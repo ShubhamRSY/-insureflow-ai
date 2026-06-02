@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ACORD xmlns="http://www.acord.org/standards/PC_Surety/ACORD">
+  <Submission>
+    <NamedInsured>
+      <GeneralPartyInfo>
+        <NameInfo>
+          <CommercialName>
+            <Name>Pacific Coast Distributors, Inc.</Name>
+            <DBA>PCD Logistics</DBA>
+          </CommercialName>
+        </NameInfo>
+        <Addr1>2450 Maritime Boulevard</Addr1>
+        <City>Oakland</City>
+        <StateProvCd>CA</StateProvCd>
+        <PostalCode>94607</PostalCode>
+        <TaxIdentity>
+          <TaxID>94-3328410</TaxID>
+        </TaxIdentity>
+        <BusinessType>Corporation</BusinessType>
+      </GeneralPartyInfo>
+    </NamedInsured>
+    <Broker>
+      <GeneralPartyInfo>
+        <ID>BRK-CA-88723</ID>
+        <NameInfo>
+          <CommercialName>
+            <Name>Golden Gate Insurance Brokers</Name>
+            <DBA>GGIB Risk Advisors</DBA>
+          </CommercialName>
+        </NameInfo>
+        <ContactName>Sarah Chen, CIC, CRM</ContactName>
+        <Email>schen@ggib.com</Email>
+      </GeneralPartyInfo>
+    </Broker>
+    <PolicyPeriod>
+      <EffectiveDate>2026-09-01</EffectiveDate>
+      <ExpirationDate>2027-09-01</ExpirationDate>
+    </PolicyPeriod>
+    <Coverage>
+      <CoverageType>Commercial General Liability</CoverageType>
+      <Limit>2000000</Limit>
+      <Deductible>0</Deductible>
+      <Premium>168500</Premium>
+    </Coverage>
+    <Coverage>
+      <CoverageType>Property</CoverageType>
+      <Limit>46250000</Limit>
+      <Deductible>100000</Deductible>
+      <Premium>342800</Premium>
+    </Coverage>
+    <Coverage>
+      <CoverageType>Commercial Auto</CoverageType>
+      <Limit>1000000</Limit>
+      <Deductible>5000</Deductible>
+      <Premium>217400</Premium>
+    </Coverage>
+    <Coverage>
+      <CoverageType>Umbrella / Excess Liability</CoverageType>
+      <Limit>10000000</Limit>
+      <Deductible>0</Deductible>
+      <Premium>98500</Premium>
+    </Coverage>
+    <Location>
+      <Addr1>2450 Maritime Boulevard</Addr1>
+      <City>Oakland</City>
+      <StateProvCd>CA</StateProvCd>
+      <PostalCode>94607</PostalCode>
+      <Occupancy>Cold Storage Warehouse / Distribution Center</Occupancy>
+      <YearBuilt>2005</YearBuilt>
+      <SquareFootage>210000</SquareFootage>
+      <ConstructionType>Masonry Non-Combustible</ConstructionType>
+      <ProtectionClass>3</ProtectionClass>
+    </Location>
+    <Location>
+      <Addr1>7800 Industrial Highway</Addr1>
+      <City>Stockton</City>
+      <StateProvCd>CA</StateProvCd>
+      <PostalCode>95206</PostalCode>
+      <Occupancy>Dry Warehouse / Transload Facility</Occupancy>
+      <YearBuilt>2012</YearBuilt>
+      <SquareFootage>88000</SquareFootage>
+      <ConstructionType>Steel Frame</ConstructionType>
+      <ProtectionClass>6</ProtectionClass>
+    </Location>
+    <Risk>
+      <NAICSCode>493120</NAICSCode>
+      <SICCode>4222</SICCode>
+      <BusinessDescription>Refrigerated warehousing and cold-chain logistics for third-party food and beverage clients throughout California, Nevada, and Oregon.</BusinessDescription>
+      <ConstructionType>Masonry Non-Combustible</ConstructionType>
+      <Occupancy>Cold Storage Warehouse / Distribution</Occupancy>
+      <ProtectionClass>3</ProtectionClass>
+      <NumberOfStories>1</NumberOfStories>
+      <TotalSquareFootage>355000</TotalSquareFootage>
+    </Risk>
+    <FinancialInfo>
+      <AnnualRevenue>94700000</AnnualRevenue>
+      <Payroll>18400000</Payroll>
+      <TotalAssets>82500000</TotalAssets>
+      <CreditRating>BB+</CreditRating>
+    </FinancialInfo>
+  </Submission>
+</ACORD>

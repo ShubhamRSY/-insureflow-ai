@@ -1,0 +1,592 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ACORD Commercial Lines Submission – Pacific Coast Distributors, Inc.
+  Prepared by: Golden Gate Insurance Brokers
+  Target market: Commercial Package (Property, GL, Auto, Umbrella)
+  Notes: This is a new business submission with 3 locations and 15-unit fleet.
+  Intentional discrepancies with inspection report and loss run:
+    - Year built of Oakland HQ (submission says 2005, inspection says 1999 with 2005 addition)
+    - Square footage of Oakland HQ (submission says 210,000, inspection measures 198,750)
+    - Construction type (submission says masonry non-combustible, inspection says steel frame)
+    - Protection class (submission says 3, inspection says 4)
+    - Sprinkler status (submission says fully sprinklered, inspection says partial)
+    - Undisclosed prior losses: 2021 slip-and-fall ($45,000) and 2023 spoilage loss ($180,000)
+    - Auto fleet count (submission lists 15, loss run shows claim on an unlisted 16th vehicle)
+-->
+<ACORD xmlns="http://www.acord.org/standards/PC_Surety/ACORD">
+  <Submission>
+    <NamedInsured>
+      <GeneralPartyInfo>
+        <NameInfo>
+          <CommercialName>
+            <Name>Pacific Coast Distributors, Inc.</Name>
+            <DBA>PCD Logistics</DBA>
+          </CommercialName>
+        </NameInfo>
+        <Addr1>2450 Maritime Boulevard</Addr1>
+        <City>Oakland</City>
+        <StateProvCd>CA</StateProvCd>
+        <PostalCode>94607</PostalCode>
+        <TaxIdentity>
+          <TaxID>94-3328410</TaxID>
+        </TaxIdentity>
+        <BusinessType>Corporation</BusinessType>
+        <BusinessTypeOther>Privately Held S-Corp</BusinessTypeOther>
+        <YearOrganized>1998</YearOrganized>
+        <WebsiteURL>www.pacificdistributors.com</WebsiteURL>
+      </GeneralPartyInfo>
+    </NamedInsured>
+
+    <AdditionalInterest>
+      <GeneralPartyInfo>
+        <NameInfo>
+          <CommercialName>
+            <Name>Pacific Coast Distributors 401(k) Profit Sharing Plan</Name>
+          </CommercialName>
+        </NameInfo>
+        <InterestType>Trustee</InterestType>
+      </GeneralPartyInfo>
+    </AdditionalInterest>
+
+    <Broker>
+      <GeneralPartyInfo>
+        <ID>BRK-CA-88723</ID>
+        <NameInfo>
+          <CommercialName>
+            <Name>Golden Gate Insurance Brokers</Name>
+            <DBA>GGIB Risk Advisors</DBA>
+          </CommercialName>
+        </NameInfo>
+        <ContactName>Sarah Chen, CIC, CRM</ContactName>
+        <ContactTitle>Senior Vice President</ContactTitle>
+        <Phone>415-555-0182</Phone>
+        <Email>schen@ggib.com</Email>
+        <Addr1>100 Pine Street, Suite 2500</Addr1>
+        <City>San Francisco</City>
+        <StateProvCd>CA</StateProvCd>
+        <PostalCode>94111</PostalCode>
+      </GeneralPartyInfo>
+    </Broker>
+
+    <PolicyPeriod>
+      <EffectiveDate>2026-09-01</EffectiveDate>
+      <ExpirationDate>2027-09-01</ExpirationDate>
+    </PolicyPeriod>
+
+    <!-- COVERAGES -->
+    <Coverage>
+      <CoverageType>Commercial General Liability</CoverageType>
+      <Limit>2000000</Limit>
+      <Deductible>0</Deductible>
+      <Premium>168500</Premium>
+      <CoverageBasis>Occurrence</CoverageBasis>
+      <CoverageSubLimit>
+        <SubLimitType>Products/Completed Operations Aggregate</SubLimitType>
+        <SubLimitAmount>4000000</SubLimitAmount>
+      </CoverageSubLimit>
+      <CoverageSubLimit>
+        <SubLimitType>Personal &amp; Advertising Injury</SubLimitType>
+        <SubLimitAmount>2000000</SubLimitAmount>
+      </CoverageSubLimit>
+      <CoverageSubLimit>
+        <SubLimitType>Fire Damage (Rented Premises)</SubLimitType>
+        <SubLimitAmount>300000</SubLimitAmount>
+      </CoverageSubLimit>
+      <CoverageSubLimit>
+        <SubLimitType>Medical Expense (any one person)</SubLimitType>
+        <SubLimitAmount>15000</SubLimitAmount>
+      </CoverageSubLimit>
+    </Coverage>
+
+    <Coverage>
+      <CoverageType>Property</CoverageType>
+      <Limit>46250000</Limit>
+      <Deductible>100000</Deductible>
+      <Premium>342800</Premium>
+      <CoverageBasis>Replacement Cost</CoverageBasis>
+      <CoverageSubLimit>
+        <SubLimitType>Building</SubLimitType>
+        <SubLimitAmount>28500000</SubLimitAmount>
+      </CoverageSubLimit>
+      <CoverageSubLimit>
+        <SubLimitType>Business Personal Property (BPP)</SubLimitType>
+        <SubLimitAmount>16250000</SubLimitAmount>
+      </CoverageSubLimit>
+      <CoverageSubLimit>
+        <SubLimitType>Stock / Inventory (Cold Storage)</SubLimitType>
+        <SubLimitAmount>8500000</SubLimitAmount>
+      </CoverageSubLimit>
+      <CoverageSubLimit>
+        <SubLimitType>Business Interruption</SubLimitType>
+        <SubLimitAmount>8500000</SubLimitAmount>
+      </CoverageSubLimit>
+      <CoverageSubLimit>
+        <SubLimitType>Equipment Breakdown</SubLimitType>
+        <SubLimitAmount>15000000</SubLimitAmount>
+      </CoverageSubLimit>
+      <CoverageSubLimit>
+        <SubLimitType>Spoliage / Refrigerated Stock</SubLimitType>
+        <SubLimitAmount>3000000</SubLimitAmount>
+      </CoverageSubLimit>
+    </Coverage>
+
+    <Coverage>
+      <CoverageType>Commercial Auto</CoverageType>
+      <Limit>1000000</Limit>
+      <Deductible>5000</Deductible>
+      <Premium>217400</Premium>
+      <CoverageBasis>Combined Single Limit</CoverageBasis>
+      <CoverageSubLimit>
+        <SubLimitType>Auto Liability - Any Accident</SubLimitType>
+        <SubLimitAmount>1000000</SubLimitAmount>
+      </CoverageSubLimit>
+      <CoverageSubLimit>
+        <SubLimitType>Comprehensive Deductible</SubLimitType>
+        <SubLimitAmount>2500</SubLimitAmount>
+      </CoverageSubLimit>
+      <CoverageSubLimit>
+        <SubLimitType>Collision Deductible</SubLimitType>
+        <SubLimitAmount>2500</SubLimitAmount>
+      </CoverageSubLimit>
+      <CoverageSubLimit>
+        <SubLimitType>Hired / Non-Owned Auto Liability</SubLimitType>
+        <SubLimitAmount>1000000</SubLimitAmount>
+      </CoverageSubLimit>
+      <CoverageSubLimit>
+        <SubLimitType>Cargo Legal Liability</SubLimitType>
+        <SubLimitAmount>250000</SubLimitAmount>
+      </CoverageSubLimit>
+    </Coverage>
+
+    <Coverage>
+      <CoverageType>Commercial Crime</CoverageType>
+      <Limit>1000000</Limit>
+      <Deductible>15000</Deductible>
+      <Premium>18200</Premium>
+      <CoverageSubLimit>
+        <SubLimitType>Employee Theft</SubLimitType>
+        <SubLimitAmount>1000000</SubLimitAmount>
+      </CoverageSubLimit>
+      <CoverageSubLimit>
+        <SubLimitType>Forgery or Alteration</SubLimitType>
+        <SubLimitAmount>500000</SubLimitAmount>
+      </CoverageSubLimit>
+      <CoverageSubLimit>
+        <SubLimitType>Inside the Premises - Theft of Money &amp; Securities</SubLimitType>
+        <SubLimitAmount>500000</SubLimitAmount>
+      </CoverageSubLimit>
+      <CoverageSubLimit>
+        <SubLimitType>Outside the Premises</SubLimitType>
+        <SubLimitAmount>250000</SubLimitAmount>
+      </CoverageSubLimit>
+    </Coverage>
+
+    <Coverage>
+      <CoverageType>Inland Marine</CoverageType>
+      <Limit>3500000</Limit>
+      <Deductible>10000</Deductible>
+      <Premium>44500</Premium>
+      <CoverageSubLimit>
+        <SubLimitType>Forklift &amp; Warehouse Equipment (Scheduled)</SubLimitType>
+        <SubLimitAmount>1850000</SubLimitAmount>
+      </CoverageSubLimit>
+      <CoverageSubLimit>
+        <SubLimitType>Computer &amp; Media Equipment</SubLimitType>
+        <SubLimitAmount>850000</SubLimitAmount>
+      </CoverageSubLimit>
+      <CoverageSubLimit>
+        <SubLimitType>Tools &amp; Mobile Equipment</SubLimitType>
+        <SubLimitAmount>425000</SubLimitAmount>
+      </CoverageSubLimit>
+      <CoverageSubLimit>
+        <SubLimitType>Accounts Receivable</SubLimitType>
+        <SubLimitAmount>375000</SubLimitAmount>
+      </CoverageSubLimit>
+    </Coverage>
+
+    <Coverage>
+      <CoverageType>Workers Compensation</CoverageType>
+      <Limit>Statutory</Limit>
+      <Deductible>0</Deductible>
+      <Premium>423900</Premium>
+      <CoverageBasis>NCCI Basis</CoverageBasis>
+    </Coverage>
+
+    <Coverage>
+      <CoverageType>Umbrella / Excess Liability</CoverageType>
+      <Limit>10000000</Limit>
+      <Deductible>0</Deductible>
+      <Premium>98500</Premium>
+      <CoverageBasis>Following Form Excess</CoverageBasis>
+      <CoverageSubLimit>
+        <SubLimitType>Self-Insured Retention (SIR)</SubLimitType>
+        <SubLimitAmount>50000</SubLimitAmount>
+      </CoverageSubLimit>
+    </Coverage>
+
+    <Coverage>
+      <CoverageType>Environmental / Pollution Liability</CoverageType>
+      <Limit>2000000</Limit>
+      <Deductible>50000</Deductible>
+      <Premium>27300</Premium>
+    </Coverage>
+
+    <!-- LOCATIONS -->
+    <Location>
+      <Addr1>2450 Maritime Boulevard</Addr1>
+      <City>Oakland</City>
+      <StateProvCd>CA</StateProvCd>
+      <PostalCode>94607</PostalCode>
+      <County>Alameda</County>
+      <Occupancy>Cold Storage Warehouse / Distribution Center</Occupancy>
+      <YearBuilt>2005</YearBuilt>
+      <SquareFootage>210000</SquareFootage>
+      <ConstructionType>Masonry Non-Combustible</ConstructionType>
+      <ProtectionClass>3</ProtectionClass>
+      <NumberOfStories>1</NumberOfStories>
+      <BuildingHeight>38</BuildingHeight>
+      <Sprinklered>Yes</Sprinklered>
+      <SprinklerType>Wet and Dry Pipe ESFR</SprinklerType>
+      <FireAlarm>Central Station</FireAlarm>
+      <RoofType>Single-Ply TPO Membrane</RoofType>
+      <YearRoofReplaced>2020</YearRoofReplaced>
+      <EstimatedValue>18500000</EstimatedValue>
+    </Location>
+
+    <Location>
+      <Addr1>7800 Industrial Highway</Addr1>
+      <City>Stockton</City>
+      <StateProvCd>CA</StateProvCd>
+      <PostalCode>95206</PostalCode>
+      <County>San Joaquin</County>
+      <Occupancy>Dry Warehouse / Transload Facility</Occupancy>
+      <YearBuilt>2012</YearBuilt>
+      <SquareFootage>88000</SquareFootage>
+      <ConstructionType>Steel Frame</ConstructionType>
+      <ProtectionClass>6</ProtectionClass>
+      <NumberOfStories>1</NumberOfStories>
+      <BuildingHeight>32</BuildingHeight>
+      <Sprinklered>Yes</Sprinklered>
+      <SprinklerType>Wet Pipe ESFR</SprinklerType>
+      <FireAlarm>Central Station</FireAlarm>
+      <RoofType>Standing Seam Metal</RoofType>
+      <YearRoofReplaced>2021</YearRoofReplaced>
+      <EstimatedValue>6200000</EstimatedValue>
+    </Location>
+
+    <Location>
+      <Addr1>1200 Capitol Avenue, Suite 100</Addr1>
+      <City>Sacramento</City>
+      <StateProvCd>CA</StateProvCd>
+      <PostalCode>95814</PostalCode>
+      <County>Sacramento</County>
+      <Occupancy>Regional Sales Office / Administrative</Occupancy>
+      <YearBuilt>2010</YearBuilt>
+      <SquareFootage>12000</SquareFootage>
+      <ConstructionType>Reinforced Concrete</ConstructionType>
+      <ProtectionClass>2</ProtectionClass>
+      <NumberOfStories>1</NumberOfStories>
+      <BuildingHeight>14</BuildingHeight>
+      <Sprinklered>Yes</Sprinklered>
+      <SprinklerType>Wet Pipe</SprinklerType>
+      <FireAlarm>Central Station</FireAlarm>
+      <RoofType>Built-Up Tar and Gravel</RoofType>
+      <EstimatedValue>1800000</EstimatedValue>
+    </Location>
+
+    <Location>
+      <Addr1>5500 Port Road, Pier 7</Addr1>
+      <City>Richmond</City>
+      <StateProvCd>CA</StateProvCd>
+      <PostalCode>94804</PostalCode>
+      <County>Contra Costa</County>
+      <Occupancy>Leased Cold Storage Annex</Occupancy>
+      <YearBuilt>2008</YearBuilt>
+      <SquareFootage>45000</SquareFootage>
+      <ConstructionType>Steel Frame with Insulated Metal Panels</ConstructionType>
+      <ProtectionClass>4</ProtectionClass>
+      <NumberOfStories>1</NumberOfStories>
+      <BuildingHeight>28</BuildingHeight>
+      <Sprinklered>Yes</Sprinklered>
+      <SprinklerType>Dry Pipe ESFR</SprinklerType>
+      <FireAlarm>Local</FireAlarm>
+      <EstimatedValue>3200000</EstimatedValue>
+    </Location>
+
+    <!-- VEHICLE SCHEDULE -->
+    <Vehicle>
+      <VehicleId>V001</VehicleId>
+      <VIN>1HGBH41JXMN109186</VIN>
+      <ModelYear>2023</ModelYear>
+      <Make>Freightliner</Make>
+      <Model>M2 106 Box Truck</Model>
+      <BodyType>Dry Van Box Truck</BodyType>
+      <GrossVehicleWeight>26000</GrossVehicleWeight>
+      <VehicleValue>145000</VehicleValue>
+      <Radius>500</Radius>
+      <PrimaryUse>Local Delivery</PrimaryUse>
+      <GarageLocation>Oakland HQ</GarageLocation>
+    </Vehicle>
+
+    <Vehicle>
+      <VehicleId>V002</VehicleId>
+      <VIN>2HGBH41JXMN109187</VIN>
+      <ModelYear>2023</ModelYear>
+      <Make>Freightliner</Make>
+      <Model>M2 106 Box Truck</Model>
+      <BodyType>Dry Van Box Truck</BodyType>
+      <GrossVehicleWeight>26000</GrossVehicleWeight>
+      <VehicleValue>145000</VehicleValue>
+      <Radius>500</Radius>
+      <PrimaryUse>Local Delivery</PrimaryUse>
+      <GarageLocation>Oakland HQ</GarageLocation>
+    </Vehicle>
+
+    <Vehicle>
+      <VehicleId>V003</VehicleId>
+      <VIN>3HGBH41JXMN109188</VIN>
+      <ModelYear>2023</ModelYear>
+      <Make>Freightliner</Make>
+      <Model>M2 106 Box Truck</Model>
+      <BodyType>Dry Van Box Truck</BodyType>
+      <GrossVehicleWeight>26000</GrossVehicleWeight>
+      <VehicleValue>145000</VehicleValue>
+      <Radius>500</Radius>
+      <PrimaryUse>Local Delivery</PrimaryUse>
+      <GarageLocation>Oakland HQ</GarageLocation>
+    </Vehicle>
+
+    <Vehicle>
+      <VehicleId>V004</VehicleId>
+      <VIN>4HGBH41JXMN109189</VIN>
+      <ModelYear>2022</ModelYear>
+      <Make>Kenworth</Make>
+      <Model>T680 Refrigerated</Model>
+      <BodyType>Reefer Truck</BodyType>
+      <GrossVehicleWeight>52000</GrossVehicleWeight>
+      <VehicleValue>198000</VehicleValue>
+      <Radius>500</Radius>
+      <PrimaryUse>Regional Cold Chain</PrimaryUse>
+      <GarageLocation>Oakland HQ</GarageLocation>
+    </Vehicle>
+
+    <Vehicle>
+      <VehicleId>V005</VehicleId>
+      <VIN>5HGBH41JXMN109190</VIN>
+      <ModelYear>2022</ModelYear>
+      <Make>Kenworth</Make>
+      <Model>T680 Refrigerated</Model>
+      <BodyType>Reefer Truck</BodyType>
+      <GrossVehicleWeight>52000</GrossVehicleWeight>
+      <VehicleValue>198000</VehicleValue>
+      <Radius>500</Radius>
+      <PrimaryUse>Regional Cold Chain</PrimaryUse>
+      <GarageLocation>Oakland HQ</GarageLocation>
+    </Vehicle>
+
+    <Vehicle>
+      <VehicleId>V006</VehicleId>
+      <VIN>6HGBH41JXMN109191</VIN>
+      <ModelYear>2021</ModelYear>
+      <Make>Hino</Make>
+      <Model>195 DC</Model>
+      <BodyType>Dry Van Straight Truck</BodyType>
+      <GrossVehicleWeight>19500</GrossVehicleWeight>
+      <VehicleValue>85000</VehicleValue>
+      <Radius>300</Radius>
+      <PrimaryUse>Local Delivery</PrimaryUse>
+      <GarageLocation>Stockton</GarageLocation>
+    </Vehicle>
+
+    <Vehicle>
+      <VehicleId>V007</VehicleId>
+      <VIN>7HGBH41JXMN109192</VIN>
+      <ModelYear>2021</ModelYear>
+      <Make>Hino</Make>
+      <Model>195 DC</Model>
+      <BodyType>Dry Van Straight Truck</BodyType>
+      <GrossVehicleWeight>19500</GrossVehicleWeight>
+      <VehicleValue>85000</VehicleValue>
+      <Radius>300</Radius>
+      <PrimaryUse>Local Delivery</PrimaryUse>
+      <GarageLocation>Stockton</GarageLocation>
+    </Vehicle>
+
+    <Vehicle>
+      <VehicleId>V008</VehicleId>
+      <VIN>8HGBH41JXMN109193</VIN>
+      <ModelYear>2020</ModelYear>
+      <Make>Ford</Make>
+      <Model>Transit 350 XL</Model>
+      <BodyType>Cargo Van</BodyType>
+      <GrossVehicleWeight>10000</GrossVehicleWeight>
+      <VehicleValue>42000</VehicleValue>
+      <Radius>200</Radius>
+      <PrimaryUse>Sales / Service</PrimaryUse>
+      <GarageLocation>Sacramento Office</GarageLocation>
+    </Vehicle>
+
+    <Vehicle>
+      <VehicleId>V009</VehicleId>
+      <VIN>1FGBH41JXMN109194</VIN>
+      <ModelYear>2020</ModelYear>
+      <Make>Ford</Make>
+      <Model>Transit 350 XL</Model>
+      <BodyType>Cargo Van</BodyType>
+      <GrossVehicleWeight>10000</GrossVehicleWeight>
+      <VehicleValue>42000</VehicleValue>
+      <Radius>200</Radius>
+      <PrimaryUse>Sales / Service</PrimaryUse>
+      <GarageLocation>Oakland HQ</GarageLocation>
+    </Vehicle>
+
+    <Vehicle>
+      <VehicleId>V010</VehicleId>
+      <VIN>2FGBH41JXMN109195</VIN>
+      <ModelYear>2020</ModelYear>
+      <Make>Ford</Make>
+      <Model>F-550 Stake Bed</Model>
+      <BodyType>Flatbed / Stake</BodyType>
+      <GrossVehicleWeight>19000</GrossVehicleWeight>
+      <VehicleValue>72000</VehicleValue>
+      <Radius>200</Radius>
+      <PrimaryUse>Yard / Facility</PrimaryUse>
+      <GarageLocation>Oakland HQ</GarageLocation>
+    </Vehicle>
+
+    <Vehicle>
+      <VehicleId>V011</VehicleId>
+      <VIN>3FGBH41JXMN109196</VIN>
+      <ModelYear>2019</ModelYear>
+      <Make>Chevrolet</Make>
+      <Model>Silverado 3500 HD</Model>
+      <BodyType>Pickup with Utility Bed</BodyType>
+      <GrossVehicleWeight>12000</GrossVehicleWeight>
+      <VehicleValue>48000</VehicleValue>
+      <Radius>100</Radius>
+      <PrimaryUse>Maintenance / Yard</PrimaryUse>
+      <GarageLocation>Oakland HQ</GarageLocation>
+    </Vehicle>
+
+    <Vehicle>
+      <VehicleId>V012</VehicleId>
+      <VIN>4FGBH41JXMN109197</VIN>
+      <ModelYear>2019</ModelYear>
+      <Make>Chevrolet</Make>
+      <Model>Silverado 3500 HD</Model>
+      <BodyType>Pickup with Utility Bed</BodyType>
+      <GrossVehicleWeight>12000</GrossVehicleWeight>
+      <VehicleValue>48000</VehicleValue>
+      <Radius>100</Radius>
+      <PrimaryUse>Maintenance / Yard</PrimaryUse>
+      <GarageLocation>Stockton</GarageLocation>
+    </Vehicle>
+
+    <Vehicle>
+      <VehicleId>V013</VehicleId>
+      <VIN>5FGBH41JXMN109198</VIN>
+      <ModelYear>2019</ModelYear>
+      <Make>Hyster</Make>
+      <Model>H50-60XL Forklift</Model>
+      <BodyType>Forklift (not road-rated)</BodyType>
+      <GrossVehicleWeight>9000</GrossVehicleWeight>
+      <VehicleValue>32000</VehicleValue>
+      <Radius>0</Radius>
+      <PrimaryUse>Warehouse Operations</PrimaryUse>
+      <GarageLocation>Oakland HQ</GarageLocation>
+    </Vehicle>
+
+    <Vehicle>
+      <VehicleId>V014</VehicleId>
+      <VIN>6FGBH41JXMN109199</VIN>
+      <ModelYear>2018</ModelYear>
+      <Make>Hyster</Make>
+      <Model>H50-60XL Forklift</Model>
+      <BodyType>Forklift (not road-rated)</BodyType>
+      <GrossVehicleWeight>9000</GrossVehicleWeight>
+      <VehicleValue>32000</VehicleValue>
+      <Radius>0</Radius>
+      <PrimaryUse>Warehouse Operations</PrimaryUse>
+      <GarageLocation>Stockton</GarageLocation>
+    </Vehicle>
+
+    <Vehicle>
+      <VehicleId>V015</VehicleId>
+      <VIN>7FGBH41JXMN109200</VIN>
+      <ModelYear>2018</ModelYear>
+      <Make>Yale</Make>
+      <Model>ERP50VT Reach Truck</Model>
+      <BodyType>Forklift (not road-rated)</BodyType>
+      <GrossVehicleWeight>8500</GrossVehicleWeight>
+      <VehicleValue>28000</VehicleValue>
+      <Radius>0</Radius>
+      <PrimaryUse>Warehouse Operations</PrimaryUse>
+      <GarageLocation>Oakland HQ</GarageLocation>
+    </Vehicle>
+
+    <!-- RISK PROFILE -->
+    <Risk>
+      <NAICSCode>493120</NAICSCode>
+      <SICCode>4222</SICCode>
+      <BusinessDescription>Refrigerated warehousing and cold-chain logistics services for third-party food and beverage clients. Operations include frozen (-10F) and refrigerated (34-38F) storage, transload cross-docking, inventory management, and regional less-than-truckload (LTL) and full-truckload (FTL) distribution throughout California, Nevada, and Oregon.</BusinessDescription>
+      <ConstructionType>Masonry Non-Combustible</ConstructionType>
+      <Occupancy>Cold Storage Warehouse / Distribution</Occupancy>
+      <ProtectionClass>3</ProtectionClass>
+      <NumberOfStories>1</NumberOfStories>
+      <TotalSquareFootage>355000</TotalSquareFootage>
+      <Sprinklered>Yes</Sprinklered>
+      <SprinklerType>Wet and Dry Pipe ESFR</SprinklerType>
+      <FireAlarm>Central Station</FireAlarm>
+      <Security>24/7 CCTV, Central Station Burglary Alarm, Gate Access Control</Security>
+      <MaxOccupancyPerShift>85</MaxOccupancyPerShift>
+      <OperationsHours>24 Hours / Day, 6 Days / Week</OperationsHours>
+    </Risk>
+
+    <!-- FINANCIAL INFO -->
+    <FinancialInfo>
+      <AnnualRevenue>94700000</AnnualRevenue>
+      <Payroll>18400000</Payroll>
+      <TotalAssets>82500000</TotalAssets>
+      <TotalLiabilities>31200000</TotalLiabilities>
+      <CurrentRatio>1.85</CurrentRatio>
+      <CreditRating>BB+</CreditRating>
+      <YearsInBusiness>28</YearsInBusiness>
+      <NumberOfEmployeesFullTime>212</NumberOfEmployeesFullTime>
+      <NumberOfEmployeesPartTime>38</NumberOfEmployeesPartTime>
+    </FinancialInfo>
+
+    <!-- UNDERWRITING QUESTIONS -->
+    <UnderwritingQuestion>
+      <Question>Has the insured or any predecessor been canceled or non-renewed by any carrier in the past 5 years?</Question>
+      <Answer>No</Answer>
+    </UnderwritingQuestion>
+    <UnderwritingQuestion>
+      <Question>Does the insured own or operate any refrigeration equipment containing ammonia (R-717)?</Question>
+      <Answer>Yes - Oakland HQ and Richmond annex utilize ammonia-based refrigeration systems. Full PSM/RMP programs in place.</Answer>
+    </UnderwritingQuestion>
+    <UnderwritingQuestion>
+      <Question>Are there any known construction defects or building code violations?</Question>
+      <Answer>No</Answer>
+    </UnderwritingQuestion>
+    <UnderwritingQuestion>
+      <Question>Has the insured had any prior losses exceeding $50,000 in the past 5 years?</Question>
+      <Answer>Yes - please refer to loss run attached.</Answer>
+    </UnderwritingQuestion>
+    <UnderwritingQuestion>
+      <Question>Is the insured currently involved in any litigation?</Question>
+      <Answer>One active premises liability claim (2025-001233) - details in loss run.</Answer>
+    </UnderwritingQuestion>
+    <UnderwritingQuestion>
+      <Question>Percentage of business with food / consumable products?</Question>
+      <Answer>Approximately 65% of stored product is food-grade (frozen and refrigerated). Remaining 35% is non-perishable consumer goods.</Answer>
+    </UnderwritingQuestion>
+    <UnderwritingQuestion>
+      <Question>Maximum distance of any delivery route?</Question>
+      <Answer>450 miles (Medford, OR). 95% of routes within California.</Answer>
+    </UnderwritingQuestion>
+    <UnderwritingQuestion>
+      <Question>Does the insured maintain a formal safety program?</Question>
+      <Answer>Yes - full-time Safety Manager (CSP certified), monthly safety meetings, driver training program, and quarterly drills. OSHA recordable rate: 3.2 (industry avg: 5.1).</Answer>
+    </UnderwritingQuestion>
+  </Submission>
+</ACORD>

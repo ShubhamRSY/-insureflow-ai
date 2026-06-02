@@ -1,0 +1,231 @@
+{
+  "submission": {
+    "submissionId": "SUB-2026-08842",
+    "submissionDate": "2026-08-01",
+    "effectiveDate": "2026-09-01",
+    "expirationDate": "2027-09-01",
+    "policyType": "Commercial Package"
+  },
+  "insured": {
+    "legalName": "Pacific Coast Distributors, Inc.",
+    "doingBusinessAs": "PCD Logistics",
+    "taxId": "94-3328410",
+    "entityType": "Corporation",
+    "yearOrganized": 1998,
+    "businessDescription": "Refrigerated warehousing and cold-chain logistics for third-party food and beverage clients throughout California, Nevada, and Oregon.",
+    "website": "www.pacificdistributors.com",
+    "address": {
+      "street": "2450 Maritime Boulevard",
+      "city": "Oakland",
+      "state": "CA",
+      "zipCode": "94607",
+      "county": "Alameda"
+    },
+    "financials": {
+      "annualRevenue": 94700000,
+      "payroll": 18400000,
+      "totalAssets": 82500000,
+      "totalLiabilities": 31200000,
+      "creditRating": "BB+",
+      "yearsInBusiness": 28,
+      "fullTimeEmployees": 212,
+      "partTimeEmployees": 38
+    }
+  },
+  "broker": {
+ "brokerName": "Golden Gate Insurance Brokers",
+    "agency": "GGIB Risk Advisors",
+    "brokerId": "BRK-CA-88723",
+    "contactName": "Sarah Chen, CIC, CRM",
+    "contactEmail": "schen@ggib.com",
+    "contactPhone": "415-555-0182",
+    "address": {
+      "street": "100 Pine Street, Suite 2500",
+      "city": "San Francisco",
+      "state": "CA",
+      "zipCode": "94111"
+    }
+  },
+  "coverages": [
+    {
+      "coverageType": "Commercial General Liability",
+      "limitAmount": 2000000,
+      "deductible": 0,
+      "annualPremium": 168500,
+      "basis": "Occurrence",
+      "sublimits": {
+        "Products/Completed Operations Aggregate": 4000000,
+        "Personal & Advertising Injury": 2000000,
+        "Fire Damage (Rented Premises)": 300000,
+        "Medical Expense (any one person)": 15000
+      }
+    },
+    {
+      "coverageType": "Property",
+      "limitAmount": 46250000,
+      "deductible": 100000,
+      "annualPremium": 342800,
+      "basis": "Replacement Cost",
+      "sublimits": {
+        "Building": 28500000,
+        "Business Personal Property": 16250000,
+        "Stock / Inventory (Cold Storage)": 8500000,
+        "Business Interruption": 8500000,
+        "Equipment Breakdown": 15000000,
+        "Spoliage / Refrigerated Stock": 3000000
+      }
+    },
+    {
+      "coverageType": "Commercial Auto",
+      "limitAmount": 1000000,
+      "deductible": 5000,
+      "annualPremium": 217400,
+      "basis": "Combined Single Limit",
+      "sublimits": {
+        "Auto Liability - Any Accident": 1000000,
+        "Comprehensive Deductible": 2500,
+        "Collision Deductible": 2500,
+        "Hired/Non-Owned Auto": 1000000,
+        "Cargo Legal Liability": 250000
+      }
+    },
+    {
+      "coverageType": "Umbrella / Excess Liability",
+      "limitAmount": 10000000,
+      "deductible": 0,
+      "annualPremium": 98500,
+      "basis": "Following Form Excess",
+      "sublimits": {
+        "Self-Insured Retention": 50000
+      }
+    },
+    {
+      "coverageType": "Workers Compensation",
+      "statutory": true,
+      "annualPremium": 423900
+    },
+    {
+      "coverageType": "Commercial Crime",
+      "limitAmount": 1000000,
+      "deductible": 15000,
+      "annualPremium": 18200,
+      "sublimits": {
+        "Employee Theft": 1000000,
+        "Forgery or Alteration": 500000,
+        "Inside Premises - Theft of Money": 500000,
+        "Outside Premises": 250000
+      }
+    },
+    {
+      "coverageType": "Inland Marine",
+      "limitAmount": 3500000,
+      "deductible": 10000,
+      "annualPremium": 44500,
+      "sublimits": {
+        "Forklift & Warehouse Equipment (Scheduled)": 1850000,
+        "Computer & Media Equipment": 850000,
+        "Tools & Mobile Equipment": 425000,
+        "Accounts Receivable": 375000
+      }
+    },
+    {
+      "coverageType": "Environmental / Pollution Liability",
+      "limitAmount": 2000000,
+      "deductible": 50000,
+      "annualPremium": 27300
+    }
+  ],
+  "locations": [
+    {
+      "address": "2450 Maritime Boulevard",
+      "city": "Oakland",
+      "state": "CA",
+      "zipCode": "94607",
+      "county": "Alameda",
+      "occupancy": "Cold Storage Warehouse / Distribution Center",
+      "yearBuilt": 2005,
+      "squareFootage": 210000,
+      "constructionType": "Masonry Non-Combustible",
+      "protectionClass": 3,
+      "numberOfStories": 1,
+      "sprinklered": true,
+      "buildingValue": 18500000,
+      "contentsValue": 12500000,
+      "businessIncomeValue": 8500000
+    },
+    {
+      "address": "7800 Industrial Highway",
+      "city": "Stockton",
+      "state": "CA",
+      "zipCode": "95206",
+      "county": "San Joaquin",
+      "occupancy": "Dry Warehouse / Transload Facility",
+      "yearBuilt": 2012,
+      "squareFootage": 88000,
+      "constructionType": "Steel Frame",
+      "protectionClass": 6,
+      "numberOfStories": 1,
+      "sprinklered": true,
+      "buildingValue": 6200000,
+      "contentsValue": 3800000,
+      "businessIncomeValue": 2200000
+    },
+    {
+      "address": "1200 Capitol Avenue, Suite 100",
+      "city": "Sacramento",
+      "state": "CA",
+      "zipCode": "95814",
+      "county": "Sacramento",
+      "occupancy": "Regional Sales Office / Administrative",
+      "yearBuilt": 2010,
+      "squareFootage": 12000,
+      "constructionType": "Reinforced Concrete",
+      "protectionClass": 2,
+      "numberOfStories": 1,
+      "sprinklered": true,
+      "buildingValue": 1800000
+    },
+    {
+      "address": "5500 Port Road, Pier 7",
+      "city": "Richmond",
+      "state": "CA",
+      "zipCode": "94804",
+      "county": "Contra Costa",
+      "occupancy": "Leased Cold Storage Annex",
+      "yearBuilt": 2008,
+      "squareFootage": 45000,
+      "constructionType": "Steel Frame with Insulated Metal Panels",
+      "protectionClass": 4,
+      "numberOfStories": 1,
+      "sprinklered": true,
+      "buildingValue": 3200000,
+      "contentsValue": 2100000,
+      "businessIncomeValue": 950000
+    }
+  ],
+  "riskClassification": {
+    "naicsCode": 493120,
+    "sicCode": 4222,
+    "occupancy": "Cold Storage Warehouse / Distribution",
+    "constructionType": "Masonry Non-Combustible",
+    "protectionClass": 3,
+    "numberOfStories": 1,
+    "totalSquareFootage": 355000,
+    "sprinklered": true,
+    "security": "24/7 CCTV, Central Station Burglary Alarm, Gate Access Control",
+    "maxOccupancyPerShift": 85,
+    "operationsHours": "24 Hours/Day, 6 Days/Week"
+  },
+  "underwritingNotes": [
+    "Renewal account — prior carrier Zurich American Insurance Company",
+    "Ammonia (R-717) refrigeration system at Oakland HQ — PSM/RMP program in place",
+    "Safety Manager (CSP certified) on staff — OSHA recordable rate 3.2 (industry avg 5.1)",
+    "HACCP certified, AIB AA-rated facility",
+    "One active premises liability claim (2025-001233) — dock leveler injury, SIR applies",
+    "5-year loss ratio 23.8% (14.9% excluding 2023 ammonia spoilage claim)"
+  ],
+  "attachments": [
+    "pacific_coast_inspection_report.md",
+    "pacific_coast_loss_run.md"
+  ]
+}

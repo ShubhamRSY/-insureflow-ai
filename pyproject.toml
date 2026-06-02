@@ -1,0 +1,61 @@
+[project]
+name = "insureflow-ai"
+version = "0.1.0"
+description = "Autonomous agentic pipeline for commercial underwriting data ingestion, reconciliation, and synthesis"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.0",
+    "pydantic-xml>=2.0",
+    "lxml>=5.0",
+    "openai>=1.0",
+    "python-dotenv>=1.0",
+    "rich>=13.0",
+    "typer>=0.9",
+    "pyyaml>=6.0",
+    "python-dateutil>=2.8",
+    "mcp>=1.0",
+    "fastapi>=0.100",
+    "uvicorn>=0.20",
+    "langgraph>=0.2",
+    "pandas>=2.0",
+]
+
+[project.optional-dependencies]
+claude = [
+    "anthropic>=0.30",
+]
+pgvector = [
+    "psycopg2-binary>=2.9",
+    "pgvector>=0.2",
+    "sqlalchemy>=2.0",
+]
+eval = [
+    "ragas>=0.4",
+    "giskard[litellm]>=2.19",
+    "datasets>=2.0",
+    "langchain-community>=0.3",
+    "langchain-core>=0.3",
+]
+dev = [
+    "pytest>=7.0",
+    "pytest-asyncio>=0.21",
+    "ruff>=0.1",
+    "mypy>=1.0",
+]
+
+[project.scripts]
+insureflow-mcp = "insureflow.mcp.server:run_server"
+
+[tool.setuptools.packages.find]
+include = ["insureflow*", "evaluations*"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W"]
+
+[tool.mypy]
+strict = true
+python_version = "3.11"

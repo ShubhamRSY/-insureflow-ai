@@ -1,0 +1,39 @@
+version: "3.9"
+
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - LLM_API_KEY=${LLM_API_KEY:-}
+      - LLM_MODEL=${LLM_MODEL:-gpt-4o-mini}
+      - LLM_CHEAP_MODEL=${LLM_CHEAP_MODEL:-gpt-4o-mini}
+      - LLM_EXPENSIVE_MODEL=${LLM_EXPENSIVE_MODEL:-gpt-4o}
+      - DATABASE_URL=postgresql://insureflow:insureflow@db:5432/insureflow
+      - PYTHONPATH=/app
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: pgvector/pgvector:pg17
+    environment:
+      - POSTGRES_USER=insureflow
+      - POSTGRES_PASSWORD=insureflow
+      - POSTGRES_DB=insureflow
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./scripts/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U insureflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  pgdata:

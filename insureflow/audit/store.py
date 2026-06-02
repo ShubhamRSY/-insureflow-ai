@@ -1,0 +1,91 @@
+from __future__ import annotations
+
+import json
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Optional
+
+from insureflow.config import settings
+from insureflow.exceptions import StorageError
+from insureflow.models.audit import AuditEntry, AuditTrail, SynthesisOutput
+from insureflow.models.provenance import ProvenanceRecord
+from insureflow.models.submissions import SubmissionBundle
+from insureflow.reconciliation.engine import ReconciliationResult
+
+
+class AuditStore:
+    def __init__(self, base_path: Optional[Path] = None) -> None:
+        self.base_path = base_path or settings.audit_log_path
+        try:
+            self.base_path.mkdir(parents=True, exist_ok=True)
+        except OSError as e:
+            raise StorageError(f"Failed to create audit log directory: {e}")
+
+    def persist_bundle(self, bundle: SubmissionBundle) -> Path:
+        output = self.base_path / bundle.bundle_id
+        try:
+            output.mkdir(parents=True, exist_ok=True)
+        except OSError as e:
+            raise StorageError(f"Failed to create bundle directory: {e}")
+        self._write_json(output / "submission_bundle.json", bundle.model_dump())
+        return output
+
+    def persist_provenance(self, record: ProvenanceRecord) -> Path:
+        output = self.base_path / record.bundle_id
+        try:
+            output.mkdir(parents=True, exist_ok=True)
+        except OSError as e:
+            raise StorageError(f"Failed to create provenance directory: {e}")
+        self._write_json(output / "provenance_record.json", record.model_dump())
+        return output
+
+    def persist_reconciliation(
+        self, result: ReconciliationResult
+    ) -> Path:
+        output = self.base_path / result.bundle_id
+        try:
+            output.mkdir(parents=True, exist_ok=True)
+        except OSError as e:
+            raise StorageError(f"Failed to create reconciliation directory: {e}")
+        self._write_json(output / "reconciliation.json", result.model_dump())
+        return output
+
+    def persist_synthesis(self, output: SynthesisOutput) -> Path:
+        dir_path = self.base_path / output.bundle_id
+        try:
+            dir_path.mkdir(parents=True, exist_ok=True)
+        except OSError as e:
+            raise StorageError(f"Failed to create synthesis directory: {e}")
+        self._write_json(dir_path / "synthesis.json", output.model_dump())
+        return dir_path
+
+    def persist_audit_trail(self, trail: AuditTrail) -> Path:
+        dir_path = self.base_path / trail.bundle_id
+        try:
+            dir_path.mkdir(parents=True, exist_ok=True)
+        except OSError as e:
+            raise StorageError(f"Failed to create audit trail directory: {e}")
+        self._write_json(
+            dir_path / "audit_trail.json",
+            trail.model_dump(),
+        )
+        return dir_path
+
+    def _write_json(self, path: Path, data: dict[str, Any]) -> None:
+        try:
+            path.write_text(
+                json.dumps(data, indent=2, default=str, ensure_ascii=False),
+                encoding="utf-8"
+            )
+        except OSError as e:
+            raise StorageError(f"Failed to write JSON to {path}: {e}")
+
+    def load_json(self, bundle_id: str, filename: str) -> Optional[dict[str, Any]]:
+        path = self.base_path / bundle_id / filename
+        if path.exists():
+            try:
+                return json.loads(path.read_text(encoding="utf-8"))
+            except (json.JSONDecodeError, OSError) as e:
+                # Log the error in a real system, returning None as fallback
+                return None
+        return None
