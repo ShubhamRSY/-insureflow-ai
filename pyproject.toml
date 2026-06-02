@@ -44,9 +44,11 @@ dev = [
 ]
 
 [project.scripts]
+insureflow = "insureflow.cli:app"
 insureflow-mcp = "insureflow.mcp.server:run_server"
 
 [tool.setuptools.packages.find]
+where = ["src", "."]
 include = ["insureflow*", "evaluations*"]
 
 [tool.ruff]

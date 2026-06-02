@@ -1,11 +1,3 @@
-FROM python:3.12-slim AS builder
-
-WORKDIR /app
-
-COPY pyproject.toml .
-RUN pip install --no-cache-dir build && \
-    pip wheel --no-cache-dir --wheel-dir /wheels .[claude,pgvector,eval,dev]
-
 FROM python:3.12-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -14,12 +6,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-COPY --from=builder /wheels /wheels
-RUN pip install --no-cache-dir /wheels/* && rm -rf /wheels
+COPY pyproject.toml .
+COPY src/ src/
+COPY cli.py .
+COPY scripts/ scripts/
 
-COPY . .
+RUN pip install --no-cache-dir -e ".[claude,pgvector,eval,dev]"
 
-ENV PYTHONPATH=/app
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 

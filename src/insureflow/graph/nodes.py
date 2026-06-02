@@ -457,9 +457,14 @@ def query_rag(state: dict[str, Any]) -> dict[str, Any]:
 
     from insureflow.agents.rag_agent import RAGAgent
     agent = RAGAgent()
-    matches = agent.i
+    matches = agent.retrieve_guidelines(query)
+
+    guidelines = ""
     if matches:
-        guideli "query_rag", f"Retrieved {len(matches)} relevant guidelines")
+        guidelines = "\n\n".join(matches)
+        _log_event(bundle_id, PipelineEvent.SYNTHESIS_START, "query_rag", f"Retrieved {len(matches)} relevant guidelines")
+
+    return {"rag_context": guidelines}
 
 
 def human_review(state: dict[str, Any]) -> dict[str, Any]:
