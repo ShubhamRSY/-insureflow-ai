@@ -17,3 +17,7 @@ ragas_scores.json
 giskard_scan.json
 evaluation_results.json
 evaluation_scores.json
+.benchmarks/
+.DS_Store
+*.log
+*.sqlite3
