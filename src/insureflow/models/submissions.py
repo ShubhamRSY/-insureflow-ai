@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from enum import Enum, auto
 from typing import Optional
 
@@ -149,7 +149,7 @@ class RiskProfile(BaseModel):
 class StructuredSubmission(BaseModel):
     submission_id: str
     source: str = "broker_acord_xml"
-    received_at: datetime = Field(default_factory=datetime.utcnow)
+    received_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
 
     named_insured: Optional[NamedInsured] = None
     broker: Optional[BrokerInfo] = None
@@ -169,7 +169,7 @@ class UnstructuredSubmission(BaseModel):
     submission_id: str
     source: str = "inspection_report"
     document_type: str = "inspection_report"
-    received_at: datetime = Field(default_factory=datetime.utcnow)
+    received_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
 
     raw_text: str = ""
     chunks: list[ExtractedChunk] = Field(default_factory=list)
@@ -196,7 +196,7 @@ class ExtractedField(BaseModel):
 
 class SubmissionBundle(BaseModel):
     bundle_id: str
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
     status: SubmissionStatus = SubmissionStatus.RECEIVED
 
     structured: Optional[StructuredSubmission] = None

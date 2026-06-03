@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Optional
 
@@ -54,7 +54,7 @@ class ReconciliationResult(BaseModel):
     matched_fields: int = 0
     total_fields: int = 0
     match_rate: float = 0.0
-    reconciled_at: datetime = Field(default_factory=datetime.utcnow)
+    reconciled_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
     overall_status: str = "pending"
 
 
@@ -66,7 +66,7 @@ class AuditEntry(BaseModel):
     agent_name: str = ""
     message: str = ""
     metadata: dict[str, Any] = Field(default_factory=dict)
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
 
     def to_dict(self) -> dict[str, Any]:
         return self.model_dump()
@@ -76,7 +76,7 @@ class AuditTrail(BaseModel):
     trail_id: str
     bundle_id: str
     entries: list[AuditEntry] = Field(default_factory=list)
-    started_at: datetime = Field(default_factory=datetime.utcnow)
+    started_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
     completed_at: Optional[datetime] = None
 
     def add_entry(self, entry: AuditEntry) -> None:
@@ -99,4 +99,4 @@ class SynthesisOutput(BaseModel):
     human_review_required: bool = False
     review_fields: list[str] = Field(default_factory=list)
     rag_context_used: bool = False
-    completed_at: datetime = Field(default_factory=datetime.utcnow)
+    completed_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))

@@ -6,7 +6,7 @@ An end-to-end system that ingests, parses, and analyzes commercial insurance sub
 
 ## What It Does
 
-Takes messy multi-document insurance submissions and produces an underwriting memo with ACCEPT / REFER / DECLINE recommendation:
+Takes messy multi-document insurance submissions (ACORD XML, broker JSON, loss runs, SOVs, inspection reports, **Excel spreadsheets, scanned PDFs**) and produces an underwriting memo with ACCEPT / REFER / DECLINE recommendation. All PII/PHI is **automatically redacted** before any data reaches the LLM.
 
 ```
 Submission → Classify → Parse → Merge → Reconcile → RAG → Agents → UW Memo
@@ -95,7 +95,7 @@ check_human_review → (human_review | query_rag) → synthesize → audit
 - `check_human_review` routes to `human_review` (wait) or `query_rag` (continue)
 - `MemorySaver` checkpointer for state persistence
 
-### 7 Document Parsers
+### 10 Document Parsers
 
 | Parser | Input | Output |
 |--------|-------|--------|
@@ -104,6 +104,8 @@ check_human_review → (human_review | query_rag) → synthesize → audit
 | Loss Run | Markdown with **bold** fields | Claims with dates, amounts, statuses, causes |
 | SOV | Pipe tables or key:value | Buildings, BPP, inventory, fleet schedules |
 | Inspection Report | Free text/markdown | Construction, protection, occupancy, recommendations |
+| **Excel** | `.xlsx` / `.csv` with merged cells | SOVs, coverage summaries, loss runs |
+| **OCR** | Scanned PDFs, PNG, JPG, TIFF | Text extraction via Unstructured.io / pdfminer |
 | Classifier | Auto-detects document type | Routing to correct parser |
 | Supplemental | Generic text | Extracted chunks with metadata |
 
@@ -114,9 +116,14 @@ check_human_review → (human_review | query_rag) → synthesize → audit
 - **In-Memory** (default) — Char-n-gram TF-IDF in 512-dimensional space, zero dependencies
 - **pgvector** (production) — PostgreSQL with pgvector extension, 1536-d OpenAI embeddings
 
-### Entity Deduplication
+### Agent Execution Modes
 
-Char-n-gram embedding with 0.85 cosine similarity threshold — resolves duplicate named insureds, brokers, and locations across documents.
+Parallel analysis supports three backends:
+- **Celery** (distributed) — for enterprise batch processing (set `use_celery=True`)
+- **ThreadPoolExecutor** (4 workers) — default single-server mode
+- **Sequential** — deterministic debugging
+
+### Entity Deduplication
 
 ### MCP Server
 
@@ -128,12 +135,37 @@ FastMCP server with SSE transport on `:8010`:
 
 Compatible with Claude Desktop, Cursor, VS Code, and any MCP client.
 
+### PII / PHI Redaction
+
+All PII/PHI is automatically detected and redacted before any data reaches the LLM:
+
+- **Regex-based** (zero-dependency) — SSNs, emails, phone numbers, credit cards, DOBs, names with titles, addresses, medical diagnoses
+- **Optional Presidio** — Microsoft Presidio Analyzer for ML-powered entity recognition
+- **Partial masking** — SSNs show last 4 digits (`***-**-1234`), emails show domain
+- **`RedactedLLMClient`** — drop-in replacement for `LLMClient` that redacts all prompts automatically
+
+### Distributed Task Queue (Celery)
+
+Six-agent parallel analysis can run across multiple worker nodes:
+
+| Mode | When to Use |
+|------|-------------|
+| **Celery** (distributed) | Production — 500+ renewal batches, horizontal scaling |
+| **ThreadPoolExecutor** (4 workers) | Default — single-server, moderate volume |
+| **Sequential** | Debugging — no parallelism overhead |
+
+```bash
+# Start Celery workers
+celery -A insureflow.tasks.celery_app worker -Q agents -l info
+celery -A insureflow.tasks.celery_app worker -Q pipeline -l info
+```
+
 ### MLOps Evaluation Suite
 
 - **Ragas** — Faithfulness, answer relevancy, context precision, context recall
 - **Giskard** — Bias, robustness, safety scanning
 - **Consolidated Report** — Custom scorer + Ragas + Giskard → verdict: DEPLOYMENT-READY / CONDITIONAL PASS / NEEDS IMPROVEMENT
-- **Score**: 88.9% precision, 96.3% recall, 3.7% hallucination (3 golden cases)
+- **13 Golden Cases** across 13 NAICS codes (chemical, food, healthcare, retail, tech, transportation, hospitality, agriculture, energy, construction, real estate, manufacturing)
 
 ## Quick Start
 
@@ -184,13 +216,21 @@ src/
     │   ├── json_parser.py        # Broker JSON parser
     │   ├── loss_run_parser.py    # Loss run parser
     │   ├── sov_parser.py         # Schedule of Values parser
-    │   └── report_extractor.py   # Inspection report parser
+    │   ├── report_extractor.py   # Inspection report parser
+    │   ├── excel_parser.py       # Excel (.xlsx/.csv) with merged cells
+    │   └── ocr.py               # OCR for scanned PDFs/images
     ├── rag/                 # RAG knowledge layer
     │   ├── guidelines.py         # 18 underwriting guidelines
     │   ├── vector_store.py       # In-memory + pgvector
     │   └── rag_agent.py          # RAG query agent
     ├── llm/                 # LLM client (OpenAI, Anthropic, vLLM)
     ├── mcp/                 # MCP server (FastMCP, SSE)
+    ├── redaction/           # PII/PHI detection & redaction
+    │   ├── detector.py          # Regex + Presidio PII scanner
+    │   └── redactor.py          # PII redactor with partial masking
+    ├── tasks/               # Celery distributed task queue
+    │   ├── celery_app.py        # Celery app (Redis broker)
+    │   └── agent_tasks.py       # Distributed agent execution
     ├── models/              # Pydantic models
     ├── entities/            # Entity deduplication
     ├── provenance/          # Data provenance
@@ -206,14 +246,14 @@ docs/
 evaluations/                 # MLOps suite
     ├── ragas_eval.py        # Ragas metrics
     ├── giskard_scan.py      # Giskard scan
-    ├── golden_dataset.py    # 3 golden test cases
+    ├── golden_dataset.py    # 13 golden test cases (13 NAICS codes)
     ├── scorer.py            # Custom scoring
     ├── runner.py            # Evaluation runner
     └── report.py            # Consolidated report
 examples/                    # Example data (3 carriers)
 scripts/
     └── init_db.sql          # Pgvector schema
-tests/                       # 153 pytest tests
+tests/                       # 153+ pytest tests
 ```
 
 ## Example Data
@@ -236,6 +276,8 @@ Three carrier submissions with multi-document bundles:
 | `EXPENSIVE_MODEL` | `gpt-4o` | Supervisor/UW decision model |
 | `ANTHROPIC_API_KEY` | — | Claude API key |
 | `DATABASE_URL` | — | pgvector connection string |
+| `CELERY_BROKER_URL` | `redis://localhost:6379/0` | Redis broker for Celery |
+| `PII_REDACTION` | `true` | Enable automatic PII/PHI redaction |
 
 **No API key needed** — all agents fall back to deterministic rule-based analysis.
 
@@ -259,5 +301,5 @@ docker-compose up --build
 
 ```bash
 python -m pytest tests/ -q
-# 153 passed
+# 153+ passed
 ```

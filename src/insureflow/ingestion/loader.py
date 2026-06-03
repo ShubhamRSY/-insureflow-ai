@@ -7,8 +7,10 @@ from uuid import uuid4
 from insureflow.ingestion.acord_parser import ACORDParser
 from insureflow.ingestion.chunker import DocumentChunker
 from insureflow.ingestion.classifier import DocumentClassifier
+from insureflow.ingestion.excel_parser import ExcelParser
 from insureflow.ingestion.json_parser import JSONBrokerParser
 from insureflow.ingestion.loss_run_parser import LossRunParser
+from insureflow.ingestion.ocr import OCRProcessor
 from insureflow.ingestion.report_extractor import InspectionReportExtractor
 from insureflow.ingestion.sov_parser import SOVParser
 from insureflow.models.submissions import (
@@ -28,6 +30,8 @@ class SubmissionLoader:
         self.report_extractor = InspectionReportExtractor()
         self.loss_run_parser = LossRunParser()
         self.sov_parser = SOVParser()
+        self.excel_parser = ExcelParser()
+        self.ocr_processor = OCRProcessor()
         self.classifier = DocumentClassifier()
         self.chunker = DocumentChunker()
 
@@ -39,6 +43,8 @@ class SubmissionLoader:
         json_payload: Optional[str] = None,
         loss_run: Optional[str] = None,
         schedule_of_values: Optional[str] = None,
+        excel_data: Optional[list[str]] = None,
+        pdf_paths: Optional[list[str]] = None,
         bundle_id: Optional[str] = None,
         auto_classify: bool = False,
         raw_docs: Optional[list[str]] = None,
@@ -111,6 +117,33 @@ class SubmissionLoader:
             sows = self.sov_parser.parse_structured(schedule_of_values)
             if bundle.structured:
                 bundle.structured.schedule_of_values = sows
+
+        if excel_data:
+            for i, data in enumerate(excel_data):
+                sub_id = f"{bundle.bundle_id}-excel-{i}"
+                is_csv = data.strip().startswith(",") or (
+                    "first_name" in data[:200].lower() and "," in data[:500]
+                )
+                if is_csv:
+                    parsed = self.excel_parser.parse_csv(data, sub_id)
+                else:
+                    parsed = self.excel_parser.parse(data, sub_id)
+                bundle.unstructured.append(parsed)
+
+                try:
+                    sows = self.excel_parser.parse_structured(data, sub_id)
+                    if sows and bundle.structured:
+                        bundle.structured.schedule_of_values.extend(sows)
+                except Exception:
+                    pass
+
+        if pdf_paths:
+            for path in pdf_paths:
+                sub_id = f"{bundle.bundle_id}-pdf-{len(bundle.unstructured)}"
+                parsed = self.ocr_processor.extract_text(path, sub_id)
+                doc_type = self.classifier.classify(parsed.raw_text, path)
+                parsed.document_type = doc_type.value
+                bundle.unstructured.append(parsed)
 
         if supplemental_docs:
             for i, doc_text in enumerate(supplemental_docs):

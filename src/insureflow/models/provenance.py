@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Optional
 
@@ -43,7 +43,7 @@ class ProvenanceNode(BaseModel):
     field_path: str
     value: Any
     source: DataSource
-    extracted_at: datetime = Field(default_factory=datetime.utcnow)
+    extracted_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
     confidence: float = 0.0
     verification_status: VerificationStatus = VerificationStatus.UNVERIFIED
     verified_against: list[str] = Field(default_factory=list)
@@ -79,7 +79,7 @@ class ProvenanceRecord(BaseModel):
     bundle_id: str
     nodes: dict[str, list[ProvenanceNode]] = Field(default_factory=dict)
     hierarchy: ProvenanceHierarchy = Field(default_factory=ProvenanceHierarchy)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
     resolved_at: Optional[datetime] = None
 
     def record_count(self) -> int:

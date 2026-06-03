@@ -18,21 +18,27 @@ from insureflow.models.agents import (
 )
 from insureflow.models.submissions import SubmissionBundle
 
-CONFLICT_RESOLUTION_PROMPT = """You are a senior underwriting supervisor. Review the findings from multiple specialist agents and resolve conflicts.
+CONFLICT_RESOLUTION_PROMPT = """\
+You are a senior underwriting supervisor. Review the findings from multiple \
+specialist agents and resolve conflicts.
 
 Agent findings:
 
 {agent_findings}
 
 Identify:
-1. Any direct conflicts between agents (e.g., one says low risk, another says high risk for the same aspect)
+1. Any direct conflicts between agents (e.g., one says low risk, another says \
+high risk for the same aspect)
 2. Findings that should be escalated in severity due to cross-agent patterns
-3. Findings that should be reduced in severity because they're mitigated by another agent's findings
+3. Findings that should be reduced in severity because they're mitigated by \
+another agent's findings
 
 For each conflict found, describe the resolution.
 
 Return JSON:
-{{"conflicts_resolved": [{{"between": [str], "issue": str, "resolution": str, "severity_adjustment": str}}], "escalated_findings": [str], "mitigated_findings": [str]}}
+{{"conflicts_resolved": [{{"between": [str], "issue": str, "resolution": str, \
+"severity_adjustment": str}}], "escalated_findings": [str], \
+"mitigated_findings": [str]}}
 """
 
 
@@ -53,29 +59,16 @@ class SupervisorAgent(BaseAgent):
         self,
         bundle: SubmissionBundle,
         parallel: bool = True,
+        use_celery: bool = False,
     ) -> UnderwritingMemo:
         start = time.time()
 
-        if parallel:
-            import concurrent.futures
-            with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
-                risk_future = pool.submit(self.risk_analyst.run, bundle)
-                loss_future = pool.submit(self.loss_run_analyst.run, bundle)
-                comp_future = pool.submit(self.compliance_agent.run, bundle)
-                fraud_future = pool.submit(self.fraud_detection.run, bundle)
-                agent_results = [
-                    risk_future.result(),
-                    loss_future.result(),
-                    comp_future.result(),
-                    fraud_future.result(),
-                ]
+        if use_celery:
+            agent_results = self._run_agents_celery(bundle)
+        elif parallel:
+            agent_results = self._run_agents_threadpool(bundle)
         else:
-            agent_results = [
-                self.risk_analyst.run(bundle),
-                self.loss_run_analyst.run(bundle),
-                self.compliance_agent.run(bundle),
-                self.fraud_detection.run(bundle),
-            ]
+            agent_results = self._run_agents_sequential(bundle)
 
         conflict_resolution = self._resolve_conflicts(agent_results)
 
@@ -94,6 +87,62 @@ class SupervisorAgent(BaseAgent):
         self._add_timing_to_memo(memo, agent_results, elapsed)
 
         return memo
+
+    def _run_agents_threadpool(self, bundle: SubmissionBundle) -> list[AgentResult]:
+        import concurrent.futures
+        with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
+            risk_future = pool.submit(self.risk_analyst.run, bundle)
+            loss_future = pool.submit(self.loss_run_analyst.run, bundle)
+            comp_future = pool.submit(self.compliance_agent.run, bundle)
+            fraud_future = pool.submit(self.fraud_detection.run, bundle)
+            return [
+                risk_future.result(),
+                loss_future.result(),
+                comp_future.result(),
+                fraud_future.result(),
+            ]
+
+    def _run_agents_sequential(self, bundle: SubmissionBundle) -> list[AgentResult]:
+        return [
+            self.risk_analyst.run(bundle),
+            self.loss_run_analyst.run(bundle),
+            self.compliance_agent.run(bundle),
+            self.fraud_detection.run(bundle),
+        ]
+
+    def _run_agents_celery(self, bundle: SubmissionBundle) -> list[AgentResult]:
+        try:
+            from celery import group
+
+            from insureflow.tasks.agent_tasks import run_agent
+
+            bundle_data = bundle.model_dump()
+            agent_names = [
+                "RiskAnalystAgent",
+                "LossRunAnalystAgent",
+                "ComplianceAgent",
+                "FraudDetectionAgent",
+            ]
+
+            job = group(
+                run_agent.s(agent_name, bundle_data)
+                for agent_name in agent_names
+            )
+            result = job.apply_async()
+
+            raw_results = result.get(timeout=300, propagate=True)
+            return [AgentResult(**r) for r in raw_results]
+
+        except Exception as exc:
+            fallback = AgentResult(
+                agent_type=self.agent_type,
+                agent_name="SupervisorAgent",
+                success=False,
+                errors=[f"Celery execution failed, falling back to threadpool: {exc}"],
+            )
+            agent_results = self._run_agents_threadpool(bundle)
+            agent_results.append(fallback)
+            return agent_results
 
     def analyze_submission_structured(
         self,
@@ -188,7 +237,8 @@ class SupervisorAgent(BaseAgent):
                                     f"Category '{f1.category}' — "
                                     f"{r1.agent_name} says {f1.severity.value}, "
                                     f"{r2.agent_name} says {f2.severity.value}. "
-                                    f"Using higher severity: {max(f1.severity.value, f2.severity.value)}"
+                                    f"Using higher severity: "
+                                    f"{max(f1.severity.value, f2.severity.value)}"
                                 )
         return notes
 

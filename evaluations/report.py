@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -46,7 +46,7 @@ def generate_report(
 
     report: dict[str, Any] = {
         "report_title": "InsureFlow AI — Underwriting Pipeline Evaluation Report",
-        "generated_at": datetime.utcnow().isoformat(),
+        "generated_at": datetime.now(tz=timezone.utc).isoformat(),
         "summary": {
             "overall_verdict": _verdict(
                 precision=avg_p,

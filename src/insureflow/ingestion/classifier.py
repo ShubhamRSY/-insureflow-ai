@@ -27,6 +27,12 @@ class DocumentClassifier:
         r"survey\s+data\s+summary|engineer(?:ing)?\s+report|"
         r"physical\s+inspection|site\s+survey)"
     )
+    EXCEL_KEYWORDS = re.compile(
+        r"(?i)(sheet\s*\d|schedule\s+of\s+values|"
+        r"coverage\s+summary|exposure\s+summary|"
+        r"location\s+details?|claim\s+summary|"
+        r"underwriting\s+worksheet)"
+    )
 
     @classmethod
     def classify(cls, content: str, filename: str = "") -> DocumentType:
@@ -64,5 +70,9 @@ class DocumentClassifier:
 
         if loss_score >= 1:
             return DocumentType.LOSS_RUN
+
+        excel_score = len(cls.EXCEL_KEYWORDS.findall(content_stripped[:3000]))
+        if excel_score >= 2:
+            return DocumentType.SCHEDULE_OF_VALUES
 
         return DocumentType.SUPPLEMENTAL
