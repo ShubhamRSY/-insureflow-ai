@@ -1,0 +1,111 @@
+========================================================================================================
+                        VERIFICATION OF EMPLOYMENT  (VOE)
+                        UNIFORM RESIDENTIAL LOAN APPLICATION FORM 1005
+========================================================================================================
+
+    TO: Illinois Mutual Insurance Company - HR Department
+         2500 Corporate Crossing Drive
+         Springfield, IL 62703
+         Fax: (217) 555-6743
+
+    FROM: InsureFlow National Mortgage - Underwriting Dept.
+          1200 Commerce Drive, Springfield, IL 62701
+          Fax: (217) 555-0191 | Phone: (217) 555-0199
+
+    DATE: January 28, 2026
+    LOAN #: IF-CASHOUT-01252026-041
+
+    RE: EMPLOYEE: PATEL, LISA MARIE
+        SSN: XXX-XX-2291
+        DOB: 06/18/1980
+
+========================================================================================================
+SECTION 1: EMPLOYMENT STATUS (TO BE COMPLETED BY EMPLOYER)
+========================================================================================================
+
+    Date of Verification: 01/28/2026
+
+    1.  Is the above-named individual currently employed by your organization?
+        X YES      ___ NO
+        
+    2.  If yes, employment start date: 01/15/2018
+        Total years of service: 8 years
+        
+    3.  Current position: Director of Marketing
+        Department: Marketing & Communications
+        Status: Exempt / Salaried / Full-Time
+        Position is full-time, permanent. No plans for departure.
+
+    4.  Is the position:    X Full-Time  ___ Part-Time  ___ Temporary  ___ Seasonal
+
+    5.  Current base salary: $165,000.00 per year
+        
+        Pay frequency: X Semi-Monthly
+        Gross per pay period: $6,875.00
+
+    6.  YTD Earnings for 2026 (as of 01/31/2026): $13,750.00
+        YTD Earnings for 2025: $164,800.00
+        YTD Earnings for 2024: $162,311.00
+        YTD Earnings for 2023: $158,440.00
+        
+        [STAMP]: INCOME CONSISTENT - 3 YEAR VERIFICATION COMPLETE
+
+    7.  Additional compensation:
+        Annual Bonus: Target 10% of salary. 
+        2025 Bonus Paid: $16,500.00 (10% target achieved)
+        2024 Bonus Paid: $14,700.00 (9% - slightly below target)
+        Range $12K-$18K per year.
+        
+        NOTE: Bonus variable. Do NOT include in qualifying income per UW.
+        Use base salary only: $165,000.
+
+    8.  Next performance review: March 2026 (annual). Expect 3-4% merit increase.
+
+========================================================================================================
+SECTION 2: EMPLOYMENT HISTORY & NOTES
+========================================================================================================
+
+    Previous positions held:
+    - Senior Marketing Manager (01/2018 - 06/2021) - Promoted to Director 06/2021
+    - No other positions at this company
+    
+    Absence record: Excellent. < 3 sick days per year.
+
+    "Lisa is one of our most senior marketing leaders. She has been instrumental
+     in our brand repositioning. Her role is secure and she is highly valued."
+     
+     - Karen Delaney, SVP Human Resources (phone confirmation 01/28/2026 @ 10:00 AM)
+
+========================================================================================================
+SECTION 3: CERTIFICATION
+========================================================================================================
+
+    I certify that the above information is true and correct to the best of my knowledge.
+
+    _________________________________
+    [SIGNATURE]  Karen Delaney
+    Senior Vice President - Human Resources
+    Illinois Mutual Insurance Company
+    Date: 01/28/2026
+
+
+    FOR HR USE ONLY:
+    Verification ID: IMIC-VOE-2026-0128-2291
+    Verified by: Karen Delaney, SVP HR
+    Written VOE faxed back + phone confirmation performed.
+
+========================================================================================================
+INTERNAL UW USE:
+    VOE confirmed. 8 years stable employment. Director-level position.
+    Base salary $165K is primary qualifying income.
+    Bonus $12-18K noted but NOT used for qualifying.
+    "Position is full-time, permanent. No plans for departure."
+    - JW 01/28/2026
+========================================================================================================
+
+[FAX HEADER - TRANSMISSION LOG]
+FROM: 217-555-6743             TO: 217-555-0191
+PAGES: 1                        DATE: 01/28/2026
+TIME: 10:30 AM                  STATUS: OK
+
+[STAMP]: VERIFIED - EMPLOYMENT CONFIRMED - VOE ACCEPTABLE

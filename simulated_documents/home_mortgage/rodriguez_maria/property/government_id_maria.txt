@@ -1,0 +1,48 @@
+================================================================================
+               STATE OF ILLINOIS - DRIVER'S LICENSE / STATE ID
+                    ILLINOIS SECRETARY OF STATE - DMV
+================================================================================
+
+  [PHOTO]  [PHOTO]  [PHOTO]
+  [PLACE]  [PLACE]  [PLACE]
+  [HOLDER] [HOLDER] [HOLDER]
+
+  LICENSE NUMBER:    I123-8872-4419
+  EXPIRATION DATE:   03/15/2028
+  CLASS:             D
+  ISSUED:            03/15/2022
+  STATUS:            VALID - NO RESTRICTIONS
+
+================================================================================
+  LAST NAME:           RODRIGUEZ
+  FIRST NAME:          MARIA
+  MIDDLE NAME:         GARCIA
+  SUFFIX:
+
+  ADDRESS:             789 Elm Street, Apt 2B
+                       Springfield, IL 62704
+                       SANGAMON COUNTY
+
+  DATE OF BIRTH:       03/15/1998
+  SEX:                 F
+  HEIGHT:              5'04"
+  WEIGHT:              135 lbs
+  EYES:                BROWN
+  HAIR:                BROWN
+  ORGAN DONOR:         YES
+  VETERAN:             NO
+
+================================================================================
+  [stamp: "SCANNED COPY - ORIGINAL PRESENTED BY BORROWER"]
+  [stamp: "DL VERIFIED VIA IL S.O.S. DATABASE 02/24/2026 - RECORD MATCHES"]
+
+  [underwriter note:]
+  "ID verified. Name matches credit report. DOB matches.
+   Address matches property address - she currently lives here
+   as a renter. SSN verified via TALX. - JM"
+
+  [barely legible handwritten note:]
+  "scanned both sides. back has barcode and organ donor sticker.
+   looks legit."
+
+================================================================================

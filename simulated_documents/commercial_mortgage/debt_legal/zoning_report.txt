@@ -1,0 +1,38 @@
+══════════════════════════════════════════════════════════════════════════════
+             CITY OF SPRINGFIELD - ZONING COMPLIANCE REPORT
+══════════════════════════════════════════════════════════════════════════════
+
+Property: 5678 Commerce Boulevard, Springfield, IL 62702
+Parcel:   14-24-789-123-0000
+Current Zoning: B-3 (General Commercial District)
+Zoning Code: Springfield Municipal Code Chapter 14, Article III
+
+CURRENT USE: Mixed-use commercial (3 retail + 4 office suites) ── COMPLIANT
+
+  Use                       Permitted?   Condition
+  Retail (food service)     YES          B-3 permitted use
+  Retail (dry cleaning)     YES          B-3 permitted use (w/ ventilation)
+  Office (insurance)        YES          B-3 permitted use
+  Office (dental)           YES          B-3 permitted use (w/ waste mgmt)
+  Office (legal)            YES          B-3 permitted use
+
+PARKING: Currently 48 spaces (code requires 4/1,000sf office + 5/1,000sf
+retail = 28,400sf total). Required: 118. Required with shared parking
+credit: 84. PROVIDED: 48. ⚠ SHORT 36 spaces. Variance needed for
+redevelopment. Existing nonconforming.
+
+SETBACKS:
+  Front (Commerce Blvd):  22 ft (required 20 ft) ─── COMPLIANT
+  Side (East):           12 ft (required 10 ft) ─── COMPLIANT
+  Side (West):           15 ft (required 10 ft) ─── COMPLIANT
+  Rear:                  30 ft (required 25 ft) ─── COMPLIANT
+  FAR:                   0.23 (max 0.50) ─── COMPLIANT
+  Building Height:       2 stories / 28 ft (max 45 ft) ─── COMPLIANT
+
+SIGNAGE: Existing monument sign (6ft) ─── COMPLIANT per B-3 code.
+Tenant blade signs ─── PERMITTED (none currently noncompliant).
+
+FLOOD ZONE: FEMA Zone X (no flood insurance required) ─── COMPLIANT
+
+  [STAMP] ZONING COMPLIANCE CONFIRMED - CITY OF SPRINGFIELD PLANNING DEPT
+══════════════════════════════════════════════════════════════════════════════

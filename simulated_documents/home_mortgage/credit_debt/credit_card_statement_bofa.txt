@@ -1,0 +1,74 @@
+══════════════════════════════════════════════════════════════════════════════
+      BANK OF AMERICA® TRAVEL REWARDS - CREDIT CARD STATEMENT
+══════════════════════════════════════════════════════════════════════════════
+
+  Account Owner:        John A. Thompson
+  Account Number:       XXXX-XXXX-7762
+  Statement Date:       April 11, 2026
+  Payment Due Date:     May 6, 2026
+
+══════════════════════════════════════════════════════════════════════════════
+ACCOUNT SUMMARY
+══════════════════════════════════════════════════════════════════════════════
+
+  Previous Balance:                          $6,800.00
+  Payments/Credits:                          -$130.00
+  Purchases:                                 +$542.81
+  Fees Charged:                              $0.00
+  Interest Charged:                          $122.18
+  ═══════════════════════════════════════════════
+  New Balance:                               $7,334.99
+
+  Credit Limit:                              $10,000.00
+  Available Credit:                          $2,665.01
+  Utilization:                               ⚠ 73% - HIGH
+  Cash APR:                                  29.99%
+
+══════════════════════════════════════════════════════════════════════════════
+PAYMENT INFO
+══════════════════════════════════════════════════════════════════════════════
+
+  Minimum Payment Due:                       $130.00
+  Total Balance:                             $7,334.99
+  >>>> WARNING: CARRYING HIGH BALANCE. INTEREST CHARGED THIS MONTH:
+       $122.18. RECOMMEND PAYING DOWN BALANCE TO AVOID FURTHER
+       INTEREST AND UTILIZATION IMPACT ON CREDIT SCORE. <<<<
+
+══════════════════════════════════════════════════════════════════════════════
+INTEREST CHARGE DETAIL
+══════════════════════════════════════════════════════════════════════════════
+
+  Purchases APR:          24.49% Variable
+  Interest on Purchases:  $122.18
+  ═══════════════════════════════════════════
+  Total Interest:         $122.18
+
+══════════════════════════════════════════════════════════════════════════════
+TRANSACTIONS
+══════════════════════════════════════════════════════════════════════════════
+
+Date        Description                                          Amount
+──────────  ───────────────────────────────────────────────────  ─────────
+03/15/2026  AUTOPAY - THANK YOU                                  -$130.00
+03/18/2026  UNITED AIRLINES - TICKETS (CHICAGO TO NY - MAR 30)   +$412.00
+03/20/2026  MARRIOTT HOTEL - NYC                                 +$689.00
+            [NOTE: Business trip - employer to reimburse]
+03/22/2026  UBER TRIPS - NYC                                     +$87.00
+03/25/2026  RESTAURANT - CARMINE'S NYC                           +$124.50
+03/28/2026  BEST BUY - AIRPODS PRO                               +$249.99
+04/02/2026  AMAZON.COM - HOUSEHOLD                               +$89.32
+04/05/2026  WALGREENS                                            +$23.00
+04/08/2026  NETFLIX                                              +$15.99
+04/10/2026  SPOTIFY                                              +$9.99
+══════════════════════════════════════════════════════════════════════════════
+
+══════════════════════════════════════════════════════════════════════════════
+REWARDS SUMMARY
+══════════════════════════════════════════════════════════════════════════════
+
+  Travel Points Earned This Period:          2,892 pts
+  Year-to-Date Points:                       8,123 pts
+  Total Points Available:                    24,500 pts (~$245 value)
+
+  Note: 3x points on travel - $1,101.00 in travel purchases = 3,303 pts
+══════════════════════════════════════════════════════════════════════════════

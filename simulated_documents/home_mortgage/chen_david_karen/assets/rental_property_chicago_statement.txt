@@ -1,0 +1,152 @@
+======================================================================
+               RENTAL PROPERTY INCOME STATEMENT
+                    PREPARED FOR UNDERWRITING
+======================================================================
+PROPERTY:  4800 Lake Shore Drive #7B
+           Chicago, IL 60615
+           Cook County
+
+OWNER:     David Chen & Karen Chen (Joint Tenants)
+           1242 Hillcrest Drive
+           Springfield, IL 62704
+
+PROPERTY TYPE: Condominium (2 BR / 2 BA, ~1,100 SF)
+DATE ACQUIRED: May 15, 2018
+PURCHASE PRICE: $185,000 (condo)
+CURRENT ESTIMATED VALUE: $200,000
+======================================================================
+
+======================================================================
+TENANT INFORMATION
+======================================================================
+TENANT:    Amanda Foster (SINGLE, PROFESSIONAL)
+EMPLOYER:  Northwestern Memorial Hospital (Nurse)
+CREDIT:    720+ (verified upon lease signing)
+LEASE TERM: 09/01/2024 - 08/31/2026 (renewed, 2nd term)
+MONTHLY RENT: $1,400.00 (increased from $1,300 in prior lease)
+RENT DUE: 1st of each month
+SECURITY DEPOSIT: $1,400.00 (held in IL interest-bearing account)
+
+RENT HISTORY:
+  Jan 2026 - PAID ON TIME
+  Feb 2026 - PAID ON TIME
+  Mar 2026 - PAID ON TIME (3/1/26, check #2041)
+  [HANDWRITTEN: "Amanda is a good tenant. Always pays between the 
+   1st and 3rd. Never late in 2 years. - PM"]
+
+======================================================================
+PROPERTY MANAGEMENT
+======================================================================
+COMPANY:   Windy City Property Management LLC
+CONTACT:   Maria Santos, Property Manager
+PHONE:     (312) 555-0147
+FEE:       12% of monthly rent collected ($168/mo)
+           + $25/mo administrative fee
+           + Lease renewal fee: $150 (once per renewal)
+
+SERVICES INCLUDE:
+  - Tenant screening and placement
+  - Rent collection
+  - Maintenance coordination
+  - Quarterly inspections
+  - Eviction handling (if needed - not used)
+  - Financial reporting
+
+======================================================================
+MONTHLY CASH FLOW ANALYSIS
+======================================================================
+  GROSS INCOME:
+    Scheduled Rent:                               $1,400.00
+    Other Income (laundry, parking):                $0.00
+    Late Fees Collected:                            $0.00
+                                                   ----------
+    TOTAL GROSS MONTHLY INCOME:                  $1,400.00
+
+  OPERATING EXPENSES:
+    Property Management (12%):                     $168.00
+    Mgmt Admin Fee:                                 $25.00
+    HOA Dues (Condo Association):                  $350.00
+    [NOTE: Includes building insurance, water, trash, common area maint]
+    Property Insurance (policy separate):          $100.00/month
+    Property Taxes (annual $4,800 / 12):           $400.00/month
+    Repairs/Maintenance Reserve:                   $50.00/month
+    [HANDWRITTEN: "Actual repairs YTD 2026: none yet. 2024: water 
+     heater replacement $1,400. 2025: dishwasher $850."]
+                                                    ---------
+    TOTAL MONTHLY OPERATING EXPENSES:            $1,093.00
+
+  NET OPERATING INCOME (NOI):                      $307.00
+                                                    =========
+
+  DEBT SERVICE:
+    First Mortgage (Chase, 30-yr fixed, orig 2018):
+      Balance: ~$131,000 (orig $148K)
+      Payment (P&I + T&I): $1,100.00/month
+      [NOTE: $800 P&I + $300 escrow for taxes/insurance]
+                                                    
+  PRE-TAX CASH FLOW:                              -$793.00
+  (Because the mortgage payment is $1,100 vs NOI of $307)
+  
+  ACTUAL CASH FLOW IMPACT ON BORROWERS: 
+  They pay $793/mo out of pocket to cover the rental.
+  
+  [UW NOTE: For Fannie Mae, we use Schedule E net income. If Schedule E 
+   shows a loss, we can add back depreciation but NOT mortgage interest 
+   (since that's a real expense). The current Schedule E shows $3,600 
+   net which appears to have factored out depreciation and mortgage 
+   interest differently. Using $3,600/yr = $300/mo positive income 
+   for DTI purposes. - Underwriter]
+  
+======================================================================
+PROPERTY TAX BILL - 2025 (PAID 2025)
+======================================================================
+  COOK COUNTY TREASURER
+  Property: 4800 Lake Shore Dr #7B, Chicago, IL 60615
+  PIN: 17-29-400-028-0000
+  Assessed Value: $76,000 (at 38% of market = $200K market)
+  Tax Rate: ~6.32%
+  
+  TAX YEAR 2024 (PAID IN 2025):
+    First Installment (due 3/1/25):             $2,200.00
+    Second Installment (due 8/1/25):             $2,600.00
+                                                  ----------
+    TOTAL:                                       $4,800.00
+                                                  ==========
+    
+    [HANDWRITTEN: "Cook County taxes. Always going up. Was $4,400 in 2023, 
+     $4,600 in 2024, now $4,800. 3% annual increase. Ugh."]
+
+======================================================================
+INSURANCE
+======================================================================
+  LIBERTY MUTUAL - RENTAL PROPERTY POLICY
+  Policy #: RP-8472-0191-22
+  Premium: $1,200/year ($100/mo) - PAID IN FULL 01/01/2026
+  Coverage:
+    - Dwelling: $200,000 (replacement cost)
+    - Liability: $500,000
+    - Loss of Rent: $25,000
+  
+======================================================================
+  ==============================================================
+  | STICKY NOTE (GREEN):                                        |
+  |                                                             |
+  |  RENTAL - Chicago condo                                    |
+  |                                                             |
+  |  Analysis:                                                  |
+  |  - Rent $1,400 vs. PITI + HOA = ~$1,825/mo                |
+  |  - Negative cash flow ~$425/mo (before maintenance)        |
+  |  - NOI ~$307/mo (before debt service)                      |
+  |  - DTI: For UW, add $300/mo (Schedule E $3,600/12)        |
+  |                                                             |
+  |  The property is slightly underwater per month but the      |
+  |  borrowers can clearly afford it. Tenant is solid.         |
+  |  Chicago condo market stabilized. No distress.             |
+  |                                                             |
+  |  Recommendation: Include $3,600 net income on 1003.        |
+  |  Schedule E supports this.                                  |
+  |                                                             |
+  |  - UW 4/2/26                                                |
+  ==============================================================
+
+======================================================================

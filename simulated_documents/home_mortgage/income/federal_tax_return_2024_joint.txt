@@ -1,0 +1,119 @@
+================================================================================
+                    U.S. INDIVIDUAL INCOME TAX RETURN
+                        FORM 1040 (2024) - OMB No. 1545-0074
+================================================================================
+
+FILING STATUS:  Married Filing Jointly
+
+PRIMARY TAXPAYER:
+  Name:             John A. Thompson
+  SSN:              XXX-XX-4567
+  Occupation:       Software Engineer
+
+SPOUSE:
+  Name:             Sarah M. Thompson
+  SSN:              XXX-XX-7890
+  Occupation:       Graphic Designer
+
+HOME ADDRESS:
+  1234 Maple Drive
+  Springfield, IL 62701
+
+================================================================================
+INCOME                                                             AMOUNT
+================================================================================
+  Line 1:  Wages, salaries, tips (John - W-2)                     $112,500.00
+  Line 1:  Wages, salaries, tips (Sarah - W-2)                    $0.00
+  Line 3:  Business income (Schedule C - Sarah)                    $68,450.00
+  Line 2b:  Taxable interest (Bank of Springfield savings)          $1,240.00
+  Line 3a:  Qualified dividends (Vanguard account)                  $2,380.00
+  Line 4a:  IRA distributions                                       $0.00
+  Line 4b:  Pensions and annuities                                  $0.00
+  Line 5:  Social Security benefits                                 $0.00
+  Line 6:  Capital gain or loss (Schedule D)                        $1,850.00
+  -------------------------------------------------------------------------
+  TOTAL INCOME (Line 9)                                            $186,420.00
+
+================================================================================
+ADJUSTED GROSS INCOME (Line 11)                                    $186,420.00
+
+================================================================================
+ADJUSTMENTS TO INCOME:
+  Educator expenses                                                 $0.00
+  HSA deduction                                                     $0.00
+  IRA deduction (John)                                              $7,000.00
+  IRA deduction (Sarah)                                             $7,000.00
+  Self-employed health insurance deduction                          $6,800.00
+  1/2 Self-employment tax deduction (Sarah)                         $4,835.00
+  -------------------------------------------------------------------------
+  TOTAL ADJUSTMENTS                                                $25,635.00
+
+================================================================================
+ADJUSTED GROSS INCOME (Line 11)                                    $160,785.00
+
+================================================================================
+STANDARD DEDUCTION                                                 $29,200.00
+  (Married Filing Jointly)
+
+QUALIFIED BUSINESS INCOME DEDUCTION (Line 13)                      $5,200.00
+
+TAXABLE INCOME (Line 15)                                           $126,385.00
+
+================================================================================
+TAX AND CREDITS:
+  Tax (from Tax Table)                                              $21,187.00
+  Child Tax Credit                                                  $0.00
+  -------------------------------------------------------------------------
+  TOTAL TAX (Line 24)                                               $21,187.00
+
+================================================================================
+PAYMENTS:
+  Federal tax withheld (John W-2)                                   $18,750.00
+  Estimated tax payments                                            $0.00
+  Amount paid with extension                                        $0.00
+  -------------------------------------------------------------------------
+  TOTAL PAYMENTS                                                    $18,750.00
+
+================================================================================
+AMOUNT YOU OWE (Line 37)                                           $2,437.00
+================================================================================
+
+================================================================================
+SCHEDULE C (Form 1040) -  Profit or Loss From Business
+  Business: Thompson Design Studio
+  Principal Code: 541430 - Graphic Design Services
+================================================================================
+
+INCOME:
+  Gross receipts or sales                                          $72,500.00
+  Returns and allowances                                            $0.00
+  Cost of goods sold                                                $0.00
+  -------------------------------------------------------------------------
+  GROSS INCOME                                                      $72,500.00
+
+EXPENSES:
+  Advertising and promotion                                         $1,200.00
+  Office expenses (software subscriptions)                          $2,850.00
+  Home office deduction (simplified method)                         $1,500.00
+  Supplies                                                          $650.00
+  Depreciation (computer equipment)                                 $1,150.00
+  Business insurance                                                $800.00
+  Meals (50% deductible)                                            $600.00
+  Travel                                                            $450.00
+  -------------------------------------------------------------------------
+  TOTAL EXPENSES                                                    $9,200.00
+
+  Tentative profit                                                  $63,300.00
+  Business use of home                                              $0.00
+  -------------------------------------------------------------------------
+  NET PROFIT (Line 31)                                              $63,300.00
+
+================================================================================
+SCHEDULE SE - SELF-EMPLOYMENT TAX
+  Net profit from Schedule C                                        $63,300.00
+  Social Security portion (92.35% x 12.4%)                          $7,247.00
+  Medicare portion (92.35% x 2.9%)                                  $1,697.00
+  -------------------------------------------------------------------------
+  TOTAL SELF-EMPLOYMENT TAX                                         $8,944.00
+  Deductible portion (1/2)                                          $4,472.00
+================================================================================

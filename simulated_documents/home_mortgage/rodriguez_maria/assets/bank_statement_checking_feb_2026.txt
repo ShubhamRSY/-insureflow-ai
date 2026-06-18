@@ -1,0 +1,75 @@
+================================================================================
+                         BANK OF SPRINGFIELD
+                       MONTHLY ACCOUNT STATEMENT
+
+  Account Type:    Free Checking
+  Account Number:  XXXX3314
+  Period:          February 1, 2026 - February 28, 2026
+  Customer:        MARIA G RODRIGUEZ
+                   789 Elm St Apt 2B, Springfield IL 62704
+
+================================================================================
+  SUMMARY OF ACTIVITY
+  --------------------------------------------------------------------------------
+  Beginning Balance (02/01)                                   $4,207.55
+  Total Deposits (+)                                          $6,211.44
+  Total Withdrawals (-)                                       $3,619.18
+  Ending Balance (02/28)                                      $6,799.81
+  --------------------------------------------------------------------------------
+
+================================================================================
+  TRANSACTION HISTORY
+================================================================================
+  DATE       DESCRIPTION                                          AMOUNT        BALANCE
+  --------   --------------------------------------------       ----------     ----------
+  02/01      Beginning Balance                                                    4,207.55
+  02/01      ATM WITHDRAWAL - BANK SPRINGFIELD ATM 001          (200.00)       4,007.55
+  02/02      DEBIT CARD - TARGET SPRINGFIELD IL                  (87.32)       3,920.23
+  02/02      DEBIT CARD - STARBUCKS SPRINGFIELD IL               (5.75)        3,914.48
+  02/05      PAYROLL - SPRINGFIELD SD 186                     2,000.00        5,914.48
+  02/06      DEBIT CARD - WALMART SPRINGFIELD IL                 (124.56)      5,789.92
+  02/07      ONLINE TRANSFER TO SAVINGS XXXX7712                (300.00)       5,489.92
+  02/08      DEBIT CARD - SHELL GAS SPRINGFIELD IL               (42.00)       5,447.92
+  02/10      DEBIT CARD - NETFLIX SUBSCRIPTION                   (15.99)       5,431.93
+  02/10      DEBIT CARD - SPOTIFY PREMIUM                        (11.99)       5,419.94
+  02/12      ELECTRONIC PAYMENT - CAPITAL ONE CARD               (85.00)       5,334.94
+  02/12      ONLINE TRANSFER TO SAVINGS XXXX7712                (250.00)       5,084.94
+  02/13      DEBIT CARD - JERSEY MIKE'S SPRINGFIELD IL           (12.45)       5,072.49
+  02/15      *** WIRE DEPOSIT - MARTA RODRIGUEZ ***           3,300.00        8,372.49
+               (REF: WIRE XXXXXX7712 - CHASE BANK)
+               ** GIFT FUNDS FOR DOWN PAYMENT **
+  02/15      DEBIT CARD - AMAZON.COM                            (39.99)        8,332.50
+               (school supplies for tutoring)
+  02/16      DEBIT CARD - HYVEE SPRINGFIELD IL                  (68.23)        8,264.27
+  02/17      ONLINE TRANSFER TO SAVINGS XXXX7712                (400.00)       7,864.27
+  02/19      PAYROLL - SPRINGFIELD SD 186                     2,000.00        9,864.27
+  02/19      ATM WITHDRAWAL - BANK SPRINGFIELD ATM 003          (100.00)       9,764.27
+  02/20      DEBIT CARD - DOLLAR TREE SPRINGFIELD IL             (8.50)        9,755.77
+  02/21      DEBIT CARD - PANERA BREAD SPRINGFIELD IL            (14.30)       9,741.47
+  02/22      ELECTRONIC PAYMENT - NELNET STUDENT LOANS           (85.00)       9,656.47
+  02/24      CHECK #1042 - CASH (PERSONAL)                      (50.00)       9,606.47
+  02/25      ATM WITHDRAWAL - BANK SPRINGFIELD ATM 001          (40.00)        9,566.47
+  02/26      RENT PAYMENT - LAKESIDE REALTY TRUST             (1,100.00)      8,466.47
+               (check #1043) *** CURRENT RENTAL ***
+  02/27      DEBIT CARD - ALDI SPRINGFIELD IL                   (57.88)        8,408.59
+  02/28      DEBIT CARD - CVS PHARMACY SPRINGFIELD IL            (22.43)       8,386.16
+  02/28      ONLINE TRANSFER TO SAVINGS XXXX7712                (350.00)       8,036.16
+  02/28      ATM WITHDRAWAL - BANK SPRINGFIELD ATM 002          (100.00)       7,936.16
+  02/28      DEBIT CARD - UBER EATS                             (21.35)        7,914.81
+  02/28      SERVICE CHARGE - MONTHLY MAINTENANCE FEE            (15.00)       6,799.81
+               [note: fee waived if min balance >$5K]
+
+================================================================================
+  ENDING BALANCE: $6,799.81
+================================================================================
+
+  [handwritten note - loan processor:]
+  "Gift wire of $3,300 from Marta Rodriguez confirmed received
+   02/15/2026. Source: Chase Bank. Copy of wire confirmation
+   attached. - Initials JM"
+
+  [stamp:]
+  *** VERIFIED AGAINST GIFT LETTER. FUNDS SEASONED 13 DAYS
+      AS OF 02/28/2026. ACCEPTABLE. - UW ***
+
+================================================================================

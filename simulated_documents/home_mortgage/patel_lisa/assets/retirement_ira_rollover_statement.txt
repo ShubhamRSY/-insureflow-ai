@@ -1,0 +1,188 @@
+    ========================================================================
+                              VANGUARD
+                   Individual Retirement Account (IRA)
+                      Beneficiary: To be updated
+
+    Account Number:        IRA-XXXXXXXX3400
+    Account Type:          Rollover IRA — Traditional
+    Statement Date:        April 30, 2026
+
+    BORROWER:              Lisa M. Sullivan (f/k/a Patel)
+                           555 Lake Shore Drive, Unit 12A
+                           Springfield, IL 62704
+
+    INITIAL FUNDING:       $335,000.00 on 01/12/2026
+                           (Qualified Domestic Relations Order transfer from
+                           Dr. Michael J. Patel 401(k) Plan)
+
+    ========================================================================
+                          ACCOUNT VALUE SUMMARY
+    ========================================================================
+
+    Beginning Balance (01/12/2026 — account opened):              $335,000.00
+    Contributions (YTD):                                           $0.00
+    Dividends & Capital Gains (YTD):                              $3,780.42
+    Withdrawals (YTD):                                            $0.00
+    Gain/Loss (YTD):                                              $1,419.58
+
+    Current Balance as of 04/30/2026:                            $340,200.00
+
+    ========================================================================
+                          HOLDINGS ALLOCATION
+    ========================================================================
+
+    Ticker    Description                          Shares      Price      Value      % of Account
+    ─────────────────────────────────────────────────────────────────────────────────────────────
+    VTI       Vanguard Total Stock Market ETF      340.00     $240.50   $81,770.00     24.03%
+              (US Large/Mid/Small Cap — Broad Market)
+
+    BND       Vanguard Total Bond Market ETF       480.00      $71.80   $34,464.00     10.13%
+              (US Investment Grade Bonds)
+
+    VXUS      Vanguard Total International Stock   980.00      $61.20   $59,976.00     17.63%
+              ETF (Developed + Emerging Markets)
+
+    VIG       Vanguard Dividend Appreciation ETF   215.00     $175.30   $37,689.50     11.08%
+              (Dividend Growth)
+
+    VTI (add'l) Vanguard Total Stock Market ETF   300.00     $240.50   $72,150.00     21.20%
+              (Additional lot — see note below)
+
+    BND (add'l) Vanguard Total Bond Market ETF    300.00      $71.80   $21,540.00      6.33%
+              (Additional lot)
+
+    Cash      Vanguard Federal Money Market Fund  32,610.50    $1.00    $32,610.50      9.59%
+              (VMFXX — Settlement Fund)
+
+    ─────────────────────────────────────────────────────────────────────────────
+    TOTAL:                                                             $340,200.00    100.00%
+    ========================================================================
+
+    ========================================================================
+                          TRANSACTION HISTORY
+    ========================================================================
+
+    Date        Description                                                  Amount
+    ───────────────────────────────────────────────────────────────────────────────
+    01/12/2026  INCOMING TRANSFER — QDRO ROLLOVER                           $335,000.00
+                FROM: DR. MICHAEL J. PATEL 401(K) PLAN
+                PLAN ADMINISTRATOR: FIDELITY (PLAN # 98765)
+                QDRO CASE #: 2024-DR-8821
+                REF: "TRANSFER FROM DR. MICHAEL PATEL 401K - QDRO"
+                TRANSFER TYPE: DIRECT TRUSTEE-TO-TRUSTEE
+                (NOT TAXABLE - QDRO EXEMPT PER IRC 402(e)(1)(A))
+
+    01/14/2026  INITIAL INVESTMENT ALLOCATION                      ($335,000.00)
+                ALLOCATION PER BORROWER DIRECTION
+                (SEE BELOW FOR INITIAL ALLOCATION)
+
+    01/15/2026  PURCHASED 500 SHARES VTI @ $237.20                 ($118,600.00)
+    01/15/2026  PURCHASED 780 SHARES BND @ $71.50                  ($55,770.00)
+    01/15/2026  PURCHASED 980 SHARES VXUS @ $60.80                ($59,584.00)
+    01/15/2026  PURCHASED 215 SHARES VIG @ $173.40                ($37,281.00)
+    01/15/2026  RETAINED IN VMFXX SETTLEMENT                       ($63,765.00)
+
+    02/03/2026  DIVIDEND REINVESTED (VTI)                              $340.00
+    02/03/2026  DIVIDEND REINVESTED (VXUS)                            $215.60
+    02/03/2026  DIVIDEND REINVESTED (BND)                            $285.00
+
+    02/28/2026  MARKET VALUE ADJUSTMENT (VTI +$1,200 / VXUS -$340
+                / BND -$85)                                            $775.00
+
+    03/02/2026  PURCHASED 140 SHARES VTI @ $241.00                ($33,740.00)
+                (Reinvested some settlement fund cash - market dip)
+
+    03/15/2026  DIVIDEND REINVESTED (VIG)                            $188.45
+
+    03/31/2026  QUARTER-END MARKET VALUE ADJUSTMENT                $1,280.35
+
+    04/01/2026  DIVIDEND REINVESTED (VMFXX)                          $402.22
+
+    04/15/2026  REBALANCED: SOLD $5,000 BND, PURCHASED
+                ADDITIONAL 20 SHARES VTI @ $239.80                   ($196.00)
+                (Net zero cost - rebalance within settlement)
+
+    04/28/2026  DIVIDEND REINVESTED (VTI)                            $290.00
+    04/28/2026  DIVIDEND REINVESTED (VXUS)                          $204.40
+    04/28/2026  DIVIDEND REINVESTED (BND)                            $285.00
+    04/28/2026  DIVIDEND REINVESTED (VIG)                            $197.42
+
+    ========================================================================
+                          ASSET ALLOCATION SUMMARY
+    ========================================================================
+
+    Current Target Allocation (Self-Directed):
+
+    US Equities (VTI + VIG):            56.31%   ($191,609.50)
+    International Equities (VXUS):      17.63%   ($59,976.00)
+    Bonds (BND):                        16.46%   ($56,004.00)
+    Cash/MM (VMFXX):                     9.59%   ($32,610.50)
+    ─────────────────────────────────   ─────
+    Total:                             100.00%   ($340,200.00)
+
+    PERSONAL NOTE (borrower's allocation rationale):
+    "I'm being slightly aggressive on equities since I have stable income,
+    the condo is paid down, and I'm catching up on retirement savings after
+    the divorce. The QDRO transfer effectively reset my retirement timeline.
+    Plan to increase bond allocation as I approach 50."
+
+    ========================================================================
+                          QDRO TRANSFER DETAIL
+    ========================================================================
+
+    QUALIFIED DOMESTIC RELATIONS ORDER (QDRO) SUMMARY:
+
+    Plan Name:          Dr. Michael J. Patel 401(k) Retirement Plan
+    Plan Sponsor:       Springfield Anesthesiology Group, P.C.
+    Plan Number:        002
+    QDRO Entered By:    Circuit Court of Sangamon County, IL
+    Case Number:        2024-DR-8821
+    Date of Order:      12/15/2025
+    Transfer Date:      01/12/2026
+
+    Marital Portion Transferred:   $335,000.00 (100% of marital portion of
+                                   Dr. Patel's 401(k) per Marital Settlement
+                                   Agreement Section 5.1)
+
+    Total QDRO Value:              $335,000.00
+    Less Early Distribution Penalty: $0.00 (Trustee-to-trustee direct
+                                   rollover — exempt)
+    Less Taxes Withheld:           $0.00 (No withholding on direct rollover)
+
+    Net Amount Deposited to        $335,000.00
+    Lisa Patel's Vanguard IRA:
+
+    Additionally, the account has grown by $5,200 since transfer due to
+    market appreciation and dividend reinvestment.
+
+    ========================================================================
+                          IMPORTANT NOTES
+    ========================================================================
+
+    1. CURRENT BENEFICIARY: Account currently lists "Michael J. Patel" as
+       primary beneficiary (from initial account setup). Borrower has been
+       advised to update beneficiary designation to her children or estate.
+       Change of beneficiary form submitted via Vanguard online portal on
+       03/20/2026 (pending processing).
+
+    2. REQUIRED MINIMUM DISTRIBUTION: Borrower is age 45. RMDs will not
+       begin until age 73 (per SECURE Act 2.0). No distributions required
+       at this time.
+
+    3. CONTRIBUTION LIMITS: This is a Rollover IRA. Borrower continues to
+       contribute to her employer 401(k) plan (Illinois Mutual 401(k) —
+       current balance approximately $89,000). She is NOT making
+       contributions to this Rollover IRA due to income limits for Roth IRA
+       and deductible IRA phaseouts. Current strategy: maximize 401(k) first.
+
+    4. ACCESS NOTE: As a Traditional IRA, distributions are subject to
+       ordinary income tax plus 10% early withdrawal penalty if taken before
+       age 59.5. Borrower confirmed she has NO plans to access these funds.
+       This account serves as long-term retirement savings.
+
+    5. STATEMENT FREQUENCY: This account is set to receive quarterly
+       statements (March, June, September, December) plus monthly online
+       access. Full statement generated at borrower's request for mortgage
+       documentation purposes.
+
+    ========================================================================

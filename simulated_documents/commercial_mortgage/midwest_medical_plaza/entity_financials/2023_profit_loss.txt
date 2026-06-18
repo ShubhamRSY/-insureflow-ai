@@ -1,0 +1,56 @@
+============================================================================
+               MIDWEST MEDICAL PLAZA LLC
+          PROFIT AND LOSS STATEMENT (ACTUAL)
+              For the Year Ended December 31, 2023
+                       (UNAUDITED)
+============================================================================
+Prepared by: Chen & Associates, PC (CPA)
+============================================================================
+
+                                         2023                2022
+============================================================================
+INCOME
+  Base Rent Revenue                  $   500,000         $   490,000
+  CAM Reimbursements                 $    20,000         $    18,000
+  Other Income                       $        -          $     2,000   [Late fees]
+                                     ------------        ------------
+  Gross Potential Rent               $   520,000         $   510,000
+
+  Vacancy / Credit Loss              ($   35,000)        ($   62,000)
+  [Vacancy in 2022 was higher due to
+   COVID - Imaging Center had 6-month
+   rent abatement, and 1 suite turned over]
+
+  [Handwritten: "2022 was rough - COVID hangover. One tenant (Derm)
+   went out of business for 4 months. Imaging Center got 2 yrs abatement
+   for buildout per lease. -Dr. Chen"]
+                                     ------------        ------------
+  Effective Gross Income              $   485,000         $   448,000
+
+============================================================================
+EXPENSES
+  Real Estate Taxes                   $    70,000         $    68,000
+  Insurance                           $    17,500         $    16,500
+  Property Management (5% of EGI)     $    24,250         $    22,400
+  Utilities                           $    13,500         $    12,800
+  Repairs & Maintenance               $     9,000         $     8,500
+  Reserves for Replacement            $     8,000         $     4,000
+    [2022 reserves were underfunded - increased to $8K in 2023]
+  Professional Fees/Legal/Accounting  $     2,000         $     1,800
+  Miscellaneous / Office              $     1,500         $     1,200
+                                     ------------        ------------
+  TOTAL EXPENSES                      $   145,750         $   135,200
+                                     ------------        ------------
+============================================================================
+NET OPERATING INCOME (NOI)            $   339,250         $   312,800
+============================================================================
+
+  [Margin note at bottom:]
+  "2023 NOI $339K is the closest to stabilized. Use $336K for
+   underwriting to be conservative (accounts for current vacancy).
+   - JM"
+
+  [Stamped:]
+     VERIFIED - CPA PREPARED
+     TAX RETURN FILED - 2023
+============================================================================

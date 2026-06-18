@@ -378,5 +378,161 @@ def agents(
     console.print(f"\n[green]Multi-agent analysis complete.[/]")
 
 
+@app.command("mortgage-borrowers")
+def mortgage_borrowers(
+    directory: Path = typer.Option(
+        Path("simulated_documents/home_mortgage"),
+        "--dir", "-d",
+        help="Root directory containing per-borrower subfolders",
+    ),
+    product: str = typer.Option("auto", "--product", "-p"),
+    no_llm: bool = typer.Option(False, "--no-llm", help="Disable LLM extraction"),
+    detailed: bool = typer.Option(False, "--detailed"),
+) -> None:
+    """Process each borrower package separately (John vs Maria vs Chen, etc.)."""
+    from insureflow.models.mortgage import ProductLine
+    from insureflow.mortgage.bundler import discover_borrower_packages
+    from insureflow.mortgage.pipeline import MortgagePipeline
+
+    product_map = {
+        "auto": None,
+        "residential": ProductLine.RESIDENTIAL_MORTGAGE,
+        "commercial": ProductLine.COMMERCIAL_MORTGAGE,
+    }
+    product_line = product_map.get(product.lower())
+    packages = discover_borrower_packages(str(directory), product_line=product_line)
+
+    console.print(f"\n[bold]Found {len(packages)} borrower package(s)[/]\n")
+    pipeline = MortgagePipeline(use_llm=not no_llm)
+
+    for pkg in packages:
+        with console.status(f"[green]Processing {pkg.display_name}..."):
+            result = pipeline.run_from_paths(
+                pkg.paths,
+                bundle_id=f"borrower-{pkg.borrower_id}",
+                product_line=pkg.product_line,
+                borrower_id=pkg.borrower_id,
+            )
+        color = {"approve": "green", "refer": "yellow", "suspend": "yellow", "deny": "red"}.get(
+            result["decision"], "white"
+        )
+        console.print(
+            f"  [{color}]{pkg.display_name:30s}[/] "
+            f"{result['document_count']:3d} docs → {result['decision'].upper()} "
+            f"(risk {result['risk_score']:.2f})"
+        )
+        if detailed and result.get("audit_paths"):
+            console.print(f"    [dim]Audit: {result['audit_paths'].get('audit_trail', '')}[/]")
+
+    console.print(f"\n[green]Per-borrower processing complete.[/]")
+
+
+@app.command()
+def mortgage(
+    directory: Optional[Path] = typer.Option(
+        None, "--dir", "-d", help="Directory of mortgage documents (recursive .txt)"
+    ),
+    files: Optional[list[Path]] = typer.Option(
+        None, "--file", "-f", help="Individual document paths"
+    ),
+    product: str = typer.Option(
+        "auto", "--product", "-p", help="Product line: auto, residential, commercial"
+    ),
+    no_llm: bool = typer.Option(False, "--no-llm", help="Disable LLM extraction"),
+    detailed: bool = typer.Option(
+        False, "--detailed", help="Show full document classification and compliance detail"
+    ),
+) -> None:
+    """Process mortgage loan documents (home or commercial) with bank compliance rules."""
+    from insureflow.models.mortgage import ProductLine
+    from insureflow.mortgage.pipeline import MortgagePipeline
+
+    product_map = {
+        "auto": None,
+        "residential": ProductLine.RESIDENTIAL_MORTGAGE,
+        "commercial": ProductLine.COMMERCIAL_MORTGAGE,
+    }
+    product_line = product_map.get(product.lower())
+    if product_line is None and product.lower() != "auto":
+        console.print(f"[red]Unknown product line: {product}[/]")
+        raise typer.Exit(1)
+
+    pipeline = MortgagePipeline(use_llm=not no_llm)
+
+    if directory:
+        with console.status("[bold green]Processing mortgage documents..."):
+            results = pipeline.run_from_directory(str(directory), product_line=product_line)
+    elif files:
+        with console.status("[bold green]Processing mortgage documents..."):
+            results = pipeline.run_from_paths([str(f) for f in files], product_line=product_line)
+    else:
+        default_dir = Path("simulated_documents/home_mortgage")
+        if not default_dir.exists():
+            console.print("[red]Provide --dir or --file, or place docs in simulated_documents/home_mortgage[/]")
+            raise typer.Exit(1)
+        console.print(f"[dim]Using default directory: {default_dir}[/]")
+        with console.status("[bold green]Processing mortgage documents..."):
+            results = pipeline.run_from_directory(str(default_dir), product_line=product_line)
+
+    decision_color = {
+        "approve": "green",
+        "refer": "yellow",
+        "suspend": "yellow",
+        "deny": "red",
+    }.get(results["decision"], "white")
+
+    console.print(f"\n[bold]═══ MORTGAGE UNDERWRITING MEMO ═══[/]")
+    console.print(f"[bold]Bundle:[/] {results['bundle_id']}")
+    console.print(f"[bold]Product:[/] {results['product_line']}")
+    console.print(f"[bold]Borrower:[/] {results['borrower']}")
+    console.print(f"[bold]Documents:[/] {results['document_count']}")
+    console.print(f"[bold]Decision:[/] [{decision_color}]{results['decision'].upper()}[/]")
+    console.print(f"[bold]Risk Score:[/] {results['risk_score']:.2f}")
+    if results.get("dti_ratio"):
+        console.print(f"[bold]DTI:[/] {results['dti_ratio']}%")
+    if results.get("ltv_ratio"):
+        console.print(f"[bold]LTV:[/] {results['ltv_ratio']:.1f}%")
+
+    memo = results.get("memo", {})
+    findings = memo.get("key_findings", [])
+    if findings:
+        table = Table(title=f"Key Findings ({len(findings)})")
+        table.add_column("Severity", style="bold")
+        table.add_column("Category")
+        table.add_column("Finding")
+        for f in findings[:10]:
+            sev_color = {"critical": "red bold", "high": "red", "moderate": "yellow", "low": "green"}
+            table.add_row(
+                f"[{sev_color.get(f['severity'], 'white')}]{f['severity'].upper()}[/]",
+                f.get("category", ""),
+                f.get("title", ""),
+            )
+        console.print(table)
+
+    violations = results.get("compliance_violations", [])
+    if violations:
+        console.print(f"\n[bold]Compliance Violations ({len(violations)}):[/]")
+        for v in violations:
+            color = "red" if v["severity"] == "critical" else "yellow"
+            console.print(f"  [{color}]{v['rule_id']}[/] {v['message']}")
+
+    recon = results.get("reconciliation_issues", [])
+    if recon:
+        console.print(f"\n[bold]Reconciliation Issues ({len(recon)}):[/]")
+        for r in recon[:8]:
+            console.print(f"  [{r['severity']}] {r['field_path']}: {r['value_a']} vs {r['value_b']}")
+
+    if detailed:
+        types = results.get("document_types", {})
+        console.print(f"\n[bold]Document Classification:[/]")
+        for dtype, count in sorted(types.items()):
+            console.print(f"  {dtype}: {count}")
+
+    if results.get("human_review_required"):
+        console.print(f"\n[red bold]⚠ HUMAN REVIEW REQUIRED[/]")
+
+    console.print(f"\n[green]Mortgage pipeline complete.[/]")
+
+
 if __name__ == "__main__":
     app()

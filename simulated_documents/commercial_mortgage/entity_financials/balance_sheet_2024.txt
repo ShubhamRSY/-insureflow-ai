@@ -1,0 +1,87 @@
+══════════════════════════════════════════════════════════════════════════════
+              THOMPSON COMMERCIAL PROPERTIES LLC - BALANCE SHEET
+══════════════════════════════════════════════════════════════════════════════
+
+  Entity:           Thompson Commercial Properties LLC
+  EIN:              46-3728491
+  Date:             December 31, 2024 (UNAUDITED - FOR INTERNAL USE ONLY)
+  Prepared By:      John A. Thompson, Managing Member
+
+══════════════════════════════════════════════════════════════════════════════
+                           ASSETS
+══════════════════════════════════════════════════════════════════════════════
+
+CURRENT ASSETS:
+  Cash - Bank of Springfield (Checking)                      $42,388.00
+  Cash - Bank of Springfield (MMkt - Reserve)                 $97,200.00
+  Accounts Receivable - Tenant Rent                           $8,450.00
+  Prepaid Insurance                                            $6,800.00
+  Prepaid Property Taxes (escrow)                             $12,400.00
+  ════════════════════════════════════════════════════════
+  TOTAL CURRENT ASSETS                                        $167,238.00
+
+FIXED ASSETS:
+  Land - 5678 Commerce Blvd (at cost)                         $485,000.00
+  Building - 5678 Commerce Blvd (at cost)                     $1,920,000.00
+  Less: Accumulated Depreciation                              ($153,600.00)
+  ----------------> (straight line - 39 yrs, since 2019)
+  Furniture, Fixtures & Equipment (shared areas)              $48,200.00
+  Less: Accumulated Depreciation - FF&E                       ($19,280.00)
+  ════════════════════════════════════════════════════
+  TOTAL FIXED ASSETS (NET)                                    $2,280,320.00
+
+OTHER ASSETS:
+  Security Deposits Held                                       $12,300.00
+  Lease Acquisition Costs (unamortized)                        $8,500.00
+  ════════════════════════════════════════════════════
+  TOTAL OTHER ASSETS                                           $20,800.00
+
+══════════════════════════════════════════════════════════════════════════════
+  TOTAL ASSETS                                                $2,468,358.00
+══════════════════════════════════════════════════════════════════════════════
+
+══════════════════════════════════════════════════════════════════════════════
+                    LIABILITIES AND MEMBER'S EQUITY
+══════════════════════════════════════════════════════════════════════════════
+
+CURRENT LIABILITIES:
+  Accounts Payable                                              $4,200.00
+  Security Deposits Payable                                    $12,300.00
+  Accrued Property Taxes Payable                                $6,200.00
+  Accrued Management Fees                                       $2,400.00
+  Current Portion - Long Term Debt (Line of Credit)             $15,000.00
+  ════════════════════════════════════════════════════
+  TOTAL CURRENT LIABILITIES                                     $40,100.00
+
+LONG TERM LIABILITIES:
+  Note Payable - First National Bank (Original $1,850,000)   $1,708,400.00
+    (5.75% fixed, 25-yr amort, matures 06/2044)
+  Less: Current Portion (above)                                ($15,000.00)
+  Equipment Loan - State Bank (HVAC - 2023)                     $18,500.00
+  ════════════════════════════════════════════════════
+  TOTAL LONG TERM LIABILITIES                                 $1,711,900.00
+
+  ════════════════════════════════════════════════════
+  TOTAL LIABILITIES                                           $1,752,000.00
+
+MEMBER'S EQUITY:
+  Member's Capital Account - John A. Thompson                  $650,000.00
+  Retained Earnings (accumulated since inception)               $66,358.00
+  ════════════════════════════════════════════════════
+  TOTAL MEMBER'S EQUITY                                        $716,358.00
+
+══════════════════════════════════════════════════════════════════════════════
+  TOTAL LIABILITIES AND MEMBER'S EQUITY                        $2,468,358.00
+══════════════════════════════════════════════════════════════════════════════
+
+══════════════════════════════════════════════════════════════════════════════
+  NOTE: Balance sheet prepared on accrual basis. Depreciation computed
+  using MACRS / straight-line methods per tax returns.
+══════════════════════════════════════════════════════════════════════════════
+
+Member Signature:   /s/ John A. Thompson                    Date: 02/15/2025
+══════════════════════════════════════════════════════════════════════════════
+
+══════════════════════════════════════════════════════════════════════════════
+[STAMP] RECEIVED 02/20/2025 - FOR COMMERCIAL LOAN APPLICATION REVIEW
+══════════════════════════════════════════════════════════════════════════════

@@ -1,0 +1,110 @@
+══════════════════════════════════════════════════════════════════════════════
+          DUN & BRADSTREET - BUSINESS CREDIT REPORT
+══════════════════════════════════════════════════════════════════════════════
+
+  Business Name:        Thompson Commercial Properties LLC
+  DUNS Number:          08-472-9158
+  Report Date:          April 8, 2026
+
+══════════════════════════════════════════════════════════════════════════════
+CREDIT SUMMARY
+══════════════════════════════════════════════════════════════════════════════
+
+  D&B PAYDEX Score:                      78  (Good - on a 1-100 scale)
+  Risk Classification:                   LOW RISK
+  NAICS:                                 531120 (Lessors of Nonresidential)
+  Years in Business:                     7 years (established 2019)
+  Employees:                             1 (John A. Thompson - owner)
+  Annual Sales (est):                    $270,000
+
+══════════════════════════════════════════════════════════════════════════════
+CREDIT CAPACITY
+══════════════════════════════════════════════════════════════════════════════
+
+  Credit Limit Summary:
+    Highest Credit:                      $1,850,000 (First National Bank)
+    Total Credit Available:              $1,903,500
+    Total Outstanding:                   $1,731,100
+    Available Credit:                    $172,400
+
+══════════════════════════════════════════════════════════════════════════════
+PAYMENT HISTORY
+══════════════════════════════════════════════════════════════════════════════
+
+  Payment Performance:
+    Within Terms:                   92%
+    1-30 Days Beyond Terms:         5%
+    31-60 Days Beyond Terms:        2%
+    61-90 Days Beyond Terms:        1%
+    Beyond 90 Days:                 0%
+
+══════════════════════════════════════════════════════════════════════════════
+TRADE LINES
+══════════════════════════════════════════════════════════════════════════════
+
+  TRADE #1:      First National Bank (Real Estate Loan)
+                 Opened: 06/2019   High Credit: $1,850,000
+                 Balance: $1,708,400     Terms: 25yr amort
+                 Payment: $11,848/mo     Status: PAYING AS AGREED
+                 Last Report: 03/2026
+
+  TRADE #2:      State Bank of Illinois (Equipment)
+                 Opened: 09/2023   High Credit: $28,000
+                 Balance: $18,500        Terms: 60 months
+                 Payment: $567/mo        Status: PAYING AS AGREED
+                 Last Report: 03/2026
+
+  TRADE #3:      City Electric Co. (Utility)
+                 Opened: 01/2019   High Credit: $2,400
+                 Balance: $0              Terms: Net 30
+                 Payment: N/A             Status: 2 slow payments in 2022
+                 Last Report: 02/2024
+
+  TRADE #4:      Midstate Insurance Agency
+                 Opened: 01/2019   High Credit: $9,800/yr
+                 Balance: $0              Terms: Annual premium
+                 Payment: N/A             Status: PAYING AS AGREED
+
+  TRADE #5:      Illinois Department of Revenue (Taxes)
+                 All tax payments current. No liens.
+                 Last Verified: 03/2026
+
+══════════════════════════════════════════════════════════════════════════════
+PUBLIC RECORDS / LIENS / JUDGMENTS
+══════════════════════════════════════════════════════════════════════════════
+
+  NONE FOUND
+
+══════════════════════════════════════════════════════════════════════════════
+BANKRUPTCY / COLLECTIONS
+══════════════════════════════════════════════════════════════════════════════
+
+  NONE FOUND
+
+══════════════════════════════════════════════════════════════════════════════
+  ═══════════════════════════════════════════════════════════════════════════
+  D&B RECOMMENDATION: STANDARD CREDIT - Low risk profile.
+  Maximum Recommended Credit: $150,000 (unsecured trade)
+  ═══════════════════════════════════════════════════════════════════════════
+
+══════════════════════════════════════════════════════════════════════════════
+          EXPERIAN INTELLISCORE BUSINESS
+══════════════════════════════════════════════════════════════════════════════
+
+  Business Name:        Thompson Commercial Properties LLC
+  Report Date:          April 8, 2026
+
+  Intelliscore:         72  (Scale 1-100)
+  Risk Class:           Low Risk (91st percentile)
+
+  Business Failure Score:  1,482 (Scale 1-1,999)
+  - 99.2% of businesses score lower (lower risk)
+
+  Derogatory Public Records: NONE
+  Collection Accounts:       NONE
+  Tax Liens:                 NONE
+  Judgments:                 NONE
+
+══════════════════════════════════════════════════════════════════════════════
+[STAMP] CREDIT REPORT OBTAINED FOR COMMERCIAL LOAN APPLICATION - 04/08/2026
+══════════════════════════════════════════════════════════════════════════════

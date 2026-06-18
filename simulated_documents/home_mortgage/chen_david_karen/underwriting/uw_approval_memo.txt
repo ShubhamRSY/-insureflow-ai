@@ -1,0 +1,94 @@
+══════════════════════════════════════════════════════════════════════
+              INSUREFLOW NATIONAL MORTGAGE
+              INTERNAL UNDERWRITING APPROVAL MEMO
+══════════════════════════════════════════════════════════════════════
+
+DATE:               March 20, 2026
+TO:                 Loan File # IN-2026-03380
+FROM:               Rachel Pasternak, Senior Underwriter
+RE:                 UNDERWRITING DECISION
+BORROWER:           Chen, David & Karen
+PROPERTY:           1242 Hillcrest Drive, Springfield, IL
+PRODUCT:            Jumbo Fixed Rate Refinance (Rate/Term + Cash-Out)
+LOAN AMOUNT:        $700,000
+LTV:                70%  (Value: $950K)
+
+══════════════════════════════════════════════════════════════════════
+
+UNDERWRITING ANALYSIS:
+
+INCOME:        $540,000/yr (verified - W-2s, VOE, tax returns)
+
+CREDIT:        812 (David) / 798 (Karen)  — Excellent
+               No derogatory items. 0x30 in 24 months.
+
+ASSETS:        $256,234 liquid (VOD verified)
+               $340,000 brokerage (Vanguard)
+               $1,880,000 retirement (not counted)
+               TOTAL VERIFIED: $596,234
+
+DTI:           37%  ($3,950 current + $180 SL + $650 auto
+               + $1,580 rental mtg + $4,310 new PITI
+               = $10,670 ÷ $29,166/mo income)
+
+               ┌─────────────────────────────────────────────┐
+               │   JUMBO MAX DTI: 43%                        │
+               │   ACTUAL DTI:    37% ✅                     │
+               │   UNDER LIMIT BY 6%                         │
+               └─────────────────────────────────────────────┘
+
+RESERVES:      $596,234 liquid ÷ $5,843 PITI = 102 months
+               ┌─────────────────────────────────────────────┐
+               │   JUMBO MIN RESERVES: 6 months PITI         │
+               │   ACTUAL RESERVES:    102 months ✅         │
+               │   6+ MONTHS CONFIRMED                       │
+               └─────────────────────────────────────────────┘
+
+APPRAISAL:     $975,000  (supports $950K value, LTV 70%)
+               Comparable sales support. No condition issues.
+
+══════════════════════════════════════════════════════════════════════
+
+DECISION:
+
+══════════════════════════════════════════════════════════════════════
+  ✅  APPROVED - JUMBO CONFORMING
+  ═══════════════════════════════════════════════════════════════════
+  ✅  All conditions met. Clear to Close (CTC) effective 03/20/2026
+
+══════════════════════════════════════════════════════════════════════
+
+CONDITIONS TO CLOSE:
+
+  1.  ⬜ Title showing old lien release (First National Bank)
+  2.  ⬜ Final insurance binder confirming loss payee
+  3.  ⬜ Borrower certification re: $50K cash-out use for
+      kitchen remodel (NOT for securities/investment)
+
+══════════════════════════════════════════════════════════════════════
+
+NOTES:
+
+  "Strong file. High income, excellent credit, substantial
+   reserves. Cash-out $50K is within jumbo guidelines.
+   Purpose is kitchen remodel — borrower signed certification.
+   Rate/term refi with cash-out for home improvement is
+   permissible under jumbo guidelines.
+
+   APPROVED. No additional stipulations. Clear to close
+   once title, insurance, and cash-use cert are received."
+
+  /s/ Rachel Pasternak
+  ──────────────────────────────────────────────────────────────────
+  Rachel Pasternak
+  Senior Underwriter, Jumbo Division
+  InsureFlow National Mortgage
+  NMLS #738201
+
+══════════════════════════════════════════════════════════════════════
+
+  // MARGIN NOTE //
+  Conditions cleared 3/22 - title release rec'd, insurance
+  binder ok, cash-use cert signed. CTC confirmed.
+  -- RP
+══════════════════════════════════════════════════════════════════════

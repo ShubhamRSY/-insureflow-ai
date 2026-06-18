@@ -1,0 +1,94 @@
+================================================================================
+                              CapitalOne
+                     PLATINUM MASTERCARD - MONTHLY STATEMENT
+================================================================================
+
+  Account Number:    XXXX-XXXX-3312
+  Customer Name:     MARIA G RODRIGUEZ
+  Statement Date:    February 10, 2026
+  Payment Due Date:  March 7, 2026
+
+  Address:  789 Elm Street, Apt 2B
+            Springfield, IL 62704
+
+================================================================================
+  ACCOUNT SUMMARY
+  --------------------------------------------------------------------------------
+  Previous Balance                                             $4,150.00
+  Payments (-)                                                 ($85.00)
+  Purchases (+)                                                $183.47
+  Cash Advances (+)                                            $0.00
+  Fees Charged (+)                                             $0.00
+  Interest Charged (+)                                         $1.53
+  New Balance                                                  $4,250.00
+  --------------------------------------------------------------------------------
+
+  CREDIT LIMIT:                 $5,000
+  AVAILABLE CREDIT:             $750.00
+  CASH ADVANCE LIMIT:           $1,000
+  AVAILABLE CASH:               $250.00
+
+  MINIMUM PAYMENT DUE:          $85.00
+  TOTAL REWARDS EARNED:         $0.00 (Platinum - no rewards)
+
+================================================================================
+  TRANSACTIONS
+  --------------------------------------------------------------------------------
+  DATE       DESCRIPTION                                        AMOUNT
+  --------   ------------------------------------------------  --------
+  01/14/26   PAYMENT - THANK YOU                               ($85.00)
+  01/15/26   AMAZON.COM                                         $39.99
+  01/18/26   SHELL GAS - SPRINGFIELD IL                         $38.50
+  01/20/26   WALMART - SPRINGFIELD IL                           $67.23
+  01/22/26   NETFLIX INC                                        $15.99
+  01/24/26   UBER EATS                                          $21.87
+  01/31/26   INTEREST CHARGE ON PURCHASES                       $1.53
+  02/05/26   AMAZON.COM                                         $22.99
+  02/08/26   DOLLAR TREE - SPRINGFIELD IL                       $9.50
+  02/10/26   STATEMENT CLOSING
+
+================================================================================
+  PAYMENT HISTORY (Last 24 Months)
+  --------------------------------------------------------------------------------
+  2026:  Jan (OK)  Feb (OK)
+  2025:  Jan (OK)  Feb (OK)  Mar (OK)  Apr (OK)  May (OK)  Jun (OK)
+         Jul (OK)  Aug (OK)  Sep (OK)  Oct (OK)  Nov (OK)  Dec (OK)
+  2024:  Jan (OK)  Feb (OK)  Mar (LATE - 30 DAYS)  Apr (OK)  May (OK)
+         Jun (OK)  Jul (OK)  Aug (OK)  Sep (OK)  Oct (OK)  Nov (OK)  Dec (OK)
+
+================================================================================
+  INTEREST CHARGE DETAIL
+  --------------------------------------------------------------------------------
+  PURCHASES:
+    Annual Percentage Rate (APR):  25.99% (Variable)
+    Balance Subject to Interest:    $421.40
+    Interest Charge:                $1.53
+
+  CASH ADVANCES:
+    APR: 26.99%
+    No cash advance balance.
+
+================================================================================
+  IMPORTANT MESSAGES
+  --------------------------------------------------------------------------------
+  - Your due date is the 07th of each month.
+  - Minimum payment warning: Making only the minimum payment will result
+    in approximately 27 years to pay off this balance (at current APR).
+  - Late Payment Warning: If we do not receive your minimum payment by
+    the due date, you may be charged a late fee of up to $40 and your
+    APR may increase to the Penalty APR of 29.99%.
+
+================================================================================
+
+  [handwritten note at bottom:]
+  "Auto-pay set up as of April 2024 (after the late payment).
+   No further lates. Balance is high but she's aware.
+   She's putting $1,000 towards this before closing to show
+   good faith. - Loan Processor Note"
+
+  [underwriter initial:]
+  "OK. Payment history acceptable. Utilization will improve.
+   Not requiring payoff - FHA allows CC debt as long as DTI
+   works. Current $85 min payment included in DTI calc. - JM"
+
+================================================================================

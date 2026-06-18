@@ -1,0 +1,111 @@
+══════════════════════════════════════════════════════════════════════════════
+               U.S. RETURN OF PARTNERSHIP INCOME - FORM 1065 (2024)
+══════════════════════════════════════════════════════════════════════════════
+
+  Name:             Thompson Commercial Properties LLC
+  EIN:              46-3728491
+  Address:          1234 Maple Drive, Springfield, IL 62701
+  Date Formed:      January 2019
+  Business Code:    531120 (Lessors of Nonresidential Buildings)
+  Accounting Method: Accrual
+
+══════════════════════════════════════════════════════════════════════════════
+INCOME
+══════════════════════════════════════════════════════════════════════════════
+
+  Line 1a:  Gross receipts or sales                                 $270,640.00
+  Line 2:   Cost of goods sold                                       $0.00
+  Line 3:   Gross profit                                             $270,640.00
+
+  Line 4:   Ordinary income (loss) from other partnerships           $0.00
+  Line 5:   Net farm profit (loss)                                   $0.00
+  Line 6:   Net gain (loss) from Form 4797                           $0.00
+  Line 7:   Other income (loss)                                      $0.00
+  ═══════════════════════════════════════════════════════════════════════════
+  Line 8:   TOTAL INCOME                                             $270,640.00
+
+══════════════════════════════════════════════════════════════════════════════
+DEDUCTIONS
+══════════════════════════════════════════════════════════════════════════════
+
+  Line 9:   Employee salaries and wages                              $0.00
+  Line 10:  Guaranteed payments to partners                           $15,000.00
+  Line 11:  Repairs and maintenance                                   $7,800.00
+  Line 12:  Bad debts                                                  $0.00
+  Line 13:  Rent                                                      $0.00
+  Line 14:  Taxes and licenses                                        $39,150.00
+  Line 15:  Interest                                                  $81,484.00
+            ---> Mortgage interest - First National Bank $81,484.00
+  Line 16:  Depreciation                                              $54,050.77
+            ---> Building (39yr SL): $49,230.77
+            ---> FF&E (7yr MACRS): $4,820.00
+  Line 17:  Depletion                                                 $0.00
+  Line 18:  Retirement plans                                          $0.00
+  Line 19:  Employee benefit programs                                 $0.00
+  Line 20:  Other deductions                                          $25,034.83
+            ---> Insurance: $9,200.00
+            ---> Utilities: $12,400.00
+            ---> Management: $10,669.60
+            ---> Legal/Professional: $3,500.00
+            ---> Janitorial/Maintenance: $4,600.00
+            ---> Snow/Landscaping: $3,200.00
+            ---> Other operating: ($18,534.77) - see Sch K
+  ═══════════════════════════════════════════════════════════════════════════
+  Line 21:  TOTAL DEDUCTIONS                                         $222,519.60
+
+══════════════════════════════════════════════════════════════════════════════
+  Line 22:  ORDINARY BUSINESS INCOME (LOSS)                            $48,120.40
+══════════════════════════════════════════════════════════════════════════════
+
+══════════════════════════════════════════════════════════════════════════════
+SCHEDULE K - PARTNERS' DISTRIBUTIVE SHARE ITEMS
+══════════════════════════════════════════════════════════════════════════════
+
+  Member:           John A. Thompson (100% interest)
+  ═══════════════════════════════════════════════════════════════════════════
+
+  Ordinary business income (loss)                                     $48,120.40
+  Net rental real estate income (loss)                                $0.00
+  Guaranteed payments                                                  $15,000.00
+  Interest income                                                      $0.00
+  Dividends                                                            $0.00
+  Depreciation                                                         $54,050.77
+  Charitable contributions                                             $0.00
+  Section 179 expense                                                  $0.00
+  ═══════════════════════════════════════════════════════════════════════════
+  SELF-EMPLOYMENT EARNINGS (for SE tax purposes):                      $48,120.40
+
+══════════════════════════════════════════════════════════════════════════════
+SCHEDULE L - BALANCE SHEETS (per books)
+══════════════════════════════════════════════════════════════════════════════
+
+  ASSETS:
+    Cash:                                                              $139,588.00
+    Trade notes and accounts receivable:                                $8,450.00
+    Other current assets:                                               $19,200.00
+    Buildings and other depreciable assets:                           $1,968,200.00
+    Less accumulated depreciation:                                    ($172,880.00)
+    Other assets:                                                       $20,800.00
+    ═══════════════════════════════════════════════════════════════════════════
+    TOTAL ASSETS:                                                    $2,468,358.00
+
+  LIABILITIES AND CAPITAL:
+    Accounts payable:                                                    $4,200.00
+    Other current liabilities:                                          $20,900.00
+    Mortgages, notes, bonds payable:                                 $1,726,900.00
+    Partner's capital accounts:                                        $716,358.00
+    ═══════════════════════════════════════════════════════════════════════════
+    TOTAL LIABILITIES AND CAPITAL:                                  $2,468,358.00
+
+══════════════════════════════════════════════════════════════════════════════
+  [Signed:]  /s/ John A. Thompson, Managing Member          Date: 03/15/2025
+══════════════════════════════════════════════════════════════════════════════
+
+══════════════════════════════════════════════════════════════════════════════
+[STAMP] ELECTRONICALLY FILED - IRS ACCEPTED 03/22/2025
+[STAMP] COPY PROVIDED FOR COMMERCIAL LOAN UNDERWRITING
+══════════════════════════════════════════════════════════════════════════════
+  NOTE: Member's basis calculation - attached separately per IRC §704(d).
+  Current year basis: $716,358.00. No recourse loans. Qualified nonrecourse
+  financing: $1,708,400.00.
+══════════════════════════════════════════════════════════════════════════════

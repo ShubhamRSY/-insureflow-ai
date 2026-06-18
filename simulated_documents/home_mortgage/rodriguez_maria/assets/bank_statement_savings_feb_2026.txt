@@ -1,0 +1,55 @@
+================================================================================
+                         BANK OF SPRINGFIELD
+                     SAVINGS ACCOUNT MONTHLY STATEMENT
+
+  Account Type:    Statement Savings
+  Account Number:  XXXX7712
+  Period:          February 1, 2026 - February 28, 2026
+  Customer:        MARIA G RODRIGUEZ
+                   789 Elm St Apt 2B, Springfield IL 62704
+
+================================================================================
+  SUMMARY OF ACTIVITY
+  --------------------------------------------------------------------------------
+  Beginning Balance (02/01)                                   $8,215.33
+  Total Deposits (+)                                          $1,300.00
+  Interest Paid (+)                                            $0.35
+  Total Withdrawals (-)                                       $200.00
+  Ending Balance (02/28)                                      $9,315.68
+  --------------------------------------------------------------------------------
+
+  ANNUAL PERCENTAGE YIELD (APY): 0.05%
+  INTEREST RATE: 0.05% compounded monthly
+
+================================================================================
+  TRANSACTION HISTORY
+================================================================================
+  DATE       DESCRIPTION                                          AMOUNT        BALANCE
+  --------   --------------------------------------------       ----------     ----------
+  02/01      Beginning Balance                                                    8,215.33
+  02/07      ONLINE TRANSFER FROM CHECKING XXXX3314             300.00         8,515.33
+  02/12      ONLINE TRANSFER FROM CHECKING XXXX3314             250.00         8,765.33
+  02/17      ONLINE TRANSFER FROM CHECKING XXXX3314             400.00         9,165.33
+  02/22      ATM WITHDRAWAL - BANK SPRINGFIELD ATM 003         (200.00)        8,965.33
+  02/28      ONLINE TRANSFER FROM CHECKING XXXX3314             350.00         9,315.33
+  02/28      INTEREST PAID                                      0.35           9,315.68
+
+================================================================================
+  ENDING BALANCE: $9,315.68
+================================================================================
+
+  [stamp: "STATEMENT PROVIDED AS OF 02/28/2026"]
+
+  [margin scribble by underwriter:]
+  "Regular savings pattern. $200-$400/mo transfers from checking.
+   Balance consistent with stated $9K+. Excluding the one ATM
+   withdrawal ($200), this is clearly a savings accumulation account.
+   No large undocumented deposits. Acceptable for reserves calculation.
+   - JM 3/2/2026"
+
+  [note at bottom:]
+  "Available balance for closing cost reserves: $9,315.68
+   Combined with checking ($6,799.81) = $16,115.49 total liquid assets.
+   Enough to cover 3+ months PITI. No sourcing issues."
+
+================================================================================

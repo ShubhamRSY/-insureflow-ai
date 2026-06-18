@@ -1,0 +1,73 @@
+══════════════════════════════════════════════════════════════════════════════
+              THOMPSON COMMERCIAL PROPERTIES LLC - BALANCE SHEET
+══════════════════════════════════════════════════════════════════════════════
+
+  Entity:           Thompson Commercial Properties LLC
+  EIN:              46-3728491
+  Date:             December 31, 2022 (UNAUDITED)
+
+══════════════════════════════════════════════════════════════════════════════
+                           ASSETS
+══════════════════════════════════════════════════════════════════════════════
+
+CURRENT ASSETS:
+  Cash - Bank of Springfield (Checking)                      $24,800.00
+  Cash - Bank of Springfield (MMkt - Reserve)                 $72,600.00
+  Accounts Receivable - Tenant Rent                           $3,400.00
+  Prepaid Insurance                                            $5,800.00
+  Prepaid Property Taxes (escrow)                             $11,200.00
+  ════════════════════════════════════════════════════
+  TOTAL CURRENT ASSETS                                        $117,800.00
+
+FIXED ASSETS:
+  Land - 5678 Commerce Blvd (at cost)                         $485,000.00
+  Building - 5678 Commerce Blvd (at cost)                     $1,920,000.00
+  Less: Accumulated Depreciation                              ($76,800.00)
+  Furniture, Fixtures & Equipment (shared areas)              $48,200.00
+  Less: Accumulated Depreciation - FF&E                       ($9,640.00)
+  ════════════════════════════════════════════════════
+  TOTAL FIXED ASSETS (NET)                                    $2,366,760.00
+
+OTHER ASSETS:
+  Security Deposits Held                                       $11,200.00
+  Lease Acquisition Costs (unamortized)                        $12,600.00
+  ════════════════════════════════════════════════════
+  TOTAL OTHER ASSETS                                           $23,800.00
+
+══════════════════════════════════════════════════════════════════════════════
+  TOTAL ASSETS                                                $2,508,360.00
+══════════════════════════════════════════════════════════════════════════════
+
+══════════════════════════════════════════════════════════════════════════════
+                    LIABILITIES AND MEMBER'S EQUITY
+══════════════════════════════════════════════════════════════════════════════
+
+CURRENT LIABILITIES:
+  Accounts Payable                                              $2,900.00
+  Security Deposits Payable                                    $11,200.00
+  Accrued Property Taxes Payable                                $5,600.00
+  Accrued Management Fees                                       $1,800.00
+  Current Portion - Long Term Debt                              $14,000.00
+  ════════════════════════════════════════════════════
+  TOTAL CURRENT LIABILITIES                                     $35,500.00
+
+LONG TERM LIABILITIES:
+  Note Payable - First National Bank                          $1,731,600.00
+  ════════════════════════════════════════════════════
+  TOTAL LONG TERM LIABILITIES                                 $1,731,600.00
+
+  ════════════════════════════════════════════════════
+  TOTAL LIABILITIES                                           $1,767,100.00
+
+MEMBER'S EQUITY:
+  Member's Capital Account - John A. Thompson                  $650,000.00
+  Retained Earnings (prior)                                     $91,260.00
+  ════════════════════════════════════════════════════
+  TOTAL MEMBER'S EQUITY                                        $741,260.00
+
+══════════════════════════════════════════════════════════════════════════════
+  TOTAL LIABILITIES AND MEMBER'S EQUITY                        $2,508,360.00
+══════════════════════════════════════════════════════════════════════════════
+══════════════════════════════════════════════════════════════════════════════
+[NOTE: Retained earnings adjusted 2023 for capital improvement distributions]
+══════════════════════════════════════════════════════════════════════════════

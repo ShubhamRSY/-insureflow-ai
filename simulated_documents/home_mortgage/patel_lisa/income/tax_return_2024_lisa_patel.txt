@@ -1,0 +1,214 @@
+    ========================================================================
+                        FORM 1040 - U.S. INDIVIDUAL INCOME TAX RETURN
+                                  TAX YEAR: 2024
+                                (DO NOT FILE - COPY FOR LOAN)
+    ========================================================================
+
+    Filing Status: Married Filing Separately
+    (Note: Separated since 02/2024. Divorce finalized 12/2025.)
+
+    Primary Taxpayer:   Lisa M. Patel (neé Sullivan)
+    SSN:                XXX-XX-XXXX
+    Address:            555 Lake Shore Drive, Unit 12A
+                        Springfield, IL 62704
+
+    Spouse (listed on return):    Michael J. Patel, M.D.
+    SSN:                          XXX-XX-XXXX
+    (Filing separately — spouse does NOT appear on this return)
+
+    ========================================================================
+                                INCOME
+    ========================================================================
+
+    Line 1:  Wages, salaries, tips, etc.
+             W-2: Illinois Mutual Insurance Company              $165,000.00
+             (No other W-2s or 1099 income)
+
+    Line 2a: Tax-exempt interest                                                   $0.00
+    Line 2b: Taxable interest                                                      $845.00
+             (Chase Savings $342 + Vanguard MM $503)
+
+    Line 3a: Qualified dividends                                                  $2,340.00
+             (Vanguard Total Stock Market Index Fund)
+
+    Line 3b: Ordinary dividends                                                    $180.00
+
+    Line 4a: IRA distributions                                                      $0.00
+    Line 4b: Pensions and annuities                                                 $0.00
+
+    Line 5:  Social Security benefits                                               $0.00
+
+    Line 6:  Capital gain or loss                                              ($1,200.00)
+             (Sold some VTI at loss for divorce legal fees - tax loss harvesting)
+
+    Line 7:  Other income                                                           $0.00
+
+    Line 8:  Total income                                                   $167,165.00
+
+    ========================================================================
+                              ADJUSTED GROSS INCOME
+    ========================================================================
+
+    Line 10: Adjustments to income:
+             Educator expenses                                                     $0.00
+             HSA deduction                                                        $0.00
+             Moving expenses (military)                                           $0.00
+             Deductible part of self-employment tax                                $0.00
+             SEP/SIMPLE/Qualified plan deduction                                  $0.00
+             Penalty on early withdrawal of savings                                $0.00
+             Alimony paid                                                          $0.00
+             IRA deduction                                                        $0.00
+             Student loan interest                                                 $0.00
+
+    Line 11: Adjusted Gross Income                                         $167,165.00
+
+    ========================================================================
+                          TAX AND PAYMENTS
+    ========================================================================
+
+    Line 16: Tax                                                                $31,827.00
+    Line 17: Amount from Schedule 2                                               $0.00
+    Line 18: Total tax before credits                                         $31,827.00
+
+    Line 19: Child tax credit/credit for other dependents                         $0.00
+             (Ex-husband claimed both children per separation agreement)
+
+    Line 20: Amount from Schedule 3 (credits)                                     $0.00
+
+    Line 21: Total tax after credits                                          $31,827.00
+
+    Line 22: Federal income tax withheld (W-2)                                34,650.00
+    Line 23: 2024 estimated tax payments                                       $0.00
+    Line 24: Earned income credit                                                $0.00
+    Line 25a: Additional child tax credit                                        $0.00
+
+    Line 26: Amount paid with extension                                          $0.00
+    Line 27: Excess Social Security withheld                                      $0.00
+
+    Line 28: Total payments                                                  $34,650.00
+
+    ========================================================================
+                              REFUND OR AMOUNT OWED
+    ========================================================================
+
+    Line 29: Overpaid                                                         $2,823.00
+    Line 30: Amount applied to 2025 estimated tax                                $0.00
+    Line 31: Refund                                                          $2,823.00
+             (REFUND APPLIED - ACTUALLY ELECTED TO APPLY TO 2025 ESTIMATED TAX
+              PER FORM 4868 FILED SEPARATELY. CPA NOTE: SEE BELOW.)
+
+    ========================================================================
+                       SCHEDULE A — ITEMIZED DEDUCTIONS
+    ========================================================================
+
+    Medical and Dental Expenses (over 7.5% AGI)                                 $0.00
+
+    Taxes You Paid:
+      State and local income taxes                                          $7,425.00
+      Real estate taxes (condo - 555 Lake Shore Dr)                         $4,800.00
+      Personal property taxes                                                   $0.00
+      Other taxes                                                               $0.00
+      Total taxes                                                          $12,225.00
+
+    Interest You Paid:
+      Home mortgage interest (Form 1098) — Chase Mortgage                    $3,275.00
+      (NOTE: Mortgage in both names but Lisa paid 100% after separation)
+      Points not reported on 1098                                                $0.00
+      Investment interest                                                        $0.00
+      Total interest                                                         $3,275.00
+
+    Gifts to Charity:
+      Cash contributions                                                      $450.00
+      (United Way $250, PBS Springfield $200)
+      Non-cash contributions                                                    $0.00
+      Carryover from prior years                                              $0.00
+
+    Casualty and Theft Losses                                                    $0.00
+
+    Other Itemized Deductions:
+      Attorney fees related to divorce (IRS Memo: partially deductible
+      for tax advice portion of divorce).                                    $4,200.00
+      [Total legal fees paid in 2024: $42,500. Only tax advice portion
+       deductible per IRC Section 212. Remainder is personal.]
+
+    TOTAL SCHEDULE A DEDUCTIONS:                                            $20,150.00
+
+    Standard Deduction (MFS - $14,600 if not itemizing):                        N/A
+    Used Itemized Deductions because > Standard.
+
+    ========================================================================
+                             CPA PREPARER NOTES
+    ========================================================================
+
+    Prepared by: Janet M. Kowalski, CPA
+    Firm: Kowalski & Associates, P.C.
+          300 South 6th Street, Suite 400
+          Springfield, IL 62701
+    PTIN: P12345678
+    Phone: (217) 555-0198
+
+    NOTES:
+    ======
+
+    1. Filing Status: Client and spouse have been separated since February 2024
+       but divorce was not finalized until December 2025. Per IRS rules, filing
+       status is determined by marital status on December 31. Since they were
+       still legally married on 12/31/2024, they must file as Married Filing
+       Separately (MFS) or Jointly. Client elected MFS due to unwillingness to
+       file jointly with estranged spouse. Ex-husband also filed MFS.
+
+    2. Children: Sophia (age 15 as of 12/31/2024) and Ethan (age 13 as of
+       12/31/2024) are claimed as dependents by Dr. Michael Patel per the
+       temporary separation agreement dated 03/01/2024. Lisa did not claim
+       head of household status because she did not provide more than 50% of
+       household costs during the separation period (temporary support was
+       being paid by Dr. Patel). HOH denied per IRS rules.
+
+    3. Child Support: NOT REPORTABLE as income per IRC Section 71(c). Child
+       support received ($1,500/mo beginning 01/2026) is not taxable income
+       and should NOT be reported on tax return. This was also true for
+       temporary support received in 2024 (labeled as "temporary family
+       support" — $2,000/mo paid from Mar-Dec 2024). The temporary support
+       was characterized as "family support" in separation agreement, not
+       alimony, and per divorce decree alimony was waived entirely. Therefore,
+       NO alimony income or deduction appears anywhere.
+
+    4. Attorney Fees: Client paid approximately $42,500 in attorney fees
+       during 2024. Only $4,200 of this related to tax advice (CPA allocated
+       based on attorney's billing detail). The remaining $38,300 is personal
+       and NOT deductible. Receipts retained in client file.
+
+    5. Refund Election: Client initially was due $2,823 refund but elected
+       to apply to 2025 estimated taxes via Form 4868 to avoid underpayment
+       penalty in 2025 (anticipated bonus income fluctuations).
+
+    6. Divorce Settlement Property: The marital residence (555 Lake Shore
+       Drive, Unit 12A) was awarded to Lisa in the December 2025 decree via
+       quitclaim deed. This was a tax-free transfer incident to divorce per
+       IRC Section 1041. No capital gain recognition. Cost basis transfers
+       to Lisa. Original purchase price in 2018 was $420,000.
+
+    7. QDRO/Retirement: Lisa received a QDRO transfer of $340,000 from Dr.
+       Patel's 401(k) in January 2026 (post-tax-year). This will not appear
+       on 2024 taxes. The rollover to Lisa's Vanguard IRA is tax-free as
+       it was directly transferred via QDRO.
+
+    8. 401(k): Client contributed $16,500 to employer 401(k) in 2024. Employer
+       match was $4,950. Both are reflected in box 12 of W-2.
+
+    ========================================================================
+                             DISCLAIMER & SIGNOFF
+    ========================================================================
+
+    Under penalties of perjury, I declare that I have examined this return and
+    accompanying schedules and statements, and to the best of my knowledge and
+    belief, they are true, correct, and complete.
+
+    [SIGNED]   Lisa M. Patel                          Date: 04/10/2025
+    [SIGNED]   Janet M. Kowalski, CPA                 Date: 04/10/2025
+
+    ========================================================================
+    THIS DOCUMENT IS A TRUE AND ACCURATE COPY OF THE TAX RETURN AS FILED
+    WITH THE INTERNAL REVENUE SERVICE. PREPARED FOR MORTGAGE UNDERWRITING
+    PURPOSES PER BORROWER REQUEST.
+    ========================================================================

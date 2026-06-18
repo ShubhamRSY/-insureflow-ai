@@ -1,0 +1,193 @@
+========================================================================================================
+                           UNIFORM RESIDENTIAL LOAN APPLICATION
+                            Fannie Mae Form 1003 / Freddie Mac Form 65
+========================================================================================================
+
+                                                                        FILE COPY
+                                                                        Loan #: INF-2026-33821
+
+SECTION I: TYPE OF MORTGAGE AND TERMS
+
+  Mortgage Applied For:       [X] Conventional   [ ] FHA   [ ] VA   [ ] USDA/RD
+  Agency Case Number:         N/A
+  Lender Case Number:         INF-2026-33821
+
+  Amount:                     $340,000.00
+  Interest Rate:              6.750%
+  Number of Months:           360
+  Amortization Type:          [X] Fixed   [ ] ARM   [ ] GPM
+  MIP/PMI:                    [ ] Yes  [X] No - LTV 80%
+
+SECTION II: PROPERTY INFORMATION AND PURPOSE OF LOAN
+
+  Subject Property Address:   4567 Oakwood Lane
+                              Springfield, IL 62704
+
+  Legal Description:          Lot 7, Block 3, Oakwood Estates Subdivision,
+                              Sangamon County, Illinois (Parcel 14-23-456-789-0000)
+
+  Year Built:                 2018
+  Property Type:              [X] Single Family   [ ] 2-4 Units   [ ] Condo   [ ] Townhouse
+
+  Purpose of Loan:            [X] Purchase   [ ] Refinance   [ ] Construction
+
+  Purchase Price:             $425,000.00
+  Loan Amount:                $340,000.00
+  Down Payment:               $85,000.00 (20.00%)
+  LTV:                        80.00%
+  CLTV:                       80.00%
+
+SECTION III: BORROWER INFORMATION
+
+  BORROWER 1:
+  Name:                       John Andrew Thompson
+  SSN:                        XXX-XX-4492
+  DOB:                        05/14/1986 (Age: 39)
+  Marital Status:             Married
+  Dependents:                 2 (Ages 8, 12)
+  Current Address:            4521 Pinecrest Drive
+                              Springfield, IL 62704
+  Years at Address:           6
+  Home Phone:                 (555) 345-2219
+  Cell Phone:                 (555) 345-2210
+  Email:                      john.thompson@email.com
+
+  Employer:                   TechCorp Inc.
+  Address:                    200 Innovation Blvd, Springfield, IL 62704
+  Position:                   Senior Software Engineer
+  Years Employed:             4 years (since 04/2022)
+  Monthly Income (Base):      $9,375.00
+  Monthly Overtime:           $0.00
+  Monthly Bonus:              $1,250.00
+  Monthly Commissions:        $0.00
+  Other Income:               $0.00 (explain: )
+
+  BORROWER 2:
+  Name:                       Sarah Michelle Thompson
+  SSN:                        XXX-XX-6731
+  DOB:                        10/22/1988 (Age: 37)
+  Marital Status:             Married
+  Dependents:                 2 (Ages 8, 12)
+  Current Address:            4521 Pinecrest Drive
+                              Springfield, IL 62704
+  Years at Address:           6
+  Cell Phone:                 (555) 345-2211
+  Email:                      sarah.thompson@email.com
+
+  Employer:                   Self-Employed (SMT Design Studio)
+  Business Address:           1420 Creative Arts Blvd, Suite 204, Springfield, IL 62704
+  Position:                   Owner/Principal Designer
+  Years Self-Employed:        6 years (since 2020)
+  Monthly Income (Base):      $4,550.00 (average based on 2024 tax return net income $54,600)
+  Other Self-Employment:      N/A
+
+SECTION IV: INCOME & ASSETS
+
+  BORROWER GROSS MONTHLY INCOME:
+
+  John Thompson Base:                         $9,375.00
+  John Thompson Bonus (avg 24mo):             $1,250.00
+  Sarah Thompson Self-Employed Net:           $4,550.00
+  Other Income:                                 $0.00
+  TOTAL GROSS MONTHLY INCOME:                $15,175.00
+
+  ASSETS:
+
+  John Thompson - Bank of Springfield Checking XXXX-4872:    $8,065.00
+  John Thompson - Bank of Springfield Savings XXXX-2198:    $18,756.00
+  Joint - Bank of Springfield Money Market XXXX-5511:       $76,095.00
+  John Thompson - 401(k) (not used for closing):          $142,000.00
+  Sarah Thompson - IRA (not used for closing):             $38,000.00
+  Gift Funds (Father - John Thompson Sr.):                 $35,000.00  <---- UNSEASONED - NEED DEPOSIT CONFIRMATION
+
+  TOTAL VERIFIED ASSETS:                                   $137,916.00 + retirement $180,000.00
+
+SECTION V: LIABILITIES & HOUSING EXPENSE
+
+  LIABILITIES:
+
+  John Thompson - Auto Loan (Honda Accord) - $487/mo - $12,400 balance:
+                                                                      $487.00
+  John Thompson - Student Loan (Navient) - $175/mo (deferred - recalculated IBR):
+                                                                      $175.00
+  Sarah Thompson - Credit Card (Chase) - $85/mo (min payment):
+                                                                       $85.00
+  Sarah Thompson - Credit Card (Amex) - $120/mo (min payment):
+                                                                      $120.00
+  John & Sarah - Joint CC (Discover) - $200/mo (min payment):
+                                                                      $200.00
+
+  TOTAL MONTHLY LIABILITIES:                                        $1,067.00
+
+  PROPOSED HOUSING EXPENSE:
+  Principal & Interest (6.75% / 360):                                $2,205.62
+  Hazard Insurance:                                                   $156.25
+  Real Estate Taxes:                                                  $560.00
+  Mortgage Insurance:                                                   $0.00
+  HOA Dues:                                                             $0.00
+  TOTAL HOUSING EXPENSE:                                            $2,921.87
+
+SECTION VI: TRANSACTION SUMMARY
+
+  Purchase Price:                                        $425,000.00
+  Closing Costs (estimated):                              $12,400.00
+  Down Payment:                                          -$85,000.00
+  Deposit / Earnest Money:                                -$5,000.00
+  Gift Funds:                                            -$35,000.00
+  Seller Credits:                                            $0.00
+  Loan Amount:                                           $340,000.00
+  Cash to Close (from borrower):                         $97,400.00
+
+========================================================================================================
+                      BORROWER SIGNATURES
+
+I/we certify that the information provided in this application is true and correct
+as of the date signed below. I/we understand that intentional misrepresentation
+may result in civil liability and/or criminal penalties.
+
+  ________________________________________             Date: 03/08/2026
+  John Andrew Thompson
+
+  ________________________________________             Date: 03/08/2026
+  Sarah Michelle Thompson
+
+========================================================================================================
+                   LENDER USE ONLY - UNDERWRITER COMMENTS
+
+============================================================================
+||                                                                        ||
+||   UW SCRIBBLES (red pen):                                              ||
+||                                                                        ||
+||   DTI = $1,067 (liabilities) + $2,921.87 (housing) = $3,988.87       ||
+||    ------------------------------------------------------             ||
+||   $3,988.87 / $15,175.00 = 26.28% FRONT / 38.1% BACK                 ||
+||                                                                        ||
+||   BACK DTI 38% - ACCEPTABLE FOR CONVENTIONAL (T4 APPROVED)             ||
+||                                                                        ||
+||   RENTAL HISTORY: Verified w/ landlord (S. Henderson,                  ||
+||   555-234-8877). $1,850/mo. Paid on time 6 yrs.                       ||
+||   NO LATE PAYMENTS. VERIFIED 03/10/2026 - J.M.                        ||
+||                                                                        ||
+||   GIFT FUNDS: $35,000 FROM FATHER (JOHN THOMPSON SR.)                ||
+||   DEPOSITED INTO MM XXXX-5511 ON 03/02/2026                          ||
+||   GIFT LETTER EXECUTED 03/02/2026. NON-REPAYABLE.                     ||
+||   DONOR: John Thompson Sr. (same name - father).                      ||
+||   RELATIONSHIP VERIFIED. 5%+ OF DOWN PAYMENT = NO PMI REQ.            ||
+||                                                                        ||
+||   NEED: Gift letter signed by donor + bank statement showing          ||
+||         donor's withdrawal AND borrower's deposit.                    ||
+||                                                                        ||
+||   *** ASSET RESERVES: $76,095 MM + $18,756 SV = $94,851              ||
+||       POST-CLOSE RESERVES: $94,851 - $12,400 CC = $82,451            ||
+||       6 MONTHS PITI = $17,531.22. RESERVES = 28 MONTHS.             ||
+||       *** EXCELLENT ***                                               ||
+||                                                                        ||
+============================================================================
+
+[STAMP]: RECEIVED - INSUREFLOW NATIONAL MORTGAGE
+         LOAN PROCESSING DEPT
+         DATE: 03/08/2026
+         INIT: LM
+
+[STAMP]: CREDIT REPORT PULLED 03/05/2026 - SCORE: JOHN 748 / SARAH 736
+         FILE: INF-2026-33821

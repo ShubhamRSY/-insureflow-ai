@@ -1,0 +1,166 @@
+======================================================================
+  WILSON HOME IMPROVEMENTS - DETAILED P&L (CASH BASIS)
+        JANUARY 1, 2024 - DECEMBER 31, 2024
+              (Supporting Detail for Schedule C)
+======================================================================
+
+PREPARED BY: James T. Wilson / Self-prepared
+NOTE: This is NOT a CPA-prepared document. Internal use. Provided
+      for loan underwriting per request. Some categories estimated.
+
+======================================================================
+REVENUE BREAKDOWN:
+======================================================================
+
+Job #      Client               Description              Amount       Status
+------     ------               -----------              ------       ------
+W-2401     Ramirez, M.           Kitchen Remodel          $28,400.00  Paid in full
+W-2402     Henderson, T.         Bathroom Remodel         $12,500.00  Paid in full
+W-2403     Patel, S.             Deck Build + Screened    $18,200.00  Paid in full
+                                 (addtl: 2,800 for elect)
+W-2404     O'Malley, K.          Basement Finish          $21,000.00  Paid - partial retainage held
+W-2405     Thompson, R.          Kitchen Remodel          $22,100.00  Paid in full  ***
+W-2406     City of Springfield   Handyman - porch repair   $5,400.00  PO# 2024-1187
+W-2407     Chen, L.              Bathroom Remodel         $13,800.00  Paid in full
+W-2408     Dawson, J.            Kitchen Remodel (partial) $11,500.00  Paid (cabinets only job - reface)
+W-2409     Various (cash jobs)   Handyman misc.           $9,600.00  See detail below
+W-cash     Misc                  Materials markup (cost+)  $8,000.00  ~17% avg markup on materials
+                                                          ----------
+TOTAL GROSS RECEIPTS                                      $145,000.00
+                                                          ==========
+
+*** Thompson job: $22,100 - was originally quoted at $19,500 but 
+    client added backsplash and custom shelving. Change order dated 8/14/24
+
+CASH JOB DETAIL (W-2409):
+   - Johnson, Mrs. A. - gutter cleaning & repair         $1,200.00
+   - Miller, S. - drywall repair (water damage)          $2,800.00
+   - Thomas, R. - fence gate replacement                 $450.00
+   - Arnold, B. - pressure washing driveway + patio      $850.00
+   - Lewis, P. - garage shelf install                    $600.00
+   - Pope, J. - water heater install (labor only)        $1,200.00
+   - Hartley, D. - closet built-in shelving              $1,400.00
+   - Carter, M. - door refinish (3 interior doors)       $450.00
+   - Cash - misc small jobs (receipts lost?)             $650.00  <-- ???
+                                                         --------
+                                                          $9,600.00
+
+======================================================================
+EXPENSE BREAKDOWN:
+======================================================================
+
+MATERIALS (Direct Job Costs):
+   Home Depot - Countertops, cabinets, lumber            $5,200.00
+   Home Depot - Tile, flooring, paint                    $3,400.00
+   Lowe's - Plumbing fixtures, piping                    $2,100.00
+   Menards - Lumber, hardware                            $1,800.00
+   Springfield Lumber Co. - Special order windows        $2,300.00
+   Total - Direct Materials                              $14,800.00
+   *(Note: some receipts missing - accounted from CC statements)*
+
+SUBCONTRACTOR PAYMENTS:
+   Rivera Electric (Mike Rivera) - Electrical work       $2,800.00
+   Precision Plumbing (Dave K.) - Plumbing               $2,200.00
+   Garcia Drywall (Jorge Garcia) - Drywall               $1,200.00
+   A-1 Painting (Tim Owens) - Interior paint             $600.00
+                                                         --------
+                                                          $6,800.00
+
+TOOLS & EQUIPMENT:
+   DeWalt circular saw (replacement - stolen job site)   $329.00
+   Milwaukee drill kit                                    $399.00
+   Porter cable nailer (used)                            $150.00
+   Tool belts (2)                                        $120.00
+   Saw blades, bits, misc consumables                    $650.00
+   Equipment rental (scaffolding)                        $752.00
+                                                         --------
+                                                          $2,400.00
+
+VEHICLE EXPENSES:
+   12,400 miles @ $0.655/mi = $8,122
+   Actual: Fuel                                           $3,400.00
+   Insurance (commercial rider)                           $1,800.00
+   Repairs (brakes + tires)                               $1,200.00
+   *Opted for standard mileage deduction = $8,122*
+   *(Higher than actual - IRS allows standard)*            $8,500.00
+                                                         (rounded up slightly)
+
+DO I NEED TO INCLUDE TOLLS? No - no tolls in Springfield really.
+
+INSURANCE:
+   General Liability - Hiscox Insurance                    $3,600.00
+   (Policy #GL-IL-4412-24 - paid quarterly)
+   
+LICENSES & PERMITS:
+   City of Springfield Contractor License                  $450.00
+   IL State License Renewal                                $300.00
+   Permit fees (passed to clients but some in my name)     $200.00
+                                                           --------
+                                                            $950.00
+
+PROFESSIONAL SERVICES:
+   CPA - tax prep & quarterly estimates                    $600.00
+   Legal - divorce related (some business deduction?)      no - personal
+   License application fees                                $600.00
+                                                           --------
+                                                           $1,200.00
+
+RENTAL EQUIPMENT:
+   Dumpster rentals (4 jobs)                              $2,800.00
+   Scaffold rental                                        $1,400.00
+                                                           --------
+                                                           $4,200.00
+
+DISPOSAL FEES:
+   Dump fees (county waste facility)                       $650.00
+
+JOB SITE SUPPLIES:
+   Tarps, tape, plastic sheeting, masks, etc.             $1,050.00
+
+SAFETY EQUIPMENT:
+   Hard hats (4), safety glasses, harness                 $400.00
+
+ADVERTISING:
+   Facebook ads ($50/mo average)                          $600.00
+   Truck magnetic signs                                   $250.00
+   Google Business listing (promotion)                    $200.00
+   Angi's List membership                                 $150.00
+                                                           --------
+                                                           $1,200.00
+
+OFFICE:
+   QuickBooks Online subscription                         $300.00
+   Phone (business portion - 60% of Verizon)              $420.00
+   Office supplies (Home office deduction - simplified)   $130.00
+                                                           --------
+                                                            $850.00
+
+======================================================================
+EXPENSE TOTAL:                                              $47,000.00
+======================================================================
+
+COGS/MATERIALS MARKUP NOTE:
+   I charge clients cost + 15-20% on materials.
+   The markup ($8,000) is in gross receipts above.
+   Cost of materials net = ~$14,800 (what I pay)
+   Client charged = ~$22,800 (what they pay me)
+   Markup = ~$8,000
+
+======================================================================
+YEAR IN REVIEW NOTES:
+======================================================================
+   - Good year overall. Steady work. Market is strong.
+   - Need to raise rates in 2025. Competition from big box 
+     "bath in a day" places but we do better work.
+   - 3 big kitchen jobs made the year. 
+   - Dec/Jan are slow - plan accordingly.
+   - $8K set aside in separate savings for estimated taxes.
+   - Paid $14K in quarterly estimates. Still owe $6,268. Ouch.
+
+   [Handwritten bottom margin:]
+   "Some of these numbers are rounded. CPA says that's fine.
+    Receipts organized by job in file cabinet. Auditable.
+    Missing ~$650 in cash job receipts - elderly lady paid 
+    cash for a handrail install, no receipt. Probably fine."
+
+======================================================================

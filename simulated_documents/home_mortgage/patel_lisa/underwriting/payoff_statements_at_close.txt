@@ -1,0 +1,130 @@
+========================================================================================================
+                      PAYOFF STATEMENTS AT CLOSE  -  CASH-OUT PROCEEDS
+                        DEBT CONSOLIDATION / PAYOFF SUMMARY
+========================================================================================================
+
+    BORROWER: Lisa M. Patel
+    LOAN #: IF-CASHOUT-01252026-041
+    PREPARED BY: InsureFlow National Mortgage - Closing Department
+    DATE: February 5, 2026
+
+========================================================================================================
+PAYOFF INSTRUCTIONS - CASH-OUT PROCEEDS
+========================================================================================================
+
+    From the cash-out proceeds of approximately $120,000.00, the following creditors
+    will be paid at closing via wire or official check:
+
+========================================================================================================
+PAYOFF #1:  CHASE SAPPHIRE RESERVE
+========================================================================================================
+
+    Creditor:           Chase Bank N.A. - Credit Card Division
+    Account #:          XXXX-XXXX-XXXX-8872
+    Borrower:           Lisa M. Patel
+    Payoff Amount:      $18,000.00  (as of 02/01/2026)
+    
+    Payoff Address:     Chase Card Services
+                        PO Box 94014
+                        Palatine, IL 60094-4014
+    
+    Payoff Contact:     (800) 555-5241
+    Payoff Valid Thru:  02/15/2026
+    Payoff Reference:   #PYMT-CHASE-8872-PATEL
+    
+    Current Balance:    $18,423.11
+    Payoff Amount:      $18,000.00  (negotiated - waived last $423 as goodwill)
+                          ^ WAIT - payoff should be full balance. Let me redo.
+    
+    [HANDWRITTEN]:
+    Per statement 01/25/2026: Balance $18,423.11
+    Minimum payment: $525
+    APR: 22.24%
+    Payoff requested: $18,423.11 plus per diem $11.23/day
+    Estimate: $18,500.00
+    Put $18,000 as estimate. Final payoff at closing.
+    - DK
+    
+    [STAMP]: PAYOFF REQUESTED 02/03/2026 - AWAITING FINAL PAYOFF LETTER
+    
+    Estimated Payoff (incl per diem):                        $18,500.00
+
+========================================================================================================
+PAYOFF #2:  CITI DOUBLE CASH CARD
+========================================================================================================
+
+    Creditor:           Citibank N.A. - Citi Double Cash
+    Account #:          XXXX-XXXX-XXXX-4419
+    Borrower:           Lisa M. Patel
+    Payoff Amount:      $10,000.00  (as of 02/01/2026)
+    
+    Payoff Address:     Citibank Card Services
+                        PO Box 6001
+                        Sioux Falls, SD 57117
+    
+    Payoff Contact:     (800) 555-4443
+    Payoff Reference:   #PYMT-CITI-4419-PATEL
+    
+    Current Balance:    $10,240.00
+    APR: 19.99%
+    Minimum payment: $250
+    Per diem interest: $5.60/day
+    
+    Estimated Payoff (incl per diem):                        $10,300.00
+
+========================================================================================================
+PAYOFF #3:  GOLDBERG & ASSOCIATES (ATTORNEY FEE)
+========================================================================================================
+
+    Creditor:           Goldberg & Associates, P.C.
+    Account #:          GA-2025-7781 (Patel Dissolution File)
+    Borrower:           Lisa M. Patel
+    Payoff Amount:      $12,500.00  (final fee - fixed amount)
+    
+    Payoff Address:     Goldberg & Associates, P.C.
+                        412 E. Jefferson Street, Suite 300
+                        Springfield, IL 62701
+    
+    Contact:            Sarah M. Goldberg, Esq. (217) 555-9988
+    
+    Description:        Final legal fee for dissolution of marriage.
+                        Case #2025-DR-441, Sangamon County Circuit Court.
+                        Services rendered through 12/15/2025 (final judgment).
+                        This is the outstanding balance after prior payments.
+    
+    Wire Instructions:  Please wire to IOLTA Trust Account per separate letter.
+    
+    Attorney Balance Confirmed:                               $12,500.00
+
+========================================================================================================
+TOTAL PAYOFF SUMMARY
+========================================================================================================
+
+    PAYEE                          AMOUNT              METHOD              REFERENCE
+    ----------------------------   ----------          ---------------     ------------------
+    Chase Sapphire Reserve         $18,000.00          Electronic Payoff   CHASE-8872
+    Citi Double Cash               $10,000.00          Electronic Payoff   CITI-4419
+    Goldberg & Associates          $12,500.00          Wire Transfer       GA-2025-7781
+    ----------------------------   ----------
+    TOTAL PAYOFFS:                 $40,500.00
+    
+    REMAINING CASH TO BORROWER:    $79,500.00  (total cash-out $120K - $40.5K payoffs)
+    
+    [HANDWRITTEN - AR]:
+    WAIT - $120K - $40.5K = $79.5K. But CD said $70K to borrower.
+    There's $9.5K discrepancy. Possibly per diem interest adjustments,
+    property tax prorations, or escrow refund from old loan.
+    Will balance at closing. Estimate only. - DK
+
+========================================================================================================
+CONFIRMATION
+
+    I authorize the above payoffs to be made from my cash-out refinance proceeds.
+
+    _________________________________                    ___________________
+    [SIGNATURE]  Lisa M. Patel                          Date
+
+========================================================================================================
+[STAMP]: RECEIVED - PAYOFF STATEMENTS ATTACHED TO CD
+         CLOSING DEPT - VERIFY FINAL PAYOFF AMOUNTS DAY OF CLOSING
+========================================================================================================

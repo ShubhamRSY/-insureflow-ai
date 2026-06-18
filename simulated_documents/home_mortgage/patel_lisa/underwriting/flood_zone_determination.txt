@@ -1,0 +1,84 @@
+================================================================================
+                    FEMA STANDARD FLOOD HAZARD DETERMINATION
+================================================================================
+
+    Order #: IF-FLOOD-01252026-041          Date: 01/27/2026
+    Property: 555 Lake Shore Drive, Unit 12A, Springfield, IL 62711
+    Borrower(s): Lisa M. Patel
+    Lender: InsureFlow National Mortgage (NMLS #412897)
+
+================================================================================
+PROPERTY INFORMATION
+================================================================================
+
+    Property Type: Condominium - High-Rise Residential
+    Legal Description: Unit 12A, Lake Shore Condominiums, a Condominium,
+                       according to the Declaration recorded as Document #2003-14881
+                       in Sangamon County, IL
+    Census Tract: 4105.01
+    Building Height: 18 Stories - Unit on 12th Floor
+
+================================================================================
+FLOOD MAP INFORMATION
+================================================================================
+
+    Map Number: 17167C0300J                   Map Date: 09/25/2024
+    Panel: 0300                              Community: City of Springfield
+    Flood Zone: X                            Zone Description: Area of Minimal Flood Risk
+    SFHA? (Special Flood Hazard Area):  NO
+
+================================================================================
+DETERMINATION
+================================================================================
+
+    X   Property is in FLOOD ZONE X (Minimal Flood Risk).
+        No flood insurance required by Federal regulations.
+        
+        Property is a 12th-floor condominium unit in high-rise building.
+        Building is not located in a Special Flood Hazard Area.
+        FLOOD INSURANCE NOT REQUIRED.
+
+    ___ Property is in FLOOD ZONE A, AE, V, etc. (SFHA).
+        Flood insurance is required.
+
+================================================================================
+CONDOMINIUM PROJECT NOTES
+================================================================================
+
+    - Lake Shore Condominiums is a high-rise waterfront property on Lake Springfield.
+    - The building elevation is approximately 580 ft MSL.
+    - The dam-controlled lake level is maintained at 560 ft MSL.
+    - Unit 12A is elevated approximately 100+ ft above lake level.
+    - The base flood elevation (BFE) for Zone AE areas nearby is 564 ft MSL.
+    - Unit 12A at 580+ ft elevation is well above any potential flood level.
+    - Condo association master policy does NOT include flood coverage - not required.
+    
+    ---------------------------------------------------------------------------
+    [HANDWRITTEN NOTE - UW]:
+    Condo high-rise. 12th floor. Zone X. No flood ins req. Standard for this
+    property type/location. Even if lake floods, 12th floor = no risk.
+    - DK 1/27
+    ---------------------------------------------------------------------------
+
+================================================================================
+FEE SUMMARY
+================================================================================
+
+    Flood Determination Fee: $12.00 (billed to borrower at closing)
+
+================================================================================
+CERTIFICATION
+================================================================================
+
+    I certify that the above determination was made in accordance with the National 
+    Flood Insurance Reform Act of 1994 and standard flood hazard determination practices.
+
+    _________________________________
+    Jennifer Walsh
+    Certified Floodplain Manager #CFM-44391
+    InsureFlow National Mortgage - Flood Compliance Dept.
+    Date: 01/27/2026
+
+
+>>>> LIFETIME OF LOAN COVERAGE - REORDER #ORD-FL-88341 <<<<
+================================================================================

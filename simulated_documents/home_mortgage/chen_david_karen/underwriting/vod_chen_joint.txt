@@ -1,0 +1,96 @@
+══════════════════════════════════════════════════════════════════════
+                   VERIFICATION OF DEPOSIT
+                  (Form 1006 — Fannie Mae/Freddie Mac)
+
+  REQUEST DATE:      02/25/2026
+  COMPLETION DATE:   02/27/2026
+
+  BORROWER(S):       David Chen & Karen Chen
+  LOAN #:            IN-2026-03380
+
+══════════════════════════════════════════════════════════════════════
+
+FINANCIAL INSTITUTION:
+
+  CHASE BANK, N.A.
+  1000 Financial Plaza
+  Chicago, IL 60606
+  (800) 555-4100
+
+  VERIFIED BY:      James T. Kowalski
+  TITLE:            Branch Manager
+  PHONE:            (312) 555-4112
+
+══════════════════════════════════════════════════════════════════════
+
+ACCOUNT DETAILS:
+
+  ┌──────────────────────────────────────────────────────────────┐
+  │ ACCOUNT TYPE:    Joint Checking                              │
+  │ ACCOUNT NUMBER:  XXXX-2290                                   │
+  │ CURRENT BALANCE: $48,234.12  (as of 02/26/2026)              │
+  │                                                              │
+  │ 12-MONTH AVERAGE BALANCE:  $45,200.00                        │
+  │ LOW BALANCE (12mo):        $12,500.00  (Aug 2025)            │
+  │ HIGH BALANCE (12mo):       $68,900.00  (Dec 2025)            │
+  │                                                              │
+  │ DIRECT DEPOSIT:             Yes - David ($10,769/biwkly)     │
+  │                              Yes - Karen ($7,500/biwkly)     │
+  │ OVERDRAFT (12mo):           None                             │
+  └──────────────────────────────────────────────────────────────┘
+
+  ┌──────────────────────────────────────────────────────────────┐
+  │ ACCOUNT TYPE:    Joint Savings                               │
+  │ ACCOUNT NUMBER:  XXXX-7711                                   │
+  │ CURRENT BALANCE: $87,412.88  (as of 02/26/2026)              │
+  │                                                              │
+  │ 12-MONTH AVERAGE BALANCE:  $85,100.00                        │
+  │ LOW BALANCE (12mo):        $82,000.00  (Jul 2025)            │
+  │ HIGH BALANCE (12mo):       $91,500.00  (Jan 2026)            │
+  │                                                              │
+  │ INTEREST RATE:        0.45% APY                              │
+  │ OVERDRAFT (12mo):     None                                   │
+  └──────────────────────────────────────────────────────────────┘
+
+══════════════════════════════════════════════════════════════════════
+
+ADDITIONAL FUNDS (VERIFIED SEPARATELY):
+
+  VANGUARD MONEY MARKET ACCOUNT:
+    Account #: XXXX-4439
+    Current Balance: $120,587.00
+    12-month avg: $115,000.00
+    Institution: Vanguard Group
+    (Separate VOD sent to Vanguard - confirmed verbally 02/27)
+
+══════════════════════════════════════════════════════════════════════
+
+TOTAL VERIFIED LIQUID ASSETS:
+
+  Checking (Chase):             $48,234
+  Savings (Chase):              $87,413
+  Money Market (Vanguard):    $120,587
+  ─────────────────────────────────
+  TOTAL LIQUID:               $256,234
+
+══════════════════════════════════════════════════════════════════════
+
+CERTIFICATION:
+
+I certify that the above information is true and correct to the
+best of my knowledge.
+
+  (signed) /s/ James T. Kowalski
+
+  James T. Kowalski
+  Branch Manager
+  Chase Bank, N.A.
+  02/27/2026
+
+══════════════════════════════════════════════════════════════════════
+
+[[ UW HANDWRITTEN NOTE ]]
+Liquid assets verified $256K (Chase + Vanguard). Combined with
+brokerage ($340K) = $596K liquid. More than sufficient for
+reserves.  --RP  3/1
+══════════════════════════════════════════════════════════════════════

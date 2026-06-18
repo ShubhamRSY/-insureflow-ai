@@ -1,0 +1,97 @@
+======================================================================
+                  FORM 1040 - U.S. INDIVIDUAL INCOME TAX RETURN
+                           TAX YEAR: 2022 (PROCESSED)
+======================================================================
+   
+FILER: James Thomas Wilson
+SSN: XXX-XX-4412
+ADDRESS (at time): 1247 Maple Drive, Springfield, IL 62704
+                    (MARITAL HOME - SOLD IN SHORT SALE 11/2022)
+STATUS: Married Filing Separately (Separation began 03/2022)
+
+INCOME:
+----------------------------------------------------------------------
+Schedule C Net Profit                    $78,000.00
+Wages (part-time - Home Depot 3 months)  $8,400.00   *** Laid off Jan 2022 from 
+                                                         previous framing job
+Interest                                 $22.00
+TOTAL INCOME                             $86,422.00
+
+ADJUSTMENTS:
+Self-Employment Tax Deduction            $5,511.00
+SE Health Insurance (COBRA)              $5,400.00
+IRA Contribution                         $0.00
+
+ADJUSTED GROSS INCOME                    $75,511.00
+
+Deductions: Itemized ($12,400 - mortgage interest on marital home)
+   (Standard for MFS was $12,950 - took itemized due to mortgage interest)
+
+TAXABLE INCOME                           $62,311.00
+
+Tax                                      $8,812.00
+Schedule SE Tax                          $11,022.00
+Additional Medicare (no)                 $0.00
+
+TOTAL TAX                                $19,834.00
+
+TAX PAYMENTS:
+Estimated Tax Payments                   $6,000.00   (only made 2 payments - divorce year)
+W-2 Withholding (Home Depot)             $1,260.00
+
+TOTAL PAYMENTS                           $7,260.00
+
+AMOUNT YOU OWE:                          $12,574.00  *** Paid via installment agreement
+                                                         ($300/mo started 08/2023 - 
+                                                          paid off 11/2024)
+======================================================================
+
+SCHEDULE C - WILSON HOME IMPROVEMENTS (Started mid-2022)
+----------------------------------------------------------------------
+GROSS RECEIPTS:                          $115,000.00
+
+EXPENSES:
+   Materials                             $12,400.00
+   Subcontractors                        $5,800.00
+   Vehicle                               $6,200.00   
+   Tools (start-up costs - tablesaw, mitre saw, etc) $5,100.00
+   Insurance (bought GL policy)          $1,800.00
+   Equipment rental                      $1,500.00
+   Professional services                 $2,200.00  (divorce lawyer + CPA)
+   Advertising                           $600.00
+   Office                                $500.00
+   Permits                               $400.00
+   Other                                 $500.00
+
+TOTAL EXPENSES:                          $37,000.00
+
+NET PROFIT:                              $78,000.00
+======================================================================
+
+NOTES FROM CPA:
+   "Divorce year - slow. Only 2 major projects.
+    Started self-employment in March after layoff from framing crew.
+    Client struggled personally this year. Business still profitable.
+    
+    Note: Vehicle expenses high relative to revenue because he was
+    using personal truck for business before dedicated tracking.
+    
+    Also: Some home office deduction on Schedule C not claimed -
+    client was renting an apartment and working out of truck.
+    Reasonable.
+
+    Installment agreement set up for balance owed. Client current.
+    - Frank Mancini, CPA"
+    
+======================================================================
+     "Divorce year - slow. Only 2 major projects."
+======================================================================
+
+UNDERWRITER NOTE (4/12/26):
+   2022 was transition year. Lower income explains reduced SE tax.
+   Short sale on 1247 Maple occurred Nov 2022 - during divorce.
+   2 late payments (Aug & Sep 2022) per credit report. Context 
+   provided by LOE. Eligible for FHA guidelines - 3 years past 
+   short sale. Manual underwrite recommended due to credit score <660.
+   - ML
+======================================================================

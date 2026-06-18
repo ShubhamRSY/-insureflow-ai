@@ -1,0 +1,86 @@
+══════════════════════════════════════════════════════════════════════
+                   VERIFICATION OF DEPOSIT
+                  (Form 1006 — Fannie Mae/Freddie Mac)
+
+  REQUEST DATE:      01/18/2026
+  COMPLETION DATE:   01/22/2026
+
+  BORROWER:          James T. Wilson
+  LOAN #:            IN-2026-02791
+
+══════════════════════════════════════════════════════════════════════
+
+FINANCIAL INSTITUTION:
+
+  BANK OF AMERICA, N.A.
+  50 Commercial Street
+  Springfield, IL 62704
+  (800) 555-5000
+
+  VERIFIED BY:      Candace Nguyen
+  TITLE:            Banking Center Manager
+  PHONE:            (217) 555-5012
+
+══════════════════════════════════════════════════════════════════════
+
+══════════════════════════════════════════════════════════════════════
+
+ACCOUNT 1 — BUSINESS CHECKING:
+
+  ACCOUNT TYPE:    Business Checking (Sole Proprietorship)
+  ACCOUNT NUMBER:  XXXX-4410
+  CURRENT BALANCE: $25,380.44  (as of 01/21/2026)
+
+  12-MONTH AVERAGE BALANCE:  $18,200.00
+  LOW BALANCE (12mo):        $5,200.00   (Feb 2025)
+  HIGH BALANCE (12mo):       $38,400.00  (Nov 2025)
+
+  Monthly deposits (avg):    $7,500 - $9,000 (business receipts)
+  NSF in 12 months:          2 (both covered within 24 hrs)
+  Account opened:            2015
+
+══════════════════════════════════════════════════════════════════════
+
+ACCOUNT 2 — PERSONAL CHECKING:
+
+  ACCOUNT TYPE:    Personal Checking
+  ACCOUNT NUMBER:  XXXX-2291
+  CURRENT BALANCE: $8,042.17   (as of 01/21/2026)
+
+  12-MONTH AVERAGE BALANCE:  $5,500.00
+  LOW BALANCE (12mo):        $1,200.00   (Mar 2025)
+  HIGH BALANCE (12mo):       $12,800.00  (Dec 2025)
+
+  Monthly deposits (avg):    $1,200 (child support) + transfers
+  NSF in 12 months:          3 (all during divorce period mid-2025)
+  Account opened:            2018
+
+══════════════════════════════════════════════════════════════════════
+
+TOTAL VERIFIED:
+
+  Business Checking:      $25,380
+  Personal Checking:       $8,042
+  ─────────────────────────────────
+  TOTAL LIQUID:           $33,422
+
+══════════════════════════════════════════════════════════════════════
+
+CERTIFICATION:
+
+I certify the above information is true and correct.
+
+  (signed) /s/ Candace Nguyen
+
+  Candace Nguyen
+  Banking Center Manager
+  Bank of America
+  01/22/2026
+
+══════════════════════════════════════════════════════════════════════
+
+  [[ UW SCRIBBLE ]]
+  $33K liquid. Low but acceptable for FHA w/ 203k. NSF history
+  tied to divorce period (see LOE). Seasonal biz pattern typical
+  for GC.  --RP  1/24
+══════════════════════════════════════════════════════════════════════

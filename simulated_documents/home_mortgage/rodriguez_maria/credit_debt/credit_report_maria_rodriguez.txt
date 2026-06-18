@@ -1,0 +1,145 @@
+================================================================================
+                                EXPERIAN CREDIT REPORT
+                          CONSUMER DISCLOSURE - ACCURACY NOT GUARANTEED
+================================================================================
+
+  REPORT DATE:    February 22, 2026
+  REPORT NUMBER:  28-XX-4419-8872-M
+  FILE SINCE:     September 2014
+
+================================================================================
+  CONSUMER INFORMATION
+  --------------------------------------------------------------------------------
+  Name:           MARIA G RODRIGUEZ
+  Also Known As:  MARIA RODRIGUEZ
+  SSN:            XXX-XX-4421
+  DOB:            03/15/1998
+  Current Address: 789 Elm Street, Apt 2B, Springfield, IL 62704
+                   (Reported since: June 2022)
+  Previous Address: 1420 College Ave, Carbondale, IL 62901
+                   (Student address - reported until 2021)
+
+================================================================================
+  CREDIT SCORE
+  --------------------------------------------------------------------------------
+  Score:          678  (VantageScore 3.0)
+  Score Range:    300 - 850
+  Factor 1:       Credit card utilization is high (84%)
+  Factor 2:       Presence of a collection account (PAID - medical)
+  Factor 3:       Student loan balances significant relative to income
+  Factor 4:       Recent credit inquiry (02/10/2026 - mortgage)
+
+================================================================================
+  ACCOUNT HISTORY
+================================================================================
+
+  ACCOUNT 1:     CAPITAL ONE - PLATINUM MASTERCARD
+  --------------------------------------------------------------------------------
+  Account Status:     Open / Active
+  Account Type:       Revolving
+  Date Opened:        March 2019
+  Credit Limit:       $5,000
+  Balance:            $4,250
+  Available Credit:   $750
+  Utilization:        84%
+  Minimum Payment:    $85
+  Payment Status:     Pays as agreed (current)
+  Recent Activity:    Current as of Feb 2026
+  Payment History:
+    2026:  Jan (OK), Feb (OK)
+    2025:  Jan-Dec (OK)
+    2024:  Jan (OK), Feb (OK), Mar (30 DAYS LATE), Apr-Dec (OK)
+    2023:  Jan-Dec (OK)
+    2022:  Jan-Dec (OK)
+    2021:  Jan-Dec (OK)
+    2020:  Jan-Dec (OK)
+  Comments:  30-day late reported March 2024. Account now current.
+
+  ACCOUNT 2:     NELNET - FEDERAL STUDENT LOANS
+  --------------------------------------------------------------------------------
+  Account Status:     Open / Deferred (Income-Driven Repayment)
+  Account Type:       Installment - Student Loan
+  Date Opened:        Various (2016-2020)
+  Original Balance:   $26,500
+  Current Balance:    $22,330
+  Monthly Payment:    $85 (IBR - Income Based Repayment)
+  Payment Status:     Pays as agreed / Deferred
+  Comments:           Consolidated under REPAYE plan.
+                      Payoff deferment through 2028.
+                      No late payments reported.
+                      Loans originated through AES then transferred to Nelnet.
+
+  ACCOUNT 3:     MEDICAL COLLECTION - ACCOUNT RECOVERY ASSOCIATES
+  --------------------------------------------------------------------------------
+  Account Status:     CLOSED / PAID IN FULL
+  Account Type:       Collection
+  Original Creditor:  Memorial Health Systems - Springfield
+  Date Opened:        December 2020
+  Date Closed:        June 2021
+  Original Balance:   $340
+  Balance:            $0
+  Payment Status:     Paid in Full
+  Comments:          COLLECTION ACCOUNT - PAID. Amount $340.
+                     Status updated to PAID as of 06/2021.
+                     This account is scheduled to remain on file until 01/2028.
+
+================================================================================
+  INQUIRIES (LAST 2 YEARS)
+  --------------------------------------------------------------------------------
+  Date           Company                                  Type
+  02/10/2026     SPRINGFIELD MORTGAGE GROUP LLC           Mortgage - Auto
+  02/10/2026     SPRINGFIELD MORTGAGE GROUP LLC           Mortgage - Manual
+  08/12/2025     CAPITAL ONE                               Account Review
+  03/04/2025     BANK OF SPRINGFIELD                       Deposit Account
+  11/15/2024     NELNET                                    Account Review
+  08/10/2024     CAPITAL ONE                               Account Review
+
+================================================================================
+  EMPLOYMENT/PUBLIC RECORDS
+  --------------------------------------------------------------------------------
+  Current Employment:   Springfield School District 186 (Verified)
+                        Position: 3rd Grade Teacher
+                        Reported: 01/2026
+  Previous Employment:  Books N' More, Inc. (2018-2021)
+  Public Records:       None found.
+                        No bankruptcies, tax liens, or judgments.
+
+================================================================================
+
+  [underwriter annotation - red ink:]
+  _________________________________________________________________
+  |  CREDIT ANALYSIS - 02/24/2026                                  |
+  |  Score: 678 (accept for FHA - meets min 580)                   |
+  |                                                                |
+  |  ISSUES:                                                       |
+  |  - Capital One utilization 84%. High but not a dealbreaker.    |
+  |    Borrower has been current for 23/24 months (one late).      |
+  |    EXPLAIN: March 2024 late - borrower stated she forgot       |
+  |    to pay while on spring break. Auto-pay now set up.          |
+  |    (see loan application notes)                                |
+  |                                                                |
+  |  - Student loans in IBR - USE $85/MO FOR QUALIFYING.           |
+  |    DO NOT use the deferred/capped payment.                     |
+  |    NOTE: REPAYE payment calculated at $85/mo based on          |
+  |    borrower's income. Using $85/mo for DTI purposes.           |
+  |    Confirmed with Nelnet 02/23/2026 (ref #3382719).            |
+  |                                                                |
+  |  - MEDICAL COLLECTION VERIFIED PAID - EXCLUDE.                 |
+  |    $340 collection from 2021. Paid in full. No action needed.  |
+  |    FHA allows paid collections to be excluded from analysis.   |
+  |                                                                |
+  |  RESULT: Eligible for FHA financing. Compensating factors:     |
+  |  - Stable employment (5+ years teaching)                      |
+  |  - Low DTI with IBR payment ($85/mo vs $500+ standard)        |
+  |  - $16K liquid assets after close                              |
+  |  - Rent payment history (12 mos on time)                      |
+  |  - No prior foreclosures / bankruptcies                       |
+  |  - 2 years post-late-payment seasoning                        |
+  |                                                                |
+  |  CONDITION: Borrower must pay off or pay down CC to under      |
+  |  50% utilization OR provide explanation of payment plan.      |
+  |  UPDATE 3/1: She's going to pay $1,000 down before closing    |
+  |  to bring utilization to ~65%. Acceptable. - JM                |
+  |________________________________________________________________|
+
+================================================================================

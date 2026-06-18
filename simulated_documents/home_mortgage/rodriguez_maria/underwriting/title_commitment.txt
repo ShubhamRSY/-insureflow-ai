@@ -1,0 +1,127 @@
+================================================================================
+                         CHICAGO TITLE INSURANCE COMPANY
+                           COMMITMENT FOR TITLE INSURANCE
+================================================================================
+
+  COMMITMENT NO.:             CTIC-IL-2026-88312
+  DATE:                       March 1, 2026
+  LENDER:                     InsureFlow National Mortgage
+  LOAN #:                     INF-2026-44210
+  PROPERTY:                   789 Elm Street, Unit 2B, Springfield, IL 62704
+
+================================================================================
+SCHEDULE A - POLICY INFORMATION
+================================================================================
+
+  PURCHASE PRICE:             $180,000.00
+  LOAN AMOUNT:                $173,700.00
+
+  SELLER(S):                  Lakeside Realty Trust
+                              c/o Asset Management Dept
+                              1500 Lake Shore Drive
+                              Chicago, IL 60610
+
+  BUYER(S):                   Maria Elena Rodriguez
+
+  LEGAL DESCRIPTION:
+  Unit 2B, Building 4, Elm Street Condominiums, a condominium,
+  according to the Declaration of Condominium recorded in Condo
+  Book 12, Page 88, and as shown on the Plat of Survey recorded
+  in Plat Book 33, Page 45, Sangamon County, Illinois.
+
+  PROPERTY ADDRESS:           789 Elm Street, Unit 2B, Springfield, IL 62704
+  (Sangamon County, Illinois)
+
+  TITLE INSURANCE TO BE ISSUED:
+  Lender's Policy:            $173,700.00 (ALTA Loan Policy 2006)
+  Owner's Policy:             $180,000.00 (ALTA Owner's Policy 2006)
+
+  PREMIUM:                    $1,600.00 (Lender's + Owner's simultaneous issue)
+
+================================================================================
+SCHEDULE B - EXCEPTIONS
+================================================================================
+
+  The following matters are EXCEPTIONS to the coverage of the policy:
+
+  1. Real estate taxes and assessments for the year 2025 and subsequent
+     years. NOTE: Property taxes included in HOA assessment. Tax bill
+     issued to seller.
+
+  2. Covenants, conditions, and restrictions contained in the Elm Street
+     Condominium Declaration (Condo Book 12, Page 88), and amendments
+     thereto.
+
+  3. Utility easements of record.
+
+  4. Condominium lien rights for unpaid HOA dues and assessments in
+     favor of Elm Street Condominium Association.
+     Current HOA dues: $175.00 per month
+     Includes: building insurance, taxes, water, trash, maintenance
+     Status: [X] Current   [ ] Delinquent
+     HOA estoppel/cert requested 02/28/2026
+
+  5. Existing mortgage to be released:
+     Wells Fargo Bank, N.A. - formerly Wachovia
+     Deed of Trust recorded in Deed Book 1922, Page 331
+     Original amount: $145,000.00
+     Current payoff amount: TBD (REO seller - Lakeside Realty Trust
+     acquired via foreclosure)
+     Status: Foreclosure deed recorded in Deed Book 2240, Page 112
+     (Sangamon County Circuit Court Case # 2025-CH-448)
+
+  6. REO status: Property is bank-owned (Lakeside Realty Trust).
+     Full foreclosure chain verified. No redemption period remaining.
+     No junior liens found.
+
+================================================================================
+SCHEDULE C - REQUIREMENTS
+================================================================================
+
+  1. Payment of all taxes and assessments due and payable.
+  2. Recording of deed from Lakeside Realty Trust to Maria Rodriguez.
+  3. Recording of mortgage/deed of trust in favor of InsureFlow.
+  4. Payment of title insurance premiums.
+  5. Evidence of HO-6 condo insurance with loss payee clause.
+  6. HOA estoppel certificate showing no outstanding dues.
+
+================================================================================
+
+  SIGNED:
+
+  _________________________________________         Date: March 1, 2026
+  Cynthia Walker
+  Senior Title Officer
+  Chicago Title Insurance Company - Springfield Division
+  NLIC: 667482
+
+================================================================================
+
+  [EMBOSSED SEAL]: CHICAGO TITLE INSURANCE COMPANY
+                   SPRINGFIELD, IL DIVISION
+                   COMMITMENT #: CTIC-IL-2026-88312
+
+================================================================================
+
+HANDWRITTEN (underwriter - red pen):
+
+   SELLER = REO (Lakeside Realty Trust / Wells Fargo REO dept).
+   Foreclosure deed recorded 01/15/2026. Chain of title clean.
+   No junior liens. Wells payoff N/A - they own it.
+   
+   HOA estoppel: Requested 02/28. Need to confirm no
+   outstanding dues during REO period.
+   
+   HOA dues $175/mo - must include in DTI.
+   
+   Condo FHA-approved ✔ (FHA ID CONDO-IL-4482)
+   
+   All standard condo exceptions. Clean title.
+   - J. Kowalski 03/02/2026
+   
+================================================================================
+
+>> FAX RECEIPT: 03/01/2026 14:15:00 CST
+>> FROM: CHICAGO TITLE - SPRINGFIELD
+>> TO: INSUREFLOW NATIONAL MORTGAGE - UW DEPT
+>> PAGES: 4

@@ -1,0 +1,102 @@
+======================================================================
+                     CAPITAL ONE - CREDIT CARD STATEMENT
+======================================================================
+
+ACCOUNT HOLDER:     James T. Wilson
+ACCOUNT NUMBER:     xxxx-7721
+STATEMENT DATE:     February 5, 2026
+PAYMENT DUE DATE:   March 2, 2026
+
+NEW BALANCE:        $5,200.00
+CREDIT LIMIT:       $6,000.00
+AVAILABLE CREDIT:   $800.00
+MINIMUM PAYMENT:    $165.00
+APR (PURCHASES):    27.99% Variable
+APR (ADVANCES):     29.99% Variable
+
+======================================================================
+PAYMENT INFORMATION:
+======================================================================
+PREVIOUS BALANCE:    $4,950.00
+PAYMENTS:           -$165.00  (Minimum payment - on time)
+PURCHASES:           $415.00
+FEES:                $0.00
+INTEREST CHARGED:    $0.00  (in grace period as of this statement)
+NEW BALANCE:         $5,200.00
+
+======================================================================
+TRANSACTIONS:
+======================================================================
+Date        Description                                                     Amount
+-----------------------------------------------------------------------------------
+01/06       Home Depot - Springfield IL - Materials                        $187.43
+01/08       Lowe's #2291 - Springfield IL - Supplies                        $94.50
+01/12       Shell Gas - Springfield IL                                     $48.72
+01/15       Amazon.com - Tools & Equipment                                 $299.99
+01/18       Walmart - Springfield IL - Household                          $112.67
+01/22       Menards - Springfield IL - Lumber                              $87.40
+01/25       Home Depot - Springfield IL - Paint                            $134.28
+01/28       Schnucks Grocery - Springfield IL                             $78.50
+01/30       Shell Gas - Springfield IL                                    $52.40
+02/02       Subway - Springfield IL (Lunch)                               $12.50
+02/03       Amazon.com - Cell Phone Case (Personal)                        $24.99
+                                                                          -------
+TOTAL PURCHASES THIS PERIOD:                                               $415.00
+                                                                          =======
+======================================================================
+IMPORTANT MESSAGES:
+======================================================================
+
+  OVER-LIMIT WARNING: Your balance ($5,200) is within $800 of 
+  your credit limit ($6,000). Available credit is low. If you 
+  exceed your limit, over-limit fees may apply.
+
+  INTEREST CHARGE SUMMARY:
+  - Your current APR for purchases is 27.99%.
+  - No interest charged this period (paid minimum before due date).
+  - But your grace period may not apply in future months.
+
+  REWARDS SUMMARY:
+  - Cash Back Earned This Month: $4.15 (1% on purchases)
+  - Total Cash Back Available: $127.84
+
+  PAYMENT DUE: March 2, 2026
+  LATE PAYMENT WARNING: If we do not receive your minimum payment 
+  by the due date, you may be charged a late fee (up to $41) and 
+  your APR may increase to the Penalty APR of 29.99%.
+
+======================================================================
+STATUS: ALL CURRENT - All payments received on time.
+======================================================================
+
+======================================================================
+UNDERWRITER NOTE (added during review):
+======================================================================
+
+  Capital One card at 86.7% utilization ($5,200 / $6,000).
+  No late payments since account opening (06/2023).
+  Multiple purchases at home improvement stores - consistent
+  with business activity.
+  
+  Concern: High utilization suggests reliance on credit for
+  ongoing expenses. However, card is being used for both
+  business materials AND personal expenses (gas, groceries).
+  Borrower may benefit from segregating business purchases to
+  business account/credit card.
+
+  Action: Review minimum payment history. All current. ✓
+  Included in DTI calculation at $165/mo.
+
+  - ML, 3/12/26
+======================================================================
+
+  [Handwritten note, bottom margin:]
+  "Gotta pay this down. Ordering all materials for the new 
+   house through business account going forward. This card 
+   was getting out of hand. Plan to pay $500/mo minimum after
+   closing. Should be under 50% util by end of 2026. - JW"
+
+  [Second handwriting, different color:]
+  "Per UW - borrower states he will pay down revolving debt 
+   post-closing. No DTI concern. Noted for file. - ML"
+======================================================================

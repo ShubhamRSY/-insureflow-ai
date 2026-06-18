@@ -1,0 +1,122 @@
+══════════════════════════════════════════════════════════════════════
+                   CLOSING DISCLOSURE
+          (Consumer Financial Protection Bureau - Form)
+          Loan Estimate / Closing Disclosure Comparison
+
+  DATE ISSUED:       March 25, 2026
+  CLOSING DATE:      March 30, 2026
+  LOAN #:           IN-2026-03380
+  LENDER:           InsureFlow National Mortgage
+  BORROWER:         David Chen & Karen Chen
+  PROPERTY:         1242 Hillcrest Drive, Springfield, IL 62704
+
+══════════════════════════════════════════════════════════════════════
+
+LOAN TERMS:
+
+  LOAN AMOUNT:              $700,000.00
+  INTEREST RATE:             6.250%
+  MONTHLY P&I:              $4,310.00
+  LOAN TYPE:                Jumbo Fixed Rate (30 Year)
+  PURPOSE:                  Refinance — Rate/Term + $50,000 Cash-Out
+
+══════════════════════════════════════════════════════════════════════
+
+PROJECTED PAYMENTS:
+
+  Payment    Amount      Components
+  ─────────────────────────────────────────────────────────
+  Total      $5,843/mo   P&I $4,310 + Prop Tax $1,266
+                         + Insurance $267 (escrowed)
+
+══════════════════════════════════════════════════════════════════════
+
+CLOSING COSTS DETAIL:
+
+  A.  Origination Charges:
+      Loan Origination Fee (1%):             $5,200.00
+      Processing/Underwriting Fee:              $0.00  (waived)
+      ─────────────────────────────────────────────────
+      Total Origination:                     $5,200.00
+
+  B.  Services Borrower Did NOT Shop For:
+      Appraisal Fee:                           $700.00
+      Credit Report Fee:                        $50.00
+      Flood Determination:                      $15.00
+      Tax Service Fee:                          $48.00
+      ─────────────────────────────────────────────────
+      Total (B):                              $813.00
+
+  C.  Services Borrower DID Shop For:
+      Title - Lender's Policy:               $1,600.00
+      Title - Settlement Fee:                  $800.00
+      Title - Recording:                       $300.00
+      Title - Courier/Admin:                   $100.00
+      ─────────────────────────────────────────────────
+      Total (C):                            $2,800.00
+
+  D.  Prepaids:
+      Homeowner's Insurance ($3,200/yr):     $2,000.00  (3 mo escrow)
+      Interest for 4/1-4/15:                  $729.17
+      ─────────────────────────────────────────────────
+      Total (D):                            $2,729.17
+
+  E.  Initial Escrow at Closing:
+      Property Taxes (3 months):            $3,798.00
+      Homeowner's Insurance (2 mo):           $533.33
+      ─────────────────────────────────────────────────
+      Total (E):                            $4,331.33  <--$3,135 per est.
+                                                          *discrepancy*
+                                                          (RP: see note)
+
+  F.  Other Costs:
+      Recording Fees:                         $300.00
+      Survey:                                 $150.00  (not needed - waived)
+      ─────────────────────────────────────────────────
+      Total (F):                              $450.00
+
+══════════════════════════════════════════════════════════════════════
+
+TOTAL CLOSING COSTS (A+B+C+D+E+F):  $14,323.33
+  (Estimated at $14,200 - variance of $123.33 due to escrow calc)
+
+══════════════════════════════════════════════════════════════════════
+
+CASH TO CLOSE:
+
+  Payoff of existing loan (First National):  $632,000.00
+  Total closing costs:                         $14,323.33
+  ─────────────────────────────────────────────────────────
+  Total funds needed:                         $646,323.33
+  New loan amount:                           $700,000.00
+  ─────────────────────────────────────────────────────────
+  CASH FROM BORROWER:                          $53,676.67
+     (est. was $64,200 — see note *escrow diff)
+
+  CASH-OUT TO BORROWER:                        $50,000.00
+     (wired to Chase XXXX-2290)
+
+  NET CASH TO CLOSE:                            $3,676.67
+     (difference between payoff/fees and loan amt)
+
+══════════════════════════════════════════════════════════════════════
+
+BORROWER SIGNATURE:
+
+  We have received this Closing Disclosure and acknowledge
+  receipt on this ____ day of March, 2026.
+
+  _________________________________
+  David Chen
+
+  _________________________________
+  Karen Chen
+
+══════════════════════════════════════════════════════════════════════
+
+  // UW NOTE //
+  Escrow calc slightly off ($3,135 est vs $4,331 actual).
+  Variance due to 3 mo tax holdback. Borrower approved.
+  $50K cash-out wired to Chase on close date.
+  -- RP  3/26
+══════════════════════════════════════════════════════════════════════

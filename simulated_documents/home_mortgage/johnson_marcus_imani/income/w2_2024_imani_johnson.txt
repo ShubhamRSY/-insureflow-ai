@@ -1,0 +1,66 @@
+================================================================================
+                    SPRINGFIELD MEMORIAL HOSPITAL - WAGE AND TAX STATEMENT
+                                FORM W-2 (Copy B - To Be Filed With Employee's FEDERAL Tax Return)
+================================================================================
+                                   2024                                        |
+================================================================================
+                                                                                
+  Employer Name:                                      Employee Name:           
+  Springfield Memorial Hospital                       Imani R. Johnson         
+  701 N 1st Street                                    SSN: ***-**-6734          
+  Springfield, IL 62781                                                         
+                                                      1234 Maple Creek Road     
+  Employer ID No: 37-1128450                          Rural Route 1             
+                                                      Clear Creek, IL 62719     
+                                                                                
+================================================================================
+                          WAGES AND TAX INFORMATION
+================================================================================
+                                                                                
+  1. Wages, tips, other compensation: ................ $45,000.00               
+  2. Federal income tax withheld: .................... $5,400.00                
+  3. Social Security wages: .......................... $45,000.00               
+  4. Social Security tax withheld: .................. $2,790.00                 
+  5. Medicare wages and tips: ........................ $45,000.00               
+  6. Medicare tax withheld: ......................... $652.50                   
+  7. Social Security tips: .......................... $0.00                     
+  8. Allocated tips: ................................ $0.00                     
+                                                                                
+  9. Dependent care benefits: ....................... $0.00                     
+  10. Dependent care benefits (excluded): ........... $0.00                     
+                                                                                
+  11. Nonqualified plans: ........................... $0.00                     
+  12a. W-2 Box 12 Codes:                                                         
+       Code DD - Cost of employer-sponsored health coverage: .... $3,600.00     
+                                                                                
+  13. Statutory employee: ........................... [ ]                        
+  14. Retirement plan: .............................. [X]                        
+  15. ___                                                                       
+                                                                                
+================================================================================
+                          STATE AND LOCAL WAGE INFORMATION
+================================================================================
+                                                                                
+  State: IL                                  Employer State ID: 37-1128450-IL   
+  Wages, tips, etc.: ................ $45,000.00                               
+  State income tax withheld: ....... $2,025.00                                 
+                                                                                
+  Locality name: N/A                                                          
+  Local wages, tips, etc.: ......... $0.00                                    
+  Local income tax withheld: ....... $0.00                                    
+                                                                                
+================================================================================
+                                                                                
+  FORM W-2 ELECTRONIC          DO NOT STAPLE              COPY B - FEDERAL     
+                                                                                
+================================================================================
+                          COMMENTS / NOTES (INTERNAL USE)
+-------------------------------------------------------------------------------
+  Imani is part-time RN (0.6 FTE - ~24 hrs/week, 12hr shifts).
+  Hourly rate as of 12/31/2024: $36.06/hr base + $4.50/hr shift diff (nights).
+  Hospital contributes to 403(b) - Imani contributes 3% ($1,350/yr).
+  Health insurance through Marcus (USPS) - Imani declined hospital coverage.
+  She graduated nursing school December 2022, passed NCLEX March 2023.
+  Started at Springfield Memorial April 2023.
+                                                                                
+================================================================================

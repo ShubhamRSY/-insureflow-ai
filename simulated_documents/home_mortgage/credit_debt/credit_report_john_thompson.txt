@@ -1,0 +1,142 @@
+══════════════════════════════════════════════════════════════════════════════
+                EQUIFAX - CONSUMER CREDIT REPORT
+                CREDIT FILE NUMBER: EFX-2026-0410-88472
+                REPORT DATE: 04/10/2026
+══════════════════════════════════════════════════════════════════════════════
+
+PERSONAL INFORMATION
+══════════════════════════════════════════════════════════════════════════════
+
+Name:             John A. Thompson         SSN: xxx-xx-4567
+AKA:              John Thompson             DOB: 05/12/1985
+AKA:              Jon Thompson              
+Current Address:  1234 Maple Drive          Springfield, IL 62701
+                  SINCE: 03/2019
+Previous:         887 Pine Street           Springfield, IL 62703
+                  (Reported: 2014-2019)
+Previous:         Apt 3B, 200 Lakeview Dr   Chicago, IL 60601
+                  (Reported: 2010-2014)
+
+Spouse:           Sarah M. Thompson
+
+EMPLOYMENT INFORMATION
+══════════════════════════════════════════════════════════════════════════════
+
+Employer:         TechCorp Inc.             Verified: 03/2026
+Position:         Senior Software Engineer
+Income:           $112,500/yr
+Previous:         DataStream Solutions      (2019-2022)
+Previous:         Windy City Tech           (2017-2019)
+
+══════════════════════════════════════════════════════════════════════════════
+CREDIT SUMMARY
+══════════════════════════════════════════════════════════════════════════════
+
+Total Accounts:             9
+Open Accounts:              6
+Closed Accounts:            3
+
+Total Balance:              $27,456.00
+Total Monthly Payment:      $689.00
+Total Credit Limit:         $67,500.00
+Utilization Rate:           40.7%
+
+══════════════════════════════════════════════════════════════════════════════
+SCORE INFORMATION
+══════════════════════════════════════════════════════════════════════════════
+
+Equifax Credit Score:       762  (Good)
+Score Factors:
+  1. Length of credit history (15 yrs 3 mo) - POSITIVE
+  2. Payment history (100% on time) - POSITIVE
+  3. Credit utilization ratio (40.7%) - NEGATIVE
+  4. Total accounts (9) - NEUTRAL
+  5. Recent inquiries (1 in last 12 mo) - POSITIVE
+
+══════════════════════════════════════════════════════════════════════════════
+ACCOUNT HISTORY
+══════════════════════════════════════════════════════════════════════════════
+
+CHASE SAPPHIRE PREFERRED CARD
+  Acct#: XXXX-XXXX-9921         Status: OPEN/PAYING AS AGREED
+  Opened: 05/2019               Credit Limit: $15,000
+  Balance: $4,200.00            MOP: OK
+  Payment: $85/mo               30/60/90: 0/0/0
+  Remarks: AUTOMATIC PAYMENT ENABLED
+
+DISCOVER IT CARD
+  Acct#: XXXX-XXXX-4431         Status: OPEN/PAYING AS AGREED
+  Opened: 03/2020               Credit Limit: $12,000
+  Balance: $3,800.00            MOP: OK
+  Payment: $75/mo               30/60/90: 0/0/0
+
+BANK OF AMERICA TRAVEL REWARDS
+  Acct#: XXXX-XXXX-7762         Status: OPEN/PAYING AS AGREED
+  Opened: 01/2021               Credit Limit: $10,000
+  Balance: $6,500.00            MOP: OK
+  Payment: $130/mo              30/60/90: 0/0/0
+  Remarks: ***UTILIZATION HIGH - 65%***
+
+AMEX BLUE CASH PREFERRED
+  Acct#: XXXX-XXXX-1183         Status: OPEN/PAYING AS AGREED
+  Opened: 06/2022               Credit Limit: $8,500
+  Balance: $2,100.00            MOP: OK
+  Payment: $65/mo               30/60/90: 0/0/0
+
+NAVISTAR AUTO LOAN (VEHICLE - 2022 HONDA CR-V)
+  Acct#: XXXX-XXXX-2309         Status: OPEN/PAYING AS AGREED
+  Opened: 01/2022               Original: $32,000
+  Balance: $18,200.00           MOP: OK
+  Monthly: $534.00              30/60/90: 0/0/0
+
+SALLIE MAE STUDENT LOAN (JOHN)
+  Acct#: XXXX-XXXX-6734         Status: OPEN/PAYING AS AGREED
+  Opened: 09/2007               Original: $28,500
+  Balance: $4,200.00            MOP: OK
+  Monthly: $125.00              30/60/90: 0/0/0
+  Remarks: NEARING COMPLETION - 12 PAYMENTS REMAINING
+
+SALLIE MAE STUDENT LOAN (SARAH)
+  Acct#: XXXX-XXXX-8902         Status: OPEN/PAYING AS AGREED
+  Opened: 09/2008               Original: $31,200
+  Balance: $6,700.00            MOP: OK
+  Monthly: $175.00              30/60/90: 0/0/0
+
+MACYS STORE CARD
+  Acct#: XXXX-XXXX-5561         Status: CLOSED/PAID
+  Opened: 11/2015               Closed: 02/2024
+  Balance: $0.00                MOP: OK
+  Remarks: ACCOUNT CLOSED BY CONSUMER
+
+VERIZON WIRELESS
+  Acct#: XXXX-XXXX-2289         Status: CLOSED/PAID
+  Opened: 06/2018               Closed: 01/2023
+  Balance: $0.00                MOP: OK
+  Remarks: SATISFACTORY
+
+══════════════════════════════════════════════════════════════════════════════
+PUBLIC RECORDS / COLLECTIONS
+══════════════════════════════════════════════════════════════════════════════
+
+NONE FOUND
+
+══════════════════════════════════════════════════════════════════════════════
+INQUIRIES (LAST 24 MONTHS)
+══════════════════════════════════════════════════════════════════════════════
+
+10/15/2025  - CAPITAL ONE (CREDIT CARD) - HARD PULL
+04/08/2026  - INSUREFLOW NATIONAL MORTGAGE (MORTGAGE) - HARD PULL
+══════════════════════════════════════════════════════════════════════════════
+
+══════════════════════════════════════════════════════════════════════════════
+INCLUDED IN JOINT FILE: SARAH M. THOMPSON SSN: XXX-XX-7890
+══════════════════════════════════════════════════════════════════════════════
+
+══════════════════════════════════════════════════════════════════════════════
+FRAUD ALERT / SECURITY FREEZE: NONE
+══════════════════════════════════════════════════════════════════════════════
+
+                              — END OF REPORT —
+
+[STAMP] REPORT PROVIDED DIRECTLY BY EQUIFAX - 04/10/2026
+══════════════════════════════════════════════════════════════════════════════

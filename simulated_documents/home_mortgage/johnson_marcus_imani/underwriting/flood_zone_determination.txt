@@ -1,0 +1,77 @@
+================================================================================
+                    FEMA STANDARD FLOOD HAZARD DETERMINATION
+================================================================================
+
+    Order #: IF-FLOOD-02262026-003B          Date: 02/03/2026
+    Property: 478 Pine Street, Clear Creek, IL 62719
+    Borrower(s): Marcus Johnson & Imani Johnson
+    Lender: InsureFlow National Mortgage (NMLS #412897)
+
+================================================================================
+PROPERTY INFORMATION
+================================================================================
+
+    Legal Description: Lot 3, Clear Creek Rural Estates, Sangamon County, IL
+    Census Tract: 4111.02
+    Latitude/Longitude: 39.6112° N / 89.4481° W
+
+================================================================================
+FLOOD MAP INFORMATION
+================================================================================
+
+    Map Number: 17167C0250J                   Map Date: 09/25/2024
+    Panel: 0250                              Community: Sangamon County Unincorporated
+    Flood Zone: X                            Zone Description: Area of Minimal Flood Risk
+    SFHA? (Special Flood Hazard Area):  NO
+
+================================================================================
+DETERMINATION
+================================================================================
+
+    X   Property is in FLOOD ZONE X (Minimal Flood Risk).
+        No flood insurance required by Federal regulations.
+        
+        USDA DOES NOT REQUIRE FLOOD INS IN ZONE X. CONFIRMED.
+
+    ___ Property is in FLOOD ZONE A, AE, V, etc. (SFHA).
+        Flood insurance is required.
+
+================================================================================
+NOTES
+================================================================================
+
+    - Property is rural unincorporated Sangamon County. No community floodplain 
+      ordinances applicable per county planning.
+    - No historical flooding reported at this location (verified by seller disclosure).
+    - Well and septic system NOT affected by any mapped floodplain.
+    - Elevation certificate on file (report #EC-2026-0381) shows BFE N/A - Zone X.
+    
+    ---------------------------------------------------------------------------
+    [HANDWRITTEN NOTE IN MARGIN]: Called FEMA map  -  confirmed no flood issues
+    for this parcel. Rural ag land elevation 612ft. Well head is elevated.
+    No flood insurance needed.  - AR 2/4
+    ---------------------------------------------------------------------------
+
+================================================================================
+FEE SUMMARY
+================================================================================
+
+    Flood Determination Fee: $12.00 (billed to borrower at closing)
+
+================================================================================
+CERTIFICATION
+================================================================================
+
+    I certify that the above determination was made in accordance with the National 
+    Flood Insurance Reform Act of 1994 and standard flood hazard determination practices.
+
+    _________________________________
+    Jennifer Walsh
+    Certified Floodplain Manager #CFM-44391
+    InsureFlow National Mortgage - Flood Compliance Dept.
+    Date: 02/03/2026
+
+
+>>>> THIS DETERMINATION IS TRANSFERABLE TO SUCCESSIVE LENDERS <<<<
+>>>> LIFETIME OF LOAN COVERAGE - REORDER #ORD-FL-88291 <<<<
+================================================================================

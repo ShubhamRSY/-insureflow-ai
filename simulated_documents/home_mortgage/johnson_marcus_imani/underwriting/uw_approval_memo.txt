@@ -1,0 +1,134 @@
+========================================================================================================
+                     INTERNAL UNDERWRITING MEMO - FINAL APPROVAL
+                          INSUREFLOW NATIONAL MORTGAGE - USDA DIVISION
+========================================================================================================
+
+    TO:    Closing Department
+    FROM:  Jennifer Walsh, Senior Underwriter - USDA Loans
+    DATE:  February 14, 2026
+    RE:    USDA GUARANTEED LOAN APPROVAL - CLEAR TO CLOSE
+           Loan #: IF-USDA-02262026-003
+           Borrower(s): Marcus D. Johnson & Imani R. Johnson
+           Property: 478 Pine Street, Clear Creek, IL 62719
+
+========================================================================================================
+FINDINGS SUMMARY
+========================================================================================================
+
+    BORROWER ELIGIBILITY:
+    ✓ U.S. Citizens: Yes (both)
+    ✓ Occupancy: Primary Residence (owner-occupied)
+    ✓ First-time Homebuyers: Yes
+    ✓ No ownership interest in other real estate: Confirmed
+
+    CREDIT ANALYSIS:
+    ✓ Credit Scores: Marcus 710 (Equifax), 715 (Experian), 720 (TransUnion)
+                     Imani 720 (Equifax), 718 (Experian), 724 (TransUnion)
+                     Median scores: 710 / 720  -  USDA minimum 640
+    ✓ No late payments in last 12 months on any tradeline
+    ✓ No collections, charge-offs, or judgments
+    ✓ Student loans deferred? No - in repayment. Payment included in DTI.
+    ✓ Auto loan current, no lates.
+    ✓ Bankruptcy/Foreclosure: None
+
+    INCOME ANALYSIS:
+    ✓ Marcus Johnson (USPS): $68,000/yr - confirmed via VOE + pay stubs (3 yrs)
+    ✓ Imani Johnson (RN): $45,000/yr - confirmed via VOE + pay stubs (2 yrs)
+    ✓ Combined Income: $113,000/yr ($9,416.67/mo)
+    
+    USDA Income Limit (2-person household, Sangamon County rural area): $128,650
+    $113,000 < $128,650.  PASS.  Income qualifies for 100% financing.
+
+    ASSET ANALYSIS:
+    ✓ Liquid Assets: $22,773.78 (checking + savings)
+    ✓ Source of $3,000 deposit: IRS tax refund (verified via transcript)
+    ✓ Sufficient funds for cash-to-close: ~$800 (prepaids/escrow)
+    ✓ Gift letter pending from grandmother Margaret Johnson ($2,000) - NEED SIGNED COPY
+
+    DEBT ANALYSIS:
+    ✓ Total Liabilities: $58,400.00
+    ✓ Total Monthly Payments: $910.00
+    ✓ Proposed Housing Payment (PITI + USDA fee): $2,140.48
+    ✓ DTI Ratio: ($910 + $2,140.48) / $9,416.67 = $3,050.48 / $9,416.67 = 32.4%
+    ... wait that's wrong. Let me recalculate.
+    
+    Actually: 
+    Auto $485 + Student $315 + Student $110 = $910
+    PITI + Annual Fee = $1,739.27 + $246 + $75 + $80.21 = $2,140.48
+    Total Debt = $910 + $2,140.48 = $3,050.48
+    Income = $9,416.67
+    DTI = 32.4%
+    
+    [HANDWRITTEN]:
+    Previous calc showed 39% - maybe included extra debts not listed? 
+    Either way, both under USDA max 41%. ACCEPTABLE.
+    -JW
+    
+    ✓ DTI: 32-39%. Below USDA maximum of 41%.  PASS.
+
+    APPRAISAL:  (Refer to Appraisal Report #APP-2026-0273)
+    ✓ Appraised Value: $275,000 - at purchase price. No adjustments.
+    ✓ Meets USDA Minimum Property Requirements (MPR):
+        - Safe and adequate water supply: Well tested OK
+        - Wastewater disposal: New septic approved
+        - Sound structural condition: Foundation OK, roof OK
+        - Adequate heating/cooling: Central HVAC, approx 5 yrs old
+        - Access to property: Private driveway, easement OK
+        - No chipping paint (built 2017 - no lead paint concerns)
+    ✓ Property is rural / eligible area per USDA map
+
+    TITLE:
+    ✓ Clear title. Seller owns free and clear.
+    ✓ Agricultural access easement - standard, acceptable
+    ✓ No open mortgages or liens
+
+========================================================================================================
+SPECIAL UW NOTES / CONDITIONS
+========================================================================================================
+
+    1.  MATERNITY LEAVE: Imani Johnson is pregnant and will begin FMLA unpaid 
+        maternity leave approx August 2026. Borrower confirms intent to return to 
+        work October/November 2026. Per USDA guidelines, if borrower is currently 
+        employed and will return to same employer after temporary leave, current 
+        income may be used to qualify.
+        
+        CONDITION: Confirm FMLA maternity leave arrangements and obtain borrower
+        written statement of intent to return to work post-leave.
+        
+    2.  GIFT FUNDS: $2,000 gift from Margaret Johnson (grandmother). Need signed
+        gift letter confirming no repayment required.
+        
+    3.  USDA GUARANTEE FEE FINANCED: 1.0% upfront ($2,750) financed into loan.
+        Final loan amount: $277,750? Wait no. The $275K includes the financed fee.
+        Actually: Base loan $275K at 100% LTV. Guarantee fee financed on top.
+        
+        [STAMP]: GUARANTEE FEE FINANCING VERIFIED - USDA APPROVED STRUCTURE
+        Final loan amount including financed guarantee fee: TBD by closing dept.
+
+========================================================================================================
+UNDERWRITING DECISION
+========================================================================================================
+
+    [STAMP - BOLD RED]:
+
+                    =========================================
+                    |     USDA GUARANTEED LOAN APPROVED     |
+                    |          CLEAR TO CLOSE               |
+                    |                                       |
+                    |  Condition: FMLA Leave Documentation  |
+                    |  Condition: Gift Letter (Grandmother)  |
+                    =========================================
+
+    USDA GUARANTEED LOAN APPROVED - CLEAR TO CLOSE. 
+    CONDITION: CONFIRM FMLA MATERNITY LEAVE ARRANGEMENTS (BORROWER RETURNING TO WORK).
+
+    _________________________________
+    [SIGNATURE]  Jennifer W.
+    Jennifer Walsh
+    Senior Underwriter - USDA Division
+    InsureFlow National Mortgage
+    Date: 02/14/2026
+
+
+    CC: Amanda Reyes (LO), Closing Department, USDA Rural Development - St. Louis Office
+    File: Johnson_Marcus_Imani_02262026

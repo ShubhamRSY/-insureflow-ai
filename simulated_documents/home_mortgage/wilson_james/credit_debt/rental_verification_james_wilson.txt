@@ -1,0 +1,103 @@
+══════════════════════════════════════════════════════════════════════
+              RENTAL VERIFICATION — RESIDENTIAL LEASE HISTORY
+══════════════════════════════════════════════════════════════════════
+
+DATE:            January 25, 2026
+TO:              InsureFlow National Mortgage
+                 1200 Commerce Drive, Chicago, IL 60606
+RE:              James T. Wilson — Rental Payment History
+                 Loan # IN-2026-02791
+
+══════════════════════════════════════════════════════════════════════
+
+PROPERTY MANAGER / LANDLORD INFORMATION:
+
+  Landlord Name:      Riverside Rentals LLC
+  Contact Person:     Margaret O'Brien, Property Manager
+  Address:            500 River Road, Suite 200
+                      Springfield, IL 62704
+  Phone:              (217) 555-4400
+  Email:              margaret.o@riversiderentals.com
+
+══════════════════════════════════════════════════════════════════════
+
+TENANT INFORMATION:
+
+  Tenant Name:        James T. Wilson
+  Rental Property:    1200 Maple Avenue, Apt 3B
+                      Springfield, IL 62704
+  Current Rent:       $1,200.00 per month
+  Lease Type:         Month-to-Month (was annual, converted 01/2025)
+  Date Moved In:      January 1, 2023
+
+══════════════════════════════════════════════════════════════════════
+
+24-MONTH PAYMENT HISTORY:
+
+  Year     Month     Amount Due   Amount Paid   Status     Days Late
+  ──────   ─────     ──────────   ───────────   ──────     ────────
+  2024     Jan         $1,200       $1,200       On Time      0
+  2024     Feb         $1,200       $1,200       On Time      0
+  2024     Mar         $1,200       $1,200       On Time      0
+  2024     Apr         $1,200       $1,200       On Time      0
+  2024     May         $1,200       $1,200       On Time      0
+  2024     Jun         $1,200       $1,200       On Time      0
+  2024     Jul         $1,200       $1,200       On Time      0
+  2024     Aug         $1,200       $1,200       On Time      0
+  2024     Sep         $1,200       $1,200       On Time      0
+  2024     Oct         $1,200       $1,200       Late         7
+  2024     Nov         $1,200       $1,200       On Time      0
+  2024     Dec         $1,200       $1,200       Late         9
+  2025     Jan         $1,200       $1,200       On Time      0
+  2025     Feb         $1,200       $1,200       On Time      0
+  2025     Mar         $1,200       $1,200       On Time      0
+  2025     Apr         $1,200       $1,200       On Time      0
+  2025     May         $1,200       $1,200       On Time      0
+  2025     Jun         $1,200       $1,200       On Time      0
+  2025     Jul         $1,200       $1,200       On Time      0
+  2025     Aug         $1,200       $1,200       On Time      0
+  2025     Sep         $1,200       $1,200       On Time      0
+  2025     Oct         $1,200       $1,200       On Time      0
+  2025     Nov         $1,200       $1,200       On Time      0
+  2025     Dec         $1,200       $1,200       On Time      0
+
+══════════════════════════════════════════════════════════════════════
+
+SUMMARY:
+
+  Total Payments (24 months):              $28,800.00
+  On-Time Payments:                        22 of 24
+  Late Payments:                           2  (Oct 2024 - 7 days,
+                                              Dec 2024 - 9 days)
+  Late Fees Charged:                       $50.00 (Oct 2024 only)
+
+══════════════════════════════════════════════════════════════════════
+
+COMMENTS:
+
+  "James has been a tenant since January 2023. He is generally
+   a reliable renter. The two late payments in late 2024 occurred
+   during a difficult divorce period — we were aware of the
+   situation. Since January 2025, he has been consistently on
+   time with his rent. He maintains the unit well and is a
+   responsible occupant.
+
+   We would lease to him again.
+
+   Current balance: $0. No outstanding amounts."
+
+  (signed) /s/ Margaret O'Brien
+
+  Margaret O'Brien
+  Property Manager
+  Riverside Rentals LLC
+  01/25/2026
+
+══════════════════════════════════════════════════════════════════════
+
+  // UW NOTE //
+  Rental verification supports LOE regarding divorce-related
+  lates. Current on-time for 12+ months. Good rental history.
+  No evictions. Satisfies FHA requirement for rent history.
+  -- RP  1/27
+══════════════════════════════════════════════════════════════════════

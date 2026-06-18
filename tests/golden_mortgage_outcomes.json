@@ -1,0 +1,65 @@
+{
+  "description": "Golden expected outcomes for mortgage underwriting evaluation",
+  "borrowers": [
+    {
+      "id": "thompson_john_sarah",
+      "display_name": "John & Sarah Thompson",
+      "expected_decision": "approve",
+      "expected_risk_score_range": [0.15, 0.35],
+      "expected_dti_range": [35, 41],
+      "expected_ltv_range": [78, 83],
+      "expected_findings_count": 4,
+      "expected_compliance_violations": 0
+    },
+    {
+      "id": "rodriguez_maria",
+      "display_name": "Maria Elena Rodriguez",
+      "expected_decision": "refer",
+      "expected_risk_score_range": [0.4, 0.6],
+      "expected_dti_range": [33, 39],
+      "expected_ltv_range": [94, 98],
+      "expected_findings_count": 3,
+      "expected_compliance_violations": 0
+    },
+    {
+      "id": "chen_david_karen",
+      "display_name": "David & Karen Chen",
+      "expected_decision": "approve",
+      "expected_risk_score_range": [0.1, 0.3],
+      "expected_dti_range": [34, 40],
+      "expected_ltv_range": [65, 75],
+      "expected_findings_count": 3,
+      "expected_compliance_violations": 0
+    },
+    {
+      "id": "wilson_james",
+      "display_name": "James T. Wilson",
+      "expected_decision": "refer",
+      "expected_risk_score_range": [0.55, 0.75],
+      "expected_dti_range": [30, 38],
+      "expected_ltv_range": [88, 96],
+      "expected_findings_count": 6,
+      "expected_compliance_violations": 0
+    },
+    {
+      "id": "johnson_marcus_imani",
+      "display_name": "Marcus D. Johnson & Imani R. Johnson",
+      "expected_decision": "approve",
+      "expected_risk_score_range": [0.25, 0.45],
+      "expected_dti_range": [28, 36],
+      "expected_ltv_range": [95, 100],
+      "expected_findings_count": 3,
+      "expected_compliance_violations": 0
+    },
+    {
+      "id": "patel_lisa",
+      "display_name": "Lisa M. Patel",
+      "expected_decision": "approve",
+      "expected_risk_score_range": [0.15, 0.35],
+      "expected_dti_range": [25, 32],
+      "expected_ltv_range": [65, 75],
+      "expected_findings_count": 3,
+      "expected_compliance_violations": 0
+    }
+  ]
+}

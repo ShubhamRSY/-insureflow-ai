@@ -1,0 +1,98 @@
+========================================================================================
+              CREDIT UNION OF CENTRAL ILLINOIS - SAVINGS ACCOUNT STATEMENT
+========================================================================================
+
+  Account Number:  *****6734                  Statement Period: 03/01/2026 - 03/31/2026
+  Account Type:    Regular Savings               Statement Date:   04/01/2026
+  Members:         Marcus D. Johnson & Imani R. Johnson
+  Address:         1234 Maple Creek Road, Rural Route 1, Clear Creek, IL 62719
+
+========================================================================================
+  ACCOUNT SUMMARY
+----------------------------------------------------------------------------------------
+  Beginning Balance (03/01/2026):                  $17,210.22
+  Total Deposits (Credits):                         $750.00
+  Dividends (Interest):                             $15.42
+  Total Withdrawals (Debits):                       ($0.00)
+  Ending Balance (03/31/2026):                      $17,975.64
+
+========================================================================================
+  DETAILED TRANSACTION HISTORY
+----------------------------------------------------------------------------------------
+  Date        Description                                                    Amount      Balance
+  --------    -------------------------------------------------------------  ---------   ---------
+  03/01       Beginning Balance                                                           $17,210.22
+  03/05       Online Transfer - FROM CHECKING (Marcus to Savings)            $250.00    $17,460.22
+  03/15       Dividend (Interest) - Monthly                                  $5.14      $17,465.36
+  03/20       Online Transfer - FROM CHECKING (Marcus to Savings)            $300.00    $17,765.36
+  03/30       Online Transfer - FROM CHECKING (Marcus to Savings)            $200.00    $17,965.36
+  03/31       Dividend (Interest) - Monthly                                  $10.28     $17,975.64
+
+========================================================================================
+  SAVINGS GOAL TRACKER (Internal CU Feature):
+  "BABY FUND" - Target: $15,000  |  Current: $18,975.64  |  126% of goal!
+  "HOUSE DOWN PAYMENT" - Target: $5,000  |  (Moved to general savings)
+  
+  *** NOTE: These were initially different accounts but merged.
+  *** Baby fund goal was $15K - they exceeded it. Now saving for house expenses.
+
+========================================================================================
+  HISTORICAL TRANSACTIONS (PRIOR 6 MONTHS - SELECTED)
+----------------------------------------------------------------------------------------
+  Date        Description                                                    Amount      Balance
+  --------    -------------------------------------------------------------  ---------   ---------
+  10/15/2025  Transfer - FROM CHECKING                                      $200.00     $12,440.15
+  10/30/2025  Transfer - FROM CHECKING                                      $200.00     $12,640.15
+  11/05/2025  Transfer - FROM CHECKING                                      $250.00     $12,890.15
+  11/12/2025  Transfer - FROM CHECKING                                      $400.00     $13,290.15
+  11/22/2025  Transfer - FROM CHECKING                                      $250.00     $13,540.15
+  11/25/2025  Transfer - FROM CHECKING                                      $300.00     $13,840.15
+  12/01/2025  Dividend (Interest)                                            $8.40      $13,848.55
+  12/06/2025  Transfer - FROM CHECKING                                      $200.00     $14,048.55
+  12/15/2025  Transfer - FROM CHECKING                                      $250.00     $14,298.55
+  12/28/2025  Transfer - FROM CHECKING                                      $300.00     $14,598.55
+  01/02/2026  Dividend (Interest)                                            $9.10      $14,607.65
+  01/10/2026  Transfer - FROM CHECKING                                      $300.00     $14,907.65
+  01/18/2026  Transfer - FROM CHECKING                                      $250.00     $15,157.65
+  01/25/2026  Transfer - FROM CHECKING                                      $350.00     $15,507.65
+  01/31/2026  Dividend (Interest)                                            $11.02     $15,518.67
+  02/05/2026  Transfer - FROM CHECKING                                      $300.00     $15,818.67
+  02/14/2026  Transfer - FROM CHECKING                                      $250.00     $16,068.67
+  02/22/2026  Transfer - FROM CHECKING                                      $400.00     $16,468.67
+  02/28/2026  Dividend (Interest)                                            $9.55      $16,478.22
+  03/05/2026  Transfer - FROM CHECKING                                      $250.00     $16,728.22
+  03/15/2026  Dividend (Interest)                                            $5.14      $16,733.36
+  03/20/2026  Transfer - FROM CHECKING                                      $300.00     $17,033.36
+  03/30/2026  Transfer - FROM CHECKING                                      $200.00     $17,233.36
+
+  *** NOTE: $750 in transfers this statement period plus $982 in prior 4 months.
+  *** Consistent savings habit. Transfers range $200-400 per occurrence.
+  *** Sometimes multiple transfers per month. 
+
+========================================================================================
+  ACCOUNT OWNERS:  Joint - Marcus D. Johnson & Imani R. Johnson
+  OPENED:          08/15/2022 (shortly after marriage)
+  MINIMUM BALANCE: $5.00 (no fees maintained)
+
+========================================================================================
+  INTEREST RATE INFORMATION
+  Current APY: 0.75% (variable)
+  Dividends paid monthly on daily collected balance.
+
+========================================================================================
+  *** PROCESSOR NOTES ***
+  Savings account used as down payment / closing costs reserve. 
+  ~$18,000 available. For USDA 100% financing, down payment is zero, 
+  but they will need ~$5,000-$8,000 for closing costs, prepaids, and reserves.
+  
+  Savings pattern: regular, consistent. Baby fund explicitly labeled.
+  They're responsible savers. No large unexplained deposits.
+  All transfers sourced from payroll deposits in checking.
+  
+  VERIFIED: Funds are seasoned (well over 90 days). 
+  Largest single deposit: $400. No cash deposits. No unusual activity.
+  
+  Available for closing: $17,975.64 (as of 03/31/2026)
+  + Checking: ~$4,800
+  Total liquid assets: ~$22,775
+========================================================================================

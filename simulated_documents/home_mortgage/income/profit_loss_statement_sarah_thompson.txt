@@ -1,0 +1,85 @@
+================================================================================
+                    PROFIT AND LOSS STATEMENT
+                Thompson Design Studio - Sole Proprietorship
+                    For the Year Ended December 31, 2025
+================================================================================
+
+BUSINESS INFORMATION:
+  Business Name:     Thompson Design Studio
+  Owner:             Sarah M. Thompson
+  Business Address:  1234 Maple Drive, Springfield, IL 62701
+  Business Type:     Graphic Design Services (NAICS: 541430)
+  Tax ID:            XXX-XX-7890
+
+================================================================================
+REVENUE                                                       AMOUNT
+================================================================================
+  Logo & Branding Design                                       $18,500.00
+  Website Design & UI/UX                                       $22,300.00
+  Print Media Design                                           $8,200.00
+  Social Media Graphics                                        $6,500.00
+  Consulting & Project Management                              $9,800.00
+  Retainer Contracts                                           $7,500.00
+  -------------------------------------------------------------------------
+  TOTAL GROSS REVENUE                                          $72,800.00
+
+================================================================================
+COST OF GOODS SOLD                                           AMOUNT
+================================================================================
+  Direct Materials (stock photos, fonts, licenses)              $1,200.00
+  Print Production Costs                                        $850.00
+  Subcontracted Services                                        $1,500.00
+  -------------------------------------------------------------------------
+  TOTAL COGS                                                    $3,550.00
+
+================================================================================
+GROSS PROFIT                                                    $69,250.00
+
+================================================================================
+OPERATING EXPENSES                                           AMOUNT
+================================================================================
+  Advertising & Marketing                                       $1,800.00
+  Software Subscriptions (Adobe, Figma, etc.)                    $3,600.00
+  Website Hosting & Domain                                      $480.00
+  Office Supplies                                               $720.00
+  Home Office Deduction                                         $1,500.00
+  Business Insurance                                             $850.00
+  Professional Development (Courses)                            $1,200.00
+  Travel & Meetings                                              $600.00
+  Meals & Entertainment (50% deductible)                        $750.00
+  Depreciation (Equipment)                                      $1,150.00
+  Legal & Professional Fees                                     $500.00
+  Utilities (home office portion)                               $420.00
+  Internet & Phone                                              $1,080.00
+  -------------------------------------------------------------------------
+  TOTAL OPERATING EXPENSES                                      $14,650.00
+
+================================================================================
+NET OPERATING INCOME                                            $54,600.00
+================================================================================
+
+================================================================================
+CASH BASIS SUMMARY                                           AMOUNT
+================================================================================
+  Beginning Cash Balance (01/01/2025)                           $12,400.00
+  Total Cash Receipts                                           $72,800.00
+  Total Cash Disbursements                                      ($14,650.00)
+  Owner's Draw                                                  ($48,000.00)
+  Ending Cash Balance (12/31/2025)                              $22,550.00
+================================================================================
+
+BALANCE SHEET ITEMS:
+  Accounts Receivable                                           $3,200.00
+  Accounts Payable                                              $450.00
+  Equipment (net of depreciation)                               $4,800.00
+================================================================================
+
+I hereby certify that this Profit and Loss Statement is true and accurate to the best
+of my knowledge.
+
+                          ________________________________
+                          Sarah M. Thompson
+                          Owner, Thompson Design Studio
+
+                          Date: 01/15/2026
+================================================================================

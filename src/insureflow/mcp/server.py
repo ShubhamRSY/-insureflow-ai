@@ -8,6 +8,7 @@ from mcp.server.fastmcp import FastMCP
 
 from insureflow.agents.tools import UnderwritingTools
 from insureflow.models.submissions import ClaimRecord
+from insureflow.models.mortgage import ProductLine
 from insureflow.pipeline import UnderwritingPipeline
 from insureflow.rag.guidelines import GuidelineCategory, builtin_guidelines
 from insureflow.rag.rag_agent import RAGAgent
@@ -201,6 +202,179 @@ def _register_all(server: FastMCP) -> None:
             "synthesis_decision": result.get("synthesis", {}).get("underwriting_decision"),
         }
         return json.dumps(summary, indent=2)
+
+    @server.tool(
+        name="assess_mortgage_risk",
+        description="Evaluate a mortgage risk profile against standard underwriting guidelines.",
+    )
+    def assess_mortgage_risk(
+        credit_score: Optional[int] = None,
+        dti_ratio: Optional[float] = None,
+        ltv_ratio: Optional[float] = None,
+        loan_amount: Optional[float] = None,
+        property_value: Optional[float] = None,
+        reserves: Optional[float] = None,
+        self_employed: Optional[bool] = None,
+        loan_purpose: Optional[str] = None,
+        occupancy_type: Optional[str] = None,
+    ) -> str:
+        findings: list[str] = []
+
+        if credit_score is not None:
+            if credit_score >= 740:
+                findings.append(f"Credit score {credit_score}: LOW risk")
+            elif credit_score >= 680:
+                findings.append(f"Credit score {credit_score}: MODERATE risk")
+            elif credit_score >= 620:
+                findings.append(f"Credit score {credit_score}: HIGH risk")
+            else:
+                findings.append(f"Credit score {credit_score}: CRITICAL risk")
+
+        if dti_ratio is not None:
+            if dti_ratio <= 0.36:
+                findings.append(f"DTI ratio {dti_ratio:.1%}: LOW risk")
+            elif dti_ratio <= 0.43:
+                findings.append(f"DTI ratio {dti_ratio:.1%}: MODERATE risk")
+            elif dti_ratio <= 0.50:
+                findings.append(f"DTI ratio {dti_ratio:.1%}: HIGH risk")
+            else:
+                findings.append(f"DTI ratio {dti_ratio:.1%}: CRITICAL risk")
+
+        if ltv_ratio is not None:
+            if ltv_ratio <= 0.60:
+                findings.append(f"LTV ratio {ltv_ratio:.1%}: LOW risk")
+            elif ltv_ratio <= 0.75:
+                findings.append(f"LTV ratio {ltv_ratio:.1%}: MODERATE risk")
+            elif ltv_ratio <= 0.85:
+                findings.append(f"LTV ratio {ltv_ratio:.1%}: HIGH risk")
+            else:
+                findings.append(f"LTV ratio {ltv_ratio:.1%}: CRITICAL risk")
+
+        if loan_amount is not None and property_value is not None and property_value > 0:
+            computed_ltv = loan_amount / property_value
+            if computed_ltv <= 0.60:
+                findings.append(f"Loan-to-value ({computed_ltv:.1%}): LOW risk")
+            elif computed_ltv <= 0.75:
+                findings.append(f"Loan-to-value ({computed_ltv:.1%}): MODERATE risk")
+            elif computed_ltv <= 0.85:
+                findings.append(f"Loan-to-value ({computed_ltv:.1%}): HIGH risk")
+            else:
+                findings.append(f"Loan-to-value ({computed_ltv:.1%}): CRITICAL risk")
+
+        if reserves is not None and loan_amount is not None and loan_amount > 0:
+            reserve_months = reserves / (loan_amount * 0.007)
+            if reserve_months >= 6:
+                findings.append(f"Reserves ({reserve_months:.0f} months): LOW risk")
+            elif reserve_months >= 3:
+                findings.append(f"Reserves ({reserve_months:.0f} months): MODERATE risk")
+            else:
+                findings.append(f"Reserves ({reserve_months:.0f} months): HIGH risk")
+
+        if self_employed is not None:
+            if self_employed:
+                findings.append("Self-employed: additional income documentation required")
+            else:
+                findings.append("Employed: standard employment verification applies")
+
+        if loan_purpose:
+            purpose_lower = loan_purpose.lower()
+            if purpose_lower in ("purchase", "refinance"):
+                findings.append(f"Loan purpose '{loan_purpose}': standard risk")
+            elif purpose_lower == "cash-out":
+                findings.append(f"Loan purpose '{loan_purpose}': elevated risk — verify equity retention")
+            else:
+                findings.append(f"Loan purpose '{loan_purpose}': review required")
+
+        if occupancy_type:
+            occ_lower = occupancy_type.lower()
+            if occ_lower == "primary":
+                findings.append(f"Occupancy '{occupancy_type}': LOW risk")
+            elif occ_lower == "secondary":
+                findings.append(f"Occupancy '{occupancy_type}': MODERATE risk")
+            elif occ_lower == "investment":
+                findings.append(f"Occupancy '{occupancy_type}': HIGH risk")
+            else:
+                findings.append(f"Occupancy '{occupancy_type}': review required")
+
+        if not findings:
+            return "No mortgage risk data provided."
+
+        return "\n".join(findings)
+
+    @server.tool(
+        name="query_mortgage_guidelines",
+        description="Search mortgage underwriting guideline knowledge base.",
+    )
+    def query_mortgage_guidelines(query: str, top_k: int = 5) -> str:
+        agent = _get_rag()
+        return agent.format_context(query, top_k=top_k)
+
+    @server.tool(
+        name="run_mortgage_pipeline",
+        description="Execute the full mortgage underwriting pipeline on a set of mortgage documents.",
+    )
+    def run_mortgage_pipeline(
+        documents_json: str,
+        bundle_id: Optional[str] = None,
+        use_llm: bool = True,
+    ) -> str:
+        from uuid import uuid4
+        from insureflow.mortgage.pipeline import MortgagePipeline
+
+        documents = json.loads(documents_json)
+        pipeline = MortgagePipeline(use_llm=use_llm)
+        bid = bundle_id or f"mortgage-{uuid4().hex[:12]}"
+        result = pipeline.run_from_texts(
+            documents,
+            bundle_id=bid,
+            product_line=ProductLine.RESIDENTIAL_MORTGAGE,
+        )
+        summary = {
+            "document_count": result.get("document_count", len(documents)),
+            "decision": result.get("decision", "refer"),
+            "risk_score": result.get("risk_score", 0.0),
+            "dti_ratio": result.get("dti_ratio"),
+            "ltv_ratio": result.get("ltv_ratio"),
+            "bundle_id": result.get("bundle_id", bid),
+        }
+        return json.dumps(summary, indent=2)
+
+    @server.tool(
+        name="calculate_mortgage_metrics",
+        description="Calculate monthly mortgage payment, total interest, and affordability metrics.",
+    )
+    def calculate_mortgage_metrics(
+        loan_amount: float,
+        interest_rate: float,
+        loan_term_years: int = 30,
+        property_tax_rate: float = 0.0,
+        insurance: float = 0.0,
+        hoa: float = 0.0,
+    ) -> str:
+        monthly_rate = interest_rate / 100 / 12
+        num_payments = loan_term_years * 12
+
+        if monthly_rate > 0:
+            monthly_pi = loan_amount * (monthly_rate * (1 + monthly_rate) ** num_payments) / ((1 + monthly_rate) ** num_payments - 1)
+        else:
+            monthly_pi = loan_amount / num_payments
+
+        monthly_tax = (loan_amount * property_tax_rate / 100) / 12 if property_tax_rate > 0 else 0.0
+        total_monthly = monthly_pi + monthly_tax + insurance + hoa
+        total_paid = total_monthly * num_payments
+        total_interest = (monthly_pi * num_payments) - loan_amount
+        total_cost = total_paid
+
+        lines = [
+            f"Monthly P&I: ${monthly_pi:,.2f}",
+            f"Monthly tax: ${monthly_tax:,.2f}",
+            f"Monthly insurance: ${insurance:,.2f}",
+            f"Monthly HOA: ${hoa:,.2f}",
+            f"Total monthly payment: ${total_monthly:,.2f}",
+            f"Total interest over {loan_term_years} years: ${total_interest:,.2f}",
+            f"Total cost (interest + principal + tax + insurance + HOA): ${total_cost:,.2f}",
+        ]
+        return "\n".join(lines)
 
     # -----------------------------------------------------------------------
     # Resources

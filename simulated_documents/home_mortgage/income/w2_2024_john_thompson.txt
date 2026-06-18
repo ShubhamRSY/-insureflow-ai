@@ -1,0 +1,56 @@
+================================================================================
+                    FORM W-2  -  WAGE AND TAX STATEMENT
+                       Copy B - To Be Filed With Employee's
+                        FEDERAL TAX RETURN
+================================================================================
+  Employer Information:
+    Employer Name: TechCorp Inc.
+    Employer Address: 2000 Innovation Drive, Suite 400
+                      Springfield, IL 62701
+    Employer ID Number: 36-7890123
+
+  Employee Information:
+    Employee Name: John A. Thompson
+    Employee Address: 1234 Maple Drive
+                      Springfield, IL 62701
+    SSN: XXX-XX-4567
+
+================================================================================
+  BOXES                                                          AMOUNT
+================================================================================
+  1.  Wages, tips, other compensation                             $112,500.00
+  2.  Federal income tax withheld                                  $18,750.00
+  3.  Social Security wages                                        $112,500.00
+  4.  Social Security tax withheld                                 $6,975.00
+  5.  Medicare wages and tips                                      $112,500.00
+  6.  Medicare tax withheld                                        $1,631.25
+  7.  Social Security tips                                         $0.00
+  8.  Allocated tips                                               $0.00
+
+  9.  Advance EIC payment                                          $0.00
+  10. Dependent care benefits                                      $0.00
+  11. Nonqualified plans                                           $0.00
+  12a.  Code D - 401(k) contributions                              $8,500.00
+  12b.  Code DD - Employer health coverage                         $6,240.00
+
+  13.  Statutory employee (box)                                    [ ]
+       Retirement plan (box)                                       [X]
+       Third-party sick pay (box)                                  [ ]
+
+  14.  Other                                                       $0.00
+
+  15.  State: Illinois
+       Employer State ID Number: 36-7890123
+  16.  State wages, tips                                           $112,500.00
+  17.  State income tax withheld                                   $5,062.50
+
+  18.  Local wages, tips                                           $0.00
+  19.  Local income tax withheld                                   $0.00
+  20.  Locality name                                               N/A
+
+================================================================================
+  IRS Use Only
+================================================================================
+
+  Form W-2 (Rev. 2024)  www.irs.gov/formw2
+================================================================================

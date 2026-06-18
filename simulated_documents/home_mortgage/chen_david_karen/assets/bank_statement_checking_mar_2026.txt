@@ -1,0 +1,101 @@
+======================================================================
+                      CHASE BANK - PREMIER CHECKING
+                STATEMENT FOR: March 1 - March 31, 2026
+======================================================================
+ACCOUNT: Premier Plus Checking
+ACCT #: XXXX-XXXX-2204
+ROUTING: 071000013
+CUSTOMERS: DAVID CHEN & KAREN CHEN (JOINT WROS)
+          1242 Hillcrest Drive
+          Springfield, IL 62704
+
+======================================================================
+SUMMARY
+======================================================================
+  Beginning Balance:                             $42,867.33
+  Total Deposits:                              +$18,269.23
+  Total Withdrawals:                           -$16,102.19
+  Ending Balance:                                $45,034.37
+======================================================================
+
+TRANSACTION DETAIL
+======================================================================
+DATE      DESCRIPTION                                          AMOUNT       BALANCE
+--------  ---------------------------------------------------- ----------   ----------
+03/01     Beginning Balance                                                      42,867.33
+03/01     AMEX PAYMENT - THANK YOU                           -4,682.00       38,185.33
+03/02     SPRINGFIELD MONTESSORI TUITION - E. CHEN          -1,400.00       36,785.33  [KINDERGARTEN]
+03/02     SPRINGFIELD MONTESSORI TUITION - E. CHEN          -1,400.00       35,385.33  [PRE-K]
+03/03     TRANSFER TO SAVINGS                              -2,000.00       33,385.33
+03/05     DIRECT DEPOSIT - MEDTECH SOLUTIONS - DAVID       +10,769.23       44,154.56
+03/05     AUTO PAY - CHASE MORTGAGE (XXXX-3381)             -4,380.00       39,774.56
+03/06     AUTO PAY - MBFS (MERCEDES) XXXX-1123               -912.00       38,862.56
+03/06     AUTO PAY - AUDI FINANCIAL XXXX-7894                -740.00       38,122.56
+03/07     TRANSFER TO VANGUARD INVESTMENT                   -3,500.00       34,622.56
+03/08     COSTCO WHOLESALE - SPRINGFIELD                     -387.42       34,235.14
+03/08     AMAZON.COM                                         -129.50       34,105.64
+03/09     CHASE SAPPHIRE RESERVE - AUTO PAY                  -3,200.00       30,905.64
+03/10     WHOLE FOODS MARKET                                -286.73       30,618.91
+03/10     DIRECT DEPOSIT - PHARMACARE - KAREN              +7,500.00       38,118.91
+03/11     SPRINGFIELD MONTESSORI TUITION - E. CHEN          -1,400.00       36,718.91
+03/11     SPRINGFIELD MONTESSORI TUITION - E. CHEN          -1,400.00       35,318.91
+03/12     TRANSFER TO SAVINGS                              -3,000.00       32,318.91
+03/13     AMEX PAYMENT - THANK YOU                           -4,891.00       27,427.91
+03/15     SPRINGFIELD GAS & ELECTRIC                         -245.00       27,182.91
+03/15     COMCAST INTERNET                                  -129.99       27,052.92
+03/15     VERIZON WIRELESS                                   -285.00       26,767.92
+03/18     TRANSFER TO VANGUARD INVESTMENT                   -2,500.00       24,267.92
+03/19     DIRECT DEPOSIT - MEDTECH SOLUTIONS - DAVID       +10,769.23       35,037.15
+03/20     TRANSFER TO SAVINGS                              -5,000.00       30,037.15
+03/22     AMAZON.COM                                         -219.87       29,817.28
+03/23     TARGET SPRINGFIELD                                 -163.40       29,653.88
+03/24     SPRINGFIELD MONTESSORI TUITION - E. CHEN          -1,400.00       28,253.88
+03/24     SPRINGFIELD MONTESSORI TUITION - E. CHEN          -1,400.00       26,853.88
+03/26     WHOLE FOODS MARKET                                -312.58       26,541.30
+03/27     DIRECT DEPOSIT - PHARMACARE - KAREN              +7,500.00       34,041.30
+03/27     EXPRESSO MART DRY CLEANERS                         -65.00       33,976.30
+03/28     STRIDER - KAREN COFFEE SUB                         -18.50       33,957.80  [EVERY. DAMN. DAY.]
+03/28     NETFLIX                                             -22.99       33,934.81
+03/29     APPLE.COM/BILL                                      -16.99       33,917.82  [ICLOUD STORAGE]
+03/30     TRANSFER TO SAVINGS                              -2,500.00       31,417.82
+03/30     CHASE CREDIT CARD PAYMENT - SAPPHIRE              -2,890.42       28,527.40
+03/31     WHOLE FOODS MARKET                                -271.89       28,255.51
+03/31     INTEREST EARNED                                     +1.18       28,256.69  [LOL $1.18]
+03/31     WITHDRAWAL - ATM FEE REIMBURSEMENT                 +0.00       28,256.69
+03/31     DEPOSIT - CHECK #4421 - STATE TAX REFUND          +1,400.00       29,656.69
+03/31     TRANSFER FROM SAVINGS                           +15,377.68       45,034.37  [??? - SEE NOTE]
+03/31     TRANSFER FROM SAVINGS                           +15,377.68       45,034.37  [WAIT THIS IS DUPLICATED?]
+
+[NOTE IN MARGIN: "Duplicated transfer entry? Check Feb statement. 
+ Might be system glitch. Balance looks right end of month though."]
+
+======================================================================
+MONTHLY FEE: $25.00 (WAIVED - PREMIER BALANCE)
+======================================================================
+INTEREST SUMMARY (ANNUAL PERCENTAGE YIELD 0.01% - LOL):
+  Average Daily Balance: $38,234.00
+  Interest Paid This Period: $1.18
+======================================================================
+
+  ==============================================================
+  | STICKY NOTE (YELLOW):                                       |
+  |                                                             |
+  |  Chase Savings account is earning 0.01% APY with $85K     |
+  |  sitting in it. Suggest moving $75K to Vanguard MMKT       |
+  |  at 4.2% APY - that's an extra $3,150/year vs $8.50.      |
+  |                                                             |
+  |  Also - direct deposit of bi-weekly payroll is consistent   |
+  |  with stated income. Payroll deposits alternating weeks     |
+  |  (David one week, Karen the next, sometimes same).          |
+  |                                                             |
+  |  Noted: Amex payments paid in full each month. No revolve. |
+  |  Sapphire Reserve also PIF. Good.                           |
+  |                                                             |
+  |  Private school tuition: $2,800/mo for TWO kids is         |
+  |  $33,600/yr. Not included in DTI calc but significant       |
+  |  recurring expense. Underwriter should note.                |
+  |                                                             |
+  |  - UW Review 4/2/26                                         |
+  ==============================================================
+
+======================================================================

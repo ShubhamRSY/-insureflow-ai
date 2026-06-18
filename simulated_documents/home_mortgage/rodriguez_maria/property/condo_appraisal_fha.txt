@@ -1,0 +1,115 @@
+================================================================================
+                   FHA APPRAISAL REPORT - UNIFORM RESIDENTIAL APPRAISAL
+                               File #: FHA-2026-IL-44198
+
+  PROPERTY:       789 Elm Street, Unit 2B, Springfield, IL 62704
+  BORROWER:       Maria G. Rodriguez
+  APPRAISER:      James R. Thornton, Certified Residential Appraiser
+                  License #: IL-XXXX-4421
+  APPRAISAL DATE: March 1, 2026
+
+================================================================================
+  APPRAISED VALUE: $178,000
+
+  [stamp: "FHA APPRAISAL - VALUATION FOR MORTGAGE INSURANCE PURPOSES"]
+
+================================================================================
+  PROPERTY DETAILS
+  --------------------------------------------------------------------------------
+  Property Type:          Condominium (Garden Style)
+  Year Built:             1987
+  Square Footage:         950 sq ft (livable)
+  Bedrooms:               2
+  Bathrooms:              1.5
+  Parking:                1 assigned surface space (#42)
+  HOA:                    Yes - $285/mo
+  --------------------------------------------------------
+  Condition:              C4 (see repair requirements below)
+  Design/Appeal:          Average
+  Location:               Established neighborhood, mixed use residential
+  View:                   Street / parking lot
+
+================================================================================
+  COMPARABLE SALES ANALYSIS
+  --------------------------------------------------------------------------------
+  Comp 1:  781 Elm St, Unit 2A (same building) - Sold 09/2025 - $182,000
+           (Renovated: new kitchen, updated bath, fresh paint)
+  Comp 2:  801 Elm St, Apt 1 - Sold 11/2025 - $175,000
+           (Similar condition, no updates, same floor plan)
+  Comp 3:  795 Elm St, Unit 3B - Sold 04/2025 - $177,500
+           (Estate sale, needs cosmetic updates)
+
+  ADJUSTMENTS:
+  Comp 1:  -$5,000 (condition adjustment - subject needs updates)
+  Comp 2:  +$2,000 (slightly smaller)
+  Comp 3:  +$1,000 (no adjustment - similar condition)
+
+  RECONCILED VALUE: $178,000
+
+  [scribbled under comps:]
+  "Unit 2B is in worse condition than 2A (sold for $182K).
+   2A had new kitchen/bath. Subject has original 1987 cabinets,
+   worn counters. Paint/carpet needed. $4K-$5K in cosmetic
+   updates would bring it to $180K+. As-is: $178K is fair.
+   - JRT"
+
+================================================================================
+  FHA APPRAISAL CONDITION REQUIREMENTS
+  --------------------------------------------------------------------------------
+  The following items require repair/remedy to meet FHA Minimum Property
+  Requirements (MPR) and Minimum Property Standards (MPS):
+
+  [REQUIRED REPAIRS - MUST BE COMPLETED BEFORE CLOSING]
+
+   1. PEELING PAINT - Exterior wood trim around front window is peeling.
+      Requires scraping and painting. Lead-safe work practices required.
+      (FHA MPR: Sound condition, no defective paint)
+
+   2. MISSING HANDRAIL - Rear exterior steps (exit from kitchen door) have
+      no handrail on the right side. Handrail required for safety per FHA.
+      (FHA MPR: Safe access and egress)
+
+   3. GFCI ELECTRICAL OUTLET - Kitchen counter receptacle is not GFCI
+      protected. Must be replaced with GFCI outlet or GFCI breaker.
+      (FHA MPS: Electrical safety)
+
+  [ADDITIONAL NOTES - NOT REQUIRED BUT NOTED]
+
+   4. Kitchen countertop laminate is worn/bubbling near sink. Not a
+      health/safety issue but cosmetic. Buyer is aware.
+
+   5. Carpet in living room shows wear in high-traffic areas. No tears
+      or tripping hazards. Acceptable as-is.
+
+   6. Bathroom caulk around tub/shower is cracked/re-moldable. Recommend
+      recaulking. Not a required repair at this time.
+
+================================================================================
+  APPRAISER'S OVERALL OPINION:
+
+  The property is located in an established neighborhood with average
+  market appeal. The subject condo is in below-average to average
+  condition, consistent with a foreclosure/estate sale property. The
+  estimated value of $178,000 reflects the property's current condition
+  and the required FHA repairs.
+
+  [handwritten note at bottom:]
+  "UNIT 2B - ESTATE SALE CONDITION. PAINT/CARPET NEEDED. KITCHEN
+   COUNTER LAMINATE WORN. REQUIRES FHA REPAIRS BEFORE CLOSING.
+   CALLED MARIA 3/2 - SHE'S OK WITH THE LOW APPRAISAL. SELLER
+   WONT COME DOWN. SHE MIGHT HAVE TO BRING EXTRA CASH FOR THE
+   $2K GAP OR RENEGOTIATE. - JRT"
+
+  [underwriter scribble:]
+  "Appraisal came in at $178K vs $180K purchase price. $2K gap.
+   Options: (1) Renegotiate to $178K (seller is bank - unlikely),
+   (2) Borrower pays $2K difference in down payment (needs 5% diff
+   between appraised value and loan amount? No - FHA allows LTV
+   based on lower of purchase price or appraised value. Loan
+   based on $178K = $171,730 max financing. Down payment goes from
+   $6,300 to $8,270. She'd need to come up with ~$1,970 more,
+   plus closing costs gap. NOT HAPPENING.
+   (3) Renegotiate seller concession from $3K to $5K to cover.
+   CALLING GEORGE HENDERSON 3/3. - JM"
+
+================================================================================

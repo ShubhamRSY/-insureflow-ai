@@ -1,0 +1,102 @@
+══════════════════════════════════════════════════════════════════════════════
+               COMMERCIAL REAL ESTATE APPRAISAL REPORT
+                    (Narrative Summary Appraisal)
+══════════════════════════════════════════════════════════════════════════════
+
+  File No:          APR-2026-8821-CM
+  Appraisal Date:   April 14, 2026
+  Prepared For:     InsureFlow National Mortgage (Commercial Division)
+  Prepared By:      Apex Appraisal Group LLC - David R. Morrison, MAI
+
+══════════════════ PROPERTY IDENTIFICATION ═══════════════════════════════════
+
+  Property Address:     5678 Commerce Boulevard, Springfield, IL 62702
+  Parcel ID:            14-24-789-123-0000
+  Property Type:        Mixed-Use Commercial (Retail + Office)
+  Year Built / Renov:   Built 2018. No substantial renovation.
+  Site Area:            2.80 acres (121,968 SF)
+  Building Area:        28,400 SF GLA (12,000 SF retail / 16,400 SF office)
+  Zoning:               B-3 General Commercial (City of Springfield)
+  Highest/Best Use:     As currently improved (commercial mixed-use)
+
+══════════════════ VALUATION APPROACHES ══════════════════════════════════════
+
+═══ INCOME CAPITALIZATION APPROACH ═══════════════════════════════════════════
+
+  Stabilized Net Operating Income (NOI):
+    Potential Gross Income (100% occ)           $273,600.00
+    Less: Vacancy/Collection Loss (5%)          ($13,680.00)
+    ═══════════════════════════════════════════
+    Effective Gross Income                      $259,920.00
+    Less: Operating Expenses (38%)             ($98,769.60)
+    ═══════════════════════════════════════════
+    Stabilized NOI                               $161,150.40
+
+  Capitalization Rate (derived from market):     7.25%
+  Indicated Value (Income Approach):           $2,222,074.00
+  ─────────────────────────────────────────────────────────────────
+  Rounded to:                                   $2,225,000.00
+
+═══ SALES COMPARISON APPROACH ════════════════════════════════════════════════
+
+  Comp 1:  4400 Commerce Blvd        Price: $2,150,000    $76/SF   Dec 2025
+           27,800 SF retail/office    OCC: 90%             NOI: $155K
+  Comp 2:  3200 Main Street          Price: $2,480,000    $82/SF   Sep 2025
+           30,200 SF office           OCC: 88%             NOI: $172K
+  Comp 3:  2100 Route 66             Price: $2,380,000    $78/SF   Mar 2026
+           30,500 SF flex            OCC: 85%             NOI: $160K (est)
+
+  Adjustments (net): -5% to -2% for age/location/condition
+  Indicated Value (Sales Comparison):                $2,360,000.00
+
+═══ COST APPROACH ════════════════════════════════════════════════════════════
+
+  Site Value (2.80 acres @ $185,000/ac)            $518,000.00
+  Building Cost New (28,400 SF @ $135/SF)         $3,834,000.00
+  Less: Depreciation (7.75% - age/condition)      ($297,000.00)
+  Site Improvements (parking, landscaping)          $125,000.00
+  ═══════════════════════════════════════════
+  Indicated Value (Cost Approach)                  $4,180,000.00
+  ═══════════════════════════════════════════
+  [NOTE: Cost approach given less weight due to entrepreneurial
+   profit / land value considerations in current market]
+
+══════════════════ FINAL VALUE CONCLUSION ═════════════════════════════════════
+
+  Approach                  Indicated Value       Weight
+  ───────────────────────   ──────────────────    ──────
+  Income Capitalization     $2,225,000            60%
+  Sales Comparison          $2,360,000            35%
+  Cost Approach             $4,180,000             5%
+
+══════════════════════════════════════════════════════════════════════════════
+          FINAL APPRAISED VALUE:          $2,300,000
+══════════════════════════════════════════════════════════════════════════════
+
+══════════════════ ASSUMPTIONS / EXPOSURE TIME ═══════════════════════════════
+
+  Exposure Time:        12-18 months (typical for market)
+  Marketing Time:       6-12 months
+  Value Assumption:     Fee simple interest, no environmental contamination,
+                        all leases in full force and effect, no pending
+                        litigation or condemnation.
+
+══════════════════════════════════════════════════════════════════════════════
+                              APPRAISER CERTIFICATION
+══════════════════════════════════════════════════════════════════════════════
+
+  I certify that to the best of my knowledge and belief:
+  - The statements of fact contained in this report are true and correct
+  - The reported analyses, opinions, and conclusions are limited only by
+    the reported assumptions and limiting conditions
+  - I have no present or prospective interest in the property
+  - No one provided significant professional assistance (sole appraiser)
+
+  /s/ David R. Morrison, MAI
+  Illinois Certified General Appraiser #IL-AR-0018834
+  Apex Appraisal Group LLC | 550 Commerce Street, Springfield, IL 62701
+  Date: April 16, 2026
+
+══════════════════════════════════════════════════════════════════════════════
+[STAMP] APPRAISAL DELIVERED TO INSUREFLOW NATIONAL MORTGAGE - 04/17/2026
+══════════════════════════════════════════════════════════════════════════════

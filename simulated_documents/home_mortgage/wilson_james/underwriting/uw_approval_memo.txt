@@ -1,0 +1,107 @@
+══════════════════════════════════════════════════════════════════════
+              INSUREFLOW NATIONAL MORTGAGE
+              INTERNAL UNDERWRITING APPROVAL MEMO
+══════════════════════════════════════════════════════════════════════
+
+DATE:               February 10, 2026
+TO:                 Loan File # IN-2026-02791
+FROM:               Rachel Pasternak, Senior Underwriter
+RE:                 FHA 203(k) UNDERWRITING DECISION
+BORROWER:           Wilson, James T.
+PROPERTY:           321 Oak Street, Springfield, IL
+PRODUCT:            FHA 203(k) Streamline Renovation
+
+LOAN AMOUNT:        $320,000
+PURCHASE:           $210,000
+RENOVATION:         $110,000
+APPRAISAL (AS-IS):  $165,000
+APPRAISAL (AFTER):  $295,000
+
+══════════════════════════════════════════════════════════════════════
+
+UNDERWRITING ANALYSIS:
+
+INCOME:        $95,000/yr (3 yr avg net SE income, CPA verified)
+
+CREDIT:        645 FICO — Below AUS approval threshold
+               Derogatory items:
+                 - 2x30 mortgage lates (2024) — divorce related
+                 - 1x30 credit card (12/2024)
+                 - Student loan in rehab (current, no lates)
+               NO 60/90 day lates. NO foreclosure. NO BK.
+
+══════════════════════════════════════════════════════════════════════
+
+MANUAL UNDERWRITE REQUIRED:
+
+  Reason:  Credit score 645 below AUS minimum of 660 for FHA.
+           Manual underwrite per FHA Handbook 4000.1.
+
+═══   COMPENSATING FACTORS   ════════════════════════════════════════
+
+  ✅  12 MONTHS RESERVES POST-REHAB
+      Post-rehab value $295K. 12 mo PITI = $2,184 + $125 MIP
+      + $434 escrow = $2,743/mo. Reserves $33K = 12.0 months.
+      Exceeds FHA min of 3 months. Strong compensating factor.
+
+  ✅  STABLE INCOME (3+ YEARS SAME FIELD)
+      10+ years self-employed as GC. Income consistent $92-98K.
+      CPA letter confirms business viability. Low income
+      variability.
+
+  ✅  LOW DTI — 34%
+      $2,743 PITI + $385 auto + $120 CC min + $1,200 child
+      support = $4,448 ÷ $7,917/mo income = 34%.
+      FHA max DTI: 43% for manual underwrite.
+      ✅ At or below 43% threshold.
+
+═══   ADDITIONAL NOTES   ════════════════════════════════════════════
+
+  Divorce-related lates adequately explained in LOE.
+  Borrower has been on time for past 12 months (rental verif
+  confirms current on-time payments).
+
+  203(k) renovation scope is well-defined. Consultant report
+  approved. Contractor licensed and FHA-approved.
+
+══════════════════════════════════════════════════════════════════════
+
+DECISION:
+
+══════════════════════════════════════════════════════════════════════
+  ✅  MANUAL UW RECOMMEND APPROVAL
+      COMPENSATING FACTORS DOCUMENTED
+══════════════════════════════════════════════════════════════════════
+
+══════════════════════════════════════════════════════════════════════
+
+CONDITIONS:
+
+  1.  ⬜ Contractor's license verified (IL-CONT-44821)
+  2.  ⬜ 203k Consultant report approved (James Rodriguez)
+  3.  ⬜ LOE for divorce-related lates signed by borrower
+  4.  ⬜ Appraisal as-is $165K / after $295K supports value
+  5.  ⬜ Builder's risk insurance policy in place
+  6.  ⬜ Rental verification from current landlord (ordered)
+
+══════════════════════════════════════════════════════════════════════
+
+  "Manual underwrite with compensating factors: 12+ months
+   reserves, stable SE income >3 years, low DTI 34%. Credit
+   risk mitigated by documented divorce context and current
+   on-time payment history. 203k structure sound. Recommend
+   approval with conditions noted above."
+
+  /s/ Rachel Pasternak
+  ──────────────────────────────────────────────────────────────────
+  Rachel Pasternak
+  Senior Underwriter, FHA Division
+  InsureFlow National Mortgage
+  NMLS #738201
+
+══════════════════════════════════════════════════════════════════════
+
+  // MARGIN NOTE //
+  Conditions cleared 2/12 - license, consultant, LOE, appraisal,
+  insurance all in. CTC pending title & CD.  --RP
+══════════════════════════════════════════════════════════════════════

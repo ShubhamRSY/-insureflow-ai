@@ -1,0 +1,70 @@
+══════════════════════════════════════════════════════════════════════════════
+          ALTA/NSPS LAND TITLE SURVEY (TABLE A ITEMS 1-20)
+══════════════════════════════════════════════════════════════════════════════
+
+  Project:          5678 Commerce Boulevard, Springfield, IL 62702
+  Survey Date:      March 28, 2026
+  Prepared For:     InsureFlow National Mortgage / Chicago Title Insurance
+  Prepared By:      Landmark Surveying Co. - IL Reg #LS-4892-001
+
+══════════════════════════════════════════════════════════════════════════════
+SURVEY RESULTS
+══════════════════════════════════════════════════════════════════════════════
+
+  LOT / PARCEL:    Lot 1 of Commerce Park Subdivision, City of Springfield
+  SECTION:         Section 14, Township 16N, Range 8W of the 3rd P.M.
+  COUNTY:          Sangamon County, Illinois
+
+  SITE DIMENSIONS:
+    North boundary:   330.00 ft (along Commerce Blvd frontage)
+    South boundary:   330.00 ft (rear property line)
+    East boundary:    369.70 ft
+    West boundary:    369.70 ft
+    Total Area:       121,968 SF (2.80 acres per deed, actual 2.79 acres)
+    ─── [NOTE: Minor discrepancy of 0.01 acre. Within acceptable
+         tolerance per ALTA standards. No title issue.]
+
+  BUILDING LOCATION:
+    Building footprint: 29,120 SF (incl. canopy/eaves)
+    Location:           Center-north portion of site
+    Setbacks:
+      Front (Commerce Blvd):       22.4 ft measured (req 20 ft)
+      Side (east):                 12.8 ft measured (req 10 ft)
+      Side (west):                 16.1 ft measured (req 10 ft)
+      Rear:                        31.2 ft measured (req 25 ft)
+    ─── ALL SETBACKS COMPLIANT WITH B-3 ZONING ───
+
+  EASEMENTS:
+    [X] Utility Easement - City Electric (10ft wide, east side)
+    [X] Utility Easement - Springfield Water (8ft, west side)
+    [X] Sanitary Sewer Easement - Sangamon County (12ft, rear)
+    [ ] Other easements: NONE
+    ─── All easements per recorded plat. No encroachments observed. ───
+
+  ENCROACHMENTS:
+    None observed. Adjacent property (4480 Commerce Blvd) fence line
+    is 0.3 ft inside subject property at southeast corner.
+    ─── [Note: De minimis encroachment. Recommend recording survey
+         to establish boundary line. Adjacent owner aware. No action
+         required for loan closing per title counsel.] ───
+
+  PARKING:
+    Total spaces counted:    48 (2 ADA accessible)
+    Required per code:       118 / 84 (w/ shared parking credit)
+    ─── EXISTING NONCONFORMING. See zoning report for details. ───
+
+══════════════════════════════════════════════════════════════════════════════
+CERTIFICATION
+══════════════════════════════════════════════════════════════════════════════
+
+  I hereby certify that this survey was prepared in accordance with
+  the 2021 ALTA/NSPS Minimum Standard Detail Requirements for Land
+  Title Surveys (Table A Items 1-20 completed).
+
+  /s/ James R. Peterson, PLS
+  Illinois Professional Land Surveyor #IL-1849
+  Landmark Surveying Co.
+
+══════════════════════════════════════════════════════════════════════════════
+[ATTACHMENT] Survey Drawing (Sheet 1 of 1) - 24" x 36" Mylar + PDF
+══════════════════════════════════════════════════════════════════════════════

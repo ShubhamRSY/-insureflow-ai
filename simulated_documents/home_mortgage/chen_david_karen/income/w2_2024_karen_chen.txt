@@ -1,0 +1,60 @@
+                FORM W-2 - WAGE AND TAX STATEMENT                       
+                COPY B - TO BE FILED WITH EMPLOYEE'S FEDERAL TAX RETURN
+================================================================
+EMPLOYER: PharmaCare LLC
+          One PharmaCare Drive
+          Springfield, IL 62703
+          EIN: 47-8392101
+
+EMPLOYEE: Karen Chen
+          SSN: XXX-XX-6730
+          1242 Hillcrest Drive
+          Springfield, IL 62704
+
+================================================================
+  a. Employee's SSN: XXX-XX-6730             
+  b. Employer ID No: 47-8392101              
+  c. Employer's name, address, ZIP: (above)
+  d. Control No: 2024-PC-4412                
+  e. Employee's name, address, ZIP: (above)  
+================================================================
+ 1. Wages, tips, other compensation:  195,000.00
+ 2. Federal income tax withheld:       46,800.00
+ 3. Social Security wages:            195,000.00
+ 4. Social Security tax withheld:      12,090.00
+ 5. Medicare wages and tips:          195,000.00
+ 6. Medicare tax withheld:              2,827.50
+ 7. Social Security tips:                    0.00
+ 8. Allocated tips:                         0.00
+================================================================
+ 9.                                    
+10. Dependent care benefits:              5,000.00
+11. Nonqualified plans:                     0.00
+12a. 401(k) (Code D)                  19,500.00
+12b.                                    
+12c.                                    
+12d. 
+13. Statutory employee: [ ]  Retirement plan: [X]  Third-party sick pay: [ ]
+14. Other:                               See below
+================================================================
+15. State: IL   Employer state ID No:  IL-478932-2
+16. State wages, tips:               195,000.00
+17. State income tax:                  9,652.50
+18. Local wages, tips:                      0.00
+19. Local income tax:                       0.00
+20. Locality name:                         
+================================================================
+
+  --- DETAIL ---
+  401(k) maxed ($19,500)
+  Dependent Care FSA: $5,000 (pre-tax, for after-school programs)
+  Health insurance premium (pre-tax): $5,100
+  Dental & Vision (pre-tax): $870
+  
+  Box 14 - Other:
+    - Group term life: $294
+    - Parking: $0 (she takes train)
+
+================================================================
+  THIS IS NOT A BILL. RETAIN FOR YOUR RECORDS.
+================================================================

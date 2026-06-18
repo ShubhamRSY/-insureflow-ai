@@ -1,0 +1,76 @@
+======================================================================
+                      CHASE BANK - SAVINGS STATEMENT
+                STATEMENT FOR: March 1 - March 31, 2026
+======================================================================
+ACCOUNT: Chase Savings
+ACCT #: XXXX-XXXX-4418
+ROUTING: 071000013
+CUSTOMERS: DAVID CHEN & KAREN CHEN (JOINT WROS)
+          1242 Hillcrest Drive
+          Springfield, IL 62704
+
+======================================================================
+SUMMARY
+======================================================================
+  Beginning Balance:                             $79,845.29
+  Total Deposits:                              +$15,000.00
+  Total Withdrawals:                           -$15,377.68
+  Service Charges:                                    -$5.00
+  Interest Earned:                                    $0.68
+  Ending Balance:                                $79,463.29
+======================================================================
+
+TRANSACTION DETAIL
+======================================================================
+DATE      DESCRIPTION                                          AMOUNT       BALANCE
+--------  ---------------------------------------------------- ----------   ----------
+03/01     Beginning Balance                                                      79,845.29
+03/03     TRANSFER FROM CHECKING - ACH                        +2,000.00       81,845.29
+03/05     SERVICE FEE - MONTHLY MAINTENANCE                      -5.00       81,840.29
+03/12     TRANSFER FROM CHECKING - ACH                        +3,000.00       84,840.29
+03/20     TRANSFER FROM CHECKING - ACH                        +5,000.00       89,840.29
+03/30     TRANSFER FROM CHECKING - ACH                        +2,500.00       92,340.29
+03/31     TRANSFER TO CHECKING                                -15,377.68       76,962.61
+03/31     TRANSFER TO CHECKING (DUPLICATE?)                   -15,377.68       61,584.93 *SEE NOTE
+
+[SIDE NOTE ON PRINTED STATEMENT:
+ "03/31 transfer to checking of $15,377.68 showing twice - was this 
+  reversed and re-processed? Balance appears off. Actual ending 
+  balance should be approx $76,962 + $2,500 (that one transfer from 
+  checking on 3/30 was posted after?) = $79,463. 
+  
+  The $5,000 on 3/20 and the $2,500 on 3/30 both posted. So total 
+  deposits +$15,000, less $15,377.68 = -$377.68 net outflow. So 
+  $79,845 + $15,000 - $15,377.68 - $5 fee + $0.68 interest = 
+  $79,463. The second $15,377.68 is probably a GLITCH.
+  
+  Either way - available balance ~$79,500."]
+
+======================================================================
+INTEREST SUMMARY
+======================================================================
+  Average Daily Balance: $84,210.00
+  Interest Rate: 0.01% APY
+  Interest Paid This Period: $0.68
+======================================================================
+
+  ==============================================================
+  | STICKY NOTE (HOT PINK, SCRIBBLED IN ALL CAPS):             |
+  |                                                             |
+  |  HIGH BALANCE - LOW YIELD                                  |
+  |                                                             |
+  |  $85,000 SITTING IN 0.01% APY SAVINGS = $8.50/YEAR        |
+  |                                                             |
+  |  SUGGEST MOVING $75K TO VANGUARD MMKT FUND (CASH PLUS)     |
+  |  CURRENTLY OFFERING 4.2% APY = $3,150/YR                   |
+  |                                                             |
+  |  THIS IS A $3,141.50/YR OPPORTUNITY COST. ABSOLUTELY       |
+  |  CRIMINAL. WHY DO PEOPLE DO THIS???                        |
+  |                                                             |
+  |  - ANALYST #2 (MIKE)                                        |
+  |                                                             |
+  |  P.S. Some of this might be for the HELOC payoff post-     |
+  |  refi. Check with borrower.                                |
+  ==============================================================
+
+======================================================================

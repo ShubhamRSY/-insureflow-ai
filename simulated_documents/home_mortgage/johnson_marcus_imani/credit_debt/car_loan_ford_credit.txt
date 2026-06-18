@@ -1,0 +1,91 @@
+========================================================================================
+                        FORD MOTOR CREDIT COMPANY - MONTHLY STATEMENT
+========================================================================================
+
+  STATEMENT DATE:  March 10, 2026                        ACCOUNT #:  ****-****-9402
+  PAYMENT DUE:     April 5, 2026                          AMOUNT DUE: $415.00
+
+  MARCUS D. JOHNSON & IMANI R. JOHNSON
+  1234 Maple Creek Road
+  Rural Route 1
+  Clear Creek, IL 62719
+
+========================================================================================
+  ACCOUNT SUMMARY
+========================================================================================
+  Original Loan Amount:                     $28,500.00
+  Original Term:                            72 Months
+  Annual Percentage Rate (APR):             5.49%
+  Monthly Payment:                          $415.00
+  
+  Current Principal Balance:                $22,153.47
+  Payment Due:                              $415.00
+  Past Due Amount:                          $0.00
+  
+  Total Payments Received:                  33 of 72
+  Remaining Payments:                       39
+  Payoff Amount (valid through 04/15/2026): $22,105.34
+  Per Diem Interest:                        $3.37/day
+
+========================================================================================
+  VEHICLE INFORMATION
+========================================================================================
+  Year/Make/Model:  2022 Ford Escape SE
+  VIN:              1FMCU9GZ1NUB48291
+  Color:            Iconic Silver
+  License Plate:    IL - JOHNSN1
+  
+  Current Mileage:  34,200 (approx 1,100 mi/mo - commuting)
+  Vehicle Status:   Active
+
+========================================================================================
+  RECENT TRANSACTIONS
+========================================================================================
+  Date          Description                          Amount        Balance
+  --------      ------------------------------      ---------     ---------
+  Feb 11, 2026  Payment Received - Thank You         ($415.00)    $22,383.69
+  Feb 11-28     Interest Accrued (5.49% APR)         $69.78       $22,453.47
+  Mar 05, 2026  Payment Received - Thank You         ($415.00)    $22,153.47
+  
+  Next Payment Due:  April 5, 2026
+  AutoPay Enrollment: YES - Draft from Credit Union of Central IL checking xxxx4821
+  AutoPay Discount:  0.25% (applied to rate)
+
+========================================================================================
+  PAYMENT HISTORY (LAST 12 MONTHS)
+========================================================================================
+  Month         Status       Amount
+  ------        ------       ------
+  Apr 2025      On Time      $415.00
+  May 2025      On Time      $415.00
+  Jun 2025      On Time      $415.00
+  Jul 2025      On Time      $415.00
+  Aug 2025      On Time      $415.00
+  Sep 2025      On Time      $415.00
+  Oct 2025      On Time      $415.00
+  Nov 2025      On Time      $415.00
+  Dec 2025      On Time      $415.00
+  Jan 2026      On Time      $415.00
+  Feb 2026      On Time      $415.00
+  Mar 2026      On Time      $415.00
+
+  *** 34 consecutive on-time payments since origination ***
+  *** NEVER LATE ***
+
+========================================================================================
+  LOAN TERMS & CONDITIONS
+========================================================================================
+  Purchase Date:       June 15, 2023
+  Selling Dealer:     Landmark Ford of Springfield
+  Vehicle Use:        Personal / Commuting
+  
+  GAP Coverage:       Yes - included in financing
+  Extended Warranty:  No - declined
+
+========================================================================================
+  *** IMPORTANT MORTGAGE NOTES ***
+  Payoff quote valid through 04/15/2026. If closing after this date, request updated.
+  No early payoff penalty. Title held by Ford Motor Credit.
+  Account in good standing. No modifications, extensions, or deferments.
+  Payment history shows 0 lates. Strong installment trade line.
+========================================================================================

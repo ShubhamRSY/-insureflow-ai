@@ -1,0 +1,98 @@
+======================================================================
+                  FORM 1040 - U.S. INDIVIDUAL INCOME TAX RETURN
+                           TAX YEAR: 2023 (PROCESSED)
+======================================================================
+   
+FILER: James Thomas Wilson
+SSN: XXX-XX-4412
+ADDRESS: 4568 West Grove Ave, Apt 3B
+         Springfield, IL 62703
+STATUS: Single (Head of Household - Ethan claimed this year)
+
+INCOME:                                  Amount
+----------------------------------------------------------------------
+Schedule C Net Profit                    $112,000.00   <--- SEE SCH C
+Wages                                    $0.00
+Interest                                 $38.12
+TOTAL INCOME                             $112,038.12
+
+AGI ADJUSTMENTS:
+Self-Employment Tax Deduction            $7,912.00
+SE Health Insurance                      $7,800.00
+IRA Contribution                         $0.00
+HSA                                      $0.00
+
+ADJUSTED GROSS INCOME                    $96,326.12
+
+Standard Deduction (Head of Household)   $20,800.00
+Qualified Business Income Deduction      $22,400.00  (20% of $112K)
+
+TAXABLE INCOME                           $53,126.12
+
+Tax (per Tax Tables)                     $7,214.00
+Schedule SE Tax                          $15,824.00
+
+TOTAL TAX                                $23,038.00
+
+TAX PAYMENTS:
+Estimated Tax Payments (1040-ES)         $16,000.00   (4 x $4,000)
+Refund Applied from 2022                 $1,240.00
+
+TOTAL PAYMENTS                           $17,240.00
+
+AMOUNT YOU OWE:                          $5,798.00
+----------------------------------------------------------------------
+
+SCHEDULE C - WILSON HOME IMPROVEMENTS
+----------------------------------------------------------------------
+GROSS RECEIPTS:                          $165,000.00
+
+EXPENSES:
+   Materials & supplies                  $16,200.00
+   Subcontractors                        $9,400.00
+   Vehicle (mileage - 14,800 mi)         $9,694.00
+   Tools & Equipment                     $3,800.00
+   Insurance                             $3,400.00
+   Rent - equipment                      $3,100.00
+   Professional Services                $1,500.00  (CPA + legal)
+   Advertising                           $900.00
+   Office & phone                        $1,200.00
+   Permits & licenses                    $800.00
+   Depreciation                          $1,800.00
+   Other (supplies, safety, disposal)    $2,206.00
+
+TOTAL EXPENSES:                          $53,000.00
+
+NET PROFIT:                              $112,000.00
+======================================================================
+
+JOBS BREAKDOWN (handwritten on back copy):
+   - Ramirez kitchen (large) - $34,000 ✓
+   - Henderson bath - $12,500 ✓
+   - Westminster Church renovation - $28,600 ✓ 
+   - Thompson basement - $16,200 ✓
+   - Various smaller jobs - remainder
+   
+   "Client had strong year - 3 large kitchen jobs.
+    Highest gross revenue to date.
+    -- F. Mancini, CPA"
+
+======================================================================
+
+   [Post-it note affixed to page 1:]
+   
+   "JAMES - YOU OWE $5,798. PAY BY 4/15.
+    Consider increasing quarterly payments for 2024.
+    You're underwithholding. Talk to me.
+    - Frank"
+    
+    (Yellow post-it, partially peeled off, adhesive residue visible)
+
+======================================================================
+
+UNDERWRITER NOTE - 4/12/26:
+   2023 income high. Used for AUS. 2024 lower but stable.
+   Averaging 3 years: $96,000/yr average. 
+   Qualifying income: $96K.
+   Initials: ML
+======================================================================

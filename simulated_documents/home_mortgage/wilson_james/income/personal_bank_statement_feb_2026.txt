@@ -1,0 +1,116 @@
+======================================================================
+                   BANK OF AMERICA - PERSONAL CHECKING
+                         ACCOUNT SUMMARY
+======================================================================
+ACCOUNT HOLDER: James T. Wilson
+ACCT #: xxxx-8832
+PERIOD: February 1, 2026 - February 28, 2026
+OPENING BALANCE: $3,112.45
+CLOSING BALANCE:  $8,044.23
+
+======================================================================
+TRANSACTION HISTORY:
+======================================================================
+Date        Description                                               Amount        Balance
+-------------------------------------------------------------------------------------------
+02/01/26    Opening Balance                                                           $3,112.45
+02/01/26    Automatic Debit - Rent (Lincoln Heights Apt #3B)          -$1,200.00     $1,912.45
+02/01/26    ACH - Child Support (IL DCSS - Ethan)                    -$600.00       $1,312.45
+02/02/26    Debit Card - Shell Gas (Springfield)                     -$52.40        $1,260.05
+02/02/26    Debit Card - Walmart Neighborhood Market                 -$87.33        $1,172.72
+02/03/26    Debit Card - Subway (lunch)                              -$12.50        $1,160.22
+02/04/26    ACH - Ford Motor Credit (Truck Loan #xxxx-2291)          -$482.00        $678.22
+02/05/26    Transfer - From Business Checking (#4412)                 +$2,000.00    $2,678.22
+            [handwritten: "payday"]
+02/06/26    Debit Card - Schnucks Grocery                            -$116.42       $2,561.80
+02/07/26    Debit Card - Amazon (Ethan's birthday gift)              -$89.99        $2,471.81
+02/08/26    Debit Card - Advance Auto Parts                          -$34.67        $2,437.14
+02/10/26    Debit Card - Aldi                                        -$54.80        $2,382.34
+02/11/26    Withdrawal - ATM (Cash)                                  -$200.00       $2,182.34
+02/12/26    Debit Card - Pizza Hut                                   -$28.99        $2,153.35
+02/13/26    Debit Card - Shell Gas                                   -$48.72        $2,104.63
+02/14/26    Debit Card - Walgreens (Ethan - school supplies?)        -$22.41        $2,082.22
+02/15/26    ACH - Capital One Payment (Min Due)                      -$165.00       $1,917.22
+02/15/26    Service Fee - Monthly Maintenance                        -$12.00        $1,905.22
+02/16/26    Debit Card - Schnucks Grocery                            -$98.50        $1,806.72
+02/17/26    Debit Card - McDonald's (Ethan)                          -$16.75        $1,789.97
+02/18/26    Transfer - From Business Checking (#4412)                 +$2,000.00    $3,789.97
+            [handwritten: "payday"]
+02/19/26    Debit Card - Shell Gas                                   -$55.10        $3,734.87
+02/20/26    Debit Card - Menards (Ethan's project)                    -$24.38        $3,710.49
+02/21/26    Debit Card - Walmart                                     -$112.67       $3,597.82
+02/22/26    ACH - Discover Card Payment (Min Due)                    -$98.00        $3,499.82
+02/23/26    Debit Card - Shell Gas                                   -$51.88        $3,447.94
+02/24/26    Debit Card - Dollar Tree (cleaning supplies)             -$15.50        $3,432.44
+02/25/26    ACH - Ford Motor Credit (Truck)                         -$482.00        $2,950.44  *** Wait, 2 payments? 
+                                                                                                See note
+02/26/26    Debit Card - Pizza Ranch (Ethan's basketball team)       -$45.00        $2,905.44
+02/26/26    Debit Card - Schnucks Grocery                            -$78.30        $2,827.14
+02/27/26    Debit Card - Shell Gas                                   -$53.22        $2,773.92
+02/28/26    Transfer - From Business Checking (#4412)                 +$2,000.00    $4,773.92
+            [handwritten: "payday"]
+02/28/26    Deposit - Check (IRS - Refund 2025?)                    +$3,270.31     $8,044.23  *** ? Unexpected!
+02/28/26    Closing Balance                                                         $8,044.23
+======================================================================
+
+MONTHLY SUMMARY:
+   Total Deposits:                                         $9,270.31
+   Total Withdrawals:                                      ($4,338.53)
+   Net Change:                                              $4,931.78
+
+======================================================================
+
+*** NOTE FROM PREVIOUS MONTH (Jan 2026 statement, not in this file): ***
+
+December 2025 activity:
+   12/15 - Overdraft Protection Transfer FROM Savings xxxx-9910   +$500.00
+   12/20 - Overdraft Protection Transfer FROM Savings xxxx-9910   +$350.00
+   12/28 - Overdraft Protection Transfer FROM Savings xxxx-9910   +$200.00
+
+   (Holiday spending + slow business Dec = over drafted. 
+    Savings covered it. Balance in savings now ~$1,200.
+    - Record for UW)
+
+======================================================================
+
+HANDWRITTEN ANNOTATIONS:
+
+[Next to 2/25 Ford payment:]
+   "DOUBLE PAYMENT? No - this is the auto-pay on 2/04 and 
+    I made an extra payment manually on 2/25. Paying down 
+    truck loan faster. UW said to keep making $482/mo and 
+    not increase. Oops. - James"
+
+[Next to IRS Refund deposit 2/28:]
+   "WTF? IRS refund? I thought I owed money. CPA said maybe 
+    refund from amended 2022 or 2023. Call Frank tomorrow.
+    Not counting on this for closing. - James"
+
+[Margin note - top of statement:]
+   "Rent $1,200/mo. Landlord is Mr. Chen (cash - I pay via 
+    BofA billpay to Chen Properties LLC). Lease ends 5/31/26.
+    PERFECT TIMING WITH CLOSING."
+
+[Bottom of statement - scribbled:]
+   "Need to replenish savings acct xxxx-9910. Only $1,200 
+    in there after the Dec OD protection transfers. This is 
+    my emergency fund. - J"
+   
+======================================================================
+UNDERWRITER NOTES (added during review):
+======================================================================
+
+- Personal account shows consistent living expenses. Rent $1,200
+  matches lease. Child support $600 confirmed by court order.
+- Truck payment $482 x 2 this month (extra payment noted). Normal
+  PITI will be ~$482 + future mortgage payment. DTI calculation
+  needed.
+- Business draws $2K bi-weekly = $4K/mo. Reasonable for his income.
+- IRS refund $3,270 - verify nature. Could be used as additional
+  cash for closing if needed.
+- Dec 2025 overdraft transfers show tight cash flow during holidays.
+  However YTD positive. UW to note.
+
+Reviewed by: ML - 3/14/26
+Status: Pending verification of IRS refund. Request transcript.
+======================================================================

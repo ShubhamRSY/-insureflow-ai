@@ -1,0 +1,65 @@
+================================================================================
+                    UNITED STATES POSTAL SERVICE - WAGE AND TAX STATEMENT
+                                FORM W-2 (Copy B - To Be Filed With Employee's FEDERAL Tax Return)
+================================================================================
+                                   2024                                        |
+================================================================================
+                                                                                
+  Employer Name:                                      Employee Name:           
+  United States Postal Service                        Marcus D. Johnson        
+  475 L'Enfant Plaza SW                               SSN: ***-**-4821          
+  Washington, DC 20260                                                          
+                                                      1234 Maple Creek Road     
+  Employer ID No: 53-0196365                          Rural Route 1             
+                                                      Clear Creek, IL 62719     
+                                                                                
+================================================================================
+                          WAGES AND TAX INFORMATION
+================================================================================
+                                                                                
+  1. Wages, tips, other compensation: ................ $68,000.00               
+  2. Federal income tax withheld: .................... $8,840.00                
+  3. Social Security wages: .......................... $68,000.00               
+  4. Social Security tax withheld: .................. $4,216.00                 
+  5. Medicare wages and tips: ........................ $68,000.00               
+  6. Medicare tax withheld: ......................... $986.00                   
+  7. Social Security tips: .......................... $0.00                     
+  8. Allocated tips: ................................ $0.00                     
+                                                                                
+  9. Dependent care benefits: ....................... $0.00                     
+  10. Dependent care benefits (excluded): ........... $0.00                     
+                                                                                
+  11. Nonqualified plans: ........................... $0.00                     
+  12a. W-2 Box 12 Codes:                                                         
+       Code D - 401(k) / TSP contributions: ......... $5,440.00                 
+                                                                                
+  13. Statutory employee: ........................... [ ]                        
+  14. Retirement plan: .............................. [X]                        
+                                                                                
+================================================================================
+                          STATE AND LOCAL WAGE INFORMATION
+================================================================================
+                                                                                
+  State: IL                                  Employer State ID: 53-0196365-IL   
+  Wages, tips, etc.: ................ $68,000.00                               
+  State income tax withheld: ....... $3,060.00                                 
+                                                                                
+  Locality name: N/A                                                          
+  Local wages, tips, etc.: ......... $0.00                                    
+  Local income tax withheld: ....... $0.00                                    
+                                                                                
+================================================================================
+                                                                                
+  FORM W-2 ELECTRONIC          DO NOT STAPLE              COPY B - FEDERAL     
+                                                                                
+================================================================================
+                          COMMENTS / NOTES (INTERNAL USE)
+-------------------------------------------------------------------------------
+  TSP contributions deducted pre-tax. Code D = $5,440.00.
+  Marcus started with USPS in 2021. Tenure: ~3.5 yrs.
+  Career position: City Carrier Assistant -> Full-Time Regular (converted 2023).
+  Hourly rate as of 12/31/2024: $33.65/hr.
+  Overtime YTD: $3,200 (approx 96 hrs OT).
+  Uniform allowance: included in wages.
+                                                                                
+================================================================================

@@ -15,6 +15,7 @@ from insureflow.auth.dependencies import (
 )
 from insureflow.auth.jwt import create_access_token, hash_password, verify_password
 from insureflow.auth.models import LoginRequest, Token, TokenData, User, UserCreateRequest
+from insureflow.models.mortgage import ProductLine
 from insureflow.pipeline import UnderwritingPipeline
 
 logger = logging.getLogger(__name__)
@@ -154,6 +155,144 @@ def list_jobs(
     _: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, list[str]]:
     return {"jobs": list(JOB_STORE.keys())}
+
+
+MORTGAGE_JOB_STORE: dict[str, dict[str, Any]] = {}
+
+
+class MortgageDocumentPayload(BaseModel):
+    filename: str
+    content: str
+
+
+class MortgageSubmissionRequest(BaseModel):
+    documents: Optional[list[MortgageDocumentPayload]] = None
+    directory: Optional[str] = None
+    bundle_id: Optional[str] = None
+    borrower_id: Optional[str] = None
+    product_line: Optional[str] = None
+    use_llm: bool = True
+    per_borrower: bool = False
+
+
+def _parse_product_line(value: str | None) -> ProductLine | None:
+    if not value or value == "auto":
+        return None
+    mapping = {
+        "residential": ProductLine.RESIDENTIAL_MORTGAGE,
+        "residential_mortgage": ProductLine.RESIDENTIAL_MORTGAGE,
+        "commercial": ProductLine.COMMERCIAL_MORTGAGE,
+        "commercial_mortgage": ProductLine.COMMERCIAL_MORTGAGE,
+    }
+    pl = mapping.get(value.lower())
+    if not pl:
+        raise HTTPException(status_code=400, detail=f"Unknown product_line: {value}")
+    return pl
+
+
+def _run_mortgage_task(job_id: str, request: MortgageSubmissionRequest) -> None:
+    from insureflow.models.mortgage import ProductLine
+    from insureflow.mortgage.pipeline import MortgagePipeline
+
+    pipeline = MortgagePipeline(use_llm=request.use_llm)
+    try:
+        product_line = _parse_product_line(request.product_line)
+
+        if request.per_borrower and request.directory:
+            result = pipeline.run_per_borrower(request.directory, product_line=product_line)
+        elif request.directory:
+            result = pipeline.run_from_directory(
+                request.directory,
+                bundle_id=request.bundle_id or job_id,
+                product_line=product_line,
+            )
+        elif request.documents:
+            docs = [{"filename": d.filename, "content": d.content} for d in request.documents]
+            result = pipeline.run_from_texts(
+                docs,
+                bundle_id=request.bundle_id or job_id,
+                product_line=product_line or ProductLine.RESIDENTIAL_MORTGAGE,
+                borrower_id=request.borrower_id,
+            )
+        else:
+            MORTGAGE_JOB_STORE[job_id] = {
+                "status": "failed",
+                "error": "Provide documents, directory, or per_borrower directory",
+            }
+            return
+
+        MORTGAGE_JOB_STORE[job_id] = {"status": "completed", "results": result}
+    except Exception as exc:
+        logger.exception("Mortgage pipeline run failed")
+        MORTGAGE_JOB_STORE[job_id] = {"status": "failed", "error": str(exc)}
+
+
+@app.post("/mortgage/pipeline/run", status_code=202)
+async def run_mortgage_pipeline(
+    req: MortgageSubmissionRequest,
+    background_tasks: BackgroundTasks,
+    _: TokenData = Depends(require_role(Role.UNDERWRITER)),
+) -> dict[str, Any]:
+    """Submit a mortgage loan package for automated underwriting analysis."""
+    job_id = req.bundle_id or f"mortgage-job-{uuid.uuid4().hex[:12]}"
+    MORTGAGE_JOB_STORE[job_id] = {"status": "processing"}
+    background_tasks.add_task(_run_mortgage_task, job_id, req)
+    return {
+        "job_id": job_id,
+        "status": "processing",
+        "message": "Mortgage submission queued for processing.",
+        "per_borrower": req.per_borrower,
+        "use_llm": req.use_llm,
+    }
+
+
+@app.get("/mortgage/pipeline/jobs/{job_id}")
+def get_mortgage_job_status(
+    job_id: str,
+    _: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    if job_id not in MORTGAGE_JOB_STORE:
+        raise HTTPException(status_code=404, detail="Mortgage job not found")
+    return MORTGAGE_JOB_STORE[job_id]
+
+
+@app.get("/mortgage/pipeline/jobs")
+def list_mortgage_jobs(
+    _: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, list[str]]:
+    return {"jobs": list(MORTGAGE_JOB_STORE.keys())}
+
+
+@app.get("/mortgage/audit/{bundle_id}")
+def get_mortgage_audit_trail(
+    bundle_id: str,
+    _: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Retrieve audit trail for a completed mortgage pipeline run."""
+    from insureflow.audit.store import AuditStore
+
+    store = AuditStore()
+    trail = store.load_json(bundle_id, "audit_trail.json")
+    memo = store.load_json(bundle_id, "mortgage_memo.json")
+    bundle = store.load_json(bundle_id, "mortgage_bundle.json")
+    if not trail and not memo:
+        raise HTTPException(status_code=404, detail=f"No audit data for bundle: {bundle_id}")
+    return {
+        "bundle_id": bundle_id,
+        "audit_trail": trail,
+        "memo": memo,
+        "bundle_summary": bundle,
+    }
+
+
+@app.delete("/mortgage/pipeline/jobs/{job_id}", status_code=204)
+def delete_mortgage_job(
+    job_id: str,
+    _: TokenData = Depends(require_role(Role.ADMIN)),
+) -> None:
+    if job_id not in MORTGAGE_JOB_STORE:
+        raise HTTPException(status_code=404, detail="Mortgage job not found")
+    del MORTGAGE_JOB_STORE[job_id]
 
 
 @app.delete("/pipeline/jobs/{job_id}", status_code=204)

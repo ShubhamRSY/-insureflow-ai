@@ -1,0 +1,104 @@
+================================================================================
+                        FORM 1040EZ - INDIVIDUAL INCOME TAX RETURN
+                            TAX YEAR 2024 (FILED APRIL 2025)
+================================================================================
+
+  [stamp: PROCESSED - IRS CENTER KANSAS CITY MO - MAY 12 2025]
+  [smudged/scanned - some fields hard to read]
+
+================================================================================
+
+  FIRST NAME: Maria G.                 LAST NAME: Rodriguez
+  SSN: XXX-XX-4421
+  ADDRESS: 789 Elm Street, Apt 2B      CITY: Springfield
+  STATE: IL                            ZIP: 62704
+
+================================================================================
+  FILING STATUS: (X) Single  ( ) Married filing jointly  ( ) Head of Household
+
+================================================================================
+  INCOME                                                                            AMOUNT
+  --------------------------------------------------------------------------------
+  Line 1:  Wages, salaries, and tips (from W-2 Box 1)                             52,000
+  Line 2:  Taxable interest income                                                     0
+  Line 3:  Unemployment compensation                                                  0
+  Line 4a:  Business income or loss (attach Schedule C) [SCHED C ATTACHED]         5,800
+  Line 5:  Adjusted gross income                                                  57,800
+
+  DEDUCTIONS AND ADJUSTMENTS
+  --------------------------------------------------------------------------------
+  Line 6:  Standard deduction                                                    (14,600)
+  Line 7:  Exemptions                                                              (0)
+  Line 8:  Taxable income                                                         43,200
+
+  TAX AND PAYMENTS
+  --------------------------------------------------------------------------------
+  Line 9:  Total tax (per Tax Table)                                               5,014
+  Line 10:  Federal income tax withheld (W-2 Box 2)                                4,200
+  Line 11:  Estimated tax payments                                                     0
+  Line 12:  Earned income credit                                                       0
+  Line 13:  Additional child tax credit                                                0
+  Line 14:  Amount paid with extension                                                  0
+  Line 15:  Total payments                                                         4,200
+  Line 16:  Amount you owe (line 9 - line 15)                                       814
+  Line 17:  Refund                                                                     0
+
+================================================================================
+
+  [margin scribbled in blue pen:]
+  "Maria - don't forget you still owe the $814 from 2024 filing.
+   IRS payment plan is active - $105/mo starting June 2025.
+   Make sure UW sees this. - CPA"
+
+================================================================================
+
+               SCHEDULE C (Form 1040) - PROFIT OR LOSS FROM BUSINESS
+                           SOLE PROPRIETORSHIP: "Maria's Tutoring"
+                               EIN: N/A (SSN used)
+================================================================================
+
+  Principal Business:   Tutoring Services (3rd-5th grade math & reading)
+  Business Address:     789 Elm Street, Apt 2B, Springfield, IL 62704
+  Accounting Method:    (X) Cash  ( ) Accrual
+
+  INCOME
+  --------------------------------------------------------------------------------
+  Gross receipts or sales                                                  $8,000
+  Returns and allowances                                                  $0
+  Line 1:  Gross income                                                    $8,000
+
+  EXPENSES
+  --------------------------------------------------------------------------------
+  Advertising                                                              $0
+  Car and truck expenses (mileage - 1,200 mi @ $0.655/mi)                 $786  <<<< scribbled: "didnt track all miles, estimated"
+  Commissions and fees                                                     $0
+  Contract labor                                                           $0
+  Depreciation                                                             $0
+  Insurance                                                                $0
+  Legal and professional services                                          $0
+  Office expenses (supplies, paper, printer ink)                          $450  <<<< note: "Staples receipts"
+  Rent/lease                                                               $0
+  Repairs/maintenance                                                      $0
+  Supplies (books, workbooks, flashcards)                                 $614
+  Taxes and licenses                                                       $0
+  Travel                                                                   $0
+  Meals (50%)                                                              $0
+  Utilities (phone/internet - estimated business use 15%)                 $350  <<<< [handwritten: "need to be more accurate next yr"]
+  Other expenses (online learning platform subscription)                  $___  <<<<[blank - scribbled "forgot to include"]
+  --------------------------------------------------------------------------------
+  Total expenses                                                         $2,200
+
+  NET PROFIT (Line 1 minus Total Expenses)                                $5,800
+  --------------------------------------------------------------------------------
+
+  [scrawled across bottom of page:]
+  "Where is the 1099 from the tutoring parents? I asked Maria for this
+   in March. She says most pay cash/Venmo. No 1099-K issued bc under
+   $20K??? Check on this - UW  JM"
+  [circled: "NEED 1099-K OR VENMO STATEMENTS TO VERIFY"]
+
+  [another note:]
+  "called Maria 4/12 - she said she'll pull Venmo transaction history
+   from 2024. following up. - JM"
+
+================================================================================

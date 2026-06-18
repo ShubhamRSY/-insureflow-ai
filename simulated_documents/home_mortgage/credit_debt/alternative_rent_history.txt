@@ -1,0 +1,68 @@
+══════════════════════════════════════════════════════════════════════════════
+            ALTERNATIVE RENT HISTORY VERIFICATION - FIRST-TIME BUYER
+══════════════════════════════════════════════════════════════════════════════
+
+Borrower(s):          John A. Thompson & Sarah M. Thompson
+Current Address:      1234 Maple Drive, Springfield, IL 62701 (RENTAL)
+Landlord:             Oakwood Property Management LLC
+                      4500 Main Street, Springfield, IL 62702
+                      Phone: (217) 555-4500
+══════════════════════════════════════════════════════════════════════════════
+
+═══ RENTAL PAYMENT HISTORY ═══════════════════════════════════════════════════
+
+Lease Term:           April 1, 2019 - Present (Current lease expires 07/31/2026)
+Monthly Rent:         $1,850.00
+
+══════════════════════════════════════════════════════════════════════════════
+12-MONTH PAYMENT HISTORY
+══════════════════════════════════════════════════════════════════════════════
+
+  Month         Amount Due       Date Paid         Amount Paid     Status
+  ────────────  ───────────────  ────────────────  ─────────────── ────────────
+  MAY 2025      $1,850.00       05/01/2025         $1,850.00       ON TIME
+  JUNE 2025     $1,850.00       06/02/2025         $1,850.00       ON TIME
+  JULY 2025     $1,850.00       06/28/2025         $1,850.00       EARLY
+  AUG 2025      $1,850.00       08/01/2025         $1,850.00       ON TIME
+  SEP 2025      $1,850.00       09/05/2025         $1,850.00       ON TIME
+  OCT 2025      $1,850.00       10/01/2025         $1,850.00       ON TIME
+  NOV 2025      $1,850.00       11/01/2025         $1,850.00       ON TIME
+  DEC 2025      $1,850.00       12/01/2025         $1,850.00       ON TIME
+  JAN 2026      $1,850.00       01/02/2026         $1,850.00       ON TIME
+  FEB 2026      $1,850.00       02/06/2026         $1,850.00       ON TIME
+  MAR 2026      $1,850.00       03/01/2026         $1,850.00       ON TIME
+  APR 2026      $1,850.00       04/02/2026         $1,850.00       ON TIME
+
+══════════════════════════════════════════════════════════════════════════════
+VERIFICATION
+══════════════════════════════════════════════════════════════════════════════
+
+  Rent Paid Via:        ACH Auto-Debit from Bank of Springfield Checking
+                        Account XXXX-4872 (verified)
+  Security Deposit:     $1,850.00 (held by landlord)
+  Late Payments:        NONE in last 36 months
+  NSF / Returned Checks: NONE in last 36 months
+  Notices / Violations: NONE
+
+══════════════════════════════════════════════════════════════════════════════
+LANDLORD CERTIFICATION
+══════════════════════════════════════════════════════════════════════════════
+
+I, the undersigned representative of Oakwood Property Management LLC, hereby
+certify that the above rental payment history is true and accurate to the
+best of my knowledge. The tenant(s) have maintained the property in good
+condition and have complied with all terms of the lease agreement.
+
+__________________________________
+Maria Gonzalez
+Property Manager
+Oakwood Property Management LLC
+(217) 555-4501
+m.gonzalez@oakwoodpm.com
+
+Date: 04/12/2026
+
+══════════════════════════════════════════════════════════════════════════════
+[STAMP] ALTERNATIVE RENT HISTORY ACCEPTED PER FHLMC GUIDELINES
+[STAMP] VERIFIED BY INSUREFLOW UNDERWRITING - 04/14/2026
+══════════════════════════════════════════════════════════════════════════════

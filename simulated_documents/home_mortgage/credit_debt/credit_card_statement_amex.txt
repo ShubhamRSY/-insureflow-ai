@@ -1,0 +1,71 @@
+══════════════════════════════════════════════════════════════════════════════
+       AMERICAN EXPRESS® BLUE CASH PREFERRED - CREDIT CARD STATEMENT
+══════════════════════════════════════════════════════════════════════════════
+
+  Account Owner:        Sarah M. Thompson
+  Account Number:       XXXX-XXXX-1183
+  Statement Date:       April 15, 2026
+  Payment Due Date:     May 10, 2026
+
+══════════════════════════════════════════════════════════════════════════════
+ACCOUNT SUMMARY
+══════════════════════════════════════════════════════════════════════════════
+
+  Previous Balance:                          $2,450.00
+  Payments/Credits:                          -$65.00
+  Purchases:                                 +$287.50
+  Fees Charged:                              $0.00
+  Interest Charged:                          $42.18
+  ═══════════════════════════════════════════════
+  New Balance:                               $2,714.68
+
+  Past Due Amount:                           $0.00
+  Credit Limit:                              $8,500.00
+  Available Credit:                          $5,785.32
+  Cash Advance Limit:                        $1,700.00
+
+══════════════════════════════════════════════════════════════════════════════
+PAYMENT INFO
+══════════════════════════════════════════════════════════════════════════════
+
+  Minimum Payment Due:                       $65.00
+  Total Balance:                             $2,714.68
+  AutoPay:                                   Yes - min payment
+  >>>> NOTE: BALANCE NOT BEING PAID IN FULL. INTEREST ACCRUING. <<<<
+
+══════════════════════════════════════════════════════════════════════════════
+INTEREST CHARGE DETAIL
+══════════════════════════════════════════════════════════════════════════════
+
+  Purchases APR:         21.99% Variable
+  Interest on Purchases: $42.18
+  ═══════════════════════════════════════════
+  Total Interest:        $42.18
+
+══════════════════════════════════════════════════════════════════════════════
+TRANSACTIONS
+══════════════════════════════════════════════════════════════════════════════
+
+Date        Description                                          Amount
+──────────  ───────────────────────────────────────────────────  ─────────
+03/15/2026  AUTOPAY - THANK YOU                                  -$65.00
+03/18/2026  ADOBE CREATIVE CLOUD - MONTHLY SUB                   +$54.99
+03/20/2026  FIGMA PROFESSIONAL - MONTHLY SUB                     +$12.00
+03/22/2026  MICHAELS ARTS & CRAFTS                               +$45.30
+03/25/2026  AMAZON.COM - DESIGN BOOKS                            +$67.21
+03/28/2026  OFFICE DEPOT - PRINTER INK                           +$38.00
+04/01/2026  CANVA PRO - MONTHLY SUB                              +$12.99
+04/05/2026  JOANN FABRICS                                        +$28.00
+04/10/2026  AMAZON.COM - WACOM TABLET PEN                        +$29.00
+══════════════════════════════════════════════════════════════════════════════
+
+══════════════════════════════════════════════════════════════════════════════
+REWARDS SUMMARY
+══════════════════════════════════════════════════════════════════════════════
+
+  Cash Back Earned This Period:      $11.38
+  Year-to-Date Cash Back:            $42.12
+  Total Rewards Available:           $187.40
+
+  Current Promotions: 6% cash back at U.S. supermarkets (up to $6,000/yr)
+══════════════════════════════════════════════════════════════════════════════

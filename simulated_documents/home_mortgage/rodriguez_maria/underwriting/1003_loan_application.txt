@@ -1,0 +1,167 @@
+========================================================================================================
+                          UNIFORM RESIDENTIAL LOAN APPLICATION
+                                   FHA 1003
+========================================================================================================
+
+                                                                        Loan #: INF-2026-44210
+                                                                        FHA Case #: 489-3321887
+
+SECTION I: TYPE OF MORTGAGE AND TERMS
+
+  Mortgage Applied For:       [ ] Conventional   [X] FHA   [ ] VA   [ ] USDA/RD
+  FHA Case Number:            489-3321887
+  Lender Case Number:         INF-2026-44210
+
+  Amount:                     $173,700.00
+  Interest Rate:              6.500%
+  Number of Months:           360
+  Amortization Type:          [X] Fixed   [ ] ARM
+  MIP:                        [X] Up-front MIP 1.75% (financed)
+                              [X] Annual MIP 0.55%
+
+SECTION II: PROPERTY INFORMATION AND PURPOSE OF LOAN
+
+  Subject Property Address:   789 Elm Street, Unit 2B
+                              Springfield, IL 62704
+
+  Legal Description:          Unit 2B, Building 4, Elm Street Condominiums,
+                              a condominium, per Declaration recorded in
+                              Condo Book 12, Page 88, Sangamon County, IL
+
+  Year Built:                 1998
+  Property Type:              [ ] Single Family   [ ] 2-4 Units [X] Condo [ ] Townhouse
+  FHA Condo Approval:         [X] Approved Condo Project - FHA ID # CONDO-IL-4482
+
+  Purpose of Loan:            [X] Purchase   [ ] Refinance   [ ] Construction
+
+  Purchase Price:             $180,000.00
+  Loan Amount:                $173,700.00
+  Down Payment:               $6,300.00 (3.5%)
+  Base LTV:                   96.50%
+  Total LTV (w/ financed MIP): 98.19%
+
+SECTION III: BORROWER INFORMATION
+
+  BORROWER:
+  Name:                       Maria Elena Rodriguez
+  SSN:                        XXX-XX-8892
+  DOB:                        07/03/1991 (Age: 34)
+  Marital Status:             Single
+  Dependents:                 0
+  Current Address:            245 North Grand Avenue, Apt 3B
+                              Springfield, IL 62704
+  Years at Address:           3
+  Home Phone:                 (555) 234-5592
+  Cell Phone:                 (555) 234-5590
+  Email:                      maria.rodriguez@email.com
+
+  Employer:                   Springfield School District 186
+  Address:                    1900 West Monroe Street
+                              Springfield, IL 62704
+  Position:                   3rd Grade Teacher
+  Years Employed:             6 years (since 08/2019)
+  Monthly Income (Base):      $4,333.33 ($52,000/yr)
+  Overtime:                   $0.00
+  Bonus:                      $0.00
+  Other Income:               $0.00
+
+SECTION IV: INCOME & ASSETS
+
+  TOTAL GROSS MONTHLY INCOME:                         $4,333.33
+
+  ASSETS:
+  Bank of Springfield Checking XXXX-3314:             $6,800.00
+  Bank of Springfield Savings XXXX-7712:              $9,300.00
+  Gift Funds (Aunt - Carmen Rodriguez):               $3,300.00
+  Total Verified Assets:                             $19,400.00
+
+SECTION V: LIABILITIES & HOUSING EXPENSE
+
+  LIABILITIES:
+  Student Loan (Navient - Federal): $0/mo (deferred - IBR $89/mo):
+                                                       $89.00
+  Credit Card (Discover) - $45/mo (min payment):       $45.00
+  Credit Card (Capital One) - $35/mo (min payment):    $35.00
+  ------------------                                --------
+  TOTAL MONTHLY LIABILITIES:                          $169.00
+
+  PROPOSED HOUSING EXPENSE:
+  Principal & Interest (6.5%/360):                    $1,098.22
+  Mortgage Insurance Premium (MIP):                    $80.00
+  Hazard Insurance:                                    $40.17
+  Real Estate Taxes:                                   $0.00 (paid by HOA)
+  HOA Dues:                                            $175.00
+  TOTAL HOUSING EXPENSE:                             $1,393.39
+
+SECTION VI: TRANSACTION SUMMARY
+
+  Purchase Price:                              $180,000.00
+  Closing Costs (estimated):                    $8,900.00
+  Down Payment (3.5%):                          -$6,300.00
+  Deposit/Earnest Money:                         -$1,000.00
+  Gift Funds:                                    -$3,300.00
+  Seller Concessions (estimated 3%):             -$5,400.00
+  Loan Amount:                                  $173,700.00
+  Cash to Close (from borrower):                $8,900.00
+
+========================================================================================================
+                       BORROWER SIGNATURE
+
+I certify that the information provided in this application is true and correct.
+
+  _________________________________________         Date: 02/20/2026
+  Maria Elena Rodriguez
+
+========================================================================================================
+                    NOTARY ACKNOWLEDGMENT
+
+State of Illinois
+County of Sangamon
+
+On this 20th day of February, 2026, personally appeared Maria Elena Rodriguez,
+known to me to be the person whose name is subscribed to the foregoing instrument,
+and acknowledged that she executed the same for the purposes therein contained.
+
+WITNESS my hand and official seal.
+
+  _________________________________________
+  Notary Public
+  My Commission Expires: 12/31/2028
+  (NOTARY SEAL)
+
+  [NOTARY STAMP - STATE OF ILLINOIS]
+  Amanda K. Peterson
+  Notary Public - Sangamon County
+  Commission #: NP-IL-448291
+  Expires: 12/31/2028
+
+========================================================================================================
+
+UW SCRIBBLES (RED PEN IN MARGINS):
+
+   FHA MANUAL UNDERWRITE - TOTAL SCORE 82 (PASS - SEE UW MEMO)
+   
+   DTI: 
+   Housing: $1,393.39
+   Liabilities: $169.00
+   Total: $1,562.39
+   Ratio: $1,562.39 / $4,333.33 = 36.05%
+   
+   FRONT: $1,393.39 / $4,333.33 = 32.1%
+   BACK: 36.05%
+   
+   UNDER FHA 31/43 GUIDELINES - BACK UNDER 43% - OK
+   
+   *** MANUAL UW FLAG: Only 1 borrower, 96.5% LTV, no co-borrower.
+   Compensating factors needed for DTI over 31%.
+   
+    FACT: Low DTI 36% (under 43%)
+    FACT: 2+ yrs reserves ($9,300 sv ÷ $1,562 = 5.9mo)
+    FACT: Rent $1,100/mo paid on time 3 yrs (verified)
+    FACT: Income stable (teacher 6 yrs, same employer)
+    FACT: Credit score 720 (AUS Accept)
+   
+   *** RECOMMEND APPROVE - MANUAL UW ***
+   - J. Kowalski 03/01/2026
+   
+========================================================================================================

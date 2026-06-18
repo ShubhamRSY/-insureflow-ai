@@ -1,0 +1,72 @@
+    *** OFFICIAL IRS FORM W-2 ***                            OMB No. 1545-0008
+    Wage and Tax Statement                                   2024
+    Copy C — For EMPLOYEE'S RECORDS
+    (See instructions for employee on page 19 of Publication 17)
+
+    Department of the Treasury — Internal Revenue Service
+
+    ┌─────────────────────────────────────────────────────────────────────────────┐
+    │ 1 Wages, tips, other compensation                 2 Federal income tax     │
+    │   $165,000.00                                       withheld               │
+    │                                                     $34,650.00             │
+    │                                                                             │
+    │ 3 Social Security wages                             4 Social Security tax   │
+    │   $165,000.00                                       withheld               │
+    │                                                     $10,230.00             │
+    │                                                                             │
+    │ 5 Medicare wages & tips                             6 Medicare tax withheld │
+    │   $165,000.00                                       $2,392.50              │
+    │                                                                             │
+    │ 7 Social Security tips                              8 Allocated tips        │
+    │                                                                             │
+    │ 9 Verification code                                 10 Dependent care       │
+    │                                                       benefits              │
+    │                                                                             │
+    │ 11 Nonqualified plans                               12a Code / Amount       │
+    │                                                       D  $16,500.00         │
+    │                                                       (401k deferral)       │
+    │                      ┌──────────────────────────────┴────────────────────── │
+    │                      │ 12b Code / Amount           12c Code / Amount       │
+    │                      │                                                     │
+    │                      │                                                     │
+    │                      ├──────────────────────────────────────────────────── │
+    │                      │ 13 Check if:                                        │
+    │                      │   [ ] Statutory employee                            │
+    │                      │   [ ] Retirement plan  [✓]                          │
+    │                      │   [ ] Third-party sick pay                          │
+    │                      ├──────────────────────────────────────────────────── │
+    │ 14 Other              │ 15 State / Employer's state ID / State wages       │
+    │                       │    IL   XXX-XX-XXXX    $165,000.00                 │
+    │                       │                                                     │
+    │                       │ 16 State income tax withheld                       │
+    │                       │    $7,425.00                                       │
+    │                       ├──────────────────────────────────────────────────── │
+    │                       │ 17 Local wages / tips / Local income tax           │
+    │                       │    $165,000.00                                     │
+    │                       │ 18 Local income tax withheld                       │
+    │                       │    $0.00                                           │
+    │                       ├──────────────────────────────────────────────────── │
+    │                       │ 19 Locality name                                   │
+    │                       │    SPRINGFIELD IL                                   │
+    │                                                                             │
+    └─────────────────────────────────────────────────────────────────────────────┘
+
+    EMPLOYER INFORMATION:
+    Illinois Mutual Insurance Company
+    200 W. Adams Street
+    Springfield, IL 62701
+    EIN: 37-1234567
+
+    EMPLOYEE INFORMATION:
+    Lisa M. Patel
+    555 Lake Shore Drive, Unit 12A
+    Springfield, IL 62704
+    SSN: XXX-XX-XXXX
+
+    ──────────────────────────────────────────────────────────────────────────────
+    NOTES:
+    - Employee contributed $16,500 to 401(k) plan (max deferral limit met)
+    - Employer match: $4,950 (3% of salary) — see box 14 detail available
+    - Full-time employee, salaried, paid semi-monthly
+    - No overtime or commission income
+    ──────────────────────────────────────────────────────────────────────────────

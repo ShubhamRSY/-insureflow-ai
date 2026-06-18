@@ -1,0 +1,166 @@
+======================================================================
+                  FORM 1040 - U.S. INDIVIDUAL INCOME TAX RETURN
+                           TAX YEAR: 2024 (DRAFT)
+======================================================================
+   
+FILER: James Thomas Wilson
+SSN: XXX-XX-4412
+ADDRESS: 4568 West Grove Ave, Apt 3B
+         Springfield, IL 62703
+DOB: 09/14/1972
+OCCUPATION: General Contractor
+STATUS: Single (Divorced 2022)
+
+DEPENDENTS: 
+  - Wilson, Ethan James (Son) - DOB: 03/22/2010 - SSN: XXX-XX-8912
+    (Claiming in alternating years per divorce decree. 2024 = mine)
+
+----------------------------------------------------------------------
+INCOME:                                  Amount
+----------------------------------------------------------------------
+Wages/Salary (Line 1z)                   $0.00       
+Schedule C Net Profit (Line 3)           $98,000.00   <--- SEE SCH C ATTACHED
+Taxable Interest (Line 4)                $42.37
+Dividends (Line 5)                       $0.00
+IRA Distributions (Line 4b)              $0.00
+Other Income (Line 8)                    $0.00
+
+TOTAL INCOME (Line 9)                    $98,042.37
+
+----------------------------------------------------------------------
+ADJUSTED GROSS INCOME:
+----------------------------------------------------------------------
+Self-Employment Tax Deduction (1/2 SE)   $6,900.00   <--- 1/2 of Schedule SE
+Self-Employed Health Insurance Deduction  $8,400.00   <--- Paid thru IL marketplace
+IRA Contribution                          $0.00        (maybe next year)
+Student Loan Interest                     $0.00
+
+ADJUSTED GROSS INCOME (Line 11)          $82,742.37
+
+----------------------------------------------------------------------
+TAX & CREDITS:
+----------------------------------------------------------------------
+Standard Deduction (Single)              $14,600.00
+QUALIFIED BUSINESS INCOME DEDUCTION      $19,600.00   <--- 20% of Schedule C
+
+TAXABLE INCOME (Line 15)                 $48,542.37
+
+----------------------------------------------------------------------
+TAX COMPUTATION:
+----------------------------------------------------------------------
+Tax (per Tax Tables)                     $6,421.00
+Schedule SE Tax (Self-Employment)        $13,847.00   <--- SEE SCHEDULE SE
+
+TOTAL TAX (Line 24)                      $20,268.00
+
+----------------------------------------------------------------------
+PAYMENTS:
+----------------------------------------------------------------------
+Federal Income Tax Withheld               $0.00
+Estimated Tax Payments (1040-ES)          $14,000.00  <--- 4 payments of $3,500
+Earned Income Credit                      $0.00
+Additional Child Tax Credit               $0.00
+
+TOTAL PAYMENTS (Line 33)                 $14,000.00
+
+----------------------------------------------------------------------
+AMOUNT YOU OWE:                          $6,268.00
+----------------------------------------------------------------------
+
+SCHEDULE C (Form 1040) - Profit or Loss From Business
+======================================================================
+BUSINESS: Wilson Home Improvements
+PRODUCT: Residential Construction & Remodeling
+EIN: XX-XXXXXXX (Sole Proprietor - using SSN)
+ADDRESS: 4568 West Grove Ave, Apt 3B, Springfield, IL 62703
+ACCOUNTING METHOD: Cash
+MATERIALLY PARTICIPATE: Yes
+
+----------------------------------------------------------------------
+PART I - INCOME
+----------------------------------------------------------------------
+Gross receipts or sales                      $145,000.00
+Returns and allowances                       $0.00
+  Line 1: GROSS INCOME                       $145,000.00
+
+----------------------------------------------------------------------
+PART II - EXPENSES
+----------------------------------------------------------------------
+Advertising                                  $1,200.00
+Car and truck expenses                       $8,500.00  <--- 12,400 miles @ $0.655/mi
+                                                      *** SEE NOTE BELOW ***
+Contractor supplies / Materials              $12,800.00
+Depreciation and Section 179                 $2,400.00
+Insurance (General Liability)                $3,600.00
+Interest (Business)                          $0.00
+Legal & Professional Services                $1,200.00  (CPA - $600, License renewals)
+Office Expense                               $850.00
+Rent or lease (equipment)                    $4,200.00  (dumpster rental, scaffold)
+Repairs & Maintenance                        $1,800.00
+Subcontractor labor                          $6,800.00
+Tools & Equipment                            $2,400.00
+Travel                                       $0.00
+Utilities & Phone                            $1,200.00
+Wages (not myself)                           $0.00
+Other Expenses (itemize):
+  - Permits & Fees                           $950.00
+  - Safety equipment                         $400.00
+  - Disposal fees                            $650.00
+  - Job site supplies                        $1,050.00
+
+TOTAL EXPENSES (Line 28)                     $47,000.00
+
+----------------------------------------------------------------------
+NET PROFIT OR (LOSS) (Line 29)              $98,000.00
+======================================================================
+
+----------------------------------------------------------------------
+
+PAGES 2 & 3 OMITTED FOR BREVITY (Standard deductions, credit calc's)
+
+======================================================================
+SCHEDULE SE (Form 1040) - SELF-EMPLOYMENT TAX
+================================================================------
+Net Profit from Schedule C (Line 2)          $98,000.00
+SE Social Security Tax (12.4% of $98,000)    $12,152.00
+SE Medicare Tax (2.9% of $98,000)            $2,842.00
+SE Tax (Line 12)                             $14,994.00   
+  Deduction allowed for 1/2 SE Tax:          $7,497.00
+======================================================================
+
+======================================================================
+                          CPA PREPARATION NOTES
+======================================================================
+ "Client's 2024 income consistent with prior years. Gross margin slightly
+  lower due to increase in material costs. Schedule C reflects actual
+  business activity. Vehicle mileage: 12,400 business miles claimed at
+  standard mileage rate. Client self-prepared mileage log - not audited.
+   Estimated tax payments made quarterly. Balance due $6,268."
+
+           - Frank Mancini, CPA (Mancini & Associates, Springfield IL)
+             PTIN: PXXX-XXXXX
+======================================================================
+
+*** HANDWRITTEN NOTE (bottom of page, blue ink): ***
+   
+              "Truck mileage stopped tracking in July - estimated 
+               rest of year using average of first 6 months.
+               Home Depot receipts attached separately.
+               - James"
+
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+               ^ (CIRCLED - scribbled in margin) ^
+
+    [Scanned document - lower right corner has coffee ring stain, 
+     approximately 2" diameter. Faint - not obscuring any data.]
+
+======================================================================
+NOTE FROM PROCESSING: Schedule C totals don't include ~$8K in materials
+markup that James accounts separately. CPA says it's included in gross
+receipts. James says he charges "cost + 15-20%" for materials. 
+
+Need clarification? YES ___ NO _X_ (UW signed off - methodology consistent
+from prior years.)
+
+- Initials: KR 3/12/26
+======================================================================

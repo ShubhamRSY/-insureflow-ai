@@ -1,0 +1,82 @@
+══════════════════════════════════════════════════════════════════════════════
+           CHASE SAPPHIRE PREFERRED - CREDIT CARD STATEMENT
+══════════════════════════════════════════════════════════════════════════════
+
+Account Owner:        John A. Thompson
+Account Number:       XXXX-XXXX-9921
+Statement Date:       April 12, 2026
+Payment Due Date:     May 07, 2026
+══════════════════════════════════════════════════════════════════════════════
+
+═══ ACCOUNT SUMMARY ══════════════════════════════════════════════════════════
+
+  Previous Balance:                      $3,580.00
+  Payments/Credits:                      -$85.00
+  Purchases/Debits:                      +$705.00
+  Fees Charged:                          $0.00
+  Interest Charged:                      $0.00
+  [Promotional APR - 0% on balance transfers ends 08/2026]
+  New Balance:                           $4,200.00
+
+══════════════════════════════════════════════════════════════════════════════
+PAYMENT INFORMATION
+══════════════════════════════════════════════════════════════════════════════
+
+  Minimum Payment Due:                  $85.00
+  Total Balance:                        $4,200.00
+  Credit Limit:                         $15,000.00
+  Available Credit:                     $10,800.00
+  Cash Advance Limit:                   $3,000.00
+  Available Cash:                       $2,400.00
+  Days in Billing Cycle:                30
+
+══════════════════════════════════════════════════════════════════════════════
+INTEREST CHARGE DETAIL
+══════════════════════════════════════════════════════════════════════════════
+
+  Purchases APR: 22.49% (Variable)
+  Balance Transfer APR: 0.00% (Promo ends 08/2026, then 22.49%)
+  Cash APR: 27.49% (Variable)
+
+  Interest on Purchases:                $0.00 (Grace period in effect)
+  Promotional Balance Transfer Int:     $0.00 (0% promo rate)
+  Total Interest for this Period:       $0.00
+
+══════════════════════════════════════════════════════════════════════════════
+TRANSACTIONS
+══════════════════════════════════════════════════════════════════════════════
+
+Date        Reference      Description                                     Amount
+──────────  ─────────────  ──────────────────────────────────────────────  ─────────
+03/18/2026  CH-2819742     MAR 15 - AUTOPAY PAYMENT - THANK YOU            -$85.00
+03/20/2026  CH-2918473     AMAZON.COM - OFFICE SUPPLIES                     +$42.50
+03/22/2026  CH-2918474     KROGER #4271 - SPRINGFIELD IL                   +$187.42
+03/25/2026  CH-2918475     BEST BUY - LAPTOP CHARGER                       +$89.99
+03/28/2026  CH-2918476     SHELL OIL #21839 - SPRINGFIELD IL               +$56.30
+03/30/2026  CH-2918477     WALMART.COM - HOUSEHOLD                         +$123.45
+04/02/2026  CH-2918478     RESTAURANT - OLIVE GARDEN                       +$78.90
+04/05/2026  CH-2918479     TARGET - HOME GOODS                             +$67.30
+04/08/2026  CH-2918480     AMAZON.COM - BOOKS                              +$32.14
+04/10/2026  CH-2918481     NETFLIX - SUBSCRIPTION                          +$15.99
+04/11/2026  CH-2918482     COSTCO WHOLESALE - GROCERIES                    +$11.00
+                             [PENDING TRANSACTION - SEE BELOW]
+══════════════════════════════════════════════════════════════════════════════
+
+═══ LOYALTY POINTS SUMMARY ═══════════════════════════════════════════════════
+
+  Points earned this period:            1,410 pts
+  Total points available:               42,300 pts
+  Points value (approx):                $634.50
+
+══════════════════════════════════════════════════════════════════════════════
+REWARDS CATEGORIES THIS PERIOD
+══════════════════════════════════════════════════════════════════════════════
+
+  Dining (3x pts):                      $78.90      = 237 pts
+  Travel (2x pts):                      $0.00       = 0 pts
+  All Other (1x pts):                   $626.10     = 626 pts
+  Bonus:                                                     547 pts
+
+══════════════════════════════════════════════════════════════════════════════
+       [STAMP] STATEMENT FOR MORTGAGE APPLICATION - VERIFIED 04/15/2026
+══════════════════════════════════════════════════════════════════════════════

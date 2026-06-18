@@ -1,0 +1,147 @@
+========================================================================================
+              UNITED STATES DEPARTMENT OF AGRICULTURE
+              RURAL DEVELOPMENT - SINGLE FAMILY HOUSING
+              ELIGIBILITY CERTIFICATE - GUARANTEED LOAN
+========================================================================================
+
+  CERTIFICATE NO:           IL-2026-0471-SFH
+  DATE OF ISSUE:            April 1, 2026
+  EXPIRATION DATE:          April 1, 2027
+
+========================================================================================
+  PROPERTY INFORMATION
+========================================================================================
+  Property Address:         478 Pine Street, Rural Route 2
+                            Clear Creek, Sangamon County, IL 62719
+  
+  Parcel ID:                14-28-402-003
+  Census Tract:             4708.02
+  Property Type:            Single Family Residence (detached)
+  Land Area:                ~3.00 acres
+  Year Built:               1998
+  Living Area:              1,800 sq ft
+
+========================================================================================
+  PROPERTY ELIGIBILITY DETERMINATION
+========================================================================================
+
+  Rural Area Determination:
+  The above-referenced property is located in an area designated as 
+  "Rural" per 7 CFR Part 3550 and 7 U.S.C. 1989.
+  
+  Basis: The property is located in unincorporated Sangamon County, 
+  Illinois, outside the boundaries of Clear Creek (unincorporated area 
+  with population under 10,000). Census Tract 4708.02 is designated 
+  as a rural area per USDA Rural Development eligibility maps 
+  (effective October 1, 2025 - September 30, 2026).
+  
+  [X] ELIGIBLE - PROPERTY IS IN A USDA-DESIGNATED RURAL AREA
+  [ ] NOT ELIGIBLE
+
+========================================================================================
+  BORROWER INCOME ELIGIBILITY
+========================================================================================
+
+  BORROWER 1:  Marcus D. Johnson
+    Income Source:                      USPS Mail Carrier
+    Annual Base Income:                 $68,000.00
+    Overtime / Other:                   $3,200.00 (documented, stable)
+    TOTAL:                              $71,200.00
+
+  BORROWER 2:  Imani R. Johnson
+    Income Source:                      Registered Nurse (Part-time)
+    Annual Base Income:                 $45,000.00
+    Shift Differential / Premium:       $2,500.00 (documented)
+    TOTAL:                              $47,500.00
+
+  COMBINED ANNUAL INCOME:               $113,000.00
+  ADJUSTED ANNUAL INCOME:               $113,000.00
+  (No adjustments for dependent care, medical expenses, etc.)
+
+  INCOME LIMIT (1-4 Person Household):  $128,650.00
+  (Per USDA RD Instruction 1980-D, Exhibit A, Sangamon County, IL)
+
+  [X] INCOME ELIGIBLE ($113,000 < $128,650)
+  [ ] NOT ELIGIBLE
+
+========================================================================================
+  LOAN TYPE
+========================================================================================
+  [X] USDA Guaranteed Loan (Section 502)
+  [ ] USDA Direct Loan (Section 502)
+  
+  Maximum Loan Amount:                  $275,000.00
+  Proposed Loan Amount:                  $275,000.00
+  Financing Percentage:                  100%
+  Down Payment:                          $0.00
+  Upfront Guarantee Fee (1.0%):          $2,750.00 (financed)
+  Annual Fee (0.35%):                   Included in monthly payment
+
+========================================================================================
+  REVIEWING OFFICER COMMENTS
+========================================================================================
+
+  Property confirmed eligible per current USDA Rural Development
+  eligibility map (effective FY 2026). Census tract 4708.02 is 
+  wholly within an eligible rural area. Property is in unincorporated
+  Sangamon County. Area is not designated as urban or suburban.
+  
+  Borrower income verified via pay stubs, W-2s, and 2024 tax return.
+  Combined income of $113,000 is within the $128,650 limit for
+  1-4 person households in Sangamon County. No deductions applicable.
+  
+  Note: The Johnsons are expecting their first child in August 2026.
+  Income limit for 1-4 persons remains $128,650 regardless of family 
+  size change after closing. Per USDA guidelines, anticipated family 
+  size changes are not considered in income eligibility - current 
+  household size of 2 is used.
+  
+  All documentation verified. Property and borrower meet USDA
+  eligibility requirements for the Section 502 Guaranteed Loan Program.
+  
+  *** APPROVED - CONDITIONAL UPON FINAL UNDERWRITING ***
+
+========================================================================================
+  OFFICIAL CERTIFICATION
+========================================================================================
+
+  I hereby certify that the above determination is accurate and complete
+  based on information provided by the lender (InsureFlow National Mortgage)
+  and supporting documentation.
+
+  __________________________________                     ______________
+  Angela M. Torres
+  USDA Rural Development
+  Area Loan Specialist
+  Springfield, IL Office
+  (217) 555-0147
+
+========================================================================================
+                              [STAMP]
+                    --------------------------------
+                    |                               |
+                    |  ELIGIBLE                     |
+                    |  USDA RURAL DEVELOPMENT       |
+                    |  SINGLE FAMILY HOUSING        |
+                    |  SECTION 502 GUARANTEED       |
+                    |                               |
+                    |  DATE: 04/01/2026             |
+                    |  LOAN #: IF-2026-4821         |
+                    |  REVIEWER: AMT                |
+                    |                               |
+                    --------------------------------
+                              [SEAL]
+========================================================================================
+
+  *** INTERNAL LENDER NOTES ***
+  Eligibility confirmed. Forward to underwriting with loan application.
+  USDA Guaranteed Loan - submit through GUS (Guaranteed Underwriting System).
+  Income eligibility verified at $113K. Property eligibility confirmed.
+  
+  NEXT STEPS:
+  1. Full appraisal with USDA MPR (Minimum Property Requirements)
+  2. Well water test results
+  3. Septic inspection/pumping records
+  4. Termite / pest inspection
+  5. Final underwriting approval
+========================================================================================

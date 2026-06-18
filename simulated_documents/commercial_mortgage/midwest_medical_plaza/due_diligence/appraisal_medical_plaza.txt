@@ -1,0 +1,162 @@
+================================================================================
+                    APPRAISAL REPORT
+                          OF
+            2400 Medical Parkway, Springfield, IL 62706
+              (Parcel 19-08-412-002 - Sangamon County)
+
+        Prepared For: Midwest Medical Plaza LLC (Borrower)
+        Requested By: First Midland Commercial, N.A. (Lender)
+        Prepared By:  Landmark Appraisal Group, LLC
+        Date of Value: February 28, 2026
+        Report Date:  March 12, 2026
+================================================================================
+
+APPRAISER: Michael J. O'Brien, MAI
+LICENSE: IL CG-0005219 (Exp. 06/30/2026)
+
+PROPERTY RIGHTS APPRAISED: Fee Simple
+
+================================================================================
+PROPERTY OVERVIEW
+================================================================================
+
+PROPERTY:         Three-story medical office building
+ADDRESS:          2400 Medical Parkway, Springfield, IL 62706
+YEAR BUILT:       2010
+BUILDING AREA:    22,000 SF (gross leasable)
+SITE AREA:        2.4 acres (104,544 SF)
+CONSTRUCTION:     Steel frame, brick veneer, EPDM roof (replaced 2020)
+PARKING:          80 surface spaces (3.6/1,000 SF - adequate)
+ZONING:           PUD-2009-04 (Planned Unit Development - Medical Campus)
+OCCUPANCY:        91% (5 of 6 suites occupied)
+HIGHEST & BEST USE: As improved - medical office use
+
+================================================================================
+VALUATION APPROACHES
+================================================================================
+
+INCOME CAPITALIZATION APPROACH (Primary)
+
+  Potential Gross Income (PGI):
+    In-place rent roll (annualized):      $456,000
+    Plus: Vacant suite at market rent:     $ 48,000
+                                          ---------
+    Economic PGI:                          $504,000
+
+  Vacancy & Collection Loss:
+    Current vacancy (8.2%) at market      $ 41,328
+    Credit loss (current - minimal)       $  2,520
+                                          ---------
+    Total vacancy/credit:                  $ 43,848
+
+  Effective Gross Income (EGI):           $460,152
+
+  Operating Expenses:
+    Real estate taxes                      $ 72,000
+    Insurance                              $ 18,000
+    Management (5% of EGI)                 $ 23,008
+    Utilities                              $ 14,000
+    Repairs & maintenance (incl reserve)   $ 21,500 (+$1,500 above actual)
+    [Appraiser adjusted upward for stabilized operations]
+                                          ---------
+    Total Expenses:                        $148,508
+
+  Net Operating Income (NOI):             $311,644
+
+  [Appraiser's NOI adjustment note:]
+  "Stabilized vacancy at 8% (one suite vacant) is reasonable.
+   Market vacancy for medical office in Springfield is 6-12%.
+   Expense ratio of 32% is typical for gross-lease medical offices.
+   Actual 2024 NOI was $331,800 - our stabilized NOI is lower due to
+   market vacancy assumptions."
+
+  Capitalization Rate: 7.75% (direct capitalization)
+  [Support: Medical office sales in IL, IN, MO 7.25%-8.50%.
+   Springfield secondary market + medical office discount.]
+
+  Indicated Value - Income Approach: $311,644 / 0.0775 = $4,021,858
+  ROUNDED: $4,000,000
+
+  [Wait - see reconciliation below. Appraiser adjusted upward.]
+
+================================================================================
+SALES COMPARISON APPROACH (Secondary)
+================================================================================
+
+  Comp 1: 1800 East Cook Street, Springfield
+          Medical office - 18,500 SF - Sold 08/2024 - $3,100,000
+          Price/SF: $167.57 - Cap: 7.50%
+          Adj: +$150,000 (size, parking inferior)
+
+  Comp 2: 3501 South 6th Street, Decatur
+          Medical office - 24,000 SF - Sold 03/2024 - $3,750,000
+          Price/SF: $156.25 - Cap: 7.70%
+          Adj: +$200,000 (inferior location, no elevator)
+
+  Comp 3: 5200 North Knoxville, Peoria
+          Medical office - 21,000 SF - Sold 11/2023 - $3,900,000
+          Price/SF: $185.71 - Cap: 7.25%
+          Adj: -$250,000 (superior location, Peoria)
+
+  Adjusted range: $3,600,000 - $4,200,000
+  Indicated Value - Sales Approach: $3,900,000
+
+================================================================================
+COST APPROACH (Less Weight)
+================================================================================
+
+  Land Value (2.4 ac @ $350,000/ac):             $  840,000
+  Building RCN (22,000 SF @ $185/SF):            $4,070,000
+  Site Improvements:                              $  390,000
+  Entrepreneurial Incentive (8%):                 $  356,800
+                                                  -----------
+  Total Cost New:                                 $5,656,800
+  Less Accrued Depreciation (15% - age/condition):($  848,520)
+                                                  -----------
+  Depreciated Cost:                                $4,808,280
+  ROUNDED:                                        $4,800,000
+
+  [Cost approach less weight due to functional depreciation
+   of older MOB design - lower ceiling heights, single-pane
+   windows in original construction not updated.]
+
+================================================================================
+RECONCILIATION
+================================================================================
+
+  Approach                 Value           Weight
+  Income Capitalization    $4,000,000       60%      [Primary]
+  Sales Comparison         $3,900,000       30%      [Supporting]
+  Cost Approach            $4,800,000       10%      [Minimal]
+                                            ------
+  INDICATED VALUE:                          $4,050,000
+
+  FINAL VALUE:                              $4,200,000
+
+  [Appraiser explanation:]
+  "The final value of $4,200,000 reflects upward adjustment for the
+   recent leasing momentum, the below-market in-place rents (particularly
+   for the vacant suite which could achieve $4,000/mo), and the strong
+   medical location adjacent to Springfield Memorial Hospital. The income
+   approach at a 7.75% cap produces a conservative $4.0M, but paired with
+   sales comps and the property's below-market leases, a value of $4.2M
+   is justified."
+
+================================================================================
+[Handwritten note on cover:]
+"Appraisal came in at $4.2M - matches purchase price. Good.
+ Income approach shows $4.0M at 7.75% cap. Sales comps at $3.9M.
+ Appraiser upward-adjusted to $4.2M based on 'below-market leases'
+ and adjacency to Memorial Hospital. A bit aggressive but defensible.
+ LTV at $3.15M / $4.2M = 75%. OK per policy.
+ - JM 3/14"
+
+"Credit committee question: Is the vacant suite being counted in the
+ value? Appraiser used stabilized occupancy. Fine. - MLW"
+
+[Stamp on last page:]
+                        RECEIVED
+              FIRST MIDLAND COMMERCIAL LENDING
+                   MAR 1 3 2026
+              APPRAISAL REVIEW - CONDITIONALLY APPROVED
+================================================================================

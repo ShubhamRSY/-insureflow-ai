@@ -1,0 +1,218 @@
+======================================================================
+               UNIFORM RESIDENTIAL APPRAISAL REPORT
+                       (URAR - FORM 1004)
+======================================================================
+BORROWER:        David Chen & Karen Chen
+PROPERTY:        1242 Hillcrest Drive, Springfield, IL 62704
+COUNTY:          Sangamon County
+APPRAISAL DATE:  March 22, 2026
+FILE #:          APR-2026-4412
+
+APPRAISER:       David Morrison, MAI
+                 Midwest Appraisal Group
+                 3400 State Street, Springfield, IL 62701
+                 (217) 555-0188
+                 License #: IL-AP-4001882 (MAI #: 12478)
+                 FHA Approved: Yes
+                 FHA #: 724-4001882-001
+
+CLIENT:          Chase Home Lending
+PURPOSE:         Conventional Mortgage Refinance
+
+======================================================================
+PROPERTY DESCRIPTION
+======================================================================
+  ADDRESS:          1242 Hillcrest Drive
+  CITY/STATE/ZIP:   Springfield, IL 62704
+  LEGAL DESC:       Lot 7, Hillcrest Estates Subdivision, Plat 3
+                     (Sangamon County Plat Book 42, Page 18)
+  CENSUS TRACT:     3024.01
+
+  SITE:
+    Lot Size:        0.60 acres (approx 26,136 SF)
+    Shape:           Rectangular
+    Topography:      Level to gently sloping (rear)
+    View:            Residential - interior lot
+    Utilities:       All public (electric, gas, water, sewer)
+    Zoning:          R-1 (Single Family Residential)
+    FEMA Flood Zone: X (not in flood zone)
+    Drainage:        Good - no standing water observed
+    Street:          Paved - curbed - street lights
+    Access:          Direct - Hillcrest Drive (public street)
+
+  IMPROVEMENTS:
+    Year Built:      2016 (per county records - verified)
+    Square Footage:  4,800 SF (above grade) - GLA per ANSI
+    Type:            Single Family - Custom Detached
+    Stories:         2-Story + Finished Basement
+    Bedrooms:        5
+    Bathrooms:       4 Full / 1 Half
+    Garage:          3-Car Attached (720 SF)
+    Basement:        Finished (1,200 SF - recreation room, exercise room, 
+                      half bath - NOT included in GLA per ANSI)
+    Pool:            In-ground concrete (20' x 40'), salt system, spa
+                     Built: 2020 - Permitted (Permit #SP-2020-4412)
+                     Condition: Excellent - well maintained
+    Patio/Deck:      Covered porch (front) + stamped concrete patio (rear)
+                      + pool deck (800 SF travertine)
+
+    INTERIOR FEATURES:
+      Kitchen:      Custom cabinetry, quartz counters, Wolf/Sub-Zero 
+                     appliances, 10' island, walk-in pantry
+      Flooring:     Hardwood (main level), carpet (upper), tile (wet areas)
+      Fireplace:    Gas fireplace (family room) + gas fireplace (primary suite)
+      Primary Suite: 600 SF with sitting area, spa bath (soaking tub, 
+                     steam shower, dual vanities, walk-in closets)
+      Laundry:      Upper level (convenient)
+      Windows:      Double-pane, low-E, casement/tilt-turn
+      HVAC:         Zoned forced air (2 furnaces, 2 AC units) - all gas
+                     Furnace 1: 2016 (maint 2024), Furnace 2: 2016
+                     Water Heater: 2 x 50-gal gas (2016, 2021 replacement)
+      Roof:         Architectural asphalt, 2016 (class 3 impact resistant)
+      Coating:      N/A
+
+    CONDITION:      GOOD to EXCELLENT (C2-C3)
+    QUALITY:        CUSTOM - Above Standard
+    [HANDWRITTEN: "House is well-maintained. Owners clearly take pride.
+     Pool added 2020 - permitted, inspected. No deferred maintenance 
+     observed. Staging: owner-occupied, no clutter. - DM"]
+
+======================================================================
+VALUATION APPROACH: SALES COMPARISON
+======================================================================
+  Three comparable sales used (all within 0.5 miles, sold within 6 mo):
+
+  COMP 1:  1278 Hillcrest Dr
+           Sold: 12/15/2025 for $940,000
+           4,600 SF, 5 BR, 4 BA, built 2015, 3-car garage, pool
+           Adjustments: -$5K (SF diff), +$0 (pool comp), +$5K (bath)
+           Adjusted Value: $940,000
+
+  COMP 2:  1150 Elmwood Lane
+           Sold: 01/20/2026 for $965,000
+           5,000 SF, 5 BR, 4.5 BA, built 2017, 3-car, no pool
+           Adjustments: -$8K (SF diff), +$25K (pool adjustment), +$0
+           Adjusted Value: $982,000
+
+  COMP 3:  1310 Windsor Court
+           Sold: 02/28/2026 for $990,000
+           4,700 SF, 5 BR, 4.5 BA, built 2018, 3-car, pool, finished basement
+           Adjustments: +$3K (SF diff), +$0 (pool comp), +$0
+           Adjusted Value: $993,000
+
+  RECONCILIATION: 
+    Comp 1: $940,000 (weight: 30%)  = $282,000
+    Comp 2: $982,000 (weight: 30%)  = $294,600
+    Comp 3: $993,000 (weight: 40%)  = $397,200
+                                    ---------
+    INDICATED VALUE (SALES): $973,800
+                                    =========
+
+======================================================================
+VALUATION APPROACH: COST NEW
+======================================================================
+  Site Value:                                $150,000
+  Cost New (4,800 SF @ $180/SF):            $864,000
+  Depreciation (age/life 10 yrs est):       -$86,400
+  Basement Finished (1,200 SF @ $40):        $48,000
+  Pool (cost):                                $65,000
+  Garage (720 SF @ $50):                      $36,000
+  Site improvements (landscape, hardscape):   $25,000
+                                             ---------
+  INDICATED VALUE (COST):                 $1,101,600
+                                             =========
+  [Note: Cost approach given less weight due to market conditions.
+   Land values in this enclave are appreciating rapidly.]
+
+======================================================================
+RECONCILIATION & FINAL OPINION
+======================================================================
+  Sales Comparison Approach:          $973,800  (PRIMARY - 70% weight)
+  Cost Approach:                     $1,101,600  (SECONDARY - 20% weight)
+  Income Approach:                       N/A     (owner-occupied)
+  
+  ROUNDED VALUE:                      $975,000
+                                      =========
+
+  [HANDWRITTEN: 
+   "Value: $975,000. Strong comps in the enclave. Hillcrest Estates is 
+    the premier subdivision in Springfield - homes here appreciate 
+    8-10% annually. Subject is well-located on interior lot, not on 
+    main road. Pool is a plus for this market segment.
+    
+    For refi at $700,000 - LTV = 700/975 = 71.8%. Higher than 
+    the 70% request. Close enough. Probably due to rounding.
+    
+    No adverse conditions noted. No deferred maintenance. House 
+    presents well. - DM"]
+
+======================================================================
+MARKET CONDITIONS
+======================================================================
+  Market:        Increasing (Springfield upper-tier market)
+  Absorption:    3-4 months inventory in this price point ($800K-$1M+)
+  DOM (median):  28 days
+  List/Sale:     97.5% (slightly below list - typical for luxury)
+  Appreciation:  ~8% annually in this enclave (Hillcrest Estates)
+  
+  [MARGIN NOTE: 
+   "HIGH-END SUBURBAN. POOL ADDED 2020 - PERMITTED. 
+    COMPARABLE SALES STRONG. MARKET APPRECIATION ~8% ANNUAL 
+    IN THIS ENCLAVE. FLOOD ZONE X - GOOD. NO EASEMENTS. 
+    
+    Neighborhood still desirable. Good schools (Springfield Public 
+    Schools - Lincoln Elementary, Washington Middle, Springfield 
+    High School). Low crime area.
+    
+    SUBJECT IS NOT IN A FLOOD ZONE - NO FLOOD INSURANCE REQUIRED 
+    for this refi."]
+
+======================================================================
+CERTIFICATION & SIGNATURE
+======================================================================
+  I hereby certify that I personally inspected the subject property
+  and comparable sales. This appraisal was prepared in accordance
+  with USPAP and Fannie Mae guidelines. No bias or conflict of
+  interest exists.
+
+  APPRAISER: David Morrison, MAI
+  DATE: March 24, 2026
+  SIGNED: /s/ David Morrison                    [IL-AP-4001882]
+
+  SUPERVISORY APPRAISER: N/A (I am the supervisor)
+  
+======================================================================
+PHOTOGRAPHS ATTACHED:
+  - Front of subject (3)
+  - Rear of subject (2)
+  - Pool (2)
+  - Kitchen (1)
+  - Primary bedroom & bath (2)
+  - Comparable 1 (1)
+  - Comparable 2 (1)
+  - Comparable 3 (1)
+  - Street scene (1)
+======================================================================
+
+  ==============================================================
+  | STICKY NOTE (YELLOW):                                       |
+  |                                                             |
+  |  Appraisal notes:                                           |
+  |                                                             |
+  |  - Value $975,000 is ABOVE the estimate of $950,000.       |
+  |    Always nice.                                              |
+  |  - 71.8% LTV vs 70% target. Slight variance. UW to         |
+  |    confirm if PMI needed (usually PMI at >80% LTV, so      |
+  |    at 71.8% no PMI needed).                                 |
+  |  - Pool has permit. Good. Some UWs would flag unpermitted  |
+  |    improvements. Not an issue here.                         |
+  |  - Same appraiser firm as original purchase (Morrison).    |
+  |    No conflict - they do most of the high-end work in this  |
+  |    area.                                                     |
+  |  - Appraiser checked flood zone - X. No flood insurance    |
+  |    required. Good.                                           |
+  |                                                             |
+  |  - UW 4/2/26                                                |
+  ==============================================================
+
+======================================================================

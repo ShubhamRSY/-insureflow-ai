@@ -1,0 +1,215 @@
+======================================================================
+                      CREDIT REPORT SUMMARY
+                         CONFIDENTIAL
+======================================================================
+
+PULLED BY:          Midwest Lending Corp. - UW Department
+PULL DATE:          March 2, 2026
+BORROWER:           James T. Wilson
+SSN:                XXX-XX-4412
+DOB:                09/14/1972
+CURRENT ADDRESS:    4568 West Grove Ave, Apt 3B, Springfield, IL 62703
+                    (Since 02/2023)
+PREVIOUS ADDRESS:   1247 Maple Drive, Springfield, IL 62704
+                    (04/2008 - 11/2022)
+
+REPORTING BUREAUS:  Equifax, Experian, TransUnion
+SCORE MODEL:        FICO Score 5 (Mortgage) - Classic 04
+
+======================================================================
+CREDIT SCORES:
+======================================================================
+
+   Equifax:     642
+   Experian:    645
+   TransUnion:  648
+   ------------------
+   MID SCORE:   645
+   ------------------
+
+======================================================================
+PUBLIC RECORDS & COLLECTIONS:
+======================================================================
+
+   NONE - No bankruptcies, judgments, tax liens, or collections found.
+
+======================================================================
+POTENTIALLY NEGATIVE ITEMS:
+======================================================================
+
+1. MORTGAGE - 1247 Maple Drive (Short Sale/Settled)
+   Acct #: xxxx-4491
+   Original Lender: Wells Fargo Home Mortgage
+   Opened: 04/2008
+   Closed: 11/2022 (Short Sale - Settled in Full)
+   Status: Paid/Settled
+   Balance: $0
+   Payment History:
+      2022: Aug - 30 days late / Sep - 30 days late
+      2022: Oct-Nov - Current (Short sale closed Nov 2022)
+      2023-Present: Account closed, $0 balance
+   Worst Delinquency: 2x 30-day lates (Aug & Sep 2022)
+
+   NOTE: Account is coded as "Short Sale / Pre-Foreclosure 
+   Settled." Per borrower, this was the marital home sold 
+   during divorce. Both borrower and ex-spouse were on the
+   mortgage. Short sale proceeds satisfied the debt. No
+   deficiency judgment.
+
+   FHA WAITING PERIOD: Short sale = 3 years from settlement
+   date (11/2022). Current date 03/2026 = 3 yrs 4 months.
+   WAITING PERIOD MET. ✓
+
+======================================================================
+REVOLVING ACCOUNTS:
+======================================================================
+
+2. CAPITAL ONE - CREDIT CARD
+   Acct #: xxxx-7721
+   Opened: 06/2023
+   Credit Limit: $6,000
+   Balance: $5,200
+   Payment Status: CURRENT (all payments on time)
+   Min Payment Due: $165
+   Utilization: 86.7% (HIGH)
+   APR: 27.99%
+   Payment History: All current since account opening.
+   Notes: Account opened post-divorce. High utilization but 
+   making payments. No late payments ever on this account.
+
+3. DISCOVER - CREDIT CARD
+   Acct #: xxxx-3348
+   Opened: 03/2021
+   Credit Limit: $4,000
+   Balance: $3,300
+   Payment Status: CURRENT
+   Min Payment Due: $98
+   Utilization: 82.5% (HIGH)
+   APR: 24.99%
+   Payment History: All current since 03/2023.
+   Prior history: 1x 30-day late in Jan 2022 (divorce turmoil)
+   Note: Account shows periodic cash advances (not ideal for
+   mortgage underwriting. Shows borrower using CC for cash flow).
+   See statement for details.
+
+======================================================================
+INSTALLMENT ACCOUNTS:
+======================================================================
+
+4. FORD MOTOR CREDIT - TRUCK LOAN
+   Acct #: xxxx-2291
+   Opened: 11/2022 (financed used 2019 F-250)
+   Original Amount: $38,500
+   Balance: $12,000
+   Payment: $482/mo
+   APR: 7.99%
+   Status: CURRENT (paying as agreed)
+   Payment History: All current since inception.
+   Notes: Paying down aggressively. Remaining balance ~$12K.
+
+======================================================================
+OTHER ACCOUNTS:
+======================================================================
+
+5. CHILD SUPPORT OBLIGATION
+   Agency: IL Department of Child Support Services (DCSS)
+   Monthly Obligation: $600
+   Status: CURRENT (verified by bank statements)
+   Not reported to credit bureaus - borrower disclosed.
+
+======================================================================
+CREDIT SUMMARY:
+======================================================================
+
+   Total Revolving Balance:          $8,500
+   Total Revolving Limit:           $10,000
+   Total Revolving Utilization:       85% (HIGH - addressed below)
+   Total Installment Balance:      $12,000
+   Total Monthly Payments:           $580 (CC mins + truck)
+   Child Support:                    $600
+   Proposed Housing Payment:      ~$2,400 (est PITI)
+   
+======================================================================
+UNDERWRITER ANALYSIS:
+======================================================================
+
+  STRENGTHS:
+    ✓ No collections, charge-offs, BK, or tax liens
+    ✓ 3+ years of consistent self-employment income
+    ✓ FHA 203(k) streamline - waiting period met for short sale
+    ✓ 2x 30-day lates only (not 60/90 day) - meets FHA guidelines
+    ✓ All tradelines currently paying as agreed
+    ✓ 2.5 years of clean payment history since divorce
+    ✓ Verified contractor's license & bond for self-performed work
+    ✓ Steady increase in business income trend (except divorce year)
+
+  CONCERNS:
+    ⚠ Credit score 645 - below automated underwriting threshold (660)
+       → Requires MANUAL UNDERWRITE
+    ⚠ High revolving utilization (85%) - risk factor
+       → Must address in LOE & verify ability to pay after close
+    ⚠ Short sale (3 years ago) - requires letter of explanation
+    ⚠ Cash advances on Discover card - may indicate cash flow issues
+       → Review bank statements to verify
+    ⚠ Previous 30-day late on Discover (Jan 2022) - explained by divorce
+    ⚠ Self-employed income verification - requires 2 years tax returns
+    ⚠ 203(k) adds complexity - renovation loan risk
+
+======================================================================
+RECOMMENDED CONDITIONS FOR APPROVAL:
+======================================================================
+
+   1. Letter of Explanation regarding divorce, short sale, and
+      mortgage lates - RECEIVED
+   2. Letter of Explanation regarding high credit card utilization
+      - RECEIVED (states paying down with renovation proceeds)
+   3. 3 years tax returns (2022, 2023, 2024) - RECEIVED
+   4. Current P&L / YTD statement - RECEIVED
+   5. Contractors license & bond verification - RECEIVED
+   6. Credit score exception (below 660) - NEEDED
+   7. Short sale waiting period verification - MET
+   8. No collections - CONFIRMED
+   9. Cash advance explanation (Discover) - RECEIVED (states 
+      temporary cash flow during slow month - paid back within cycle)
+
+======================================================================
+FINAL UW DETERMINATION:
+======================================================================
+
+   [ ] APPROVED - Clear to Close (CTC)
+   [ ] APPROVED WITH CONDITIONS (CWC)
+   [ ] SUSPENDED - Additional documentation required
+   [ ] DENIED
+
+   CURRENT STATUS: CWC - Pending:
+      - LOE for credit events (receipt confirmed)
+      - Manual underwrite approval from senior UW
+      - Exception approval for credit score < 660
+      - Appraisal review (203k after-improved value)
+      - Verification of contractor license + bond
+
+   REVIEWED BY: M. Larsen, UW I
+   DATE: 03/05/2026
+
+   NOTES: "File is approvable with conditions. Credit is
+   borderline but well explained. Divorce year (2022) is the
+   only blemish. 2.5 years clean history is sufficient.
+   Short sale meets waiting period. Self-employed income
+   is solid and trending up. Manual underwrite required.
+   Recommend APPROVED with conditions."
+
+======================================================================
+
+   [HANDWRITTEN - red ink across top:]
+   "DEROG: MORTGAGE LATES DURING DIVORCE - EXPLAINED BY 
+    BORROWER. SHORT SALE DUE TO DIVORCE - 3 YRS AGO. 
+    EXCEPTION NEEDED. OTHERWISE ALL CURRENT. 2 30-DAY 
+    LATES ONLY - MEETS WAIT PERIOD."
+
+   [Margin scribble - blue ink:]
+   "CC utilization 85% - but no lates. He's paying. After 
+    mortgage closes he'll have equity access + less rent 
+    $1,200 to free up cash. Should improve within 6 mo.
+    - ML"
+
+======================================================================

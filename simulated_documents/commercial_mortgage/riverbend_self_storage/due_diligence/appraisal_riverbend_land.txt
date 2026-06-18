@@ -1,0 +1,129 @@
+================================================================================
+              APPRAISAL REPORT - PROPOSED CONSTRUCTION
+                                  OF
+              RIVERBEND SELF STORAGE
+              1800 River Road, Riverbend, IL 62788
+            (Parcel 22-11-156-001 - Sangamon County)
+================================================================================
+
+Prepared For:   Riverbend Self Storage LLC (Borrower)
+Requested By:   First Midland Commercial, N.A. (Lender)
+Prepared By:    Landmark Appraisal Group, LLC
+Date of Value:  March 1, 2026
+Report Date:    March 20, 2026
+================================================================================
+
+APPRAISER:      Michael J. O'Brien, MAI
+LICENSE:        IL CG-0005219
+
+PROPERTY RIGHTS APPRAISED: Fee Simple
+
+================================================================================
+PROPERTY OVERVIEW
+================================================================================
+
+SITE:            5.8 acres - vacant land
+LOCATION:        1800 River Road, Riverbend, IL
+ZONING:          I-1 (Light Industrial)
+PROPOSED:        65,000 SF self-storage (500 units)
+                 5,000 SF ancillary retail
+TOTAL SF:        70,000 SF
+SITE COVERAGE:   27.7%
+
+================================================================================
+VALUATION APPROACHES
+================================================================================
+
+1. AS-IS LAND VALUE (Sales Comparison Approach)
+
+   Comp 1: 2.5 acres - 1500 Commerce Drive, Riverbend
+           Sold 10/2024 - $155,000 ($62,000/acre)
+           Zoned I-1 - Industrial warehouse site
+
+   Comp 2: 4.0 acres - 2200 Industrial Parkway, Riverbend
+           Sold 06/2024 - $232,000 ($58,000/acre)
+           Zoned I-1 - Light industrial
+
+   Comp 3: 6.0 acres - 3100 Logistics Drive, Springfield
+           Sold 03/2025 - $330,000 ($55,000/acre)
+           Zoned I-2 - General industrial - inferior location
+
+   Comp 4: 3.8 acres - 900 River Road, Riverbend
+           Sold 01/2026 - $235,600 ($62,000/acre)
+           Zoned B-3 - Commercial - adjacent to subject
+
+   Adjusted value range: $55,000 - $62,000/acre
+   Subject site (5.8 acres): $58,000/acre
+
+   INDICATED AS-IS LAND VALUE:            $  336,400
+   ROUNDED:                                $  350,000
+
+   [Support: $350K land value = $60,345/acre. Reasonable given
+    comps. Purchase price = $350K. Confirmed. - JM]
+
+2. AS-COMPLETE VALUE (Upon Completion of Construction)
+
+   Based on hypothetical condition that construction is complete
+   as of the effective date.
+
+   As-Complete Value:
+     Land:                                           $  350,000
+     Building (70,000 SF @ $45/SF - cost new):      $3,150,000
+     Site improvements:                              $  240,000
+                                                     -----------
+     Total Cost:                                     $3,740,000
+
+   Note: Cost approach is primary for as-complete valuation
+   for proposed construction. Market will be tested upon
+   stabilization.
+
+   AS-COMPLETE VALUE:                                $3,740,000
+   ROUNDED:                                           $3,700,000
+
+   [The as-complete value approximates total project cost.
+    No entrepreneurial profit is recognized until the property
+    achieves stabilized occupancy.]
+
+3. AS-STABILIZED VALUE (Upon Achieving Stabilized Occupancy)
+
+   Based on prospective value upon achieving stabilized operations
+   (projected Year 3 at 85% occupancy).
+
+   Net Operating Income (stabilized):                 $  474,000
+   [Based on pro-forma: $858K gross - 15% vacancy = $729.3K EGI
+    less $255.3K expenses = $474K NOI]
+
+   Capitalization Rate: 9.0%
+   [Support: Self-storage sales in Midwest 8.25%-9.75%.
+    New construction with lease-up risk at higher end.]
+
+   AS-STABILIZED VALUE: $474,000 / 0.090 =           $5,266,667
+   ROUNDED:                                          $5,200,000
+
+   [Margin note:]
+   "$5.2M stabilized value / $2.8M loan = 53.8% LTV at stabilization.
+    Very strong. Even at as-complete $3.7M, LTV is 75.7% which is
+    tight but OK for construction. The takeout (permanent loan) will
+    be based on stabilized value. - JM 3/21"
+
+================================================================================
+RECONCILIATION
+================================================================================
+
+  Value Type           Value          Weight        Use
+  As-Is Land           $350,000       100%          Land acquisition
+  As-Complete          $3,700,000     70%           Construction draw basis
+  As-Stabilized        $5,200,000     80%           Permanent loan basis
+
+  [Handwritten note on cover:]
+  "Appraisal supports both the construction loan ($2.8M at 75.7% LTV
+   as-complete) and the permanent takeout ($2.8M at 53.8% LTV at
+   stabilization). The 9.0% cap rate is conservative for self-storage.
+   Good report. - JM"
+
+  [Stamp:]
+                        RECEIVED
+              FIRST MIDLAND COMMERCIAL LENDING
+                   MAR 2 2 2026
+              APPRAISAL REVIEW - ACCEPTABLE
+================================================================================

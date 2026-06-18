@@ -1,0 +1,78 @@
+======================================================================
+              VANGUARD CASH PLUS - MONEY MARKET FUND
+            STATEMENT FOR: March 1 - March 31, 2026
+======================================================================
+ACCOUNT TYPE: Vanguard Cash Plus Account (Brokerage Sweep)
+ACCT #: XXXX-XXXX-9921
+REGISTRATION: DAVID CHEN & KAREN CHEN JT WROS
+
+======================================================================
+FUND: VANGUARD FEDERAL MONEY MARKET FUND (Settlement Fund)
+======================================================================
+CURRENT YIELD: 4.22% (as of 3/31/2026)
+7-DAY SEC YIELD: 4.18%
+GROSS EXPENSE RATIO: 0.11%
+======================================================================
+
+======================================================================
+PORTFOLIO SUMMARY
+======================================================================
+  Previous Balance:                              $120,418.52
+  Purchases:                                          $0.00
+  Redemptions:                                        $0.00
+  Dividends Received:                               $443.27
+  End of Period Balance:                         $120,861.79
+======================================================================
+
+TRANSACTION DETAIL
+======================================================================
+  DATE      DESCRIPTION                                      AMOUNT     BALANCE
+  --------  ------------------------------------------------ ---------- ---------
+  03/01     Beginning Balance                                            120,418.52
+  03/01     DIVIDEND REINVESTED - MONEY MARKET              +$443.27   120,861.79
+
+======================================================================
+DIVIDEND & INTEREST DETAIL
+======================================================================
+  Money Market Dividend (03/01/26):                       $443.27
+  Dividend Reinvested? Yes (automatic)
+  
+  Annualized yield on $120K at 4.22% = ~$5,064/yr
+  This month: $443.27 (~4.4% annualized - close)
+
+======================================================================
+  [NO TRANSACTIONS THIS MONTH. SITTING PRETTY.]
+  
+  Notes:
+  - Account is essentially an emergency fund / wealth accumulation vehicle
+  - No regular withdrawals - no ACH outbound activity
+  - Dividends automatically reinvested
+  - No check writing activity
+  
+  ANALYSIS NOTE: $120K in liquid MMKT. Combined with $45K checking + 
+  $85K savings = $250K liquid cash. For borrowers with $475K salary, 
+  this is reasonable 6-month emergency reserve (needs ~$12K/mo burn 
+  = 6 months = $72K). They have over 3x that. Asset position strong.
+
+======================================================================
+  ===============================================================
+  | POST-IT NOTE (BLUE):                                        |
+  |                                                             |
+  |  Cash Plus - $120,861                                      |
+  |  Savings - $79,463 (after adjustment)                      |
+  |  Checking - $45,034                                        |
+  |                                                             |
+  |  Total Liquid: ~$245K                                      |
+  |                                                             |
+  |  For refi closing costs (~$8-10K) they can pull from       |
+  |  checking/savings. No need to touch MMKT.                  |
+  |                                                             |
+  |  Plus $340K in Vanguard brokerage (per investment stmt).   |
+  |  Total assets: ~$585K+                                     |
+  |                                                             |
+  |  They're fine. Rich people problems.                       |
+  |                                                             |
+  |  - UW REVIEW 4/2                                            |
+  ===============================================================
+
+======================================================================

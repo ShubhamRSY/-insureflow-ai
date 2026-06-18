@@ -1,0 +1,188 @@
+================================================================================
+              CONSTRUCTION BUDGET
+      Riverbend Self Storage - 1800 River Road, Riverbend, IL
+          Proposed: 65,000 SF Self-Storage + 5,000 SF Retail
+================================================================================
+Prepared by: Thomas Enterprises Inc. - Development Division
+Date:        January 30, 2026
+Budget Ref:  TE-RSS-BUDGET-001
+================================================================================
+
+================================================================================
+HARD COSTS
+================================================================================
+
+1. SITE WORK
+   1.1  Clearing & grubbing                      $   35,000
+   1.2  Earthwork / grading / compaction          $  120,000
+   1.3  Stormwater management / detention basin   $   85,000
+   1.4  Site utilities (tap fees, connections)    $   80,000
+        [Water $25K, Sewer $35K, Electric $20K]
+                                                     --------
+                                                      $320,000
+
+2. FOUNDATIONS & SLAB
+   2.1  Concrete slab (70,000 SF @ $4.00/SF)      $  280,000
+                                                     --------
+                                                      $280,000
+
+3. BUILDING CONSTRUCTION (SELF-STORAGE)
+   3.1  Steel frame / metal building shell         $  660,000
+   3.2  Roofing (insulated metal panel)            $  175,000
+   3.3  Exterior walls / wainscot                  $  135,000
+   3.4  Interior partition walls (unit demising)   $   90,000
+   3.5  Roll-up doors (500 units @ $350)           $  175,000
+                                                     --------
+                                                    $1,235,000
+   [Handwritten: "Steel prices up 8% from original est.
+    Need to lock in pricing. - Tom T."]
+
+4. RETAIL BUILDING (5,000 SF)
+   4.1  Shell construction                         $  275,000
+   4.2  Interior finishes (office/showroom)        $  150,000
+   4.3  Bathroom / break room                      $   45,000
+                                                     --------
+                                                      $470,000
+
+   [Actually per revised plan: Retail is attached to main building.
+    Combine with self-storage construction. Steel/build total $1.1M
+    for whole building. - Tom T. 2/5]
+                                                     --------
+   ADJUSTED STEEL/BUILD TOTAL:                     $1,100,000
+
+5. ELECTRICAL
+   5.1  Service entrance / panel                   $   75,000
+   5.2  Lighting (interior units + exterior)        $   80,000
+   5.3  Security system wiring (camera/access)      $   35,000
+   5.4  Fire alarm / detection                      $   10,000
+                                                     --------
+                                                      $200,000
+
+6. PLUMBING
+   6.1  Water lines / faucets / restrooms           $   85,000
+   6.2  Storm drainage                              $   20,000
+   6.3  Fire sprinkler system (retail only)          $   20,000
+                                                     --------
+                                                      $125,000
+
+7. HVAC
+   7.1  Office/retail space (2 rooftop units)       $   75,000
+   7.2  Ventilation (storage units - passive)       $   20,000
+                                                     --------
+                                                       $95,000
+
+8. INTERIOR FINISHES (RETAIL/OFFICE)
+   8.1  Drywall / paint / flooring                  $   95,000
+   8.2  Cabinetry / countertops / fixtures          $   35,000
+   8.3  Signage (building + monument)               $   20,000
+                                                     --------
+                                                      $150,000
+
+   [Skip elevator - single story building]
+
+9. SITE IMPROVEMENTS
+   9.1  Parking lot (asphalt - 60 spaces)           $  120,000
+   9.2  Driveway / curb cuts / apron                $   35,000
+   9.3  Fencing (perimeter - chain link)            $   40,000
+   9.4  Gate system (electronic entry)              $   25,000
+   9.5  Landscaping                                 $   20,000
+                                                     --------
+                                                      $240,000
+
+================================================================================
+TOTAL HARD COSTS:                                  $2,810,000
+================================================================================
+
+================================================================================
+SOFT COSTS
+================================================================================
+
+10. ARCHITECTURE & ENGINEERING
+    10.1 Architectural design (plans/permits)       $   65,000
+    10.2 Structural engineering                      $   25,000
+    10.3 MEP engineering                             $   18,000
+    10.4 Civil engineering / SWPPP                   $   22,000
+                                                      --------
+                                                       $130,000
+
+11. LEGAL & SURVEY
+    11.1 Legal (entity formation, contracts)          $   25,000
+    11.2 Title / survey / recording                   $   15,000
+                                                      --------
+                                                        $40,000
+
+12. FINANCING COSTS
+    12.1 Loan origination fee (1 point)               $   28,000
+    12.2 Appraisal / Phase I / other due diligence    $   15,000
+    12.3 Construction interest reserve (18 months)    $  100,000
+     [Estimate @ 6.25% on average outstanding]
+                                                      --------
+                                                       $143,000
+
+13. DEVELOPMENT FEE (Thomas Enterprises - 3%)
+    13.1 Development coordination / administration    $   91,000
+                                                      --------
+                                                        $91,000
+
+14. LEASING & MARKETING
+    14.1 Pre-leasing / marketing campaign              $   18,000
+    14.2 Signage / brochures / website                 $   12,000
+                                                      --------
+                                                        $30,000
+
+15. PERMITS & FEES
+    15.1 Building permit                               $   35,000
+    15.2 Planning commission fees                      $    5,000
+    15.3 Impact fees / utility connection               $   60,000
+                                                      --------
+                                                       $100,000
+
+================================================================================
+TOTAL SOFT COSTS:                                    $  534,000
+================================================================================
+  [Actually add land: $350K separate line item. Total project
+   cost = Hard $2.8M + Soft $534K + Land $350K = $3.684M.
+   But budget shows $3.5M. Let me adjust... - JM]
+
+================================================================================
+CONTINGENCY (10% of hard costs):                     $  281,000
+================================================================================
+
+================================================================================
+TOTAL PROJECT COSTS:                                  $3,625,000
+  [Rounded down to $3.5M per Tom. Contingency is flexible.]
+================================================================================
+
+================================================================================
+SOURCES & USES
+================================================================================
+
+SOURCES:
+  First Midland Commercial (construction loan)       $2,800,000
+  Borrower Equity (Thomas Enterprises):               $  700,000
+                                                      ----------
+  TOTAL SOURCES:                                      $3,500,000
+
+USES:
+  Land acquisition:                                   $  350,000
+  Hard costs:                                         $2,810,000
+  Soft costs (incl contingency):                      $  340,000
+                                                      ----------
+  TOTAL USES:                                         $3,500,000
+
+  [Margin note:]
+  "Budget seems right. Hard costs at $2.81M = $40/SF for self-storage
+   which is reasonable. Contingency of $281K (10%) provides cushion.
+   Tom is self-performing development mgmt so no GC markup.
+   Loan to cost: $2.8M / $3.5M = 80%. At policy max. - JM 2/22"
+
+  "Need cost verification from 3rd party. Send to Rider Levett
+   Bucknall for PEER REVIEW. - Credit Comm. 3/8"
+
+================================================================================
+[Stamp:]
+                    RECEIVED
+          FIRST MIDLAND COMMERCIAL LENDING
+              FEB 2 5 2026
+          BUDGET REVIEW - PENDING PEER REVIEW
+================================================================================

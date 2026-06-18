@@ -1,0 +1,169 @@
+========================================================================================================
+                          CLOSING DISCLOSURE  (TRID - CFPB)
+                         LOAN ESTIMATE / CD FORM - USDA RURAL DEVELOPMENT
+========================================================================================================
+
+    FILE #: IF-USDA-02262026-003
+    DATE ISSUED: February 14, 2026
+    CLOSING DATE: TBD (on or before 03/15/2026)
+
+    LENDER: InsureFlow National Mortgage
+            1200 Commerce Drive, Springfield, IL 62701
+            NMLS #412897
+
+    BORROWER(S): Marcus Darnell Johnson & Imani Renee Johnson
+    PROPERTY: 478 Pine Street, Clear Creek, IL 62719
+
+    LOAN TERMS:
+    -----------
+    Loan Amount:                            $275,000.00
+    Interest Rate:                          6.500%
+    Monthly Principal & Interest:           $1,739.27
+    Loan Term:                              30 Years
+    Product:                                USDA Guaranteed (RD 502) - Fixed Rate
+    LTV:                                    100.00%
+    Cash to Close from/to Borrower:         $800.00  (estimated)
+
+========================================================================================================
+PROJECTED PAYMENTS
+========================================================================================================
+
+    Payment Component                   Amount         Notes
+    -------------------------------   -----------     --------------------------------------------
+    Principal & Interest               $1,739.27      P&I on $275K @ 6.5% / 360 months
+    Mortgage Insurance                  $   46.00      USDA Annual Fee (0.35% / 12 = $80.21??)
+                                                      
+    [HANDWRITTEN]:
+    Wait - USDA annual fee is 0.35% of avg outstanding. $275K x 0.35% = $962.50/yr.
+    $962.50 / 12 = $80.21/mo. NOT $46. CD shows $46??? Check with closing. Miscalc.
+    Actually the USDA annual fee is paid monthly in escrow. Let me correct below...
+    
+    CORRECTION - USDA ANNUAL FEE:                     $80.21/mo
+    ------^^^^^^^^^^^^^^^^^^^^^^
+    
+    Property Taxes                                    $246.00/mo   (est. $2,952/yr)
+    Homeowner's Insurance                             $ 75.00/mo   (est. $900/yr - HO3 policy)
+    ------------------------------------------------------------
+    TOTAL MONTHLY PAYMENT (estimated):                $2,140.48
+
+========================================================================================================
+COSTS AT CLOSING
+========================================================================================================
+
+    A. ORIGINATION CHARGES:
+       -------------------                           ----------
+       0.25% Origination Fee                             $687.50
+       Processing Fee                                    $  500.00
+       Underwriting Fee                                  $  450.00
+       USDA Administration Fee                           $2,487.50  (1.0% USDA guarantee fee)
+       -------                                                                              
+       Total Origination Charges:                        $4,125.00 
+
+    B. SERVICES YOU DID NOT SHOP FOR:
+       ------------------------------                   ----------
+       Appraisal Fee                                     $  500.00
+       Credit Report Fee                                 $   45.00
+       Flood Determination Fee                           $   12.00
+       Tax Service Fee                                   $   85.00
+       -------                                                                              
+       Total:                                            $  642.00
+
+    C. SERVICES YOU DID SHOP FOR:
+       ---------------------------                      ----------
+       Title - Lender's Title Insurance                  $  800.00
+       Title - Settlement/Closing Fee                    $  500.00
+       Title - Recording Service                         $  200.00
+       Title - Courier/Expedia                           $  100.00
+       -------                                                                              
+       Total:                                            $1,600.00
+
+    D. PREPAIDS:
+       ---------                                         ----------
+       Homeowner's Insurance Premium (1st yr)            $  900.00
+       Prepaid Interest ($50.34/day x 15 days est)       $  755.10
+       -------                                                                              
+       Total:                                            $1,655.10
+
+    E. ESCROW ACCOUNT (12 months):
+       ---------------------------                      ----------
+       Property Taxes (12 mo @ $246)                     $2,952.00
+       Homeowner's Insurance (2 mo cushion)               $  150.00
+       -------                                                                              
+       Total:                                            $3,102.00
+
+    F. OTHER CHARGES:
+       ----------------                                   ----------
+       Recording Fees (Deed + Mortgage)                   $  200.00
+       Survey (if needed)                                 $    0.00  (ALTA survey not req'd for USDA)
+       -------                                                                              
+       Total:                                            $  200.00
+
+========================================================================================================
+TOTAL CLOSING COSTS
+========================================================================================================
+
+    TOTAL CLOSING COSTS (A+B+C+D+E+F):                  $11,324.10
+    
+    Less: USDA Guarantee Fee (in origination) is financed into loan... WAIT. The 
+    $2,487.50 guarantee fee is typically financed/added to loan amount. So actual
+    cash needed at closing should be total costs MINUS financed guarantee fee.
+
+    ACTUAL CASH NEEDED FROM BORROWER:                   $   800.00 (approx prepaids)
+
+    SELLER CREDIT TOWARD CLOSING COSTS:                 $ 2,500.00
+
+    CASH FROM BORROWER AT CLOSING:                      $   800.00
+
+========================================================================================================
+LOAN AMOUNT BREAKDOWN
+========================================================================================================
+
+    Base Loan Amount (100% of purchase):                $275,000.00
+    Plus: USDA Guarantee Fee (financed):                $  2,750.00?? Wait, 1% of $275K = $2,750.
+    Actually fee is 1% of loan amount. If loan is $275K, fee = $2,750.
+    But this gets financed, making note amount $277,750.
+    However the CD shows $275K as loan amount. Let me check...
+    
+    [HANDWRITTEN]:
+    OK so the base loan is $275,000. The 1% guarantee fee of $2,750 is financed
+    on top. Final loan note = $277,750. The CD shows $275K as the base amount.
+    UW and closing to coordinate final note amount. - AR
+    
+    FINAL NOTE AMOUNT: $277,750.00  (incl financed guarantee fee)
+
+========================================================================================================
+PAYOFFS / DISTRIBUTIONS
+========================================================================================================
+
+    Purchase Price (to Seller):                         $275,000.00
+    Recording Fees:                                     $    200.00
+    Title Charges:                                      $  1,600.00
+    Appraisal (paid at application - borrower out of pocket): Already paid by borrower,
+    but wait, it's listed here as closing cost. Double check.
+    
+    [HANDWRITTEN - AR]:
+    Already paid appraisal separate. Remove from CD. Fix this.
+    
+    ---------------------------------------------------------------------------
+    CREDITS:
+    Earnest Money Deposit:                              $  1,000.00
+    Seller Credit:                                      $  2,500.00
+    Gift from Grandmother (M. Johnson):                 $  2,000.00  (letter pending)
+    ---------------------------------------------------------------------------
+
+========================================================================================================
+BORROWER SIGNATURES
+========================================================================================================
+
+    By signing below, I/we acknowledge receipt of this Closing Disclosure and confirm 
+    that I/we have reviewed the terms disclosed herein.
+
+    _________________________________                    ___________________
+    [SIGNATURE]  Marcus D. Johnson                      Date
+
+    _________________________________                    ___________________
+    [SIGNATURE]  Imani R. Johnson                       Date
+
+========================================================================================================
+[STAMP]: RECEIVED AND REVIEWED BY BORROWERS - COPY PROVIDED
+========================================================================================================

@@ -1,0 +1,129 @@
+================================================================================
+              VERIFICATION OF EMPLOYMENT - SELF-EMPLOYED
+                    CPA LETTER / BUSINESS INCOME VERIFICATION
+================================================================================
+
+  LOAN #:                     INF-2026-33821
+  BORROWER:                   Sarah Michelle Thompson
+  BUSINESS NAME:              SMT Design Studio
+  REQUEST DATE:               March 10, 2026
+  REQUESTED BY:               InsureFlow National Mortgage
+
+================================================================================
+CPA CERTIFICATION LETTER
+================================================================================
+
+March 15, 2026
+
+To: InsureFlow National Mortgage
+    Attn: Underwriting Department
+    555 Financial Parkway, Suite 300
+    Chicago, IL 60606
+
+RE: Verification of Self-Employment Income
+    Borrower: Sarah M. Thompson (SSN: XXX-XX-6731)
+    Business: SMT Design Studio, 1420 Creative Arts Blvd, Suite 204
+              Springfield, IL 62704
+
+Dear Underwriter,
+
+I am a Certified Public Accountant licensed in the State of Illinois (License
+# CPA-IL-44821) and I have been the tax preparer and accountant for SMT Design
+Studio since its inception in 2020. I have prepared the following summary of
+the business's income based on filed tax returns (Schedule C and supporting
+documentation):
+
+BUSINESS INFORMATION:
+
+  Business Name:              SMT Design Studio
+  Business Type:              Sole Proprietorship
+  Business Address:           1420 Creative Arts Blvd, Suite 204
+                              Springfield, IL 62704
+  Year Established:           2020
+  Current Status:             Active and in good standing
+  Nature of Business:         Graphic design, branding, web design services
+
+INCOME HISTORY (from filed federal tax returns):
+
+  Tax Year 2022:
+    Gross Receipts:           $78,400.00
+    Business Expenses:        $26,200.00
+    Net Income:               $52,200.00
+
+  Tax Year 2023:
+    Gross Receipts:           $82,100.00
+    Business Expenses:        $28,400.00
+    Net Income:               $53,700.00
+
+  Tax Year 2024:
+    Gross Receipts:           $85,200.00
+    Business Expenses:        $30,600.00
+    Net Income:               $54,600.00  <---- FINAL FIGURE PER 2024 TAX RETURN
+                                                      (filed 03/10/2026)
+
+  3-YEAR AVERAGE NET INCOME:  $53,500.00  ($4,458.33/mo)
+
+CERTIFICATION:
+
+I certify that the above information accurately reflects the income of
+SMT Design Studio as reported on the business's filed federal income tax
+returns for the stated years. The business has been continuously operating
+since 2020, is viable, and is ongoing. To the best of my knowledge, there
+are no indications that the business operations will cease or materially
+change in the foreseeable future.
+
+The 2024 tax return (Form 1040, Schedule C, Schedule SE) was filed with the
+IRS on March 10, 2026. Copies are attached.
+
+Sincerely,
+
+/s/ Mark Sullivan
+
+Mark Sullivan, CPA
+Sullivan & Associates, PC
+1500 Financial Drive, Suite 400
+Springfield, IL 62704
+(555) 234-7766
+License #: CPA-IL-44821
+
+================================================================================
+
+                        [CPA FIRM STAMP]
+ =================================================================
+                    SULLIVAN & ASSOCIATES, PC
+                    CERTIFIED PUBLIC ACCOUNTANTS
+                    =================================
+                    LICENSE: CPA-IL-44821
+                    VERIFIED: 03/15/2026
+                    =================================
+
+================================================================================
+
+UNDERWRITER NOTES (HANDWRITTEN - blue pen):
+
+   Self-employed income calculation per FHLMC Guide:
+   
+   3yr avg net: $53,500 ÷ 12 = $4,458.33/mo
+   
+   BUT - this is sole prop. Must also consider:
+   - Business is ongoing > 5 years ✔
+   - Consistent upward trend ✔
+   - CPA letter on file ✔
+   - Tax returns verified (1040 + Sch C) ✔
+   
+   Used: $4,550/mo (UW rounded down slightly for conservatism)
+   
+   Combined qualifying income:
+   John: $10,625/mo (base + bonus avg)
+   Sarah: $4,550/mo
+   TOTAL: $15,175/mo
+   
+   - J. Mitchell 03/16/2026
+   
+================================================================================
+
+>> FAX TRANSMISSION: 03/15/2026 10:30:00 CST
+>> FROM: SULLIVAN & ASSOCIATES, PC (555-234-7767)
+>> TO: INSUREFLOW NATIONAL MORTGAGE (555-234-8900)
+>> PAGES: 3 (INCL COVER + ATTACHMENTS)
+>> STATUS: COMPLETE

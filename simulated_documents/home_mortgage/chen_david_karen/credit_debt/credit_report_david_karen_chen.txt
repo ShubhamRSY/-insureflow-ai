@@ -1,0 +1,197 @@
+======================================================================
+                    CREDIT REPORT
+                Merged File - 3 Bureau
+======================================================================
+REPORT ORDERED: 03/28/2026
+REPORT NUMBER: CR-38472910-CM
+BORROWER: DAVID CHEN                        CO-BORROWER: KAREN CHEN
+SSN: XXX-XX-4821                            SSN: XXX-XX-6730
+DOB: 04/15/1987                             DOB: 09/22/1988
+
+======================================================================
+CREDIT SCORES
+======================================================================
+                  BORROWER (DAVID)   CO-BORROWER (KAREN)
+Experian:         814                 800
+TransUnion:       810                 796
+Equifax:          812                 798
+  -----------     ---                 ---
+  MID SCORE:      812                 798
+  -----------     ---                 ---
+  
+SCORE FACTORS (DAVID):
+  - Excellent payment history (oldest trade: 17 yrs)
+  - Low credit utilization (1% overall)
+  - Average age of accounts: 12.4 years
+  - No derogatory marks
+  - 1 inquiry in last 24 months (current mortgage)
+
+SCORE FACTORS (KAREN):
+  - Excellent payment history
+  - Low credit utilization (2%)
+  - Average age of accounts: 9.8 years
+  - No derogatory marks
+  - 2 inquiries in last 24 months (auto loan + current mortgage)
+
+======================================================================
+PERSONAL INFORMATION
+======================================================================
+DAVID CHEN:
+  Current: 1242 Hillcrest Drive, Springfield, IL 62704 (since 2018)
+  Previous: 892 Oakwood Lane, Springfield, IL 62702 (2013-2018)
+  Employer: MedTech Solutions Inc. (verified)
+  Previous: Biomedix Inc. (2010-2018)
+
+KAREN CHEN:
+  Current: 1242 Hillcrest Drive, Springfield, IL 62704 (since 2018)
+  Previous: 310 Pine Street #305, Springfield, IL 62701 (2015-2018)
+  Employer: PharmaCare LLC (verified)
+  Previous: Midwest Health Systems (2012-2018)
+
+======================================================================
+TRADE LINE SUMMARY
+======================================================================
+                  DAVID CHEN                        KAREN CHEN
+                  ----------                        ----------
+OPEN ACCOUNTS:    6                                 6
+CLOSED:           3                                 2
+INSTALLMENT:      3 (MORTGAGE, MERCEDES, AUDI)      2 (AUDI JOINT, MERCEDES JOINT)
+REVOLVING:        3 (AMEX, CHASE SAPPHIRE, COSTCO)  4 (AMEX JOINT, CHASE JOINT, 
+                                                        COSTCO JOINT, BLOOMINGDALES)
+TOTAL BALANCES:   $735,284                          $735,284 (JOINT - SAME ACCOUNTS)
+AVAILABLE CREDIT: $98,000                           $98,000
+UTILIZATION:      1%                                1%
+PAYMENT STATUS:   ALL PAID AS AGREED                ALL PAID AS AGREED
+DEROGATORY:       NONE                              NONE
+PUBLIC RECORDS:   NONE                              NONE
+COLLECTIONS:      NONE                              NONE
+
+======================================================================
+DETAILED TRADE LINES - ALL OPEN
+======================================================================
+
+--- MORTGAGE ---
+ACCOUNT #:     XXXX-3381
+TYPE:          Conventional Mortgage - 30 Year Fixed
+OPENED:        06/15/2018 (7 years 9 months)
+CREDIT LIMIT:  N/A (original $680,000)
+BALANCE:       $650,000 as of 03/01/2026
+PAYMENT:       $4,380/month (PITI)
+STATUS:        PAID AS AGREED / NEVER LATE (84 months on-time)
+30/60/90:      0 / 0 / 0
+BORROWERS:     DAVID & KAREN (JOINT)
+
+--- MERCEDES-BENZ FINANCIAL (MERCEDES GLE 350) ---
+ACCOUNT #:     XXXX-1123
+TYPE:          Auto Loan - Installment
+OPENED:        01/15/2024 (2 years 2 months)
+LOAN AMOUNT:   $65,000 (original)
+BALANCE:       $48,000
+PAYMENT:       $912/month
+STATUS:        PAID AS AGREED / NEVER LATE
+30/60/90:      0 / 0 / 0
+BORROWERS:     DAVID (PRIMARY) / KAREN (CO-SIGNER)
+[HANDWRITTEN: "2024 GLE 350. Nice car. 5.49% APR. 26 payments on time."]
+
+--- AUDI FINANCIAL (AUDI Q5) ---
+ACCOUNT #:     XXXX-7894
+TYPE:          Auto Loan - Installment
+OPENED:        08/12/2023 (2 years 7 months)
+LOAN AMOUNT:   $55,000 (original)
+BALANCE:       $37,000
+PAYMENT:       $740/month
+STATUS:        PAID AS AGREED / NEVER LATE
+30/60/90:      0 / 0 / 0
+BORROWERS:     KAREN (PRIMARY) / DAVID (CO-SIGNER)
+[HANDWRITTEN: "2023 Q5. 5.99% APR. 31 payments on time."]
+
+--- AMERICAN EXPRESS PLATINUM ---
+ACCOUNT #:     XXXX-410004
+TYPE:          Charge Card (no preset limit - pay in full)
+OPENED:        08/2015 (10 years 7 months)
+HIGH BALANCE:  $8,400 (Feb 2026 - vacation)
+BALANCE:       $0 (PIF monthly)
+STATUS:        PAID AS AGREED / NEVER LATE
+BORROWERS:     DAVID (PRIMARY) / KAREN (ADDITIONAL CARD)
+
+--- CHASE SAPPHIRE RESERVE ---
+ACCOUNT #:     XXXX-8821
+TYPE:          Visa Infinite - Revolving
+CREDIT LIMIT:  $35,000
+OPENED:        06/2019 (6 years 9 months)
+BALANCE:       $0 (PIF monthly)
+PAYMENT:       $3,200 (last month - PIF)
+STATUS:        PAID AS AGREED / NEVER LATE
+BORROWERS:     DAVID (PRIMARY) / KAREN (ADDITIONAL)
+
+--- COSTCO CITI VISA ---
+ACCOUNT #:     XXXX-5592
+TYPE:          Visa - Revolving
+CREDIT LIMIT:  $15,000
+OPENED:        02/2020 (6 years 1 month)
+BALANCE:       $0 (PIF monthly)
+STATUS:        PAID AS AGREED / NEVER LATE
+BORROWERS:     DAVID (PRIMARY)
+
+--- BLOOMINGDALE'S (KAREN ONLY) ---
+ACCOUNT #:     XXXX-8830
+TYPE:          Store Card - Revolving
+CREDIT LIMIT:  $5,000
+OPENED:        11/2022 (3 years 4 months)
+BALANCE:       $780 (currently - see note)
+PAYMENT:       $35/month (or PIF)
+STATUS:        PAID AS AGREED / NEVER LATE
+BORROWERS:     KAREN (SOLE)
+[HANDWRITTEN: "Bloomingdale's. $780 balance. Probably just a small balance 
+ from clothes shopping. Not a concern. Utilization on this card: 15.6%."]
+
+--- AMAZON PRIME VISA (CLOSED) ---
+ACCOUNT #:     XXXX-7720
+TYPE:          Visa - Revolving (CLOSED BY CONSUMER 08/2024)
+LIMIT:         $12,000
+BALANCE:       $0
+STATUS:        CLOSED / PAID AS AGREED
+
+--- STUDENT LOAN (KAREN - PAID OFF 2021, CLOSED) ---
+ACCOUNT #:     XXXX-3340
+TYPE:          Student Loan - Installment
+BALANCE:       $0 (PAID IN FULL 06/2021)
+STATUS:        CLOSED / PAID AS AGREED (NEVER LATE)
+
+======================================================================
+INQUIRIES
+======================================================================
+  BORROWER (DAVID):
+    03/15/2026  CHASE MORTGAGE (current refinance)
+    02/20/2026  VISA (pre-approval - no account opened)
+    
+  CO-BORROWER (KAREN):
+    03/15/2026  CHASE MORTGAGE (current refinance)
+    07/12/2025  BLOOMINGDALE'S (CLI increase - approved)
+
+[HANDWRITTEN: "Only 1 hard inquiry each for mortgage. The 02/20 on David 
+ was a pre-approval. Explain? Might need to ask borrower. Otherwise clean."]
+
+======================================================================
+PUBLIC RECORDS / COLLECTIONS / JUDGMENTS
+======================================================================
+  NONE FOUND - CLEAN
+
+======================================================================
+SUMMARY & RECOMMENDATION
+======================================================================
+  CREDIT ANALYSIS:
+  - Both borrowers have EXCELLENT credit (>780)
+  - No late payments EVER on any account (15+ years combined history)
+  - Revolving accounts paid in full monthly (no carried balance except 
+    Bloomingdale's $780 - trivial)
+  - Installment accounts current and on-time
+  - Low utilization across all accounts
+  - 1 mortgage inquiry only for this transaction
+  - No derogatory marks, collections, BKs, foreclosures
+  
+  CREDIT RECOMMENDATION: APPROVED
+  Meets Fannie Mae/Freddie Mac standards for conventional financing.
+  Use MID score of 812 (David) and 798 (Karen) for qualification.
+  
+======================================================================

@@ -303,3 +303,131 @@ curl -X POST http://localhost:8000/auth/users \
 python -m pytest tests/ -q
 # 153 passed
 ```
+
+## Mortgage Underwriting Module
+
+### Overview
+A fully functional mortgage underwriting module that supports both residential and commercial mortgage loan packages. The module features LLM-powered agents, LangGraph orchestration with human-in-the-loop, fraud detection, PII redaction, and Celery async workers.
+
+### Architecture
+
+```asciidoc
+Mortgage Documents → Classifier → Extractors → Reconciliation → Compliance → Specialist Agents → Decision
+                                                                                    ↓
+                                                                            Fraud Detection
+                                                                                    ↓
+                                                                          Human-in-the-Loop
+                                                                                    ↓
+                                                                          Audit Trail (persisted)
+```
+
+### Key Components
+
+| Component | Description |
+|-----------|-------------|
+| `MortgagePipeline` | End-to-end linear pipeline for document processing |
+| `MortgagePipelineGraph` | LangGraph orchestrated pipeline with human-in-the-loop |
+| `MortgageSupervisorAgent` | Coordinates 5 specialist agents (income, credit, assets, collateral, fraud) |
+| `MortgageFraudDetectionAgent` | Rule-based + LLM fraud red flags |
+| `MortgageComplianceEngine` | 7+ bank compliance rules (credit score, DTI, LTV, DSCR, etc.) |
+| `MortgageReconciliationEngine` | Cross-document validation (W-2 vs 1040, appraisal vs purchase) |
+| `MortgageAuditLogger` | Full audit trail persisted to JSON |
+| `PIIRedactor` | PII detection and redaction (SSN, DOB, bank accounts, etc.) |
+| `MortgageLLMExtractor` | LLM-assisted extraction for messy/handwritten documents |
+| `MortgageSubmissionLoader` | Document loading from files, directories, or API payloads |
+
+### Document Types
+
+The classifier supports 50+ mortgage document types including:
+- Income: W-2, Pay Stubs, Tax Returns (1040, 1065), Profit & Loss, Schedule C
+- Assets: Bank Statements, Investment Statements, Retirement (401k), Gift Letters
+- Credit: Credit Reports, Credit Card Statements, Auto/Student Loan Statements
+- Property: Appraisals (Residential & Commercial), Purchase Agreements, Surveys, Zoning
+- Legal: Divorce Decrees, Corporate Governance, Operating Agreements
+- Commercial: Rent Rolls, Leases, Estoppels, Operating Statements, Business Credit
+- **Underwriting (NEW)**: Form 1003/URLA, Pre-Approval Letters, Flood Zone Certs, Title Commitments, VOE, VOD, Hazard Insurance Declarations, Property Tax Bills, UW Approval Memos, Closing Disclosures, Loan Estimates
+
+### Supported Borrower Scenarios
+
+#### Home Mortgage (6 scenarios)
+| Borrower | Profile | Expected Decision |
+|----------|---------|-------------------|
+| John & Sarah Thompson | W-2 salaried, good credit (740+), 20% down | Approve |
+| Maria Rodriguez | FTHB teacher, gift funds, 678 credit | Refer |
+| David & Karen Chen | Jumbo refi, high earners, 800+ credit | Approve |
+| James Wilson | Self-employed GC, 203k renovation, 645 credit | Suspend |
+| Marcus & Imani Johnson | Young couple, USDA rural, first child | Refer |
+| Lisa Patel | Divorcee cash-out refi, asset-heavy, 760 credit | Approve |
+
+#### Commercial Mortgage (4 scenarios)
+| Entity | Property Type | Loan Purpose |
+|--------|---------------|--------------|
+| Thompson Commercial Properties | Mixed-use retail/office | $2.3M acquisition |
+| Oak Street Retail LLC | NNN Walgreens | $3.8M acquisition |
+| Midwest Medical Plaza LLC | Medical office | $4.2M refinance |
+| Riverbend Self Storage LLC | Self-storage (65k SF) | Construction loan |
+
+### API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/mortgage/pipeline/run` | POST | Submit mortgage documents for processing |
+| `/mortgage/pipeline/jobs` | GET | List all mortgage processing jobs |
+| `/mortgage/pipeline/jobs/{job_id}` | GET | Get job status and results |
+| `/mortgage/pipeline/jobs/{job_id}` | DELETE | Delete a mortgage job |
+| `/mortgage/audit/{bundle_id}` | GET | Retrieve audit trail for a completed run |
+
+### CLI Usage
+
+```bash
+# Process a directory of mortgage documents
+insureflow mortgage --dir simulated_documents/home_mortgage
+
+# Process per-borrower packages
+insureflow mortgage-borrowers --dir simulated_documents/home_mortgage
+
+# Process commercial mortgages
+insureflow mortgage --dir simulated_documents/commercial_mortgage --product commercial
+
+# Include detailed output
+insureflow mortgage --dir simulated_documents/home_mortgage --detailed
+
+# Disable LLM extraction
+insureflow mortgage --dir simulated_documents/home_mortgage --no-llm
+```
+
+### LangGraph Pipeline
+
+```python
+from insureflow.mortgage.graph import build_mortgage_pipeline_graph
+
+graph = build_mortgage_pipeline_graph()
+state = {
+    "raw_documents": [{"filename": "w2.txt", "content": "..."}],
+    "bundle_id": "my-loan-001",
+}
+result = graph.run(state)
+```
+
+### Celery Async Processing
+
+```bash
+# Start mortgage worker
+celery -A insureflow.tasks.celery_app worker -Q mortgage -l info
+
+# Submit processing job
+from insureflow.tasks.mortgage_tasks import run_mortgage_pipeline
+result = run_mortgage_pipeline.delay(documents_data, bundle_id="my-loan")
+```
+
+### MCP Tools
+
+The MCP server exposes 4 mortgage-specific tools:
+- `assess_mortgage_risk` — evaluate credit/DTI/LTV/reserves
+- `query_mortgage_guidelines` — search UW guidelines
+- `run_mortgage_pipeline` — execute full pipeline
+- `calculate_mortgage_metrics` — compute payment/affordability
+
+### Simulated Document Portfolio
+
+233 files across 10 borrower scenarios (1.8MB total) in the `simulated_documents/` directory for testing and development.

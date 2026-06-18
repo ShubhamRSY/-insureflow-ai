@@ -1,0 +1,47 @@
+============================================================================
+                    RENT ROLL SUMMARY
+               Oak Street Retail LLC - 8900 Oak Street
+                Springfield, IL 62705
+                As of March 1, 2026
+============================================================================
+
+Prepared by:    Sullivan Real Estate Management (self-managed)
+Contact:        Greg Sullivan, (217) 555-0192
+============================================================================
+
+TOTAL BUILDING SF:     14,200 SF
+TOTAL RENTABLE SF:     14,200 SF
+NUMBER OF TENANTS:     1
+OCCUPANCY:             100%
+NUMBER OF UNITS:       1
+
+============================================================================
+TENANT          SUITE    SF     LEASE TYPE     RENT/MO     RENT/SF   LEASE END
+============================================================================
+Walgreens        100    14,200  NNN            $23,750.00   $20.07/yr  06/30/2036
+-------------------------------------------------------------------------------
+TOTAL                   14,200                 $23,750.00
+============================================================================
+
+Additional Rent Information:
+
+  Current Base Rent:               $23,750.00/mo ($285,000.00/yr)
+  Scheduled Increase 07/01/2026:   $26,125.00/mo ($313,500.00/yr)  [10% bump]
+  Scheduled Increase 07/01/2031:   $28,737.50/mo ($344,850.00/yr)  [10% bump]
+
+  CAM Reimbursement:               N/A - NNN (tenant pays all expenses directly)
+
+  [NOTE: Tenant pays ALL expenses directly. No landlord obligations.
+   Real estate taxes paid by tenant via direct billing from County.
+   Insurance paid by tenant under Walgreens corporate program.]
+
+============================================================================
+
+   [Handwritten at bottom:]
+   "Single tenant - easy underwrite. Triple net - no expense risk to LL.
+    Walgreens Boots Alliance guarantee. Rent bump in 90 days - factor into
+    cash flow. DSCR at current rent = 1.35x. At new rent = 1.48x. Solid.
+    - John M."
+
+   [Stamped:]   VERIFIED AGAINST LEASE - 3/10/26 - LK
+============================================================================

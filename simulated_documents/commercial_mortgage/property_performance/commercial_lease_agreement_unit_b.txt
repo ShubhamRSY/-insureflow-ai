@@ -1,0 +1,39 @@
+══════════════════════════════════════════════════════════════════════════════
+                    COMMERCIAL LEASE AGREEMENT (NNN)
+                         ILLINOIS - STANDARD FORM
+══════════════════════════════════════════════════════════════════════════════
+
+  LEASE DATE:       May 1, 2022
+  PROPERTY:         5678 Commerce Boulevard, Unit B (4,000 SF Retail)
+
+  LANDLORD:         Thompson Commercial Properties LLC
+                    1234 Maple Drive, Springfield, IL 62701
+
+  TENANT:           Springfield Dry Cleaners Inc.
+                    4482 Maple Avenue, Springfield, IL 62701
+                    Attn: James Park, President
+
+  TERM:             7 years (06/01/2022 - 05/31/2029)
+  RENEWAL:          One (1) option for 5 years
+
+  BASE RENT:        $3,800.00/mo | $11.40/SF/yr | NNN
+  ESCALATION:       2.5% annual (next: 06/01/2026 -> $3,895/mo)
+  SECURITY DEPOSIT: $7,600.00 (2 months)
+
+  USE:              Dry cleaning / garment care / laundry services
+                    Tenant shall install and maintain appropriate
+                    ventilation, waste water treatment, and solvent
+                    containment systems per environmental regs.
+
+  LANDLORD TI:      $25,000 TI allowance. Tenant completed buildout
+                    including vent system, dry cleaning track, front
+                    counter. Completed per permit #B-2022-04418.
+
+  INSURANCE:        GL $2M/$4M, WC statutory, Pollution Liability $1M
+  HAZMAT:           Tenant responsible for all hazmat compliance
+                    (perchloroethylene alternative - hydrocarbon system)
+
+  /s/ John A. Thompson                     /s/ James Park
+  ─────────────────────────────────────    ──────────────────────────
+  Landlord                                 Tenant (President)
+══════════════════════════════════════════════════════════════════════════════

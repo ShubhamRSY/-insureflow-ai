@@ -1,0 +1,97 @@
+========================================================================================
+              CREDIT UNION OF CENTRAL ILLINOIS - CHECKING ACCOUNT STATEMENT
+========================================================================================
+
+  Account Number:  *****4821                  Statement Period: 03/01/2026 - 03/31/2026
+  Account Type:    Rewards Checking            Statement Date:   04/01/2026
+  Members:         Marcus D. Johnson & Imani R. Johnson
+  Address:         1234 Maple Creek Road, Rural Route 1, Clear Creek, IL 62719
+
+========================================================================================
+  ACCOUNT SUMMARY
+----------------------------------------------------------------------------------------
+  Beginning Balance (03/01/2026):                  $4,227.58
+  Total Deposits (Credits):                         $5,899.47
+  Total Withdrawals (Debits):                       ($5,328.22)
+  Ending Balance (03/31/2026):                      $4,798.83
+
+========================================================================================
+  TRANSACTION HISTORY
+----------------------------------------------------------------------------------------
+  Date        Description                                                      Amount      Balance
+  --------    -----------------------------------------------------------------  ---------   ---------
+  03/02       Beginning Balance                                                               $4,227.58
+  03/02       Direct Deposit - USPS Payroll (Marcus)                           $1,835.18    $6,062.76
+  03/02       Debit - Shell Gas #2143 / Clear Creek IL                           ($47.50)   $6,015.26
+  03/03       Debit - Casey's General Store / Clear Creek IL                    ($32.80)   $5,982.46
+  03/03       ACH - TSP Auto Debit (Marcus)                                    ($149.39)   $5,833.07
+  03/04       Debit - Walmart / Springfield IL                                  ($187.43)   $5,645.64
+  03/05       Online Transfer - Marcus to Savings                              ($250.00)   $5,395.64
+  03/06       Debit - McDonald's / Springfield IL                                ($12.67)   $5,382.97
+  03/07       Debit - Amazon.com / Prime Membership                              ($14.99)   $5,367.98
+  03/07       Debit - Amazon.com / Diapers & Baby Items                         ($68.42)   $5,299.56
+  03/08       Debit - Kroger / Springfield IL                                   ($84.30)   $5,215.26
+  03/09       Debit - Amazon.com / Baby Registry Item                          ($35.99)   $5,179.27
+  03/10       Direct Deposit - Springfield Memorial (Imani)                    $1,440.15   $6,619.42
+  03/10       ACH - TSP Auto Debit (Marcus)                                    ($149.39)   $6,470.03
+  03/11       ACH - Ford Motor Credit / Car Payment                             ($415.00)   $6,055.03
+  03/12       ACH - Navient / Student Loan Payment                             ($210.00)   $5,845.03
+  03/12       ACH - Chase Credit Card / Min Payment                             ($65.00)   $5,780.03
+  03/13       Debit - Casey's Gas / Clear Creek IL                              ($38.50)   $5,741.53
+  03/13       Debit - Jimmy John's / Springfield IL                             ($11.39)   $5,730.14
+  03/14       Debit - Schnucks / Springfield IL                                ($156.80)   $5,573.34
+  03/15       Check #1104 - Oak Creek Rental Property (RENT)                   ($950.00)   $4,623.34
+  03/16       ATM Withdrawal - Credit Union ATM / Clear Creek                   ($100.00)   $4,523.34
+  03/17       Debit - Family Dollar / Clear Creek IL                            ($23.50)   $4,499.84
+  03/18       Debit - Amazon.com / Baby Items                                   ($52.30)   $4,447.54
+  03/19       Debit - BP Gas / Springfield IL                                   ($44.60)   $4,402.94
+  03/20       Online Transfer - Marcus to Savings                              ($300.00)   $4,102.94
+  03/21       Direct Deposit - USPS Payroll (Marcus)                           $1,835.18    $5,938.12
+  03/22       Debit - Target / Springfield IL                                  ($129.47)   $5,808.65
+  03/23       Debit - Starbucks / Springfield IL                                 ($5.85)   $5,802.80
+  03/24       Debit - Pizza Hut / Clear Creek IL                                ($28.99)   $5,773.81
+  03/25       ACH - Ford Motor Credit / Car Payment                             ($415.00)   $5,358.81
+  03/26       ACH - Navient / Student Loan Payment                             ($210.00)   $5,148.81
+  03/27       ACH - Chase Credit Card / Payment                                ($200.00)   $4,948.81
+  03/28       Debit - Kroger / Springfield IL                                   ($92.40)   $4,856.41
+  03/29       Debit - Amazon.com / Maternity Clothes                            ($45.78)   $4,810.63
+  03/30       Online Transfer - Marcus to Savings                              ($200.00)   $4,610.63
+  03/31       Debit - Casey's Gas / Clear Creek IL                              ($42.00)   $4,568.63
+  03/31       ATM Fee - Non-Credit Union ATM (truck stop)                        ($3.50)   $4,565.13
+  03/31       Monthly Service Fee (Rewards Checking)                             ($0.00)   $4,565.13
+  03/31       Dividend (Interest) Earned                                         ($0.33)   $4,565.46
+
+========================================================================================
+  OVERDRAFT / NSF HISTORY (PRIOR MONTHS)
+----------------------------------------------------------------------------------------
+  DATE         DESCRIPTION                                          AMOUNT
+  --------     ------------------------------------------------    -------
+  12/05/2025   NSF Fee - Debit declined (insufficient funds)        $25.00
+  12/05/2025   NSF Reversal - Deposit cleared next day              $0.00
+  12/18/2025   NSF Fee - Debit declined (Amazon - holiday)          $25.00
+  12/18/2025   NSF Reversal - Deposit cleared next day              $0.00
+
+  *** EXPLANATION: Overdrafts in Dec 2025 due to holiday spending and 
+  *** timing of payroll deposits. No overdrafts since. Account currently in good standing.
+  *** Marcus and Imani have been better about budgeting since the baby on the way.
+
+========================================================================================
+  DIRECT DEPOSITS SET UP:
+  - United States Postal Service (Marcus Johnson): Biweekly ~$1,835.18
+  - Springfield Memorial Hospital (Imani Johnson): Biweekly ~$1,440.15
+
+  AUTO DEBITS SET UP:
+  - TSP Deferral (Marcus): $149.39 per pay period (5% traditional)
+  - Ford Motor Credit: $415.00 monthly (due 11th)
+  - Navient (Student Loan): $210.00 monthly (due 12th)
+  - Chase Credit Card: $65.00 minimum + extra payments
+
+========================================================================================
+  *** PROCESSOR NOTES: Checking account is primary account for all bill payments.
+  *** Rent check #1104 paid 03/15 - $950/mo. They rent from Oak Creek Properties.
+  *** Looking at spending patterns: groceries ~$300-400/mo, gas ~$150-200/mo,
+  *** baby-related purchases increasing (diapers, baby items, registry, maternity).
+  *** NSF history: 2 insufficient fund events in Dec 2025, none since.
+  *** Stable direct deposits - consistent biweekly payroll.
+  *** Average collected balance for past 3 months: ~$4,200
+========================================================================================

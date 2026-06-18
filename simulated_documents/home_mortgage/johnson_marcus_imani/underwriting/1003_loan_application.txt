@@ -1,0 +1,183 @@
+========================================================================================================
+                       UNIFORM RESIDENTIAL LOAN APPLICATION  -  FANNIE MAE FORM 1003
+                                  (USDA RURAL DEVELOPMENT ADAPTATION)
+========================================================================================================
+
+    Loan #: IF-USDA-02262026-003                                                    Date: 02/05/2026
+    Branch: Springfield, IL                                                        Loan Officer: A. Reyes
+    Purpose: X Purchase   ___ Refinance   ___ Construction
+    Property will be: X Primary Residence   ___ Secondary   ___ Investment
+
+========================================================================================================
+SECTION 1: TYPE OF MORTGAGE AND TERMS
+========================================================================================================
+
+    X USDA Rural Development Guaranteed (RD 502)
+    
+    Loan Amount: $275,000.00           Interest Rate: 6.500%
+    Amortization Type: Fixed           Term: 30 Years
+    LTV: 100.00%                       
+    No Down Payment                      
+
+========================================================================================================
+SECTION 2: BORROWER INFORMATION
+========================================================================================================
+
+    BORROWER:                                      CO-BORROWER:
+    Name: Johnson, Marcus Darnell                  Name: Johnson, Imani Renee
+    SSN: XXX-XX-3847                               SSN: XXX-XX-5561
+    DOB: 04/17/1993 (Age 32)                       DOB: 09/08/1995 (Age 30)
+    Status: Married                                Status: Married
+    Dependents: 1 (expected Aug 2026)              Dependents: same
+    
+    Current Address:                               Current Address:
+    1423 West Oak Street (Rent)                    1423 West Oak Street (Rent)
+    Springfield, IL 62704                          Springfield, IL 62704
+    Years There: 2                                  Years There: 2
+    Landlord: Oak Street Properties                 Landlord: same
+    Rent: $1,200/mo                                Rent: same
+    
+    Home Phone: (217) 555-3847                     Cell: (217) 555-5561
+    Email: marcus.johnson@email.com                Email: imani.johnson@email.com
+
+========================================================================================================
+SECTION 3: EMPLOYMENT INFORMATION
+========================================================================================================
+
+    BORROWER:                                      CO-BORROWER:
+    Employer: USPS - United States Postal Service   Employer: Springfield Memorial Hospital
+    Address: 200 W. Washington St                   Address: 800 N. 1st Street
+             Springfield, IL 62701                           Springfield, IL 62701
+    Phone: (217) 555-2300                           Phone: (217) 555-4400
+    
+    Position/Title: City Mail Carrier               Position/Title: Registered Nurse
+    Years on Job: 3 yrs (since 03/2022)             Years on Job: 2 yrs (since 06/2023)
+    Full/Part Time: Full-Time                       Full/Part Time: Part-Time (0.6 FTE)
+    
+    Gross Monthly Income: $5,666.67                 Gross Monthly Income: $3,750.00
+    Annual Salary: $68,000.00                       Annual YTD: $45,000.00
+                                                    Hourly Rate: $36.50/hr
+
+========================================================================================================
+SECTION 4: MONTHLY INCOME
+========================================================================================================
+
+    BORROWER:
+    Base Employment Income:                    $5,666.67
+    Overtime (avg monthly):                    $    0.00  (USPS OT not guaranteed)
+    Bonuses/Commissions:                       $    0.00
+    ------------------------------------------ -----------
+    Total Monthly Income (Borrower):           $5,666.67
+
+    CO-BORROWER:
+    Base Employment Income (0.6 FTE):          $3,750.00
+    ------------------------------------------ -----------
+    Total Monthly Income (Co-Borrower):        $3,750.00
+    
+    COMBINED MONTHLY INCOME:                   $9,416.67
+    COMBINED ANNUAL INCOME:                    $113,000.00
+
+========================================================================================================
+SECTION 5: MONTHLY HOUSING EXPENSE PROPOSED
+========================================================================================================
+
+    Principal & Interest:                      $1,739.27
+    Property Taxes (est):                      $  246.00
+    Homeowner's Insurance (est):               $   75.00
+    USDA Annual Fee (0.35%):                   $   80.21
+    ----------------------------------------------------
+    TOTAL HOUSING PAYMENT:                     $2,140.48
+
+========================================================================================================
+SECTION 6: ASSETS
+========================================================================================================
+
+    DESCRIPTION                                         VALUE              INSTITUTION
+    -------------------------------------------------  -----------        -------------------------
+    Checking Account                                    $  4,798.00        Credit Union of Central IL
+    Savings Account                                     $ 17,975.00        Credit Union of Central IL
+    2019 Honda Civic (KBB est)                          $  8,500.00        N/A (vehicle)
+    -------------------------                           -----------
+    TOTAL ASSETS:                                       $ 31,273.00
+    TOTAL LIQUID ASSETS (excluding vehicle):            $ 22,773.00
+
+========================================================================================================
+SECTION 7: DEBTS AND LIABILITIES
+========================================================================================================
+
+    CREDITOR                          TYPE              BALANCE         MONTHLY PAYMENT
+    -------------------------------   -------------    -------------   -----------------
+    Chase Auto Loan                   Auto             $22,400.00      $  485.00
+    (2022 Honda Civic - Marcus)
+    
+    Sallie Mae Student Loans          Student Loan     $31,000.00      $  315.00
+    (Marcus - consolidated)
+    
+    Sallie Mae Student Loans          Student Loan     $ 5,000.00      $  110.00
+    (Imani - nursing school)
+    
+    CareCredit (Imani)                 Medical          $     0.00      $    0.00
+    (Paid in Full - reported $0 bal)
+    
+    TOTAL LIABILITIES:                                  $58,400.00      $  910.00
+
+========================================================================================================
+SECTION 8: DECLARATIONS
+========================================================================================================
+
+    1.  Will you occupy the property as your primary residence?                  X Yes  ___ No
+    2.  Are you a U.S. Citizen?                                                  X Yes  ___ No
+        Marcus: X     Imani: X
+    3.  Have you had any property foreclosed upon in last 7 years?               ___ Yes X No
+    4.  Are you a party to any lawsuit?                                          ___ Yes X No
+    5.  Have you been declared bankrupt in last 7 years?                         ___ Yes X No
+    6.  Are any of the funds for closing borrowed from a source not disclosed?   ___ Yes X No
+        TBD - waiting on gift letter from grandma? - UW NOTE: FOLLOW UP
+    7.  Do you intend to occupy the property within 60 days of closing?          X Yes  ___ No
+    8.  Is this property in a rural area per USDA guidelines?                    X Yes  ___ No
+
+========================================================================================================
+SECTION 9: ACKNOWLEDGEMENT AND AGREEMENT
+========================================================================================================
+
+    I/We certify that the information provided in this application is true and correct to the best
+    of my/our knowledge. I/We understand that intentional misrepresentation may result in civil
+    liability and/or criminal penalties under 18 U.S.C. § 1014.
+
+    ___________________________                          02/05/2026
+    [SIGNATURE]  Marcus D. Johnson                       Date
+
+    ___________________________                          02/05/2026
+    [SIGNATURE]  Imani R. Johnson                        Date
+
+
+    STATE OF ILLINOIS               )
+                                    ) ss:
+    COUNTY OF SANGAMON              )
+    
+    On this 5th day of February, 2026, before me personally appeared MARCUS DARNELL JOHNSON and
+    IMANI RENEE JOHNSON, known to me (or satisfactorily proven) to be the persons whose names are
+    subscribed to the within instrument and acknowledged that they executed the same.
+    
+    WITNESS my hand and official seal.
+    
+    SEAL
+    [NOTARY STAMP]
+    _________________________
+    Patricia A. Miller
+    Notary Public, State of Illinois
+    My Commission Expires: 08/12/2028
+
+
+==================================== INTERNAL USE ONLY - UW COMMENTS ====================================
+
+    VERIFIED: Combined income $113K meets USDA eligibility < $128,650 for area.
+    VERIFIED: Credit scores pulled 02/04/2026 - Marcus 710 / Imani 720.
+    VERIFIED: Assets at $22,773 liquid. Sufficient for closing costs.
+    NOTE: Gift letter from grandmother (Margaret Johnson) for $2,000 - need signed letter.
+    NOTE: $0 down payment - USDA 100% financing. No PMI.
+    
+    INITIALED: AR  02/06/2026
+    REVIEWED: JW  02/07/2026  [UW SENIOR REVIEW - ALL GOOD PROCEED]
+    
+========================================================================================================

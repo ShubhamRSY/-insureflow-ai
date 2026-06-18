@@ -1,0 +1,76 @@
+══════════════════════════════════════════════════════════════════════════════
+          BANK OF SPRINGFIELD - PERSONAL CHECKING ACCOUNT STATEMENT
+══════════════════════════════════════════════════════════════════════════════
+
+Customer Name: JOHN A THOMPSON & SARAH M THOMPSON (JT TEN)
+Account Number: XXXX-XXXX-4872
+Statement Period: 04/01/2026 - 04/30/2026
+
+══════════════════════════════════════════════════════════════════════════════
+SUMMARY
+══════════════════════════════════════════════════════════════════════════════
+
+Beginning Balance on 04/01/2026                      $ 8,432.17
+
+Deposits and Other Credits (+)                       $12,850.00
+Checks and Other Debits (-)                          $13,216.45
+
+══════════════════════════════════════════════════════════════════════════════
+ENDING BALANCE AS OF 04/30/2026                      $ 8,065.72
+══════════════════════════════════════════════════════════════════════════════
+
+══════════════════════════════════════════════════════════════════════════════
+TRANSACTION DETAIL
+══════════════════════════════════════════════════════════════════════════════
+
+Date        Description                                              Amount      Balance
+──────────  ───────────────────────────────────────────────────────  ──────────  ──────────
+04/01/2026  Beginning Balance                                                     $8,432.17
+04/02/2026  DEPOSIT - PAYROLL - TECHCORP INC                       +$4,807.69   $13,239.86
+04/02/2026  ACH WITHDRAWAL - SPRINT MORTGAGE (AUTO-PAY)            -$1,850.00   $11,389.86
+04/03/2026  DEBIT CARD - KROGER #4271                              -$187.42     $11,202.44
+04/03/2026  DEBIT CARD - SHELL OIL #21839                          -$56.30      $11,146.14
+04/05/2026  CHECK #1043 - SPRINGFIELD UTILITIES                    -$214.78     $10,931.36
+04/06/2026  DEBIT CARD - AMAZON.COM                                -$89.97      $10,841.39
+04/07/2026  ACH DEPOSIT - SARAH THOMPSON DESIGN - CLIENT PAYMT     +$3,500.00   $14,341.39
+04/08/2026  CHECK #1044 - STATE FARM INSURANCE                     -$187.50     $14,153.89
+04/10/2026  TRANSFER - TO SAVINGS ACCT XXXX-2198 (ONLINE)          -$2,000.00   $12,153.89
+04/11/2026  DEBIT CARD - TARGET                                    -$234.16     $11,919.73
+04/12/2026  DEBIT CARD - NETFLIX                                   -$15.99      $11,903.74
+04/14/2026  DEPOSIT - PAYROLL - TECHCORP INC                       +$4,807.69   $16,711.43
+04/15/2026  CHECK #1045 - DISCOVER CARD PAYMENT                    -$350.00     $16,361.43
+04/16/2026  DEBIT CARD - COSTCO WHOLESALE                          -$312.80     $16,048.63
+04/18/2026  ACH WITHDRAWAL - COMCAST                              -$198.00     $15,850.63
+04/20/2026  DEBIT CARD - CHEVRON                                   -$62.15      $15,788.48
+04/21/2026  ATM WITHDRAWAL - WITHDRAWAL                           -$200.00     $15,588.48
+04/22/2026  CHECK #1046 - SARAH - AMEX PAYMENT                     -$425.00     $15,163.48
+04/24/2026  DEBIT CARD - WHOLE FOODS MARKET                        -$267.33     $14,896.15
+04/25/2026  INTEREST PAYMENT                                       +$4.23       $14,900.38
+04/26/2026  DEBIT CARD - DOMINO'S PIZZA                            -$42.99      $14,857.39
+04/27/2026  ACH DEPOSIT - SARAH THOMPSON DESIGN - LOGO PROJ        +$2,500.00   $17,357.39
+04/28/2026  CHECK #1047 - PAYPAL CREDIT                            -$300.00     $17,057.39
+04/29/2026  DEBIT CARD - WALMART                                  -$176.84     $16,880.55
+04/30/2026  DEBIT CARD - SPOTIFY                                  -$9.99       $16,870.56
+04/30/2026  SERVICE FEE (MONTHLY MAINTENANCE)                      -$14.95      $16,855.61
+04/30/2026  TRANSFER - FROM SAVINGS ACCT XXXX-2198                 -            $16,855.61
+           [TRANSFER REVERSED - INSUFFICIENT FUNDS - NSF FEE $35]
+           NSF FEE                                                  -$35.00     $16,820.61
+04/30/2026  TRANSFER - FROM SAVINGS ACCT XXXX-2198 (RETRY)        +$5,000.00   $21,820.61
+04/30/2026  TRFR - TO MONEY MARKET XXXX-5511                      -$13,754.89  $8,065.72
+══════════════════════════════════════════════════════════════════════════════
+
+══════════════════════════════════════════════════════════════════════════════
+ACCOUNT FEES THIS PERIOD: $49.95
+  Monthly Maintenance Fee: $14.95
+  NSF Fee (1 occurrence): $35.00
+══════════════════════════════════════════════════════════════════════════════
+
+OVERDRAFT PROTECTION TRANSFERS THIS PERIOD: 1
+══════════════════════════════════════════════════════════════════════════════
+
+** NOTE: MINIMUM BALANCE TO WAIVE MONTHLY FEE IS $10,000. AVERAGE
+   MONTHLY BALANCE WAS $9,847.23. PLEASE MAINTAIN MINIMUM BALANCE. **
+
+══════════════════════════════════════════════════════════════════════════════
+[STAMP] PROCESSED 05/02/2026  |  BANK OF SPRINGFIELD
+══════════════════════════════════════════════════════════════════════════════

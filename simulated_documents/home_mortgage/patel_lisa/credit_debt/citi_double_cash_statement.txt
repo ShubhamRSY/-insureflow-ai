@@ -1,0 +1,162 @@
+    ========================================================================
+                        CITI DOUBLE CASH CARD
+                           Monthly Statement
+
+    Account Number:        XXXX 8922
+    Payment Due Date:      May 14, 2026
+    Minimum Payment Due:   $250.00
+    New Balance:           $10,150.50
+    Credit Limit:          $15,000.00
+    Available Credit:      $4,849.50
+    Cash Advance Limit:    $3,000.00
+
+    Customer Service:      1-800-950-5114
+    Cash Back Rewards:     $203.01 (Earned — not yet redeemed)
+
+    BORROWER:              Lisa M. Sullivan (f/k/a Patel)
+                           555 Lake Shore Drive, Unit 12A
+                           Springfield, IL 62704
+
+    STATEMENT PERIOD:      March 20, 2026 - April 19, 2026
+
+    ========================================================================
+                          ACCOUNT SUMMARY
+    ========================================================================
+
+    Previous Balance:                                             $10,250.00
+    Payments & Credits:                                           ($250.00)
+    Purchases & Adjustments:                                      $495.50
+    Fees Charged:                                                    $0.00
+    Interest Charged:                                             ($345.00)
+    (Note: Interest charge reversed as courtesy — see note below)
+
+    New Balance:                                                  $10,150.50
+
+    Interest Rate (Purchases):      22.99% Variable (Prime + 15.49%)
+    Interest Rate (Cash Advances):  27.99% Variable
+
+    ========================================================================
+                 DETAILED TRANSACTION HISTORY
+    ========================================================================
+
+    Trans. Date   Post Date   Description                                              Amount
+    ─────────────────────────────────────────────────────────────────────────────────────────
+    03/21/2026    03/22/2026  AMAZON.COM                                                      $89.97
+                              (Kids' books + art supplies)
+
+    03/22/2026    03/23/2026  JEWEL-OSCO - SPRINGFIELD IL                                    $45.50
+    03/23/2026    03/24/2026  WALGREENS - SPRINGFIELD IL                                      $18.75
+                              (Prescription copay — Ethan allergy meds)
+
+    03/25/2026    03/26/2026  AMAZON.COM                                                     $23.99
+                              (Streaming accessory)
+
+    03/27/2026    03/28/2026  AUTOMATIC PAYMENT - THANK YOU                                ($250.00)
+                              (Minimum payment)
+
+    03/28/2026    03/29/2026  SPROUTS FARMERS MARKET - SPRINGFIELD IL                        $52.40
+    03/30/2026    03/31/2026  TARGET T-1282 - SPRINGFIELD IL                                 $78.20
+                              (Household essentials + Ethan's school supplies)
+
+    04/01/2026    04/02/2026  CHEWY.COM - PET SUPPLIES                                       $34.99
+                              (Fish food + water conditioner — kids' aquarium)
+
+    04/03/2026    04/04/2026  RESTAURANT - MCDONALD'S - SPRINGFIELD IL                       $22.50
+                              (Quick dinner after soccer practice)
+
+    04/05/2026    04/06/2026  AMAZON.COM                                                     $42.00
+                              (Phone case — Sophia's new iPhone)
+
+    04/07/2026    04/08/2026  SHELL OIL - SPRINGFIELD IL                                     $48.00
+    04/08/2026    04/09/2026  PEACHTREE PLUMBING - SPRINGFIELD IL                           $195.00
+                              (Emergency plumbing — kitchen sink clog. $85 diagnostic
+                               + $110 repair. =| )
+
+    04/10/2026    04/11/2026  AMAZON.COM                                                     $12.99
+                              (Kindle book)
+
+    04/12/2026    04/13/2026  MARIANO'S FRESH MARKET - SPRINGFIELD IL                        $67.80
+    04/14/2026    04/15/2026  CVS PHARMACY - SPRINGFIELD IL                                  $15.20
+                              (OTC medicine — Sophia had flu)
+
+    04/16/2026    04/17/2026  NETFLIX.COM                                                     $22.99
+    04/19/2026    04/20/2026  PAYMENT - THANK YOU (ONLINE)                                  ($250.00)
+                              (Extra payment made online)
+
+                              ─────────────────                                        ─────────
+                              TOTAL PURCHASES FOR PERIOD:                              $495.50
+
+    ========================================================================
+                          INTEREST CHARGE DETAIL
+    ========================================================================
+
+    Interest on Purchases:
+      APR:                                    22.99% variable
+      Balance Subject to Interest Rate:        $10,000.00 (approx. avg daily balance)
+      Interest Charge:                         $0.00
+      (Interest charge of $191.67 was incurred but
+       was REVERSED per customer courtesy adjustment.
+       Reason: "Customer requested courtesy reversal
+       due to financial hardship from divorce. One-time
+       courtesy adjustment approved.")
+
+    Interest on Cash Advances:                  $0.00
+
+    ========================================================================
+                          CASH BACK REWARDS
+    ========================================================================
+
+    Cash Back Earned This Period:             $9.91
+    Total Cash Back Available:               $203.01
+    Redemption Options:                       Statement Credit ($203.01)
+                                              Direct Deposit ($203.01)
+                                              Check ($203.01)
+
+    ========================================================================
+                      PAYMENTS AND CREDITS
+    ========================================================================
+
+    Date        Description                                              Amount
+    ─────────────────────────────────────────────────────────────────────────────
+    03/27/2026  AUTOPAY PAYMENT - MINIMUM DUE                            ($250.00)
+    04/20/2026  ONLINE PAYMENT - THANK YOU                               ($250.00)
+                (Borrower made manual extra payment of $250 this month)
+
+    NOTE: Normal minimum payment is $250/month. Borrower has been paying
+    minimum + occasional extra payments. Prior to divorce, this card was
+    paid in full each month. Balance has grown from $2,200 (Jan 2024) to
+    current $10,150.
+
+    ========================================================================
+                          PAYMENT INFORMATION
+    ========================================================================
+
+    New Balance:                                $10,150.50
+    Minimum Payment Due:                        $250.00
+    Payment Due Date:                           May 14, 2026
+    Past Due Amount:                            $0.00
+
+    Minimum Payment Warning:
+    If you make only the minimum payment each period, you will pay more
+    in interest and it will take you longer to pay off your balance.
+    For example:
+      If you make no additional charges and each month you pay only the
+      minimum payment, you will pay off the balance in 51 months and
+      will pay an estimated total of $15,843 (including $5,693 in interest).
+
+    ========================================================================
+                         BORROWER STATEMENT
+    ========================================================================
+
+    This statement is provided as documentation for mortgage underwriting
+    per borrower's request.
+
+    HANDWRITTEN NOTE (attached to statement on pink sticky note):
+    "These cards accumulated during the separation/divorce proceedings.
+    Will be paid in full at closing from cash-out refinance proceeds.
+    - Lisa Patel"
+
+    ─────────────────────────────────────────────────────────────────────────────
+    Citi is a registered service mark of Citigroup Inc.
+    Equal Credit Opportunity Lender. Member FDIC.
+    ─────────────────────────────────────────────────────────────────────────────

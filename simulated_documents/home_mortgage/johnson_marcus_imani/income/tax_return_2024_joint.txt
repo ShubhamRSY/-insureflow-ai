@@ -1,0 +1,145 @@
+========================================================================================
+                          FORM 1040 - U.S. INDIVIDUAL INCOME TAX RETURN
+                                    TAX YEAR 2024
+========================================================================================
+
+  FILING STATUS:  Married Filing Jointly
+
+  PRIMARY TAXPAYER:    Marcus D. Johnson              SSN: ***-**-4821
+  SPOUSE:              Imani R. Johnson              SSN: ***-**-6734
+
+  ADDRESS:             1234 Maple Creek Road
+                       Rural Route 1
+                       Clear Creek, IL 62719
+
+========================================================================================
+  INCOME
+----------------------------------------------------------------------------------------
+  1.  Wages, salaries, tips, etc. (Form(s) W-2, box 1):
+      - Marcus D. Johnson (USPS) ..................................... $68,000.00
+      - Imani R. Johnson (Springfield Memorial Hospital) ............ $45,000.00
+      TOTAL WAGES: .................................................. $113,000.00
+
+  2a. Tax-exempt interest ........................................... $0.00
+  2b. Taxable interest .............................................. $12.50
+      (Credit Union savings interest - very little)
+
+  3a. Qualified dividends ........................................... $0.00
+  3b. Ordinary dividends ............................................ $0.00
+
+  4a. IRA distributions ............................................. $0.00
+  4b. Taxable amount ................................................ $0.00
+
+  5a. Pensions and annuities ........................................ $0.00
+  5b. Taxable amount ................................................ $0.00
+
+  6.  Social Security benefits ...................................... $0.00
+
+  7.  Capital gain or loss .......................................... $0.00
+
+  8.  Other income (from Schedule 1) ............................... $0.00
+
+  9.  TOTAL INCOME (line 9) ........................................ $113,012.50
+
+========================================================================================
+  ADJUSTED GROSS INCOME
+----------------------------------------------------------------------------------------
+  10. Adjustments to income:
+      - Educator expenses ........................................... $0.00
+      - Student loan interest deduction ............................. $480.00
+        (Imani paid approx $620 in student loan interest in 2024; max deductible $2,500)
+        (lower amount because of phaseout - partial year in repayment)
+      - HSA deduction .............................................. $0.00
+      - IRA deduction .............................................. $0.00
+
+  11. ADJUSTED GROSS INCOME (AGI) ................................. $112,532.50
+
+========================================================================================
+  STANDARD DEDUCTION
+----------------------------------------------------------------------------------------
+  12. Standard deduction for Married Filing Jointly ............... $29,200.00
+
+  13. Itemized deductions (from Schedule A) ........................ $0.00
+      (Standard deduction taken - no itemizing)
+
+  14. Qualified business income deduction .......................... $0.00
+
+========================================================================================
+  TAX AND CREDITS
+----------------------------------------------------------------------------------------
+  15. Taxable income (line 11 - line 12) .......................... $83,332.50
+
+  16a. Tax (from tax tables) ...................................... $9,756.00
+
+  17. Child tax credit ............................................. $0.00
+  18. Other credits (EIC, etc.) .................................... $0.00
+
+  19. TOTAL TAX (line 16a - credits) .............................. $9,756.00
+
+========================================================================================
+  PAYMENTS
+----------------------------------------------------------------------------------------
+  20. Federal income tax withheld (W-2):
+      - Marcus (USPS) .............................................. $8,840.00
+      - Imani (Springfield Memorial) ............................... $5,400.00
+      TOTAL WITHHOLDING: ........................................... $14,240.00
+
+  21. Estimated tax payments ........................................ $0.00
+
+  22. Refundable credits (EIC, etc.) ................................ $0.00
+
+  23. TOTAL PAYMENTS (line 20 + 21 + 22) .......................... $14,240.00
+
+========================================================================================
+  REFUND OR AMOUNT YOU OWE
+----------------------------------------------------------------------------------------
+  24. OVERPAID (line 23 - line 19) ................................ $4,484.00
+      (Refund requested: $4,484.00)
+      Check here: [X] Direct Deposit - Routing: 271187152 / Acct: xxxx4821
+
+  *** NOTE: The above is what TurboTax calculated. Actual refund after review: ~$1,200.
+  *** Marcus had calculated his withholding thinking he'd make more OT but didn't.
+  *** Actually wait - the numbers are wrong. Let me redo this.
+  *** REFUND: Total withholding $14,240 - Total Tax $9,756 = $4,484???
+  *** That seems high. But okay. Actually a lot of couples overwithhold.
+  *** Actually, looking at this more carefully - the tax on $83,332.50 for MFJ 
+  *** in 2024 would be roughly:
+  *** 10% bracket: $0 - $23,200 = $2,320
+  *** 12% bracket: $23,200 - $83,332.50 = $60,132.50 x 12% = $7,215.90
+  *** Total: $9,535.90 approx. So $9,756 is about right.
+  *** Refund of $4,484 - that's a big refund. They're overwithholding.
+  *** But for mortgage qualification, the $113,000 AGI is what matters.
+
+========================================================================================
+  STATE RETURN SUMMARY - ILLINOIS
+----------------------------------------------------------------------------------------
+  IL Adjusted Gross Income: ........................................ $112,532.50
+  IL Standard Deduction: ........................................... $2,700.00
+  IL Taxable Income: ............................................... $109,832.50
+  IL Tax (flat 4.95%): .............................................. $5,436.71
+  IL Withholding (Marcus $3,060 + Imani $2,025): ................... $5,085.00
+  IL Refund: ........................................................ $0.00
+  IL Amount Owed: ................................................... $351.71
+
+========================================================================================
+                        *** INTERNAL LOAN PROCESSOR NOTES ***
+----------------------------------------------------------------------------------------
+  Income verified via 2024 tax return: $113,000 combined.
+  Base income for qualification (stable & predictable):
+    - Marcus: $68,000 (USPS career position - stable govt job)  
+    - Imani: $45,000 (part-time RN - stable but check employment history)
+  Total qualifying income: $113,000/yr = $9,416.67/mo
+  
+  DTI CALCULATION:
+    Proposed PITI (USDA loan at ~6.5% est): $1,740/mo (principal+interest+insurance+taxes)
+    Marcus car: $415/mo
+    Imani student loans: $210/mo
+    Chase CC: $65/mo (min payment)  
+    Total debts: $690/mo + $1,740 = $2,430
+    DTI: $2,430 / $9,416.67 = 25.8% - WELL UNDER 43% USDA MAX
+  
+  *** NOTE: Student loans need 12-month payment history verified ***
+  *** NOTE: Imani was in school partial 2023 - income increasing trend is good ***
+  *** NOTE: Tax return shows $480 student loan interest deduction - confirms loans are in repayment ***
+----------------------------------------------------------------------------------------
+========================================================================================

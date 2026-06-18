@@ -1,0 +1,170 @@
+========================================================================================================
+                         CLOSING DISCLOSURE
+                       (TRID / TILA-RESPA Integrated Disclosure)
+========================================================================================================
+
+                                                                        FILE #: INF-2026-44210
+                                                                        DATE ISSUED: 04/28/2026
+                                                                        CLOSING DATE: 05/05/2026
+
+========================================================================================================
+TRANSACTION INFORMATION
+========================================================================================================
+
+  BORROWER:                   Maria Elena Rodriguez
+  SELLER:                     Lakeside Realty Trust (REO)
+
+  LENDER:                     InsureFlow National Mortgage
+                              555 Financial Parkway, Suite 300
+                              Chicago, IL 60606
+                              NMLS # 882931
+
+  PROPERTY:                   789 Elm Street, Unit 2B, Springfield, IL 62704
+
+  LOAN TYPE:                  [ ] Conventional  [X] FHA  [ ] VA  [ ] USDA
+  LOAN PURPOSE:               [X] Purchase  [ ] Refinance  [ ] Construction
+
+========================================================================================================
+LOAN TERMS
+========================================================================================================
+
+  LOAN AMOUNT:                                           $173,700.00
+  INTEREST RATE:                                         6.500%
+  MONTHLY PRINCIPAL & INTEREST (P&I):                    $1,098.22
+  LOAN TERM:                                             30 Years (360 Months)
+  FHA CASE #:                                             489-3321887
+
+========================================================================================================
+PROJECTED PAYMENTS
+========================================================================================================
+
+                                                        YEARS 1-30
+  Principal & Interest                                    $1,098.22
+  Mortgage Insurance Premium (MIP)                         $80.00
+  Hazard Insurance (HO-6)                                  $40.17
+  Real Estate Taxes                                         $0.00 (in HOA)
+  Homeowner's Association (HOA)                           $175.00
+  ---------------------------------------------------   ---------
+  TOTAL MONTHLY PAYMENT                                   $1,393.39
+
+========================================================================================================
+LOAN COSTS
+========================================================================================================
+
+  ORIGINATION CHARGES (A):
+    Origination Fee (1.75% of base loan)                  $3,039.75
+    Processing Fee                                           $60.00
+    Underwriting Fee                                         $0.00
+    TOTAL (A):                                            $3,099.75
+
+  SERVICES YOU CAN SHOP FOR (B):
+    Appraisal Fee to: Midwest Appraisal Services            $550.00 (paid by borrower 02/22/2026)
+    Credit Report Fee to: Experian                           $35.00
+    Flood Determination Fee to: CoreLogic                    $12.00
+    Tax Service Fee to: CoreLogic                            $65.00
+    TOTAL (B):                                              $662.00
+
+  SERVICES YOU CANNOT SHOP FOR (C):
+    Title - Lender's Title Insurance (Chicago Title)        $950.00
+    Title - Settlement/Closing Fee                           $400.00
+    Title - Closing Protection Letter                        $100.00
+    HOA Estoppel/Cert Fee                                    $75.00
+    Courier/Wire Fees                                        $75.00
+    TOTAL (C):                                            $1,600.00
+
+  GOVERNMENT FEES (D):
+    Recording Fees (County + State)                         $150.00
+    Intangible Tax                                           $0.00
+    TOTAL (D):                                              $150.00
+
+========================================================================================================
+PREPAIDS & ESCROW
+========================================================================================================
+
+  PREPAIDS (E):
+    Hazard Insurance Premium (HO-6 - State Farm 1yr)        $482.00
+    Mortgage Insurance Premium - Upfront FHA (1.75%)       $3,039.75 (financed - NOT in closing costs)
+    Prepaid Interest (05/05 - 05/31 @ $31.35/day)           $846.45
+    TOTAL (E):                                            $1,328.45
+
+  INITIAL ESCROW PAYMENT AT CLOSING (F):
+    MIP Escrow (2 months @ $80.00)                          $160.00
+    Hazard Insurance Escrow (2mo @ $40.17)                   $80.34
+    Real Estate Taxes                                        $0.00 (paid by HOA)
+    TOTAL (F):                                              $240.34
+
+  OTHER COSTS (G):
+    Owner's Title Insurance (Chicago Title)                  $600.00
+    HOA Transfer Fee                                         $100.00
+    TOTAL (G):                                              $700.00
+
+========================================================================================================
+TOTAL CLOSING COSTS (A + B + C + D + E + F + G):
+                                                           $7,780.54
+                                                           ==========
+  (Less appraisal already paid):                           -$550.00
+  NET CLOSING COSTS DUE AT CLOSING:                        $7,230.54
+
+========================================================================================================
+CASH TO CLOSE
+========================================================================================================
+
+  Purchase Price                                           $180,000.00
+  Total Closing Costs                                       $7,780.54
+  Down Payment (3.5%)                                       $6,300.00
+  Loan Amount                                              -$173,700.00
+  Earnest Money Deposit                                     -$1,000.00
+  Seller Concessions (3% of purchase price)                 -$5,400.00
+  Upfront MIP Financed                                       $0.00 (added to loan)
+  Appraisal Fee Already Paid                                 -$550.00
+  ---------------------------------------------------   -------------
+  CALCULATED CASH TO CLOSE FROM BORROWER:                   $3,430.54
+                                                            ==========
+  SELLER CONCESSION BREAKDOWN:
+  3% of $180,000 = $5,400.00 applied to borrower's closing costs.
+
+========================================================================================================
+BORROWER SIGNATURE
+========================================================================================================
+
+  By signing, I acknowledge I have received and read this disclosure.
+
+  _________________________________________         Date: ______________
+  Maria Elena Rodriguez
+
+========================================================================================================
+
+  [STAMP]: FINAL CD - BORROWER COPY
+           INSUREFLOW NATIONAL MORTGAGE
+           ISSUED: 04/28/2026
+
+========================================================================================================
+
+UW HANDWRITTEN NOTES (RED PEN):
+
+   CD RECEIVED 04/28/2026. REVIEWED.
+   
+   All tolerances met ✔
+   
+   Seller concession $5,400 applied to closing costs.
+   Cash from borrower: $3,430.54
+   
+   Borrower assets: $16,191.67
+   Post-close: $16,191.67 - $3,430.54 = $12,761.13 remaining
+   
+   Reserves: $12,761.13 / $1,393.39 = 9.16 months
+   
+   *** EXCELLENT RESERVES ***
+   
+   FHA minimum: 3 months ✔
+   
+   All conditions cleared. CLEAR TO CLOSE.
+   
+   - J.K. 04/28/2026
+   
+========================================================================================================
+
+>> FAXED TO BORROWER: 04/28/2026 15:00:00 CST
+>> FAX NUMBER: (555) 234-5555
+>> STATUS: SENT
+>> CONFIRMATION #: FAX-CD-44210

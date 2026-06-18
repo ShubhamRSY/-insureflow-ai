@@ -1,0 +1,113 @@
+========================================================================================================
+                     SANGAMON COUNTY - PROPERTY TAX BILL / TAX YEAR 2025
+                                  OFFICE OF THE COUNTY TREASURER
+========================================================================================================
+
+    Tax Bill #: SC-TAX-2025-1405378002             Due Date: 06/01/2026 (First Installment)
+                                                     Due Date: 09/01/2026 (Second Installment)
+    Parcel ID (PIN): 14-05-378-002
+
+    PROPERTY ADDRESS:
+    478 Pine Street
+    Clear Creek, IL 62719
+    (Rural Route 3, Box 178)
+
+    PROPERTY OWNER AS OF 01/01/2025:
+    Martha L. Jenkins
+    478 Pine Street
+    Clear Creek, IL 62719
+
+========================================================================================================
+ASSESSMENT AND TAX COMPUTATION
+========================================================================================================
+
+    Land Assessed Value:                         $ 25,000.00
+    Improvement Assessed Value:                  $ 57,000.00
+    -------------------------------------------  ------------
+    TOTAL ASSESSED VALUE:                        $ 82,000.00
+    
+    Level of Assessment: 33.33% of Fair Cash Value
+    Estimated Fair Cash Value:                   $246,000.00  (based on assessment ratio)
+
+    STATE EQUALIZATION FACTOR: 1.0000
+    COUNTY EQUALIZATION FACTOR: 1.0000
+
+    TAX RATE BREAKDOWN (per $100 assessed value):
+    ----------------------------------------------------------------
+    Sangamon County General:                 $1.2437
+    Clear Creek Township:                    $0.4210
+    Road District:                           $0.1892
+    School District #184 (Rural):            $3.6014  <-- HIGHEST COMPONENT
+    Community College District #526:         $0.3823
+    Fire Protection District (Volunteer):    $0.1502
+    Library District (Rural):                $0.1129
+    Drainage District (Clear Creek):         $0.0895
+    County Mental Health:                    $0.0918
+    4-H Extension:                           $0.0191
+    ----------------------------------------------------------------
+    TOTAL TAX RATE:                           $6.3011  per $100 assessed value
+    
+    TAX COMPUTATION:
+    82,000 x $6.3011 / $100 = $5,166.90?? Wait, let me re-check. 
+
+    Actually, Illinois tax billing uses assessed value x tax rate / 100.
+    But there may be caps. Let me look at the actual billed amount...
+
+    ---------------------------------------------------------------------------
+    [HANDWRITTEN SCRIBBLE - UW NOTE]:
+    Tax billed at RURAL rate. 82,000 x 3.6 = $2,952/yr. 
+    Confirmed with County Assessor's office 2/11 - property has agricultural
+    use reduction on portion of lot (2.3 acres out of 3.5 acres in ag use 
+    reduction program). This reduces the effective taxable value.
+    = $246/mo. CORRECT.
+    
+    RURAL PROPERTY - LOWER TAX RATE. ESCROW $246/MO.
+    ---------------------------------------------------------------------------
+
+========================================================================================================
+TAX AMOUNT DUE - TAX YEAR 2025
+========================================================================================================
+
+    TOTAL TAXES LEVIED:                            $2,951.64
+    Less: Credits/Exemptions:                      $    0.00
+    -------------------------------------------   ------------
+    TOTAL AMOUNT DUE:                              $2,951.64
+    
+    Installment 1 (Due 06/01/2026):                $1,475.82
+    Installment 2 (Due 09/01/2026):                $1,475.82
+    
+    PAID:  ___ Paid   X__ Unpaid (Seller will pay at closing via proration)
+    
+    Delinquent Penalties (if any): None. Current.
+
+========================================================================================================
+ESCROW ANALYSIS (Projected for new owners)
+========================================================================================================
+
+    Monthly Tax Escrow:                            $  246.00/mo ($2,952/yr / 12)
+    
+    Note: When property transfers to Johnson, school district exemptions may apply
+    (homestead exemption reduces assessed value by approx $6,000). Estimated tax
+    savings of ~$200/yr. Not included in escrow calc.
+
+========================================================================================================
+CERTIFICATION
+
+    I certify this is a true and correct copy of the tax record for Parcel 14-05-378-002.
+
+    _________________________________
+    [SIGNATURE]
+    Sangamon County Treasurer's Office
+    By: ________________________________
+        Linda M. Kowalski, Deputy Treasurer
+    Date: 02/04/2026
+
+========================================================================================================
+[OFFICIAL COUNTY STAMP - RAISED SEAL]
+    SANGAMON COUNTY ILLINOIS
+    TREASURER'S OFFICE
+    *** CERTIFIED COPY ***
+    
+    [STAMP]: PAID THROUGH 12/31/2025 - SELLER CREDIT AT CLOSING FOR 2025
+
+========================================================================================================

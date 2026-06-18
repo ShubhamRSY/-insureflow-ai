@@ -1,0 +1,92 @@
+======================================================================
+        MERCEDES-BENZ FINANCIAL SERVICES USA LLC
+                   MONTHLY STATEMENT
+======================================================================
+ACCOUNT NUMBER:  XXXX-1123-4401
+STATEMENT DATE:  March 10, 2026
+PAYMENT DUE:     April 4, 2026
+
+BORROWER:        David Chen (Primary)
+                 1242 Hillcrest Drive
+                 Springfield, IL 62704
+
+CO-BORROWER:     Karen Chen
+
+======================================================================
+VEHICLE INFORMATION
+======================================================================
+  VEHICLE:        2024 Mercedes-Benz GLE 350 4MATIC
+  VIN:            4JGBB8GB7PA672841
+  COLOR:          Obsidian Black Metallic
+  STOCK #:        M-22401
+
+======================================================================
+LOAN SUMMARY
+======================================================================
+  Original Loan Amount:                    $65,000.00
+  Loan Date:                               01/15/2024
+  Loan Term:                               72 months
+  Annual Percentage Rate (APR):            5.49%
+  Monthly Payment:                         $912.00
+  Maturity Date:                           01/15/2030
+  Payoff Amount (as of 03/10/2026):        $48,622.47
+  [HANDWRITTEN: "Per diem interest: $7.32/day after 3/10"]
+
+======================================================================
+TRANSACTION DETAIL (February 10 - March 9, 2026)
+======================================================================
+  DATE         DESCRIPTION                             AMOUNT        BALANCE
+  -----------  ------------------------------------    ----------    ----------
+  02/10/2026   Previous Balance                                      $49,220.00
+  02/12/2026   PAYMENT - THANK YOU                    -$912.00       $48,308.00
+  02/15/2026   INTEREST CHARGE (02/10-03/09)           +$220.00      $48,528.00
+  02/28/2026   PRINCIPAL ADJUSTMENT (rounded)           -$0.47        $48,527.53
+  03/09/2026   Ending Balance                                        $48,527.53
+  [HANDWRITTEN: "Wait. $48,528? I wrote $48K above. Close enough."]
+
+======================================================================
+PAYMENT HISTORY
+======================================================================
+  DATE         AMOUNT       STATUS          DAYS LATE
+  -----------  -----------  --------------  ----------
+  Jan 2026     $912.00      PAID - ON TIME     0
+  Dec 2025     $912.00      PAID - ON TIME     0
+  Nov 2025     $912.00      PAID - ON TIME     0
+  Oct 2025     $912.00      PAID - ON TIME     0
+  Sep 2025     $912.00      PAID - ON TIME     0
+  Aug 2025     $912.00      PAID - ON TIME     0
+  Jul 2025     $912.00      PAID - ON TIME     0
+  Jun 2025     $912.00      PAID - ON TIME     0
+  May 2025     $912.00      PAID - ON TIME     0
+  Apr 2025     $912.00      PAID - ON TIME     0
+  Mar 2025     $912.00      PAID - ON TIME     0
+  Feb 2025     $912.00      PAID - ON TIME     0
+  Jan 2025     $912.00      PAID - ON TIME     0
+  
+  [ALL 26 PAYMENTS ON TIME. NEVER LATE.]
+
+======================================================================
+AMORTIZATION INFO
+======================================================================
+  Total Payments to Date:                $23,712.00 (26 x $912)
+  Total Interest Paid to Date:            $7,471.00
+  Total Principal Paid to Date:          $16,241.00
+  Remaining Balance:                     $48,527.53
+  Remaining Payments:                    46 x $912 = $41,952.00
+  Remaining Interest:                      ~$5,424.47 (if paid to maturity)
+  
+  Estimated Payoff (if paid today 3/10): $48,622.47 (incl $94.94 per diem)
+
+======================================================================
+IMPORTANT MESSAGES
+======================================================================
+  - AutoPay is active. Your payment of $912.00 will be deducted from 
+    your account on file on 04/04/2026.
+  - Your next payment due: April 4, 2026
+  - Current APR: 5.49%
+  - Late Payment Fee: $25.00 if payment not received within 10 days
+  
+  [MARGIN: "5.49% is a bit high for 2024. Rates were already rising then.
+   They could refi this too but probably not worth it for $48K. - Analyst"]
+
+======================================================================

@@ -1,0 +1,91 @@
+======================================================================
+              AUDI FINANCIAL SERVICES
+                   MONTHLY STATEMENT
+======================================================================
+ACCOUNT NUMBER:  XXXX-7894-2208
+STATEMENT DATE:  March 8, 2026
+PAYMENT DUE:     April 2, 2026
+
+BORROWER:        Karen Chen (Primary)
+                 1242 Hillcrest Drive
+                 Springfield, IL 62704
+
+CO-BORROWER:     David Chen
+
+======================================================================
+VEHICLE INFORMATION
+======================================================================
+  VEHICLE:        2023 Audi Q5 45 TFSI S-Line
+  VIN:            WA1BAAFY6P2129407
+  COLOR:          District Green Metallic
+  STOCK #:        A-18742
+
+======================================================================
+LOAN SUMMARY
+======================================================================
+  Original Loan Amount:                    $55,000.00
+  Loan Date:                               08/12/2023
+  Loan Term:                               66 months (5.5 years)
+  Annual Percentage Rate (APR):            5.99%
+  Monthly Payment:                         $740.00
+  Maturity Date:                           02/12/2029
+  Payoff Amount (as of 03/10/2026):        $37,442.83
+
+======================================================================
+TRANSACTION DETAIL (February 8 - March 7, 2026)
+======================================================================
+  DATE         DESCRIPTION                             AMOUNT        BALANCE
+  -----------  ------------------------------------    ----------    ----------
+  02/08/2026   Previous Balance                                      $37,882.00
+  02/10/2026   PAYMENT - THANK YOU                    -$740.00       $37,142.00
+  02/12/2026   INTEREST CHARGE (02/08-03/07)           +$186.50      $37,328.50
+  03/01/2026   PRINCIPAL ADJUSTMENT                     -$0.28        $37,328.22
+  03/08/2026   Ending Balance                                        $37,328.22
+  [HANDWRITTEN: "$37,328. I said $37K in credit report. Same ballpark."]
+
+======================================================================
+PAYMENT HISTORY
+======================================================================
+  DATE         AMOUNT       STATUS          DAYS LATE
+  -----------  -----------  --------------  ----------
+  Feb 2026     $740.00      PAID - ON TIME     0
+  Jan 2026     $740.00      PAID - ON TIME     0
+  Dec 2025     $740.00      PAID - ON TIME     0
+  Nov 2025     $740.00      PAID - ON TIME     0
+  Oct 2025     $740.00      PAID - ON TIME     0
+  Sep 2025     $740.00      PAID - ON TIME     0
+  Aug 2025     $740.00      PAID - ON TIME     0
+  Jul 2025     $740.00      PAID - ON TIME     0
+  Jun 2025     $740.00      PAID - ON TIME     0
+  May 2025     $740.00      PAID - ON TIME     0
+  Apr 2025     $740.00      PAID - ON TIME     0
+  Mar 2025     $740.00      PAID - ON TIME     0
+  Feb 2025     $740.00      PAID - ON TIME     0
+  Jan 2025     $740.00      PAID - ON TIME     0
+  
+  (31 payments total, all ON TIME)
+
+======================================================================
+AMORTIZATION INFO
+======================================================================
+  Total Payments to Date:                $22,940.00 (31 x $740)
+  Total Interest Paid to Date:            $5,612.00
+  Total Principal Paid to Date:          $17,328.00
+  Remaining Balance:                     $37,328.22
+  Remaining Payments:                    35 x $740 = $25,900.00
+
+======================================================================
+NOTES
+======================================================================
+  - AutoPay enrolled. Payment method: Chase Checking XXXX-2204
+  - Next payment: April 2, 2026
+  - Current APR: 5.99%
+  - Late Payment Fee: $30.00
+  
+  [HANDWRITTEN: 
+   "Audi Q5. Karen's car. 5.99% is higher than the Mercedes at 5.49%.
+    Both current and on-time. Combined auto debt: $48,528 + $37,328 = 
+    ~$85,856. Combined payments: $912 + $740 = $1,652/mo.
+    Not excessive for their income ($475K base + $65K bonus)."]
+    
+======================================================================

@@ -1,0 +1,128 @@
+========================================================================================================
+                        VERIFICATION OF EMPLOYMENT  (VOE)
+                        UNIFORM RESIDENTIAL LOAN APPLICATION FORM 1005
+========================================================================================================
+
+    TO: Springfield Memorial Hospital - HR / Employee Records
+         800 N. 1st Street
+         Springfield, IL 62701
+         Fax: (217) 555-4499
+
+    FROM: InsureFlow National Mortgage - Underwriting Dept.
+          1200 Commerce Drive, Springfield, IL 62701
+          Fax: (217) 555-0191 | Phone: (217) 555-0199
+
+    DATE: February 10, 2026
+    LOAN #: IF-USDA-02262026-003
+
+    RE: EMPLOYEE: JOHNSON, IMANI RENEE
+        SSN: XXX-XX-5561
+        DOB: 09/08/1995
+
+========================================================================================================
+SECTION 1: EMPLOYMENT STATUS (TO BE COMPLETED BY EMPLOYER)
+========================================================================================================
+
+    Date of Verification: 02/10/2026
+
+    1.  Is the above-named individual currently employed by your organization?
+        X YES      ___ NO
+        
+    2.  If yes, employment start date: 06/19/2023
+        Total years of service: 2 years 8 months
+
+    3.  Current position: Registered Nurse - Med/Surg Unit
+        Status: Permanent Part-Time (0.6 FTE)
+        Position is permanent part-time. Eligible for benefits.
+
+    4.  Is the position:    ___ Full-Time  X Part-Time (0.6 FTE)
+                            ___ Temporary  ___ Seasonal  ___ PRN
+
+    5.  Current rate of pay: $36.50 per hour
+        
+        Hours per pay period: 48 hours (24 hrs/week average)
+        Pay frequency: X Bi-Weekly
+
+    6.  YTD Earnings for 2026 (as of 02/01/2026): $1,752.00 (3 shifts)
+        Annualized / Total Income (2025): $44,928.00
+        2024 Total Income: $42,380.00
+        
+        [STAMP]: CONSISTENT INCOME PATTERN - 2 YEARS
+
+    7.  Additional compensation:
+        Shift differential: $3.00/hr for nights/weekends (avg $150-$200/mo)
+        NOTE: DO NOT INCLUDE SHIFT DIFF PER UW POLICY - INCOME NOT GUARANTEED
+
+========================================================================================================
+SECTION 2: LEAVE STATUS / FUTURE PLANS
+========================================================================================================
+
+    8.  Is employee currently on leave or scheduled for leave? 
+
+        YES - SEE BELOW
+        Employee has notified department of expected maternity leave beginning 
+        approximately August 2026. Employee is eligible for FMLA (12 weeks unpaid).
+        
+        "Position is permanent part-time. Eligible for benefits. On leave expected 
+         08/2026 for maternity (FMLA eligible)."
+         
+        Expected return to work: Approximately October/November 2026.
+        
+        ---------------------------------------------------------------------------
+        [HANDWRITTEN NOTE - UW DEPT]:
+        MATERNITY LEAVE - FMLA UNPAID. BORROWER SAYS RETURNING 10/2026. 
+        USE CURRENT INCOME. UW OK.
+        Per GSE guidelines: borrower currently employed, returning to same employer.
+        Income is stable and consistent. Leave is temporary and does not affect
+        current income qualification. - JW 02/11/2026
+        ---------------------------------------------------------------------------
+
+========================================================================================================
+SECTION 3: EMPLOYER INFORMATION
+========================================================================================================
+
+    Department: Med/Surg Unit - 3rd Floor
+    Supervisor Name: Patricia Chen, RN, BSN
+    Supervisor Title: Nurse Manager, Med/Surg Unit
+    Phone: (217) 555-4422
+    Email: patricia.chen@smh.org
+
+    "Imani is a valued member of our team. She has excellent patient reviews.
+     We fully support her maternity leave and expect her return post-leave."
+
+========================================================================================================
+SECTION 4: CERTIFICATION
+========================================================================================================
+
+    I certify that the above information is true and correct to the best of my knowledge.
+
+    _________________________________
+    [SIGNATURE]  Patricia Chen, RN, BSN
+    Nurse Manager, Med/Surg Unit
+    Springield Memorial Hospital
+    Date: 02/10/2026
+
+    FOR HR USE ONLY:
+    Verified by: Diane R. Watkins, HR Director
+    Phone verification performed 02/10/2026 @ 11:15 AM CST
+    Employee file reviewed: Y
+    FMLA eligibility confirmed: Y (12 weeks unpaid)
+    Return-to-work letter on file: PENDING (will provide upon return)
+
+========================================================================================================
+INTERNAL UW USE:
+    VOE received. Employment stable 2+ years. Part-time at 0.6 FTE is permanent.
+    Maternity leave noted - FMLA eligible. Will return to same position.
+    Per UW guidelines - current income used for qualifying. Leave does not disqualify.
+    OK TO PROCEED.  - JW 02/11/2026
+    
+    *** CONFIRM RETURN TO WORK LETTER PRIOR TO CLOSING IF POSSIBLE ***
+    *** CONDITION: CONFIRM FMLA MATERNITY LEAVE ARRANGEMENTS ***
+========================================================================================================
+
+[FAX HEADER - TRANSMISSION LOG]
+FROM: 217-555-4499             TO: 217-555-0191
+PAGES: 2                        DATE: 02/10/2026
+TIME: 11:25 AM                  STATUS: OK
+
+[STAMP]: RECEIVED FEB 10 2026 - INSUREFLOW UNDERWRITING

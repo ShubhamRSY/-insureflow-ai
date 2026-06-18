@@ -1,0 +1,140 @@
+══════════════════════════════════════════════════════════════════
+     UNIFORM RESIDENTIAL LOAN APPLICATION  ◆  FANNIE MAE 1003
+     OMB No. 2502-0582  ◆  Exp. 04/30/2028
+══════════════════════════════════════════════════════════════════
+
+  APPLICATION DATE:  02/22/2026
+
+SECTION 1:  BORROWER INFORMATION
+
+BORROWER:  David Chen
+SSN:       XXX-XX-4821
+DOB:       10/15/1979
+CITIZENSHIP: US Citizen
+MARITAL STATUS: Married
+
+CO-BORROWER:  Karen Chen
+SSN:         XXX-XX-7730
+DOB:         03/22/1982
+CITIZENSHIP: US Citizen
+MARITAL STATUS: Married
+
+CURRENT ADDRESS:
+1242 Hillcrest Drive
+Springfield, IL 62704
+Years at address: 7
+
+SECTION 2:  EMPLOYMENT INFORMATION
+
+BORROWER EMPLOYER:
+MedTech Solutions Inc.
+200 Innovation Parkway
+Chicago, IL 60606
+Position:  VP Engineering
+Years on job: 5+
+Business phone: (312) 555-0192
+
+CO-BORROWER EMPLOYER:
+PharmaCare LLC
+1500 Medical Drive
+Springfield, IL 62704
+Position: Director Clinical Operations
+Years on job: 4
+Business phone: (217) 555-0147
+
+SECTION 3:  INCOME
+
+Borrower Base:       $280,000/yr
+Borrower Bonus:      $45,000/yr (variable)
+Co-Borrower Base:    $195,000/yr
+Co-Borrower Bonus:   $20,000/yr (variable)
+Total Annual Income: $540,000
+
+SECTION 4:  ASSETS
+
+  Liquid Assets:
+    Chase Checking (XXXX-2290):          $48,234
+    Chase Savings (XXXX-7711):           $87,412
+    Vanguard Money Market:              $120,587
+    Vanguard Brokerage (stocks/bonds):  $340,000
+    Fidelity 401(k) - David:            $1,200,000
+    Fidelity 401(k) - Karen:            $680,000
+
+  Real Estate Owned:
+    Rental Property - 456 Elm St
+      Value: $320,000 | Mortgage: $210,000
+      Rent: $2,400/mo | PITI: $1,850/mo
+      Net cash flow: $550/mo
+
+SECTION 5:  LIABILITIES
+
+    Car Loan - Mercedes (David):    $22,000 ($650/mo)
+    Student Loan (Karen):           $12,000 ($180/mo)
+    Credit Cards (paid monthly):    $0 balance
+    Rental Property Mortgage:       $210,000 ($1,580/mo)
+    Current Residence Mortgage:     $632,000 ($3,950/mo)  <-- TO BE PAID OFF
+
+══════════════════════════════════════════════════════════════════
+  CONTINUED ON PAGE 2
+══════════════════════════════════════════════════════════════════
+
+SECTION 6:  LOAN INFORMATION
+
+PURPOSE OF LOAN:  ☐ Purchase  ☒ Refinance  ☐ Construction
+
+TYPE OF REFINANCE:
+  ☒ Rate/Term Refinance + $50,000 Cash-Out
+  ☐ Cash-Out (other)
+  ☐ Simple Refinance
+
+LOAN AMOUNT REQUESTED:  $700,000
+ESTIMATED PROPERTY VALUE:  $950,000
+LOAN PURPOSE DESCRIPTION:
+  "Rate/Term Refinance + $50,000 Cash-Out for Kitchen Remodel.
+   Current loan paid off. Cash-out proceeds for home improvement."
+
+OCCUPANCY: ☒ Primary Residence  ☐ Secondary  ☐ Investment
+
+SECTION 7:  DECLARATIONS
+
+  1.  Do you have any outstanding judgments?              ☐ Yes  ☒ No
+  2.  Have you been bankrupt in last 7 years?             ☐ Yes  ☒ No
+  3.  Are any properties in foreclosure?                  ☐ Yes  ☒ No
+  4.  Are you a party to a lawsuit?                       ☐ Yes  ☒ No
+  5.  Have you conveyed title in lieu of foreclosure?     ☐ Yes  ☒ No
+  6.  Are you obligated on any other loans not listed?    ☐ Yes  ☒ No
+
+SECTION 8:  AGREEMENT
+
+I/We certify that the information provided in this application is true
+and correct as of the date set forth below.
+
+  _________________________________  Date:  02/22/2026
+  David Chen
+
+  _________________________________  Date:  02/22/2026
+  Karen Chen
+
+══════════════════════════════════════════════════════════════════
+
+                       NOTARY ACKNOWLEDGMENT
+
+State of Illinois
+County of Sangamon
+
+On this 22nd day of February, 2026, before me personally appeared
+David Chen and Karen Chen, known to me to be the persons whose
+names are subscribed to the foregoing instrument.
+
+WITNESS my hand and official seal.
+
+  (notary stamp - SEAL)
+  /s/ Patricia M. Reynolds
+
+  Notary Public, State of Illinois
+  My Commission Expires: 12/15/2028
+
+══════════════════════════════════════════════════════════════════
+  [[ UW NOTE: $50K CASH-OUT - CONFIRM KITCHEN RENOVATION
+     IS THE INTENDED USE. NO INVESTMENT PURPOSES. ]]
+══════════════════════════════════════════════════════════════════

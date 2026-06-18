@@ -1,0 +1,117 @@
+========================================================================================================
+                        VERIFICATION OF DEPOSIT  (VOD)
+                        UNIFORM RESIDENTIAL LOAN APPLICATION FORM 1006
+========================================================================================================
+
+    TO: Credit Union of Central Illinois
+         1400 S. 6th Street
+         Springfield, IL 62703
+         Fax: (217) 555-0799
+
+    FROM: InsureFlow National Mortgage - Underwriting Dept.
+          1200 Commerce Drive, Springfield, IL 62701
+          Fax: (217) 555-0191 | Phone: (217) 555-0199
+
+    DATE: February 12, 2026
+    LOAN #: IF-USDA-02262026-003
+
+    RE: ACCOUNT HOLDER(S): Marcus D. Johnson & Imani R. Johnson (Joint Tenants)
+        SSN: XXX-XX-3847 / XXX-XX-5561
+        DOB: 04/17/1993 / 09/08/1995
+
+========================================================================================================
+ACCOUNT INFORMATION (VERIFIED 02/12/2026)
+========================================================================================================
+
+    ACCOUNT #1:  SHARE (SAVINGS) ACCOUNT  -  XXXXXX8821
+    -----------------------------------------------
+    Current Balance:                                          $17,975.42
+    Date Opened:             06/15/2019
+    Average Balance (6 months):                               $13,500.00
+    Average Balance (3 months):                               $15,200.00
+    
+    Interest Rate: 0.25% APY (Regular Share Savings)
+
+    ACCOUNT #2:  CHECKING (DRAFT) ACCOUNT  -  XXXXXX4417
+    -----------------------------------------------
+    Current Balance:                                          $ 4,798.36
+    Date Opened:             06/15/2019
+    Average Balance (6 months):                               $ 3,200.00
+    Average Balance (3 months):                               $ 3,500.00
+    
+    Interest Rate: N/A (Free Checking)
+
+========================================================================================================
+LARGE DEPOSIT / UNUSUAL ACTIVITY
+========================================================================================================
+
+    DEPOSIT DATE:     01/22/2026
+    AMOUNT:           $3,000.00
+    SOURCE:           Electronic Deposit - IRS Tax Refund (2025 Fed/State)
+    NOTE:             Verified via IRS transcript. E-filed 01/15/2026.
+                      Refund issued 01/22/2026. Legitimate source.
+                      [STAMP]: SOURCE VERIFIED - TAX REFUND - NO GIFT LETTER NEEDED
+
+========================================================================================================
+ADDITIONAL DEPOSITS (Routine - 60 DAY HISTORY)
+========================================================================================================
+
+    12/15/2025    $2,615.00     (Marcus - USPS Direct Deposit)
+    12/31/2025    $2,615.00     (Marcus - USPS Direct Deposit)
+    01/15/2026    $2,615.00     (Marcus - USPS Direct Deposit)
+    01/31/2026    $2,615.00     (Marcus - USPS Direct Deposit)
+    12/20/2025    $1,752.00     (Imani - SMH Direct Deposit)
+    01/03/2026    $1,752.00     (Imani - SMH Direct Deposit)
+    01/17/2026    $1,752.00     (Imani - SMH Direct Deposit)
+    01/31/2026    $1,752.00     (Imani - SMH Direct Deposit)
+    
+    No NSF items in last 12 months.
+    No overdrafts in last 12 months.
+
+========================================================================================================
+VERIFICATION OF FUNDS FOR CLOSING
+========================================================================================================
+
+    Combined Liquid Assets:
+    ---------------------------
+    Checking:                                        $ 4,798.36
+    Savings:                                         $17,975.42
+    -----------------------------------------------------------
+    Total Verified:                                  $22,773.78
+    
+    Estimated Closing Costs (per CD):                $ 8,400.00
+    Estimated Cash from Borrower:                    $   800.00 (prepaids + escrow)
+    Gift from Grandmother (pending):                 $ 2,000.00
+                                                     ----------
+    Total Funds Needed:                              $ 10,400.00?? WAIT - NO DOWN PAYMT USDA
+    Actually: Cash from borrower = $800. 
+    $22,773.78 > $800.00. SUFFICIENT FUNDS VERIFIED.
+    
+    [HANDWRITTEN]:
+    USDA = no downpayment. $800 needed from borrower for prepaids.
+    Has $22.7K. NO ISSUE.  - AR
+
+========================================================================================================
+CERTIFICATION
+========================================================================================================
+
+    I certify that the above account information is accurate as of the date signed.
+
+    _________________________________
+    [SIGNATURE]  Brian C. Holloway
+    Branch Manager, Credit Union of Central Illinois
+    Date: 02/12/2026
+
+    Phone verification: (217) 555-0788 - Spoke with Brian Holloway @ 2:30 PM 02/12/2026
+    Accounts confirmed as represented.
+
+========================================================================================================
+INTERNAL UW USE:
+    VOD received. All accounts joint. Balances consistent with stated income.
+    Large deposit $3K = IRS refund, verified via transcript. Acceptable.
+    Sufficient funds for closing. NO RESERVE REQUIREMENT FOR USDA.
+    - JW 02/12/2026
+========================================================================================================
+
+[FAX HEADER]
+FROM: 217-555-0799    TO: 217-555-0191    02/12/2026  2:45PM   PAGES: 2   OK

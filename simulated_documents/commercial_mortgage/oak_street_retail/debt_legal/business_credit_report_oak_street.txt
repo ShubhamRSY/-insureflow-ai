@@ -1,0 +1,92 @@
+================================================================================
+              BUSINESS CREDIT REPORT - EXPERIAN
+================================================================================
+
+BORROWER:       OAK STREET RETAIL LLC
+EIN:            99-1234567
+ADDRESS:        1242 Highland Drive, Springfield, IL 62704
+DATE FILED:     January 22, 2026 (Illinois)
+FILE TYPE:      Commercial - New Entity
+
+================================================================================
+EXPERIAN INTELLISCORE PLUS
+================================================================================
+
+Intelliscore:           68 (out of 100)
+Risk Class:             Low-Moderate Risk
+Payment Index:          N/A (insufficient trade history)
+Credit Capacity Index:  Low
+Business Age:           Less than 3 months
+Industry:               Lessors of Nonresidential Real Estate (NAICS 531190)
+
+         [!] SCORE REFLECTS LIMITED FILE - NEWLY FORMED ENTITY [!]
+
+================================================================================
+TRADE LINES
+================================================================================
+
+No trade lines reported. File is newly established.
+
+================================================================================
+PUBLIC RECORDS
+================================================================================
+
+No public records found. UCC filings: None.
+
+================================================================================
+D&B REPORT SUMMARY
+================================================================================
+
+D-U-N-S NUMBER:       Not yet assigned (application in process)
+RATING:               Not yet rated
+PAYMENT SCORE:        N/A
+CREDIT LIMIT:         Not yet established
+LINES OF CREDIT:      0
+
+================================================================================
+ALTERNATE DATA
+================================================================================
+
+Secretary of State Status: Active and in good standing (IL SOS)
+Annual Report Filed:        Not yet due (initial report due 01/01/2027)
+
+================================================================================
+COMMENTS AND NARRATIVE
+================================================================================
+
+Oak Street Retail LLC was formed on January 22, 2026 as a single-member
+Illinois LLC. The entity has no operating history and no established trade
+lines at this time. Credit profile should be reassessed once the entity has
+12+ months of operating history.
+
+[!] This is a new entity formed specifically for the purpose of acquiring the
+    8900 Oak Street property. Credit support for this loan will be provided
+    primarily through the personal guaranty of the sole member, Gregory T.
+    Sullivan, whose personal credit profile is attached as a separate exhibit.
+
+================================================================================
+PERSONAL GUARANTOR SUMMARY: GREGORY T. SULLIVAN
+================================================================================
+
+EXPERIAN PERSONAL SCORE: 812 (Excellent)
+TRANSUNION PERSONAL:     798
+EQUIFAX PERSONAL:        805
+
+Payment history: Clean. No late payments in last 7 years.
+Public records: None.
+Credit utilization: Low (under 10% of available credit).
+
+================================================================================
+REPORT DATE:  March 5, 2026
+REPORT REF:   EXP-CR-20260305-44581
+
+================================================================================
+[Handwritten on cover sheet:]
+"Thin file on the entity - expected. Personal guaranty will carry it.
+ Greg's scores are excellent. No issues. - JM"
+
+[Stamp in red ink:]
+                CREDIT DEPARTMENT REVIEWED
+                PERSONAL GUARANTY REQUIRED
+                APPROVED CONDITIONALLY - 3/10/26 - MLW
+================================================================================

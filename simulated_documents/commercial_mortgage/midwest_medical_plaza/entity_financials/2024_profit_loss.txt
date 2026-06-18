@@ -1,0 +1,70 @@
+============================================================================
+               MIDWEST MEDICAL PLAZA LLC
+          PROFIT AND LOSS STATEMENT (ACTUAL)
+              For the Year Ended December 31, 2024
+                       (UNAUDITED)
+============================================================================
+Prepared by: Chen & Associates, PC (CPA)
+Prepared from: Compiled financial statements - no audit performed
+============================================================================
+
+                              [CURRENT]          [PRIOR YEAR]           [VARIANCE]
+                              2024               2023                   $        %
+============================================================================
+INCOME
+  Base Rent Revenue          $   510,000         $   500,000         $ +10,000   +2.0%
+  CAM Reimbursements         $    22,000         $    20,000         $  +2,000  +10.0%
+  Other Income (vending,
+    laundry, ATMs)           $        -          $        -          $        -      -
+                            ------------        ------------        ------------
+  Gross Potential Rent       $   532,000         $   520,000         $ +12,000   +2.3%
+
+  Vacancy / Credit Loss      ($   48,000)        ($   35,000)        ($13,000)  +37.1%
+  [1 suite vacant 1,800 SF
+   since 09/2024 - note]
+                            ------------        ------------        ------------
+  Effective Gross Income     $   484,000         $   485,000         $  (1,000)  -0.2%
+
+============================================================================
+EXPENSES
+  Real Estate Taxes          $    72,000         $    70,000         $  +2,000   +2.9%
+  Insurance                  $    18,000         $    17,500         $    +500   +2.9%
+  Property Management
+    (5% of EGI)              $    24,200         $    24,250         $     (50)  -0.2%
+  Utilities                  $    14,000         $    13,500         $    +500   +3.7%
+  Repairs & Maintenance      $    12,000         $     9,000         $  +3,000  +33.3%
+    [HVAC repair - rooftop unit - $4,200 - one time]
+  Reserves for Replacement   $     8,000         $     8,000         $      -    0.0%
+  Professional Fees/
+    Legal/Accounting         $     2,500         $     2,000         $    +500  +25.0%
+  Miscellaneous              $     1,500         $     1,500         $      -    0.0%
+                            ------------        ------------        ------------
+  TOTAL EXPENSES             $   152,200         $   145,750         $  +6,450   +4.4%
+                            ------------        ------------        ------------
+============================================================================
+NET OPERATING INCOME         $   331,800         $   339,250         $  (7,450)  -2.2%
+============================================================================
+  [Margin note: "NOI $331,800 vs appraiser's $336,000. Difference due
+   to higher vacancy and HVAC repair. Stabilized NOI should be ~$336K
+   if vacant suite leased. Underwrite at $336K. - JM 3/10"]
+
+  Debt Service (proposed):   $   262,500         [factor rate]
+  DSCR:                      $   331.8 / 262.5 = 1.26x at actual
+                                     336 / 262.5 = 1.28x at stabilized
+
+============================================================================
+OCCUPANCY NOTES:
+  - 5 leased suites out of 6 (91% occupied)
+  - Suite 300 vacant since Sept 2024 (1,800 SF @ $4,000/mo market)
+  - Marketing: listed with Baird & Warner since 10/2024
+  - Management says they have a lead from a dental practice - no LOI yet
+============================================================================
+[Handwritten in blue ink:]
+"Dr. Chen says the vacant suite showing to a dentist next week.
+ Might have LOI by end of month. Worth noting - could boost NOI ~$48K/yr
+ if leased at $4K/mo. - JM"
+
+[Stamp:]
+                VERIFIED AGAINST CPA PREPARED FINANCIALS
+                CHEN & ASSOCIATES, PC - 3/1/2026
+============================================================================

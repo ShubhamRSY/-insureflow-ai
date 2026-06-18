@@ -1,0 +1,58 @@
+══════════════════════════════════════════════════════════════════════════════
+            NAVISTAR FINANCIAL SERVICES - AUTO LOAN STATEMENT
+══════════════════════════════════════════════════════════════════════════════
+
+Borrower(s):          John A. Thompson
+Account Number:       XXXX-XXXX-2309
+Vehicle:              2022 Honda CR-V EX-L (VIN: 2HKRW5H56NH123456)
+Statement Date:       04/03/2026
+Payment Due Date:     04/20/2026
+══════════════════════════════════════════════════════════════════════════════
+
+═══ PAYMENT SUMMARY ══════════════════════════════════════════════════════════
+
+  Monthly Payment:                $534.00
+  Total Due By 04/20/2026:        $534.00
+  Past Due Amount:                $0.00
+  Delinquent Days:                0
+
+══════════════════════════════════════════════════════════════════════════════
+LOAN DETAIL
+══════════════════════════════════════════════════════════════════════════════
+
+  Original Loan Amount:           $32,000.00
+  Loan Origination Date:          01/15/2022
+  Current Principal Balance:      $18,200.00
+  Interest Rate:                  5.49% Fixed APR
+  Loan Term:                      72 months
+  Remaining Payments:             40 (of 72)
+  Payoff Amount (good thru 05/03): $18,156.00
+  Actual Payoff (good thru 04/20): $18,221.00
+
+══════════════════════════════════════════════════════════════════════════════
+TRANSACTION HISTORY
+══════════════════════════════════════════════════════════════════════════════
+
+Date          Description                          Amount          Balance
+────────────  ──────────────────────────────────  ───────────────  ───────────────
+03/20/2026    PAYMENT RECEIVED (ACH AUTO-DEBIT)    -$534.00        $18,200.00
+03/31/2026    INTEREST ACCRUED (03/20-03/31)       +$82.44         $18,282.44
+04/01/2026    PRINCIPAL BREAKDOWN (REGULAR)        -$82.44         $18,200.00
+══════════════════════════════════════════════════════════════════════════════
+
+═══ PAYMENT BREAKDOWN (LAST PAYMENT) ═════════════════════════════════════════
+
+  Principal Portion:              $196.12
+  Interest Portion:               $337.88
+  Fees:                           $0.00
+  Total:                          $534.00
+
+══════════════════════════════════════════════════════════════════════════════
+  NOTE: AUTOPAY ENROLLED. YOUR PAYMENT OF $534.00 WILL BE DRAFTED ON
+  04/20/2026 FROM YOUR BANK OF SPRINGFIELD CHECKING ACCT XXXX-4872.
+  NO ACTION REQUIRED.
+══════════════════════════════════════════════════════════════════════════════
+
+══════════════════════════════════════════════════════════════════════════════
+[STAMP] CURRENT - NO DELINQUENCY
+══════════════════════════════════════════════════════════════════════════════

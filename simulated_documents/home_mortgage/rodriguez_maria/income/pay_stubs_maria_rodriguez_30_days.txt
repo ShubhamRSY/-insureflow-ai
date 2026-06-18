@@ -1,0 +1,84 @@
+================================================================================
+                    SPRINGFIELD SCHOOL DISTRICT 186 - PAYROLL ADVICE
+                                PAY PERIOD ENDING 02/15/2026
+                                  CHECK DATE: 02/19/2026
+================================================================================
+
+EMPLOYEE:  RODRIGUEZ, MARIA G.                    EMPL ID:   T-44219
+SSN:       XXX-XX-4421                             PAY DATE: 02/19/2026
+DEPT:      Lincoln Elementary - 3rd Grade         CHECK #:  8823471
+
+================================================================================
+  EARNINGS                     CURRENT                     YEAR TO DATE
+  --------------------------------------------------------------------
+  Regular (80.00 hrs)     $2,000.00                    $8,000.00
+
+  GROSS PAY                $2,000.00                    $8,000.00
+
+  DEDUCTIONS
+  --------------------------------------------------------------------
+  Federal Withholding       $161.54                      $646.16
+  Social Security           $124.00                      $496.00
+  Medicare                  $29.00                       $116.00
+  IL State Tax              $80.00                       $320.00
+  TRS Pension (9.8%)        $196.00                      $784.00
+  Dental                    $12.50                       $50.00
+  Vision                    $4.80                        $19.20
+
+  TOTAL DEDUCTIONS          $607.84                      $2,431.36
+
+  NET PAY                   $1,392.16                    $5,568.64
+
+================================================================================
+  CURRENT GROSS: $2,000.00   YTD GROSS: $8,000.00   YTD NET: $5,568.64
+================================================================================
+
+-----------------------------------------------------------------------
+
+================================================================================
+                    SPRINGFIELD SCHOOL DISTRICT 186 - PAYROLL ADVICE
+                                PAY PERIOD ENDING 02/29/2026
+                                  CHECK DATE: 03/04/2026
+================================================================================
+
+EMPLOYEE:  RODRIGUEZ, MARIA G.                    EMPL ID:   T-44219
+SSN:       XXX-XX-4421                             PAY DATE: 03/04/2026
+DEPT:      Lincoln Elementary - 3rd Grade         CHECK #:  8824702
+
+================================================================================
+  EARNINGS                     CURRENT                     YEAR TO DATE
+  --------------------------------------------------------------------
+  Regular (80.00 hrs)     $2,000.00                    $10,000.00
+
+  GROSS PAY                $2,000.00                    $10,000.00
+
+  DEDUCTIONS
+  --------------------------------------------------------------------
+  Federal Withholding       $161.54                      $807.70
+  Social Security           $124.00                      $620.00
+  Medicare                  $29.00                       $145.00
+  IL State Tax              $80.00                       $400.00
+  TRS Pension (9.8%)        $196.00                      $980.00
+  Dental                    $12.50                       $62.50
+  Vision                    $4.80                        $24.00
+
+  TOTAL DEDUCTIONS          $607.84                      $3,039.20
+
+  NET PAY                   $1,392.16                    $6,960.80
+
+================================================================================
+  CURRENT GROSS: $2,000.00   YTD GROSS: $10,000.00   YTD NET: $6,960.80
+================================================================================
+
+  [handwritten yellow sticky note attached to top of stub:]
+  _________________________________________________________________
+  | Maria - can you update your W-4? Still claiming single/0?    |
+  | Your fed withholding looks a bit high this year. LMK if you  |
+  | want to adjust. -- Carol in Payroll, Ext 4417                |
+  |_______________________________________________________________|
+
+  [underwriter stamped:]
+  *** YTD $10,000 GROSS SALARY VERIFIED. $52K ANNUALIZED CONSISTENT
+      WITH W-2 HISTORY. 2/26/2026 - UW REVIEW INITIALS: JM ***
+
+  [coffee stain ring on bottom right corner]

@@ -1,0 +1,140 @@
+================================================================================
+               PERSONAL FINANCIAL STATEMENT SUMMARIES
+                  MIDWEST MEDICAL PLAZA LLC
+                  Sponsors/Guarantors (3 Members)
+================================================================================
+Prepared from PFS forms submitted 02/15/2026
+Verified against supporting documentation: In progress
+================================================================================
+
+GUARANTOR 1: DR. ROBERT CHEN, M.D.
+============================================================
+DOB:         08/22/1965 (Age 60)
+Profession:  Internal Medicine - Springfield Internal Medicine Assoc.
+Position:    Managing Member - Midwest Medical Plaza LLC
+Residence:   458 Oak Knoll Drive, Springfield, IL 62704
+Net Worth:   $4,200,000 (per PFS dated 01/31/2026)
+
+ASSETS:
+  Residence (free and clear - 458 Oak Knoll)           $  850,000
+  Medical practice ownership (Springfield IM - 50%)     $1,200,000
+  [Estimate based on practice valuation 2024]
+  Investment portfolio (Schwab - managed)                $1,100,000
+  Retirement accounts (401k, IRA, SEP)                   $  900,000
+  Real estate (2 rental properties - single family)      $  450,000
+  Cash & checking                                       $  125,000
+  Personal property & vehicles                           $  100,000
+                                                         ----------
+  TOTAL ASSETS                                          $4,725,000
+
+LIABILITIES:
+  Rental property mortgages (2 properties)               $  275,000
+  Practice loan (Springfield IM - his share)              $  200,000
+  Credit cards (paid monthly, current balance)            $   15,000
+  [Umbrella policy premiums noted but not liability]
+  No other debt                                          $        -
+                                                         ----------
+  TOTAL LIABILITIES                                      $  490,000
+
+NET WORTH:                                                $4,235,000
+
+LIQUIDITY: Schwab + Cash = $1,225,000 (easily liquidated)
+
+[!] Primary credit support for this loan. Strong liquidity.
+
+============================================================
+GUARANTOR 2: DR. SARAH KIM, M.D.
+============================================================
+DOB:         11/03/1978 (Age 47)
+Profession:  Dermatologist - Springfield Dermatology Associates
+Residence:   2154 Pinecrest Lane, Springfield, IL 62707
+Net Worth:   $1,800,000 (per PFS dated 02/01/2026)
+
+ASSETS:
+  Residence (mortgage - 2154 Pinecrest)                  $  520,000
+  [Market value $520K]
+  Derm practice ownership (100% - SDA PC)                 $  500,000
+  [Est - single doc practice]
+  Investment accounts (Vanguard)                          $  590,000
+  Retirement (SEP IRA, 401k)                              $  250,000
+  Cash                                                   $   80,000
+  Personal property/vehicle                               $   60,000
+                                                         ----------
+  TOTAL ASSETS                                           $2,000,000
+
+LIABILITIES:
+  Residence mortgage                                      $  180,000
+  Practice line of credit (SDA PC - personal guaranty)     $   25,000
+  Student loans (MD - near payoff)                         $   15,000
+  Credit cards (current)                                   $    8,000
+                                                         ----------
+  TOTAL LIABILITIES                                       $  228,000
+
+NET WORTH:                                                $1,772,000
+
+LIQUIDITY: Vanguard + Cash = $670,000
+
+[!] NOTE: Derm lease expires 09/30/2026. Dr. Kim IS the tenant.
+    If she doesn't renew, it impacts both her income AND the property
+    occupancy. Need to confirm renewal before close. - JM
+
+  [Handwritten: "Spoke to Dr. Kim 3/14. She's renewing. Just negotiating
+   rent. She wants to stay - her patient base is here. - JM"]
+
+============================================================
+GUARANTOR 3: DR. JAMES FREEMAN, M.D.
+============================================================
+DOB:         03/28/1970 (Age 55)
+Profession:  Radiologist - Associated Radiologists of Springfield
+Residence:   782 Meadowbrook Circle, Springfield, IL 62708
+Net Worth:   $2,100,000 (per PFS dated 02/10/2026)
+
+ASSETS:
+  Residence (free and clear - 782 Meadowbrook)            $  680,000
+  Vacation home (Lake Springfield cabin)                  $  220,000
+  Investment portfolio (Fidelity)                         $  750,000
+  Retirement accounts (401k, IRA)                         $  550,000
+  Cash                                                   $  100,000
+  Personal property/vehicles                              $   80,000
+                                                         ----------
+  TOTAL ASSETS                                           $2,380,000
+
+LIABILITIES:
+  Vacation home mortgage (Lake Springfield)                $  180,000
+  Car loan (2024 BMW X5)                                   $   35,000
+  Credit cards (paid monthly)                              $   12,000
+                                                         ----------
+  TOTAL LIABILITIES                                       $  227,000
+
+NET WORTH:                                                $2,153,000
+
+LIQUIDITY: Fidelity + Cash = $850,000
+
+[!] Clean profile. Dr. Freeman is an employed radiologist -
+    not a tenant in the building. Stable income, solid NW.
+
+================================================================================
+COMBINED GUARANTOR STRENGTH SUMMARY
+================================================================================
+
+                    Dr. Chen         Dr. Kim          Dr. Freeman       TOTAL
+                    ---------        ---------        ---------       --------
+Net Worth           $4,235,000       $1,772,000       $2,153,000      $8,160,000
+Liquid Assets       $1,225,000       $  670,000       $  850,000      $2,745,000
+Debt Ratios         10.4%            11.4%            9.5%            10.5% avg
+
+Combined NW of $8.16M supports the $3.15M loan.
+Combined liquidity $2.745M = 87% of loan amount.
+All three have clean personal credit (780+ scores per Experian).
+
+================================================================================
+[Handwritten note at bottom:]
+"Dr. Chen is the strong backstop on this deal. Dr. Kim carries tenant risk
+ (her own lease expiring). Dr. Freeman is clean. Collectively strong enough.
+ Recommend we condition the loan on Derm renewal (Dr. Kim's practice).
+ - JM 3/12/26"
+
+"Per credit committee 3/14: Need PFS updates within 90 days of closing.
+ Also need Dr. Kim's lease renewal signed before funding.
+ - MLW (credit)"
+================================================================================

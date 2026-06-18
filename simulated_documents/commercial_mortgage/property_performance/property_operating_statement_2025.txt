@@ -1,0 +1,86 @@
+══════════════════════════════════════════════════════════════════════════════
+               THOMPSON COMMERCIAL PROPERTIES LLC
+         ANNUAL PROPERTY OPERATING STATEMENT - YEAR ENDED 2025
+══════════════════════════════════════════════════════════════════════════════
+
+  Property:         5678 Commerce Boulevard, Springfield, IL 62702
+  Prepared For:     Loan Application / Underwriting Review
+  Variance Notes:   Compared to 2024 actuals
+
+══════════════════════════════════════════════════════════════════════════════
+                          ACTUAL 2024     ACTUAL 2025   VARIANCE     %
+══════════════════════════════════════════════════════════════════════════════
+
+REVENUE:
+  Gross Rental Income    $259,200.00      $261,600.00    +$2,400.00   +0.9%
+  Other Income            $11,440.00       $12,400.00    +$960.00     +8.4%
+  Vacancy Loss            ($3,900.00)      ($6,300.00)   ($2,400.00)  +61.5%
+══════════════════════════════════════════════════════════════════════════════
+  EGI                   $266,740.00      $267,700.00    +$960.00      +0.4%
+══════════════════════════════════════════════════════════════════════════════
+
+EXPENSES:
+  Property Mgmt          $10,669.60       $10,708.00    +$38.40       +0.4%
+  Real Estate Taxes      $38,400.00       $39,600.00    +$1,200.00    +3.1%
+  Insurance               $9,200.00        $9,800.00     +$600.00     +6.5%
+  Utilities Common       $12,400.00       $13,200.00    +$800.00      +6.5%
+  Repairs & Maint         $7,800.00       $9,400.00     +$1,600.00   +20.5%
+  Janitorial              $4,600.00        $5,000.00     +$400.00     +8.7%
+  Snow/Landscaping        $3,200.00        $3,400.00     +$200.00     +6.3%
+  Pest Control             $1,200.00        $1,200.00     $0.00        0.0%
+  Elevator Maintenance     $2,400.00        $2,400.00     $0.00        0.0%
+  HVAC Maintenance         $1,800.00        $2,200.00     +$400.00    +22.2%
+  Fire Safety                $850.00          $850.00      $0.00        0.0%
+  Security Monitoring      $2,400.00        $2,400.00     $0.00        0.0%
+  Legal & Professional     $3,500.00        $3,200.00    ($300.00)    -8.6%
+  Accounting               $2,400.00        $2,400.00     $0.00        0.0%
+  Advertising (Leasing)    $1,500.00        $2,800.00    +$1,300.00  +86.7%
+  Licenses & Permits         $750.00          $800.00      $50.00      +6.7%
+══════════════════════════════════════════════════════════════════════════════
+  TOTAL EXPENSES        $103,469.60      $109,158.00    +$5,688.40    +5.5%
+══════════════════════════════════════════════════════════════════════════════
+
+══════════════════════════════════════════════════════════════════════════════
+  NOI                    $163,270.40      $158,542.00    ($4,728.40)   -2.9%
+══════════════════════════════════════════════════════════════════════════════
+
+══════════════════════════════════════════════════════════════════════════════
+DEBT SERVICE:
+  First National Bank
+  (P&I Monthly $11,848.40)  $142,180.80   $142,180.80     $0.00        0.0%
+══════════════════════════════════════════════════════════════════════════════
+  NET CASH FLOW            $21,089.60       $16,361.20   ($4,728.40)  -22.4%
+══════════════════════════════════════════════════════════════════════════════
+
+══════════════════════════════════════════════════════════════════════════════
+RATIOS:
+══════════════════════════════════════════════════════════════════════════════
+  DSCR (Debt Service Coverage Ratio):  1.12x
+  Operating Expense Ratio:              40.8%
+  Vacancy Rate:                         2.3% (vs 1.4% in 2024)
+  Occupancy Cost Ratio:                 68.2% (inc. debt service)
+  Effective Gross Income Multiplier:    10.5x
+
+══════════════════════════════════════════════════════════════════════════════
+VARIANCE EXPLANATIONS:
+══════════════════════════════════════════════════════════════════════════════
+
+  - Repairs & Maint (+$1,600): HVAC compressor replacement on Suite 200
+    (April 2025) - $2,800. Roof patch repair (October 2025) - $1,200.
+    Budgeted R&M for 2026: $8,500.
+
+  - Vacancy Loss (+$2,400): Suite 310 (Freelance Hub CoWork) vacated
+    11/30/2025. 1 month vacancy + tenant improvement period.
+    Currently listed. Expected to lease by Q2 2026.
+
+  - Advertising/Leasing (+$1,300): Increased spend for Suite 310
+    leasing efforts. CoStar listing + broker commission expectation
+    of $19K upon lease signing.
+
+  - Insurance (+$600): Annual renewal increase due to market conditions.
+    Shopping policy at renewal (May 2026) for potential savings.
+
+══════════════════════════════════════════════════════════════════════════════
+[STAMP] PREPARED BY OWNER/MANAGEMENT - NOT AUDITED
+[STAMP] RECEIVED FOR UNDERWRITING REVIEW - 03/10/2026
+══════════════════════════════════════════════════════════════════════════════

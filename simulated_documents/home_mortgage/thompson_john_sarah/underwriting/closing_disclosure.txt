@@ -1,0 +1,154 @@
+========================================================================================================
+                         CLOSING DISCLOSURE
+                       (TRID / TILA-RESPA Integrated Disclosure)
+========================================================================================================
+
+                                                                        FILE #: INF-2026-33821
+                                                                        DATE ISSUED: 04/25/2026
+                                                                        CLOSING DATE: 04/30/2026
+
+========================================================================================================
+TRANSACTION INFORMATION
+========================================================================================================
+
+  BORROWER(S):                John A. Thompson & Sarah M. Thompson
+  SELLER(S):                  Mark A. Williams & Rebecca T. Williams
+
+  LENDER:                     InsureFlow National Mortgage
+                              555 Financial Parkway, Suite 300
+                              Chicago, IL 60606
+                              NMLS # 882931
+
+  PROPERTY:                   4567 Oakwood Lane, Springfield, IL 62704
+
+  LOAN TYPE:                  [X] Conventional  [ ] FHA  [ ] VA  [ ] USDA
+  LOAN PURPOSE:               [X] Purchase  [ ] Refinance  [ ] Construction
+
+========================================================================================================
+LOAN TERMS
+========================================================================================================
+
+  LOAN AMOUNT:                                           $340,000.00
+  INTEREST RATE:                                         6.750%
+  MONTHLY PRINCIPAL & INTEREST (P&I):                    $2,205.62
+  LOAN TERM:                                             30 Years (360 Months)
+  PRODUCT:                                                30-Year Fixed Rate
+
+  CAN THIS RATE INCREASE AFTER CLOSING?                  NO
+
+========================================================================================================
+PROJECTED PAYMENTS
+========================================================================================================
+
+                                                        YEARS 1-30
+  Principal & Interest                                    $2,205.62
+  Mortgage Insurance                                         $0.00
+  Hazard Insurance (escrowed)                              $156.25
+  Real Estate Taxes (escrowed)                             $560.00
+  Homeowner's Association                                    $0.00
+  ---------------------------------------------------   ---------
+  TOTAL MONTHLY PAYMENT                                   $2,921.87
+
+========================================================================================================
+COSTS AT CLOSING
+========================================================================================================
+
+  ORIGINATION CHARGES (A):
+    Origination Fee (1% of loan)                          $3,400.00
+    Processing Fee                                           $0.00
+    Underwriting Fee                                        $0.00
+    TOTAL (A):                                            $3,400.00
+
+  SERVICES YOU CAN SHOP FOR (B):
+    Appraisal Fee to: Midwest Appraisal Services            $600.00
+    Credit Report Fee to: Experian                           $45.00
+    Flood Determination Fee to: CoreLogic                   $12.00
+    Tax Service Fee to: CoreLogic                            $65.00
+    Survey Fee to: Sangamon Surveying Co.                   $350.00
+    TOTAL (B):                                            $1,072.00
+
+  SERVICES YOU CANNOT SHOP FOR (C):
+    Title - Lender's Title Insurance (Chicago Title)      $1,200.00
+    Title - Settlement Agent Fee                             $500.00
+    Title - Closing Protection Letter                        $100.00
+    Title - Recording Fees                                   $75.00
+    TOTAL (C):                                            $1,875.00
+
+  GOVERNMENT FEES (D):
+    Recording Fees (County Recorder)                        $250.00
+    Transfer Taxes (State of Illinois)                       $0.00 (seller pays per contract)
+    TOTAL (D):                                              $250.00
+
+  PREPAIDS (E):
+    Hazard Insurance Premium (1 yr - State Farm)          $1,875.00
+    Prepaid Interest (04/30 - 05/31 @ $63.30/day)        $1,930.00
+    TOTAL (E):                                            $3,805.00
+
+  INITIAL ESCROW PAYMENT AT CLOSING (F):
+    Hazard Insurance (2 months @ $156.25)                   $312.50
+    Real Estate Taxes (2 months @ $560.00)                 $1,120.00
+    TOTAL (F):                                            $1,432.50
+
+  OTHER COSTS (G):
+    Owner's Title Insurance (Chicago Title)                 $700.00
+    TOTAL (G):                                              $700.00
+
+========================================================================================================
+TOTAL CLOSING COSTS (A + B + C + D + E + F + G):
+                                                          $12,534.50
+                                                          ==========
+
+========================================================================================================
+CASH TO CLOSE
+========================================================================================================
+
+  Purchase Price                                           $422,500.00
+  Total Closing Costs (from above)                         $12,534.50
+  Down Payment (20.71%)                                    $87,500.00
+  Loan Amount                                             -$340,000.00
+  Earnest Money Deposit                                    -$5,000.00
+  Seller Credits                                             $0.00
+  ---------------------------------------------------   -------------
+  CASH TO CLOSE FROM BORROWER:                              $97,034.50
+                                                            ==========
+
+  Note: Seller credits toward buyer's closing costs:       $0.00
+
+========================================================================================================
+BORROWER SIGNATURES
+========================================================================================================
+
+  By signing below, I/we acknowledge that I/we have received and read
+  this Closing Disclosure and agree to the terms disclosed.
+
+  _________________________________________         Date: ______________
+  John Andrew Thompson
+
+  _________________________________________         Date: ______________
+  Sarah Michelle Thompson
+
+========================================================================================================
+
+[STAMP]: COPY - BORROWER
+         INSUREFLOW NATIONAL MORTGAGE
+         PROVIDED TO BORROWER 04/25/2026
+
+========================================================================================================
+
+UW HANDWRITTEN NOTES (RED PEN ON PAGE 1):
+
+   CD matches LE within tolerance ✔
+   
+   Total closing costs actually $12,534.50 - revised appraisal addendum
+   changed purchase price down $2,500. Slight change in cash to close.
+   
+   Cash to close: $97,034.50
+   
+   Borrower has $102,918.22 verified assets.
+   Difference: $5,883.72 remaining.
+   
+   All good. Proceed.
+   
+   - J.M. 04/25/2026
+   
+========================================================================================================

@@ -1,0 +1,53 @@
+================================================================================
+                    Department of the Treasury - Internal Revenue Service
+                                  WAGE AND TAX STATEMENT
+                                        Form W-2
+                                    COPY B - TO BE FILED WITH EMPLOYEE'S FEDERAL TAX RETURN
+================================================================================
+
+  Employer's Name & Address:                                    Employer ID Number:
+  Springfield School District 186                                37-6128995
+  1900 W Monroe Street
+  Springfield, IL 62704
+
+  Employer's State ID:                                           Control Number:
+  IL-XX-37289                                                    S1092-8832M
+
+================================================================================
+  Employee's Name & Address:                                    Employee's SSN:
+  MARIA G. RODRIGUEZ                                            XXX-XX-4421
+  789 Elm Street, Apt 2B
+  Springfield, IL 62704
+
+================================================================================
+  BOX 1 - Wages, Tips, Other Compensation:          $52,000.00
+  BOX 2 - Federal Income Tax Withheld:               $4,200.00
+  BOX 3 - Social Security Wages:                     $52,000.00
+  BOX 4 - Social Security Tax Withheld:              $3,224.00
+  BOX 5 - Medicare Wages & Tips:                     $52,000.00
+  BOX 6 - Medicare Tax Withheld:                     $754.00
+  BOX 7 - Social Security Tips:                      $0.00
+  BOX 8 - Allocated Tips:                             $0.00
+  BOX 9 - Blank
+  BOX 10 - Dependent Care Benefits:                  $0.00
+  BOX 11 - Nonqualified Plans:                       $0.00
+  BOX 12a - Code / Amount:                           D   $1,200.00
+  BOX 12b - Code / Amount:
+  BOX 13 - Statutory Employee / Retirement Plan /   _/_  Retirement Plan (X)
+                            Third-Party Sick Pay
+  BOX 14 - Other:                                    STATE IL
+
+  BOX 15 - State / Employer's State ID:             IL / 37-6128995
+  BOX 16 - State Wages:                             $52,000.00
+  BOX 17 - State Income Tax:                        $2,080.00
+  BOX 18 - Local Wages:                              $0.00
+  BOX 19 - Local Income Tax:                         $0.00
+  BOX 20 - Locality Name:
+
+================================================================================
+  [stamp: RECEIVED MAR 14 2025 - PAYROLL DEPT SPRINGFIELD SD186]
+  [stamp: CERTIFIED COPY - DO NOT ALTER]
+
+  ~ faint coffee stain lower right corner ~
+
+================================================================================

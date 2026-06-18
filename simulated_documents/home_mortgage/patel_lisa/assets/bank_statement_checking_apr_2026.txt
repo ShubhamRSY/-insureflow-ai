@@ -1,0 +1,202 @@
+    ========================================================================
+                             CHASE BANK
+                     Personal Checking Account Statement
+
+    Account Number:       XXXX4521
+    Account Type:         Chase Total Checking®
+    Statement Period:     April 1, 2026 - April 30, 2026
+
+    BORROWER:             Lisa M. Sullivan (f/k/a Patel)
+                          555 Lake Shore Drive, Unit 12A
+                          Springfield, IL 62704
+
+    ========================================================================
+                          ACCOUNT SUMMARY
+    ========================================================================
+
+    Beginning Balance on 04/01/2026:                           $18,432.17
+    Total Deposits & Credits:                                   $16,921.50
+    Total Withdrawals & Debits:                                ($13,342.88)
+    Ending Balance on 04/30/2026:                               $22,010.79
+
+    Average Daily Balance (31 days):                            $20,125.44
+
+    ========================================================================
+                          DEPOSITS & CREDITS
+    ========================================================================
+
+    Date        Description                                                   Amount
+    ───────────────────────────────────────────────────────────────────────────────
+    04/01/2026  DIRECT DEPOSIT - SPRINGFIELD COMM BK                          $1,500.00
+                CHILD SUPPORT - MICHAEL PATEL
+
+    04/02/2026  ATM DEPOSIT - CHASE BRANCH #421                               $500.00
+                SPRINGFIELD IL (birthday gift from parents)
+
+    04/03/2026  MOBILE DEPOSIT - CHECK #1042                                  $250.00
+                Drawer: SOPHIA PATEL (school fundraiser reimbursement)
+
+    04/08/2026  BANK INTEREST                                                   $0.32
+
+    04/15/2026  DIRECT DEPOSIT - ILLINOIS MUTUAL INS CO                     $6,875.00
+                PAYROLL - LISA PATEL
+
+    04/15/2026  DIRECT DEPOSIT - ILLINOIS MUTUAL INS CO                     $7,796.18
+                PAYROLL (w/ bonus catch-up from prior period)
+                * SEE NOTE BELOW - ADJUSTED FOR PAYROLL ERROR
+
+    04/22/2026  TRANSFER FROM VANGUARD MONEY MARKET                       $2,000.00
+                REF: ACCT #XXXX7890
+
+    ─────────────────────────────────────────────────────────────────────────────
+    NOTE ON 04/15 PAYROLL: Two deposits appear because payroll system
+    correction was made after HR discovered March bonus paystub was short
+    $7,796.18 due to incorrect deduction code. Corrected 04/15/2026.
+    ─────────────────────────────────────────────────────────────────────────────
+
+    ========================================================================
+                         WITHDRAWALS & DEBITS
+    ========================================================================
+
+    Date        Description                                                   Amount
+    ───────────────────────────────────────────────────────────────────────────────
+    04/01/2026  CHASE AUTO LOAN PAYMENT - ACCT XXXXXX                         $0.00
+                (AUTOPAY CANCELLED - LOAN PAID OFF 02/2026)
+
+    04/02/2026  DEBIT CARD PURCHASE - JEWEL-OSCO #7821                      ($87.32)
+                SPRINGFIELD IL - GROCERIES
+
+    04/03/2026  DEBIT CARD PURCHASE - TARGET T-1282                        ($142.50)
+                SPRINGFIELD IL - HOUSEHOLD
+
+    04/05/2026  DEBIT CARD PURCHASE - AMAZON.COM                            ($89.97)
+                PRIME MEMBERSHIP + SUPPLIES
+
+    04/06/2026  DEBIT CARD PURCHASE - MARIANO'S FRESH MARKET               ($56.80)
+                SPRINGFIELD IL - GROCERIES
+
+    04/08/2026  ONLINE TRANSFER TO CHASE SAVINGS #7891                    ($500.00)
+                TRANSFER TO SAVINGS
+
+    04/10/2026  CHECK #1187                                                ($350.00)
+                PAY TO: SPRINGFIELD PIANO ACADEMY
+                MEMO: ETHAN LESSONS - APRIL
+
+    04/11/2026  DEBIT CARD PURCHASE - SHELL OIL #2045                      ($45.00)
+                SPRINGFIELD IL - GAS
+
+    04/12/2026  DEBIT CARD PURCHASE - NORDSTROM RACK                       ($215.40)
+                SPRINGFIELD IL - CLOTHING
+
+    04/13/2026  DEBIT CARD PURCHASE - PANERA BREAD #3021                   ($32.50)
+                SPRINGFIELD IL - DINING
+
+    04/14/2026  DEBIT CARD PURCHASE - WALGREENS #4406                      ($28.75)
+                SPRINGFIELD IL - PHARMACY
+
+    04/15/2026  DEBIT CARD PURCHASE - AMAZON.COM                           ($124.38)
+                HOUSEHOLD ITEMS
+
+    04/16/2026  CHECK #1188                                                ($2,500.00)
+                PAY TO: O'BRIEN & ASSOCIATES, P.C.
+                MEMO: LEGAL FEES - FINAL DIVORCE BILLING
+                * THIS IS LAST ATTORNEY BILL - WILL BE REIMBURSED FROM
+                  CASH-OUT PROCEEDS PER CLOSING - JM
+
+    04/17/2026  DEBIT CARD PURCHASE - BEST BUY 00142                       ($1,299.99)
+                SPRINGFIELD IL - MACBOOK AIR (REPLACEMENT - OLD LAPTOP
+                WAS SPOUSE'S AND WAS RETURNED PER DIVORCE DECREE)
+
+    04/18/2026  DEBIT CARD PURCHASE - SPROUTS FARMERS MARKET               ($68.00)
+                SPRINGFIELD IL - GROCERIES
+
+    04/20/2026  DEBIT CARD PURCHASE - HOME DEPOT #2801                     ($189.40)
+                SPRINGFIELD IL - PAINT + SUPPLIES (BATHROOM RENOVATION)
+
+    04/21/2026  DEBIT CARD PURCHASE - EXXONMOBIL #1745                     ($52.00)
+                SPRINGFIELD IL - GAS
+
+    04/22/2026  CHECK #1189                                                ($187.50)
+                PAY TO: LAKE SHORE DRIVE CONDO ASSOC
+                MEMO: HOA DUES - MAY 2026
+
+    04/23/2026  DEBIT CARD PURCHASE - ULTA BEAUTY #1055                   ($78.40)
+                SPRINGFIELD IL - PERSONAL CARE
+
+    04/24/2026  ONLINE TRANSFER TO CHASE SAVINGS #7891                    ($500.00)
+                BUDGETED SAVINGS TRANSFER
+
+    04/25/2026  DEBIT CARD PURCHASE - WHOLE FOODS MARKET                  ($112.80)
+                SPRINGFIELD IL - GROCERIES
+
+    04/26/2026  DEBIT CARD PURCHASE - DICK'S SPORTING GOODS               ($165.00)
+                SPRINGFIELD IL - SOPHIA SOCCER CLEATS + EQUIPMENT
+
+    04/27/2026  DEBIT CARD PURCHASE - NETFLIX.COM                          ($22.99)
+
+    04/28/2026  DEBIT CARD PURCHASE - AMAZON.COM                           ($47.50)
+                SCHOOL SUPPLIES
+
+    04/29/2026  DEBIT CARD PURCHASE - BP GAS #6321                        ($48.00)
+                SPRINGFIELD IL - GAS
+
+    04/30/2026  DEBIT CARD PURCHASE - MARIANO'S FRESH MARKET               ($71.08)
+                SPRINGFIELD IL - GROCERIES
+
+    04/30/2026  MONTHLY SERVICE FEE                                         ($12.00)
+                (WAIVED IF DAILY BALANCE > $1,500 WHICH WAS MET FOR
+                 24 OF 31 DAYS — FEE ASSESSED INCORRECTLY, DISPUTED)
+
+    ─────────────────────────────────────────────────────────────────────────────
+    LARGE WITHDRAWALS — PREVIOUS MONTHS (ATTORNEY FEES)
+
+    The following large withdrawals were identified in prior statement
+    periods related to divorce legal fees:
+
+    Date        Description                                                   Amount
+    ───────────────────────────────────────────────────────────────────────────────
+    01/15/2026  CHECK #1175                                                ($12,000.00)
+                PAY TO: O'BRIEN & ASSOCIATES, P.C.
+                MEMO: LEGAL FEES - QDRO PREP + PROPERTY DIVISION
+
+    01/20/2026  CHECK #1176                                                 ($5,000.00)
+                PAY TO: KOWALSKI & ASSOCIATES (CPA)
+                MEMO: TAX PREP + FORECASTING - DIVORCE
+
+    02/10/2026  CHECK #1180                                                 ($8,500.00)
+                PAY TO: O'BRIEN & ASSOCIATES, P.C.
+                MEMO: FINAL DECREE + APPEARANCE FEES
+
+    03/05/2026  CHECK #1183                                                 ($6,000.00)
+                PAY TO: O'BRIEN & ASSOCIATES, P.C.
+                MEMO: CHILD SUPPORT MODIFICATION
+
+    03/20/2026  CHECK #1185                                                 ($3,500.00)
+                PAY TO: O'BRIEN & ASSOCIATES, P.C.
+                MEMO: FINAL BILLING - CASE CLOSE
+
+    04/16/2026  CHECK #1188                                                 ($2,500.00)
+                PAY TO: O'BRIEN & ASSOCIATES, P.C.
+                MEMO: LEGAL FEES - FINAL DIVORCE BILLING
+
+    ─────────────────────────────────────────────────────────────────────────────
+    NOTE ACCOUNT TOTALS:
+    Total Attorney Fees Paid YTD 2026:                          $37,500.00
+    Total CPA Fees Paid YTD 2026:                               $5,000.00
+
+    HANDWRITTEN NOTE (in blue ink at bottom of page):
+    "ATTORNEY FEES SHOWN - WILL BE PAID OFF AT CLOSING - JM"
+
+    ─────────────────────────────────────────────────────────────────────────────
+    ADDITIONAL UNDERWRITER NOTES:
+    - Child support deposit ($1,500/mo) consistently received on or before
+      the 1st of each month. 4 consecutive months verified.
+    - Payroll deposits consistent with base salary of $165K/yr.
+    - Large withdrawals for attorney fees are 1-time/post-divorce expenses.
+      Will be resolved at closing from cash-out proceeds.
+    - No NSF or overdraft items in current period.
+    - The $2,000 transfer from Vanguard Money Market was to cover the
+      attorney check #1188 ($2,500) plus regular expenses.
+    - The Best Buy purchase ($1,299.99) - this is a laptop replacement.
+      Old laptop was marital property retained by ex-husband.
+    ─────────────────────────────────────────────────────────────────────────────

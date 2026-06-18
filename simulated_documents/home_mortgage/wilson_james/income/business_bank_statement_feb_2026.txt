@@ -1,0 +1,93 @@
+======================================================================
+                   BANK OF AMERICA - BUSINESS CHECKING
+                         ACCOUNT SUMMARY
+======================================================================
+ACCOUNT: Wilson Home Improvements
+ACCT #: xxxx-4412 (EIN used for TIN)
+PERIOD: February 1, 2026 - February 28, 2026
+OPENING BALANCE: $22,418.37
+CLOSING BALANCE:  $25,106.82
+
+======================================================================
+TRANSACTION HISTORY:
+======================================================================
+Date        Description                                              Amount       Balance
+------------------------------------------------------------------------------------------
+02/01/26    Opening Balance                                                       $22,418.37
+02/02/26    Deposit - Zelle Transfer - Ramirez J. (Kitchen final)   +$4,200.00   $26,618.37
+02/02/26    Debit Card - Home Depot #4412, Springfield              -$487.23     $26,131.14
+02/03/26    Check #1041 - Michael Rivera Electrical (sub)           -$2,800.00   $23,331.14
+02/05/26    Debit Card - Lowe's #2291, Springfield                 -$234.18     $23,096.96
+02/06/26    Deposit - Check - Chen L. (Bath final - personal chk)  +$6,400.00   $29,496.96
+02/07/26    Debit Card - Menards, Springfield                      -$145.50     $29,351.46
+02/08/26    Withdrawal - ATM (Cash - job site petty cash)          -$400.00     $28,951.46
+02/10/26    Check #1042 - Precision Plumbing (sub)                  -$2,200.00   $26,751.46
+02/11/26    Debit Card - Home Depot #4412                          -$312.87     $26,438.59
+02/12/26    Debit Card - Harbor Freight (tools)                    -$89.99      $26,348.60
+02/13/26    Deposit - Zelle - O'Malley K. (Final payment)          +$3,500.00   $29,848.60
+02/14/26    Debit Card - Sherwin Williams (paint)                  -$215.40     $29,633.20
+02/15/26    Service Fee - Monthly Maintenance                      -$29.95      $29,603.25
+02/15/26    Debit Card - AutoZone (truck parts)                    -$87.32      $29,515.93
+02/16/26    Check #1043 - Garcia Drywall (sub)                      -$1,200.00   $28,315.93
+02/17/26    Debit Card - Home Depot #4412                          -$567.80     $27,748.13
+02/18/26    Transfer - To Personal Checking (#8832)                -$2,000.00   $25,748.13
+            [handwritten note: "draw for living expenses"]
+02/20/26    Debit Card - Lowe's #2291                              -$118.27     $25,629.86
+02/21/26    Deposit - Zelle - Dawson J. (Final payment)            +$4,800.00   $30,429.86
+02/22/26    Check #1044 - A-1 Painting (sub)                        -$600.00     $29,829.86
+02/23/26    Debit Card - Home Depot - Springfield                  -$428.15     $29,401.71
+02/24/26    Deposit - Cash (Hartley closet job balance)            +$1,200.00   $30,601.71
+02/25/26    Debit Card - Fastenal (fasteners/hardware)             -$67.50      $30,534.21
+02/26/26    Debit Card - Menards                                   -$223.40     $30,310.81
+02/27/26    Check #1045 - Dave K. Plumbing (extras on Chen job)    -$800.00     $29,510.81
+02/27/26    Deposit - Zelle - Payments (2 small jobs)              +$1,800.00   $31,310.81
+02/28/26    Debit Card - Home Depot #4412                          -$4,203.99   $27,106.82
+            [ANNOTATION: large purchase - kitchen cabinets 
+             for Wilson's OWN renovation? VERIFY]
+02/28/26    Transfer - BofA Business Savings (auto-save)           -$2,000.00   $25,106.82
+02/28/26    Closing Balance                                                     $25,106.82
+======================================================================
+
+MONTHLY SUMMARY:
+   Total Deposits:                                        $21,900.00
+   Total Withdrawals:                                    ($19,211.50)
+   Net Change:                                             $2,688.45
+
+======================================================================
+OUTSTANDING CHECKS (NOT YET CLEARED as of 2/28):
+   Check #1046 - Home Depot (materials)                       $0.00  (voided)
+   Check #1047 - Vacant                                      $0.00
+   Check #1048 - Springfield Lumber (pending)                $950.00
+======================================================================
+
+======================================================================
+HANDWRITTEN ANNOTATIONS (scanned document, appears in margins):
+======================================================================
+
+ [Margin, blue ink:]
+   "Home Depot 2/28 - $4,203 - THAT'S THE KITCHEN CABINETS 
+    FOR THE NEW HOUSE! Should this be on personal or biz? 
+    Told loan officer I'm buying them through the business 
+    account since I'm GC. Need to make sure UW is ok with this.
+    - James"
+
+ [Sticky note, bottom of page 2:]
+   "JAMES - REMEMBER TO PAY Q1 ESTIMATED TAXES BY 4/15.
+    You've got about $25K in biz account. Set aside $8K min.
+    Don't spend it all on the new house.
+    - Frank"
+
+ [Circled entry - 02/08 - ATM $400:]
+   "Petty cash for job site. Receipts in glovebox."
+   [scrawled, barely legible]
+
+ [Margin note next to 2/18 transfer:]
+   "$2K - personal draw. I do this every 2 weeks.
+    My "paycheck". (UW: this is normal for sole props)"
+
+ [Different handwriting, red ink - underwriter?]
+   "2/28 cabinet purchase - OK per 203(k) guidelines. Materials
+    purchased by borrower/GC for renovation. Keep receipt.
+    - UW Review 3/15"
+
+======================================================================

@@ -1,0 +1,121 @@
+================================================================================
+                         VERIFICATION OF EMPLOYMENT
+                  (Form 1005 - Fannie Mae/Freddie Mac)
+================================================================================
+
+  LOAN #:                     INF-2026-33821
+  BORROWER:                   John Andrew Thompson
+  REQUEST DATE:               March 10, 2026
+  REQUESTED BY:               InsureFlow National Mortgage
+
+================================================================================
+SECTION A - EMPLOYER INFORMATION
+================================================================================
+
+  EMPLOYER NAME:              TechCorp Inc.
+  EMPLOYER ADDRESS:           200 Innovation Boulevard
+                              Springfield, IL 62704
+  PHONE:                      (555) 987-6500
+  FAX:                        (555) 987-6501
+
+  HR CONTACT:                 Patricia Adams, HR Director
+  CONTACT TITLE:              Director of Human Resources
+  CONTACT PHONE:              (555) 987-6522
+  CONTACT EMAIL:              padams@techcorp.com
+
+================================================================================
+SECTION B - EMPLOYMENT INFORMATION
+================================================================================
+
+  1. EMPLOYMENT DATE:
+     Date of Hire:            April 18, 2022
+     Type of Employment:      [X] Current   [ ] Previous
+     Position:                Senior Software Engineer
+     Employment Status:       [X] Full-Time   [ ] Part-Time   [ ] Seasonal
+
+  2. CURRENT COMPENSATION:
+     Base Salary (Annual):    $112,500.00
+                               ($9,375.00 per month)
+     
+     Overtime:                N/A - Exempt position
+     
+     Bonus:                   $15,000.00 (annual - paid quarterly)
+                              Last bonus paid: 01/15/2026 - $3,750.00
+                              Bonus is discretionary based on company performance
+                              and individual metrics.
+     
+     Commission:              N/A
+     
+     Other Income:            N/A
+
+  3. EMPLOYMENT HISTORY:
+     Previous position with company: Software Engineer (04/2022 - 06/2024)
+     Promoted to Senior Software Engineer: Effective 07/01/2024
+     
+     Previous employer prior to TechCorp: 
+     -- ByteForge Solutions, Springfield, IL (06/2019 - 03/2022)
+     -- Position: Software Developer
+
+  4. PROBABILITY OF CONTINUED EMPLOYMENT:
+     [X] Good   [ ] Fair   [ ] Poor
+     Comments: Employee is in good standing. Recent performance review
+     (01/2026): "Exceeds Expectations."
+
+================================================================================
+SECTION C - EMPLOYER CERTIFICATION
+================================================================================
+
+  I certify that the above information is true and correct to the best of
+  my knowledge and belief. I understand that this verification is being
+  used in connection with a mortgage loan application and that intentional
+  misrepresentation may result in civil liability and/or criminal penalties.
+
+  _________________________________________         Date: 03/12/2026
+  Patricia Adams
+  Director of Human Resources
+  TechCorp Inc.
+
+================================================================================
+
+                              [COMPANY STAMP]
+
+                    ================================
+                         TECHCORP INC.
+                    HUMAN RESOURCES DEPARTMENT
+                    ================================
+                    VERIFIED: 03/12/2026
+                    SIGNED: P. Adams, HR Dir.
+                    ================================
+
+================================================================================
+
+>> VOE PROCESSING NOTES:
+>> PHONE VERIFICATION: Called (555) 987-6522 on 03/12/2026.
+>> Spoke with Patricia Adams. Confirmed:
+>>   - Employment dates match
+>>   - Salary $112,500/yr
+>>   - Position: Sr Software Engineer
+>>   - Eligible for rehire: Yes
+>>   - No plans for layoff/reduction
+>> VERIFIED BY: Lisa M. (Loan Processor)
+>> DATE: 03/12/2026
+
+================================================================================
+
+HANDWRITTEN (UW - red pen):
+
+   INCOME CALC:
+   
+   Base:    $9,375/mo
+   Bonus:   $1,250/mo (avg 24mo = $15k/yr ÷ 12. Eligible 4yr.)
+            TWO-YEAR BONUS HISTORY VERIFIED. Consistent.
+   
+   TOTAL VERIFIED: $10,625/mo
+   
+   - J.M. 03/13/2026
+   
+   NOTE: Bonus used in qualifying. Per FHLMC guide:
+   Must have 2yr receipt + reasonable likelihood of continuance.
+   TechCorp bonus plan docs in file. ✔
+   
+================================================================================

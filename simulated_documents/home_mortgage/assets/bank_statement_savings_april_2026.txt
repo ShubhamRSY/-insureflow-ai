@@ -1,0 +1,60 @@
+══════════════════════════════════════════════════════════════════════════════
+          BANK OF SPRINGFIELD - PERSONAL SAVINGS ACCOUNT STATEMENT
+══════════════════════════════════════════════════════════════════════════════
+
+Customer Name: JOHN A THOMPSON & SARAH M THOMPSON (JT TEN)
+Account Number: XXXX-XXXX-2198
+Statement Period: 04/01/2026 - 04/30/2026
+
+══════════════════════════════════════════════════════════════════════════════
+SUMMARY
+══════════════════════════════════════════════════════════════════════════════
+
+Beginning Balance on 04/01/2026                      $22,456.80
+
+Deposits and Other Credits (+)                       $3,250.00
+Withdrawals and Debits (-)                           $7,000.00
+
+══════════════════════════════════════════════════════════════════════════════
+ENDING BALANCE AS OF 04/30/2026                      $18,756.80
+══════════════════════════════════════════════════════════════════════════════
+
+══════════════════════════════════════════════════════════════════════════════
+TRANSACTION DETAIL
+══════════════════════════════════════════════════════════════════════════════
+
+Date        Description                                              Amount      Balance
+──────────  ───────────────────────────────────────────────────────  ──────────  ──────────
+04/01/2026  Beginning Balance                                                     $22,456.80
+04/01/2026  INTEREST CREDITED (MAR 2026)                            +$18.72      $22,475.52
+04/05/2026  AUTOMATIC TRANSFER FROM CHECKING                        +$2,000.00   $24,475.52
+04/10/2026  TRANSFER OUT TO CHECKING - ONLINE TRANSFER              -$2,000.00   $22,475.52
+04/15/2026  AUTOMATIC TRANSFER FROM CHECKING                        -            $22,475.52
+           [NOTE: TRANSFER SKIPPED - INSUFFICIENT FUNDS IN CHECKING]
+04/20/2026  DIRECT DEPOSIT - GIFT FROM GRANDMOTHER                  +$500.00     $22,975.52
+04/21/2026  MOBILE DEPOSIT - CHECK #2981 (REFUND)                   +$250.00     $23,225.52
+04/25/2026  INTEREST CREDITED (APR 2026)                            +$18.78      $23,244.30
+04/28/2026  TRANSFER OUT TO CHECKING (WIRE)                         -$5,000.00   $18,244.30
+04/29/2026  TRANSFER OUT TO MONEY MARKET                            -            $18,244.30
+           [TRANSFER REJECTED - DAILY LIMIT EXCEEDED]
+04/30/2026  TRANSFER OUT TO MONEY MARKET                            -            $18,244.30
+           [TRANSFER REJECTED - SEE NOTE BELOW]
+══════════════════════════════════════════════════════════════════════════════
+
+══════════════════════════════════════════════════════════════════════════════
+INTEREST RATE INFORMATION
+══════════════════════════════════════════════════════════════════════════════
+
+Current Annual Percentage Yield (APY): 1.85%
+Interest Rate: 1.83% (variable)
+Interest This Period: $37.50
+Interest Year-To-Date: $112.30
+
+══════════════════════════════════════════════════════════════════════════════
+  NOTE: Account requires minimum daily balance of $300 to avoid fees.
+  MINIMUM BALANCE THIS PERIOD: $18,244.30 (MET)
+══════════════════════════════════════════════════════════════════════════════
+
+══════════════════════════════════════════════════════════════════════════════
+[STAMP] STATEMENT PROVIDED FOR MORTGAGE APPLICATION - DATED 05/15/2026
+══════════════════════════════════════════════════════════════════════════════

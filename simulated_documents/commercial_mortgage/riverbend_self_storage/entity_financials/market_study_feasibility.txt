@@ -1,0 +1,159 @@
+================================================================================
+                  MARKET FEASIBILITY STUDY
+                           FOR
+              PROPOSED SELF-STORAGE FACILITY
+               1800 River Road, Riverbend, IL 62788
+================================================================================
+
+Prepared For:    Thomas Enterprises Inc.
+Prepared By:     Storage Market Research Inc. (SMR)
+                 4500 Commerce Parkway, Suite 200
+                 Indianapolis, IN 46250
+Study Date:      February 10, 2026
+Project No.:     SMR-2026-014
+
+================================================================================
+1.0 EXECUTIVE SUMMARY
+================================================================================
+
+This study analyzes the feasibility of a proposed 65,000 SF self-storage
+facility (approximately 500 units) with 5,000 SF of ancillary retail space
+(moving truck rental, packing supplies) to be located at 1800 River Road,
+Riverbend, IL 62788.
+
+CONCLUSION: THE PROPOSED PROJECT IS FEASIBLE AND SUPPORTED BY MARKET DEMAND.
+
+================================================================================
+2.0 TRADE AREA ANALYSIS
+================================================================================
+
+Primary Trade Area (3-mile radius):
+  Population (2025 est):         47,200
+  Households (2025 est):         18,500
+  Median Household Income:        $72,400
+  Population Growth (2020-2025):  +14.2%
+  Housing Units (2025):          20,100
+  Owner-Occupied:                 68% (13,668)
+  Renter-Occupied:                32% (6,432)
+  New Housing Permits (2025):     420 units (townhomes/condos)
+  Average Household Size:         2.55
+
+Secondary Trade Area (5-mile radius):
+  Population (2025 est):         82,500
+  Households:                    31,200
+  Population Growth:              +9.8%
+
+  [Riverbend is the fastest-growing suburb in Sangamon County.
+   New developments: Riverbend Estates (180 homes), Riverwalk
+   Townhomes (120 units), Prairie Crossing (200 single-family).
+   Demographics support self-storage demand. - SMR]
+
+================================================================================
+3.0 COMPETITIVE SUPPLY ANALYSIS
+================================================================================
+
+Existing Self-Storage Facilities within 5-Mile Radius:
+
+  FACILITY NAME                     ADDRESS                    UNITS  OCCUPANCY  DISTANCE
+  ----------------------           -------------------------   -----  --------   --------
+  NONE                                                     -        -            -
+
+CURRENT SUPPLY: ZERO (0) SELF-STORAGE FACILITIES WITHIN 5 MILES.
+
+[!] NO DIRECT COMPETITION EXISTS WITHIN THE PRIMARY TRADE AREA. [!]
+
+Nearest facilities:
+  - Storage King Springfield:        8.2 miles south (65% occupied, 400 units)
+  - U-Haul Moving & Storage:         9.5 miles southwest (72% occupied, 250 units)
+  - CubeSmart Springfield:          10.1 miles south (78% occupied, 520 units)
+
+   The nearest facilities are all in Springfield proper, 8+ miles away.
+   Riverbend residents currently must drive to Springfield for self-storage.
+   This represents a significant underserved market opportunity.
+
+   [Margin note: "Competition vacuum. Huge opportunity. - SMR analysis"]
+
+================================================================================
+4.0 DEMAND ANALYSIS
+================================================================================
+
+Demand Calculation (Primary Trade Area):
+
+  Total Households (Primary):                         18,500
+  x Avg self-storage penetration rate (7.5%):        1,388 households
+  x Avg unit size rented (100 SF):                     138,800 SF
+  x Commercial/other demand factor (15%):               +20,820 SF
+                                                       ----------
+  Total Estimated Demand:                               159,620 SF
+
+  Existing Supply:                                            0 SF
+  Underserved Demand:                                    159,620 SF
+
+  [Supply gap of ~159,620 SF - the proposed 65,000 SF facility
+   would capture approximately 41% of unmet demand, which is
+   reasonable and achievable.]
+
+    [Handwritten: "Demand calculation supports the project."]
+
+================================================================================
+5.0 ABSORPTION PROJECTIONS
+================================================================================
+
+Year 1 (Stabilization Period):
+  Projected Occupancy:        35% (22,750 SF)
+  Units Leased:               175 units
+  Monthly Rental Income @ $1.10/SF:        $25,025/mo
+  Cumulative Annual Income:               $225,225 (assuming gradual lease-up)
+
+Year 2:
+  Projected Occupancy:        55% (35,750 SF)
+  Units Leased:               275 units
+  Monthly Rental Income:                   $39,325/mo
+  Cumulative Annual Income:               $462,000
+
+Year 3 (Stabilized):
+  Projected Occupancy:        70% (45,500 SF)
+  Units Leased:               350 units
+  Monthly Rental Income:                   $50,050/mo
+  Cumulative Annual Income:               $600,600
+
+  [Absorption rate is conservative based on comparable new facilities
+   in Midwest suburban markets. The lack of existing competition may
+   accelerate absorption. - SMR]
+
+================================================================================
+6.0 RETAIL COMPONENT ASSESSMENT
+================================================================================
+
+The proposed 5,000 SF retail component (moving truck rental, packing supplies)
+is expected to generate approximately $85,000-$95,000/yr in incremental
+revenue with minimal incremental operating cost. Tenant improvement costs
+are estimated at $40/SF.
+
+================================================================================
+7.0 CONCLUSION
+================================================================================
+
+The Riverbend trade area demonstrates strong demographic trends, rapid
+population growth, and a complete absence of self-storage supply. The
+proposed 65,000 SF facility would serve a clearly unmet need. Absorption
+projections are achievable, and the project economics are sound.
+
+SMR recommends proceeding with development.
+
+================================================================================
+SIGNATURE
+
+/s/ Robert D. Parker
+Robert D. Parker, CCIM
+Principal - Storage Market Research Inc.
+
+================================================================================
+[Handwritten sticky note inside front cover:]
+"Tom - the market study looks great. No competition within 5 miles
+ is impressive. Underserved demand of 159K SF against our 65K SF
+ planned - we only need to capture 41% of the gap to fill up.
+ Absorption at 35-55-70% is conservatie. I've seen 50% year 1 in
+ stronger markets. Good to go.
+ - JM 2/15"
+================================================================================

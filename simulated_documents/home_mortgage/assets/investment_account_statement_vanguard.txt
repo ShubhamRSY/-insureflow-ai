@@ -1,0 +1,74 @@
+══════════════════════════════════════════════════════════════════════════════
+             VANGUARD BROKERAGE SERVICES - ACCOUNT STATEMENT
+══════════════════════════════════════════════════════════════════════════════
+
+Account Owner:    John A. Thompson (ITF / as custodian)
+Account Number:   VG-XXXXXX-8741-1
+Statement Period: January 1, 2026 - March 31, 2026 (Q1 2026)
+
+══════════════════════════════════════════════════════════════════════════════
+ACCOUNT SUMMARY
+══════════════════════════════════════════════════════════════════════════════
+
+Beginning Account Value (01/01/2026)                           $127,432.88
+
+  Cash & Cash Investments                                       $12,450.00
+  Stocks                                                        $45,200.00
+  Mutual Funds / ETFs                                            $69,782.88
+
+══════════════════════════════════════════════════════════════════════════════
+TRANSACTION ACTIVITY
+══════════════════════════════════════════════════════════════════════════════
+
+Date        Description                                                  Amount
+──────────  ───────────────────────────────────────────────────────────  ─────────
+01/05/2026  DIVIDEND REINVESTMENT - VTI (VANGUARD TOTAL STOCK)           +$312.44
+01/15/2026  DIVIDEND REINVESTMENT - VXUS (VANGUARD TOTAL INTL)          +$178.22
+01/20/2026  CONTRIBUTION (IRA - PRIOR YEAR)                              +$7,000.00
+02/03/2026  DIVIDEND REINVESTMENT - VTI                                  +$298.76
+02/15/2026  MARKET VALUE ADJ - VTI SHARES (MARKET APPRECIATION)          +$1,234.50
+02/15/2026  MARKET VALUE ADJ - AAPL (MARKET APPRECIATION)                +$876.30
+02/20/2026  CONTRIBUTION (IRA - CURRENT YEAR)                            +$7,000.00
+03/01/2026  DIVIDEND REINVESTMENT - VXUS                                 +$166.89
+03/10/2026  WITHDRAWAL - IRA CONTRIBUTION (EXCESS - RETURNED)            -$7,000.00
+03/15/2026  MARKET VALUE ADJ - VTI SHARES (MARKET DECLINE)               -$2,145.80
+03/15/2026  MARKET VALUE ADJ - BND (BOND ETF DECLINE)                    -$567.22
+03/20/2026  CONTRIBUTION (IRA - CORRECTED)                               +$7,000.00
+03/28/2026  DIVIDEND REINVESTMENT - BND                                  +$134.56
+03/31/2026  INTEREST - SETTLEMENT FUND (CASH RESERVES)                   +$12.45
+══════════════════════════════════════════════════════════════════════════════
+
+══════════════════════════════════════════════════════════════════════════════
+HOLDINGS AS OF 03/31/2026
+══════════════════════════════════════════════════════════════════════════════
+
+Ticker    Description                              Shares        Price        Value
+────────  ───────────────────────────────────────  ───────────  ───────────  ─────────
+VTI       Vanguard Total Stock Market ETF           287.42       $259.83      $74,677.40
+VXUS      Vanguard Total International Stock ETF    104.60       $62.18       $6,504.03
+BND       Vanguard Total Bond Market ETF            92.15        $71.44       $6,582.20
+AAPL      Apple Inc. (Common Stock)                 25.00        $178.32      $4,458.00
+MSFT      Microsoft Corporation (Common Stock)      10.00        $421.45      $4,214.50
+GOOGL     Alphabet Inc. (Class A)                   8.00         $167.89      $1,343.12
+CASH      Settlement Fund (VMFXX)                                ---          $15,678.22
+══════════════════════════════════════════════════════════════════════════════
+
+══════════════════════════════════════════════════════════════════════════════
+ENDING ACCOUNT VALUE (03/31/2026)                                      $113,457.47
+══════════════════════════════════════════════════════════════════════════════
+
+══════════════════════════════════════════════════════════════════════════════
+RETIREMENT / IRA SUMMARY
+══════════════════════════════════════════════════════════════════════════════
+
+  Traditional IRA Balance:   $48,234.50  (VG-XXXXXX-8741-IRA-T)
+  Roth IRA Balance:          $65,222.97  (VG-XXXXXX-8741-IRA-R)
+══════════════════════════════════════════════════════════════════════════════
+
+══════════════════════════════════════════════════════════════════════════════
+[STAMP] ACCOUNT VALUE VERIFIED AS OF 03/31/2026
+══════════════════════════════════════════════════════════════════════════════
+
+This statement has been provided as a true copy of the original Vanguard
+statement. Please note original shows as sent via US Mail on 04/05/2026.
+══════════════════════════════════════════════════════════════════════════════

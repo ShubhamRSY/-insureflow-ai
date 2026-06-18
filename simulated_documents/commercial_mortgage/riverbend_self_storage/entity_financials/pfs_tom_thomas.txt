@@ -1,0 +1,127 @@
+================================================================================
+              PERSONAL FINANCIAL STATEMENT
+               THOMAS R. THOMAS (TOM)
+           As of February 1, 2026
+================================================================================
+
+Borrower:      Thomas R. Thomas
+SSN:           XXX-XX-8892
+DOB:           04/22/1963 (Age 62)
+Title:         President - Thomas Enterprises Inc.
+Residence:     1240 Harbor View Lane, Riverbend, IL 62788
+(217) 555-0421
+
+============================================================================
+                        ASSETS
+============================================================================
+
+CASH AND CASH EQUIVALENTS:
+  First Riverbend Bank - Checking ............... $   125,000.00
+  First Riverbend Bank - Money Market ........... $   425,000.00
+  Thomas Enterprises Operating Account .......... $   350,000.00
+    [Business account - Tom has signing authority]
+  Midwest Trust - Cash Management ............... $   900,000.00
+                                                       -----------
+                                                         $1,800,000.00
+
+   [Handwritten: "Liquidity $1.8M - strong"]
+
+SELF STORAGE FACILITIES (8 properties - owned by various LLCs):
+  [See attached schedule for detail]
+
+  1. Riverbend Self Storage #1 - Riverbend, IL
+     (45,000 SF - 350 units - built 2005) .............. $ 1,800,000.00
+  2. Riverbend Self Storage #2 - Riverbend, IL
+     (55,000 SF - 420 units - built 2010) .............. $ 2,400,000.00
+  3. Springfield Self Storage - Springfield, IL
+     (40,000 SF - 310 units - built 2008) .............. $ 1,600,000.00
+  4. Decatur Self Storage - Decatur, IL
+     (35,000 SF - 270 units - built 2012) .............. $ 1,300,000.00
+  5. Bloomington Self Storage - Bloomington, IL
+     (50,000 SF - 380 units - built 2015) .............. $ 2,100,000.00
+  6. Peoria Self Storage - Peoria, IL
+     (60,000 SF - 450 units - built 2018) .............. $ 2,800,000.00
+  7. Indianapolis Self Storage - Indianapolis, IN
+     (65,000 SF - 500 units - built 2020) .............. $ 3,100,000.00
+  8. St. Louis Self Storage - St. Louis, MO
+     (48,000 SF - 360 units - built 2022) .............. $ 2,600,000.00
+                                                       -----------
+                                                         $17,700,000.00
+
+  [All properties fee simple owned through single-purpose LLCs.
+   Estimated market values per recent appraisals/tax assessments.]
+
+PERSONAL RESIDENCE (free and clear):
+  1240 Harbor View Lane, Riverbend .................... $   850,000.00
+
+INVESTMENT PORTFOLIO:
+  Merrill Lynch Managed Account ....................... $ 2,100,000.00
+  Various individual stocks (MSFT, GOOGL, O, STOR) ... $   650,000.00
+                                                       -----------
+                                                         $ 2,750,000.00
+
+RETIREMENT:
+  Fidelity 401(k) ..................................... $ 1,200,000.00
+  IRA (self-directed - includes real estate notes) ... $   800,000.00
+                                                       -----------
+                                                         $ 2,000,000.00
+
+OTHER ASSETS:
+  2025 Ford F-250 (business) .......................... $    65,000.00
+  2023 Lexus LX 600 (personal) ........................ $    90,000.00
+  Household goods, art, personal property ............ $   250,000.00
+                                                       -----------
+                                                         $   405,000.00
+
+============================================================================
+TOTAL ASSETS                                              $27,455,000.00
+============================================================================
+
+============================================================================
+LIABILITIES
+============================================================================
+
+MORTGAGES ON SELF STORAGE FACILITIES:
+  1. Riverbend #1 - First Riverbend Bank (bal $450K) .. $   127,000.00
+  2. Riverbend #2 - First Midland (bal $680K) .......... $   655,000.00
+  3. Springfield - Heartland Bank (bal $350K) .......... $   330,000.00
+  4. Decatur - Decatur Savings (bal $280K) ............ $   265,000.00
+  5. Bloomington - First Midland (bal $520K) .......... $   495,000.00
+  6. Peoria - Peoria National (bal $890K) ............. $   860,000.00
+  7. Indianapolis - First IN Bank (bal $1.1M) ......... $ 1,050,000.00
+  8. St. Louis - Midwest Commerce (bal $780K) ......... $   750,000.00
+                                                       -----------
+                                                         $ 4,532,000.00
+
+   [These are approximate - current as of 1/31/26 per loan statements]
+
+THOMAS ENTERPRISES - LINE OF CREDIT:
+  First Riverbend Bank (LOC - $500K limit, drawn) ... $   280,000.00
+  [Business LOC - used for pre-development costs]
+
+CREDIT CARDS (Current):
+  Various (paid monthly - approximate balance) ....... $    25,000.00
+
+============================================================================
+TOTAL LIABILITIES                                       $ 4,837,000.00
+============================================================================
+================================================================================
+NET WORTH                                                $22,618,000.00
+================================================================================
+
+[Handwritten note at bottom:]
+  "Tom Thomas is a very experienced self-storage developer/operator.
+   8 existing facilities, all performing well. Net worth $22.6M.
+   Liquidity $1.8M. Personal guaranty strong enough for this deal.
+   - JM 2/10"
+
+  "FYI - Tom's been in self-storage since 2005. He knows the market.
+   This is his 9th facility. He's also got a JV with a REIT on the
+   St. Louis property (not shown here). Solid sponsor. - JM"
+
+  [Stamp:]
+                    TAX RETURN RECEIVED - 2024 PERSONAL
+                    AGI $540,000. CPAs: Miller & Chen LLP.
+                    VERIFIED - 2/20/26 - LK
+
+================================================================================

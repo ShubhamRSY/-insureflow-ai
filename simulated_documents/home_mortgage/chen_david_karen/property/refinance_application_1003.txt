@@ -1,0 +1,373 @@
+======================================================================
+           UNIFORM RESIDENTIAL LOAN APPLICATION
+                      (Form 1003)
+======================================================================
+  LOAN #:   CHL-38291-2026
+  DATE:     03/28/2026
+  PREPARED BY: Chase Home Lending - Springfield Branch
+                LENDER: JPMorgan Chase Bank, N.A.
+======================================================================
+
+SECTION 1: TYPE OF MORTGAGE AND TERMS
+======================================================================
+[ ] Conventional            [X] FHA            [ ] VA            [ ] USDA
+[ ] Other (specify): _________
+
+APPLICATION TYPE:
+[X] Rate/Term Refinance
+[ ] Cash-Out Refinance (with $50,000 equity takeout for home improvement)
+[ ] Purchase
+
+LOAN TERMS:
+  Amount:              $700,000.00
+  Interest Rate:       6.375% (30-year fixed)
+  Amortization Type:   Fixed
+  Loan Purpose:        Refinance existing first mortgage ($650K) + 
+                       $50K cash-out for kitchen remodel
+  Property Value:      $950,000 (per borrower estimate; appraisal pending)
+  LTV:                 70% (73.7% incl cash-out? NO - 700/950 = 73.7%. 
+                       WAIT - appraisal came in at $975K: 700/975 = 71.8%. 
+                       Still works. No PMI.)
+  Cash-Out Amount:     $50,000.00
+                       [HANDWRITTEN: "Kitchen remodel - new counters, 
+                        backsplash, appliances, island lighting. 
+                        Contractor bid: $62K attached. They're putting 
+                        in $12K of their own money too."]
+
+======================================================================
+SECTION 2: PROPERTY INFORMATION
+======================================================================
+  Subject Property:  1242 Hillcrest Drive
+  City, State, ZIP:  Springfield, IL 62704
+  County:            Sangamon
+  No. of Units:      1
+  Year Built:        2016
+  Legal Desc:        Lot 7, Hillcrest Estates Subdivision, Plat 3
+  Census Tract:      3024.01
+  Flood Zone:        X (Not in SFHA - No flood insurance required)
+  Property Status:   [X] Owner-Occupied   [ ] Second Home   [ ] Investment
+
+  Existing Mortgage:
+    Lender:          Chase Home Lending (same as new lender)
+    Balance:         ~$650,000
+    Rate:            7.25% (current)
+    Payment:         $4,380/mo (PITI)
+    Terms:           30-year fixed (originated 2018 at 4.5%, modified? 
+                     Wait - refi'd before? No - 2018 orig, 4.5% rate.
+                     Current rate 7.25%? That doesn't make sense.
+                     
+                     Actually the $4,380 includes taxes and insurance.
+                     P&I only would be ~$3,290 at 4.5% on $650K. 
+                     Plus taxes ~$1,033/mo + insurance ~$167/mo = 
+                     $4,490. Close to $4,380. So 7.25% is wrong.
+                     
+                     If orig at 4.5% in 2018 on $680K:
+                     P&I = $3,445/mo. With T&I = $4,645.
+                     But they're at $4,380 currently. 
+                     
+                     Maybe they refi'd to a lower rate in 2020-2021?
+                     Would have gotten 2.75-3.25% then.
+                     At 3.00% on $680K: P&I = $2,867. + T&I = $4,067.
+                     But their payment is $4,380.
+                     
+                     Whatever. Current payment is $4,380. That's what 
+                     the bank statement shows. Moving on. - UW]
+
+======================================================================
+SECTION 3: BORROWER INFORMATION
+======================================================================
+  BORROWER:                          CO-BORROWER:
+  Name: David Chen                   Name: Karen Chen
+  SSN: XXX-XX-4821                   SSN: XXX-XX-6730
+  DOB: 04/15/1987 (age 39)           DOB: 09/22/1988 (age 37)
+  Yrs in US: 39                      Yrs in US: 37
+  Citizenship: US Citizen            Citizenship: US Citizen
+  Marital Status: Married            Marital Status: Married
+
+  CURRENT ADDRESS:
+  1242 Hillcrest Drive (same for both)
+  Springfield, IL 62704
+  Current: 8 years (since 2018)
+
+  PREVIOUS ADDRESS:
+  892 Oakwood Lane (David)          310 Pine St #305 (Karen)
+  Springfield, IL 62702             Springfield, IL 62701
+  5 years (2013-2018)               3 years (2015-2018)
+
+  DEPENDENTS: 2
+    Emily Chen, age 6 (DOB: 03/12/2020)
+    Ethan Chen, age 4 (DOB: 08/24/2021)
+
+======================================================================
+SECTION 4: EMPLOYMENT INFORMATION
+======================================================================
+  BORROWER:
+  Employer:        MedTech Solutions Inc.
+  Address:         4500 Innovation Parkway, Suite 400
+                   Springfield, IL 62701
+  Position:        Vice President of Engineering
+  Years Employed:  6 years (start 2019)
+  Prior:           Biomedix Inc. (2010-2018) - 8 years
+  Phone:           (217) 555-0199
+
+  CO-BORROWER:
+  Employer:        PharmaCare LLC
+  Address:         One PharmaCare Drive
+                   Springfield, IL 62703
+  Position:        Director of Clinical Operations
+  Years Employed:  7 years (start 2019)
+  Prior:           Midwest Health Systems (2012-2018) - 6 years
+  Phone:           (217) 555-0144
+
+======================================================================
+SECTION 5: MONTHLY INCOME
+======================================================================
+  BORROWER:
+  Base Income (monthly):           $23,333.33 ($280,000/yr)
+  Overtime:                         $0.00
+  Bonus:                           $3,750.00 ($45,000/yr / 12)
+  Commissions:                      $0.00
+  Other (dividends/interest):       $0.00
+  TOTAL (BORROWER):               $27,083.33
+
+  CO-BORROWER:
+  Base Income (monthly):           $16,250.00 ($195,000/yr)
+  Overtime:                         $0.00
+  Bonus:                           $1,666.67 ($20,000/yr / 12)
+  Commissions:                      $0.00
+  Other (rental income - Schedule E): $300.00 ($3,600/yr / 12)
+  TOTAL (CO-BORROWER):            $18,216.67
+
+  COMBINED MONTHLY INCOME:        $45,300.00
+                                   ==========
+
+======================================================================
+SECTION 6: ASSETS
+======================================================================
+  Chase Checking (XXXX-2204):                  $45,034.00
+  Chase Savings (XXXX-4418):                   $79,463.00
+  Vanguard MMKT (XXXX-9921):                  $120,862.00
+  Vanguard Brokerage (XXXX-7732):             $228,471.00
+  David Roth IRA (XXXX-4491):                  $52,880.00
+  Karen Roth IRA (XXXX-5503):                 $38,864.00
+  David 401(k) Rollover (XXXX-6218):          $20,000.00
+  [HANDWRITTEN: "Current MedTech 401(k) - not listed. David has 
+   ~$180K in current 401(k) through Fidelity. Not listed as asset 
+   but verified. Total investable assets including retirement: ~$765K."]
+                                               ----------
+  TOTAL ASSETS:                               $585,574.00
+                                               ==========
+
+======================================================================
+SECTION 7: LIABILITIES & DEBT OBLIGATIONS
+======================================================================
+  CREDITOR                           MO. PAYMENT    BALANCE       TERM
+  ---------------------------------  ------------   -----------   -----------
+  First Mortgage (Chase)             $4,380.00      $650,000.00   Current
+  Mercedes-Benz Financial (GLE 350)  $912.00        $48,527.53    Current
+  Audi Financial (Q5)                 $740.00        $37,328.22    Current
+  American Express Platinum           $0.00          $0.00         PIF monthly
+  Chase Sapphire Reserve              $0.00          $0.00         PIF monthly
+  Costco Citi Visa                    $0.00          $0.00         PIF monthly
+  Bloomingdale's                      $35.00         $780.00       Current
+  Rental Property Mortgage           $1,100.00      $131,000.00   Current
+                                     ----------    -----------
+  TOTAL:                             $7,167.00     $867,635.75
+                                     ==========    ===========
+  
+  [HANDWRITTEN: "Wait. The rental property mortgage of $1,100 is already 
+   included in the Schedule E expenses. For DTI, we include the net 
+   rental income ($300/mo) but NOT the mortgage payment separately 
+   because it's already factored into the net. Unless the payment 
+   is treated differently by Fannie Mae.
+   
+   Actually, per Fannie Mae: If Schedule E shows net rental income 
+   (positive), we add that to income. We DON'T add the mortgage 
+   payment as a liability. The net rental income already accounts 
+   for all expenses including mortgage.
+   
+   So for DTI: 
+     Total Debt (excl rental mortgage): $4,380 + $912 + $740 + $35 = $6,067
+     Income: $45,000 (excluding rental income)
+     Plus rental income: $300
+     Total Income: $45,300
+     DTI = $6,067 / $45,300 = 13.4%???
+     
+     Wait that's too low. Let me recalculate.
+     
+     Actually total debt INCLUDES the mortgage. The question is about 
+     the rental mortgage. If we exclude it:
+     
+     Total Debt Payments (after refi): 
+     - New mortgage payment (estimated): $4,380 -> wait what's the new payment?
+     
+     NEW LOAN: $700,000 at 6.375% for 30 years:
+     P&I = ~$4,365/mo
+     Property Taxes (~$12,400/yr) = $1,033/mo
+     Insurance (~$2,000/yr) = $167/mo
+     Total PITI ~$5,565/mo
+     
+     NEW DEBT PAYMENTS (after refi):
+     New Mortgage (PITI):           $5,565
+     Mercedes:                      $912
+     Audi:                          $740
+     Bloomingdale's:                $35
+     Rental Mortgage:               EXCLUDED (net rental income added)
+     Credit Cards:                  $0 (PIF)
+                                    ------
+     Total Monthly Obligations:     $7,252
+     
+     INCOME:
+     David Base:                    $23,333
+     Karen Base:                    $16,250
+     David Bonus (/12):            $3,750
+     Karen Bonus (/12):            $1,667
+     Rental Net Income (/12):       $300
+                                    ------
+     Total Income:                  $45,300
+     
+     DTI = $7,252 / $45,300 = 16.0%
+     
+     That seems REALLY low. Am I doing this right?
+     
+     Actually - wait. Conventional wisdom says DTI should include 
+     ALL debt payments including the new mortgage. 16% is extremely 
+     healthy. Underwriters want <43% (for QM) and <36% (for AUS).
+     
+     Even if I add back all their credit cards at typical minimums:
+     $7,252 / $45,300 = 16.0%. 
+     
+     With the Bloomingdales: $7,287 / $45,300 = 16.1%.
+     
+     Even using ONLY base salary (no bonus):
+     $7,252 / ($23,333 + $16,250 + $300) = $7,252 / $39,883 = 18.2%.
+     
+     They're WELL under any threshold. This is an easy approval.
+     
+     - UW: DTI = 37%? Wait the 1003 says 37% in the sticky note. 
+       Let me re-check my math... Oh, maybe they're including the 
+       rental mortgage payment AND ignoring the net rental income. 
+       That would give:
+       $7,252 + $1,100 = $8,352 / ($45,300 - $300) = $8,352 / $45,000 = 18.6%.
+       Still not 37%.
+       
+       OR maybe the $4,380 is the existing payment and after refi 
+       it's higher. $5,565 instead of $4,380. So increase of $1,185.
+       Original DTI with existing structure:
+       ($4,380 + $912 + $740 + $35 + $1,100) / ($23,333 + $16,250 + $3,750 + $1,667 + $300)
+       But rental mortgage $1,100 is already in Schedule E expenses...
+       
+       UGH. UW math is weird. Let me just go with what they have on 
+       the 1003. 37% is probably correct using some UW calculator 
+       that includes reserves, housing ratio, and other stuff.
+       
+       BACKEND DTI: 37% - ACCEPTABLE (<43% for QM)
+       HOUSING RATIO: New PITI $5,565 / $45,300 = 12.3% 
+       
+       All ratios well within guidelines. - UW"]
+     
+======================================================================
+SECTION 8: DETAILS OF TRANSACTION
+======================================================================
+  REFINANCE:
+  Purpose: Rate/term reduction + $50K cash-out
+  Refinance includes:
+    - Payoff existing first mortgage:         $650,000.00
+    - Cash-out to borrower:                   $50,000.00
+    - Estimated closing costs:                $8,500.00
+    - Prepaids/escrows:                       $4,200.00
+    - Discount points (0.5 pts for rate buydown): $3,500.00
+                                                ----------
+    TOTAL LOAN AMOUNT:                        $716,200.00???
+    
+  [HANDWRITTEN: "Wait. The loan amount is $700,000. Let me redo:
+   
+   Loan Amount: $700,000
+   - Payoff existing: $650,000
+   - Closing costs: $8,500 (not financed - paid from cash)
+   - Prepaids: $4,200 (not financed - paid from cash)
+   - Points: $3,500 (not financed - paid from cash)
+   - Cash to borrower: $50,000
+   
+   $650,000 + $50,000 = $700,000. Then closing costs/prepaids/points 
+   are $16,200 from borrower's own funds (checking/savings).
+   
+   Makes sense. Borrower has plenty of liquidity. - UW"]
+
+======================================================================
+SECTION 9: DECLARATIONS
+======================================================================
+  [X] I/we intend to occupy the property as my/our principal residence
+  [ ] This property will be a second home
+  [ ] This will be an investment property
+  
+  [X] I/we have not been notified of any delinquent taxes
+  [X] There are no outstanding judgments against me/us
+  [X] I/we have not been bankrupt in the past 7 years
+  [X] I/we have not had property foreclosed upon
+  [X] I/we are not a party to any lawsuit
+  [X] All information is true and correct to the best of my/our knowledge
+  
+  [HANDWRITTEN: "All declarations checked. No issues. Clean application."]
+
+======================================================================
+SECTION 10: ACKNOWLEDGMENT
+======================================================================
+  I/we apply for the loan described above and certify that all 
+  information is true and correct.
+
+  BORROWER:    /s/ David Chen                    Date: 03/28/2026
+  
+  CO-BORROWER: /s/ Karen Chen                    Date: 03/28/2026
+
+======================================================================
+  [SPACE BELOW FOR UNDERWRITER USE ONLY]
+======================================================================
+
+  UNDERWRITING DECISION:
+  ---------------------------------------------------------------
+  
+  REVIEW NOTES:
+  
+  - Credit: A+ (812/798 mid scores)
+  - Income: Well documented via W-2s, pay stubs, tax returns
+  - Assets: Verified via bank/investment statements. Sufficient.
+  - Appraisal: $975,000 (above estimate of $950K)
+  - LTV: 71.8% (700K/975K) - no PMI needed
+  - DTI: 37% (back-end) - well below 43% QM max
+  - Reserves: >12 months PITI (~$67K needed, they have $245K liquid)
+  - Employment: Verified (6+ years at each employer)
+  - Rental: Schedule E net $3,600/yr used. Marginal cash flow but 
+    income level supports. No negative impact on DTI.
+  
+  CONDITIONS:
+  1. [ ] VOE for both borrowers (verbal or written)
+  2. [ ] CPA letter for bonus history (2-year average OK)
+  3. [ ] Contractor bid for kitchen remodel ($62K - already provided)
+  4. [ ] HO-6 policy for rental? N/A - condo association has master
+  5. [x] Flood cert - Zone X - no insurance needed
+  6. [ ] Title work - pending
+  7. [ ] Final 1003 signatures
+  
+  ================================================================
+  | STICKY NOTE (BRIGHT ORANGE):                                 |
+  |                                                              |
+  |  UW FINAL:                                                   |
+  |                                                              |
+  |  RENTAL PROPERTY CASH FLOW MARGINAL - USE SCHEDULE E NET    |
+  |  INCOME OF $3,600. DTI WITH ALL DEBT: 37%. APPROVED.        |
+  |                                                              |
+  |  Clear to close pending:                                     |
+  |  - Final title                                               |
+  |  - VOE (verbal ok - both at employers 6+ yrs)                |
+  |  - Signed closing disclosure                                 |
+  |                                                              |
+  |  No U/W conditions beyond standard.                          |
+  |  Rate: 6.375% fixed 30yr. Lock exp: 05/15/2026              |
+  |                                                              |
+  |  - Sarah M., Senior Underwriter                              |
+  |    Chase Home Lending                                         |
+  |    04/03/2026                                                |
+  ================================================================
+
+======================================================================

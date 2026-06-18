@@ -1,0 +1,154 @@
+========================================================================================
+                        UNIFORM RESIDENTIAL APPRAISAL REPORT
+                              USDA RURAL DEVELOPMENT
+========================================================================================
+
+  FILE #:          IF-2026-AP-0471
+  DATE:            April 14, 2026
+  BORROWER:        Marcus D. Johnson & Imani R. Johnson
+  LENDER:          InsureFlow National Mortgage
+  
+  PROPERTY:        478 Pine Street, Rural Route 2
+                  Clear Creek, Sangamon County, IL 62719
+  LEGAL:           See Purchase Agreement
+  TAX ID:          14-28-402-003
+
+========================================================================================
+  APPRAISAL INFORMATION
+========================================================================================
+  Appraiser:                    Brian T. Kowalski, Certified Residential Appraiser
+                                IL License # 556.001482
+                                Kowalski Appraisal Services, Springfield, IL
+  
+  Appraisal Type:               [X] Full Interior & Exterior Inspection
+  Inspected:                    04/12/2026
+  Effective Date of Value:      April 12, 2026
+  
+  PURPOSE:                      USDA Minimum Property Requirements / Market Value
+
+========================================================================================
+  PROPERTY DESCRIPTION
+========================================================================================
+  Site:                         ~3.00 acres (irregular shape, mostly level)
+  Zoning:                       Residential/Agricultural (unincorporated)
+  Utilities:                    Electric (Ameren IL), Well (private), Septic (private)
+  Access:                       Paved county road - Pine Street (public, maintained)
+  
+  Improvements:
+  Style:                        Ranch / 1 Story
+  Year Built:                   1998
+  Sq Ft (GLA):                  1,800 (approx - per county records)
+  Basement:                     Full, unfinished (concrete floor, block walls)
+                                - Houses mechanicals, well pressure tank, water softener
+  Bedrooms:                     3
+  Bathrooms:                    2 (full)
+  
+  Construction:                 Frame / Vinyl Siding
+  Foundation:                   Poured concrete
+  Roof:                         Asphalt shingles - 2018 (10-12 yrs remaining est)
+  Gutters:                      Aluminum seamless - functional
+  HVAC:                         Gas forced air - 2019 (Trane, 80% AFUE)
+  Water Heater:                 50 gal electric - 2016 (end of life - functional)
+  Flooring:                     Living room: LVP (2022) / Bedrooms: Carpet (original? ~ok)
+                                Kitchen: Tile (2019) / Baths: Tile
+  
+  Garage:                       Attached 2-car, finished drywall, auto openers
+  Porch/Deck:                   Concrete front stoop, rear wood deck (2005 - weathered)
+  Shed:                         Detached 8x10 storage shed (as-is)
+
+========================================================================================
+  CONDITION RATING
+========================================================================================
+  Overall:                      [X] C3 - Average/Good for age
+  Quality:                      [X] Q4 - Average construction
+  C1-C6 Rating Scale:           C3 - Minor deferred maintenance observed.
+                                Property has been maintained by elderly seller.
+                                No significant defects noted.
+
+  DEFERRED MAINTENANCE:
+  - Deck boards slightly weathered (power wash/stain recommended)
+  - Water heater 2016 (functional but nearing end of life)
+  - Driveway has minor cracks (sealcoat recommended)
+  - Smoke detectors outdated (replace as needed)
+  
+  NOTE: None of the above affect safety, soundness, or security. All are cosmetic
+  or minor maintenance items. Property meets USDA Minimum Property Requirements.
+
+========================================================================================
+  USDA MINIMUM PROPERTY REQUIREMENTS (MPR) CHECKLIST
+========================================================================================
+  Requirement                                          Status
+  ----------------------------------------------------------------------------------------
+  Safe and structurally sound                           [X] MET
+  Adequate water supply (well - tested, potable)        [X] MET
+  Adequate sewage disposal (septic - functional)        [X] MET
+  Adequate heating system (gas forced air - 2019)       [X] MET
+  Adequate electrical system (200 amp - functional)     [X] MET
+  Access to property (public road - paved)              [X] MET
+  No health/safety hazards                              [X] MET
+  No lead-based paint issues (built 1998 - post-ban)    [X] MET
+  No chipping/peeling paint                             [X] MET
+  Roof adequate / no leaks                              [X] MET
+  Windows intact / no broken panes                      [X] MET
+  Grading slopes away from foundation                   [X] MET
+
+  PROPERTY IS ADEQUATE FOR USDA REQUIREMENTS. MINIMUM PROPERTY REQUIREMENTS MET.
+  WELL AND SEPTIC FUNCTIONAL.
+
+========================================================================================
+  VALUATION - SALES COMPARISON APPROACH
+========================================================================================
+
+  COMP 1:   312 Cedar Lane, Clear Creek, IL
+            Sold 09/2025 - $280,000
+            1,950 sq ft ranch, 3BR/2BA, 2.5 acres, built 2000
+            Similar condition, similar amenities. Above-grade finished area larger.
+            Adj. -$15,000 for size, site, age. Adjusted: $273,000
+  
+  COMP 2:   1650 County Road 12, Clear Creek, IL
+            Sold 03/2026 - $260,000 (pending - just closed)
+            1,700 sq ft ranch, 3BR/2BA, 4 acres, built 1995
+            Older, smaller. Less updated. 
+            Adj. +$12,000 for updates, size. Adjusted: $272,000
+  
+  COMP 3:   89 Willow Creek Drive, Pleasant Plains, IL
+            Sold 12/2025 - $290,000
+            1,850 sq ft ranch, 3BR/2BA, 2 acres, built 2002
+            Newer, slightly larger, nicer finish level.
+            Adj. -$15,000 for age, condition. Adjusted: $275,000
+
+  RECONCILED VALUE: $275,000
+
+========================================================================================
+  VALUATION CONCLUSION
+========================================================================================
+  Estimated Market Value (as-is):     $275,000
+  Estimated Market Value (completed): $275,000 (no repairs required)
+  
+  Appraised Value:                     $275,000.00
+                                    -------------------------------
+                                    TWO HUNDRED SEVENTY-FIVE THOUSAND DOLLARS
+                                    -------------------------------
+
+  *** VALUE IS IN LINE WITH CONTRACT PRICE. YOUNG COUPLE PAYING FAIR MARKET. ***
+
+========================================================================================
+  APPRAISER CERTIFICATION
+========================================================================================
+  I certify that I have personally inspected the subject property and have 
+  performed this appraisal in accordance with USPAP and USDA appraisal requirements.
+
+  __________________________________                     ______________
+  Brian T. Kowalski, IL Cert. Res. Appraiser #556.001482
+  Date of Report: April 14, 2026
+
+========================================================================================
+  *** PROCESSOR NOTES ***
+  Appraisal came in at contract price - $275,000. Clean appraisal.
+  No repair requirements. USDA MPR all met. Well and septic functional.
+  Water heater is older (2016) but functional - no requirement to replace.
+  Deck is weathered but structurally sound.
+  
+  This is a straightforward USDA appraisal on a well-maintained property.
+  No value issues. No MPR issues. Good to proceed.
+========================================================================================

@@ -1,0 +1,87 @@
+══════════════════════════════════════════════════════════════════════════════
+               SALLIE MAE - STUDENT LOAN MONTHLY STATEMENT
+══════════════════════════════════════════════════════════════════════════════
+
+Borrower:      John A. Thompson
+Account #:     XXXX-XXXX-6734
+Statement Date: 04/01/2026
+Payment Due:    04/28/2026
+══════════════════════════════════════════════════════════════════════════════
+
+═══ CURRENT BALANCE BREAKDOWN ════════════════════════════════════════════════
+
+  Principal:                      $3,890.22
+  Interest (Fixed 4.50%):         $39.78
+
+═══ PAYMENT INFORMATION ═══════════════════════════════════════════════════════
+
+  Minimum Payment Due:            $125.00
+  Auto-Pay Enrolled:              YES (0.25% rate discount applied)
+  Next Payment Date:              04/28/2026
+  Payoff Amount:                  $3,930.00 (good thru 05/15/2026)
+
+══════════════════════════════════════════════════════════════════════════════
+LOAN DETAIL
+══════════════════════════════════════════════════════════════════════════════
+
+Loan Type:                        Federal Consolidation Loan
+Original Principal:                $28,500.00
+Disbursement Date:                 09/04/2007
+Interest Rate:                     4.50% Fixed
+Loan Term:                         240 months
+Payments Remaining:                12
+Estimated Payoff Date:             March 2027
+══════════════════════════════════════════════════════════════════════════════
+
+═══ TRANSACTION HISTORY ═══════════════════════════════════════════════════════
+
+03/15/2026  PAYMENT - AUTO DEBIT (ACH)         -$125.00      $3,930.00
+03/31/2026  INTEREST ACCRUED                     +$14.74      $3,944.74
+04/01/2026  PRINCIPAL ADJUSTMENT >                -$14.74     $3,930.00
+           [Correction - interest adjustment]
+══════════════════════════════════════════════════════════════════════════════
+
+══════════════════════════════════════════════════════════════════════════════
+               SALLIE MAE - STUDENT LOAN MONTHLY STATEMENT
+══════════════════════════════════════════════════════════════════════════════
+
+Borrower:      Sarah M. Thompson
+Account #:     XXXX-XXXX-8902
+Statement Date: 04/01/2026
+Payment Due:    04/28/2026
+══════════════════════════════════════════════════════════════════════════════
+
+═══ CURRENT BALANCE BREAKDOWN ════════════════════════════════════════════════
+
+  Principal:                      $6,402.18
+  Interest (Fixed 5.25%):         $84.02
+
+═══ PAYMENT INFORMATION ═══════════════════════════════════════════════════════
+
+  Minimum Payment Due:            $175.00
+  Auto-Pay Enrolled:              YES (0.25% rate discount applied)
+  Next Payment Date:              04/28/2026
+  Payoff Amount:                  $6,486.20 (good thru 05/15/2026)
+
+══════════════════════════════════════════════════════════════════════════════
+LOAN DETAIL
+══════════════════════════════════════════════════════════════════════════════
+
+Loan Type:                        Federal Consolidation Loan
+Original Principal:                $31,200.00
+Disbursement Date:                 09/02/2008
+Interest Rate:                     5.25% Fixed
+Loan Term:                         240 months
+Payments Remaining:                44
+Estimated Payoff Date:             December 2029
+══════════════════════════════════════════════════════════════════════════════
+
+═══ TRANSACTION HISTORY ═══════════════════════════════════════════════════════
+
+03/15/2026  PAYMENT - AUTO DEBIT (ACH)         -$175.00      $6,486.20
+03/31/2026  INTEREST ACCRUED                     +$24.32      $6,510.52
+══════════════════════════════════════════════════════════════════════════════
+
+══════════════════════════════════════════════════════════════════════════════
+[NOTE: BORROWERS ARE CURRENT. NO DELINQUENCIES REPORTED IN LAST 36 MONTHS]
+══════════════════════════════════════════════════════════════════════════════

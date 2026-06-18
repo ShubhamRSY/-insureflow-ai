@@ -1,0 +1,55 @@
+══════════════════════════════════════════════════════════════════════════════
+                    DISCOVER IT® - CREDIT CARD STATEMENT
+══════════════════════════════════════════════════════════════════════════════
+
+  Account Owner:        John A. Thompson
+  Account Number:       XXXX-XXXX-4431
+  Statement Date:       April 10, 2026
+  Payment Due Date:     May 5, 2026
+
+══════════════════════════════════════════════════════════════════════════════
+ACCOUNT SUMMARY
+══════════════════════════════════════════════════════════════════════════════
+
+  Previous Balance:                 $3,950.00
+  Payments/Credits:                 -$75.00
+  Purchases/Debits:                 +$0.00
+  Fees Charged:                     $0.00
+  Interest Charged:                 $0.00
+  ═══════════════════════════════════════════
+  New Balance:                      $3,875.00      <-- (decreased from last mo)
+
+  Credit Limit:                     $12,000.00
+  Available Credit:                 $8,125.00
+  Cash Advance Limit:               $2,400.00
+  Available Cash:                   $1,200.00
+  Cash APR:                         27.49%
+
+══════════════════════════════════════════════════════════════════════════════
+PAYMENT INFO
+══════════════════════════════════════════════════════════════════════════════
+
+  Minimum Payment Due:              $75.00
+  Total Balance:                    $3,875.00
+  PAYMENT DEADLINE:                 May 5, 2026
+  AutoPay:                          Yes - min payment from BofS XXXX-4872
+
+══════════════════════════════════════════════════════════════════════════════
+INTEREST RATES
+══════════════════════════════════════════════════════════════════════════════
+
+  Purchases APR:        18.99% Variable
+  Balance Transfer APR: 18.99% Variable
+  Cash APR:            27.49% Variable
+  Penalty APR:         29.99%
+
+  Interest charged this period: $0.00 (paid in full each month / grace period)
+══════════════════════════════════════════════════════════════════════════════
+══════════════════════════════════════════════════════════════════════════════
+CASHBACK SUMMARY
+══════════════════════════════════════════════════════════════════════════════
+
+  Cashback Earned This Period:    $12.50
+  Cashback Earned YTD:            $48.20
+  Total Cashback Available:       $312.80
+══════════════════════════════════════════════════════════════════════════════

@@ -1,0 +1,139 @@
+================================================================================
+                    APPRAISAL REPORT
+                          OF
+               8900 Oak Street, Springfield, IL 62705
+                 (Sangamon County - Parcel 14-05-278-004)
+
+        Prepared For: Oak Street Retail LLC (Borrower)
+        Requested By: First Midland Commercial (Lender)
+        Prepared By:  Central Illinois Appraisal Group, Inc.
+        Date of Value: February 28, 2026
+        Report Date:  March 8, 2026
+================================================================================
+
+FILE NUMBER: 2026-0117-CIAG
+APPRAISER: Thomas R. Hendricks, MAI
+LICENSE: IL CG-0004581 (Exp. 12/31/2026)
+
+================================================================================
+SUMMARY OF VALUE CONCLUSIONS
+================================================================================
+
+PROPERTY TYPE:     Single-tenant retail (NNN ground lease)
+SITE AREA:         2.18 acres (±94,900 SF)
+BUILDING AREA:     14,200 SF
+YEAR BUILT:        2008 (construction)
+OCCUPANCY:         100% (Walgreens)
+ZONING:            B-3 (General Business) - Sangamon County
+HIGHEST & BEST USE: As improved - continued retail use
+
+================================================================================
+VALUE APPROACHES
+================================================================================
+
+1. INCOME CAPITALIZATION APPROACH (Primary)
+
+   Net Operating Income (stabilized):
+   Current Base Rent:                                $285,000/yr
+   [Post-7/1/2026 rent bump: $313,500/yr - noted but not used for stabilized
+    valuation as appraiser values at current rent level]
+
+   Potential Gross Income:                           $285,000
+   Vacancy/Credit Loss (0% - NNN, corporate tenant):  $     0
+   Effective Gross Income:                           $285,000
+   Expenses:                                         $     -0-  (NNN)
+                                                    -----------
+   Net Operating Income:                             $285,000
+
+   Capitalization Rate:                              7.50%
+   [Support: comparable NNN sales in Midwest 6.75%-8.00%. Walgreens
+    credit justifies lower end of range. See comparable sales grid.]
+
+   Indicated Value - Income Approach:   $285,000 / 0.075 =  $3,800,000
+                                                                 =========
+
+2. SALES COMPARISON APPROACH (Secondary)
+
+   Comp 1: 7500 North Main Street, Springfield
+            Walgreens (NNN) - 14,100 SF - Sold 08/2024 for $3,625,000
+            Cap rate: 7.45% - Adj: +$75,000 (location, age)
+
+   Comp 2: 4200 Veterans Parkway, Decatur
+            Walgreens (NNN) - 14,500 SF - Sold 03/2024 for $3,700,000
+            Cap rate: 7.35% - Adj: +$50,000 (market conditions)
+
+   Comp 3: 600 East Ash Street, Bloomington
+            Walgreens (NNN) - 14,000 SF - Sold 11/2023 for $3,425,000
+            Cap rate: 7.65% - Adj: +$325,000 (time, market appreciation)
+
+   Comp 4: 1200 West Jefferson, Peoria
+            Walgreens (NNN) - 14,200 SF - Sold 06/2025 for $3,850,000
+            Cap rate: 7.20% - Adj: -$100,000 (superior location)
+
+   Adjusted Sales Range: $3,550,000 - $3,875,000
+   Indicated Value - Sales Approach:   $3,750,000
+
+3. COST APPROACH (Tertiary - less weight)
+
+   Land Value (2.18 acres @ $350,000/ac):           $  763,000
+   Building Replacement Cost (14,200 SF @ $145/SF): $2,059,000
+   Site Improvements:                                $  180,000
+   Entrepreneurial Incentive (10%):                  $  206,000
+                                                    -----------
+   Total Cost New:                                   $3,208,000
+   Less Depreciation (18% - age/condition):         ($ 577,440)
+                                                    -----------
+   Indicated Value - Cost Approach:                  $2,630,560
+   [Less weight given limited relevance for income-producing property
+    with long-term NNN lease]
+
+================================================================================
+RECONCILIATION AND FINAL VALUE
+================================================================================
+
+  Approach                Value           Weight
+  Income Capitalization   $3,800,000       70%       [Primary]
+  Sales Comparison        $3,750,000       25%       [Supporting]
+  Cost Approach           $2,630,000        5%       [Minimal weight]
+                                         ------
+  FINAL VALUE:            $3,800,000      100%
+
+================================================================================
+"The subject property is well-located, stabilized, single-tenant retail
+ property leased to Walgreens, an investment-grade credit tenant. The
+ NNN lease structure, remaining 10-year firm term (plus renewal options),
+ and corporate guarantee support the concluded value."
+
+================================================================================
+LIMITING CONDITIONS AND ASSUMPTIONS
+
+- Assumes clear title
+- No environmental contamination (see Phase I ESA dated 02/2026)
+- Property inspected 02/25/2026 - interior not accessed (tenant restrictions)
+- Market conditions as of 02/28/2026
+
+================================================================================
+APPRAISER CERTIFICATION
+
+I certify that, to the best of my knowledge and belief:
+
+[signed] /s/ Thomas R. Hendricks, MAI
+March 8, 2026
+
+================================================================================
+[Handwritten sticky note attached to cover:]
+"Tom, can you confirm the cap rate comps? I'm seeing Walgreens trades
+ at 7.10-7.25% in the Midwest. 7.50% seems conservative but OK for
+ our purposes. - JM"
+
+[Response handwritten on same note:]
+"John - 7.50% is appropriate for Springfield secondary market. The
+ Peoria comp at 7.20% is in a stronger MSA. Our subject is solid but
+ not premium. - Tom H."
+
+[Stamped on last page:]
+                           RECEIVED
+              FIRST MIDLAND COMMERCIAL LENDING
+                   MAR 1 0 2026
+              APPRAISAL REVIEW - COMPLETE
+================================================================================

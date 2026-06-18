@@ -1,0 +1,208 @@
+================================================================================
+                       INSUREFLOW NATIONAL MORTGAGE
+                     UNDERWRITING APPROVAL MEMORANDUM
+                              FHA LOAN
+================================================================================
+
+  TO:                        Closing Department
+  FROM:                      Janet Kowalski, FHA UW Specialist
+  LOAN #:                    INF-2026-44210
+  FHA CASE #:                489-3321887
+  BORROWER:                  Maria Elena Rodriguez
+  PROPERTY:                  789 Elm Street, Unit 2B, Springfield, IL 62704
+  DATE:                      April 10, 2026
+
+================================================================================
+FINAL APPROVAL STATUS
+================================================================================
+
+                     [STAMP - BLUE INK]
+          ====================================
+          |    APPROVED WITH CONDITIONS      |
+          |                                   |
+          |   INSUREFLOW NATIONAL MORTGAGE   |
+          |   FHA UNDERWRITING DIVISION      |
+          |   APPROVED: J. KOWALSKI          |
+          |   DATE: 04/10/2026              |
+          |   FHA CASE #: 489-3321887       |
+          |   STATUS: APPROVED W/ COND'L    |
+          ====================================
+
+================================================================================
+UNDERWRITING SUMMARY
+================================================================================
+
+  LOAN PROGRAM:               FHA 30-Year Fixed
+  LOAN AMOUNT:                $173,700.00
+  INTEREST RATE:              6.500%
+  LTV:                        96.50%
+  PURCHASE PRICE:             $180,000.00
+  DOWN PAYMENT:               $6,300.00 (3.5%)
+
+  OCCUPANCY:                  [X] Primary Residence
+                              [ ] Secondary Residence
+                              [ ] Investment Property
+
+================================================================================
+MANUAL UNDERWRITE - COMPENSATING FACTORS
+================================================================================
+
+  This file was run through FHA TOTAL Mortgage Scorecard:
+  RESULT:                     REFER (Manual Underwrite Required)
+
+  Reason:                     Single borrower, high LTV (96.5%), limited
+                              asset reserves relative to loan amount.
+                              Automated scoring requires manual review.
+
+  COMPENSATING FACTORS IDENTIFIED:
+  
+  1. LOW DTI RATIO - 36.05% TOTAL DTI
+     Under FHA's 31/43 guidelines, total DTI is 36.05%, well under
+     the 43% maximum. Front ratio 32.1%, back ratio 36.05%.
+     (See compensating factor grid - FHA Handbook 4000.1, II.A.4.b)
+
+  2. TWO-YEAR RESERVES
+     Post-close reserves estimated at $6,391 (minimum balance after
+     closing). Equates to approximately 4.5 months of PITI payments.
+     FHA requires minimum 3 months for manual underwrite.
+     EXCEEDS MINIMUM REQUIREMENT.
+
+  3. RENT HISTORY
+     Verified rental payment history for current apartment:
+     - Landlord: Grand Avenue Apartments Management
+     - 3 years at current address
+     - 12-month VOR from landlord confirms on-time payments
+     - No late payments, no NSF checks
+     - Rent $1,100/mo consistently paid
+     RENTAL HISTORY: POSITIVE.
+
+  4. INCOME STABILITY
+     - Employed as teacher with Springfield School District 186 since 2019
+     - Tenured position with regular contract renewals
+     - Income consistent and predictable
+     - Same employer for 6+ years
+     - Profession (education) considered stable
+
+  5. CREDIT HISTORY
+     - Credit Score: 720 (FICO 2, 4, 5 verified)
+     - No late mortgage/rent payments
+     - Credit report shows: 2 credit cards, 1 student loan (deferred/IBR)
+     - No collections, no judgments, no bankruptcies
+     - Payment history: 100% on-time
+
+  MANUAL UNDERWRITE CONCLUSION:
+  Compensating factors are sufficient to mitigate the higher-risk
+  characteristics of this loan. Approved per FHA Handbook 4000.1.
+
+================================================================================
+CONDITIONS OF APPROVAL
+================================================================================
+
+  CONDITION 1: FHA Appraisal Repairs
+  --- STATUS: PENDING - MUST BE COMPLETED PRIOR TO CLOSING ---
+  
+  FHA appraiser noted the following Minimum Property Requirements (MPR)
+  items requiring repair/remediation:
+  
+  a) PEELING PAINT on front entry door frame and garage access door.
+     Appraiser noted paint is pre-1978 (potential lead paint concern).
+     Must be scraped and repainted with encapsulation.
+     ESTIMATE: $250
+     
+  b) MISSING HANDRAIL on rear porch steps (3 or more risers require
+     handrail per FHA safety requirements).
+     Install handrail on rear porch steps.
+     ESTIMATE: $150
+     
+  c) GFCI ELECTRICAL OUTLET missing in kitchen within 6 ft of sink.
+     Install GFCI outlet. Seller must complete.
+     ESTIMATE: $100
+  
+  TOTAL ESTIMATED REPAIR COST: $500
+  RESPONSIBLE PARTY: Seller (Lakeside Realty Trust / Wells Fargo Asset Mgmt)
+  
+  *** Seller agreed to complete repairs prior to closing (addendum signed
+      03/20/2026). Contractor invoice required before closing. ***
+  
+  NOTE: FHA case number assigned. Appraisal validity: 120 days from
+  inspection date (03/01/2026).
+
+  CONDITION 2: Gift Funds
+  --- STATUS: SATISFIED ---
+  
+  Gift of $3,300 from Carmen Rodriguez (aunt).
+  - Gift letter executed 02/15/2026 (signed by donor + borrower)
+  - Cashier's check deposited 02/18/2026
+  - Bank statement showing deposit
+  - Donor bank statement showing sufficient funds available
+  - No repayment required. Non-repayable gift.
+  - VerifiED: 03/25/2026
+
+  CONDITION 3: HOA Certification
+  --- STATUS: SATISFIED ---
+  
+  HOA estoppel/certification received 03/10/2026.
+  - Elm Street Condominium Association
+  - FHA-approved condo project: CONDO-IL-4482 (exp 12/2027)
+  - No outstanding HOA dues
+  - HOA dues current ($175/mo)
+  - Master policy coverage verified
+  - No pending special assessments
+  - Association financials reviewed: 85% owner-occupied ratio (meets FHA min 50%)
+  - No litigation pending against association
+
+================================================================================
+FINAL DECISION
+================================================================================
+
+  APPROVED:                  [X] YES - WITH CONDITIONS
+                             [ ] UNCONDITIONAL
+                             [ ] DENIED
+
+  STATUS: APPROVED WITH CONDITIONS. Loan is clear to close ONCE
+  FHA appraisal repair verification is received.
+
+  CLOSING DATE:              May 05, 2026 (tentative - pending repairs)
+  ESCROW HOLDER:             Chicago Title - Springfield
+
+================================================================================
+
+  APPROVED BY:
+
+  _________________________________________         Date: 04/10/2026
+  Janet Kowalski
+  FHA Underwriting Specialist
+  NMLS # 77293
+  InsureFlow National Mortgage
+
+================================================================================
+
+HANDWRITTEN (UNDERWRITER - RED PEN ON PAGE 1):
+
+   MANUAL UW - COMPENSATING FACTORS:
+   
+   ✓ 2-YEAR RESERVE (4.5mo)
+   ✓ RENT HISTORY (3yr on time)
+   ✓ INCOME STABLE (teacher, tenured)
+   ✓ LOW DTI 36%
+   ✓ CREDIT 720
+   
+   *** APPROVED - Manual UW pass ***
+   
+   Repairs: Called Wells Fargo REO. They approved $500 repair
+   credit. Contractor scheduled for 04/20/2026.
+   Follow up after repairs complete.
+   
+   - J.K.
+   
+================================================================================
+
+>> POST-APPROVAL NOTE (04/25/2026):
+>> FHA REPAIRS COMPLETED. INVOICE #INV-44821 FROM 
+>> HOMETOWN HANDYMAN SERVICES ($475). PHOTOS ATTACHED.
+>> PAINTING, HANDRAIL, GFCI ALL COMPLETE.
+>> VERIFIED BY: Field inspector 04/24/2026.
+>> 
+>> CLEAR TO CLOSE EFFECTIVE 04/25/2026.
+>> - J. Kowalski
+================================================================================

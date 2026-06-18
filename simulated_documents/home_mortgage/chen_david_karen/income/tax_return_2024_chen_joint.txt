@@ -1,0 +1,300 @@
+======================================================================
+                 FORM 1040 - U.S. INDIVIDUAL INCOME TAX RETURN
+                        TAX YEAR: 2024 (FILED JOINTLY)
+======================================================================
+PRIMARY:  David Chen                    SSN: XXX-XX-4821
+SPOUSE:   Karen Chen                    SSN: XXX-XX-6730
+ADDRESS:  1242 Hillcrest Drive
+          Springfield, IL 62704
+
+FILING STATUS: Married Filing Jointly
+DEPENDENTS: 2 (Emily Chen, age 6 - SSN XXX-XX-1123)
+                (Ethan Chen, age 4 - SSN XXX-XX-4456)
+
+======================================================================
+INCOME
+----------------------------------------------------------------------
+ 1.  Wages, salaries, tips (W-2):
+     David Chen - MedTech Solutions Inc.          $280,000.00
+     Karen Chen - PharmaCare LLC                  $195,000.00
+                                                   -----------
+     Total Wages:                                  $475,000.00
+
+ 2a. Taxable interest                                  $1,280.00
+ 2b. Tax-exempt interest                                $0.00
+ 3.  Ordinary dividends                                $8,450.00
+ 4a. IRA distributions                                  $0.00
+ 4b. Taxable amount                                     $0.00
+ 5a. Pensions and annuities                              $0.00
+ 5b. Taxable amount                                     $0.00
+ 6.  Social Security benefits                            $0.00
+ 7.  Capital gain or loss:
+     - VTI/VXUS dividends (qualified)                $6,200.00
+     - Apple stock sale                             $2,100.00
+     - Microsoft stock dividend                    $1,300.00
+                                                   -----------
+     Net capital gain                                 $9,600.00
+
+ 8.  Other income:
+     - Schedule E - Rental real estate               $3,600.00
+     - David bonus                                    45,000.00
+     - Karen bonus                                    20,000.00
+     - State tax refund                                $1,400.00
+                                                      ----------
+                                                      $70,000.00
+                                                   ===========
+ 9.  TOTAL INCOME:                                  $556,080.00
+
+======================================================================
+ADJUSTMENTS TO INCOME
+----------------------------------------------------------------------
+10.  Educator expenses                                  $0.00
+11a. IRA deduction                                      $0.00
+12.  Student loan interest                              $0.00
+13.  Health savings account (HSA) - David            $3,600.00
+14.  Moving expenses                                    $0.00
+15.  Self-employment tax (deductible half)              $0.00
+16.  Self-employed SEP, SIMPLE, etc.                    $0.00
+17.  Self-employed health insurance                    $0.00
+18.  Penalty on early withdrawal of savings             $0.00
+19a. Alimony paid                                       $0.00
+20.  IRA deduction (reported on 1040)                   $0.00
+21.  Reserved
+22.  Domestic production activities                      $0.00
+23.  Other adjustments:
+     - 401(k) employee contributions (W-2)           $38,000.00     (David $19,500 + Karen $19,500 - wait this is already excluded from wages. Actually it's included in wages on W-2 then adjusted? No - 401k is already pre-tax on W-2. Let me re-check...)
+     [NOTE FROM CPA: 401(k) already excluded from Box 1 wages. Not an add-back adjustment.]
+     - HSA deduction - David                          $3,600.00
+     - Dependent Care FSA (already pre-tax)            $0.00
+                                                      ---------
+24.  TOTAL ADJUSTMENTS:                                $3,600.00
+                                                     ==========
+25.  ADJUSTED GROSS INCOME (AGI):                    $552,480.00
+                                                     ==========
+
+  [SCRATCH PAPER IN MARGIN: "AGI capped at $500K for some deductions lost. Need to check phaseouts. - Jen"]
+
+======================================================================
+ITEMIZED DEDUCTIONS (SCHEDULE A) - ACTUAL, WORTH MORE THAN STD
+----------------------------------------------------------------------
+Medical & Dental expenses (exceeding 7.5% AGI):
+  Total medical: $4,200
+  Less 7.5% AGI: $41,436
+  Allowable: $0                                                      $0.00
+
+Taxes You Paid:
+  State & local income taxes (SALT)                              $15,200.00
+  Real estate taxes (primary residence)                          $12,400.00
+  Real estate taxes (rental property - Chicago)                  $4,800.00
+  Personal property taxes                                         $0.00
+  Total SALT (capped at $10K thanks to TCJA)                                    
+  [HANDWRITTEN: "F$%^ING SALT CAP. $10K max."]                  $10,000.00
+
+Interest You Paid:
+  Home mortgage interest (Form 1098 - Chase)
+    - Primary residence: $32,000                                 $32,000.00
+  Investment interest                                             $0.00
+                                                                  ---------
+Total Interest:                                                  $32,000.00
+
+Gifts to Charity:
+  Cash contributions (receipts on file):
+    - United Way: $2,500
+    - St. John's Church: $8,000
+    - American Heart Association: $1,500
+    - Springfield Food Bank: $3,500
+    - Local Children's Hospital: $2,500
+  Non-cash contributions:
+    - Goodwill (clothing/furniture): ~$2,000 (thrift value)
+                                                            [wait is this over $500? Need form 8283 if over $500 noncash - Jen]
+  Total: $18,000.00                                             $18,000.00
+
+Casualty & Theft Losses                                            $0.00
+Other Itemized Deductions:
+  Tax prep fees: $0 (no longer deductible)
+  Unreimbursed employee expenses: $0                             $0.00
+
+TOTAL ITEMIZED DEDUCTIONS:                                      $60,000.00
+                                                                =========
+
+  [NOTE FROM CPA: "Could do standard ($29,200) but itemized is way better. Good."]
+
+======================================================================
+TAX COMPUTATION
+----------------------------------------------------------------------
+26.  AGI (from line 25):                                      $552,480.00
+27.  Itemized deductions (from Schedule A):                    $60,000.00
+28a. Qualified business income deduction (199A):                    $0.00
+28b. Total deductions:                                          $60,000.00
+29.  Taxable income:                                           $492,480.00
+                                                                =========
+
+30.  Tax (from Tax Tables or Schedules):
+     - $29,502 + 35% of amount over $231,250 (MFJ)
+     - Calculation: $29,502 + 0.35($492,480 - $231,250)
+     - $29,502 + $91,430.50 = $120,932.50                      $120,933.00
+
+31.  Alternative Minimum Tax (AMT): check needed
+     [SCRATCH: "Income too high? AMT exemption phaseout starts at $1M MFJ. Probably OK but double-check. - Jen"]
+     AMT owed: $0.00                                            $0.00
+32.  Total tax before credits:                                 $120,933.00
+33.  Nonrefundable credits:
+     Child Tax Credit (2 children under 17) - $2,000 ea
+       Phaseout starts at AGI $400K - we're at $552K
+       Phaseout: $50 per $1,000 over $400K = $152K over = $7,600 phaseout
+       $4,000 - $7,600 = $0 (FULLY PHASED OUT)
+     [SCREW YOU TCJA - Jen]                                     $0.00
+
+34.  Other nonrefundable credits:
+     Foreign tax credit: $0                                     $0.00
+35.  Total nonrefundable credits:                               $0.00
+36.  Net tax:                                                  $120,933.00
+37.  Other taxes:
+     Schedule 2 - AMT (if any)                                 $0.00
+     NIIT (Net Investment Income Tax) - 3.8% on the LESSER of
+        net investment income ($9,600 + $1,280 interest = $10,880)
+        or MAGI over threshold ($552,480 - $250,000 = $302,480)
+        3.8% x $10,880 = $413.44                                $413.00
+                                                                -------
+38.  TOTAL TAX:                                                $121,346.00
+                                                                =========
+
+======================================================================
+PAYMENTS
+----------------------------------------------------------------------
+39.  Federal tax withheld (W-2):
+     David: $72,800 + Karen: $46,800                          $119,600.00
+40.  Estimated tax payments (1040-ES):                          $4,000.00
+     [HANDWRITTEN: "We underwithheld! Had to pay $4K in estimated in Dec.
+      David's bonus pushed us into higher bracket. Set up withholding adjustment 
+      for next year."]
+41.  Amount paid with extension:                                   $0.00
+42.  Excess Social Security:                                        $0.00
+43.  Credit for federal tax on fuels:                              $0.00
+44.  Amount on Form 2439:                                          $0.00
+45.  Total payments:                                           $123,600.00
+                                                                =========
+======================================================================
+REFUND OR AMOUNT YOU OWE
+----------------------------------------------------------------------
+46.  Overpaid (line 45 minus line 38):                          $2,254.00
+47.  Amount REFUNDED TO YOU:                                    $2,254.00
+     [CPA NOTE: "Direct deposit to Chase checking? - Jen"]
+48.  Amount you OWE:                                               $0.00
+     Estimated tax penalty (underpayment): less than $1K due? no penalty
+======================================================================
+
+======================================================================
+SCHEDULE E - SUPPLEMENTAL INCOME AND LOSS
+(FROM RENTAL REAL ESTATE)
+======================================================================
+Property A: 4800 Lake Shore Dr #7B, Chicago, IL 60615
+Type: Residential rental condo
+Acquired: May 2018
+
+INCOME:
+  Gross rents received:  $1,400 x 12 months = $16,800.00
+  Total rental income:                                          $16,800.00
+
+EXPENSES:
+  Advertising:                                                      $0.00
+  Auto & travel:                                                 $240.00
+  Cleaning & maintenance:                                      $1,400.00
+  Commissions (Windy City PM - 12%):                            $2,016.00
+  Insurance:                                                   $1,200.00
+  Legal & professional fees:                                     $350.00
+  Management fees (already above - included in commissions)        $0.00
+  Mortgage interest:                                          $10,200.00
+  Other interest:                                                   $0.00
+  Repairs:                                                     $2,800.00
+  [HANDWRITTEN: "New water heater Feb 2024 - $1,400 of this"]
+  Supplies:                                                      $220.00
+  Taxes (real estate):                                          $4,800.00
+  Utilities:                                                    $840.00
+  Depreciation (27.5 yr - condo value $180K improvement):
+    Land: $20K, Building: $180K                                 $6,545.00
+                                                                ---------
+  TOTAL EXPENSES:                                              $30,611.00
+
+NET INCOME (LOSS):                                           ($13,811.00)
+
+[CPAs HANDWRITTEN NOTE: "Passive activity loss - can't offset W-2 unless 
+ qualifies as real estate professional. They don't. Suspended loss carries 
+ forward. For mortgage purposes, underwriters typically use Schedule E 
+ net income but add back depreciation and non-cash items. NOI for UW = 
+ $16,800 - ($30,611 - $6,545) = $16,800 - $24,066 = (-$7,266). 
+ Actually Fannie Mae: use net rental income from Schedule E line 21 
+ which is $3,600. Wait where is $3,600 coming from? Adding back 
+ depreciation? Let me recalculate:
+
+  Gross rent:                  $16,800
+  Cash expenses:               $24,066 (total less depreciation)
+  Mortgage interest:           $10,200
+  Not including principal paydown
+  Net cash flow:               -$7,266  (negative!)
+  BUT for Fannie Mae they take Schedule E line 21
+  Line 21 = total income - total expenses = $16,800 - $30,611 = ($13,811)
+  
+  THIS DOESN'T MATCH THE $3,600. 
+  
+  WAIT - I think they're using a different property? Or maybe the $3,600 is
+  from an earlier return. Let me check 2023.
+  
+  Actually for the 1003 we're using $3,600 as the net rental income. 
+  The app might be ignoring mortgage interest and depreciation.
+  
+  UGH this is why I hate rental properties. - Jen"]
+
+[ACTUALLY, looking at this again: Net rental income on the 1003 should use
+ Fannie Mae guidelines - if Schedule E shows a loss, you can add back
+ depreciation, but not mortgage interest. Simplified: $16,800 - ($30,611 - $6,545 - $10,200) 
+ = $16,800 - $13,866 = $2,934. About $3K. Close enough to $3,600 I guess.
+ 
+ SCREW IT. Use $3,600 like the 1003 says. UW won't care about $600 difference. - Jen]
+
+======================================================================
+SCHEDULE A (cont.) - CHARITABLE CONTRIBUTIONS DETAIL
+======================================================================
+  Church (St. John's Springfield):                      $8,000.00
+    [HANDWRITTEN: "Gave cash - have offering envelopes. No single donation >$250? 
+     One was $500 on Easter. Need receipt."]
+  United Way:                                           $2,500.00
+  American Heart Association:                           $1,500.00
+  Springfield Food Bank:                                $3,500.00
+  Children's Hospital of IL:                            $2,500.00
+                                                        ---------
+  Total cash:                                          $18,000.00
+
+Non-cash (Goodwill receipts attached - fair market value):
+  Clothing, household, books                           $2,000.00
+
+======================================================================
+
+  ==========================================================
+  | STICKY NOTE (PINK):                                    |
+  |                                                        |
+  |  DAVID -                                             |
+  |                                                        |
+  |  I still need the K-1 from your side LLC (Chens        |
+  |  Consulting Group?). You mentioned some consulting      |
+  |  income from last year. Did you file the extension?     |
+  |                                                        |
+  |  Also - did you get the 1099 from the board seat       |
+  |  you resigned from?                                     |
+  |                                                        |
+  |  Let me know by Friday, or I'm filing the extension.   |
+  |                                                        |
+  |  - Jen                                                  |
+  |                                                        |
+  |  P.S. Tell Karen the FSA receipts are fine. Just       |
+  |       upload them.                                      |
+  ==========================================================
+
+======================================================================
+[CPA FIRM HEADER]:
+  Jennifer L. Martinez, CPA, MST
+  Martinez & Associates Tax Advisory
+  2200 Commerce Blvd, Springfield, IL 62701
+  (217) 555-0192
+  Prepared: 03/15/2025
+======================================================================

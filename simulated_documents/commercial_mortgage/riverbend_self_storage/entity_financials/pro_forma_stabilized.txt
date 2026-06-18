@@ -1,0 +1,125 @@
+================================================================================
+                    PRO-FORMA OPERATING STATEMENT
+                                  FOR
+                 RIVERBEND SELF STORAGE LLC
+               1800 River Road, Riverbend, IL 62788
+================================================================================
+Based on: Stabilized Operations (Year 3)
+Prepared: February 20, 2026 by Thomas Enterprises Inc.
+Review:   Underwriting - First Midland Commercial
+================================================================================
+
+PROJECT SUMMARY:
+  Self-Storage:                65,000 SF (500 units - mix of sizes)
+  Ancillary Retail:             5,000 SF (moving truck rental, packing supplies)
+  Total Building:              70,000 SF
+  Site:                         5.8 acres
+
+================================================================================
+INCOME PROJECTIONS
+================================================================================
+
+SELF-STORAGE RENTAL INCOME:
+  65,000 SF @ $1.10/SF/mo average rent          $   71,500/mo
+                                                 ------------
+  Gross Annual Self-Storage Revenue              $  858,000
+
+  [Rent mix: 10x5x5 (10% units, 5x5 units, 5x10 units, etc.)
+   Weighted avg $1.10/SF/mo is conservative for new construction.
+   Comparable facilities: $1.05-$1.25/SF/mo. - Tom Thomas]
+
+ANCILLARY RETAIL INCOME:
+  Moving truck rental commissions                 $   25,000/yr
+  Packing supplies / merchandise sales            $   38,000/yr
+  Late fees / admin fees                          $   12,000/yr
+  Tenant insurance commissions                    $    8,000/yr
+                                                 ------------
+  Total Ancillary Income                          $   83,000/yr
+
+  [Handwritten: "Ancillary income is hard to project - these figures
+   are typical for a facility this size. Truck rental alone can vary.
+   - JM"]
+
+GROSS POTENTIAL INCOME:                           $  941,000
+
+LESS: ECONOMIC VACANCY (15%):
+  [Stabilized vacancy at 15% is conservative for self-storage.
+   Industry average is 10-15%. Market study suggests 70% occ Year 3
+   = 30% vacancy, but 85% occ is achievable by Year 4-5 pro-forma.
+   We are underwriting at 85% occupancy. - Tom Thomas]
+
+  15% x $941,000                                   ($141,150)
+                                                 ------------
+EFFECTIVE GROSS INCOME:                            $  799,850
+
+================================================================================
+OPERATING EXPENSES
+================================================================================
+
+  Real Estate Taxes (@ ~2.0% of value est.)       $   96,000
+  Insurance                                         $   24,000
+  Property Management (@ 6% of EGI)                 $   47,991
+  Utilities (electric, water, sewer)                $   36,000
+  Repairs & Maintenance                             $   25,000
+  Landscaping / Snow Removal                        $   12,000
+  Marketing / Advertising                           $   18,000
+  Security system monitoring                        $    6,000
+  Trash removal                                     $    6,000
+  Reserves for Replacement (@ $0.15/SF)             $   10,500
+  Legal & Accounting                                $    8,000
+  Miscellaneous                                     $   10,000
+                                                 ------------
+  TOTAL EXPENSES:                                   $  299,491
+
+  Expense Ratio: 37.4% of EGI
+
+  [Margin note: "Expense ratio at 37% is reasonable for self-storage.
+   Industry range 30-40%. New construction will have lower maintenance
+   in early years. - JM"]
+
+================================================================================
+NET OPERATING INCOME (NOI):                         $  500,359
+================================================================================
+
+  ROUNDED TO:                                       $  500,000
+
+================================================================================
+DEBT SERVICE CALCULATION
+================================================================================
+
+Loan Amount:                      $2,800,000
+Interest Rate:                    6.25% (fixed)
+Amortization:                     25 years
+Monthly Payment:                  $ 18,564.00
+Annual Debt Service:              $ 222,768.00
+                                  -----------
+
+================================================================================
+DEBT SERVICE COVERAGE RATIO (DSCR):  $500,000 / $222,768 = 2.24x
+================================================================================
+
+  [Handwritten, circled in green:]
+  "2.24x DSCR!! Very strong. Even at Year 1 with 35% occ:
+   NOI ~$225K / $222,768 = 1.01x (tight but workable).
+   
+   Year 2 at 55% occ: NOI ~$460K / $222,768 = 2.06x.
+   
+   Construction risk is in Year 1 - need to make sure Tom has
+   liquidity to cover debt service during lease-up. He has $1.8M
+   cash - can cover ~8 years of debt service. No issue.
+   - JM 2/22"
+
+  "Underwrite at 85% occupancy = 2.13x DSCR per credit policy.
+   Minimum 1.25x needed. Passes with room. - MLW"
+
+================================================================================
+LOAN-TO-VALUE (LTV):
+  Stabilized Value (see appraisal - as-stabilized $5.2M)
+  Loan: $2.8M / $5.2M = 53.8% LTV (stabilized)
+
+================================================================================
+[Stamp:]
+                    REVIEWED BY CREDIT COMMITTEE
+                    PRELIMINARY APPROVAL - 3/10/26
+                    CONDITION: CONSTRUCTION BUDGET VERIFICATION
+================================================================================

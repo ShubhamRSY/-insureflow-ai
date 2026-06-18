@@ -1,0 +1,97 @@
+    ========================================================================
+                    12-MONTH CHILD SUPPORT PAYMENT HISTORY
+                          Lisa M. Sullivan f/k/a Patel
+                             Payor: Michael J. Patel, M.D.
+
+    Court Order Entered: December 15, 2025
+    Monthly Obligation:  $1,500.00 ($750/child)
+    Payment Method:      Direct Deposit from Payor's Springfield Community Bank
+                         (Account #XXXX7821) to Payee's Chase Checking Account
+                         (Account #XXXX4521)
+
+    Payment History as of April 15, 2026:
+
+    ┌──────────────┬────────────┬───────────────┬──────────────┬──────────────────┐
+    │  MONTH       │  AMOUNT    │  DATE PAID    │  STATUS      │  NOTES           │
+    ├──────────────┼────────────┼───────────────┼──────────────┼──────────────────┤
+    │ January 2026 │ $1,500.00  │ 01/02/2026    │  ON TIME      │  First payment   │
+    │              │            │               │               │  under order     │
+    ├──────────────┼────────────┼───────────────┼──────────────┼──────────────────┤
+    │ February     │ $1,500.00  │ 02/01/2026    │  ON TIME      │                   │
+    │ 2026         │            │               │               │                   │
+    ├──────────────┼────────────┼───────────────┼──────────────┼──────────────────┤
+    │ March 2026   │ $1,500.00  │ 03/01/2026    │  ON TIME      │                   │
+    │              │            │               │               │                   │
+    ├──────────────┼────────────┼───────────────┼──────────────┼──────────────────┤
+    │ April 2026   │ $1,500.00  │ 04/01/2026    │  ON TIME      │                   │
+    │              │            │               │               │                   │
+    ├──────────────┼────────────┼───────────────┼──────────────┼──────────────────┤
+    │              │            │               │              │                   │
+    │ PRIOR TO     │  N/A       │  N/A          │  N/A          │  Order entered    │
+    │ January      │            │               │               │  12/15/2025       │
+    │ 2026         │            │               │               │  No prior         │
+    │              │            │               │               │  obligation       │
+    └──────────────┴────────────┴───────────────┴──────────────┴──────────────────┘
+
+    TOTAL RECEIVED (YTD 2026):    $6,000.00 (January - April 2026)
+    PAYMENTS MISSED:              0
+    PAYMENTS LATE:                0
+    AVERAGE PAYMENT DATE:         1st of month (or next business day)
+
+    ─────────────────────────────────────────────────────────────────────────────
+    DIRECT DEPOSIT CONFIRMATION — CHASE BANK
+
+    The following direct deposit transactions were verified from Chase
+    Bank Statement (Account #XXXX4521):
+
+    Deposit Date     Description                                    Amount
+    ─────────────────────────────────────────────────────────────────────────────
+    01/02/2026       DIRECT DEPOSIT - SPRINGFIELD COMM BK           $1,500.00
+                     REF: CHILD SUPPORT PATEL
+
+    02/01/2026       DIRECT DEPOSIT - SPRINGFIELD COMM BK           $1,500.00
+                     REF: CHILD SUPPORT PATEL
+
+    03/01/2026       DIRECT DEPOSIT - SPRINGFIELD COMM BK           $1,500.00
+                     REF: CHILD SUPPORT PATEL
+
+    04/01/2026       DIRECT DEPOSIT - SPRINGFIELD COMM BK           $1,500.00
+                     REF: CHILD SUPPORT PATEL
+
+    ─────────────────────────────────────────────────────────────────────────────
+    ACH TRACE NUMBERS AVAILABLE UPON REQUEST FOR EACH TRANSACTION.
+    VERIFIED BY: Jessica Martinez, Senior Paralegal
+                 O'Brien & Associates, P.C.
+    VERIFICATION DATE: 04/15/2026
+    ─────────────────────────────────────────────────────────────────────────────
+
+    ADDITIONAL NOTES FOR UNDERWRITING:
+
+    - Child support is entered as a post-divorce obligation per court order
+      dated 12/15/2025. Only 3 complete months of payment history available
+      as of this writing (January, February, March 2026). April 2026 payment
+      received and posted.
+
+    - Per UW guidelines: borrower is requesting to include $1,500/mo as
+      qualifying income. Supporting documentation: certified copy of court
+      order (attached), 4 months of bank statements showing receipt, and
+      verification of payor's income from case file.
+
+    - Payor (Michael J. Patel, M.D.) has stable, verifiable income of
+      $420,000/year as an anesthesiologist. 12 years with same employer.
+      No risk of non-payment. Income withholding order is in place with
+      his employer (Springfield Anesthesiology Group).
+
+    - Fact Sheet: $1,500/mo � 12 = $18,000/yr child support income.
+      Not taxable to borrower per IRC Section 71(c). Documented on Form
+      1040 but excluded from gross income (see CPA note on tax return).
+
+    - NOTE: Underwriter may require at least 6 months of receipt history
+      to use in qualifying per FNMA guidelines. Request exception based
+      on: (a) income withholding order active, (b) payor's strong financial
+      profile, (c) direct deposit evidence, (d) court order. JM
+
+    ─────────────────────────────────────────────────────────────────────────────
+    [ATTACHMENT: Certified Copy of Court Order (See Separate Document)]
+    [ATTACHMENT: Chase Bank Statements (Jan-Apr 2026)]
+    ─────────────────────────────────────────────────────────────────────────────

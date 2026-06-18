@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  BROKER SUBMISSION — Sunrise Artisan Bakery LLC
+  Submitted by: Cascade Pacific Insurance Brokers (Marcus Chen, applicant)
+  Scenario: New business / renewal application BEFORE vendor data arrives.
+  Intentional gaps vs VeriRisk vendor feeds:
+    - Lists only Pearl District location (commissary omitted)
+    - Revenue understated ($2.8M vs vendor D&B $3.4M)
+    - Claims "no losses in 5 years" (vendor ISO shows 4 claims)
+    - Fully sprinklered (commissary kitchen is NOT sprinklered per inspection)
+    - No disclosure of owner bankruptcy or related entity Rose City Catering
+-->
+<ACORD xmlns="http://www.acord.org/standards/PC_Surety/ACORD">
+  <Submission>
+    <NamedInsured>
+      <GeneralPartyInfo>
+        <NameInfo>
+          <CommercialName>
+            <Name>Sunrise Artisan Bakery LLC</Name>
+            <DBA>Sunrise Bakery &amp; Cafe</DBA>
+          </CommercialName>
+        </NameInfo>
+        <Addr1>1204 NW Glisan Street</Addr1>
+        <City>Portland</City>
+        <StateProvCd>OR</StateProvCd>
+        <PostalCode>97209</PostalCode>
+        <TaxIdentity>
+          <TaxID>93-2847193</TaxID>
+        </TaxIdentity>
+        <BusinessType>LLC</BusinessType>
+        <YearOrganized>2017</YearOrganized>
+      </GeneralPartyInfo>
+    </NamedInsured>
+
+    <AdditionalInterest>
+      <GeneralPartyInfo>
+        <NameInfo>
+          <CommercialName>
+            <Name>Marcus Wei-Lin Chen</Name>
+          </CommercialName>
+        </NameInfo>
+        <InterestType>Owner / Principal</InterestType>
+        <ContactTitle>Managing Member (100% ownership)</ContactTitle>
+      </GeneralPartyInfo>
+    </AdditionalInterest>
+
+    <Broker>
+      <GeneralPartyInfo>
+        <ID>BRK-OR-44291</ID>
+        <NameInfo>
+          <CommercialName>
+            <Name>Cascade Pacific Insurance Brokers</Name>
+            <DBA>CPIB Commercial Lines</DBA>
+          </CommercialName>
+        </NameInfo>
+        <ContactName>Jennifer Walsh, CIC</ContactName>
+        <Email>jwalsh@cpib.com</Email>
+        <Phone>503-555-0147</Phone>
+      </GeneralPartyInfo>
+    </Broker>
+
+    <PolicyPeriod>
+      <EffectiveDate>2026-10-01</EffectiveDate>
+      <ExpirationDate>2027-10-01</ExpirationDate>
+    </PolicyPeriod>
+
+    <Coverage>
+      <CoverageType>Commercial General Liability</CoverageType>
+      <Limit>1000000</Limit>
+      <Deductible>0</Deductible>
+      <Premium>12400</Premium>
+    </Coverage>
+    <Coverage>
+      <CoverageType>Property</CoverageType>
+      <Limit>1850000</Limit>
+      <Deductible>2500</Deductible>
+      <Premium>18750</Premium>
+    </Coverage>
+    <Coverage>
+      <CoverageType>Business Income</CoverageType>
+      <Limit>350000</Limit>
+      <Deductible>72</Deductible>
+      <Premium>4200</Premium>
+    </Coverage>
+    <Coverage>
+      <CoverageType>Commercial Auto</CoverageType>
+      <Limit>500000</Limit>
+      <Deductible>1000</Deductible>
+      <Premium>6800</Premium>
+    </Coverage>
+    <Coverage>
+      <CoverageType>Workers Compensation</CoverageType>
+      <Limit>Statutory</Limit>
+      <Deductible>0</Deductible>
+      <Premium>28400</Premium>
+    </Coverage>
+
+    <Location>
+      <Addr1>1204 NW Glisan Street</Addr1>
+      <City>Portland</City>
+      <StateProvCd>OR</StateProvCd>
+      <PostalCode>97209</PostalCode>
+      <County>Multnomah</County>
+      <Occupancy>Retail Bakery / Cafe</Occupancy>
+      <YearBuilt>1924</YearBuilt>
+      <SquareFootage>4200</SquareFootage>
+      <ConstructionType>Joisted Masonry</ConstructionType>
+      <ProtectionClass>2</ProtectionClass>
+      <NumberOfStories>2</NumberOfStories>
+      <Sprinklered>Yes</Sprinklered>
+      <EstimatedValue>920000</EstimatedValue>
+    </Location>
+
+    <Vehicle>
+      <VehicleId>V001</VehicleId>
+      <VIN>1FTBW3XM5GKA48291</VIN>
+      <ModelYear>2019</ModelYear>
+      <Make>Ford</Make>
+      <Model>Transit 250 Refrigerated Van</Model>
+      <BodyType>Reefer Delivery Van</BodyType>
+      <VehicleValue>38000</VehicleValue>
+      <PrimaryUse>Wholesale delivery to grocers</PrimaryUse>
+    </Vehicle>
+    <Vehicle>
+      <VehicleId>V002</VehicleId>
+      <VIN>2FTBW3XM5GKA48292</VIN>
+      <ModelYear>2021</ModelYear>
+      <Make>Ford</Make>
+      <Model>Transit 250 Cargo Van</Model>
+      <BodyType>Cargo Van</BodyType>
+      <VehicleValue>42000</VehicleValue>
+      <PrimaryUse>Catering delivery</PrimaryUse>
+    </Vehicle>
+
+    <Risk>
+      <NAICSCode>311811</NAICSCode>
+      <SICCode>5461</SICCode>
+      <BusinessDescription>Artisan retail bakery and cafe producing breads, pastries, and wholesale baked goods for Portland-area grocers and restaurants. Single storefront with attached production kitchen.</BusinessDescription>
+      <ConstructionType>Joisted Masonry</ConstructionType>
+      <Occupancy>Retail Bakery</Occupancy>
+      <ProtectionClass>2</ProtectionClass>
+      <NumberOfStories>2</NumberOfStories>
+      <TotalSquareFootage>4200</TotalSquareFootage>
+      <Sprinklered>Yes</Sprinklered>
+    </Risk>
+
+    <FinancialInfo>
+      <AnnualRevenue>2800000</AnnualRevenue>
+      <Payroll>840000</Payroll>
+      <TotalAssets>1100000</TotalAssets>
+      <YearsInBusiness>9</YearsInBusiness>
+      <NumberOfEmployeesFullTime>22</NumberOfEmployeesFullTime>
+      <NumberOfEmployeesPartTime>6</NumberOfEmployeesPartTime>
+    </FinancialInfo>
+
+    <UnderwritingQuestion>
+      <Question>Has the insured had any prior losses exceeding $10,000 in the past 5 years?</Question>
+      <Answer>No</Answer>
+    </UnderwritingQuestion>
+    <UnderwritingQuestion>
+      <Question>Does the insured operate any additional locations not listed above?</Question>
+      <Answer>No</Answer>
+    </UnderwritingQuestion>
+    <UnderwritingQuestion>
+      <Question>Has the owner or any principal filed for bankruptcy in the past 10 years?</Question>
+      <Answer>No</Answer>
+    </UnderwritingQuestion>
+    <UnderwritingQuestion>
+      <Question>Is the insured involved in any pending litigation?</Question>
+      <Answer>No</Answer>
+    </UnderwritingQuestion>
+  </Submission>
+</ACORD>

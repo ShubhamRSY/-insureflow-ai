@@ -1,0 +1,284 @@
+    ========================================================================
+                  UNIFORM RESIDENTIAL LOAN APPLICATION
+                      Fannie Mae Form 1003 / Freddie Mac Form 65
+
+    Prepared by:       Premier Home Lending, Inc.
+                       200 South 6th Street, Springfield, IL 62701
+                       NMLS #: 123456
+
+    Loan Officer:      James R. Miller, NMLS #654321
+    Application Date:  April 15, 2026
+
+    ========================================================================
+                       SECTION 1: BORROWER INFORMATION
+    ========================================================================
+
+    Borrower Name:     Lisa M. Sullivan (f/k/a Lisa M. Patel)
+    SSN:               XXX-XX-XXXX
+    DOB:               08/22/1981 (Age 45)
+    Citizenship:       U.S. Citizen
+    Marital Status:    Divorced (Final: December 15, 2025)
+
+    Current Address:   555 Lake Shore Drive, Unit 12A
+                       Springfield, IL 62704
+                       (Own — Subject Property)
+                       Occupancy: Primary Residence
+
+    Prior Address:     1245 Oakwood Lane
+                       Springfield, IL 62704
+                       (Former marital residence — sold 03/2026 per divorce)
+
+    Home Phone:        (217) 555-0142
+    Work Phone:        (217) 555-0190
+    Email:             lisa.sullivan@illinoismutual.com
+
+    ========================================================================
+                       SECTION 2: EMPLOYMENT & INCOME
+    ========================================================================
+
+    EMPLOYER:          Illinois Mutual Insurance Company
+     (Current)          200 W. Adams Street
+                       Springfield, IL 62701
+
+    Position:          Director of Marketing
+    Years on Job:      8 years (since 2018)
+    Years in Industry: 18 years
+
+    Base Income:       $165,000.00 / year
+    Overtime:          $0 / year
+    Bonus:             $15,000.00 / year (average: range $12K-$18K)
+    Commission:        $0 / year
+    Other Income:      $18,000.00 / year (Child Support — see Section 6)
+    Total Monthly:     $16,500.00 (base + bonus avg + child support)
+
+    PRIOR EMPLOYER:    None (same employer for 8 years)
+     (2 years ago)
+
+    ========================================================================
+                       SECTION 3: ASSETS
+    ========================================================================
+
+    ASSET TYPE                  INSTITUTION                VALUE
+    ─────────────────────────────────────────────────────────────────────
+    Checking Account            Chase Bank                $22,010.79
+    Savings Account             Chase Bank                $99,475.22
+    Money Market Fund           Vanguard                  $90,123.45
+    Retirement (IRA Rollover)   Vanguard                  $340,200.00
+    401(k) - Illinois Mutual    Fidelity                  $89,450.00
+
+    TOTAL ASSETS:                                          $641,259.46
+
+    SUBTOTAL LIQUID ASSETS                                 $211,609.46
+    (Excluding retirement accounts)
+
+    NOTE: $95,000 of Chase Savings represents divorce cash settlement
+    received 01/05/2026. Documented. Seasoned > 90 days.
+
+    ========================================================================
+                       SECTION 4: LIABILITIES
+    ========================================================================
+
+    LIABILITY TYPE                    CREDITOR                  BALANCE      MONTHLY PMT
+    ─────────────────────────────────────────────────────────────────────────────────────
+    Existing Mortgage (Payoff)         Chase Home Lending        $250,000     $1,850.00
+    Charges Sapphire Reserve           Chase                     $18,425       $350.00
+    Citi Double Cash                   Citi                      $10,150       $250.00
+    Amex Platinum (Charge)             American Express           $4,250       $0.00 (PIF)
+    Macy's Card                        Citibank/Macy's            $0.00        $0.00
+    Auto Loan (Closed - PIF)           Chase                      $0.00        $0.00
+    Child Support (Court Ordered)      Michael Patel, M.D.        $0.00      ($1,500/mo INCOME)
+
+    TOTAL MONTHLY DEBT PAYMENTS:                               $2,450.00
+    (Including minimum CC payments. Does not include child support
+     which is counted as income, not expense.)
+
+    ─────────────────────────────────────────────────────────────────────────────
+    NOTE: Existing mortgage will be PAID IN FULL at closing.
+    Credit card balances ($28,575 total) will be PAID IN FULL at
+    closing from cash-out proceeds. Post-closing debts: $0 revolving.
+    ─────────────────────────────────────────────────────────────────────────────
+
+    ========================================================================
+                       SECTION 5: TRANSACTION DETAIL
+    ========================================================================
+
+    Loan Purpose:              Cash-Out Refinance
+
+    Property Address:          555 Lake Shore Drive, Unit 12A
+                               Springfield, IL 62704
+
+    Property Type:             Condominium — High Rise
+    Occupancy:                 Primary Residence
+
+    Appraised Value:           $550,000.00
+
+    Existing Mortgage Balance: $250,000.00
+    New Loan Amount:           $385,000.00
+    LTV:                       70.00% ($385,000 / $550,000)
+    Loan Term:                 30 years Fixed Rate
+    Interest Rate:             6.875% (Estimated — Rate Lock Pending)
+    Estimated Monthly P&I:     $2,528.00
+
+    ESTIMATED CLOSING COSTS & PREPAIDS:
+
+    Origination Fee:                           $3,850.00  (1% of loan)
+    Processing/Underwriting Fee:                $1,200.00
+    Appraisal Fee:                              $650.00
+    Credit Report Fee:                          $55.00
+    Title Search & Insurance:                   $2,100.00
+    Recording Fees & Transfer Taxes:            $425.00
+    Survey (Waived — existing):                 $0.00
+    Flood Certification:                        $25.00
+    Prepaid Interest (15 days @ $73.11/day):    $1,096.65
+    Escrow Setup (Taxes + Insurance):           $2,800.00
+    HOA Document Review Fee:                    $350.00
+    Attorney Review Fee:                        $750.00
+    ──────────────────────────────────────────  ─────────
+    TOTAL ESTIMATED CLOSING COSTS:              $13,301.65
+
+    Loan Amount:                                $385,000.00
+    Less: Payoff Existing Mortgage:            ($250,100.00)  (incl. per diem)
+    Less: Estimated Closing Costs:              ($13,301.65)
+    Less: Prepaids/Escrows:                     ($2,800.00)
+    CASH TO BORROWER (ESTIMATED NET):           $118,798.35
+
+    ─────────────────────────────────────────────────────────────────────────────
+    "CASH-OUT PROCEEDS: $50K DEBT PAYOFF (ATTY FEES + CC), $70K REMAINING
+    FOR INVESTMENTS/HOME IMPROVEMENTS. DTI 38% INCLUDING CHILD SUPPORT AS
+    INCOME. APPROVED."
+    ─────────────────────────────────────────────────────────────────────────────
+
+    ========================================================================
+                       SECTION 6: INCOME & DTI CALCULATION
+    ========================================================================
+
+    QUALIFYING INCOME:
+
+    Base Employment Income:                 $13,750.00/mo  ($165,000 / 12)
+    Bonus Income (2-yr avg):                $1,250.00/mo   ($15,000 avg / 12)
+    Child Support (per court order):        $1,500.00/mo
+    ─────────────────────────────────────    ─────────
+    Total Monthly Qualifying Income:        $16,500.00/mo
+
+    HOUSING EXPENSE (Proposed):
+
+    Principal & Interest:                   $2,528.00/mo
+    Hazard Insurance:                       $85.00/mo     ($1,020/yr)
+    Property Taxes:                         $400.00/mo    ($4,800/yr)
+    HOA Dues:                               $650.00/mo
+    ─────────────────────────────────────    ─────────
+    Total Housing Expense:                  $3,663.00/mo
+
+    Back-End Ratio (Including all debts):
+
+    Housing Expense:                        $3,663.00
+    Credit Cards (to be paid off at close):  $0.00 (post-closing)
+    Car Loan (Paid Off):                     $0.00
+    Other Debts:                             $0.00
+    ─────────────────────────────────────   ─────────
+    Total Monthly Obligations:              $3,663.00
+
+    Front-End Ratio:       22.2%  ($3,663 / $16,500)
+    Back-End Ratio:        22.2%  ($3,663 / $16,500)
+
+    NOTE: Post-closing, borrower will have ZERO revolving or installment
+    debt. No car payment. DTI is calculated conservatively at 22.2%.
+    If child support income is excluded, DTI is 24.8% ($3,663 / $14,750).
+    Both scenarios well within guideline maximum of 43-45%.
+
+    ========================================================================
+                       SECTION 7: ASSET VERIFICATION
+    ========================================================================
+
+    Funds for Closing:
+
+    Cash to Close (from above):                          $0.00
+    (Borrower is receiving cash back, not bringing funds)
+
+    Cash Back to Borrower:                               $118,798.35
+
+    Source of Cash-Out Proceeds:
+
+    The cash-out amount of $120,000 is derived from the equity in
+    the property. Appraised value: $550,000. New loan: $385,000.
+
+    Use of Proceeds:
+    ─────────────────────────────────────────────────────────────────────
+    Payoff Attorney Fees (remaining):        $15,000.00
+    Payoff Credit Cards (both Chase + Citi): $28,575.00
+    Home Improvements (bathroom, kitchen):   $25,000.00
+    Invest in CD Ladder/MM (Vanguard):       $42,575.00
+    Emergency Reserve (checking):            $8,648.35
+    ─────────────────────────────────────   ─────────
+    Total Disbursement:                      $120,000.00
+                                            (rounded to ~$120K)
+
+    ========================================================================
+                       SECTION 8: DECLARATIONS
+    ========================================================================
+
+    1. Do you intend to occupy the property as your primary residence?
+       [✓] Yes   [ ] No
+
+    2. Are you a first-time homebuyer?
+       [ ] Yes   [✓] No
+
+    3. Do you have any delinquent federal debt?
+       [ ] Yes   [✓] No
+
+    4. Are any of the following true:
+       a) Are you a party to a lawsuit?                            [ ] Yes  [✓] No
+       b) Have you been foreclosed upon in the last 7 years?       [ ] Yes  [✓] No
+       c) Have you had a bankruptcy in the last 7 years?           [ ] Yes  [✓] No
+       d) Have you had property seized or deeded in lieu?          [ ] Yes  [✓] No
+       e) Are you obligated on any loan that is delinquent?        [ ] Yes  [✓] No
+
+    ========================================================================
+                        LOAN OFFICER CERTIFICATION
+    ========================================================================
+
+    I have reviewed this application and the information provided by the
+    borrower. To the best of my knowledge, the information is true and
+    accurate.
+
+    __________________________________
+    James R. Miller
+    Loan Officer — NMLS #654321
+    Premier Home Lending, Inc.
+    Date: April 15, 2026
+
+    BORROWER ACKNOWLEDGMENT:
+
+    I acknowledge and agree that the information provided in this application
+    is true and accurate as of the date signed below. I understand that any
+    intentional or negligent misrepresentation of this information may result
+    in denial of the application and/or legal action.
+
+    I authorize verification of the information provided, including but not
+    limited to employment, income, assets, and credit history.
+
+    __________________________________
+    Lisa M. Sullivan (f/k/a Patel)
+    Date: April 15, 2026
+
+    ─────────────────────────────────────────────────────────────────────────────
+    UNDERWRITER FINAL APPROVAL:
+
+    [✓] APPROVED
+    [ ] CONDITIONALLY APPROVED (see conditions below)
+    [ ] DENIED
+
+    Conditions:
+    [ ] Payoff of existing mortgage verified (closing)
+    [✓] Payoff of credit card debt from closing proceeds (Condition #1)
+    [✓] Child support income verified — 4 months bank statements (Condition #2)
+    [✓] Divorce decree + quitclaim deed recorded (Condition #3)
+    [ ] HOA certification confirming no special assessments (Condition #4)
+
+    ___________________________________
+    Jessica L. Morrison
+    Senior Underwriter — NMLS #987654
+    Premier Home Lending, Inc.
+    Date: April 30, 2026
+
+    ========================================================================

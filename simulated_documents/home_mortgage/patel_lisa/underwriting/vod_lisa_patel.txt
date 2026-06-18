@@ -1,0 +1,131 @@
+========================================================================================================
+                        VERIFICATION OF DEPOSIT  (VOD)
+                        UNIFORM RESIDENTIAL LOAN APPLICATION FORM 1006
+========================================================================================================
+
+    TO: Chase Bank N.A. - Springfield Branch
+         1500 E. Cook Street
+         Springfield, IL 62704
+         Fax: (212) 555-7788
+
+    FROM: InsureFlow National Mortgage - Underwriting Dept.
+          1200 Commerce Drive, Springfield, IL 62701
+          Fax: (217) 555-0191 | Phone: (217) 555-0199
+
+    DATE: January 29, 2026
+    LOAN #: IF-CASHOUT-01252026-041
+
+    RE: ACCOUNT HOLDER: Patel, Lisa Marie (Individual Account)
+        SSN: XXX-XX-2291
+
+========================================================================================================
+ACCOUNT INFORMATION (VERIFIED 01/29/2026)
+========================================================================================================
+
+    ACCOUNT #1:  CHASE TOTAL CHECKING  -  XXXXXX7721
+    -----------------------------------------------
+    Current Balance:                                          $22,014.87
+    Date Opened:             08/12/2019
+    Average Balance (2 months):                               $21,200.00
+    Average Balance (6 months):                               $24,500.00
+    
+    Interest Rate: N/A
+
+    ACCOUNT #2:  CHASE PREMIER SAVINGS  -  XXXXXX4418
+    -----------------------------------------------
+    Current Balance:                                          $99,512.33
+    Date Opened:             08/12/2019
+    Average Balance (2 months):                               $97,800.00
+    Average Balance (6 months):                               $95,200.00
+    
+    Interest Rate: 0.01% APY
+
+========================================================================================================
+LARGE DEPOSITS / UNUSUAL ACTIVITY
+========================================================================================================
+
+    DEPOSIT DATE:     12/15/2025
+    AMOUNT:           $90,000.00
+    SOURCE:           Wire Transfer - Vanguard Brokerage (VMFXX - Money Market Fund)
+    NOTES:            Transfer from Vanguard Money Market Settlement Fund. This is a 
+                      repositioning of existing investment assets. Verified via Vanguard
+                      statement dated 12/31/2025 showing corresponding withdrawal.
+                      
+    [STAMP]: SOURCE VERIFIED - TRANSFER FROM VANGUARD MM. NOT NEW FUNDS.
+    
+    DEPOSIT DATE:     01/03/2026
+    AMOUNT:           $1,500.00
+    SOURCE:           Electronic Deposit - Child Support (Rajesh Patel - State Disbursement Unit)
+    NOTES:            Consistent monthly deposit. Verified via divorce decree.
+                      $18,000/yr child support income documented.
+
+    DEPOSIT DATE:     01/05/2026
+    AMOUNT:           $6,875.00
+    SOURCE:           Direct Deposit - Illinois Mutual Insurance Co. (payroll)
+    NOTES:            Semi-monthly salary. Consistent with $165K/yr.
+
+    No NSF items in last 12 months.
+    No overdrafts in last 12 months.
+
+========================================================================================================
+ADDITIONAL ACCOUNTS (NOT AT CHASE - PROVIDED BY BORROWER)
+========================================================================================================
+
+    ACCOUNT #3:  VANGUARD BROKERAGE (VMFXX Money Market)
+    -----------------------------------------------
+    Institution: Vanguard Investments
+    Account #:  XXXXXX3317
+    Current Balance:                                          $90,212.44
+    Account Type: Individual Brokerage - Money Market Settlement Fund
+    Date Opened: 2015
+    Source docs provided: Statement 01/31/2026
+
+    ACCOUNT #4:  VANGUARD TRADITIONAL IRA (ROLLOVER)
+    -----------------------------------------------
+    Institution: Vanguard Investments
+    Account #:  XXXXXX4091
+    Current Balance:                                          $340,188.77
+    Account Type: Traditional IRA (rolled over from 401(k) 2021)
+    Note: Retirement funds - not used for transaction. Recorded for reserve analysis.
+    
+========================================================================================================
+ASSET SUMMARY FOR QUALIFYING
+========================================================================================================
+
+    Category                    Amount            Institution
+    ----------------------   ------------        ----------------------------
+    Checking                  $ 22,014.87        Chase Bank
+    Savings                   $ 99,512.33        Chase Bank
+    Vanguard MM Fund          $ 90,212.44        Vanguard
+    ----------------------   ------------
+    Total Deposit Accounts    $211,739.64
+        
+    Vanguard IRA              $340,188.77        Vanguard (retirement - not counted for reserves)
+    
+    HIGH LIQUIDITY - $211.5K DEPOSIT ACCOUNTS.
+    Reserves: 12+ months PITI ($2,467 P&I + $714 taxes + $75 ins = $3,256/mo x 12 = $39,072)
+    $211,739 / $3,256 = 65 months reserves. FAR EXCEEDS requirement.
+
+========================================================================================================
+CERTIFICATION
+========================================================================================================
+
+    I certify that the above account information is accurate as of the date signed.
+
+    _________________________________
+    [SIGNATURE]  Chase Bank Representative
+    FOR: Chase Bank N.A. - Springfield Branch
+    Date: 01/29/2026
+
+    Phone verification: (212) 555-7788 - Spoke with Maria Santos, Branch Support
+    VOD faxed and returned. All balances confirmed as of 01/29/2026.
+
+========================================================================================================
+INTERNAL UW USE:
+    VOD received. Excellent liquidity. $211K+ in deposit accounts.
+    Source of $90K Vanguard transfer verified. Child support verified.
+    NO RESERVE CONCERNS. - JW 01/29/2026
+========================================================================================================
+
+[FAX HEADER]
+FROM: 212-555-7788    TO: 217-555-0191    01/29/2026  11:15AM   PAGES: 2   OK

@@ -1,0 +1,78 @@
+══════════════════════════════════════════════════════════════════════════════
+          THOMPSON COMMERCIAL PROPERTIES LLC - PROFIT & LOSS STATEMENT
+                  For the Year Ended December 31, 2022
+══════════════════════════════════════════════════════════════════════════════
+
+══════════════════ INCOME ════════════════════════════════════════════════════
+
+RENTAL INCOME:
+  Unit A - Retail (The Coffee House)                            $50,400.00
+  Unit B - Retail (Springfield Dry Clean)                       $45,600.00
+  Unit C - Retail (The Pizza Place)                             $40,800.00
+  Suite 100 - Office (Midwest Insurance)                        $32,400.00
+          [NOTE: Rent increase 2,600->2,800 effective 07/01/2022]
+  Suite 200 - Office (Atrium Dental)                            $36,000.00
+  Suite 300 - Office (Legal Aid Clinic)                         $28,800.00
+  Suite 310 - Office (Freelance Hub CoWork)                     $19,200.00
+  ═══════════════════════════════════════════════════
+  GROSS RENTAL INCOME                                           $253,200.00
+
+OTHER INCOME:
+  Late Fees Collected                                            $1,100.00
+  Laundry/Vending                                                $1,900.00
+  Parking                                                        $3,600.00
+  CAM Overage                                                    $3,400.00
+  ═══════════════════════════════════════════════════
+  TOTAL OTHER INCOME                                             $10,000.00
+
+══════════════════════════════════════════════════════════════════════════════
+  TOTAL GROSS INCOME                                             $263,200.00
+══════════════════════════════════════════════════════════════════════════════
+
+══════════════════ VACANCY / COLLECTION LOSS ═════════════════════════════════
+
+  Vacancy Loss (Unit A - 2 weeks turnover)                      ($2,100.00)
+  ═══════════════════════════════════════════════
+  TOTAL VACANCY                                                  ($2,100.00)
+
+══════════════════════════════════════════════════════════════════════════════
+  EFFECTIVE GROSS INCOME                                         $261,100.00
+══════════════════════════════════════════════════════════════════════════════
+
+══════════════════ OPERATING EXPENSES ════════════════════════════════════════
+
+  Property Management (self-managed)                             $10,444.00
+  Real Estate Taxes                                               $36,800.00
+  Property Insurance                                              $8,400.00
+  Utilities - Common                                              $11,200.00
+  Repairs & Maintenance                                           $6,500.00
+  Janitorial                                                      $4,200.00
+  Snow Removal & Landscaping                                      $2,900.00
+  Pest Control                                                    $1,200.00
+  Elevator Maintenance                                            $2,400.00
+  HVAC Maintenance                                                $1,800.00
+  Fire Safety                                                     $800.00
+  Security Monitoring                                              $2,400.00
+  Legal & Professional                                            $2,800.00
+  Accounting                                                      $2,400.00
+  Advertising                                                      $1,000.00
+  Licenses & Permits                                              $700.00
+  ═══════════════════════════════════════════════════
+  TOTAL OPERATING EXPENSES                                       $95,944.00
+
+══════════════════════════════════════════════════════════════════════════════
+  NET OPERATING INCOME (NOI)                                     $165,156.00
+══════════════════════════════════════════════════════════════════════════════
+
+══════════════════ DEBT SERVICE ══════════════════════════════════════════════
+
+  First National Bank Loan (P&I)                                ($142,180.80)
+  ═══════════════════════════════════════════════════
+  TOTAL DEBT SERVICE                                            ($142,180.80)
+
+══════════════════════════════════════════════════════════════════════════════
+  NET INCOME (PRE-DEPRECIATION)                                   $22,975.20
+══════════════════════════════════════════════════════════════════════════════
+
+═══ DSCR: 1.16x ═════════════════════════════════════════════════════════════
+══════════════════════════════════════════════════════════════════════════════

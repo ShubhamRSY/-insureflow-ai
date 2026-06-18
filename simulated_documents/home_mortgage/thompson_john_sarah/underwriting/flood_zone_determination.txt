@@ -1,0 +1,100 @@
+================================================================================
+                          FLOOD ZONE DETERMINATION
+                              FEMA STANDARD FLOOD HAZARD DETERMINATION
+================================================================================
+
+  CERTIFICATION #:             FEMA-IL-2026-44821
+  DATE OF DETERMINATION:      March 14, 2026
+  ORDERED BY:                 InsureFlow National Mortgage
+  LOAN #:                     INF-2026-33821
+  BORROWER:                   John Thompson & Sarah Thompson
+  PROPERTY ADDRESS:           4567 Oakwood Lane, Springfield, IL 62704
+
+================================================================================
+PROPERTY INFORMATION
+================================================================================
+
+  Parcel ID:          14-23-456-789-0000
+  County:             Sangamon
+  State:              Illinois
+  Census Tract:       3021.12
+  Latitude:           39.7817 N
+  Longitude:          89.6501 W
+  Map Panel Number:   17167C0234G
+  Effective Map Date: March 17, 2014
+
+================================================================================
+FLOOD ZONE DETERMINATION RESULTS
+================================================================================
+
+  FLOOD ZONE:                                    X
+  SPECIAL FLOOD HAZARD AREA (SFHA):              NO
+  1% ANNUAL FLOOD RISK:                          UNLIKELY
+  FLOOD INSURANCE REQUIRED (FEDERAL):            NO
+  MANDATORY PURCHASE REQUIREMENT:                DOES NOT APPLY
+
+  ZONE DESCRIPTION:  Zone X (also designated Zone C or X) 
+  Areas determined to be outside the 0.2% (500-year) floodplain.
+  Areas of minimal flood hazard.
+
+  DETERMINATION METHOD:  Community maps, FIRM panel, LOMR/LOMA review
+
+================================================================================
+LENDER INFORMATION
+================================================================================
+
+  LENDER:                    InsureFlow National Mortgage
+                             Attn: Underwriting Department
+                             555 Financial Parkway, Suite 300
+                             Chicago, IL 60606
+
+  REQUIRED INSURANCE:        NONE - FLOOD INSURANCE NOT REQUIRED
+                             Property is in Zone X (minimal flood risk)
+
+  NOTES:                     This determination is valid for the life of the
+                             loan unless:
+                             a) The property is improved or map changes
+                             b) FEMA revises flood maps
+                             c) Property boundaries change
+
+================================================================================
+ADDITIONAL NOTES FROM FLOOD CERT PROVIDER (CoreLogic)
+================================================================================
+
+  - No Letters of Map Amendment (LOMA) found on file for this parcel
+  - No Letters of Map Revision (LOMR) affecting this property
+  - Property does NOT have a federally-backed building or content flood policy
+    currently active per NFIP records query (03/14/2026)
+  - Flood zone determination prepared by: National Flood Services, LLC
+    License #: IL-NFS-33418
+
+================================================================================
+
+  ________________________________________
+  Authorized Signature
+
+================================================================================
+
+===============================================================================
+HANDWRITTEN (UNDERWRITER - RED PEN):
+
+   No flood req'd - confirm with investor.
+   
+   FHLMC guidelines: Zone X = no mandatory flood insurance.
+   However, confirm investor overlay doesn't require anyway.
+   
+   - J. Mitchell, UW
+   03/15/2026
+   
+   *** UPDATE *** Called investor (WF). Confirmed:
+   NOT required. File accordingly.
+   
+===============================================================================
+
+[SCANNED DOCUMENT - CoreLogic Flood Zone Cert]
+
+>> FAX RECEIPT: 03/14/2026 11:04:22 AM CST
+>> PAGES: 2
+>> SENDER: CoreLogic Flood Services (800-XXX-XXXX)
+>> RECIPIENT: InsureFlow National Mortgage UW Dept
+>> STATUS: RECEIVED

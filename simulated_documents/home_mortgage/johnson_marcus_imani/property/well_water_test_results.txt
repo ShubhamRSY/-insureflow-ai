@@ -1,0 +1,121 @@
+========================================================================================
+                    SANGAMON COUNTY HEALTH DEPARTMENT
+                    ENVIRONMENTAL HEALTH LABORATORY
+                    PRIVATE WELL WATER ANALYSIS REPORT
+========================================================================================
+
+  LAB REPORT #:            W-2026-4481
+  DATE COLLECTED:          March 10, 2026
+  DATE RECEIVED:           March 11, 2026
+  DATE ANALYZED:           March 11-14, 2026
+  DATE REPORTED:           March 15, 2026
+
+========================================================================================
+  CLIENT INFORMATION
+========================================================================================
+  Homeowner:           Martha L. Jenkins
+  Property Address:    478 Pine Street, Rural Route 2
+                       Clear Creek, IL 62719
+  
+  Well ID (IL Dept of Public Health): Well # 14-28-402-003-01
+  Well Type:           [X] Private Residential Well
+  Well Depth:          185 feet
+  Casing Depth:        40 feet
+  Well Construction:   1998 (bored/dug with concrete casing)
+  
+  Sampled By:          William H. Parker, Sanitarian
+                       Sangamon County Health Dept
+
+========================================================================================
+  LABORATORY RESULTS
+========================================================================================
+
+  PARAMETER                    RESULT          MCL (Max Contaminant Level)    STATUS
+  -------------------------    -------------   ----------------------------  --------
+  
+  BACTERIOLOGICAL:
+  Total Coliform Bacteria      NEGATIVE        < 1.0 CFU/100mL               PASS
+  E. coli                      NEGATIVE        < 1.0 CFU/100mL               PASS
+  
+  INORGANIC CHEMICALS:
+  Nitrate (as N)               2.4 mg/L        10.0 mg/L                     PASS
+  Nitrite (as N)               <0.1 mg/L       1.0 mg/L                      PASS
+  Fluoride                     0.3 mg/L        4.0 mg/L                      PASS
+  Arsenic                      <0.002 mg/L     0.010 mg/L                    PASS
+  Lead                         <0.001 mg/L     0.015 mg/L                    PASS
+  Copper                       0.12 mg/L       1.3 mg/L                      PASS
+  Iron                         0.22 mg/L       Secondary - 0.3 mg/L          PASS
+  Manganese                    0.04 mg/L       Secondary - 0.05 mg/L         PASS
+  Sulfate                      18 mg/L         250 mg/L                      PASS
+  Chloride                    12 mg/L          250 mg/L                      PASS
+  
+  PHYSICAL PROPERTIES:
+  pH                           7.2             6.5 - 8.5                     PASS
+  Hardness (as CaCO3)          146 mg/L        (8.5 gpg) - Moderate          -- 
+  Total Dissolved Solids       212 mg/L        500 mg/L                      PASS
+  Turbidity                    1.2 NTU         5.0 NTU                       PASS
+  
+  RADIOLOGICAL:
+  Gross Alpha                  <2.0 pCi/L      15 pCi/L                      PASS
+  Radium 226 + 228             <1.0 pCi/L      5 pCi/L                       PASS
+
+========================================================================================
+  WELL FLOW RATE TEST
+========================================================================================
+  Test Date:                   March 10, 2026
+  Static Water Level:          28 ft below grade
+  Pumping Rate:                8.0 gallons per minute (GPM)
+  Drawdown After 1 Hour:      32 ft below grade
+  Recovery After 1 Hour:      90% recovery
+  Flow Rate Assessment:        [X] GOOD - Adequate for residential use
+  
+  *** Well flow rate of 8 GPM is well above the USDA minimum of 3-5 GPM. ***
+
+========================================================================================
+  ADDITIONAL OBSERVATIONS
+========================================================================================
+  Pressure tank present in basement. Tank appears to be Amtrol 20-gal (installed 2018).
+  Water softener installed (2019 model - Morton brand).
+  No evidence of well contamination from nearby agricultural operations.
+  Property is setback adequately from any potential contamination sources.
+  Well cap is sanitary and vermin-proof. Conditions satisfactory.
+
+========================================================================================
+  INTERPRETATION OF RESULTS
+========================================================================================
+  All tested parameters are within acceptable limits for drinking water
+  established by the Illinois Environmental Protection Agency and the
+  U.S. Environmental Protection Agency Safe Drinking Water Act.
+  
+  Nitrate level (2.4 mg/L) is below the MCL of 10 mg/L. This is typical for
+  rural groundwater in Sangamon County and poses no health risk.
+  
+  Hardness measured at 146 mg/L (8.5 gpg) is classified as "moderately hard."
+  Existing water softener system is appropriate and functional.
+  
+  No coliform bacteria detected. Water is bacteriologically safe.
+  
+  RECOMMENDATION: Continue routine annual testing. Test for coliform and
+  nitrate annually. Test for metals every 3-5 years.
+
+========================================================================================
+  CERTIFICATION
+========================================================================================
+  I certify that the above analyses were performed in accordance with 
+  standard laboratory procedures and EPA-approved methods.
+
+  __________________________________                     ______________
+  Dr. Patricia A. Morrison, PhD
+  Laboratory Director
+  Sangamon County Health Department
+  (217) 555-0192
+
+========================================================================================
+  *** NOTE FOR LENDER / UNDERWRITER ***
+  Well water test results are attached. All parameters within acceptable limits.
+  Coliform: NEGATIVE. Nitrates: 2.4 mg/L. Flow rate: 8 GPM (EXCELLENT).
+  Property has a water softener (Morton, 2019).
+  
+  USDA MPR for well water: MET.
+  No further water testing required for loan approval.
+========================================================================================

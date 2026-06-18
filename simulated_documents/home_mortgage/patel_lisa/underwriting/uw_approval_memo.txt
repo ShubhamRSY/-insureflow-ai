@@ -1,0 +1,136 @@
+========================================================================================================
+                     INTERNAL UNDERWRITING MEMO - FINAL APPROVAL
+                          INSUREFLOW NATIONAL MORTGAGE - CONVENTIONAL DIVISION
+========================================================================================================
+
+    TO:    Closing Department
+    FROM:  Jennifer Walsh, Senior Underwriter - Conventional/FHA
+    DATE:  February 5, 2026
+    RE:    CONVENTIONAL CASH-OUT REFINANCE - APPROVED - CLEAR TO CLOSE
+           Loan #: IF-CASHOUT-01252026-041
+           Borrower: Lisa M. Patel
+           Property: 555 Lake Shore Drive, Unit 12A, Springfield, IL 62711
+
+========================================================================================================
+FINDINGS SUMMARY
+========================================================================================================
+
+    BORROWER ELIGIBILITY:
+    ✓ U.S. Citizen: Yes
+    ✓ Occupancy: Primary Residence (owner-occupied)
+    ✓ Marital Status: Divorced (decree final 12/15/2025)
+    ✓ Sole owner per Quitclaim Deed recorded 01/02/2026 as Document #2026-00184
+
+    CREDIT ANALYSIS:
+    ✓ Credit Score: 760 (Equifax), 758 (Experian), 764 (TransUnion)
+                     Median: 760 - Excellent
+    ✓ No late payments in last 24 months on any tradeline
+    ✓ Revolving utilization: HIGH - 68% across all cards
+    ✓ Explanation: Divorce-related legal fees and separation expenses. Borrower
+      has sufficient assets to pay off balances. Payoff documented at closing.
+    ✓ No collections, charge-offs, judgments, or bankruptcies
+    ✓ Prior mortgage (existing): Always current. No lates.
+    
+    Exception noted for high revolving utilization (divorce related). 
+    Utilization is being addressed via payoff from cash-out proceeds.
+    Payoff verified. See attached payoff statements.
+
+    INCOME ANALYSIS:
+    ✓ Base Salary (Illinois Mutual Insurance): $165,000/yr - 8 years employment
+    ✓ Child Support: $18,000/yr ($1,500/mo) - documented via divorce decree and
+      bank statements showing 12 months receipt history
+    ✓ Total Qualifying Income: $165,000 + $18,000 = $183,000/yr ($15,250/mo)
+    ✓ Bonus NOT used for qualifying (variable)
+
+    ASSET / RESERVE ANALYSIS:
+    ✓ Total Deposit Accounts: $211,739.64 (Chase checking/savings + Vanguard MM)
+    ✓ Vanguard IRA: $340,188.77 (retirement - documented for reserves but not required)
+    ✓ Source of $90,000 Vanguard MM transfer verified (repositioning of existing assets)
+    ✓ Cash-Out Proceeds: ~$120,000 (being added to borrower's liquidity post-close)
+    ✓ RESERVES: $211,739 / $3,256/mo (PITI) = 65 months. EXCEEDS standard 6-month min.
+    
+    HIGH CC UTILIZATION EXPLAINED BY DIVORCE - TO BE PAID OFF AT CLOSING.
+
+    DEBT ANALYSIS:
+    ✓ Existing First Mortgage (being paid off): $238,000 ($1,588/mo current P&I)
+    ✓ Revolving Debt (being paid off): ~$37,500 ($1,450/mo minimum payments)
+    ✓ Auto Loan (2023 BMW X3): $28,000 ($612/mo) - borrower keeping
+    ✓ No other installment debt
+    
+    Note: With existing debts being paid off at closing (mortgage + revolving), 
+    the borrower's monthly obligations will decrease significantly post-closing.
+    
+    DTI CALCULATION:
+    Current debts used for qualifying (standard UW):
+    - Proposed PITI: $2,467 (P&I) + $714 (taxes) + $57 (HO-6 ins) + $475 (HOA) = $3,713/mo
+    - Auto Loan: $612/mo
+    - No CC payments used (being paid off at close - documented)
+    - No existing mortgage used (being paid off)
+    
+    Total Monthly Debt: $3,713 + $612 = $4,325
+    Monthly Income: $15,250
+    DTI: 28.4%
+    
+    [HANDWRITTEN]:
+    Previous calc showed DTI 22%. This is 28%. Both well under 43% FNMA max.
+    Either way, very low DTI. No issue. -JW
+    
+    DTI: 22-28%. Below Fannie Mae maximum of 43%.  PASS.
+
+    APPRAISAL:  (Refer to Appraisal Report #APP-2026-0251)
+    ✓ Appraised Value: $550,000 - supports LTV of 70%
+    ✓ Comparable sales: 3 closed + 2 active listings in building
+    ✓ Condition: Good. Recent updates per unit interior.
+    ✓ No property condition issues.
+
+    TITLE:
+    ✓ Current lien: First National Bank of Springfield - to be paid off
+    ✓ Quitclaim deed from ex-husband recorded 01/02/2026 - clears prior joint ownership
+    ✓ HOA estoppel requested - confirm no liens or special assessments
+    ✓ ALTA 4 and ALTA 9 endorsements required for condo project
+
+========================================================================================================
+CONDOMINIUM PROJECT REVIEW
+========================================================================================================
+
+    ✓ Lake Shore Condominiums - established 2003 (non-warrantable? NO - FNMA approved)
+    ✓ Total units: 72
+    ✓ Owner-occupancy: 85% (exceeds FNMA 50% minimum - actually for condo, min is 50% 
+      but higher is better) 
+    ✓ HOA Budget: reviewed - adequate reserves
+    ✓ No pending special assessments
+    ✓ No litigation
+    ✓ Pre-sale requirement met (existing project, not new construction)
+    ✓ Insurance: Master policy reviewed - adequate
+
+========================================================================================================
+UNDERWRITING DECISION
+========================================================================================================
+
+    [STAMP - BOLD GREEN]:
+
+    ===============================================
+    |     CASH-OUT REFINANCE - APPROVED          |
+    |          CLEAR TO CLOSE                    |
+    |                                             |
+    |   Exception: High revolving utilization     |
+    |   (divorce related - payoff verified)       |
+    |   Condition: Quitclaim deed recorded copy   |
+    |   Condition: Payoff statements confirmed    |
+    ===============================================
+
+    APPROVED - CASH-OUT REFI.
+    Exception noted for high revolving utilization (divorce related). Payoff verified.
+    6-month seasoning of divorce settlement funds in account. 
+    Clear to close once payoffs confirmed and recorded quitclaim deed received.
+
+    _________________________________
+    [SIGNATURE]  Jennifer W.
+    Jennifer Walsh
+    Senior Underwriter
+    InsureFlow National Mortgage
+    Date: 02/05/2026
+
+
+    CC: David Klein (LO), Closing Department, Lisa Patel (email)
+    File: Patel_Lisa_01252026

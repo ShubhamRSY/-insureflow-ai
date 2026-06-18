@@ -1,0 +1,140 @@
+================================================================================
+                      STATE FARM INSURANCE COMPANY
+                 CONDOMINIUM UNIT-OWNERS POLICY (HO-6)
+                         DECLARATIONS PAGE
+================================================================================
+
+  POLICY NUMBER:              SF-CONDO-44821
+  POLICY TYPE:                HO-6 (Unit-Owners Form)
+  AGENCY:                     State Farm - Springfield Agency
+                              2200 Wabash Avenue
+                              Springfield, IL 62704
+                              (555) 234-8800
+
+================================================================================
+POLICY PERIOD
+================================================================================
+
+  EFFECTIVE DATE:             May 1, 2026 (12:01 AM)
+  EXPIRATION DATE:            May 1, 2027 (12:01 AM)
+  POLICY TERM:                12 Months
+
+================================================================================
+NAMED INSURED
+================================================================================
+
+  Maria E. Rodriguez
+  245 North Grand Avenue, Apt 3B
+  Springfield, IL 62704
+
+  * Property address for coverage: 789 Elm Street, Unit 2B
+    Springfield, IL 62704
+
+================================================================================
+LOSS PAYEE / MORTGAGEE
+================================================================================
+
+  InsureFlow National Mortgage
+  Attn: Mortgage Department
+  555 Financial Parkway, Suite 300
+  Chicago, IL 60606
+
+  Loan #: INF-2026-44210
+  Loss Payee Clause: "Loss, if any, payable to InsureFlow National
+  Mortgage as its interest may appear."
+
+================================================================================
+COVERAGES & LIMITS
+================================================================================
+
+  ------------------------------------------------------------------------------
+  COVERAGE                                   LIMIT          PREMIUM
+  ------------------------------------------------------------------------------
+  A - Dwelling (unit improvements)           $60,000.00      $220.00
+  B - Other Structures                       $5,000.00       $15.00
+  C - Personal Property                      $60,000.00      $175.00
+  D - Loss of Use                            $12,000.00      Included
+  E - Personal Liability                     $300,000.00      $72.00
+  F - Medical Payments                       $5,000.00        $0.00
+  ------------------------------------------------------------------------------
+                                                                                
+  SUBTOTAL PREMIUM:                                           $482.00
+
+================================================================================
+ENDORSEMENTS
+================================================================================
+
+  HO-06 Loss Assessment Coverage              $10,000.00      Included
+  HO-06 Water Backup Coverage                  $5,000.00      Included
+
+================================================================================
+DEDUCTIBLES
+================================================================================
+
+  All Perils:                 $500.00
+  Water Backup:               $500.00
+  Loss Assessment:            $250.00
+
+================================================================================
+TOTAL ANNUAL PREMIUM:                                       $482.00
+
+  Payment Plan:                [X] Paid in Full   [ ] Monthly
+  Method:                      Visa XXXX-4482 (Maria Rodriguez)
+  Transaction ID:              SF-TXN-2026-11282
+  Date Paid:                   April 15, 2026
+
+================================================================================
+CONDO ASSOCIATION MASTER POLICY INFORMATION
+================================================================================
+
+  Elm Street Condominium Association Master Policy:
+  - Policy #: SF-MASTER-88412 (State Farm)
+  - Coverage: Building exterior, common areas, liability
+  - Deductible: $10,000 per occurrence
+  - Covers: Walls-out (building envelope, roof, common areas)
+  - Unit owner responsible for: Interior improvements, personal property,
+    liability (per HOA docs)
+
+  This HO-6 policy covers interior improvements betterments, personal
+  property, and liability inside Unit 2B. Loss assessment coverage
+  included for HOA special assessments.
+
+================================================================================
+
+  _________________________________________         Date: 04/15/2026
+  David Kim - Authorized Representative
+  State Farm Insurance - Springfield
+
+================================================================================
+
+  [STATE FARM OFFICIAL STAMP]
+  ====================================
+     STATE FARM INSURANCE CO.
+     POLICY ACTIVE: SF-CONDO-44821
+     ISSUED: 04/15/2026
+     AGENT: D. KIM #IL-PC-448291
+     PAID IN FULL: $482.00
+  ====================================
+
+================================================================================
+
+UW NOTES (HANDWRITTEN - blue pen):
+
+   HO-6 policy meets FHA minimum coverage requirements.
+   Dwelling coverage $60K (adequate for interior).
+   
+   Master policy covers building exterior. FHA requires
+   HO-6 for improvements + liability. ✔
+   
+   Paid in full. Loss payee: InsureFlow. ✔
+   
+   - J.K. 04/16/2026
+   
+================================================================================
+
+>> FAX TRANSMISSION:
+>> FROM: STATE FARM - D. KIM (555-234-8801)
+>> TO: INSUREFLOW - UW DEPT (555-234-8900)
+>> DATE: 04/15/2026
+>> PAGES: 2
+>> RE: POLICY SF-CONDO-44821 - RODRIGUEZ - DEC PAGE

@@ -1,0 +1,82 @@
+═══════════════════════════════════════════════════════════════════
+              CHICAGO TITLE INSURANCE COMPANY
+               COMMITMENT FOR TITLE INSURANCE
+                    (ALTA Loan Policy - FHA)
+
+  Commitment No.:  CT-TC-33981-IL
+  Date:            January 22, 2026
+  Effective Date:  January 22, 2026 @ 8:00 AM
+
+═══════════════════════════════════════════════════════════════════
+
+PROPERTY:
+  321 Oak Street
+  Springfield, IL 62704
+  Lot 8, Oakwood Addition
+  Sangamon County, Illinois
+
+BUYER:
+  James T. Wilson
+
+SELLER:
+  Oak Street Trust (REO)
+  c/o Bank of Springfield REO Department
+  500 Commerce Drive, Springfield, IL 62704
+
+LENDER:
+  InsureFlow National Mortgage
+  (FHA Approved Lender)
+
+PURCHASE PRICE:  $210,000.00
+LOAN AMOUNT:     $320,000.00
+
+═══════════════════════════════════════════════════════════════════
+
+SCHEDULE A - POLICY TO BE ISSUED:
+
+  Amount of Insurance:  $320,000.00
+  Type:                 ALTA Loan Policy (FHA)
+  Premium:              $1,800.00
+
+═══════════════════════════════════════════════════════════════════
+
+SCHEDULE B - EXISTING LIENS & ENCUMBRANCES:
+
+  1.  None — Property is bank-owned (REO).
+      Seller: Oak Street Trust
+      Prior mortgage: Foreclosed and extinguished.
+      No old mortgage issues.
+
+  2.  Real Estate Taxes:
+      Tax Year 2025:  UNPAID — Property is bank-owned.
+                      May be delinquent. See note below.
+      Tax Year 2024:  PAID by bank upon acquisition.
+
+  3.  HOA:
+      None — Single family residence.
+
+  4.  Restrictions:
+      Standard subdivision covenants.
+      No 203(k)-related restrictions recorded yet.
+      ⬜ 203k Deed Restrictions to be recorded at closing.
+
+═══════════════════════════════════════════════════════════════════
+
+SCHEDULE C - REQUIREMENTS FOR POLICY ISSUANCE:
+
+  ⬜  Record Deed from Oak Street Trust to James T. Wilson
+  ⬜  Record Deed of Trust in favor of InsureFlow
+  ⬜  Record FHA 203(k) Deed Restrictions
+  ⬜  Proof of owner's title insurance (buyer)
+  ⬜  Tax status verification at closing
+  ⬜  Gap coverage through closing
+
+═══════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════
+  [[ HANDWRITTEN NOTE ]]
+  203k deed restrictions need to be recorded. REO property
+  means seller is bank. No prior liens. Tax status: confirm
+  at closing if delinquent, may need to be paid from proceeds.
+  -- KW
+═══════════════════════════════════════════════════════════════════

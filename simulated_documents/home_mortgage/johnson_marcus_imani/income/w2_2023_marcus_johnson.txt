@@ -1,0 +1,64 @@
+================================================================================
+                    UNITED STATES POSTAL SERVICE - WAGE AND TAX STATEMENT
+                                FORM W-2 (Copy B - To Be Filed With Employee's FEDERAL Tax Return)
+================================================================================
+                                   2023                                        |
+================================================================================
+                                                                                
+  Employer Name:                                      Employee Name:           
+  United States Postal Service                        Marcus D. Johnson        
+  475 L'Enfant Plaza SW                               SSN: ***-**-4821          
+  Washington, DC 20260                                                          
+                                                      1234 Maple Creek Road     
+  Employer ID No: 53-0196365                          Rural Route 1             
+                                                      Clear Creek, IL 62719     
+                                                                                
+================================================================================
+                          WAGES AND TAX INFORMATION
+================================================================================
+                                                                                
+  1. Wages, tips, other compensation: ................ $64,500.00               
+  2. Federal income tax withheld: .................... $8,385.00                
+  3. Social Security wages: .......................... $64,500.00               
+  4. Social Security tax withheld: .................. $3,999.00                 
+  5. Medicare wages and tips: ........................ $64,500.00               
+  6. Medicare tax withheld: ......................... $935.25                   
+  7. Social Security tips: .......................... $0.00                     
+  8. Allocated tips: ................................ $0.00                     
+                                                                                
+  9. Dependent care benefits: ....................... $0.00                     
+  10. Dependent care benefits (excluded): ........... $0.00                     
+                                                                                
+  11. Nonqualified plans: ........................... $0.00                     
+  12a. W-2 Box 12 Codes:                                                         
+       Code D - 401(k) / TSP contributions: ......... $4,800.00                 
+                                                                                
+  13. Statutory employee: ........................... [ ]                        
+  14. Retirement plan: .............................. [X]                        
+                                                                                
+================================================================================
+                          STATE AND LOCAL WAGE INFORMATION
+================================================================================
+                                                                                
+  State: IL                                  Employer State ID: 53-0196365-IL   
+  Wages, tips, etc.: ................ $64,500.00                               
+  State income tax withheld: ....... $2,902.50                                 
+                                                                                
+  Locality name: N/A                                                          
+  Local wages, tips, etc.: ......... $0.00                                    
+  Local income tax withheld: ....... $0.00                                    
+                                                                                
+================================================================================
+                                                                                
+  FORM W-2 ELECTRONIC          DO NOT STAPLE              COPY B - FEDERAL     
+                                                                                
+================================================================================
+                          COMMENTS / NOTES (INTERNAL USE)
+-------------------------------------------------------------------------------
+  TSP contributions: $4,800.00.
+  Marcus converted to FTR (Full-Time Regular) in May 2023.
+  Lower OT in 2023 compared to 2024. OT YTD: ~$1,800.
+  Hourly rate end of 2023: $31.20/hr.
+  Promotional step increase July 2023.
+                                                                                
+================================================================================

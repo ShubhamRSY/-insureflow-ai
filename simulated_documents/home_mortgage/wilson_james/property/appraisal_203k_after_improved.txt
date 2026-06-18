@@ -1,0 +1,186 @@
+======================================================================
+              FHA 203(k) APPRAISAL REPORT - SUMMARY
+======================================================================
+                            (Streamlined Report)
+======================================================================
+
+APPRAISER:          Amy Richardson, Certified Residential Appraiser
+                    Lic #IL-CR-441288
+                    Richardson Appraisal Services
+                    1880 Oakton Ave, Springfield, IL 62701
+
+APPRAISAL DATE:     February 22, 2026
+EFFECTIVE DATE:     February 22, 2026
+PURPOSE:            FHA 203(k) Renovation Loan - "As-Is" & 
+                    "After-Improved" Values
+
+PROPERTY:           321 Oak Street, Springfield, IL 62703
+BORROWER:           James T. Wilson
+LENDER:             Midwest Lending Corp.
+
+======================================================================
+VALUATION SUMMARY:
+======================================================================
+
+AS-IS VALUE (Current Condition):        $165,000
+AFTER-IMPROVED VALUE (Upon Completion): $295,000
+ESTIMATED REPAIR COST:                  $110,000 (per 203(k) Consultant Report)
+
+======================================================================
+PROPERTY DESCRIPTION:
+======================================================================
+
+Property Type:       Single-family residence - 1 story + basement
+Year Built:          1958
+Style:               Ranch
+Lot Size:            0.25 acres (75' x 145')
+Gross Living Area:   1,264 SF (per assessor)
+Bedrooms:            3
+Bathrooms:           1 full, 1 half (unfinished)
+Basement:            Full, unfinished (partial)
+Foundation:          Concrete block - crack noted in southeast corner
+                     (engineer report provided)
+Garage:              Detached 1-car (needs repair)
+Construction:        Frame - wood siding
+Roof:                Asphalt shingles - original, failing (30 year old)
+HVAC:                Forced air gas - original, non-functional
+Windows:             Single pane, aluminum frames - deteriorated
+Utilities:           All functional at time of inspection
+
+======================================================================
+CONDITION NOTES (AS-IS):
+======================================================================
+
+  The property is in POOR condition overall. It has been vacant
+  for approximately 18 months (bank-owned REO). While the 
+  structure is sound (per engineer report), all major systems 
+  and finishes are at or past end of useful life.
+
+  POSITIVES:
+  - Good location. Established neighborhood. Oak Street is a
+    quiet residential street with mature trees.
+  - Foundation structurally sound (crack is minor per engineer).
+  - Dry basement (no evidence of water intrusion).
+  - Good bones - layout is functional.
+  - Typical ranch floorplan that appeals to broad market.
+
+  NEGATIVES:
+  - Roof failing - multiple leaks in attic (stains present).
+  - Kitchen outdated - original 1958 cabinets, non-functional 
+    appliances.
+  - Bathroom outdated - pink tile, original fixtures.
+  - HVAC non-functional (system dead). Need full replacement.
+  - Electrical: 100A service - inadequate for modern needs.
+  - Windows: drafty, single pane, some broken.
+  - Interior: worn carpet, damaged drywall, needs paint.
+  - Front porch: floor joist rot near entry door.
+  - Garage: leaning slightly, roof damaged.
+
+======================================================================
+AS-IS VALUE ANALYSIS:
+======================================================================
+
+  The as-is value of $165,000 is based on comparable sales of
+  properties in similar condition within the 62703 zip code.
+  This is approximately 21% below the contract purchase price
+  of $210,000, which is typical for 203(k) scenarios where the
+  purchase premium reflects renovation potential.
+
+  RECENT COMPARABLES (AS-IS):
+  1. 456 Elm St - Sold 10/2025 - $158,000 - Similar condition, 
+     needs renovation, smaller lot.
+  2. 1298 Pine Ave - Sold 08/2025 - $172,000 - Slightly better 
+     condition, updated bathroom.
+  3. 884 Walnut Dr - Sold 12/2025 - $162,000 - Similar condition,
+     sold REO.
+
+  ADJUSTED VALUE RANGE: $158,000 - $172,000
+  OPINION OF AS-IS VALUE: $165,000
+
+======================================================================
+AFTER-IMPROVED VALUE ANALYSIS:
+======================================================================
+
+  The after-improved value of $295,000 reflects the expected
+  market value upon completion of the proposed renovations per
+  the 203(k) Work Write-Up. This represents a $130,000 increase
+  from as-is value ($295,000 - $165,000 = $130,000).
+
+  RENO COST: $110,000
+  FORCED APPRECIATION / EQUITY CREATED: $20,000 ($130K - $110K)
+
+  COMPARABLES (RENOVATED):
+  1. 455 Elm St - Sold 02/2026 - $289,000 - Renovated 2025, 
+     3BR/2BA, similar SF, sold 2 weeks ago.
+  2. 1312 Pine Ave - Sold 11/2025 - $302,000 - Fully updated, 
+     plus finished basement (adjustment applied).
+  3. 890 Walnut Dr - Sold 09/2025 - $295,000 - Similar renovation
+     scope, same neighborhood.
+
+  ADJUSTED VALUE RANGE: $285,000 - $305,000
+  OPINION OF AFTER-IMPROVED VALUE: $295,000
+
+======================================================================
+APPRAISAL COMMENTS:
+======================================================================
+
+  1. The after-improved value of $295,000 supports the total
+     loan amount of $320,000 ($210K purchase + $110K renovation).
+     LTV based on after-improved value = ~93% (within FHA limits
+     with MIP).
+
+  2. The subject property is in poor condition. All utilities 
+     are functional. Foundation has a minor crack - engineer 
+     report provided. The after-improved value is based on 
+     comparable renovated properties in the area and is 
+     considered conservative given the scope of work proposed.
+
+  3. The 203(k) work write-up is reasonable and the estimated 
+     costs are in line with local market rates. Borrower is 
+     a licensed contractor who will perform some work himself, 
+     which reduces overall project cost.
+
+  4. Neighborhood is stable with increasing values. School 
+     district rated 6/10 on GreatSchools. Proximity to downtown 
+     Springfield (15 min), shopping, and medical facilities.
+
+  5. No adverse environmental conditions noted. No flood zone
+     (Zone X). No encroachments.
+
+  6. RECOMMENDATION: Proceed with 203(k) loan based on after-
+     improved value. Subject to completion of renovations per
+     the Work Write-Up.
+
+======================================================================
+CERTIFICATION:
+======================================================================
+
+  I certify that I have personally inspected the subject property
+  and have prepared this appraisal in accordance with USPAP and
+  FHA 203(k) appraisal guidelines. I have no present or 
+  prospective interest in the property or the parties involved.
+
+  _________________________________________
+  Amy Richardson, Certified Residential Appraiser
+  IL License #CR-441288
+  Date: February 28, 2026
+
+======================================================================
+
+   [Post-it note attached to appraisal cover page:]
+   "Amy called me 3/1. She said 321 Oak is one of the worst 
+    houses she's ever been in but the bones are good. Her 
+    comparables are solid. After-improved value is real. 
+    She's done FHA work before. - ML (UW)"
+
+   [Margin note - appraiser's handwriting?]
+   "Buyer met me at the property. Very knowledgeable about 
+    construction. He pointed out several things I wouldn't 
+    have caught (foundation crack is old, not active - he 
+    already had engineer report). This is his area of 
+    expertise. Confidence in project completion is HIGH. - AR"
+
+   [Coffee stain on bottom right - somewhat obscuring the 
+    certification signature but still legible.]
+
+======================================================================

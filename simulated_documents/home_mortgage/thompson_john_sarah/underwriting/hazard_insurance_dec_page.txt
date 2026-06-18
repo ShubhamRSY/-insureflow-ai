@@ -1,0 +1,146 @@
+================================================================================
+                      STATE FARM INSURANCE COMPANY
+                  HOMEOWNERS POLICY DECLARATIONS PAGE
+================================================================================
+
+  POLICY NUMBER:              HO-848291
+  POLICY TYPE:                HO-3 (Special Form)
+  AGENCY:                     State Farm - Springfield Agency
+                              2200 Wabash Avenue
+                              Springfield, IL 62704
+                              (555) 234-8800
+
+================================================================================
+POLICY PERIOD
+================================================================================
+
+  EFFECTIVE DATE:             April 1, 2026 (12:01 AM)
+  EXPIRATION DATE:            April 1, 2027 (12:01 AM)
+  POLICY TERM:                12 Months
+
+================================================================================
+NAMED INSURED(S)
+================================================================================
+
+  John A. Thompson
+  Sarah M. Thompson
+  4521 Pinecrest Drive
+  Springfield, IL 62704
+
+  * Property address for coverage: 4567 Oakwood Lane, Springfield, IL 62704
+
+================================================================================
+MORTGAGEE / LOSS PAYEE
+================================================================================
+
+  InsureFlow National Mortgage
+  Attn: Mortgage Department
+  555 Financial Parkway, Suite 300
+  Chicago, IL 60606
+
+  Loan #: INF-2026-33821
+  Mortgagee Clause: "Loss, if any, payable to InsureFlow National Mortgage
+  as its interest may appear."
+
+================================================================================
+COVERAGES & LIMITS
+================================================================================
+
+  ------------------------------------------------------------------------------
+  COVERAGE                                   LIMIT          PREMIUM
+  ------------------------------------------------------------------------------
+  A - Dwelling                               $425,000.00     $1,125.00
+  B - Other Structures (10% of A)            $42,500.00      Included
+  C - Personal Property (50% of A)           $212,500.00     $375.00
+  D - Loss of Use (20% of A)                $85,000.00      Included
+  E - Personal Liability                     $300,000.00     $125.00
+  F - Medical Payments                       $5,000.00       $50.00
+  ------------------------------------------------------------------------------
+                                                                                
+  SUBTOTAL PREMIUM:                                           $1,675.00
+
+================================================================================
+ENDORSEMENTS / RIDERS
+================================================================================
+
+  HO-04 Wind/Hail Deductible Endorsement
+    Deductible: 2% of Coverage A ($8,500.00)
+    Applicable to wind and hail losses only
+    Premium: $125.00
+
+  HO-20 Scheduled Personal Property Endorsement
+    Coverage: Jewelry/Watches - $10,000.00
+    Premium: $75.00
+
+  HO-34 Water Backup Coverage
+    Coverage: $10,000.00
+    Premium: Included
+
+================================================================================
+DEDUCTIBLES
+================================================================================
+
+  All Perils:                 $1,000.00
+  Wind/Hail:                  $8,500.00 (2% of Dwelling Limit) [Endorsement]
+  Water Backup:               $1,000.00
+
+================================================================================
+TOTAL ANNUAL PREMIUM:                                   $1,875.00
+
+  Payment Plan:                [X] Paid in Full   [ ] Monthly ($162.58)
+                               [ ] Quarterly ($487.50)   [ ] Escrow
+
+  Payment Received:            $1,875.00 - Paid in Full
+  Payment Method:              Visa XXXX-4412 (John Thompson)
+  Transaction ID:              SF-TXN-2026-99821
+  Date Paid:                   March 25, 2026
+
+================================================================================
+AGENT INFORMATION
+================================================================================
+
+  Agent:                      David Kim
+  License #:                  IL-PC-448291
+  Phone:                      (555) 234-8801
+  Email:                      david.kim.g8z4@statefarm.com
+
+================================================================================
+
+  This policy is a legal contract between the named insured and State Farm
+  Insurance Company. Please read your policy carefully.
+
+  _________________________________________         Date: 03/25/2026
+  Authorized Representative
+
+================================================================================
+
+  [STATE FARM OFFICIAL STAMP]
+  ====================================
+     STATE FARM INSURANCE CO.
+     SPRINGFIELD, IL AGENCY
+     POLICY ACTIVE: HO-848291
+     ISSUED: 03/25/2026
+     AGENT: D. KIM #IL-PC-448291
+  ====================================
+
+================================================================================
+
+HANDWRITTEN NOTES (broker - blue pen):
+
+   John called 3/24 - wanted to confirm wind/hail deductible.
+   Explained 2% = $8,500. He was fine with it.
+   
+   Escrow instructions: Send loss payable clause to InsureFlow.
+   Done. Mortgagee clause attached.
+   
+   - D. Kim
+   
+================================================================================
+
+>> FAX TRANSMISSION RECORD:
+>> TO: InsureFlow National Mortgage (555-234-8900)
+>> FROM: State Farm - D. Kim (555-234-8801)
+>> DATE: 03/25/2026 16:15:00 CST
+>> PAGES: 2
+>> SUBJECT: POLICY HO-848291 - THOMPSON - DEC PAGE
+>> STATUS: SENT OK

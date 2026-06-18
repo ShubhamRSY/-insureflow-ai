@@ -1,0 +1,133 @@
+================================================================================
+                       INSUREFLOW NATIONAL MORTGAGE
+                     UNDERWRITING APPROVAL MEMORANDUM
+================================================================================
+
+  TO:                        Closing Department
+  FROM:                      James Mitchell, Senior Underwriter
+  LOAN #:                    INF-2026-33821
+  BORROWER(S):               John A. Thompson & Sarah M. Thompson
+  PROPERTY:                  4567 Oakwood Lane, Springfield, IL 62704
+  DATE:                      April 24, 2026
+
+================================================================================
+FINAL APPROVAL STATUS
+================================================================================
+
+                     [STAMP - RED INK]
+          =====================================
+          |        CLEAR TO CLOSE            |
+          |                                   |
+          |   INSUREFLOW NATIONAL MORTGAGE   |
+          |   INTERNAL USE ONLY              |
+          |   APPROVED: J. MITCHELL          |
+          |   DATE: 04/24/2026               |
+          |   UW #: INF-2026-33821           |
+          =====================================
+
+================================================================================
+UNDERWRITING SUMMARY
+================================================================================
+
+  LOAN PROGRAM:               Conventional 30-Year Fixed
+  LOAN AMOUNT:                $340,000.00
+  INTEREST RATE:              6.750%
+  LTV:                        80.47% (based on adjusted purchase price)
+  PURCHASE PRICE:             $422,500.00 (reduced per appraisal)
+
+  NOTE: Original purchase price was $425,000. Appraisal came in at
+  $420,000. After negotiation, sellers agreed to price reduction to
+  $422,500. Buyer putting additional $2,500 down to maintain 20%.
+  New down payment: $87,500 (20.71%). LTV 80.47% - still no PMI.
+
+================================================================================
+CONDITIONS - ALL SATISFIED
+================================================================================
+
+  CONDITION 1: Confirmation of $35,000 gift deposit from John Thompson Sr.
+  --- STATUS: SATISFIED ---
+  - Gift letter executed 03/02/2026 (signed by donor and borrowers)
+  - Donor bank statement showing withdrawal of $35,000 (BofS acct XXXX-1122)
+  - Borrower bank statement showing deposit of $35,000 (MM XXXX-5511)
+  - Wire transfer confirmation #WIRE-2026-33821
+  - Donor relationship verified (father of John Thompson)
+  - Gift is NON-REPAYABLE per gift letter
+  - Verified: 03/25/2026
+
+  CONDITION 2: Satisfactory appraisal review
+  --- STATUS: SATISFIED ---
+  - Appraisal received 03/28/2026
+  - Appraised value: $420,000.00
+  - Purchase price adjusted to $422,500.00 per addendum
+  - Appraisal review completed by UW Collateral Desk
+  - No significant value concerns. Comps support $420K.
+  - Review comments: "Property in good condition. Three comparable
+    sales within 6 months. Adjustments appropriate."
+  - Appraisal Review: ACCEPTABLE (Collateral Desk 04/02/2026)
+
+  CONDITION 3: Hazard insurance binder/declarations page
+  --- STATUS: SATISFIED ---
+  - State Farm policy HO-848291 received 03/25/2026
+  - Coverage A: $425,000.00 (meets minimum LTV requirement)
+  - Loss payee: InsureFlow National Mortgage
+  - Paid in full for 1 year
+  - Wind/hail deductible 2% - acceptable per investor guidelines
+  - Verified: 03/25/2026
+
+  CONDITION 4: Clear title
+  --- STATUS: SATISFIED ---
+  - Final title policy received 04/15/2026
+  - Wells Fargo payoff confirmed: $178,423.17 (wired 04/12/2026)
+  - Release of mortgage recorded 04/14/2026
+  - No new liens or judgments since commitment
+  - Title policy issued: CTIC-IL-2026-77421
+
+================================================================================
+FINAL DECISION
+================================================================================
+
+  APPROVED:                  [X] YES   [ ] NO   [ ] CONDITIONAL
+
+  LOAN IS CLEAR TO CLOSE.
+
+  All conditions have been met. Please proceed with closing.
+
+  CLOSING DATE:              April 30, 2026 (tentative - confirm with all parties)
+  ESCROW HOLDER:             Chicago Title - Springfield (Cynthia Walker)
+  SIGNING LOCATION:          Chicago Title Office or mobile notary (borrower's choice)
+
+================================================================================
+MISCELLANEOUS NOTES
+================================================================================
+
+  - Verified rental history through landlord (S. Henderson) - no late payments
+  - Employment verification: John - confirmed via phone + written VOE
+  - Self-employment: Sarah - CPA letter + tax returns verified
+  - Credit: John 748 / Sarah 736 (both above minimum)
+  - Reserves: 28 months PITI - EXCELLENT
+  - DTI: 38.1% (below max 45% for conventional)
+
+================================================================================
+
+  APPROVED BY:
+
+  _________________________________________         Date: 04/24/2026
+  James Mitchell
+  Senior Underwriter
+  NMLS # 55128
+  InsureFlow National Mortgage
+
+================================================================================
+
+HANDWRITTEN ADDENDUM (UW - blue pen):
+
+   CALLED BORROWER 4/24 - LEFT VOICEMAIL:
+   "Closing on track for 4/30. Bring ID + certified funds
+    for down payment OR wire instructions. Congrats!" - J.M.
+   
+   Called again 4/24 PM - John picked up. Confirmed closing
+   4/30 at 2:00 PM at Chicago Title. He's wiring funds.
+   
+   Rate locked at 6.625% (John accepted 60-day lock on 3/10).
+   
+================================================================================

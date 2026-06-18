@@ -1,0 +1,144 @@
+    ========================================================================
+                    CHASE BANK + VANGUARD
+            SAVINGS & MONEY MARKET ACCOUNTS
+                  As of April 30, 2026
+
+    BORROWER:     Lisa M. Sullivan (f/k/a Patel)
+                  555 Lake Shore Drive, Unit 12A
+                  Springfield, IL 62704
+    ========================================================================
+
+
+    ┌─────────────────────────────────────────────────────────────────────────────┐
+    │                                                                             │
+    │   PART 1: CHASE BANK — SAVINGS ACCOUNT                                      │
+    │   Account #: XXXX7891                                                       │
+    │   Account Type: Chase Premier Savings                                       │
+    │                                                                             │
+    ├─────────────────────────────────────────────────────────────────────────────┤
+    │                                                                             │
+    │   ACCOUNT SUMMARY — April 2026                                              │
+    │   Beginning Balance (04/01/2026):                $98,450.22                 │
+    │   Deposits & Credits:                             $1,025.00                 │
+    │   Withdrawals & Debits:                            $0.00                    │
+    │   Ending Balance (04/30/2026):                   $99,475.22                 │
+    │                                                                             │
+    ├─────────────────────────────────────────────────────────────────────────────┤
+    │   TRANSACTION DETAIL:                                                       │
+    │                                                                             │
+    │   Date        Description                              Amount               │
+    │   ─────────────────────────────────────────────────────────────────────      │
+    │   04/01/2026  INTEREST PAYMENT                            $25.22            │
+    │               (APY 0.01% - RIDICULOUSLY LOW, I KNOW)                        │
+    │                                                                             │
+    │   04/08/2026  TRANSFER FROM CHECKING #4521               $500.00            │
+    │               MONTHLY AUTO SAVINGS TRANSFER                                │
+    │                                                                             │
+    │   04/24/2026  TRANSFER FROM CHECKING #4521               $500.00            │
+    │               BUDGETED SAVINGS TRANSFER                                     │
+    │                                                                             │
+    │   ─────────────────────────────────────────────────────────────────────      │
+    │   NOTE: No ATM withdrawals from savings this period.                        │
+    │                                                                             │
+    ├─────────────────────────────────────────────────────────────────────────────┤
+    │                                                                             │
+    │   FUND COMPOSITION                                                          │
+    │   Current Balance:                       $99,475.22                         │
+    │                                                                             │
+    │   Source of Funds:                                                          │
+    │   - Divorce Cash Settlement                $95,000.00 (deposited 01/05/2026)│
+    │   - Existing Savings Prior to Settlement    $2,450.22                       │
+    │   - Accumulated Interest/Since Deposits     $2,025.00                       │
+    │                                                                             │
+    │   NOTE: The $95,000 was received via wire transfer from:                   │
+    │   "PATEL DIVORCE SETTLEMENT - M. PATEL" on 01/05/2026.                     │
+    │   This represents the equalization payment per Marital Settlement           │
+    │   Agreement Section 4.2 (cash buyout of ex-husband's equity interest).      │
+    │                                                                             │
+    └─────────────────────────────────────────────────────────────────────────────┘
+
+
+    ┌─────────────────────────────────────────────────────────────────────────────┐
+    │                                                                             │
+    │   PART 2: VANGUARD — MONEY MARKET SETTLEMENT FUND                           │
+    │   Account #: 1234-5678-9012-7890                                            │
+    │   Account Type: Vanguard Cash Plus (formerly Settlement Fund)               │
+    │                                                                             │
+    ├─────────────────────────────────────────────────────────────────────────────┤
+    │                                                                             │
+    │   ACCOUNT SUMMARY — As of April 30, 2026                                    │
+    │                                                                             │
+    │   Current Balance:                           $90,123.45                     │
+    │   Dividend Rate (current):                    4.25% APY                     │
+    │   YTD Dividends Paid:                        $1,275.80                      │
+    │                                                                             │
+    ├─────────────────────────────────────────────────────────────────────────────┤
+    │   HOLDINGS:                                                                 │
+    │                                                                             │
+    │   VMFXX - Vanguard Federal Money Market Fund                                │
+    │   Shares: 90,123.45 @ $1.00                                                 │
+    │                                                                             │
+    │   This fund serves as the settlement/MM sweep. Funds are accessible         │
+    │   within 1-2 business days. No penalties or restrictions.                   │
+    │                                                                             │
+    ├─────────────────────────────────────────────────────────────────────────────┤
+    │   RECENT TRANSACTIONS:                                                      │
+    │                                                                             │
+    │   Date        Description                              Amount               │
+    │   ─────────────────────────────────────────────────────────────────────      │
+    │   01/05/2026  CD MATURITY - VANGUARD CD (2YR 4.50%)   $45,000.00            │
+    │               PROCEEDS ROLLED TO MM (MATURED CD)                            │
+    │                                                                             │
+    │   02/15/2026  CD MATURITY - VANGUARD CD (18MO 4.75%)  $45,000.00            │
+    │               PROCEEDS ROLLED TO MM (MATURED CD)                            │
+    │                                                                             │
+    │   03/01/2026  DIVIDEND REINVESTED                       $412.56             │
+    │                                                                             │
+    │   04/01/2026  DIVIDEND REINVESTED                       $318.22             │
+    │                                                                             │
+    │   04/22/2026  TRANSFER TO CHASE CHECKING #4521        ($2,000.00)           │
+    │               WITHDRAWAL TO COVER ATTORNEY FEE                              │
+    │                                                                             │
+    ├─────────────────────────────────────────────────────────────────────────────┤
+    │   CD LADDER STATUS:                                                         │
+    │                                                                             │
+    │   NOTE: Prior to this statement period, this account held a CD ladder       │
+    │   built over the past 3 years. The two most recent CDs matured in           │
+    │   January and February 2026. At maturity, balances were moved to the        │
+    │   Money Market Settlement Fund while borrower decides on reinvestment       │
+    │   strategy post-divorce. The borrower intends to rebuild CD ladder          │
+    │   after refinance closes.                                                   │
+    │                                                                             │
+    └─────────────────────────────────────────────────────────────────────────────┘
+
+
+    ┌─────────────────────────────────────────────────────────────────────────────┐
+    │                                                                             │
+    │   COMBINED SAVINGS SUMMARY                                                  │
+    │                                                                             │
+    │   Chase Savings:                              $99,475.22                    │
+    │   Vanguard MM Settlement Fund:                $90,123.45                    │
+    │   ──────────────────────────────────────────  ─────────                     │
+    │   TOTAL LIQUID SAVINGS/MM:                    $189,598.67                   │
+    │                                                                             │
+    │                                                                             │
+    │   SOURCE BREAKDOWN:                                                         │
+    │   - Divorce Cash Settlement (cash equalization):      $95,000.00            │
+    │   - Pre-existing Savings (pre-divorce):               $92,098.67            │
+    │   - Accumulated Interest/Dividends:                    $2,500.00            │
+    │                                                     ──────────              │
+    │                                                     $189,598.67             │
+    │                                                                             │
+    │                                                                             │
+    │   NOTE FOR UNDERWRITING:                                                    │
+    │   The $95,000 divorce settlement deposit is a non-recurring, one-time       │
+    │   event related to the divorce finalization. The remaining balance of       │
+    │   ~$94,600 represents borrower's ongoing accumulated savings. These         │
+    │   funds are verified and seasoned (the pre-existing funds have been         │
+    │   in account for > 2 years). The divorce settlement deposit is > 90         │
+    │   days old (received 01/05/2026), meeting seasoning requirements.           │
+    │                                                                             │
+    │   No large deposits (>50% of income) requiring explanation other than       │
+    │   the noted divorce settlement wire.                                        │
+    │                                                                             │
+    └─────────────────────────────────────────────────────────────────────────────┘

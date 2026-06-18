@@ -1,0 +1,113 @@
+══════════════════════════════════════════════════════════════════
+     UNIFORM RESIDENTIAL LOAN APPLICATION  ◆  FANNIE MAE 1003
+     OMB No. 2502-0582  ◆  Exp. 04/30/2028
+     (FHA CASE NUMBER: 555-4829101)
+══════════════════════════════════════════════════════════════════
+
+  APPLICATION DATE:  01/15/2026
+
+SECTION 1:  BORROWER INFORMATION
+
+BORROWER:  James Thomas Wilson
+SSN:       XXX-XX-3381
+DOB:       07/22/1973  (Age 52)
+CITIZENSHIP: US Citizen
+MARITAL STATUS: Divorced
+DEPENDENTS: 2 (ages 16, 19)
+
+CURRENT ADDRESS:
+1200 Maple Avenue, Apt 3B
+Springfield, IL 62704
+Years at address: 3
+
+SECTION 2:  EMPLOYMENT INFORMATION
+
+SELF-EMPLOYED:
+
+  Business Name:  Wilson Home Improvements
+  Business Type:  Sole Proprietorship
+  Address:        1800 Industrial Road
+                  Springfield, IL 62704
+  Years in Business:  Since 2015 (10+ years)
+  EIN:            XX-XXXXX
+
+SECTION 3:  INCOME
+
+  Net Self-Employment Income (2025):  $98,000
+  Net Self-Employment Income (2024):  $92,000
+  Net Self-Employment Income (2023):  $95,000
+  Average (3 yrs):                    $95,000/yr
+
+SECTION 4:  ASSETS
+
+  Liquid:
+    BofA Business Checking (XXXX-4410):   $25,000
+    BofA Personal Checking (XXXX-2291):    $8,000
+
+  Retirement:
+    Simple IRA (Edward Jones):            $32,000
+    (not counted for qualifying)
+
+SECTION 5:  LIABILITIES
+
+  Auto Loan (2019 Ford F-150):       $15,200  ($385/mo)
+  Credit Card (Chase):               $4,200   ($120/mo min)
+  Student Loan (defaulted - rehab):  $0       (in rehab program)
+  Child Support:                     $1,200/mo (order attached)
+  NO OTHER REAL ESTATE OWNED.
+
+══════════════════════════════════════════════════════════════════
+  CONTINUED ON PAGE 2
+══════════════════════════════════════════════════════════════════
+
+SECTION 6:  LOAN INFORMATION
+
+PURPOSE OF LOAN:
+  ☒ Purchase
+  ☒ Rehabilitation (203k)
+
+OCCUPANCY:       ☒ Primary Residence
+FHA CASE #:      555-4829101
+LOAN AMOUNT:     $320,000
+PURCHASE PRICE:  $210,000
+RENOVATION:      $110,000
+APPRAISAL (AS-IS):   $165,000
+APPRAISAL (AFTER):   $295,000
+
+SECTION 7:  DECLARATIONS
+
+  1.  Outstanding judgments?             ☒ Yes  ☐ No
+      (Child support order - disclosed)
+  2.  Bankrupt in 7 years?               ☐ Yes  ☒ No
+  3.  Properties in foreclosure?         ☐ Yes  ☒ No
+  4.  Party to lawsuit?                  ☐ Yes  ☒ No
+  5.  Foreclosure/Deed in lieu?          ☐ Yes  ☒ No
+
+SECTION 8:  AGREEMENT
+
+I certify that the information provided is true and correct.
+
+  _________________________________  Date:  01/15/2026
+  James T. Wilson
+
+══════════════════════════════════════════════════════════════════
+
+                       NOTARY ACKNOWLEDGMENT
+
+State of Illinois
+County of Sangamon
+
+On this 15th day of January, 2026, before me personally appeared
+James T. Wilson, known to me to be the person whose name is
+subscribed to the foregoing instrument.
+
+  (notary stamp - SEAL)
+
+  Notary Public: Patricia M. Reynolds
+  My Commission Expires: 12/15/2028
+
+══════════════════════════════════════════════════════════════════
+  [[ UW: FHA 203k streamline. Self-employed. Child support
+     obligation included in DTI calc. Manual underwrite req'd
+     due to 645 score. Divorce-related lates explained in LOE. ]]
+══════════════════════════════════════════════════════════════════

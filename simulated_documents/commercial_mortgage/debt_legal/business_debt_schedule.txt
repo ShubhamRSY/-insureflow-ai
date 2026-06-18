@@ -1,0 +1,101 @@
+══════════════════════════════════════════════════════════════════════════════
+               THOMPSON COMMERCIAL PROPERTIES LLC
+                   BUSINESS DEBT SCHEDULE
+══════════════════════════════════════════════════════════════════════════════
+
+  Entity:           Thompson Commercial Properties LLC
+  Prepared:         April 10, 2026
+  Purpose:          Commercial Mortgage Application Disclosure
+
+══════════════════════════════════════════════════════════════════════════════
+SCHEDULED DEBTS
+══════════════════════════════════════════════════════════════════════════════
+
+═══  1.  FIRST NATIONAL BANK - REAL ESTATE MORTGAGE LOAN
+══════════════════════════════════════════════════════════════════════════════
+
+  Original Loan Amount:           $1,850,000.00
+  Current Principal Balance:      $1,708,400.00
+  Interest Rate:                  5.75% Fixed
+  Monthly Payment (P&I):          $11,848.40
+  Maturity Date:                  June 1, 2044 (25-year amortization)
+  Prepayment Penalty:             Yield maintenance through 06/01/2029
+                                  3% declining prepay thereafter
+  Collateral:                     5678 Commerce Boulevard, Springfield, IL
+                                  (First Lien - Deed of Trust)
+  Payment Status:                 CURRENT - Auto-debit from BofS acct
+
+═══  2.  STATE BANK OF ILLINOIS - EQUIPMENT LOAN (HVAC 2023)
+══════════════════════════════════════════════════════════════════════════════
+
+  Original Loan Amount:           $28,000.00
+  Current Principal Balance:      $18,500.00
+  Interest Rate:                  6.99% Fixed
+  Monthly Payment:                $567.00
+  Maturity Date:                  December 2028 (60-month term)
+  Prepayment:                     None
+  Collateral:                     HVAC units (3x rooftop units, 2x heat pumps)
+                                  UCC-1 Filing #2023-04881-SPFD
+  Payment Status:                 CURRENT (15 months remaining)
+
+═══  3.  AMERICAN EXPRESS BUSINESS PLATINUM CARD
+══════════════════════════════════════════════════════════════════════════════
+
+  Account Number:                 XXXX-XXXX-4481
+  Credit Limit:                   $25,000.00
+  Current Balance:                $4,200.00
+  Minimum Payment:                $200.00
+  APR:                            22.49% Variable
+  Payment Status:                 CURRENT (paid in full monthly typically)
+  Note:                           Used for operating expenses / supplies
+
+═══  4.  JOHN A. THOMPSON - MEMBER LOAN TO LLC
+══════════════════════════════════════════════════════════════════════════════
+
+  Type:                           Unsecured member loan (not a formal note)
+  Original Amount:                $50,000.00 (made 01/15/2024 for CapEx)
+  Current Balance:                $25,000.00
+  Terms:                          No fixed payment schedule. Repayment at
+                                  member's discretion from cash flow.
+  Status:                         Informal / No formal loan agreement
+  Priority:                       Subordinated to senior debt per member
+                                  agreement (subordination letter available)
+
+══════════════════════════════════════════════════════════════════════════════
+TOTAL DEBT SUMMARY
+══════════════════════════════════════════════════════════════════════════════
+
+  Total Real Estate Debt:                     $1,708,400.00
+  Total Equipment Debt:                        $18,500.00
+  Total Credit Card Debt:                       $4,200.00
+  Total Member Loan (Subordinated):            $25,000.00
+  ═══════════════════════════════════════════
+  TOTAL INDEBTEDNESS:                        $1,756,100.00
+
+══════════════════════════════════════════════════════════════════════════════
+OTHER CONTINGENT LIABILITIES
+══════════════════════════════════════════════════════════════════════════════
+
+  Loan Guarantees (Personal):     NONE
+  Litigation / Claims:            NONE
+  Tax Liens:                      NONE (current on all tax payments)
+  Lease Guarantees:               NONE
+
+══════════════════════════════════════════════════════════════════════════════
+CREDIT HISTORY (BUSINESS)
+══════════════════════════════════════════════════════════════════════════════
+
+  D&B PAYDEX Score:               78 (Good - 30 day avg pay speed)
+  Experian Intelliscore:          72 (Low risk)
+  Bankruptcy/Collections:         NONE
+
+══════════════════════════════════════════════════════════════════════════════
+  I declare under penalty of perjury that the foregoing is true and correct.
+
+  /s/ John A. Thompson                             Date: 04/10/2026
+  John A. Thompson, Managing Member
+══════════════════════════════════════════════════════════════════════════════
+
+══════════════════════════════════════════════════════════════════════════════
+[STAMP] RECEIVED FOR UNDERWRITING - INSUREFLOW COMMERCIAL DIVISION
+══════════════════════════════════════════════════════════════════════════════

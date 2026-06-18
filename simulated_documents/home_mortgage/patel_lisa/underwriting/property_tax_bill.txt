@@ -1,0 +1,136 @@
+========================================================================================================
+                     SANGAMON COUNTY - PROPERTY TAX BILL / TAX YEAR 2025
+                                  OFFICE OF THE COUNTY TREASURER
+========================================================================================================
+
+    Tax Bill #: SC-TAX-2025-1827401012A            Due: 06/01/2026 (1st Installment)
+                                                                                                     
+    Parcel ID (PIN): 18-27-401-012A
+
+    PROPERTY ADDRESS:
+    555 Lake Shore Drive, Unit 12A
+    Springfield, IL 62711
+    (Condominium - Lake Shore Condominiums)
+
+    PROPERTY OWNER AS OF 01/01/2025:
+    Lisa M. Patel and Rajesh K. Patel (Joint Tenancy) -> Divested to Lisa M. Patel 
+    via Quitclaim Deed recorded 01/02/2026. Tax bill issued in prior owners' names
+    but current owner is Lisa M. Patel solely.
+
+========================================================================================================
+ASSESSMENT AND TAX COMPUTATION
+========================================================================================================
+
+    Land Assessed Value:                         $105,000.00  (pro-rata share of land)
+    Improvement Assessed Value:                  $245,000.00  (unit value)
+    -------------------------------------------  ------------
+    TOTAL ASSESSED VALUE:                        $350,000.00
+    
+    Level of Assessment: 33.33% of Fair Cash Value
+    Estimated Fair Cash Value:                   $550,000.00  (matches appraisal)
+    
+    STATE EQUALIZATION FACTOR: 1.0000
+    COUNTY EQUALIZATION FACTOR: 1.0000
+    CITY OF SPRINGFIELD FACTOR: 1.0000
+
+    TAX RATE BREAKDOWN (per $100 assessed value):
+    ----------------------------------------------------------------
+    City of Springfield General:                 $0.8511
+    Sangamon County General:                     $0.4210
+    School District #186 (Springfield):          $4.8812  <-- CITY SCHOOLS HIGHER RATE
+    Community College District #526:             $0.3823
+    Park District (Springfield):                 $0.4120
+    Library District (Springfield):              $0.2218
+    City Fire Protection:                        $0.1423
+    Police Pension:                              $0.1510
+    Firefighters Pension:                        $0.0987
+    County Mental Health:                        $0.0918
+    Transit Authority:                           $0.1517
+    Garbage/Sanitation:                          $0.0872
+    4-H Extension:                               $0.0191
+    ----------------------------------------------------------------
+    TOTAL TAX RATE:                              $7.9112  per $100 assessed value
+    
+    TAX COMPUTATION:
+    350,000 x $7.9112 / $100 = $27,689.20???
+    
+    That can't be right. Townhomes in IL are assessed at 10% of market value
+    for residential, NOT 33.33%. Let me check.
+    
+    [HANDWRITTEN NOTE]:
+    OK - Illinois residential condos are assessed at 10% of market value.
+    $550,000 x 10% = $55,000 assessed. Then $55,000 x 7.9112 / $100 = $4,352/yr? 
+    But bill says $8,568. Let me redo.
+    
+    Actually, assessment on the bill says $350,000 total assessed. That seems high
+    for 10%. But the bill shows it. Let me check with county. maybe it's multi-year???
+    
+    NO - the bill is showing $350K assessed at 33.33%. So fair cash value = $1,050,000?
+    That doesn't match appraisal $550K.
+    
+    I think the assessment value is the actual assessed value after equalization.
+    For condos in Springfield, the assessment ratio policy... ugh this is confusing.
+    
+    SIMPLE ANSWER: Tax bill says $8,568/yr. Divide by 12 = $714/mo. USE THAT.
+    The county bill is the official document. Don't overthink it. - JW
+    
+    TOTAL TAX BILL:                                $8,567.76
+    Rounded:                                       $8,568.00/yr 
+    Monthly Escrow:                                $  714.00/mo
+    
+    CONDO TAX - HIGHER RATE THAN RURAL. CITY RATES + SCHOOLS = HIGHER TAX.
+========================================================================================================
+
+========================================================================================================
+TAX AMOUNT DUE - TAX YEAR 2025
+========================================================================================================
+
+    TOTAL TAXES LEVIED:                            $8,567.76
+    Less: General Homestead Exemption:             $    0.00  (applied? check county)
+    -------------------------------------------   ------------
+    TOTAL AMOUNT DUE:                              $8,567.76
+    
+    Installment 1 (Due 06/01/2026):                $4,283.88
+    Installment 2 (Due 09/01/2026):                $4,283.88
+    
+    PAID:  X Current - Not Delinquent
+           Seller/Borrower responsible for taxes in current year.
+           Escrow: collect 2 months + 12 months = $714 x 14 = $9,996?? 
+           Actually typical: collect at closing for upcoming tax payments.
+           
+           Closing in Feb 2026 - 2025 taxes not yet due. Need to collect 2025 taxes
+           at closing and hold in escrow until June/Sept 2026 due dates.
+
+========================================================================================================
+ESCROW ANALYSIS
+========================================================================================================
+
+    Monthly Tax Escrow:                            $  714.00/mo
+    Initial Escrow Deposit at Closing:             $2,142.00  (3 months cushion typically)
+    
+    [HANDWRITTEN]:
+    Standard escrow: collect 2 months cushion + payments until next due date.
+    Closing Feb -> next tax due June. 4 months gap. $714 x 4 = $2,856
+    But CD shows $2,142. OK close enough. - DK
+
+========================================================================================================
+CERTIFICATION
+
+    I certify this is a true and correct copy of the tax record for Parcel 18-27-401-012A.
+
+    _________________________________
+    [SIGNATURE]
+    Sangamon County Treasurer's Office
+    By: ________________________________
+        Linda M. Kowalski, Deputy Treasurer
+    Date: 01/28/2026
+
+========================================================================================================
+[OFFICIAL COUNTY STAMP - RAISED SEAL]
+    SANGAMON COUNTY ILLINOIS
+    TREASURER'S OFFICE
+    *** CERTIFIED COPY ***
+    
+    [STAMP]: TAXES CURRENT - NO DELINQUENCY - PIN 18-27-401-012A
+
+========================================================================================================

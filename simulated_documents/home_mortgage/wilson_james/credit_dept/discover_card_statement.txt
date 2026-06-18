@@ -1,0 +1,118 @@
+======================================================================
+                  DISCOVER IT CARD - MONTHLY STATEMENT
+======================================================================
+
+ACCOUNT HOLDER:     James T. Wilson
+ACCOUNT NUMBER:     xxxx-3348
+STATEMENT DATE:     February 3, 2026
+PAYMENT DUE DATE:   February 28, 2026
+
+NEW BALANCE:        $3,300.00
+CREDIT LIMIT:       $4,000.00
+AVAILABLE CREDIT:   $700.00
+MINIMUM PAYMENT:    $98.00
+APR (PURCHASES):    24.99% Variable
+APR (CASH ADVANCES): 26.99% Variable
+
+======================================================================
+PAYMENT INFORMATION:
+======================================================================
+PREVIOUS BALANCE:    $3,150.00
+PAYMENTS:            -$98.00   (Minimum payment - on time)
+PURCHASES:           $180.00
+CASH ADVANCES:       $200.00   (ATM withdrawal 01/20/26 - $200 + $10 fee)
+FEES:                $10.00    (Cash advance fee - 5% of $200)
+INTEREST CHARGED:    $58.00    (Interest on purchases + cash advances)
+NEW BALANCE:         $3,300.00
+
+======================================================================
+TRANSACTIONS:
+======================================================================
+Date        Description                                                   Amount
+-----------------------------------------------------------------------------------
+01/06       Amazon.com                                                     $45.99
+01/09       Shell Gas - Springfield IL                                    $51.30
+01/11       Home Depot - Springfield IL                                   $78.40
+01/15       AutoPay - Minimum Payment                                     -$98.00
+01/20       CASH ADVANCE - ATM BOA #2291 Springfield IL                  $200.00
+            [Fee: $10.00] 
+01/22       Pizza Ranch (Ethan's team dinner)                             $32.50
+01/26       Schnucks Grocery                                              $64.80
+01/28       iTunes / Apple Services                                       $9.99
+02/01       Netflix                                                        $15.99
+02/02       Shell Gas - Springfield IL                                    $48.72
+                                                                          -------
+TOTAL TRANSACTIONS THIS PERIOD:                                           $380.00
+                                                                          =======
+======================================================================
+INTEREST CHARGE DETAIL:
+======================================================================
+  Purchases - 24.99% APR (Daily Balance Method):
+    Balance Subject to Rate: $2,980.00
+    Interest Charged:        $38.00
+  
+  Cash Advances - 26.99% APR:
+    Balance Subject to Rate: $200.00
+    Interest Charged:        $4.50
+    (Cash advances have NO grace period - interest accrues immediately)
+    
+  Previous Balance Interest: $15.50
+  TOTAL INTEREST CHARGED:    $58.00
+======================================================================
+IMPORTANT MESSAGES:
+======================================================================
+
+  - No late payment was received. Account is current.
+  - Your remaining credit is $700 (17.5% of limit).
+  - Cash Advance Rate: 26.99% APR. Consider alternative sources
+    of cash to avoid high interest rates.
+  - 5% Cash Back on rotating categories: April-June = Home 
+    Improvement Stores & Gas Stations. You're enrolled!
+  
+  REWARDS SUMMARY:
+  - Cash Back Earned This Period: $3.60
+  - Year-to-Date Cash Back: $18.40
+  - Total Available: $142.50
+
+======================================================================
+PAYMENT HISTORY (Last 12 months):
+======================================================================
+  Mar 2025:  OK  | Apr 2025:  OK  | May 2025:  OK 
+  Jun 2025:  OK  | Jul 2025:  OK  | Aug 2025:  OK 
+  Sep 2025:  OK  | Oct 2025:  OK  | Nov 2025:  OK 
+  Dec 2025:  OK  | Jan 2026:  OK  | Feb 2026:  OK 
+  All payments received within grace period.
+
+  *Note: Jan 2022 had 1x 30-day late during divorce. No other lates.*
+======================================================================
+
+======================================================================
+HANDWRITTEN NOTES (seanned document - appears on statement):
+======================================================================
+
+  [Scrawled across top margin - blue ink:]
+  "Discover card is my 'emergency card' - hence the cash advances.
+   I know it's not ideal for the mortgage app. The $200 ATM was
+   for Ethan's basketball tournament - needed cash for hotel/food.
+   Paid back within the same billing cycle mostly.
+   - James"
+
+  [Margin note - red pen, different handwriting - UW?]
+  "CASH ADVANCE - NEGATIVE FACTOR. Shows borrower is using 
+   credit cards to supplement cash flow. However: small amount 
+   ($200), infrequent (1x this statement), and borrower explains
+   it's for son's sports event. Not a pattern of reliance.
+   
+   ALSO NOTE: Interest charges show borrower is carrying 
+   balance each month - not paying in full. This is consistent
+   with high utilization scenario.
+   
+   Recommendation: Include in LOE. Not a dealbreaker.
+   - ML 3/12/26"
+
+  [Tiny scribble - bottom corner:]
+  "Once I close on Oak St, I'm gonna transfer this balance
+   to a 0% APR card. Already pre-approved for Citi Simplicity
+   with 21 months BT. Just need to wait until after closing.
+   - JW (personal note)"
+======================================================================

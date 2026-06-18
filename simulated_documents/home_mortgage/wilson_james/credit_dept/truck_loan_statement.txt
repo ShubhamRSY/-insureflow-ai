@@ -1,0 +1,97 @@
+======================================================================
+                   FORD MOTOR CREDIT COMPANY
+                    RETAIL INSTALLMENT CONTRACT
+                      MONTHLY STATEMENT
+======================================================================
+
+ACCOUNT HOLDER:     James T. Wilson
+ACCOUNT NUMBER:     xxxx-2291
+VEHICLE:            2019 Ford F-250 XLT 4x4
+                    VIN: 1FT7W2BT6KEB22911
+STATEMENT DATE:     February 1, 2026
+PAYMENT DUE DATE:   February 18, 2026
+
+PAYMENT AMOUNT:     $482.00
+CURRENT BALANCE:    $12,047.18
+ORIGINAL AMOUNT:    $38,500.00
+APR:                7.99%
+MATURITY DATE:      November 2029 (original)
+EST. PAYOFF 2/26:   $12,047.18
+EST. PAYOFF 3/26:   $11,592.42
+EST. PAYOFF 4/26:   $11,127.33
+
+======================================================================
+TRANSACTION HISTORY:
+======================================================================
+Date        Description                                     Amount       Balance
+----------------------------------------------------------------------------------
+01/01/26    Beginning Balance                                           $12,529.18
+01/10/26    Payment Received (AutoPay) - Thank You          -$482.00    $12,047.18
+01/18/26    Interest Charged ($12,047.18 x 7.99% / 12)       $0.00     $12,047.18
+            (Interest included in payment allocation)
+---------------------------------------------------------------------------------
+           No additional activity this period.
+02/01/26    STATEMENT BALANCE                                            $12,047.18
+======================================================================
+
+PAYMENT BREAKDOWN (Jan 2026 payment):
+  Principal:         $332.00
+  Interest:          $80.00
+  Escrow/Other:      $0.00
+  Late Fee:          $0.00
+  Total Payment:     $482.00
+
+======================================================================
+ACCOUNT STATUS: CURRENT / PAYING AS AGREED
+======================================================================
+
+  Delinquency Status: Current (0 days past due)
+  Total Payments Made: 38 of 84 (original term)
+  Payments Remaining: ~25 (paying extra principal each month)
+
+  NEXT PAYMENT DUE: February 18, 2026 - $482.00
+  AutoPay Enrollment: YES (Bank of America - Personal Checking xxxx-8832)
+
+======================================================================
+IMPORTANT MESSAGES:
+======================================================================
+
+  - Thank you for being a valued Ford Motor Credit customer.
+  - You may be eligible for a rate reduction if you enroll in
+    automatic payments (already enrolled).
+  - Your current APR of 7.99% is fixed for the life of the loan.
+
+======================================================================
+LOAN ESTIMATES (if paid as agreed):
+======================================================================
+  Month       Payment       Principal     Interest      Balance
+  ----------------------------------------------------------------
+  Feb 2026    $482.00       $335.00       $80.00        $11,712.18
+  Mar 2026    $482.00       $337.00       $79.00        $11,375.18
+  Apr 2026    $482.00       $339.00       $78.00        $11,036.18
+  May 2026    $482.00       $341.00       $77.00        $10,695.18
+  ... (paid ahead at current extra principal rate)
+  
+  Estimated Payoff Date: April 2028 (at current extra payment rate)
+  (Original maturity: Nov 2029)
+
+======================================================================
+
+[HANDWRITTEN - top margin:]
+  "Paying extra $150/mo on principal when I can. Want this 
+   truck paid off before the new house. Can't have a truck 
+   payment AND a mortgage AND child support forever.
+   - James"
+
+[Second note - bottom margin:]
+  "Truck is essential for work. Can't do contracting without 
+   it. Hauls lumber, tools, dump trailer. 2019 F-250 with 
+   118K miles. Blue Book ~$32K. I owe $12K. Lots of equity.
+   - JW note to UW"
+
+[UW Stamp:]
+  "TRUCK LOAN - CURRENT. $482/mo INCLUDED IN DTI.
+   VEHICLE VALUED APPROX $30-32K PER KBB. SIGNIFICANT
+   EQUITY. NOT UTILIZED FOR CASH OUT IN THIS TRANSACTION.
+   - UW ML 3/10/26"
+======================================================================

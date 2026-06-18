@@ -1,0 +1,83 @@
+══════════════════════════════════════════════════════════════════════════════
+          PHASE I ENVIRONMENTAL SITE ASSESSMENT - ASTM E1527-21
+══════════════════════════════════════════════════════════════════════════════
+
+Project: 5678 Commerce Boulevard, Springfield, IL 62702
+ESA Prepared For: InsureFlow National Mortgage / Thompson Commercial Props
+ESA Date: March 22, 2026
+Prepared By: Midwest Environmental Consulting LLC (MEC #4821)
+
+SITE SUMMARY:
+  Current Use:           Mixed-use commercial (retail + office)
+  Site Area:             2.8 acres
+  Improvements:          28,400 sf building (2018 construction)
+  Previous Use:          Light industrial / warehouse (1950s-2015)
+                         Vacant land prior to 1950
+
+RECORDS REVIEW:
+  Federal (EPA NPL):             No nearby sites within 1-mile search
+  State (IL EPA LUST):           One LUST case #2020-4412 at adjacent
+                                 property (4480 Commerce Blvd) - CLOSED 2021
+  Local Fire Dept Records:       No hazardous material incidents at site
+  Historical Aerial Review:      Pre-1950 agricultural. 1956-2015 industrial.
+                                 Building demolished 2016. Current bldg 2018.
+  Sanborn Fire Insurance Maps:   Not available for this area (rural pre-1960)
+
+SITE RECONNAISSANCE:
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │  Date of Visit:    March 20, 2026                                   │
+  │  Weather:          58°F, partly cloudy                              │
+  │  Inspector:        Michael Torres, Senior Environmental Scientist   │
+  │                                                                     │
+  │  OBSERVATIONS:                                                      │
+  │  - Paved parking lot - no staining observed                         │
+  │  - No stressed vegetation                                            │
+  │  - No ASTs/USTs observed on site                                    │
+  │  - No transformers observed (all underground utilities)              │
+  │  - Trash dumpster area - clean, no leakage                          │
+  │  - Roof drains discharge to municipal storm sewer                   │
+  │  - No odors, no drums, no stained soil                             │
+  │  - Interior: finished commercial. No mold observed.                 │
+  │  - HVAC units on roof - no leaks observed                          │
+  └─────────────────────────────────────────────────────────────────────┘
+
+HISTORICAL USE ASSESSMENT:
+  Previous industrial use (1956-2015) = REC (Recognized Environmental
+  Condition). Former use: light manufacturing (auto parts).
+  ─────────────────────────────────────────────────────────
+  REC #1:   Potential soil/gw contamination from former industrial use.
+            Vapor intrusion risk for building.
+  STATUS:   Building constructed 2018 with vapor barrier. Soil vapor
+            sampling performed during construction (2017) - all VOCs
+            below Tier 1 screening levels (see report Appendix C).
+
+INTERVIEWS:
+  John Thompson (Owner): No knowledge of environmental issues.
+  Previous Owner (Springfield Industrial LLC, via phone): No knowledge
+  of spills, releases, or environmental violations during ownership
+  (1998-2015).
+
+CONCLUSIONS / OPINIONS:
+  ═══════════════════════════════════════════════════════════════════════
+  No evidence of recognized environmental conditions (RECs) in
+  connection with the subject property, with the following exception:
+  ───────────────────────────────────────────────────────────────────────
+  CREC: Historical use as light industrial. Mitigated by:
+        - Building constructed with vapor barrier (2018)
+        - No current evidence of impact
+        - Soil vapor testing clean (2017)
+  ───────────────────────────────────────────────────────────────────────
+  No HRECs (Historical RECs) identified.
+  No de minimis conditions identified.
+  ═══════════════════════════════════════════════════════════════════════
+
+RECOMMENDATIONS:
+  No further environmental action recommended at this time.
+  No Vapor Encroachment Condition (VEC) identified per ASTM E2600-22.
+
+  [STAMP] PHASE I ESA COMPLETE - NO FURTHER ACTION REQUIRED
+══════════════════════════════════════════════════════════════════════════════
+
+Reviewed By:  /s/ Rebecca Chen, PE                         03/28/2026
+             Principal Engineer, Midwest Environmental Consulting LLC
+═════════════════════════════════════════════════════════════════════════════

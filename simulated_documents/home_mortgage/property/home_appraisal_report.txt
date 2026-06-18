@@ -1,0 +1,147 @@
+══════════════════════════════════════════════════════════════════════════════
+             UNIFORM RESIDENTIAL APPRAISAL REPORT (FHLMC FORM 70)
+══════════════════════════════════════════════════════════════════════════════
+
+  File No:         APR-2026-4418-SPFD
+  Appraisal Date:  April 18, 2026
+  Prepared For:    InsureFlow National Mortgage
+
+══════════════════════════════════════════════════════════════════════════════
+PROPERTY INFORMATION
+══════════════════════════════════════════════════════════════════════════════
+
+  Property Address:  4567 Oakwood Lane
+                     Springfield, IL 62704
+                     (Sangamon County)
+
+  Legal Description: Lot 23, Oakwood Hills Subdivision, Plat Book 47,
+                     Page 12, Sangamon County Records
+
+  Assessor Parcel #: 14-23-456-789-0000
+
+  Census Tract:      3027.04
+
+══════════════════════════════════════════════════════════════════════════════
+NEIGHBORHOOD
+══════════════════════════════════════════════════════════════════════════════
+
+  Location:            ⬤ Suburban  ⬡ Rural  ⬡ Urban
+  Built-Up:            ⬤ Over 75%  ⬡ 25-75%  ⬡ Under 25%
+  Growth:              ⬤ Stable    ⬡ Growing  ⬡ Declining
+  Neighborhood Value:  ⬤ Stable    ⬡ Increasing  ⬡ Declining
+  Demand/Supply:       ⬤ Balanced  ⬡ Shortage  ⬡ Oversupply
+  Marketing Time:      30-60 days (current market conditions)
+
+  NOTE: Neighborhood is well-established suburban area with mature
+  landscaping. Schools: Springfield District 186. Recent comps show
+  3-5% appreciation over prior 12 months.
+
+══════════════════════════════════════════════════════════════════════════════
+SITE
+══════════════════════════════════════════════════════════════════════════════
+
+  Lot Size:           0.28 acres (approx. 80' x 150')
+  Shape:              Rectangular
+  Street Frontage:    Concrete curb & gutter
+  Topography:         Level
+  Utilities:          All public (electric, gas, water, sewer)
+  Zoning:             R-2 (Single Family Residential - City of Springfield)
+  FEMA Flood Zone:    X (not in SFHA - no flood insurance required)
+  Site Improvements:  Asphalt driveway, concrete walkway, lawn, shrubs
+
+══════════════════════════════════════════════════════════════════════════════
+IMPROVEMENTS
+══════════════════════════════════════════════════════════════════════════════
+
+  Property Type:      ⬤ Single Family  ⬡ Condo  ⬡ Townhouse  ⬡ Duplex
+  Year Built:         2018
+  Effective Age:      5 years (well-maintained)
+  Condition:          ⬤ Good  ⬡ Average  ⬡ Fair  ⬡ Poor
+  Design:             Colonial Revival, 2-Story
+  Square Footage:     2,450 sq ft (measured GLA)
+  Rooms:              9 total  (4 BR, 2.5 BA, LR, DR, Kit, Den)
+
+  Foundation:         Poured concrete slab
+  Exterior:           Brick veneer (front), HardiePlank siding
+  Roof:               Architectural asphalt shingles (class 3, est 2018)
+  Windows:            Double-pane, vinyl, Low-E (2018)
+  HVAC:               Gas forced air, central AC (Rheem, 2018 - serviced 2024)
+  Water Heater:       50 gal gas (2018)
+  Electrical:         200 amp panel
+  Flooring:           Hardwood (main level), Carpet (upstairs), Tile (wet areas)
+
+  Garage:             Attached 2-car, finished, 480 sq ft
+  Basement:           Full unfinished, 1,200 sq ft (poured concrete walls)
+  Patio:              Concrete patio (20'x12')
+  Fencing:            Privacy fence - rear yard (cedar, 2019)
+
+══════════════════════════════════════════════════════════════════════════════
+SALES COMPARISON APPROACH
+══════════════════════════════════════════════════════════════════════════════
+
+                               Subject        Comp 1          Comp 2          Comp 3
+                             4567 Oakwood    4500 Maple      4821 Elm        4120 Pine
+                              Springfield     Springfield     Springfield     Springfield
+                             ------------  --------------  --------------  --------------
+  Sale Price                  (Appraised)    $412,000        $398,000        $435,000
+  Price/sq ft                              $168/sq ft      $163/sq ft      $174/sq ft
+  GLA (sq ft)                2,450          2,380           2,410           2,520
+  Lot Size                   0.28 ac        0.25 ac         0.30 ac         0.32 ac
+  BR/BA                      4/2.5          4/2.5           3/2.0           4/3.0
+  Garage                     2-car          2-car           2-car           2-car
+  Year Built                 2018           2016            2019            2017
+  Condition                  Good           Average         Good            Good
+  Sale Date                   [Appr]       12/15/2025      02/20/2026      01/08/2026
+
+  ADJUSTMENTS:
+  ────────────────────────────────────────────────────────────────────────────
+  GLA                        ---            +$4,200         +$1,600         -$2,800
+  Site                       ---            +$1,500         -$1,200         -$1,600
+  Condition                  ---            +$5,000         $0              $0
+  Bathrooms                  ---            $0              +$5,000         -$5,000
+  Garage                     ---            $0              $0              $0
+  Age                        ---            -$1,000         +$500           -$500
+  ────────────────────────────────────────────────────────────────────────────
+  NET ADJUSTMENT (total)     ---            +$9,700         +$5,900         -$8,900
+  Adjusted Sale Price        ---            $421,700        $403,900        $426,100
+
+══════════════════════════════════════════════════════════════════════════════
+VALUE CONCLUSION
+══════════════════════════════════════════════════════════════════════════════
+
+  INDICATED VALUE BY SALES COMPARISON APPROACH:           $420,000
+  INDICATED VALUE BY COST APPROACH:                       $418,000
+  INDICATED VALUE BY INCOME APPROACH:                     N/A (owner-occupied)
+
+══════════════════════════════════════════════════════════════════════════════
+                          FINAL APPRAISED VALUE: $420,000
+══════════════════════════════════════════════════════════════════════════════
+
+══════════════════════════════════════════════════════════════════════════════
+APPRAISER CERTIFICATION
+══════════════════════════════════════════════════════════════════════════════
+
+  Appraiser:         David R. Morrison, MAI
+  License #:         IL-AR-0018834
+  License Expiry:    12/31/2026
+  Company:           Apex Appraisal Group LLC
+                     550 Commerce Street, Springfield, IL 62701
+                     (217) 555-3350
+
+  Supervisory Appraiser (if applicable): N/A
+
+  I certify that I inspected the subject property (both interior and
+  exterior) and have no bias or present interest in the property.
+
+  __________________________________
+  David R. Morrison, MAI
+  Date: 04/20/2026
+
+══════════════════════════════════════════════════════════════════════════════
+[ATTACHMENT: PHOTOGRAPHS] - 12 photos taken 04/18/2026 (front, rear, street,
+  kitchen, primary BR, BR2, BA, basement, garage, comp properties)
+══════════════════════════════════════════════════════════════════════════════
+
+══════════════════════════════════════════════════════════════════════════════
+[STAMP] REPORT DELIVERED TO INSUREFLOW NATIONAL MORTGAGE - 04/22/2026
+══════════════════════════════════════════════════════════════════════════════

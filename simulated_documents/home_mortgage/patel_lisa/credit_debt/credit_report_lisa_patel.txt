@@ -1,0 +1,333 @@
+    ========================================================================
+                      THREE-BUREAU CREDIT REPORT
+                      Merged Report for Mortgage Lending
+
+    Prepared For:       Premier Home Lending, Inc.
+    Prepared By:        CredCo Credit Solutions
+    Report Date:        April 28, 2026
+    Report Number:      CR-2026-0415-PATEL
+
+    ========================================================================
+                          BORROWER INFORMATION
+    ========================================================================
+
+    Name:               Lisa M. Sullivan (f/k/a Patel)
+    Also Known As:      Lisa M. Patel
+                        Lisa Marie Sullivan (prior to 2003 marriage — inactive)
+
+    Current Address:    555 Lake Shore Drive, Unit 12A
+                        Springfield, IL 62704
+                        (Verified — Occupied per deed of trust and HOA records)
+
+    Prior Address:      1245 Oakwood Lane
+                        Springfield, IL 62704
+                        (Marital residence — sold 03/2026 as part of divorce)
+
+    Date of Birth:      08/22/1981
+    SSN:                XXX-XX-XXXX
+    Employer:           Illinois Mutual Insurance Company
+    Time at Employer:   8 years (since 2018)
+
+    ========================================================================
+                          CREDIT SCORES
+    ========================================================================
+
+    Bureau              Score        Model            Date
+    ─────────────────────────────────────────────────────────────
+    Equifax             760          FICO Score 8     04/28/2026
+    Experian            758          FICO Score 8     04/28/2026
+    TransUnion          762          FICO Score 8     04/28/2026
+
+    REPRESENTATIVE SCORE:  760  (Mid-Score per agency guidelines)
+
+    ========================================================================
+                          PUBLIC RECORDS
+    ========================================================================
+
+    NONE FOUND — No bankruptcies, tax liens, judgments, or collections.
+
+    Divorce Record: Case #2024-DR-8821, Sangamon County Circuit Court,
+    Final Judgment 12/15/2025. NOT a public record on credit report.
+    (Verified separately.)
+
+    ========================================================================
+                          INQUIRIES
+    ========================================================================
+
+    Soft Inquiries (Last 24 months — NON-scoring):
+    ─────────────────────────────────────────────────────────────
+    01/15/2026    Vanguard (Account Review)
+    03/01/2026    Chase Bank (Account Review)
+    04/01/2026    Credit Karma (Consumer Initiated)
+    04/10/2026    Premier Home Lending (Mortgage Pre-Qual)
+
+    Hard Inquiries (Last 24 months):
+    ─────────────────────────────────────────────────────────────
+    04/15/2026    Premier Home Lending, Inc.                Mortgage
+    04/16/2026    Chase Bank (possible — auto loan inquiry   Auto (pre-existing,
+                  but borrower did NOT apply — see dispute)   disputed)
+    08/12/2024    American Express (Account Review — EX only)
+    12/01/2024    Macy's (Credit Limit Increase Request)
+
+    ========================================================================
+                          TRADELINE DETAIL
+    ========================================================================
+
+
+    ┌─────────────────────────────────────────────────────────────────────────────┐
+    │ TRADELINE 1: FIRST MORTGAGE — CHASE HOME LENDING                           │
+    ├─────────────────────────────────────────────────────────────────────────────┤
+    │                                                                             │
+    │ Account #:          XXXX4521                                                │
+    │ Account Type:       Conventional Mortgage — Fixed Rate                      │
+    │ Date Opened:        June 2018                                               │
+    │ Loan Amount:        $420,000.00                                             │
+    │ Current Balance:    $248,750.00                                             │
+    │ Monthly Payment:    $1,850.00 (P&I + Escrow)                               │
+    │                   ($1,562 P&I + $288 T&I)                                  │
+    │ Credit Limit:       N/A (Installment Loan)                                  │
+    │ Past Due:           $0                                                      │
+    │ Status:             Pays As Agreed                                          │
+    │                                                                             │
+    │ PAYMENT HISTORY:                                                            │
+    │ ┌─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┐ │
+    │ │ APR │ MAR │ FEB │ JAN │ DEC │ NOV │ OCT │ SEP │ AUG │ JUL │ JUN │ MAY │ │
+    │ │ 26  │ 26  │ 26  │ 26  │ 25  │ 25  │ 25  │ 25  │ 25  │ 25  │ 25  │ 25  │ │
+    │ ├─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┤ │
+    │ │  OK │  OK │  OK │  OK │  OK │  OK │  OK │  OK │  OK │  OK │  OK │  OK │ │
+    │ └─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┘ │
+    │                                                                             │
+    │ 72 months on record. 0 late payments. 0 delinquencies.                      │
+    │                                                                             │
+    │ NOTE: This mortgage will be PAID IN FULL from new loan proceeds             │
+    │ at closing. Estimated payoff: $250,100 (incl. per diem interest).           │
+    │                                                                             │
+    └─────────────────────────────────────────────────────────────────────────────┘
+
+
+    ┌─────────────────────────────────────────────────────────────────────────────┐
+    │ TRADELINE 2: AMERICAN EXPRESS PLATINUM CHARGE CARD                         │
+    ├─────────────────────────────────────────────────────────────────────────────┤
+    │                                                                             │
+    │ Account #:          XXXX450001                                              │
+    │ Account Type:       Charge Card (No Preset Spending Limit)                  │
+    │ Date Opened:        March 2019                                              │
+    │ Current Balance:    $4,250.00 (Statement Balance — Paid in Full Monthly)  │
+    │ Credit Limit:       N/A (Charge Card — No Preset Limit)                    │
+    │                    (Estimated spending power: $30,000 - $60,000)            │
+    │ Past Due:           $0                                                      │
+    │ Status:             Pays As Agreed                                          │
+    │                                                                             │
+    │ PAYMENT HISTORY: 100% ON TIME. Pays statement balance monthly.              │
+    │ Annual Fee: $695. Borrower has held card for 7 years.                       │
+    │                                                                             │
+    │ Recent charges include:                                                     │
+    │ - Delta Air Lines tickets (Sophia spring break trip to visit grandparents)  │
+    │ - Hotel charges (various business travel)                                   │
+    │ - Restaurant charges (business entertainment)                               │
+    │ - $695 annual fee posted February 2026                                      │
+    │                                                                             │
+    └─────────────────────────────────────────────────────────────────────────────┘
+
+
+    ┌─────────────────────────────────────────────────────────────────────────────┐
+    │ TRADELINE 3: CHASE SAPPHIRE RESERVE                                        │
+    ├─────────────────────────────────────────────────────────────────────────────┤
+    │                                                                             │
+    │ Account #:          XXXX5567                                                │
+    │ Account Type:       Visa Signature — Rewards Card                           │
+    │ Date Opened:        November 2020                                           │
+    │ Credit Limit:       $25,000                                                 │
+    │ Current Balance:    $18,425.00                                              │
+    │ Statement Balance:  $18,000.00 (as of last cycle — includes pending)       │
+    │ Minimum Payment:    $350.00                                                 │
+    │ Past Due:           $0                                                      │
+    │ Status:             Pays As Agreed                                          │
+    │ APR:                24.49% Variable                                         │
+    │                                                                             │
+    │ CREDIT UTILIZATION: $18,425 / $25,000 = 73.70%  HIGH                       │
+    │                                                                             │
+    │ PAYMENT HISTORY:                                                            │
+    │ ┌─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┐ │
+    │ │ APR │ MAR │ FEB │ JAN │ DEC │ NOV │ OCT │ SEP │ AUG │ JUL │ JUN │ MAY │ │
+    │ │ 26  │ 26  │ 26  │ 26  │ 25  │ 25  │ 25  │ 25  │ 25  │ 25  │ 25  │ 25  │ │
+    │ ├─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┤ │
+    │ │  OK │  OK │  OK │  OK │  OK │  OK │  OK │  OK │  OK │  OK │  OK │  OK │ │
+    │ └─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┘ │
+    │                                                                             │
+    │ 65 months on record. 0 late payments. 0 delinquencies.                      │
+    │                                                                             │
+    │ HIGH BALANCE NOTE: Balance has increased from $4,500 (Jan 2024) to          │
+    │ $18,425 (Apr 2026) during separation/divorce period.                        │
+    │                                                                             │
+    └─────────────────────────────────────────────────────────────────────────────┘
+
+
+    ┌─────────────────────────────────────────────────────────────────────────────┐
+    │ TRADELINE 4: CITI DOUBLE CASH CARD                                        │
+    ├─────────────────────────────────────────────────────────────────────────────┤
+    │                                                                             │
+    │ Account #:          XXXX8922                                                │
+    │ Account Type:       Mastercard — Rewards Card                               │
+    │ Date Opened:        January 2021                                            │
+    │ Credit Limit:       $15,000                                                 │
+    │ Current Balance:    $10,150.00                                              │
+    │ Statement Balance:  $10,000.00 (as of last cycle)                          │
+    │ Minimum Payment:    $250.00                                                 │
+    │ Past Due:           $0                                                      │
+    │ Status:             Pays As Agreed                                          │
+    │ APR:                22.99% Variable                                         │
+    │                                                                             │
+    │ CREDIT UTILIZATION: $10,150 / $15,000 = 67.67%  HIGH                       │
+    │                                                                             │
+    │ PAYMENT HISTORY:                                                            │
+    │ ┌─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┐ │
+    │ │ APR │ MAR │ FEB │ JAN │ DEC │ NOV │ OCT │ SEP │ AUG │ JUL │ JUN │ MAY │ │
+    │ │ 26  │ 26  │ 26  │ 26  │ 25  │ 25  │ 25  │ 25  │ 25  │ 25  │ 25  │ 25  │ │
+    │ ├─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┤ │
+    │ │  OK │  OK │  OK │  OK │  OK │  OK │  OK │  OK │  OK │  OK │  OK │  OK │ │
+    │ └─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┘ │
+    │                                                                             │
+    │ 64 months on record. 0 late payments. 0 delinquencies.                      │
+    │                                                                             │
+    │ HIGH BALANCE NOTE: Balance increased from $2,200 (pre-separation) to        │
+    │ $10,150 during divorce period.                                              │
+    │                                                                             │
+    └─────────────────────────────────────────────────────────────────────────────┘
+
+
+    ┌─────────────────────────────────────────────────────────────────────────────┐
+    │ TRADELINE 5: MACY'S AMERICAN EXPRESS                                       │
+    ├─────────────────────────────────────────────────────────────────────────────┤
+    │                                                                             │
+    │ Account #:          XXXX3311                                                │
+    │ Account Type:       Retail Card                                             │
+    │ Date Opened:        September 2015                                          │
+    │ Credit Limit:       $4,000                                                  │
+    │ Current Balance:    $0.00                                                   │
+    │ Past Due:           $0                                                      │
+    │ Status:             Pays As Agreed / Inactive                               │
+    │                                                                             │
+    │ PAYMENT HISTORY: 100% ON TIME. No recent activity (last charge 06/2024).    │
+    │                                                                             │
+    └─────────────────────────────────────────────────────────────────────────────┘
+
+
+    ┌─────────────────────────────────────────────────────────────────────────────┐
+    │ TRADELINE 6: CHASE AUTO LOAN (CLOSED)                                      │
+    ├─────────────────────────────────────────────────────────────────────────────┤
+    │                                                                             │
+    │ Account #:          XXXX1197                                                │
+    │ Account Type:       Auto Loan — Closed                                      │
+    │ Date Opened:        March 2019                                              │
+    │ Date Closed:        February 2026                                           │
+    │ Original Amount:    $32,500                                                 │
+    │ Current Balance:    $0.00 (PAID IN FULL)                                   │
+    │ Status:             Closed / Paid in Full                                   │
+    │                                                                             │
+    │ PAYMENT HISTORY: 100% ON TIME. 0 late payments.                            │
+    │                                                                             │
+    │ Note: 2019 Honda Pilot EX-L. Paid off voluntarily in February 2026          │
+    │ as part of divorce settlement. Vehicle awarded to Lisa Patel per            │
+    │ Marital Settlement Agreement. Title transferred to her name only.           │
+    │                                                                             │
+    └─────────────────────────────────────────────────────────────────────────────┘
+
+
+    ========================================================================
+                          CREDIT SUMMARY
+    ========================================================================
+
+    TOTAL OPEN TRADELINES:         4 (1 Mortgage, 1 Charge Card, 2 Revolving)
+    CLOSED TRADELINES:             1 (Auto Loan - Paid)
+    TOTAL ACCOUNTS:                5
+
+    ON-TIME PAYMENT HISTORY:       100% (All accounts, all time)
+    LATE PAYMENTS:                 0
+    DELINQUENCIES:                 0
+    CHARGE-OFFS:                   0
+    COLLECTIONS:                   0
+    PUBLIC RECORDS:                0
+
+    TOTAL REVOLVING BALANCE:       $28,575.00  ($18,425 + $10,150 + $0)
+    TOTAL REVOLVING LIMITS:        $44,000.00  ($25,000 + $15,000 + $4,000)
+    TOTAL REVOLVING UTILIZATION:   $28,575/$44,000 = 64.9%  HIGH
+
+    CREDIT HISTORY LENGTH:         12 years, 2 months (oldest account: Macy's 2015)
+    AVERAGE ACCOUNT AGE:           5 years, 8 months
+    NEW ACCOUNTS (LAST 12 MO):     0
+
+    ========================================================================
+                    UNDERWRITER ANALYSIS & NOTES
+    ========================================================================
+
+    UW REVIEW BY:     Jessica L. Morrison, Senior Underwriter
+    UW DATE:          04/29/2026
+    LOAN NUMBER:      2026-1015-PATEL
+
+    FINDINGS:
+
+    1. CREDIT SCORE: 760 — EXCELLENT. Meets all agency requirements for
+       conventional cash-out refinance. Passes AUS (DU Approve/Eligible).
+
+    2. PAYMENT HISTORY: FLAWLESS. 100% on-time for all obligations across
+       all accounts. Zero derogatory items. Borrower clearly prioritizes
+       debt payments despite financial strain of divorce.
+
+    3. HIGH CREDIT CARD UTILIZATION:
+       Chase Sapphire:     $18,425/$25,000  = 73.7%
+       Citi Double Cash:   $10,150/$15,000  = 67.7%
+       Combined:           $28,575/$44,000  = 64.9%
+
+       HIGH CC BALANCES DUE TO DIVORCE (ATTORNEY FEES, MOVING, LEGAL).
+       WILL BE PAID FROM CASH-OUT PROCEEDS. VERIFIED. EXCEPTION APPROVED
+       FOR UTILIZATION.
+
+       Explanation letter received from borrower dated 04/15/2026 stating:
+       "These cards accumulated during the separation/divorce proceedings.
+       Regular payments were made on time. The balances reflect legal fees,
+       new household purchases (starting over), and related divorce expenses.
+       Will be paid in full at closing from cash-out proceeds."
+
+       Rationale for Exception Approval:
+       - Borrower has documented, verified assets of ~$530K
+       - Cash-out proceeds of $120K will fully retire these balances at closing
+       - Borrower has NEVER missed a payment
+       - Divorce is a documented, non-recurring life event
+       - Post-closing DTI including new mortgage payment will be ~38%,
+         well within guideline maximums
+
+    4. MORTGAGE TRADELINE:
+       Current mortgage $248,750. Paying off at closing. 72 months of
+       perfect payment history. This is a strong compensating factor.
+
+    5. EMPLOYMENT & INCOME:
+       Stable — 8 years with same employer. Income trending upward.
+       No gaps.
+
+    6. RECENT INQUIRIES:
+       Mortgage inquiry (04/15/2026) is expected. One disputed auto inquiry
+       (04/16/2026) — borrower states she did not apply; potential identity
+       mixing with ex-husband's credit. Dispute filed. (Does not impact
+       score materially.)
+
+    ========================================================================
+                           RECOMMENDATION
+    ========================================================================
+
+    APPROVED — with condition that the following items are verified:
+
+    [ ] Confirmation that credit card balances are paid from closing proceeds
+        (Condition #1 — Pre-Closing)
+
+    [ ] Letter of explanation for high utilization (RECEIVED 04/15/2026)
+
+    [ ] Verification that disputed inquiry (Chase auto 04/16/2026) does not
+        represent new credit obligation
+
+    [ ] Confirmation that divorce is final and property settlement recorded
+
+    ─────────────────────────────────────────────────────────────────────────────
+    This credit report is provided for mortgage underwriting purposes only.
+    Prepared by CredCo Credit Solutions  |  License #: CRED-IL-2024-001
+    ─────────────────────────────────────────────────────────────────────────────

@@ -1,0 +1,55 @@
+============================================================================
+               MIDWEST MEDICAL PLAZA LLC
+          PROFIT AND LOSS STATEMENT (ACTUAL)
+              For the Year Ended December 31, 2022
+                       (UNAUDITED)
+============================================================================
+Prepared by: Chen & Associates, PC (CPA)
+============================================================================
+
+                                         2022
+============================================================================
+INCOME
+  Base Rent Revenue                  $   490,000
+  CAM Reimbursements                 $    18,000
+  Other Income (late fees)           $     2,000
+                                     ------------
+  Gross Potential Rent               $   510,000
+
+  Vacancy / Credit Loss              ($   62,000)
+                                     ------------
+  Effective Gross Income              $   448,000
+
+============================================================================
+EXPENSES
+  Real Estate Taxes                   $    68,000
+  Insurance                           $    16,500
+  Property Management (5% of EGI)     $    22,400
+  Utilities                           $    12,800
+  Repairs & Maintenance               $     8,500
+  Reserves for Replacement            $     4,000     [underfunded - increased in 2023]
+  Professional Fees                   $     1,800
+  Miscellaneous / Office              $     1,200
+                                     ------------
+  TOTAL EXPENSES                      $   135,200
+                                     ------------
+============================================================================
+NET OPERATING INCOME (NOI)            $   312,800
+============================================================================
+
+  [Handwritten in red ink across the page:]
+  "COVID YEAR EFFECTS:
+   - Derm practice had 4-month closure (tenant was late on rent, eventually paid)
+   - Imaging Center: 2 years rent abatement @ $4,000/mo = $48,000/yr
+     (Abatement expired 12/31/2023 - now paying full rent)
+   - Physical Therapy started 6 months late due to construction delays
+   
+   This year is NOT representative of stabilized operations.
+   Use 2023 or TTM for underwriting. - JM"
+
+  [Margin note:]
+  "2022 was a mess. Vacancy at 12% vs stabilized 6-7%.
+   COVID rent abatements distorted everything.
+   2023 is better baseline. - Chen (CPA)"
+
+============================================================================

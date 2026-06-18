@@ -1,0 +1,177 @@
+======================================================================
+               FHA 203(k) STREAMLINE - WORK WRITE-UP
+                    & COST ESTIMATE SUMMARY
+======================================================================
+
+PROPERTY:      321 Oak Street, Springfield, IL 62703
+BORROWER:      James T. Wilson
+203(k) CONSULTANT: Patricia Owens, P.E. - License #PE-IL-44712
+                  Owens Inspection & Engineering Services
+                  2120 Commerce Dr, Springfield, IL 62704
+                  (217) 555-0188
+
+DATE OF INSPECTION: January 22, 2026
+REPORT DATE:        February 3, 2026
+
+======================================================================
+ESTIMATE OF REPAIRS & REHABILITATION COSTS
+======================================================================
+
+  ITEM NO. | DESCRIPTION                        | QTY   | UNIT     | UNIT PRICE | TOTAL
+  ---------|------------------------------------|-------|----------|------------|--------
+  01       | NEW ROOF - Dimensional Shingles    | 28 sq | $446/sq  | $446.43    | $12,500.00
+           | (30yr, CertainTeed Landmark)       |       |          |            |
+           | Includes: tear-off, felt, flashing,|       |          |            |
+           | ridge vent, drip edge.             |       |          |            |
+           | Contractor: ABC Roofing (bonded)   |       |          |            |
+  ---------|------------------------------------|-------|----------|------------|--------
+  02       | KITCHEN - GUT REMODEL              | 1     | LS       | $28,000.00 | $28,000.00
+           | Demo existing cabinets/countertops |       |          |            |
+           | New cabinetry (RTA - mid grade)    |       |          |            |
+           | Granite countertops (Level 1)      |       |          |            |
+           | Farmhouse sink + Moen faucet       |       |          |            |
+           | New appliances (range, hood,       |       |          |            |
+           |   fridge, DW - allowance $4,200)   |       |          |            |
+           | Tile backsplash (subway tile)      |       |          |            |
+           | LVP flooring                       |       |          |            |
+           | Labor & misc materials             |       |          |            |
+  ---------|------------------------------------|-------|----------|------------|--------
+  03       | BATHROOM REMODEL                   | 1     | LS       | $14,500.00 | $14,500.00
+           | Gut to studs                       |       |          |            |
+           | New tub/shower surround (acrylic)  |       |          |            |
+           | New vanity + sink + faucet         |       |          |            |
+           | Toilet (comfort height)            |       |          |            |
+           | Tile floor (12x24 porcelain)       |       |          |            |
+           | Exhaust fan (Panasonic whisper)    |       |          |            |
+           | Plumbing rough-in & fixtures       |       |          |            |
+           | Paint + trim                       |       |          |            |
+  ---------|------------------------------------|-------|----------|------------|--------
+  04       | FLOORING - THROUGHOUT              | 1,200 | SF       | $8.17/SF   | $9,800.00
+           | LVP (8mm, waterproof, wear layer)  |       |          |            |
+           | Remove existing carpet/tile        |       |          |            |
+           | Install LVP throughout main living |       |          |            |
+           | (Living room, hallway, bedrooms.   |       |          |            |
+           | Owner to do himself - included     |       |          |            |
+           | in estimate at 50% of normal       |       |          |            |
+  ---------|------------------------------------|-------|----------|------------|--------
+  05       | INTERIOR PAINT                     | 1     | LS       | $5,200.00  | $5,200.00
+           | Ceilings, walls, trim - whole house|       |          |            |
+           | Primer + 2 coats (SW Superpaint)   |       |          |            |
+           | Color: agreeable gray (SW 7029)    |       |          |            |
+           | Trim: pure white (SW 7005)         |       |          |            |
+           | Owner to provide labor (deducted)  |       |          |            |
+  ---------|------------------------------------|-------|----------|------------|--------
+  06       | ELECTRICAL PANEL UPGRADE           | 1     | LS       | $4,200.00  | $4,200.00
+           | Upgrade from 100A to 200A service  |       |          |            |
+           | New main panel (Square D)          |       |          |            |
+           | AFCI/GFCI breakers as required     |       |          |            |
+           | Permit + inspection incl.          |       |          |            |
+           | Contractor: Rivera Electric (IL EC |       |          |            |
+           |   Lic #EC-332-441)                 |       |          |            |
+  ---------|------------------------------------|-------|----------|------------|--------
+  07       | HVAC REPLACEMENT                   | 1     | LS       | $9,800.00  | $9,800.00
+           | 3-ton split system (14 SEER min)   |       |          |            |
+           | Gas furnace (80% AFUE)             |       |          |            |
+           | Remove & dispose old unit          |       |          |            |
+           | New ductwork (partial - 2 runs)    |       |          |            |
+           | Thermostat (programmable)          |       |          |            |
+           | Contractor: Pohlman Heating & Air  |       |          |            |
+  ---------|------------------------------------|-------|----------|------------|--------
+  08       | WINDOWS (4)                        | 4     | EA       | $1,300.00  | $5,200.00
+           | Double hung, vinyl, Low-E, argon   |       |          |            |
+           | (Jeld-Wen or equivalent)           |       |          |            |
+           | Install + trim + caulk             |       |          |            |
+           | Includes 1 egress window (bedroom) |       |          |            |
+  ---------|------------------------------------|-------|----------|------------|--------
+  09       | PLUMBING                           | 1     | LS       | $6,500.00  | $6,500.00
+           | Replace main water line to street  |       |          |            |
+           |   (cast iron - 40 ft)              |       |          |            |
+           | Replace galvanized supply lines    |       |          |            |
+           |   (partial re-pipe - PEX)          |       |          |            |
+           | New water heater (50 gal gas)      |       |          |            |
+           |    (Bradford White)                |       |          |            |
+           | Sink & toilet rough-ins            |       |          |            |
+           | Contractor: Precision Plumbing     |       |          |            |
+  ---------|------------------------------------|-------|----------|------------|--------
+  10       | STRUCTURAL - FOUNDATION CRACK REPAIR| 1    | LS       | $4,500.00  | $4,500.00
+           | Helical pier (2) @ $1,500 each     |       |          |            |
+           | Epoxy injection (crack repair)     |       |          |            |
+           | Engineer sign-off incl in quote    |       |          |            |
+           | Contractor: Illinois Foundation     |       |          |            |
+           |   Solutions (Lic #FS-IL-9981)      |       |          |            |
+           | *** SEE ENGINEER REPORT ATTACHED ***|       |          |            |
+  ---------|------------------------------------|-------|----------|------------|--------
+  11       | CONTINGENCY RESERVE (15%)          | 1     | LS       | $9,800.00  | $9,800.00
+           | Required for 203(k) Streamline     |       |          |            |
+           | Based on total line items above    |       |          |            |
+           | ($109,000 x ~9%)                   |       |          |            |
+  ---------|------------------------------------|-------|----------|------------|--------
+           | TOTAL ESTIMATED COST - RENOVATION  |       |          |            | $110,000.00
+           |                                      |       |          | TOTAL     | ==========
+======================================================================
+
+======================================================================
+ADDITIONAL NOTES:
+======================================================================
+
+1. This is a 203(k) Streamline (limited) - max $200,000 in rehab costs.
+   Total rehab cost $110,000 is within guidelines.
+
+2. Borrower (James T. Wilson) is a licensed general contractor in
+   Illinois. He will act as GC and perform some work himself.
+   Per HUD guidelines, borrower-as-contractor is permissible for
+   203(k) Streamline if licensed and bonded.
+
+3. Borrower's "sweat equity" for work performed himself (flooring,
+   paint, demo) has been accounted for at reduced labor costs in
+   line items #04 and #05.
+
+4. All subcontractors must be licensed, bonded, and insured. Copies
+   of licenses & COI on file.
+
+5. Permit required from City of Springfield Building Department.
+   Borrower to pull permits.
+
+6. Draw schedule per 203(k) guidelines:
+   - Initial disbursement: 50% of non-labor materials
+   - Subsequent draws: upon inspection of completed work
+   - Final draw: upon completion & CO
+
+======================================================================
+CERTIFICATION:
+
+I, Patricia Owens, PE, have inspected the subject property at
+321 Oak Street, Springfield, IL 62703 and prepared this Work
+Write-Up and Cost Estimate. I certify that the scope of work
+is necessary to bring the property to acceptable living standards,
+that the estimates are based on current market rates in Springfield,
+IL, and that I have no financial interest in the property or the
+contractor.
+
+_________________________________________
+Patricia Owens, P.E.
+License #PE-IL-44712
+Date: February 3, 2026
+
+======================================================================
+
+[HANDWRITTEN NOTE - bottom margin, blue ink, Patricia's handwriting?]
+   "James - found a few things during reinspection 2/10.
+    The front porch floor joists have some rot near the 
+    front door. May need sistering - ~$1,200. I didn't 
+    include in original estimate. Can we add from 
+    contingency? Let's discuss. - PO"
+
+[Second handwriting, black pen - James?]
+   "Talked to PO. She says if we find more rot during 
+    demo we can use contingency. I'll handle the porch
+    myself over a weekend. Cost me ~$400 in lumber.
+    Already planned in my head. Don't need to touch
+    contingency. - JW"
+
+[UW Stamp - Red Ink]
+   " CONTINGENCY ALLOCATION - APPROVED PER 203(K)
+     GUIDELINES. 15% CONTINGENCY INCLUDED IN $110K.
+     NO FURTHER DOCUMENTATION NEEDED UNLESS 
+     CONTINGENCY IS TAPPED. - UW MD 3/10/26 "
+======================================================================

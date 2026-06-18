@@ -1,0 +1,145 @@
+================================================================================
+              PHASE I ENVIRONMENTAL SITE ASSESSMENT
+                        1800 River Road
+                   Riverbend, Sangamon County, IL
+                      Parcel 22-11-156-001
+================================================================================
+
+Prepared For:   Riverbend Self Storage LLC / First Midland Commercial
+Prepared By:    Prairie State Environmental Consultants, Inc.
+                Project No.: PSEC-2629-02-2026
+Date:           March 5, 2026
+Site Visit:     February 28, 2026 (Jennifer Caldwell, PG)
+
+================================================================================
+1.0 SITE DESCRIPTION
+================================================================================
+
+The subject property consists of a 5.8-acre vacant parcel located at the
+northwest corner of River Road and County Highway 14 in Riverbend, IL.
+The site is currently undeveloped agricultural land. The proposed use is
+construction of a self-storage facility with ancillary retail space.
+
+Site topography: Flat to gently sloping (2% grade east to west).
+Surface cover: Currently fallow field - previously row crops.
+Drainage: Site drains to county ditch along south boundary.
+
+1.1 SURROUNDING LAND USE
+
+  North: Single-family residential (subdivision - built 2018-2022)
+  South: County Highway 14, beyond which is more agricultural land
+  East: River Road, beyond which is Riverbend Commerce Park (light
+        industrial/warehouse)
+  West: Agricultural (farmland) - row crops
+
+================================================================================
+2.0 HISTORICAL USE REVIEW
+================================================================================
+
+Records Reviewed:
+  - Aerial photos: 1939, 1948, 1955, 1962, 1970, 1979, 1986, 1995, 2002,
+    2008, 2012, 2015, 2020, 2024
+  - Topographic maps: USGS 1956, 1975, 1995, 2015
+  - Sanborn maps: Not available for this rural area
+  - City directories: Riverbend - limited historical coverage
+  - Historical aerial photography flights (Sangamon County GIS): 2000-2024
+
+Historical Use Summary:
+
+  1939-1970: Agricultural - row crops (corn/soybeans) - no structures
+  1970-2000: Continued agricultural use - evidence of tilling patterns
+  2000-2020: Active farmland - rotated corn/soybeans per FSA records
+  2020-2024: Fallow - no crops planted since 2020
+  2024-2026: Vacant - no current use - some volunteer vegetation
+
+  [NO EVIDENCE OF PRIOR INDUSTRIAL, COMMERCIAL, OR OTHER
+   POTENTIALLY CONTAMINATING USES FOUND]
+
+  [According to interviews with adjacent landowner (Anderson Family Farm,
+   the seller), the property has been in continuous agricultural use since
+   the 1920s. No buildings, structures, USTs, or dumping has ever occurred
+   on the property to the owner's knowledge.]
+
+================================================================================
+3.0 ENVIRONMENTAL RECORDS
+================================================================================
+
+Database Search (within ASTM-standard radii):
+  - NPL sites: NONE within 1 mile
+  - RCRA TSD: NONE within 1 mile
+  - RCRA CORRACTS: NONE within 1 mile
+  - LUST sites: NONE within 0.5 miles
+  - State solid waste/landfills: NONE within 1 mile
+  - Brownfields: NONE within 0.5 miles
+
+   No environmental concerns identified in the database search.
+
+================================================================================
+4.0 PHYSICAL SETTING
+================================================================================
+
+  Soils:            Sable silty clay loam (hydrologic group B)
+  Depth to GW:      Approximately 18-22 feet (per county well records)
+  Groundwater flow: Southwesterly (toward the Sangamon River, ~1.2 mi S)
+  Flood zone:       Zone X (Area of Minimal Flood Hazard) - FEMA Map
+                    17167C0250J
+
+================================================================================
+5.0 SITE RECONNAISSANCE
+================================================================================
+
+Observations during site visit (02/28/2026 - clear, 45F):
+  - Vacant field - volunteer grasses, weeds, some brush along fence lines
+  - No evidence of dumping, spills, staining, or stressed vegetation
+  - No drums, containers, or stored materials
+  - No underground or aboveground storage tanks visible
+  - No transformers or utility equipment on site
+  - No structures or foundations present
+  - Drainage ditch along south boundary - no visible contamination
+  - Soil borings taken at 3 locations (see attached soil boring logs):
+      SB-1 (center north): Clean to 8 ft - silty clay, no odor, no staining
+      SB-2 (center south): Clean to 8 ft - silty clay, no odor, no staining
+      SB-3 (east boundary): Clean to 8 ft - silty clay, no odor, no staining
+  - No groundwater encountered in borings to 8 ft depth
+
+================================================================================
+6.0 RECOGNIZED ENVIRONMENTAL CONDITIONS (RECs)
+================================================================================
+
+NO RECOGNIZED ENVIRONMENTAL CONDITIONS WERE IDENTIFIED.
+
+The site has been in agricultural use since at least 1939 with no evidence
+of any potentially contaminating activities. Soil borings showed no evidence
+of contamination. The site is clean and suitable for the proposed use.
+
+================================================================================
+7.0 OPINION
+================================================================================
+
+It is the opinion of Prairie State Environmental Consultants that the subject
+property is suitable for the proposed self-storage development. No further
+environmental investigation is warranted at this time.
+
+Note: The construction contractor will be required to obtain an IL EPA NPDES
+General Permit for Stormwater Discharges from Construction Activities (ILR10)
+and prepare a SWPPP prior to site disturbance.
+
+================================================================================
+SIGNATURE
+
+/s/ Jennifer L. Caldwell
+Jennifer L. Caldwell, PG
+Senior Project Manager
+
+================================================================================
+[Handwritten note on cover:]
+"Former farmland. No environmental issues. Soil borings clean. Will
+ need NPDES stormwater permit for construction (standard). No RECs.
+ Cleanest Phase I you'll ever see. - JM 3/8"
+
+[Stamp:]
+                        RECEIVED
+              FIRST MIDLAND COMMERCIAL LENDING
+                   MAR 0 8 2026
+              ENVIRONMENTAL REVIEW - ACCEPTABLE
+================================================================================

@@ -1,0 +1,143 @@
+================================================================================
+                        VERIFICATION OF DEPOSIT
+                       (Form 1006 - Fannie Mae/Freddie Mac)
+================================================================================
+
+  LOAN #:                     INF-2026-33821
+  BORROWER(S):                John A. Thompson & Sarah M. Thompson
+  REQUEST DATE:               March 16, 2026
+  REQUESTED BY:               InsureFlow National Mortgage
+
+================================================================================
+FINANCIAL INSTITUTION INFORMATION
+================================================================================
+
+  FINANCIAL INSTITUTION:      Bank of Springfield
+  ADDRESS:                    1500 Main Street
+                              Springfield, IL 62704
+  PHONE:                      (555) 234-5000
+  FAX:                        (555) 234-5001
+
+  BRANCH MANAGER:             Robert Chen
+  CONTACT PHONE:              (555) 234-5033
+
+================================================================================
+ACCOUNT INFORMATION
+================================================================================
+
+----------------------------------------------------------------------
+ACCOUNT #1 - PERSONAL CHECKING
+----------------------------------------------------------------------
+  Account Type:               [X] Checking   [ ] Savings   [ ] Money Market
+  Account Number:             XXXX-4872
+  Account Holder(s):          John A. Thompson only
+  Current Balance:            $8,065.42
+  Date Opened:                August 14, 2018
+  Average Balance (6 months): $5,433.00
+  NSFs (last 6 months):       NONE
+  Overdrafts (last 6 months): NONE
+
+  Source of Funds:            Direct deposit (TechCorp payroll)
+
+----------------------------------------------------------------------
+ACCOUNT #2 - PERSONAL SAVINGS
+----------------------------------------------------------------------
+  Account Type:               [ ] Checking   [X] Savings   [ ] Money Market
+  Account Number:             XXXX-2198
+  Account Holder(s):          John A. Thompson only
+  Current Balance:            $18,756.93
+  Date Opened:                August 14, 2018
+  Average Balance (6 months): $14,200.00
+  Withdrawals (last 6 months): Routine (less than 3/mo)
+  Transfers to/from Checking: Automatic $500/mo
+
+----------------------------------------------------------------------
+ACCOUNT #3 - JOINT MONEY MARKET
+----------------------------------------------------------------------
+  Account Type:               [ ] Checking   [ ] Savings   [X] Money Market
+  Account Number:             XXXX-5511
+  Account Holder(s):          John A. Thompson AND Sarah M. Thompson (Joint - WROS)
+  Current Balance:            $76,095.87
+  Date Opened:                January 22, 2019
+  Average Balance (6 months): $45,000.00
+  Interest Rate:              2.10% APY
+  Withdrawal Restrictions:    6 per statement cycle (Reg D)
+
+  *** NOTE FROM BRANCH MANAGER ***
+  Large deposit on 03/02/2026: $35,000.00 - Wire transfer from 
+  John Thompson Sr. (Bank of Springfield - routing 0719XXXXX)
+  Remitter: JOHN THOMPSON SR / ACCT XXXX-1122
+  Deposit source: Gift funds (Gift letter dated 03/02/2026 in file)
+  No other unusual activity.
+
+================================================================================
+FUNDS AVAILABILITY SUMMARY
+================================================================================
+
+  Checking (XXXX-4872):               $8,065.42
+  Savings  (XXXX-2198):              $18,756.93
+  Money Market (XXXX-5511):          $76,095.87
+  -------------------------------------------
+  TOTAL ON DEPOSIT:                 $102,918.22
+
+  6-MONTH AVERAGE BALANCE:           $64,633.00
+  (without $35k gift):               $29,633.00
+
+================================================================================
+BANK OFFICER CERTIFICATION
+================================================================================
+
+  I certify that the above information is true and correct to the best
+  of my knowledge. This verification is being used in connection with a
+  mortgage loan application.
+
+  _________________________________________         Date: 03/18/2026
+  Robert Chen
+  Branch Manager
+  Bank of Springfield
+
+================================================================================
+
+  [BANK STAMP]
+  ================================
+      BANK OF SPRINGFIELD
+       OFFICIAL SEAL
+    BRANCH: MAIN STREET
+   VERIFIED: 03/18/2026
+   SIGNED: R. Chen, Mgr
+  ================================
+
+================================================================================
+
+UNDERWRITER NOTES (HANDWRITTEN - RED PEN):
+
+   ASSET CALC:
+   
+   MM XXXX-5511:  $76,095.87  <-- includes $35k gift
+   SV XXXX-2198:  $18,756.93
+   CK XXXX-4872:   $8,065.42
+   -----------  ------------
+   TOTAL:       $102,918.22
+   
+   Minus cash to close ($97,400):
+   REMAINING:      $5,518.22 (post-close reserves)
+   
+   BUT ALSO: gift funds $35k counted in above.
+   Gift letter + proof of transfer ✔
+   Donor acct verification PENDING (need donor bank statement)
+   
+   *** Gift source funds verified via wire confirm 03/18/2026 ***
+   
+   - J. Mitchell
+   
+   P.S. Called Robert Chen @ BofS - confirmed the $35k wire
+   was from John Thompson Sr. Funds are seasoned as of deposit
+   date 03/02/2026. No issue.
+   
+================================================================================
+
+>> FAX RECEIPT: 03/18/2026 14:22:00 CST
+>> PAGES: 2
+>> FROM: BANK OF SPRINGFIELD - MAIN STREET BRANCH
+>> TO: INSUREFLOW NATIONAL MORTGAGE - UW DEPT
+>> CONFIRMATION #: BOS-FAX-2026-33142

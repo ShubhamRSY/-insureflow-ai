@@ -1,0 +1,91 @@
+================================================================================
+                          FLOOD ZONE DETERMINATION
+                              FEMA STANDARD FLOOD HAZARD DETERMINATION
+================================================================================
+
+  CERTIFICATION #:             FEMA-IL-2026-55281
+  DATE OF DETERMINATION:      February 25, 2026
+  ORDERED BY:                 InsureFlow National Mortgage
+  LOAN #:                     INF-2026-44210
+  BORROWER:                   Maria Rodriguez
+  PROPERTY ADDRESS:           789 Elm Street, Unit 2B, Springfield, IL 62704
+
+================================================================================
+PROPERTY INFORMATION
+================================================================================
+
+  Parcel ID:          14-18-332-771-0000
+  County:             Sangamon
+  State:              Illinois
+  Property Type:      Condominium - Unit 2B, Building 4
+  Map Panel Number:   17167C0337G
+  Effective Map Date: March 17, 2014
+
+================================================================================
+FLOOD ZONE DETERMINATION RESULTS
+================================================================================
+
+  FLOOD ZONE:                                    X
+  SPECIAL FLOOD HAZARD AREA (SFHA):              NO
+  1% ANNUAL FLOOD RISK:                          UNLIKELY
+  FLOOD INSURANCE REQUIRED (FEDERAL):            NO
+  MANDATORY PURCHASE REQUIREMENT:                DOES NOT APPLY
+
+  ZONE DESCRIPTION:  Zone X - Areas of minimal flood hazard
+  outside the 0.2% (500-year) floodplain.
+
+================================================================================
+LENDER INFORMATION
+================================================================================
+
+  LENDER:                    InsureFlow National Mortgage
+                              555 Financial Parkway, Suite 300
+                              Chicago, IL 60606
+
+  FLOOD INSURANCE REQUIRED:  NOT REQUIRED per FEMA guidelines
+
+================================================================================
+
+  FLOOD ZONE DETERMINATION PROVIDED BY:
+  National Flood Services, LLC
+  License #: IL-NFS-33817
+
+  _________________________________________
+  Authorized Signature
+
+================================================================================
+
+  [CORELOGIC STAMP]
+  ====================================
+     FLOOD ZONE DETERMINATION
+     CERT #: FEMA-IL-2026-55281
+     DETERMINED: 02/25/2026
+     ZONE: X - NO SFHA
+  ====================================
+
+================================================================================
+
+HANDWRITTEN (UW - BLUE PEN):
+
+   FHA RULE CHECK - Flood insurance NOT required in Zone X.
+   
+   HUD Handbook 4000.1: If property is in Zone X, flood insurance
+   is NOT mandatory. Borrower may decline if desired.
+   
+   CONFIRMED: No flood insurance required.
+   
+   *** NOTE: HOA master policy MAY cover common elements.
+   Confirm with HOA cert if master flood policy exists.
+   
+   - J.K. 02/26/2026
+   
+   *** UPDATE 03/01/2026: HOA cert confirms NO master
+   flood policy. Building in Zone X. All units Zone X.
+   No flood issues. File accordingly.
+   
+================================================================================
+
+>> FAX RECEIPT: 02/25/2026 11:30:00 CST
+>> FROM: NATIONAL FLOOD SERVICES - CORELOGIC
+>> TO: INSUREFLOW NATIONAL MORTGAGE
+>> PAGES: 1

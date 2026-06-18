@@ -1,0 +1,61 @@
+                FORM W-2 - WAGE AND TAX STATEMENT                       
+                COPY B - TO BE FILED WITH EMPLOYEE'S FEDERAL TAX RETURN
+                (THIS IS NOT A TAX REFUND - DO NOT STAPLE)
+================================================================
+EMPLOYER: MedTech Solutions Inc.
+         4500 Innovation Parkway, Suite 400
+         Springfield, IL 62701
+         EIN: 36-4782910
+
+EMPLOYEE: David Chen
+          SSN: XXX-XX-4821
+          1242 Hillcrest Drive
+          Springfield, IL 62704
+
+================================================================
+  a. Employee's SSN: XXX-XX-4821             
+  b. Employer ID No: 36-4782910              
+  c. Employer's name, address, ZIP: (above)
+  d. Control No: 2024-MT-8872                
+  e. Employee's name, address, ZIP: (above)  
+================================================================
+ 1. Wages, tips, other compensation:  280,000.00
+ 2. Federal income tax withheld:       72,800.00
+ 3. Social Security wages:            280,000.00
+ 4. Social Security tax withheld:      17,360.00
+ 5. Medicare wages and tips:          280,000.00
+ 6. Medicare tax withheld:              4,060.00
+ 7. Social Security tips:                    0.00
+ 8. Allocated tips:                         0.00
+================================================================
+ 9.                                    
+10. Dependent care benefits:                0.00
+11. Nonqualified plans:                     0.00
+12a. 401(k) (Code D)                  19,500.00
+12b. 
+12c. 
+12d. HSA (Code W)                      3,600.00
+13. Statutory employee: [ ]  Retirement plan: [X]  Third-party sick pay: [ ]
+14. Other:                               See below
+================================================================
+15. State: IL   Employer state ID No:  IL-364789-1
+16. State wages, tips:               280,000.00
+17. State income tax:                 13,860.00
+18. Local wages, tips:                      0.00
+19. Local income tax:                       0.00
+20. Locality name:                         
+================================================================
+
+  --- DETAIL ---
+  401(k) contributions maxed for 2024 ($19,500)
+  HSA contribution: $3,600 (employer contributed additional $1,200)
+  Health insurance premium (pre-tax): $6,240 annually
+  Dental & Vision (pre-tax): $1,020 annually
+  
+  Box 14 - Other:
+    - Commuter benefits: $1,320
+    - Group term life insurance over $50k: $372
+
+================================================================
+  THIS IS NOT A BILL. RETAIN FOR YOUR RECORDS.
+================================================================
