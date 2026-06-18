@@ -44,9 +44,10 @@ def decode_access_token(
         payload = jwt.decode(token, secret_key, algorithms=[ALGORITHM])
         username: Optional[str] = payload.get("sub")
         role: Optional[str] = payload.get("role")
+        org_id: str = payload.get("org_id", "default")
         if username is None:
             return None
         from insureflow.auth import Role
-        return TokenData(username=username, role=Role(role) if role else None)
+        return TokenData(username=username, role=Role(role) if role else None, org_id=org_id)
     except JWTError:
         return None

@@ -97,3 +97,11 @@ class UnderwritingMemo(BaseModel):
     human_review_reasons: list[str] = Field(default_factory=list)
 
     agent_results: dict[str, AgentResult] = Field(default_factory=dict)
+
+    # Licensed UW sign-off
+    approved_by: str = ""
+    approved_at: Optional[datetime] = None
+    license_number: str = ""
+    sign_off_notes: str = ""
+    sign_off_action: str = ""
+    workflow_state: str = "pending_review"

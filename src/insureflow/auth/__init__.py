@@ -5,6 +5,7 @@ from enum import Enum
 
 class Role(str, Enum):
     ADMIN = "admin"
+    LICENSED_UW = "licensed_uw"
     UNDERWRITER = "underwriter"
     VIEWER = "viewer"
 
@@ -12,5 +13,6 @@ class Role(str, Enum):
 ROLE_HIERARCHY: dict[Role, int] = {
     Role.VIEWER: 1,
     Role.UNDERWRITER: 2,
-    Role.ADMIN: 3,
+    Role.LICENSED_UW: 3,
+    Role.ADMIN: 4,
 }

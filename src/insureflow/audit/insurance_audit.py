@@ -5,21 +5,26 @@ from typing import Any
 from uuid import uuid4
 
 from insureflow.audit.store import AuditStore
+from insureflow.models.agents import UnderwritingMemo
 from insureflow.models.audit import AuditEntry, AuditTrail, EventSeverity, PipelineEvent
-from insureflow.models.mortgage import MortgageBundle, MortgageMemo
+from insureflow.models.provenance import ProvenanceRecord
+from insureflow.models.submissions import SubmissionBundle
+from insureflow.models.audit import ReconciliationResult
 from insureflow.storage.encryption import EnvelopeEncryption
 
 
-class MortgageAuditLogger:
-    """Audit trail for mortgage pipeline runs — wired to AuditStore with optional encryption."""
+class InsuranceAuditLogger:
+    """Encrypted audit persistence for insurance submissions — mirrors MortgageAuditLogger."""
 
     def __init__(
         self,
         store: AuditStore | None = None,
         encryption: EnvelopeEncryption | None = None,
+        org_id: str = "default",
     ) -> None:
         self.store = store or AuditStore()
         self.encryption = encryption or EnvelopeEncryption()
+        self.org_id = org_id
         self._trail: AuditTrail | None = None
 
     def start(self, bundle_id: str) -> AuditTrail:
@@ -27,7 +32,7 @@ class MortgageAuditLogger:
             trail_id=f"trail-{uuid4().hex[:12]}",
             bundle_id=bundle_id,
         )
-        self.log(PipelineEvent.SUBMISSION_RECEIVED, f"Mortgage submission received: {bundle_id}")
+        self.log(PipelineEvent.SUBMISSION_RECEIVED, f"Insurance submission received: {bundle_id}")
         return self._trail
 
     def log(
@@ -49,74 +54,72 @@ class MortgageAuditLogger:
                 severity=severity,
                 agent_name=agent_name,
                 message=message,
-                metadata=metadata or {},
+                metadata={**(metadata or {}), "org_id": self.org_id},
             )
         )
 
     def persist(
         self,
-        bundle: MortgageBundle,
-        memo: MortgageMemo,
+        bundle: SubmissionBundle,
+        memo: UnderwritingMemo,
+        provenance: ProvenanceRecord | None = None,
+        reconciliation: ReconciliationResult | None = None,
         extra: dict[str, Any] | None = None,
     ) -> dict[str, str]:
         if self._trail is None:
             self.start(bundle.bundle_id)
 
-        self.log(PipelineEvent.PIPELINE_COMPLETE, f"Decision: {memo.decision.value.upper()}")
+        self.log(
+            PipelineEvent.PIPELINE_COMPLETE,
+            f"AI recommendation: {memo.decision.value.upper()}",
+            agent_name="uw_decision_agent",
+        )
 
         if memo.human_review_required:
             self.log(
                 PipelineEvent.HUMAN_REVIEW_REQUIRED,
-                "Human review required before final decision",
+                "Licensed UW sign-off required",
                 severity=EventSeverity.WARNING,
             )
 
-        for issue in bundle.reconciliation_issues:
-            self.log(
-                PipelineEvent.DISCREPANCY_DETECTED,
-                f"{issue.field_path}: {issue.value_a} vs {issue.value_b}",
-                severity=EventSeverity.WARNING if issue.severity == "warning" else EventSeverity.ERROR,
-                metadata={"rule_id": issue.rule_id},
-            )
-
-        for violation in bundle.compliance_violations:
-            sev = EventSeverity.CRITICAL if violation.severity == "critical" else EventSeverity.WARNING
-            self.log(
-                PipelineEvent.DISCREPANCY_DETECTED,
-                f"[{violation.rule_id}] {violation.message}",
-                severity=sev,
-                metadata={"rule_id": violation.rule_id, "compliance": True},
-            )
+        if reconciliation:
+            for disc in reconciliation.discrepancies:
+                self.log(
+                    PipelineEvent.DISCREPANCY_DETECTED,
+                    f"{disc.field_path}: {disc.source_a} vs {disc.source_b}",
+                    severity=EventSeverity.WARNING if disc.severity != EventSeverity.CRITICAL else EventSeverity.CRITICAL,
+                    metadata={"description": disc.description},
+                )
 
         assert self._trail is not None
         self._trail.completed_at = datetime.now(tz=timezone.utc)
 
-        bundle_dir = self.store.base_path / bundle.bundle_id
+        bundle_dir = self.store.base_path / self.org_id / bundle.bundle_id
         bundle_dir.mkdir(parents=True, exist_ok=True)
 
         paths: dict[str, str] = {}
 
-        bundle_path = str(bundle_dir / "mortgage_bundle.json")
-        self.encryption.write_encrypted_file(bundle_path, bundle.model_dump())
-        paths["bundle"] = bundle_path
-
-        memo_path = str(bundle_dir / "mortgage_memo.json")
-        self.encryption.write_encrypted_file(memo_path, memo.model_dump())
-        paths["memo"] = memo_path
-
-        trail_path = str(bundle_dir / "audit_trail.json")
-        self.encryption.write_encrypted_file(trail_path, self._trail.model_dump())
-        paths["audit_trail"] = trail_path
-
+        artifacts = {
+            "submission_bundle.json": bundle.model_dump(),
+            "underwriting_memo.json": memo.model_dump(),
+            "audit_trail.json": self._trail.model_dump(),
+        }
+        if provenance:
+            artifacts["provenance_record.json"] = provenance.model_dump()
+        if reconciliation:
+            artifacts["reconciliation.json"] = reconciliation.model_dump()
         if extra:
-            summary_path = str(bundle_dir / "pipeline_summary.json")
-            self.encryption.write_encrypted_file(summary_path, extra)
-            paths["summary"] = summary_path
+            artifacts["pipeline_summary.json"] = extra
+
+        for filename, data in artifacts.items():
+            path = str(bundle_dir / filename)
+            self.encryption.write_encrypted_file(path, data)
+            paths[filename.replace(".json", "")] = path
 
         if self.encryption.enabled:
             self.log(
                 PipelineEvent.VERIFICATION_COMPLETE,
-                "Audit bundle encrypted at rest (Fernet envelope encryption)",
+                "Regulatory audit bundle encrypted at rest",
                 metadata={"encrypted": True},
             )
 

@@ -11,10 +11,17 @@ services:
       - LLM_CHEAP_MODEL=${LLM_CHEAP_MODEL:-gpt-4o-mini}
       - LLM_EXPENSIVE_MODEL=${LLM_EXPENSIVE_MODEL:-gpt-4o}
       - DATABASE_URL=postgresql://insureflow:insureflow@db:5432/insureflow
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - JOB_STORE_BACKEND=redis
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-}
       - PYTHONPATH=/app
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_started
     restart: unless-stopped
 
   mortgage-worker:

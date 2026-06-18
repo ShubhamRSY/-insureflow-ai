@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InsureFlow Mortgage Dashboard</title>
+  <style>
+    :root { --bg:#0f1419; --card:#1a2332; --accent:#3b82f6; --green:#22c55e; --yellow:#eab308; --red:#ef4444; --text:#e2e8f0; --muted:#94a3b8; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family: system-ui, sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+    header { padding:1rem 2rem; border-bottom:1px solid #334155; display:flex; align-items:center; justify-content:space-between; }
+    header h1 { font-size:1.25rem; }
+    .badge { background:var(--accent); padding:.2rem .6rem; border-radius:4px; font-size:.75rem; }
+    main { max-width:1200px; margin:0 auto; padding:1.5rem; display:grid; gap:1.5rem; }
+    .card { background:var(--card); border-radius:8px; padding:1.25rem; border:1px solid #334155; }
+    .card h2 { font-size:1rem; margin-bottom:1rem; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; }
+    input, select, button, textarea { width:100%; padding:.6rem .8rem; border-radius:6px; border:1px solid #475569; background:#0f172a; color:var(--text); margin-bottom:.75rem; }
+    button { background:var(--accent); border:none; cursor:pointer; font-weight:600; }
+    button:hover { opacity:.9; }
+    button.secondary { background:#334155; }
+    .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+    .job { padding:.75rem; border:1px solid #334155; border-radius:6px; margin-bottom:.5rem; cursor:pointer; }
+    .job:hover { border-color:var(--accent); }
+    .status-completed { color:var(--green); }
+    .status-failed { color:var(--red); }
+    .status-processing { color:var(--yellow); }
+    .decision-approve { color:var(--green); font-weight:700; }
+    .decision-deny { color:var(--red); font-weight:700; }
+    .decision-refer, .decision-suspend { color:var(--yellow); font-weight:700; }
+    pre { background:#0f172a; padding:1rem; border-radius:6px; overflow:auto; max-height:400px; font-size:.8rem; }
+    .hidden { display:none; }
+    .row { display:flex; gap:.5rem; align-items:center; margin-bottom:.75rem; }
+    .row label { min-width:100px; color:var(--muted); font-size:.875rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>InsureFlow <span class="badge">Mortgage</span></h1>
+    <span id="userInfo" style="color:var(--muted);font-size:.875rem"></span>
+  </header>
+  <main>
+    <section class="card" id="loginSection">
+      <h2>Sign In</h2>
+      <input id="username" placeholder="Username" value="admin" />
+      <input id="password" type="password" placeholder="Password" />
+      <input id="orgId" placeholder="Organization ID" value="default" />
+      <button onclick="login()">Login</button>
+      <p id="loginError" style="color:var(--red);margin-top:.5rem"></p>
+    </section>
+
+    <div id="appSection" class="hidden">
+      <div class="grid-2">
+        <section class="card">
+          <h2>Submit Loan Package</h2>
+          <input id="directory" placeholder="Document directory path" value="simulated_documents/home_mortgage" />
+          <label><input type="checkbox" id="perBorrower" checked /> Process per borrower</label><br/><br/>
+          <label><input type="checkbox" id="useLlm" checked /> Use LLM extraction</label><br/><br/>
+          <select id="productLine">
+            <option value="auto">Auto-detect product line</option>
+            <option value="residential">Residential</option>
+            <option value="commercial">Commercial</option>
+          </select>
+          <select id="loanProduct">
+            <option value="">Auto-select loan product</option>
+            <option value="conventional_30_fixed">Conventional 30yr Fixed</option>
+            <option value="fha_30_fixed">FHA 30yr Fixed</option>
+            <option value="va_30_fixed">VA 30yr Fixed</option>
+            <option value="usda_30_fixed">USDA 30yr Fixed</option>
+            <option value="jumbo_30_fixed">Jumbo 30yr Fixed</option>
+            <option value="commercial_5_1_arm">Commercial 5/1 ARM</option>
+          </select>
+          <button onclick="submitJob()">Run Pipeline</button>
+          <p id="submitStatus" style="margin-top:.5rem;color:var(--muted)"></p>
+        </section>
+
+        <section class="card">
+          <h2>Webhooks</h2>
+          <input id="webhookUrl" placeholder="https://your-bank.com/hooks/insureflow" />
+          <button class="secondary" onclick="registerWebhook()">Register Webhook</button>
+          <pre id="webhookResult"></pre>
+        </section>
+      </div>
+
+      <section class="card">
+        <h2>Jobs</h2>
+        <button class="secondary" onclick="loadJobs()" style="width:auto;margin-bottom:1rem">Refresh</button>
+        <div id="jobList"></div>
+      </section>
+
+      <section class="card">
+        <h2>Job Detail</h2>
+        <pre id="jobDetail">Select a job to view results</pre>
+      </section>
+    </div>
+  </main>
+  <script>
+    let token = localStorage.getItem('if_token') || '';
+    let orgId = localStorage.getItem('if_org') || 'default';
+
+    if (token) { showApp(); loadJobs(); }
+
+    async function api(path, opts = {}) {
+      const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
+      if (token) headers['Authorization'] = 'Bearer ' + token;
+      const res = await fetch(path, { ...opts, headers });
+      if (res.status === 401) { logout(); throw new Error('Unauthorized'); }
+      if (res.status === 204) return null;
+      return res.json();
+    }
+
+    async function login() {
+      orgId = document.getElementById('orgId').value || 'default';
+      const body = {
+        username: document.getElementById('username').value,
+        password: document.getElementById('password').value,
+      };
+      try {
+        const data = await fetch('/auth/login', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        }).then(r => r.json());
+        if (!data.access_token) { document.getElementById('loginError').textContent = 'Login failed'; return; }
+        token = data.access_token;
+        localStorage.setItem('if_token', token);
+        localStorage.setItem('if_org', orgId);
+        document.getElementById('loginError').textContent = '';
+        showApp();
+        loadJobs();
+      } catch(e) { document.getElementById('loginError').textContent = e.message; }
+    }
+
+    function logout() {
+      token = ''; localStorage.removeItem('if_token');
+      document.getElementById('loginSection').classList.remove('hidden');
+      document.getElementById('appSection').classList.add('hidden');
+    }
+
+    function showApp() {
+      document.getElementById('loginSection').classList.add('hidden');
+      document.getElementById('appSection').classList.remove('hidden');
+      document.getElementById('userInfo').textContent = `Org: ${orgId}`;
+    }
+
+    async function submitJob() {
+      const body = {
+        directory: document.getElementById('directory').value,
+        per_borrower: document.getElementById('perBorrower').checked,
+        use_llm: document.getElementById('useLlm').checked,
+        product_line: document.getElementById('productLine').value,
+        loan_product: document.getElementById('loanProduct').value || null,
+      };
+      document.getElementById('submitStatus').textContent = 'Submitting...';
+      const data = await api('/mortgage/pipeline/run', { method: 'POST', body: JSON.stringify(body) });
+      document.getElementById('submitStatus').textContent = `Job queued: ${data.job_id}`;
+      pollJob(data.job_id);
+      loadJobs();
+    }
+
+    async function pollJob(id) {
+      for (let i = 0; i < 60; i++) {
+        await new Promise(r => setTimeout(r, 2000));
+        const job = await api(`/mortgage/pipeline/jobs/${id}`);
+        if (job.status !== 'processing') { showJob(id); return; }
+      }
+    }
+
+    async function loadJobs() {
+      const data = await api('/mortgage/pipeline/jobs');
+      const el = document.getElementById('jobList');
+      el.innerHTML = (data.jobs || []).map(id =>
+        `<div class="job" onclick="showJob('${id}')">${id}</div>`
+      ).join('') || '<p style="color:var(--muted)">No jobs yet</p>';
+    }
+
+    async function showJob(id) {
+      const job = await api(`/mortgage/pipeline/jobs/${id}`);
+      document.getElementById('jobDetail').textContent = JSON.stringify(job, null, 2);
+    }
+
+    async function registerWebhook() {
+      const url = document.getElementById('webhookUrl').value;
+      const data = await api('/mortgage/webhooks', {
+        method: 'POST',
+        body: JSON.stringify({ url, events: ['mortgage.completed', 'mortgage.failed', 'mortgage.batch.completed'] }),
+      });
+      document.getElementById('webhookResult').textContent = JSON.stringify(data, null, 2);
+    }
+  </script>
+</body>
+</html>

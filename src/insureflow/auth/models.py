@@ -13,6 +13,7 @@ class User(BaseModel):
     hashed_password: str
     role: Role = Role.VIEWER
     disabled: bool = False
+    org_id: str = "default"
     created_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
     full_name: str = ""
 
@@ -25,6 +26,7 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     username: Optional[str] = None
     role: Optional[Role] = None
+    org_id: str = "default"
 
 
 class LoginRequest(BaseModel):
@@ -37,3 +39,4 @@ class UserCreateRequest(BaseModel):
     password: str
     role: Role = Role.VIEWER
     full_name: str = ""
+    org_id: str = "default"

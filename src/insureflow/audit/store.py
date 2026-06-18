@@ -80,12 +80,20 @@ class AuditStore:
         except OSError as e:
             raise StorageError(f"Failed to write JSON to {path}: {e}")
 
-    def load_json(self, bundle_id: str, filename: str) -> Optional[dict[str, Any]]:
-        path = self.base_path / bundle_id / filename
-        if path.exists():
-            try:
-                return json.loads(path.read_text(encoding="utf-8"))
-            except (json.JSONDecodeError, OSError) as e:
-                # Log the error in a real system, returning None as fallback
-                return None
+    def load_json(self, bundle_id: str, filename: str, org_id: str | None = None) -> Optional[dict[str, Any]]:
+        candidates = []
+        if org_id:
+            candidates.append(self.base_path / org_id / bundle_id / filename)
+        candidates.append(self.base_path / bundle_id / filename)
+
+        for path in candidates:
+            if path.exists():
+                try:
+                    from insureflow.storage.encryption import EnvelopeEncryption
+                    enc = EnvelopeEncryption()
+                    if enc.enabled and path.read_text(encoding="utf-8").startswith("ENC:v1:"):
+                        return enc.read_encrypted_file(str(path))
+                    return json.loads(path.read_text(encoding="utf-8"))
+                except (json.JSONDecodeError, OSError, ValueError):
+                    return None
         return None

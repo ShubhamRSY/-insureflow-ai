@@ -69,6 +69,17 @@ class Settings:
     audit_log_path: Path = Path(os.getenv("AUDIT_LOG_PATH", "./audit_logs"))
     storage_backend: str = os.getenv("STORAGE_BACKEND", "memory")
 
+    # Auth
+    secret_key: str = os.getenv("SECRET_KEY", "CHANGE_ME_TO_A_LONG_SECRET_KEY_IN_PRODUCTION")
+    access_token_expire_minutes: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
+
+    # Job store (memory | redis | auto)
+    job_store_backend: str = os.getenv("JOB_STORE_BACKEND", "auto")
+    redis_url: str = os.getenv("REDIS_URL", os.getenv("CELERY_BROKER_URL", ""))
+
+    # Encryption at rest for audit bundles
+    encryption_key: str = os.getenv("ENCRYPTION_KEY", "")
+
     max_retries: int = 3
     extraction_chunk_size: int = 4000
     extraction_overlap: int = 200

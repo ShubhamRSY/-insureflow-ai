@@ -14,7 +14,10 @@ def _field(name: str, value: str, confidence: float = 0.9, context: str = "") ->
 
 def _first(pattern: re.Pattern[str], text: str, group: int = 1) -> str:
     match = pattern.search(text)
-    return match.group(group).strip() if match else ""
+    if match:
+        val = match.group(group)
+        return val.strip() if val else ""
+    return ""
 
 
 def _money(pattern: re.Pattern[str], text: str) -> str:
