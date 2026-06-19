@@ -155,7 +155,14 @@ class MortgageCreditAgent:
             return MortgageAgentResult(agent_name=self.agent_name, findings=findings, risk_score=0.85, summary="Credit analysis incomplete")
 
         score = bundle.credit.credit_score
-        if score >= 740:
+        if not score:
+            findings.append(MortgageFinding(
+                title="Credit score not extracted",
+                description="Credit report present but qualifying score could not be parsed — manual review",
+                severity="moderate",
+                category="credit",
+            ))
+        elif score >= 740:
             findings.append(MortgageFinding(title="Strong credit score", description=f"Score {score}", severity="low", category="credit"))
         elif score >= 680:
             findings.append(MortgageFinding(title="Acceptable credit score", description=f"Score {score}", severity="low", category="credit"))

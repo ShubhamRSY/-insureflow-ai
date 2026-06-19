@@ -166,10 +166,19 @@ class UWDecisionAgent(ReActAgent):
         sev_counts: dict[str, int] = {}
         for f in findings:
             sev_counts[f.severity.value] = sev_counts.get(f.severity.value, 0) + 1
-        parts = [f"UW Decision: {decision.value.upper()}"]
-        parts.append(f"Risk Score: {score:.2f}")
-        parts.append(f"Findings: {dict(sorted(sev_counts.items()))}")
-        return " | ".join(parts)
+        critical = sev_counts.get("critical", 0)
+        high = sev_counts.get("high", 0)
+        total = len(findings)
+        action = decision.value.upper()
+        pct = int(round(score * 100))
+        narrative = (
+            f"Underwriting recommendation is {action} based on {total} findings "
+            f"across risk, loss history, compliance, and fraud analysis. "
+            f"Aggregate risk score is {pct}/100."
+        )
+        if critical or high:
+            narrative += f" {critical + high} finding(s) require elevated attention."
+        return narrative
 
     def _agent_findings(
         self, results: list[AgentResult], name: str

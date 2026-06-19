@@ -7,16 +7,13 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer, OAuth2Pas
 
 from insureflow.auth import Role, ROLE_HIERARCHY
 from insureflow.auth.jwt import decode_access_token
-from insureflow.auth.models import TokenData, User
+from insureflow.auth.models import TokenData
+from insureflow.auth.store import clear_user_store, get_user_store
 
 security = HTTPBearer()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
-_USER_STORE: dict[str, User] = {}
-
-
-def get_user_store() -> dict[str, User]:
-    return _USER_STORE
+__all__ = ["get_user_store", "clear_user_store", "get_current_user", "require_role", "security"]
 
 
 async def get_current_user(
@@ -36,8 +33,7 @@ async def get_current_user_optional(
 ) -> Optional[TokenData]:
     if credentials is None:
         return None
-    token_data = decode_access_token(credentials.credentials)
-    return token_data
+    return decode_access_token(credentials.credentials)
 
 
 def require_role(min_role: Role):

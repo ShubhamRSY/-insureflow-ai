@@ -26,13 +26,29 @@ def _money(pattern: re.Pattern[str], text: str) -> str:
 
 def extract_w2(text: str) -> dict[str, list[ExtractedMortgageField]]:
     fields: dict[str, list[ExtractedMortgageField]] = {}
+    employee = _first(
+        re.compile(
+            r"Employee Name:.*?(?:\n\s*[^\n]*?\s)?([A-Z][a-z]+(?: [A-Z]\.?)? [A-Z][a-z]+)\s*(?:\n|SSN:)",
+            re.I | re.S,
+        ),
+        text,
+    )
+    if not employee:
+        employee = _first(re.compile(r"Employee Name:\s*(.+?)(?:\s+SSN:|\n)", re.I), text)
     for key, pattern in {
-        "employee_name": re.compile(r"Employee Name:\s*(.+)", re.I),
-        "employer_name": re.compile(r"Employer Name:\s*(.+)", re.I),
-        "wages_box1": re.compile(r"1\.\s*Wages.*?compensation\s+\$?([\d,]+\.?\d*)", re.I | re.S),
-        "federal_tax_withheld": re.compile(r"2\.\s*Federal income tax withheld\s+\$?([\d,]+\.?\d*)", re.I | re.S),
-        "tax_year": re.compile(r"Form W-2 \(Rev\.\s*(\d{4})\)", re.I),
+        "employee_name": re.compile(r"__employee__"),
+        "employer_name": re.compile(r"Employer Name:\s*\n\s*(.+?)(?:\n\s*\d|\n\s*[A-Z])", re.I | re.S),
+        "wages_box1": re.compile(r"1\.\s*Wages.*?compensation.*?([\d,]+\.?\d*)", re.I | re.S),
+        "federal_tax_withheld": re.compile(r"2\.\s*Federal income tax withheld.*?([\d,]+\.?\d*)", re.I | re.S),
+        "tax_year": re.compile(r"Form W-2 \(Rev\.\s*(\d{4})\)|^\s*(\d{4})\s*\|", re.I | re.M),
     }.items():
+        if key == "employee_name":
+            fields[key] = _field(key, employee)
+            continue
+        if key == "tax_year":
+            val = _first(pattern, text) or _first(pattern, text, group=2)
+            fields[key] = _field(key, val)
+            continue
         val = _first(pattern, text) if key != "wages_box1" and key != "federal_tax_withheld" else _money(pattern, text)
         fields[key] = _field(key, val)
     return fields
@@ -59,9 +75,18 @@ def extract_tax_return_1040(text: str) -> dict[str, list[ExtractedMortgageField]
         "primary_taxpayer": re.compile(r"PRIMARY TAXPAYER:\s*\n\s*Name:\s*(.+)", re.I),
         "spouse": re.compile(r"SPOUSE:\s*\n\s*Name:\s*(.+)", re.I),
         "filing_status": re.compile(r"FILING STATUS:\s*(.+)", re.I),
-        "total_income": re.compile(r"TOTAL INCOME \(Line 9\)\s+\$?([\d,]+\.?\d*)", re.I),
-        "adjusted_gross_income": re.compile(r"ADJUSTED GROSS INCOME \(Line 11\)\s+\$?([\d,]+\.?\d*)", re.I),
-        "wages_line1": re.compile(r"Line 1:.*W-2\)\s+\$?([\d,]+\.?\d*)", re.I),
+        "total_income": re.compile(
+            r"(?:TOTAL INCOME \(Line 9\)|TOTAL INCOME \(line 9\)|9\.\s*TOTAL INCOME \(line 9\)).*?([\d,]+\.?\d*)",
+            re.I | re.S,
+        ),
+        "adjusted_gross_income": re.compile(
+            r"(?:ADJUSTED GROSS INCOME \(Line 11\)|11\.\s*ADJUSTED GROSS INCOME \(AGI\)).*?([\d,]+\.?\d*)",
+            re.I | re.S,
+        ),
+        "wages_line1": re.compile(
+            r"(?:Line 1:.*W-2\)|TOTAL WAGES:|Wages, salaries, tips.*?TOTAL WAGES:).*?([\d,]+\.?\d*)",
+            re.I | re.S,
+        ),
         "business_income": re.compile(r"Business income \(Schedule C.*?\)\s+\$?([\d,]+\.?\d*)", re.I),
         "taxable_income": re.compile(r"TAXABLE INCOME \(Line 15\)\s+\$?([\d,]+\.?\d*)", re.I),
     }.items():
@@ -74,14 +99,34 @@ def extract_credit_report(text: str) -> dict[str, list[ExtractedMortgageField]]:
     fields: dict[str, list[ExtractedMortgageField]] = {}
     bureau = "Equifax" if "equifax" in text.lower() else "Experian" if "experian" in text.lower() else "TransUnion" if "transunion" in text.lower() else "Unknown"
     fields["bureau"] = _field("bureau", bureau)
+
+    score = _first(re.compile(r"(?:Equifax|Experian|TransUnion)?\s*Credit Score:\s*(\d{3})", re.I), text)
+    if not score:
+        rep_scores = re.findall(r"REPRESENTATIVE SCORE:.*?(\d{3})", text, re.I | re.S)
+        if rep_scores:
+            score = min(rep_scores, key=int)
+    if not score:
+        mid_scores = re.findall(r"Median scores?:\s*(\d{3})\s*/\s*(\d{3})", text, re.I)
+        if mid_scores:
+            score = min(mid_scores[0], key=int)
+
     for key, pattern in {
-        "borrower_name": re.compile(r"Name:\s*(.+?)\s+SSN:", re.I),
-        "credit_score": re.compile(r"(?:Equifax|Experian|TransUnion)?\s*Credit Score:\s*(\d{3})", re.I),
-        "total_balance": re.compile(r"Total Balance:\s*\$?([\d,]+\.?\d*)", re.I),
-        "total_monthly_payment": re.compile(r"Total Monthly Payment:\s*\$?([\d,]+\.?\d*)", re.I),
-        "utilization_rate": re.compile(r"Utilization Rate:\s*([\d.]+)%?", re.I),
+        "borrower_name": re.compile(r"BORROWER:\s*(.+?)(?:\s+CO-BORROWER:|$)", re.I),
+        "credit_score": re.compile(r"__credit_score__"),  # filled below
+        "total_balance": re.compile(
+            r"(?:Total Balance:|Current Balance.*?JOINT)\s+(?:\$?[\d,]+\.?\d*\s+){0,2}\$?([\d,]+\.?\d*)",
+            re.I | re.S,
+        ),
+        "total_monthly_payment": re.compile(
+            r"Monthly Payment\s+(?:\$?[\d,]+\.?\d*\s+){1,2}\$?([\d,]+\.?\d*)",
+            re.I,
+        ),
+        "utilization_rate": re.compile(r"(?:Utilization Rate:|Credit Utilization)\s*([\d.]+)%?", re.I),
         "open_accounts": re.compile(r"Open Accounts:\s*(\d+)", re.I),
     }.items():
+        if key == "credit_score":
+            fields[key] = _field(key, score)
+            continue
         val = _first(pattern, text)
         fields[key] = _field(key, val)
     return fields

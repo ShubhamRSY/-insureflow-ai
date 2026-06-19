@@ -38,6 +38,20 @@ def run_mortgage_pipeline(
     return result
 
 
+MORTGAGE_JOB_NS = "mortgage"
+
+
+def _persist_celery_job(job_id: str, org_id: str, payload: dict[str, Any], task_id: str) -> None:
+    from insureflow.storage.job_store import get_job_store
+
+    get_job_store().set(
+        MORTGAGE_JOB_NS,
+        job_id,
+        {**payload, "backend": "celery", "celery_task_id": task_id},
+        org_id=org_id,
+    )
+
+
 @celery_app.task(
     bind=True,
     name="insureflow.tasks.mortgage_tasks.run_mortgage_directory",
@@ -48,18 +62,27 @@ def run_mortgage_directory(
     bundle_id: str | None = None,
     product_line: str | None = None,
     use_llm: bool = True,
+    job_id: str | None = None,
+    org_id: str = "default",
 ) -> dict[str, Any]:
     from insureflow.models.mortgage import ProductLine
     from insureflow.mortgage.pipeline import MortgagePipeline
 
-    pipeline = MortgagePipeline(use_llm=use_llm)
+    pipeline = MortgagePipeline(use_llm=use_llm, org_id=org_id)
     pl = ProductLine(product_line) if product_line else None
-    result = pipeline.run_from_directory(
-        directory,
-        bundle_id=bundle_id,
-        product_line=pl,
-    )
-    return result
+    try:
+        result = pipeline.run_from_directory(
+            directory,
+            bundle_id=bundle_id,
+            product_line=pl,
+        )
+        if job_id:
+            _persist_celery_job(job_id, org_id, {"status": "completed", "results": result}, self.request.id or "")
+        return result
+    except Exception as exc:
+        if job_id:
+            _persist_celery_job(job_id, org_id, {"status": "failed", "error": str(exc)}, self.request.id or "")
+        raise
 
 
 @celery_app.task(

@@ -31,25 +31,24 @@ class MortgageReconciliationEngine:
         gifts = bundle.documents_by_type(MortgageDocumentType.GIFT_LETTER)
         bank_stmts = bundle.documents_by_type(MortgageDocumentType.BANK_STATEMENT)
 
-        # W-2 Box 1 vs 1040 Line 1 wages
-        for w2 in w2s:
-            w2_wages = w2.get_float("wages_box1")
-            for tr in tax_returns:
-                tr_wages = tr.get_float("wages_line1")
-                if w2_wages and tr_wages:
-                    diff_pct = abs(w2_wages - tr_wages) / max(w2_wages, 1)
-                    if diff_pct > self.WAGE_TOLERANCE_PCT:
-                        issues.append(
-                            ReconciliationIssue(
-                                field_path="income.wages",
-                                source_a=w2.source_path or "W-2",
-                                source_b=tr.source_path or "1040",
-                                value_a=f"${w2_wages:,.0f}",
-                                value_b=f"${tr_wages:,.0f}",
-                                severity="high" if diff_pct > 0.10 else "warning",
-                                rule_id="W2_1040_WAGE_MATCH",
-                            )
+        # W-2 Box 1 total vs 1040 wages (joint returns: sum all W-2s)
+        w2_total = self._sum_latest_w2_wages(w2s)
+        for tr in tax_returns:
+            tr_wages = tr.get_float("wages_line1") or tr.get_float("total_income")
+            if w2_total and tr_wages:
+                diff_pct = abs(w2_total - tr_wages) / max(w2_total, 1)
+                if diff_pct > self.WAGE_TOLERANCE_PCT:
+                    issues.append(
+                        ReconciliationIssue(
+                            field_path="income.wages",
+                            source_a=f"W-2 total ({len(w2s)} forms)",
+                            source_b=tr.source_path or "1040",
+                            value_a=f"${w2_total:,.0f}",
+                            value_b=f"${tr_wages:,.0f}",
+                            severity="high" if diff_pct > 0.10 else "warning",
+                            rule_id="W2_1040_WAGE_MATCH",
                         )
+                    )
 
         # Appraisal vs purchase price
         for appr in appraisals:
@@ -71,12 +70,19 @@ class MortgageReconciliationEngine:
                             )
                         )
 
-        # Credit report name vs W-2 employee name
+        # Credit report name vs W-2 employee name (primary borrower only)
         for cr in credit_reports:
-            cr_name = cr.get_field("borrower_name").lower()
+            cr_name = cr.get_field("borrower_name").lower().strip()
+            cr_first = cr_name.split()[0] if cr_name else ""
             for w2 in w2s:
-                w2_name = w2.get_field("employee_name").lower()
-                if cr_name and w2_name and cr_name.split()[0] not in w2_name:
+                w2_name = w2.get_field("employee_name").lower().strip()
+                w2_first = w2_name.split()[0] if w2_name else ""
+                if not cr_first or not w2_first:
+                    continue
+                # Joint loan: only validate W-2s that belong to the primary borrower on the credit report
+                if cr_first not in w2_name and w2_first != cr_first:
+                    continue
+                if cr_first not in w2_name:
                     issues.append(
                         ReconciliationIssue(
                             field_path="identity.borrower_name",
@@ -117,6 +123,16 @@ class MortgageReconciliationEngine:
         bundle.collateral = self._build_collateral(bundle)
         return bundle
 
+    def _sum_latest_w2_wages(self, w2s: list[MortgageDocument]) -> float:
+        """Sum the highest Box-1 wages per employee (handles multi-year W-2 packages)."""
+        by_employee: dict[str, float] = {}
+        for w2 in w2s:
+            name = (w2.get_field("employee_name") or "").strip().lower()
+            wages = w2.get_float("wages_box1")
+            if name and wages:
+                by_employee[name] = max(by_employee.get(name, 0.0), wages)
+        return sum(by_employee.values())
+
     def _extract_borrowers(self, bundle: MortgageBundle) -> list[BorrowerProfile]:
         borrowers: list[BorrowerProfile] = []
         seen: set[str] = set()
@@ -146,11 +162,10 @@ class MortgageReconciliationEngine:
         agi = 0.0
         sources: list[str] = []
 
-        for w2 in bundle.documents_by_type(MortgageDocumentType.W2):
-            w = w2.get_float("wages_box1")
-            if w:
-                wages += w
-                sources.append(w2.source_path or "W-2")
+        w2_docs = bundle.documents_by_type(MortgageDocumentType.W2)
+        if w2_docs:
+            wages = self._sum_latest_w2_wages(w2_docs)
+            sources.extend(w2.source_path or "W-2" for w2 in w2_docs if w2.get_float("wages_box1"))
 
         for tr in bundle.documents_by_type(MortgageDocumentType.TAX_RETURN_1040):
             total = max(total, tr.get_float("total_income"))

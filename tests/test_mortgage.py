@@ -128,7 +128,8 @@ class TestMortgageAudit:
         assert Path(paths_written["audit_trail"]).exists()
         assert Path(paths_written["memo"]).exists()
         assert Path(paths_written["bundle"]).exists()
-        trail = json.loads(Path(paths_written["audit_trail"]).read_text())
+        trail = audit_store.load_json("audit-test", "audit_trail.json")
+        assert trail is not None
         assert len(trail["entries"]) >= 1
 
 

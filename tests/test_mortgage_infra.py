@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 
 from insureflow.api import app
 from insureflow.auth import Role
-from insureflow.auth.dependencies import _USER_STORE
+from insureflow.auth.store import clear_user_store, get_user_store
 from insureflow.auth.jwt import create_access_token
 from insureflow.auth.models import User
 from insureflow.mortgage.pricing import LoanPricingEngine, LoanProduct
@@ -104,10 +104,10 @@ class TestWebhooks:
 class TestMortgageAPIIntegration:
     @pytest.fixture(autouse=True)
     def reset_users(self) -> None:
-        _USER_STORE.clear()
+        clear_user_store()
 
     def _auth_headers(self, org_id: str = "acme-bank", role: Role = Role.ADMIN) -> dict[str, str]:
-        _USER_STORE["admin"] = User(
+        get_user_store()["admin"] = User(
             username="admin",
             hashed_password="unused",
             role=role,
@@ -136,7 +136,7 @@ class TestMortgageAPIIntegration:
         job_id = resp.json()["job_id"]
         assert resp.json()["org_id"] == "bank-a"
 
-        _USER_STORE["other"] = User(
+        get_user_store()["other"] = User(
             username="other",
             hashed_password="unused",
             role=Role.ADMIN,

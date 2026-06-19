@@ -183,6 +183,13 @@ class MortgagePipeline:
         product_enum = LoanProduct(loan_product) if loan_product else None
         rate_quote = self.pricing.quote(bundle, memo, loan_amount=loan_amount, product=product_enum)
 
+        dti_ratio = memo.dti_ratio
+        if bundle.income and bundle.credit and rate_quote.monthly_pi:
+            monthly_income = (bundle.income.adjusted_gross_income or bundle.income.total_income) / 12
+            if monthly_income > 0:
+                total_debt = bundle.credit.total_monthly_payment + rate_quote.monthly_pi
+                dti_ratio = round(total_debt / monthly_income * 100, 1)
+
         type_counts: dict[str, int] = {}
         for doc in documents:
             key = doc.document_type.value
@@ -201,7 +208,7 @@ class MortgagePipeline:
             "borrower": memo.borrower_name,
             "decision": memo.decision.value,
             "risk_score": memo.risk_score,
-            "dti_ratio": memo.dti_ratio,
+            "dti_ratio": dti_ratio,
             "ltv_ratio": memo.ltv_ratio,
             "human_review_required": memo.human_review_required,
             "rate_quote": {

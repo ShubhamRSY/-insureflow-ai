@@ -534,5 +534,134 @@ def mortgage(
     console.print(f"\n[green]Mortgage pipeline complete.[/]")
 
 
+@app.command("serve")
+def serve(
+    port: int = typer.Option(8002, "--port", "-p", help="Port (8000/8001 often taken)"),
+    host: str = typer.Option("127.0.0.1", "--host", help="Bind host"),
+    reload: bool = typer.Option(True, "--reload/--no-reload", help="Auto-reload on code changes"),
+) -> None:
+    """Start the InsureFlow API + web dashboard (use insureflow.api, not llm.main)."""
+    import uvicorn
+
+    console.print(f"\n[bold green]InsureFlow API[/] → http://{host}:{port}")
+    console.print(f"[bold]Dashboard[/]      → http://{host}:{port}/dashboard")
+    console.print(f"[bold]Diagnostics[/]   → http://{host}:{port}/system/diagnostics")
+    console.print(f"[dim]Stop with Ctrl+C[/]\n")
+    uvicorn.run(
+        "insureflow.api:app",
+        host=host,
+        port=port,
+        reload=reload,
+    )
+
+
+@app.command("auth-reset")
+def auth_reset(
+    port: int = typer.Option(8002, "--port", "-p", help="API port"),
+) -> None:
+    """Clear ALL dashboard login accounts on the running server + browser session hint."""
+    import urllib.error
+    import urllib.request
+
+    url = f"http://127.0.0.1:{port}/auth/reset"
+    try:
+        req = urllib.request.Request(url, method="POST")
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            import json
+            data = json.loads(resp.read().decode())
+        console.print(f"[green]Server: cleared {data.get('users_removed', 0)} user(s).[/]")
+    except urllib.error.URLError as exc:
+        console.print(f"[red]Could not reach API on port {port}:[/] {exc}")
+        console.print("[yellow]Start the server first:[/] python cli.py serve --port 8002")
+        raise typer.Exit(1) from exc
+    console.print(f"[bold green]Done.[/] Open in browser to wipe saved login too:")
+    console.print(f"  [link=http://127.0.0.1:{port}/auth/reset]http://127.0.0.1:{port}/auth/reset[/]")
+
+
+@app.command("e2e")
+def e2e(
+    port: int = typer.Option(8002, "--port", "-p"),
+    in_process: bool = typer.Option(False, "--in-process", help="Run via TestClient (no live server)"),
+    fast: bool = typer.Option(False, "--fast", help="Skip connector pull tests"),
+    no_browser: bool = typer.Option(False, "--no-browser", help="Skip Playwright UI tests"),
+    no_celery: bool = typer.Option(False, "--no-celery", help="Skip Celery worker test"),
+    use_llm: bool = typer.Option(False, "--use-llm"),
+    timeout: int = typer.Option(360, "--timeout", help="Job poll timeout seconds"),
+    json_output: bool = typer.Option(False, "--json"),
+) -> None:
+    """Run end-to-end tests across auth, connectors, insurance, mortgage, and infra."""
+    from insureflow.e2e.runner import run_inprocess, run_live
+
+    kwargs = {
+        "use_llm": use_llm,
+        "test_connectors": not fast,
+        "test_browser": not no_browser,
+        "test_celery": not no_celery,
+        "job_timeout": timeout,
+    }
+    report = run_inprocess(**kwargs) if in_process else run_live(base_url=f"http://127.0.0.1:{port}", **kwargs)
+
+    if json_output:
+        console.print_json(json.dumps(report, indent=2))
+    else:
+        for row in report["results"]:
+            mark = "[green]PASS[/]" if row["passed"] else "[red]FAIL[/]"
+            console.print(f"  {mark} {row['name']}: {row.get('detail', '')}")
+        color = "green bold" if report["success"] else "red bold"
+        console.print(f"\n[{color}]{report['passed']}/{report['total']} passed[/]")
+    if not report["success"]:
+        raise typer.Exit(1)
+
+
+@app.command()
+def doctor(
+    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
+) -> None:
+    from insureflow.health.diagnostics import CheckStatus, SystemDiagnostics
+
+    report = SystemDiagnostics(project_root=Path.cwd()).run_all()
+
+    if json_output:
+        console.print_json(json.dumps(report, indent=2))
+        return
+
+    overall_colors = {
+        "healthy": "green bold",
+        "degraded": "yellow bold",
+        "missing": "red bold",
+        "error": "red bold",
+    }
+    color = overall_colors.get(report["overall"], "white")
+    console.print(f"\n[bold]InsureFlow System Doctor[/]")
+    console.print(f"Overall: [{color}]{report['overall'].upper()}[/]")
+    console.print(f"LLM mode: [bold]{report['llm_mode']}[/]")
+    s = report["summary"]
+    console.print(f"Checks: {s['ok']} ok · {s['degraded']} degraded · {s['missing']} missing · {s['error']} error\n")
+
+    table = Table(show_header=True, header_style="bold")
+    table.add_column("Component")
+    table.add_column("Status")
+    table.add_column("Message")
+    status_style = {
+        CheckStatus.OK.value: "green",
+        CheckStatus.DEGRADED.value: "yellow",
+        CheckStatus.MISSING.value: "red",
+        CheckStatus.ERROR.value: "red bold",
+    }
+    for check in report["checks"]:
+        st = check["status"]
+        table.add_row(
+            check["component"],
+            f"[{status_style.get(st, 'white')}]{st.upper()}[/]",
+            check["message"],
+        )
+    console.print(table)
+
+    if report["llm_mode"] == "deterministic_fallback":
+        console.print("\n[yellow]Tip:[/] Add LLM_API_KEY to .env for full ReAct agent reasoning.")
+        console.print("     cp .env.example .env  →  edit LLM_API_KEY=sk-...")
+    console.print(f"\n[dim]Web UI: python cli.py serve --port 8002  →  /dashboard[/]\n")
+
+
 if __name__ == "__main__":
     app()

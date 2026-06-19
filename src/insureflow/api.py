@@ -7,10 +7,12 @@ from typing import Any, Optional
 
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, status
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from insureflow.auth import Role
 from insureflow.auth.dependencies import (
+    clear_user_store,
     get_current_user,
     get_user_store,
     require_role,
@@ -36,9 +38,57 @@ app = FastAPI(
 )
 
 STATIC_DIR = Path(__file__).parent / "static"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+EXAMPLES_DIR = PROJECT_ROOT / "examples"
+SIM_DOCS_DIR = PROJECT_ROOT / "simulated_documents"
 
 
 # ── Auth Endpoints ──────────────────────────────────────────────
+
+
+@app.get("/auth/status")
+def auth_status() -> dict[str, bool]:
+    """Whether first-time admin setup is still required."""
+    return {"setup_required": not bool(get_user_store())}
+
+
+def _do_auth_reset() -> dict[str, str | int | bool]:
+    removed = clear_user_store()
+    return {
+        "message": "All credentials cleared. Use First-time Setup to create a new admin.",
+        "users_removed": removed,
+        "setup_required": True,
+        "clear_browser_session": True,
+    }
+
+
+_RESET_HTML = """<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Session cleared</title>
+<style>body{font-family:system-ui;background:#0c0f17;color:#e2e8f0;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}
+.box{text-align:center;padding:2rem;border:1px solid #334155;border-radius:12px;max-width:420px}
+a{color:#7aa3f5}</style></head>
+<body><div class="box"><h1>All sign-in data cleared</h1>
+<p>Server accounts removed. Browser session wiped.</p>
+<p><a href="/dashboard">Open dashboard → First-time Setup</a></p></div>
+<script>
+['insureflow_token','insureflow_user'].forEach(function(k){localStorage.removeItem(k);sessionStorage.removeItem(k);});
+setTimeout(function(){window.location.href='/dashboard';},800);
+</script></body></html>"""
+
+
+@app.get("/auth/reset")
+def reset_auth_get():
+    """One-click wipe: server accounts + redirect to dashboard."""
+    from fastapi.responses import HTMLResponse
+
+    _do_auth_reset()
+    return HTMLResponse(_RESET_HTML)
+
+
+@app.post("/auth/reset")
+def reset_auth_post() -> dict[str, str | int | bool]:
+    """Clear all server accounts (JSON). Client should wipe localStorage too."""
+    return _do_auth_reset()
 
 
 @app.post("/auth/setup", status_code=201)
@@ -49,20 +99,24 @@ def setup_first_admin(admin: UserCreateRequest) -> dict[str, str]:
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Admin already exists. Use /auth/login.",
         )
-    store[admin.username] = User(
-        username=admin.username,
+    username = admin.username.strip()
+    if not username or not admin.password:
+        raise HTTPException(status_code=400, detail="Username and password are required")
+    store[username] = User(
+        username=username,
         hashed_password=hash_password(admin.password),
         role=Role.ADMIN,
-        full_name=admin.full_name or admin.username,
-        org_id=admin.org_id,
+        full_name=(admin.full_name or username).strip(),
+        org_id=(admin.org_id or "default").strip(),
     )
-    return {"message": f"Admin '{admin.username}' created for org '{admin.org_id}'"}
+    return {"message": f"Admin '{username}' created for org '{admin.org_id}'"}
 
 
 @app.post("/auth/login")
 def login(req: LoginRequest) -> Token:
     store = get_user_store()
-    user = store.get(req.username)
+    username = req.username.strip()
+    user = store.get(username)
     if not user or not verify_password(req.password, user.hashed_password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
     if user.disabled:
@@ -104,10 +158,32 @@ def get_me(current_user: TokenData = Depends(get_current_user)) -> dict[str, str
 
 # ── Dashboard ───────────────────────────────────────────────────
 
+_UI_ASSETS = STATIC_DIR / "ui" / "assets"
+if _UI_ASSETS.is_dir():
+    app.mount("/dashboard/assets", StaticFiles(directory=_UI_ASSETS), name="dashboard-assets")
+
 
 @app.get("/dashboard")
-def dashboard() -> FileResponse:
-    return FileResponse(STATIC_DIR / "dashboard.html")
+@app.get("/dashboard/")
+def dashboard_root() -> FileResponse:
+    return _dashboard_index()
+
+
+@app.get("/dashboard/{full_path:path}")
+def dashboard_spa(full_path: str) -> FileResponse:
+    if full_path.startswith("assets/"):
+        raise HTTPException(status_code=404, detail="Asset not found")
+    return _dashboard_index()
+
+
+def _dashboard_index() -> FileResponse:
+    ui_index = STATIC_DIR / "ui" / "index.html"
+    if ui_index.exists():
+        return FileResponse(ui_index)
+    path = STATIC_DIR / "dashboard.html"
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="Dashboard not found")
+    return FileResponse(path)
 
 
 # ── Insurance Pipeline ──────────────────────────────────────────
@@ -155,9 +231,279 @@ class LossExperienceRequest(BaseModel):
     bundle_id: str = ""
 
 
+class InsuranceSourcePullRequest(BaseModel):
+    path: Optional[str] = None
+    package_id: Optional[str] = None
+    bucket: Optional[str] = None
+    prefix: str = ""
+    folder_id: Optional[str] = None
+    site_url: Optional[str] = None
+    mailbox: Optional[str] = None
+    host: Optional[str] = None
+    environment: Optional[str] = None
+
+
 @app.get("/health")
 async def health() -> dict[str, str]:
     return {"status": "ok", "version": "0.2.0"}
+
+
+@app.get("/system/diagnostics")
+async def system_diagnostics() -> dict[str, Any]:
+    """Public system health — shows what's configured without exposing secrets."""
+    from insureflow.health.diagnostics import SystemDiagnostics
+
+    return SystemDiagnostics(project_root=PROJECT_ROOT).run_all()
+
+
+@app.get("/api/demo/presets")
+async def demo_presets() -> dict[str, Any]:
+    """Available one-click demo submissions for the dashboard."""
+    insurance = [
+        {
+            "id": "pacific-coast",
+            "name": "Pacific Coast Marine",
+            "description": "Commercial P&C — ACORD, loss run, SOV, inspection, broker API",
+            "vertical": "insurance",
+        }
+    ]
+    mortgage = [
+        {
+            "id": "johnson-residential",
+            "name": "Johnson Family (Residential)",
+            "description": "Full residential loan package — income, credit, property, UW docs",
+            "vertical": "mortgage",
+            "product_line": "residential_mortgage",
+            "directory": str(SIM_DOCS_DIR / "home_mortgage" / "johnson_marcus_imani"),
+        },
+        {
+            "id": "midwest-commercial",
+            "name": "Midwest Medical Plaza (Commercial)",
+            "description": "Commercial CRE package — entity financials, leases, due diligence",
+            "vertical": "mortgage",
+            "product_line": "commercial_mortgage",
+            "directory": str(SIM_DOCS_DIR / "commercial_mortgage" / "midwest_medical_plaza"),
+        },
+    ]
+    return {"insurance": insurance, "mortgage": mortgage}
+
+
+@app.get("/api/dashboard/overview")
+def dashboard_overview(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Aggregated job counts and recent activity for the dashboard home."""
+    from insureflow.workflow.service import WorkflowService
+
+    org_id = current.org_id
+
+    def _recent_jobs(namespace: str, limit: int = 12) -> list[dict[str, Any]]:
+        ids = job_store.list_ids(namespace, org_id=org_id)
+        rows: list[dict[str, Any]] = []
+        for job_id in reversed(ids[-limit:]):
+            job = job_store.get(namespace, job_id, org_id=org_id) or {}
+            row: dict[str, Any] = {
+                "job_id": job_id,
+                "status": job.get("status", "unknown"),
+                "vertical": "insurance" if namespace == INSURANCE_NS else "mortgage",
+            }
+            results = job.get("results") or {}
+            if isinstance(results, dict):
+                if namespace == INSURANCE_NS:
+                    memo = results.get("memo") or {}
+                    row["decision"] = results.get("ai_decision") or (
+                        memo.get("decision") if isinstance(memo, dict) else None
+                    )
+                    row["bundle_id"] = results.get("bundle_id")
+                    row["insured_name"] = results.get("insured_name") or (
+                        memo.get("insured_name") if isinstance(memo, dict) else None
+                    )
+                else:
+                    summary = results.get("summary") or results.get("pipeline_summary") or results
+                    if isinstance(summary, dict):
+                        row["decision"] = (
+                            summary.get("decision")
+                            or summary.get("recommendation")
+                        )
+                    row["bundle_id"] = results.get("bundle_id") or (
+                        summary.get("bundle_id") if isinstance(summary, dict) else None
+                    )
+            rows.append(row)
+        return rows
+
+    ins_ids = job_store.list_ids(INSURANCE_NS, org_id=org_id)
+    mort_ids = job_store.list_ids(MORTGAGE_NS, org_id=org_id)
+    pending = WorkflowService().store.list_pending(org_id)
+
+    def _count_status(namespace: str, ids: list[str]) -> dict[str, int]:
+        counts: dict[str, int] = {"processing": 0, "completed": 0, "failed": 0}
+        for job_id in ids:
+            job = job_store.get(namespace, job_id, org_id=org_id) or {}
+            st = job.get("status", "unknown")
+            counts[st] = counts.get(st, 0) + 1
+        return counts
+
+    ins_counts = _count_status(INSURANCE_NS, ins_ids)
+    mort_counts = _count_status(MORTGAGE_NS, mort_ids)
+
+    return {
+        "org_id": org_id,
+        "username": current.username,
+        "role": current.role.value if current.role else "none",
+        "insurance": {"total": len(ins_ids), **ins_counts},
+        "mortgage": {"total": len(mort_ids), **mort_counts},
+        "pending_reviews": len(pending),
+        "recent_jobs": _recent_jobs(INSURANCE_NS) + _recent_jobs(MORTGAGE_NS),
+        "pending": pending,
+    }
+
+
+def _load_pacific_coast_submission() -> SubmissionRequest:
+    acord = (EXAMPLES_DIR / "pacific_coast_acord.xml").read_text(encoding="utf-8")
+    loss_run = (EXAMPLES_DIR / "pacific_coast_loss_run.md").read_text(encoding="utf-8")
+    sov = (EXAMPLES_DIR / "pacific_coast_sov.md").read_text(encoding="utf-8")
+    inspection = (EXAMPLES_DIR / "pacific_coast_inspection_report.md").read_text(encoding="utf-8")
+    broker = (EXAMPLES_DIR / "pacific_coast_broker_api.json").read_text(encoding="utf-8")
+    return SubmissionRequest(
+        acord_xml=acord,
+        loss_run=loss_run,
+        schedule_of_values=sov,
+        inspection_reports=[inspection],
+        json_payload=broker,
+        use_llm=True,
+    )
+
+
+@app.post("/api/demo/insurance/{preset_id}", status_code=202)
+async def run_insurance_demo(
+    preset_id: str,
+    background_tasks: BackgroundTasks,
+    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+) -> dict[str, Any]:
+    if preset_id != "pacific-coast":
+        raise HTTPException(status_code=404, detail=f"Unknown insurance preset: {preset_id}")
+    if not (EXAMPLES_DIR / "pacific_coast_acord.xml").exists():
+        raise HTTPException(status_code=503, detail="Example data not found on server")
+    job_id = f"demo-{uuid.uuid4().hex[:12]}"
+    req = _load_pacific_coast_submission()
+    job_store.set(INSURANCE_NS, job_id, {"status": "processing", "demo": True}, org_id=current.org_id)
+    background_tasks.add_task(_run_pipeline_task, job_id, req, current.org_id)
+    return {"job_id": job_id, "status": "processing", "preset": preset_id, "org_id": current.org_id}
+
+
+@app.get("/api/insurance/sources")
+def list_insurance_sources() -> dict[str, Any]:
+    from insureflow.ingestion.insurance.sources import list_sources
+
+    return {"sources": list_sources(EXAMPLES_DIR)}
+
+
+@app.post("/api/insurance/sources/{source_id}/pull")
+def pull_insurance_source(
+    source_id: str,
+    req: InsuranceSourcePullRequest,
+    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+) -> dict[str, Any]:
+    """Pull submission documents from a connected source (library, folder, or simulated cloud)."""
+    from insureflow.ingestion.insurance.sources import (
+        DEMO_CONNECTORS,
+        INSURANCE_PACKAGES,
+        load_directory,
+        load_package,
+        simulated_connection_label,
+    )
+
+    try:
+        if source_id in INSURANCE_PACKAGES:
+            documents = load_package(EXAMPLES_DIR, source_id)
+            meta = INSURANCE_PACKAGES[source_id]
+            return {
+                "source_id": source_id,
+                "simulated": False,
+                "connection_label": meta["name"],
+                "package_id": source_id,
+                "package_name": meta["name"],
+                "documents": documents,
+                "file_count": len(documents),
+            }
+
+        if source_id in DEMO_CONNECTORS:
+            package_id = req.package_id or "pacific-coast"
+            documents = load_package(EXAMPLES_DIR, package_id)
+            meta = INSURANCE_PACKAGES[package_id]
+            return {
+                "source_id": source_id,
+                "simulated": True,
+                "connection_label": simulated_connection_label(source_id, req),
+                "package_id": package_id,
+                "package_name": meta["name"],
+                "documents": documents,
+                "file_count": len(documents),
+            }
+
+        if source_id == "server-folder":
+            raw = req.path or "examples"
+            directory = Path(raw)
+            if not directory.is_absolute():
+                directory = (PROJECT_ROOT / raw).resolve()
+            if not str(directory).startswith(str(PROJECT_ROOT.resolve())):
+                raise HTTPException(status_code=400, detail="Path must be under project root")
+            documents = load_directory(directory)
+            return {
+                "source_id": source_id,
+                "simulated": False,
+                "connection_label": str(directory),
+                "documents": documents,
+                "file_count": len(documents),
+            }
+
+        raise HTTPException(status_code=404, detail=f"Unknown source: {source_id}")
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+
+
+@app.post("/api/demo/mortgage/{preset_id}", status_code=202)
+async def run_mortgage_demo(
+    preset_id: str,
+    background_tasks: BackgroundTasks,
+    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+) -> dict[str, Any]:
+    presets = {
+        "johnson-residential": (
+            SIM_DOCS_DIR / "home_mortgage" / "johnson_marcus_imani",
+            "residential_mortgage",
+        ),
+        "midwest-commercial": (
+            SIM_DOCS_DIR / "commercial_mortgage" / "midwest_medical_plaza",
+            "commercial_mortgage",
+        ),
+    }
+    if preset_id not in presets:
+        raise HTTPException(status_code=404, detail=f"Unknown mortgage preset: {preset_id}")
+    directory, product_line = presets[preset_id]
+    if not directory.is_dir():
+        raise HTTPException(status_code=503, detail=f"Fixture directory missing: {directory}")
+    job_id = f"demo-mort-{uuid.uuid4().hex[:12]}"
+    req = MortgageSubmissionRequest(
+        directory=str(directory),
+        product_line=product_line,
+        use_llm=True,
+        bundle_id=job_id,
+    )
+    job_store.set(MORTGAGE_NS, job_id, {"status": "processing", "demo": True}, org_id=current.org_id)
+    background_tasks.add_task(_run_mortgage_task, job_id, req, current.org_id)
+    return {"job_id": job_id, "status": "processing", "preset": preset_id, "org_id": current.org_id}
+
+
+@app.get("/")
+async def root() -> dict[str, str]:
+    return {
+        "service": "InsureFlow AI",
+        "version": "0.2.0",
+        "dashboard": "/dashboard",
+        "diagnostics": "/system/diagnostics",
+        "health": "/health",
+    }
 
 
 def _run_pipeline_task(job_id: str, request: SubmissionRequest, org_id: str) -> None:
@@ -347,6 +693,8 @@ def bind_policy(
         quote_ref,
     )
 
+    record = wf.store.get(bundle_id, current.org_id) or record
+
     return {"bind": bind_result, "workflow": record.model_dump(), "outcome": outcome.model_dump()}
 
 
@@ -478,6 +826,47 @@ def _run_mortgage_task(job_id: str, request: MortgageSubmissionRequest, org_id: 
         webhook_dispatcher.dispatch("mortgage.failed", org_id, {"job_id": job_id, "error": str(exc)})
 
 
+def _finalize_celery_mortgage_job(job_id: str, org_id: str, job: dict[str, Any]) -> dict[str, Any]:
+    """Promote finished Celery task state into job_store (lazy sync on poll)."""
+    if job.get("status") != "processing" or job.get("backend") != "celery":
+        return job
+    task_id = job.get("celery_task_id")
+    if not task_id:
+        return job
+
+    from celery.result import AsyncResult
+
+    from insureflow.mortgage.webhooks import webhook_dispatcher
+    from insureflow.tasks.celery_app import celery_app
+
+    async_result = AsyncResult(task_id, app=celery_app)
+    if not async_result.ready():
+        return job
+
+    if async_result.successful():
+        result = async_result.result
+        updated: dict[str, Any] = {
+            "status": "completed",
+            "results": result,
+            "backend": "celery",
+            "celery_task_id": task_id,
+        }
+        job_store.set(MORTGAGE_NS, job_id, updated, org_id=org_id)
+        webhook_dispatcher.dispatch("mortgage.completed", org_id, {"job_id": job_id, "results": result})
+        return updated
+
+    error = str(async_result.result) if async_result.failed() else "Celery task failed"
+    updated = {
+        "status": "failed",
+        "error": error,
+        "backend": "celery",
+        "celery_task_id": task_id,
+    }
+    job_store.set(MORTGAGE_NS, job_id, updated, org_id=org_id)
+    webhook_dispatcher.dispatch("mortgage.failed", org_id, {"job_id": job_id, "error": error})
+    return updated
+
+
 def _dispatch_mortgage_celery(job_id: str, request: MortgageSubmissionRequest, org_id: str) -> None:
     from insureflow.tasks.mortgage_tasks import (
         run_mortgage_directory,
@@ -496,9 +885,11 @@ def _dispatch_mortgage_celery(job_id: str, request: MortgageSubmissionRequest, o
     elif request.directory:
         task = run_mortgage_directory.delay(
             request.directory,
-            bundle_id=job_id,
+            bundle_id=request.bundle_id or job_id,
             product_line=request.product_line,
             use_llm=request.use_llm,
+            job_id=job_id,
+            org_id=org_id,
         )
     elif request.documents:
         docs = [{"filename": d.filename, "content": d.content} for d in request.documents]
@@ -552,12 +943,12 @@ def get_mortgage_job_status(
     job = job_store.get(MORTGAGE_NS, job_id, org_id=current.org_id)
     if not job:
         raise HTTPException(status_code=404, detail="Mortgage job not found")
-    return job
+    return _finalize_celery_mortgage_job(job_id, current.org_id, job)
 
 
 @app.get("/mortgage/pipeline/jobs")
 def list_mortgage_jobs(current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, list[str]]:
-    return {"jobs": job_store.list_ids(MORTGAGE_NS, org_id=current.org_id), "org_id": current.org_id}
+    return {"jobs": job_store.list_ids(MORTGAGE_NS, org_id=current.org_id)}
 
 
 @app.get("/mortgage/audit/{bundle_id}")

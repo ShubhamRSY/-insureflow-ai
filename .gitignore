@@ -5,6 +5,7 @@ __pycache__/
 dist/
 build/
 .env
+.insureflow/
 audit_logs/
 .pytest_cache/
 .mypy_cache/

@@ -10,7 +10,7 @@ from insureflow.audit.insurance_audit import InsuranceAuditLogger
 from insureflow.audit.package import RegulatoryPackageBuilder
 from insureflow.audit.store import AuditStore
 from insureflow.auth import Role
-from insureflow.auth.dependencies import _USER_STORE
+from insureflow.auth.store import clear_user_store, get_user_store
 from insureflow.auth.jwt import create_access_token
 from insureflow.auth.models import User
 from insureflow.ingestion.insurance.classifier import InsuranceDocumentClassifier, InsuranceDocumentType
@@ -122,10 +122,10 @@ class TestInsurancePipelineIntegration:
 class TestInsuranceAPIProduction:
     @pytest.fixture(autouse=True)
     def reset_users(self) -> None:
-        _USER_STORE.clear()
+        clear_user_store()
 
     def _headers(self, role: Role = Role.LICENSED_UW, org_id: str = "acme") -> dict[str, str]:
-        _USER_STORE["uw"] = User(username="uw", hashed_password="x", role=role, org_id=org_id)
+        get_user_store()["uw"] = User(username="uw", hashed_password="x", role=role, org_id=org_id)
         token = create_access_token({"sub": "uw", "role": role.value, "org_id": org_id})
         return {"Authorization": f"Bearer {token}"}
 
