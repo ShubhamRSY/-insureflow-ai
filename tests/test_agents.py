@@ -43,6 +43,7 @@ def _make_bundle(
     structured_claims: list | None = None,
     insured_name: str = "Test Corp",
     loss_run: LossRunData | None = None,
+    credit_rating: str | None = None,
 ) -> SubmissionBundle:
     if claims is not None and loss_run is None:
         loss_run = LossRunData(
@@ -52,7 +53,7 @@ def _make_bundle(
             claims=claims,
         )
 
-    fi = FinancialData(loss_run=loss_run)
+    fi = FinancialData(loss_run=loss_run, credit_rating=credit_rating)
     if structured_claims:
         fi.prior_losses = structured_claims
 
@@ -211,6 +212,45 @@ class TestRiskAnalystAgent:
         agent = RiskAnalystAgent()
         result = agent.run(bundle)
         assert result.success
+
+    def test_credit_rating_low(self):
+        bundle = _make_bundle(credit_rating="750")
+        agent = RiskAnalystAgent()
+        result = agent.run(bundle)
+        findings = [f for f in result.findings if f.category == "credit"]
+        assert len(findings) == 1
+        assert findings[0].severity == RiskSeverity.LOW
+
+    def test_credit_rating_critical(self):
+        bundle = _make_bundle(credit_rating="D")
+        agent = RiskAnalystAgent()
+        result = agent.run(bundle)
+        findings = [f for f in result.findings if f.category == "credit"]
+        assert len(findings) == 1
+        assert findings[0].severity == RiskSeverity.CRITICAL
+
+    def test_credit_rating_missing(self):
+        bundle = _make_bundle()
+        agent = RiskAnalystAgent()
+        result = agent.run(bundle)
+        findings = [f for f in result.findings if f.category == "credit"]
+        assert len(findings) == 0
+
+    def test_credit_rating_numeric_moderate(self):
+        bundle = _make_bundle(credit_rating="680")
+        agent = RiskAnalystAgent()
+        result = agent.run(bundle)
+        findings = [f for f in result.findings if f.category == "credit"]
+        assert len(findings) == 1
+        assert findings[0].severity == RiskSeverity.MODERATE
+
+    def test_credit_rating_numeric_high(self):
+        bundle = _make_bundle(credit_rating="580")
+        agent = RiskAnalystAgent()
+        result = agent.run(bundle)
+        findings = [f for f in result.findings if f.category == "credit"]
+        assert len(findings) == 1
+        assert findings[0].severity == RiskSeverity.HIGH
 
 
 class TestLossRunAnalystAgent:

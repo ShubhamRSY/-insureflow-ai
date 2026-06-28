@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useParams } from 'react-router-dom';
 import Layout from './components/Layout';
 import LoginModal from './components/LoginModal';
 import JobDrawer from './components/JobDrawer';
@@ -9,6 +9,10 @@ import InsurancePage from './pages/Insurance';
 import MortgagePage from './pages/Mortgage';
 import WorkflowPage from './pages/Workflow';
 import SettingsPage from './pages/Settings';
+import BrokerStatusPage from './pages/BrokerStatus';
+import AuthorityMatrix from './pages/AuthorityMatrix';
+import MarketAdmin from './pages/MarketAdmin';
+import RenewalDashboard from './pages/RenewalDashboard';
 import { auth, endpoints, AuthError } from './lib/api';
 
 function Protected({ children, onLogin }) {
@@ -33,6 +37,8 @@ function AppRoutes() {
   const [insuranceJobs, setInsuranceJobs] = useState([]);
   const [mortgageJobs, setMortgageJobs] = useState([]);
   const [pending, setPending] = useState([]);
+  const [marketCycle, setMarketCycle] = useState(null);
+  const [queueStats, setQueueStats] = useState(null);
   const [drawer, setDrawer] = useState({ vertical: null, jobId: null, job: null });
 
   const loadHealth = useCallback(async () => {
@@ -60,6 +66,18 @@ function AppRoutes() {
       if (e instanceof AuthError) handleAuthError();
     }
   }, [handleAuthError]);
+
+  const loadMarketCycle = useCallback(async () => {
+    if (!auth.isLoggedIn) return;
+    try { setMarketCycle(await endpoints.marketCycle()); }
+    catch { /* ignore */ }
+  }, []);
+
+  const loadQueueStats = useCallback(async () => {
+    if (!auth.isLoggedIn) return;
+    try { setQueueStats(await endpoints.submissionQueue()); }
+    catch { /* ignore */ }
+  }, []);
 
   const loadInsuranceJobs = useCallback(async () => {
     if (!auth.isLoggedIn) return;
@@ -100,8 +118,8 @@ function AppRoutes() {
   }, [handleAuthError]);
 
   const refreshAll = useCallback(async () => {
-    await Promise.all([loadHealth(), loadPresets(), loadOverview(), loadInsuranceJobs(), loadMortgageJobs()]);
-  }, [loadHealth, loadPresets, loadOverview, loadInsuranceJobs, loadMortgageJobs]);
+    await Promise.all([loadHealth(), loadPresets(), loadOverview(), loadInsuranceJobs(), loadMortgageJobs(), loadMarketCycle(), loadQueueStats()]);
+  }, [loadHealth, loadPresets, loadOverview, loadInsuranceJobs, loadMortgageJobs, loadMarketCycle, loadQueueStats]);
 
   useEffect(() => {
     endpoints.authStatus().then((s) => {
@@ -142,11 +160,15 @@ function AppRoutes() {
     return () => clearInterval(iv);
   }, [drawer.jobId, drawer.vertical, drawer.job?.status, refreshAll, handleAuthError]);
 
-  const openJob = async (vertical, jobId) => {
+  const openJob = async (vertical, jobId, bundleId) => {
+    // If called with bundle_id (not job_id), look up the job_id first
+    const actualJobId = bundleId
+      ? (insuranceJobs.find(r => r.job?.results?.bundle_id === bundleId)?.id || jobId)
+      : jobId;
     try {
       const fetch = vertical === 'insurance' ? endpoints.insuranceJob : endpoints.mortgageJob;
-      const job = await fetch(jobId);
-      setDrawer({ vertical, jobId, job });
+      const job = await fetch(actualJobId);
+      setDrawer({ vertical, jobId: actualJobId, job });
     } catch (e) {
       if (e instanceof AuthError) handleAuthError();
       else throw e;
@@ -178,12 +200,16 @@ function AppRoutes() {
   return (
     <>
       <Routes>
+        <Route path="broker/status/:token" element={<BrokerStatusPage />} />
         <Route element={<Layout health={health} pendingCount={pending.length} onRefresh={refreshAll} onLogin={() => setLoginOpen(true)} user={user} setUser={setUser} />}>
-          <Route index element={<Overview overview={overview} health={health} presets={presets} onRunDemo={runDemo} onOpenJob={openJob} onLogin={() => setLoginOpen(true)} />} />
+          <Route index element={<Overview overview={overview} health={health} presets={presets} onRunDemo={runDemo} onOpenJob={openJob} onLogin={() => setLoginOpen(true)} marketCycle={marketCycle} queueStats={queueStats} />} />
           <Route path="system" element={<SystemPage health={health} />} />
           <Route path="insurance" element={<Protected onLogin={() => setLoginOpen(true)}><InsurancePage presets={presets} jobs={insuranceJobs} onRunDemo={runDemo} onOpenJob={openJob} onSubmit={submitInsurance} /></Protected>} />
           <Route path="mortgage" element={<Protected onLogin={() => setLoginOpen(true)}><MortgagePage presets={presets} jobs={mortgageJobs} onRunDemo={runDemo} onOpenJob={openJob} onSubmit={submitMortgage} /></Protected>} />
-          <Route path="workflow" element={<Protected onLogin={() => setLoginOpen(true)}><WorkflowPage pending={pending} onRefresh={loadOverview} /></Protected>} />
+          <Route path="workflow" element={<Protected onLogin={() => setLoginOpen(true)}><WorkflowPage pending={pending} onRefresh={loadOverview} onOpenJob={openJob} /></Protected>} />
+          <Route path="renewals" element={<Protected onLogin={() => setLoginOpen(true)}><RenewalDashboard /></Protected>} />
+          <Route path="authority" element={<Protected onLogin={() => setLoginOpen(true)}><AuthorityMatrix /></Protected>} />
+          <Route path="market" element={<Protected onLogin={() => setLoginOpen(true)}><MarketAdmin /></Protected>} />
           <Route path="settings" element={<SettingsPage onLogin={() => setLoginOpen(true)} />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>

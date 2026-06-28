@@ -1,22 +1,42 @@
 from __future__ import annotations
 
+import time
 from typing import Any
 
 from insureflow.agents.base import BaseAgent
-from insureflow.agents.react_agent import ReActAgent
 from insureflow.agents.tools import UnderwritingTools
-from insureflow.models.agents import AgentType, Finding, RiskSeverity
+from insureflow.models.agents import AgentResult, AgentType, Finding, RiskSeverity
 from insureflow.models.submissions import LocationData, SubmissionBundle
 
 
-class RiskAnalystAgent(ReActAgent):
+class RiskAnalystAgent(BaseAgent):
     agent_type = AgentType.RISK_ANALYST
     agent_name = "RiskAnalystAgent"
-    prompt_key = "risk_analyst"
 
     def __init__(self, tools: UnderwritingTools | None = None) -> None:
         super().__init__()
         self.tools = tools or UnderwritingTools()
+
+    def run(self, bundle: SubmissionBundle, **kwargs: Any) -> AgentResult:
+        start = time.time()
+        self._findings = []
+        self._errors = []
+        self._analyze(bundle, **kwargs)
+        elapsed = (time.time() - start) * 1000
+        severity = self.tools.assess_overall_severity(self._findings)
+        return AgentResult(
+            agent_type=self.agent_type,
+            agent_name=self.agent_name,
+            findings=self._findings,
+            risk_score=self._calculate_risk_score(),
+            risk_severity=severity,
+            recommendation=self._build_recommendation(),
+            summary=self._build_summary(),
+            errors=self._errors,
+            processing_time_ms=round(elapsed, 1),
+            success=len(self._errors) == 0,
+            data_sources_used=self._get_sources(bundle),
+        )
 
     def _analyze(self, bundle: SubmissionBundle, **kwargs: Any) -> None:
         profile = self.tools.get_risk_profile(bundle)
@@ -34,6 +54,8 @@ class RiskAnalystAgent(ReActAgent):
         sovs = self.tools.get_sovs(bundle)
         if sovs:
             self._assess_sov_adequacy(sovs, locations)
+
+        self._assess_credit_rating(bundle)
 
     def _assess_construction(self, profile: Any) -> None:
         ctype = profile.construction_type
@@ -156,3 +178,62 @@ class RiskAnalystAgent(ReActAgent):
                     category="valuation",
                     field_path="schedule_of_values",
                 ))
+
+    _CREDIT_RATING_PATTERNS: list[tuple[list[str], RiskSeverity]] = [
+        (["aaa", "aa", "a+", "a1", "a2", "a3", "excellent", "very good"], RiskSeverity.LOW),
+        (["a", "a-", "bbb+", "bbb", "bbb-", "good", "fair"], RiskSeverity.MODERATE),
+        (["bb+", "bb", "bb-", "b+", "b", "b-", "poor", "below average"], RiskSeverity.HIGH),
+        (["ccc+", "ccc", "ccc-", "cc", "c", "d", "default", "very poor"], RiskSeverity.CRITICAL),
+    ]
+
+    def _assess_credit_rating(self, bundle: SubmissionBundle) -> None:
+        if not bundle.structured or not bundle.structured.financial:
+            return
+        rating = bundle.structured.financial.credit_rating
+        if not rating:
+            return
+        rating_lower = rating.strip().lower()
+
+        numeric_score = self._try_parse_numeric(rating_lower)
+        if numeric_score is not None:
+            if numeric_score >= 750:
+                sev = RiskSeverity.LOW
+            elif numeric_score >= 650:
+                sev = RiskSeverity.MODERATE
+            elif numeric_score >= 550:
+                sev = RiskSeverity.HIGH
+            else:
+                sev = RiskSeverity.CRITICAL
+        else:
+            sev = RiskSeverity.MODERATE
+            for keywords, matched_sev in self._CREDIT_RATING_PATTERNS:
+                if any(kw in rating_lower for kw in keywords):
+                    sev = matched_sev
+                    break
+
+        desc = f"Business credit rating: '{rating}'"
+        if sev == RiskSeverity.LOW:
+            desc += " — strong financial standing"
+        elif sev == RiskSeverity.MODERATE:
+            desc += " — adequate credit quality"
+        elif sev == RiskSeverity.HIGH:
+            desc += " — elevated default risk"
+        else:
+            desc += " — critical credit risk"
+
+        self._add_finding(Finding(
+            title=f"{'Favorable' if sev == RiskSeverity.LOW else 'Elevated'} business credit rating",
+            description=desc,
+            severity=sev,
+            category="credit",
+            field_path="structured.financial.credit_rating",
+            source_value=rating,
+        ))
+
+    @staticmethod
+    def _try_parse_numeric(rating: str) -> int | None:
+        cleaned = rating.replace(",", "").replace("$", "").replace("score", "").strip()
+        try:
+            return int(float(cleaned))
+        except (ValueError, TypeError):
+            return None

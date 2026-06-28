@@ -1,25 +1,62 @@
+import { useState } from 'react';
 import { Badge, EmptyState } from '../components/ui';
-import { ClipboardCheck } from 'lucide-react';
+import { ClipboardCheck, Shield, Search } from 'lucide-react';
 import { endpoints } from '../lib/api';
 
-export default function WorkflowPage({ pending, onRefresh }) {
-  const handleSignOff = async (bundleId, action) => {
-    const license = prompt('License number (optional):') || '';
-    const notes = prompt('Notes (optional):') || '';
+const REASON_CATEGORIES = [
+  { value: 'pricing', label: 'Pricing' },
+  { value: 'coverage', label: 'Coverage' },
+  { value: 'terms', label: 'Terms' },
+  { value: 'appetite', label: 'Appetite' },
+  { value: 'compliance', label: 'Compliance' },
+  { value: 'data_quality', label: 'Data Quality' },
+  { value: 'market_conditions', label: 'Market Conditions' },
+  { value: 'client_relationship', label: 'Client Relationship' },
+  { value: 'erroneous_ai', label: 'Erroneous AI' },
+  { value: 'other', label: 'Other' },
+];
+
+export default function WorkflowPage({ pending, onRefresh, authorityData, onOpenJob }) {
+  const [showSignOff, setShowSignOff] = useState(null);
+  const [form, setForm] = useState({ action: 'approve', license_number: '', notes: '', override_reason: '', override_reason_category: 'other', uw_confidence: 'medium' });
+
+  const handleSignOff = async (bundleId) => {
     try {
-      await endpoints.signOff(bundleId, { action, license_number: license, notes });
+      await endpoints.signOff(bundleId, form);
+      setShowSignOff(null);
+      setForm({ action: 'approve', license_number: '', notes: '', override_reason: '', override_reason_category: 'other', uw_confidence: 'medium' });
       onRefresh();
     } catch (e) {
       alert(e.message);
     }
   };
 
+  const getAuthorityLabel = (premium) => {
+    if (!authorityData?.authorities) return '';
+    const tiers = authorityData.authorities;
+    for (const t of tiers) {
+      if (premium <= t.binding_authority.max_premium) return `${t.tier} (${t.display_name}, max $${(t.binding_authority.max_premium / 1000).toFixed(0)}K)`;
+    }
+    return 'Needs CUO approval';
+  };
+
   return (
-    <div className="mx-auto max-w-3xl space-y-8 animate-fade-in">
+    <div className="mx-auto max-w-4xl space-y-8 animate-fade-in">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">UW Sign-off Queue</h1>
         <p className="mt-1 text-slate-400">Licensed underwriter review for insurance submissions</p>
       </div>
+
+      {authorityData?.authorities && (
+        <div className="flex flex-wrap gap-2">
+          {authorityData.authorities.map((a) => (
+            <span key={a.username} className="inline-flex items-center gap-1.5 rounded-full bg-surface-overlay px-3 py-1 text-xs text-slate-300 ring-1 ring-white/[0.06]">
+              <Shield className="h-3 w-3" />
+              {a.display_name} — {a.tier} (${(a.binding_authority.max_premium / 1000).toFixed(0)}K)
+            </span>
+          ))}
+        </div>
+      )}
 
       <div className="glass-card p-6">
         {!pending?.length ? (
@@ -27,19 +64,67 @@ export default function WorkflowPage({ pending, onRefresh }) {
         ) : (
           <div className="space-y-4">
             {pending.map((p) => {
-              const id = p.bundle_id || p.bundleId;
+              const id = typeof p === 'string' ? p : (p.bundle_id || p.bundleId || '');
+              const premium = typeof p === 'string' ? 0 : (p.premium || p.estimated_premium || 0);
+              const authLabel = getAuthorityLabel(premium);
+              const isOpen = showSignOff === id;
               return (
                 <div key={id} className="rounded-xl border border-white/[0.06] bg-surface-overlay p-5">
                   <div className="flex items-center justify-between gap-4">
-                    <span className="font-mono text-sm font-semibold">{id}</span>
+                    <div>
+                      <span className="font-mono text-sm font-semibold">{id}</span>
+                      {authLabel && <span className="ml-2 text-xs text-slate-500">({authLabel})</span>}
+                    </div>
                     <Badge status={p.state || p.status || 'pending'} />
                   </div>
                   <p className="mt-2 text-sm text-slate-400">{p.recommendation || p.decision || 'Awaiting review'}</p>
+
                   <div className="mt-4 flex flex-wrap gap-2">
-                    <button type="button" onClick={() => handleSignOff(id, 'approve')} className="btn-primary btn-sm text-xs">Approve</button>
-                    <button type="button" onClick={() => handleSignOff(id, 'refer')} className="btn-secondary text-xs">Refer</button>
-                    <button type="button" onClick={() => handleSignOff(id, 'decline')} className="rounded-xl px-3 py-1.5 text-xs text-red-400 ring-1 ring-red-500/30 hover:bg-red-500/10">Decline</button>
+                    <button type="button" onClick={() => onOpenJob?.('insurance', id, id)} className="btn-secondary text-xs">View</button>
+                    <button type="button" onClick={() => { setShowSignOff(id); setForm(f => ({ ...f, action: 'approve' })); }} className="btn-primary btn-sm text-xs">Approve</button>
+                    <button type="button" onClick={() => { setShowSignOff(id); setForm(f => ({ ...f, action: 'refer' })); }} className="btn-secondary text-xs">Refer</button>
+                    <button type="button" onClick={() => { setShowSignOff(id); setForm(f => ({ ...f, action: 'decline' })); }} className="rounded-xl px-3 py-1.5 text-xs text-red-400 ring-1 ring-red-500/30 hover:bg-red-500/10">Decline</button>
                   </div>
+
+                  {isOpen && (
+                    <div className="mt-4 space-y-3 rounded-lg bg-black/20 p-4">
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <input
+                          type="text" placeholder="License number" className="input-field w-full text-sm"
+                          value={form.license_number} onChange={e => setForm(f => ({ ...f, license_number: e.target.value }))}
+                        />
+                        <select
+                          className="input-field w-full text-sm"
+                          value={form.override_reason_category} onChange={e => setForm(f => ({ ...f, override_reason_category: e.target.value }))}
+                        >
+                          <option value="">Reason category…</option>
+                          {REASON_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                        </select>
+                        <select
+                          className="input-field w-full text-sm"
+                          value={form.uw_confidence} onChange={e => setForm(f => ({ ...f, uw_confidence: e.target.value }))}
+                        >
+                          <option value="low">Low confidence</option>
+                          <option value="medium">Medium confidence</option>
+                          <option value="high">High confidence</option>
+                        </select>
+                        <input
+                          type="text" placeholder="Override reason" className="input-field w-full text-sm"
+                          value={form.override_reason} onChange={e => setForm(f => ({ ...f, override_reason: e.target.value }))}
+                        />
+                      </div>
+                      <textarea
+                        placeholder="Notes…" className="input-field w-full text-sm" rows={2}
+                        value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
+                      />
+                      <div className="flex gap-2">
+                        <button type="button" onClick={() => handleSignOff(id)} className="btn-primary btn-sm text-xs">
+                          Confirm {form.action}
+                        </button>
+                        <button type="button" onClick={() => setShowSignOff(null)} className="btn-secondary text-xs">Cancel</button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}

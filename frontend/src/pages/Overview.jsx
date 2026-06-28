@@ -1,10 +1,10 @@
 import { useOutletContext } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { Zap, ArrowRight } from 'lucide-react';
+import { Zap, ArrowRight, TrendingUp, TrendingDown, AlertTriangle } from 'lucide-react';
 import { StatCard, DemoCard, VerticalExplainer, Badge, EmptyState } from '../components/ui';
 import { endpoints } from '../lib/api';
 
-export default function Overview({ overview, health, presets, onRunDemo, onOpenJob, onLogin }) {
+export default function Overview({ overview, health, presets, onRunDemo, onOpenJob, onLogin, marketCycle, queueStats }) {
   const { user } = useOutletContext() || {};
 
   const chartData = overview ? [
@@ -14,12 +14,34 @@ export default function Overview({ overview, health, presets, onRunDemo, onOpenJ
 
   const demos = [...(presets?.insurance || []), ...(presets?.mortgage || [])];
 
+  const marketPhase = marketCycle?.phase || null;
+  const MarketIcon = marketPhase === 'hard' ? TrendingUp : marketPhase === 'soft' ? TrendingDown : null;
+  const marketColor = marketPhase === 'hard' ? 'text-red-400' : marketPhase === 'soft' ? 'text-green-400' : 'text-slate-400';
+
   return (
     <div className="mx-auto max-w-6xl space-y-8 animate-fade-in">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
         <p className="mt-1 text-slate-400">Autonomous underwriting for insurance carriers and mortgage lenders</p>
       </div>
+
+      {/* Market cycle + Queue stats banner */}
+      {(marketCycle || queueStats) && (
+        <div className="flex flex-wrap gap-3">
+          {marketCycle && (
+            <div className={`inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-medium ring-1 ${marketColor} ring-current/30 bg-surface-overlay`}>
+              {MarketIcon && <MarketIcon className="h-3.5 w-3.5" />}
+              Market: {marketPhase?.toUpperCase()} — Property {marketCycle.property_mod}, Liability {marketCycle.liability_mod}
+              {marketCycle.nuclear_verdict_trend === 'rising' && <AlertTriangle className="ml-1 h-3 w-3 text-red-400" />}
+            </div>
+          )}
+          {queueStats && (
+            <div className="inline-flex items-center gap-2 rounded-full bg-surface-overlay px-4 py-1.5 text-xs text-slate-300 ring-1 ring-white/[0.06]">
+              Queue: {queueStats.hot_need_review} hot, {queueStats.warm_could_proceed} warm, {queueStats.no_fit_discard} no-fit
+            </div>
+          )}
+        </div>
+      )}
 
       <VerticalExplainer />
 

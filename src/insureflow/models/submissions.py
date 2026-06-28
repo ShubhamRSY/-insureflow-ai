@@ -9,13 +9,18 @@ from pydantic import BaseModel, Field
 
 class SubmissionStatus(str, Enum):
     RECEIVED = "received"
+    PENDING_APPETITE_CHECK = "pending_appetite_check"
+    APPETITE_DECLINED = "appetite_declined"
     PARSING = "parsing"
     PARSED = "parsed"
     EXTRACTING = "extracting"
     EXTRACTED = "extracted"
+    EXTERNAL_ORACLE_CHECK = "external_oracle_check"
     RECONCILING = "reconciling"
     RECONCILED = "reconciled"
     SYNTHESIZING = "synthesizing"
+    PORTFOLIO_REVIEW = "portfolio_review"
+    REINSURANCE_REVIEW = "reinsurance_review"
     COMPLETED = "completed"
     FAILED = "failed"
     FLAGGED = "flagged"
@@ -135,6 +140,7 @@ class FinancialData(BaseModel):
 class RiskProfile(BaseModel):
     naics_code: Optional[str] = None
     sic_code: Optional[str] = None
+    ncci_class_code: Optional[str] = None
     business_description: Optional[str] = None
     occupancy_type: Optional[str] = None
     construction_type: Optional[str] = None

@@ -5,8 +5,11 @@ import uuid
 from pathlib import Path
 from typing import Any, Optional
 
-from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, status
-from fastapi.responses import FileResponse
+from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Request, status
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
+from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -20,9 +23,8 @@ from insureflow.auth.dependencies import (
 from insureflow.auth.jwt import create_access_token, hash_password, verify_password
 from insureflow.auth.models import LoginRequest, Token, TokenData, User, UserCreateRequest
 from insureflow.models.mortgage import ProductLine
-from insureflow.insurance.pipeline import InsurancePipeline
-from insureflow.pipeline import UnderwritingPipeline
 from insureflow.storage.job_store import JobStore, get_job_store
+from insureflow.tasks.celery_app import celery_app
 
 logger = logging.getLogger(__name__)
 
@@ -31,11 +33,15 @@ MORTGAGE_NS = "mortgage"
 
 job_store: JobStore = get_job_store()
 
+limiter = Limiter(key_func=get_remote_address, default_limits=["30/minute"])
+
 app = FastAPI(
     title="InsureFlow AI",
     description="Autonomous underwriting pipeline API — Insurance & Mortgage",
     version="0.2.0",
 )
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 STATIC_DIR = Path(__file__).parent / "static"
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -113,7 +119,8 @@ def setup_first_admin(admin: UserCreateRequest) -> dict[str, str]:
 
 
 @app.post("/auth/login")
-def login(req: LoginRequest) -> Token:
+@limiter.limit("10/minute")
+def login(req: LoginRequest, request: Request) -> Token:
     store = get_user_store()
     username = req.username.strip()
     user = store.get(username)
@@ -153,6 +160,43 @@ def get_me(current_user: TokenData = Depends(get_current_user)) -> dict[str, str
         "username": current_user.username,
         "role": current_user.role.value if current_user.role else "none",
         "org_id": current_user.org_id,
+    }
+
+
+@app.post("/auth/register", status_code=201)
+@limiter.limit("3/hour")
+def register_user(req: UserCreateRequest, request: Request) -> dict[str, str]:
+    """Self-register — limited to VIEWER or UNDERWRITER roles."""
+    store = get_user_store()
+    username = req.username.strip()
+    if not username or not req.password:
+        raise HTTPException(status_code=400, detail="Username and password are required")
+    if len(req.password) < 4:
+        raise HTTPException(status_code=400, detail="Password must be at least 4 characters")
+    role = req.role if req.role in (Role.VIEWER, Role.UNDERWRITER) else Role.VIEWER
+    if username in store:
+        raise HTTPException(status_code=409, detail="Username already exists")
+    store[username] = User(
+        username=username,
+        hashed_password=hash_password(req.password),
+        role=role,
+        full_name=req.full_name or username,
+        org_id=req.org_id or "default",
+    )
+    return {"message": f"User '{username}' created with role '{role.value}'"}
+
+
+@app.get("/auth/roles")
+def get_role_hierarchy() -> dict[str, Any]:
+    """List all roles with hierarchy levels and descriptions."""
+    return {
+        "roles": [
+            {"role": "viewer", "level": 1, "description": "View dashboards, jobs, and audit results — read-only"},
+            {"role": "underwriter", "level": 2, "description": "Run pipelines, create audits, pull data sources"},
+            {"role": "licensed_uw", "level": 3, "description": "Sign off decisions and bind policies"},
+            {"role": "admin", "level": 4, "description": "Manage users, delete jobs, configure webhooks"},
+            {"role": "cuo", "level": 5, "description": "Set market cycles and system-wide parameters"},
+        ]
     }
 
 
@@ -214,6 +258,8 @@ class SignOffRequest(BaseModel):
     license_number: str = ""
     notes: str = ""
     override_reason: str = ""
+    override_reason_category: str = ""  # pricing | coverage | terms | appetite | ...
+    uw_confidence: str = ""  # low | medium | high
 
 
 class BindRequest(BaseModel):
@@ -387,7 +433,11 @@ async def run_insurance_demo(
     job_id = f"demo-{uuid.uuid4().hex[:12]}"
     req = _load_pacific_coast_submission()
     job_store.set(INSURANCE_NS, job_id, {"status": "processing", "demo": True}, org_id=current.org_id)
-    background_tasks.add_task(_run_pipeline_task, job_id, req, current.org_id)
+    celery_app.send_task(
+        "insureflow.tasks.pipeline_tasks.run_pipeline",
+        args=[job_id, req.model_dump(), current.org_id],
+        queue="pipeline",
+    )
     return {"job_id": job_id, "status": "processing", "preset": preset_id, "org_id": current.org_id}
 
 
@@ -537,14 +587,20 @@ def _run_pipeline_task(job_id: str, request: SubmissionRequest, org_id: str) -> 
 
 
 @app.post("/pipeline/run", status_code=202)
+@limiter.limit("10/minute")
 async def run_pipeline(
     req: SubmissionRequest,
     background_tasks: BackgroundTasks,
+    request: Request,
     current: TokenData = Depends(require_role(Role.UNDERWRITER)),
 ) -> dict[str, Any]:
     job_id = f"job-{uuid.uuid4().hex[:12]}"
     job_store.set(INSURANCE_NS, job_id, {"status": "processing"}, org_id=current.org_id)
-    background_tasks.add_task(_run_pipeline_task, job_id, req, current.org_id)
+    celery_app.send_task(
+        "insureflow.tasks.pipeline_tasks.run_pipeline",
+        args=[job_id, req.model_dump(), current.org_id],
+        queue="pipeline",
+    )
     return {"job_id": job_id, "status": "processing", "org_id": current.org_id}
 
 
@@ -568,6 +624,20 @@ def list_jobs(current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[s
 def delete_job(job_id: str, current: TokenData = Depends(require_role(Role.ADMIN))) -> None:
     if not job_store.delete(INSURANCE_NS, job_id, org_id=current.org_id):
         raise HTTPException(status_code=404, detail="Job not found")
+
+
+@app.get("/pipeline/jobs/{job_id}/quote")
+def get_job_quote(
+    job_id: str,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> HTMLResponse:
+    job = job_store.get(INSURANCE_NS, job_id, org_id=current.org_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    html = job.get("quote_html", "")
+    if not html:
+        raise HTTPException(status_code=404, detail="Quote document not available")
+    return HTMLResponse(content=html, status_code=200)
 
 
 # ── Insurance: Audit, Sign-off, Rating, Outcomes ─────────────────
@@ -651,6 +721,37 @@ def licensed_uw_sign_off(
         notes=req.notes,
         override_reason=req.override_reason,
     )
+
+    # Capture structured override analytics when UW decision differs from AI
+    if req.override_reason and record.ai_decision and record.final_decision:
+        from uuid import uuid4
+        from insureflow.outcomes.analytics import get_analytics_engine
+        from insureflow.outcomes.override import OverrideDetail, OverrideReasonCategory, PremiumDelta
+
+        try:
+            category = OverrideReasonCategory(req.override_reason_category.lower())
+        except (ValueError, AttributeError):
+            from insureflow.outcomes.override import OverrideReasonCategory
+            category = OverrideReasonCategory.OTHER
+
+        ai_decision = record.ai_decision
+        uw_decision = record.final_decision
+        decision_changed = ai_decision != uw_decision
+
+        detail = OverrideDetail(
+            override_id=f"ovr-{uuid4().hex[:10]}",
+            sign_off_id=record.sign_offs[-1].sign_off_id if record.sign_offs else "",
+            bundle_id=bundle_id,
+            org_id=current.org_id,
+            ai_decision=ai_decision,
+            uw_decision=uw_decision,
+            decision_changed=decision_changed,
+            reason_category=category,
+            reason_freeform=req.override_reason,
+            uw_confidence=req.uw_confidence,
+        )
+        get_analytics_engine().record_override(detail)
+
     return record.model_dump()
 
 
@@ -723,6 +824,360 @@ def get_calibration_summary(current: TokenData = Depends(require_role(Role.VIEWE
     from insureflow.outcomes.feedback import FeedbackEngine
 
     return FeedbackEngine().calibration_summary(current.org_id)
+
+
+@app.get("/analytics/overrides")
+def list_override_analytics(
+    limit: int = 100,
+    offset: int = 0,
+    reason_category: str = "",
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    from insureflow.outcomes.analytics import get_analytics_engine
+    from insureflow.outcomes.override import OverrideAnalyticsQuery, OverrideReasonCategory
+
+    query = OverrideAnalyticsQuery(
+        org_id=current.org_id, limit=limit, offset=offset,
+        reason_category=OverrideReasonCategory(reason_category) if reason_category else None,
+    )
+    engine = get_analytics_engine()
+    return {
+        "summary": engine.generate_summary(current.org_id).model_dump(),
+        "overrides": [o.model_dump() for o in engine.query_overrides(query)],
+    }
+
+
+@app.get("/analytics/overrides/patterns")
+def list_override_patterns(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    from insureflow.outcomes.analytics import get_analytics_engine
+
+    engine = get_analytics_engine()
+    return {
+        "patterns": [p.model_dump() for p in engine.get_patterns()],
+    }
+
+
+# ── Underwriting Workspace Endpoints ──────────────────────────────
+
+
+@app.get("/pipeline/queue")
+def get_submission_queue(
+    priority: str = "",
+    limit: int = 50,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Get the prioritized submission queue — sorted by triage score."""
+    from insureflow.agents.triage_agent import SubmissionPriority, get_triage_agent
+
+    ta = get_triage_agent()
+    pri = SubmissionPriority(priority) if priority else None
+    return {
+        "queue": [
+            {k: v for k, v in r.__dict__.items() if not k.startswith("_")}
+            for r in ta.get_queue(pri, limit)
+        ],
+        "statistics": ta.get_statistics(),
+    }
+
+
+@app.get("/pipeline/cope/{bundle_id}")
+def get_cope_analysis(
+    bundle_id: str,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Run COPE risk analysis on a submission bundle."""
+    from insureflow.underwriting.cope import COPERatingEngine
+    from insureflow.workflow.service import WorkflowService
+
+    svc = WorkflowService()
+    record = svc.store.get(bundle_id, current.org_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="Submission not found")
+
+    from insureflow.audit.store import AuditStore
+    store = AuditStore()
+    bundle = store.load_json(bundle_id, "submission_bundle.json", org_id=current.org_id)
+    if not bundle:
+        raise HTTPException(status_code=404, detail="Bundle data not found")
+
+    from insureflow.models.submissions import SubmissionBundle
+    cope = COPERatingEngine()
+    result = cope.analyze(SubmissionBundle(**bundle))
+    return {
+        "cope_score": result.score.__dict__,
+        "construction": {
+            "class": result.construction_class.value if result.construction_class else None,
+            "raw": result.construction_raw,
+            "mod_pct": result.score.construction_mod_pct,
+            "detail": result.construction_detail,
+        },
+        "occupancy": {
+            "class": result.occupancy_class.value if result.occupancy_class else None,
+            "raw": result.occupancy_raw,
+            "mod_pct": result.score.occupancy_mod_pct,
+            "detail": result.occupancy_detail,
+        },
+        "protection": {
+            "class": result.protection_class,
+            "mod_pct": result.score.protection_mod_pct,
+            "detail": result.protection_detail,
+        },
+        "exposure": {
+            "types": [e.value for e in result.exposure_types],
+            "mod_pct": result.score.exposure_mod_pct,
+            "detail": result.exposure_detail,
+        },
+    }
+
+
+@app.get("/underwriting/market")
+def get_market_cycle_status(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Get current market phase and its impact on pricing/appetite."""
+    from insureflow.underwriting.market import get_market_cycle
+
+    return get_market_cycle().market_adjustment_narrative()
+
+
+@app.post("/underwriting/market/set")
+def set_market_cycle(
+    phase: str,
+    current: TokenData = Depends(require_role(Role.CUO)),
+) -> dict[str, Any]:
+    """Set market phase (hard/soft) — CUO-level access only."""
+    from insureflow.underwriting.market import MarketCycle, MarketPhase, get_market_cycle
+
+    try:
+        mp = MarketPhase(phase.lower())
+    except ValueError:
+        raise HTTPException(status_code=400, detail=f"Invalid phase: {phase} (use: hard, soft, transitioning_hard, transitioning_soft)")
+
+    cycles = {
+        MarketPhase.HARD: MarketCycle(
+            phase=MarketPhase.HARD,
+            property_rate_mod=1.25, liability_rate_mod=1.15,
+            workers_comp_rate_mod=0.95, auto_rate_mod=1.30,
+            appetite_tightness=1.4, reinsurance_cost_mod=1.20,
+            industry_loss_ratio=0.73, capacity_available=False,
+            nuclear_verdict_trend="rising",
+            description="Hard market: Rates rising, capacity tightening. Nuclear verdicts driving increases.",
+        ),
+        MarketPhase.SOFT: MarketCycle(
+            phase=MarketPhase.SOFT,
+            property_rate_mod=0.92, liability_rate_mod=0.95,
+            workers_comp_rate_mod=0.90, auto_rate_mod=0.96,
+            appetite_tightness=0.80, reinsurance_cost_mod=0.90,
+            industry_loss_ratio=0.55, capacity_available=True,
+            nuclear_verdict_trend="stable",
+            description="Soft market: Rates declining 4-8%. Capacity abundant. Competition increasing.",
+        ),
+        MarketPhase.TRANSITIONING_HARD: MarketCycle(
+            phase=MarketPhase.TRANSITIONING_HARD,
+            property_rate_mod=1.10, liability_rate_mod=1.05,
+            workers_comp_rate_mod=0.92, auto_rate_mod=1.15,
+            appetite_tightness=1.15, reinsurance_cost_mod=1.08,
+            industry_loss_ratio=0.65, capacity_available=True,
+            nuclear_verdict_trend="stable",
+            description="Transitioning from hard to soft: Rates still elevated but capacity returning.",
+        ),
+    }
+
+    mc = get_market_cycle()
+    mc.set_cycle(cycles.get(mp, cycles[MarketPhase.SOFT]))
+    return mc.market_adjustment_narrative()
+
+
+@app.get("/underwriting/authority")
+def list_underwriting_authorities(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """List all underwriter authority levels and binding limits."""
+    from insureflow.underwriting.authority import get_authority_matrix
+
+    matrix = get_authority_matrix()
+    return {
+        "authorities": [
+            {
+                "username": a.username,
+                "display_name": a.display_name,
+                "tier": a.tier.value,
+                "license_number": a.license_number,
+                "binding_authority": {
+                    "max_premium": a.binding_authority.max_premium,
+                    "max_tiv": a.binding_authority.max_tiv,
+                    "requires_co_sign": a.binding_authority.requires_co_sign,
+                    "co_sign_threshold_premium": a.binding_authority.co_sign_threshold_premium,
+                    "max_aggregate_exposure": a.binding_authority.max_aggregate_exposure,
+                },
+            }
+            for a in matrix.list_all()
+        ]
+    }
+
+
+@app.post("/pipeline/renewal/{bundle_id}")
+def analyze_renewal(
+    bundle_id: str,
+    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+) -> dict[str, Any]:
+    """Run renewal analysis on an existing policy."""
+    from insureflow.underwriting.renewal import RenewalEngine
+
+    from insureflow.workflow.service import WorkflowService
+    record = WorkflowService().store.get(bundle_id, current.org_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="Submission not found")
+
+    engine = RenewalEngine()
+    from datetime import date, timedelta
+    rec = engine.analyze_renewal(
+        bundle_id=bundle_id,
+        insured_name="",  # Would come from bundle
+        current_premium=0.0,
+        loss_ratio=0.0,
+        expiry_date=date.today() + timedelta(days=90),
+    )
+    return rec.__dict__
+
+
+# ── Premium Audit Endpoints ────────────────────────────────────
+
+
+_audit_engine: Optional[PremiumAuditEngine] = None
+
+
+def _get_audit_engine() -> PremiumAuditEngine:
+    global _audit_engine
+    if _audit_engine is None:
+        from insureflow.underwriting.renewal import PremiumAuditEngine
+        _audit_engine = PremiumAuditEngine()
+    return _audit_engine
+
+
+@app.post("/pipeline/audits/{bundle_id}/create")
+def create_premium_audit(
+    bundle_id: str,
+    estimated_premium: float,
+    policy_period_start: Optional[str] = None,
+    policy_period_end: Optional[str] = None,
+    policy_number: str = "",
+    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+) -> dict[str, Any]:
+    """Create a premium audit for end-of-year reconciliation."""
+    engine = _get_audit_engine()
+    from datetime import date
+    p_start = date.fromisoformat(policy_period_start) if policy_period_start else None
+    p_end = date.fromisoformat(policy_period_end) if policy_period_end else None
+    audit = engine.create_audit(
+        bundle_id=bundle_id,
+        estimated_premium=estimated_premium,
+        policy_period_start=p_start,
+        policy_period_end=p_end,
+        policy_number=policy_number,
+        org_id=current.org_id,
+    )
+    return audit.__dict__
+
+
+@app.post("/pipeline/audits/{audit_id}/adjustment")
+def add_audit_adjustment(
+    audit_id: str,
+    adjustment_type: str,
+    description: str,
+    amount: float,
+    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+) -> dict[str, Any]:
+    """Add an adjustment to a premium audit."""
+    from insureflow.underwriting.renewal import AuditAdjustmentType
+    engine = _get_audit_engine()
+    try:
+        adj_type = AuditAdjustmentType(adjustment_type)
+        audit = engine.add_adjustment(audit_id, adj_type, description, amount)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Audit not found")
+    except ValueError:
+        raise HTTPException(status_code=400, detail=f"Invalid adjustment type: {adjustment_type}")
+    return audit.__dict__
+
+
+@app.post("/pipeline/audits/{audit_id}/complete")
+def complete_premium_audit(
+    audit_id: str,
+    actual_premium: float,
+    audited_exposure: str = "",
+    notes: str = "",
+    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+) -> dict[str, Any]:
+    """Complete a premium audit with actual figures."""
+    engine = _get_audit_engine()
+    try:
+        audit = engine.complete_audit(
+            audit_id, actual_premium,
+            audited_exposure=audited_exposure,
+            notes=notes,
+            reconciled_by=current.username,
+        )
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Audit not found")
+    return audit.__dict__
+
+
+@app.get("/pipeline/audits")
+def list_premium_audits(
+    status: Optional[str] = None,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """List premium audits with optional status filter."""
+    from insureflow.underwriting.renewal import AuditStatus
+    engine = _get_audit_engine()
+    audit_status = AuditStatus(status) if status else None
+    audits = engine.list_audits(org_id=current.org_id, status=audit_status)
+    return {"audits": [a.__dict__ for a in audits], "total": len(audits)}
+
+
+@app.get("/pipeline/audits/material-adjustments")
+def material_audit_adjustments(
+    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+) -> dict[str, Any]:
+    """Audits with material adjustments needing UW review."""
+    engine = _get_audit_engine()
+    audits = engine.audits_needing_renewal_review(org_id=current.org_id)
+    return {"audits": [a.__dict__ for a in audits], "total": len(audits)}
+
+
+@app.get("/pipeline/documents/{bundle_id}/missing")
+def get_missing_documents(
+    bundle_id: str,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Get list of missing documents for a submission."""
+    from insureflow.workflow.service import WorkflowService
+    record = WorkflowService().store.get(bundle_id, current.org_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="Submission not found")
+
+    from insureflow.audit.store import AuditStore
+    store = AuditStore()
+    bundle_data = store.load_json(bundle_id, "submission_bundle.json", org_id=current.org_id)
+
+    if not bundle_data:
+        from insureflow.agents.triage_agent import DocumentChecklist
+        checklist = DocumentChecklist()
+    else:
+        from insureflow.models.submissions import SubmissionBundle
+        bundle = SubmissionBundle(**bundle_data)
+        from insureflow.agents.triage_agent import get_triage_agent
+        result = get_triage_agent().score_submission(bundle)
+        checklist = result.document_checklist
+
+    return {
+        "bundle_id": bundle_id,
+        "completeness_pct": checklist.completeness_pct,
+        "missing_documents": checklist.missing,
+    }
 
 
 @app.get("/pipeline/rating/products")
@@ -1052,3 +1507,298 @@ def delete_mortgage_job(
 ) -> None:
     if not job_store.delete(MORTGAGE_NS, job_id, org_id=current.org_id):
         raise HTTPException(status_code=404, detail="Mortgage job not found")
+
+
+# ── Broker / Agent Real-Time Visibility ──────────────────────────
+
+
+@app.get("/broker/status/{token}")
+def broker_submission_status(
+    token: str,
+) -> dict[str, Any]:
+    """Public (no-auth) endpoint for brokers to check submission status via share token."""
+    from insureflow.webhooks.dispatcher import webhook_dispatcher
+
+    share = webhook_dispatcher.get_broker_share(token)
+    if not share:
+        raise HTTPException(status_code=404, detail="Invalid or expired broker status link")
+
+    job = job_store.get(INSURANCE_NS, share.bundle_id, org_id=share.org_id)
+    if not job:
+        job = job_store.get(MORTGAGE_NS, share.bundle_id, org_id=share.org_id)
+
+    status = (job or {}).get("status", "unknown")
+    results = (job or {}).get("results") or {}
+
+    return {
+        "bundle_id": share.bundle_id,
+        "status": status,
+        "broker_name": share.broker_name,
+        "vertical": "insurance" if job_store.get(INSURANCE_NS, share.bundle_id, org_id=share.org_id) else "mortgage",
+        "decision": results.get("ai_decision") or (
+            (results.get("memo") or {}).get("decision") if isinstance(results, dict) else None
+        ),
+        "workflow_state": results.get("workflow_state", ""),
+        "estimated_completion": None,
+        "last_updated": (job or {}).get("updated_at", ""),
+    }
+
+
+class BrokerShareRequest(BaseModel):
+    broker_name: str = ""
+    broker_email: str = ""
+
+
+@app.post("/pipeline/jobs/{bundle_id}/broker-share")
+def create_broker_share(
+    bundle_id: str,
+    req: BrokerShareRequest,
+    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+) -> dict[str, str]:
+    """Generate a shareable broker status link for this bundle."""
+    from insureflow.webhooks.dispatcher import webhook_dispatcher
+
+    token = webhook_dispatcher.create_broker_share(
+        bundle_id=bundle_id,
+        org_id=current.org_id,
+        broker_name=req.broker_name,
+        broker_email=req.broker_email,
+    )
+    return {
+        "token": token,
+        "bundle_id": bundle_id,
+        "status_url": f"/broker/status/{token}",
+    }
+
+
+# ── Unified Webhook Management (Insurance + Mortgage) ────────────
+
+
+class InsuranceWebhookRegisterRequest(BaseModel):
+    url: str
+    events: list[str] = ["insurance.completed", "insurance.failed"]
+    secret: str = ""
+    label: str = ""
+
+
+@app.post("/webhooks/insurance", status_code=201)
+def register_insurance_webhook(
+    req: InsuranceWebhookRegisterRequest,
+    current: TokenData = Depends(require_role(Role.ADMIN)),
+) -> dict[str, Any]:
+    from insureflow.webhooks.dispatcher import webhook_dispatcher
+
+    sub = webhook_dispatcher.register(
+        org_id=current.org_id,
+        url=req.url,
+        events=req.events or ["insurance.completed", "insurance.failed"],
+        secret=req.secret,
+        label=req.label,
+    )
+    return {
+        "subscription_id": sub.subscription_id,
+        "org_id": sub.org_id,
+        "url": sub.url,
+        "events": sub.events,
+        "label": sub.label,
+    }
+
+
+@app.get("/webhooks/insurance")
+def list_insurance_webhooks(
+    current: TokenData = Depends(require_role(Role.ADMIN)),
+) -> dict[str, Any]:
+    from insureflow.webhooks.dispatcher import webhook_dispatcher
+
+    subs = webhook_dispatcher.list_for_org(current.org_id)
+    insurance_subs = [s for s in subs if any("insurance" in e for e in s.events)]
+    return {
+        "org_id": current.org_id,
+        "subscriptions": [
+            {
+                "subscription_id": s.subscription_id,
+                "url": s.url,
+                "events": s.events,
+                "active": s.active,
+                "label": s.label,
+            }
+            for s in insurance_subs
+        ],
+    }
+
+
+@app.delete("/webhooks/{subscription_id}", status_code=204)
+def delete_any_webhook(
+    subscription_id: str,
+    current: TokenData = Depends(require_role(Role.ADMIN)),
+) -> None:
+    from insureflow.webhooks.dispatcher import webhook_dispatcher
+
+    if not webhook_dispatcher.unregister(subscription_id, current.org_id):
+        raise HTTPException(status_code=404, detail="Webhook not found")
+
+
+# ── Portfolio Concentration ──────────────────────────────────────
+
+
+@app.get("/portfolio/summary")
+def portfolio_summary(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """View the carrier's current portfolio composition for concentration analysis."""
+    from insureflow.portfolio.store import get_portfolio_store
+
+    store = get_portfolio_store()
+    policies = store.list_policies(org_id=current.org_id)
+
+    by_state: dict[str, dict[str, Any]] = {}
+    by_naics2: dict[str, dict[str, Any]] = {}
+    total_tiv = 0.0
+    total_policies = len(policies)
+
+    for p in policies:
+        total_tiv += p.tiv
+        state = p.geographic_region
+        if state not in by_state:
+            by_state[state] = {"count": 0, "tiv": 0.0, "policies": []}
+        by_state[state]["count"] += 1
+        by_state[state]["tiv"] += p.tiv
+        by_state[state]["policies"].append({
+            "insured_name": p.insured_name, "tiv": p.tiv, "naics": p.naics_code,
+        })
+
+        naics2 = p.industry_code
+        if naics2 not in by_naics2:
+            by_naics2[naics2] = {"count": 0, "tiv": 0.0, "policies": []}
+        by_naics2[naics2]["count"] += 1
+        by_naics2[naics2]["tiv"] += p.tiv
+        by_naics2[naics2]["policies"].append({
+            "insured_name": p.insured_name, "tiv": p.tiv, "state": p.state,
+        })
+
+    return {
+        "org_id": current.org_id,
+        "total_policies": total_policies,
+        "total_tiv": total_tiv,
+        "by_state": {
+            state: {"count": info["count"], "tiv": info["tiv"], "pct": round(info["tiv"] / total_tiv * 100, 1) if total_tiv else 0}
+            for state, info in sorted(by_state.items(), key=lambda x: -x[1]["tiv"])
+        },
+        "by_industry": {
+            naics: {"count": info["count"], "tiv": info["tiv"], "pct": round(info["tiv"] / total_tiv * 100, 1) if total_tiv else 0}
+            for naics, info in sorted(by_naics2.items(), key=lambda x: -x[1]["tiv"])
+        },
+        "concentration_warnings": [
+            f"{state}: {info['tiv'] / total_tiv * 100:.0f}% of portfolio TIV"
+            for state, info in by_state.items()
+            if total_tiv > 0 and info["tiv"] / total_tiv > 0.30
+        ],
+    }
+
+
+# ── Core System Integration Status ────────────────────────────────
+
+
+@app.get("/integration/status")
+def integration_status(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Check which core systems are configured and their connectivity."""
+    from insureflow.integration.britecore_adapter import BriteCoreAdapter
+    from insureflow.integration.guidewire_adapter import GuidewireAdapter
+
+    britecore = BriteCoreAdapter(api_key=os.getenv("BRITECORE_API_KEY", ""))
+    guidewire = GuidewireAdapter(api_key=os.getenv("GUIDEWIRE_API_KEY", ""))
+
+    return {
+        "systems": [
+            {
+                "name": britecore.get_system_name(),
+                "configured": bool(os.getenv("BRITECORE_API_KEY")),
+                "mode": "simulated" if not os.getenv("BRITECORE_API_KEY") else "live",
+                "healthy": True,
+            },
+            {
+                "name": guidewire.get_system_name(),
+                "configured": bool(os.getenv("GUIDEWIRE_API_KEY")),
+                "mode": "simulated" if not os.getenv("GUIDEWIRE_API_KEY") else "live",
+                "healthy": True,
+            },
+        ]
+    }
+
+
+# ── Pipeline Configuration (enhanced with new features) ──────────
+
+
+class PipelineConfigRequest(BaseModel):
+    """Extended submission request with new pipeline feature toggles."""
+    acord_xml: Optional[str] = None
+    inspection_reports: Optional[list[str]] = None
+    supplemental_docs: Optional[list[str]] = None
+    json_payload: Optional[str] = None
+    loss_run: Optional[str] = None
+    schedule_of_values: Optional[str] = None
+    documents: Optional[list[InsuranceDocumentPayload]] = None
+    pdf_paths: Optional[list[str]] = None
+    bundle_id: Optional[str] = None
+    use_llm: bool = True
+    use_legacy_pipeline: bool = False
+    skip_appetite_filter: bool = False
+    skip_oracles: bool = False
+    skip_portfolio: bool = False
+    skip_core_integration: bool = False
+    create_broker_share: bool = False
+
+
+@app.post("/pipeline/v2/run", status_code=202)
+async def run_pipeline_v2(
+    req: PipelineConfigRequest,
+    background_tasks: BackgroundTasks,
+    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+) -> dict[str, Any]:
+    """Enhanced pipeline run with appetite filter, oracles, portfolio, and core integration."""
+    job_id = f"job-{uuid.uuid4().hex[:12]}"
+    job_store.set(INSURANCE_NS, job_id, {"status": "processing", "pipeline_version": "v2"}, org_id=current.org_id)
+    background_tasks.add_task(_run_pipeline_v2_task, job_id, req, current.org_id)
+    return {"job_id": job_id, "status": "processing", "pipeline_version": "v2", "org_id": current.org_id}
+
+
+def _run_pipeline_v2_task(job_id: str, request: PipelineConfigRequest, org_id: str) -> None:
+    try:
+        docs = [d.model_dump() for d in request.documents] if request.documents else None
+        pipeline = InsurancePipeline(org_id=org_id, use_llm=request.use_llm)
+        result = pipeline.run(
+            acord_xml=request.acord_xml,
+            inspection_reports=request.inspection_reports,
+            supplemental_docs=request.supplemental_docs,
+            json_payload=request.json_payload,
+            loss_run=request.loss_run,
+            schedule_of_values=request.schedule_of_values,
+            documents=docs,
+            pdf_paths=request.pdf_paths,
+            bundle_id=request.bundle_id or job_id,
+            skip_appetite_filter=request.skip_appetite_filter,
+            skip_oracles=request.skip_oracles,
+            skip_portfolio=request.skip_portfolio,
+            skip_core_integration=request.skip_core_integration,
+        )
+
+        if request.create_broker_share and result.get("bundle_id"):
+            from insureflow.webhooks.dispatcher import webhook_dispatcher
+            token = webhook_dispatcher.create_broker_share(
+                bundle_id=result["bundle_id"],
+                org_id=org_id,
+                broker_name=result.get("broker_name", ""),
+            )
+            result["broker_status_token"] = token
+            result["broker_status_url"] = f"/broker/status/{token}"
+
+        job_store.set(INSURANCE_NS, job_id, {"status": "completed", "results": result}, org_id=org_id)
+    except Exception as exc:
+        logger.exception("Pipeline v2 run failed")
+        job_store.set(INSURANCE_NS, job_id, {"status": "failed", "error": str(exc)}, org_id=org_id)
+
+
+# Ensure os is imported (used in integration_status)
+import os

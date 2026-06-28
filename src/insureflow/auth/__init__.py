@@ -8,6 +8,7 @@ class Role(str, Enum):
     LICENSED_UW = "licensed_uw"
     UNDERWRITER = "underwriter"
     VIEWER = "viewer"
+    CUO = "cuo"
 
 
 ROLE_HIERARCHY: dict[Role, int] = {
@@ -15,4 +16,5 @@ ROLE_HIERARCHY: dict[Role, int] = {
     Role.UNDERWRITER: 2,
     Role.LICENSED_UW: 3,
     Role.ADMIN: 4,
+    Role.CUO: 5,
 }

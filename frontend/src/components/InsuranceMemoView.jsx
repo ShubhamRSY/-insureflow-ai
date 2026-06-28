@@ -17,6 +17,16 @@ function severityCounts(findings) {
   return counts;
 }
 
+const SEV_ORDER = { critical: 0, high: 1, moderate: 2, low: 3 };
+
+function sortFindings(findings) {
+  return [...(findings || [])].sort((a, b) => {
+    const sa = SEV_ORDER[(a.severity || 'moderate').toLowerCase()] ?? 2;
+    const sb = SEV_ORDER[(b.severity || 'moderate').toLowerCase()] ?? 2;
+    return sa - sb;
+  });
+}
+
 function FindingRow({ finding }) {
   const sev = (finding.severity || 'moderate').toLowerCase();
   return (
@@ -109,24 +119,24 @@ export default function InsuranceMemoView({ job }) {
         </div>
       )}
 
-      {/* Key findings */}
+      {/* Key findings (sorted high→low) */}
       {allFindings.length > 0 && (
         <div>
           <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Key Findings</h4>
           <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-            {allFindings.slice(0, 8).map((f, i) => (
+            {sortFindings(allFindings).slice(0, 8).map((f, i) => (
               <FindingRow key={f.finding_id || i} finding={f} />
             ))}
           </div>
         </div>
       )}
 
-      {/* Agent sections */}
+      {/* Agent sections (sorted high→low) */}
       {agentSections.map(([key, label]) => (
         <div key={key}>
           <h4 className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">{label}</h4>
           <div className="space-y-2">
-            {(memo[key] || []).slice(0, 3).map((f, i) => (
+            {sortFindings(memo[key]).slice(0, 3).map((f, i) => (
               <FindingRow key={i} finding={f} />
             ))}
           </div>

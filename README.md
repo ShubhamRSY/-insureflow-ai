@@ -41,10 +41,13 @@ Modern SPA served at `/dashboard` (React 18, Vite, Tailwind CSS):
 | **System Health** | Live diagnostics (10 component checks) |
 | **Insurance** | Source connector hub, one-click demos, job history |
 | **Mortgage** | Loan package submission, job history, rate/DTI display |
-| **UW Sign-off** | Licensed review queue with approve / refer / decline |
-| **Settings** | Session info, credential reset |
+| **UW Sign-off** | Licensed review queue with View (job drawer), approve, refer, decline |
+| **Renewals** | Premium audit tracking, reconciliation status, material adjustments |
+| **Authority Matrix** | UW tier overview, binding limits per authority level |
+| **Market Admin** | Market phase controls (hard/soft), rate impact cards |
+| **Settings** | Session info, RBAC reference (role hierarchy + descriptions), credential reset |
 
-Features: JWT login with first-time setup, password visibility toggle, real-time job polling, responsive sidebar navigation.
+Features: JWT login with first-time setup, self-registration (viewer/underwriter), password visibility toggle, real-time job polling, responsive sidebar navigation.
 
 ### Insurance Source Connectors
 
@@ -61,7 +64,7 @@ Category-filtered connector hub with brand logos and pull-to-submit workflow.
 
 ### Infrastructure & Operations
 
-- **JWT auth + RBAC** — viewer → underwriter → licensed_uw → admin; org-scoped data isolation
+- **JWT auth + RBAC** — viewer → underwriter → licensed_uw → admin → cuo; org-scoped data isolation, self-registration for viewer/underwriter
 - **Persistent auth store** — file-backed user registry survives server reloads
 - **Redis job store** — org-scoped async job tracking for insurance and mortgage pipelines
 - **Celery workers** — async mortgage processing with job-store completion sync
@@ -295,12 +298,23 @@ All agents have a **deterministic fallback** when no LLM key is configured.
 
 | Feature | Module | Description |
 |---------|--------|-------------|
+| Submission triage & scoring | `agents/triage_agent.py` | Score/prioritize incoming submissions (hot/warm/cold/no-fit) |
+| COPE risk analysis | `underwriting/cope.py` | Construction, Occupancy, Protection, Exposure — 4-pillar property framework |
+| ISO-style rating | `rating/engine.py` | ISO loss costs × LCM × territory relativities × COPE mods × market cycle |
+| Market cycle awareness | `underwriting/market.py` | Hard/soft market adjustments to pricing & appetite thresholds |
+| Delegation of authority | `underwriting/authority.py` | Junior/Senior/CUO/MGA tiers with binding limits & co-sign rules |
+| Renewal engine | `underwriting/renewal.py` | 60-120 day pre-renewal analysis, loss ratio trends, bundled retention |
+| Override analytics | `outcomes/analytics.py` | Structured override capture, pattern detection, knowledge base feedback |
+| Reinsurance treaty fit | `portfolio/treaty.py` | Quota share, excess treaties, aggregate utilization, facultative thresholds |
+| Portfolio concentration | `portfolio/store.py` | Geographic + industry concentration scoring, double-concentration alerts |
+| External data oracles | `oracles/` | CLUE claims history, NCCI workers comp, catastrophe model simulation |
+| Appetite filter | `agents/appetite_filter.py` | 9 check methods (NAICS, geography, TIV, loss ratio, premium, years in business, prior cancellation) |
 | OCR on broker PDFs | `ingestion/insurance/` | Tesseract + pdfminer for scans |
-| P&C rating | `rating/engine.py` | Schedule mods, loss ratio adjustments |
 | Policy admin adapter | `rating/adapters/stub.py` | Guidewire/Duck Creek-style quote + bind interface |
-| Licensed UW sign-off | `workflow/` | `LICENSED_UW` role, license number, override reason |
+| Licensed UW sign-off | `workflow/` | `LICENSED_UW` role, license number, override reason, override category, UW confidence |
 | Bind/loss feedback | `outcomes/` | Prediction vs actual premium/loss calibration |
 | Regulatory audit pack | `audit/package.py` | Encrypted artifacts + ZIP with SHA-256 manifest |
+| Real-time broker status | `webhooks/` | Token-based public share links, HMAC-signed webhooks |
 
 ### Insurance API endpoints
 
@@ -312,11 +326,20 @@ All agents have a **deterministic fallback** when no LLM key is configured.
 | `/pipeline/audit/{bundle_id}` | GET | viewer | Full audit trail |
 | `/pipeline/audit/{bundle_id}/package` | GET | admin | Regulatory ZIP export |
 | `/pipeline/workflow/pending` | GET | viewer | Bundles awaiting UW review |
-| `/pipeline/workflow/{bundle_id}/sign-off` | POST | licensed_uw | Approve / decline / refer |
+| `/pipeline/workflow/{bundle_id}/sign-off` | POST | licensed_uw | Approve / decline / refer (with override category, UW confidence) |
 | `/pipeline/workflow/{bundle_id}/bind` | POST | licensed_uw | Bind approved policy |
 | `/pipeline/outcomes/loss-experience` | POST | underwriter | Record actual loss data |
 | `/pipeline/outcomes/calibration` | GET | viewer | Portfolio loss ratio stats |
 | `/pipeline/rating/products` | GET | viewer | Available P&C lines + base rates |
+| `/pipeline/queue` | GET | viewer | Prioritized submission queue with triage scores |
+| `/pipeline/cope/{id}` | GET | viewer | COPE risk analysis (C-O-P-E breakdown + schedule mod) |
+| `/pipeline/documents/{id}/missing` | GET | viewer | Missing document checklist |
+| `/underwriting/market` | GET | viewer | Current market phase + rate impacts |
+| `/underwriting/market/set` | POST | cuo | Set market phase (hard/soft) |
+| `/underwriting/authority` | GET | viewer | All UW authority tiers & binding limits |
+| `/pipeline/renewal/{id}` | POST | underwriter | Run renewal analysis |
+| `/analytics/overrides` | GET | viewer | Override analytics with patterns |
+| `/analytics/overrides/patterns` | GET | viewer | Detected override patterns |
 
 **Submit with PDF upload:**
 
@@ -431,8 +454,11 @@ Open **http://localhost:8002/dashboard** after starting the API.
 | **System Health** | No | Live component status with LLM mode indicator |
 | **Insurance** | Yes | Connector hub (24 sources), Pacific Coast demo, job table |
 | **Mortgage** | Yes | Johnson / Midwest demos, job submission, rate & DTI |
-| **UW Sign-off** | Yes | Licensed review queue — approve, refer, decline |
-| **Settings** | Optional | Account info, sign out, credential reset |
+| **UW Sign-off** | Yes | Licensed review queue — View (opens job drawer with full memo), approve, refer, decline |
+| **Renewal Dashboard** | Yes | Premium audit history, material adjustment queue |
+| **Authority Matrix** | Yes | UW tier cards, binding limits per authority level |
+| **Market Admin** | Yes | Market phase selector, rate impact metrics |
+| **Settings** | Optional | Account info, RBAC role reference, sign out, credential reset |
 
 ### Auth reset
 
@@ -441,7 +467,7 @@ python cli.py auth-reset       # Clear all accounts on running server
 curl -X POST http://localhost:8002/auth/reset
 ```
 
-Then use **First-time Setup** in the dashboard login modal.
+Then use **First-time Setup** in the dashboard login modal (or **Settings → Reset credentials** if signed in).
 
 ---
 
@@ -451,12 +477,28 @@ JWT bearer tokens with role-based access control and org-scoped data isolation.
 
 ### Roles
 
-| Role | Permissions |
-|------|-------------|
-| `viewer` | Read jobs, audit trails, workflow status |
-| `underwriter` | Run pipelines, record loss experience |
-| `licensed_uw` | Sign off on memos, bind policies |
-| `admin` | Create users, delete jobs, export audit packages, manage webhooks |
+| Role | Level | Permissions |
+|------|-------|-------------|
+| `viewer` | 1 | Read jobs, audit trails, workflow status |
+| `underwriter` | 2 | Run pipelines, record loss experience, create audits |
+| `licensed_uw` | 3 | Sign off on memos, bind policies |
+| `admin` | 4 | Create users, delete jobs, configure webhooks |
+| `cuo` | 5 | Set market cycles, system-wide parameters |
+
+Self-registration (`POST /auth/register`) creates `viewer` or `underwriter` accounts only. Admins use `POST /auth/users` to assign higher roles.
+
+### Endpoints
+
+| Endpoint | Method | Auth | Description |
+|----------|--------|------|-------------|
+| `/auth/status` | GET | No | Check if first-time admin setup is required |
+| `/auth/setup` | POST | No (one-time) | Create first admin account |
+| `/auth/register` | POST | No | Self-register as viewer or underwriter |
+| `/auth/login` | POST | No | Get JWT bearer token |
+| `/auth/me` | GET | Bearer | Current user (username, role, org_id) |
+| `/auth/roles` | GET | No | List all roles with hierarchy levels and descriptions |
+| `/auth/users` | POST | Bearer (admin) | Admin creates user with any role |
+| `/auth/reset` | GET/POST | No | Clear all accounts (redirect/JSON) |
 
 ### Setup
 
@@ -464,7 +506,7 @@ JWT bearer tokens with role-based access control and org-scoped data isolation.
 # 1. Create first admin (one-time)
 curl -X POST http://localhost:8000/auth/setup \
   -H "Content-Type: application/json" \
-  -d '{"username": "admin", "password": "changeme", "role": "admin", "org_id": "my-bank"}'
+  -d '{"username": "admin", "password": "changeme", "org_id": "my-bank"}'
 
 # 2. Login
 curl -X POST http://localhost:8000/auth/login \
@@ -512,6 +554,10 @@ python -c "from insureflow.storage.encryption import EnvelopeEncryption; print(E
 ```
 src/insureflow/
 ├── agents/                  # Insurance ReAct agents + mortgage specialists
+│   ├── appetite_filter.py   # Fast-fail appetite screening (9 checks)
+│   ├── triage_agent.py      # Submission scoring & prioritization
+│   ├── reinsurance_agent.py # Reinsurance treaty fit analysis
+│   └── portfolio_risk_agent.py  # Portfolio concentration analysis
 ├── api.py                   # FastAPI server (insurance + mortgage)
 ├── audit/                   # Audit store, insurance audit logger, regulatory ZIP
 ├── auth/                    # JWT, roles (viewer → licensed_uw → admin)
@@ -521,10 +567,25 @@ src/insureflow/
 │   └── mortgage/            # Mortgage document loader, classifier, extractors
 ├── insurance/               # InsurancePipeline (production default)
 ├── mortgage/                # MortgagePipeline, pricing, compliance, webhooks
-├── outcomes/                # Bind outcomes, loss experience, feedback loop
-├── rating/                  # P&C rating engine + policy admin adapter
+├── oracles/                 # External data oracles (CLUE, NCCI, CAT models)
+├── outcomes/                # Bind outcomes, loss experience, feedback loop, override analytics
+│   ├── analytics.py         # Override pattern detection & knowledge base
+│   └── override.py          # Structured override detail model (premium deltas, reason taxonomy)
+├── portfolio/               # Portfolio concentration & reinsurance treaty stores
+│   ├── store.py             # Portfolio policy store + concentration analysis
+│   └── treaty.py            # Reinsurance treaty model (6 treaty types)
+├── rating/                  # P&C rating engine
+│   ├── engine.py            # ISO-style rating with COPE + market cycle adjustments
+│   ├── models.py            # Quote models, rate components
+│   └── adapters/            # Policy admin adapter (Guidewire/Duck Creek stub)
+├── underwriting/            # Core underwriting domain (new)
+│   ├── cope.py              # COPE risk analysis (Construction/Occupancy/Protection/Exposure)
+│   ├── authority.py         # Delegation of authority matrix (Junior/Senior/CUO/MGA)
+│   ├── market.py            # Market cycle awareness (hard/soft market pricing)
+│   └── renewal.py           # Pre-renewal engine (60-120 day window, bundling analysis)
 ├── workflow/                # Licensed UW sign-off state machine
 ├── storage/                 # Redis job store, Fernet encryption
+├── webhooks/                # HMAC-signed event dispatch + broker status shares
 ├── rag/                     # Underwriting guidelines (in-memory + pgvector)
 ├── provenance/              # Data provenance hierarchy
 ├── reconciliation/          # Cross-document discrepancy detection
@@ -532,6 +593,7 @@ src/insureflow/
 ├── e2e/                     # End-to-end test runner + Playwright browser tests
 ├── health/                  # System diagnostics (doctor)
 ├── mcp/                     # MCP server for Claude Desktop / Cursor
+├── integration/             # Core system adapters (BriteCore, Guidewire)
 ├── static/ui/               # Built React dashboard (Vite output)
 └── cli.py                   # Typer CLI
 

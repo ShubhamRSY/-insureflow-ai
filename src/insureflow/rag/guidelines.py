@@ -15,6 +15,7 @@ class GuidelineCategory(str, Enum):
     LOSS_HISTORY = "loss_history"
     COMPLIANCE = "compliance"
     GENERAL = "general"
+    CARRIER_APPETITE = "carrier_appetite"
 
 
 class GuidelineSource(str, Enum):
@@ -48,6 +49,84 @@ class UnderwritingGuidelines(BaseModel):
             g for g in self.guidelines
             if any(t.lower() in " ".join(g.keywords).lower() for t in terms)
         ]
+
+
+def builtin_carrier_appetite_rules() -> UnderwritingGuidelines:
+    """Strict carrier appetite / eligibility rules for fast-fail filtering."""
+    return UnderwritingGuidelines(guidelines=[
+        Guideline(
+            id="APT-001",
+            category=GuidelineCategory.CARRIER_APPETITE,
+            source=GuidelineSource.COMPANY,
+            title="NAICS Code Eligibility",
+            content="Decline any risk with NAICS code in the following excluded industries: 7211 (casinos), 1133 (logging), 2131 (mining support), 4821 (rail transport), 4911 (postal service), 9211 (military). Preferred NAICS: 44-45 (retail), 53 (real estate), 54 (professional services), 56 (admin support), 62 (healthcare), 72 (accommodation/food excluding casinos), 81 (other services).",
+            keywords=["naics", "industry", "eligible", "excluded", "decline"],
+            risk_impact="high",
+        ),
+        Guideline(
+            id="APT-002",
+            category=GuidelineCategory.CARRIER_APPETITE,
+            source=GuidelineSource.COMPANY,
+            title="Minimum Premium Threshold",
+            content="Minimum annual premium of $2,500 for any new business policy. Risks generating less than $2,500 in estimated premium are ineligible. Maximum annual premium of $250,000 without facultative reinsurance approval.",
+            keywords=["premium", "minimum", "maximum", "threshold", "reinsurance"],
+            risk_impact="high",
+        ),
+        Guideline(
+            id="APT-003",
+            category=GuidelineCategory.CARRIER_APPETITE,
+            source=GuidelineSource.COMPANY,
+            title="Geographic Restrictions (CAT Exposure)",
+            content="No new business in coastal FL (zip codes 32000-34999), coastal TX (77500-78500), or HI. Louisiana and Mississippi coastal counties require additional CAT modeling and are ineligible for habitational risks. California wildfire zones (zip codes in high/Very High Fire Hazard Severity Zones per CalFire) are ineligible without fire suppression credits.",
+            keywords=["geographic", "coastal", "florida", "texas", "california", "cat", "wildfire", "hurricane"],
+            risk_impact="high",
+        ),
+        Guideline(
+            id="APT-004",
+            category=GuidelineCategory.CARRIER_APPETITE,
+            source=GuidelineSource.COMPANY,
+            title="Loss Ratio Eligibility",
+            content="Accounts with a 5-year loss ratio exceeding 65% require underwriter referral. Accounts with a 5-year loss ratio exceeding 80% are ineligible for new business. Accounts with zero prior insurance history (no prior carrier) in the last 3 years require additional due diligence.",
+            keywords=["loss ratio", "eligibility", "referral", "decline", "prior insurance"],
+            risk_impact="high",
+        ),
+        Guideline(
+            id="APT-005",
+            category=GuidelineCategory.CARRIER_APPETITE,
+            source=GuidelineSource.COMPANY,
+            title="Minimum Years in Business",
+            content="The named insured entity must have been in operation for a minimum of 2 years at the time of application. Startups and entities less than 2 years old require licensed UW exception with additional financial verification.",
+            keywords=["years in business", "startup", "new venture", "operation history"],
+            risk_impact="high",
+        ),
+        Guideline(
+            id="APT-006",
+            category=GuidelineCategory.CARRIER_APPETITE,
+            source=GuidelineSource.COMPANY,
+            title="Maximum TIV Per Location",
+            content="Maximum total insured value per location is $25,000,000. Single locations exceeding $25M TIV require facultative reinsurance. Multi-location accounts with any location over $50M TIV require automatic facultative binding. Minimum TIV of $50,000 per location.",
+            keywords=["tiv", "maximum", "location", "facultative", "reinsurance"],
+            risk_impact="high",
+        ),
+        Guideline(
+            id="APT-007",
+            category=GuidelineCategory.CARRIER_APPETITE,
+            source=GuidelineSource.COMPANY,
+            title="Entity Type Restrictions",
+            content="Government entities, non-profit organizations with annual revenue exceeding $10M, and religious institutions require specialized underwriting and are not eligible for standard appetite. Publicly traded companies with market cap under $50M require additional financial review.",
+            keywords=["entity", "government", "nonprofit", "religious", "public", "restriction"],
+            risk_impact="medium",
+        ),
+        Guideline(
+            id="APT-008",
+            category=GuidelineCategory.CARRIER_APPETITE,
+            source=GuidelineSource.COMPANY,
+            title="Prior Carrier Cancellation / Non-Renewal",
+            content="Any applicant that has been cancelled or non-renewed by a prior carrier within the last 3 years is ineligible for standard appetite. Prior declination for the same risk from any admitted carrier in the last 12 months requires automatic referral to senior UW.",
+            keywords=["cancellation", "nonrenewal", "non-renewal", "declination", "prior carrier"],
+            risk_impact="high",
+        ),
+    ])
 
 
 def builtin_guidelines() -> UnderwritingGuidelines:

@@ -49,6 +49,7 @@ class QuoteResult:
     eligible: bool = True
     ineligibility_reasons: list[str] = field(default_factory=list)
     policy_admin_reference: str = ""
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class RatingAdapter(ABC):

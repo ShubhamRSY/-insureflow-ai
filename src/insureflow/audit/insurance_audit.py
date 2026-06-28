@@ -60,22 +60,26 @@ class InsuranceAuditLogger:
 
     def persist(
         self,
-        bundle: SubmissionBundle,
-        memo: UnderwritingMemo,
+        bundle: SubmissionBundle | None,
+        memo: UnderwritingMemo | None,
         provenance: ProvenanceRecord | None = None,
         reconciliation: ReconciliationResult | None = None,
         extra: dict[str, Any] | None = None,
     ) -> dict[str, str]:
+        bundle_id = bundle.bundle_id if bundle else (extra or {}).get("bundle_id", "unknown")
         if self._trail is None:
-            self.start(bundle.bundle_id)
+            self.start(bundle_id)
 
+        decision_label = "DECLINED (appetite)"
+        if memo is not None:
+            decision_label = memo.decision.value.upper()
         self.log(
             PipelineEvent.PIPELINE_COMPLETE,
-            f"AI recommendation: {memo.decision.value.upper()}",
+            f"AI recommendation: {decision_label}",
             agent_name="uw_decision_agent",
         )
 
-        if memo.human_review_required:
+        if memo is not None and memo.human_review_required:
             self.log(
                 PipelineEvent.HUMAN_REVIEW_REQUIRED,
                 "Licensed UW sign-off required",
@@ -94,16 +98,18 @@ class InsuranceAuditLogger:
         assert self._trail is not None
         self._trail.completed_at = datetime.now(tz=timezone.utc)
 
-        bundle_dir = self.store.base_path / self.org_id / bundle.bundle_id
+        bundle_dir = self.store.base_path / self.org_id / bundle_id
         bundle_dir.mkdir(parents=True, exist_ok=True)
 
         paths: dict[str, str] = {}
 
-        artifacts = {
-            "submission_bundle.json": bundle.model_dump(),
-            "underwriting_memo.json": memo.model_dump(),
+        artifacts: dict[str, Any] = {
             "audit_trail.json": self._trail.model_dump(),
         }
+        if bundle is not None:
+            artifacts["submission_bundle.json"] = bundle.model_dump()
+        if memo is not None:
+            artifacts["underwriting_memo.json"] = memo.model_dump()
         if provenance:
             artifacts["provenance_record.json"] = provenance.model_dump()
         if reconciliation:

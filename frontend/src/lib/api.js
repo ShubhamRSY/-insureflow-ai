@@ -62,6 +62,8 @@ export const endpoints = {
   authReset: () => api('/auth/reset', { method: 'POST' }).then((r) => { auth.wipeSession(); return r; }),
   setup: (body) => api('/auth/setup', { method: 'POST', body }),
   me: () => api('/auth/me'),
+  register: (body) => api('/auth/register', { method: 'POST', body }),
+  roles: () => api('/auth/roles'),
   insuranceJobs: () => api('/pipeline/jobs'),
   insuranceJob: (id) => api(`/pipeline/jobs/${id}`),
   runInsurance: (body) => api('/pipeline/run', { method: 'POST', body }),
@@ -74,6 +76,44 @@ export const endpoints = {
   signOff: (bundleId, body) => api(`/pipeline/workflow/${bundleId}/sign-off`, { method: 'POST', body }),
   insuranceSources: () => api('/api/insurance/sources'),
   pullInsuranceSource: (sourceId, body = {}) => api(`/api/insurance/sources/${sourceId}/pull`, { method: 'POST', body }),
+
+  // New v2 pipeline
+  runInsuranceV2: (body) => api('/pipeline/v2/run', { method: 'POST', body }),
+
+  // Broker status
+  brokerStatus: (token) => api(`/broker/status/${token}`),
+  createBrokerShare: (bundleId) => api(`/pipeline/jobs/${bundleId}/broker-share`, { method: 'POST' }),
+
+  // Portfolio concentration
+  portfolioSummary: () => api('/portfolio/summary'),
+
+  // Core integration status
+  integrationStatus: () => api('/integration/status'),
+
+  // Insurance webhooks
+  insuranceWebhooks: () => api('/webhooks/insurance'),
+  registerInsuranceWebhook: (body) => api('/webhooks/insurance', { method: 'POST', body }),
+  deleteWebhook: (id) => api(`/webhooks/${id}`, { method: 'DELETE' }),
+
+  // Underwriting workspace
+  submissionQueue: (priority, limit) => api(`/pipeline/queue?priority=${priority || ''}&limit=${limit || 50}`),
+  copeAnalysis: (bundleId) => api(`/pipeline/cope/${bundleId}`),
+  marketCycle: () => api('/underwriting/market'),
+  setMarketCycle: (phase) => api(`/underwriting/market/set?phase=${phase}`, { method: 'POST' }),
+  authorityMatrix: () => api('/underwriting/authority'),
+  renewalAnalysis: (bundleId) => api(`/pipeline/renewal/${bundleId}`, { method: 'POST' }),
+  missingDocuments: (bundleId) => api(`/pipeline/documents/${bundleId}/missing`),
+
+  // Premium audit
+  premiumAudits: (status) => api(`/pipeline/audits${status ? `?status=${status}` : ''}`),
+  createPremiumAudit: (bundleId, estimated_premium, opts = {}) => api(
+    `/pipeline/audits/${bundleId}/create?estimated_premium=${estimated_premium}${opts.policy_number ? `&policy_number=${opts.policy_number}` : ''}${opts.policy_period_start ? `&policy_period_start=${opts.policy_period_start}` : ''}${opts.policy_period_end ? `&policy_period_end=${opts.policy_period_end}` : ''}`,
+    { method: 'POST' }
+  ),
+  completePremiumAudit: (auditId, actual_premium, notes = '') => api(
+    `/pipeline/audits/${auditId}/complete?actual_premium=${actual_premium}&notes=${encodeURIComponent(notes)}`,
+    { method: 'POST' }
+  ),
 };
 
 export function fmtCurrency(n) {

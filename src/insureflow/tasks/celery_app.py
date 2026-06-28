@@ -36,3 +36,4 @@ celery_app.conf.task_routes = {
 
 import insureflow.tasks.agent_tasks  # noqa: E402,F401
 import insureflow.tasks.mortgage_tasks  # noqa: E402,F401
+import insureflow.tasks.pipeline_tasks  # noqa: E402,F401

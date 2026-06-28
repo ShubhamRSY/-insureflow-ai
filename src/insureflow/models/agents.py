@@ -14,6 +14,10 @@ class AgentType(str, Enum):
     FRAUD_DETECTION = "fraud_detection"
     UW_DECISION = "uw_decision"
     SUPERVISOR = "supervisor"
+    APPETITE_FILTER = "appetite_filter"
+    ORACLE_AGENT = "oracle_agent"
+    PORTFOLIO_RISK = "portfolio_risk"
+    REINSURANCE = "reinsurance"
 
 
 class RiskSeverity(str, Enum):

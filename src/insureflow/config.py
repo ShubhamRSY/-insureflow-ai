@@ -84,5 +84,8 @@ class Settings:
     extraction_chunk_size: int = 4000
     extraction_overlap: int = 200
 
+    # Oracle clients: simulated | live
+    oracle_mode: str = os.getenv("ORACLE_MODE", "simulated")
+
 
 settings = Settings()
