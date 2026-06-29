@@ -36,6 +36,13 @@ class E2ERunner:
     password: str = "E2eTestPass123!"
     org_id: str = "e2e-org"
     _token: str = field(default="", init=False)
+    _insurance_decision: str = field(default="", init=False)
+    _insurance_bundle_id: str = field(default="", init=False)
+    _insurance_job_id: str = field(default="", init=False)
+    _mortgage_bundle_id: str = field(default="", init=False)
+    _mortgage_job_id: str = field(default="", init=False)
+    _celery_job_id: str = field(default="", init=False)
+    _bound_policy_number: str = field(default="", init=False)
     results: list[E2EResult] = field(default_factory=list)
     _client: Any = field(default=None, init=False)
 
@@ -347,6 +354,7 @@ class E2ERunner:
             premium = (results.get("quote") or {}).get("adjusted_premium")
             self._insurance_job_id = job_id
             self._insurance_bundle_id = results.get("bundle_id", job_id)
+            self._insurance_decision = decision
             return f"decision={decision} premium={premium}"
 
         self._step("GET /api/demo/presets", presets)
@@ -392,6 +400,11 @@ class E2ERunner:
         bundle_id = getattr(self, "_insurance_bundle_id", None)
         if not bundle_id:
             self._record("Insurance production (skipped)", True, "no bundle from pipeline")
+            return
+
+        decision = getattr(self, "_insurance_decision", "")
+        if decision == "decline":
+            self._record("Insurance production (skipped)", True, "decision=decline, no workflow to sign off")
             return
 
         def pending_queue() -> str:

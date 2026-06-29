@@ -331,14 +331,15 @@ class InsurancePipeline:
         appetite_findings: list[Any],
         audit: InsuranceAuditLogger,
     ) -> dict[str, Any]:
+        wf = self.workflow.submit_for_review(bundle_id, self.org_id, "decline")
         result = {
-            "status": "declined",
+            "status": "completed",
             "bundle_id": bundle_id,
             "org_id": self.org_id,
             "appetite_filter_passed": False,
             "decline_reason": reason,
             "ai_decision": "decline",
-            "workflow_state": "declined",
+            "workflow_state": wf.state.value,
             "human_review_required": False,
             "ocr_documents": 0,
             "document_count": 0,

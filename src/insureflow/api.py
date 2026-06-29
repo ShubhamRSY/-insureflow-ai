@@ -1182,12 +1182,15 @@ def get_missing_documents(
 
 @app.get("/pipeline/rating/products")
 def list_insurance_products(_: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
-    from insureflow.rating.engine import InsuranceRatingEngine
+    from insureflow.rating.engine import ISO_LOSS_COSTS
     from insureflow.rating.models import InsuranceLine
 
     return {
         "lines": [
-            {"id": line.value, "base_rate_per_100": InsuranceRatingEngine.BASE_RATES.get(line, 0.0)}
+            {
+                "id": line.value,
+                "base_rate_per_100": ISO_LOSS_COSTS.get(line, 0.0),
+            }
             for line in InsuranceLine
         ]
     }
