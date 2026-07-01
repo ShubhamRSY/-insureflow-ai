@@ -44,9 +44,7 @@ class LendingPipeline:
         timeline.append(self._record("ingest", "start", run_id, application))
 
         violations = self._compliance.evaluate(application)
-        timeline.append(
-            self._record("compliance", "completed", run_id, {"violations_count": len(violations)})
-        )
+        timeline.append(self._record("compliance", "completed", run_id, {"violations_count": len(violations)}))
 
         critical_violations = [v for v in violations if v.get("severity") == "critical"]
         if critical_violations:
@@ -125,9 +123,7 @@ class LendingPipeline:
                 human_reasons.extend(v["rule_name"] for v in high_sev)
         if application.requested_amount > 1_000_000:
             human_review = True
-            human_reasons.append(
-                f"Loan amount ${application.requested_amount:,.0f} exceeds $1M threshold"
-            )
+            human_reasons.append(f"Loan amount ${application.requested_amount:,.0f} exceeds $1M threshold")
 
         result = LendingPipelineResult(
             application_id=application.application_id,
@@ -196,9 +192,7 @@ class LendingPipeline:
     ) -> None:
         audit = {
             "run_id": run_id,
-            "application_type": (
-                "business" if isinstance(application, BusinessLoanApplication) else "consumer"
-            ),
+            "application_type": ("business" if isinstance(application, BusinessLoanApplication) else "consumer"),
             "application": application.model_dump(),
             "result": result.model_dump(mode="json"),
             "timeline": timeline,
@@ -218,11 +212,7 @@ class LendingPipeline:
     ) -> None:
         if not documents:
             return
-        vertical = (
-            "business_lending"
-            if isinstance(application, BusinessLoanApplication)
-            else "consumer_lending"
-        )
+        vertical = "business_lending" if isinstance(application, BusinessLoanApplication) else "consumer_lending"
         self._analytics.record(
             bundle_id=run_id,
             vertical=vertical,

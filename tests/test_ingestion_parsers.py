@@ -109,9 +109,7 @@ Coinsurance: 80%
 
 class TestDocumentClassifier:
     def test_classify_acord_xml(self):
-        result = DocumentClassifier.classify(
-            '<?xml version="1.0"?><ACORD xmlns="http://www.acord.org/standards/PC_Surety/ACORD"><Submission/></ACORD>'
-        )
+        result = DocumentClassifier.classify('<?xml version="1.0"?><ACORD xmlns="http://www.acord.org/standards/PC_Surety/ACORD"><Submission/></ACORD>')
         assert result == DocumentType.ACORD_XML
 
     def test_classify_json_broker(self):

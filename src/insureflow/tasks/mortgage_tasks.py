@@ -23,9 +23,7 @@ def run_mortgage_pipeline(
     from insureflow.models.mortgage import ProductLine
     from insureflow.mortgage.pipeline import MortgagePipeline
 
-    docs: list[dict[str, str]] = [
-        {"filename": d["filename"], "content": d["content"]} for d in documents_data
-    ]
+    docs: list[dict[str, str]] = [{"filename": d["filename"], "content": d["content"]} for d in documents_data]
 
     pipeline = MortgagePipeline(use_llm=use_llm)
     result = pipeline.run_from_texts(
@@ -76,15 +74,11 @@ def run_mortgage_directory(
             product_line=pl,
         )
         if job_id:
-            _persist_celery_job(
-                job_id, org_id, {"status": "completed", "results": result}, self.request.id or ""
-            )
+            _persist_celery_job(job_id, org_id, {"status": "completed", "results": result}, self.request.id or "")
         return result
     except Exception as exc:
         if job_id:
-            _persist_celery_job(
-                job_id, org_id, {"status": "failed", "error": str(exc)}, self.request.id or ""
-            )
+            _persist_celery_job(job_id, org_id, {"status": "failed", "error": str(exc)}, self.request.id or "")
         raise
 
 

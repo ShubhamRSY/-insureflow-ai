@@ -130,9 +130,7 @@ def login(req: LoginRequest, request: Request) -> Token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
     if user.disabled:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account disabled")
-    token = create_access_token(
-        data={"sub": user.username, "role": user.role.value, "org_id": user.org_id}
-    )
+    token = create_access_token(data={"sub": user.username, "role": user.role.value, "org_id": user.org_id})
     return Token(access_token=token)
 
 
@@ -153,9 +151,7 @@ def create_user(
         full_name=new_user.full_name or new_user.username,
         org_id=org_id,
     )
-    return {
-        "message": f"User '{new_user.username}' created with role '{new_user.role.value}' in org '{org_id}'"
-    }
+    return {"message": f"User '{new_user.username}' created with role '{new_user.role.value}' in org '{org_id}'"}
 
 
 @app.get("/auth/me")
@@ -381,20 +377,14 @@ def dashboard_overview(
             if isinstance(results, dict):
                 if namespace == INSURANCE_NS:
                     memo = results.get("memo") or {}
-                    row["decision"] = results.get("ai_decision") or (
-                        memo.get("decision") if isinstance(memo, dict) else None
-                    )
+                    row["decision"] = results.get("ai_decision") or (memo.get("decision") if isinstance(memo, dict) else None)
                     row["bundle_id"] = results.get("bundle_id")
-                    row["insured_name"] = results.get("insured_name") or (
-                        memo.get("insured_name") if isinstance(memo, dict) else None
-                    )
+                    row["insured_name"] = results.get("insured_name") or (memo.get("insured_name") if isinstance(memo, dict) else None)
                 else:
                     summary = results.get("summary") or results.get("pipeline_summary") or results
                     if isinstance(summary, dict):
                         row["decision"] = summary.get("decision") or summary.get("recommendation")
-                    row["bundle_id"] = results.get("bundle_id") or (
-                        summary.get("bundle_id") if isinstance(summary, dict) else None
-                    )
+                    row["bundle_id"] = results.get("bundle_id") or (summary.get("bundle_id") if isinstance(summary, dict) else None)
             rows.append(row)
         return rows
 
@@ -453,9 +443,7 @@ async def run_insurance_demo(
         raise HTTPException(status_code=503, detail="Example data not found on server")
     job_id = f"demo-{uuid.uuid4().hex[:12]}"
     req = _load_pacific_coast_submission()
-    job_store.set(
-        INSURANCE_NS, job_id, {"status": "processing", "demo": True}, org_id=current.org_id
-    )
+    job_store.set(INSURANCE_NS, job_id, {"status": "processing", "demo": True}, org_id=current.org_id)
     celery_app.send_task(
         "insureflow.tasks.pipeline_tasks.run_pipeline",
         args=[job_id, req.model_dump(), current.org_id],
@@ -563,9 +551,7 @@ async def run_mortgage_demo(
         use_llm=True,
         bundle_id=job_id,
     )
-    job_store.set(
-        MORTGAGE_NS, job_id, {"status": "processing", "demo": True}, org_id=current.org_id
-    )
+    job_store.set(MORTGAGE_NS, job_id, {"status": "processing", "demo": True}, org_id=current.org_id)
     background_tasks.add_task(_run_mortgage_task, job_id, req, current.org_id)
     return {"job_id": job_id, "status": "processing", "preset": preset_id, "org_id": current.org_id}
 
@@ -605,9 +591,7 @@ def _run_pipeline_task(job_id: str, request: SubmissionRequest, org_id: str) -> 
                 pdf_paths=request.pdf_paths,
                 bundle_id=request.bundle_id or job_id,
             )
-        job_store.set(
-            INSURANCE_NS, job_id, {"status": "completed", "results": result}, org_id=org_id
-        )
+        job_store.set(INSURANCE_NS, job_id, {"status": "completed", "results": result}, org_id=org_id)
     except Exception as exc:
         logger.exception("Pipeline run failed")
         job_store.set(INSURANCE_NS, job_id, {"status": "failed", "error": str(exc)}, org_id=org_id)
@@ -913,10 +897,7 @@ def get_submission_queue(
     ta = get_triage_agent()
     pri = SubmissionPriority(priority) if priority else None
     return {
-        "queue": [
-            {k: v for k, v in r.__dict__.items() if not k.startswith("_")}
-            for r in ta.get_queue(pri, limit)
-        ],
+        "queue": [{k: v for k, v in r.__dict__.items() if not k.startswith("_")} for r in ta.get_queue(pri, limit)],
         "statistics": ta.get_statistics(),
     }
 
@@ -1370,22 +1351,16 @@ def _run_mortgage_task(job_id: str, request: MortgageSubmissionRequest, org_id: 
                 },
                 org_id=org_id,
             )
-            webhook_dispatcher.dispatch(
-                "mortgage.failed", org_id, {"job_id": job_id, "error": "no input"}
-            )
+            webhook_dispatcher.dispatch("mortgage.failed", org_id, {"job_id": job_id, "error": "no input"})
             return
 
-        job_store.set(
-            MORTGAGE_NS, job_id, {"status": "completed", "results": result}, org_id=org_id
-        )
+        job_store.set(MORTGAGE_NS, job_id, {"status": "completed", "results": result}, org_id=org_id)
     except Exception as exc:
         logger.exception("Mortgage pipeline run failed")
         job_store.set(MORTGAGE_NS, job_id, {"status": "failed", "error": str(exc)}, org_id=org_id)
         from insureflow.mortgage.webhooks import webhook_dispatcher
 
-        webhook_dispatcher.dispatch(
-            "mortgage.failed", org_id, {"job_id": job_id, "error": str(exc)}
-        )
+        webhook_dispatcher.dispatch("mortgage.failed", org_id, {"job_id": job_id, "error": str(exc)})
 
 
 def _finalize_celery_mortgage_job(job_id: str, org_id: str, job: dict[str, Any]) -> dict[str, Any]:
@@ -1414,9 +1389,7 @@ def _finalize_celery_mortgage_job(job_id: str, org_id: str, job: dict[str, Any])
             "celery_task_id": task_id,
         }
         job_store.set(MORTGAGE_NS, job_id, updated, org_id=org_id)
-        webhook_dispatcher.dispatch(
-            "mortgage.completed", org_id, {"job_id": job_id, "results": result}
-        )
+        webhook_dispatcher.dispatch("mortgage.completed", org_id, {"job_id": job_id, "results": result})
         return updated
 
     error = str(async_result.result) if async_result.failed() else "Celery task failed"
@@ -1655,11 +1628,8 @@ def broker_submission_status(
         "bundle_id": share.bundle_id,
         "status": status,
         "broker_name": share.broker_name,
-        "vertical": "insurance"
-        if job_store.get(INSURANCE_NS, share.bundle_id, org_id=share.org_id)
-        else "mortgage",
-        "decision": results.get("ai_decision")
-        or ((results.get("memo") or {}).get("decision") if isinstance(results, dict) else None),
+        "vertical": "insurance" if job_store.get(INSURANCE_NS, share.bundle_id, org_id=share.org_id) else "mortgage",
+        "decision": results.get("ai_decision") or ((results.get("memo") or {}).get("decision") if isinstance(results, dict) else None),
         "workflow_state": results.get("workflow_state", ""),
         "estimated_completion": None,
         "last_updated": (job or {}).get("updated_at", ""),
@@ -1826,11 +1796,7 @@ def portfolio_summary(
             }
             for naics, info in sorted(by_naics2.items(), key=lambda x: -x[1]["tiv"])
         },
-        "concentration_warnings": [
-            f"{state}: {info['tiv'] / total_tiv * 100:.0f}% of portfolio TIV"
-            for state, info in by_state.items()
-            if total_tiv > 0 and info["tiv"] / total_tiv > 0.30
-        ],
+        "concentration_warnings": [f"{state}: {info['tiv'] / total_tiv * 100:.0f}% of portfolio TIV" for state, info in by_state.items() if total_tiv > 0 and info["tiv"] / total_tiv > 0.30],
     }
 
 
@@ -1944,9 +1910,7 @@ def _run_pipeline_v2_task(job_id: str, request: PipelineConfigRequest, org_id: s
             result["broker_status_token"] = token
             result["broker_status_url"] = f"/broker/status/{token}"
 
-        job_store.set(
-            INSURANCE_NS, job_id, {"status": "completed", "results": result}, org_id=org_id
-        )
+        job_store.set(INSURANCE_NS, job_id, {"status": "completed", "results": result}, org_id=org_id)
     except Exception as exc:
         logger.exception("Pipeline v2 run failed")
         job_store.set(INSURANCE_NS, job_id, {"status": "failed", "error": str(exc)}, org_id=org_id)
@@ -2265,9 +2229,7 @@ def run_lending_pipeline(
         raise HTTPException(status_code=400, detail=f"Unknown product: {req.product_type}")
 
     purp = purpose_map.get(req.purpose, LoanPurpose.OTHER)
-    is_business = pt.value.startswith(
-        ("business_", "commercial_", "construction_", "sba_", "equipment_", "invoice_")
-    )
+    is_business = pt.value.startswith(("business_", "commercial_", "construction_", "sba_", "equipment_", "invoice_"))
 
     if is_business:
         from insureflow.lending.models import Collateral
@@ -2282,9 +2244,7 @@ def run_lending_pipeline(
             current_assets=req.current_assets,
             current_liabilities=req.current_liabilities,
         )
-        coll = (
-            [Collateral(estimated_value=req.collateral_value)] if req.collateral_value > 0 else []
-        )
+        coll = [Collateral(estimated_value=req.collateral_value)] if req.collateral_value > 0 else []
         app = BusinessLoanApplication(
             business_name=req.business_name or "Unnamed Business",
             industry=req.industry,

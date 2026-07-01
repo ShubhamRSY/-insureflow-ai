@@ -16,7 +16,7 @@ class EnvelopeEncryption:
 
     def __init__(self, key: str | None = None) -> None:
         self._fernet = None
-        raw_key = key or os.getenv("ENCRYPTION_KEY", "")
+        raw_key = key if key is not None else os.getenv("ENCRYPTION_KEY", "")
         if raw_key:
             self._fernet = self._build_fernet(raw_key)
 
@@ -65,9 +65,7 @@ class EnvelopeEncryption:
 
         p = Path(path)
         p.parent.mkdir(parents=True, exist_ok=True)
-        payload = (
-            self.encrypt_json(data) if self.enabled else json.dumps(data, indent=2, default=str)
-        )
+        payload = self.encrypt_json(data) if self.enabled else json.dumps(data, indent=2, default=str)
         p.write_text(payload, encoding="utf-8")
 
     def read_encrypted_file(self, path: str) -> dict[str, Any] | None:

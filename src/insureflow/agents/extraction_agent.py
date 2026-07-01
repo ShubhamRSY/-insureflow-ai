@@ -29,15 +29,11 @@ class ExtractionAgent:
     def extract_structured(self, xml_content: str, bundle_id: str) -> StructuredSubmission:
         return self.acord_parser.parse(xml_content, bundle_id)
 
-    def extract_unstructured(
-        self, raw_text: str, bundle_id: str, doc_index: int = 0
-    ) -> UnstructuredSubmission:
+    def extract_unstructured(self, raw_text: str, bundle_id: str, doc_index: int = 0) -> UnstructuredSubmission:
         regex_based = self.report_extractor.parse(raw_text, bundle_id)
 
         if self.llm.api_key:
-            text_for_llm = (
-                self.redactor.redact(raw_text[:8000]) if self.redactor else raw_text[:8000]
-            )
+            text_for_llm = self.redactor.redact(raw_text[:8000]) if self.redactor else raw_text[:8000]
             llm_result = self.llm.complete(EXTRACTION_PROMPT, text_for_llm)
             try:
                 import json
@@ -63,10 +59,7 @@ class ExtractionAgent:
             doc.raw_text = self.redactor.redact(doc.raw_text)
             redacted_fields: dict[str, list] = {}
             for key, field_list in doc.extracted_fields.items():
-                redacted_fields[key] = [
-                    type(f)(**{**f.model_dump(), "value": self.redactor.redact(str(f.value))})
-                    for f in field_list
-                ]
+                redacted_fields[key] = [type(f)(**{**f.model_dump(), "value": self.redactor.redact(str(f.value))}) for f in field_list]
             doc.extracted_fields = redacted_fields
 
         for doc in bundle.supplemental:

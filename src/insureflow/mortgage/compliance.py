@@ -134,12 +134,8 @@ BANK_RULES: list[BankRule] = [
         (ProductLine.RESIDENTIAL_MORTGAGE,),
         _min_credit_score_620,
     ),
-    BankRule(
-        "DTI-001", "Maximum DTI Ratio", "high", (ProductLine.RESIDENTIAL_MORTGAGE,), _max_dti_43
-    ),
-    BankRule(
-        "LTV-001", "Maximum LTV Ratio", "high", (ProductLine.RESIDENTIAL_MORTGAGE,), _max_ltv_80
-    ),
+    BankRule("DTI-001", "Maximum DTI Ratio", "high", (ProductLine.RESIDENTIAL_MORTGAGE,), _max_dti_43),
+    BankRule("LTV-001", "Maximum LTV Ratio", "high", (ProductLine.RESIDENTIAL_MORTGAGE,), _max_ltv_80),
     BankRule(
         "INCOME-001",
         "Income Documentation",

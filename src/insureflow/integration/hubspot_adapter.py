@@ -76,9 +76,7 @@ class HubSpotAdapter:
             return self._call_live_api("deals", deal.__dict__)
 
         deal.hubspot_id = f"deal-{uuid4().hex[:8]}"
-        logger.info(
-            "HubSpot deal created: %s (%s) — $%.0f", deal.deal_name, deal.hubspot_id, deal.amount
-        )
+        logger.info("HubSpot deal created: %s (%s) — $%.0f", deal.deal_name, deal.hubspot_id, deal.amount)
         return {
             "success": True,
             "hubspot_id": deal.hubspot_id,
@@ -106,9 +104,7 @@ class HubSpotAdapter:
             deal_name=f"Insurance Submission — {insured_name}",
             amount=premium,
             stage="qualified_to_buy",
-            contact_ids=[contact_result.get("hubspot_id", "")]
-            if contact_result.get("success")
-            else [],
+            contact_ids=[contact_result.get("hubspot_id", "")] if contact_result.get("success") else [],
         )
         deal_result = self.create_deal(deal)
 

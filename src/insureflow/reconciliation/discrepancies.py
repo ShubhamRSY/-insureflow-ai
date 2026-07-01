@@ -65,9 +65,7 @@ class DiscrepancyDetector:
             provenance_node_ids=[n.node_id for n in sorted_nodes],
         )
 
-    def _determine_severity(
-        self, field_path: str, unique_count: int, total_sources: int
-    ) -> EventSeverity:
+    def _determine_severity(self, field_path: str, unique_count: int, total_sources: int) -> EventSeverity:
         if field_path in self.CRITICAL_FIELDS:
             return EventSeverity.CRITICAL
         if field_path in self.HIGH_FIELDS:
@@ -76,9 +74,7 @@ class DiscrepancyDetector:
             return EventSeverity.WARNING
         return EventSeverity.INFO
 
-    def batch_detect(
-        self, reconciled_fields: dict[str, list[ProvenanceNode]]
-    ) -> list[DiscrepancyRecord]:
+    def batch_detect(self, reconciled_fields: dict[str, list[ProvenanceNode]]) -> list[DiscrepancyRecord]:
         discrepancies: list[DiscrepancyRecord] = []
         for field_path, nodes in reconciled_fields.items():
             result = self.detect(field_path, nodes)
@@ -86,7 +82,5 @@ class DiscrepancyDetector:
                 discrepancies.append(result)
         return sorted(
             discrepancies,
-            key=lambda d: {"critical": 0, "warning": 1, "error": 2, "info": 3}.get(
-                d.severity.value, 4
-            ),
+            key=lambda d: {"critical": 0, "warning": 1, "error": 2, "info": 3}.get(d.severity.value, 4),
         )

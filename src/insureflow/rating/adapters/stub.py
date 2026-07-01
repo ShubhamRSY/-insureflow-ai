@@ -11,9 +11,7 @@ from insureflow.rating.models import InsuranceLine, QuoteRequest, QuoteResult, R
 class StubPolicyAdminAdapter:
     """Deterministic stub for Guidewire/Duck Creek-style policy admin integration."""
 
-    def submit_quote(
-        self, request: QuoteRequest, memo: UnderwritingMemo, bundle: SubmissionBundle
-    ) -> QuoteResult:
+    def submit_quote(self, request: QuoteRequest, memo: UnderwritingMemo, bundle: SubmissionBundle) -> QuoteResult:
         base_rate = 0.45 if request.line == InsuranceLine.COMMERCIAL_PROPERTY else 0.12
         base_premium = (request.tiv / 100.0) * base_rate
 
@@ -22,14 +20,10 @@ class StubPolicyAdminAdapter:
 
         if request.loss_ratio > 0.40:
             adjusted *= 1.25
-            mods.append(
-                RateComponent("loss_ratio_surcharge", adjusted - base_premium, "loss_ratio", 25.0)
-            )
+            mods.append(RateComponent("loss_ratio_surcharge", adjusted - base_premium, "loss_ratio", 25.0))
         elif request.loss_ratio < 0.10:
             adjusted *= 0.90
-            mods.append(
-                RateComponent("loss_free_credit", adjusted - base_premium, "loss_ratio", -10.0)
-            )
+            mods.append(RateComponent("loss_free_credit", adjusted - base_premium, "loss_ratio", -10.0))
 
         if request.schedule_mod_pct:
             factor = 1 + (request.schedule_mod_pct / 100.0)

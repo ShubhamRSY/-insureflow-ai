@@ -117,9 +117,7 @@ class SubmissionLoader:
         if excel_data:
             for i, data in enumerate(excel_data):
                 sub_id = f"{bundle.bundle_id}-excel-{i}"
-                is_csv = data.strip().startswith(",") or (
-                    "first_name" in data[:200].lower() and "," in data[:500]
-                )
+                is_csv = data.strip().startswith(",") or ("first_name" in data[:200].lower() and "," in data[:500])
                 if is_csv:
                     parsed = self.excel_parser.parse_csv(data, sub_id)
                 else:
@@ -167,9 +165,7 @@ class SubmissionLoader:
 
         return bundle
 
-    def _load_auto_classified(
-        self, raw_docs: list[str], bundle: SubmissionBundle
-    ) -> SubmissionBundle:
+    def _load_auto_classified(self, raw_docs: list[str], bundle: SubmissionBundle) -> SubmissionBundle:
         acord_docs: list[str] = []
         json_docs: list[str] = []
         inspection_docs: list[str] = []

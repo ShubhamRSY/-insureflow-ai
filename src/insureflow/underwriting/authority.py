@@ -149,18 +149,11 @@ class AuthorityMatrix:
 
         if premium > ba.max_premium:
             if ba.requires_co_sign or premium > ba.co_sign_threshold_premium:
-                return False, (
-                    f"Premium ${premium:,.0f} exceeds ${ba.max_premium:,.0f} {auth.tier.value} limit "
-                    f"for {auth.display_name} — requires co-sign from senior UW/CUO"
-                )
-            return False, (
-                f"Premium ${premium:,.0f} exceeds ${ba.max_premium:,.0f} {auth.tier.value} binding limit"
-            )
+                return False, (f"Premium ${premium:,.0f} exceeds ${ba.max_premium:,.0f} {auth.tier.value} limit for {auth.display_name} — requires co-sign from senior UW/CUO")
+            return False, (f"Premium ${premium:,.0f} exceeds ${ba.max_premium:,.0f} {auth.tier.value} binding limit")
 
         if tiv > ba.max_tiv:
-            return False, (
-                f"TIV ${tiv:,.0f} exceeds ${ba.max_tiv:,.0f} {auth.tier.value} binding limit"
-            )
+            return False, (f"TIV ${tiv:,.0f} exceeds ${ba.max_tiv:,.0f} {auth.tier.value} binding limit")
 
         if ba.allowed_states and state and state not in ba.allowed_states:
             return False, f"State '{state}' not in {auth.display_name}'s licensed states"

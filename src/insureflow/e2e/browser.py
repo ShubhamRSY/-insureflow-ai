@@ -21,9 +21,7 @@ def _step(name: str, fn) -> BrowserResult:
     t0 = time.perf_counter()
     try:
         detail = fn() or "ok"
-        return BrowserResult(
-            name=name, passed=True, detail=detail, duration_ms=(time.perf_counter() - t0) * 1000
-        )
+        return BrowserResult(name=name, passed=True, detail=detail, duration_ms=(time.perf_counter() - t0) * 1000)
     except Exception as exc:
         return BrowserResult(
             name=name,

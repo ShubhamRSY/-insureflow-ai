@@ -276,9 +276,7 @@ class RegistryService:
 
     # ── Change requests ─────────────────────────────────────────────────
 
-    def create_change_request(
-        self, title: str, entry_ids: list[str], description: str = "", requested_by: str = ""
-    ) -> ChangeRequest:
+    def create_change_request(self, title: str, entry_ids: list[str], description: str = "", requested_by: str = "") -> ChangeRequest:
         cr = ChangeRequest(
             title=title,
             description=description,

@@ -26,15 +26,11 @@ REGULATORY_ARTIFACTS = [
 class RegulatoryPackageBuilder:
     """Assemble examiner-ready audit ZIP with manifest and SHA-256 checksums."""
 
-    def __init__(
-        self, store: AuditStore | None = None, encryption: EnvelopeEncryption | None = None
-    ) -> None:
+    def __init__(self, store: AuditStore | None = None, encryption: EnvelopeEncryption | None = None) -> None:
         self.store = store or AuditStore()
         self.encryption = encryption or EnvelopeEncryption()
 
-    def build(
-        self, bundle_id: str, org_id: str = "default", output_dir: Path | None = None
-    ) -> dict[str, Any]:
+    def build(self, bundle_id: str, org_id: str = "default", output_dir: Path | None = None) -> dict[str, Any]:
         bundle_dir = self.store.base_path / org_id / bundle_id
         if not bundle_dir.exists():
             bundle_dir = self.store.base_path / bundle_id
@@ -88,9 +84,7 @@ class RegulatoryPackageBuilder:
             "generated_at": manifest["generated_at"],
         }
 
-    def load_artifact(
-        self, bundle_id: str, filename: str, org_id: str = "default"
-    ) -> dict[str, Any] | None:
+    def load_artifact(self, bundle_id: str, filename: str, org_id: str = "default") -> dict[str, Any] | None:
         bundle_dir = self.store.base_path / org_id / bundle_id
         if not bundle_dir.exists():
             bundle_dir = self.store.base_path / bundle_id

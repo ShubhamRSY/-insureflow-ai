@@ -12,11 +12,7 @@ def generate_quote_html(
     memo: UnderwritingMemo,
     quote: QuoteResult,
 ) -> str:
-    insured = (
-        bundle.structured.named_insured.legal_name
-        if bundle.structured and bundle.structured.named_insured
-        else "Named Insured"
-    )
+    insured = bundle.structured.named_insured.legal_name if bundle.structured and bundle.structured.named_insured else "Named Insured"
     today = datetime.now(tz=timezone.utc).strftime("%B %d, %Y")
     valid_until = quote.quote_valid_until or "30 days from issuance"
 
@@ -24,15 +20,8 @@ def generate_quote_html(
     coverages_html = ""
     if bundle.structured and bundle.structured.coverages:
         for c in bundle.structured.coverages:
-            sublimits = "".join(
-                f"<tr><td class='pl-8'>{k}</td><td class='text-right'>${v:,.0f}</td></tr>"
-                for k, v in c.sublimits.items()
-            )
-            endorsements = (
-                "".join(f"<li>{e}</li>" for e in c.endorsements)
-                if c.endorsements
-                else "<li class='text-slate-400'>None</li>"
-            )
+            sublimits = "".join(f"<tr><td class='pl-8'>{k}</td><td class='text-right'>${v:,.0f}</td></tr>" for k, v in c.sublimits.items())
+            endorsements = "".join(f"<li>{e}</li>" for e in c.endorsements) if c.endorsements else "<li class='text-slate-400'>None</li>"
             coverages_html += f"""
             <div class="card">
               <div class="card-header">{c.coverage_type}</div>
@@ -53,10 +42,7 @@ def generate_quote_html(
     if memo.recommendation and memo.recommendation.conditions:
         exclusions.extend(memo.recommendation.conditions)
     for f in memo.key_findings:
-        if (
-            f.category in ("compliance", "coverage")
-            and "exclusion" in (f.title + f.description).lower()
-        ):
+        if f.category in ("compliance", "coverage") and "exclusion" in (f.title + f.description).lower():
             exclusions.append(f"{f.title}: {f.description}")
     if not exclusions:
         exclusions.append("Standard policy exclusions apply. See policy form for full details.")
@@ -68,26 +54,17 @@ def generate_quote_html(
         pct = rc.modifier_pct
         label = rc.name.replace("_", " ").title()
         if pct > 0:
-            components_html += (
-                f"<tr><td>{label}</td><td class='text-right text-red-400'>+{pct:.1f}%</td></tr>"
-            )
+            components_html += f"<tr><td>{label}</td><td class='text-right text-red-400'>+{pct:.1f}%</td></tr>"
         elif pct < 0:
-            components_html += (
-                f"<tr><td>{label}</td><td class='text-right text-green-400'>{pct:.1f}%</td></tr>"
-            )
+            components_html += f"<tr><td>{label}</td><td class='text-right text-green-400'>{pct:.1f}%</td></tr>"
         else:
-            components_html += (
-                f"<tr><td>{label}</td><td class='text-right text-slate-400'>{pct:.1f}%</td></tr>"
-            )
+            components_html += f"<tr><td>{label}</td><td class='text-right text-slate-400'>{pct:.1f}%</td></tr>"
 
     # Metadata
     meta = quote.metadata or {}
     cope_grade = meta.get("cope_grade", "N/A")
     market_phase = meta.get("market_phase", "N/A")
-    tiv = sum(
-        (l.building_value or 0) + (l.contents_value or 0) + (l.bi_value or 0)
-        for l in (bundle.structured.locations if bundle.structured else [])
-    ) or quote.metadata.get("tiv", 0)
+    tiv = sum((l.building_value or 0) + (l.contents_value or 0) + (l.bi_value or 0) for l in (bundle.structured.locations if bundle.structured else [])) or quote.metadata.get("tiv", 0)
 
     return f"""<!DOCTYPE html>
 <html lang="en">

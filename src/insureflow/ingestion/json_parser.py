@@ -93,9 +93,7 @@ class JSONBrokerParser(BaseParser):
         return default
 
     def _parse_named_insured(self, data: dict) -> Optional[NamedInsured]:
-        insured_data = (
-            data.get("insured") or data.get("applicant") or data.get("namedInsured") or data
-        )
+        insured_data = data.get("insured") or data.get("applicant") or data.get("namedInsured") or data
 
         if isinstance(insured_data, str):
             return NamedInsured(legal_name=insured_data)
@@ -103,9 +101,7 @@ class JSONBrokerParser(BaseParser):
         if not isinstance(insured_data, dict):
             return None
 
-        legal_name = self._first_match(
-            insured_data, ["legalName", "legal_name", "name", "companyName", "businessName"]
-        )
+        legal_name = self._first_match(insured_data, ["legalName", "legal_name", "name", "companyName", "businessName"])
         if not legal_name:
             for top_key in ["legalName", "legal_name", "name", "companyName", "submissionName"]:
                 val = data.get(top_key)
@@ -118,20 +114,10 @@ class JSONBrokerParser(BaseParser):
 
         return NamedInsured(
             legal_name=str(legal_name),
-            dba=str(self._first_match(insured_data, ["dba", "doingBusinessAs"]))
-            if self._first_match(insured_data, ["dba", "doingBusinessAs"])
-            else None,
-            tax_id=str(self._first_match(insured_data, ["taxId", "taxID", "ein", "fein"]))
-            if self._first_match(insured_data, ["taxId", "taxID", "ein", "fein"])
-            else None,
-            entity_type=str(
-                self._first_match(insured_data, ["entityType", "businessType", "entity_type"])
-            )
-            if self._first_match(insured_data, ["entityType", "businessType", "entity_type"])
-            else None,
-            address=str(self._first_match(insured_data, ["address", "streetAddress", "addr1"]))
-            if self._first_match(insured_data, ["address", "streetAddress", "addr1"])
-            else None,
+            dba=str(self._first_match(insured_data, ["dba", "doingBusinessAs"])) if self._first_match(insured_data, ["dba", "doingBusinessAs"]) else None,
+            tax_id=str(self._first_match(insured_data, ["taxId", "taxID", "ein", "fein"])) if self._first_match(insured_data, ["taxId", "taxID", "ein", "fein"]) else None,
+            entity_type=str(self._first_match(insured_data, ["entityType", "businessType", "entity_type"])) if self._first_match(insured_data, ["entityType", "businessType", "entity_type"]) else None,
+            address=str(self._first_match(insured_data, ["address", "streetAddress", "addr1"])) if self._first_match(insured_data, ["address", "streetAddress", "addr1"]) else None,
         )
 
     def _parse_broker(self, data: dict) -> Optional[BrokerInfo]:
@@ -146,28 +132,16 @@ class JSONBrokerParser(BaseParser):
 
         return BrokerInfo(
             broker_name=str(name),
-            broker_id=str(self._first_match(broker_data, ["id", "brokerId", "licenseNumber"]))
-            if self._first_match(broker_data, ["id", "brokerId", "licenseNumber"])
-            else None,
-            contact_name=str(
-                self._first_match(broker_data, ["contactName", "contact", "agentName"])
-            )
-            if self._first_match(broker_data, ["contactName", "contact", "agentName"])
-            else None,
-            contact_email=str(self._first_match(broker_data, ["email", "contactEmail"]))
-            if self._first_match(broker_data, ["email", "contactEmail"])
-            else None,
+            broker_id=str(self._first_match(broker_data, ["id", "brokerId", "licenseNumber"])) if self._first_match(broker_data, ["id", "brokerId", "licenseNumber"]) else None,
+            contact_name=str(self._first_match(broker_data, ["contactName", "contact", "agentName"])) if self._first_match(broker_data, ["contactName", "contact", "agentName"]) else None,
+            contact_email=str(self._first_match(broker_data, ["email", "contactEmail"])) if self._first_match(broker_data, ["email", "contactEmail"]) else None,
         )
 
     def _parse_policy_period(self, data: dict) -> Optional[PolicyPeriod]:
         policy = data.get("policy") or data.get("policyPeriod") or data
 
-        eff = self._first_match(
-            policy, ["effectiveDate", "effective_date", "inceptionDate", "policyEffective"]
-        )
-        exp = self._first_match(
-            policy, ["expirationDate", "expiration_date", "expiryDate", "policyExpiration"]
-        )
+        eff = self._first_match(policy, ["effectiveDate", "effective_date", "inceptionDate", "policyEffective"])
+        exp = self._first_match(policy, ["expirationDate", "expiration_date", "expiryDate", "policyExpiration"])
 
         if not eff or not exp:
             return None
@@ -193,13 +167,7 @@ class JSONBrokerParser(BaseParser):
 
     def _parse_coverages(self, data: dict) -> list[CoverageDetail]:
         coverages: list[CoverageDetail] = []
-        raw = (
-            data.get("coverages")
-            or data.get("coverage")
-            or data.get("lines")
-            or data.get("policyLines")
-            or []
-        )
+        raw = data.get("coverages") or data.get("coverage") or data.get("lines") or data.get("policyLines") or []
 
         if isinstance(raw, dict):
             raw = [raw]
@@ -207,18 +175,12 @@ class JSONBrokerParser(BaseParser):
         for cov in raw:
             if not isinstance(cov, dict):
                 continue
-            cov_type = self._first_match(
-                cov, ["type", "coverageType", "coverage_type", "lineOfBusiness"]
-            )
+            cov_type = self._first_match(cov, ["type", "coverageType", "coverage_type", "lineOfBusiness"])
             if not cov_type:
                 continue
 
-            limit = self._first_match(
-                cov, ["limit", "limitAmount", "liabilityLimit", "coverageLimit"]
-            )
-            deductible = self._first_match(
-                cov, ["deductible", "deductibleAmount", "selfInsuredRetention"]
-            )
+            limit = self._first_match(cov, ["limit", "limitAmount", "liabilityLimit", "coverageLimit"])
+            deductible = self._first_match(cov, ["deductible", "deductibleAmount", "selfInsuredRetention"])
             premium = self._first_match(cov, ["premium", "annualPremium", "totalPremium"])
 
             detail = CoverageDetail(
@@ -246,13 +208,7 @@ class JSONBrokerParser(BaseParser):
 
     def _parse_locations(self, data: dict) -> list[LocationData]:
         locations: list[LocationData] = []
-        raw = (
-            data.get("locations")
-            or data.get("location")
-            or data.get("premises")
-            or data.get("sites")
-            or []
-        )
+        raw = data.get("locations") or data.get("location") or data.get("premises") or data.get("sites") or []
 
         if isinstance(raw, dict):
             raw = [raw]
@@ -267,33 +223,13 @@ class JSONBrokerParser(BaseParser):
             locations.append(
                 LocationData(
                     address=str(addr),
-                    city=str(self._first_match(loc, ["city"]))
-                    if self._first_match(loc, ["city"])
-                    else "",
-                    state=str(self._first_match(loc, ["state", "stateProvCd", "stateCode"]))
-                    if self._first_match(loc, ["state", "stateProvCd", "stateCode"])
-                    else "",
-                    zip_code=str(self._first_match(loc, ["zip", "zipCode", "postalCode"]))
-                    if self._first_match(loc, ["zip", "zipCode", "postalCode"])
-                    else "",
-                    building_occupancy=str(
-                        self._first_match(loc, ["occupancy", "occupancyType", "buildingUse"])
-                    )
-                    if self._first_match(loc, ["occupancy", "occupancyType", "buildingUse"])
-                    else None,
-                    year_built=int(
-                        self._first_match(loc, ["yearBuilt", "constructionYear", "year_built"])
-                    )
-                    if self._first_match(loc, ["yearBuilt", "constructionYear", "year_built"])
-                    else None,
-                    square_footage=float(
-                        self._first_match(loc, ["squareFootage", "sqft", "totalArea"])
-                    )
-                    if self._first_match(loc, ["squareFootage", "sqft", "totalArea"])
-                    else None,
-                    construction_type=str(
-                        self._first_match(loc, ["constructionType", "construction", "frameType"])
-                    )
+                    city=str(self._first_match(loc, ["city"])) if self._first_match(loc, ["city"]) else "",
+                    state=str(self._first_match(loc, ["state", "stateProvCd", "stateCode"])) if self._first_match(loc, ["state", "stateProvCd", "stateCode"]) else "",
+                    zip_code=str(self._first_match(loc, ["zip", "zipCode", "postalCode"])) if self._first_match(loc, ["zip", "zipCode", "postalCode"]) else "",
+                    building_occupancy=str(self._first_match(loc, ["occupancy", "occupancyType", "buildingUse"])) if self._first_match(loc, ["occupancy", "occupancyType", "buildingUse"]) else None,
+                    year_built=int(self._first_match(loc, ["yearBuilt", "constructionYear", "year_built"])) if self._first_match(loc, ["yearBuilt", "constructionYear", "year_built"]) else None,
+                    square_footage=float(self._first_match(loc, ["squareFootage", "sqft", "totalArea"])) if self._first_match(loc, ["squareFootage", "sqft", "totalArea"]) else None,
+                    construction_type=str(self._first_match(loc, ["constructionType", "construction", "frameType"]))
                     if self._first_match(loc, ["constructionType", "construction", "frameType"])
                     else None,
                 )
@@ -304,9 +240,7 @@ class JSONBrokerParser(BaseParser):
     def _parse_financial(self, data: dict) -> Optional[FinancialData]:
         fin = data.get("financial") or data.get("financialInfo") or data
 
-        revenue = self._first_match(
-            fin, ["annualRevenue", "revenue", "totalRevenue", "grossRevenue"]
-        )
+        revenue = self._first_match(fin, ["annualRevenue", "revenue", "totalRevenue", "grossRevenue"])
         payroll = self._first_match(fin, ["payroll", "annualPayroll", "totalPayroll"])
         assets = self._first_match(fin, ["totalAssets", "assets", "totalAssetValue"])
         rating = self._first_match(fin, ["creditRating", "credit_rating", "rating"])
@@ -330,29 +264,15 @@ class JSONBrokerParser(BaseParser):
 
         return RiskProfile(
             naics_code=str(naics),
-            sic_code=str(self._first_match(risk, ["sicCode", "sic", "sic_code"]))
-            if self._first_match(risk, ["sicCode", "sic", "sic_code"])
-            else None,
-            business_description=str(
-                self._first_match(risk, ["businessDescription", "description", "businessDesc"])
-            )
+            sic_code=str(self._first_match(risk, ["sicCode", "sic", "sic_code"])) if self._first_match(risk, ["sicCode", "sic", "sic_code"]) else None,
+            business_description=str(self._first_match(risk, ["businessDescription", "description", "businessDesc"]))
             if self._first_match(risk, ["businessDescription", "description", "businessDesc"])
             else None,
-            occupancy_type=str(self._first_match(risk, ["occupancy", "occupancyType"]))
-            if self._first_match(risk, ["occupancy", "occupancyType"])
-            else None,
-            construction_type=str(self._first_match(risk, ["constructionType", "construction"]))
-            if self._first_match(risk, ["constructionType", "construction"])
-            else None,
-            protection_class=int(self._first_match(risk, ["protectionClass", "pc", "isoClass"]))
-            if self._first_match(risk, ["protectionClass", "pc", "isoClass"])
-            else None,
-            number_of_stories=int(self._first_match(risk, ["numberOfStories", "stories", "floors"]))
-            if self._first_match(risk, ["numberOfStories", "stories", "floors"])
-            else None,
-            total_square_footage=float(
-                self._first_match(risk, ["totalSquareFootage", "totalSqft", "buildingArea"])
-            )
+            occupancy_type=str(self._first_match(risk, ["occupancy", "occupancyType"])) if self._first_match(risk, ["occupancy", "occupancyType"]) else None,
+            construction_type=str(self._first_match(risk, ["constructionType", "construction"])) if self._first_match(risk, ["constructionType", "construction"]) else None,
+            protection_class=int(self._first_match(risk, ["protectionClass", "pc", "isoClass"])) if self._first_match(risk, ["protectionClass", "pc", "isoClass"]) else None,
+            number_of_stories=int(self._first_match(risk, ["numberOfStories", "stories", "floors"])) if self._first_match(risk, ["numberOfStories", "stories", "floors"]) else None,
+            total_square_footage=float(self._first_match(risk, ["totalSquareFootage", "totalSqft", "buildingArea"]))
             if self._first_match(risk, ["totalSquareFootage", "totalSqft", "buildingArea"])
             else None,
         )

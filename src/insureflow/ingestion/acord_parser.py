@@ -98,15 +98,9 @@ class ACORDParser(BaseParser):
                 root,
                 ".//acord:NamedInsured/acord:GeneralPartyInfo/acord:NameInfo/acord:CommercialName/acord:DBA",
             ),
-            tax_id=self._find_text(
-                root, ".//acord:NamedInsured/acord:GeneralPartyInfo/acord:TaxIdentity/acord:TaxID"
-            ),
-            entity_type=self._find_text(
-                root, ".//acord:NamedInsured/acord:GeneralPartyInfo/acord:BusinessType"
-            ),
-            address=self._find_text(
-                root, ".//acord:NamedInsured/acord:GeneralPartyInfo/acord:Addr1"
-            ),
+            tax_id=self._find_text(root, ".//acord:NamedInsured/acord:GeneralPartyInfo/acord:TaxIdentity/acord:TaxID"),
+            entity_type=self._find_text(root, ".//acord:NamedInsured/acord:GeneralPartyInfo/acord:BusinessType"),
+            address=self._find_text(root, ".//acord:NamedInsured/acord:GeneralPartyInfo/acord:Addr1"),
         )
 
     def _parse_broker(self, root: ET.Element) -> Optional[BrokerInfo]:
@@ -119,12 +113,8 @@ class ACORDParser(BaseParser):
         return BrokerInfo(
             broker_name=name,
             broker_id=self._find_text(root, ".//acord:Broker/acord:GeneralPartyInfo/acord:ID"),
-            contact_name=self._find_text(
-                root, ".//acord:Broker/acord:GeneralPartyInfo/acord:ContactName"
-            ),
-            contact_email=self._find_text(
-                root, ".//acord:Broker/acord:GeneralPartyInfo/acord:Email"
-            ),
+            contact_name=self._find_text(root, ".//acord:Broker/acord:GeneralPartyInfo/acord:ContactName"),
+            contact_email=self._find_text(root, ".//acord:Broker/acord:GeneralPartyInfo/acord:Email"),
             agency=self._find_text(
                 root,
                 ".//acord:Broker/acord:GeneralPartyInfo/acord:NameInfo/acord:CommercialName/acord:DBA",

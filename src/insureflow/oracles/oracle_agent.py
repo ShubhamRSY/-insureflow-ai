@@ -78,11 +78,7 @@ class OracleAgent(BaseAgent):
 
         if result.total_claims_found > 0:
             for record in result.records:
-                sev = (
-                    RiskSeverity.CRITICAL
-                    if record.current_status == "open" and record.paid_amount > 50_000
-                    else RiskSeverity.HIGH
-                )
+                sev = RiskSeverity.CRITICAL if record.current_status == "open" and record.paid_amount > 50_000 else RiskSeverity.HIGH
                 findings.append(
                     Finding(
                         title=f"CLUE: {record.loss_type.replace('_', ' ').title()} claim found ({record.current_status})",
@@ -159,11 +155,7 @@ class OracleAgent(BaseAgent):
 
         if result.total_claims_found > 0:
             for record in result.records:
-                sev = (
-                    RiskSeverity.CRITICAL
-                    if record.current_status == "open" and record.paid_amount > 100_000
-                    else RiskSeverity.HIGH
-                )
+                sev = RiskSeverity.CRITICAL if record.current_status == "open" and record.paid_amount > 100_000 else RiskSeverity.HIGH
                 findings.append(
                     Finding(
                         title=f"A-PLUS: {record.claim_type.value.replace('_', ' ').title()} property claim ({record.current_status})",
@@ -240,7 +232,12 @@ class OracleAgent(BaseAgent):
                 findings.append(
                     Finding(
                         title=f"NCCI: Critical experience mod ({mod.mod_factor:.3f})",
-                        description=f"Class {mod.class_code} ({mod.class_code_description}): mod {mod.mod_factor:.3f} — actual losses ${result.total_actual_losses:,.0f} vs expected ${result.total_expected_losses:,.0f}",
+                        description=(
+                            f"Class {mod.class_code} ({mod.class_code_description}): "
+                            f"mod {mod.mod_factor:.3f} — "
+                            f"actual losses ${result.total_actual_losses:,.0f} "
+                            f"vs expected ${result.total_expected_losses:,.0f}"
+                        ),
                         severity=RiskSeverity.CRITICAL,
                         category="external_oracle",
                         field_path="oracles.ncci",

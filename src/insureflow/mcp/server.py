@@ -277,9 +277,7 @@ def _register_all(server: FastMCP) -> None:
             if purpose_lower in ("purchase", "refinance"):
                 findings.append(f"Loan purpose '{loan_purpose}': standard risk")
             elif purpose_lower == "cash-out":
-                findings.append(
-                    f"Loan purpose '{loan_purpose}': elevated risk — verify equity retention"
-                )
+                findings.append(f"Loan purpose '{loan_purpose}': elevated risk — verify equity retention")
             else:
                 findings.append(f"Loan purpose '{loan_purpose}': review required")
 
@@ -354,11 +352,7 @@ def _register_all(server: FastMCP) -> None:
         num_payments = loan_term_years * 12
 
         if monthly_rate > 0:
-            monthly_pi = (
-                loan_amount
-                * (monthly_rate * (1 + monthly_rate) ** num_payments)
-                / ((1 + monthly_rate) ** num_payments - 1)
-            )
+            monthly_pi = loan_amount * (monthly_rate * (1 + monthly_rate) ** num_payments) / ((1 + monthly_rate) ** num_payments - 1)
         else:
             monthly_pi = loan_amount / num_payments
 
@@ -456,9 +450,7 @@ def _register_all(server: FastMCP) -> None:
             f"Year Built: {year_built}" if year_built else "",
             f"Sprinklered: {sprinklered}" if sprinklered is not None else "",
             f"Protection Class: {protection_class}" if protection_class else "",
-            f"Total Insurable Value: ${total_insurable_value:,.2f}"
-            if total_insurable_value
-            else "",
+            f"Total Insurable Value: ${total_insurable_value:,.2f}" if total_insurable_value else "",
             f"Prior Claims (5yr): {prior_claims_count}" if prior_claims_count is not None else "",
             "",
             "Analyze the following dimensions:",

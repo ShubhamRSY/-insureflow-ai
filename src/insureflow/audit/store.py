@@ -70,15 +70,11 @@ class AuditStore:
 
     def _write_json(self, path: Path, data: dict[str, Any]) -> None:
         try:
-            path.write_text(
-                json.dumps(data, indent=2, default=str, ensure_ascii=False), encoding="utf-8"
-            )
+            path.write_text(json.dumps(data, indent=2, default=str, ensure_ascii=False), encoding="utf-8")
         except OSError as e:
             raise StorageError(f"Failed to write JSON to {path}: {e}")
 
-    def load_json(
-        self, bundle_id: str, filename: str, org_id: str | None = None
-    ) -> Optional[dict[str, Any]]:
+    def load_json(self, bundle_id: str, filename: str, org_id: str | None = None) -> Optional[dict[str, Any]]:
         candidates = []
         if org_id:
             candidates.append(self.base_path / org_id / bundle_id / filename)

@@ -96,9 +96,7 @@ class InsuranceAuditLogger:
                 self.log(
                     PipelineEvent.DISCREPANCY_DETECTED,
                     f"{disc.field_path}: {disc.source_a} vs {disc.source_b}",
-                    severity=EventSeverity.WARNING
-                    if disc.severity != EventSeverity.CRITICAL
-                    else EventSeverity.CRITICAL,
+                    severity=EventSeverity.WARNING if disc.severity != EventSeverity.CRITICAL else EventSeverity.CRITICAL,
                     metadata={"description": disc.description},
                 )
 

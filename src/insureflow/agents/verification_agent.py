@@ -20,9 +20,7 @@ class VerificationAgent:
         self.reconciliation = ReconciliationEngine()
         self.scorer = TrustScorer()
 
-    def verify(
-        self, provenance_record: ProvenanceRecord
-    ) -> tuple[ReconciliationResult, dict[str, float]]:
+    def verify(self, provenance_record: ProvenanceRecord) -> tuple[ReconciliationResult, dict[str, float]]:
         result = self.reconciliation.reconcile(provenance_record)
         scores = self.scorer.score(provenance_record)
 

@@ -73,11 +73,7 @@ class AuditLogger:
         return []
 
     def get_errors(self, bundle_id: str) -> list[AuditEntry]:
-        return [
-            e
-            for e in self.get_all_entries(bundle_id)
-            if e.severity in (EventSeverity.ERROR, EventSeverity.CRITICAL)
-        ]
+        return [e for e in self.get_all_entries(bundle_id) if e.severity in (EventSeverity.ERROR, EventSeverity.CRITICAL)]
 
     def cleanup_trail(self, bundle_id: str) -> None:
         """Removes the trail from memory to prevent memory leaks in long-running processes."""

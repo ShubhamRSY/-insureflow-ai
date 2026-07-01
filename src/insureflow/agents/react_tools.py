@@ -96,9 +96,7 @@ class ToolRegistry:
             lambda: self._serialize(
                 {
                     "open_ratio": self.uw.open_claim_ratio(self._claims()),
-                    "open_reserves": sum(
-                        c.open_reserve for c in self._claims() if c.claim_status.value == "open"
-                    ),
+                    "open_reserves": sum(c.open_reserve for c in self._claims() if c.claim_status.value == "open"),
                 }
             ),
         )
@@ -170,9 +168,7 @@ class ToolRegistry:
         parameters: dict[str, str],
         fn: Callable[..., Any],
     ) -> None:
-        self._tools[name] = ToolDef(
-            name=name, description=description, parameters=parameters, fn=fn
-        )
+        self._tools[name] = ToolDef(name=name, description=description, parameters=parameters, fn=fn)
 
     def list_tools(self) -> list[dict[str, Any]]:
         return [

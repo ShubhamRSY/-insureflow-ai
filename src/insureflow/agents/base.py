@@ -62,10 +62,7 @@ class BaseAgent:
     def _build_summary(self) -> str:
         if self._errors:
             return f"{self.agent_name}: {len(self._errors)} error(s)"
-        return (
-            f"{self.agent_name}: {len(self._findings)} finding(s), "
-            f"risk score {self._calculate_risk_score():.2f}"
-        )
+        return f"{self.agent_name}: {len(self._findings)} finding(s), risk score {self._calculate_risk_score():.2f}"
 
     def _get_sources(self, bundle: SubmissionBundle) -> list[str]:
         return bundle.all_sources()

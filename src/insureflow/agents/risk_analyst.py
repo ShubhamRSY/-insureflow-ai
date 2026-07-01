@@ -64,9 +64,7 @@ class RiskAnalystAgent(BaseAgent):
         ctype_lower = ctype.lower()
         hazardous = ("wood", "frame", "combustible")
         fire_resistive = ("steel", "concrete", "fireproof", "masonry")
-        if any(h in ctype_lower for h in hazardous) and not any(
-            f in ctype_lower for f in fire_resistive
-        ):
+        if any(h in ctype_lower for h in hazardous) and not any(f in ctype_lower for f in fire_resistive):
             self._add_finding(
                 Finding(
                     title="Higher-risk construction type",
@@ -179,9 +177,7 @@ class RiskAnalystAgent(BaseAgent):
 
     def _assess_sov_adequacy(self, sovs: Any, locations: list[LocationData]) -> None:
         total_sov = sum(s.total_value for s in sovs)
-        total_loc = self.tools.total_insurable_value(
-            [l for l in locations if isinstance(l, LocationData)]
-        )
+        total_loc = self.tools.total_insurable_value([l for l in locations if isinstance(l, LocationData)])
         if total_loc > 0 and total_sov > 0:
             ratio = total_sov / total_loc
             if ratio < 0.8:

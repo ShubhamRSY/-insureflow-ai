@@ -87,12 +87,6 @@ class ReconciliationEngine:
         result.reconciled_at = datetime.now(timezone.utc)
 
         critical_discrepancies = sum(1 for d in discrepancies if d.severity.value == "critical")
-        result.overall_status = (
-            "flagged"
-            if critical_discrepancies > 0
-            else "reconciled"
-            if result.match_rate >= 0.8
-            else "partial"
-        )
+        result.overall_status = "flagged" if critical_discrepancies > 0 else "reconciled" if result.match_rate >= 0.8 else "partial"
 
         return result

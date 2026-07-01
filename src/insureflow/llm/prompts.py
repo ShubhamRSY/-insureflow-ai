@@ -1,4 +1,7 @@
-EXTRACTION_PROMPT = """You are an expert commercial underwriting document analyst. Extract structured risk data from the following inspection report text. Return a JSON object with these fields (use null for missing values):
+EXTRACTION_PROMPT = """\
+You are an expert commercial underwriting document analyst. \
+Extract structured risk data from the following inspection report text. \
+Return a JSON object with these fields (use null for missing values):
 - construction_type: string describing construction (frame, masonry, fireproof, concrete, steel)
 - year_built: integer
 - square_footage: number

@@ -98,9 +98,7 @@ class ReinsuranceAgent(BaseAgent):
                     Finding(
                         title=f"Treaty not applicable: {alloc.treaty_name}",
                         description=f"Excluded: {alloc.exclusion_reason}",
-                        severity=RiskSeverity.MODERATE
-                        if "exhausted" in alloc.exclusion_reason
-                        else RiskSeverity.LOW,
+                        severity=RiskSeverity.MODERATE if "exhausted" in alloc.exclusion_reason else RiskSeverity.LOW,
                         category="reinsurance",
                         evidence=[alloc.exclusion_reason],
                     )
@@ -112,9 +110,7 @@ class ReinsuranceAgent(BaseAgent):
         self._add_finding(
             Finding(
                 title="Reinsurance summary",
-                description=f"Ceded: ${total_ceded:,.0f}, Retained: ${retained:,.0f} ({retained / tiv:.0%} of TIV)"
-                if tiv > 0
-                else "No TIV to cede",
+                description=f"Ceded: ${total_ceded:,.0f}, Retained: ${retained:,.0f} ({retained / tiv:.0%} of TIV)" if tiv > 0 else "No TIV to cede",
                 severity=RiskSeverity.MODERATE if retained > 15_000_000 else RiskSeverity.LOW,
                 category="reinsurance",
                 source_value=retained,

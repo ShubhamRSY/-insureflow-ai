@@ -49,9 +49,7 @@ class InMemoryVectorStore(VectorStore):
         self._vectors.clear()
 
     def _embed(self, guideline: Guideline) -> list[float]:
-        return self._tfidf_vector(
-            f"{guideline.title} {guideline.content} {' '.join(guideline.keywords)}"
-        )
+        return self._tfidf_vector(f"{guideline.title} {guideline.content} {' '.join(guideline.keywords)}")
 
     def _embed_query(self, query: str) -> list[float]:
         return self._tfidf_vector(query)

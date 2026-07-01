@@ -271,9 +271,7 @@ class TestRiskAnalystAgent:
     def test_aging_building(self):
         bundle = _make_bundle(
             risk_profile={},
-            locations=[
-                LocationData(address="Old", city="C", state="S", zip_code="Z", year_built=1950)
-            ],
+            locations=[LocationData(address="Old", city="C", state="S", zip_code="Z", year_built=1950)],
         )
         agent = RiskAnalystAgent()
         result = agent.run(bundle)
@@ -445,9 +443,7 @@ class TestComplianceAgent:
 
     def test_adequate_limits(self):
         covs = [
-            CoverageDetail(
-                coverage_type="Property", limit_amount=10_000_000, deductible=10_000, premium=50_000
-            ),
+            CoverageDetail(coverage_type="Property", limit_amount=10_000_000, deductible=10_000, premium=50_000),
         ]
         bundle = _make_bundle(
             coverages=covs,
@@ -469,9 +465,7 @@ class TestComplianceAgent:
 
     def test_inadequate_limits(self):
         covs = [
-            CoverageDetail(
-                coverage_type="Property", limit_amount=1_000_000, deductible=10_000, premium=50_000
-            ),
+            CoverageDetail(coverage_type="Property", limit_amount=1_000_000, deductible=10_000, premium=50_000),
         ]
         bundle = _make_bundle(
             coverages=covs,
@@ -492,9 +486,7 @@ class TestComplianceAgent:
 
     def test_high_deductible(self):
         covs = [
-            CoverageDetail(
-                coverage_type="Property", limit_amount=1_000_000, deductible=200_000, premium=50_000
-            ),
+            CoverageDetail(coverage_type="Property", limit_amount=1_000_000, deductible=200_000, premium=50_000),
         ]
         bundle = _make_bundle(coverages=covs)
         agent = ComplianceAgent()
@@ -503,9 +495,7 @@ class TestComplianceAgent:
 
     def test_coverage_gaps(self):
         covs = [
-            CoverageDetail(
-                coverage_type="Property", limit_amount=1_000_000, deductible=10_000, premium=50_000
-            ),
+            CoverageDetail(coverage_type="Property", limit_amount=1_000_000, deductible=10_000, premium=50_000),
         ]
         bundle = _make_bundle(coverages=covs)
         agent = ComplianceAgent()
@@ -529,16 +519,12 @@ class TestComplianceAgent:
 
     def test_recommendation_built(self):
         covs = [
-            CoverageDetail(
-                coverage_type="Property", limit_amount=100_000, deductible=10_000, premium=50_000
-            ),
+            CoverageDetail(coverage_type="Property", limit_amount=100_000, deductible=10_000, premium=50_000),
         ]
         bundle = _make_bundle(
             coverages=covs,
             locations=[
-                LocationData(
-                    address="A", city="C", state="S", zip_code="Z", building_value=5_000_000
-                ),
+                LocationData(address="A", city="C", state="S", zip_code="Z", building_value=5_000_000),
             ],
         )
         agent = ComplianceAgent()
@@ -584,10 +570,7 @@ class TestFraudDetectionAgent:
         bundle = _make_bundle(claims=claims)
         agent = FraudDetectionAgent()
         result = agent.run(bundle)
-        assert any(
-            "non-disclosure" in f.title.lower() or "not disclosed" in f.description.lower()
-            for f in result.findings
-        )
+        assert any("non-disclosure" in f.title.lower() or "not disclosed" in f.description.lower() for f in result.findings)
 
     def test_valuation_discrepancy(self):
         bundle = _make_bundle(
@@ -872,11 +855,7 @@ class TestReActAgent:
 
     def test_tool_sov_vs_location(self):
         bundle = _make_bundle(
-            locations=[
-                LocationData(
-                    address="A", city="C", state="S", zip_code="Z", building_value=1_000_000
-                )
-            ],
+            locations=[LocationData(address="A", city="C", state="S", zip_code="Z", building_value=1_000_000)],
             sovs=[
                 ScheduleOfValues(
                     schedule_type="Building",
@@ -894,16 +873,12 @@ class TestReActAgent:
 
     def test_tool_coverage_adequacy(self):
         covs = [
-            CoverageDetail(
-                coverage_type="Property", limit_amount=1_000_000, deductible=10_000, premium=25_000
-            ),
+            CoverageDetail(coverage_type="Property", limit_amount=1_000_000, deductible=10_000, premium=25_000),
         ]
         bundle = _make_bundle(
             coverages=covs,
             locations=[
-                LocationData(
-                    address="A", city="C", state="S", zip_code="Z", building_value=2_000_000
-                ),
+                LocationData(address="A", city="C", state="S", zip_code="Z", building_value=2_000_000),
             ],
         )
         from insureflow.agents.react_tools import ToolRegistry
@@ -917,9 +892,7 @@ class TestReActAgent:
 
         agent = ReActAgent()
         parsed = agent._parse_llm_output(
-            '{"thought": "done", "action": "final_answer", '
-            '"findings": [{"title": "Test", "description": "Desc", '
-            '"severity": "high", "category": "test"}], "summary": "Done"}'
+            '{"thought": "done", "action": "final_answer", "findings": [{"title": "Test", "description": "Desc", "severity": "high", "category": "test"}], "summary": "Done"}'
         )
         assert parsed["action"] == "final_answer"
         assert len(parsed["findings"]) == 1
@@ -928,10 +901,7 @@ class TestReActAgent:
         from insureflow.agents.react_agent import ReActAgent
 
         agent = ReActAgent()
-        parsed = agent._parse_llm_output(
-            '```json\n{"thought": "test", "action": "final_answer", '
-            '"findings": [], "summary": "ok"}\n```'
-        )
+        parsed = agent._parse_llm_output('```json\n{"thought": "test", "action": "final_answer", "findings": [], "summary": "ok"}\n```')
         assert parsed["action"] == "final_answer"
 
     def test_react_parse_llm_malformed(self):
@@ -972,9 +942,7 @@ class TestSupervisorAgent:
                 deductible=5_000,
                 premium=25_000,
             ),
-            CoverageDetail(
-                coverage_type="Property", limit_amount=5_000_000, deductible=25_000, premium=50_000
-            ),
+            CoverageDetail(coverage_type="Property", limit_amount=5_000_000, deductible=25_000, premium=50_000),
             CoverageDetail(
                 coverage_type="Commercial Auto",
                 limit_amount=1_000_000,

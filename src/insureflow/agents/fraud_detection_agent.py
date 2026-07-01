@@ -35,10 +35,7 @@ class FraudDetectionAgent(ReActAgent):
                     description=f"{len(non_disclosed)} claim(s) in loss run not found in structured submission",
                     severity=RiskSeverity.HIGH,
                     category="non_disclosure",
-                    evidence=[
-                        f"{c.claim_id}: ${c.incurred_amount:,.0f} ({c.date_of_loss})"
-                        for c in non_disclosed
-                    ],
+                    evidence=[f"{c.claim_id}: ${c.incurred_amount:,.0f} ({c.date_of_loss})" for c in non_disclosed],
                 )
             )
 

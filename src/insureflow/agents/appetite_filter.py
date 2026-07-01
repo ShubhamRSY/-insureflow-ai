@@ -33,8 +33,7 @@ class AppetiteFilterResult:
             findings=self.findings,
             risk_score=0.0 if self.passed else 0.9,
             risk_severity=severity,
-            summary=self.reason
-            or ("Appetite check passed" if self.passed else "Risk out of appetite"),
+            summary=self.reason or ("Appetite check passed" if self.passed else "Risk out of appetite"),
             processing_time_ms=round(processing_time_ms, 1),
             data_sources_used=["carrier_appetite_guidelines"],
         )
@@ -76,13 +75,9 @@ class AppetiteFilterAgent(BaseAgent):
             return AppetiteFilterResult(passed=False, findings=findings, reason=reason)
         if high:
             reason = "; ".join(f.title for f in high)
-            return AppetiteFilterResult(
-                passed=False, findings=findings, reason=reason, needs_uw_referral=True
-            )
+            return AppetiteFilterResult(passed=False, findings=findings, reason=reason, needs_uw_referral=True)
 
-        return AppetiteFilterResult(
-            passed=True, findings=findings, reason="All appetite checks passed"
-        )
+        return AppetiteFilterResult(passed=True, findings=findings, reason="All appetite checks passed")
 
     def _check_naics(self, bundle: SubmissionBundle) -> list[Finding]:
         findings: list[Finding] = []

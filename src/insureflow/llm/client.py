@@ -55,9 +55,7 @@ class LLMClient:
                 raise ImportError("Anthropic package required. Install: pip install anthropic")
             api_key = self.api_key or settings.claude_api_key
             if not api_key:
-                raise ValueError(
-                    "Claude API key required. Set ANTHROPIC_API_KEY, CLAUDE_API_KEY, or LLM_API_KEY"
-                )
+                raise ValueError("Claude API key required. Set ANTHROPIC_API_KEY, CLAUDE_API_KEY, or LLM_API_KEY")
             kwargs: dict[str, Any] = {"api_key": api_key}
             if self.base_url:
                 kwargs["base_url"] = self.base_url

@@ -33,11 +33,7 @@ class LendingRiskEngine:
                 analysis.strengths.append(f"Strong liquidity {current_ratio:.2f}x")
 
         if fin.total_liabilities > 0 and fin.total_assets > 0:
-            leverage = (
-                fin.total_liabilities / fin.shareholder_equity
-                if fin.shareholder_equity > 0
-                else 999
-            )
+            leverage = fin.total_liabilities / fin.shareholder_equity if fin.shareholder_equity > 0 else 999
             analysis.leverage_ratio = leverage
             ratios.append(f"Leverage {leverage:.2f}x")
             if leverage > 4.0:
@@ -181,15 +177,11 @@ class LendingRiskEngine:
 
         if fin.bankruptcies_last_7_years > 0:
             analysis.overall_risk_score += 25
-            analysis.weaknesses.append(
-                f"{fin.bankruptcies_last_7_years} bankruptcy(ies) in last 7 years"
-            )
+            analysis.weaknesses.append(f"{fin.bankruptcies_last_7_years} bankruptcy(ies) in last 7 years")
 
         if fin.foreclosures_last_7_years > 0:
             analysis.overall_risk_score += 20
-            analysis.weaknesses.append(
-                f"{fin.foreclosures_last_7_years} foreclosure(s) in last 7 years"
-            )
+            analysis.weaknesses.append(f"{fin.foreclosures_last_7_years} foreclosure(s) in last 7 years")
 
         score = max(0, min(100, analysis.overall_risk_score))
         analysis.overall_risk_score = score

@@ -57,9 +57,7 @@ def test_graph_run_acord_only(sample_acord_xml: str) -> None:
     assert len(errors) == 0
 
 
-def test_graph_run_acord_with_inspection(
-    sample_acord_xml: str, sample_inspection_report: str
-) -> None:
+def test_graph_run_acord_with_inspection(sample_acord_xml: str, sample_inspection_report: str) -> None:
     pg = build_pipeline_graph()
     state = create_initial_state(
         acord_xml=sample_acord_xml,

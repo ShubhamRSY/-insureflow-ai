@@ -137,12 +137,7 @@ class MortgageReconciliationEngine:
         seen: set[str] = set()
 
         for doc in bundle.documents:
-            name = (
-                doc.get_field("borrower_name")
-                or doc.get_field("employee_name")
-                or doc.get_field("primary_taxpayer")
-                or doc.get_field("account_holder")
-            )
+            name = doc.get_field("borrower_name") or doc.get_field("employee_name") or doc.get_field("primary_taxpayer") or doc.get_field("account_holder")
             if name and name.lower() not in seen:
                 seen.add(name.lower())
                 borrowers.append(

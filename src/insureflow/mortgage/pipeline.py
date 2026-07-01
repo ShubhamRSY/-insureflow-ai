@@ -70,9 +70,7 @@ class MortgagePipeline:
         loan_amount: float | None = None,
     ) -> dict[str, Any]:
         bid = bundle_id or f"mortgage-{uuid4().hex[:12]}"
-        inferred = product_line or (
-            self._infer_product_line(paths[0]) if paths else ProductLine.RESIDENTIAL_MORTGAGE
-        )
+        inferred = product_line or (self._infer_product_line(paths[0]) if paths else ProductLine.RESIDENTIAL_MORTGAGE)
         documents = self.loader.load_from_paths(paths, bundle_id=bid, product_line=inferred)
         return self.run_documents(
             documents,
@@ -152,24 +150,13 @@ class MortgagePipeline:
             metadata={"use_llm": self.use_llm, "borrower_id": borrower_id, "org_id": self.org_id},
         )
 
-        llm_doc_count = sum(
-            1
-            for d in documents
-            if any(
-                f.field_name == "extraction_method" and "llm" in f.value
-                for f in d.extracted_fields.get("extraction_method", [])
-            )
-        )
+        llm_doc_count = sum(1 for d in documents if any(f.field_name == "extraction_method" and "llm" in f.value for f in d.extracted_fields.get("extraction_method", [])))
         ocr_doc_count = sum(1 for d in documents if d.extracted_fields.get("ocr_engine"))
 
         if llm_doc_count:
-            audit.log(
-                PipelineEvent.EXTRACTION_COMPLETE, f"LLM extraction on {llm_doc_count} document(s)"
-            )
+            audit.log(PipelineEvent.EXTRACTION_COMPLETE, f"LLM extraction on {llm_doc_count} document(s)")
         if ocr_doc_count:
-            audit.log(
-                PipelineEvent.EXTRACTION_COMPLETE, f"OCR extraction on {ocr_doc_count} document(s)"
-            )
+            audit.log(PipelineEvent.EXTRACTION_COMPLETE, f"OCR extraction on {ocr_doc_count} document(s)")
 
         audit.log(
             PipelineEvent.STRUCTURED_PARSE_COMPLETE,
@@ -205,9 +192,7 @@ class MortgagePipeline:
 
         dti_ratio = memo.dti_ratio
         if bundle.income and bundle.credit and rate_quote.monthly_pi:
-            monthly_income = (
-                bundle.income.adjusted_gross_income or bundle.income.total_income
-            ) / 12
+            monthly_income = (bundle.income.adjusted_gross_income or bundle.income.total_income) / 12
             if monthly_income > 0:
                 total_debt = bundle.credit.total_monthly_payment + rate_quote.monthly_pi
                 dti_ratio = round(total_debt / monthly_income * 100, 1)

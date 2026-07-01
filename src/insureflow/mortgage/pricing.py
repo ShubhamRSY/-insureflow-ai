@@ -170,9 +170,7 @@ class LoanPricingEngine:
         pmi = bool(ltv and ltv > rules.pmi_required_above_ltv)
         monthly_pi = self._calc_monthly_pi(amount, rate, 30)
 
-        lock_expires = (
-            datetime.now(tz=timezone.utc) + timedelta(days=rules.rate_lock_days)
-        ).strftime("%Y-%m-%d")
+        lock_expires = (datetime.now(tz=timezone.utc) + timedelta(days=rules.rate_lock_days)).strftime("%Y-%m-%d")
 
         return RateLockQuote(
             product=product,

@@ -57,14 +57,10 @@ class UnderwritingTools:
 
     @staticmethod
     def total_insurable_value(locations: list[LocationData]) -> float:
-        return sum(
-            (l.building_value or 0) + (l.contents_value or 0) + (l.bi_value or 0) for l in locations
-        )
+        return sum((l.building_value or 0) + (l.contents_value or 0) + (l.bi_value or 0) for l in locations)
 
     @staticmethod
-    def coverage_adequacy(
-        coverage: CoverageDetail, total_insurable_value: float
-    ) -> tuple[float, str]:
+    def coverage_adequacy(coverage: CoverageDetail, total_insurable_value: float) -> tuple[float, str]:
         if total_insurable_value == 0:
             return 1.0, "unknown"
         ratio = coverage.limit_amount / total_insurable_value

@@ -204,10 +204,7 @@ class SupervisorAgent(BaseAgent):
             notes = []
             for c in parsed.get("conflicts_resolved", []):
                 between = " vs ".join(c.get("between", []))
-                notes.append(
-                    f"[CONFLICT RESOLVED] {between}: {c.get('issue', '')} → "
-                    f"{c.get('resolution', '')} ({c.get('severity_adjustment', 'no change')})"
-                )
+                notes.append(f"[CONFLICT RESOLVED] {between}: {c.get('issue', '')} → {c.get('resolution', '')} ({c.get('severity_adjustment', 'no change')})")
             for f in parsed.get("escalated_findings", []):
                 notes.append(f"[ESCALATED] {f}")
             for f in parsed.get("mitigated_findings", []):

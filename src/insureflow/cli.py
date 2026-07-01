@@ -23,12 +23,8 @@ console = Console()
 @app.command()
 def run(
     acord_xml: Optional[Path] = typer.Option(None, "--acord", "-a", help="Path to ACORD XML file"),
-    inspection_reports: Optional[list[Path]] = typer.Option(
-        None, "--report", "-r", help="Path to inspection report(s)"
-    ),
-    supplemental: Optional[list[Path]] = typer.Option(
-        None, "--supplemental", "-s", help="Path to supplemental document(s)"
-    ),
+    inspection_reports: Optional[list[Path]] = typer.Option(None, "--report", "-r", help="Path to inspection report(s)"),
+    supplemental: Optional[list[Path]] = typer.Option(None, "--supplemental", "-s", help="Path to supplemental document(s)"),
     bundle_id: Optional[str] = typer.Option(None, "--bundle-id", "-b", help="Custom bundle ID"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed output"),
 ) -> None:
@@ -229,9 +225,7 @@ No other losses reported in the last 5 years.
     audit = results.get("audit_summary", {})
     console.print("\n[bold]Audit Trail:[/]")
     console.print(f"  {audit.get('total_audit_entries', 0)} events logged")
-    console.print(
-        f"  {audit.get('verified_nodes', 0)}/{audit.get('total_provenance_nodes', 0)} nodes verified"
-    )
+    console.print(f"  {audit.get('verified_nodes', 0)}/{audit.get('total_provenance_nodes', 0)} nodes verified")
     console.print(f"  Verification Rate: {audit.get('verification_rate', 0):.1%}")
 
     console.print("\n[green]Demo complete![/]")
@@ -253,12 +247,8 @@ def audit(
     entries = trail_data.get("entries", [])
     for entry in entries:
         sev = entry.get("severity", "info")
-        color = {"info": "blue", "warning": "yellow", "error": "red", "critical": "red bold"}.get(
-            sev, "white"
-        )
-        console.print(
-            f"  [{color}][{sev.upper():7s}][/] {entry.get('event', '')} - {entry.get('message', '')}"
-        )
+        color = {"info": "blue", "warning": "yellow", "error": "red", "critical": "red bold"}.get(sev, "white")
+        console.print(f"  [{color}][{sev.upper():7s}][/] {entry.get('event', '')} - {entry.get('message', '')}")
 
     console.print(f"\n[bold]Total entries:[/] {len(entries)}")
 
@@ -266,15 +256,9 @@ def audit(
 @app.command()
 def agents(
     acord_xml: Optional[Path] = typer.Option(None, "--acord", "-a", help="Path to ACORD XML file"),
-    json_payload: Optional[Path] = typer.Option(
-        None, "--json", "-j", help="Path to JSON broker payload"
-    ),
-    loss_run: Optional[Path] = typer.Option(
-        None, "--loss-run", "-l", help="Path to loss run document"
-    ),
-    inspection: Optional[Path] = typer.Option(
-        None, "--report", "-r", help="Path to inspection report"
-    ),
+    json_payload: Optional[Path] = typer.Option(None, "--json", "-j", help="Path to JSON broker payload"),
+    loss_run: Optional[Path] = typer.Option(None, "--loss-run", "-l", help="Path to loss run document"),
+    inspection: Optional[Path] = typer.Option(None, "--report", "-r", help="Path to inspection report"),
     sov_doc: Optional[Path] = typer.Option(None, "--sov", "-s", help="Path to schedule of values"),
     detailed: bool = typer.Option(False, "--detailed", "-d", help="Show detailed agent findings"),
 ) -> None:
@@ -301,9 +285,7 @@ def agents(
         doc_labels.append(f"SOV: {sov_doc.name}")
 
     if not docs:
-        console.print(
-            "[red]No input documents. Use --acord, --json, --loss-run, --report, or --sov[/]"
-        )
+        console.print("[red]No input documents. Use --acord, --json, --loss-run, --report, or --sov[/]")
         raise typer.Exit(1)
 
     with console.status("[bold green]Loading submission..."):
@@ -366,11 +348,7 @@ def agents(
         console.print("\n[bold]Agent Performance:[/]")
         for name, stats in agent_results.items():
             color = "green" if not stats.get("errors") else "red"
-            console.print(
-                f"  [{color}]{name}:[/] risk={stats['risk_score']:.2f}, "
-                f"findings={stats['findings_count']}, "
-                f"summary={stats['summary']}"
-            )
+            console.print(f"  [{color}]{name}:[/] risk={stats['risk_score']:.2f}, findings={stats['findings_count']}, summary={stats['summary']}")
             if stats.get("errors"):
                 for e in stats["errors"]:
                     console.print(f"    [red]ERROR: {e}[/]")
@@ -414,14 +392,8 @@ def mortgage_borrowers(
                 product_line=pkg.product_line,
                 borrower_id=pkg.borrower_id,
             )
-        color = {"approve": "green", "refer": "yellow", "suspend": "yellow", "deny": "red"}.get(
-            result["decision"], "white"
-        )
-        console.print(
-            f"  [{color}]{pkg.display_name:30s}[/] "
-            f"{result['document_count']:3d} docs → {result['decision'].upper()} "
-            f"(risk {result['risk_score']:.2f})"
-        )
+        color = {"approve": "green", "refer": "yellow", "suspend": "yellow", "deny": "red"}.get(result["decision"], "white")
+        console.print(f"  [{color}]{pkg.display_name:30s}[/] {result['document_count']:3d} docs → {result['decision'].upper()} (risk {result['risk_score']:.2f})")
         if detailed and result.get("audit_paths"):
             console.print(f"    [dim]Audit: {result['audit_paths'].get('audit_trail', '')}[/]")
 
@@ -430,19 +402,11 @@ def mortgage_borrowers(
 
 @app.command()
 def mortgage(
-    directory: Optional[Path] = typer.Option(
-        None, "--dir", "-d", help="Directory of mortgage documents (recursive .txt)"
-    ),
-    files: Optional[list[Path]] = typer.Option(
-        None, "--file", "-f", help="Individual document paths"
-    ),
-    product: str = typer.Option(
-        "auto", "--product", "-p", help="Product line: auto, residential, commercial"
-    ),
+    directory: Optional[Path] = typer.Option(None, "--dir", "-d", help="Directory of mortgage documents (recursive .txt)"),
+    files: Optional[list[Path]] = typer.Option(None, "--file", "-f", help="Individual document paths"),
+    product: str = typer.Option("auto", "--product", "-p", help="Product line: auto, residential, commercial"),
     no_llm: bool = typer.Option(False, "--no-llm", help="Disable LLM extraction"),
-    detailed: bool = typer.Option(
-        False, "--detailed", help="Show full document classification and compliance detail"
-    ),
+    detailed: bool = typer.Option(False, "--detailed", help="Show full document classification and compliance detail"),
 ) -> None:
     """Process mortgage loan documents (home or commercial) with bank compliance rules."""
     from insureflow.models.mortgage import ProductLine
@@ -469,9 +433,7 @@ def mortgage(
     else:
         default_dir = Path("simulated_documents/home_mortgage")
         if not default_dir.exists():
-            console.print(
-                "[red]Provide --dir or --file, or place docs in simulated_documents/home_mortgage[/]"
-            )
+            console.print("[red]Provide --dir or --file, or place docs in simulated_documents/home_mortgage[/]")
             raise typer.Exit(1)
         console.print(f"[dim]Using default directory: {default_dir}[/]")
         with console.status("[bold green]Processing mortgage documents..."):
@@ -528,9 +490,7 @@ def mortgage(
     if recon:
         console.print(f"\n[bold]Reconciliation Issues ({len(recon)}):[/]")
         for r in recon[:8]:
-            console.print(
-                f"  [{r['severity']}] {r['field_path']}: {r['value_a']} vs {r['value_b']}"
-            )
+            console.print(f"  [{r['severity']}] {r['field_path']}: {r['value_a']} vs {r['value_b']}")
 
     if detailed:
         types = results.get("document_types", {})
@@ -586,17 +546,13 @@ def auth_reset(
         console.print("[yellow]Start the server first:[/] python cli.py serve --port 8002")
         raise typer.Exit(1) from exc
     console.print("[bold green]Done.[/] Open in browser to wipe saved login too:")
-    console.print(
-        f"  [link=http://127.0.0.1:{port}/auth/reset]http://127.0.0.1:{port}/auth/reset[/]"
-    )
+    console.print(f"  [link=http://127.0.0.1:{port}/auth/reset]http://127.0.0.1:{port}/auth/reset[/]")
 
 
 @app.command("e2e")
 def e2e(
     port: int = typer.Option(8002, "--port", "-p"),
-    in_process: bool = typer.Option(
-        False, "--in-process", help="Run via TestClient (no live server)"
-    ),
+    in_process: bool = typer.Option(False, "--in-process", help="Run via TestClient (no live server)"),
     fast: bool = typer.Option(False, "--fast", help="Skip connector pull tests"),
     no_browser: bool = typer.Option(False, "--no-browser", help="Skip Playwright UI tests"),
     no_celery: bool = typer.Option(False, "--no-celery", help="Skip Celery worker test"),
@@ -614,11 +570,7 @@ def e2e(
         "test_celery": not no_celery,
         "job_timeout": timeout,
     }
-    report = (
-        run_inprocess(**kwargs)
-        if in_process
-        else run_live(base_url=f"http://127.0.0.1:{port}", **kwargs)
-    )
+    report = run_inprocess(**kwargs) if in_process else run_live(base_url=f"http://127.0.0.1:{port}", **kwargs)
 
     if json_output:
         console.print_json(json.dumps(report, indent=2))
@@ -655,9 +607,7 @@ def doctor(
     console.print(f"Overall: [{color}]{report['overall'].upper()}[/]")
     console.print(f"LLM mode: [bold]{report['llm_mode']}[/]")
     s = report["summary"]
-    console.print(
-        f"Checks: {s['ok']} ok · {s['degraded']} degraded · {s['missing']} missing · {s['error']} error\n"
-    )
+    console.print(f"Checks: {s['ok']} ok · {s['degraded']} degraded · {s['missing']} missing · {s['error']} error\n")
 
     table = Table(show_header=True, header_style="bold")
     table.add_column("Component")
@@ -698,40 +648,24 @@ def lending_underwrite(
     amount: float = typer.Option(..., "--amount", "-a", help="Requested loan amount"),
     term: int = typer.Option(12, "--term", "-t", help="Loan term in months"),
     purpose: str = typer.Option("other", "--purpose", "-p", help="Loan purpose"),
-    business_name: str = typer.Option(
-        "", "--business", "-b", help="Business name (for business loans)"
-    ),
+    business_name: str = typer.Option("", "--business", "-b", help="Business name (for business loans)"),
     industry: str = typer.Option("", "--industry", "-i", help="Industry (for business loans)"),
     revenue: float = typer.Option(0.0, "--revenue", "-r", help="Annual revenue (business)"),
     net_income: float = typer.Option(0.0, "--net-income", "-ni", help="Net income (business)"),
     ebitda: float = typer.Option(0.0, "--ebitda", "-e", help="EBITDA (business)"),
-    debt_service: float = typer.Option(
-        0.0, "--debt-service", "-ds", help="Annual debt service (business)"
-    ),
+    debt_service: float = typer.Option(0.0, "--debt-service", "-ds", help="Annual debt service (business)"),
     total_assets: float = typer.Option(0.0, "--total-assets", "-ta", help="Total assets"),
-    total_liabilities: float = typer.Option(
-        0.0, "--total-liabilities", "-tl", help="Total liabilities"
-    ),
+    total_liabilities: float = typer.Option(0.0, "--total-liabilities", "-tl", help="Total liabilities"),
     current_assets: float = typer.Option(0.0, "--current-assets", "-ca", help="Current assets"),
-    current_liabilities: float = typer.Option(
-        0.0, "--current-liabilities", "-cl", help="Current liabilities"
-    ),
-    collateral_value: float = typer.Option(
-        0.0, "--collateral", "-c", help="Total collateral value"
-    ),
+    current_liabilities: float = typer.Option(0.0, "--current-liabilities", "-cl", help="Current liabilities"),
+    collateral_value: float = typer.Option(0.0, "--collateral", "-c", help="Total collateral value"),
     years_in_business: float = typer.Option(0.0, "--years", "-y", help="Years in business"),
     first_name: str = typer.Option("", "--first-name", "-fn", help="First name (consumer loans)"),
     last_name: str = typer.Option("", "--last-name", "-ln", help="Last name (consumer loans)"),
-    credit_score: int = typer.Option(
-        0, "--credit-score", "-cs", help="Credit score (consumer loans)"
-    ),
+    credit_score: int = typer.Option(0, "--credit-score", "-cs", help="Credit score (consumer loans)"),
     annual_income: float = typer.Option(0.0, "--income", "-inc", help="Annual income (consumer)"),
-    monthly_debt: float = typer.Option(
-        0.0, "--monthly-debt", "-md", help="Total monthly debt (consumer)"
-    ),
-    employment_years: float = typer.Option(
-        0.0, "--emp-years", "-ey", help="Years at current employer"
-    ),
+    monthly_debt: float = typer.Option(0.0, "--monthly-debt", "-md", help="Total monthly debt (consumer)"),
+    employment_years: float = typer.Option(0.0, "--emp-years", "-ey", help="Years at current employer"),
     bankruptcies: int = typer.Option(0, "--bankruptcies", help="Bankruptcies in last 7 years"),
     foreclosures: int = typer.Option(0, "--foreclosures", help="Foreclosures in last 7 years"),
     json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
@@ -741,6 +675,7 @@ def lending_underwrite(
     from insureflow.lending.models import (
         BusinessFinancialData,
         BusinessLoanApplication,
+        Collateral,
         ConsumerFinancialData,
         ConsumerLoanApplication,
         LoanProductType,
@@ -789,9 +724,7 @@ def lending_underwrite(
         raise typer.Exit(1)
 
     purp = purpose_map.get(purpose, LoanPurpose.OTHER)
-    is_business = pt.value.startswith(
-        ("business_", "commercial_", "construction_", "sba_", "equipment_", "invoice_")
-    )
+    is_business = pt.value.startswith(("business_", "commercial_", "construction_", "sba_", "equipment_", "invoice_"))
 
     with console.status("[bold green]Running lending underwriting..."):
         if is_business:
@@ -815,9 +748,7 @@ def lending_underwrite(
                         current_liabilities=current_liabilities,
                     )
                 ],
-                collateral=[Collateral(estimated_value=collateral_value, description="General collateral")]
-                if collateral_value > 0
-                else [],
+                collateral=[Collateral(estimated_value=collateral_value, description="General collateral")] if collateral_value > 0 else [],
             )
         else:
             app = ConsumerLoanApplication(
@@ -844,9 +775,7 @@ def lending_underwrite(
         console.print_json(json.dumps(result.model_dump(mode="json"), indent=2))
         return
 
-    decision_color = (
-        "green" if result.decision.value in ("approved", "approved_with_conditions") else "red"
-    )
+    decision_color = "green" if result.decision.value in ("approved", "approved_with_conditions") else "red"
     console.print(f"\n[bold]Lending Underwriting Result[/] — {app.application_id}")
     console.print(f"  Product:      [bold]{result.product_type.value}[/]")
     console.print(f"  Decision:     [{decision_color}]{result.decision.value.upper()}[/]")
@@ -863,13 +792,9 @@ def lending_underwrite(
         if len(result.conditions) > 5:
             console.print(f"    ... and {len(result.conditions) - 5} more")
     if result.human_review_required:
-        console.print(
-            f"  [yellow]Human Review Required:[/] {', '.join(result.human_review_reasons)}"
-        )
+        console.print(f"  [yellow]Human Review Required:[/] {', '.join(result.human_review_reasons)}")
     if result.compliance_violations:
-        console.print(
-            f"  [yellow]Compliance:[/] {len(result.compliance_violations)} rule(s) evaluated"
-        )
+        console.print(f"  [yellow]Compliance:[/] {len(result.compliance_violations)} rule(s) evaluated")
     if result.document_count:
         console.print(f"  Documents:    {result.document_count}")
 
@@ -881,9 +806,7 @@ registry_app = typer.Typer(help="Model component registry for compliance team re
 
 @registry_app.command("list")
 def registry_list(
-    component: str = typer.Argument(
-        "prompt", help="Component type: prompt, llm_config, compliance_rule, agent_logic"
-    ),
+    component: str = typer.Argument("prompt", help="Component type: prompt, llm_config, compliance_rule, agent_logic"),
     json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
 ) -> None:
     from insureflow.registry import ComponentType, RegistryService
@@ -942,9 +865,7 @@ def registry_list(
 
 @registry_app.command("diff")
 def registry_diff(
-    component: str = typer.Argument(
-        ..., help="Component type: prompt, llm_config, compliance_rule, agent_logic"
-    ),
+    component: str = typer.Argument(..., help="Component type: prompt, llm_config, compliance_rule, agent_logic"),
     id_a: str = typer.Argument(..., help="First (newer) entry ID"),
     id_b: str = typer.Argument(..., help="Second (older) entry ID"),
 ) -> None:
@@ -959,9 +880,7 @@ def registry_diff(
 
     console.print(f"[bold]Diff:[/] {diff.get('from_version')} → {diff.get('to_version')}")
     console.print(f"[bold]Component:[/] {diff.get('component_type', component)}")
-    console.print(
-        f"[bold]Key:[/] {diff.get('prompt_key') or diff.get('model_tier') or diff.get('agent_type', '')}"
-    )
+    console.print(f"[bold]Key:[/] {diff.get('prompt_key') or diff.get('model_tier') or diff.get('agent_type', '')}")
 
     if diff.get("hash_changed"):
         console.print("\n[red]⚠ Content hash changed[/]")
@@ -1038,9 +957,7 @@ def registry_show(
 @registry_app.command("create")
 def registry_create(
     component: str = typer.Argument(..., help="Component type"),
-    key: str = typer.Option(
-        "", "--key", "-k", help="Component key (prompt_key, model_tier, agent_type)"
-    ),
+    key: str = typer.Option("", "--key", "-k", help="Component key (prompt_key, model_tier, agent_type)"),
     description: str = typer.Option("", "--desc", "-d", help="Description"),
     notes: str = typer.Option("", "--notes", "-n", help="Change notes"),
     version: str = typer.Option("1.0.0", "--version", "-v", help="Version label"),
@@ -1063,9 +980,7 @@ def registry_create(
 
         prompt_text = SYSTEM_PROMPTS.get(key, "")
         if not prompt_text:
-            console.print(
-                f"[red]Unknown prompt key: {key}. Available: {', '.join(SYSTEM_PROMPTS.keys())}[/]"
-            )
+            console.print(f"[red]Unknown prompt key: {key}. Available: {', '.join(SYSTEM_PROMPTS.keys())}[/]")
             raise typer.Exit(1)
         entry = PromptVersion(
             component_type=ct,
@@ -1117,9 +1032,7 @@ def registry_create(
         raise typer.Exit(1)
 
     reg.create(entry)
-    console.print(
-        f"[green]Created {component} version [bold]{entry.entry_id[:12]}[/] ({version})[/]"
-    )
+    console.print(f"[green]Created {component} version [bold]{entry.entry_id[:12]}[/] ({version})[/]")
 
 
 @registry_app.command("submit")
@@ -1266,15 +1179,8 @@ def registry_bootstrap(
     entries = reg.bootstrap(created_by=creator)
     console.print(f"[green]Bootstrapped {len(entries)} approved version(s) from current code[/]")
     for e in entries:
-        key = (
-            getattr(e, "prompt_key", None)
-            or getattr(e, "model_tier", None)
-            or getattr(e, "agent_type", None)
-            or ""
-        )
-        console.print(
-            f"  ✓ {e.component_type.value:18s} {key:20s} → {e.entry_id[:12]} ({e.version_label})"
-        )
+        key = getattr(e, "prompt_key", None) or getattr(e, "model_tier", None) or getattr(e, "agent_type", None) or ""
+        console.print(f"  ✓ {e.component_type.value:18s} {key:20s} → {e.entry_id[:12]} ({e.version_label})")
 
 
 @registry_app.command("context")
@@ -1293,9 +1199,7 @@ def registry_context(
     console.print("[bold]Active Version Context[/]\n")
     console.print("[underline]Prompts:[/]")
     for key, info in ctx.get("prompts", {}).items():
-        console.print(
-            f"  {key:20s} {info['version']:8s} {info['entry_id'][:12]} hash={info['hash']}"
-        )
+        console.print(f"  {key:20s} {info['version']:8s} {info['entry_id'][:12]} hash={info['hash']}")
     console.print()
     console.print("[underline]LLM Configs:[/]")
     for tier, info in ctx.get("llm_configs", {}).items():
@@ -1311,9 +1215,7 @@ def registry_context(
 
 
 app.add_typer(registry_app, name="registry", help="Model version registry & compliance review")
-app.add_typer(
-    lending_app, name="lending", help="Lending underwriting for business & consumer loan products"
-)
+app.add_typer(lending_app, name="lending", help="Lending underwriting for business & consumer loan products")
 
 
 # ── Document Analytics ───────────────────────────────────────────────────
@@ -1322,9 +1224,7 @@ app.add_typer(
 @app.command("doc-stats")
 def doc_stats(
     vertical: str = typer.Option("", "--vertical", "-v", help="Filter: insurance, mortgage"),
-    distribution: bool = typer.Option(
-        False, "--distribution", "-d", help="Show distribution instead of summary"
-    ),
+    distribution: bool = typer.Option(False, "--distribution", "-d", help="Show distribution instead of summary"),
     json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
 ) -> None:
     """Show average documents per application across pipeline runs."""
@@ -1366,9 +1266,7 @@ def doc_stats(
     if summary["by_vertical"]:
         console.print("[underline]By vertical:[/]")
         for v, stats in summary["by_vertical"].items():
-            console.print(
-                f"  {v:15s} {stats['avg']:>8.1f} avg ({stats['min']}-{stats['max']})  n={stats['count']}"
-            )
+            console.print(f"  {v:15s} {stats['avg']:>8.1f} avg ({stats['min']}-{stats['max']})  n={stats['count']}")
 
     if summary["by_decision"]:
         console.print("[underline]By decision:[/]")

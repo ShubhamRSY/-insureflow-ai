@@ -306,9 +306,7 @@ class TestDocumentCountFromPipelineFixtures:
             structured_count=1,
             unstructured_count=3,
         )
-        engine.record(
-            bundle_id="mtg-match", document_count=6, vertical="mortgage", unstructured_count=6
-        )
+        engine.record(bundle_id="mtg-match", document_count=6, vertical="mortgage", unstructured_count=6)
 
         summary = engine.summary()
         assert summary["total_applications"] == 2

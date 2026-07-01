@@ -41,9 +41,7 @@ def ingest_docs(state: dict[str, Any]) -> dict[str, Any]:
         bundle_id=bundle_id,
     )
 
-    _log_event(
-        bundle_id, PipelineEvent.SUBMISSION_RECEIVED, "ingest_docs", f"Bundle loaded: {bundle_id}"
-    )
+    _log_event(bundle_id, PipelineEvent.SUBMISSION_RECEIVED, "ingest_docs", f"Bundle loaded: {bundle_id}")
 
     return {
         "bundle": bundle,
@@ -290,9 +288,7 @@ def parse_sov(state: dict[str, Any]) -> dict[str, Any]:
                 break
 
     if not sov_text:
-        _log_event(
-            bundle_id, PipelineEvent.STRUCTURED_PARSE_START, "parse_sov", "No SOV data, skipping"
-        )
+        _log_event(bundle_id, PipelineEvent.STRUCTURED_PARSE_START, "parse_sov", "No SOV data, skipping")
         return {"parsed_sov": True}
 
     from insureflow.ingestion.sov_parser import SOVParser
@@ -399,9 +395,7 @@ def extract_agents(state: dict[str, Any]) -> dict[str, Any]:
     bundle: SubmissionBundle = state["bundle"]
     bundle_id = state["bundle_id"]
     _log_state("extract_agents", state)
-    _log_event(
-        bundle_id, PipelineEvent.EXTRACTION_START, "extract_agents", "Running agent extraction"
-    )
+    _log_event(bundle_id, PipelineEvent.EXTRACTION_START, "extract_agents", "Running agent extraction")
 
     llm = LLMClient()
 
@@ -413,9 +407,7 @@ def extract_agents(state: dict[str, Any]) -> dict[str, Any]:
         bundle = agent.process_bundle(bundle)
         retries = 0
     except Exception as exc:
-        logger.error(
-            "Extraction failed (attempt %d): %s", state.get("extraction_retries", 0) + 1, exc
-        )
+        logger.error("Extraction failed (attempt %d): %s", state.get("extraction_retries", 0) + 1, exc)
         _log_event(
             bundle_id,
             PipelineEvent.EXTRACTION_COMPLETE,
@@ -448,9 +440,7 @@ def build_provenance(state: dict[str, Any]) -> dict[str, Any]:
     bundle: SubmissionBundle = state["bundle"]
     bundle_id = state["bundle_id"]
     _log_state("build_provenance", state)
-    _log_event(
-        bundle_id, PipelineEvent.PROVENANCE_CHECK, "build_provenance", "Building provenance records"
-    )
+    _log_event(bundle_id, PipelineEvent.PROVENANCE_CHECK, "build_provenance", "Building provenance records")
 
     engine = ProvenanceEngine()
 
@@ -503,11 +493,7 @@ def reconcile(state: dict[str, Any]) -> dict[str, Any]:
             f"Discrepancies: {len(result.discrepancies)}",
         )
 
-        critical = any(
-            d.severity.value == "critical"
-            for d in result.discrepancies
-            if hasattr(d.severity, "value")
-        )
+        critical = any(d.severity.value == "critical" for d in result.discrepancies if hasattr(d.severity, "value"))
         human_review = critical
 
         _log_event(
@@ -565,14 +551,8 @@ def query_rag(state: dict[str, Any]) -> dict[str, Any]:
         if rp.construction_type:
             query_parts.append(str(rp.construction_type))
 
-    query = (
-        " ".join(query_parts)
-        if query_parts
-        else "general commercial property underwriting guidelines"
-    )
-    _log_event(
-        bundle_id, PipelineEvent.SYNTHESIS_START, "query_rag", f"Querying RAG for: '{query}'"
-    )
+    query = " ".join(query_parts) if query_parts else "general commercial property underwriting guidelines"
+    _log_event(bundle_id, PipelineEvent.SYNTHESIS_START, "query_rag", f"Querying RAG for: '{query}'")
 
     from insureflow.agents.rag_agent import RAGAgent
 
@@ -595,18 +575,14 @@ def query_rag(state: dict[str, Any]) -> dict[str, Any]:
 def human_review(state: dict[str, Any]) -> dict[str, Any]:
     bundle_id = state["bundle_id"]
     _log_state("human_review", state)
-    _log_event(
-        bundle_id, PipelineEvent.HUMAN_REVIEW_REQUIRED, "human_review", "Waiting for human review"
-    )
+    _log_event(bundle_id, PipelineEvent.HUMAN_REVIEW_REQUIRED, "human_review", "Waiting for human review")
 
     reconciliation = state.get("reconciliation")
     reasons: list[str] = []
     if reconciliation and reconciliation.discrepancies:
         for d in reconciliation.discrepancies:
             if d.severity.value == "critical":
-                reasons.append(
-                    f"[{d.field_path}] {d.description} (src_a={d.source_a}, src_b={d.source_b})"
-                )
+                reasons.append(f"[{d.field_path}] {d.description} (src_a={d.source_a}, src_b={d.source_b})")
 
     return {"human_review_reasons": reasons}
 
@@ -643,8 +619,7 @@ def synthesize(state: dict[str, Any]) -> dict[str, Any]:
             bundle_id,
             PipelineEvent.SYNTHESIS_COMPLETE,
             "synthesize",
-            f"Synthesis done: {synthesis.discrepancies_found} discrepancies, "
-            f"human_review={synthesis.human_review_required}",
+            f"Synthesis done: {synthesis.discrepancies_found} discrepancies, human_review={synthesis.human_review_required}",
         )
     except Exception as exc:
         logger.error("Synthesis failed: %s", exc)
@@ -681,8 +656,7 @@ def audit(state: dict[str, Any]) -> dict[str, Any]:
         bundle_id,
         PipelineEvent.PIPELINE_COMPLETE,
         "graph_orchestrator",
-        f"Pipeline complete. human_review={state.get('human_review_needed', False)}, "
-        f"errors={len(state.get('errors', []))}",
+        f"Pipeline complete. human_review={state.get('human_review_needed', False)}, errors={len(state.get('errors', []))}",
         severity=EventSeverity.INFO,
     )
 

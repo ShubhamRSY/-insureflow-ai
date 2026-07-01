@@ -25,16 +25,10 @@ class InsuranceDocumentClassifier:
         if filename.endswith(".xml") or "<acord" in combined or "acord xmlns" in combined:
             return InsuranceDocumentType.ACORD_XML
 
-        if any(
-            k in combined
-            for k in ("declaration page", "dec page", "policy declarations", "policy number:")
-        ):
+        if any(k in combined for k in ("declaration page", "dec page", "policy declarations", "policy number:")):
             return InsuranceDocumentType.DEC_PAGE
 
-        if any(
-            k in combined
-            for k in ("loss run", "claims history", "claim #", "date of loss", "incurred")
-        ):
+        if any(k in combined for k in ("loss run", "claims history", "claim #", "date of loss", "incurred")):
             if re.search(r"claim\s*#?\s*\d+", combined) or "total incurred" in combined:
                 return InsuranceDocumentType.LOSS_RUN
 
@@ -49,22 +43,13 @@ class InsuranceDocumentClassifier:
         ):
             return InsuranceDocumentType.BROKER_SLIP
 
-        if any(
-            k in combined
-            for k in ("schedule of values", "sov", "building value", "total insurable")
-        ):
+        if any(k in combined for k in ("schedule of values", "sov", "building value", "total insurable")):
             return InsuranceDocumentType.SCHEDULE_OF_VALUES
 
-        if any(
-            k in combined
-            for k in ("inspection report", "inspector", "property condition", "roof condition")
-        ):
+        if any(k in combined for k in ("inspection report", "inspector", "property condition", "roof condition")):
             return InsuranceDocumentType.INSPECTION_REPORT
 
-        if any(
-            k in combined
-            for k in ("balance sheet", "income statement", "financial statement", "annual revenue")
-        ):
+        if any(k in combined for k in ("balance sheet", "income statement", "financial statement", "annual revenue")):
             return InsuranceDocumentType.FINANCIAL_STATEMENT
 
         return InsuranceDocumentType.SUPPLEMENTAL

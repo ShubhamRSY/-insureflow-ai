@@ -104,8 +104,6 @@ class FeedbackEngine:
             "org_id": org_id,
             "sample_size": len(experiences),
             "avg_loss_ratio": round(avg_lr, 4),
-            "portfolio_loss_ratio": round(total_incurred / total_earned, 4)
-            if total_earned
-            else 0.0,
+            "portfolio_loss_ratio": round(total_incurred / total_earned, 4) if total_earned else 0.0,
             "total_claims": sum(e.claim_count for e in experiences),
         }

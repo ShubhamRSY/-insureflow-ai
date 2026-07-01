@@ -68,9 +68,7 @@ class ISiModotechAdapter(BasePolicyAdminAdapter):
             response_payload=response,
         )
 
-    def bind_policy(
-        self, payload: PolicySubmissionPayload, quote_reference: str
-    ) -> IntegrationResult:
+    def bind_policy(self, payload: PolicySubmissionPayload, quote_reference: str) -> IntegrationResult:
         policy_number = f"MOD-{datetime.now(tz=timezone.utc).year}-{uuid4().hex[:8].upper()}"
         response = {
             "policy_number": policy_number,

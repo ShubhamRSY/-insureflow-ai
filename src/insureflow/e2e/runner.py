@@ -102,9 +102,7 @@ class E2ERunner:
         expected: int | tuple[int, ...] = 200,
     ) -> Any:
         if self._client is not None:
-            return self._request_testclient(
-                method, path, json_body=json_body, auth=auth, expected=expected
-            )
+            return self._request_testclient(method, path, json_body=json_body, auth=auth, expected=expected)
 
         url = f"{self.base_url.rstrip('/')}{path}"
         headers = {"Accept": "application/json"}
@@ -208,9 +206,7 @@ class E2ERunner:
             if status in ("completed", "failed"):
                 return last
             time.sleep(2)
-        raise TimeoutError(
-            f"Job {job_id} not finished after {self.job_timeout}s (last={last.get('status')})"
-        )
+        raise TimeoutError(f"Job {job_id} not finished after {self.job_timeout}s (last={last.get('status')})")
 
     def _auth_headers_setup(self) -> None:
         """Ensure token is set (setup new org user or login with existing credentials)."""
@@ -254,9 +250,7 @@ class E2ERunner:
         if _try_login(fallback_user, fallback_pass):
             return
 
-        raise RuntimeError(
-            "Could not authenticate. Set E2E_USERNAME/E2E_PASSWORD or run auth-reset + setup."
-        )
+        raise RuntimeError("Could not authenticate. Set E2E_USERNAME/E2E_PASSWORD or run auth-reset + setup.")
 
     # ── Test suites ──────────────────────────────────────────────
 
@@ -430,19 +424,13 @@ class E2ERunner:
 
         decision = getattr(self, "_insurance_decision", "")
         if decision == "decline":
-            self._record(
-                "Insurance production (skipped)", True, "decision=decline, no workflow to sign off"
-            )
+            self._record("Insurance production (skipped)", True, "decision=decline, no workflow to sign off")
             return
 
         def pending_queue() -> str:
             data = self._request("GET", "/pipeline/workflow/pending", auth=True)
             pending = data.get("pending", [])
-            ids = (
-                pending
-                if not pending or isinstance(pending[0], str)
-                else [p.get("bundle_id") for p in pending]
-            )
+            ids = pending if not pending or isinstance(pending[0], str) else [p.get("bundle_id") for p in pending]
             if bundle_id not in ids and not ids:
                 raise AssertionError(f"Expected pending queue entries, bundle={bundle_id}")
             return f"{len(ids)} pending"
@@ -482,9 +470,7 @@ class E2ERunner:
             pkg = self._request("GET", f"/pipeline/audit/{bundle_id}/package", auth=True)
             assert pkg.get("artifact_count", 0) >= 1, "regulatory package empty"
             assert pkg.get("bundle_id") == bundle_id
-            return (
-                f"artifacts={pkg['artifact_count']} path={Path(pkg.get('package_path', '')).name}"
-            )
+            return f"artifacts={pkg['artifact_count']} path={Path(pkg.get('package_path', '')).name}"
 
         def loss_experience() -> str:
             policy = getattr(self, "_bound_policy_number", f"POL-E2E-{bundle_id[:8]}")
@@ -544,9 +530,7 @@ class E2ERunner:
             rq = results.get("rate_quote") or {}
             self._mortgage_job_id = job_id
             self._mortgage_bundle_id = results.get("bundle_id", job_id)
-            return (
-                f"decision={decision} rate={rq.get('adjusted_rate')} dti={results.get('dti_ratio')}"
-            )
+            return f"decision={decision} rate={rq.get('adjusted_rate')} dti={results.get('dti_ratio')}"
 
         self._step("Mortgage demo pipeline (Johnson)", demo_run)
 
@@ -644,11 +628,7 @@ class E2ERunner:
         def overview() -> str:
             data = self._request("GET", "/api/dashboard/overview", auth=True)
             assert "insurance" in data and "mortgage" in data
-            return (
-                f"ins={data['insurance'].get('total', 0)} "
-                f"mort={data['mortgage'].get('total', 0)} "
-                f"pending={len(data.get('pending', []))}"
-            )
+            return f"ins={data['insurance'].get('total', 0)} mort={data['mortgage'].get('total', 0)} pending={len(data.get('pending', []))}"
 
         self._step("GET /api/dashboard/overview", overview)
 
@@ -692,9 +672,7 @@ class E2ERunner:
 
             examples = PROJECT_ROOT / "examples"
             acord = (examples / "pacific_coast_acord.xml").read_text(encoding="utf-8")
-            inspection = (examples / "pacific_coast_inspection_report.md").read_text(
-                encoding="utf-8"
-            )
+            inspection = (examples / "pacific_coast_inspection_report.md").read_text(encoding="utf-8")
             loss = (examples / "pacific_coast_loss_run.md").read_text(encoding="utf-8")
             result = InsurancePipeline(org_id=self.org_id, use_llm=self.use_llm).run(
                 acord_xml=acord,
@@ -762,9 +740,7 @@ def run_inprocess(**kwargs: Any) -> dict[str, Any]:
         full_name="E2E Admin",
         org_id=runner.org_id,
     )
-    runner._token = create_access_token(
-        {"sub": runner.username, "role": "admin", "org_id": runner.org_id}
-    )
+    runner._token = create_access_token({"sub": runner.username, "role": "admin", "org_id": runner.org_id})
     return runner.run_all()
 
 

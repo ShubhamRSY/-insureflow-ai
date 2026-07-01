@@ -133,22 +133,15 @@ class CLUEClient:
             records=records,
             total_claims_found=len(records),
             total_paid=total_paid,
-            has_prior_litigation=any(
-                "litigation" in r.description.lower() or "lawsuit" in r.description.lower()
-                for r in records
-            ),
+            has_prior_litigation=any("litigation" in r.description.lower() or "lawsuit" in r.description.lower() for r in records),
             has_prior_cancellation=False,
         )
 
     def query_by_tax_id(self, tax_id: str, years_back: int = 7) -> CLUEResult:
         name_lower = tax_id.lower()
-        return self.query_by_name_and_address(
-            name_lower if name_lower else "Unknown", tax_id=tax_id
-        )
+        return self.query_by_name_and_address(name_lower if name_lower else "Unknown", tax_id=tax_id)
 
-    def _call_live_api(
-        self, legal_name: str, address: str, tax_id: str, years_back: int
-    ) -> CLUEResult:
+    def _call_live_api(self, legal_name: str, address: str, tax_id: str, years_back: int) -> CLUEResult:
         return CLUEResult(
             subject_name=legal_name,
             subject_address=address,

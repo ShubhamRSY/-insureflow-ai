@@ -96,9 +96,7 @@ class SystemDiagnostics:
     def _check_llm(self) -> ComponentCheck:
         from insureflow.config import settings
 
-        has_openai = bool(
-            settings.llm_api_key or settings.llm_cheap_api_key or settings.llm_expensive_api_key
-        )
+        has_openai = bool(settings.llm_api_key or settings.llm_cheap_api_key or settings.llm_expensive_api_key)
         has_claude = bool(settings.claude_api_key)
 
         if has_openai or has_claude:
@@ -112,11 +110,7 @@ class SystemDiagnostics:
                     "provider": provider,
                     "cheap_model": settings.llm_cheap_model,
                     "expensive_model": settings.llm_expensive_model,
-                    "key_hint": _mask_key(
-                        settings.llm_api_key
-                        or settings.llm_cheap_api_key
-                        or settings.claude_api_key
-                    ),
+                    "key_hint": _mask_key(settings.llm_api_key or settings.llm_cheap_api_key or settings.claude_api_key),
                     "openai": has_openai,
                     "claude": has_claude,
                 },

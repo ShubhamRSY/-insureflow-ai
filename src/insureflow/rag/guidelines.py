@@ -44,11 +44,7 @@ class UnderwritingGuidelines(BaseModel):
         return [g for g in self.guidelines if g.category == category]
 
     def search_keywords(self, terms: list[str]) -> list[Guideline]:
-        return [
-            g
-            for g in self.guidelines
-            if any(t.lower() in " ".join(g.keywords).lower() for t in terms)
-        ]
+        return [g for g in self.guidelines if any(t.lower() in " ".join(g.keywords).lower() for t in terms)]
 
 
 def builtin_carrier_appetite_rules() -> UnderwritingGuidelines:

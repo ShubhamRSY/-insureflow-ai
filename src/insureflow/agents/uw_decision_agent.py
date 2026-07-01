@@ -46,9 +46,7 @@ class UWDecisionAgent(ReActAgent):
             )
             return
 
-        high_crit = [
-            f for f in all_findings if f.severity in (RiskSeverity.CRITICAL, RiskSeverity.HIGH)
-        ]
+        high_crit = [f for f in all_findings if f.severity in (RiskSeverity.CRITICAL, RiskSeverity.HIGH)]
         moderate = [f for f in all_findings if f.severity == RiskSeverity.MODERATE]
 
         if any(f.severity == RiskSeverity.CRITICAL for f in high_crit):
@@ -67,8 +65,7 @@ class UWDecisionAgent(ReActAgent):
             self._add_finding(
                 Finding(
                     title="Elevated aggregate risk score",
-                    description=f"Aggregate risk score {score:.2f} — "
-                    f"{len(high_crit)} high/critical + {len(moderate)} moderate findings",
+                    description=f"Aggregate risk score {score:.2f} — {len(high_crit)} high/critical + {len(moderate)} moderate findings",
                     severity=RiskSeverity.HIGH,
                     category="uw_decision",
                 )
@@ -97,11 +94,7 @@ class UWDecisionAgent(ReActAgent):
                 action="refer",
                 rationale=f"Aggregate risk score: {score:.2f}. {sum(1 for f in self._findings if f.severity == RiskSeverity.HIGH)} high-severity findings require UW review.",
                 suggested_premium_modification=1.15 if score > 0.6 else None,
-                conditions=[
-                    f.title
-                    for f in self._findings
-                    if f.severity in (RiskSeverity.HIGH, RiskSeverity.CRITICAL)
-                ],
+                conditions=[f.title for f in self._findings if f.severity in (RiskSeverity.HIGH, RiskSeverity.CRITICAL)],
             )
         return Recommendation(
             action="accept",
@@ -150,17 +143,11 @@ class UWDecisionAgent(ReActAgent):
             conditions=rec.conditions if rec else [],
             review_notes=self._build_review_notes(all_findings),
             human_review_required=decision in (UWDecision.REFER, UWDecision.DECLINE),
-            human_review_reasons=[
-                f.title
-                for f in all_findings
-                if f.severity in (RiskSeverity.HIGH, RiskSeverity.CRITICAL)
-            ],
+            human_review_reasons=[f.title for f in all_findings if f.severity in (RiskSeverity.HIGH, RiskSeverity.CRITICAL)],
             agent_results=results_map,
         )
 
-    def _build_memo_summary(
-        self, decision: UWDecision, score: float, findings: list[Finding]
-    ) -> str:
+    def _build_memo_summary(self, decision: UWDecision, score: float, findings: list[Finding]) -> str:
         sev_counts: dict[str, int] = {}
         for f in findings:
             sev_counts[f.severity.value] = sev_counts.get(f.severity.value, 0) + 1
@@ -169,11 +156,7 @@ class UWDecisionAgent(ReActAgent):
         total = len(findings)
         action = decision.value.upper()
         pct = int(round(score * 100))
-        narrative = (
-            f"Underwriting recommendation is {action} based on {total} findings "
-            f"across risk, loss history, compliance, and fraud analysis. "
-            f"Aggregate risk score is {pct}/100."
-        )
+        narrative = f"Underwriting recommendation is {action} based on {total} findings across risk, loss history, compliance, and fraud analysis. Aggregate risk score is {pct}/100."
         if critical or high:
             narrative += f" {critical + high} finding(s) require elevated attention."
         return narrative

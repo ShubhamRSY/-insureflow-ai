@@ -48,9 +48,7 @@ class APlusResult:
     def summary(self) -> str:
         if self.error:
             return f"A-PLUS query failed: {self.error}"
-        parts = [
-            f"A-PLUS returned {self.total_claims_found} property records for {self.subject_name}"
-        ]
+        parts = [f"A-PLUS returned {self.total_claims_found} property records for {self.subject_name}"]
         if self.has_repeated_property_claims:
             parts.append("Repeated property claims detected")
         if self.has_arson_or_fraud_flag:
@@ -96,9 +94,7 @@ class APlusClient:
 
         return self._simulated_query(legal_name, property_address, tax_id, years_back)
 
-    def _call_live_api(
-        self, legal_name: str, property_address: str, tax_id: str, years_back: int
-    ) -> APlusResult:
+    def _call_live_api(self, legal_name: str, property_address: str, tax_id: str, years_back: int) -> APlusResult:
         return APlusResult(
             subject_name=legal_name,
             subject_address=property_address,
@@ -107,9 +103,7 @@ class APlusClient:
             error="Live A-PLUS adapter not yet implemented — set ORACLE_MODE=simulated",
         )
 
-    def _simulated_query(
-        self, legal_name: str, property_address: str, tax_id: str, years_back: int
-    ) -> APlusResult:
+    def _simulated_query(self, legal_name: str, property_address: str, tax_id: str, years_back: int) -> APlusResult:
         today = date.today()
         name_lower = (legal_name or "").lower()
         addr_lower = (property_address or "").lower()
@@ -192,6 +186,5 @@ class APlusClient:
             total_claims_found=len(records),
             total_paid=total_paid,
             has_repeated_property_claims=len(records) >= 2,
-            has_arson_or_fraud_flag="arson" in str(records).lower()
-            or "fraud" in str(records).lower(),
+            has_arson_or_fraud_flag="arson" in str(records).lower() or "fraud" in str(records).lower(),
         )

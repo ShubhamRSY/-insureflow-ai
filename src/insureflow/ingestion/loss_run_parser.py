@@ -26,16 +26,12 @@ class LossRunParser(BaseParser):
         r"general\s+liability|property|inland\s+marine|cargo|"
         r"auto|wc|gl|umbrella|crime|spoilage)"
     )
-    CAUSE_RE = re.compile(
-        r"(?i)\*{0,2}(?:cause|reason|nature)\*{0,2}\s*:\s*\*{0,2}\s*(.+?)(?:\n|$)"
-    )
+    CAUSE_RE = re.compile(r"(?i)\*{0,2}(?:cause|reason|nature)\*{0,2}\s*:\s*\*{0,2}\s*(.+?)(?:\n|$)")
     AMOUNT_RE = re.compile(
         r"(?i)\*{0,2}(?:incurred|paid|reserve|open\s+reserve|amount)"
         r"\*{0,2}\s*:\s*\*{0,2}\s*\$?([\d,]+(?:\.\d{2})?)"
     )
-    STATUS_RE = re.compile(
-        r"(?i)\*{0,2}status\*{0,2}\s*:\s*\*{0,2}\s*(open|closed|pending|litigation|subrogation)"
-    )
+    STATUS_RE = re.compile(r"(?i)\*{0,2}status\*{0,2}\s*:\s*\*{0,2}\s*(open|closed|pending|litigation|subrogation)")
 
     SECTION_HEADINGS = re.compile(
         r"(?i)^(#{1,3}\s*)?(?:claim\s+detail|loss\s+run|claims?\s+summary|"
@@ -280,7 +276,5 @@ class LossRunParser(BaseParser):
                 )
             pos = next_idx
         if not chunks:
-            chunks.append(
-                ExtractedChunk(chunk_index=0, text=text, start_char=0, end_char=len(text))
-            )
+            chunks.append(ExtractedChunk(chunk_index=0, text=text, start_char=0, end_char=len(text)))
         return chunks

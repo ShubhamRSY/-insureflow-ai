@@ -165,28 +165,15 @@ def _recommendations(
     recs: list[str] = []
 
     if precision < 0.85:
-        recs.append(
-            f"Improve field extraction precision ({precision:.1%}). Review parser regex patterns for ACORD/loss-run parsers."
-        )
+        recs.append(f"Improve field extraction precision ({precision:.1%}). Review parser regex patterns for ACORD/loss-run parsers.")
     if recall < 0.90:
-        recs.append(
-            f"Improve field extraction recall ({recall:.1%}). Add more field mappings for edge-case XML structures."
-        )
+        recs.append(f"Improve field extraction recall ({recall:.1%}). Add more field mappings for edge-case XML structures.")
     if hallucination > 0.05:
-        recs.append(
-            f"Reduce hallucination rate ({hallucination:.1%}). Tighten LLM prompts and add output validation."
-        )
-    if (
-        ragas_result.get("overall_quality_score", 0) is not None
-        and ragas_result.get("overall_quality_score", 1) < 0.8
-    ):
-        recs.append(
-            f"RAG quality score is {ragas_result.get('overall_quality_score'):.1%}. Add more guidelines and improve retrieval."
-        )
+        recs.append(f"Reduce hallucination rate ({hallucination:.1%}). Tighten LLM prompts and add output validation.")
+    if ragas_result.get("overall_quality_score", 0) is not None and ragas_result.get("overall_quality_score", 1) < 0.8:
+        recs.append(f"RAG quality score is {ragas_result.get('overall_quality_score'):.1%}. Add more guidelines and improve retrieval.")
     if giskard_result.get("total_issues", 0) and giskard_result["total_issues"] > 0:
-        recs.append(
-            f"Giskard found {giskard_result['total_issues']} issues. Review and address before production deployment."
-        )
+        recs.append(f"Giskard found {giskard_result['total_issues']} issues. Review and address before production deployment.")
     if not recs:
         recs.append("All quality gates pass. Ready for production deployment.")
 

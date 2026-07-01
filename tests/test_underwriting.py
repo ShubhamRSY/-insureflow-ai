@@ -413,9 +413,7 @@ class TestPremiumAudit:
 
 
 class TestTriageModule:
-    def _make_bundle(
-        self, naics: str = "541330", state: str = "TX", tiv: float = 5_000_000
-    ) -> SubmissionBundle:
+    def _make_bundle(self, naics: str = "541330", state: str = "TX", tiv: float = 5_000_000) -> SubmissionBundle:
         return SubmissionBundle(
             bundle_id="test-triage",
             structured=StructuredSubmission(

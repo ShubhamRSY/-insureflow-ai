@@ -29,9 +29,7 @@ class OCRProcessor:
                 raw_text=raw,
             )
 
-    def extract_text_from_bytes(
-        self, data: bytes, filename: str, submission_id: str
-    ) -> UnstructuredSubmission:
+    def extract_text_from_bytes(self, data: bytes, filename: str, submission_id: str) -> UnstructuredSubmission:
         ext = Path(filename).suffix.lower()
         if ext == ".pdf":
             return self._ocr_pdf_bytes(data, submission_id)

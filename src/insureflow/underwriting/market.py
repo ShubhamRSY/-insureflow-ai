@@ -58,9 +58,7 @@ _HARD_CYCLE = MarketCycle(
     industry_loss_ratio=0.73,
     capacity_available=False,
     nuclear_verdict_trend="rising",
-    description="Hard market: Rates rising, capacity tightening. "
-    "Nuclear verdicts driving auto/liability increases. "
-    "Reinsurance costs up 20%+.",
+    description="Hard market: Rates rising, capacity tightening. Nuclear verdicts driving auto/liability increases. Reinsurance costs up 20%+.",
 )
 
 _SOFT_CYCLE = MarketCycle(
@@ -74,8 +72,7 @@ _SOFT_CYCLE = MarketCycle(
     industry_loss_ratio=0.55,
     capacity_available=True,
     nuclear_verdict_trend="stable",
-    description="Soft market: Rates declining 4-8% across lines. "
-    "Capacity abundant. Reinsurance costs down 10%.",
+    description="Soft market: Rates declining 4-8% across lines. Capacity abundant. Reinsurance costs down 10%.",
 )
 
 _TRANSITIONING_HARD = MarketCycle(
@@ -89,8 +86,7 @@ _TRANSITIONING_HARD = MarketCycle(
     industry_loss_ratio=0.65,
     capacity_available=True,
     nuclear_verdict_trend="stable",
-    description="Transitioning from hard to soft: Rates still elevated but "
-    "capacity returning. Competition increasing.",
+    description="Transitioning from hard to soft: Rates still elevated but capacity returning. Competition increasing.",
 )
 
 
@@ -122,12 +118,7 @@ class MarketCycleAwareness:
     ) -> float:
         """Apply market-cycle rate adjustment to premium."""
         # Use the average of line-specific mods as a general adjustment
-        avg_rate_mod = (
-            self._cycle.property_rate_mod
-            + self._cycle.liability_rate_mod
-            + self._cycle.workers_comp_rate_mod
-            + self._cycle.auto_rate_mod
-        ) / 4.0
+        avg_rate_mod = (self._cycle.property_rate_mod + self._cycle.liability_rate_mod + self._cycle.workers_comp_rate_mod + self._cycle.auto_rate_mod) / 4.0
         return base_premium * avg_rate_mod * self._cycle.reinsurance_cost_mod
 
     def market_adjustment_narrative(self) -> dict:

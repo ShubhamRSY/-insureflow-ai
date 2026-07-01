@@ -127,9 +127,7 @@ class TriageAgent:
             if bundle.structured.locations:
                 state = bundle.structured.locations[0].state or ""
                 for loc in bundle.structured.locations:
-                    tiv += (
-                        (loc.building_value or 0) + (loc.contents_value or 0) + (loc.bi_value or 0)
-                    )
+                    tiv += (loc.building_value or 0) + (loc.contents_value or 0) + (loc.bi_value or 0)
             for cov in bundle.structured.coverages:
                 premium += cov.premium
             if bundle.structured.financial:
@@ -196,13 +194,7 @@ class TriageAgent:
         )
 
         # Weighted total score
-        score = (
-            naics_fit * 0.30
-            + geography_fit * 0.25
-            + size_fit * 0.20
-            + coverage_fit * 0.15
-            + (checklist.completeness_pct * 100.0) * 0.10
-        )
+        score = naics_fit * 0.30 + geography_fit * 0.25 + size_fit * 0.20 + coverage_fit * 0.15 + (checklist.completeness_pct * 100.0) * 0.10
         score = max(0.0, min(100.0, score))
 
         # Priority

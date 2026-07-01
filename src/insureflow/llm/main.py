@@ -45,9 +45,7 @@ def _run_pipeline_task(job_id: str, request: SubmissionRequest) -> None:
 
 
 @app.post("/api/v1/submissions/reconcile", status_code=202)
-def reconcile_submission(
-    request: SubmissionRequest, background_tasks: BackgroundTasks
-) -> dict[str, Any]:
+def reconcile_submission(request: SubmissionRequest, background_tasks: BackgroundTasks) -> dict[str, Any]:
     """Accepts submission data and queues it for background reconciliation."""
     job_id = f"job-{uuid.uuid4().hex[:12]}"
     JOB_STORE[job_id] = {"status": "processing"}

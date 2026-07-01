@@ -55,9 +55,7 @@ class OverrideAnalyticsEngine:
                 ai_decision="accept",
                 uw_decision="accept",
                 decision_changed=False,
-                premium_delta=PremiumDelta(
-                    ai_premium=12_000, uw_premium=12_000, delta=0, delta_pct=0.0, reason="No change"
-                ),
+                premium_delta=PremiumDelta(ai_premium=12_000, uw_premium=12_000, delta=0, delta_pct=0.0, reason="No change"),
                 reason_category=OverrideReasonCategory.PRICING,
                 reason_freeform="Premium within acceptable range",
                 uw_confidence="high",
@@ -127,9 +125,7 @@ class OverrideAnalyticsEngine:
             total_overrides=total,
             total_decision_changes=len(decision_changes),
             decision_change_rate=len(decision_changes) / total if total else 0.0,
-            avg_premium_delta_pct=sum(premium_deltas) / len(premium_deltas)
-            if premium_deltas
-            else 0.0,
+            avg_premium_delta_pct=sum(premium_deltas) / len(premium_deltas) if premium_deltas else 0.0,
             by_category=dict(category_counts),
             top_patterns=self.get_patterns(),
         )
@@ -165,14 +161,8 @@ class OverrideAnalyticsEngine:
                 p["last_seen"] = o.created_at
 
         self._patterns.clear()
-        for i, (key, data) in enumerate(
-            sorted(patterns.items(), key=lambda x: x[1]["count"], reverse=True)
-        ):
-            avg_delta = (
-                sum(data["premium_deltas"]) / len(data["premium_deltas"])
-                if data["premium_deltas"]
-                else 0.0
-            )
+        for i, (key, data) in enumerate(sorted(patterns.items(), key=lambda x: x[1]["count"], reverse=True)):
+            avg_delta = sum(data["premium_deltas"]) / len(data["premium_deltas"]) if data["premium_deltas"] else 0.0
             common_shift = key.split(":", 1)[1] if ":" in key else ""
             self._patterns[f"pat-{uuid4().hex[:8]}"] = OverridePattern(
                 pattern_id=f"pat-{uuid4().hex[:8]}",
@@ -196,9 +186,7 @@ class OverrideAnalyticsEngine:
         elif override.reason_category == OverrideReasonCategory.CLIENT_RELATIONSHIP:
             return "Add client-relationship override rule for existing book rollovers"
         elif override.reason_category == OverrideReasonCategory.DATA_QUALITY:
-            return (
-                "Improve extraction pipeline — UW often corrects data that AI extracted incorrectly"
-            )
+            return "Improve extraction pipeline — UW often corrects data that AI extracted incorrectly"
         elif override.reason_category == OverrideReasonCategory.MARKET_CONDITIONS:
             return "Add market-condition override signal — UW considers competitive environment"
         return "Review underwriting guidelines for this override type"

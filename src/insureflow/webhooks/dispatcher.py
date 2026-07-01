@@ -103,9 +103,7 @@ class WebhookDispatcher:
             sig = hmac.new(sub.secret.encode(), body.encode(), hashlib.sha256).hexdigest()
             headers["X-InsureFlow-Signature"] = f"sha256={sig}"
 
-        req = urllib.request.Request(
-            sub.url, data=body.encode("utf-8"), headers=headers, method="POST"
-        )
+        req = urllib.request.Request(sub.url, data=body.encode("utf-8"), headers=headers, method="POST")
         try:
             with urllib.request.urlopen(req, timeout=10) as resp:
                 return {

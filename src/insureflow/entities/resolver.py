@@ -70,9 +70,7 @@ class EntityResolver:
                 winner.verification_status = VerificationStatus.VERIFIED
                 for dupe in cluster.nodes[1:]:
                     dupe.verification_status = VerificationStatus.CONTRADICTED
-                    dupe.notes = (
-                        f"Deduplicated: merged with {winner.node_id}, similarity≥{self.threshold}"
-                    )
+                    dupe.notes = f"Deduplicated: merged with {winner.node_id}, similarity≥{self.threshold}"
                     if dupe not in merged:
                         merged.append(dupe)
                 merged.append(winner)

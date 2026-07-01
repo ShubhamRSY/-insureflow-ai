@@ -31,11 +31,7 @@ class SynthesisAgent:
         provenance_summary: dict[str, Any] = {}
 
         for field_path, field_result in reconciliation_result.field_reconciliation.items():
-            field_name = (
-                field_path.replace("risk_profile.", "")
-                .replace("location.", "")
-                .replace("financial.", "")
-            )
+            field_name = field_path.replace("risk_profile.", "").replace("location.", "").replace("financial.", "")
             profile[field_name] = field_result.get("resolved_value")
             confidence[field_path] = field_result.get("confidence", 0.0)
             provenance_summary[field_path] = {
@@ -78,18 +74,10 @@ class SynthesisAgent:
         output.confidence_scores = confidence
         output.provenance_summary = provenance_summary
         output.discrepancies_found = len(reconciliation_result.discrepancies)
-        output.discrepancies_resolved = sum(
-            1 for d in reconciliation_result.discrepancies if d.resolved
-        )
-        output.human_review_required = any(
-            d.severity.value == "critical" for d in reconciliation_result.discrepancies
-        )
+        output.discrepancies_resolved = sum(1 for d in reconciliation_result.discrepancies if d.resolved)
+        output.human_review_required = any(d.severity.value == "critical" for d in reconciliation_result.discrepancies)
         if output.human_review_required:
-            output.review_fields = [
-                d.field_path
-                for d in reconciliation_result.discrepancies
-                if d.severity.value == "critical"
-            ]
+            output.review_fields = [d.field_path for d in reconciliation_result.discrepancies if d.severity.value == "critical"]
         output.completed_at = datetime.now(timezone.utc)
 
         return output

@@ -90,11 +90,7 @@ def discover_borrower_packages(
     if not root.is_dir():
         raise FileNotFoundError(f"Directory not found: {directory}")
 
-    inferred_product = product_line or (
-        ProductLine.COMMERCIAL_MORTGAGE
-        if "commercial_mortgage" in str(root).lower()
-        else ProductLine.RESIDENTIAL_MORTGAGE
-    )
+    inferred_product = product_line or (ProductLine.COMMERCIAL_MORTGAGE if "commercial_mortgage" in str(root).lower() else ProductLine.RESIDENTIAL_MORTGAGE)
 
     packages: dict[str, BorrowerPackage] = {}
 

@@ -239,9 +239,7 @@ class InsurancePipeline:
         # ── 10. CORE SYSTEM INTEGRATION (push to BriteCore/Guidewire) ──
         core_results: list[dict[str, Any]] = []
         if not skip_core_integration:
-            core_results = self.policy_admin.submit_to_core_systems(
-                bundle, memo, quote, self.org_id
-            )
+            core_results = self.policy_admin.submit_to_core_systems(bundle, memo, quote, self.org_id)
             successful = [r for r in core_results if r.get("success")]
             audit.log(
                 PipelineEvent.PIPELINE_COMPLETE,
@@ -285,12 +283,9 @@ class InsurancePipeline:
             "triage_score": triage_result.score,
             "ai_decision": memo.decision.value,
             "workflow_state": wf.state.value,
-            "human_review_required": memo.human_review_required
-            or wf.state == WorkflowState.PENDING_REVIEW,
+            "human_review_required": memo.human_review_required or wf.state == WorkflowState.PENDING_REVIEW,
             "appetite_filter_passed": appetite_passed,
-            "appetite_needs_uw_referral": appetite_result.needs_uw_referral
-            if appetite_result
-            else False,
+            "appetite_needs_uw_referral": appetite_result.needs_uw_referral if appetite_result else False,
             "oracle_findings_count": len(oracle_findings),
             "ocr_documents": ocr_count,
             "document_count": len(bundle.unstructured) + (1 if bundle.structured else 0),
@@ -382,6 +377,7 @@ class InsurancePipeline:
             "encryption_at_rest": self.encryption.enabled,
         }
         audit.persist(None, None, extra=result)
+        result["audit_trail_entries"] = len(audit.trail.entries) if audit.trail else 0
         webhook_dispatcher.dispatch(
             "insurance.declined",
             self.org_id,
@@ -406,9 +402,7 @@ class InsurancePipeline:
                 if bundle.structured.locations:
                     loc = bundle.structured.locations[0]
                     state = loc.state or ""
-                    tiv = (
-                        (loc.building_value or 0) + (loc.contents_value or 0) + (loc.bi_value or 0)
-                    )
+                    tiv = (loc.building_value or 0) + (loc.contents_value or 0) + (loc.bi_value or 0)
                     occupancy = loc.building_occupancy or ""
                 if bundle.structured.risk_profile:
                     naics = bundle.structured.risk_profile.naics_code or ""

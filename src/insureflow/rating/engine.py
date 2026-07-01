@@ -176,9 +176,7 @@ class InsuranceRatingEngine:
         cope_adjusted = market_adjusted * (1 + cope_mod / 100.0)
 
         # UW memo schedule modification (from agent findings)
-        schedule_mod = (
-            memo.recommendation.suggested_premium_modification if memo.recommendation else 0.0
-        )
+        schedule_mod = memo.recommendation.suggested_premium_modification if memo.recommendation else 0.0
         schedule_mod = schedule_mod or 0.0
 
         # Deductible credit
@@ -201,13 +199,7 @@ class InsuranceRatingEngine:
         years_mod = self._years_in_business_mod(bundle)
 
         # Final premium
-        adjusted_premium = (
-            cope_adjusted
-            * (1 + schedule_mod / 100.0)
-            * (1 + deductible_credit / 100.0)
-            * (1 + exp_mod / 100.0)
-            * (1 + years_mod / 100.0)
-        )
+        adjusted_premium = cope_adjusted * (1 + schedule_mod / 100.0) * (1 + deductible_credit / 100.0) * (1 + exp_mod / 100.0) * (1 + years_mod / 100.0)
         adjusted_premium += self.EXPENSE_CONSTANT
 
         # Minimum premium
@@ -223,9 +215,7 @@ class InsuranceRatingEngine:
                 basis="per_100_tiv",
                 modifier_pct=0.0,
             ),
-            RateComponent(
-                name="loss_cost_multiplier", amount=lcm, basis="expense_profit", modifier_pct=0.0
-            ),
+            RateComponent(name="loss_cost_multiplier", amount=lcm, basis="expense_profit", modifier_pct=0.0),
             RateComponent(
                 name=f"territory_relativity_{state}",
                 amount=territory_rel,
@@ -264,11 +254,7 @@ class InsuranceRatingEngine:
                 )
             )
         if years_mod != 0:
-            components.append(
-                RateComponent(
-                    name="years_in_business", amount=0, basis="tenure", modifier_pct=years_mod
-                )
-            )
+            components.append(RateComponent(name="years_in_business", amount=0, basis="tenure", modifier_pct=years_mod))
         if schedule_mod != 0:
             components.append(
                 RateComponent(
@@ -377,11 +363,7 @@ class InsuranceRatingEngine:
                     years = datetime.now(tz=timezone.utc).year - int(field.value)
                 except (ValueError, TypeError):
                     pass
-        if (
-            bundle.structured
-            and bundle.structured.financial
-            and bundle.structured.financial.annual_revenue
-        ):
+        if bundle.structured and bundle.structured.financial and bundle.structured.financial.annual_revenue:
             pass  # annual_revenue is a separate signal, not years
         for lo, hi, mod in YEARS_IN_BUSINESS_MODIFIERS:
             if (lo is None or years >= lo) and (hi is None or years < hi):

@@ -145,26 +145,12 @@ def sample_bundle(sample_structured_submission: StructuredSubmission) -> Submiss
                 source="inspection_report",
                 raw_text=SAMPLE_INSPECTION_REPORT,
                 extracted_fields={
-                    "construction_type": [
-                        ExtractedField(
-                            field_name="construction_type", value="Masonry", confidence=0.7
-                        )
-                    ],
-                    "year_built": [
-                        ExtractedField(field_name="year_built", value="1995", confidence=0.7)
-                    ],
-                    "square_footage": [
-                        ExtractedField(field_name="square_footage", value="85000", confidence=0.7)
-                    ],
-                    "number_of_stories": [
-                        ExtractedField(field_name="number_of_stories", value="2", confidence=0.7)
-                    ],
-                    "sprinklered": [
-                        ExtractedField(field_name="sprinklered", value="fully", confidence=0.7)
-                    ],
-                    "protection_class": [
-                        ExtractedField(field_name="protection_class", value="4", confidence=0.7)
-                    ],
+                    "construction_type": [ExtractedField(field_name="construction_type", value="Masonry", confidence=0.7)],
+                    "year_built": [ExtractedField(field_name="year_built", value="1995", confidence=0.7)],
+                    "square_footage": [ExtractedField(field_name="square_footage", value="85000", confidence=0.7)],
+                    "number_of_stories": [ExtractedField(field_name="number_of_stories", value="2", confidence=0.7)],
+                    "sprinklered": [ExtractedField(field_name="sprinklered", value="fully", confidence=0.7)],
+                    "protection_class": [ExtractedField(field_name="protection_class", value="4", confidence=0.7)],
                 },
             )
         ],

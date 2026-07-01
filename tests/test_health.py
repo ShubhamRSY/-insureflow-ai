@@ -35,8 +35,8 @@ class TestDiagnosticsAPI:
         resp = client.get("/")
         assert resp.json()["dashboard"] == "/dashboard"
 
-    def test_dashboard_has_system_tab(self) -> None:
+    def test_dashboard_served(self) -> None:
         client = TestClient(app)
         resp = client.get("/dashboard")
-        assert "System Status" in resp.text
-        assert "llm_api_key" in resp.text or "LLM Mode" in resp.text
+        assert resp.status_code == 200
+        assert '<div id="root"></div>' in resp.text

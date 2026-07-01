@@ -47,21 +47,13 @@ def _print_report(report: dict) -> None:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="InsureFlow end-to-end test suite")
     parser.add_argument("--port", type=int, default=8002, help="API port for live tests")
-    parser.add_argument(
-        "--base-url", default="", help="Override base URL (e.g. http://127.0.0.1:8002)"
-    )
-    parser.add_argument(
-        "--in-process", action="store_true", help="Use FastAPI TestClient (no live server)"
-    )
+    parser.add_argument("--base-url", default="", help="Override base URL (e.g. http://127.0.0.1:8002)")
+    parser.add_argument("--in-process", action="store_true", help="Use FastAPI TestClient (no live server)")
     parser.add_argument("--use-llm", action="store_true", help="Enable LLM in sync pipeline tests")
     parser.add_argument("--fast", action="store_true", help="Skip connector pull tests")
-    parser.add_argument(
-        "--no-browser", action="store_true", help="Skip Playwright browser UI tests"
-    )
+    parser.add_argument("--no-browser", action="store_true", help="Skip Playwright browser UI tests")
     parser.add_argument("--no-celery", action="store_true", help="Skip Celery worker mortgage test")
-    parser.add_argument(
-        "--headed", action="store_true", help="Run browser tests with visible window"
-    )
+    parser.add_argument("--headed", action="store_true", help="Run browser tests with visible window")
     parser.add_argument("--timeout", type=int, default=180, help="Job poll timeout seconds")
     parser.add_argument("--json", action="store_true", help="Print JSON report only")
     args = parser.parse_args(argv)

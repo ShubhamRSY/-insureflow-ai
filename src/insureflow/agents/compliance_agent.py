@@ -43,9 +43,7 @@ class ComplianceAgent(ReActAgent):
             if cov.limit_amount > 0:
                 ratio = sub_limit / cov.limit_amount
                 if ratio < 0.1:
-                    high_sublimit_ratio_fields.append(
-                        f"{sub_name}: ${sub_limit:,.0f} ({ratio:.0%} of limit)"
-                    )
+                    high_sublimit_ratio_fields.append(f"{sub_name}: ${sub_limit:,.0f} ({ratio:.0%} of limit)")
         if high_sublimit_ratio_fields:
             self._add_finding(
                 Finding(

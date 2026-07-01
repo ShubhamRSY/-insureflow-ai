@@ -20,9 +20,7 @@ class FieldMatcher:
 
         consensus_rate = 1.0
         if len(by_hierarchy) > 1:
-            matches = sum(
-                1 for val in by_hierarchy[1:] if str(val.get("value", "")) == authoritative_val
-            )
+            matches = sum(1 for val in by_hierarchy[1:] if str(val.get("value", "")) == authoritative_val)
             consensus_rate = matches / (len(by_hierarchy) - 1)
 
         return {

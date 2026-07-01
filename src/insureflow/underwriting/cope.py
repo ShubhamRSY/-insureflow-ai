@@ -269,28 +269,18 @@ def analyze_cope(
     c_score = 0.0
     if c_class in (ConstructionClass.FRAME, ConstructionClass.JOISTED_MASONRY):
         c_score = 0.8
-        result.construction_detail = (
-            f"Frame construction is highest fire risk; applies +{c_mod:.0f}% schedule debit"
-        )
+        result.construction_detail = f"Frame construction is highest fire risk; applies +{c_mod:.0f}% schedule debit"
     elif c_class in (ConstructionClass.MASONRY_NON_COMBUSTIBLE,):
         c_score = 0.4
-        result.construction_detail = (
-            "Masonry non-combustible construction provides moderate fire protection"
-        )
+        result.construction_detail = "Masonry non-combustible construction provides moderate fire protection"
     elif c_class in (ConstructionClass.MODIFIED_FIRE_RESISTIVE,):
         c_score = 0.2
-        result.construction_detail = (
-            f"Modified fire-resistive construction; applies {c_mod:.0f}% schedule credit"
-        )
+        result.construction_detail = f"Modified fire-resistive construction; applies {c_mod:.0f}% schedule credit"
     elif c_class == ConstructionClass.FIRE_RESISTIVE:
         c_score = 0.1
-        result.construction_detail = (
-            f"Fire-resistive construction is best; applies {c_mod:.0f}% schedule credit"
-        )
+        result.construction_detail = f"Fire-resistive construction is best; applies {c_mod:.0f}% schedule credit"
     else:
-        result.construction_detail = (
-            f"Construction type '{construction_type}' unclassified — no adjustment"
-        )
+        result.construction_detail = f"Construction type '{construction_type}' unclassified — no adjustment"
 
     # O — Occupancy
     o_class = _classify_occupancy(occupancy_type)
@@ -299,9 +289,7 @@ def analyze_cope(
     o_score = 0.0
     if o_class in (OccupancyClass.SPECIAL, OccupancyClass.MANUFACTURING):
         o_score = 0.7
-        result.occupancy_detail = (
-            f"{occupancy_type} occupancy has elevated risk; applies +{o_mod:.0f}% debit"
-        )
+        result.occupancy_detail = f"{occupancy_type} occupancy has elevated risk; applies +{o_mod:.0f}% debit"
     elif o_class in (
         OccupancyClass.LODGING,
         OccupancyClass.SERVICE,
@@ -328,9 +316,7 @@ def analyze_cope(
     if year_built and year_built < 1970:
         o_mod += 10.0
         o_score = min(1.0, o_score + 0.15)
-        result.occupancy_detail += (
-            f" Building age ({year_built}) over 55 years — +10% age surcharge."
-        )
+        result.occupancy_detail += f" Building age ({year_built}) over 55 years — +10% age surcharge."
     if number_of_stories and number_of_stories > 5:
         o_mod += 5.0
         o_score = min(1.0, o_score + 0.1)
@@ -349,9 +335,7 @@ def analyze_cope(
             result.protection_detail = f"ISO Class {protection_class} — adequate fire protection"
         elif protection_class <= 7:
             p_score = 0.5
-            result.protection_detail = (
-                f"ISO Class {protection_class} — below-average fire protection"
-            )
+            result.protection_detail = f"ISO Class {protection_class} — below-average fire protection"
         else:
             p_score = 0.8
             result.protection_detail = f"ISO Class {protection_class} — poor fire protection"

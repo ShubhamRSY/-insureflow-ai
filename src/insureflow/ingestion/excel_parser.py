@@ -127,9 +127,7 @@ class ExcelParser(BaseParser):
             rows.append("| " + " | ".join(str(c or "") for c in row) + " |")
         return f"### Sheet: {sheet_name}\n{header}\n{sep}\n" + "\n".join(rows)
 
-    def _extract_fields_from_table(
-        self, table: list[list[Optional[str]]], sheet_name: str
-    ) -> dict[str, Any]:
+    def _extract_fields_from_table(self, table: list[list[Optional[str]]], sheet_name: str) -> dict[str, Any]:
         fields: dict[str, Any] = {}
         if not table:
             return fields
@@ -196,9 +194,7 @@ class ExcelParser(BaseParser):
                 sovs.append(sov)
         return sovs
 
-    def _build_sov_from_table(
-        self, table: list[list[Optional[str]]], sheet_name: str
-    ) -> ScheduleOfValues:
+    def _build_sov_from_table(self, table: list[list[Optional[str]]], sheet_name: str) -> ScheduleOfValues:
         coverage_map = {
             "building": "Property",
             "contents": "Property",

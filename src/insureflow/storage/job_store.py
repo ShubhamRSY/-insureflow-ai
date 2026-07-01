@@ -11,14 +11,10 @@ logger = logging.getLogger(__name__)
 
 class JobStore(ABC):
     @abstractmethod
-    def set(
-        self, namespace: str, job_id: str, data: dict[str, Any], org_id: str = "default"
-    ) -> None: ...
+    def set(self, namespace: str, job_id: str, data: dict[str, Any], org_id: str = "default") -> None: ...
 
     @abstractmethod
-    def get(
-        self, namespace: str, job_id: str, org_id: str = "default"
-    ) -> dict[str, Any] | None: ...
+    def get(self, namespace: str, job_id: str, org_id: str = "default") -> dict[str, Any] | None: ...
 
     @abstractmethod
     def delete(self, namespace: str, job_id: str, org_id: str = "default") -> bool: ...
@@ -34,9 +30,7 @@ class MemoryJobStore(JobStore):
     def _key(self, namespace: str, job_id: str, org_id: str) -> str:
         return f"{org_id}:{namespace}:{job_id}"
 
-    def set(
-        self, namespace: str, job_id: str, data: dict[str, Any], org_id: str = "default"
-    ) -> None:
+    def set(self, namespace: str, job_id: str, data: dict[str, Any], org_id: str = "default") -> None:
         data = {**data, "org_id": org_id, "updated_at": datetime.now(tz=timezone.utc).isoformat()}
         self._store[self._key(namespace, job_id, org_id)] = data
 
@@ -68,9 +62,7 @@ class RedisJobStore(JobStore):
     def _index_key(self, namespace: str, org_id: str) -> str:
         return f"insureflow:{org_id}:{namespace}:index"
 
-    def set(
-        self, namespace: str, job_id: str, data: dict[str, Any], org_id: str = "default"
-    ) -> None:
+    def set(self, namespace: str, job_id: str, data: dict[str, Any], org_id: str = "default") -> None:
         data = {**data, "org_id": org_id, "updated_at": datetime.now(tz=timezone.utc).isoformat()}
         key = self._key(namespace, job_id, org_id)
         self.client.setex(key, self.ttl, json.dumps(data, default=str))

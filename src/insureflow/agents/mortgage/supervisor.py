@@ -48,9 +48,7 @@ def _parse_llm_json_findings(raw: str, category: str) -> list[MortgageFinding]:
     return []
 
 
-def _collect_doc_text(
-    bundle: MortgageBundle, *doc_types: MortgageDocumentType, max_chars: int = 12000
-) -> str:
+def _collect_doc_text(bundle: MortgageBundle, *doc_types: MortgageDocumentType, max_chars: int = 12000) -> str:
     parts: list[str] = []
     for dt in doc_types:
         for d in bundle.documents_by_type(dt):
@@ -454,9 +452,7 @@ class MortgageFraudDetectionAgent:
             MortgageDocumentType.TAX_RETURN_1040: "Tax Return (1040)",
             MortgageDocumentType.CREDIT_REPORT: "Credit Report",
         }
-        missing_docs = [
-            name for dt, name in missing_map.items() if not bundle.documents_by_type(dt)
-        ]
+        missing_docs = [name for dt, name in missing_map.items() if not bundle.documents_by_type(dt)]
         if missing_docs:
             findings.append(
                 MortgageFinding(
@@ -493,9 +489,7 @@ class MortgageFraudDetectionAgent:
         llm_findings = self._llm_fraud_analysis(bundle)
         findings.extend(llm_findings)
 
-        risk = min(
-            1.0, len([f for f in findings if f.severity in ("high", "critical")]) * 0.2 + 0.1
-        )
+        risk = min(1.0, len([f for f in findings if f.severity in ("high", "critical")]) * 0.2 + 0.1)
         return MortgageAgentResult(
             agent_name=self.agent_name,
             findings=findings,
@@ -505,10 +499,7 @@ class MortgageFraudDetectionAgent:
 
     def _llm_fraud_analysis(self, bundle: MortgageBundle) -> list[MortgageFinding]:
         try:
-            all_texts = "\n\n".join(
-                f"--- {d.document_type.value.upper()} ({d.document_id}) ---\n{d.raw_text[:2000]}"
-                for d in bundle.documents[:10]
-            )
+            all_texts = "\n\n".join(f"--- {d.document_type.value.upper()} ({d.document_id}) ---\n{d.raw_text[:2000]}" for d in bundle.documents[:10])
             if not all_texts.strip():
                 return []
 
@@ -544,9 +535,7 @@ class MortgageDecisionAgent:
 
         critical = [f for f in all_findings if f.severity == "critical"]
         high = [f for f in all_findings if f.severity == "high"]
-        fraud_critical = [
-            f for f in all_findings if f.category == "fraud" and f.severity == "critical"
-        ]
+        fraud_critical = [f for f in all_findings if f.category == "fraud" and f.severity == "critical"]
         fraud_high = [f for f in all_findings if f.category == "fraud" and f.severity == "high"]
         critical_violations = [v for v in bundle.compliance_violations if v.severity == "critical"]
 
@@ -587,15 +576,12 @@ class MortgageDecisionAgent:
             summary=f"Decision: {decision.value.upper()} | {len(all_findings)} findings | {len(bundle.compliance_violations)} compliance checks",
             key_findings=sorted(
                 all_findings,
-                key=lambda f: {"critical": 0, "high": 1, "moderate": 2, "low": 3}.get(
-                    f.severity, 4
-                ),
+                key=lambda f: {"critical": 0, "high": 1, "moderate": 2, "low": 3}.get(f.severity, 4),
             )[:10],
             reconciliation_issues=bundle.reconciliation_issues,
             compliance_violations=bundle.compliance_violations,
             conditions=conditions,
-            human_review_required=decision
-            in (MortgageDecision.REFER, MortgageDecision.SUSPEND, MortgageDecision.DENY),
+            human_review_required=decision in (MortgageDecision.REFER, MortgageDecision.SUSPEND, MortgageDecision.DENY),
         )
 
 

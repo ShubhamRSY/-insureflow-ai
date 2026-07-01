@@ -61,31 +61,18 @@ class PortfolioRiskAgent(BaseAgent):
         self._add_finding(
             Finding(
                 title="Portfolio concentration analysis",
-                description=f"Current portfolio: {result.existing_policy_count} policies, "
-                f"${result.existing_tiv_total:,.0f} total TIV",
+                description=f"Current portfolio: {result.existing_policy_count} policies, ${result.existing_tiv_total:,.0f} total TIV",
                 severity=RiskSeverity.LOW,
                 category="portfolio_risk",
                 evidence=[
-                    f"Same state ({result.same_state_policy_count} policies, "
-                    f"${result.same_state_tiv_total:,.0f} TIV, "
-                    f"{result.same_state_pct_of_portfolio:.1f}% of portfolio)",
-                    f"Same NAICS2 ({result.same_naics2_policy_count} policies, "
-                    f"${result.same_naics2_tiv_total:,.0f} TIV, "
-                    f"{result.same_naics2_pct_of_portfolio:.1f}% of portfolio)",
+                    f"Same state ({result.same_state_policy_count} policies, ${result.same_state_tiv_total:,.0f} TIV, {result.same_state_pct_of_portfolio:.1f}% of portfolio)",
+                    f"Same NAICS2 ({result.same_naics2_policy_count} policies, ${result.same_naics2_tiv_total:,.0f} TIV, {result.same_naics2_pct_of_portfolio:.1f}% of portfolio)",
                 ],
             )
         )
 
         for warning in result.concentration_warnings:
-            sev = (
-                RiskSeverity.CRITICAL
-                if "exceeds" in warning and "40" in warning
-                else (
-                    RiskSeverity.HIGH
-                    if "exceeds" in warning or "Double concentration" in warning
-                    else (RiskSeverity.MODERATE)
-                )
-            )
+            sev = RiskSeverity.CRITICAL if "exceeds" in warning and "40" in warning else (RiskSeverity.HIGH if "exceeds" in warning or "Double concentration" in warning else (RiskSeverity.MODERATE))
             self._add_finding(
                 Finding(
                     title=f"Portfolio concentration: {warning.split(':')[0].strip()}",
@@ -100,8 +87,7 @@ class PortfolioRiskAgent(BaseAgent):
             self._add_finding(
                 Finding(
                     title="HIGH portfolio concentration risk",
-                    description=f"Portfolio concentration score: {score:.0%} — "
-                    f"new submission would significantly increase exposure concentration",
+                    description=f"Portfolio concentration score: {score:.0%} — new submission would significantly increase exposure concentration",
                     severity=RiskSeverity.CRITICAL,
                     category="portfolio_risk",
                     source_value=score,
@@ -111,8 +97,7 @@ class PortfolioRiskAgent(BaseAgent):
             self._add_finding(
                 Finding(
                     title="Moderate portfolio concentration risk",
-                    description=f"Portfolio concentration score: {score:.0%} — "
-                    f"review geographic/industry diversification before binding",
+                    description=f"Portfolio concentration score: {score:.0%} — review geographic/industry diversification before binding",
                     severity=RiskSeverity.HIGH,
                     category="portfolio_risk",
                     source_value=score,

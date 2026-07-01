@@ -209,11 +209,7 @@ class RenewalEngine:
         org_id: str = "default",
     ) -> RenewalRecommendation:
         now = date.today()
-        months_to_expiry = (
-            ((expiry_date.year - now.year) * 12 + (expiry_date.month - now.month))
-            if expiry_date
-            else 6
-        )
+        months_to_expiry = ((expiry_date.year - now.year) * 12 + (expiry_date.month - now.month)) if expiry_date else 6
 
         # Determine loss ratio trend
         if loss_ratio <= RENEWAL_LR_THRESHOLDS["improving"]:
@@ -256,29 +252,18 @@ class RenewalEngine:
         if loss_ratio > 0.75 and claims_count >= 3:
             action = RenewalAction.NON_RENEW
             retention_score = max(0.1, retention_score - 0.4)
-            rationale = (
-                f"Loss ratio of {loss_ratio:.0%} with {claims_count} claims exceeds "
-                f"renewal threshold — recommending non-renewal"
-            )
+            rationale = f"Loss ratio of {loss_ratio:.0%} with {claims_count} claims exceeds renewal threshold — recommending non-renewal"
         elif loss_ratio > 0.60:
             action = RenewalAction.RENEW_WITH_MODIFICATION
             retention_score = max(0.2, retention_score - 0.2)
             conditions.append("Reduce limits or increase deductible by 25%")
             conditions.append("Consider excluding problem coverages")
-            rationale = (
-                f"Loss ratio of {loss_ratio:.0%} is elevated — "
-                f"renewing with modified terms ({net_change:+.0f}% premium change)"
-            )
+            rationale = f"Loss ratio of {loss_ratio:.0%} is elevated — renewing with modified terms ({net_change:+.0f}% premium change)"
         elif net_change < -5.0:
             action = RenewalAction.RENEW_WITH_MODIFICATION
-            rationale = (
-                f"Favorable experience — reducing premium {net_change:+.0f}% "
-                f"(bundling discount: {bundling_discount:.0f}%)"
-            )
+            rationale = f"Favorable experience — reducing premium {net_change:+.0f}% (bundling discount: {bundling_discount:.0f}%)"
         else:
-            rationale = (
-                f"Standard renewal — experience within thresholds, premium {net_change:+.0f}%"
-            )
+            rationale = f"Standard renewal — experience within thresholds, premium {net_change:+.0f}%"
 
         if bundling_discount > 0:
             conditions.append(f"Multi-policy bundling discount: {bundling_discount:.0f}%")

@@ -55,9 +55,7 @@ class ProvenanceEngine:
 
         return record
 
-    def _index_structured_fields(
-        self, record: ProvenanceRecord, structured: StructuredSubmission
-    ) -> None:
+    def _index_structured_fields(self, record: ProvenanceRecord, structured: StructuredSubmission) -> None:
         source = DataSource(
             source_id=structured.submission_id,
             source_type=SourceType.STRUCTURED,
@@ -74,12 +72,8 @@ class ProvenanceEngine:
             fields["named_insured.entity_type"] = structured.named_insured.entity_type
 
         if structured.policy_period:
-            fields["policy_period.effective_date"] = (
-                structured.policy_period.effective_date.isoformat()
-            )
-            fields["policy_period.expiration_date"] = (
-                structured.policy_period.expiration_date.isoformat()
-            )
+            fields["policy_period.effective_date"] = structured.policy_period.effective_date.isoformat()
+            fields["policy_period.expiration_date"] = structured.policy_period.expiration_date.isoformat()
 
         if structured.risk_profile:
             fields["risk_profile.naics_code"] = structured.risk_profile.naics_code
@@ -88,9 +82,7 @@ class ProvenanceEngine:
             fields["risk_profile.occupancy_type"] = structured.risk_profile.occupancy_type
             fields["risk_profile.protection_class"] = structured.risk_profile.protection_class
             fields["risk_profile.number_of_stories"] = structured.risk_profile.number_of_stories
-            fields["risk_profile.total_square_footage"] = (
-                structured.risk_profile.total_square_footage
-            )
+            fields["risk_profile.total_square_footage"] = structured.risk_profile.total_square_footage
 
         if structured.financial:
             fields["financial.annual_revenue"] = structured.financial.annual_revenue
@@ -174,9 +166,7 @@ class ProvenanceEngine:
                 record.nodes[field_path] = []
             record.nodes[field_path].append(node)
 
-    def verify_against_authority(
-        self, record: ProvenanceRecord, field_path: str, authoritative_value: Any
-    ) -> VerificationStatus:
+    def verify_against_authority(self, record: ProvenanceRecord, field_path: str, authoritative_value: Any) -> VerificationStatus:
         if field_path not in record.nodes:
             return VerificationStatus.UNVERIFIED
 

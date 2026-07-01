@@ -97,10 +97,7 @@ def _check_udaap_prohibited(biz: BusinessLoanApplication | ConsumerLoanApplicati
                 "rule_id": "UDAAP-001",
                 "rule_name": "UDAAP Screening",
                 "severity": "info",
-                "message": (
-                    "No credit score — verify fair lending compliance "
-                    "and ensure no prohibited basis discrimination"
-                ),
+                "message": ("No credit score — verify fair lending compliance and ensure no prohibited basis discrimination"),
                 "regulation": "Dodd-Frank Act Section 1031",
             }
     return None
@@ -154,9 +151,7 @@ def _check_collateral_coverage(
                 "rule_id": "COLLAT-001",
                 "rule_name": "Collateral Coverage",
                 "severity": "moderate",
-                "message": (
-                    f"LTV {ltv:.1f}% exceeds 80% — additional collateral or guarantor needed"
-                ),
+                "message": (f"LTV {ltv:.1f}% exceeds 80% — additional collateral or guarantor needed"),
                 "regulation": "Interagency Loan Policy",
             }
     return None

@@ -57,14 +57,7 @@ class PIIRedactor:
             elif isinstance(value, dict):
                 redacted[key] = self.redact_fields(value, mask=mask)
             elif isinstance(value, list):
-                redacted[key] = [
-                    self.redact_fields(item, mask=mask)
-                    if isinstance(item, dict)
-                    else self.redact(str(item), mask=mask)
-                    if isinstance(item, str)
-                    else item
-                    for item in value
-                ]
+                redacted[key] = [self.redact_fields(item, mask=mask) if isinstance(item, dict) else self.redact(str(item), mask=mask) if isinstance(item, str) else item for item in value]
             else:
                 redacted[key] = value
         return redacted

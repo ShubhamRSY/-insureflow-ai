@@ -249,9 +249,7 @@ def evaluate_ragas(output_path: str | None = None) -> dict[str, Any]:
     has_llm = bool(os.getenv("OPENAI_API_KEY") or os.getenv("LLM_API_KEY"))
 
     if has_llm:
-        logger.info(
-            "Computing Ragas metrics (faithfulness, relevancy, context precision/recall)..."
-        )
+        logger.info("Computing Ragas metrics (faithfulness, relevancy, context precision/recall)...")
         score: EvaluationResult = ragas_evaluate(
             dataset=dataset,
             metrics=[faithfulness, answer_relevancy, context_precision, context_recall],
@@ -272,9 +270,7 @@ def evaluate_ragas(output_path: str | None = None) -> dict[str, Any]:
         }
         overall = round(sum(m["avg"] for m in metrics.values()) / 4, 4)
     else:
-        logger.warning(
-            "No LLM API key set — Ragas LLM-based metrics require OPENAI_API_KEY or LLM_API_KEY."
-        )
+        logger.warning("No LLM API key set — Ragas LLM-based metrics require OPENAI_API_KEY or LLM_API_KEY.")
         logger.info("Computing RAG context stats only (no LLM judge).")
         # Non-LLM fallback: compute context statistics
         per_case = [

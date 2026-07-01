@@ -51,9 +51,7 @@ class NCCIResult:
 
     @property
     def worst_mod(self) -> NCCIExperienceMod | None:
-        return (
-            max(self.experience_mods, key=lambda m: m.mod_factor) if self.experience_mods else None
-        )
+        return max(self.experience_mods, key=lambda m: m.mod_factor) if self.experience_mods else None
 
     @property
     def summary(self) -> str:

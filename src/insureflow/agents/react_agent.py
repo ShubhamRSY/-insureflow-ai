@@ -73,11 +73,7 @@ class ReActAgent(BaseAgent):
             {"role": "system", "content": system_prompt},
             {
                 "role": "user",
-                "content": (
-                    f"Analyze the submission for {self.agent_name}. "
-                    "Think step by step and use tools to gather data. "
-                    "When you have enough information, produce your final findings."
-                ),
+                "content": (f"Analyze the submission for {self.agent_name}. Think step by step and use tools to gather data. When you have enough information, produce your final findings."),
             },
         ]
 

@@ -27,9 +27,7 @@ class WorkflowStore:
 
     def save(self, record: WorkflowRecord) -> None:
         record.updated_at = datetime.now(tz=timezone.utc)
-        self._path(record.bundle_id, record.org_id).write_text(
-            record.model_dump_json(indent=2), encoding="utf-8"
-        )
+        self._path(record.bundle_id, record.org_id).write_text(record.model_dump_json(indent=2), encoding="utf-8")
 
     def list_pending(self, org_id: str = "default") -> list[str]:
         org_dir = self.base_path / org_id

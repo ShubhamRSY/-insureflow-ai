@@ -76,11 +76,7 @@ class InsuranceDocumentLoader:
                 bundle.status = SubmissionStatus.PARSED
                 continue
 
-            if (
-                filename.endswith(".json")
-                or doc_type == InsuranceDocumentType.BROKER_SLIP
-                and raw_text.strip().startswith("{")
-            ):
+            if filename.endswith(".json") or doc_type == InsuranceDocumentType.BROKER_SLIP and raw_text.strip().startswith("{"):
                 try:
                     bundle.structured = self.json_parser.parse(raw_text, bid)
                     bundle.status = SubmissionStatus.PARSED
@@ -115,21 +111,13 @@ class InsuranceDocumentLoader:
             if ext in {".pdf", ".png", ".jpg", ".jpeg", ".tiff", ".bmp", ".tif"}:
                 sub_id = f"ocr-{uuid4().hex[:8]}"
                 parsed = self.ocr.extract_text_from_bytes(data, filename, sub_id)
-                engine = (
-                    "tesseract"
-                    if parsed.raw_text and not parsed.raw_text.startswith("[OCR:")
-                    else "pdfminer"
-                )
+                engine = "tesseract" if parsed.raw_text and not parsed.raw_text.startswith("[OCR:") else "pdfminer"
                 return parsed.raw_text, engine
             return data.decode("utf-8", errors="replace"), ""
 
         if ext == ".pdf" and encoding == "utf-8":
             with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
-                tmp.write(
-                    content.encode("utf-8", errors="surrogateescape")
-                    if isinstance(content, str)
-                    else content
-                )
+                tmp.write(content.encode("utf-8", errors="surrogateescape") if isinstance(content, str) else content)
                 tmp_path = tmp.name
             try:
                 parsed = self.ocr.extract_text(tmp_path, f"ocr-{uuid4().hex[:8]}")
@@ -160,14 +148,9 @@ class InsuranceDocumentLoader:
 
         extracted = extract_fields(dtype, raw_text)
         if ocr_engine:
-            extracted.setdefault("ocr_engine", []).append(
-                ExtractedField(field_name="ocr_engine", value=ocr_engine, confidence=1.0)
-            )
+            extracted.setdefault("ocr_engine", []).append(ExtractedField(field_name="ocr_engine", value=ocr_engine, confidence=1.0))
 
-        chunks = [
-            ExtractedChunk(chunk_index=idx, text=chunk, start_char=0, end_char=len(chunk))
-            for idx, chunk in enumerate(self.chunker.chunk_text(raw_text))
-        ]
+        chunks = [ExtractedChunk(chunk_index=idx, text=chunk, start_char=0, end_char=len(chunk)) for idx, chunk in enumerate(self.chunker.chunk_text(raw_text))]
 
         return UnstructuredSubmission(
             submission_id=sub_id,

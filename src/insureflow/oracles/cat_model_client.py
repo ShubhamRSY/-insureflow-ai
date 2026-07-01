@@ -73,9 +73,7 @@ class CATModelResult:
         ]
         if self.worst_exposure:
             we = self.worst_exposure
-            parts.append(
-                f"Worst: {we.city}, {we.state} ({we.max_threat}: {we.combined_cat_score:.0%})"
-            )
+            parts.append(f"Worst: {we.city}, {we.state} ({we.max_threat}: {we.combined_cat_score:.0%})")
             parts.append(f"PML 100yr: ${self.portfolio_aggregate_pml_100yr:,.0f}")
         return " | ".join(parts)
 
@@ -173,12 +171,7 @@ class CatastropheModelClient:
             flood_risk = 0.10
             wildfire_risk = 0.05
 
-        combined = (
-            hurricane_risk * 0.30
-            + earthquake_risk * 0.25
-            + flood_risk * 0.25
-            + wildfire_risk * 0.20
-        )
+        combined = hurricane_risk * 0.30 + earthquake_risk * 0.25 + flood_risk * 0.25 + wildfire_risk * 0.20
 
         aal = tiv * combined * 0.005
         pml_100yr = tiv * combined * 0.15
@@ -209,11 +202,7 @@ class CatastropheModelClient:
     ) -> CATModelResult:
         results: list[CATExposureResult] = []
         for loc in locations:
-            tiv = (
-                (loc.get("building_value") or 0)
-                + (loc.get("contents_value") or 0)
-                + (loc.get("bi_value") or 0)
-            ) or total_tiv / max(len(locations), 1)
+            tiv = ((loc.get("building_value") or 0) + (loc.get("contents_value") or 0) + (loc.get("bi_value") or 0)) or total_tiv / max(len(locations), 1)
             result = self.model_location(
                 address=loc.get("address", ""),
                 city=loc.get("city", ""),

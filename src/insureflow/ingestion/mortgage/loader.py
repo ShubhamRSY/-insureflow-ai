@@ -37,24 +37,16 @@ class MortgageDocumentParser(BaseParser):
         ocr_engine: str = "",
     ) -> MortgageDocument:
         resolved_type = doc_type or MortgageDocumentClassifier.classify(raw_text, source_path)
-        resolved_product = product_line or MortgageDocumentClassifier.infer_product_line(
-            source_path
-        )
+        resolved_product = product_line or MortgageDocumentClassifier.infer_product_line(source_path)
 
         regex_fields = extract_fields(resolved_type, raw_text)
         llm_used = False
         ocr_used = bool(ocr_engine)
 
         if ocr_used:
-            regex_fields.setdefault("ocr_engine", []).append(
-                ExtractedMortgageField(field_name="ocr_engine", value=ocr_engine, confidence=1.0)
-            )
+            regex_fields.setdefault("ocr_engine", []).append(ExtractedMortgageField(field_name="ocr_engine", value=ocr_engine, confidence=1.0))
 
-        if (
-            self.use_llm
-            and self.llm_extractor
-            and self.llm_extractor.needs_llm(resolved_type, regex_fields, raw_text)
-        ):
+        if self.use_llm and self.llm_extractor and self.llm_extractor.needs_llm(resolved_type, regex_fields, raw_text):
             llm_result = self.llm_extractor.extract(raw_text, resolved_type, source_path)
             if llm_result:
                 regex_fields = self.llm_extractor.merge_fields(regex_fields, llm_result)
@@ -104,9 +96,7 @@ class MortgageDocumentParser(BaseParser):
         else:
             raw = Path(path).read_text(encoding="utf-8", errors="replace")
 
-        return self.parse(
-            raw, submission_id, source_path=path, product_line=product_line, ocr_engine=ocr_engine
-        )
+        return self.parse(raw, submission_id, source_path=path, product_line=product_line, ocr_engine=ocr_engine)
 
     def parse_bytes(
         self,
@@ -155,9 +145,7 @@ class MortgageSubmissionLoader:
             else:
                 with open(path, encoding="utf-8", errors="replace") as f:
                     raw = f.read()
-                doc = self.parser.parse(
-                    raw, f"{bid}-doc-{i}", source_path=path, product_line=inferred_line
-                )
+                doc = self.parser.parse(raw, f"{bid}-doc-{i}", source_path=path, product_line=inferred_line)
             documents.append(doc)
         return documents
 
@@ -191,12 +179,8 @@ class MortgageSubmissionLoader:
 
             if encoding == "base64":
                 data = base64.b64decode(content)
-                doc = self.parser.parse_bytes(
-                    data, filename, f"{bid}-doc-{i}", product_line=product_line
-                )
+                doc = self.parser.parse_bytes(data, filename, f"{bid}-doc-{i}", product_line=product_line)
             else:
-                doc = self.parser.parse(
-                    content, f"{bid}-doc-{i}", source_path=filename, product_line=product_line
-                )
+                doc = self.parser.parse(content, f"{bid}-doc-{i}", source_path=filename, product_line=product_line)
             results.append(doc)
         return results

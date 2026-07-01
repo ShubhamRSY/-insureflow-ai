@@ -154,10 +154,7 @@ class PolicyAdminService:
         state = ""
         if bundle.structured and bundle.structured.locations:
             state = bundle.structured.locations[0].state or ""
-            total_tiv = sum(
-                (loc.building_value or 0) + (loc.contents_value or 0)
-                for loc in bundle.structured.locations
-            )
+            total_tiv = sum((loc.building_value or 0) + (loc.contents_value or 0) for loc in bundle.structured.locations)
 
         return PolicySubmissionPayload(
             bundle_id=bundle.bundle_id,
@@ -171,13 +168,8 @@ class PolicyAdminService:
             uw_decision=memo.decision.value,
             coverages=coverages,
             locations=locations,
-            risk_profile=bundle.structured.risk_profile.model_dump()
-            if bundle.structured and bundle.structured.risk_profile
-            else {},
+            risk_profile=bundle.structured.risk_profile.model_dump() if bundle.structured and bundle.structured.risk_profile else {},
             memo_summary=memo.summary,
-            key_findings=[
-                {"title": f.title, "severity": f.severity.value, "description": f.description}
-                for f in memo.key_findings[:10]
-            ],
+            key_findings=[{"title": f.title, "severity": f.severity.value, "description": f.description} for f in memo.key_findings[:10]],
             raw_json=bundle.model_dump(),
         )
