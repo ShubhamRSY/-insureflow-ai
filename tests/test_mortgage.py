@@ -39,7 +39,9 @@ class TestMortgageClassifier:
     def test_classify_credit_report(self) -> None:
         path = str(HOME / "credit_debt" / "credit_report_john_thompson.txt")
         content = Path(path).read_text()
-        assert MortgageDocumentClassifier.classify(content, path) == MortgageDocumentType.CREDIT_REPORT
+        assert (
+            MortgageDocumentClassifier.classify(content, path) == MortgageDocumentType.CREDIT_REPORT
+        )
 
     def test_classify_commercial_rent_roll(self) -> None:
         path = str(COMMERCIAL / "property_performance" / "current_rent_roll.txt")
@@ -47,8 +49,14 @@ class TestMortgageClassifier:
         assert MortgageDocumentClassifier.classify(content, path) == MortgageDocumentType.RENT_ROLL
 
     def test_infer_product_line(self) -> None:
-        assert MortgageDocumentClassifier.infer_product_line(str(HOME)) == ProductLine.RESIDENTIAL_MORTGAGE
-        assert MortgageDocumentClassifier.infer_product_line(str(COMMERCIAL)) == ProductLine.COMMERCIAL_MORTGAGE
+        assert (
+            MortgageDocumentClassifier.infer_product_line(str(HOME))
+            == ProductLine.RESIDENTIAL_MORTGAGE
+        )
+        assert (
+            MortgageDocumentClassifier.infer_product_line(str(COMMERCIAL))
+            == ProductLine.COMMERCIAL_MORTGAGE
+        )
 
 
 class TestMortgageBundler:
@@ -86,7 +94,11 @@ class TestMortgageLLMExtractor:
         from insureflow.mortgage.llm_extractor import LLMExtractedField, LLMExtractionResult
 
         extractor = MortgageLLMExtractor()
-        regex = {"wages_box1": [ExtractedMortgageField(field_name="wages_box1", value="100000", confidence=0.9)]}
+        regex = {
+            "wages_box1": [
+                ExtractedMortgageField(field_name="wages_box1", value="100000", confidence=0.9)
+            ]
+        }
         llm = LLMExtractionResult(
             fields=[LLMExtractedField(field_name="credit_score", value="720", confidence=0.85)],
             borrower_name="John Smith",
@@ -179,7 +191,9 @@ class TestMortgagePipeline:
         assert "audit_paths" in results
 
     def test_per_borrower_processing(self, audit_store: AuditStore) -> None:
-        results = MortgagePipeline(use_llm=False, audit_store=audit_store).run_per_borrower(str(HOME))
+        results = MortgagePipeline(use_llm=False, audit_store=audit_store).run_per_borrower(
+            str(HOME)
+        )
         assert results["status"] == "completed"
         assert results["borrower_count"] >= 5
         for pkg in results["packages"]:
@@ -206,7 +220,9 @@ class TestMortgagePipeline:
         rule_ids = {v["rule_id"] for v in violations}
         assert "INCOME-001" in rule_ids
 
-    def test_api_text_submission(self, audit_store: AuditStore, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_api_text_submission(
+        self, audit_store: AuditStore, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         w2 = (HOME / "income" / "w2_2024_john_thompson.txt").read_text()
         credit = (HOME / "credit_debt" / "credit_report_john_thompson.txt").read_text()
         result = MortgagePipeline(use_llm=False, audit_store=audit_store).run_from_texts(

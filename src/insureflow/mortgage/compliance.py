@@ -127,13 +127,47 @@ def _commercial_dscr(bundle: MortgageBundle) -> ComplianceViolation | None:
 
 
 BANK_RULES: list[BankRule] = [
-    BankRule("CREDIT-001", "Minimum Credit Score", "critical", (ProductLine.RESIDENTIAL_MORTGAGE,), _min_credit_score_620),
-    BankRule("DTI-001", "Maximum DTI Ratio", "high", (ProductLine.RESIDENTIAL_MORTGAGE,), _max_dti_43),
-    BankRule("LTV-001", "Maximum LTV Ratio", "high", (ProductLine.RESIDENTIAL_MORTGAGE,), _max_ltv_80),
-    BankRule("INCOME-001", "Income Documentation", "critical", (ProductLine.RESIDENTIAL_MORTGAGE, ProductLine.COMMERCIAL_MORTGAGE), _income_documentation),
-    BankRule("ASSET-001", "Asset Verification", "warning", (ProductLine.RESIDENTIAL_MORTGAGE,), _asset_reserves),
-    BankRule("RECON-001", "Reconciliation Blockers", "high", (ProductLine.RESIDENTIAL_MORTGAGE, ProductLine.COMMERCIAL_MORTGAGE), _reconciliation_blockers),
-    BankRule("CM-DSCR-001", "Commercial DSCR", "critical", (ProductLine.COMMERCIAL_MORTGAGE,), _commercial_dscr),
+    BankRule(
+        "CREDIT-001",
+        "Minimum Credit Score",
+        "critical",
+        (ProductLine.RESIDENTIAL_MORTGAGE,),
+        _min_credit_score_620,
+    ),
+    BankRule(
+        "DTI-001", "Maximum DTI Ratio", "high", (ProductLine.RESIDENTIAL_MORTGAGE,), _max_dti_43
+    ),
+    BankRule(
+        "LTV-001", "Maximum LTV Ratio", "high", (ProductLine.RESIDENTIAL_MORTGAGE,), _max_ltv_80
+    ),
+    BankRule(
+        "INCOME-001",
+        "Income Documentation",
+        "critical",
+        (ProductLine.RESIDENTIAL_MORTGAGE, ProductLine.COMMERCIAL_MORTGAGE),
+        _income_documentation,
+    ),
+    BankRule(
+        "ASSET-001",
+        "Asset Verification",
+        "warning",
+        (ProductLine.RESIDENTIAL_MORTGAGE,),
+        _asset_reserves,
+    ),
+    BankRule(
+        "RECON-001",
+        "Reconciliation Blockers",
+        "high",
+        (ProductLine.RESIDENTIAL_MORTGAGE, ProductLine.COMMERCIAL_MORTGAGE),
+        _reconciliation_blockers,
+    ),
+    BankRule(
+        "CM-DSCR-001",
+        "Commercial DSCR",
+        "critical",
+        (ProductLine.COMMERCIAL_MORTGAGE,),
+        _commercial_dscr,
+    ),
 ]
 
 

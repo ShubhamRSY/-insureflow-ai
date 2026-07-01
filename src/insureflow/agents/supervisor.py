@@ -76,9 +76,7 @@ class SupervisorAgent(BaseAgent):
         uw_result = self.uw_decision.run(bundle, agent_results=agents_map)
         agent_results.append(uw_result)
 
-        memo = self.uw_decision.produce_underwriting_memo(
-            bundle, agent_results, uw_result
-        )
+        memo = self.uw_decision.produce_underwriting_memo(bundle, agent_results, uw_result)
 
         if conflict_resolution:
             memo.review_notes.extend(conflict_resolution)
@@ -90,6 +88,7 @@ class SupervisorAgent(BaseAgent):
 
     def _run_agents_threadpool(self, bundle: SubmissionBundle) -> list[AgentResult]:
         import concurrent.futures
+
         with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
             risk_future = pool.submit(self.risk_analyst.run, bundle)
             loss_future = pool.submit(self.loss_run_analyst.run, bundle)
@@ -124,10 +123,7 @@ class SupervisorAgent(BaseAgent):
                 "FraudDetectionAgent",
             ]
 
-            job = group(
-                run_agent.s(agent_name, bundle_data)
-                for agent_name in agent_names
-            )
+            job = group(run_agent.s(agent_name, bundle_data) for agent_name in agent_names)
             result = job.apply_async()
 
             raw_results = result.get(timeout=300, propagate=True)
@@ -225,7 +221,7 @@ class SupervisorAgent(BaseAgent):
         severity_map = {"critical": 4, "high": 3, "moderate": 2, "low": 1}
 
         for i, r1 in enumerate(results):
-            for r2 in results[i + 1:]:
+            for r2 in results[i + 1 :]:
                 for f1 in r1.findings:
                     for f2 in r2.findings:
                         if f1.category == f2.category:
@@ -252,8 +248,5 @@ class SupervisorAgent(BaseAgent):
         total_elapsed: float,
     ) -> None:
         timing_note = f"Total agentic analysis: {total_elapsed:.1f}s | "
-        timing_note += " | ".join(
-            f"{r.agent_name}: {r.processing_time_ms:.0f}ms"
-            for r in results
-        )
+        timing_note += " | ".join(f"{r.agent_name}: {r.processing_time_ms:.0f}ms" for r in results)
         memo.review_notes.append(timing_note)

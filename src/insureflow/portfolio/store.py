@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 
 class PortfolioPolicy(BaseModel):
     """A single policy in the carrier's portfolio for concentration analysis."""
+
     policy_id: str
     bundle_id: str
     org_id: str = "default"
@@ -33,6 +34,7 @@ class PortfolioPolicy(BaseModel):
 
 class PortfolioConcentrationSummary(BaseModel):
     """Concentration analysis result for a new submission."""
+
     bundle_id: str
     org_id: str
 
@@ -66,63 +68,113 @@ class PortfolioStore:
     def _load_demo_seed(self) -> None:
         seeds = [
             PortfolioPolicy(
-                policy_id=f"pol-{uuid4().hex[:8]}", bundle_id="seed-001",
-                insured_name="Bayfront Retail LLC", naics_code="452210",
-                state="FL", zip_code="33101", tiv=4_500_000, premium=22_500,
+                policy_id=f"pol-{uuid4().hex[:8]}",
+                bundle_id="seed-001",
+                insured_name="Bayfront Retail LLC",
+                naics_code="452210",
+                state="FL",
+                zip_code="33101",
+                tiv=4_500_000,
+                premium=22_500,
                 occupancy_type="retail",
             ),
             PortfolioPolicy(
-                policy_id=f"pol-{uuid4().hex[:8]}", bundle_id="seed-002",
-                insured_name="Suncoast Office Park", naics_code="531120",
-                state="FL", zip_code="33139", tiv=8_200_000, premium=41_000,
+                policy_id=f"pol-{uuid4().hex[:8]}",
+                bundle_id="seed-002",
+                insured_name="Suncoast Office Park",
+                naics_code="531120",
+                state="FL",
+                zip_code="33139",
+                tiv=8_200_000,
+                premium=41_000,
                 occupancy_type="office",
             ),
             PortfolioPolicy(
-                policy_id=f"pol-{uuid4().hex[:8]}", bundle_id="seed-003",
-                insured_name="Texas Warehousing Inc", naics_code="493110",
-                state="TX", zip_code="77001", tiv=12_000_000, premium=60_000,
+                policy_id=f"pol-{uuid4().hex[:8]}",
+                bundle_id="seed-003",
+                insured_name="Texas Warehousing Inc",
+                naics_code="493110",
+                state="TX",
+                zip_code="77001",
+                tiv=12_000_000,
+                premium=60_000,
                 occupancy_type="warehouse",
             ),
             PortfolioPolicy(
-                policy_id=f"pol-{uuid4().hex[:8]}", bundle_id="seed-004",
-                insured_name="Pacific Marine Services", naics_code="488320",
-                state="CA", zip_code="90001", tiv=3_200_000, premium=16_000,
+                policy_id=f"pol-{uuid4().hex[:8]}",
+                bundle_id="seed-004",
+                insured_name="Pacific Marine Services",
+                naics_code="488320",
+                state="CA",
+                zip_code="90001",
+                tiv=3_200_000,
+                premium=16_000,
                 occupancy_type="marine",
             ),
             PortfolioPolicy(
-                policy_id=f"pol-{uuid4().hex[:8]}", bundle_id="seed-005",
-                insured_name="Midwest Manufacturing Co", naics_code="332710",
-                state="IL", zip_code="60601", tiv=6_800_000, premium=34_000,
+                policy_id=f"pol-{uuid4().hex[:8]}",
+                bundle_id="seed-005",
+                insured_name="Midwest Manufacturing Co",
+                naics_code="332710",
+                state="IL",
+                zip_code="60601",
+                tiv=6_800_000,
+                premium=34_000,
                 occupancy_type="manufacturing",
             ),
             PortfolioPolicy(
-                policy_id=f"pol-{uuid4().hex[:8]}", bundle_id="seed-006",
-                insured_name="NYC Commercial Properties", naics_code="531120",
-                state="NY", zip_code="10001", tiv=15_000_000, premium=75_000,
+                policy_id=f"pol-{uuid4().hex[:8]}",
+                bundle_id="seed-006",
+                insured_name="NYC Commercial Properties",
+                naics_code="531120",
+                state="NY",
+                zip_code="10001",
+                tiv=15_000_000,
+                premium=75_000,
                 occupancy_type="office",
             ),
             PortfolioPolicy(
-                policy_id=f"pol-{uuid4().hex[:8]}", bundle_id="seed-007",
-                insured_name="Georgia Logistics Corp", naics_code="484110",
-                state="GA", zip_code="30301", tiv=5_500_000, premium=27_500,
+                policy_id=f"pol-{uuid4().hex[:8]}",
+                bundle_id="seed-007",
+                insured_name="Georgia Logistics Corp",
+                naics_code="484110",
+                state="GA",
+                zip_code="30301",
+                tiv=5_500_000,
+                premium=27_500,
                 occupancy_type="transportation",
             ),
             PortfolioPolicy(
-                policy_id=f"pol-{uuid4().hex[:8]}", bundle_id="seed-008",
-                insured_name="SoCal Restaurant Group", naics_code="722511",
-                state="CA", zip_code="90210", tiv=1_200_000, premium=6_000,
+                policy_id=f"pol-{uuid4().hex[:8]}",
+                bundle_id="seed-008",
+                insured_name="SoCal Restaurant Group",
+                naics_code="722511",
+                state="CA",
+                zip_code="90210",
+                tiv=1_200_000,
+                premium=6_000,
                 occupancy_type="restaurant",
             ),
             PortfolioPolicy(
-                policy_id=f"pol-{uuid4().hex[:8]}", bundle_id="seed-009",
-                insured_name="Texas Healthcare Partners", naics_code="622110",
-                state="TX", zip_code="75201", tiv=20_000_000, premium=100_000,
+                policy_id=f"pol-{uuid4().hex[:8]}",
+                bundle_id="seed-009",
+                insured_name="Texas Healthcare Partners",
+                naics_code="622110",
+                state="TX",
+                zip_code="75201",
+                tiv=20_000_000,
+                premium=100_000,
                 occupancy_type="healthcare",
             ),
             PortfolioPolicy(
-                policy_id=f"pol-{uuid4().hex[:8]}", bundle_id="seed-010",
-                insured_name="Florida Hotel Group", naics_code="721110",
-                state="FL", zip_code="33101", tiv=25_000_000, premium=125_000,
+                policy_id=f"pol-{uuid4().hex[:8]}",
+                bundle_id="seed-010",
+                insured_name="Florida Hotel Group",
+                naics_code="721110",
+                state="FL",
+                zip_code="33101",
+                tiv=25_000_000,
+                premium=125_000,
                 occupancy_type="lodging",
             ),
         ]
@@ -136,10 +188,18 @@ class PortfolioStore:
         return [p for p in self._policies.values() if p.org_id == org_id and p.is_active]
 
     def get_by_state(self, state: str, org_id: str = "default") -> list[PortfolioPolicy]:
-        return [p for p in self._policies.values() if p.state == state and p.org_id == org_id and p.is_active]
+        return [
+            p
+            for p in self._policies.values()
+            if p.state == state and p.org_id == org_id and p.is_active
+        ]
 
     def get_by_naics2(self, naics2: str, org_id: str = "default") -> list[PortfolioPolicy]:
-        return [p for p in self._policies.values() if p.naics_code.startswith(naics2) and p.org_id == org_id and p.is_active]
+        return [
+            p
+            for p in self._policies.values()
+            if p.naics_code.startswith(naics2) and p.org_id == org_id and p.is_active
+        ]
 
     def analyze_concentration(
         self,
@@ -203,7 +263,9 @@ class PortfolioStore:
             )
             score += 0.2
 
-        combined_state_and_naics = len([p for p in same_state if p.naics_code.startswith(naics2) and naics2])
+        combined_state_and_naics = len(
+            [p for p in same_state if p.naics_code.startswith(naics2) and naics2]
+        )
         if combined_state_and_naics >= 2 and state_pct > 20 and naics_pct > 20:
             warnings.append(
                 f"Double concentration: {combined_state_and_naics + 1} policies in {state} "
@@ -212,7 +274,9 @@ class PortfolioStore:
             score += 0.3
 
         if total_count == 0 and new_tiv > 10_000_000:
-            warnings.append("First policy in portfolio with TIV > $10M — no diversification baseline")
+            warnings.append(
+                "First policy in portfolio with TIV > $10M — no diversification baseline"
+            )
             score += 0.1
 
         score = min(1.0, score)

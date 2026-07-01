@@ -117,7 +117,8 @@ class ComplianceRuleVersion(RegistryEntry):
             "added": list(new_rules - old_rules),
             "removed": list(old_rules - new_rules),
             "changed": [
-                r for r in old_rules & new_rules
+                r
+                for r in old_rules & new_rules
                 if other.rules_snapshot[r] != self.rules_snapshot[r]
             ],
         }

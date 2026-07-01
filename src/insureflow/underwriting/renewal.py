@@ -18,16 +18,16 @@ from uuid import uuid4
 
 
 class RenewalAction(str, Enum):
-    RENEW = "renew"                       # Standard renewal
+    RENEW = "renew"  # Standard renewal
     RENEW_WITH_MODIFICATION = "renew_with_modification"  # Change terms/price
-    NON_RENEW = "non_renew"               # Decline to renew
-    REFER_TO_UW = "refer_to_uw"           # Needs UW review
+    NON_RENEW = "non_renew"  # Decline to renew
+    REFER_TO_UW = "refer_to_uw"  # Needs UW review
 
 
 class RetentionRisk(str, Enum):
-    LOW = "low"          # Likely to stay
-    MEDIUM = "medium"    # May shop around
-    HIGH = "high"        # At risk of leaving
+    LOW = "low"  # Likely to stay
+    MEDIUM = "medium"  # May shop around
+    HIGH = "high"  # At risk of leaving
 
 
 class AuditStatus(str, Enum):
@@ -49,6 +49,7 @@ class AuditAdjustmentType(str, Enum):
 @dataclass
 class PolicyLapse:
     """A single policy that might be part of a bundled account."""
+
     policy_number: str
     line_of_business: str
     current_premium: float
@@ -61,6 +62,7 @@ class PolicyLapse:
 @dataclass
 class BundledAccount:
     """All policies for one insured, used for retention analysis."""
+
     account_id: str
     insured_name: str
     policies: list[PolicyLapse] = field(default_factory=list)
@@ -209,7 +211,8 @@ class RenewalEngine:
         now = date.today()
         months_to_expiry = (
             ((expiry_date.year - now.year) * 12 + (expiry_date.month - now.month))
-            if expiry_date else 6
+            if expiry_date
+            else 6
         )
 
         # Determine loss ratio trend
@@ -273,7 +276,9 @@ class RenewalEngine:
                 f"(bundling discount: {bundling_discount:.0f}%)"
             )
         else:
-            rationale = f"Standard renewal — experience within thresholds, premium {net_change:+.0f}%"
+            rationale = (
+                f"Standard renewal — experience within thresholds, premium {net_change:+.0f}%"
+            )
 
         if bundling_discount > 0:
             conditions.append(f"Multi-policy bundling discount: {bundling_discount:.0f}%")

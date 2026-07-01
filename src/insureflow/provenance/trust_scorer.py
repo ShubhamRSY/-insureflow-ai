@@ -44,7 +44,5 @@ class TrustScorer:
     def needs_human_review(self, result: ReconciliationResult) -> bool:
         if result.match_rate < 0.7:
             return True
-        critical_discrepancies = [
-            d for d in result.discrepancies if d.severity.value == "critical"
-        ]
+        critical_discrepancies = [d for d in result.discrepancies if d.severity.value == "critical"]
         return len(critical_discrepancies) > 0

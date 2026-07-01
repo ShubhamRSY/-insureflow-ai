@@ -21,8 +21,7 @@ class FieldMatcher:
         consensus_rate = 1.0
         if len(by_hierarchy) > 1:
             matches = sum(
-                1 for val in by_hierarchy[1:]
-                if str(val.get("value", "")) == authoritative_val
+                1 for val in by_hierarchy[1:] if str(val.get("value", "")) == authoritative_val
             )
             consensus_rate = matches / (len(by_hierarchy) - 1)
 
@@ -59,6 +58,7 @@ class FieldMatcher:
 
         if len(str_a) > 3 and len(str_b) > 3:
             from difflib import SequenceMatcher
+
             ratio = SequenceMatcher(None, str_a, str_b).ratio()
             return ratio >= 0.85
 

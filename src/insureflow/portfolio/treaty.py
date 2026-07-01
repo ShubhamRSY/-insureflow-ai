@@ -51,6 +51,7 @@ class ReinsuranceTreaty(BaseModel):
 
 class TreatyAllocation(BaseModel):
     """Result of applying a treaty to a specific risk."""
+
     treaty_id: str
     treaty_name: str
     treaty_type: TreatyType
@@ -62,6 +63,7 @@ class TreatyAllocation(BaseModel):
 
 class TreatyAttachmentResult(BaseModel):
     """Whether a risk attaches to the treaty and at what level."""
+
     treaty_id: str
     treaty_name: str
     treaty_type: TreatyType

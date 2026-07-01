@@ -24,8 +24,7 @@ def run_mortgage_pipeline(
     from insureflow.mortgage.pipeline import MortgagePipeline
 
     docs: list[dict[str, str]] = [
-        {"filename": d["filename"], "content": d["content"]}
-        for d in documents_data
+        {"filename": d["filename"], "content": d["content"]} for d in documents_data
     ]
 
     pipeline = MortgagePipeline(use_llm=use_llm)
@@ -77,11 +76,15 @@ def run_mortgage_directory(
             product_line=pl,
         )
         if job_id:
-            _persist_celery_job(job_id, org_id, {"status": "completed", "results": result}, self.request.id or "")
+            _persist_celery_job(
+                job_id, org_id, {"status": "completed", "results": result}, self.request.id or ""
+            )
         return result
     except Exception as exc:
         if job_id:
-            _persist_celery_job(job_id, org_id, {"status": "failed", "error": str(exc)}, self.request.id or "")
+            _persist_celery_job(
+                job_id, org_id, {"status": "failed", "error": str(exc)}, self.request.id or ""
+            )
         raise
 
 
@@ -119,10 +122,7 @@ def run_mortgage_langgraph(
 ) -> dict[str, Any]:
     from insureflow.mortgage.graph import build_mortgage_pipeline_graph
 
-    raw_documents = [
-        {"filename": d["filename"], "content": d["content"]}
-        for d in documents_data
-    ]
+    raw_documents = [{"filename": d["filename"], "content": d["content"]} for d in documents_data]
 
     initial_state: dict[str, Any] = {
         "raw_documents": raw_documents,

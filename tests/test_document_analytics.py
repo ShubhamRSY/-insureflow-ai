@@ -234,9 +234,27 @@ class TestDocumentCountFromPipelineFixtures:
         from insureflow.models.mortgage import MortgageDocument, MortgageDocumentType, ProductLine
 
         docs = [
-            MortgageDocument(document_id="1", source_path="/a.pdf", document_type=MortgageDocumentType.W2, product_line=ProductLine.RESIDENTIAL_MORTGAGE, raw_text="W2"),
-            MortgageDocument(document_id="2", source_path="/b.pdf", document_type=MortgageDocumentType.BANK_STATEMENT, product_line=ProductLine.RESIDENTIAL_MORTGAGE, raw_text="bank"),
-            MortgageDocument(document_id="3", source_path="/c.pdf", document_type=MortgageDocumentType.TAX_RETURN_1040, product_line=ProductLine.RESIDENTIAL_MORTGAGE, raw_text="tax"),
+            MortgageDocument(
+                document_id="1",
+                source_path="/a.pdf",
+                document_type=MortgageDocumentType.W2,
+                product_line=ProductLine.RESIDENTIAL_MORTGAGE,
+                raw_text="W2",
+            ),
+            MortgageDocument(
+                document_id="2",
+                source_path="/b.pdf",
+                document_type=MortgageDocumentType.BANK_STATEMENT,
+                product_line=ProductLine.RESIDENTIAL_MORTGAGE,
+                raw_text="bank",
+            ),
+            MortgageDocument(
+                document_id="3",
+                source_path="/c.pdf",
+                document_type=MortgageDocumentType.TAX_RETURN_1040,
+                product_line=ProductLine.RESIDENTIAL_MORTGAGE,
+                raw_text="tax",
+            ),
         ]
         assert len(docs) == 3
 
@@ -244,7 +262,13 @@ class TestDocumentCountFromPipelineFixtures:
         from insureflow.models.mortgage import MortgageDocument, MortgageDocumentType, ProductLine
 
         docs = [
-            MortgageDocument(document_id="1", source_path="/a.pdf", document_type=MortgageDocumentType.CREDIT_REPORT, product_line=ProductLine.RESIDENTIAL_MORTGAGE, raw_text="credit"),
+            MortgageDocument(
+                document_id="1",
+                source_path="/a.pdf",
+                document_type=MortgageDocumentType.CREDIT_REPORT,
+                product_line=ProductLine.RESIDENTIAL_MORTGAGE,
+                raw_text="credit",
+            ),
         ]
         assert len(docs) == 1
 
@@ -252,26 +276,39 @@ class TestDocumentCountFromPipelineFixtures:
         from insureflow.models.mortgage import MortgageDocument, MortgageDocumentType, ProductLine
 
         docs = [
-            MortgageDocument(document_id=str(i), source_path=f"/{i}.pdf",
-                           document_type=dt, product_line=ProductLine.COMMERCIAL_MORTGAGE, raw_text="doc")
-            for i, dt in enumerate([
-                MortgageDocumentType.OPERATING_STATEMENT,
-                MortgageDocumentType.BALANCE_SHEET,
-                MortgageDocumentType.BUSINESS_CREDIT_REPORT,
-                MortgageDocumentType.COMMERCIAL_APPRAISAL,
-                MortgageDocumentType.TITLE_POLICY,
-                MortgageDocumentType.PHASE_I_ESA,
-                MortgageDocumentType.RENT_ROLL,
-                MortgageDocumentType.COMMERCIAL_LEASE,
-            ])
+            MortgageDocument(
+                document_id=str(i),
+                source_path=f"/{i}.pdf",
+                document_type=dt,
+                product_line=ProductLine.COMMERCIAL_MORTGAGE,
+                raw_text="doc",
+            )
+            for i, dt in enumerate(
+                [
+                    MortgageDocumentType.OPERATING_STATEMENT,
+                    MortgageDocumentType.BALANCE_SHEET,
+                    MortgageDocumentType.BUSINESS_CREDIT_REPORT,
+                    MortgageDocumentType.COMMERCIAL_APPRAISAL,
+                    MortgageDocumentType.TITLE_POLICY,
+                    MortgageDocumentType.PHASE_I_ESA,
+                    MortgageDocumentType.RENT_ROLL,
+                    MortgageDocumentType.COMMERCIAL_LEASE,
+                ]
+            )
         ]
         assert len(docs) == 8
 
     def test_analytics_records_match_pipeline_count(self, engine: DocumentAnalyticsEngine) -> None:
-        engine.record(bundle_id="ins-match", document_count=4, vertical="insurance",
-                      structured_count=1, unstructured_count=3)
-        engine.record(bundle_id="mtg-match", document_count=6, vertical="mortgage",
-                      unstructured_count=6)
+        engine.record(
+            bundle_id="ins-match",
+            document_count=4,
+            vertical="insurance",
+            structured_count=1,
+            unstructured_count=3,
+        )
+        engine.record(
+            bundle_id="mtg-match", document_count=6, vertical="mortgage", unstructured_count=6
+        )
 
         summary = engine.summary()
         assert summary["total_applications"] == 2

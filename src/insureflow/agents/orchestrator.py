@@ -62,9 +62,15 @@ class PipelineOrchestrator:
         }
 
         bundle = self._step_ingest(
-            acord_xml, inspection_reports, supplemental_docs,
-            json_payload, loss_run, schedule_of_values,
-            raw_docs, auto_classify, bundle_id,
+            acord_xml,
+            inspection_reports,
+            supplemental_docs,
+            json_payload,
+            loss_run,
+            schedule_of_values,
+            raw_docs,
+            auto_classify,
+            bundle_id,
         )
         results["steps"]["ingestion"] = {"bundle_id": bundle.bundle_id, "status": "complete"}
 
@@ -94,9 +100,7 @@ class PipelineOrchestrator:
         results["status"] = "completed" if not synthesis.human_review_required else "flagged"
         results["synthesis"] = synthesis.model_dump()
         results["reconciliation"] = reconciliation.model_dump()
-        results["audit_summary"] = self.trail_builder.build_audit_summary(
-            audit_trail, provenance
-        )
+        results["audit_summary"] = self.trail_builder.build_audit_summary(audit_trail, provenance)
 
         self.audit_logger.complete_trail(bundle_id)
         self.audit_logger.log(
@@ -122,7 +126,10 @@ class PipelineOrchestrator:
         bundle_id: str,
     ) -> SubmissionBundle:
         self.audit_logger.log(
-            bundle_id, PipelineEvent.SUBMISSION_RECEIVED, "orchestrator", "Loading submission bundle"
+            bundle_id,
+            PipelineEvent.SUBMISSION_RECEIVED,
+            "orchestrator",
+            "Loading submission bundle",
         )
         bundle = self.loader.load_bundle(
             acord_xml=acord_xml,
@@ -167,9 +174,7 @@ class PipelineOrchestrator:
         self.audit_store.persist_provenance(record)
         return record
 
-    def _step_reconcile(
-        self, provenance: ProvenanceRecord
-    ) -> ReconciliationResult:
+    def _step_reconcile(self, provenance: ProvenanceRecord) -> ReconciliationResult:
         self.audit_logger.log(
             provenance.bundle_id,
             PipelineEvent.RECONCILIATION_START,

@@ -19,6 +19,7 @@ app = FastAPI(
     version="1.0.0",
 )
 
+
 class SubmissionRequest(BaseModel):
     acord_xml: Optional[str] = None
     inspection_reports: Optional[list[str]] = None
@@ -53,7 +54,11 @@ def reconcile_submission(
 
     background_tasks.add_task(_run_pipeline_task, job_id, request)
 
-    return {"job_id": job_id, "status": "processing", "message": "Submission queued for processing."}
+    return {
+        "job_id": job_id,
+        "status": "processing",
+        "message": "Submission queued for processing.",
+    }
 
 
 @app.get("/api/v1/submissions/jobs/{job_id}")

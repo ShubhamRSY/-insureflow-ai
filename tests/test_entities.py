@@ -12,7 +12,9 @@ from insureflow.models.provenance import (
 )
 
 
-def _make_node(field_path: str, value: str, rank: int = 5, node_id: str | None = None) -> ProvenanceNode:
+def _make_node(
+    field_path: str, value: str, rank: int = 5, node_id: str | None = None
+) -> ProvenanceNode:
     return ProvenanceNode(
         node_id=node_id or f"node-{field_path}-{id(value)}",
         field_path=field_path,

@@ -47,7 +47,8 @@ class GuidewireAdapter(BasePolicyAdminAdapter):
 
         logger.info(
             "Guidewire quote submission: %s for %s",
-            payload.bundle_id, payload.insured_name,
+            payload.bundle_id,
+            payload.insured_name,
         )
 
         job_number = f"GW-JOB-{uuid4().hex[:10].upper()}"
@@ -70,7 +71,9 @@ class GuidewireAdapter(BasePolicyAdminAdapter):
             response_payload=response,
         )
 
-    def bind_policy(self, payload: PolicySubmissionPayload, quote_reference: str) -> IntegrationResult:
+    def bind_policy(
+        self, payload: PolicySubmissionPayload, quote_reference: str
+    ) -> IntegrationResult:
         policy_number = f"GW-POL-{datetime.now(tz=timezone.utc).year}-{uuid4().hex[:8].upper()}"
         response = {
             "policy_number": policy_number,

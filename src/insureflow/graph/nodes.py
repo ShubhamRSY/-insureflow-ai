@@ -41,8 +41,9 @@ def ingest_docs(state: dict[str, Any]) -> dict[str, Any]:
         bundle_id=bundle_id,
     )
 
-    _log_event(bundle_id, PipelineEvent.SUBMISSION_RECEIVED, "ingest_docs",
-               f"Bundle loaded: {bundle_id}")
+    _log_event(
+        bundle_id, PipelineEvent.SUBMISSION_RECEIVED, "ingest_docs", f"Bundle loaded: {bundle_id}"
+    )
 
     return {
         "bundle": bundle,
@@ -92,8 +93,12 @@ def classify_docs(state: dict[str, Any]) -> dict[str, Any]:
     if not routes:
         routes.append("parse_supplemental")
 
-    _log_event(state["bundle_id"], PipelineEvent.STRUCTURED_PARSE_START,
-               "classify_docs", f"Routes determined: {routes}")
+    _log_event(
+        state["bundle_id"],
+        PipelineEvent.STRUCTURED_PARSE_START,
+        "classify_docs",
+        f"Routes determined: {routes}",
+    )
 
     return {"classification_routes": routes}
 
@@ -127,28 +132,45 @@ def parse_acord(state: dict[str, Any]) -> dict[str, Any]:
     bundle_id = state["bundle_id"]
 
     if bundle.structured and bundle.structured.source == "broker_acord_xml":
-        _log_event(bundle_id, PipelineEvent.STRUCTURED_PARSE_COMPLETE,
-                   "parse_acord", "ACORD already parsed in bundle")
+        _log_event(
+            bundle_id,
+            PipelineEvent.STRUCTURED_PARSE_COMPLETE,
+            "parse_acord",
+            "ACORD already parsed in bundle",
+        )
         return {"parsed_acord": True}
 
     acord_xml = state.get("acord_xml")
     if not acord_xml:
-        _log_event(bundle_id, PipelineEvent.STRUCTURED_PARSE_START,
-                   "parse_acord", "No ACORD XML provided, skipping")
+        _log_event(
+            bundle_id,
+            PipelineEvent.STRUCTURED_PARSE_START,
+            "parse_acord",
+            "No ACORD XML provided, skipping",
+        )
         return {"parsed_acord": True}
 
     from insureflow.ingestion.acord_parser import ACORDParser
+
     try:
         parser = ACORDParser()
         structured = parser.parse(acord_xml, f"{bundle_id}-acord")
         bundle.structured = structured
-        _log_event(bundle_id, PipelineEvent.STRUCTURED_PARSE_COMPLETE,
-                   "parse_acord", "ACORD XML parsed successfully")
+        _log_event(
+            bundle_id,
+            PipelineEvent.STRUCTURED_PARSE_COMPLETE,
+            "parse_acord",
+            "ACORD XML parsed successfully",
+        )
     except Exception as exc:
         logger.error("ACORD parse failed: %s", exc)
-        _log_event(bundle_id, PipelineEvent.STRUCTURED_PARSE_COMPLETE,
-                   "parse_acord", f"ACORD parse failed: {exc}",
-                   severity=EventSeverity.ERROR)
+        _log_event(
+            bundle_id,
+            PipelineEvent.STRUCTURED_PARSE_COMPLETE,
+            "parse_acord",
+            f"ACORD parse failed: {exc}",
+            severity=EventSeverity.ERROR,
+        )
 
     return {"bundle": bundle, "parsed_acord": True}
 
@@ -160,27 +182,44 @@ def parse_json(state: dict[str, Any]) -> dict[str, Any]:
     json_payload = state.get("json_payload")
 
     if not json_payload:
-        _log_event(bundle_id, PipelineEvent.STRUCTURED_PARSE_START,
-                   "parse_json", "No JSON payload, skipping")
+        _log_event(
+            bundle_id,
+            PipelineEvent.STRUCTURED_PARSE_START,
+            "parse_json",
+            "No JSON payload, skipping",
+        )
         return {"parsed_json": True}
 
     if bundle.structured and bundle.structured.source == "broker_api_json":
-        _log_event(bundle_id, PipelineEvent.STRUCTURED_PARSE_COMPLETE,
-                   "parse_json", "JSON already parsed in bundle")
+        _log_event(
+            bundle_id,
+            PipelineEvent.STRUCTURED_PARSE_COMPLETE,
+            "parse_json",
+            "JSON already parsed in bundle",
+        )
         return {"parsed_json": True}
 
     from insureflow.ingestion.json_parser import BrokerJSONParser
+
     try:
         parser = BrokerJSONParser()
         structured = parser.parse(json_payload, f"{bundle_id}-json")
         bundle.structured = structured
-        _log_event(bundle_id, PipelineEvent.STRUCTURED_PARSE_COMPLETE,
-                   "parse_json", "JSON payload parsed successfully")
+        _log_event(
+            bundle_id,
+            PipelineEvent.STRUCTURED_PARSE_COMPLETE,
+            "parse_json",
+            "JSON payload parsed successfully",
+        )
     except Exception as exc:
         logger.error("JSON parse failed: %s", exc)
-        _log_event(bundle_id, PipelineEvent.STRUCTURED_PARSE_COMPLETE,
-                   "parse_json", f"JSON parse failed: {exc}",
-                   severity=EventSeverity.ERROR)
+        _log_event(
+            bundle_id,
+            PipelineEvent.STRUCTURED_PARSE_COMPLETE,
+            "parse_json",
+            f"JSON parse failed: {exc}",
+            severity=EventSeverity.ERROR,
+        )
 
     return {"bundle": bundle, "parsed_json": True}
 
@@ -192,17 +231,22 @@ def parse_loss_run(state: dict[str, Any]) -> dict[str, Any]:
     loss_run_text = state.get("loss_run")
 
     if not loss_run_text:
-        for doc in (bundle.unstructured or []):
+        for doc in bundle.unstructured or []:
             if "loss_run" in doc.source.lower() or "loss" in doc.document_type.lower():
                 loss_run_text = doc.raw_text
                 break
 
     if not loss_run_text:
-        _log_event(bundle_id, PipelineEvent.STRUCTURED_PARSE_START,
-                   "parse_loss_run", "No loss run data, skipping")
+        _log_event(
+            bundle_id,
+            PipelineEvent.STRUCTURED_PARSE_START,
+            "parse_loss_run",
+            "No loss run data, skipping",
+        )
         return {"parsed_loss_run": True}
 
     from insureflow.ingestion.loss_run_parser import LossRunParser
+
     try:
         parser = LossRunParser()
         parsed = parser.parse(loss_run_text, f"{bundle_id}-loss-run")
@@ -211,15 +255,24 @@ def parse_loss_run(state: dict[str, Any]) -> dict[str, Any]:
         if bundle.structured and loss_run_data:
             if not bundle.structured.financial:
                 from insureflow.models.submissions import FinancialData
+
                 bundle.structured.financial = FinancialData()
             bundle.structured.financial.loss_run = loss_run_data
-        _log_event(bundle_id, PipelineEvent.STRUCTURED_PARSE_COMPLETE,
-                   "parse_loss_run", f"Loss run parsed: {len(loss_run_data.claims)} claims")
+        _log_event(
+            bundle_id,
+            PipelineEvent.STRUCTURED_PARSE_COMPLETE,
+            "parse_loss_run",
+            f"Loss run parsed: {len(loss_run_data.claims)} claims",
+        )
     except Exception as exc:
         logger.error("Loss run parse failed: %s", exc)
-        _log_event(bundle_id, PipelineEvent.STRUCTURED_PARSE_COMPLETE,
-                   "parse_loss_run", f"Loss run parse failed: {exc}",
-                   severity=EventSeverity.ERROR)
+        _log_event(
+            bundle_id,
+            PipelineEvent.STRUCTURED_PARSE_COMPLETE,
+            "parse_loss_run",
+            f"Loss run parse failed: {exc}",
+            severity=EventSeverity.ERROR,
+        )
 
     return {"bundle": bundle, "parsed_loss_run": True}
 
@@ -231,17 +284,19 @@ def parse_sov(state: dict[str, Any]) -> dict[str, Any]:
     sov_text = state.get("schedule_of_values")
 
     if not sov_text:
-        for doc in (bundle.unstructured or []):
+        for doc in bundle.unstructured or []:
             if "sov" in doc.source.lower() or "schedule_of_values" in doc.document_type.lower():
                 sov_text = doc.raw_text
                 break
 
     if not sov_text:
-        _log_event(bundle_id, PipelineEvent.STRUCTURED_PARSE_START,
-                   "parse_sov", "No SOV data, skipping")
+        _log_event(
+            bundle_id, PipelineEvent.STRUCTURED_PARSE_START, "parse_sov", "No SOV data, skipping"
+        )
         return {"parsed_sov": True}
 
     from insureflow.ingestion.sov_parser import SOVParser
+
     try:
         parser = SOVParser()
         parsed = parser.parse(sov_text, f"{bundle_id}-sov")
@@ -249,13 +304,21 @@ def parse_sov(state: dict[str, Any]) -> dict[str, Any]:
         sov_result = parser.parse_structured(sov_text)
         if bundle.structured:
             bundle.structured.schedule_of_values = sov_result
-        _log_event(bundle_id, PipelineEvent.STRUCTURED_PARSE_COMPLETE,
-                   "parse_sov", f"SOV parsed: {len(sov_result)} schedules")
+        _log_event(
+            bundle_id,
+            PipelineEvent.STRUCTURED_PARSE_COMPLETE,
+            "parse_sov",
+            f"SOV parsed: {len(sov_result)} schedules",
+        )
     except Exception as exc:
         logger.error("SOV parse failed: %s", exc)
-        _log_event(bundle_id, PipelineEvent.STRUCTURED_PARSE_COMPLETE,
-                   "parse_sov", f"SOV parse failed: {exc}",
-                   severity=EventSeverity.ERROR)
+        _log_event(
+            bundle_id,
+            PipelineEvent.STRUCTURED_PARSE_COMPLETE,
+            "parse_sov",
+            f"SOV parse failed: {exc}",
+            severity=EventSeverity.ERROR,
+        )
 
     return {"bundle": bundle, "parsed_sov": True}
 
@@ -266,32 +329,49 @@ def parse_inspection(state: dict[str, Any]) -> dict[str, Any]:
     bundle_id = state["bundle_id"]
 
     if not (bundle.unstructured or []):
-        _log_event(bundle_id, PipelineEvent.STRUCTURED_PARSE_START,
-                   "parse_inspection", "No unstructured docs, skipping")
+        _log_event(
+            bundle_id,
+            PipelineEvent.STRUCTURED_PARSE_START,
+            "parse_inspection",
+            "No unstructured docs, skipping",
+        )
         return {"parsed_inspection": True}
 
     from insureflow.ingestion.report_extractor import InspectionReportExtractor
+
     try:
         extractor = InspectionReportExtractor()
         for doc in bundle.unstructured:
             if "inspection" in doc.source.lower() or "inspection" in doc.document_type.lower():
                 extracted = extractor.parse(doc.raw_text, doc.submission_id)
                 doc.extracted_fields = extracted.extracted_fields
-        _log_event(bundle_id, PipelineEvent.STRUCTURED_PARSE_COMPLETE,
-                   "parse_inspection", "Inspection reports parsed")
+        _log_event(
+            bundle_id,
+            PipelineEvent.STRUCTURED_PARSE_COMPLETE,
+            "parse_inspection",
+            "Inspection reports parsed",
+        )
     except Exception as exc:
         logger.error("Inspection parse failed: %s", exc)
-        _log_event(bundle_id, PipelineEvent.STRUCTURED_PARSE_COMPLETE,
-                   "parse_inspection", f"Inspection parse failed: {exc}",
-                   severity=EventSeverity.ERROR)
+        _log_event(
+            bundle_id,
+            PipelineEvent.STRUCTURED_PARSE_COMPLETE,
+            "parse_inspection",
+            f"Inspection parse failed: {exc}",
+            severity=EventSeverity.ERROR,
+        )
 
     return {"bundle": bundle, "parsed_inspection": True}
 
 
 def parse_supplemental(state: dict[str, Any]) -> dict[str, Any]:
     _log_state("parse_supplemental", state)
-    _log_event(state["bundle_id"], PipelineEvent.STRUCTURED_PARSE_COMPLETE,
-               "parse_supplemental", "Supplemental documents noted")
+    _log_event(
+        state["bundle_id"],
+        PipelineEvent.STRUCTURED_PARSE_COMPLETE,
+        "parse_supplemental",
+        "Supplemental documents noted",
+    )
     return {}
 
 
@@ -301,12 +381,17 @@ def merge_structured(state: dict[str, Any]) -> dict[str, Any]:
 
     if not bundle.structured:
         from insureflow.models.submissions import StructuredSubmission
+
         bundle.structured = StructuredSubmission(
             submission_id=f"{state['bundle_id']}-merged",
         )
 
-    _log_event(state["bundle_id"], PipelineEvent.STRUCTURED_PARSE_COMPLETE,
-               "merge_structured", "All parsed data merged into bundle")
+    _log_event(
+        state["bundle_id"],
+        PipelineEvent.STRUCTURED_PARSE_COMPLETE,
+        "merge_structured",
+        "All parsed data merged into bundle",
+    )
     return {"bundle": bundle}
 
 
@@ -314,23 +399,30 @@ def extract_agents(state: dict[str, Any]) -> dict[str, Any]:
     bundle: SubmissionBundle = state["bundle"]
     bundle_id = state["bundle_id"]
     _log_state("extract_agents", state)
-    _log_event(bundle_id, PipelineEvent.EXTRACTION_START,
-               "extract_agents", "Running agent extraction")
+    _log_event(
+        bundle_id, PipelineEvent.EXTRACTION_START, "extract_agents", "Running agent extraction"
+    )
 
     llm = LLMClient()
 
     from insureflow.agents.extraction_agent import ExtractionAgent
+
     agent = ExtractionAgent(llm)
 
     try:
         bundle = agent.process_bundle(bundle)
         retries = 0
     except Exception as exc:
-        logger.error("Extraction failed (attempt %d): %s",
-                      state.get("extraction_retries", 0) + 1, exc)
-        _log_event(bundle_id, PipelineEvent.EXTRACTION_COMPLETE,
-                   "extract_agents", f"Extraction failed: {exc}",
-                   severity=EventSeverity.ERROR)
+        logger.error(
+            "Extraction failed (attempt %d): %s", state.get("extraction_retries", 0) + 1, exc
+        )
+        _log_event(
+            bundle_id,
+            PipelineEvent.EXTRACTION_COMPLETE,
+            "extract_agents",
+            f"Extraction failed: {exc}",
+            severity=EventSeverity.ERROR,
+        )
         retries = state.get("extraction_retries", 0) + 1
 
     return {
@@ -348,9 +440,7 @@ def should_retry_extraction(state: dict[str, Any]) -> str:
         return "extract_agents"
     if retries > max_retries:
         logger.error("Extraction failed after %d retries", max_retries)
-        state.setdefault("errors", []).append(
-            f"Extraction failed after {max_retries} retries"
-        )
+        state.setdefault("errors", []).append(f"Extraction failed after {max_retries} retries")
     return "build_provenance"
 
 
@@ -358,21 +448,29 @@ def build_provenance(state: dict[str, Any]) -> dict[str, Any]:
     bundle: SubmissionBundle = state["bundle"]
     bundle_id = state["bundle_id"]
     _log_state("build_provenance", state)
-    _log_event(bundle_id, PipelineEvent.PROVENANCE_CHECK,
-               "build_provenance", "Building provenance records")
+    _log_event(
+        bundle_id, PipelineEvent.PROVENANCE_CHECK, "build_provenance", "Building provenance records"
+    )
 
     engine = ProvenanceEngine()
 
     try:
         record = engine.build_provenance(bundle)
-        _log_event(bundle_id, PipelineEvent.PROVENANCE_CHECK,
-                   "build_provenance",
-                   f"Provenance built: {record.record_count()} nodes")
+        _log_event(
+            bundle_id,
+            PipelineEvent.PROVENANCE_CHECK,
+            "build_provenance",
+            f"Provenance built: {record.record_count()} nodes",
+        )
     except Exception as exc:
         logger.error("Provenance build failed: %s", exc)
-        _log_event(bundle_id, PipelineEvent.PROVENANCE_CHECK,
-                   "build_provenance", f"Provenance failed: {exc}",
-                   severity=EventSeverity.ERROR)
+        _log_event(
+            bundle_id,
+            PipelineEvent.PROVENANCE_CHECK,
+            "build_provenance",
+            f"Provenance failed: {exc}",
+            severity=EventSeverity.ERROR,
+        )
         record = None
 
     return {"provenance": record}
@@ -382,42 +480,60 @@ def reconcile(state: dict[str, Any]) -> dict[str, Any]:
     provenance = state.get("provenance")
     bundle_id = state["bundle_id"]
     _log_state("reconcile", state)
-    _log_event(bundle_id, PipelineEvent.RECONCILIATION_START,
-               "reconcile", "Running reconciliation")
+    _log_event(bundle_id, PipelineEvent.RECONCILIATION_START, "reconcile", "Running reconciliation")
 
     if not provenance:
-        _log_event(bundle_id, PipelineEvent.RECONCILIATION_COMPLETE,
-                   "reconcile", "No provenance to reconcile",
-                   severity=EventSeverity.WARNING)
+        _log_event(
+            bundle_id,
+            PipelineEvent.RECONCILIATION_COMPLETE,
+            "reconcile",
+            "No provenance to reconcile",
+            severity=EventSeverity.WARNING,
+        )
         return {"reconciliation": None, "human_review_needed": False}
 
     engine = ReconciliationEngine()
 
     try:
         result = engine.reconcile(provenance)
-        _log_event(bundle_id, PipelineEvent.DISCREPANCY_DETECTED,
-                   "reconcile", f"Discrepancies: {len(result.discrepancies)}")
+        _log_event(
+            bundle_id,
+            PipelineEvent.DISCREPANCY_DETECTED,
+            "reconcile",
+            f"Discrepancies: {len(result.discrepancies)}",
+        )
 
         critical = any(
-            d.severity.value == "critical" for d in result.discrepancies
-            if hasattr(d.severity, 'value')
+            d.severity.value == "critical"
+            for d in result.discrepancies
+            if hasattr(d.severity, "value")
         )
         human_review = critical
 
-        _log_event(bundle_id, PipelineEvent.RECONCILIATION_COMPLETE,
-                   "reconcile",
-                   f"Match rate: {result.match_rate:.1%}, "
-                   f"human_review={human_review}")
+        _log_event(
+            bundle_id,
+            PipelineEvent.RECONCILIATION_COMPLETE,
+            "reconcile",
+            f"Match rate: {result.match_rate:.1%}, human_review={human_review}",
+        )
 
         if human_review:
-            _log_event(bundle_id, PipelineEvent.HUMAN_REVIEW_REQUIRED,
-                       "reconcile", "Critical discrepancies found")
+            _log_event(
+                bundle_id,
+                PipelineEvent.HUMAN_REVIEW_REQUIRED,
+                "reconcile",
+                "Critical discrepancies found",
+            )
 
     except Exception as exc:
         logger.error("Reconciliation failed: %s", exc)
-        _log_event(bundle_id, PipelineEvent.RECONCILIATION_COMPLETE,
-                   "reconcile", f"Reconciliation failed: {exc}",
-                   severity=EventSeverity.ERROR)
+        _log_event(
+            bundle_id,
+            PipelineEvent.RECONCILIATION_COMPLETE,
+            "reconcile",
+            f"Reconciliation failed: {exc}",
+            severity=EventSeverity.ERROR,
+        )
         result = None
         human_review = True
 
@@ -449,17 +565,29 @@ def query_rag(state: dict[str, Any]) -> dict[str, Any]:
         if rp.construction_type:
             query_parts.append(str(rp.construction_type))
 
-    query = " ".join(query_parts) if query_parts else "general commercial property underwriting guidelines"
-    _log_event(bundle_id, PipelineEvent.SYNTHESIS_START, "query_rag", f"Querying RAG for: '{query}'")
+    query = (
+        " ".join(query_parts)
+        if query_parts
+        else "general commercial property underwriting guidelines"
+    )
+    _log_event(
+        bundle_id, PipelineEvent.SYNTHESIS_START, "query_rag", f"Querying RAG for: '{query}'"
+    )
 
     from insureflow.agents.rag_agent import RAGAgent
+
     agent = RAGAgent()
     matches = agent.retrieve_guidelines(query)
 
     guidelines = ""
     if matches:
         guidelines = "\n\n".join(matches)
-        _log_event(bundle_id, PipelineEvent.SYNTHESIS_START, "query_rag", f"Retrieved {len(matches)} relevant guidelines")
+        _log_event(
+            bundle_id,
+            PipelineEvent.SYNTHESIS_START,
+            "query_rag",
+            f"Retrieved {len(matches)} relevant guidelines",
+        )
 
     return {"rag_context": guidelines}
 
@@ -467,8 +595,9 @@ def query_rag(state: dict[str, Any]) -> dict[str, Any]:
 def human_review(state: dict[str, Any]) -> dict[str, Any]:
     bundle_id = state["bundle_id"]
     _log_state("human_review", state)
-    _log_event(bundle_id, PipelineEvent.HUMAN_REVIEW_REQUIRED,
-               "human_review", "Waiting for human review")
+    _log_event(
+        bundle_id, PipelineEvent.HUMAN_REVIEW_REQUIRED, "human_review", "Waiting for human review"
+    )
 
     reconciliation = state.get("reconciliation")
     reasons: list[str] = []
@@ -476,8 +605,7 @@ def human_review(state: dict[str, Any]) -> dict[str, Any]:
         for d in reconciliation.discrepancies:
             if d.severity.value == "critical":
                 reasons.append(
-                    f"[{d.field_path}] {d.description} "
-                    f"(src_a={d.source_a}, src_b={d.source_b})"
+                    f"[{d.field_path}] {d.description} (src_a={d.source_a}, src_b={d.source_b})"
                 )
 
     return {"human_review_reasons": reasons}
@@ -488,35 +616,48 @@ def synthesize(state: dict[str, Any]) -> dict[str, Any]:
     provenance = state.get("provenance")
     reconciliation = state.get("reconciliation")
     _log_state("synthesize", state)
-    _log_event(bundle_id, PipelineEvent.SYNTHESIS_START,
-               "synthesize", "Building synthesis output")
+    _log_event(bundle_id, PipelineEvent.SYNTHESIS_START, "synthesize", "Building synthesis output")
 
     if not reconciliation:
         from insureflow.models.audit import SynthesisOutput
+
         synthesis = SynthesisOutput(bundle_id=bundle_id)
-        _log_event(bundle_id, PipelineEvent.SYNTHESIS_COMPLETE,
-                   "synthesize", "No reconciliation data for synthesis",
-                   severity=EventSeverity.WARNING)
+        _log_event(
+            bundle_id,
+            PipelineEvent.SYNTHESIS_COMPLETE,
+            "synthesize",
+            "No reconciliation data for synthesis",
+            severity=EventSeverity.WARNING,
+        )
         return {"synthesis": synthesis}
 
     llm = LLMClient()
 
     from insureflow.agents.synthesis_agent import SynthesisAgent
+
     agent = SynthesisAgent(llm)
 
     try:
         synthesis = agent.synthesize(provenance, reconciliation)
-        _log_event(bundle_id, PipelineEvent.SYNTHESIS_COMPLETE,
-                   "synthesize",
-                   f"Synthesis done: {synthesis.discrepancies_found} discrepancies, "
-                   f"human_review={synthesis.human_review_required}")
+        _log_event(
+            bundle_id,
+            PipelineEvent.SYNTHESIS_COMPLETE,
+            "synthesize",
+            f"Synthesis done: {synthesis.discrepancies_found} discrepancies, "
+            f"human_review={synthesis.human_review_required}",
+        )
     except Exception as exc:
         logger.error("Synthesis failed: %s", exc)
         from insureflow.models.audit import SynthesisOutput
+
         synthesis = SynthesisOutput(bundle_id=bundle_id)
-        _log_event(bundle_id, PipelineEvent.SYNTHESIS_COMPLETE,
-                   "synthesize", f"Synthesis failed: {exc}",
-                   severity=EventSeverity.ERROR)
+        _log_event(
+            bundle_id,
+            PipelineEvent.SYNTHESIS_COMPLETE,
+            "synthesize",
+            f"Synthesis failed: {exc}",
+            severity=EventSeverity.ERROR,
+        )
 
     return {"synthesis": synthesis}
 
@@ -536,10 +677,14 @@ def audit(state: dict[str, Any]) -> dict[str, Any]:
     if state.get("synthesis"):
         audit_store.persist_synthesis(state["synthesis"])
 
-    _log_event(bundle_id, PipelineEvent.PIPELINE_COMPLETE, "graph_orchestrator",
-               f"Pipeline complete. human_review={state.get('human_review_needed', False)}, "
-               f"errors={len(state.get('errors', []))}",
-               severity=EventSeverity.INFO)
+    _log_event(
+        bundle_id,
+        PipelineEvent.PIPELINE_COMPLETE,
+        "graph_orchestrator",
+        f"Pipeline complete. human_review={state.get('human_review_needed', False)}, "
+        f"errors={len(state.get('errors', []))}",
+        severity=EventSeverity.INFO,
+    )
 
     trail = _AUDIT_LOGGER.get_trail(bundle_id)
     if trail is None:
@@ -552,18 +697,28 @@ def audit(state: dict[str, Any]) -> dict[str, Any]:
 
 
 def _log_state(node: str, state: dict[str, Any]) -> None:
-    logger.debug("[Graph] Entering node '%s' (bundle_id=%s, retries=%d)",
-                 node, state.get("bundle_id", "?"), state.get("extraction_retries", 0))
+    logger.debug(
+        "[Graph] Entering node '%s' (bundle_id=%s, retries=%d)",
+        node,
+        state.get("bundle_id", "?"),
+        state.get("extraction_retries", 0),
+    )
 
 
-def _log_event(bundle_or_state: str | dict[str, Any], event: PipelineEvent, agent: str,
-               message: str, severity: EventSeverity = EventSeverity.INFO) -> None:
+def _log_event(
+    bundle_or_state: str | dict[str, Any],
+    event: PipelineEvent,
+    agent: str,
+    message: str,
+    severity: EventSeverity = EventSeverity.INFO,
+) -> None:
     logger.debug("[Graph] %s: %s", event.value, message)
 
     if isinstance(bundle_or_state, dict):
         bundle_id = bundle_or_state.get("bundle_id", "")
         entries = bundle_or_state.setdefault("audit_entries", [])
         from insureflow.models.audit import AuditEntry
+
         try:
             entry = AuditEntry(
                 entry_id=f"graph-{uuid4().hex[:8]}",

@@ -96,7 +96,9 @@ class SystemDiagnostics:
     def _check_llm(self) -> ComponentCheck:
         from insureflow.config import settings
 
-        has_openai = bool(settings.llm_api_key or settings.llm_cheap_api_key or settings.llm_expensive_api_key)
+        has_openai = bool(
+            settings.llm_api_key or settings.llm_cheap_api_key or settings.llm_expensive_api_key
+        )
         has_claude = bool(settings.claude_api_key)
 
         if has_openai or has_claude:
@@ -110,7 +112,11 @@ class SystemDiagnostics:
                     "provider": provider,
                     "cheap_model": settings.llm_cheap_model,
                     "expensive_model": settings.llm_expensive_model,
-                    "key_hint": _mask_key(settings.llm_api_key or settings.llm_cheap_api_key or settings.claude_api_key),
+                    "key_hint": _mask_key(
+                        settings.llm_api_key
+                        or settings.llm_cheap_api_key
+                        or settings.claude_api_key
+                    ),
                     "openai": has_openai,
                     "claude": has_claude,
                 },
@@ -167,6 +173,7 @@ class SystemDiagnostics:
             )
         try:
             import redis
+
             client = redis.from_url(url)
             client.ping()
             return ComponentCheck(
@@ -241,6 +248,7 @@ class SystemDiagnostics:
 
         try:
             import pdfminer  # noqa: F401
+
             pdfminer_ok = True
         except ImportError:
             pass
@@ -248,17 +256,20 @@ class SystemDiagnostics:
         try:
             import pytesseract  # noqa: F401
             from PIL import Image  # noqa: F401
+
             tesseract_py_ok = True
         except ImportError:
             pass
 
         try:
             import pdf2image  # noqa: F401
+
             pdf2image_ok = True
         except ImportError:
             pass
 
         import shutil
+
         tesseract_bin = shutil.which("tesseract") is not None
         details = {
             "pdfminer": pdfminer_ok,
@@ -281,7 +292,10 @@ class SystemDiagnostics:
                 status=CheckStatus.DEGRADED,
                 message="Text PDF OCR only — install pip install insureflow-ai[ocr] + system Tesseract for scans",
                 category="ingestion",
-                details={**details, "fix": "pip install -e \".[ocr]\" && brew install tesseract (macOS)"},
+                details={
+                    **details,
+                    "fix": 'pip install -e ".[ocr]" && brew install tesseract (macOS)',
+                },
             )
         return ComponentCheck(
             component="ocr",
@@ -360,6 +374,7 @@ class SystemDiagnostics:
 
     def _check_postgres(self) -> ComponentCheck:
         import os
+
         url = os.getenv("DATABASE_URL", "")
         if not url:
             return ComponentCheck(
@@ -371,6 +386,7 @@ class SystemDiagnostics:
             )
         try:
             import psycopg2
+
             conn = psycopg2.connect(url)
             conn.close()
             return ComponentCheck(
@@ -386,7 +402,7 @@ class SystemDiagnostics:
                 status=CheckStatus.DEGRADED,
                 message="DATABASE_URL set but psycopg2 not installed",
                 category="rag",
-                details={"fix": "pip install -e \".[pgvector]\""},
+                details={"fix": 'pip install -e ".[pgvector]"'},
             )
         except Exception as exc:
             return ComponentCheck(

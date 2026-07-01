@@ -52,6 +52,7 @@ def decode_access_token(
         if username is None:
             return None
         from insureflow.auth import Role
+
         return TokenData(username=username, role=Role(role) if role else None, org_id=org_id)
     except JWTError:
         return None

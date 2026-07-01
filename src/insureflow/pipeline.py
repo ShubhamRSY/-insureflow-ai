@@ -138,7 +138,9 @@ class UnderwritingPipeline:
                     "overall_status": reconciliation.overall_status if reconciliation else "failed",
                 },
                 "synthesis": {
-                    "human_review_required": synthesis.human_review_required if synthesis else False,
+                    "human_review_required": synthesis.human_review_required
+                    if synthesis
+                    else False,
                     "discrepancies_found": synthesis.discrepancies_found if synthesis else 0,
                 },
             },

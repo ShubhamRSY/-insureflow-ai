@@ -22,12 +22,11 @@ class UWDecisionAgent(ReActAgent):
 
     def __init__(self) -> None:
         from insureflow.llm.client import LLMClient
+
         super().__init__(llm=LLMClient(model_tier="expensive"))
         self._agent_results: dict[str, AgentResult] = {}
 
-    def run(
-        self, bundle: SubmissionBundle, **kwargs: Any
-    ) -> AgentResult:
+    def run(self, bundle: SubmissionBundle, **kwargs: Any) -> AgentResult:
         self._agent_results = kwargs.get("agent_results", {})
         return super().run(bundle, **kwargs)
 
@@ -37,40 +36,43 @@ class UWDecisionAgent(ReActAgent):
             all_findings.extend(result.findings)
 
         if not all_findings:
-            self._add_finding(Finding(
-                title="No findings from specialist agents",
-                description="All agents returned clean results — standard risk",
-                severity=RiskSeverity.LOW,
-                category="synthesis",
-            ))
+            self._add_finding(
+                Finding(
+                    title="No findings from specialist agents",
+                    description="All agents returned clean results — standard risk",
+                    severity=RiskSeverity.LOW,
+                    category="synthesis",
+                )
+            )
             return
 
         high_crit = [
-            f for f in all_findings
-            if f.severity in (RiskSeverity.CRITICAL, RiskSeverity.HIGH)
+            f for f in all_findings if f.severity in (RiskSeverity.CRITICAL, RiskSeverity.HIGH)
         ]
-        moderate = [
-            f for f in all_findings if f.severity == RiskSeverity.MODERATE
-        ]
+        moderate = [f for f in all_findings if f.severity == RiskSeverity.MODERATE]
 
         if any(f.severity == RiskSeverity.CRITICAL for f in high_crit):
-            self._add_finding(Finding(
-                title="Critical findings require declination",
-                description=f"{sum(1 for f in high_crit if f.severity == RiskSeverity.CRITICAL)} critical finding(s)",
-                severity=RiskSeverity.CRITICAL,
-                category="uw_decision",
-                evidence=[f.title for f in high_crit if f.severity == RiskSeverity.CRITICAL],
-            ))
+            self._add_finding(
+                Finding(
+                    title="Critical findings require declination",
+                    description=f"{sum(1 for f in high_crit if f.severity == RiskSeverity.CRITICAL)} critical finding(s)",
+                    severity=RiskSeverity.CRITICAL,
+                    category="uw_decision",
+                    evidence=[f.title for f in high_crit if f.severity == RiskSeverity.CRITICAL],
+                )
+            )
 
         score = self._calculate_aggregate_risk(all_findings)
         if score >= 0.7:
-            self._add_finding(Finding(
-                title="Elevated aggregate risk score",
-                description=f"Aggregate risk score {score:.2f} — "
-                            f"{len(high_crit)} high/critical + {len(moderate)} moderate findings",
-                severity=RiskSeverity.HIGH,
-                category="uw_decision",
-            ))
+            self._add_finding(
+                Finding(
+                    title="Elevated aggregate risk score",
+                    description=f"Aggregate risk score {score:.2f} — "
+                    f"{len(high_crit)} high/critical + {len(moderate)} moderate findings",
+                    severity=RiskSeverity.HIGH,
+                    category="uw_decision",
+                )
+            )
 
     def _calculate_aggregate_risk(self, findings: list[Finding]) -> float:
         if not findings:
@@ -80,12 +82,8 @@ class UWDecisionAgent(ReActAgent):
         return min(1.0, sum(scores) / len(scores))
 
     def _build_recommendation(self) -> Recommendation | None:
-        has_critical = any(
-            f.severity == RiskSeverity.CRITICAL for f in self._findings
-        )
-        has_high = any(
-            f.severity == RiskSeverity.HIGH for f in self._findings
-        )
+        has_critical = any(f.severity == RiskSeverity.CRITICAL for f in self._findings)
+        has_high = any(f.severity == RiskSeverity.HIGH for f in self._findings)
         score = self._calculate_aggregate_risk(self._findings)
 
         if has_critical:
@@ -100,16 +98,15 @@ class UWDecisionAgent(ReActAgent):
                 rationale=f"Aggregate risk score: {score:.2f}. {sum(1 for f in self._findings if f.severity == RiskSeverity.HIGH)} high-severity findings require UW review.",
                 suggested_premium_modification=1.15 if score > 0.6 else None,
                 conditions=[
-                    f.title for f in self._findings
+                    f.title
+                    for f in self._findings
                     if f.severity in (RiskSeverity.HIGH, RiskSeverity.CRITICAL)
                 ],
             )
         return Recommendation(
             action="accept",
             rationale=f"Acceptable risk profile. Aggregate risk score: {score:.2f}. No high-severity findings.",
-            conditions=[
-                f.title for f in self._findings if f.severity == RiskSeverity.MODERATE
-            ],
+            conditions=[f.title for f in self._findings if f.severity == RiskSeverity.MODERATE],
         )
 
     def produce_underwriting_memo(
@@ -154,7 +151,8 @@ class UWDecisionAgent(ReActAgent):
             review_notes=self._build_review_notes(all_findings),
             human_review_required=decision in (UWDecision.REFER, UWDecision.DECLINE),
             human_review_reasons=[
-                f.title for f in all_findings
+                f.title
+                for f in all_findings
                 if f.severity in (RiskSeverity.HIGH, RiskSeverity.CRITICAL)
             ],
             agent_results=results_map,
@@ -180,9 +178,7 @@ class UWDecisionAgent(ReActAgent):
             narrative += f" {critical + high} finding(s) require elevated attention."
         return narrative
 
-    def _agent_findings(
-        self, results: list[AgentResult], name: str
-    ) -> list[Finding]:
+    def _agent_findings(self, results: list[AgentResult], name: str) -> list[Finding]:
         for r in results:
             if r.agent_name == name:
                 return r.findings

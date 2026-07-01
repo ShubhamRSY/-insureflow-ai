@@ -31,9 +31,7 @@ def test_provenance_engine_verification(sample_bundle) -> None:
     engine = ProvenanceEngine()
     record = engine.build_provenance(sample_bundle)
 
-    status = engine.verify_against_authority(
-        record, "risk_profile.construction_type", "Masonry"
-    )
+    status = engine.verify_against_authority(record, "risk_profile.construction_type", "Masonry")
     assert status == VerificationStatus.VERIFIED
 
 

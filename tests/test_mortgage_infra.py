@@ -79,7 +79,9 @@ class TestLoanPricing:
             dti_ratio=35.0,
             ltv_ratio=80.0,
         )
-        quote = engine.quote(bundle, memo, loan_amount=400_000, product=LoanProduct.CONVENTIONAL_30_FIXED)
+        quote = engine.quote(
+            bundle, memo, loan_amount=400_000, product=LoanProduct.CONVENTIONAL_30_FIXED
+        )
         assert quote.adjusted_rate > 0
         assert quote.rate_lock_expires
         assert quote.monthly_pi > 0
@@ -133,7 +135,11 @@ class TestMortgageAPIIntegration:
 
         resp = client.post(
             "/mortgage/pipeline/run",
-            json={"directory": "simulated_documents/home_mortgage", "use_llm": False, "per_borrower": False},
+            json={
+                "directory": "simulated_documents/home_mortgage",
+                "use_llm": False,
+                "per_borrower": False,
+            },
             headers=headers,
         )
         assert resp.status_code == 202

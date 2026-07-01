@@ -34,7 +34,10 @@ EXAMPLES = Path(__file__).resolve().parent.parent / "examples"
 class TestInsuranceOCR:
     def test_classify_broker_slip(self) -> None:
         text = "UNDERWRITING SUBMISSION\nNamed Insured: Pacific Coast Distributors\nTIV: $4,350,000"
-        assert InsuranceDocumentClassifier.classify(text, "broker_slip.pdf") == InsuranceDocumentType.BROKER_SLIP
+        assert (
+            InsuranceDocumentClassifier.classify(text, "broker_slip.pdf")
+            == InsuranceDocumentType.BROKER_SLIP
+        )
 
     def test_extract_broker_slip_fields(self) -> None:
         text = "Named Insured: Pacific Coast Distributors, Inc.\nTIV: $4,350,000\nNAICS: 493120"
@@ -46,7 +49,9 @@ class TestInsuranceOCR:
 class TestInsuranceRating:
     def test_quote_from_bundle(self) -> None:
         bundle = SubmissionBundle(bundle_id="rate-test")
-        memo = UnderwritingMemo(bundle_id="rate-test", decision=UWDecision.ACCEPT, insured_name="Test Co")
+        memo = UnderwritingMemo(
+            bundle_id="rate-test", decision=UWDecision.ACCEPT, insured_name="Test Co"
+        )
         quote = InsuranceRatingEngine().quote(bundle, memo)
         assert quote.adjusted_premium > 0
         assert quote.policy_admin_reference.startswith("PA-")
@@ -60,8 +65,11 @@ class TestWorkflowSignOff:
         svc = WorkflowService(store=store)
         svc.submit_for_review("bundle-1", "test-org", "refer")
         record = svc.sign_off(
-            "bundle-1", "test-org", SignOffAction.APPROVE,
-            signed_by="jane.uw", license_number="UW-CA-12345",
+            "bundle-1",
+            "test-org",
+            SignOffAction.APPROVE,
+            signed_by="jane.uw",
+            license_number="UW-CA-12345",
         )
         assert record.state == WorkflowState.APPROVED
         assert record.sign_offs[0].license_number == "UW-CA-12345"
@@ -87,7 +95,9 @@ class TestRegulatoryAudit:
         logger = InsuranceAuditLogger(audit_store, enc, org_id="test-org")
 
         bundle = SubmissionBundle(bundle_id="audit-test")
-        memo = UnderwritingMemo(bundle_id="audit-test", decision=UWDecision.REFER, insured_name="Audit Co")
+        memo = UnderwritingMemo(
+            bundle_id="audit-test", decision=UWDecision.REFER, insured_name="Audit Co"
+        )
         logger.start("audit-test")
         paths = logger.persist(bundle, memo, extra={"status": "completed"})
         assert paths["underwriting_memo"]

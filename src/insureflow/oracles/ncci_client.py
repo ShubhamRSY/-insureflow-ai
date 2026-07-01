@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class NCCIExperienceMod:
     """Workers' compensation experience modification factor from NCCI."""
+
     mod_factor: float
     class_code: str
     class_code_description: str = ""
@@ -50,7 +51,9 @@ class NCCIResult:
 
     @property
     def worst_mod(self) -> NCCIExperienceMod | None:
-        return max(self.experience_mods, key=lambda m: m.mod_factor) if self.experience_mods else None
+        return (
+            max(self.experience_mods, key=lambda m: m.mod_factor) if self.experience_mods else None
+        )
 
     @property
     def summary(self) -> str:
@@ -71,7 +74,12 @@ class NCCIClient:
     Set ORACLE_MODE=live and provide a real API key for production use.
     """
 
-    def __init__(self, api_key: str = "", base_url: str = "https://api.ncci.com/experience/v2", mode: str = "simulated"):
+    def __init__(
+        self,
+        api_key: str = "",
+        base_url: str = "https://api.ncci.com/experience/v2",
+        mode: str = "simulated",
+    ):
         self.api_key = api_key
         self.base_url = base_url
         self.mode = mode
@@ -79,7 +87,12 @@ class NCCIClient:
 
     def query_by_fein(self, fein: str, legal_name: str = "") -> NCCIResult:
         if not self._enabled:
-            return NCCIResult(employer_name=legal_name, fein=fein, query_completed=False, error="NCCI API not configured")
+            return NCCIResult(
+                employer_name=legal_name,
+                fein=fein,
+                query_completed=False,
+                error="NCCI API not configured",
+            )
 
         if self.mode == "live":
             return self._call_live_api(fein, legal_name)
@@ -88,49 +101,57 @@ class NCCIClient:
         mods: list[NCCIExperienceMod] = []
 
         if "pacific" in name_lower or "marine" in name_lower:
-            mods.append(NCCIExperienceMod(
-                mod_factor=1.12,
-                class_code="8380",
-                class_code_description="Marine Cargo Handling",
-                expected_losses=120_000.0,
-                actual_losses=134_400.0,
-                primary_losses=45_000.0,
-                excess_losses=89_400.0,
-                payroll=3_200_000.0,
-            ))
+            mods.append(
+                NCCIExperienceMod(
+                    mod_factor=1.12,
+                    class_code="8380",
+                    class_code_description="Marine Cargo Handling",
+                    expected_losses=120_000.0,
+                    actual_losses=134_400.0,
+                    primary_losses=45_000.0,
+                    excess_losses=89_400.0,
+                    payroll=3_200_000.0,
+                )
+            )
         elif "construction" in name_lower or "veririsk" in name_lower:
-            mods.append(NCCIExperienceMod(
-                mod_factor=1.35,
-                class_code="5221",
-                class_code_description="Concrete or Cement Work",
-                expected_losses=180_000.0,
-                actual_losses=243_000.0,
-                primary_losses=68_000.0,
-                excess_losses=175_000.0,
-                payroll=4_500_000.0,
-            ))
+            mods.append(
+                NCCIExperienceMod(
+                    mod_factor=1.35,
+                    class_code="5221",
+                    class_code_description="Concrete or Cement Work",
+                    expected_losses=180_000.0,
+                    actual_losses=243_000.0,
+                    primary_losses=68_000.0,
+                    excess_losses=175_000.0,
+                    payroll=4_500_000.0,
+                )
+            )
         elif "northwind" in name_lower:
-            mods.append(NCCIExperienceMod(
-                mod_factor=0.88,
-                class_code="8810",
-                class_code_description="Clerical Office",
-                expected_losses=45_000.0,
-                actual_losses=39_600.0,
-                primary_losses=12_000.0,
-                excess_losses=27_600.0,
-                payroll=1_800_000.0,
-            ))
+            mods.append(
+                NCCIExperienceMod(
+                    mod_factor=0.88,
+                    class_code="8810",
+                    class_code_description="Clerical Office",
+                    expected_losses=45_000.0,
+                    actual_losses=39_600.0,
+                    primary_losses=12_000.0,
+                    excess_losses=27_600.0,
+                    payroll=1_800_000.0,
+                )
+            )
         else:
-            mods.append(NCCIExperienceMod(
-                mod_factor=1.00,
-                class_code="5555",
-                class_code_description="General Classification",
-                expected_losses=50_000.0,
-                actual_losses=50_000.0,
-                primary_losses=15_000.0,
-                excess_losses=35_000.0,
-                payroll=1_000_000.0,
-            ))
+            mods.append(
+                NCCIExperienceMod(
+                    mod_factor=1.00,
+                    class_code="5555",
+                    class_code_description="General Classification",
+                    expected_losses=50_000.0,
+                    actual_losses=50_000.0,
+                    primary_losses=15_000.0,
+                    excess_losses=35_000.0,
+                    payroll=1_000_000.0,
+                )
+            )
 
         return NCCIResult(
             employer_name=legal_name or fein,

@@ -14,27 +14,15 @@ class LLMClient:
         self._client: Any = None
 
         if model_tier == "cheap":
-            self.provider = (
-                settings.llm_cheap_provider or settings.llm_provider
-            )
+            self.provider = settings.llm_cheap_provider or settings.llm_provider
             self.model = settings.llm_cheap_model
-            self.api_key = (
-                settings.llm_cheap_api_key or settings.llm_api_key
-            )
-            self.base_url = (
-                settings.llm_cheap_base_url or settings.llm_base_url
-            )
+            self.api_key = settings.llm_cheap_api_key or settings.llm_api_key
+            self.base_url = settings.llm_cheap_base_url or settings.llm_base_url
         elif model_tier == "expensive":
-            self.provider = (
-                settings.llm_expensive_provider or settings.llm_provider
-            )
+            self.provider = settings.llm_expensive_provider or settings.llm_provider
             self.model = settings.llm_expensive_model
-            self.api_key = (
-                settings.llm_expensive_api_key or settings.llm_api_key
-            )
-            self.base_url = (
-                settings.llm_expensive_base_url or settings.llm_base_url
-            )
+            self.api_key = settings.llm_expensive_api_key or settings.llm_api_key
+            self.base_url = settings.llm_expensive_base_url or settings.llm_base_url
         else:
             self.provider = settings.llm_provider
             self.model = settings.llm_model
@@ -52,6 +40,7 @@ class LLMClient:
 
         if provider == "openai" or provider == "vllm":
             from openai import OpenAI
+
             client_kwargs: dict[str, Any] = {
                 "api_key": self.api_key or "sk-local",
             }
@@ -63,14 +52,11 @@ class LLMClient:
             try:
                 from anthropic import Anthropic
             except ImportError:
-                raise ImportError(
-                    "Anthropic package required. Install: pip install anthropic"
-                )
+                raise ImportError("Anthropic package required. Install: pip install anthropic")
             api_key = self.api_key or settings.claude_api_key
             if not api_key:
                 raise ValueError(
-                    "Claude API key required. Set ANTHROPIC_API_KEY, "
-                    "CLAUDE_API_KEY, or LLM_API_KEY"
+                    "Claude API key required. Set ANTHROPIC_API_KEY, CLAUDE_API_KEY, or LLM_API_KEY"
                 )
             kwargs: dict[str, Any] = {"api_key": api_key}
             if self.base_url:
@@ -160,10 +146,7 @@ class LLMClient:
 
         if provider in ("openai", "vllm"):
             # Using OpenAI's standard embedding model
-            response = client.embeddings.create(
-                input=text,
-                model="text-embedding-3-small"
-            )
+            response = client.embeddings.create(input=text, model="text-embedding-3-small")
             return response.data[0].embedding
 
         # Fallback for non-supported providers during local testing

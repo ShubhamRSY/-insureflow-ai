@@ -8,7 +8,8 @@ from insureflow.lending.models import (
 
 class LendingRiskEngine:
     def analyze(
-        self, application: BusinessLoanApplication | ConsumerLoanApplication,
+        self,
+        application: BusinessLoanApplication | ConsumerLoanApplication,
     ) -> CreditAnalysis:
         if isinstance(application, BusinessLoanApplication):
             return self._analyze_business(application)
@@ -32,8 +33,11 @@ class LendingRiskEngine:
                 analysis.strengths.append(f"Strong liquidity {current_ratio:.2f}x")
 
         if fin.total_liabilities > 0 and fin.total_assets > 0:
-            leverage = fin.total_liabilities / fin.shareholder_equity \
-                if fin.shareholder_equity > 0 else 999
+            leverage = (
+                fin.total_liabilities / fin.shareholder_equity
+                if fin.shareholder_equity > 0
+                else 999
+            )
             analysis.leverage_ratio = leverage
             ratios.append(f"Leverage {leverage:.2f}x")
             if leverage > 4.0:

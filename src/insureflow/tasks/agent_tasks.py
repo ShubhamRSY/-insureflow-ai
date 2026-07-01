@@ -61,9 +61,7 @@ def supervisor_consolidate(
     uw_result = uw_agent.run(bundle, agent_results=agents_map)
     parsed_results.append(uw_result)
 
-    memo = supervisor.uw_decision.produce_underwriting_memo(
-        bundle, parsed_results, uw_result
-    )
+    memo = supervisor.uw_decision.produce_underwriting_memo(bundle, parsed_results, uw_result)
     conflict_resolution = supervisor._resolve_conflicts(parsed_results)
     if conflict_resolution:
         memo.review_notes.extend(conflict_resolution)

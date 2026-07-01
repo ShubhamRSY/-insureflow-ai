@@ -19,7 +19,8 @@ from insureflow.lending.risk import LendingRiskEngine
 
 AUDIT_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-    "audit_logs", "lending",
+    "audit_logs",
+    "lending",
 )
 os.makedirs(AUDIT_DIR, exist_ok=True)
 
@@ -59,7 +60,9 @@ class LendingPipeline:
             )
             timeline.append(
                 self._record(
-                    "compliance", "blocked", run_id,
+                    "compliance",
+                    "blocked",
+                    run_id,
                     {"reason": "critical_violations", "violations": critical_violations},
                 ),
             )
@@ -68,9 +71,14 @@ class LendingPipeline:
             return result
 
         risk_analysis = self._risk.analyze(application)
-        timeline.append(self._record("risk", "completed", run_id,
-                                      {"score": risk_analysis.overall_risk_score,
-                                       "rating": risk_analysis.risk_rating}))
+        timeline.append(
+            self._record(
+                "risk",
+                "completed",
+                run_id,
+                {"score": risk_analysis.overall_risk_score, "rating": risk_analysis.risk_rating},
+            )
+        )
 
         if documents:
             self._ingest_documents(application, documents)
@@ -78,20 +86,29 @@ class LendingPipeline:
         timeline.append(self._record("documents", "ingested", run_id, {"count": doc_count}))
 
         pricing = self._pricing.price(
-            application.product_type, risk_analysis, application.requested_term_months,
+            application.product_type,
+            risk_analysis,
+            application.requested_term_months,
         )
         timeline.append(
             self._record(
-                "pricing", "completed", run_id,
-                {"final_rate": pricing.final_rate, "base_rate": pricing.base_rate,
-                 "risk_spread": pricing.risk_spread},
+                "pricing",
+                "completed",
+                run_id,
+                {
+                    "final_rate": pricing.final_rate,
+                    "base_rate": pricing.base_rate,
+                    "risk_spread": pricing.risk_spread,
+                },
             ),
         )
 
         decision, approved_amount = self._make_decision(application, risk_analysis)
         timeline.append(
             self._record(
-                "decision", "completed", run_id,
+                "decision",
+                "completed",
+                run_id,
                 {"decision": decision.value, "approved_amount": approved_amount},
             ),
         )
@@ -135,8 +152,13 @@ class LendingPipeline:
         return result
 
     def _record(self, phase: str, status: str, run_id: str, data: Any) -> dict:
-        return {"phase": phase, "status": status, "run_id": run_id, "data": str(data)[:200],
-                "timestamp": datetime.now(timezone.utc).isoformat()}
+        return {
+            "phase": phase,
+            "status": status,
+            "run_id": run_id,
+            "data": str(data)[:200],
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
 
     def _make_decision(
         self,
@@ -196,8 +218,11 @@ class LendingPipeline:
     ) -> None:
         if not documents:
             return
-        vertical = "business_lending" if isinstance(application, BusinessLoanApplication) \
+        vertical = (
+            "business_lending"
+            if isinstance(application, BusinessLoanApplication)
             else "consumer_lending"
+        )
         self._analytics.record(
             bundle_id=run_id,
             vertical=vertical,

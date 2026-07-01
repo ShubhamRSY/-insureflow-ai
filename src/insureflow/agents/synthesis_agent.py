@@ -31,7 +31,11 @@ class SynthesisAgent:
         provenance_summary: dict[str, Any] = {}
 
         for field_path, field_result in reconciliation_result.field_reconciliation.items():
-            field_name = field_path.replace("risk_profile.", "").replace("location.", "").replace("financial.", "")
+            field_name = (
+                field_path.replace("risk_profile.", "")
+                .replace("location.", "")
+                .replace("financial.", "")
+            )
             profile[field_name] = field_result.get("resolved_value")
             confidence[field_path] = field_result.get("confidence", 0.0)
             provenance_summary[field_path] = {
@@ -45,9 +49,7 @@ class SynthesisAgent:
 
                 context = {
                     "field_reconciliation": reconciliation_result.field_reconciliation,
-                    "discrepancies": [
-                        d.model_dump() for d in reconciliation_result.discrepancies
-                    ],
+                    "discrepancies": [d.model_dump() for d in reconciliation_result.discrepancies],
                     "match_rate": reconciliation_result.match_rate,
                     "overall_status": reconciliation_result.overall_status,
                     "rag_context": rag_context,

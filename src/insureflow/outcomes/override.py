@@ -39,6 +39,7 @@ class CoverageDelta(BaseModel):
 
 class OverrideDetail(BaseModel):
     """Structured record of a single UW override of the AI recommendation."""
+
     override_id: str
     sign_off_id: str
     bundle_id: str
@@ -62,6 +63,7 @@ class OverrideDetail(BaseModel):
 
 class OverridePattern(BaseModel):
     """An aggregated pattern detected across multiple UW overrides."""
+
     pattern_id: str
     description: str
     reason_categories: list[OverrideReasonCategory] = Field(default_factory=list)

@@ -48,7 +48,9 @@ def _parse_llm_json_findings(raw: str, category: str) -> list[MortgageFinding]:
     return []
 
 
-def _collect_doc_text(bundle: MortgageBundle, *doc_types: MortgageDocumentType, max_chars: int = 12000) -> str:
+def _collect_doc_text(
+    bundle: MortgageBundle, *doc_types: MortgageDocumentType, max_chars: int = 12000
+) -> str:
     parts: list[str] = []
     for dt in doc_types:
         for d in bundle.documents_by_type(dt):
@@ -87,31 +89,42 @@ class MortgageIncomeAgent:
                 logger.warning("LLM income analysis failed: %s", exc)
 
         if not bundle.income:
-            findings.append(MortgageFinding(
-                title="Missing income documentation",
-                description="No qualifying income could be calculated from loan package",
-                severity="critical",
-                category="income",
-            ))
-            return MortgageAgentResult(agent_name=self.agent_name, findings=findings, risk_score=0.9, summary="Income verification failed")
+            findings.append(
+                MortgageFinding(
+                    title="Missing income documentation",
+                    description="No qualifying income could be calculated from loan package",
+                    severity="critical",
+                    category="income",
+                )
+            )
+            return MortgageAgentResult(
+                agent_name=self.agent_name,
+                findings=findings,
+                risk_score=0.9,
+                summary="Income verification failed",
+            )
 
         if bundle.income.self_employment_income > 0:
-            findings.append(MortgageFinding(
-                title="Self-employment income present",
-                description=f"Schedule C / business income ${bundle.income.self_employment_income:,.0f} requires 2-year averaging",
-                severity="moderate",
-                category="income",
-            ))
+            findings.append(
+                MortgageFinding(
+                    title="Self-employment income present",
+                    description=f"Schedule C / business income ${bundle.income.self_employment_income:,.0f} requires 2-year averaging",
+                    severity="moderate",
+                    category="income",
+                )
+            )
 
         for issue in bundle.reconciliation_issues:
             if issue.rule_id == "W2_1040_WAGE_MATCH":
-                findings.append(MortgageFinding(
-                    title="W-2 / tax return wage mismatch",
-                    description=f"{issue.value_a} vs {issue.value_b}",
-                    severity="high",
-                    category="income",
-                    document_refs=[issue.source_a, issue.source_b],
-                ))
+                findings.append(
+                    MortgageFinding(
+                        title="W-2 / tax return wage mismatch",
+                        description=f"{issue.value_a} vs {issue.value_b}",
+                        severity="high",
+                        category="income",
+                        document_refs=[issue.source_a, issue.source_b],
+                    )
+                )
 
         risk = 0.3 if not findings else 0.6
         return MortgageAgentResult(
@@ -151,28 +164,77 @@ class MortgageCreditAgent:
                 logger.warning("LLM credit analysis failed: %s", exc)
 
         if not bundle.credit:
-            findings.append(MortgageFinding(title="No credit report", description="Credit profile unavailable", severity="critical", category="credit"))
-            return MortgageAgentResult(agent_name=self.agent_name, findings=findings, risk_score=0.85, summary="Credit analysis incomplete")
+            findings.append(
+                MortgageFinding(
+                    title="No credit report",
+                    description="Credit profile unavailable",
+                    severity="critical",
+                    category="credit",
+                )
+            )
+            return MortgageAgentResult(
+                agent_name=self.agent_name,
+                findings=findings,
+                risk_score=0.85,
+                summary="Credit analysis incomplete",
+            )
 
         score = bundle.credit.credit_score
         if not score:
-            findings.append(MortgageFinding(
-                title="Credit score not extracted",
-                description="Credit report present but qualifying score could not be parsed — manual review",
-                severity="moderate",
-                category="credit",
-            ))
+            findings.append(
+                MortgageFinding(
+                    title="Credit score not extracted",
+                    description="Credit report present but qualifying score could not be parsed — manual review",
+                    severity="moderate",
+                    category="credit",
+                )
+            )
         elif score >= 740:
-            findings.append(MortgageFinding(title="Strong credit score", description=f"Score {score}", severity="low", category="credit"))
+            findings.append(
+                MortgageFinding(
+                    title="Strong credit score",
+                    description=f"Score {score}",
+                    severity="low",
+                    category="credit",
+                )
+            )
         elif score >= 680:
-            findings.append(MortgageFinding(title="Acceptable credit score", description=f"Score {score}", severity="low", category="credit"))
+            findings.append(
+                MortgageFinding(
+                    title="Acceptable credit score",
+                    description=f"Score {score}",
+                    severity="low",
+                    category="credit",
+                )
+            )
         elif score >= 620:
-            findings.append(MortgageFinding(title="Marginal credit score", description=f"Score {score} — near minimum", severity="moderate", category="credit"))
+            findings.append(
+                MortgageFinding(
+                    title="Marginal credit score",
+                    description=f"Score {score} — near minimum",
+                    severity="moderate",
+                    category="credit",
+                )
+            )
         else:
-            findings.append(MortgageFinding(title="Below minimum credit score", description=f"Score {score}", severity="critical", category="credit"))
+            findings.append(
+                MortgageFinding(
+                    title="Below minimum credit score",
+                    description=f"Score {score}",
+                    severity="critical",
+                    category="credit",
+                )
+            )
 
         for flag in bundle.credit.derogatory_flags:
-            findings.append(MortgageFinding(title="Credit risk flag", description=flag, severity="moderate", category="credit"))
+            findings.append(
+                MortgageFinding(
+                    title="Credit risk flag",
+                    description=flag,
+                    severity="moderate",
+                    category="credit",
+                )
+            )
 
         risk = max(0.2, 1.0 - (score / 850)) if score else 0.8
         return MortgageAgentResult(
@@ -211,25 +273,41 @@ class MortgageAssetAgent:
                 logger.warning("LLM asset analysis failed: %s", exc)
 
         if not bundle.assets:
-            findings.append(MortgageFinding(title="No asset verification", description="Bank statements not found", severity="high", category="assets"))
-            return MortgageAgentResult(agent_name=self.agent_name, findings=findings, risk_score=0.7, summary="Asset verification incomplete")
+            findings.append(
+                MortgageFinding(
+                    title="No asset verification",
+                    description="Bank statements not found",
+                    severity="high",
+                    category="assets",
+                )
+            )
+            return MortgageAgentResult(
+                agent_name=self.agent_name,
+                findings=findings,
+                risk_score=0.7,
+                summary="Asset verification incomplete",
+            )
 
         if bundle.assets.gift_funds > 0:
-            findings.append(MortgageFinding(
-                title="Gift funds identified",
-                description=f"${bundle.assets.gift_funds:,.0f} — verify source and seasoning",
-                severity="moderate",
-                category="assets",
-            ))
+            findings.append(
+                MortgageFinding(
+                    title="Gift funds identified",
+                    description=f"${bundle.assets.gift_funds:,.0f} — verify source and seasoning",
+                    severity="moderate",
+                    category="assets",
+                )
+            )
 
         reserves = bundle.assets.total_liquid_assets
         severity = "low" if reserves >= 20000 else "moderate" if reserves >= 5000 else "high"
-        findings.append(MortgageFinding(
-            title="Liquid reserves",
-            description=f"${reserves:,.0f} across {len(bundle.assets.accounts)} account(s)",
-            severity=severity,
-            category="assets",
-        ))
+        findings.append(
+            MortgageFinding(
+                title="Liquid reserves",
+                description=f"${reserves:,.0f} across {len(bundle.assets.accounts)} account(s)",
+                severity=severity,
+                category="assets",
+            )
+        )
 
         return MortgageAgentResult(
             agent_name=self.agent_name,
@@ -272,23 +350,44 @@ class MortgageCollateralAgent:
                 rent_rolls = bundle.documents_by_type(MortgageDocumentType.RENT_ROLL)
                 if rent_rolls:
                     rr = rent_rolls[0]
-                    findings.append(MortgageFinding(
-                        title="Commercial rent roll parsed",
-                        description=f"{rr.get_field('unit_count')} units, ${rr.get_float('total_monthly_rent'):,.0f}/mo rent",
-                        severity="low",
-                        category="collateral",
-                    ))
-                    return MortgageAgentResult(agent_name=self.agent_name, findings=findings, risk_score=0.4, summary="Commercial collateral from rent roll")
-            findings.append(MortgageFinding(title="No collateral data", description="Appraisal or purchase agreement missing", severity="high", category="collateral"))
-            return MortgageAgentResult(agent_name=self.agent_name, findings=findings, risk_score=0.75, summary="Collateral analysis incomplete")
+                    findings.append(
+                        MortgageFinding(
+                            title="Commercial rent roll parsed",
+                            description=f"{rr.get_field('unit_count')} units, ${rr.get_float('total_monthly_rent'):,.0f}/mo rent",
+                            severity="low",
+                            category="collateral",
+                        )
+                    )
+                    return MortgageAgentResult(
+                        agent_name=self.agent_name,
+                        findings=findings,
+                        risk_score=0.4,
+                        summary="Commercial collateral from rent roll",
+                    )
+            findings.append(
+                MortgageFinding(
+                    title="No collateral data",
+                    description="Appraisal or purchase agreement missing",
+                    severity="high",
+                    category="collateral",
+                )
+            )
+            return MortgageAgentResult(
+                agent_name=self.agent_name,
+                findings=findings,
+                risk_score=0.75,
+                summary="Collateral analysis incomplete",
+            )
 
         if bundle.collateral.ltv > 80:
-            findings.append(MortgageFinding(
-                title="High LTV",
-                description=f"LTV {bundle.collateral.ltv:.1f}% — PMI or additional down payment required",
-                severity="moderate",
-                category="collateral",
-            ))
+            findings.append(
+                MortgageFinding(
+                    title="High LTV",
+                    description=f"LTV {bundle.collateral.ltv:.1f}% — PMI or additional down payment required",
+                    severity="moderate",
+                    category="collateral",
+                )
+            )
 
         return MortgageAgentResult(
             agent_name=self.agent_name,
@@ -313,13 +412,15 @@ class MortgageFraudDetectionAgent:
                     if v_a > 0:
                         pct = abs(v_a - v_b) / v_a * 100
                         if pct > 10:
-                            findings.append(MortgageFinding(
-                                title="W-2 / 1040 wage discrepancy > 10%",
-                                description=f"{pct:.1f}% difference: ${v_a:,.0f} vs ${v_b:,.0f}",
-                                severity="high",
-                                category="fraud",
-                                document_refs=[issue.source_a, issue.source_b],
-                            ))
+                            findings.append(
+                                MortgageFinding(
+                                    title="W-2 / 1040 wage discrepancy > 10%",
+                                    description=f"{pct:.1f}% difference: ${v_a:,.0f} vs ${v_b:,.0f}",
+                                    severity="high",
+                                    category="fraud",
+                                    document_refs=[issue.source_a, issue.source_b],
+                                )
+                            )
                 except (ValueError, TypeError):
                     pass
 
@@ -327,21 +428,25 @@ class MortgageFraudDetectionAgent:
         if bundle.borrowers:
             addresses = {b.address for b in bundle.borrowers if b.address}
             if len(addresses) > 1:
-                findings.append(MortgageFinding(
-                    title="Address mismatch across borrowers",
-                    description=f"Multiple addresses found: {', '.join(addresses)}",
-                    severity="high",
-                    category="fraud",
-                ))
+                findings.append(
+                    MortgageFinding(
+                        title="Address mismatch across borrowers",
+                        description=f"Multiple addresses found: {', '.join(addresses)}",
+                        severity="high",
+                        category="fraud",
+                    )
+                )
 
         # 3. Large gift funds >= $25k
         if bundle.assets and bundle.assets.gift_funds >= 25000:
-            findings.append(MortgageFinding(
-                title="Large gift funds detected",
-                description=f"${bundle.assets.gift_funds:,.0f} in gift funds — verify source, donor relationship, and seasoning",
-                severity="high",
-                category="fraud",
-            ))
+            findings.append(
+                MortgageFinding(
+                    title="Large gift funds detected",
+                    description=f"${bundle.assets.gift_funds:,.0f} in gift funds — verify source, donor relationship, and seasoning",
+                    severity="high",
+                    category="fraud",
+                )
+            )
 
         # 4. Missing key underwriting documents
         missing_map = {
@@ -349,14 +454,18 @@ class MortgageFraudDetectionAgent:
             MortgageDocumentType.TAX_RETURN_1040: "Tax Return (1040)",
             MortgageDocumentType.CREDIT_REPORT: "Credit Report",
         }
-        missing_docs = [name for dt, name in missing_map.items() if not bundle.documents_by_type(dt)]
+        missing_docs = [
+            name for dt, name in missing_map.items() if not bundle.documents_by_type(dt)
+        ]
         if missing_docs:
-            findings.append(MortgageFinding(
-                title="Missing critical underwriting documents",
-                description=", ".join(missing_docs),
-                severity="high" if len(missing_docs) >= 2 else "moderate",
-                category="fraud",
-            ))
+            findings.append(
+                MortgageFinding(
+                    title="Missing critical underwriting documents",
+                    description=", ".join(missing_docs),
+                    severity="high" if len(missing_docs) >= 2 else "moderate",
+                    category="fraud",
+                )
+            )
 
         # 5. Suspicious bank statement patterns (rule-based heuristic)
         if bundle.assets and bundle.assets.accounts:
@@ -371,18 +480,22 @@ class MortgageFraudDetectionAgent:
                         except (ValueError, TypeError):
                             pass
             if large_round_deposits >= 3:
-                findings.append(MortgageFinding(
-                    title="Suspicious round-number deposits",
-                    description=f"{large_round_deposits} round deposits >= $5,000 — possible structured deposits",
-                    severity="high",
-                    category="fraud",
-                ))
+                findings.append(
+                    MortgageFinding(
+                        title="Suspicious round-number deposits",
+                        description=f"{large_round_deposits} round deposits >= $5,000 — possible structured deposits",
+                        severity="high",
+                        category="fraud",
+                    )
+                )
 
         # 6. LLM fraud analysis on all documents
         llm_findings = self._llm_fraud_analysis(bundle)
         findings.extend(llm_findings)
 
-        risk = min(1.0, len([f for f in findings if f.severity in ("high", "critical")]) * 0.2 + 0.1)
+        risk = min(
+            1.0, len([f for f in findings if f.severity in ("high", "critical")]) * 0.2 + 0.1
+        )
         return MortgageAgentResult(
             agent_name=self.agent_name,
             findings=findings,
@@ -431,7 +544,9 @@ class MortgageDecisionAgent:
 
         critical = [f for f in all_findings if f.severity == "critical"]
         high = [f for f in all_findings if f.severity == "high"]
-        fraud_critical = [f for f in all_findings if f.category == "fraud" and f.severity == "critical"]
+        fraud_critical = [
+            f for f in all_findings if f.category == "fraud" and f.severity == "critical"
+        ]
         fraud_high = [f for f in all_findings if f.category == "fraud" and f.severity == "high"]
         critical_violations = [v for v in bundle.compliance_violations if v.severity == "critical"]
 
@@ -470,11 +585,17 @@ class MortgageDecisionAgent:
             dti_ratio=dti,
             ltv_ratio=bundle.collateral.ltv if bundle.collateral else None,
             summary=f"Decision: {decision.value.upper()} | {len(all_findings)} findings | {len(bundle.compliance_violations)} compliance checks",
-            key_findings=sorted(all_findings, key=lambda f: {"critical": 0, "high": 1, "moderate": 2, "low": 3}.get(f.severity, 4))[:10],
+            key_findings=sorted(
+                all_findings,
+                key=lambda f: {"critical": 0, "high": 1, "moderate": 2, "low": 3}.get(
+                    f.severity, 4
+                ),
+            )[:10],
             reconciliation_issues=bundle.reconciliation_issues,
             compliance_violations=bundle.compliance_violations,
             conditions=conditions,
-            human_review_required=decision in (MortgageDecision.REFER, MortgageDecision.SUSPEND, MortgageDecision.DENY),
+            human_review_required=decision
+            in (MortgageDecision.REFER, MortgageDecision.SUSPEND, MortgageDecision.DENY),
         )
 
 

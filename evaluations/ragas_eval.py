@@ -16,9 +16,13 @@ import types as _types
 
 _MOD = _types.ModuleType("langchain_community.chat_models.vertexai")
 
+
 class _DummyChatVertexAI:
     _llm_type = "dummy"
-    def __init__(self, **kwargs: Any) -> None: pass
+
+    def __init__(self, **kwargs: Any) -> None:
+        pass
+
 
 _MOD.ChatVertexAI = _DummyChatVertexAI
 
@@ -41,7 +45,8 @@ def _avg(key: str, scores: list[dict[str, Any]]) -> float:
 
 
 def _extract_per_case_scores(
-    score: EvaluationResult, cases: list,
+    score: EvaluationResult,
+    cases: list,
 ) -> list[dict[str, Any]]:
     return [
         {
@@ -62,6 +67,7 @@ def _ensure_rag() -> None:
     global _RAG_INITIALIZED
     if not _RAG_INITIALIZED:
         from insureflow.rag.rag_agent import RAGAgent
+
         agent = RAGAgent()
         agent.ensure_indexed()
         _RAG_INITIALIZED = True
@@ -70,6 +76,7 @@ def _ensure_rag() -> None:
 def _run_pipeline_for_sample(case) -> dict[str, Any]:
     """Run the pipeline and return a dict with synthesis + expected fields."""
     from insureflow.pipeline import UnderwritingPipeline
+
     pipeline = UnderwritingPipeline()
     raw = pipeline.run(acord_xml=case.acord_xml, bundle_id=case.name)
 
@@ -202,14 +209,20 @@ def evaluate_ragas(output_path: str | None = None) -> dict[str, Any]:
             sample = _build_sample(case, pipeline_data)
             if sample is not None:
                 samples.append(sample)
-                case_details.append({
-                    "case": case.name,
-                    "has_sample": True,
-                    "context_count": len(sample.retrieved_contexts),
-                    "answer_len": len(sample.response),
-                })
-                logger.info("[%s] sample built (ctx=%d, ans=%d)",
-                           case.name, len(sample.retrieved_contexts), len(sample.response))
+                case_details.append(
+                    {
+                        "case": case.name,
+                        "has_sample": True,
+                        "context_count": len(sample.retrieved_contexts),
+                        "answer_len": len(sample.response),
+                    }
+                )
+                logger.info(
+                    "[%s] sample built (ctx=%d, ans=%d)",
+                    case.name,
+                    len(sample.retrieved_contexts),
+                    len(sample.response),
+                )
             else:
                 logger.warning("[%s] empty profile, skipped", case.name)
                 errors.append({"case": case.name, "reason": "empty profile"})
@@ -220,16 +233,25 @@ def evaluate_ragas(output_path: str | None = None) -> dict[str, Any]:
     if not samples:
         msg = "No Ragas samples generated (all empty answers)."
         logger.warning(msg)
-        return {"framework": "ragas", "total_cases": len(cases), "samples": 0, "error": msg, "errors": errors}
+        return {
+            "framework": "ragas",
+            "total_cases": len(cases),
+            "samples": 0,
+            "error": msg,
+            "errors": errors,
+        }
 
     dataset = EvaluationDataset(samples=samples)
 
     # Check if we have an LLM API key — Ragas needs one for LLM-based metrics
     import os
+
     has_llm = bool(os.getenv("OPENAI_API_KEY") or os.getenv("LLM_API_KEY"))
 
     if has_llm:
-        logger.info("Computing Ragas metrics (faithfulness, relevancy, context precision/recall)...")
+        logger.info(
+            "Computing Ragas metrics (faithfulness, relevancy, context precision/recall)..."
+        )
         score: EvaluationResult = ragas_evaluate(
             dataset=dataset,
             metrics=[faithfulness, answer_relevancy, context_precision, context_recall],
@@ -238,15 +260,21 @@ def evaluate_ragas(output_path: str | None = None) -> dict[str, Any]:
         per_case = _extract_per_case_scores(score, cases)
         metrics = {
             "faithfulness": {"avg": _avg("faithfulness", score.scores), "per_case": per_case},
-            "answer_relevancy": {"avg": _avg("answer_relevancy", score.scores), "per_case": per_case},
-            "context_precision": {"avg": _avg("context_precision", score.scores), "per_case": per_case},
+            "answer_relevancy": {
+                "avg": _avg("answer_relevancy", score.scores),
+                "per_case": per_case,
+            },
+            "context_precision": {
+                "avg": _avg("context_precision", score.scores),
+                "per_case": per_case,
+            },
             "context_recall": {"avg": _avg("context_recall", score.scores), "per_case": per_case},
         }
-        overall = round(
-            sum(m["avg"] for m in metrics.values()) / 4, 4
-        )
+        overall = round(sum(m["avg"] for m in metrics.values()) / 4, 4)
     else:
-        logger.warning("No LLM API key set — Ragas LLM-based metrics require OPENAI_API_KEY or LLM_API_KEY.")
+        logger.warning(
+            "No LLM API key set — Ragas LLM-based metrics require OPENAI_API_KEY or LLM_API_KEY."
+        )
         logger.info("Computing RAG context stats only (no LLM judge).")
         # Non-LLM fallback: compute context statistics
         per_case = [
@@ -282,6 +310,7 @@ def evaluate_ragas(output_path: str | None = None) -> dict[str, Any]:
 
     if output_path:
         import pathlib
+
         pathlib.Path(output_path).write_text(json.dumps(summary, indent=2, default=str))
         logger.info("Written to %s", output_path)
 

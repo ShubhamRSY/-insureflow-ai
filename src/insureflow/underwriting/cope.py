@@ -14,27 +14,28 @@ from typing import Optional
 
 
 class ConstructionClass(str, Enum):
-    FRAME = "frame"           # Wood frame — highest fire risk
+    FRAME = "frame"  # Wood frame — highest fire risk
     JOISTED_MASONRY = "joisted_masonry"  # Masonry walls, wood roof
     MASONRY_NON_COMBUSTIBLE = "masonry_non_combustible"  # Masonry walls, steel roof
     MODIFIED_FIRE_RESISTIVE = "modified_fire_resistive"  # Masonry with fire protection
-    FIRE_RESISTIVE = "fire_resistive"   # Reinforced concrete/steel with fireproofing
+    FIRE_RESISTIVE = "fire_resistive"  # Reinforced concrete/steel with fireproofing
 
 
 class OccupancyClass(str, Enum):
-    MERCANTILE = "mercantile"          # Retail stores, restaurants
-    OFFICE = "office"                  # Professional offices
-    MANUFACTURING = "manufacturing"    # Factories, assembly plants
-    WAREHOUSE = "warehouse"            # Storage, distribution
-    LODGING = "lodging"                # Hotels, motels
-    INSTITUTIONAL = "institutional"    # Schools, churches, hospitals
-    HABITATIONAL = "habitational"      # Apartment buildings
-    SERVICE = "service"                # Repair shops, cleaners, auto
-    SPECIAL = "special"                # Theaters, bowling alleys
+    MERCANTILE = "mercantile"  # Retail stores, restaurants
+    OFFICE = "office"  # Professional offices
+    MANUFACTURING = "manufacturing"  # Factories, assembly plants
+    WAREHOUSE = "warehouse"  # Storage, distribution
+    LODGING = "lodging"  # Hotels, motels
+    INSTITUTIONAL = "institutional"  # Schools, churches, hospitals
+    HABITATIONAL = "habitational"  # Apartment buildings
+    SERVICE = "service"  # Repair shops, cleaners, auto
+    SPECIAL = "special"  # Theaters, bowling alleys
 
 
 class ProtectionClass(int, Enum):
     """ISO Protection Class 1 (best) through 10 (worst)."""
+
     PC_1 = 1
     PC_2 = 2
     PC_3 = 3
@@ -61,21 +62,21 @@ class ExposureType(str, Enum):
 
 
 class RiskGrade(str, Enum):
-    PREFERRED = "preferred"       # Best risks, lowest rate
-    STANDARD = "standard"         # Acceptable risks, standard rate
-    NON_STANDARD = "non_standard" # Higher risk, surcharged rate
-    DECLINED = "declined"         # Cannot write
+    PREFERRED = "preferred"  # Best risks, lowest rate
+    STANDARD = "standard"  # Acceptable risks, standard rate
+    NON_STANDARD = "non_standard"  # Higher risk, surcharged rate
+    DECLINED = "declined"  # Cannot write
 
 
 @dataclass
 class COPEScore:
-    construction_score: float = 0.0   # 0.0 (best) to 1.0 (worst)
+    construction_score: float = 0.0  # 0.0 (best) to 1.0 (worst)
     occupancy_score: float = 0.0
     protection_score: float = 0.0
     exposure_score: float = 0.0
     total_score: float = 0.0
     risk_grade: RiskGrade = RiskGrade.STANDARD
-    schedule_mod_pct: float = 0.0     # Debit (+) or credit (-) from schedule rating
+    schedule_mod_pct: float = 0.0  # Debit (+) or credit (-) from schedule rating
 
     construction_mod_pct: float = 0.0
     occupancy_mod_pct: float = 0.0
@@ -104,8 +105,16 @@ OCCUPANCY_MODIFIERS: dict[OccupancyClass, float] = {
 }
 
 PROTECTION_MODIFIERS: dict[int, float] = {
-    1: -15.0, 2: -10.0, 3: -5.0, 4: 0.0, 5: 5.0,
-    6: 10.0, 7: 15.0, 8: 20.0, 9: 25.0, 10: 35.0,
+    1: -15.0,
+    2: -10.0,
+    3: -5.0,
+    4: 0.0,
+    5: 5.0,
+    6: 10.0,
+    7: 15.0,
+    8: 20.0,
+    9: 25.0,
+    10: 35.0,
 }
 
 EXPOSURE_MODIFIERS: dict[ExposureType, float] = {
@@ -260,18 +269,28 @@ def analyze_cope(
     c_score = 0.0
     if c_class in (ConstructionClass.FRAME, ConstructionClass.JOISTED_MASONRY):
         c_score = 0.8
-        result.construction_detail = f"Frame construction is highest fire risk; applies +{c_mod:.0f}% schedule debit"
+        result.construction_detail = (
+            f"Frame construction is highest fire risk; applies +{c_mod:.0f}% schedule debit"
+        )
     elif c_class in (ConstructionClass.MASONRY_NON_COMBUSTIBLE,):
         c_score = 0.4
-        result.construction_detail = "Masonry non-combustible construction provides moderate fire protection"
+        result.construction_detail = (
+            "Masonry non-combustible construction provides moderate fire protection"
+        )
     elif c_class in (ConstructionClass.MODIFIED_FIRE_RESISTIVE,):
         c_score = 0.2
-        result.construction_detail = f"Modified fire-resistive construction; applies {c_mod:.0f}% schedule credit"
+        result.construction_detail = (
+            f"Modified fire-resistive construction; applies {c_mod:.0f}% schedule credit"
+        )
     elif c_class == ConstructionClass.FIRE_RESISTIVE:
         c_score = 0.1
-        result.construction_detail = f"Fire-resistive construction is best; applies {c_mod:.0f}% schedule credit"
+        result.construction_detail = (
+            f"Fire-resistive construction is best; applies {c_mod:.0f}% schedule credit"
+        )
     else:
-        result.construction_detail = f"Construction type '{construction_type}' unclassified — no adjustment"
+        result.construction_detail = (
+            f"Construction type '{construction_type}' unclassified — no adjustment"
+        )
 
     # O — Occupancy
     o_class = _classify_occupancy(occupancy_type)
@@ -280,8 +299,15 @@ def analyze_cope(
     o_score = 0.0
     if o_class in (OccupancyClass.SPECIAL, OccupancyClass.MANUFACTURING):
         o_score = 0.7
-        result.occupancy_detail = f"{occupancy_type} occupancy has elevated risk; applies +{o_mod:.0f}% debit"
-    elif o_class in (OccupancyClass.LODGING, OccupancyClass.SERVICE, OccupancyClass.HABITATIONAL, OccupancyClass.WAREHOUSE):
+        result.occupancy_detail = (
+            f"{occupancy_type} occupancy has elevated risk; applies +{o_mod:.0f}% debit"
+        )
+    elif o_class in (
+        OccupancyClass.LODGING,
+        OccupancyClass.SERVICE,
+        OccupancyClass.HABITATIONAL,
+        OccupancyClass.WAREHOUSE,
+    ):
         o_score = 0.5
         result.occupancy_detail = f"{occupancy_type} has moderate risk; applies +{o_mod:.0f}% debit"
     elif o_class in (OccupancyClass.MERCANTILE,):
@@ -302,7 +328,9 @@ def analyze_cope(
     if year_built and year_built < 1970:
         o_mod += 10.0
         o_score = min(1.0, o_score + 0.15)
-        result.occupancy_detail += f" Building age ({year_built}) over 55 years — +10% age surcharge."
+        result.occupancy_detail += (
+            f" Building age ({year_built}) over 55 years — +10% age surcharge."
+        )
     if number_of_stories and number_of_stories > 5:
         o_mod += 5.0
         o_score = min(1.0, o_score + 0.1)
@@ -321,7 +349,9 @@ def analyze_cope(
             result.protection_detail = f"ISO Class {protection_class} — adequate fire protection"
         elif protection_class <= 7:
             p_score = 0.5
-            result.protection_detail = f"ISO Class {protection_class} — below-average fire protection"
+            result.protection_detail = (
+                f"ISO Class {protection_class} — below-average fire protection"
+            )
         else:
             p_score = 0.8
             result.protection_detail = f"ISO Class {protection_class} — poor fire protection"

@@ -15,7 +15,6 @@ from insureflow.models.submissions import (
 
 
 class UnderwritingTools:
-
     @staticmethod
     def loss_ratio(incurred: float, premium: float) -> float:
         if premium == 0:
@@ -36,9 +35,7 @@ class UnderwritingTools:
         return round(total / len(claims), 2)
 
     @staticmethod
-    def large_loss_ratio(
-        claims: list[ClaimRecord], threshold: float = 100_000
-    ) -> float:
+    def large_loss_ratio(claims: list[ClaimRecord], threshold: float = 100_000) -> float:
         if not claims:
             return 0.0
         large = [c for c in claims if c.incurred_amount >= threshold]
@@ -61,8 +58,7 @@ class UnderwritingTools:
     @staticmethod
     def total_insurable_value(locations: list[LocationData]) -> float:
         return sum(
-            (l.building_value or 0) + (l.contents_value or 0) + (l.bi_value or 0)
-            for l in locations
+            (l.building_value or 0) + (l.contents_value or 0) + (l.bi_value or 0) for l in locations
         )
 
     @staticmethod

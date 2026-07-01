@@ -4,9 +4,7 @@ from insureflow.ingestion.loader import SubmissionLoader
 from insureflow.pipeline import UnderwritingPipeline
 
 
-def test_loader_creates_bundle(
-    sample_acord_xml: str, sample_inspection_report: str
-) -> None:
+def test_loader_creates_bundle(sample_acord_xml: str, sample_inspection_report: str) -> None:
     loader = SubmissionLoader()
     bundle = loader.load_bundle(
         acord_xml=sample_acord_xml,

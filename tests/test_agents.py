@@ -77,49 +77,95 @@ class TestUnderwritingTools:
         assert UnderwritingTools.loss_ratio(50_000, 0) == 0.0
 
     def test_claim_frequency(self):
-        claims = [ClaimRecord(claim_id="C1", date_of_loss=date(2024, 1, 1),
-                              line_of_business="GL", cause="test",
-                              incurred_amount=1000)]
+        claims = [
+            ClaimRecord(
+                claim_id="C1",
+                date_of_loss=date(2024, 1, 1),
+                line_of_business="GL",
+                cause="test",
+                incurred_amount=1000,
+            )
+        ]
         assert UnderwritingTools.claim_frequency(claims, 5.0) == 0.2
         assert UnderwritingTools.claim_frequency([], 5.0) == 0.0
 
     def test_average_severity(self):
         claims = [
-            ClaimRecord(claim_id="C1", date_of_loss=date(2024, 1, 1),
-                        line_of_business="GL", cause="t", incurred_amount=100_000),
-            ClaimRecord(claim_id="C2", date_of_loss=date(2024, 2, 1),
-                        line_of_business="WC", cause="t", incurred_amount=300_000),
+            ClaimRecord(
+                claim_id="C1",
+                date_of_loss=date(2024, 1, 1),
+                line_of_business="GL",
+                cause="t",
+                incurred_amount=100_000,
+            ),
+            ClaimRecord(
+                claim_id="C2",
+                date_of_loss=date(2024, 2, 1),
+                line_of_business="WC",
+                cause="t",
+                incurred_amount=300_000,
+            ),
         ]
         assert UnderwritingTools.average_severity(claims) == 200_000.0
 
     def test_large_loss_ratio(self):
         claims = [
-            ClaimRecord(claim_id="C1", date_of_loss=date(2024, 1, 1),
-                        line_of_business="GL", cause="t", incurred_amount=50_000),
-            ClaimRecord(claim_id="C2", date_of_loss=date(2024, 2, 1),
-                        line_of_business="WC", cause="t", incurred_amount=200_000),
+            ClaimRecord(
+                claim_id="C1",
+                date_of_loss=date(2024, 1, 1),
+                line_of_business="GL",
+                cause="t",
+                incurred_amount=50_000,
+            ),
+            ClaimRecord(
+                claim_id="C2",
+                date_of_loss=date(2024, 2, 1),
+                line_of_business="WC",
+                cause="t",
+                incurred_amount=200_000,
+            ),
         ]
         assert UnderwritingTools.large_loss_ratio(claims) == 0.5
 
     def test_open_claim_ratio(self):
         claims = [
-            ClaimRecord(claim_id="C1", date_of_loss=date(2024, 1, 1),
-                        line_of_business="GL", cause="t", incurred_amount=1000,
-                        claim_status=ClaimStatus.OPEN),
-            ClaimRecord(claim_id="C2", date_of_loss=date(2024, 2, 1),
-                        line_of_business="WC", cause="t", incurred_amount=2000,
-                        claim_status=ClaimStatus.CLOSED),
+            ClaimRecord(
+                claim_id="C1",
+                date_of_loss=date(2024, 1, 1),
+                line_of_business="GL",
+                cause="t",
+                incurred_amount=1000,
+                claim_status=ClaimStatus.OPEN,
+            ),
+            ClaimRecord(
+                claim_id="C2",
+                date_of_loss=date(2024, 2, 1),
+                line_of_business="WC",
+                cause="t",
+                incurred_amount=2000,
+                claim_status=ClaimStatus.CLOSED,
+            ),
         ]
         assert UnderwritingTools.open_claim_ratio(claims) == 0.5
 
     def test_litigation_ratio(self):
         claims = [
-            ClaimRecord(claim_id="C1", date_of_loss=date(2024, 1, 1),
-                        line_of_business="GL", cause="t", incurred_amount=1000,
-                        claim_status=ClaimStatus.PENDING_LITIGATION),
-            ClaimRecord(claim_id="C2", date_of_loss=date(2024, 2, 1),
-                        line_of_business="WC", cause="t", incurred_amount=2000,
-                        claim_status=ClaimStatus.CLOSED),
+            ClaimRecord(
+                claim_id="C1",
+                date_of_loss=date(2024, 1, 1),
+                line_of_business="GL",
+                cause="t",
+                incurred_amount=1000,
+                claim_status=ClaimStatus.PENDING_LITIGATION,
+            ),
+            ClaimRecord(
+                claim_id="C2",
+                date_of_loss=date(2024, 2, 1),
+                line_of_business="WC",
+                cause="t",
+                incurred_amount=2000,
+                claim_status=ClaimStatus.CLOSED,
+            ),
         ]
         assert UnderwritingTools.litigation_ratio(claims) == 0.5
 
@@ -143,20 +189,35 @@ class TestUnderwritingTools:
 
     def test_total_insurable_value(self):
         locs = [
-            LocationData(address="A", city="C", state="S", zip_code="Z",
-                         building_value=1_000_000, contents_value=500_000,
-                         bi_value=250_000),
-            LocationData(address="B", city="C", state="S", zip_code="Z",
-                         building_value=2_000_000),
+            LocationData(
+                address="A",
+                city="C",
+                state="S",
+                zip_code="Z",
+                building_value=1_000_000,
+                contents_value=500_000,
+                bi_value=250_000,
+            ),
+            LocationData(address="B", city="C", state="S", zip_code="Z", building_value=2_000_000),
         ]
         assert UnderwritingTools.total_insurable_value(locs) == 3_750_000
 
     def test_find_non_disclosed_losses(self):
         claims = [
-            ClaimRecord(claim_id="C1", date_of_loss=date(2024, 1, 1),
-                        line_of_business="GL", cause="t", incurred_amount=1000),
-            ClaimRecord(claim_id="C2", date_of_loss=date(2024, 2, 1),
-                        line_of_business="WC", cause="t", incurred_amount=2000),
+            ClaimRecord(
+                claim_id="C1",
+                date_of_loss=date(2024, 1, 1),
+                line_of_business="GL",
+                cause="t",
+                incurred_amount=1000,
+            ),
+            ClaimRecord(
+                claim_id="C2",
+                date_of_loss=date(2024, 2, 1),
+                line_of_business="WC",
+                cause="t",
+                incurred_amount=2000,
+            ),
         ]
         structured = [{"claim_id": "C1"}]
         nd = UnderwritingTools.find_non_disclosed_losses(claims, structured)
@@ -175,8 +236,17 @@ class TestRiskAnalystAgent:
     def test_low_risk_construction(self):
         bundle = _make_bundle(
             risk_profile={"construction_type": "steel", "sprinklered": True, "protection_class": 3},
-            locations=[LocationData(address="1 Main", city="City", state="S", zip_code="Z",
-                                    year_built=2015, building_value=1_000_000, square_footage=10_000)],
+            locations=[
+                LocationData(
+                    address="1 Main",
+                    city="City",
+                    state="S",
+                    zip_code="Z",
+                    year_built=2015,
+                    building_value=1_000_000,
+                    square_footage=10_000,
+                )
+            ],
         )
         agent = RiskAnalystAgent()
         result = agent.run(bundle)
@@ -186,7 +256,11 @@ class TestRiskAnalystAgent:
 
     def test_high_risk_construction(self):
         bundle = _make_bundle(
-            risk_profile={"construction_type": "wood frame", "sprinklered": False, "protection_class": 8},
+            risk_profile={
+                "construction_type": "wood frame",
+                "sprinklered": False,
+                "protection_class": 8,
+            },
         )
         agent = RiskAnalystAgent()
         result = agent.run(bundle)
@@ -197,8 +271,9 @@ class TestRiskAnalystAgent:
     def test_aging_building(self):
         bundle = _make_bundle(
             risk_profile={},
-            locations=[LocationData(address="Old", city="C", state="S", zip_code="Z",
-                                    year_built=1950)],
+            locations=[
+                LocationData(address="Old", city="C", state="S", zip_code="Z", year_built=1950)
+            ],
         )
         agent = RiskAnalystAgent()
         result = agent.run(bundle)
@@ -261,10 +336,16 @@ class TestLossRunAnalystAgent:
 
     def test_high_frequency(self):
         from datetime import timedelta
+
         base = date(2022, 1, 1)
         claims = [
-            ClaimRecord(claim_id=f"C{i}", date_of_loss=base + timedelta(days=i * 60),
-                        line_of_business="GL", cause="test", incurred_amount=10_000)
+            ClaimRecord(
+                claim_id=f"C{i}",
+                date_of_loss=base + timedelta(days=i * 60),
+                line_of_business="GL",
+                cause="test",
+                incurred_amount=10_000,
+            )
             for i in range(18)
         ]
         bundle = _make_bundle(claims=claims)
@@ -274,8 +355,13 @@ class TestLossRunAnalystAgent:
 
     def test_high_severity(self):
         claims = [
-            ClaimRecord(claim_id="C1", date_of_loss=date(2024, 1, 1),
-                        line_of_business="GL", cause="test", incurred_amount=500_000),
+            ClaimRecord(
+                claim_id="C1",
+                date_of_loss=date(2024, 1, 1),
+                line_of_business="GL",
+                cause="test",
+                incurred_amount=500_000,
+            ),
         ]
         bundle = _make_bundle(claims=claims)
         agent = LossRunAnalystAgent()
@@ -284,8 +370,13 @@ class TestLossRunAnalystAgent:
 
     def test_large_loss_concentration(self):
         claims = [
-            ClaimRecord(claim_id=f"C{i}", date_of_loss=date(2024, 1, i),
-                        line_of_business="GL", cause="test", incurred_amount=200_000)
+            ClaimRecord(
+                claim_id=f"C{i}",
+                date_of_loss=date(2024, 1, i),
+                line_of_business="GL",
+                cause="test",
+                incurred_amount=200_000,
+            )
             for i in range(1, 6)
         ]
         bundle = _make_bundle(claims=claims)
@@ -295,10 +386,14 @@ class TestLossRunAnalystAgent:
 
     def test_litigation_claim(self):
         claims = [
-            ClaimRecord(claim_id="L1", date_of_loss=date(2024, 1, 1),
-                        line_of_business="GL", cause="injury",
-                        incurred_amount=100_000,
-                        claim_status=ClaimStatus.PENDING_LITIGATION),
+            ClaimRecord(
+                claim_id="L1",
+                date_of_loss=date(2024, 1, 1),
+                line_of_business="GL",
+                cause="injury",
+                incurred_amount=100_000,
+                claim_status=ClaimStatus.PENDING_LITIGATION,
+            ),
         ]
         bundle = _make_bundle(claims=claims)
         agent = LossRunAnalystAgent()
@@ -307,10 +402,14 @@ class TestLossRunAnalystAgent:
 
     def test_non_disclosed_notes(self):
         claims = [
-            ClaimRecord(claim_id="ND1", date_of_loss=date(2024, 1, 1),
-                        line_of_business="GL", cause="slip and fall",
-                        incurred_amount=50_000,
-                        notes="This loss was NOT disclosed on the current broker application"),
+            ClaimRecord(
+                claim_id="ND1",
+                date_of_loss=date(2024, 1, 1),
+                line_of_business="GL",
+                cause="slip and fall",
+                incurred_amount=50_000,
+                notes="This loss was NOT disclosed on the current broker application",
+            ),
         ]
         bundle = _make_bundle(claims=claims)
         agent = LossRunAnalystAgent()
@@ -319,10 +418,16 @@ class TestLossRunAnalystAgent:
 
     def test_open_exposure(self):
         claims = [
-            ClaimRecord(claim_id="O1", date_of_loss=date(2024, 1, 1),
-                        line_of_business="GL", cause="test",
-                        incurred_amount=100_000, paid_amount=50_000,
-                        open_reserve=50_000, claim_status=ClaimStatus.OPEN),
+            ClaimRecord(
+                claim_id="O1",
+                date_of_loss=date(2024, 1, 1),
+                line_of_business="GL",
+                cause="test",
+                incurred_amount=100_000,
+                paid_amount=50_000,
+                open_reserve=50_000,
+                claim_status=ClaimStatus.OPEN,
+            ),
         ]
         bundle = _make_bundle(claims=claims)
         agent = LossRunAnalystAgent()
@@ -340,13 +445,23 @@ class TestComplianceAgent:
 
     def test_adequate_limits(self):
         covs = [
-            CoverageDetail(coverage_type="Property", limit_amount=10_000_000,
-                           deductible=10_000, premium=50_000),
+            CoverageDetail(
+                coverage_type="Property", limit_amount=10_000_000, deductible=10_000, premium=50_000
+            ),
         ]
-        bundle = _make_bundle(coverages=covs, locations=[
-            LocationData(address="A", city="C", state="S", zip_code="Z",
-                         building_value=5_000_000, contents_value=2_000_000),
-        ])
+        bundle = _make_bundle(
+            coverages=covs,
+            locations=[
+                LocationData(
+                    address="A",
+                    city="C",
+                    state="S",
+                    zip_code="Z",
+                    building_value=5_000_000,
+                    contents_value=2_000_000,
+                ),
+            ],
+        )
         agent = ComplianceAgent()
         result = agent.run(bundle)
         high_sev = [f for f in result.findings if f.severity == RiskSeverity.HIGH]
@@ -354,32 +469,43 @@ class TestComplianceAgent:
 
     def test_inadequate_limits(self):
         covs = [
-            CoverageDetail(coverage_type="Property", limit_amount=1_000_000,
-                           deductible=10_000, premium=50_000),
+            CoverageDetail(
+                coverage_type="Property", limit_amount=1_000_000, deductible=10_000, premium=50_000
+            ),
         ]
-        bundle = _make_bundle(coverages=covs, locations=[
-            LocationData(address="A", city="C", state="S", zip_code="Z",
-                         building_value=5_000_000, contents_value=5_000_000),
-        ])
+        bundle = _make_bundle(
+            coverages=covs,
+            locations=[
+                LocationData(
+                    address="A",
+                    city="C",
+                    state="S",
+                    zip_code="Z",
+                    building_value=5_000_000,
+                    contents_value=5_000_000,
+                ),
+            ],
+        )
         agent = ComplianceAgent()
         result = agent.run(bundle)
         assert any("inadequate" in f.title.lower() for f in result.findings)
 
     def test_high_deductible(self):
         covs = [
-            CoverageDetail(coverage_type="Property", limit_amount=1_000_000,
-                           deductible=200_000, premium=50_000),
+            CoverageDetail(
+                coverage_type="Property", limit_amount=1_000_000, deductible=200_000, premium=50_000
+            ),
         ]
         bundle = _make_bundle(coverages=covs)
         agent = ComplianceAgent()
         result = agent.run(bundle)
-        assert any("High" in f.title and "deductible" in f.title.lower()
-                   for f in result.findings)
+        assert any("High" in f.title and "deductible" in f.title.lower() for f in result.findings)
 
     def test_coverage_gaps(self):
         covs = [
-            CoverageDetail(coverage_type="Property", limit_amount=1_000_000,
-                           deductible=10_000, premium=50_000),
+            CoverageDetail(
+                coverage_type="Property", limit_amount=1_000_000, deductible=10_000, premium=50_000
+            ),
         ]
         bundle = _make_bundle(coverages=covs)
         agent = ComplianceAgent()
@@ -388,9 +514,13 @@ class TestComplianceAgent:
 
     def test_restrictive_sublimits(self):
         covs = [
-            CoverageDetail(coverage_type="Property", limit_amount=10_000_000,
-                           deductible=10_000, premium=50_000,
-                           sublimits={"Ordinance or Law": 50_000}),
+            CoverageDetail(
+                coverage_type="Property",
+                limit_amount=10_000_000,
+                deductible=10_000,
+                premium=50_000,
+                sublimits={"Ordinance or Law": 50_000},
+            ),
         ]
         bundle = _make_bundle(coverages=covs)
         agent = ComplianceAgent()
@@ -399,13 +529,18 @@ class TestComplianceAgent:
 
     def test_recommendation_built(self):
         covs = [
-            CoverageDetail(coverage_type="Property", limit_amount=100_000,
-                           deductible=10_000, premium=50_000),
+            CoverageDetail(
+                coverage_type="Property", limit_amount=100_000, deductible=10_000, premium=50_000
+            ),
         ]
-        bundle = _make_bundle(coverages=covs, locations=[
-            LocationData(address="A", city="C", state="S", zip_code="Z",
-                         building_value=5_000_000),
-        ])
+        bundle = _make_bundle(
+            coverages=covs,
+            locations=[
+                LocationData(
+                    address="A", city="C", state="S", zip_code="Z", building_value=5_000_000
+                ),
+            ],
+        )
         agent = ComplianceAgent()
         result = agent.run(bundle)
         assert result.recommendation is not None
@@ -415,10 +550,20 @@ class TestComplianceAgent:
 class TestFraudDetectionAgent:
     def test_non_disclosed_claims(self):
         claims = [
-            ClaimRecord(claim_id="C1", date_of_loss=date(2024, 1, 1),
-                        line_of_business="GL", cause="test", incurred_amount=50_000),
-            ClaimRecord(claim_id="C2", date_of_loss=date(2024, 2, 1),
-                        line_of_business="WC", cause="test", incurred_amount=100_000),
+            ClaimRecord(
+                claim_id="C1",
+                date_of_loss=date(2024, 1, 1),
+                line_of_business="GL",
+                cause="test",
+                incurred_amount=50_000,
+            ),
+            ClaimRecord(
+                claim_id="C2",
+                date_of_loss=date(2024, 2, 1),
+                line_of_business="WC",
+                cause="test",
+                incurred_amount=100_000,
+            ),
         ]
         bundle = _make_bundle(claims=claims, structured_claims=[{"claim_id": "C1"}])
         agent = FraudDetectionAgent()
@@ -427,26 +572,43 @@ class TestFraudDetectionAgent:
 
     def no_disclosed_flag_in_notes(self):
         claims = [
-            ClaimRecord(claim_id="ND1", date_of_loss=date(2024, 1, 1),
-                        line_of_business="GL", cause="test",
-                        incurred_amount=50_000,
-                        notes="NOT DISCLOSED on application"),
+            ClaimRecord(
+                claim_id="ND1",
+                date_of_loss=date(2024, 1, 1),
+                line_of_business="GL",
+                cause="test",
+                incurred_amount=50_000,
+                notes="NOT DISCLOSED on application",
+            ),
         ]
         bundle = _make_bundle(claims=claims)
         agent = FraudDetectionAgent()
         result = agent.run(bundle)
-        assert any("non-disclosure" in f.title.lower() or "not disclosed" in f.description.lower()
-                   for f in result.findings)
+        assert any(
+            "non-disclosure" in f.title.lower() or "not disclosed" in f.description.lower()
+            for f in result.findings
+        )
 
     def test_valuation_discrepancy(self):
         bundle = _make_bundle(
-            locations=[LocationData(address="A", city="C", state="S", zip_code="Z",
-                                    building_value=10_000_000, contents_value=5_000_000)],
-            sovs=[ScheduleOfValues(
-                schedule_type="Property", coverage_type="Building",
-                items=[ScheduleItem(description="Building", value=3_000_000)],
-                total_value=3_000_000,
-            )],
+            locations=[
+                LocationData(
+                    address="A",
+                    city="C",
+                    state="S",
+                    zip_code="Z",
+                    building_value=10_000_000,
+                    contents_value=5_000_000,
+                )
+            ],
+            sovs=[
+                ScheduleOfValues(
+                    schedule_type="Property",
+                    coverage_type="Building",
+                    items=[ScheduleItem(description="Building", value=3_000_000)],
+                    total_value=3_000_000,
+                )
+            ],
         )
         agent = FraudDetectionAgent()
         result = agent.run(bundle)
@@ -458,14 +620,18 @@ class TestFraudDetectionAgent:
             ExtractedField,
             UnstructuredSubmission,
         )
+
         bundle.unstructured = [
             UnstructuredSubmission(
                 submission_id="u1",
                 extracted_fields={
                     "named_insured": [
-                        ExtractedField(field_name="named_insured",
-                                       value="Test Corp LLC",
-                                       confidence=0.8, context="report")
+                        ExtractedField(
+                            field_name="named_insured",
+                            value="Test Corp LLC",
+                            confidence=0.8,
+                            context="report",
+                        )
                     ]
                 },
             )
@@ -476,10 +642,16 @@ class TestFraudDetectionAgent:
 
     def test_recent_loss_cluster(self):
         from datetime import timedelta
+
         base = date(2026, 1, 1)
         claims = [
-            ClaimRecord(claim_id=f"C{i}", date_of_loss=base + timedelta(days=i * 30),
-                        line_of_business="GL", cause="test", incurred_amount=10_000)
+            ClaimRecord(
+                claim_id=f"C{i}",
+                date_of_loss=base + timedelta(days=i * 30),
+                line_of_business="GL",
+                cause="test",
+                incurred_amount=10_000,
+            )
             for i in range(3)
         ]
         bundle = _make_bundle(claims=claims)
@@ -492,9 +664,16 @@ class TestUWDecisionAgent:
     def test_accept_decision(self):
         UWDecisionAgent()
         result = AgentResult(
-            agent_type="risk_analyst", agent_name="RiskAnalystAgent",
-            findings=[Finding(title="Clean risk", description="No issues",
-                              severity=RiskSeverity.LOW, category="general")],
+            agent_type="risk_analyst",
+            agent_name="RiskAnalystAgent",
+            findings=[
+                Finding(
+                    title="Clean risk",
+                    description="No issues",
+                    severity=RiskSeverity.LOW,
+                    category="general",
+                )
+            ],
         )
         uw_agent = UWDecisionAgent()
         uw_result = uw_agent.run(_make_bundle(), agent_results={"RiskAnalystAgent": result})
@@ -504,9 +683,16 @@ class TestUWDecisionAgent:
     def test_refer_decision(self):
         agent = UWDecisionAgent()
         result = AgentResult(
-            agent_type="risk_analyst", agent_name="RiskAnalystAgent",
-            findings=[Finding(title="High risk", description="Issue found",
-                              severity=RiskSeverity.HIGH, category="general")],
+            agent_type="risk_analyst",
+            agent_name="RiskAnalystAgent",
+            findings=[
+                Finding(
+                    title="High risk",
+                    description="Issue found",
+                    severity=RiskSeverity.HIGH,
+                    category="general",
+                )
+            ],
         )
         uw_result = agent.run(_make_bundle(), agent_results={"RiskAnalystAgent": result})
         assert uw_result.recommendation is not None
@@ -515,9 +701,16 @@ class TestUWDecisionAgent:
     def test_decline_decision(self):
         agent = UWDecisionAgent()
         result = AgentResult(
-            agent_type="fraud_detection", agent_name="FraudDetectionAgent",
-            findings=[Finding(title="Fraud risk", description="Material misrepresentation",
-                              severity=RiskSeverity.CRITICAL, category="fraud")],
+            agent_type="fraud_detection",
+            agent_name="FraudDetectionAgent",
+            findings=[
+                Finding(
+                    title="Fraud risk",
+                    description="Material misrepresentation",
+                    severity=RiskSeverity.CRITICAL,
+                    category="fraud",
+                )
+            ],
         )
         uw_result = agent.run(_make_bundle(), agent_results={"FraudDetectionAgent": result})
         assert uw_result.recommendation is not None
@@ -526,13 +719,24 @@ class TestUWDecisionAgent:
     def test_produce_memo(self):
         agent = UWDecisionAgent()
         agent_results = [
-            AgentResult(agent_type="risk_analyst", agent_name="RiskAnalystAgent",
-                        findings=[Finding(title="Test finding", description="desc",
-                                          severity=RiskSeverity.LOW, category="test")]),
+            AgentResult(
+                agent_type="risk_analyst",
+                agent_name="RiskAnalystAgent",
+                findings=[
+                    Finding(
+                        title="Test finding",
+                        description="desc",
+                        severity=RiskSeverity.LOW,
+                        category="test",
+                    )
+                ],
+            ),
         ]
         uw_result = AgentResult(
-            agent_type="uw_decision", agent_name="UWDecisionAgent",
-            findings=[], recommendation=agent._build_recommendation(),
+            agent_type="uw_decision",
+            agent_name="UWDecisionAgent",
+            findings=[],
+            recommendation=agent._build_recommendation(),
         )
         bundle = _make_bundle()
         memo = agent.produce_underwriting_memo(bundle, agent_results, uw_result)
@@ -545,15 +749,25 @@ class TestReActAgent:
         bundle = _make_bundle(
             risk_profile={"construction_type": "steel", "sprinklered": True},
             coverages=[
-                CoverageDetail(coverage_type="Property", limit_amount=1_000_000,
-                               deductible=10_000, premium=25_000),
+                CoverageDetail(
+                    coverage_type="Property",
+                    limit_amount=1_000_000,
+                    deductible=10_000,
+                    premium=25_000,
+                ),
             ],
             claims=[
-                ClaimRecord(claim_id="C1", date_of_loss=date(2024, 1, 1),
-                            line_of_business="GL", cause="test", incurred_amount=10_000),
+                ClaimRecord(
+                    claim_id="C1",
+                    date_of_loss=date(2024, 1, 1),
+                    line_of_business="GL",
+                    cause="test",
+                    incurred_amount=10_000,
+                ),
             ],
         )
         from insureflow.agents.risk_analyst import RiskAnalystAgent
+
         agent = RiskAnalystAgent()
         result = agent.run(bundle)
         assert result.success
@@ -562,6 +776,7 @@ class TestReActAgent:
     def test_tool_registry(self):
         bundle = _make_bundle(insured_name="Test Corp")
         from insureflow.agents.react_tools import ToolRegistry
+
         reg = ToolRegistry(bundle)
         tools = reg.list_tools()
         assert len(tools) >= 15
@@ -576,6 +791,7 @@ class TestReActAgent:
     def test_tool_registry_unknown_tool(self):
         bundle = _make_bundle()
         from insureflow.agents.react_tools import ToolRegistry
+
         reg = ToolRegistry(bundle)
         result = reg.call("nonexistent_tool")
         assert "error" in result
@@ -583,6 +799,7 @@ class TestReActAgent:
     def test_tool_get_risk_profile(self):
         bundle = _make_bundle(risk_profile={"construction_type": "steel", "sprinklered": True})
         from insureflow.agents.react_tools import ToolRegistry
+
         reg = ToolRegistry(bundle)
         result = reg.call("get_risk_profile")
         assert result is not None
@@ -590,70 +807,114 @@ class TestReActAgent:
 
     def test_tool_claim_frequency(self):
         claims = [
-            ClaimRecord(claim_id="C1", date_of_loss=date(2024, 1, 1),
-                        line_of_business="GL", cause="t", incurred_amount=10_000),
-            ClaimRecord(claim_id="C2", date_of_loss=date(2024, 6, 1),
-                        line_of_business="WC", cause="t", incurred_amount=20_000),
+            ClaimRecord(
+                claim_id="C1",
+                date_of_loss=date(2024, 1, 1),
+                line_of_business="GL",
+                cause="t",
+                incurred_amount=10_000,
+            ),
+            ClaimRecord(
+                claim_id="C2",
+                date_of_loss=date(2024, 6, 1),
+                line_of_business="WC",
+                cause="t",
+                incurred_amount=20_000,
+            ),
         ]
         bundle = _make_bundle(claims=claims)
         from insureflow.agents.react_tools import ToolRegistry
+
         reg = ToolRegistry(bundle)
         result = reg.call("compute_claim_frequency")
         assert result["frequency"] == 0.4
 
     def test_tool_large_loss_ratio(self):
         claims = [
-            ClaimRecord(claim_id="C1", date_of_loss=date(2024, 1, 1),
-                        line_of_business="GL", cause="t", incurred_amount=200_000),
-            ClaimRecord(claim_id="C2", date_of_loss=date(2024, 6, 1),
-                        line_of_business="WC", cause="t", incurred_amount=50_000),
+            ClaimRecord(
+                claim_id="C1",
+                date_of_loss=date(2024, 1, 1),
+                line_of_business="GL",
+                cause="t",
+                incurred_amount=200_000,
+            ),
+            ClaimRecord(
+                claim_id="C2",
+                date_of_loss=date(2024, 6, 1),
+                line_of_business="WC",
+                cause="t",
+                incurred_amount=50_000,
+            ),
         ]
         bundle = _make_bundle(claims=claims)
         from insureflow.agents.react_tools import ToolRegistry
+
         reg = ToolRegistry(bundle)
         result = reg.call("compute_large_loss_ratio")
         assert result["large_loss_ratio"] == 0.5
 
     def test_tool_non_disclosed(self):
         claims = [
-            ClaimRecord(claim_id="C1", date_of_loss=date(2024, 1, 1),
-                        line_of_business="GL", cause="t", incurred_amount=10_000),
+            ClaimRecord(
+                claim_id="C1",
+                date_of_loss=date(2024, 1, 1),
+                line_of_business="GL",
+                cause="t",
+                incurred_amount=10_000,
+            ),
         ]
         bundle = _make_bundle(claims=claims, structured_claims=[{"claim_id": "C2"}])
         from insureflow.agents.react_tools import ToolRegistry
+
         reg = ToolRegistry(bundle)
         result = reg.call("check_non_disclosed_claims")
         assert result["non_disclosed_count"] == 1
 
     def test_tool_sov_vs_location(self):
         bundle = _make_bundle(
-            locations=[LocationData(address="A", city="C", state="S", zip_code="Z",
-                                    building_value=1_000_000)],
-            sovs=[ScheduleOfValues(schedule_type="Building", coverage_type="Property",
-                                   items=[ScheduleItem(description="Bldg", value=500_000)],
-                                   total_value=500_000)],
+            locations=[
+                LocationData(
+                    address="A", city="C", state="S", zip_code="Z", building_value=1_000_000
+                )
+            ],
+            sovs=[
+                ScheduleOfValues(
+                    schedule_type="Building",
+                    coverage_type="Property",
+                    items=[ScheduleItem(description="Bldg", value=500_000)],
+                    total_value=500_000,
+                )
+            ],
         )
         from insureflow.agents.react_tools import ToolRegistry
+
         reg = ToolRegistry(bundle)
         result = reg.call("check_sov_vs_location_valuation")
         assert result["ratio"] == 0.5
 
     def test_tool_coverage_adequacy(self):
         covs = [
-            CoverageDetail(coverage_type="Property", limit_amount=1_000_000,
-                           deductible=10_000, premium=25_000),
+            CoverageDetail(
+                coverage_type="Property", limit_amount=1_000_000, deductible=10_000, premium=25_000
+            ),
         ]
-        bundle = _make_bundle(coverages=covs, locations=[
-            LocationData(address="A", city="C", state="S", zip_code="Z",
-                         building_value=2_000_000),
-        ])
+        bundle = _make_bundle(
+            coverages=covs,
+            locations=[
+                LocationData(
+                    address="A", city="C", state="S", zip_code="Z", building_value=2_000_000
+                ),
+            ],
+        )
         from insureflow.agents.react_tools import ToolRegistry
+
         reg = ToolRegistry(bundle)
         result = reg.call("check_coverage_adequacy", coverage_type="Property")
         assert result["status"] == "inadequate"
 
     def test_react_parse_llm_final_answer(self):
         from insureflow.agents.react_agent import ReActAgent
+
         agent = ReActAgent()
         parsed = agent._parse_llm_output(
             '{"thought": "done", "action": "final_answer", '
@@ -665,15 +926,17 @@ class TestReActAgent:
 
     def test_react_parse_llm_with_code_block(self):
         from insureflow.agents.react_agent import ReActAgent
+
         agent = ReActAgent()
         parsed = agent._parse_llm_output(
-            "```json\n{\"thought\": \"test\", \"action\": \"final_answer\", "
+            '```json\n{"thought": "test", "action": "final_answer", '
             '"findings": [], "summary": "ok"}\n```'
         )
         assert parsed["action"] == "final_answer"
 
     def test_react_parse_llm_malformed(self):
         from insureflow.agents.react_agent import ReActAgent
+
         agent = ReActAgent()
         parsed = agent._parse_llm_output("not json at all")
         assert "findings" in parsed
@@ -682,30 +945,59 @@ class TestReActAgent:
 class TestSupervisorAgent:
     def test_full_analysis(self):
         claims = [
-            ClaimRecord(claim_id="C1", date_of_loss=date(2024, 1, 1),
-                        line_of_business="General Liability", cause="slip and fall",
-                        incurred_amount=50_000, paid_amount=50_000,
-                        claim_status=ClaimStatus.CLOSED),
-            ClaimRecord(claim_id="C2", date_of_loss=date(2024, 6, 1),
-                        line_of_business="Workers Compensation", cause="back strain",
-                        incurred_amount=120_000, paid_amount=100_000,
-                        open_reserve=20_000, claim_status=ClaimStatus.OPEN),
+            ClaimRecord(
+                claim_id="C1",
+                date_of_loss=date(2024, 1, 1),
+                line_of_business="General Liability",
+                cause="slip and fall",
+                incurred_amount=50_000,
+                paid_amount=50_000,
+                claim_status=ClaimStatus.CLOSED,
+            ),
+            ClaimRecord(
+                claim_id="C2",
+                date_of_loss=date(2024, 6, 1),
+                line_of_business="Workers Compensation",
+                cause="back strain",
+                incurred_amount=120_000,
+                paid_amount=100_000,
+                open_reserve=20_000,
+                claim_status=ClaimStatus.OPEN,
+            ),
         ]
         covs = [
-            CoverageDetail(coverage_type="General Liability", limit_amount=2_000_000,
-                           deductible=5_000, premium=25_000),
-            CoverageDetail(coverage_type="Property", limit_amount=5_000_000,
-                           deductible=25_000, premium=50_000),
-            CoverageDetail(coverage_type="Commercial Auto", limit_amount=1_000_000,
-                           deductible=10_000, premium=30_000),
+            CoverageDetail(
+                coverage_type="General Liability",
+                limit_amount=2_000_000,
+                deductible=5_000,
+                premium=25_000,
+            ),
+            CoverageDetail(
+                coverage_type="Property", limit_amount=5_000_000, deductible=25_000, premium=50_000
+            ),
+            CoverageDetail(
+                coverage_type="Commercial Auto",
+                limit_amount=1_000_000,
+                deductible=10_000,
+                premium=30_000,
+            ),
         ]
         locs = [
-            LocationData(address="100 Industrial Blvd", city="Oakland", state="CA",
-                         zip_code="94607", year_built=1999, building_value=18_500_000,
-                         square_footage=210_000, protection_class=3),
+            LocationData(
+                address="100 Industrial Blvd",
+                city="Oakland",
+                state="CA",
+                zip_code="94607",
+                year_built=1999,
+                building_value=18_500_000,
+                square_footage=210_000,
+                protection_class=3,
+            ),
         ]
         bundle = _make_bundle(
-            claims=claims, coverages=covs, locations=locs,
+            claims=claims,
+            coverages=covs,
+            locations=locs,
             risk_profile={
                 "construction_type": "Steel frame",
                 "occupancy_type": "Warehouse distribution",
@@ -742,12 +1034,21 @@ class TestSupervisorAgent:
     def test_parallel_execution(self):
         bundle = _make_bundle(
             claims=[
-                ClaimRecord(claim_id="C1", date_of_loss=date(2024, 1, 1),
-                            line_of_business="GL", cause="test", incurred_amount=10_000),
+                ClaimRecord(
+                    claim_id="C1",
+                    date_of_loss=date(2024, 1, 1),
+                    line_of_business="GL",
+                    cause="test",
+                    incurred_amount=10_000,
+                ),
             ],
             coverages=[
-                CoverageDetail(coverage_type="Property", limit_amount=1_000_000,
-                               deductible=10_000, premium=25_000),
+                CoverageDetail(
+                    coverage_type="Property",
+                    limit_amount=1_000_000,
+                    deductible=10_000,
+                    premium=25_000,
+                ),
             ],
             risk_profile={"sprinklered": True},
         )

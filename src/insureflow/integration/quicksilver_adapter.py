@@ -46,7 +46,9 @@ class QuickSilverMercuryAdapter(BasePolicyAdminAdapter):
 
         logger.info(
             "Quick Silver Mercury quote: %s for %s (TIV $%.0f)",
-            payload.bundle_id, payload.insured_name, payload.tiv,
+            payload.bundle_id,
+            payload.insured_name,
+            payload.tiv,
         )
 
         quote_ref = f"QSM-Q-{uuid4().hex[:10].upper()}"
@@ -67,7 +69,9 @@ class QuickSilverMercuryAdapter(BasePolicyAdminAdapter):
             response_payload=response,
         )
 
-    def bind_policy(self, payload: PolicySubmissionPayload, quote_reference: str) -> IntegrationResult:
+    def bind_policy(
+        self, payload: PolicySubmissionPayload, quote_reference: str
+    ) -> IntegrationResult:
         policy_number = f"QSM-{datetime.now(tz=timezone.utc).year}-{uuid4().hex[:8].upper()}"
         response = {
             "policy_number": policy_number,

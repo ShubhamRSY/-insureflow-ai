@@ -252,15 +252,9 @@ class LossRunParser(BaseParser):
             ratios[match.group(1)] = float(match.group(4))
         return ratios
 
-    def _chunk_by_claims(
-        self, text: str, claims: list[ClaimRecord]
-    ) -> list[ExtractedChunk]:
+    def _chunk_by_claims(self, text: str, claims: list[ClaimRecord]) -> list[ExtractedChunk]:
         if not claims:
-            return [
-                ExtractedChunk(
-                    chunk_index=0, text=text, start_char=0, end_char=len(text)
-                )
-            ]
+            return [ExtractedChunk(chunk_index=0, text=text, start_char=0, end_char=len(text))]
         chunks: list[ExtractedChunk] = []
         pos = 0
         for i, claim in enumerate(claims):
@@ -287,8 +281,6 @@ class LossRunParser(BaseParser):
             pos = next_idx
         if not chunks:
             chunks.append(
-                ExtractedChunk(
-                    chunk_index=0, text=text, start_char=0, end_char=len(text)
-                )
+                ExtractedChunk(chunk_index=0, text=text, start_char=0, end_char=len(text))
             )
         return chunks

@@ -59,8 +59,10 @@ class TestCOPEModule:
         )
         assert result.score.total_score > 0
         assert result.score.risk_grade in (
-            RiskGrade.PREFERRED, RiskGrade.STANDARD,
-            RiskGrade.NON_STANDARD, RiskGrade.DECLINED,
+            RiskGrade.PREFERRED,
+            RiskGrade.STANDARD,
+            RiskGrade.NON_STANDARD,
+            RiskGrade.DECLINED,
         )
         assert isinstance(result.score.schedule_mod_pct, float)
 
@@ -94,12 +96,16 @@ class TestCOPEModule:
 
     def test_florida_exposure_higher_risk(self) -> None:
         inland = analyze_cope(
-            construction_type="Masonry", occupancy_type="Office",
-            protection_class=4, state="OK",
+            construction_type="Masonry",
+            occupancy_type="Office",
+            protection_class=4,
+            state="OK",
         )
         coastal = analyze_cope(
-            construction_type="Masonry", occupancy_type="Office",
-            protection_class=4, state="FL",
+            construction_type="Masonry",
+            occupancy_type="Office",
+            protection_class=4,
+            state="FL",
         )
         assert coastal.score.exposure_score > inland.score.exposure_score
 
@@ -132,14 +138,18 @@ class TestAuthorityModule:
     def test_check_binding_authority_under_limit(self) -> None:
         matrix = AuthorityMatrix()
         authorized, reason = matrix.check_binding_authority(
-            "sfields", premium=100_000, tiv=5_000_000,
+            "sfields",
+            premium=100_000,
+            tiv=5_000_000,
         )
         assert authorized is True
 
     def test_check_binding_authority_over_limit(self) -> None:
         matrix = AuthorityMatrix()
         authorized, reason = matrix.check_binding_authority(
-            "junderwood", premium=100_000, tiv=5_000_000,
+            "junderwood",
+            premium=100_000,
+            tiv=5_000_000,
         )
         assert authorized is False
         assert "exceeds" in reason
@@ -147,7 +157,9 @@ class TestAuthorityModule:
     def test_co_sign_required_above_threshold(self) -> None:
         matrix = AuthorityMatrix()
         authorized, reason = matrix.check_binding_authority(
-            "sfields", premium=200_000, tiv=8_000_000,
+            "sfields",
+            premium=200_000,
+            tiv=8_000_000,
         )
         assert authorized is True
 
@@ -179,12 +191,16 @@ class TestMarketCycleModule:
 
     def test_adjust_premium_hard_increases(self) -> None:
         mc = MarketCycleAwareness()
-        mc.set_cycle(MarketCycle(
-            phase=MarketPhase.HARD,
-            property_rate_mod=1.25, liability_rate_mod=1.15,
-            workers_comp_rate_mod=0.95, auto_rate_mod=1.30,
-            reinsurance_cost_mod=1.20,
-        ))
+        mc.set_cycle(
+            MarketCycle(
+                phase=MarketPhase.HARD,
+                property_rate_mod=1.25,
+                liability_rate_mod=1.15,
+                workers_comp_rate_mod=0.95,
+                auto_rate_mod=1.30,
+                reinsurance_cost_mod=1.20,
+            )
+        )
         adjusted = mc.adjust_premium(100_000)
         assert adjusted > 100_000
 
@@ -220,8 +236,11 @@ class TestRenewalModule:
     def test_standard_renewal(self) -> None:
         engine = RenewalEngine()
         rec = engine.analyze_renewal(
-            bundle_id="b-1", insured_name="Good Co",
-            current_premium=50_000, loss_ratio=0.30, claims_count=0,
+            bundle_id="b-1",
+            insured_name="Good Co",
+            current_premium=50_000,
+            loss_ratio=0.30,
+            claims_count=0,
             expiry_date=date.today() + timedelta(days=90),
         )
         assert rec.action == RenewalAction.RENEW
@@ -230,8 +249,11 @@ class TestRenewalModule:
     def test_non_renew_high_losses(self) -> None:
         engine = RenewalEngine()
         rec = engine.analyze_renewal(
-            bundle_id="b-2", insured_name="Bad Co",
-            current_premium=50_000, loss_ratio=0.85, claims_count=4,
+            bundle_id="b-2",
+            insured_name="Bad Co",
+            current_premium=50_000,
+            loss_ratio=0.85,
+            claims_count=4,
             expiry_date=date.today() + timedelta(days=90),
         )
         assert rec.action == RenewalAction.NON_RENEW
@@ -239,8 +261,11 @@ class TestRenewalModule:
     def test_modify_elevated_loss_ratio(self) -> None:
         engine = RenewalEngine()
         rec = engine.analyze_renewal(
-            bundle_id="b-3", insured_name="Med Co",
-            current_premium=50_000, loss_ratio=0.65, claims_count=1,
+            bundle_id="b-3",
+            insured_name="Med Co",
+            current_premium=50_000,
+            loss_ratio=0.65,
+            claims_count=1,
             expiry_date=date.today() + timedelta(days=90),
         )
         assert rec.action == RenewalAction.RENEW_WITH_MODIFICATION
@@ -248,25 +273,39 @@ class TestRenewalModule:
     def test_refer_to_uw_under_60_days(self) -> None:
         engine = RenewalEngine()
         rec = engine.analyze_renewal(
-            bundle_id="b-4", insured_name="Urgent Co",
-            current_premium=50_000, loss_ratio=0.30, claims_count=0,
+            bundle_id="b-4",
+            insured_name="Urgent Co",
+            current_premium=50_000,
+            loss_ratio=0.30,
+            claims_count=0,
             expiry_date=date.today() + timedelta(days=30),
         )
         assert rec.action == RenewalAction.REFER_TO_UW
 
     def test_bundling_discount(self) -> None:
         engine = RenewalEngine()
-        engine.register_policy(PolicyLapse(
-            policy_number="P-1", line_of_business="GL",
-            current_premium=20_000, expiry_date=date.today() + timedelta(days=90),
-        ))
-        engine.register_policy(PolicyLapse(
-            policy_number="P-2", line_of_business="Property",
-            current_premium=30_000, expiry_date=date.today() + timedelta(days=90),
-        ))
+        engine.register_policy(
+            PolicyLapse(
+                policy_number="P-1",
+                line_of_business="GL",
+                current_premium=20_000,
+                expiry_date=date.today() + timedelta(days=90),
+            )
+        )
+        engine.register_policy(
+            PolicyLapse(
+                policy_number="P-2",
+                line_of_business="Property",
+                current_premium=30_000,
+                expiry_date=date.today() + timedelta(days=90),
+            )
+        )
         rec = engine.analyze_renewal(
-            bundle_id="b-5", insured_name="Bundle Co",
-            current_premium=50_000, loss_ratio=0.30, claims_count=0,
+            bundle_id="b-5",
+            insured_name="Bundle Co",
+            current_premium=50_000,
+            loss_ratio=0.30,
+            claims_count=0,
             expiry_date=date.today() + timedelta(days=120),
             policy_number="P-1",
         )
@@ -275,8 +314,11 @@ class TestRenewalModule:
     def test_premium_change_deteriorating(self) -> None:
         engine = RenewalEngine()
         rec = engine.analyze_renewal(
-            bundle_id="b-6", insured_name="Declining Co",
-            current_premium=100_000, loss_ratio=0.70, claims_count=2,
+            bundle_id="b-6",
+            insured_name="Declining Co",
+            current_premium=100_000,
+            loss_ratio=0.70,
+            claims_count=2,
             expiry_date=date.today() + timedelta(days=90),
         )
         assert rec.proposed_premium > rec.current_premium
@@ -284,8 +326,11 @@ class TestRenewalModule:
     def test_premium_change_improving(self) -> None:
         engine = RenewalEngine()
         rec = engine.analyze_renewal(
-            bundle_id="b-7", insured_name="Improving Co",
-            current_premium=100_000, loss_ratio=0.15, claims_count=0,
+            bundle_id="b-7",
+            insured_name="Improving Co",
+            current_premium=100_000,
+            loss_ratio=0.15,
+            claims_count=0,
             expiry_date=date.today() + timedelta(days=90),
         )
         assert rec.proposed_premium < rec.current_premium
@@ -325,8 +370,10 @@ class TestPremiumAudit:
         engine = PremiumAuditEngine()
         audit = engine.create_audit("b-3", 100_000.0)
         engine.add_adjustment(
-            audit.audit_id, AuditAdjustmentType.EXPOSURE_CHANGE,
-            "Additional locations", 5_000.0,
+            audit.audit_id,
+            AuditAdjustmentType.EXPOSURE_CHANGE,
+            "Additional locations",
+            5_000.0,
         )
         engine.complete_audit(audit.audit_id, 108_000.0)
         assert audit.premium_delta == 13_000.0
@@ -366,8 +413,9 @@ class TestPremiumAudit:
 
 
 class TestTriageModule:
-    def _make_bundle(self, naics: str = "541330", state: str = "TX",
-                     tiv: float = 5_000_000) -> SubmissionBundle:
+    def _make_bundle(
+        self, naics: str = "541330", state: str = "TX", tiv: float = 5_000_000
+    ) -> SubmissionBundle:
         return SubmissionBundle(
             bundle_id="test-triage",
             structured=StructuredSubmission(
@@ -393,10 +441,14 @@ class TestTriageModule:
                     protection_class=4,
                 ),
                 financial=FinancialData(annual_revenue=tiv),
-                locations=[LocationData(
-                    address="123 Main", city="Austin",
-                    state=state, zip_code="78701",
-                )],
+                locations=[
+                    LocationData(
+                        address="123 Main",
+                        city="Austin",
+                        state=state,
+                        zip_code="78701",
+                    )
+                ],
             ),
         )
 
@@ -433,11 +485,15 @@ class TestTriageModule:
                     occupancy_type="Warehouse",
                     protection_class=8,
                 ),
-                locations=[LocationData(
-                    address="1 Main", city="Nowhere",
-                    state="AK", zip_code="99999",
-                    building_value=40_000,
-                )],
+                locations=[
+                    LocationData(
+                        address="1 Main",
+                        city="Nowhere",
+                        state="AK",
+                        zip_code="99999",
+                        building_value=40_000,
+                    )
+                ],
             ),
         )
         result = agent.score_submission(bundle)
@@ -477,8 +533,10 @@ class TestTriageModule:
 
     def test_document_checklist_partial(self) -> None:
         checklist = DocumentChecklist(
-            acord_form=True, loss_run=True,
-            financials=True, photos=True,
+            acord_form=True,
+            loss_run=True,
+            financials=True,
+            photos=True,
         )
         assert checklist.completeness_pct == 0.5
         assert len(checklist.missing) == 4

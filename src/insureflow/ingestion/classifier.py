@@ -40,7 +40,9 @@ class DocumentClassifier:
         if not content_stripped:
             return DocumentType.SUPPLEMENTAL
 
-        if cls.XML_DECL_RE.match(content_stripped) or cls.ACORD_ROOT_RE.search(content_stripped[:2000]):
+        if cls.XML_DECL_RE.match(content_stripped) or cls.ACORD_ROOT_RE.search(
+            content_stripped[:2000]
+        ):
             ns_match = cls.ACORD_NS_RE.search(content_stripped[:2000])
             if ns_match or cls.ACORD_ROOT_RE.search(content_stripped[:2000]):
                 return DocumentType.ACORD_XML
@@ -50,7 +52,10 @@ class DocumentClassifier:
                 parsed = json.loads(content_stripped)
                 if isinstance(parsed, dict):
                     top_keys = " ".join(parsed.keys()).lower()
-                    if any(k in top_keys for k in ("submission", "insured", "broker", "coverage", "applicant")):
+                    if any(
+                        k in top_keys
+                        for k in ("submission", "insured", "broker", "coverage", "applicant")
+                    ):
                         return DocumentType.BROKER_API_JSON
             except (json.JSONDecodeError, ValueError):
                 pass

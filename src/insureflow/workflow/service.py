@@ -21,7 +21,9 @@ class WorkflowService:
         return record
 
     def submit_for_review(self, bundle_id: str, org_id: str, ai_decision: str) -> WorkflowRecord:
-        record = self.store.get(bundle_id, org_id) or WorkflowRecord(bundle_id=bundle_id, org_id=org_id)
+        record = self.store.get(bundle_id, org_id) or WorkflowRecord(
+            bundle_id=bundle_id, org_id=org_id
+        )
         record.state = WorkflowState.PENDING_REVIEW
         record.ai_decision = ai_decision
         self.store.save(record)

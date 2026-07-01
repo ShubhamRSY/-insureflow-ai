@@ -21,9 +21,16 @@ def _step(name: str, fn) -> BrowserResult:
     t0 = time.perf_counter()
     try:
         detail = fn() or "ok"
-        return BrowserResult(name=name, passed=True, detail=detail, duration_ms=(time.perf_counter() - t0) * 1000)
+        return BrowserResult(
+            name=name, passed=True, detail=detail, duration_ms=(time.perf_counter() - t0) * 1000
+        )
     except Exception as exc:
-        return BrowserResult(name=name, passed=False, detail=str(exc) or repr(exc), duration_ms=(time.perf_counter() - t0) * 1000)
+        return BrowserResult(
+            name=name,
+            passed=False,
+            detail=str(exc) or repr(exc),
+            duration_ms=(time.perf_counter() - t0) * 1000,
+        )
 
 
 def run_browser_tests(
@@ -64,7 +71,12 @@ def run_browser_tests(
             "total": 1,
             "success": False,
             "results": [
-                {"name": "Browser preflight", "passed": False, "detail": str(exc), "duration_ms": 0},
+                {
+                    "name": "Browser preflight",
+                    "passed": False,
+                    "detail": str(exc),
+                    "duration_ms": 0,
+                },
             ],
         }
 
@@ -95,7 +107,7 @@ def run_browser_tests(
                 page.get_by_role("button", name="Hide password").click()
                 page.locator('input[name="username"]').fill(username)
                 pwd.fill(password)
-                page.locator('form').get_by_role("button", name="Sign In", exact=True).click()
+                page.locator("form").get_by_role("button", name="Sign In", exact=True).click()
                 page.wait_for_selector(f"aside >> text={username}", timeout=15000)
             assert page.locator(f"aside >> text={username}").count() > 0
             return f"logged in as {username} (password toggle ok)"
@@ -163,7 +175,12 @@ def run_browser_tests(
         "total": len(results),
         "success": failed == 0,
         "results": [
-            {"name": r.name, "passed": r.passed, "detail": r.detail, "duration_ms": round(r.duration_ms, 1)}
+            {
+                "name": r.name,
+                "passed": r.passed,
+                "detail": r.detail,
+                "duration_ms": round(r.duration_ms, 1),
+            }
             for r in results
         ],
     }

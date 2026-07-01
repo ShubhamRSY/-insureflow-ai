@@ -77,9 +77,7 @@ def run_all(output_path: str | None = None) -> list[dict[str, Any]]:
         try:
             r = run_case(case)
             results.append(r)
-            has_errors = any(
-                r.get("errors", [])
-            )
+            has_errors = any(r.get("errors", []))
             status = r.get("status", "failed")
             if status == "completed" and not has_errors:
                 passed += 1
@@ -87,11 +85,13 @@ def run_all(output_path: str | None = None) -> list[dict[str, Any]]:
                 failed += 1
             logger.info("[%s] status=%s", case.name, status)
         except Exception as exc:
-            results.append({
-                "case": case.name,
-                "status": "error",
-                "error": str(exc),
-            })
+            results.append(
+                {
+                    "case": case.name,
+                    "status": "error",
+                    "error": str(exc),
+                }
+            )
             failed += 1
 
     summary = {

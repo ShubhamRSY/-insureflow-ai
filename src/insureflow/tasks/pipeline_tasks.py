@@ -54,7 +54,9 @@ def run_pipeline(self, job_id: str, request_data: dict[str, Any], org_id: str) -
                 bundle_id=req.bundle_id or job_id,
             )
 
-        job_store.set(INSURANCE_NS, job_id, {"status": "completed", "results": result}, org_id=org_id)
+        job_store.set(
+            INSURANCE_NS, job_id, {"status": "completed", "results": result}, org_id=org_id
+        )
         return {"status": "completed", "job_id": job_id}
 
     except Exception as exc:

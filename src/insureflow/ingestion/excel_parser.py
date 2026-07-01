@@ -25,6 +25,7 @@ class ExcelParser(BaseParser):
 
         try:
             import openpyxl
+
             wb = openpyxl.load_workbook(io.BytesIO(raw_data.encode("latin-1")), data_only=True)
             for sheet_name in wb.sheetnames:
                 ws = wb[sheet_name]
@@ -49,6 +50,7 @@ class ExcelParser(BaseParser):
     def parse_structured(self, raw_data: str, submission_id: str) -> list[ScheduleOfValues]:
         try:
             import openpyxl
+
             wb = openpyxl.load_workbook(io.BytesIO(raw_data.encode("latin-1")), data_only=True)
             return self._extract_sovs(wb)
         except Exception:
@@ -133,12 +135,27 @@ class ExcelParser(BaseParser):
             return fields
 
         cov_keywords = [
-            "coverage", "limit", "deductible", "premium", "building",
-            "contents", "liability", "property", "inland", "crime",
+            "coverage",
+            "limit",
+            "deductible",
+            "premium",
+            "building",
+            "contents",
+            "liability",
+            "property",
+            "inland",
+            "crime",
         ]
         loc_keywords = [
-            "location", "address", "city", "state", "zip",
-            "occupancy", "construction", "year built", "sqft",
+            "location",
+            "address",
+            "city",
+            "state",
+            "zip",
+            "occupancy",
+            "construction",
+            "year built",
+            "sqft",
         ]
 
         for row in table:
@@ -163,7 +180,7 @@ class ExcelParser(BaseParser):
                     val = str(row[-1] or "").strip()
                     val = re.sub(r"[^\d.,]", "", val)
                     if val:
-                        fields[f"total_{sheet_name.lower().replace(' ','_')}"] = val
+                        fields[f"total_{sheet_name.lower().replace(' ', '_')}"] = val
 
         return fields
 
@@ -223,12 +240,14 @@ class ExcelParser(BaseParser):
             val = self._parse_currency(raw_val)
             limit = self._parse_currency(raw_lim) if raw_lim else None
 
-            items.append(ScheduleItem(
-                item_number=str(len(items) + 1),
-                description=desc,
-                value=val,
-                limit=limit,
-            ))
+            items.append(
+                ScheduleItem(
+                    item_number=str(len(items) + 1),
+                    description=desc,
+                    value=val,
+                    limit=limit,
+                )
+            )
 
         total = sum(i.value for i in items)
         return ScheduleOfValues(

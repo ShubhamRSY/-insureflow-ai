@@ -40,7 +40,9 @@ DEMO_CONNECTORS: dict[str, dict[str, Any]] = {
         "type": "cloud",
         "category": "Document Storage",
         "description": "Broker shared drive / MGA submission folder",
-        "config_fields": [{"key": "folder_id", "label": "Folder ID or URL", "placeholder": "1BxiMVs0XRA5..."}],
+        "config_fields": [
+            {"key": "folder_id", "label": "Folder ID or URL", "placeholder": "1BxiMVs0XRA5..."}
+        ],
         "label": lambda req: f"Google Drive › {req.folder_id or 'Broker Submissions'}",
     },
     "sharepoint": {
@@ -48,7 +50,13 @@ DEMO_CONNECTORS: dict[str, dict[str, Any]] = {
         "type": "cloud",
         "category": "Document Storage",
         "description": "Carrier or MGA document library (Microsoft 365)",
-        "config_fields": [{"key": "site_url", "label": "Site URL", "placeholder": "https://contoso.sharepoint.com/sites/uw-intake"}],
+        "config_fields": [
+            {
+                "key": "site_url",
+                "label": "Site URL",
+                "placeholder": "https://contoso.sharepoint.com/sites/uw-intake",
+            }
+        ],
         "label": lambda req: f"SharePoint › {req.site_url or 'UW Intake Library'}",
     },
     "s3-bucket": {
@@ -60,7 +68,9 @@ DEMO_CONNECTORS: dict[str, dict[str, Any]] = {
             {"key": "bucket", "label": "Bucket", "placeholder": "carrier-submissions"},
             {"key": "prefix", "label": "Prefix", "placeholder": "brokers/golden-gate/"},
         ],
-        "label": lambda req: f"s3://{req.bucket or 'carrier-submissions'}/{req.prefix or 'inbound/'}",
+        "label": lambda req: (
+            f"s3://{req.bucket or 'carrier-submissions'}/{req.prefix or 'inbound/'}"
+        ),
     },
     "azure-blob": {
         "name": "Azure Blob Storage",
@@ -86,7 +96,9 @@ DEMO_CONNECTORS: dict[str, dict[str, Any]] = {
         "type": "email",
         "category": "Submission Intake",
         "description": "Poll submissions@yourmga.com for broker attachments",
-        "config_fields": [{"key": "mailbox", "label": "Mailbox", "placeholder": "submissions@insureflow.demo"}],
+        "config_fields": [
+            {"key": "mailbox", "label": "Mailbox", "placeholder": "submissions@insureflow.demo"}
+        ],
         "label": lambda req: req.mailbox or "submissions@insureflow.demo",
     },
     "sftp": {
@@ -106,7 +118,9 @@ DEMO_CONNECTORS: dict[str, dict[str, Any]] = {
             {"key": "host", "label": "IVANS mailbox / account", "placeholder": "carrier-12345"},
             {"key": "environment", "label": "Environment", "placeholder": "production"},
         ],
-        "label": lambda req: f"IVANS › {req.host or 'carrier-mailbox'} ({req.environment or 'prod'})",
+        "label": lambda req: (
+            f"IVANS › {req.host or 'carrier-mailbox'} ({req.environment or 'prod'})"
+        ),
     },
     "acord-al3": {
         "name": "ACORD AL3 / XML Hub",
@@ -125,7 +139,11 @@ DEMO_CONNECTORS: dict[str, dict[str, Any]] = {
         "category": "Policy Admin",
         "description": "Pull submission attachments from Guidewire PolicyCenter",
         "config_fields": [
-            {"key": "site_url", "label": "PolicyCenter URL", "placeholder": "https://pc.carrier.com"},
+            {
+                "key": "site_url",
+                "label": "PolicyCenter URL",
+                "placeholder": "https://pc.carrier.com",
+            },
             {"key": "environment", "label": "Environment", "placeholder": "prod"},
         ],
         "label": lambda req: f"Guidewire PC › {req.site_url or 'pc.carrier.com'}",
@@ -136,7 +154,11 @@ DEMO_CONNECTORS: dict[str, dict[str, Any]] = {
         "category": "Policy Admin",
         "description": "Submission documents from Duck Creek Policy admin",
         "config_fields": [
-            {"key": "site_url", "label": "Duck Creek URL", "placeholder": "https://policy.carrier.com"},
+            {
+                "key": "site_url",
+                "label": "Duck Creek URL",
+                "placeholder": "https://policy.carrier.com",
+            },
             {"key": "environment", "label": "Environment", "placeholder": "prod"},
         ],
         "label": lambda req: f"Duck Creek › {req.site_url or 'policy.carrier.com'}",
@@ -146,7 +168,13 @@ DEMO_CONNECTORS: dict[str, dict[str, Any]] = {
         "type": "policy",
         "category": "Policy Admin",
         "description": "P&C policy admin — submission bundle export",
-        "config_fields": [{"key": "site_url", "label": "Majesco tenant URL", "placeholder": "https://tenant.majesco.com"}],
+        "config_fields": [
+            {
+                "key": "site_url",
+                "label": "Majesco tenant URL",
+                "placeholder": "https://tenant.majesco.com",
+            }
+        ],
         "label": lambda req: f"Majesco › {req.site_url or 'tenant.majesco.com'}",
     },
     "applied-epic": {
@@ -165,7 +193,9 @@ DEMO_CONNECTORS: dict[str, dict[str, Any]] = {
         "type": "agency",
         "category": "Agency Management",
         "description": "Independent agency management — new business submissions",
-        "config_fields": [{"key": "host", "label": "Agency ID / API host", "placeholder": "agency-12345"}],
+        "config_fields": [
+            {"key": "host", "label": "Agency ID / API host", "placeholder": "agency-12345"}
+        ],
         "label": lambda req: f"HawkSoft › {req.host or 'agency-12345'}",
     },
     "salesforce-crm": {
@@ -174,8 +204,16 @@ DEMO_CONNECTORS: dict[str, dict[str, Any]] = {
         "category": "CRM / Distribution",
         "description": "Broker opportunity files from Salesforce Opportunity / Case",
         "config_fields": [
-            {"key": "site_url", "label": "Salesforce org URL", "placeholder": "https://carrier.my.salesforce.com"},
-            {"key": "folder_id", "label": "Record type / queue", "placeholder": "Commercial_Submissions"},
+            {
+                "key": "site_url",
+                "label": "Salesforce org URL",
+                "placeholder": "https://carrier.my.salesforce.com",
+            },
+            {
+                "key": "folder_id",
+                "label": "Record type / queue",
+                "placeholder": "Commercial_Submissions",
+            },
         ],
         "label": lambda req: f"Salesforce › {req.folder_id or 'Commercial Submissions'}",
     },
@@ -185,7 +223,11 @@ DEMO_CONNECTORS: dict[str, dict[str, Any]] = {
         "category": "Rating & Loss Data",
         "description": "ISO loss costs, PPC, and property analytics feed",
         "config_fields": [
-            {"key": "site_url", "label": "Verisk account / endpoint", "placeholder": "https://api.verisk.com"},
+            {
+                "key": "site_url",
+                "label": "Verisk account / endpoint",
+                "placeholder": "https://api.verisk.com",
+            },
             {"key": "environment", "label": "Environment", "placeholder": "production"},
         ],
         "label": lambda req: f"Verisk ISO › {req.site_url or 'api.verisk.com'}",
@@ -195,7 +237,9 @@ DEMO_CONNECTORS: dict[str, dict[str, Any]] = {
         "type": "data",
         "category": "Rating & Loss Data",
         "description": "Property risk, replacement cost, and catastrophe models",
-        "config_fields": [{"key": "site_url", "label": "API endpoint", "placeholder": "https://api.corelogic.com"}],
+        "config_fields": [
+            {"key": "site_url", "label": "API endpoint", "placeholder": "https://api.corelogic.com"}
+        ],
         "label": lambda req: f"CoreLogic › {req.site_url or 'property-risk-api'}",
     },
     "imageright": {
@@ -204,10 +248,16 @@ DEMO_CONNECTORS: dict[str, dict[str, Any]] = {
         "category": "Document Storage",
         "description": "Document management for small carriers — policy forms, applications, inspection reports",
         "config_fields": [
-            {"key": "host", "label": "ImageRight server / tenant", "placeholder": "imageright.carrier.com"},
+            {
+                "key": "host",
+                "label": "ImageRight server / tenant",
+                "placeholder": "imageright.carrier.com",
+            },
             {"key": "folder_id", "label": "Document queue / folder", "placeholder": "UW-Intake"},
         ],
-        "label": lambda req: f"ImageRight › {req.host or 'imageright.carrier.com'}/{req.folder_id or 'UW-Intake'}",
+        "label": lambda req: (
+            f"ImageRight › {req.host or 'imageright.carrier.com'}/{req.folder_id or 'UW-Intake'}"
+        ),
     },
     "bold-penguin": {
         "name": "Bold Penguin",
@@ -215,10 +265,16 @@ DEMO_CONNECTORS: dict[str, dict[str, Any]] = {
         "category": "Submission Intake",
         "description": "Small commercial marketplace — route applications from agents directly to carrier appetite",
         "config_fields": [
-            {"key": "host", "label": "Bold Penguin API endpoint", "placeholder": "https://api.boldpenguin.com"},
+            {
+                "key": "host",
+                "label": "Bold Penguin API endpoint",
+                "placeholder": "https://api.boldpenguin.com",
+            },
             {"key": "environment", "label": "Environment", "placeholder": "production"},
         ],
-        "label": lambda req: f"Bold Penguin › {req.host or 'api.boldpenguin.com'} ({req.environment or 'prod'})",
+        "label": lambda req: (
+            f"Bold Penguin › {req.host or 'api.boldpenguin.com'} ({req.environment or 'prod'})"
+        ),
     },
     "docusign": {
         "name": "DocuSign",
@@ -226,8 +282,16 @@ DEMO_CONNECTORS: dict[str, dict[str, Any]] = {
         "category": "eSignature",
         "description": "Signed application packets and broker attestations",
         "config_fields": [
-            {"key": "site_url", "label": "DocuSign account", "placeholder": "https://account.docusign.com"},
-            {"key": "folder_id", "label": "Envelope folder / template", "placeholder": "UW-Applications"},
+            {
+                "key": "site_url",
+                "label": "DocuSign account",
+                "placeholder": "https://account.docusign.com",
+            },
+            {
+                "key": "folder_id",
+                "label": "Envelope folder / template",
+                "placeholder": "UW-Applications",
+            },
         ],
         "label": lambda req: f"DocuSign › {req.folder_id or 'UW Applications'}",
     },
@@ -236,7 +300,13 @@ DEMO_CONNECTORS: dict[str, dict[str, Any]] = {
         "type": "messaging",
         "category": "Collaboration",
         "description": "UW intake channel file drops and @mention submissions",
-        "config_fields": [{"key": "site_url", "label": "Team channel webhook / URL", "placeholder": "https://teams.microsoft.com/..."}],
+        "config_fields": [
+            {
+                "key": "site_url",
+                "label": "Team channel webhook / URL",
+                "placeholder": "https://teams.microsoft.com/...",
+            }
+        ],
         "label": lambda req: "Teams › UW Intake Channel",
     },
     "slack-intake": {
@@ -244,7 +314,9 @@ DEMO_CONNECTORS: dict[str, dict[str, Any]] = {
         "type": "messaging",
         "category": "Collaboration",
         "description": "#submissions channel — broker file uploads via workflow",
-        "config_fields": [{"key": "mailbox", "label": "Channel / workflow ID", "placeholder": "#submissions"}],
+        "config_fields": [
+            {"key": "mailbox", "label": "Channel / workflow ID", "placeholder": "#submissions"}
+        ],
         "label": lambda req: f"Slack › {req.mailbox or '#submissions'}",
     },
     "snowflake": {
@@ -253,7 +325,11 @@ DEMO_CONNECTORS: dict[str, dict[str, Any]] = {
         "category": "Data Warehouse",
         "description": "Historical loss and exposure data from carrier warehouse",
         "config_fields": [
-            {"key": "host", "label": "Account / warehouse", "placeholder": "carrier.snowflakecomputing.com"},
+            {
+                "key": "host",
+                "label": "Account / warehouse",
+                "placeholder": "carrier.snowflakecomputing.com",
+            },
             {"key": "prefix", "label": "Schema.table", "placeholder": "UW.SUBMISSIONS_STAGING"},
         ],
         "label": lambda req: f"Snowflake › {req.prefix or 'UW.SUBMISSIONS_STAGING'}",
@@ -338,14 +414,20 @@ def list_sources(examples_dir: Path) -> list[dict[str, object]]:
         }
         for sid, meta in DEMO_CONNECTORS.items()
     ]
-    return packages + [
-        {
-            "id": "server-folder",
-            "name": "Server Directory",
-            "type": "filesystem",
-            "category": "Document Storage",
-            "description": "Pull from a folder on the API server (e.g. examples/)",
-            "status": "ready",
-            "config_fields": [{"key": "path", "label": "Folder path", "placeholder": "examples"}],
-        },
-    ] + enterprise
+    return (
+        packages
+        + [
+            {
+                "id": "server-folder",
+                "name": "Server Directory",
+                "type": "filesystem",
+                "category": "Document Storage",
+                "description": "Pull from a folder on the API server (e.g. examples/)",
+                "status": "ready",
+                "config_fields": [
+                    {"key": "path", "label": "Folder path", "placeholder": "examples"}
+                ],
+            },
+        ]
+        + enterprise
+    )

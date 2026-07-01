@@ -12,18 +12,18 @@ from typing import Optional
 
 
 class AuthorityTier(str, Enum):
-    JUNIOR = "junior"          # Simple, small accounts (< $25K premium)
-    SENIOR = "senior"          # Complex/high-value (up to $500K)
-    CUO = "cuo"                # Chief Underwriting Officer (unlimited)
-    MGA = "mga"                # Managing General Agent (delegated)
+    JUNIOR = "junior"  # Simple, small accounts (< $25K premium)
+    SENIOR = "senior"  # Complex/high-value (up to $500K)
+    CUO = "cuo"  # Chief Underwriting Officer (unlimited)
+    MGA = "mga"  # Managing General Agent (delegated)
 
 
 @dataclass
 class BindingAuthority:
-    max_premium: float = 0.0          # Maximum annual premium
-    max_tiv: float = 0.0              # Maximum total insured value
+    max_premium: float = 0.0  # Maximum annual premium
+    max_tiv: float = 0.0  # Maximum total insured value
     max_line_tiv: dict[str, float] = field(default_factory=dict)  # Per-line limits
-    requires_co_sign: bool = False    # Needs second signature
+    requires_co_sign: bool = False  # Needs second signature
     co_sign_threshold_premium: float = 0.0
     allowed_states: list[str] = field(default_factory=list)
     excluded_occupancies: list[str] = field(default_factory=list)
@@ -82,24 +82,36 @@ class AuthorityMatrix:
     def _seed_defaults(self) -> None:
         defaults = [
             UnderwriterAuthority(
-                username="junderwood", display_name="Jamie Underwood",
-                tier=AuthorityTier.JUNIOR, binding_authority=_JUNIOR_BASIC,
-                license_number="P&C-48291-TX", license_states=["TX", "OK"],
+                username="junderwood",
+                display_name="Jamie Underwood",
+                tier=AuthorityTier.JUNIOR,
+                binding_authority=_JUNIOR_BASIC,
+                license_number="P&C-48291-TX",
+                license_states=["TX", "OK"],
             ),
             UnderwriterAuthority(
-                username="sfields", display_name="Sarah Fields",
-                tier=AuthorityTier.SENIOR, binding_authority=_SENIOR_STANDARD,
-                license_number="P&C-77124-TX", license_states=["TX", "OK", "LA", "AR"],
+                username="sfields",
+                display_name="Sarah Fields",
+                tier=AuthorityTier.SENIOR,
+                binding_authority=_SENIOR_STANDARD,
+                license_number="P&C-77124-TX",
+                license_states=["TX", "OK", "LA", "AR"],
             ),
             UnderwriterAuthority(
-                username="mchen", display_name="Michael Chen",
-                tier=AuthorityTier.CUO, binding_authority=_CUO_UNLIMITED,
-                license_number="P&C-33901-TX", license_states=["TX", "OK", "LA", "AR", "FL", "CA", "NY"],
+                username="mchen",
+                display_name="Michael Chen",
+                tier=AuthorityTier.CUO,
+                binding_authority=_CUO_UNLIMITED,
+                license_number="P&C-33901-TX",
+                license_states=["TX", "OK", "LA", "AR", "FL", "CA", "NY"],
             ),
             UnderwriterAuthority(
-                username="tbroker", display_name="Tom Broker",
-                tier=AuthorityTier.MGA, binding_authority=_MGA_DELEGATED,
-                license_number="MGA-55129-TX", license_states=["TX"],
+                username="tbroker",
+                display_name="Tom Broker",
+                tier=AuthorityTier.MGA,
+                binding_authority=_MGA_DELEGATED,
+                license_number="MGA-55129-TX",
+                license_states=["TX"],
             ),
         ]
         for a in defaults:

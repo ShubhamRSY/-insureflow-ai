@@ -19,10 +19,10 @@ from insureflow.models.submissions import SubmissionBundle
 
 
 class SubmissionPriority(str, Enum):
-    HOT = "hot"            # Best fit — score >= 80
-    WARM = "warm"          # Good fit — score >= 50
-    COLD = "cold"          # Marginal — score >= 25
-    NO_FIT = "no_fit"      # Don't bother — score < 25
+    HOT = "hot"  # Best fit — score >= 80
+    WARM = "warm"  # Good fit — score >= 50
+    COLD = "cold"  # Marginal — score >= 25
+    NO_FIT = "no_fit"  # Don't bother — score < 25
 
 
 @dataclass
@@ -39,11 +39,18 @@ class DocumentChecklist:
     @property
     def completeness_pct(self) -> float:
         total = 8
-        present = sum([
-            self.acord_form, self.loss_run, self.financials, self.photos,
-            self.inspection_report, self.schedule_of_values,
-            self.supplemental, self.signed_application,
-        ])
+        present = sum(
+            [
+                self.acord_form,
+                self.loss_run,
+                self.financials,
+                self.photos,
+                self.inspection_report,
+                self.schedule_of_values,
+                self.supplemental,
+                self.signed_application,
+            ]
+        )
         return present / total
 
     @property
@@ -76,10 +83,10 @@ class TriageResult:
     rank: int = 0  # Position in the queue
 
     # Fit analysis
-    naics_fit: float = 0.0      # 0-100
+    naics_fit: float = 0.0  # 0-100
     geography_fit: float = 0.0  # 0-100
-    size_fit: float = 0.0       # 0-100
-    coverage_fit: float = 0.0   # 0-100
+    size_fit: float = 0.0  # 0-100
+    coverage_fit: float = 0.0  # 0-100
 
     # Documents
     document_checklist: DocumentChecklist = field(default_factory=DocumentChecklist)
@@ -120,7 +127,9 @@ class TriageAgent:
             if bundle.structured.locations:
                 state = bundle.structured.locations[0].state or ""
                 for loc in bundle.structured.locations:
-                    tiv += (loc.building_value or 0) + (loc.contents_value or 0) + (loc.bi_value or 0)
+                    tiv += (
+                        (loc.building_value or 0) + (loc.contents_value or 0) + (loc.bi_value or 0)
+                    )
             for cov in bundle.structured.coverages:
                 premium += cov.premium
             if bundle.structured.financial:
@@ -140,9 +149,7 @@ class TriageAgent:
         if naics:
             if naics[:2] in self.PREFERRED_NAICS_PREFIXES:
                 naics_fit = 100.0
-            elif any(naics.startswith(p) for p in (
-                "7211", "1133", "2131", "4821", "4911", "9211"
-            )):
+            elif any(naics.startswith(p) for p in ("7211", "1133", "2131", "4821", "4911", "9211")):
                 naics_fit = 0.0  # Excluded
             else:
                 naics_fit = 40.0

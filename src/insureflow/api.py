@@ -153,7 +153,9 @@ def create_user(
         full_name=new_user.full_name or new_user.username,
         org_id=org_id,
     )
-    return {"message": f"User '{new_user.username}' created with role '{new_user.role.value}' in org '{org_id}'"}
+    return {
+        "message": f"User '{new_user.username}' created with role '{new_user.role.value}' in org '{org_id}'"
+    }
 
 
 @app.get("/auth/me")
@@ -193,11 +195,31 @@ def get_role_hierarchy() -> dict[str, Any]:
     """List all roles with hierarchy levels and descriptions."""
     return {
         "roles": [
-            {"role": "viewer", "level": 1, "description": "View dashboards, jobs, and audit results — read-only"},
-            {"role": "underwriter", "level": 2, "description": "Run pipelines, create audits, pull data sources"},
-            {"role": "licensed_uw", "level": 3, "description": "Sign off decisions and bind policies"},
-            {"role": "admin", "level": 4, "description": "Manage users, delete jobs, configure webhooks"},
-            {"role": "cuo", "level": 5, "description": "Set market cycles and system-wide parameters"},
+            {
+                "role": "viewer",
+                "level": 1,
+                "description": "View dashboards, jobs, and audit results — read-only",
+            },
+            {
+                "role": "underwriter",
+                "level": 2,
+                "description": "Run pipelines, create audits, pull data sources",
+            },
+            {
+                "role": "licensed_uw",
+                "level": 3,
+                "description": "Sign off decisions and bind policies",
+            },
+            {
+                "role": "admin",
+                "level": 4,
+                "description": "Manage users, delete jobs, configure webhooks",
+            },
+            {
+                "role": "cuo",
+                "level": 5,
+                "description": "Set market cycles and system-wide parameters",
+            },
         ]
     }
 
@@ -369,10 +391,7 @@ def dashboard_overview(
                 else:
                     summary = results.get("summary") or results.get("pipeline_summary") or results
                     if isinstance(summary, dict):
-                        row["decision"] = (
-                            summary.get("decision")
-                            or summary.get("recommendation")
-                        )
+                        row["decision"] = summary.get("decision") or summary.get("recommendation")
                     row["bundle_id"] = results.get("bundle_id") or (
                         summary.get("bundle_id") if isinstance(summary, dict) else None
                     )
@@ -434,7 +453,9 @@ async def run_insurance_demo(
         raise HTTPException(status_code=503, detail="Example data not found on server")
     job_id = f"demo-{uuid.uuid4().hex[:12]}"
     req = _load_pacific_coast_submission()
-    job_store.set(INSURANCE_NS, job_id, {"status": "processing", "demo": True}, org_id=current.org_id)
+    job_store.set(
+        INSURANCE_NS, job_id, {"status": "processing", "demo": True}, org_id=current.org_id
+    )
     celery_app.send_task(
         "insureflow.tasks.pipeline_tasks.run_pipeline",
         args=[job_id, req.model_dump(), current.org_id],
@@ -542,7 +563,9 @@ async def run_mortgage_demo(
         use_llm=True,
         bundle_id=job_id,
     )
-    job_store.set(MORTGAGE_NS, job_id, {"status": "processing", "demo": True}, org_id=current.org_id)
+    job_store.set(
+        MORTGAGE_NS, job_id, {"status": "processing", "demo": True}, org_id=current.org_id
+    )
     background_tasks.add_task(_run_mortgage_task, job_id, req, current.org_id)
     return {"job_id": job_id, "status": "processing", "preset": preset_id, "org_id": current.org_id}
 
@@ -582,7 +605,9 @@ def _run_pipeline_task(job_id: str, request: SubmissionRequest, org_id: str) -> 
                 pdf_paths=request.pdf_paths,
                 bundle_id=request.bundle_id or job_id,
             )
-        job_store.set(INSURANCE_NS, job_id, {"status": "completed", "results": result}, org_id=org_id)
+        job_store.set(
+            INSURANCE_NS, job_id, {"status": "completed", "results": result}, org_id=org_id
+        )
     except Exception as exc:
         logger.exception("Pipeline run failed")
         job_store.set(INSURANCE_NS, job_id, {"status": "failed", "error": str(exc)}, org_id=org_id)
@@ -683,7 +708,10 @@ def export_regulatory_package(
 def list_pending_reviews(current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
     from insureflow.workflow.service import WorkflowService
 
-    return {"org_id": current.org_id, "pending": WorkflowService().store.list_pending(current.org_id)}
+    return {
+        "org_id": current.org_id,
+        "pending": WorkflowService().store.list_pending(current.org_id),
+    }
 
 
 @app.get("/pipeline/workflow/{bundle_id}")
@@ -738,6 +766,7 @@ def licensed_uw_sign_off(
             category = OverrideReasonCategory(req.override_reason_category.lower())
         except (ValueError, AttributeError):
             from insureflow.outcomes.override import OverrideReasonCategory
+
             category = OverrideReasonCategory.OTHER
 
         ai_decision = record.ai_decision
@@ -826,7 +855,9 @@ def record_loss_experience(
 
 
 @app.get("/pipeline/outcomes/calibration")
-def get_calibration_summary(current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
+def get_calibration_summary(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
     from insureflow.outcomes.feedback import FeedbackEngine
 
     return FeedbackEngine().calibration_summary(current.org_id)
@@ -843,7 +874,9 @@ def list_override_analytics(
     from insureflow.outcomes.override import OverrideAnalyticsQuery, OverrideReasonCategory
 
     query = OverrideAnalyticsQuery(
-        org_id=current.org_id, limit=limit, offset=offset,
+        org_id=current.org_id,
+        limit=limit,
+        offset=offset,
         reason_category=OverrideReasonCategory(reason_category) if reason_category else None,
     )
     engine = get_analytics_engine()
@@ -903,12 +936,14 @@ def get_cope_analysis(
         raise HTTPException(status_code=404, detail="Submission not found")
 
     from insureflow.audit.store import AuditStore
+
     store = AuditStore()
     bundle = store.load_json(bundle_id, "submission_bundle.json", org_id=current.org_id)
     if not bundle:
         raise HTTPException(status_code=404, detail="Bundle data not found")
 
     from insureflow.models.submissions import SubmissionBundle
+
     cope = COPERatingEngine()
     result = cope.analyze(SubmissionBundle(**bundle))
     return {
@@ -959,33 +994,48 @@ def set_market_cycle(
     try:
         mp = MarketPhase(phase.lower())
     except ValueError:
-        raise HTTPException(status_code=400, detail=f"Invalid phase: {phase} (use: hard, soft, transitioning_hard, transitioning_soft)")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid phase: {phase} (use: hard, soft, transitioning_hard, transitioning_soft)",
+        )
 
     cycles = {
         MarketPhase.HARD: MarketCycle(
             phase=MarketPhase.HARD,
-            property_rate_mod=1.25, liability_rate_mod=1.15,
-            workers_comp_rate_mod=0.95, auto_rate_mod=1.30,
-            appetite_tightness=1.4, reinsurance_cost_mod=1.20,
-            industry_loss_ratio=0.73, capacity_available=False,
+            property_rate_mod=1.25,
+            liability_rate_mod=1.15,
+            workers_comp_rate_mod=0.95,
+            auto_rate_mod=1.30,
+            appetite_tightness=1.4,
+            reinsurance_cost_mod=1.20,
+            industry_loss_ratio=0.73,
+            capacity_available=False,
             nuclear_verdict_trend="rising",
             description="Hard market: Rates rising, capacity tightening. Nuclear verdicts driving increases.",
         ),
         MarketPhase.SOFT: MarketCycle(
             phase=MarketPhase.SOFT,
-            property_rate_mod=0.92, liability_rate_mod=0.95,
-            workers_comp_rate_mod=0.90, auto_rate_mod=0.96,
-            appetite_tightness=0.80, reinsurance_cost_mod=0.90,
-            industry_loss_ratio=0.55, capacity_available=True,
+            property_rate_mod=0.92,
+            liability_rate_mod=0.95,
+            workers_comp_rate_mod=0.90,
+            auto_rate_mod=0.96,
+            appetite_tightness=0.80,
+            reinsurance_cost_mod=0.90,
+            industry_loss_ratio=0.55,
+            capacity_available=True,
             nuclear_verdict_trend="stable",
             description="Soft market: Rates declining 4-8%. Capacity abundant. Competition increasing.",
         ),
         MarketPhase.TRANSITIONING_HARD: MarketCycle(
             phase=MarketPhase.TRANSITIONING_HARD,
-            property_rate_mod=1.10, liability_rate_mod=1.05,
-            workers_comp_rate_mod=0.92, auto_rate_mod=1.15,
-            appetite_tightness=1.15, reinsurance_cost_mod=1.08,
-            industry_loss_ratio=0.65, capacity_available=True,
+            property_rate_mod=1.10,
+            liability_rate_mod=1.05,
+            workers_comp_rate_mod=0.92,
+            auto_rate_mod=1.15,
+            appetite_tightness=1.15,
+            reinsurance_cost_mod=1.08,
+            industry_loss_ratio=0.65,
+            capacity_available=True,
             nuclear_verdict_trend="stable",
             description="Transitioning from hard to soft: Rates still elevated but capacity returning.",
         ),
@@ -1032,12 +1082,14 @@ def analyze_renewal(
     """Run renewal analysis on an existing policy."""
     from insureflow.underwriting.renewal import RenewalEngine
     from insureflow.workflow.service import WorkflowService
+
     record = WorkflowService().store.get(bundle_id, current.org_id)
     if not record:
         raise HTTPException(status_code=404, detail="Submission not found")
 
     engine = RenewalEngine()
     from datetime import date, timedelta
+
     rec = engine.analyze_renewal(
         bundle_id=bundle_id,
         insured_name="",  # Would come from bundle
@@ -1058,6 +1110,7 @@ def _get_audit_engine() -> PremiumAuditEngine:
     global _audit_engine
     if _audit_engine is None:
         from insureflow.underwriting.renewal import PremiumAuditEngine
+
         _audit_engine = PremiumAuditEngine()
     return _audit_engine
 
@@ -1074,6 +1127,7 @@ def create_premium_audit(
     """Create a premium audit for end-of-year reconciliation."""
     engine = _get_audit_engine()
     from datetime import date
+
     p_start = date.fromisoformat(policy_period_start) if policy_period_start else None
     p_end = date.fromisoformat(policy_period_end) if policy_period_end else None
     audit = engine.create_audit(
@@ -1097,6 +1151,7 @@ def add_audit_adjustment(
 ) -> dict[str, Any]:
     """Add an adjustment to a premium audit."""
     from insureflow.underwriting.renewal import AuditAdjustmentType
+
     engine = _get_audit_engine()
     try:
         adj_type = AuditAdjustmentType(adjustment_type)
@@ -1120,7 +1175,8 @@ def complete_premium_audit(
     engine = _get_audit_engine()
     try:
         audit = engine.complete_audit(
-            audit_id, actual_premium,
+            audit_id,
+            actual_premium,
             audited_exposure=audited_exposure,
             notes=notes,
             reconciled_by=current.username,
@@ -1137,6 +1193,7 @@ def list_premium_audits(
 ) -> dict[str, Any]:
     """List premium audits with optional status filter."""
     from insureflow.underwriting.renewal import AuditStatus
+
     engine = _get_audit_engine()
     audit_status = AuditStatus(status) if status else None
     audits = engine.list_audits(org_id=current.org_id, status=audit_status)
@@ -1160,21 +1217,26 @@ def get_missing_documents(
 ) -> dict[str, Any]:
     """Get list of missing documents for a submission."""
     from insureflow.workflow.service import WorkflowService
+
     record = WorkflowService().store.get(bundle_id, current.org_id)
     if not record:
         raise HTTPException(status_code=404, detail="Submission not found")
 
     from insureflow.audit.store import AuditStore
+
     store = AuditStore()
     bundle_data = store.load_json(bundle_id, "submission_bundle.json", org_id=current.org_id)
 
     if not bundle_data:
         from insureflow.agents.triage_agent import DocumentChecklist
+
         checklist = DocumentChecklist()
     else:
         from insureflow.models.submissions import SubmissionBundle
+
         bundle = SubmissionBundle(**bundle_data)
         from insureflow.agents.triage_agent import get_triage_agent
+
         result = get_triage_agent().score_submission(bundle)
         checklist = result.document_checklist
 
@@ -1299,19 +1361,31 @@ def _run_mortgage_task(job_id: str, request: MortgageSubmissionRequest, org_id: 
                 loan_amount=request.loan_amount,
             )
         else:
-            job_store.set(MORTGAGE_NS, job_id, {
-                "status": "failed",
-                "error": "Provide documents or directory",
-            }, org_id=org_id)
-            webhook_dispatcher.dispatch("mortgage.failed", org_id, {"job_id": job_id, "error": "no input"})
+            job_store.set(
+                MORTGAGE_NS,
+                job_id,
+                {
+                    "status": "failed",
+                    "error": "Provide documents or directory",
+                },
+                org_id=org_id,
+            )
+            webhook_dispatcher.dispatch(
+                "mortgage.failed", org_id, {"job_id": job_id, "error": "no input"}
+            )
             return
 
-        job_store.set(MORTGAGE_NS, job_id, {"status": "completed", "results": result}, org_id=org_id)
+        job_store.set(
+            MORTGAGE_NS, job_id, {"status": "completed", "results": result}, org_id=org_id
+        )
     except Exception as exc:
         logger.exception("Mortgage pipeline run failed")
         job_store.set(MORTGAGE_NS, job_id, {"status": "failed", "error": str(exc)}, org_id=org_id)
         from insureflow.mortgage.webhooks import webhook_dispatcher
-        webhook_dispatcher.dispatch("mortgage.failed", org_id, {"job_id": job_id, "error": str(exc)})
+
+        webhook_dispatcher.dispatch(
+            "mortgage.failed", org_id, {"job_id": job_id, "error": str(exc)}
+        )
 
 
 def _finalize_celery_mortgage_job(job_id: str, org_id: str, job: dict[str, Any]) -> dict[str, Any]:
@@ -1340,7 +1414,9 @@ def _finalize_celery_mortgage_job(job_id: str, org_id: str, job: dict[str, Any])
             "celery_task_id": task_id,
         }
         job_store.set(MORTGAGE_NS, job_id, updated, org_id=org_id)
-        webhook_dispatcher.dispatch("mortgage.completed", org_id, {"job_id": job_id, "results": result})
+        webhook_dispatcher.dispatch(
+            "mortgage.completed", org_id, {"job_id": job_id, "results": result}
+        )
         return updated
 
     error = str(async_result.result) if async_result.failed() else "Celery task failed"
@@ -1392,11 +1468,16 @@ def _dispatch_mortgage_celery(job_id: str, request: MortgageSubmissionRequest, o
         job_store.set(MORTGAGE_NS, job_id, {"status": "failed", "error": "no input"}, org_id=org_id)
         return
 
-    job_store.set(MORTGAGE_NS, job_id, {
-        "status": "processing",
-        "backend": "celery",
-        "celery_task_id": task.id,
-    }, org_id=org_id)
+    job_store.set(
+        MORTGAGE_NS,
+        job_id,
+        {
+            "status": "processing",
+            "backend": "celery",
+            "celery_task_id": task.id,
+        },
+        org_id=org_id,
+    )
 
 
 @app.post("/mortgage/pipeline/run", status_code=202)
@@ -1435,7 +1516,9 @@ def get_mortgage_job_status(
 
 
 @app.get("/mortgage/pipeline/jobs")
-def list_mortgage_jobs(current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, list[str]]:
+def list_mortgage_jobs(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, list[str]]:
     return {"jobs": job_store.list_ids(MORTGAGE_NS, org_id=current.org_id)}
 
 
@@ -1516,7 +1599,12 @@ def list_webhooks(current: TokenData = Depends(require_role(Role.ADMIN))) -> dic
     return {
         "org_id": current.org_id,
         "subscriptions": [
-            {"subscription_id": s.subscription_id, "url": s.url, "events": s.events, "active": s.active}
+            {
+                "subscription_id": s.subscription_id,
+                "url": s.url,
+                "events": s.events,
+                "active": s.active,
+            }
             for s in subs
         ],
     }
@@ -1567,10 +1655,11 @@ def broker_submission_status(
         "bundle_id": share.bundle_id,
         "status": status,
         "broker_name": share.broker_name,
-        "vertical": "insurance" if job_store.get(INSURANCE_NS, share.bundle_id, org_id=share.org_id) else "mortgage",
-        "decision": results.get("ai_decision") or (
-            (results.get("memo") or {}).get("decision") if isinstance(results, dict) else None
-        ),
+        "vertical": "insurance"
+        if job_store.get(INSURANCE_NS, share.bundle_id, org_id=share.org_id)
+        else "mortgage",
+        "decision": results.get("ai_decision")
+        or ((results.get("memo") or {}).get("decision") if isinstance(results, dict) else None),
         "workflow_state": results.get("workflow_state", ""),
         "estimated_completion": None,
         "last_updated": (job or {}).get("updated_at", ""),
@@ -1696,29 +1785,45 @@ def portfolio_summary(
             by_state[state] = {"count": 0, "tiv": 0.0, "policies": []}
         by_state[state]["count"] += 1
         by_state[state]["tiv"] += p.tiv
-        by_state[state]["policies"].append({
-            "insured_name": p.insured_name, "tiv": p.tiv, "naics": p.naics_code,
-        })
+        by_state[state]["policies"].append(
+            {
+                "insured_name": p.insured_name,
+                "tiv": p.tiv,
+                "naics": p.naics_code,
+            }
+        )
 
         naics2 = p.industry_code
         if naics2 not in by_naics2:
             by_naics2[naics2] = {"count": 0, "tiv": 0.0, "policies": []}
         by_naics2[naics2]["count"] += 1
         by_naics2[naics2]["tiv"] += p.tiv
-        by_naics2[naics2]["policies"].append({
-            "insured_name": p.insured_name, "tiv": p.tiv, "state": p.state,
-        })
+        by_naics2[naics2]["policies"].append(
+            {
+                "insured_name": p.insured_name,
+                "tiv": p.tiv,
+                "state": p.state,
+            }
+        )
 
     return {
         "org_id": current.org_id,
         "total_policies": total_policies,
         "total_tiv": total_tiv,
         "by_state": {
-            state: {"count": info["count"], "tiv": info["tiv"], "pct": round(info["tiv"] / total_tiv * 100, 1) if total_tiv else 0}
+            state: {
+                "count": info["count"],
+                "tiv": info["tiv"],
+                "pct": round(info["tiv"] / total_tiv * 100, 1) if total_tiv else 0,
+            }
             for state, info in sorted(by_state.items(), key=lambda x: -x[1]["tiv"])
         },
         "by_industry": {
-            naics: {"count": info["count"], "tiv": info["tiv"], "pct": round(info["tiv"] / total_tiv * 100, 1) if total_tiv else 0}
+            naics: {
+                "count": info["count"],
+                "tiv": info["tiv"],
+                "pct": round(info["tiv"] / total_tiv * 100, 1) if total_tiv else 0,
+            }
             for naics, info in sorted(by_naics2.items(), key=lambda x: -x[1]["tiv"])
         },
         "concentration_warnings": [
@@ -1766,6 +1871,7 @@ def integration_status(
 
 class PipelineConfigRequest(BaseModel):
     """Extended submission request with new pipeline feature toggles."""
+
     acord_xml: Optional[str] = None
     inspection_reports: Optional[list[str]] = None
     supplemental_docs: Optional[list[str]] = None
@@ -1792,9 +1898,19 @@ async def run_pipeline_v2(
 ) -> dict[str, Any]:
     """Enhanced pipeline run with appetite filter, oracles, portfolio, and core integration."""
     job_id = f"job-{uuid.uuid4().hex[:12]}"
-    job_store.set(INSURANCE_NS, job_id, {"status": "processing", "pipeline_version": "v2"}, org_id=current.org_id)
+    job_store.set(
+        INSURANCE_NS,
+        job_id,
+        {"status": "processing", "pipeline_version": "v2"},
+        org_id=current.org_id,
+    )
     background_tasks.add_task(_run_pipeline_v2_task, job_id, req, current.org_id)
-    return {"job_id": job_id, "status": "processing", "pipeline_version": "v2", "org_id": current.org_id}
+    return {
+        "job_id": job_id,
+        "status": "processing",
+        "pipeline_version": "v2",
+        "org_id": current.org_id,
+    }
 
 
 def _run_pipeline_v2_task(job_id: str, request: PipelineConfigRequest, org_id: str) -> None:
@@ -1819,6 +1935,7 @@ def _run_pipeline_v2_task(job_id: str, request: PipelineConfigRequest, org_id: s
 
         if request.create_broker_share and result.get("bundle_id"):
             from insureflow.webhooks.dispatcher import webhook_dispatcher
+
             token = webhook_dispatcher.create_broker_share(
                 bundle_id=result["bundle_id"],
                 org_id=org_id,
@@ -1827,7 +1944,9 @@ def _run_pipeline_v2_task(job_id: str, request: PipelineConfigRequest, org_id: s
             result["broker_status_token"] = token
             result["broker_status_url"] = f"/broker/status/{token}"
 
-        job_store.set(INSURANCE_NS, job_id, {"status": "completed", "results": result}, org_id=org_id)
+        job_store.set(
+            INSURANCE_NS, job_id, {"status": "completed", "results": result}, org_id=org_id
+        )
     except Exception as exc:
         logger.exception("Pipeline v2 run failed")
         job_store.set(INSURANCE_NS, job_id, {"status": "failed", "error": str(exc)}, org_id=org_id)
@@ -1898,37 +2017,53 @@ def create_registry_version(
 
     if ct == ComponentType.PROMPT:
         from insureflow.agents.prompts import SYSTEM_PROMPTS
+
         prompt_text = SYSTEM_PROMPTS.get(key, "")
         if not prompt_text:
             raise HTTPException(status_code=400, detail=f"Unknown prompt key: {key}")
         entry = PromptVersion(
-            component_type=ct, version_label=version, created_by=creator,
-            description=description, change_notes=change_notes,
-            prompt_key=key, prompt_text=prompt_text,
+            component_type=ct,
+            version_label=version,
+            created_by=creator,
+            description=description,
+            change_notes=change_notes,
+            prompt_key=key,
+            prompt_text=prompt_text,
         )
     elif ct == ComponentType.LLM_CONFIG:
         entry = LLMConfigVersion(
-            component_type=ct, version_label=version, created_by=creator,
-            description=description, change_notes=change_notes,
+            component_type=ct,
+            version_label=version,
+            created_by=creator,
+            description=description,
+            change_notes=change_notes,
             model_tier=key,
         )
     elif ct == ComponentType.COMPLIANCE_RULE:
         from insureflow.mortgage.compliance import BANK_RULES
+
         rules = {}
         for rule in BANK_RULES:
             rules[rule.rule_id] = {
-                "name": rule.name, "severity": rule.severity,
+                "name": rule.name,
+                "severity": rule.severity,
                 "product_lines": [p.value for p in rule.product_lines],
             }
         entry = ComplianceRuleVersion(
-            component_type=ct, version_label=version, created_by=creator,
-            description=description, change_notes=change_notes,
+            component_type=ct,
+            version_label=version,
+            created_by=creator,
+            description=description,
+            change_notes=change_notes,
             rules_snapshot=rules,
         )
     elif ct == ComponentType.AGENT_LOGIC:
         entry = AgentLogicVersion(
-            component_type=ct, version_label=version, created_by=creator,
-            description=description, change_notes=change_notes,
+            component_type=ct,
+            version_label=version,
+            created_by=creator,
+            description=description,
+            change_notes=change_notes,
             agent_type=key,
         )
     else:
@@ -2108,13 +2243,21 @@ def run_lending_pipeline(
         "unsecured": LoanProductType.UNSECURED_PERSONAL,
     }
     purpose_map: dict[str, LoanPurpose] = {
-        "working_capital": LoanPurpose.WORKING_CAPITAL, "refinance": LoanPurpose.DEBT_REFINANCE,
-        "equipment": LoanPurpose.EQUIPMENT_PURCHASE, "real_estate": LoanPurpose.REAL_ESTATE_PURCHASE,
-        "construction": LoanPurpose.CONSTRUCTION, "expansion": LoanPurpose.BUSINESS_EXPANSION,
-        "inventory": LoanPurpose.INVENTORY_FINANCING, "acquisition": LoanPurpose.ACQUISITION,
-        "auto": LoanPurpose.AUTO_PURCHASE, "boat": LoanPurpose.BOAT_PURCHASE,
-        "home_improvement": LoanPurpose.HOME_IMPROVEMENT, "debt_consolidation": LoanPurpose.DEBT_CONSOLIDATION,
-        "education": LoanPurpose.EDUCATION, "medical": LoanPurpose.MEDICAL, "other": LoanPurpose.OTHER,
+        "working_capital": LoanPurpose.WORKING_CAPITAL,
+        "refinance": LoanPurpose.DEBT_REFINANCE,
+        "equipment": LoanPurpose.EQUIPMENT_PURCHASE,
+        "real_estate": LoanPurpose.REAL_ESTATE_PURCHASE,
+        "construction": LoanPurpose.CONSTRUCTION,
+        "expansion": LoanPurpose.BUSINESS_EXPANSION,
+        "inventory": LoanPurpose.INVENTORY_FINANCING,
+        "acquisition": LoanPurpose.ACQUISITION,
+        "auto": LoanPurpose.AUTO_PURCHASE,
+        "boat": LoanPurpose.BOAT_PURCHASE,
+        "home_improvement": LoanPurpose.HOME_IMPROVEMENT,
+        "debt_consolidation": LoanPurpose.DEBT_CONSOLIDATION,
+        "education": LoanPurpose.EDUCATION,
+        "medical": LoanPurpose.MEDICAL,
+        "other": LoanPurpose.OTHER,
     }
 
     pt = product_map.get(req.product_type)
@@ -2122,33 +2265,52 @@ def run_lending_pipeline(
         raise HTTPException(status_code=400, detail=f"Unknown product: {req.product_type}")
 
     purp = purpose_map.get(req.purpose, LoanPurpose.OTHER)
-    is_business = pt.value.startswith(("business_", "commercial_", "construction_", "sba_", "equipment_", "invoice_"))
+    is_business = pt.value.startswith(
+        ("business_", "commercial_", "construction_", "sba_", "equipment_", "invoice_")
+    )
 
     if is_business:
         from insureflow.lending.models import Collateral
 
         fin = BusinessFinancialData(
-            annual_revenue=req.revenue, net_income=req.net_income, ebitda=req.ebitda,
-            debt_service=req.debt_service, total_assets=req.total_assets,
-            total_liabilities=req.total_liabilities, current_assets=req.current_assets,
+            annual_revenue=req.revenue,
+            net_income=req.net_income,
+            ebitda=req.ebitda,
+            debt_service=req.debt_service,
+            total_assets=req.total_assets,
+            total_liabilities=req.total_liabilities,
+            current_assets=req.current_assets,
             current_liabilities=req.current_liabilities,
         )
-        coll = ([Collateral(estimated_value=req.collateral_value)] if req.collateral_value > 0 else [])
+        coll = (
+            [Collateral(estimated_value=req.collateral_value)] if req.collateral_value > 0 else []
+        )
         app = BusinessLoanApplication(
-            business_name=req.business_name or "Unnamed Business", industry=req.industry,
-            years_in_business=req.years_in_business, product_type=pt, loan_purpose=purp,
-            requested_amount=req.amount, requested_term_months=req.term_months,
-            financials=[fin], collateral=coll,
+            business_name=req.business_name or "Unnamed Business",
+            industry=req.industry,
+            years_in_business=req.years_in_business,
+            product_type=pt,
+            loan_purpose=purp,
+            requested_amount=req.amount,
+            requested_term_months=req.term_months,
+            financials=[fin],
+            collateral=coll,
         )
     else:
         fin = ConsumerFinancialData(
-            annual_income=req.annual_income, total_monthly_debt=req.monthly_debt,
-            credit_score=req.credit_score, employment_years=req.employment_years,
-            bankruptcies_last_7_years=req.bankruptcies, foreclosures_last_7_years=req.foreclosures,
+            annual_income=req.annual_income,
+            total_monthly_debt=req.monthly_debt,
+            credit_score=req.credit_score,
+            employment_years=req.employment_years,
+            bankruptcies_last_7_years=req.bankruptcies,
+            foreclosures_last_7_years=req.foreclosures,
         )
         app = ConsumerLoanApplication(
-            product_type=pt, loan_purpose=purp, requested_amount=req.amount,
-            requested_term_months=req.term_months, financial_data=fin,
+            product_type=pt,
+            loan_purpose=purp,
+            requested_amount=req.amount,
+            requested_term_months=req.term_months,
+            financial_data=fin,
         )
 
     pipeline = LendingPipeline()
@@ -2162,9 +2324,12 @@ def get_lending_result(
     current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
     import json
+
     audit_path = os.path.join(
         os.path.dirname(os.path.dirname(__file__)),
-        "..", "audit_logs", "lending",
+        "..",
+        "audit_logs",
+        "lending",
     )
     for fname in os.listdir(audit_path):
         if application_id in fname:
@@ -2178,7 +2343,5 @@ def list_lending_products(
     current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, list[str]]:
     from insureflow.lending.models import LoanProductType
+
     return {"products": [p.value for p in LoanProductType]}
-
-
-

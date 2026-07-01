@@ -65,7 +65,9 @@ class EnvelopeEncryption:
 
         p = Path(path)
         p.parent.mkdir(parents=True, exist_ok=True)
-        payload = self.encrypt_json(data) if self.enabled else json.dumps(data, indent=2, default=str)
+        payload = (
+            self.encrypt_json(data) if self.enabled else json.dumps(data, indent=2, default=str)
+        )
         p.write_text(payload, encoding="utf-8")
 
     def read_encrypted_file(self, path: str) -> dict[str, Any] | None:

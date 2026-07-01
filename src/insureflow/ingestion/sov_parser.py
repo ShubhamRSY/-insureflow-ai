@@ -18,9 +18,7 @@ class SOVParser(BaseParser):
     PIPE_ROW_RE = re.compile(r"^\s*\|(.+)\|\s*$")
     SKIP_LINE_RE = re.compile(r"^[\s\|\-:=+#]+$")
 
-    VALUE_LINE_RE = re.compile(
-        r"(?i)([\w\s/&()#.-]+?)\s*[:\-]\s*\$?\s*([\d,]+(?:\.\d{2})?)"
-    )
+    VALUE_LINE_RE = re.compile(r"(?i)([\w\s/&()#.-]+?)\s*[:\-]\s*\$?\s*([\d,]+(?:\.\d{2})?)")
 
     SECTION_RE = re.compile(
         r"(?i)^(?:#{1,3}\s+)?(.+?(?:schedule|values?|valuation|"
@@ -179,9 +177,7 @@ class SOVParser(BaseParser):
                 amount_col = None
                 amount_val = None
                 for i in reversed(range(len(cols))):
-                    amt_match = re.match(
-                        r"^[\*\s]*\$?\s*([\d,]+(?:\.\d{2})?)\s*[\*\s]*$", cols[i]
-                    )
+                    amt_match = re.match(r"^[\*\s]*\$?\s*([\d,]+(?:\.\d{2})?)\s*[\*\s]*$", cols[i])
                     if amt_match:
                         amount_col = i
                         amount_val = float(amt_match.group(1).replace(",", ""))

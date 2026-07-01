@@ -19,6 +19,7 @@ def _import_giskard() -> None:
         return
     try:
         import giskard  # noqa: F401
+
         _GSKARD_AVAILABLE = True
     except ImportError:
         logger.warning("Giskard not installed. Run: pip install giskard")
@@ -28,6 +29,7 @@ def _import_giskard() -> None:
 def _predict(df: pd.DataFrame) -> list[str]:
     """Prediction function wrapping the underwriting pipeline."""
     from insureflow.pipeline import UnderwritingPipeline
+
     pipeline = UnderwritingPipeline()
 
     results: list[str] = []
@@ -91,12 +93,14 @@ def scan_pipeline(output_path: str | None = None) -> dict[str, Any]:
     issues = []
     if hasattr(scanned, "issues"):
         for issue in scanned.issues:
-            issues.append({
-                "tag": str(issue.tag),
-                "group": str(issue.group),
-                "description": str(issue.description),
-                "severity": str(getattr(issue, "severity", "unknown")),
-            })
+            issues.append(
+                {
+                    "tag": str(issue.tag),
+                    "group": str(issue.group),
+                    "description": str(issue.description),
+                    "severity": str(getattr(issue, "severity", "unknown")),
+                }
+            )
 
     summary = {
         "framework": "giskard",
@@ -110,6 +114,7 @@ def scan_pipeline(output_path: str | None = None) -> dict[str, Any]:
 
     if output_path:
         import pathlib
+
         pathlib.Path(output_path).write_text(json.dumps(summary, indent=2, default=str))
         logger.info("Written to %s", output_path)
 

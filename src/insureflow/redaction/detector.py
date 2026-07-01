@@ -73,15 +73,21 @@ NAME_PATTERN = re.compile(
 
 
 DIAGNOSIS_PATTERNS = [
-    re.compile(r"\b(?:diagnosis|diagnosed with|suffering from|complains of|"
-               r"medical history|treatment for|condition:|impression:|"
-               r"assessment:)\s*.{3,80}", re.IGNORECASE),
+    re.compile(
+        r"\b(?:diagnosis|diagnosed with|suffering from|complains of|"
+        r"medical history|treatment for|condition:|impression:|"
+        r"assessment:)\s*.{3,80}",
+        re.IGNORECASE,
+    ),
 ]
 
 
 ADDRESS_PATTERNS = [
-    re.compile(r"\b\d{1,5}\s+[A-Za-z0-9\s,]+(?:Street|St|Avenue|Ave|Road|Rd|"
-               r"Boulevard|Blvd|Lane|Ln|Drive|Dr|Court|Ct|Way|Place|Pl)\b", re.IGNORECASE),
+    re.compile(
+        r"\b\d{1,5}\s+[A-Za-z0-9\s,]+(?:Street|St|Avenue|Ave|Road|Rd|"
+        r"Boulevard|Blvd|Lane|Ln|Drive|Dr|Court|Ct|Way|Place|Pl)\b",
+        re.IGNORECASE,
+    ),
 ]
 
 
@@ -112,54 +118,70 @@ class PIIDetector:
         for category, patterns in PATTERNS.items():
             for pattern in patterns:
                 for match in pattern.finditer(text):
-                    spans.append(PIISpan(
-                        text=match.group(),
-                        category=category,
-                        start=match.start(),
-                        end=match.end(),
-                        score=0.95,
-                    ))
+                    spans.append(
+                        PIISpan(
+                            text=match.group(),
+                            category=category,
+                            start=match.start(),
+                            end=match.end(),
+                            score=0.95,
+                        )
+                    )
 
         for match in NAME_PATTERN.finditer(text):
-            spans.append(PIISpan(
-                text=match.group(),
-                category=PIICategory.NAME,
-                start=match.start(),
-                end=match.end(),
-                score=0.85,
-            ))
+            spans.append(
+                PIISpan(
+                    text=match.group(),
+                    category=PIICategory.NAME,
+                    start=match.start(),
+                    end=match.end(),
+                    score=0.85,
+                )
+            )
 
         for pattern in DIAGNOSIS_PATTERNS:
             for match in pattern.finditer(text):
-                spans.append(PIISpan(
-                    text=match.group(),
-                    category=PIICategory.HEALTH_DIAGNOSIS,
-                    start=match.start(),
-                    end=match.end(),
-                    score=0.75,
-                ))
+                spans.append(
+                    PIISpan(
+                        text=match.group(),
+                        category=PIICategory.HEALTH_DIAGNOSIS,
+                        start=match.start(),
+                        end=match.end(),
+                        score=0.75,
+                    )
+                )
 
         for pattern in ADDRESS_PATTERNS:
             for match in pattern.finditer(text):
-                spans.append(PIISpan(
-                    text=match.group(),
-                    category=PIICategory.ADDRESS,
-                    start=match.start(),
-                    end=match.end(),
-                    score=0.7,
-                ))
+                spans.append(
+                    PIISpan(
+                        text=match.group(),
+                        category=PIICategory.ADDRESS,
+                        start=match.start(),
+                        end=match.end(),
+                        score=0.7,
+                    )
+                )
 
         return spans
 
     def _presidio_scan(self, text: str) -> list[PIISpan]:
         from presidio_analyzer import AnalyzerEngine
+
         engine = AnalyzerEngine()
         results = engine.analyze(
             text=text,
             entities=[
-                "PERSON", "EMAIL_ADDRESS", "PHONE_NUMBER", "SSN",
-                "CREDIT_CARD", "US_BANK_NUMBER", "US_DRIVER_LICENSE",
-                "DATE_OF_BIRTH", "LOCATION", "MEDICAL_LICENSE",
+                "PERSON",
+                "EMAIL_ADDRESS",
+                "PHONE_NUMBER",
+                "SSN",
+                "CREDIT_CARD",
+                "US_BANK_NUMBER",
+                "US_DRIVER_LICENSE",
+                "DATE_OF_BIRTH",
+                "LOCATION",
+                "MEDICAL_LICENSE",
             ],
             language="en",
         )
@@ -177,13 +199,15 @@ class PIIDetector:
         spans: list[PIISpan] = []
         for result in results:
             cat = category_map.get(result.entity_type, PIICategory.TAX_ID)
-            spans.append(PIISpan(
-                text=text[result.start:result.end],
-                category=cat,
-                start=result.start,
-                end=result.end,
-                score=result.score,
-            ))
+            spans.append(
+                PIISpan(
+                    text=text[result.start : result.end],
+                    category=cat,
+                    start=result.start,
+                    end=result.end,
+                    score=result.score,
+                )
+            )
         return spans
 
     @staticmethod

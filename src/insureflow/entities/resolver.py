@@ -71,8 +71,7 @@ class EntityResolver:
                 for dupe in cluster.nodes[1:]:
                     dupe.verification_status = VerificationStatus.CONTRADICTED
                     dupe.notes = (
-                        f"Deduplicated: merged with {winner.node_id}, "
-                        f"similarity≥{self.threshold}"
+                        f"Deduplicated: merged with {winner.node_id}, similarity≥{self.threshold}"
                     )
                     if dupe not in merged:
                         merged.append(dupe)
@@ -82,9 +81,7 @@ class EntityResolver:
 
         return record
 
-    def _cluster_nodes(
-        self, nodes: list[ProvenanceNode]
-    ) -> list[EntityCluster]:
+    def _cluster_nodes(self, nodes: list[ProvenanceNode]) -> list[EntityCluster]:
         clusters: list[EntityCluster] = []
         assigned: set[str] = set()
 
@@ -106,9 +103,7 @@ class EntityResolver:
 
         return clusters
 
-    def _compute_similarity(
-        self, a: ProvenanceNode, b: ProvenanceNode
-    ) -> float:
+    def _compute_similarity(self, a: ProvenanceNode, b: ProvenanceNode) -> float:
         vec_a = self._embed(str(a.value))
         vec_b = self._embed(str(b.value))
         return self._cosine_similarity(vec_a, vec_b)
@@ -120,7 +115,7 @@ class EntityResolver:
         cleaned = re.sub(r"[^a-z0-9]", "", text.lower())
         ngrams: list[str] = []
         for i in range(len(cleaned) - 2):
-            ngrams.append(cleaned[i:i+3])
+            ngrams.append(cleaned[i : i + 3])
         vec = [0.0] * 512
         for ng in ngrams:
             hashed = hash(ng) % 512

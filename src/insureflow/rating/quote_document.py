@@ -12,7 +12,11 @@ def generate_quote_html(
     memo: UnderwritingMemo,
     quote: QuoteResult,
 ) -> str:
-    insured = bundle.structured.named_insured.legal_name if bundle.structured and bundle.structured.named_insured else "Named Insured"
+    insured = (
+        bundle.structured.named_insured.legal_name
+        if bundle.structured and bundle.structured.named_insured
+        else "Named Insured"
+    )
     today = datetime.now(tz=timezone.utc).strftime("%B %d, %Y")
     valid_until = quote.quote_valid_until or "30 days from issuance"
 
@@ -24,9 +28,11 @@ def generate_quote_html(
                 f"<tr><td class='pl-8'>{k}</td><td class='text-right'>${v:,.0f}</td></tr>"
                 for k, v in c.sublimits.items()
             )
-            endorsements = "".join(
-                f"<li>{e}</li>" for e in c.endorsements
-            ) if c.endorsements else "<li class='text-slate-400'>None</li>"
+            endorsements = (
+                "".join(f"<li>{e}</li>" for e in c.endorsements)
+                if c.endorsements
+                else "<li class='text-slate-400'>None</li>"
+            )
             coverages_html += f"""
             <div class="card">
               <div class="card-header">{c.coverage_type}</div>
@@ -47,7 +53,10 @@ def generate_quote_html(
     if memo.recommendation and memo.recommendation.conditions:
         exclusions.extend(memo.recommendation.conditions)
     for f in memo.key_findings:
-        if f.category in ("compliance", "coverage") and "exclusion" in (f.title + f.description).lower():
+        if (
+            f.category in ("compliance", "coverage")
+            and "exclusion" in (f.title + f.description).lower()
+        ):
             exclusions.append(f"{f.title}: {f.description}")
     if not exclusions:
         exclusions.append("Standard policy exclusions apply. See policy form for full details.")
@@ -59,11 +68,17 @@ def generate_quote_html(
         pct = rc.modifier_pct
         label = rc.name.replace("_", " ").title()
         if pct > 0:
-            components_html += f"<tr><td>{label}</td><td class='text-right text-red-400'>+{pct:.1f}%</td></tr>"
+            components_html += (
+                f"<tr><td>{label}</td><td class='text-right text-red-400'>+{pct:.1f}%</td></tr>"
+            )
         elif pct < 0:
-            components_html += f"<tr><td>{label}</td><td class='text-right text-green-400'>{pct:.1f}%</td></tr>"
+            components_html += (
+                f"<tr><td>{label}</td><td class='text-right text-green-400'>{pct:.1f}%</td></tr>"
+            )
         else:
-            components_html += f"<tr><td>{label}</td><td class='text-right text-slate-400'>{pct:.1f}%</td></tr>"
+            components_html += (
+                f"<tr><td>{label}</td><td class='text-right text-slate-400'>{pct:.1f}%</td></tr>"
+            )
 
     # Metadata
     meta = quote.metadata or {}
@@ -112,16 +127,16 @@ def generate_quote_html(
       <p class="subtitle">Commercial Insurance Quote &mdash; Issued {today}</p>
     </div>
     <div style="text-align:right;">
-      <div class="badge">Quote #{quote.policy_admin_reference or 'N/A'}</div>
+      <div class="badge">Quote #{quote.policy_admin_reference or "N/A"}</div>
       <p style="color:#f59e0b;font-size:12px;margin-top:4px;">Expires {valid_until}</p>
     </div>
   </div>
 
-  <div class="row"><span class="label">Line of Business</span><span>{quote.line.value.replace('_',' ').title()}</span></div>
+  <div class="row"><span class="label">Line of Business</span><span>{quote.line.value.replace("_", " ").title()}</span></div>
   <div class="row"><span class="label">Total Insured Value</span><span>${tiv:,.0f}</span></div>
-  <div class="row"><span class="label">COPE Risk Grade</span><span>{cope_grade.replace('_',' ').title()}</span></div>
-  <div class="row"><span class="label">Market Phase</span><span>{market_phase.replace('_',' ').title()}</span></div>
-  <div class="row"><span class="label">Policy Admin Ref</span><span>{quote.policy_admin_reference or 'N/A'}</span></div>
+  <div class="row"><span class="label">COPE Risk Grade</span><span>{cope_grade.replace("_", " ").title()}</span></div>
+  <div class="row"><span class="label">Market Phase</span><span>{market_phase.replace("_", " ").title()}</span></div>
+  <div class="row"><span class="label">Policy Admin Ref</span><span>{quote.policy_admin_reference or "N/A"}</span></div>
 
   <h2>Coverages</h2>
   {coverages_html}
@@ -140,16 +155,16 @@ def generate_quote_html(
   <div class="grid-2">
     <div class="card">
       <div class="card-header">Base Rate</div>
-      <div class="row"><span class="label">ISO Loss Cost</span><span>${meta.get('loss_cost', 0):.4f}/$100</span></div>
+      <div class="row"><span class="label">ISO Loss Cost</span><span>${meta.get("loss_cost", 0):.4f}/$100</span></div>
       <div class="row"><span class="label">Rate per $100 TIV</span><span>${quote.rate_per_100_tiv:.4f}</span></div>
     </div>
     <div class="card">
       <div class="card-header">Modifiers</div>
-      <div class="row"><span class="label">COPE</span><span>{meta.get('cope_mod_pct', 0):+.1f}%</span></div>
-      <div class="row"><span class="label">Market</span><span>{meta.get('market_mod_pct', 0):+.1f}%</span></div>
-      <div class="row"><span class="label">Deductible</span><span>{meta.get('deductible_credit', 0):+.1f}%</span></div>
-      <div class="row"><span class="label">Loss Exp</span><span>{meta.get('loss_experience_mod_pct', 0):+.1f}%</span></div>
-      <div class="row"><span class="label">Tenure</span><span>{meta.get('years_in_business_mod_pct', 0):+.1f}%</span></div>
+      <div class="row"><span class="label">COPE</span><span>{meta.get("cope_mod_pct", 0):+.1f}%</span></div>
+      <div class="row"><span class="label">Market</span><span>{meta.get("market_mod_pct", 0):+.1f}%</span></div>
+      <div class="row"><span class="label">Deductible</span><span>{meta.get("deductible_credit", 0):+.1f}%</span></div>
+      <div class="row"><span class="label">Loss Exp</span><span>{meta.get("loss_experience_mod_pct", 0):+.1f}%</span></div>
+      <div class="row"><span class="label">Tenure</span><span>{meta.get("years_in_business_mod_pct", 0):+.1f}%</span></div>
     </div>
   </div>
 

@@ -82,14 +82,16 @@ def score_all(output_path: str | None = None) -> list[dict[str, Any]]:
             s = score_case(result)
             scored.append(s)
         except Exception as exc:
-            scored.append({
-                "case": case.name,
-                "status": "error",
-                "error": str(exc),
-                "precision": 0.0,
-                "recall": 0.0,
-                "hallucination_rate": 1.0,
-            })
+            scored.append(
+                {
+                    "case": case.name,
+                    "status": "error",
+                    "error": str(exc),
+                    "precision": 0.0,
+                    "recall": 0.0,
+                    "hallucination_rate": 1.0,
+                }
+            )
 
     avg_precision = sum(s["precision"] for s in scored) / max(len(scored), 1)
     avg_recall = sum(s["recall"] for s in scored) / max(len(scored), 1)
@@ -105,6 +107,7 @@ def score_all(output_path: str | None = None) -> list[dict[str, Any]]:
 
     if output_path:
         import pathlib
+
         pathlib.Path(output_path).write_text(json.dumps(summary, indent=2, default=str))
 
     return scored
@@ -112,6 +115,7 @@ def score_all(output_path: str | None = None) -> list[dict[str, Any]]:
 
 if __name__ == "__main__":
     import sys
+
     out = sys.argv[1] if len(sys.argv) > 1 else "evaluation_scores.json"
     score_all(out)
     print(f"Scores written to {out}")

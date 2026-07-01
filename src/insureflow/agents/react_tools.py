@@ -66,13 +66,13 @@ class ToolRegistry:
             "compute_claim_frequency",
             "Calculates claims per year over a given period.",
             {"years": "number of years to average over (default 5)"},
-            lambda years=5: self._serialize({
-                "frequency": self.uw.claim_frequency(
-                    self._claims(), float(years)
-                ),
-                "total_claims": len(self._claims()),
-                "years": float(years),
-            }),
+            lambda years=5: self._serialize(
+                {
+                    "frequency": self.uw.claim_frequency(self._claims(), float(years)),
+                    "total_claims": len(self._claims()),
+                    "years": float(years),
+                }
+            ),
         )
         self._register(
             "compute_average_severity",
@@ -85,9 +85,7 @@ class ToolRegistry:
             "Calculates percentage of claims over a threshold.",
             {"threshold": "minimum incurred amount for large loss (default 100000)"},
             lambda threshold=100000: {
-                "large_loss_ratio": self.uw.large_loss_ratio(
-                    self._claims(), float(threshold)
-                ),
+                "large_loss_ratio": self.uw.large_loss_ratio(self._claims(), float(threshold)),
                 "threshold": float(threshold),
             },
         )
@@ -95,14 +93,14 @@ class ToolRegistry:
             "compute_open_claim_ratio",
             "Returns ratio of open claims and total open reserves.",
             {},
-            lambda: self._serialize({
-                "open_ratio": self.uw.open_claim_ratio(self._claims()),
-                "open_reserves": sum(
-                    c.open_reserve
-                    for c in self._claims()
-                    if c.claim_status.value == "open"
-                ),
-            }),
+            lambda: self._serialize(
+                {
+                    "open_ratio": self.uw.open_claim_ratio(self._claims()),
+                    "open_reserves": sum(
+                        c.open_reserve for c in self._claims() if c.claim_status.value == "open"
+                    ),
+                }
+            ),
         )
         self._register(
             "compute_litigation_ratio",
@@ -131,14 +129,20 @@ class ToolRegistry:
             "check_non_disclosed_claims",
             "Compares loss run claims against structured submission to find claims not disclosed in the application.",
             {},
-            lambda: self._serialize({
-                "non_disclosed_count": len(self._non_disclosed()),
-                "non_disclosed": [
-                    {"claim_id": c.claim_id, "incurred": c.incurred_amount,
-                     "date": str(c.date_of_loss), "cause": c.cause}
-                    for c in self._non_disclosed()
-                ],
-            }),
+            lambda: self._serialize(
+                {
+                    "non_disclosed_count": len(self._non_disclosed()),
+                    "non_disclosed": [
+                        {
+                            "claim_id": c.claim_id,
+                            "incurred": c.incurred_amount,
+                            "date": str(c.date_of_loss),
+                            "cause": c.cause,
+                        }
+                        for c in self._non_disclosed()
+                    ],
+                }
+            ),
         )
         self._register(
             "check_sov_vs_location_valuation",
@@ -150,9 +154,7 @@ class ToolRegistry:
             "check_coverage_adequacy",
             "Checks if a coverage limit is adequate relative to total insurable value.",
             {"coverage_type": "the coverage type to check (e.g. 'Property')"},
-            lambda coverage_type: self._serialize(
-                self._check_coverage_adequacy(coverage_type)
-            ),
+            lambda coverage_type: self._serialize(self._check_coverage_adequacy(coverage_type)),
         )
         self._register(
             "get_all_structured_data",
@@ -195,9 +197,7 @@ class ToolRegistry:
     def tool_descriptions(self) -> str:
         lines = ["Available tools:"]
         for t in self._tools.values():
-            params = ", ".join(
-                f"{k}: {v}" for k, v in t.parameters.items()
-            )
+            params = ", ".join(f"{k}: {v}" for k, v in t.parameters.items())
             lines.append(f"  - {t.name}({params}): {t.description}")
         return "\n".join(lines)
 

@@ -45,7 +45,9 @@ class ISiModotechAdapter(BasePolicyAdminAdapter):
 
         logger.info(
             "ISi/Modotech quote: %s for %s (premium $%.0f)",
-            payload.bundle_id, payload.insured_name, payload.adjusted_premium,
+            payload.bundle_id,
+            payload.insured_name,
+            payload.adjusted_premium,
         )
 
         quote_ref = f"MOD-Q-{uuid4().hex[:10].upper()}"
@@ -66,7 +68,9 @@ class ISiModotechAdapter(BasePolicyAdminAdapter):
             response_payload=response,
         )
 
-    def bind_policy(self, payload: PolicySubmissionPayload, quote_reference: str) -> IntegrationResult:
+    def bind_policy(
+        self, payload: PolicySubmissionPayload, quote_reference: str
+    ) -> IntegrationResult:
         policy_number = f"MOD-{datetime.now(tz=timezone.utc).year}-{uuid4().hex[:8].upper()}"
         response = {
             "policy_number": policy_number,

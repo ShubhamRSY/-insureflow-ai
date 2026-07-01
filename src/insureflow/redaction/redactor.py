@@ -37,7 +37,7 @@ class PIIRedactor:
         pos = 0
         for span in spans:
             if span.start > pos:
-                result.append(text[pos:span.start])
+                result.append(text[pos : span.start])
             replacement = self._replace(span, mask)
             result.append(replacement)
             pos = max(pos, span.end)
@@ -58,8 +58,10 @@ class PIIRedactor:
                 redacted[key] = self.redact_fields(value, mask=mask)
             elif isinstance(value, list):
                 redacted[key] = [
-                    self.redact_fields(item, mask=mask) if isinstance(item, dict)
-                    else self.redact(str(item), mask=mask) if isinstance(item, str)
+                    self.redact_fields(item, mask=mask)
+                    if isinstance(item, dict)
+                    else self.redact(str(item), mask=mask)
+                    if isinstance(item, str)
                     else item
                     for item in value
                 ]

@@ -86,27 +86,49 @@ class ACORDParser(BaseParser):
         return None
 
     def _parse_named_insured(self, root: ET.Element) -> Optional[NamedInsured]:
-        name = self._find_text(root, ".//acord:NamedInsured/acord:GeneralPartyInfo/acord:NameInfo/acord:CommercialName/acord:Name")
+        name = self._find_text(
+            root,
+            ".//acord:NamedInsured/acord:GeneralPartyInfo/acord:NameInfo/acord:CommercialName/acord:Name",
+        )
         if not name:
             return None
         return NamedInsured(
             legal_name=name,
-            dba=self._find_text(root, ".//acord:NamedInsured/acord:GeneralPartyInfo/acord:NameInfo/acord:CommercialName/acord:DBA"),
-            tax_id=self._find_text(root, ".//acord:NamedInsured/acord:GeneralPartyInfo/acord:TaxIdentity/acord:TaxID"),
-            entity_type=self._find_text(root, ".//acord:NamedInsured/acord:GeneralPartyInfo/acord:BusinessType"),
-            address=self._find_text(root, ".//acord:NamedInsured/acord:GeneralPartyInfo/acord:Addr1"),
+            dba=self._find_text(
+                root,
+                ".//acord:NamedInsured/acord:GeneralPartyInfo/acord:NameInfo/acord:CommercialName/acord:DBA",
+            ),
+            tax_id=self._find_text(
+                root, ".//acord:NamedInsured/acord:GeneralPartyInfo/acord:TaxIdentity/acord:TaxID"
+            ),
+            entity_type=self._find_text(
+                root, ".//acord:NamedInsured/acord:GeneralPartyInfo/acord:BusinessType"
+            ),
+            address=self._find_text(
+                root, ".//acord:NamedInsured/acord:GeneralPartyInfo/acord:Addr1"
+            ),
         )
 
     def _parse_broker(self, root: ET.Element) -> Optional[BrokerInfo]:
-        name = self._find_text(root, ".//acord:Broker/acord:GeneralPartyInfo/acord:NameInfo/acord:CommercialName/acord:Name")
+        name = self._find_text(
+            root,
+            ".//acord:Broker/acord:GeneralPartyInfo/acord:NameInfo/acord:CommercialName/acord:Name",
+        )
         if not name:
             return None
         return BrokerInfo(
             broker_name=name,
             broker_id=self._find_text(root, ".//acord:Broker/acord:GeneralPartyInfo/acord:ID"),
-            contact_name=self._find_text(root, ".//acord:Broker/acord:GeneralPartyInfo/acord:ContactName"),
-            contact_email=self._find_text(root, ".//acord:Broker/acord:GeneralPartyInfo/acord:Email"),
-            agency=self._find_text(root, ".//acord:Broker/acord:GeneralPartyInfo/acord:NameInfo/acord:CommercialName/acord:DBA"),
+            contact_name=self._find_text(
+                root, ".//acord:Broker/acord:GeneralPartyInfo/acord:ContactName"
+            ),
+            contact_email=self._find_text(
+                root, ".//acord:Broker/acord:GeneralPartyInfo/acord:Email"
+            ),
+            agency=self._find_text(
+                root,
+                ".//acord:Broker/acord:GeneralPartyInfo/acord:NameInfo/acord:CommercialName/acord:DBA",
+            ),
         )
 
     def _parse_policy_period(self, root: ET.Element) -> Optional[PolicyPeriod]:
@@ -156,20 +178,22 @@ class ACORDParser(BaseParser):
             zip_code = self._find_text(loc_elem, ".//acord:PostalCode") or ""
             if not addr:
                 continue
-            locations.append(LocationData(
-                address=addr,
-                city=city,
-                state=state,
-                zip_code=zip_code,
-                building_occupancy=self._find_text(loc_elem, ".//acord:Occupancy"),
-                year_built=self._find_int(loc_elem, ".//acord:YearBuilt"),
-                square_footage=self._find_float(loc_elem, ".//acord:SquareFootage"),
-                construction_type=self._find_text(loc_elem, ".//acord:ConstructionType"),
-                protection_class=self._find_int(loc_elem, ".//acord:ProtectionClass"),
-                building_value=self._find_float(loc_elem, ".//acord:EstimatedValue"),
-                contents_value=self._find_float(loc_elem, ".//acord:ContentsValue"),
-                bi_value=self._find_float(loc_elem, ".//acord:BusinessIncomeValue"),
-            ))
+            locations.append(
+                LocationData(
+                    address=addr,
+                    city=city,
+                    state=state,
+                    zip_code=zip_code,
+                    building_occupancy=self._find_text(loc_elem, ".//acord:Occupancy"),
+                    year_built=self._find_int(loc_elem, ".//acord:YearBuilt"),
+                    square_footage=self._find_float(loc_elem, ".//acord:SquareFootage"),
+                    construction_type=self._find_text(loc_elem, ".//acord:ConstructionType"),
+                    protection_class=self._find_int(loc_elem, ".//acord:ProtectionClass"),
+                    building_value=self._find_float(loc_elem, ".//acord:EstimatedValue"),
+                    contents_value=self._find_float(loc_elem, ".//acord:ContentsValue"),
+                    bi_value=self._find_float(loc_elem, ".//acord:BusinessIncomeValue"),
+                )
+            )
         return locations
 
     def _parse_financial(self, root: ET.Element) -> Optional[FinancialData]:

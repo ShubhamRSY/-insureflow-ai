@@ -27,9 +27,7 @@ class DiscrepancyDetector:
     def __init__(self) -> None:
         self.matcher = FieldMatcher()
 
-    def detect(
-        self, field_path: str, nodes: list[ProvenanceNode]
-    ) -> Optional[DiscrepancyRecord]:
+    def detect(self, field_path: str, nodes: list[ProvenanceNode]) -> Optional[DiscrepancyRecord]:
         if len(nodes) < 2:
             return None
 
@@ -60,8 +58,8 @@ class DiscrepancyDetector:
             unstructured_value=conflicts[0].value if conflicts else None,
             severity=severity,
             description=f"Field '{field_path}' has {num_unique} conflicting values across {len(values)} sources. "
-                        f"Authority ({authoritative.source.source_name}): '{authoritative.value}' conflicts with "
-                        f"'{' vs '.join(str(c.value) for c in conflicts)}'",
+            f"Authority ({authoritative.source.source_name}): '{authoritative.value}' conflicts with "
+            f"'{' vs '.join(str(c.value) for c in conflicts)}'",
             source_a=authoritative.source.source_name,
             source_b=conflicts[0].source.source_name if conflicts else "",
             provenance_node_ids=[n.node_id for n in sorted_nodes],
@@ -88,9 +86,7 @@ class DiscrepancyDetector:
                 discrepancies.append(result)
         return sorted(
             discrepancies,
-            key=lambda d: (
-                {"critical": 0, "warning": 1, "error": 2, "info": 3}.get(
-                    d.severity.value, 4
-                )
+            key=lambda d: {"critical": 0, "warning": 1, "error": 2, "info": 3}.get(
+                d.severity.value, 4
             ),
         )

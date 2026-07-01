@@ -29,7 +29,7 @@ class RegistryService:
     """
 
     def __init__(self, base_path: Path | None = None) -> None:
-        self.base_path = (base_path or Path.cwd() / ".insureflow" / "registry")
+        self.base_path = base_path or Path.cwd() / ".insureflow" / "registry"
         self.base_path.mkdir(parents=True, exist_ok=True)
         (self.base_path / "prompts").mkdir(exist_ok=True)
         (self.base_path / "llm_configs").mkdir(exist_ok=True)
@@ -93,15 +93,21 @@ class RegistryService:
         return entry
 
     def get(
-        self, entry_id: str, component_type: ComponentType | None = None,
+        self,
+        entry_id: str,
+        component_type: ComponentType | None = None,
     ) -> RegistryEntry | None:
         if component_type:
-            candidates = [self.base_path / {
-                ComponentType.PROMPT: "prompts",
-                ComponentType.LLM_CONFIG: "llm_configs",
-                ComponentType.COMPLIANCE_RULE: "compliance_rules",
-                ComponentType.AGENT_LOGIC: "agent_logic",
-            }[component_type] / f"{entry_id}.json"]
+            candidates = [
+                self.base_path
+                / {
+                    ComponentType.PROMPT: "prompts",
+                    ComponentType.LLM_CONFIG: "llm_configs",
+                    ComponentType.COMPLIANCE_RULE: "compliance_rules",
+                    ComponentType.AGENT_LOGIC: "agent_logic",
+                }[component_type]
+                / f"{entry_id}.json"
+            ]
         else:
             candidates = []
             for folder in ("prompts", "llm_configs", "compliance_rules", "agent_logic"):
@@ -139,7 +145,9 @@ class RegistryService:
         return entries
 
     def get_active_version(
-        self, component_type: ComponentType, key: str = "",
+        self,
+        component_type: ComponentType,
+        key: str = "",
     ) -> RegistryEntry | None:
         entries = self.list_versions(component_type)
         for e in entries:
@@ -213,7 +221,8 @@ class RegistryService:
         if isinstance(entry_a, LLMConfigVersion) and isinstance(entry_b, LLMConfigVersion):
             return entry_a.compute_diff(entry_b)
         if isinstance(entry_a, ComplianceRuleVersion) and isinstance(
-            entry_b, ComplianceRuleVersion,
+            entry_b,
+            ComplianceRuleVersion,
         ):
             return entry_a.compute_diff(entry_b)
         if isinstance(entry_a, AgentLogicVersion) and isinstance(entry_b, AgentLogicVersion):
@@ -240,7 +249,8 @@ class RegistryService:
                 snapshot.compliance_rules.append(rule.entry_id)
         for agent in self.list_versions(ComponentType.AGENT_LOGIC):
             if agent.status == RegistryEntryStatus.APPROVED and isinstance(
-                agent, AgentLogicVersion,
+                agent,
+                AgentLogicVersion,
             ):
                 snapshot.agent_logic[agent.agent_type] = agent.entry_id
         self._snapshot_path(self.base_path, snapshot.snapshot_id).write_text(
@@ -286,7 +296,10 @@ class RegistryService:
         )
 
     def approve_change_request(
-        self, request_id: str, reviewer: str = "", notes: str = "",
+        self,
+        request_id: str,
+        reviewer: str = "",
+        notes: str = "",
     ) -> ChangeRequest | None:
         cr = self._load_change_request(request_id)
         if not cr:
@@ -302,7 +315,10 @@ class RegistryService:
         return cr
 
     def reject_change_request(
-        self, request_id: str, reviewer: str = "", notes: str = "",
+        self,
+        request_id: str,
+        reviewer: str = "",
+        notes: str = "",
     ) -> ChangeRequest | None:
         cr = self._load_change_request(request_id)
         if not cr:
@@ -357,12 +373,27 @@ class RegistryService:
             created.append(e)
 
         for tier, provider, model, temp, tokens in [
-            ("cheap", settings.llm_cheap_provider, settings.llm_cheap_model,
-             settings.llm_temperature, settings.llm_max_tokens),
-            ("expensive", settings.llm_expensive_provider, settings.llm_expensive_model,
-             settings.llm_temperature, settings.llm_max_tokens),
-            ("default", settings.llm_provider, settings.llm_model,
-             settings.llm_temperature, settings.llm_max_tokens),
+            (
+                "cheap",
+                settings.llm_cheap_provider,
+                settings.llm_cheap_model,
+                settings.llm_temperature,
+                settings.llm_max_tokens,
+            ),
+            (
+                "expensive",
+                settings.llm_expensive_provider,
+                settings.llm_expensive_model,
+                settings.llm_temperature,
+                settings.llm_max_tokens,
+            ),
+            (
+                "default",
+                settings.llm_provider,
+                settings.llm_model,
+                settings.llm_temperature,
+                settings.llm_max_tokens,
+            ),
         ]:
             entry = LLMConfigVersion(
                 component_type=ComponentType.LLM_CONFIG,

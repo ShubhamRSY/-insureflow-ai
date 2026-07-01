@@ -12,21 +12,31 @@ class NCCIClassCode:
 
 
 NCCI_CLASS_CODES: dict[str, NCCIClassCode] = {
-    "8810": NCCIClassCode("8810", "Clerical Office", "low", ["office", "administrative", "professional services"]),
+    "8810": NCCIClassCode(
+        "8810", "Clerical Office", "low", ["office", "administrative", "professional services"]
+    ),
     "8824": NCCIClassCode("8824", "Accounting or Auditing", "low", ["accounting", "finance"]),
     "8831": NCCIClassCode("8831", "Real Estate Appraisal", "low", ["real estate", "appraisal"]),
     "7720": NCCIClassCode("7720", "Retail Store — NOC", "low", ["retail", "store"]),
     "8008": NCCIClassCode("8008", "Wholesale Store — NOC", "low", ["wholesale", "distribution"]),
-    "8017": NCCIClassCode("8017", "Restaurant — Fast Food", "moderate", ["restaurant", "fast food"]),
-    "8031": NCCIClassCode("8031", "Restaurant — Full Service", "moderate", ["restaurant", "dining"]),
+    "8017": NCCIClassCode(
+        "8017", "Restaurant — Fast Food", "moderate", ["restaurant", "fast food"]
+    ),
+    "8031": NCCIClassCode(
+        "8031", "Restaurant — Full Service", "moderate", ["restaurant", "dining"]
+    ),
     "8044": NCCIClassCode("8044", "Bar or Tavern", "moderate", ["bar", "nightclub"]),
     "8380": NCCIClassCode("8380", "Marine Cargo Handling", "high", ["marine", "shipping", "cargo"]),
-    "8391": NCCIClassCode("8391", "Trucking — NOC", "high", ["trucking", "transportation", "logistics"]),
+    "8391": NCCIClassCode(
+        "8391", "Trucking — NOC", "high", ["trucking", "transportation", "logistics"]
+    ),
     "5402": NCCIClassCode("5402", "Carpentry — Residential", "high", ["construction", "carpentry"]),
     "5403": NCCIClassCode("5403", "Carpentry — Commercial", "high", ["construction", "carpentry"]),
     "5221": NCCIClassCode("5221", "Concrete or Cement Work", "high", ["construction", "concrete"]),
     "5222": NCCIClassCode("5222", "Roofing", "critical", ["construction", "roofing"]),
-    "5223": NCCIClassCode("5223", "Structural Steel Erection", "critical", ["construction", "steel erection"]),
+    "5223": NCCIClassCode(
+        "5223", "Structural Steel Erection", "critical", ["construction", "steel erection"]
+    ),
     "5555": NCCIClassCode("5555", "General Classification", "moderate", ["general"]),
     "9101": NCCIClassCode("9101", "Janitorial Services", "moderate", ["janitorial", "cleaning"]),
     "9519": NCCIClassCode("9519", "Machine Shop", "high", ["manufacturing", "machining"]),

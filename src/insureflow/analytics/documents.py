@@ -26,7 +26,8 @@ class DocumentAnalyticsStore:
 
     def __init__(self, base_path: Path | None = None) -> None:
         from insureflow.config import settings
-        self.base_path = (base_path or settings.audit_log_path / "document_analytics")
+
+        self.base_path = base_path or settings.audit_log_path / "document_analytics"
         self.base_path.mkdir(parents=True, exist_ok=True)
 
     def save(self, record: DocumentRecord) -> None:
@@ -43,7 +44,8 @@ class DocumentAnalyticsStore:
         records: list[DocumentRecord] = []
         for path in sorted(
             self.base_path.glob("*.json"),
-            key=lambda p: p.stat().st_mtime, reverse=True,
+            key=lambda p: p.stat().st_mtime,
+            reverse=True,
         ):
             try:
                 rec = DocumentRecord.model_validate_json(path.read_text(encoding="utf-8"))
@@ -131,6 +133,7 @@ class DocumentAnalyticsEngine:
         for r in records:
             bucket = self._bucket(r.document_count)
             dist[bucket] = dist.get(bucket, 0) + 1
+
         def sort_key(item: tuple[str, int]) -> int:
             bucket = item[0]
             if bucket == "21+":
@@ -139,6 +142,7 @@ class DocumentAnalyticsEngine:
                 return int(bucket.split("-")[0])
             except ValueError:
                 return 999
+
         return dict(sorted(dist.items(), key=sort_key))
 
     @staticmethod
@@ -176,6 +180,7 @@ class DocumentAnalyticsEngine:
     @staticmethod
     def _by_vertical(records: list[DocumentRecord]) -> dict[str, dict[str, Any]]:
         from collections import defaultdict
+
         by_v: dict[str, list[int]] = defaultdict(list)
         for r in records:
             by_v[r.vertical or "unknown"].append(r.document_count)

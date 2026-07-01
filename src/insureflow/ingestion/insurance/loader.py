@@ -27,7 +27,18 @@ from insureflow.models.submissions import (
     UnstructuredSubmission,
 )
 
-SUPPORTED_EXTENSIONS = {".txt", ".pdf", ".png", ".jpg", ".jpeg", ".tiff", ".bmp", ".tif", ".xml", ".json"}
+SUPPORTED_EXTENSIONS = {
+    ".txt",
+    ".pdf",
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".tiff",
+    ".bmp",
+    ".tif",
+    ".xml",
+    ".json",
+}
 
 
 class InsuranceDocumentLoader:
@@ -65,7 +76,11 @@ class InsuranceDocumentLoader:
                 bundle.status = SubmissionStatus.PARSED
                 continue
 
-            if filename.endswith(".json") or doc_type == InsuranceDocumentType.BROKER_SLIP and raw_text.strip().startswith("{"):
+            if (
+                filename.endswith(".json")
+                or doc_type == InsuranceDocumentType.BROKER_SLIP
+                and raw_text.strip().startswith("{")
+            ):
                 try:
                     bundle.structured = self.json_parser.parse(raw_text, bid)
                     bundle.status = SubmissionStatus.PARSED
@@ -84,7 +99,13 @@ class InsuranceDocumentLoader:
         docs = []
         for path in paths:
             p = Path(path)
-            docs.append({"filename": p.name, "content": p.read_text(encoding="utf-8", errors="replace"), "encoding": "utf-8"})
+            docs.append(
+                {
+                    "filename": p.name,
+                    "content": p.read_text(encoding="utf-8", errors="replace"),
+                    "encoding": "utf-8",
+                }
+            )
         return self.load_from_documents(docs, bundle_id=bundle_id)
 
     def _resolve_content(self, content: str, filename: str, encoding: str) -> tuple[str, str]:
@@ -94,13 +115,21 @@ class InsuranceDocumentLoader:
             if ext in {".pdf", ".png", ".jpg", ".jpeg", ".tiff", ".bmp", ".tif"}:
                 sub_id = f"ocr-{uuid4().hex[:8]}"
                 parsed = self.ocr.extract_text_from_bytes(data, filename, sub_id)
-                engine = "tesseract" if parsed.raw_text and not parsed.raw_text.startswith("[OCR:") else "pdfminer"
+                engine = (
+                    "tesseract"
+                    if parsed.raw_text and not parsed.raw_text.startswith("[OCR:")
+                    else "pdfminer"
+                )
                 return parsed.raw_text, engine
             return data.decode("utf-8", errors="replace"), ""
 
         if ext == ".pdf" and encoding == "utf-8":
             with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
-                tmp.write(content.encode("utf-8", errors="surrogateescape") if isinstance(content, str) else content)
+                tmp.write(
+                    content.encode("utf-8", errors="surrogateescape")
+                    if isinstance(content, str)
+                    else content
+                )
                 tmp_path = tmp.name
             try:
                 parsed = self.ocr.extract_text(tmp_path, f"ocr-{uuid4().hex[:8]}")

@@ -26,11 +26,10 @@ class ProvenanceEngine:
         self.hierarchy = ProvenanceHierarchy()
         self.deduplicate = deduplicate
 
-    def build_provenance(
-        self, bundle: SubmissionBundle
-    ) -> ProvenanceRecord:
+    def build_provenance(self, bundle: SubmissionBundle) -> ProvenanceRecord:
         if self.deduplicate:
             from insureflow.entities.resolver import EntityResolver
+
             self._resolver = EntityResolver()
         else:
             self._resolver = None
@@ -89,7 +88,9 @@ class ProvenanceEngine:
             fields["risk_profile.occupancy_type"] = structured.risk_profile.occupancy_type
             fields["risk_profile.protection_class"] = structured.risk_profile.protection_class
             fields["risk_profile.number_of_stories"] = structured.risk_profile.number_of_stories
-            fields["risk_profile.total_square_footage"] = structured.risk_profile.total_square_footage
+            fields["risk_profile.total_square_footage"] = (
+                structured.risk_profile.total_square_footage
+            )
 
         if structured.financial:
             fields["financial.annual_revenue"] = structured.financial.annual_revenue
@@ -134,11 +135,13 @@ class ProvenanceEngine:
                 key = f"extracted.{field_name}"
                 if key not in fields:
                     fields[key] = []
-                fields[key].append({
-                    "value": ef.value,
-                    "confidence": ef.confidence,
-                    "context": ef.context,
-                })
+                fields[key].append(
+                    {
+                        "value": ef.value,
+                        "confidence": ef.confidence,
+                        "context": ef.context,
+                    }
+                )
 
         if not is_supplemental:
             for field_name, extracted_list in unstructured.extracted_fields.items():

@@ -52,4 +52,5 @@ def require_role(min_role: Role):
                 detail=f"Role '{user_role.value}' insufficient, requires '{min_role.value}'",
             )
         return current_user
+
     return _check_role

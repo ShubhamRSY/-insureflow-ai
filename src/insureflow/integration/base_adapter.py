@@ -8,6 +8,7 @@ from typing import Any
 @dataclass
 class PolicySubmissionPayload:
     """Standardized payload to push into policy admin / rating systems."""
+
     bundle_id: str
     org_id: str
     insured_name: str
@@ -39,13 +40,12 @@ class BasePolicyAdminAdapter(ABC):
     """Abstract adapter for core system integration (BriteCore, Guidewire, etc.)."""
 
     @abstractmethod
-    def submit_quote(self, payload: PolicySubmissionPayload) -> IntegrationResult:
-        ...
+    def submit_quote(self, payload: PolicySubmissionPayload) -> IntegrationResult: ...
 
     @abstractmethod
-    def bind_policy(self, payload: PolicySubmissionPayload, quote_reference: str) -> IntegrationResult:
-        ...
+    def bind_policy(
+        self, payload: PolicySubmissionPayload, quote_reference: str
+    ) -> IntegrationResult: ...
 
     @abstractmethod
-    def get_system_name(self) -> str:
-        ...
+    def get_system_name(self) -> str: ...

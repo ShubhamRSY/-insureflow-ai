@@ -77,8 +77,11 @@ class PipelineGraph:
         )
 
         parse_nodes = [
-            "parse_acord", "parse_json", "parse_loss_run",
-            "parse_sov", "parse_inspection",
+            "parse_acord",
+            "parse_json",
+            "parse_loss_run",
+            "parse_sov",
+            "parse_inspection",
         ]
         for node in parse_nodes:
             graph.add_conditional_edges(

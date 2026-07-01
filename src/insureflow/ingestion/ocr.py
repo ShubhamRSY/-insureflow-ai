@@ -95,6 +95,7 @@ class OCRProcessor:
         # 2. pdfminer fallback (some TIFF/PDF hybrids)
         try:
             from pdfminer.high_level import extract_text
+
             text = extract_text(file_path)
             if text and text.strip():
                 return text
@@ -114,6 +115,7 @@ class OCRProcessor:
 
     def _ocr_pdf_unstructured(self, file_path: str, submission_id: str) -> UnstructuredSubmission:
         from unstructured.partition.pdf import partition_pdf
+
         elements = partition_pdf(filename=file_path, strategy="auto")
         text = "\n\n".join(str(el) for el in elements)
         return UnstructuredSubmission(
@@ -135,6 +137,7 @@ class OCRProcessor:
     def _extract_pdf_text(self, file_path: str) -> str:
         try:
             from pdfminer.high_level import extract_text
+
             text = extract_text(file_path)
             if text and len(text.strip()) > 50:
                 return text
@@ -159,6 +162,7 @@ class OCRProcessor:
 
         try:
             import PyPDF2
+
             with open(file_path, "rb") as f:
                 reader = PyPDF2.PdfReader(f)
                 return "\n".join(page.extract_text() or "" for page in reader.pages)

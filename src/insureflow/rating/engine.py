@@ -104,20 +104,20 @@ DEDUCTIBLE_CREDITS: dict[tuple[float, float], float] = {
 # Years-in-business premium modifiers (generic tiers for any business)
 # < 2 years = startup risk, 2-5 = still green, 5-10 = established, 10+ = mature
 YEARS_IN_BUSINESS_MODIFIERS: list[tuple[int | None, int | None, float]] = [
-    (None, 2, 10.0),     # < 2 years → +10% surcharge
-    (2, 5, 0.0),          # 2-5 years → no adjustment
-    (5, 10, -5.0),        # 5-10 years → -5% credit
-    (10, None, -10.0),    # 10+ years → -10% credit
+    (None, 2, 10.0),  # < 2 years → +10% surcharge
+    (2, 5, 0.0),  # 2-5 years → no adjustment
+    (5, 10, -5.0),  # 5-10 years → -5% credit
+    (10, None, -10.0),  # 10+ years → -10% credit
 ]
 
 # Loss experience modifiers (multi-tier for any claims history)
 LOSS_EXPERIENCE_MODIFIERS: list[tuple[float | None, float | None, float]] = [
     (None, 0.10, -10.0),  # LR < 10% → -10% credit
-    (0.10, 0.20, -5.0),   # LR 10-20% → -5% credit
-    (0.20, 0.30, 0.0),    # LR 20-30% → no adjustment
-    (0.30, 0.50, 5.0),    # LR 30-50% → +5% surcharge
-    (0.50, 0.75, 10.0),   # LR 50-75% → +10% surcharge
-    (0.75, None, 20.0),   # LR 75%+ → +20% surcharge
+    (0.10, 0.20, -5.0),  # LR 10-20% → -5% credit
+    (0.20, 0.30, 0.0),  # LR 20-30% → no adjustment
+    (0.30, 0.50, 5.0),  # LR 30-50% → +5% surcharge
+    (0.50, 0.75, 10.0),  # LR 50-75% → +10% surcharge
+    (0.75, None, 20.0),  # LR 75%+ → +20% surcharge
 ]
 
 
@@ -176,7 +176,9 @@ class InsuranceRatingEngine:
         cope_adjusted = market_adjusted * (1 + cope_mod / 100.0)
 
         # UW memo schedule modification (from agent findings)
-        schedule_mod = memo.recommendation.suggested_premium_modification if memo.recommendation else 0.0
+        schedule_mod = (
+            memo.recommendation.suggested_premium_modification if memo.recommendation else 0.0
+        )
         schedule_mod = schedule_mod or 0.0
 
         # Deductible credit
@@ -190,7 +192,7 @@ class InsuranceRatingEngine:
         # Loss experience mod (multi-tier)
         loss_ratio = self._loss_ratio(bundle)
         exp_mod = 0.0
-        for (lo, hi, mod) in LOSS_EXPERIENCE_MODIFIERS:
+        for lo, hi, mod in LOSS_EXPERIENCE_MODIFIERS:
             if (lo is None or loss_ratio >= lo) and (hi is None or loss_ratio < hi):
                 exp_mod = mod
                 break
@@ -199,7 +201,13 @@ class InsuranceRatingEngine:
         years_mod = self._years_in_business_mod(bundle)
 
         # Final premium
-        adjusted_premium = cope_adjusted * (1 + schedule_mod / 100.0) * (1 + deductible_credit / 100.0) * (1 + exp_mod / 100.0) * (1 + years_mod / 100.0)
+        adjusted_premium = (
+            cope_adjusted
+            * (1 + schedule_mod / 100.0)
+            * (1 + deductible_credit / 100.0)
+            * (1 + exp_mod / 100.0)
+            * (1 + years_mod / 100.0)
+        )
         adjusted_premium += self.EXPENSE_CONSTANT
 
         # Minimum premium
@@ -209,20 +217,67 @@ class InsuranceRatingEngine:
 
         # Build rate components
         components: list[RateComponent] = [
-            RateComponent(name="iso_base_loss_cost", amount=round(iso_cost, 4), basis="per_100_tiv", modifier_pct=0.0),
-            RateComponent(name="loss_cost_multiplier", amount=lcm, basis="expense_profit", modifier_pct=0.0),
-            RateComponent(name=f"territory_relativity_{state}", amount=territory_rel, basis="state", modifier_pct=0.0),
-            RateComponent(name="cope_schedule_rating", amount=round(cope_mod, 1), basis="schedule", modifier_pct=cope_mod),
-            RateComponent(name="market_cycle_adjustment", amount=round(market_cycle_mod, 1), basis="market", modifier_pct=market_cycle_mod),
+            RateComponent(
+                name="iso_base_loss_cost",
+                amount=round(iso_cost, 4),
+                basis="per_100_tiv",
+                modifier_pct=0.0,
+            ),
+            RateComponent(
+                name="loss_cost_multiplier", amount=lcm, basis="expense_profit", modifier_pct=0.0
+            ),
+            RateComponent(
+                name=f"territory_relativity_{state}",
+                amount=territory_rel,
+                basis="state",
+                modifier_pct=0.0,
+            ),
+            RateComponent(
+                name="cope_schedule_rating",
+                amount=round(cope_mod, 1),
+                basis="schedule",
+                modifier_pct=cope_mod,
+            ),
+            RateComponent(
+                name="market_cycle_adjustment",
+                amount=round(market_cycle_mod, 1),
+                basis="market",
+                modifier_pct=market_cycle_mod,
+            ),
         ]
         if deductible_credit != 0:
-            components.append(RateComponent(name="deductible_credit", amount=deductible, basis="deductible", modifier_pct=deductible_credit))
+            components.append(
+                RateComponent(
+                    name="deductible_credit",
+                    amount=deductible,
+                    basis="deductible",
+                    modifier_pct=deductible_credit,
+                )
+            )
         if exp_mod != 0:
-            components.append(RateComponent(name="loss_experience", amount=round(loss_ratio, 4), basis="loss_ratio", modifier_pct=exp_mod))
+            components.append(
+                RateComponent(
+                    name="loss_experience",
+                    amount=round(loss_ratio, 4),
+                    basis="loss_ratio",
+                    modifier_pct=exp_mod,
+                )
+            )
         if years_mod != 0:
-            components.append(RateComponent(name="years_in_business", amount=0, basis="tenure", modifier_pct=years_mod))
+            components.append(
+                RateComponent(
+                    name="years_in_business", amount=0, basis="tenure", modifier_pct=years_mod
+                )
+            )
         if schedule_mod != 0:
-            components.append(RateComponent(name="uw_schedule_modification", amount=0, basis="uw_discretion", modifier_pct=schedule_mod))
+            components.append(
+                RateComponent(
+                    name="uw_schedule_modification",
+                    amount=0,
+                    basis="uw_discretion",
+                    modifier_pct=schedule_mod,
+                )
+            )
 
         result = self.adapter.submit_quote(
             QuoteRequest(
@@ -322,7 +377,11 @@ class InsuranceRatingEngine:
                     years = datetime.now(tz=timezone.utc).year - int(field.value)
                 except (ValueError, TypeError):
                     pass
-        if bundle.structured and bundle.structured.financial and bundle.structured.financial.annual_revenue:
+        if (
+            bundle.structured
+            and bundle.structured.financial
+            and bundle.structured.financial.annual_revenue
+        ):
             pass  # annual_revenue is a separate signal, not years
         for lo, hi, mod in YEARS_IN_BUSINESS_MODIFIERS:
             if (lo is None or years >= lo) and (hi is None or years < hi):

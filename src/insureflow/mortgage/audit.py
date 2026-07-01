@@ -75,12 +75,18 @@ class MortgageAuditLogger:
             self.log(
                 PipelineEvent.DISCREPANCY_DETECTED,
                 f"{issue.field_path}: {issue.value_a} vs {issue.value_b}",
-                severity=EventSeverity.WARNING if issue.severity == "warning" else EventSeverity.ERROR,
+                severity=EventSeverity.WARNING
+                if issue.severity == "warning"
+                else EventSeverity.ERROR,
                 metadata={"rule_id": issue.rule_id},
             )
 
         for violation in bundle.compliance_violations:
-            sev = EventSeverity.CRITICAL if violation.severity == "critical" else EventSeverity.WARNING
+            sev = (
+                EventSeverity.CRITICAL
+                if violation.severity == "critical"
+                else EventSeverity.WARNING
+            )
             self.log(
                 PipelineEvent.DISCREPANCY_DETECTED,
                 f"[{violation.rule_id}] {violation.message}",

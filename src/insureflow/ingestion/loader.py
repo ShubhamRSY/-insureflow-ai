@@ -57,15 +57,11 @@ class SubmissionLoader:
             return self._load_auto_classified(raw_docs, bundle)
 
         if acord_xml:
-            bundle.structured = self.acord_parser.parse(
-                acord_xml, bundle.bundle_id
-            )
+            bundle.structured = self.acord_parser.parse(acord_xml, bundle.bundle_id)
             bundle.status = SubmissionStatus.PARSED
 
         if json_payload:
-            bundle.structured = self.json_parser.parse(
-                json_payload, bundle.bundle_id
-            )
+            bundle.structured = self.json_parser.parse(json_payload, bundle.bundle_id)
             bundle.status = SubmissionStatus.PARSED
 
         if inspection_reports:
@@ -94,6 +90,7 @@ class SubmissionLoader:
                 ]
             elif bundle.structured:
                 from insureflow.models.submissions import FinancialData
+
                 bundle.structured.financial = FinancialData(
                     loss_run=loss_data,
                     prior_losses=[
@@ -196,34 +193,27 @@ class SubmissionLoader:
                 supplemental_docs.append(doc)
 
         if acord_docs:
-            bundle.structured = self.acord_parser.parse(
-                acord_docs[0], bundle.bundle_id
-            )
+            bundle.structured = self.acord_parser.parse(acord_docs[0], bundle.bundle_id)
             bundle.status = SubmissionStatus.PARSED
 
         if json_docs and not bundle.structured:
-            bundle.structured = self.json_parser.parse(
-                json_docs[0], bundle.bundle_id
-            )
+            bundle.structured = self.json_parser.parse(json_docs[0], bundle.bundle_id)
             bundle.status = SubmissionStatus.PARSED
 
         for i, doc in enumerate(inspection_docs):
             sub_id = f"{bundle.bundle_id}-inspection-{i}"
-            bundle.unstructured.append(
-                self.report_extractor.parse(doc, sub_id)
-            )
+            bundle.unstructured.append(self.report_extractor.parse(doc, sub_id))
 
         for i, doc in enumerate(loss_run_docs):
             sub_id = f"{bundle.bundle_id}-loss-run-{i}"
-            bundle.unstructured.append(
-                self.loss_run_parser.parse(doc, sub_id)
-            )
+            bundle.unstructured.append(self.loss_run_parser.parse(doc, sub_id))
             loss_data = self.loss_run_parser.parse_structured(doc)
             if bundle.structured:
                 if bundle.structured.financial:
                     bundle.structured.financial.loss_run = loss_data
                 else:
                     from insureflow.models.submissions import FinancialData
+
                     bundle.structured.financial = FinancialData(loss_run=loss_data)
                 bundle.structured.financial.prior_losses = [
                     {

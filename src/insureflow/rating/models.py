@@ -55,13 +55,14 @@ class RatingAdapter(ABC):
     """Adapter interface for policy admin / rating systems (Guidewire, Duck Creek, etc.)."""
 
     @abstractmethod
-    def submit_quote(self, request: QuoteRequest, memo: UnderwritingMemo, bundle: SubmissionBundle) -> QuoteResult:
-        ...
+    def submit_quote(
+        self, request: QuoteRequest, memo: UnderwritingMemo, bundle: SubmissionBundle
+    ) -> QuoteResult: ...
 
     @abstractmethod
-    def bind_policy(self, bundle_id: str, quote_reference: str, bound_by: str) -> dict[str, Any]:
-        ...
+    def bind_policy(
+        self, bundle_id: str, quote_reference: str, bound_by: str
+    ) -> dict[str, Any]: ...
 
     @abstractmethod
-    def sync_status(self, reference: str) -> dict[str, Any]:
-        ...
+    def sync_status(self, reference: str) -> dict[str, Any]: ...

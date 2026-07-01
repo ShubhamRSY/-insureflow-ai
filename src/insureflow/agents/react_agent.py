@@ -123,10 +123,10 @@ class ReActAgent(BaseAgent):
             f"{tools_desc}\n\n"
             "You must respond in JSON format with exactly this structure:\n"
             '{"thought": "your reasoning here", "action": "tool_name", "action_input": {"param": "value"}}\n\n'
-            'When you have enough information, respond with:\n'
+            "When you have enough information, respond with:\n"
             '{"thought": "I have enough information", "action": "final_answer", '
             '"findings": [...], "summary": "..."}\n\n'
-            "Each finding: {\"title\": str, \"description\": str, "
+            'Each finding: {"title": str, "description": str, '
             '"severity": "low|moderate|high|critical", '
             '"category": str, "evidence": [str]}\n'
             "Do not add markdown formatting. Return ONLY valid JSON."
@@ -159,6 +159,7 @@ class ReActAgent(BaseAgent):
 
         try:
             import re
+
             json_match = re.search(r"\{.*\}", cleaned, re.DOTALL)
             if json_match:
                 return json.loads(json_match.group())
@@ -185,13 +186,15 @@ class ReActAgent(BaseAgent):
                 "high": RiskSeverity.HIGH,
                 "critical": RiskSeverity.CRITICAL,
             }
-            self._add_finding(Finding(
-                title=fd.get("title", "Untitled"),
-                description=fd.get("description", ""),
-                severity=sev_map.get(fd.get("severity", ""), RiskSeverity.MODERATE),
-                category=fd.get("category", "general"),
-                evidence=fd.get("evidence", []),
-            ))
+            self._add_finding(
+                Finding(
+                    title=fd.get("title", "Untitled"),
+                    description=fd.get("description", ""),
+                    severity=sev_map.get(fd.get("severity", ""), RiskSeverity.MODERATE),
+                    category=fd.get("category", "general"),
+                    evidence=fd.get("evidence", []),
+                )
+            )
 
     def _analyze(self, bundle: SubmissionBundle, **kwargs: Any) -> None:
         pass

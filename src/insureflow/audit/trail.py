@@ -8,9 +8,7 @@ from insureflow.models.provenance import ProvenanceRecord
 
 class ProvenanceTrailBuilder:
     @staticmethod
-    def build_field_trail(
-        record: ProvenanceRecord, field_path: str
-    ) -> list[dict[str, Any]]:
+    def build_field_trail(record: ProvenanceRecord, field_path: str) -> list[dict[str, Any]]:
         if field_path not in record.nodes:
             return []
 
@@ -54,9 +52,7 @@ class ProvenanceTrailBuilder:
         return lineage
 
     @staticmethod
-    def build_audit_summary(
-        trail: AuditTrail, record: ProvenanceRecord
-    ) -> dict[str, Any]:
+    def build_audit_summary(trail: AuditTrail, record: ProvenanceRecord) -> dict[str, Any]:
         node_counts = record.record_count()
         verified = record.verified_count()
         discrepancies = record.discrepancy_count()

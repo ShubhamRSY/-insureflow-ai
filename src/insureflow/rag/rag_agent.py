@@ -38,9 +38,7 @@ class RAGAgent:
             lines.append("")
         return "\n".join(lines)
 
-    def augment_synthesis_prompt(
-        self, query: str, original_prompt: str, top_k: int = 5
-    ) -> str:
+    def augment_synthesis_prompt(self, query: str, original_prompt: str, top_k: int = 5) -> str:
         context = self.format_context(query, top_k=top_k)
         if not context:
             return original_prompt

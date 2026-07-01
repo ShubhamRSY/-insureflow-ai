@@ -10,50 +10,52 @@ from insureflow.ingestion.loss_run_parser import LossRunParser
 from insureflow.ingestion.sov_parser import SOVParser
 from insureflow.models.submissions import DocumentType
 
-SAMPLE_JSON = json.dumps({
-    "insured": {
-        "legalName": "Pacific Coast Distributors, Inc.",
-        "doingBusinessAs": "PCD Logistics",
-        "taxId": "94-3328410",
-        "entityType": "Corporation",
-        "financials": {"annualRevenue": 94700000, "payroll": 18400000, "totalAssets": 82500000},
-    },
-    "broker": {
-        "brokerName": "Golden Gate Insurance Brokers",
-        "contactName": "Sarah Chen",
-    },
-    "policy": {
-        "effectiveDate": "2026-09-01",
-        "expirationDate": "2027-09-01",
-    },
-    "coverages": [
-        {
-            "coverageType": "General Liability",
-            "limitAmount": 2000000,
-            "deductible": 0,
-            "annualPremium": 168500,
-            "sublimits": {"Products Aggregate": 4000000, "Fire Damage": 300000},
+SAMPLE_JSON = json.dumps(
+    {
+        "insured": {
+            "legalName": "Pacific Coast Distributors, Inc.",
+            "doingBusinessAs": "PCD Logistics",
+            "taxId": "94-3328410",
+            "entityType": "Corporation",
+            "financials": {"annualRevenue": 94700000, "payroll": 18400000, "totalAssets": 82500000},
         },
-    ],
-    "locations": [
-        {
-            "address": "2450 Maritime Blvd",
-            "city": "Oakland",
-            "state": "CA",
-            "zipCode": "94607",
-            "occupancy": "Warehouse",
-            "yearBuilt": 2005,
-            "squareFootage": 210000,
-        }
-    ],
-    "financial": {"annualRevenue": 94700000, "payroll": 18400000, "totalAssets": 82500000},
-    "risk": {
-        "naicsCode": 493120,
-        "sicCode": 4222,
-        "constructionType": "Masonry",
-        "protectionClass": 3,
-    },
-})
+        "broker": {
+            "brokerName": "Golden Gate Insurance Brokers",
+            "contactName": "Sarah Chen",
+        },
+        "policy": {
+            "effectiveDate": "2026-09-01",
+            "expirationDate": "2027-09-01",
+        },
+        "coverages": [
+            {
+                "coverageType": "General Liability",
+                "limitAmount": 2000000,
+                "deductible": 0,
+                "annualPremium": 168500,
+                "sublimits": {"Products Aggregate": 4000000, "Fire Damage": 300000},
+            },
+        ],
+        "locations": [
+            {
+                "address": "2450 Maritime Blvd",
+                "city": "Oakland",
+                "state": "CA",
+                "zipCode": "94607",
+                "occupancy": "Warehouse",
+                "yearBuilt": 2005,
+                "squareFootage": 210000,
+            }
+        ],
+        "financial": {"annualRevenue": 94700000, "payroll": 18400000, "totalAssets": 82500000},
+        "risk": {
+            "naicsCode": 493120,
+            "sicCode": 4222,
+            "constructionType": "Masonry",
+            "protectionClass": 3,
+        },
+    }
+)
 
 
 SAMPLE_LOSS_RUN = """# LOSS RUN / CLAIMS HISTORY
@@ -107,7 +109,9 @@ Coinsurance: 80%
 
 class TestDocumentClassifier:
     def test_classify_acord_xml(self):
-        result = DocumentClassifier.classify('<?xml version="1.0"?><ACORD xmlns="http://www.acord.org/standards/PC_Surety/ACORD"><Submission/></ACORD>')
+        result = DocumentClassifier.classify(
+            '<?xml version="1.0"?><ACORD xmlns="http://www.acord.org/standards/PC_Surety/ACORD"><Submission/></ACORD>'
+        )
         assert result == DocumentType.ACORD_XML
 
     def test_classify_json_broker(self):

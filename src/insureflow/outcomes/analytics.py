@@ -37,7 +37,13 @@ class OverrideAnalyticsEngine:
                 ai_decision="decline",
                 uw_decision="accept",
                 decision_changed=True,
-                premium_delta=PremiumDelta(ai_premium=0, uw_premium=8_500, delta=8_500, delta_pct=1.0, reason="Client has strong loss history elsewhere"),
+                premium_delta=PremiumDelta(
+                    ai_premium=0,
+                    uw_premium=8_500,
+                    delta=8_500,
+                    delta_pct=1.0,
+                    reason="Client has strong loss history elsewhere",
+                ),
                 reason_category=OverrideReasonCategory.CLIENT_RELATIONSHIP,
                 reason_freeform="Long-standing client with profitable book elsewhere",
                 uw_confidence="high",
@@ -49,7 +55,9 @@ class OverrideAnalyticsEngine:
                 ai_decision="accept",
                 uw_decision="accept",
                 decision_changed=False,
-                premium_delta=PremiumDelta(ai_premium=12_000, uw_premium=12_000, delta=0, delta_pct=0.0, reason="No change"),
+                premium_delta=PremiumDelta(
+                    ai_premium=12_000, uw_premium=12_000, delta=0, delta_pct=0.0, reason="No change"
+                ),
                 reason_category=OverrideReasonCategory.PRICING,
                 reason_freeform="Premium within acceptable range",
                 uw_confidence="high",
@@ -61,7 +69,13 @@ class OverrideAnalyticsEngine:
                 ai_decision="accept",
                 uw_decision="decline",
                 decision_changed=True,
-                premium_delta=PremiumDelta(ai_premium=22_000, uw_premium=0, delta=-22_000, delta_pct=-1.0, reason="Building age + location risk"),
+                premium_delta=PremiumDelta(
+                    ai_premium=22_000,
+                    uw_premium=0,
+                    delta=-22_000,
+                    delta_pct=-1.0,
+                    reason="Building age + location risk",
+                ),
                 reason_category=OverrideReasonCategory.APPETITE,
                 reason_freeform="Building over 50 years in CAT-exposed zone — AI missed construction quality",
                 uw_confidence="high",
@@ -90,7 +104,7 @@ class OverrideAnalyticsEngine:
         if query.date_to:
             results = [o for o in results if o.created_at <= query.date_to]
         results.sort(key=lambda o: o.created_at, reverse=True)
-        return results[query.offset:query.offset + query.limit]
+        return results[query.offset : query.offset + query.limit]
 
     def get_patterns(self, active_only: bool = True) -> list[OverridePattern]:
         if active_only:
@@ -113,7 +127,9 @@ class OverrideAnalyticsEngine:
             total_overrides=total,
             total_decision_changes=len(decision_changes),
             decision_change_rate=len(decision_changes) / total if total else 0.0,
-            avg_premium_delta_pct=sum(premium_deltas) / len(premium_deltas) if premium_deltas else 0.0,
+            avg_premium_delta_pct=sum(premium_deltas) / len(premium_deltas)
+            if premium_deltas
+            else 0.0,
             by_category=dict(category_counts),
             top_patterns=self.get_patterns(),
         )
@@ -149,10 +165,13 @@ class OverrideAnalyticsEngine:
                 p["last_seen"] = o.created_at
 
         self._patterns.clear()
-        for i, (key, data) in enumerate(sorted(patterns.items(), key=lambda x: x[1]["count"], reverse=True)):
+        for i, (key, data) in enumerate(
+            sorted(patterns.items(), key=lambda x: x[1]["count"], reverse=True)
+        ):
             avg_delta = (
                 sum(data["premium_deltas"]) / len(data["premium_deltas"])
-                if data["premium_deltas"] else 0.0
+                if data["premium_deltas"]
+                else 0.0
             )
             common_shift = key.split(":", 1)[1] if ":" in key else ""
             self._patterns[f"pat-{uuid4().hex[:8]}"] = OverridePattern(
@@ -177,7 +196,9 @@ class OverrideAnalyticsEngine:
         elif override.reason_category == OverrideReasonCategory.CLIENT_RELATIONSHIP:
             return "Add client-relationship override rule for existing book rollovers"
         elif override.reason_category == OverrideReasonCategory.DATA_QUALITY:
-            return "Improve extraction pipeline — UW often corrects data that AI extracted incorrectly"
+            return (
+                "Improve extraction pipeline — UW often corrects data that AI extracted incorrectly"
+            )
         elif override.reason_category == OverrideReasonCategory.MARKET_CONDITIONS:
             return "Add market-condition override signal — UW considers competitive environment"
         return "Review underwriting guidelines for this override type"

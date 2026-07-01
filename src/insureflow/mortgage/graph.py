@@ -115,6 +115,7 @@ def extract_fields(state: dict[str, Any]) -> dict[str, Any]:
 
     for doc in bundle.documents:
         from insureflow.ingestion.mortgage.extractors import extract_fields as _run_extract
+
         extracted = _run_extract(doc.document_type, doc.raw_text)
         doc.extracted_fields.update(extracted)
 
@@ -198,23 +199,17 @@ def decide(state: dict[str, Any]) -> dict[str, Any]:
         "collateral_analysis",
         "fraud_analysis",
     )
-    agent_results = [
-        MortgageAgentResult(**state[k]) for k in result_keys if state.get(k)
-    ]
+    agent_results = [MortgageAgentResult(**state[k]) for k in result_keys if state.get(k)]
     memo = agent.decide(bundle, agent_results)
 
     human_review_reasons: list[str] = []
     if memo.human_review_required:
         for f in memo.key_findings:
             if f.severity in ("high", "critical"):
-                human_review_reasons.append(
-                    f"[{f.severity.upper()}] {f.title}: {f.description}"
-                )
+                human_review_reasons.append(f"[{f.severity.upper()}] {f.title}: {f.description}")
         for v in memo.compliance_violations:
             if v.severity in ("high", "critical"):
-                human_review_reasons.append(
-                    f"[COMPLIANCE] ({v.rule_id}) {v.message}"
-                )
+                human_review_reasons.append(f"[COMPLIANCE] ({v.rule_id}) {v.message}")
 
     return {
         "memo": memo.model_dump(),

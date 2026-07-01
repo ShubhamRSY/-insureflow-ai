@@ -88,9 +88,7 @@ def test_graph_conditional_routing_acord() -> None:
 
 def test_graph_conditional_routing_loss_run() -> None:
     pg = build_pipeline_graph()
-    loss_run_text = (
-        "LOSS RUN REPORT\nClaim 1: $50,000 incurred\nClaim 2: $25,000 incurred"
-    )
+    loss_run_text = "LOSS RUN REPORT\nClaim 1: $50,000 incurred\nClaim 2: $25,000 incurred"
     state = create_initial_state(
         acord_xml="<ACORD>test</ACORD>",
         loss_run=loss_run_text,
@@ -124,6 +122,7 @@ def test_graph_retry_limit() -> None:
     )
 
     from insureflow.graph.nodes import should_retry_extraction
+
     decision = should_retry_extraction(state)
     assert decision == "build_provenance"
 
@@ -136,6 +135,7 @@ def test_graph_retry_still_retrying() -> None:
     )
 
     from insureflow.graph.nodes import should_retry_extraction
+
     decision = should_retry_extraction(state)
     assert decision == "extract_agents"
 
@@ -146,6 +146,7 @@ def test_graph_human_review_triggered() -> None:
     )
 
     from insureflow.graph.nodes import check_human_review
+
     decision = check_human_review(state)
     assert decision == "human_review"
 
@@ -156,6 +157,7 @@ def test_graph_human_review_skipped() -> None:
     )
 
     from insureflow.graph.nodes import check_human_review
+
     decision = check_human_review(state)
     assert decision == "query_rag"
 
@@ -180,6 +182,7 @@ def test_graph_human_review_node() -> None:
     )
 
     from insureflow.graph.nodes import human_review
+
     result = human_review(state)
 
     reasons = result.get("human_review_reasons", [])

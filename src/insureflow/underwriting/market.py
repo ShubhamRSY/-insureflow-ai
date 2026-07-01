@@ -15,9 +15,9 @@ from typing import Optional
 
 
 class MarketPhase(str, Enum):
-    HARD = "hard"           # Prices rising, capacity tight
+    HARD = "hard"  # Prices rising, capacity tight
     TRANSITIONING_HARD = "transitioning_hard"  # Peaking but easing
-    SOFT = "soft"           # Prices falling, capacity abundant
+    SOFT = "soft"  # Prices falling, capacity abundant
     TRANSITIONING_SOFT = "transitioning_soft"  # Softening further
 
 
@@ -49,33 +49,33 @@ class MarketCycle:
 # Realistic data from late 2024/2025 market reports
 _HARD_CYCLE = MarketCycle(
     phase=MarketPhase.HARD,
-    property_rate_mod=1.25,        # +25% property rates
-    liability_rate_mod=1.15,       # +15% liability rates
-    workers_comp_rate_mod=0.95,    # WC still competitive
-    auto_rate_mod=1.30,            # +30% auto (nuclear verdicts)
-    appetite_tightness=1.4,        # 40% more restrictive
-    reinsurance_cost_mod=1.20,     # +20% reinsurance cost pass-through
+    property_rate_mod=1.25,  # +25% property rates
+    liability_rate_mod=1.15,  # +15% liability rates
+    workers_comp_rate_mod=0.95,  # WC still competitive
+    auto_rate_mod=1.30,  # +30% auto (nuclear verdicts)
+    appetite_tightness=1.4,  # 40% more restrictive
+    reinsurance_cost_mod=1.20,  # +20% reinsurance cost pass-through
     industry_loss_ratio=0.73,
     capacity_available=False,
     nuclear_verdict_trend="rising",
     description="Hard market: Rates rising, capacity tightening. "
-                "Nuclear verdicts driving auto/liability increases. "
-                "Reinsurance costs up 20%+.",
+    "Nuclear verdicts driving auto/liability increases. "
+    "Reinsurance costs up 20%+.",
 )
 
 _SOFT_CYCLE = MarketCycle(
     phase=MarketPhase.SOFT,
-    property_rate_mod=0.92,        # -8% property
-    liability_rate_mod=0.95,       # -5% liability
-    workers_comp_rate_mod=0.90,    # -10% WC
-    auto_rate_mod=0.96,            # -4% auto
-    appetite_tightness=0.80,       # 20% more willing to write
-    reinsurance_cost_mod=0.90,     # -10% reinsurance cost
+    property_rate_mod=0.92,  # -8% property
+    liability_rate_mod=0.95,  # -5% liability
+    workers_comp_rate_mod=0.90,  # -10% WC
+    auto_rate_mod=0.96,  # -4% auto
+    appetite_tightness=0.80,  # 20% more willing to write
+    reinsurance_cost_mod=0.90,  # -10% reinsurance cost
     industry_loss_ratio=0.55,
     capacity_available=True,
     nuclear_verdict_trend="stable",
     description="Soft market: Rates declining 4-8% across lines. "
-                "Capacity abundant. Reinsurance costs down 10%.",
+    "Capacity abundant. Reinsurance costs down 10%.",
 )
 
 _TRANSITIONING_HARD = MarketCycle(
@@ -90,7 +90,7 @@ _TRANSITIONING_HARD = MarketCycle(
     capacity_available=True,
     nuclear_verdict_trend="stable",
     description="Transitioning from hard to soft: Rates still elevated but "
-                "capacity returning. Competition increasing.",
+    "capacity returning. Competition increasing.",
 )
 
 

@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class CATExposureResult:
     """Catastrophe risk assessment for a single location."""
+
     address: str
     city: str
     state: str
@@ -72,7 +73,9 @@ class CATModelResult:
         ]
         if self.worst_exposure:
             we = self.worst_exposure
-            parts.append(f"Worst: {we.city}, {we.state} ({we.max_threat}: {we.combined_cat_score:.0%})")
+            parts.append(
+                f"Worst: {we.city}, {we.state} ({we.max_threat}: {we.combined_cat_score:.0%})"
+            )
             parts.append(f"PML 100yr: ${self.portfolio_aggregate_pml_100yr:,.0f}")
         return " | ".join(parts)
 
@@ -103,7 +106,10 @@ class CatastropheModelClient:
     ) -> CATExposureResult:
         if not self._enabled:
             return CATExposureResult(
-                address=address, city=city, state=state, zip_code=zip_code,
+                address=address,
+                city=city,
+                state=state,
+                zip_code=zip_code,
                 query_completed=False,
             )
 

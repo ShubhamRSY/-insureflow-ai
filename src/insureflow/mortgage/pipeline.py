@@ -53,8 +53,11 @@ class MortgagePipeline:
         inferred = product_line or self._infer_product_line(directory)
         documents = self.loader.load_from_directory(directory, bundle_id=bid, product_line=inferred)
         return self.run_documents(
-            documents, bundle_id=bid, product_line=inferred,
-            loan_product=loan_product, loan_amount=loan_amount,
+            documents,
+            bundle_id=bid,
+            product_line=inferred,
+            loan_product=loan_product,
+            loan_amount=loan_amount,
         )
 
     def run_from_paths(
@@ -67,11 +70,17 @@ class MortgagePipeline:
         loan_amount: float | None = None,
     ) -> dict[str, Any]:
         bid = bundle_id or f"mortgage-{uuid4().hex[:12]}"
-        inferred = product_line or (self._infer_product_line(paths[0]) if paths else ProductLine.RESIDENTIAL_MORTGAGE)
+        inferred = product_line or (
+            self._infer_product_line(paths[0]) if paths else ProductLine.RESIDENTIAL_MORTGAGE
+        )
         documents = self.loader.load_from_paths(paths, bundle_id=bid, product_line=inferred)
         return self.run_documents(
-            documents, bundle_id=bid, product_line=inferred, borrower_id=borrower_id,
-            loan_product=loan_product, loan_amount=loan_amount,
+            documents,
+            bundle_id=bid,
+            product_line=inferred,
+            borrower_id=borrower_id,
+            loan_product=loan_product,
+            loan_amount=loan_amount,
         )
 
     def run_from_texts(
@@ -86,8 +95,12 @@ class MortgagePipeline:
         bid = bundle_id or f"mortgage-{uuid4().hex[:12]}"
         loaded = self.loader.load_from_texts(documents, bundle_id=bid, product_line=product_line)
         return self.run_documents(
-            loaded, bundle_id=bid, product_line=product_line, borrower_id=borrower_id,
-            loan_product=loan_product, loan_amount=loan_amount,
+            loaded,
+            bundle_id=bid,
+            product_line=product_line,
+            borrower_id=borrower_id,
+            loan_product=loan_product,
+            loan_amount=loan_amount,
         )
 
     def run_per_borrower(
@@ -140,23 +153,28 @@ class MortgagePipeline:
         )
 
         llm_doc_count = sum(
-            1 for d in documents
+            1
+            for d in documents
             if any(
                 f.field_name == "extraction_method" and "llm" in f.value
                 for f in d.extracted_fields.get("extraction_method", [])
             )
         )
-        ocr_doc_count = sum(
-            1 for d in documents
-            if d.extracted_fields.get("ocr_engine")
-        )
+        ocr_doc_count = sum(1 for d in documents if d.extracted_fields.get("ocr_engine"))
 
         if llm_doc_count:
-            audit.log(PipelineEvent.EXTRACTION_COMPLETE, f"LLM extraction on {llm_doc_count} document(s)")
+            audit.log(
+                PipelineEvent.EXTRACTION_COMPLETE, f"LLM extraction on {llm_doc_count} document(s)"
+            )
         if ocr_doc_count:
-            audit.log(PipelineEvent.EXTRACTION_COMPLETE, f"OCR extraction on {ocr_doc_count} document(s)")
+            audit.log(
+                PipelineEvent.EXTRACTION_COMPLETE, f"OCR extraction on {ocr_doc_count} document(s)"
+            )
 
-        audit.log(PipelineEvent.STRUCTURED_PARSE_COMPLETE, f"Classified and extracted {len(documents)} documents")
+        audit.log(
+            PipelineEvent.STRUCTURED_PARSE_COMPLETE,
+            f"Classified and extracted {len(documents)} documents",
+        )
 
         bundle = MortgageBundle(
             bundle_id=bundle_id,
@@ -165,7 +183,10 @@ class MortgagePipeline:
             status=MortgageBundleStatus.PARSED,
         )
 
-        audit.log(PipelineEvent.RECONCILIATION_START, "Building summaries and cross-document reconciliation")
+        audit.log(
+            PipelineEvent.RECONCILIATION_START,
+            "Building summaries and cross-document reconciliation",
+        )
         self.reconciliation.build_summaries(bundle)
         self.reconciliation.reconcile(bundle)
         audit.log(
@@ -184,7 +205,9 @@ class MortgagePipeline:
 
         dti_ratio = memo.dti_ratio
         if bundle.income and bundle.credit and rate_quote.monthly_pi:
-            monthly_income = (bundle.income.adjusted_gross_income or bundle.income.total_income) / 12
+            monthly_income = (
+                bundle.income.adjusted_gross_income or bundle.income.total_income
+            ) / 12
             if monthly_income > 0:
                 total_debt = bundle.credit.total_monthly_payment + rate_quote.monthly_pi
                 dti_ratio = round(total_debt / monthly_income * 100, 1)

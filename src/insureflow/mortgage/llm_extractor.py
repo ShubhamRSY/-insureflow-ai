@@ -94,10 +94,13 @@ class MortgageLLMExtractor:
             return None
         try:
             truncated = raw_text[:12000]
-            user_prompt = LLM_EXTRACTION_PROMPT.format(
-                doc_type=doc_type.value,
-                source_path=source_path or "unknown",
-            ) + f"\n\n--- DOCUMENT TEXT ---\n{truncated}"
+            user_prompt = (
+                LLM_EXTRACTION_PROMPT.format(
+                    doc_type=doc_type.value,
+                    source_path=source_path or "unknown",
+                )
+                + f"\n\n--- DOCUMENT TEXT ---\n{truncated}"
+            )
 
             result = self.llm.extract_structured(
                 system_prompt="You extract mortgage underwriting fields. Respond with JSON only.",

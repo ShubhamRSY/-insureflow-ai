@@ -60,7 +60,7 @@ class InMemoryVectorStore(VectorStore):
         cleaned = re.sub(r"[^a-z0-9]", "", text.lower())
         ngrams: list[str] = []
         for i in range(len(cleaned) - 2):
-            ngrams.append(cleaned[i:i+3])
+            ngrams.append(cleaned[i : i + 3])
         vec = [0.0] * 512
         for ng in ngrams:
             hashed = hash(ng) % 512
@@ -124,17 +124,26 @@ class PgVectorStore(VectorStore):
         cur = self._conn.cursor()
         for g in guidelines:
             emb = self._get_embedding(f"{g.title} {g.content}")
-            cur.execute(f"""
+            cur.execute(
+                f"""
                 INSERT INTO {self._collection} (id, title, content, category, source, keywords, risk_impact, embedding)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                 ON CONFLICT (id) DO UPDATE SET
                     title = EXCLUDED.title,
                     content = EXCLUDED.content,
                     embedding = EXCLUDED.embedding
-            """, (
-                g.id, g.title, g.content, g.category.value, g.source.value,
-                g.keywords, g.risk_impact, emb,
-            ))
+            """,
+                (
+                    g.id,
+                    g.title,
+                    g.content,
+                    g.category.value,
+                    g.source.value,
+                    g.keywords,
+                    g.risk_impact,
+                    emb,
+                ),
+            )
         self._conn.commit()
         cur.close()
 
@@ -142,18 +151,25 @@ class PgVectorStore(VectorStore):
         self._ensure_connected()
         query_vec = self._get_embedding(query)
         cur = self._conn.cursor()
-        cur.execute(f"""
+        cur.execute(
+            f"""
             SELECT id, title, content, category, source, keywords, risk_impact,
                    1 - (embedding <=> %s::vector) AS similarity
             FROM {self._collection}
             ORDER BY embedding <=> %s::vector
             LIMIT %s
-        """, (query_vec, query_vec, top_k))
+        """,
+            (query_vec, query_vec, top_k),
+        )
         results: list[tuple[Guideline, float]] = []
         for row in cur.fetchall():
             g = Guideline(
-                id=row[0], title=row[1], content=row[2],
-                category=row[3], source=row[4], keywords=list(row[5]),
+                id=row[0],
+                title=row[1],
+                content=row[2],
+                category=row[3],
+                source=row[4],
+                keywords=list(row[5]),
                 risk_impact=row[6],
             )
             results.append((g, float(row[7])))
@@ -170,6 +186,7 @@ class PgVectorStore(VectorStore):
     def _get_embedding(self, text: str) -> list[float]:
         try:
             from openai import OpenAI
+
             client = OpenAI()
             resp = client.embeddings.create(
                 model="text-embedding-3-small",

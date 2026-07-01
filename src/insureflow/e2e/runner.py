@@ -80,7 +80,12 @@ class E2ERunner:
             "total": len(self.results),
             "success": failed == 0,
             "results": [
-                {"name": r.name, "passed": r.passed, "detail": r.detail, "duration_ms": round(r.duration_ms, 1)}
+                {
+                    "name": r.name,
+                    "passed": r.passed,
+                    "detail": r.detail,
+                    "duration_ms": round(r.duration_ms, 1),
+                }
                 for r in self.results
             ],
         }
@@ -97,7 +102,9 @@ class E2ERunner:
         expected: int | tuple[int, ...] = 200,
     ) -> Any:
         if self._client is not None:
-            return self._request_testclient(method, path, json_body=json_body, auth=auth, expected=expected)
+            return self._request_testclient(
+                method, path, json_body=json_body, auth=auth, expected=expected
+            )
 
         url = f"{self.base_url.rstrip('/')}{path}"
         headers = {"Accept": "application/json"}
@@ -175,11 +182,21 @@ class E2ERunner:
         try:
             detail = fn() or "ok"
             self.results.append(
-                E2EResult(name=name, passed=True, detail=detail, duration_ms=(time.perf_counter() - t0) * 1000)
+                E2EResult(
+                    name=name,
+                    passed=True,
+                    detail=detail,
+                    duration_ms=(time.perf_counter() - t0) * 1000,
+                )
             )
         except Exception as exc:
             self.results.append(
-                E2EResult(name=name, passed=False, detail=str(exc), duration_ms=(time.perf_counter() - t0) * 1000)
+                E2EResult(
+                    name=name,
+                    passed=False,
+                    detail=str(exc),
+                    duration_ms=(time.perf_counter() - t0) * 1000,
+                )
             )
 
     def _wait_job(self, path: str, job_id: str) -> dict[str, Any]:
@@ -191,7 +208,9 @@ class E2ERunner:
             if status in ("completed", "failed"):
                 return last
             time.sleep(2)
-        raise TimeoutError(f"Job {job_id} not finished after {self.job_timeout}s (last={last.get('status')})")
+        raise TimeoutError(
+            f"Job {job_id} not finished after {self.job_timeout}s (last={last.get('status')})"
+        )
 
     def _auth_headers_setup(self) -> None:
         """Ensure token is set (setup new org user or login with existing credentials)."""
@@ -288,7 +307,14 @@ class E2ERunner:
             data = self._request("GET", "/system/diagnostics")
             summary = data.get("summary", {})
             checks = {c["component"]: c["status"] for c in data.get("checks", [])}
-            required = ["llm_api_key", "redis", "job_store", "ocr", "insurance_examples", "postgres_pgvector"]
+            required = [
+                "llm_api_key",
+                "redis",
+                "job_store",
+                "ocr",
+                "insurance_examples",
+                "postgres_pgvector",
+            ]
             missing = [k for k in required if k not in checks]
             if missing:
                 raise AssertionError(f"Missing checks: {missing}")
@@ -404,13 +430,19 @@ class E2ERunner:
 
         decision = getattr(self, "_insurance_decision", "")
         if decision == "decline":
-            self._record("Insurance production (skipped)", True, "decision=decline, no workflow to sign off")
+            self._record(
+                "Insurance production (skipped)", True, "decision=decline, no workflow to sign off"
+            )
             return
 
         def pending_queue() -> str:
             data = self._request("GET", "/pipeline/workflow/pending", auth=True)
             pending = data.get("pending", [])
-            ids = pending if not pending or isinstance(pending[0], str) else [p.get("bundle_id") for p in pending]
+            ids = (
+                pending
+                if not pending or isinstance(pending[0], str)
+                else [p.get("bundle_id") for p in pending]
+            )
             if bundle_id not in ids and not ids:
                 raise AssertionError(f"Expected pending queue entries, bundle={bundle_id}")
             return f"{len(ids)} pending"
@@ -450,7 +482,9 @@ class E2ERunner:
             pkg = self._request("GET", f"/pipeline/audit/{bundle_id}/package", auth=True)
             assert pkg.get("artifact_count", 0) >= 1, "regulatory package empty"
             assert pkg.get("bundle_id") == bundle_id
-            return f"artifacts={pkg['artifact_count']} path={Path(pkg.get('package_path', '')).name}"
+            return (
+                f"artifacts={pkg['artifact_count']} path={Path(pkg.get('package_path', '')).name}"
+            )
 
         def loss_experience() -> str:
             policy = getattr(self, "_bound_policy_number", f"POL-E2E-{bundle_id[:8]}")
@@ -510,7 +544,9 @@ class E2ERunner:
             rq = results.get("rate_quote") or {}
             self._mortgage_job_id = job_id
             self._mortgage_bundle_id = results.get("bundle_id", job_id)
-            return f"decision={decision} rate={rq.get('adjusted_rate')} dti={results.get('dti_ratio')}"
+            return (
+                f"decision={decision} rate={rq.get('adjusted_rate')} dti={results.get('dti_ratio')}"
+            )
 
         self._step("Mortgage demo pipeline (Johnson)", demo_run)
 
@@ -656,7 +692,9 @@ class E2ERunner:
 
             examples = PROJECT_ROOT / "examples"
             acord = (examples / "pacific_coast_acord.xml").read_text(encoding="utf-8")
-            inspection = (examples / "pacific_coast_inspection_report.md").read_text(encoding="utf-8")
+            inspection = (examples / "pacific_coast_inspection_report.md").read_text(
+                encoding="utf-8"
+            )
             loss = (examples / "pacific_coast_loss_run.md").read_text(encoding="utf-8")
             result = InsurancePipeline(org_id=self.org_id, use_llm=self.use_llm).run(
                 acord_xml=acord,

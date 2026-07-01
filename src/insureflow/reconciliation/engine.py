@@ -16,9 +16,7 @@ class ReconciliationEngine:
         self.detector = DiscrepancyDetector()
         self.rule_set = VerificationRuleSet.default_rules()
 
-    def reconcile(
-        self, provenance_record: ProvenanceRecord
-    ) -> ReconciliationResult:
+    def reconcile(self, provenance_record: ProvenanceRecord) -> ReconciliationResult:
         result = ReconciliationResult(
             bundle_id=provenance_record.bundle_id,
         )
@@ -88,9 +86,7 @@ class ReconciliationEngine:
         result.match_rate = matched / max(total, 1)
         result.reconciled_at = datetime.now(timezone.utc)
 
-        critical_discrepancies = sum(
-            1 for d in discrepancies if d.severity.value == "critical"
-        )
+        critical_discrepancies = sum(1 for d in discrepancies if d.severity.value == "critical")
         result.overall_status = (
             "flagged"
             if critical_discrepancies > 0

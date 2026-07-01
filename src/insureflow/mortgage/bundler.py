@@ -7,10 +7,20 @@ from pathlib import Path
 from insureflow.models.mortgage import ProductLine
 
 # Category folders shared at package root (not borrower-specific)
-SHARED_CATEGORY_DIRS = frozenset({
-    "assets", "credit_debt", "credit_dept", "income", "legal", "property",
-    "debt_legal", "due_diligence", "entity_financials", "property_performance",
-})
+SHARED_CATEGORY_DIRS = frozenset(
+    {
+        "assets",
+        "credit_debt",
+        "credit_dept",
+        "income",
+        "legal",
+        "property",
+        "debt_legal",
+        "due_diligence",
+        "entity_financials",
+        "property_performance",
+    }
+)
 
 # Map shared-doc filename tokens → borrower package id
 FILENAME_BORROWER_HINTS: list[tuple[re.Pattern[str], str]] = [
@@ -53,7 +63,11 @@ def _infer_borrower_from_path(path: str) -> str | None:
         if lower.endswith(".txt"):
             continue
         # borrower folder e.g. chen_david_karen
-        if "_" in lower and lower not in ("home_mortgage", "commercial_mortgage", "simulated_documents"):
+        if "_" in lower and lower not in (
+            "home_mortgage",
+            "commercial_mortgage",
+            "simulated_documents",
+        ):
             if lower not in SHARED_CATEGORY_DIRS:
                 return lower
     return None
@@ -77,7 +91,8 @@ def discover_borrower_packages(
         raise FileNotFoundError(f"Directory not found: {directory}")
 
     inferred_product = product_line or (
-        ProductLine.COMMERCIAL_MORTGAGE if "commercial_mortgage" in str(root).lower()
+        ProductLine.COMMERCIAL_MORTGAGE
+        if "commercial_mortgage" in str(root).lower()
         else ProductLine.RESIDENTIAL_MORTGAGE
     )
 

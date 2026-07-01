@@ -123,20 +123,23 @@ class InsurancePipeline:
                 audit.log(
                     PipelineEvent.STRUCTURED_PARSE_COMPLETE,
                     f"Appetite filter: {appetite_result.reason}",
-                    metadata={"appetite_passed": False, "needs_uw_referral": appetite_result.needs_uw_referral},
+                    metadata={
+                        "appetite_passed": False,
+                        "needs_uw_referral": appetite_result.needs_uw_referral,
+                    },
                 )
                 if not appetite_result.needs_uw_referral:
                     return self._build_appetite_decline_result(
-                        bid, appetite_result.reason, appetite_result.findings, audit,
+                        bid,
+                        appetite_result.reason,
+                        appetite_result.findings,
+                        audit,
                     )
 
         # ── 2. Ingest ──
         if documents:
             bundle = self.doc_loader.load_from_documents(documents, bundle_id=bid)
-            ocr_count = sum(
-                1 for d in bundle.unstructured
-                if d.extracted_fields.get("ocr_engine")
-            )
+            ocr_count = sum(1 for d in bundle.unstructured if d.extracted_fields.get("ocr_engine"))
         else:
             bundle = self.legacy_loader.load_bundle(
                 acord_xml=acord_xml,
@@ -170,7 +173,10 @@ class InsurancePipeline:
             audit.log(
                 PipelineEvent.VERIFICATION_COMPLETE,
                 f"Oracle queries: {len(oracle_findings)} findings from CLUE, NCCI, CAT models",
-                metadata={"oracle_success": oracle_result.success, "oracle_findings": len(oracle_findings)},
+                metadata={
+                    "oracle_success": oracle_result.success,
+                    "oracle_findings": len(oracle_findings),
+                },
             )
 
         # ── 5. Provenance + Reconciliation ──
@@ -225,6 +231,7 @@ class InsurancePipeline:
         # ── 9b. Generate quote document HTML ──
         try:
             from insureflow.rating.quote_document import generate_quote_html
+
             quote_html = generate_quote_html(bundle, memo, quote)
         except Exception:
             quote_html = ""
@@ -232,7 +239,9 @@ class InsurancePipeline:
         # ── 10. CORE SYSTEM INTEGRATION (push to BriteCore/Guidewire) ──
         core_results: list[dict[str, Any]] = []
         if not skip_core_integration:
-            core_results = self.policy_admin.submit_to_core_systems(bundle, memo, quote, self.org_id)
+            core_results = self.policy_admin.submit_to_core_systems(
+                bundle, memo, quote, self.org_id
+            )
             successful = [r for r in core_results if r.get("success")]
             audit.log(
                 PipelineEvent.PIPELINE_COMPLETE,
@@ -250,13 +259,17 @@ class InsurancePipeline:
         wf = self.workflow.submit_for_review(bid, self.org_id, memo.decision.value)
 
         # ── 14. Dispatch status webhooks for broker visibility ──
-        webhook_dispatcher.dispatch("insurance.completed", self.org_id, {
-            "bundle_id": bid,
-            "status": "completed",
-            "decision": memo.decision.value,
-            "insured_name": memo.insured_name,
-            "workflow_state": wf.state.value,
-        })
+        webhook_dispatcher.dispatch(
+            "insurance.completed",
+            self.org_id,
+            {
+                "bundle_id": bid,
+                "status": "completed",
+                "decision": memo.decision.value,
+                "insured_name": memo.insured_name,
+                "workflow_state": wf.state.value,
+            },
+        )
 
         broker_name = ""
         if bundle.structured and bundle.structured.broker:
@@ -272,9 +285,12 @@ class InsurancePipeline:
             "triage_score": triage_result.score,
             "ai_decision": memo.decision.value,
             "workflow_state": wf.state.value,
-            "human_review_required": memo.human_review_required or wf.state == WorkflowState.PENDING_REVIEW,
+            "human_review_required": memo.human_review_required
+            or wf.state == WorkflowState.PENDING_REVIEW,
             "appetite_filter_passed": appetite_passed,
-            "appetite_needs_uw_referral": appetite_result.needs_uw_referral if appetite_result else False,
+            "appetite_needs_uw_referral": appetite_result.needs_uw_referral
+            if appetite_result
+            else False,
             "oracle_findings_count": len(oracle_findings),
             "ocr_documents": ocr_count,
             "document_count": len(bundle.unstructured) + (1 if bundle.structured else 0),
@@ -366,11 +382,15 @@ class InsurancePipeline:
             "encryption_at_rest": self.encryption.enabled,
         }
         audit.persist(None, None, extra=result)
-        webhook_dispatcher.dispatch("insurance.declined", self.org_id, {
-            "bundle_id": bundle_id,
-            "status": "declined",
-            "reason": reason,
-        })
+        webhook_dispatcher.dispatch(
+            "insurance.declined",
+            self.org_id,
+            {
+                "bundle_id": bundle_id,
+                "status": "declined",
+                "reason": reason,
+            },
+        )
         return result
 
     def _record_portfolio_policy(self, bundle: Any, memo: Any, quote: Any) -> None:
@@ -386,7 +406,9 @@ class InsurancePipeline:
                 if bundle.structured.locations:
                     loc = bundle.structured.locations[0]
                     state = loc.state or ""
-                    tiv = (loc.building_value or 0) + (loc.contents_value or 0) + (loc.bi_value or 0)
+                    tiv = (
+                        (loc.building_value or 0) + (loc.contents_value or 0) + (loc.bi_value or 0)
+                    )
                     occupancy = loc.building_occupancy or ""
                 if bundle.structured.risk_profile:
                     naics = bundle.structured.risk_profile.naics_code or ""

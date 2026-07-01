@@ -29,18 +29,26 @@ class TestLendingRiskEngine:
             loan_purpose=LoanPurpose.WORKING_CAPITAL,
             requested_amount=500000,
             requested_term_months=36,
-            financials=[BusinessFinancialData(
-                annual_revenue=2000000, net_income=200000, ebitda=350000,
-                debt_service=220000, total_assets=1000000, total_liabilities=400000,
-                current_assets=300000, current_liabilities=200000,
-            )],
+            financials=[
+                BusinessFinancialData(
+                    annual_revenue=2000000,
+                    net_income=200000,
+                    ebitda=350000,
+                    debt_service=220000,
+                    total_assets=1000000,
+                    total_liabilities=400000,
+                    current_assets=300000,
+                    current_liabilities=200000,
+                )
+            ],
         )
         defaults.update(overrides)
         return BusinessLoanApplication(**defaults)
 
     def make_con_app(self, **overrides: object) -> ConsumerLoanApplication:
         defaults: dict = dict(
-            first_name="Jane", last_name="Doe",
+            first_name="Jane",
+            last_name="Doe",
             product_type=LoanProductType.AUTO_LOAN,
             loan_purpose=LoanPurpose.AUTO_PURCHASE,
             requested_amount=35000,
@@ -57,12 +65,19 @@ class TestLendingRiskEngine:
 
     def test_low_risk_business(self) -> None:
         app = self.make_biz_app(
-            financials=[BusinessFinancialData(
-                annual_revenue=5000000, net_income=750000, ebitda=1200000,
-                debt_service=400000, total_assets=5000000, total_liabilities=1000000,
-                shareholder_equity=4000000,
-                current_assets=2000000, current_liabilities=500000,
-            )],
+            financials=[
+                BusinessFinancialData(
+                    annual_revenue=5000000,
+                    net_income=750000,
+                    ebitda=1200000,
+                    debt_service=400000,
+                    total_assets=5000000,
+                    total_liabilities=1000000,
+                    shareholder_equity=4000000,
+                    current_assets=2000000,
+                    current_liabilities=500000,
+                )
+            ],
             years_in_business=15,
             industry="software",
         )
@@ -73,11 +88,18 @@ class TestLendingRiskEngine:
 
     def test_high_risk_business(self) -> None:
         app = self.make_biz_app(
-            financials=[BusinessFinancialData(
-                annual_revenue=80000, net_income=-5000, ebitda=10000,
-                debt_service=50000, total_assets=30000, total_liabilities=60000,
-                current_assets=5000, current_liabilities=40000,
-            )],
+            financials=[
+                BusinessFinancialData(
+                    annual_revenue=80000,
+                    net_income=-5000,
+                    ebitda=10000,
+                    debt_service=50000,
+                    total_assets=30000,
+                    total_liabilities=60000,
+                    current_assets=5000,
+                    current_liabilities=40000,
+                )
+            ],
             years_in_business=1,
             industry="restaurant",
         )
@@ -88,10 +110,14 @@ class TestLendingRiskEngine:
         assert len(analysis.weaknesses) >= 3
 
     def test_excellent_credit_consumer(self) -> None:
-        app = self.make_con_app(financial_data=ConsumerFinancialData(
-            annual_income=120000, total_monthly_debt=800, credit_score=800,
-            employment_years=10,
-        ))
+        app = self.make_con_app(
+            financial_data=ConsumerFinancialData(
+                annual_income=120000,
+                total_monthly_debt=800,
+                credit_score=800,
+                employment_years=10,
+            )
+        )
         engine = LendingRiskEngine()
         analysis = engine.analyze(app)
         assert analysis.overall_risk_score < 40
@@ -99,10 +125,15 @@ class TestLendingRiskEngine:
         assert len(analysis.strengths) >= 1
 
     def test_poor_credit_consumer(self) -> None:
-        app = self.make_con_app(financial_data=ConsumerFinancialData(
-            annual_income=40000, total_monthly_debt=2000, credit_score=580,
-            employment_years=1, bankruptcies_last_7_years=1,
-        ))
+        app = self.make_con_app(
+            financial_data=ConsumerFinancialData(
+                annual_income=40000,
+                total_monthly_debt=2000,
+                credit_score=580,
+                employment_years=1,
+                bankruptcies_last_7_years=1,
+            )
+        )
         engine = LendingRiskEngine()
         analysis = engine.analyze(app)
         assert analysis.overall_risk_score >= 60
@@ -164,7 +195,8 @@ class TestLendingComplianceEngine:
 
     def test_consumer_loan_with_name_passes_cip(self) -> None:
         app = ConsumerLoanApplication(
-            first_name="John", last_name="Smith",
+            first_name="John",
+            last_name="Smith",
             product_type=LoanProductType.AUTO_LOAN,
             loan_purpose=LoanPurpose.AUTO_PURCHASE,
             requested_amount=25000,
@@ -206,7 +238,8 @@ class TestLendingComplianceEngine:
 
     def test_high_dti_triggers_warning(self) -> None:
         app = ConsumerLoanApplication(
-            first_name="John", last_name="Doe",
+            first_name="John",
+            last_name="Doe",
             product_type=LoanProductType.UNSECURED_PERSONAL,
             loan_purpose=LoanPurpose.DEBT_CONSOLIDATION,
             requested_amount=20000,
@@ -266,11 +299,18 @@ class TestLendingPipeline:
             loan_purpose=LoanPurpose.WORKING_CAPITAL,
             requested_amount=250000,
             requested_term_months=36,
-            financials=[BusinessFinancialData(
-                annual_revenue=1500000, net_income=150000, ebitda=300000,
-                debt_service=150000, total_assets=800000, total_liabilities=300000,
-                current_assets=250000, current_liabilities=150000,
-            )],
+            financials=[
+                BusinessFinancialData(
+                    annual_revenue=1500000,
+                    net_income=150000,
+                    ebitda=300000,
+                    debt_service=150000,
+                    total_assets=800000,
+                    total_liabilities=300000,
+                    current_assets=250000,
+                    current_liabilities=150000,
+                )
+            ],
             collateral=[Collateral(estimated_value=400000)],
         )
         pipeline = LendingPipeline()
@@ -284,7 +324,8 @@ class TestLendingPipeline:
 
     def test_consumer_loan_auto_approved(self) -> None:
         app = ConsumerLoanApplication(
-            first_name="Jane", last_name="Doe",
+            first_name="Jane",
+            last_name="Doe",
             product_type=LoanProductType.AUTO_LOAN,
             loan_purpose=LoanPurpose.AUTO_PURCHASE,
             requested_amount=35000,
@@ -325,11 +366,18 @@ class TestLendingPipeline:
             loan_purpose=LoanPurpose.WORKING_CAPITAL,
             requested_amount=100000,
             requested_term_months=12,
-            financials=[BusinessFinancialData(
-                annual_revenue=50000, net_income=-10000, ebitda=5000,
-                debt_service=60000, total_assets=20000, total_liabilities=50000,
-                current_assets=5000, current_liabilities=45000,
-            )],
+            financials=[
+                BusinessFinancialData(
+                    annual_revenue=50000,
+                    net_income=-10000,
+                    ebitda=5000,
+                    debt_service=60000,
+                    total_assets=20000,
+                    total_liabilities=50000,
+                    current_assets=5000,
+                    current_liabilities=45000,
+                )
+            ],
         )
         pipeline = LendingPipeline()
         result = pipeline.run(app)
@@ -345,11 +393,18 @@ class TestLendingPipeline:
             loan_purpose=LoanPurpose.WORKING_CAPITAL,
             requested_amount=5_000_000,
             requested_term_months=60,
-            financials=[BusinessFinancialData(
-                annual_revenue=20000000, net_income=3000000, ebitda=5000000,
-                debt_service=1000000, total_assets=15000000, total_liabilities=5000000,
-                current_assets=6000000, current_liabilities=2000000,
-            )],
+            financials=[
+                BusinessFinancialData(
+                    annual_revenue=20000000,
+                    net_income=3000000,
+                    ebitda=5000000,
+                    debt_service=1000000,
+                    total_assets=15000000,
+                    total_liabilities=5000000,
+                    current_assets=6000000,
+                    current_liabilities=2000000,
+                )
+            ],
         )
         pipeline = LendingPipeline()
         result = pipeline.run(app)
@@ -365,11 +420,18 @@ class TestLendingPipeline:
             loan_purpose=LoanPurpose.WORKING_CAPITAL,
             requested_amount=500000,
             requested_term_months=12,
-            financials=[BusinessFinancialData(
-                annual_revenue=10000, net_income=-50000, ebitda=-20000,
-                debt_service=80000, total_assets=5000, total_liabilities=100000,
-                current_assets=1000, current_liabilities=80000,
-            )],
+            financials=[
+                BusinessFinancialData(
+                    annual_revenue=10000,
+                    net_income=-50000,
+                    ebitda=-20000,
+                    debt_service=80000,
+                    total_assets=5000,
+                    total_liabilities=100000,
+                    current_assets=1000,
+                    current_liabilities=80000,
+                )
+            ],
         )
         pipeline = LendingPipeline()
         result = pipeline.run(app)
@@ -381,7 +443,8 @@ class TestLendingPipeline:
         audit_dir.mkdir(parents=True)
 
         app = ConsumerLoanApplication(
-            first_name="Test", last_name="User",
+            first_name="Test",
+            last_name="User",
             product_type=LoanProductType.PERSONAL_TERM_LOAN,
             loan_purpose=LoanPurpose.DEBT_CONSOLIDATION,
             requested_amount=10000,
@@ -395,7 +458,8 @@ class TestLendingPipeline:
 
     def test_document_count_tracked(self) -> None:
         app = ConsumerLoanApplication(
-            first_name="Doc", last_name="Test",
+            first_name="Doc",
+            last_name="Test",
             product_type=LoanProductType.PERSONAL_TERM_LOAN,
             loan_purpose=LoanPurpose.DEBT_CONSOLIDATION,
             requested_amount=5000,
@@ -430,6 +494,7 @@ class TestLendingModels:
 
     def test_all_document_types_defined(self) -> None:
         from insureflow.lending.models import LendingDocumentType
+
         assert len(LendingDocumentType) >= 25
 
 
@@ -448,7 +513,8 @@ class TestLoanDecisionMapping:
     def test_auto_loan_has_regz(self) -> None:
         engine = LendingComplianceEngine()
         app = ConsumerLoanApplication(
-            first_name="A", last_name="B",
+            first_name="A",
+            last_name="B",
             product_type=LoanProductType.AUTO_LOAN,
             loan_purpose=LoanPurpose.AUTO_PURCHASE,
             requested_amount=30000,

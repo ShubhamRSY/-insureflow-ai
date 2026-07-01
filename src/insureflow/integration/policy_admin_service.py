@@ -45,13 +45,15 @@ class PolicyAdminService:
         for adapter in self._adapters:
             try:
                 result = adapter.submit_quote(payload)
-                results.append({
-                    "system": adapter.get_system_name(),
-                    "success": result.success,
-                    "external_reference": result.external_reference,
-                    "error": result.error,
-                    "response": result.response_payload,
-                })
+                results.append(
+                    {
+                        "system": adapter.get_system_name(),
+                        "success": result.success,
+                        "external_reference": result.external_reference,
+                        "error": result.error,
+                        "response": result.response_payload,
+                    }
+                )
                 logger.info(
                     "Core integration %s: %s (%s)",
                     "SUCCESS" if result.success else "FAILED",
@@ -60,13 +62,15 @@ class PolicyAdminService:
                 )
             except Exception as exc:
                 logger.exception("Core integration failed for %s", adapter.get_system_name())
-                results.append({
-                    "system": adapter.get_system_name(),
-                    "success": False,
-                    "error": str(exc),
-                    "external_reference": "",
-                    "response": {},
-                })
+                results.append(
+                    {
+                        "system": adapter.get_system_name(),
+                        "success": False,
+                        "error": str(exc),
+                        "external_reference": "",
+                        "response": {},
+                    }
+                )
 
         return results
 
@@ -85,23 +89,27 @@ class PolicyAdminService:
             try:
                 ref = getattr(adapter, "last_quote_reference", "")
                 result = adapter.bind_policy(payload, ref)
-                results.append({
-                    "system": adapter.get_system_name(),
-                    "success": result.success,
-                    "policy_number": result.policy_number,
-                    "external_reference": result.external_reference,
-                    "error": result.error,
-                    "response": result.response_payload,
-                })
+                results.append(
+                    {
+                        "system": adapter.get_system_name(),
+                        "success": result.success,
+                        "policy_number": result.policy_number,
+                        "external_reference": result.external_reference,
+                        "error": result.error,
+                        "response": result.response_payload,
+                    }
+                )
             except Exception as exc:
                 logger.exception("Policy bind failed for %s", adapter.get_system_name())
-                results.append({
-                    "system": adapter.get_system_name(),
-                    "success": False,
-                    "error": str(exc),
-                    "policy_number": "",
-                    "response": {},
-                })
+                results.append(
+                    {
+                        "system": adapter.get_system_name(),
+                        "success": False,
+                        "error": str(exc),
+                        "policy_number": "",
+                        "response": {},
+                    }
+                )
 
         return results
 
@@ -115,24 +123,28 @@ class PolicyAdminService:
         locations: list[dict[str, Any]] = []
         if bundle.structured:
             for loc in bundle.structured.locations:
-                locations.append({
-                    "address": loc.address,
-                    "city": loc.city,
-                    "state": loc.state,
-                    "zip_code": loc.zip_code,
-                    "building_value": loc.building_value,
-                    "contents_value": loc.contents_value,
-                })
+                locations.append(
+                    {
+                        "address": loc.address,
+                        "city": loc.city,
+                        "state": loc.state,
+                        "zip_code": loc.zip_code,
+                        "building_value": loc.building_value,
+                        "contents_value": loc.contents_value,
+                    }
+                )
 
         coverages: list[dict[str, Any]] = []
         if bundle.structured:
             for cov in bundle.structured.coverages:
-                coverages.append({
-                    "coverage_type": cov.coverage_type,
-                    "limit_amount": cov.limit_amount,
-                    "deductible": cov.deductible,
-                    "premium": cov.premium,
-                })
+                coverages.append(
+                    {
+                        "coverage_type": cov.coverage_type,
+                        "limit_amount": cov.limit_amount,
+                        "deductible": cov.deductible,
+                        "premium": cov.premium,
+                    }
+                )
 
         naics = ""
         if bundle.structured and bundle.structured.risk_profile:
@@ -159,8 +171,13 @@ class PolicyAdminService:
             uw_decision=memo.decision.value,
             coverages=coverages,
             locations=locations,
-            risk_profile=bundle.structured.risk_profile.model_dump() if bundle.structured and bundle.structured.risk_profile else {},
+            risk_profile=bundle.structured.risk_profile.model_dump()
+            if bundle.structured and bundle.structured.risk_profile
+            else {},
             memo_summary=memo.summary,
-            key_findings=[{"title": f.title, "severity": f.severity.value, "description": f.description} for f in memo.key_findings[:10]],
+            key_findings=[
+                {"title": f.title, "severity": f.severity.value, "description": f.description}
+                for f in memo.key_findings[:10]
+            ],
             raw_json=bundle.model_dump(),
         )

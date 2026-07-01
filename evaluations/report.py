@@ -23,6 +23,7 @@ def generate_report(
     """
     # 1. Custom scorer
     from evaluations.scorer import score_all
+
     custom_scores = score_all()
 
     avg_p = sum(s["precision"] for s in custom_scores) / max(len(custom_scores), 1)
@@ -31,6 +32,7 @@ def generate_report(
 
     # 2. Ragas
     from evaluations.ragas_eval import evaluate_ragas
+
     ragas_result = evaluate_ragas()
 
     ragas_metrics = ragas_result.get("metrics", {})
@@ -38,6 +40,7 @@ def generate_report(
 
     # 3. Giskard
     from evaluations.giskard_scan import scan_pipeline
+
     try:
         giskard_result = scan_pipeline()
     except Exception as exc:
@@ -162,15 +165,28 @@ def _recommendations(
     recs: list[str] = []
 
     if precision < 0.85:
-        recs.append(f"Improve field extraction precision ({precision:.1%}). Review parser regex patterns for ACORD/loss-run parsers.")
+        recs.append(
+            f"Improve field extraction precision ({precision:.1%}). Review parser regex patterns for ACORD/loss-run parsers."
+        )
     if recall < 0.90:
-        recs.append(f"Improve field extraction recall ({recall:.1%}). Add more field mappings for edge-case XML structures.")
+        recs.append(
+            f"Improve field extraction recall ({recall:.1%}). Add more field mappings for edge-case XML structures."
+        )
     if hallucination > 0.05:
-        recs.append(f"Reduce hallucination rate ({hallucination:.1%}). Tighten LLM prompts and add output validation.")
-    if ragas_result.get("overall_quality_score", 0) is not None and ragas_result.get("overall_quality_score", 1) < 0.8:
-        recs.append(f"RAG quality score is {ragas_result.get('overall_quality_score'):.1%}. Add more guidelines and improve retrieval.")
+        recs.append(
+            f"Reduce hallucination rate ({hallucination:.1%}). Tighten LLM prompts and add output validation."
+        )
+    if (
+        ragas_result.get("overall_quality_score", 0) is not None
+        and ragas_result.get("overall_quality_score", 1) < 0.8
+    ):
+        recs.append(
+            f"RAG quality score is {ragas_result.get('overall_quality_score'):.1%}. Add more guidelines and improve retrieval."
+        )
     if giskard_result.get("total_issues", 0) and giskard_result["total_issues"] > 0:
-        recs.append(f"Giskard found {giskard_result['total_issues']} issues. Review and address before production deployment.")
+        recs.append(
+            f"Giskard found {giskard_result['total_issues']} issues. Review and address before production deployment."
+        )
     if not recs:
         recs.append("All quality gates pass. Ready for production deployment.")
 
@@ -185,20 +201,20 @@ def print_report(report: dict[str, Any]) -> None:
     print(f"  Generated: {report.get('generated_at', 'N/A')}")
     print("=" * 72)
     print(f"\n  VERDICT: {s.get('overall_verdict', 'N/A')}")
-    print(f"\n  ┌─{'─'*50}─┐")
+    print(f"\n  ┌─{'─' * 50}─┐")
     print(f"  │ {'Metric':<30} {'Score':<18} │")
-    print(f"  ├─{'─'*50}─┤")
+    print(f"  ├─{'─' * 50}─┤")
     print(f"  │ {'Precision':<30} {s.get('precision', 'N/A'):>8.1%} {'':>10} │")
     print(f"  │ {'Recall':<30} {s.get('recall', 'N/A'):>8.1%} {'':>10} │")
     print(f"  │ {'Hallucination Rate':<30} {s.get('hallucination_rate', 'N/A'):>8.1%} {'':>10} │")
-    qs = s.get('ragas_quality_score', 'N/A')
+    qs = s.get("ragas_quality_score", "N/A")
     if isinstance(qs, (int, float)):
         print(f"  │ {'RAG Quality Score':<30} {qs:>8.1%} {'':>10} │")
     else:
         print(f"  │ {'RAG Quality Score':<30} {'N/A':>8} {'':>10} │")
-    gi = s.get('giskard_issues_found', 'N/A')
+    gi = s.get("giskard_issues_found", "N/A")
     print(f"  │ {'Giskard Issues':<30} {str(gi):>8} {'':>10} │")
-    print(f"  └─{'─'*50}─┘")
+    print(f"  └─{'─' * 50}─┘")
 
     secs = report.get("sections", {})
     for name, section in secs.items():

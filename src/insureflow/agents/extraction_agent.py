@@ -36,12 +36,12 @@ class ExtractionAgent:
 
         if self.llm.api_key:
             text_for_llm = (
-                self.redactor.redact(raw_text[:8000])
-                if self.redactor else raw_text[:8000]
+                self.redactor.redact(raw_text[:8000]) if self.redactor else raw_text[:8000]
             )
             llm_result = self.llm.complete(EXTRACTION_PROMPT, text_for_llm)
             try:
                 import json
+
                 parsed = json.loads(llm_result)
                 self._merge_llm_results(regex_based, parsed)
             except (json.JSONDecodeError, TypeError):
@@ -55,13 +55,9 @@ class ExtractionAgent:
 
         if bundle.structured:
             if bundle.structured.raw_xml:
-                bundle.structured.raw_xml = self.redactor.redact(
-                    bundle.structured.raw_xml
-                )
+                bundle.structured.raw_xml = self.redactor.redact(bundle.structured.raw_xml)
             if bundle.structured.raw_json:
-                bundle.structured.raw_json = self.redactor.redact(
-                    bundle.structured.raw_json
-                )
+                bundle.structured.raw_json = self.redactor.redact(bundle.structured.raw_json)
 
         for doc in bundle.unstructured:
             doc.raw_text = self.redactor.redact(doc.raw_text)
@@ -78,9 +74,7 @@ class ExtractionAgent:
 
         return bundle
 
-    def _merge_llm_results(
-        self, submission: UnstructuredSubmission, llm_fields: dict
-    ) -> None:
+    def _merge_llm_results(self, submission: UnstructuredSubmission, llm_fields: dict) -> None:
         from insureflow.models.submissions import ExtractedField
 
         for key, value in llm_fields.items():
