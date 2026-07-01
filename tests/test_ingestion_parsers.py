@@ -352,7 +352,7 @@ class TestAutoClassification:
     def test_auto_classify_mixed_docs(self):
         loss_run = SAMPLE_LOSS_RUN
         sov = SAMPLE_SOV
-        xml = '<?xml version="1.0"?><ACORD xmlns="http://www.acord.org/standards/PC_Surety/ACORD"><Submission><NamedInsured><GeneralPartyInfo><NameInfo><CommercialName><Name>Test Corp</Name></CommercialName></NameInfo><Addr1>123 Main</Addr1><City>SF</City><StateProvCd>CA</StateProvCd><PostalCode>94105</PostalCode></GeneralPartyInfo></NamedInsured><Risk><NAICSCode>123456</NAICSCode></Risk></Submission></ACORD>'
+        xml = '<?xml version="1.0"?><ACORD xmlns="http://www.acord.org/standards/PC_Surety/ACORD"><Submission><NamedInsured><GeneralPartyInfo><NameInfo><CommercialName><Name>Test Corp</Name></CommercialName></NameInfo><Addr1>123 Main</Addr1><City>SF</City><StateProvCd>CA</StateProvCd><PostalCode>94105</PostalCode></GeneralPartyInfo></NamedInsured><Risk><NAICSCode>123456</NAICSCode></Risk></Submission></ACORD>'  # noqa: E501
 
         loader = SubmissionLoader()
         bundle = loader.load_bundle(
