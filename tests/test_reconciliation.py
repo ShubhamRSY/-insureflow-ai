@@ -2,10 +2,9 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from insureflow.models.provenance import ProvenanceRecord, VerificationStatus
 from insureflow.provenance.hierarchy import ProvenanceEngine
-from insureflow.reconciliation.engine import ReconciliationEngine
 from insureflow.reconciliation.discrepancies import DiscrepancyDetector
+from insureflow.reconciliation.engine import ReconciliationEngine
 
 
 def test_reconciliation_matches(sample_bundle) -> None:
@@ -68,6 +67,7 @@ def test_discrepancy_detection() -> None:
 def test_no_discrepancy_on_match() -> None:
     detector = DiscrepancyDetector()
     from datetime import datetime, timezone
+
     from insureflow.models.provenance import DataSource, ProvenanceNode, SourceType, TrustLevel
 
     now = datetime.now(timezone.utc)

@@ -210,7 +210,7 @@ def print_report(report: dict[str, Any]) -> None:
             else:
                 print(f"    {k}: {v}")
 
-    print(f"\n  Recommendations:")
+    print("\n  Recommendations:")
     for r in report.get("recommendations", []):
         print(f"    • {r}")
     print("=" * 72)

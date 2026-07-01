@@ -6,7 +6,7 @@ from insureflow.rag.guidelines import (
     builtin_guidelines,
 )
 from insureflow.rag.rag_agent import RAGAgent
-from insureflow.rag.vector_store import VectorStore, InMemoryVectorStore, PgVectorStore
+from insureflow.rag.vector_store import InMemoryVectorStore, PgVectorStore, VectorStore
 
 __all__ = [
     "Guideline",

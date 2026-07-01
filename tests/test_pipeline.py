@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from insureflow.ingestion.loader import SubmissionLoader
-from insureflow.models.submissions import SubmissionStatus
 from insureflow.pipeline import UnderwritingPipeline
 
 

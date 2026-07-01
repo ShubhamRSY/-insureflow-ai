@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Any
 
 import psycopg2
 
@@ -23,12 +22,12 @@ class RAGAgent:
         """Embeds the query and performs a vector similarity search in PostgreSQL."""
         try:
             embedding = self.llm.embed(query)
-            
+
             with psycopg2.connect(self.db_url) as conn:
                 with conn.cursor() as cur:
                     cur.execute(
                         """
-                        SELECT rule_text FROM underwriting_guidelines 
+                        SELECT rule_text FROM underwriting_guidelines
                         ORDER BY embedding <-> %s::vector LIMIT %s
                         """,
                         (embedding, top_k),

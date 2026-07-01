@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from insureflow.models.audit import AuditEntry, AuditTrail
-from insureflow.models.provenance import ProvenanceNode, ProvenanceRecord
+from insureflow.models.audit import AuditTrail
+from insureflow.models.provenance import ProvenanceRecord
 
 
 class ProvenanceTrailBuilder:

@@ -10,7 +10,6 @@ from insureflow.ingestion.loss_run_parser import LossRunParser
 from insureflow.ingestion.sov_parser import SOVParser
 from insureflow.models.submissions import DocumentType
 
-
 SAMPLE_JSON = json.dumps({
     "insured": {
         "legalName": "Pacific Coast Distributors, Inc.",

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Optional
-from uuid import uuid4
+from typing import Optional
 
 from insureflow.models.audit import DiscrepancyRecord, EventSeverity
 from insureflow.models.provenance import ProvenanceNode

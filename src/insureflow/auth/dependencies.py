@@ -5,7 +5,7 @@ from typing import Optional
 from fastapi import Depends, HTTPException, Security, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer, OAuth2PasswordBearer
 
-from insureflow.auth import Role, ROLE_HIERARCHY
+from insureflow.auth import ROLE_HIERARCHY, Role
 from insureflow.auth.jwt import decode_access_token
 from insureflow.auth.models import TokenData
 from insureflow.auth.store import clear_user_store, get_user_store

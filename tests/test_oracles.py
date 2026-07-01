@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from datetime import date, timedelta
-
 from insureflow.oracles.aplus_client import APlusClient, PropertyClaimType
 from insureflow.oracles.clue_client import CLUEClient
 from insureflow.oracles.ncci_client import NCCIClient
@@ -83,7 +81,7 @@ class TestNCCIClient:
         assert result.worst_mod.mod_factor == 1.00
 
     def test_risk_bans(self):
-        client = NCCIClient()
+        NCCIClient()
         c = NCCIClient()
         result = c.query_by_fein("00-0000000", "Veririsk Construction")
         mod = result.experience_mods[0]

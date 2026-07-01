@@ -6,13 +6,12 @@ from uuid import uuid4
 
 from insureflow.audit.logger import AuditLogger
 from insureflow.audit.store import AuditStore
-from insureflow.audit.trail import ProvenanceTrailBuilder
+from insureflow.graph.state import default_state
 from insureflow.ingestion.classifier import DocumentClassifier
 from insureflow.ingestion.loader import SubmissionLoader
 from insureflow.llm.client import LLMClient
 from insureflow.models.audit import EventSeverity, PipelineEvent
 from insureflow.models.submissions import DocumentType, SubmissionBundle
-from insureflow.graph.state import default_state
 from insureflow.provenance.hierarchy import ProvenanceEngine
 from insureflow.reconciliation.engine import ReconciliationEngine
 
@@ -362,7 +361,6 @@ def build_provenance(state: dict[str, Any]) -> dict[str, Any]:
     _log_event(bundle_id, PipelineEvent.PROVENANCE_CHECK,
                "build_provenance", "Building provenance records")
 
-    from insureflow.provenance.hierarchy import ProvenanceEngine
     engine = ProvenanceEngine()
 
     try:
@@ -393,7 +391,6 @@ def reconcile(state: dict[str, Any]) -> dict[str, Any]:
                    severity=EventSeverity.WARNING)
         return {"reconciliation": None, "human_review_needed": False}
 
-    from insureflow.reconciliation.engine import ReconciliationEngine
     engine = ReconciliationEngine()
 
     try:
@@ -495,7 +492,7 @@ def synthesize(state: dict[str, Any]) -> dict[str, Any]:
                "synthesize", "Building synthesis output")
 
     if not reconciliation:
-        from insureflow.models.audit import ReconciliationResult, SynthesisOutput
+        from insureflow.models.audit import SynthesisOutput
         synthesis = SynthesisOutput(bundle_id=bundle_id)
         _log_event(bundle_id, PipelineEvent.SYNTHESIS_COMPLETE,
                    "synthesize", "No reconciliation data for synthesis",

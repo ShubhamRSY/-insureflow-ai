@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-import json
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 from uuid import uuid4
 
 from pydantic import BaseModel, Field
@@ -42,7 +41,10 @@ class DocumentAnalyticsStore:
 
     def list_all(self, vertical: str = "") -> list[DocumentRecord]:
         records: list[DocumentRecord] = []
-        for path in sorted(self.base_path.glob("*.json"), key=lambda p: p.stat().st_mtime, reverse=True):
+        for path in sorted(
+            self.base_path.glob("*.json"),
+            key=lambda p: p.stat().st_mtime, reverse=True,
+        ):
             try:
                 rec = DocumentRecord.model_validate_json(path.read_text(encoding="utf-8"))
                 if not vertical or rec.vertical == vertical:
@@ -113,7 +115,12 @@ class DocumentAnalyticsEngine:
             "by_decision": self._by_decision(records),
             "by_vertical": self._by_vertical(records),
             "sample_records": [
-                {"bundle_id": r.bundle_id, "count": r.document_count, "vertical": r.vertical, "decision": r.decision}
+                {
+                    "bundle_id": r.bundle_id,
+                    "count": r.document_count,
+                    "vertical": r.vertical,
+                    "decision": r.decision,
+                }
                 for r in records[:10]
             ],
         }

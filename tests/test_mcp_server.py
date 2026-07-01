@@ -3,10 +3,7 @@ from __future__ import annotations
 import json
 from unittest.mock import patch
 
-import pytest
-
 from insureflow.mcp.server import _parse_claims, _register_all, run_server
-from insureflow.models.submissions import ClaimRecord
 from insureflow.rag.guidelines import GuidelineCategory
 
 

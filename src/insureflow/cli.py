@@ -8,7 +8,6 @@ from typing import Optional
 import typer
 from rich.console import Console
 from rich.table import Table
-from rich.tree import Tree
 
 from insureflow.agents.supervisor import SupervisorAgent
 from insureflow.audit.store import AuditStore
@@ -61,13 +60,13 @@ def run(
     console.print(f"[bold]Bundle ID:[/] {results['bundle_id']}")
 
     recon = results.get("reconciliation", {})
-    console.print(f"\n[bold]Reconciliation Summary:[/]")
+    console.print("\n[bold]Reconciliation Summary:[/]")
     console.print(f"  Match Rate: {recon.get('match_rate', 0):.1%}")
     console.print(f"  Discrepancies: {len(recon.get('discrepancies', []))}")
     console.print(f"  Overall Status: {recon.get('overall_status', 'N/A')}")
 
     audit = results.get("audit_summary", {})
-    console.print(f"\n[bold]Audit Summary:[/]")
+    console.print("\n[bold]Audit Summary:[/]")
     console.print(f"  Total Entries: {audit.get('total_audit_entries', 0)}")
     console.print(f"  Provenance Nodes: {audit.get('total_provenance_nodes', 0)}")
     console.print(f"  Verified Nodes: {audit.get('verified_nodes', 0)}")
@@ -75,7 +74,7 @@ def run(
 
     if verbose:
         synth = results.get("synthesis", {})
-        console.print(f"\n[bold]Synthesis Profile:[/]")
+        console.print("\n[bold]Synthesis Profile:[/]")
         profile = synth.get("synthesized_profile", {})
         for key, value in profile.items():
             console.print(f"  {key}: {value}")
@@ -210,7 +209,7 @@ No other losses reported in the last 5 years.
     console.print(f"\n[bold]Demo Pipeline Status:[/] [{status_color}]{results['status']}[/]")
 
     recon = results.get("reconciliation", {})
-    console.print(f"\n[bold]Reconciliation:[/]")
+    console.print("\n[bold]Reconciliation:[/]")
     console.print(f"  Matched: {recon.get('matched_fields', 0)}/{recon.get('total_fields', 0)}")
     console.print(f"  Match Rate: {recon.get('match_rate', 0):.1%}")
     console.print(f"  Discrepancies: {len(recon.get('discrepancies', []))}")
@@ -234,7 +233,7 @@ No other losses reported in the last 5 years.
         console.print("[green]No discrepancies found.[/]")
 
     audit = results.get("audit_summary", {})
-    console.print(f"\n[bold]Audit Trail:[/]")
+    console.print("\n[bold]Audit Trail:[/]")
     console.print(f"  {audit.get('total_audit_entries', 0)} events logged")
     console.print(f"  {audit.get('verified_nodes', 0)}/{audit.get('total_provenance_nodes', 0)} nodes verified")
     console.print(f"  Verification Rate: {audit.get('verification_rate', 0):.1%}")
@@ -327,14 +326,14 @@ def agents(
         "decline": "red",
     }.get(memo["decision"], "white")
 
-    console.print(f"\n[bold]═══ UNDERWRITING MEMO ═══[/]")
+    console.print("\n[bold]═══ UNDERWRITING MEMO ═══[/]")
     console.print(f"[bold]Bundle:[/] {memo['bundle_id']}")
     console.print(f"[bold]Insured:[/] {memo['insured_name']}")
     console.print(f"[bold]Decision:[/] [{decision_color}]{memo['decision'].upper()}[/]")
     console.print(f"[bold]Risk Score:[/] {memo['overall_risk_score']:.2f}")
     console.print(f"[bold]Risk Severity:[/] {memo['overall_risk_severity'].upper()}")
 
-    console.print(f"\n[bold]Summary:[/]")
+    console.print("\n[bold]Summary:[/]")
     console.print(f"  {memo['summary']}")
 
     findings = memo.get("key_findings", [])
@@ -354,18 +353,18 @@ def agents(
 
     conditions = memo.get("conditions", [])
     if conditions:
-        console.print(f"\n[bold]Conditions / Actions:[/]")
+        console.print("\n[bold]Conditions / Actions:[/]")
         for c in conditions:
             console.print(f"  • {c}")
 
     if memo.get("human_review_required"):
-        console.print(f"\n[red bold]⚠ HUMAN REVIEW REQUIRED[/]")
+        console.print("\n[red bold]⚠ HUMAN REVIEW REQUIRED[/]")
         for reason in memo.get("human_review_reasons", []):
             console.print(f"  [red]• {reason}[/]")
 
     if detailed:
         agent_results = memo.get("agent_results", {})
-        console.print(f"\n[bold]Agent Performance:[/]")
+        console.print("\n[bold]Agent Performance:[/]")
         for name, stats in agent_results.items():
             color = "green" if not stats.get("errors") else "red"
             console.print(f"  [{color}]{name}:[/] risk={stats['risk_score']:.2f}, "
@@ -375,7 +374,7 @@ def agents(
                 for e in stats["errors"]:
                     console.print(f"    [red]ERROR: {e}[/]")
 
-    console.print(f"\n[green]Multi-agent analysis complete.[/]")
+    console.print("\n[green]Multi-agent analysis complete.[/]")
 
 
 @app.command("mortgage-borrowers")
@@ -424,7 +423,7 @@ def mortgage_borrowers(
         if detailed and result.get("audit_paths"):
             console.print(f"    [dim]Audit: {result['audit_paths'].get('audit_trail', '')}[/]")
 
-    console.print(f"\n[green]Per-borrower processing complete.[/]")
+    console.print("\n[green]Per-borrower processing complete.[/]")
 
 
 @app.command()
@@ -481,7 +480,7 @@ def mortgage(
         "deny": "red",
     }.get(results["decision"], "white")
 
-    console.print(f"\n[bold]═══ MORTGAGE UNDERWRITING MEMO ═══[/]")
+    console.print("\n[bold]═══ MORTGAGE UNDERWRITING MEMO ═══[/]")
     console.print(f"[bold]Bundle:[/] {results['bundle_id']}")
     console.print(f"[bold]Product:[/] {results['product_line']}")
     console.print(f"[bold]Borrower:[/] {results['borrower']}")
@@ -524,14 +523,14 @@ def mortgage(
 
     if detailed:
         types = results.get("document_types", {})
-        console.print(f"\n[bold]Document Classification:[/]")
+        console.print("\n[bold]Document Classification:[/]")
         for dtype, count in sorted(types.items()):
             console.print(f"  {dtype}: {count}")
 
     if results.get("human_review_required"):
-        console.print(f"\n[red bold]⚠ HUMAN REVIEW REQUIRED[/]")
+        console.print("\n[red bold]⚠ HUMAN REVIEW REQUIRED[/]")
 
-    console.print(f"\n[green]Mortgage pipeline complete.[/]")
+    console.print("\n[green]Mortgage pipeline complete.[/]")
 
 
 @app.command("serve")
@@ -546,7 +545,7 @@ def serve(
     console.print(f"\n[bold green]InsureFlow API[/] → http://{host}:{port}")
     console.print(f"[bold]Dashboard[/]      → http://{host}:{port}/dashboard")
     console.print(f"[bold]Diagnostics[/]   → http://{host}:{port}/system/diagnostics")
-    console.print(f"[dim]Stop with Ctrl+C[/]\n")
+    console.print("[dim]Stop with Ctrl+C[/]\n")
     uvicorn.run(
         "insureflow.api:app",
         host=host,
@@ -574,7 +573,7 @@ def auth_reset(
         console.print(f"[red]Could not reach API on port {port}:[/] {exc}")
         console.print("[yellow]Start the server first:[/] python cli.py serve --port 8002")
         raise typer.Exit(1) from exc
-    console.print(f"[bold green]Done.[/] Open in browser to wipe saved login too:")
+    console.print("[bold green]Done.[/] Open in browser to wipe saved login too:")
     console.print(f"  [link=http://127.0.0.1:{port}/auth/reset]http://127.0.0.1:{port}/auth/reset[/]")
 
 
@@ -632,7 +631,7 @@ def doctor(
         "error": "red bold",
     }
     color = overall_colors.get(report["overall"], "white")
-    console.print(f"\n[bold]InsureFlow System Doctor[/]")
+    console.print("\n[bold]InsureFlow System Doctor[/]")
     console.print(f"Overall: [{color}]{report['overall'].upper()}[/]")
     console.print(f"LLM mode: [bold]{report['llm_mode']}[/]")
     s = report["summary"]
@@ -660,7 +659,7 @@ def doctor(
     if report["llm_mode"] == "deterministic_fallback":
         console.print("\n[yellow]Tip:[/] Add LLM_API_KEY to .env for full ReAct agent reasoning.")
         console.print("     cp .env.example .env  →  edit LLM_API_KEY=sk-...")
-    console.print(f"\n[dim]Web UI: python cli.py serve --port 8002  →  /dashboard[/]\n")
+    console.print("\n[dim]Web UI: python cli.py serve --port 8002  →  /dashboard[/]\n")
 
 
 # ── Lending ─────────────────────────────────────────────────────────────
@@ -751,7 +750,7 @@ def lending_underwrite(
     purp = purpose_map.get(purpose, LoanPurpose.OTHER)
     is_business = pt.value.startswith(("business_", "commercial_", "construction_", "sba_", "equipment_", "invoice_"))
 
-    with console.status("[bold green]Running lending underwriting...") as status:
+    with console.status("[bold green]Running lending underwriting..."):
         if is_business:
             fin = BusinessFinancialData(
                 annual_revenue=revenue,
@@ -912,15 +911,15 @@ def registry_diff(
     console.print(f"[bold]Key:[/] {diff.get('prompt_key') or diff.get('model_tier') or diff.get('agent_type', '')}")
 
     if diff.get("hash_changed"):
-        console.print(f"\n[red]⚠ Content hash changed[/]")
+        console.print("\n[red]⚠ Content hash changed[/]")
         console.print(f"  From: {diff.get('from_hash')}")
         console.print(f"  To:   {diff.get('to_hash')}")
 
     if diff.get("text_changed"):
-        console.print(f"\n[yellow]✎ Prompt text changed[/]")
+        console.print("\n[yellow]✎ Prompt text changed[/]")
 
     if diff.get("changes"):
-        console.print(f"\n[yellow]✎ Configuration changes:[/]")
+        console.print("\n[yellow]✎ Configuration changes:[/]")
         for field, change in diff["changes"].items():
             console.print(f"  {field}: [red]{change['from']}[/] → [green]{change['to']}[/]")
 
@@ -986,7 +985,12 @@ def registry_create(
     creator: str = typer.Option("cli", "--creator", "-c", help="Created by"),
 ) -> None:
     from insureflow.registry import ComponentType, RegistryService
-    from insureflow.registry.models import PromptVersion, LLMConfigVersion, ComplianceRuleVersion, AgentLogicVersion
+    from insureflow.registry.models import (
+        AgentLogicVersion,
+        ComplianceRuleVersion,
+        LLMConfigVersion,
+        PromptVersion,
+    )
 
     reg = RegistryService()
     ct = ComponentType(component)
@@ -1071,7 +1075,7 @@ def registry_approve(
 
     entry = reg.approve(entry_id, reviewer=reviewer, comment=comment)
     if not entry:
-        console.print(f"[red]Could not approve — not in REVIEW status[/]")
+        console.print("[red]Could not approve — not in REVIEW status[/]")
         raise typer.Exit(1)
 
     console.print(f"[green]✓ Approved [bold]{entry_id[:12]}[/] ({entry.version_label})[/]")
@@ -1092,7 +1096,7 @@ def registry_reject(
     reg = RegistryService()
     entry = reg.reject(entry_id, reviewer=reviewer, comment=comment)
     if not entry:
-        console.print(f"[red]Could not reject — not found or not in REVIEW status[/]")
+        console.print("[red]Could not reject — not found or not in REVIEW status[/]")
         raise typer.Exit(1)
     console.print(f"[red]✗ Rejected [bold]{entry_id[:12]}[/][/]")
     if comment:

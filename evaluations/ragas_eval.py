@@ -23,12 +23,13 @@ class _DummyChatVertexAI:
 _MOD.ChatVertexAI = _DummyChatVertexAI
 
 import sys as _sys
+
 _sys.modules["langchain_community.chat_models.vertexai"] = _MOD
 
 # Now safe to import ragas
-from ragas.dataset_schema import EvaluationDataset, SingleTurnSample, EvaluationResult
-from ragas.metrics import faithfulness, answer_relevancy, context_precision, context_recall
 from ragas import evaluate as ragas_evaluate
+from ragas.dataset_schema import EvaluationDataset, EvaluationResult, SingleTurnSample
+from ragas.metrics import answer_relevancy, context_precision, context_recall, faithfulness
 
 from evaluations.golden_dataset import golden_dataset
 from evaluations.runner import extract_field
@@ -115,7 +116,7 @@ def _build_sample(
     case,
     pipeline_data: dict[str, Any],
 ) -> SingleTurnSample | None:
-    synthesis = pipeline_data.get("synthesis", {})
+    pipeline_data.get("synthesis", {})
     rag_context = pipeline_data.get("rag_context", "")
     expected = pipeline_data.get("expected", {})
     actual = pipeline_data.get("actual", {})

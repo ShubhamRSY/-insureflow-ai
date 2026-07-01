@@ -286,7 +286,7 @@ def analyze_cope(
         result.occupancy_detail = f"{occupancy_type} has moderate risk; applies +{o_mod:.0f}% debit"
     elif o_class in (OccupancyClass.MERCANTILE,):
         o_score = 0.3
-        result.occupancy_detail = f"Standard mercantile occupancy; no adjustment"
+        result.occupancy_detail = "Standard mercantile occupancy; no adjustment"
     elif o_class in (OccupancyClass.OFFICE, OccupancyClass.INSTITUTIONAL):
         o_score = 0.2
         result.occupancy_detail = f"Low-risk occupancy; applies {o_mod:.0f}% schedule credit"
@@ -333,7 +333,7 @@ def analyze_cope(
     result.exposure_types = exposures
     e_mod = sum(EXPOSURE_MODIFIERS.get(ex, 0.0) for ex in exposures)
     e_mod = min(e_mod, 45.0)  # Cap at 45%
-    primary_exposure = exposures[0] if exposures else ExposureType.NONE
+    exposures[0] if exposures else ExposureType.NONE
     e_score = 0.0
     if ExposureType.COASTAL_WIND in exposures:
         e_score = 0.9

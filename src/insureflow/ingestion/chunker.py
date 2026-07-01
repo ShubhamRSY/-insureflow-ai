@@ -13,11 +13,11 @@ class DocumentChunker:
         """Splits a large document into overlapping chunks safely."""
         if not text:
             return []
-            
+
         chunks = []
         start = 0
         text_length = len(text)
-        
+
         while start < text_length:
             end = start + self.chunk_size
             # Ensure we don't break in the middle of a word if possible
@@ -25,5 +25,5 @@ class DocumentChunker:
                 end = text.rfind(" ", start, end) + 1 or end
             chunks.append(text[start:end].strip())
             start = end - self.overlap
-            
+
         return chunks

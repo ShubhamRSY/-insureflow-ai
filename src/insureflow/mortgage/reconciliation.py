@@ -10,7 +10,6 @@ from insureflow.models.mortgage import (
     MortgageBundleStatus,
     MortgageDocument,
     MortgageDocumentType,
-    ProductLine,
     ReconciliationIssue,
 )
 
@@ -29,7 +28,7 @@ class MortgageReconciliationEngine:
         appraisals = bundle.documents_by_type(MortgageDocumentType.RESIDENTIAL_APPRAISAL)
         purchases = bundle.documents_by_type(MortgageDocumentType.PURCHASE_AGREEMENT)
         gifts = bundle.documents_by_type(MortgageDocumentType.GIFT_LETTER)
-        bank_stmts = bundle.documents_by_type(MortgageDocumentType.BANK_STATEMENT)
+        bundle.documents_by_type(MortgageDocumentType.BANK_STATEMENT)
 
         # W-2 Box 1 total vs 1040 wages (joint returns: sum all W-2s)
         w2_total = self._sum_latest_w2_wages(w2s)

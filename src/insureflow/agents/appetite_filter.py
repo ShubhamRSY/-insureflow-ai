@@ -3,9 +3,9 @@ from __future__ import annotations
 from typing import Any
 
 from insureflow.agents.base import BaseAgent
-from insureflow.models.agents import AgentType, AgentResult, Finding, RiskSeverity
+from insureflow.models.agents import AgentResult, AgentType, Finding, RiskSeverity
 from insureflow.models.submissions import SubmissionBundle
-from insureflow.oracles.ncci_codes import is_high_risk_ncci_class, get_ncci_description
+from insureflow.oracles.ncci_codes import get_ncci_description, is_high_risk_ncci_class
 from insureflow.rag.guidelines import builtin_carrier_appetite_rules
 
 
@@ -55,7 +55,6 @@ class AppetiteFilterAgent(BaseAgent):
 
     def check_appetite(self, bundle: SubmissionBundle) -> AppetiteFilterResult:
         findings: list[Finding] = []
-        needs_uw_referral = False
 
         findings.extend(self._check_naics(bundle))
         findings.extend(self._check_geography(bundle))

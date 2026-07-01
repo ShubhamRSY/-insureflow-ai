@@ -2,15 +2,14 @@ from __future__ import annotations
 
 import re
 from datetime import datetime, timezone
-from typing import Optional
 
+from insureflow.config import settings
 from insureflow.ingestion.base import BaseParser
 from insureflow.models.submissions import (
     ExtractedChunk,
     ExtractedField,
     UnstructuredSubmission,
 )
-from insureflow.config import settings
 
 
 class InspectionReportExtractor(BaseParser):

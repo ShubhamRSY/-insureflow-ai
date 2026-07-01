@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
 
 from insureflow.api import app
+from insureflow.audit.store import AuditStore
 from insureflow.ingestion.mortgage.classifier import MortgageDocumentClassifier
 from insureflow.ingestion.mortgage.loader import MortgageSubmissionLoader
 from insureflow.models.mortgage import MortgageDocumentType, ProductLine
@@ -14,7 +14,6 @@ from insureflow.mortgage.audit import MortgageAuditLogger
 from insureflow.mortgage.bundler import discover_borrower_packages
 from insureflow.mortgage.llm_extractor import MortgageLLMExtractor
 from insureflow.mortgage.pipeline import MortgagePipeline
-from insureflow.audit.store import AuditStore
 
 SIM = Path(__file__).resolve().parent.parent / "simulated_documents"
 HOME = SIM / "home_mortgage"
@@ -84,7 +83,7 @@ class TestMortgageLLMExtractor:
 
     def test_merge_fields_combines_llm_and_regex(self) -> None:
         from insureflow.models.mortgage import ExtractedMortgageField
-        from insureflow.mortgage.llm_extractor import LLMExtractionResult, LLMExtractedField
+        from insureflow.mortgage.llm_extractor import LLMExtractedField, LLMExtractionResult
 
         extractor = MortgageLLMExtractor()
         regex = {"wages_box1": [ExtractedMortgageField(field_name="wages_box1", value="100000", confidence=0.9)]}

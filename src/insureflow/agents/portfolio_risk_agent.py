@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from insureflow.agents.base import BaseAgent
-from insureflow.models.agents import AgentType, AgentResult, Finding, RiskSeverity
+from insureflow.models.agents import AgentType, Finding, RiskSeverity
 from insureflow.models.submissions import SubmissionBundle
 from insureflow.portfolio.store import PortfolioConcentrationSummary, get_portfolio_store
 

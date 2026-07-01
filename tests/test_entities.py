@@ -3,7 +3,13 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from insureflow.entities.resolver import EntityCluster, EntityResolver, embedding_similarity
-from insureflow.models.provenance import DataSource, ProvenanceNode, ProvenanceRecord, SourceType, TrustLevel
+from insureflow.models.provenance import (
+    DataSource,
+    ProvenanceNode,
+    ProvenanceRecord,
+    SourceType,
+    TrustLevel,
+)
 
 
 def _make_node(field_path: str, value: str, rank: int = 5, node_id: str | None = None) -> ProvenanceNode:
@@ -117,10 +123,13 @@ def test_entity_resolver_single_node() -> None:
 
 
 def test_entity_resolver_provenance_integration() -> None:
-    from insureflow.provenance.hierarchy import ProvenanceEngine
     from insureflow.models.submissions import (
-        NamedInsured, RiskProfile, StructuredSubmission, SubmissionBundle,
+        NamedInsured,
+        RiskProfile,
+        StructuredSubmission,
+        SubmissionBundle,
     )
+    from insureflow.provenance.hierarchy import ProvenanceEngine
 
     engine = ProvenanceEngine(deduplicate=True)
     bundle = SubmissionBundle(

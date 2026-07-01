@@ -187,6 +187,7 @@ class SystemDiagnostics:
 
     def _check_job_store(self) -> ComponentCheck:
         import os
+
         from insureflow.storage.job_store import get_job_store
 
         backend = os.getenv("JOB_STORE_BACKEND", "auto")

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Optional
 
 from insureflow.models.agents import Finding, RiskSeverity
 from insureflow.models.submissions import (

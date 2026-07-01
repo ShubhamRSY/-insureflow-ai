@@ -92,7 +92,9 @@ class RegistryService:
         )
         return entry
 
-    def get(self, entry_id: str, component_type: ComponentType | None = None) -> RegistryEntry | None:
+    def get(
+        self, entry_id: str, component_type: ComponentType | None = None,
+    ) -> RegistryEntry | None:
         if component_type:
             candidates = [self.base_path / {
                 ComponentType.PROMPT: "prompts",
@@ -136,7 +138,9 @@ class RegistryService:
                 continue
         return entries
 
-    def get_active_version(self, component_type: ComponentType, key: str = "") -> RegistryEntry | None:
+    def get_active_version(
+        self, component_type: ComponentType, key: str = "",
+    ) -> RegistryEntry | None:
         entries = self.list_versions(component_type)
         for e in entries:
             if e.status == RegistryEntryStatus.APPROVED:
@@ -208,7 +212,9 @@ class RegistryService:
             return entry_a.compute_diff(entry_b)
         if isinstance(entry_a, LLMConfigVersion) and isinstance(entry_b, LLMConfigVersion):
             return entry_a.compute_diff(entry_b)
-        if isinstance(entry_a, ComplianceRuleVersion) and isinstance(entry_b, ComplianceRuleVersion):
+        if isinstance(entry_a, ComplianceRuleVersion) and isinstance(
+            entry_b, ComplianceRuleVersion,
+        ):
             return entry_a.compute_diff(entry_b)
         if isinstance(entry_a, AgentLogicVersion) and isinstance(entry_b, AgentLogicVersion):
             return entry_a.compute_diff(entry_b)
@@ -233,7 +239,9 @@ class RegistryService:
             if rule.status == RegistryEntryStatus.APPROVED:
                 snapshot.compliance_rules.append(rule.entry_id)
         for agent in self.list_versions(ComponentType.AGENT_LOGIC):
-            if agent.status == RegistryEntryStatus.APPROVED and isinstance(agent, AgentLogicVersion):
+            if agent.status == RegistryEntryStatus.APPROVED and isinstance(
+                agent, AgentLogicVersion,
+            ):
                 snapshot.agent_logic[agent.agent_type] = agent.entry_id
         self._snapshot_path(self.base_path, snapshot.snapshot_id).write_text(
             json.dumps(snapshot.model_dump(), indent=2, default=str, ensure_ascii=False),
@@ -277,7 +285,9 @@ class RegistryService:
             encoding="utf-8",
         )
 
-    def approve_change_request(self, request_id: str, reviewer: str = "", notes: str = "") -> ChangeRequest | None:
+    def approve_change_request(
+        self, request_id: str, reviewer: str = "", notes: str = "",
+    ) -> ChangeRequest | None:
         cr = self._load_change_request(request_id)
         if not cr:
             return None
@@ -291,7 +301,9 @@ class RegistryService:
         self._save_change_request(cr)
         return cr
 
-    def reject_change_request(self, request_id: str, reviewer: str = "", notes: str = "") -> ChangeRequest | None:
+    def reject_change_request(
+        self, request_id: str, reviewer: str = "", notes: str = "",
+    ) -> ChangeRequest | None:
         cr = self._load_change_request(request_id)
         if not cr:
             return None
@@ -345,9 +357,12 @@ class RegistryService:
             created.append(e)
 
         for tier, provider, model, temp, tokens in [
-            ("cheap", settings.llm_cheap_provider, settings.llm_cheap_model, settings.llm_temperature, settings.llm_max_tokens),
-            ("expensive", settings.llm_expensive_provider, settings.llm_expensive_model, settings.llm_temperature, settings.llm_max_tokens),
-            ("default", settings.llm_provider, settings.llm_model, settings.llm_temperature, settings.llm_max_tokens),
+            ("cheap", settings.llm_cheap_provider, settings.llm_cheap_model,
+             settings.llm_temperature, settings.llm_max_tokens),
+            ("expensive", settings.llm_expensive_provider, settings.llm_expensive_model,
+             settings.llm_temperature, settings.llm_max_tokens),
+            ("default", settings.llm_provider, settings.llm_model,
+             settings.llm_temperature, settings.llm_max_tokens),
         ]:
             entry = LLMConfigVersion(
                 component_type=ComponentType.LLM_CONFIG,

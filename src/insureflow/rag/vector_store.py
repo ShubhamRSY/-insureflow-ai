@@ -4,7 +4,7 @@ import logging
 import math
 import re
 from abc import ABC, abstractmethod
-from typing import Any, Optional
+from typing import Any
 
 from insureflow.rag.guidelines import Guideline
 

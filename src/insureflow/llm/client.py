@@ -165,6 +165,6 @@ class LLMClient:
                 model="text-embedding-3-small"
             )
             return response.data[0].embedding
-        
+
         # Fallback for non-supported providers during local testing
         return [0.0] * 1536

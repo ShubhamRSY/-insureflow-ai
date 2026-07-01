@@ -1,13 +1,8 @@
 from __future__ import annotations
 
-from typing import Any
-
-import pytest
-
 from insureflow.graph.builder import build_pipeline_graph
 from insureflow.graph.nodes import create_initial_state
-from insureflow.graph.state import PipelineState
-from insureflow.models.submissions import SubmissionBundle, SubmissionStatus
+from insureflow.models.submissions import SubmissionBundle
 
 
 def test_graph_construction() -> None:
@@ -120,7 +115,7 @@ def test_graph_conditional_routing_sov() -> None:
 
 
 def test_graph_retry_limit() -> None:
-    pg = build_pipeline_graph()
+    build_pipeline_graph()
 
     state = create_initial_state(
         acord_xml="<ACORD>test</ACORD>",
@@ -215,7 +210,7 @@ def test_graph_checkpointing(sample_acord_xml: str) -> None:
         bundle_id=thread_id,
         auto_classify=True,
     )
-    result = pg.run(state)
+    pg.run(state)
 
     saved = pg.get_state(thread_id)
     assert saved is not None

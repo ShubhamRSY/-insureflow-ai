@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import xml.etree.ElementTree as ET
 from datetime import date, datetime, timezone
-from typing import Any, Optional
+from typing import Optional
 
 from insureflow.ingestion.base import BaseParser
 from insureflow.models.submissions import (

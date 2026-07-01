@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Optional, TypedDict
+from typing import Any, TypedDict
 
 from insureflow.models.audit import ReconciliationResult, SynthesisOutput
 from insureflow.models.provenance import ProvenanceRecord

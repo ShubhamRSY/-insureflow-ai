@@ -11,15 +11,16 @@ from insureflow.lending.models import (
     BusinessLoanApplication,
     ConsumerLoanApplication,
     CreditAnalysis,
-    LendingDocumentType,
     LendingPipelineResult,
     LoanDecision,
-    LoanProductType,
 )
 from insureflow.lending.pricing import LendingPricingEngine
 from insureflow.lending.risk import LendingRiskEngine
 
-AUDIT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "audit_logs", "lending")
+AUDIT_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+    "audit_logs", "lending",
+)
 os.makedirs(AUDIT_DIR, exist_ok=True)
 
 
@@ -42,7 +43,9 @@ class LendingPipeline:
         timeline.append(self._record("ingest", "start", run_id, application))
 
         violations = self._compliance.evaluate(application)
-        timeline.append(self._record("compliance", "completed", run_id, {"violations_count": len(violations)}))
+        timeline.append(
+            self._record("compliance", "completed", run_id, {"violations_count": len(violations)})
+        )
 
         critical_violations = [v for v in violations if v.get("severity") == "critical"]
         if critical_violations:
@@ -54,8 +57,12 @@ class LendingPipeline:
                 human_review_required=True,
                 human_review_reasons=["Critical compliance violations detected"],
             )
-            timeline.append(self._record("compliance", "blocked", run_id,
-                                          {"reason": "critical_violations", "violations": critical_violations}))
+            timeline.append(
+                self._record(
+                    "compliance", "blocked", run_id,
+                    {"reason": "critical_violations", "violations": critical_violations},
+                ),
+            )
             self._save_audit(run_id, application, result, timeline, documents)
             self._record_document_analytics(run_id, application, documents, result)
             return result
@@ -70,14 +77,24 @@ class LendingPipeline:
         doc_count = len(documents) if documents else 0
         timeline.append(self._record("documents", "ingested", run_id, {"count": doc_count}))
 
-        pricing = self._pricing.price(application.product_type, risk_analysis, application.requested_term_months)
-        timeline.append(self._record("pricing", "completed", run_id,
-                                      {"final_rate": pricing.final_rate, "base_rate": pricing.base_rate,
-                                       "risk_spread": pricing.risk_spread}))
+        pricing = self._pricing.price(
+            application.product_type, risk_analysis, application.requested_term_months,
+        )
+        timeline.append(
+            self._record(
+                "pricing", "completed", run_id,
+                {"final_rate": pricing.final_rate, "base_rate": pricing.base_rate,
+                 "risk_spread": pricing.risk_spread},
+            ),
+        )
 
         decision, approved_amount = self._make_decision(application, risk_analysis)
-        timeline.append(self._record("decision", "completed", run_id,
-                                      {"decision": decision.value, "approved_amount": approved_amount}))
+        timeline.append(
+            self._record(
+                "decision", "completed", run_id,
+                {"decision": decision.value, "approved_amount": approved_amount},
+            ),
+        )
 
         human_review = False
         human_reasons: list[str] = []
@@ -91,7 +108,9 @@ class LendingPipeline:
                 human_reasons.extend(v["rule_name"] for v in high_sev)
         if application.requested_amount > 1_000_000:
             human_review = True
-            human_reasons.append(f"Loan amount ${application.requested_amount:,.0f} exceeds $1M threshold")
+            human_reasons.append(
+                f"Loan amount ${application.requested_amount:,.0f} exceeds $1M threshold"
+            )
 
         result = LendingPipelineResult(
             application_id=application.application_id,
@@ -155,7 +174,9 @@ class LendingPipeline:
     ) -> None:
         audit = {
             "run_id": run_id,
-            "application_type": "business" if isinstance(application, BusinessLoanApplication) else "consumer",
+            "application_type": (
+                "business" if isinstance(application, BusinessLoanApplication) else "consumer"
+            ),
             "application": application.model_dump(),
             "result": result.model_dump(mode="json"),
             "timeline": timeline,
@@ -175,7 +196,8 @@ class LendingPipeline:
     ) -> None:
         if not documents:
             return
-        vertical = "business_lending" if isinstance(application, BusinessLoanApplication) else "consumer_lending"
+        vertical = "business_lending" if isinstance(application, BusinessLoanApplication) \
+            else "consumer_lending"
         self._analytics.record(
             bundle_id=run_id,
             vertical=vertical,

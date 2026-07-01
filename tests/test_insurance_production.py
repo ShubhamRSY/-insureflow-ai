@@ -10,10 +10,13 @@ from insureflow.audit.insurance_audit import InsuranceAuditLogger
 from insureflow.audit.package import RegulatoryPackageBuilder
 from insureflow.audit.store import AuditStore
 from insureflow.auth import Role
-from insureflow.auth.store import clear_user_store, get_user_store
 from insureflow.auth.jwt import create_access_token
 from insureflow.auth.models import User
-from insureflow.ingestion.insurance.classifier import InsuranceDocumentClassifier, InsuranceDocumentType
+from insureflow.auth.store import clear_user_store, get_user_store
+from insureflow.ingestion.insurance.classifier import (
+    InsuranceDocumentClassifier,
+    InsuranceDocumentType,
+)
 from insureflow.ingestion.insurance.extractors import extract_broker_slip
 from insureflow.insurance.pipeline import InsurancePipeline
 from insureflow.models.agents import UnderwritingMemo, UWDecision

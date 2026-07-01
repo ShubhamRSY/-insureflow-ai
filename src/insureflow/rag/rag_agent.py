@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional
+from typing import Optional
 
 from insureflow.rag.guidelines import Guideline, builtin_guidelines
 from insureflow.rag.vector_store import InMemoryVectorStore, VectorStore

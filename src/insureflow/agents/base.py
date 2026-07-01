@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import time
-from typing import Any, Callable, Optional
+from typing import Any, Optional
 
 from insureflow.agents.tools import UnderwritingTools
 from insureflow.models.agents import AgentResult, AgentType, Finding, Recommendation

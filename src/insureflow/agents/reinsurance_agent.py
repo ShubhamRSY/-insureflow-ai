@@ -3,9 +3,9 @@ from __future__ import annotations
 from typing import Any
 
 from insureflow.agents.base import BaseAgent
-from insureflow.models.agents import AgentType, AgentResult, Finding, RiskSeverity
+from insureflow.models.agents import AgentType, Finding, RiskSeverity
 from insureflow.models.submissions import SubmissionBundle
-from insureflow.portfolio.treaty import TreatyAllocation, TreatyType, get_treaty_store
+from insureflow.portfolio.treaty import get_treaty_store
 
 
 class ReinsuranceAgent(BaseAgent):

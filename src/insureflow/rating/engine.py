@@ -1,15 +1,13 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
-from uuid import uuid4
+from datetime import datetime, timezone
 
-from insureflow.models.agents import UnderwritingMemo, UWDecision
+from insureflow.models.agents import UnderwritingMemo
 from insureflow.models.submissions import SubmissionBundle
 from insureflow.rating.adapters.stub import StubPolicyAdminAdapter
 from insureflow.rating.models import InsuranceLine, QuoteRequest, QuoteResult, RateComponent
-from insureflow.underwriting.cope import COPERatingEngine, COPEAnalysisResult
+from insureflow.underwriting.cope import COPERatingEngine
 from insureflow.underwriting.market import get_market_cycle
-
 
 # ISO-style base loss costs (per $100 of TIV) — representative values
 # These would come from ISO/Verisk filings in production

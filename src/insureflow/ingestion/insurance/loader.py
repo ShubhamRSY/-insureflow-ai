@@ -9,7 +9,10 @@ from uuid import uuid4
 from insureflow.ingestion.acord_parser import ACORDParser
 from insureflow.ingestion.chunker import DocumentChunker
 from insureflow.ingestion.classifier import DocumentClassifier
-from insureflow.ingestion.insurance.classifier import InsuranceDocumentClassifier, InsuranceDocumentType
+from insureflow.ingestion.insurance.classifier import (
+    InsuranceDocumentClassifier,
+    InsuranceDocumentType,
+)
 from insureflow.ingestion.insurance.extractors import extract_fields
 from insureflow.ingestion.json_parser import JSONBrokerParser
 from insureflow.ingestion.loss_run_parser import LossRunParser

@@ -60,6 +60,10 @@ class LendingPricingEngine:
             risk_spread=risk_spread,
             term_spread=term_spread,
             final_rate=round(final_rate, 2),
-            upfront_fee_percent=0.5 if risk_analysis.risk_rating == "high" else 0.0,
-            annual_fee_percent=0.25 if product_type == LoanProductType.BUSINESS_LINE_OF_CREDIT else 0.0,
+            upfront_fee_percent=(
+                0.5 if risk_analysis.risk_rating == "high" else 0.0
+            ),
+            annual_fee_percent=(
+                0.25 if product_type == LoanProductType.BUSINESS_LINE_OF_CREDIT else 0.0
+            ),
         )

@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 from pathlib import Path
-from uuid import uuid4
 
 from insureflow.config import settings
-from insureflow.outcomes.models import BindOutcome, LossExperience, OutcomeStatus, PredictionRecord
+from insureflow.outcomes.models import BindOutcome, LossExperience, PredictionRecord
 
 
 class OutcomeStore:

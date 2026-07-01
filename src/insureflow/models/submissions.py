@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime, timezone
-from enum import Enum, auto
+from enum import Enum
 from typing import Optional
 
 from pydantic import BaseModel, Field

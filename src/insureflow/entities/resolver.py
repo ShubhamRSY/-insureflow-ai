@@ -3,10 +3,9 @@ from __future__ import annotations
 import logging
 import math
 import re
-from typing import Any, Optional
+from typing import Any
 
 from insureflow.models.provenance import (
-    DataSource,
     ProvenanceNode,
     ProvenanceRecord,
     VerificationStatus,

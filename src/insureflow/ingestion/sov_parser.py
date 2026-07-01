@@ -107,7 +107,6 @@ class SOVParser(BaseParser):
         lines = text.split("\n")
         sections: list[str] = []
         current: list[str] = []
-        in_section = False
 
         for line in lines:
             if re.match(
@@ -118,7 +117,6 @@ class SOVParser(BaseParser):
                 if current:
                     sections.append("\n".join(current))
                     current = []
-                in_section = True
             current.append(line)
 
         if current:

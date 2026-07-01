@@ -16,7 +16,6 @@ from insureflow.ingestion.sov_parser import SOVParser
 from insureflow.models.submissions import (
     DocumentType,
     ExtractedChunk,
-    StructuredSubmission,
     SubmissionBundle,
     SubmissionStatus,
     UnstructuredSubmission,
@@ -155,7 +154,7 @@ class SubmissionLoader:
                     raw_text=doc_text,
                     processed_at=datetime.now(timezone.utc),
                 )
-                
+
                 # Apply safe document chunking to prevent LLM context limits
                 raw_chunks = self.chunker.chunk_text(doc_text)
                 sup.chunks = [
@@ -252,7 +251,7 @@ class SubmissionLoader:
                 raw_text=doc,
                 processed_at=datetime.now(timezone.utc),
             )
-            
+
             raw_chunks = self.chunker.chunk_text(doc)
             sup.chunks = [
                 ExtractedChunk(

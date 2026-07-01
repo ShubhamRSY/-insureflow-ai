@@ -2,9 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
-from insureflow.lending.compliance import LendingComplianceEngine, LENDING_RULES
+from insureflow.lending.compliance import LENDING_RULES, LendingComplianceEngine
 from insureflow.lending.models import (
     BusinessFinancialData,
     BusinessLoanApplication,
@@ -379,7 +377,6 @@ class TestLendingPipeline:
         assert result.approved_amount is None
 
     def test_pipeline_audit_file_created(self, tmp_path: Path) -> None:
-        import os
         audit_dir = tmp_path / "audit_logs" / "lending"
         audit_dir.mkdir(parents=True)
 
@@ -392,7 +389,7 @@ class TestLendingPipeline:
             financial_data=ConsumerFinancialData(annual_income=60000, credit_score=700),
         )
         pipeline = LendingPipeline()
-        result = pipeline.run(app, pipeline_run_id="test-audit-001")
+        pipeline.run(app, pipeline_run_id="test-audit-001")
         audit_files = list(audit_dir.parent.glob("lending/*.json"))
         assert len(audit_files) >= 0
 
@@ -443,7 +440,7 @@ class TestLoanDecisionMapping:
     HELOC = LoanProductType.HOME_EQUITY_LINE
 
     def test_sba_7a_rules_apply(self) -> None:
-        engine = LendingComplianceEngine()
+        LendingComplianceEngine()
         sba_7a_rules = [r for r in LENDING_RULES if r.rule_id == "SBA-001"]
         for rule in sba_7a_rules:
             assert self.SBA_7A in rule.product_types

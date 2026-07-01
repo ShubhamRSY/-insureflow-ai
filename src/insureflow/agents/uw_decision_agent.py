@@ -9,8 +9,8 @@ from insureflow.models.agents import (
     Finding,
     Recommendation,
     RiskSeverity,
-    UWDecision,
     UnderwritingMemo,
+    UWDecision,
 )
 from insureflow.models.submissions import SubmissionBundle
 

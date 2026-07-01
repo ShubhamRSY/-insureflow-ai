@@ -97,13 +97,18 @@ def _check_udaap_prohibited(biz: BusinessLoanApplication | ConsumerLoanApplicati
                 "rule_id": "UDAAP-001",
                 "rule_name": "UDAAP Screening",
                 "severity": "info",
-                "message": "No credit score — verify fair lending compliance and ensure no prohibited basis discrimination",
+                "message": (
+                    "No credit score — verify fair lending compliance "
+                    "and ensure no prohibited basis discrimination"
+                ),
                 "regulation": "Dodd-Frank Act Section 1031",
             }
     return None
 
 
-def _check_business_debt_service(biz: BusinessLoanApplication | ConsumerLoanApplication) -> dict | None:
+def _check_business_debt_service(
+    biz: BusinessLoanApplication | ConsumerLoanApplication,
+) -> dict | None:
     if isinstance(biz, BusinessLoanApplication):
         financials = biz.financials
         if financials:
@@ -138,7 +143,9 @@ def _check_consumer_dti(biz: BusinessLoanApplication | ConsumerLoanApplication) 
     return None
 
 
-def _check_collateral_coverage(biz: BusinessLoanApplication | ConsumerLoanApplication) -> dict | None:
+def _check_collateral_coverage(
+    biz: BusinessLoanApplication | ConsumerLoanApplication,
+) -> dict | None:
     if isinstance(biz, BusinessLoanApplication) and biz.collateral and biz.requested_amount > 0:
         total_collateral = sum(c.estimated_value for c in biz.collateral)
         ltv = biz.requested_amount / total_collateral * 100 if total_collateral > 0 else 999
@@ -147,13 +154,18 @@ def _check_collateral_coverage(biz: BusinessLoanApplication | ConsumerLoanApplic
                 "rule_id": "COLLAT-001",
                 "rule_name": "Collateral Coverage",
                 "severity": "moderate",
-                "message": f"LTV {ltv:.1f}% exceeds 80% — additional collateral or guarantor needed",
+                "message": (
+                    f"LTV {ltv:.1f}% exceeds 80% — "
+                    "additional collateral or guarantor needed"
+                ),
                 "regulation": "Interagency Loan Policy",
             }
     return None
 
 
-def _check_sba_504_requirements(biz: BusinessLoanApplication | ConsumerLoanApplication) -> dict | None:
+def _check_sba_504_requirements(
+    biz: BusinessLoanApplication | ConsumerLoanApplication,
+) -> dict | None:
     if isinstance(biz, BusinessLoanApplication) and biz.product_type == LoanProductType.SBA_504:
         if biz.requested_amount > 5_000_000:
             return {
@@ -200,7 +212,8 @@ LENDING_RULES: list[LendingRule] = [
     LendingRule("CIP-001", "Business CIP", "critical",
                 (LoanProductType.BUSINESS_TERM_LOAN, LoanProductType.BUSINESS_LINE_OF_CREDIT,
                  LoanProductType.COMMERCIAL_REAL_ESTATE, LoanProductType.CONSTRUCTION_LOAN,
-                 LoanProductType.SBA_7A, LoanProductType.SBA_504, LoanProductType.EQUIPMENT_FINANCING,
+                 LoanProductType.SBA_7A, LoanProductType.SBA_504,
+                 LoanProductType.EQUIPMENT_FINANCING,
                  LoanProductType.INVOICE_FINANCING),
                 "Business entity verification required", "31 CFR 1020.220", _check_business_cip),
     LendingRule("CIP-002", "Consumer CIP", "critical",
@@ -217,7 +230,8 @@ LENDING_RULES: list[LendingRule] = [
                 (LoanProductType.BUSINESS_TERM_LOAN, LoanProductType.BUSINESS_LINE_OF_CREDIT,
                  LoanProductType.COMMERCIAL_REAL_ESTATE, LoanProductType.CONSTRUCTION_LOAN,
                  LoanProductType.SBA_7A, LoanProductType.EQUIPMENT_FINANCING),
-                "DSCR must be above 1.15x", "Interagency CRE Guidelines", _check_business_debt_service),
+                "DSCR must be above 1.15x",
+                "Interagency CRE Guidelines", _check_business_debt_service),
     LendingRule("CREDIT-201", "Maximum DTI", "high",
                 (LoanProductType.PERSONAL_TERM_LOAN, LoanProductType.PERSONAL_LINE_OF_CREDIT,
                  LoanProductType.AUTO_LOAN, LoanProductType.BOAT_LOAN,
@@ -236,7 +250,9 @@ LENDING_RULES: list[LendingRule] = [
 
 
 class LendingComplianceEngine:
-    def evaluate(self, application: BusinessLoanApplication | ConsumerLoanApplication) -> list[dict]:
+    def evaluate(
+        self, application: BusinessLoanApplication | ConsumerLoanApplication,
+    ) -> list[dict]:
         violations: list[dict] = []
         for rule in LENDING_RULES:
             if application.product_type not in rule.product_types:

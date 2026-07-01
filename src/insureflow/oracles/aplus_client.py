@@ -4,7 +4,6 @@ import logging
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 from enum import Enum
-from typing import Any
 from uuid import uuid4
 
 logger = logging.getLogger(__name__)

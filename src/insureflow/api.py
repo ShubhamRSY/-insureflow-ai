@@ -7,12 +7,12 @@ from pathlib import Path
 from typing import Any, Optional
 
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Request, status
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.errors import RateLimitExceeded
-from slowapi.util import get_remote_address
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 
 from insureflow.auth import Role
 from insureflow.auth.dependencies import (
@@ -727,8 +727,12 @@ def licensed_uw_sign_off(
     # Capture structured override analytics when UW decision differs from AI
     if req.override_reason and record.ai_decision and record.final_decision:
         from uuid import uuid4
+
         from insureflow.outcomes.analytics import get_analytics_engine
-        from insureflow.outcomes.override import OverrideDetail, OverrideReasonCategory, PremiumDelta
+        from insureflow.outcomes.override import (
+            OverrideDetail,
+            OverrideReasonCategory,
+        )
 
         try:
             category = OverrideReasonCategory(req.override_reason_category.lower())
@@ -1027,7 +1031,6 @@ def analyze_renewal(
 ) -> dict[str, Any]:
     """Run renewal analysis on an existing policy."""
     from insureflow.underwriting.renewal import RenewalEngine
-
     from insureflow.workflow.service import WorkflowService
     record = WorkflowService().store.get(bundle_id, current.org_id)
     if not record:

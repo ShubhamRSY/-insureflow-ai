@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
@@ -12,7 +11,6 @@ from insureflow.models.audit import PipelineEvent
 from insureflow.models.mortgage import (
     MortgageBundle,
     MortgageBundleStatus,
-    MortgageMemo,
     ProductLine,
 )
 from insureflow.mortgage.audit import MortgageAuditLogger

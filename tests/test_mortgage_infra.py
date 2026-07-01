@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -9,9 +8,9 @@ from fastapi.testclient import TestClient
 
 from insureflow.api import app
 from insureflow.auth import Role
-from insureflow.auth.store import clear_user_store, get_user_store
 from insureflow.auth.jwt import create_access_token
 from insureflow.auth.models import User
+from insureflow.auth.store import clear_user_store, get_user_store
 from insureflow.mortgage.pricing import LoanPricingEngine, LoanProduct
 from insureflow.mortgage.webhooks import WebhookDispatcher
 from insureflow.storage.encryption import EnvelopeEncryption
@@ -62,7 +61,12 @@ class TestJobStore:
 
 class TestLoanPricing:
     def test_quote_returns_rate_lock(self) -> None:
-        from insureflow.models.mortgage import MortgageBundle, MortgageDecision, MortgageMemo, ProductLine
+        from insureflow.models.mortgage import (
+            MortgageBundle,
+            MortgageDecision,
+            MortgageMemo,
+            ProductLine,
+        )
 
         engine = LoanPricingEngine()
         bundle = MortgageBundle(bundle_id="test", product_line=ProductLine.RESIDENTIAL_MORTGAGE)

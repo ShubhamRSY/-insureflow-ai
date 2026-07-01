@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Any, Optional
+from typing import Optional
 
 from mcp.server.fastmcp import FastMCP
 
 from insureflow.agents.tools import UnderwritingTools
-from insureflow.models.submissions import ClaimRecord
 from insureflow.models.mortgage import ProductLine
+from insureflow.models.submissions import ClaimRecord
 from insureflow.pipeline import UnderwritingPipeline
 from insureflow.rag.guidelines import GuidelineCategory, builtin_guidelines
 from insureflow.rag.rag_agent import RAGAgent
@@ -319,6 +319,7 @@ def _register_all(server: FastMCP) -> None:
         use_llm: bool = True,
     ) -> str:
         from uuid import uuid4
+
         from insureflow.mortgage.pipeline import MortgagePipeline
 
         documents = json.loads(documents_json)

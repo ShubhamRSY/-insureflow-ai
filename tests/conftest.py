@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from datetime import date
-from pathlib import Path
 
 import pytest
 
@@ -17,7 +16,6 @@ from insureflow.models.submissions import (
     SubmissionBundle,
     UnstructuredSubmission,
 )
-
 
 SAMPLE_ACORD_XML = """<?xml version="1.0" encoding="UTF-8"?>
 <ACORD xmlns="http://www.acord.org/standards/PC_Surety/ACORD">

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import base64
-import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
@@ -10,7 +9,12 @@ from insureflow.ingestion.base import BaseParser
 from insureflow.ingestion.mortgage.classifier import MortgageDocumentClassifier
 from insureflow.ingestion.mortgage.extractors import extract_fields
 from insureflow.ingestion.ocr import OCRProcessor
-from insureflow.models.mortgage import ExtractedMortgageField, MortgageDocument, MortgageDocumentType, ProductLine
+from insureflow.models.mortgage import (
+    ExtractedMortgageField,
+    MortgageDocument,
+    MortgageDocumentType,
+    ProductLine,
+)
 from insureflow.mortgage.llm_extractor import MortgageLLMExtractor
 
 SUPPORTED_EXTENSIONS = {".txt", ".pdf", ".png", ".jpg", ".jpeg", ".tiff", ".bmp", ".tif"}

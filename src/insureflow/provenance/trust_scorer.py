@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from insureflow.models.provenance import ProvenanceRecord, TrustLevel, VerificationStatus
 from insureflow.models.audit import ReconciliationResult
+from insureflow.models.provenance import ProvenanceRecord, TrustLevel
 
 
 class TrustScorer:

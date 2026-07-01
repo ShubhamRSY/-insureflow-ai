@@ -1,3 +1,3 @@
-from insureflow.entities.resolver import EntityResolver, EntityCluster
+from insureflow.entities.resolver import EntityCluster, EntityResolver
 
 __all__ = ["EntityResolver", "EntityCluster"]

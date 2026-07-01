@@ -12,7 +12,6 @@ from insureflow.models.agents import (
     AgentResult,
     AgentType,
     Finding,
-    Recommendation,
     RiskSeverity,
 )
 from insureflow.models.submissions import SubmissionBundle

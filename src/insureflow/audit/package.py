@@ -10,7 +10,6 @@ from typing import Any
 from insureflow.audit.store import AuditStore
 from insureflow.storage.encryption import EnvelopeEncryption
 
-
 REGULATORY_ARTIFACTS = [
     "submission_bundle.json",
     "underwriting_memo.json",

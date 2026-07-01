@@ -5,7 +5,6 @@ from typing import Any
 
 from insureflow.integration.base_adapter import (
     BasePolicyAdminAdapter,
-    IntegrationResult,
     PolicySubmissionPayload,
 )
 from insureflow.integration.britecore_adapter import BriteCoreAdapter

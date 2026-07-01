@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from datetime import datetime, timezone
-from uuid import uuid4
 from typing import Optional
+from uuid import uuid4
 
 from insureflow.outcomes.override import (
     OverrideAnalyticsQuery,
@@ -30,7 +29,6 @@ class OverrideAnalyticsEngine:
 
     def _load_seed_data(self) -> None:
         """Populate with demo overrides to enable analytics out of the box."""
-        import random
         seeds = [
             OverrideDetail(
                 override_id="ovr-seed-001",

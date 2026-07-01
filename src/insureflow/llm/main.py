@@ -6,10 +6,10 @@ from typing import Any, Optional
 from fastapi import BackgroundTasks, FastAPI, HTTPException
 from pydantic import BaseModel
 
-from insureflow.pipeline import UnderwritingPipeline
 from insureflow.exceptions import InsureFlowError
+from insureflow.pipeline import UnderwritingPipeline
 
-# In-memory store for demo purposes. 
+# In-memory store for demo purposes.
 # In production, this would be a database (e.g., PostgreSQL/Redis)
 JOB_STORE: dict[str, dict[str, Any]] = {}
 
@@ -50,9 +50,9 @@ def reconcile_submission(
     """Accepts submission data and queues it for background reconciliation."""
     job_id = f"job-{uuid.uuid4().hex[:12]}"
     JOB_STORE[job_id] = {"status": "processing"}
-    
+
     background_tasks.add_task(_run_pipeline_task, job_id, request)
-    
+
     return {"job_id": job_id, "status": "processing", "message": "Submission queued for processing."}
 
 

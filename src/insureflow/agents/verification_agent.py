@@ -3,12 +3,11 @@ from __future__ import annotations
 from typing import Optional
 
 from insureflow.llm.client import LLMClient
-from insureflow.llm.prompts import VERIFICATION_PROMPT
 from insureflow.models.audit import ReconciliationResult
-from insureflow.models.provenance import ProvenanceRecord, TrustLevel, VerificationStatus
+from insureflow.models.provenance import ProvenanceRecord, VerificationStatus
 from insureflow.provenance.hierarchy import ProvenanceEngine
-from insureflow.reconciliation.engine import ReconciliationEngine
 from insureflow.provenance.trust_scorer import TrustScorer
+from insureflow.reconciliation.engine import ReconciliationEngine
 
 
 class VerificationAgent:
@@ -27,7 +26,7 @@ class VerificationAgent:
         result = self.reconciliation.reconcile(provenance_record)
         scores = self.scorer.score(provenance_record)
 
-        trust_level = self.scorer.overall_trust_level(scores["overall"])
+        self.scorer.overall_trust_level(scores["overall"])
 
         for field_path, nodes in provenance_record.nodes.items():
             if len(nodes) >= 2:

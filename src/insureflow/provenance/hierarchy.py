@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Any, Optional
+from typing import Any
 from uuid import uuid4
 
 from insureflow.config import settings
@@ -15,7 +15,6 @@ from insureflow.models.provenance import (
     VerificationStatus,
 )
 from insureflow.models.submissions import (
-    ExtractedField,
     StructuredSubmission,
     SubmissionBundle,
     UnstructuredSubmission,

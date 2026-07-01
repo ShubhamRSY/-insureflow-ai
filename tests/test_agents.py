@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from datetime import date
 
-import pytest
-
 from insureflow.agents.compliance_agent import ComplianceAgent
 from insureflow.agents.fraud_detection_agent import FraudDetectionAgent
 from insureflow.agents.loss_run_analyst import LossRunAnalystAgent
@@ -457,7 +455,6 @@ class TestFraudDetectionAgent:
     def test_entity_inconsistency(self):
         bundle = _make_bundle(insured_name="Test Corp")
         from insureflow.models.submissions import (
-            ExtractedChunk,
             ExtractedField,
             UnstructuredSubmission,
         )
@@ -493,7 +490,7 @@ class TestFraudDetectionAgent:
 
 class TestUWDecisionAgent:
     def test_accept_decision(self):
-        agent = UWDecisionAgent()
+        UWDecisionAgent()
         result = AgentResult(
             agent_type="risk_analyst", agent_name="RiskAnalystAgent",
             findings=[Finding(title="Clean risk", description="No issues",
