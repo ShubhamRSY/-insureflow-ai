@@ -70,6 +70,12 @@ line-length = 100
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W"]
 
+[tool.pytest.ini_options]
+markers = [
+    "e2e: end-to-end integration tests",
+]
+testpaths = ["tests"]
+
 [tool.mypy]
 strict = true
 python_version = "3.11"

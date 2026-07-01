@@ -10,6 +10,7 @@ from insureflow.exceptions import DataIngestionError
 from insureflow.graph.builder import build_pipeline_graph
 from insureflow.graph.nodes import create_initial_state
 from insureflow.llm.client import LLMClient
+from insureflow.registry.service import RegistryService
 
 logger = logging.getLogger(__name__)
 
@@ -111,9 +112,13 @@ class UnderwritingPipeline:
 
         audit_entries = len(audit_trail.entries) if audit_trail else 0
 
+        registry = RegistryService()
+        version_context = registry.version_context()
+
         return {
             "bundle_id": result.get("bundle_id"),
             "status": "completed" if not result.get("human_review_needed") else "flagged",
+            "version_context": version_context,
             "steps": {
                 "ingestion": {
                     "bundle_id": bundle.bundle_id if bundle else None,

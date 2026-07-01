@@ -5,6 +5,7 @@ from typing import Any
 from uuid import uuid4
 
 from insureflow.agents.mortgage.supervisor import MortgageSupervisorAgent
+from insureflow.analytics.documents import DocumentAnalyticsEngine
 from insureflow.audit.store import AuditStore
 from insureflow.ingestion.mortgage.loader import MortgageSubmissionLoader
 from insureflow.models.audit import PipelineEvent
@@ -223,6 +224,17 @@ class MortgagePipeline:
             },
             "encryption_at_rest": self.encryption.enabled,
         }
+
+        doc_analytics = DocumentAnalyticsEngine()
+        doc_analytics.record(
+            bundle_id=bundle_id,
+            document_count=len(documents),
+            vertical="mortgage",
+            unstructured_count=len(documents),
+            human_review_required=memo.human_review_required,
+            decision=memo.decision.value,
+            org_id=self.org_id,
+        )
 
         audit_paths = audit.persist(bundle, memo, extra=summary)
 

@@ -25,6 +25,8 @@ from insureflow.provenance.hierarchy import ProvenanceEngine
 from insureflow.rating.engine import InsuranceRatingEngine
 from insureflow.reconciliation.engine import ReconciliationEngine
 from insureflow.storage.encryption import EnvelopeEncryption
+from insureflow.analytics.documents import DocumentAnalyticsEngine
+from insureflow.registry.service import RegistryService
 from insureflow.webhooks.dispatcher import webhook_dispatcher
 from insureflow.workflow.models import WorkflowState
 from insureflow.workflow.service import WorkflowService
@@ -294,6 +296,22 @@ class InsurancePipeline:
             summary["portfolio_concentration_score"] = portfolio_result.risk_score
             portfolio_findings = [f.model_dump() for f in portfolio_result.findings]
             summary["portfolio_findings"] = portfolio_findings
+
+        registry = RegistryService()
+        version_context = registry.version_context()
+        summary["version_context"] = version_context
+
+        doc_analytics = DocumentAnalyticsEngine()
+        doc_analytics.record(
+            bundle_id=bid,
+            document_count=summary["document_count"],
+            vertical="insurance",
+            structured_count=1 if bundle.structured else 0,
+            unstructured_count=len(bundle.unstructured),
+            human_review_required=summary.get("human_review_required", False),
+            decision=summary.get("ai_decision", ""),
+            org_id=self.org_id,
+        )
 
         audit_paths = audit.persist(bundle, memo, provenance, reconciliation, extra=summary)
 

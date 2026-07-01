@@ -663,5 +663,610 @@ def doctor(
     console.print(f"\n[dim]Web UI: python cli.py serve --port 8002  →  /dashboard[/]\n")
 
 
+# ── Lending ─────────────────────────────────────────────────────────────
+
+lending_app = typer.Typer(help="Lending product underwriting for business & consumer loans.")
+
+
+@lending_app.command("underwrite")
+def lending_underwrite(
+    product: str = typer.Argument(..., help="Product type: business_term_loan, business_loc, cre, construction, sba_7a, sba_504, equipment, invoice, personal_term, personal_loc, auto, boat, heloc, secured, unsecured"),
+    amount: float = typer.Option(..., "--amount", "-a", help="Requested loan amount"),
+    term: int = typer.Option(12, "--term", "-t", help="Loan term in months"),
+    purpose: str = typer.Option("other", "--purpose", "-p", help="Loan purpose"),
+    business_name: str = typer.Option("", "--business", "-b", help="Business name (for business loans)"),
+    industry: str = typer.Option("", "--industry", "-i", help="Industry (for business loans)"),
+    revenue: float = typer.Option(0.0, "--revenue", "-r", help="Annual revenue (business)"),
+    net_income: float = typer.Option(0.0, "--net-income", "-ni", help="Net income (business)"),
+    ebitda: float = typer.Option(0.0, "--ebitda", "-e", help="EBITDA (business)"),
+    debt_service: float = typer.Option(0.0, "--debt-service", "-ds", help="Annual debt service (business)"),
+    total_assets: float = typer.Option(0.0, "--total-assets", "-ta", help="Total assets"),
+    total_liabilities: float = typer.Option(0.0, "--total-liabilities", "-tl", help="Total liabilities"),
+    current_assets: float = typer.Option(0.0, "--current-assets", "-ca", help="Current assets"),
+    current_liabilities: float = typer.Option(0.0, "--current-liabilities", "-cl", help="Current liabilities"),
+    collateral_value: float = typer.Option(0.0, "--collateral", "-c", help="Total collateral value"),
+    years_in_business: float = typer.Option(0.0, "--years", "-y", help="Years in business"),
+    first_name: str = typer.Option("", "--first-name", "-fn", help="First name (consumer loans)"),
+    last_name: str = typer.Option("", "--last-name", "-ln", help="Last name (consumer loans)"),
+    credit_score: int = typer.Option(0, "--credit-score", "-cs", help="Credit score (consumer loans)"),
+    annual_income: float = typer.Option(0.0, "--income", "-inc", help="Annual income (consumer)"),
+    monthly_debt: float = typer.Option(0.0, "--monthly-debt", "-md", help="Total monthly debt (consumer)"),
+    employment_years: float = typer.Option(0.0, "--emp-years", "-ey", help="Years at current employer"),
+    bankruptcies: int = typer.Option(0, "--bankruptcies", help="Bankruptcies in last 7 years"),
+    foreclosures: int = typer.Option(0, "--foreclosures", help="Foreclosures in last 7 years"),
+    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
+) -> None:
+    """Run the lending underwriting pipeline for business or consumer loan applications."""
+    from insureflow.lending import LendingPipeline
+    from insureflow.lending.models import (
+        BusinessFinancialData,
+        BusinessLoanApplication,
+        ConsumerFinancialData,
+        ConsumerLoanApplication,
+        LoanProductType,
+        LoanPurpose,
+    )
+
+    product_map: dict[str, LoanProductType] = {
+        "business_term_loan": LoanProductType.BUSINESS_TERM_LOAN,
+        "business_loc": LoanProductType.BUSINESS_LINE_OF_CREDIT,
+        "cre": LoanProductType.COMMERCIAL_REAL_ESTATE,
+        "construction": LoanProductType.CONSTRUCTION_LOAN,
+        "sba_7a": LoanProductType.SBA_7A,
+        "sba_504": LoanProductType.SBA_504,
+        "equipment": LoanProductType.EQUIPMENT_FINANCING,
+        "invoice": LoanProductType.INVOICE_FINANCING,
+        "personal_term": LoanProductType.PERSONAL_TERM_LOAN,
+        "personal_loc": LoanProductType.PERSONAL_LINE_OF_CREDIT,
+        "auto": LoanProductType.AUTO_LOAN,
+        "boat": LoanProductType.BOAT_LOAN,
+        "heloc": LoanProductType.HOME_EQUITY_LINE,
+        "secured": LoanProductType.SECURED_PERSONAL,
+        "unsecured": LoanProductType.UNSECURED_PERSONAL,
+    }
+
+    purpose_map: dict[str, LoanPurpose] = {
+        "working_capital": LoanPurpose.WORKING_CAPITAL,
+        "refinance": LoanPurpose.DEBT_REFINANCE,
+        "equipment": LoanPurpose.EQUIPMENT_PURCHASE,
+        "real_estate": LoanPurpose.REAL_ESTATE_PURCHASE,
+        "construction": LoanPurpose.CONSTRUCTION,
+        "expansion": LoanPurpose.BUSINESS_EXPANSION,
+        "inventory": LoanPurpose.INVENTORY_FINANCING,
+        "acquisition": LoanPurpose.ACQUISITION,
+        "auto": LoanPurpose.AUTO_PURCHASE,
+        "boat": LoanPurpose.BOAT_PURCHASE,
+        "home_improvement": LoanPurpose.HOME_IMPROVEMENT,
+        "debt_consolidation": LoanPurpose.DEBT_CONSOLIDATION,
+        "education": LoanPurpose.EDUCATION,
+        "medical": LoanPurpose.MEDICAL,
+        "other": LoanPurpose.OTHER,
+    }
+
+    pt = product_map.get(product)
+    if pt is None:
+        console.print(f"[red]Unknown product: {product}. Options: {', '.join(product_map)}[/]")
+        raise typer.Exit(1)
+
+    purp = purpose_map.get(purpose, LoanPurpose.OTHER)
+    is_business = pt.value.startswith(("business_", "commercial_", "construction_", "sba_", "equipment_", "invoice_"))
+
+    with console.status("[bold green]Running lending underwriting...") as status:
+        if is_business:
+            fin = BusinessFinancialData(
+                annual_revenue=revenue,
+                net_income=net_income,
+                ebitda=ebitda,
+                debt_service=debt_service,
+                total_assets=total_assets,
+                total_liabilities=total_liabilities,
+                current_assets=current_assets,
+                current_liabilities=current_liabilities,
+            )
+            coll = []
+            if collateral_value > 0:
+                from insureflow.lending.models import Collateral
+                coll.append(Collateral(estimated_value=collateral_value, description="General collateral"))
+            app = BusinessLoanApplication(
+                business_name=business_name or "Unnamed Business",
+                industry=industry,
+                years_in_business=years_in_business,
+                product_type=pt,
+                loan_purpose=purp,
+                requested_amount=amount,
+                requested_term_months=term,
+                financials=[fin],
+                collateral=coll,
+            )
+        else:
+            fin = ConsumerFinancialData(
+                annual_income=annual_income,
+                total_monthly_debt=monthly_debt,
+                credit_score=credit_score,
+                employment_years=employment_years,
+                bankruptcies_last_7_years=bankruptcies,
+                foreclosures_last_7_years=foreclosures,
+            )
+            app = ConsumerLoanApplication(
+                first_name=first_name or "Applicant",
+                last_name=last_name or "Unknown",
+                product_type=pt,
+                loan_purpose=purp,
+                requested_amount=amount,
+                requested_term_months=term,
+                financial_data=fin,
+            )
+
+        pipeline = LendingPipeline()
+        result = pipeline.run(app)
+
+    if json_output:
+        console.print_json(json.dumps(result.model_dump(mode="json"), indent=2))
+        return
+
+    decision_color = "green" if result.decision.value in ("approved", "approved_with_conditions") else "red"
+    console.print(f"\n[bold]Lending Underwriting Result[/] — {app.application_id}")
+    console.print(f"  Product:      [bold]{result.product_type.value}[/]")
+    console.print(f"  Decision:     [{decision_color}]{result.decision.value.upper()}[/]")
+    console.print(f"  Risk Score:   {result.risk_score:.0f}/100 ({result.risk_rating})")
+    console.print(f"  Requested:    ${result.requested_amount:,.0f}")
+    if result.approved_amount:
+        console.print(f"  Approved:     ${result.approved_amount:,.0f}")
+    if result.approved_rate:
+        console.print(f"  Rate:         {result.approved_rate:.2f}%")
+    if result.conditions:
+        console.print(f"  Conditions:   {len(result.conditions)}")
+        for c in result.conditions[:5]:
+            console.print(f"    • {c}")
+        if len(result.conditions) > 5:
+            console.print(f"    ... and {len(result.conditions) - 5} more")
+    if result.human_review_required:
+        console.print(f"  [yellow]Human Review Required:[/] {', '.join(result.human_review_reasons)}")
+    if result.compliance_violations:
+        console.print(f"  [yellow]Compliance:[/] {len(result.compliance_violations)} rule(s) evaluated")
+    if result.document_count:
+        console.print(f"  Documents:    {result.document_count}")
+
+
+# ── Model Registry ──────────────────────────────────────────────────────
+
+registry_app = typer.Typer(help="Model component registry for compliance team review.")
+
+
+@registry_app.command("list")
+def registry_list(
+    component: str = typer.Argument("prompt", help="Component type: prompt, llm_config, compliance_rule, agent_logic"),
+    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
+) -> None:
+    from insureflow.registry import ComponentType, RegistryService
+
+    reg = RegistryService()
+    ct = ComponentType(component)
+    entries = reg.list_versions(ct)
+
+    if json_output:
+        data = [e.model_dump(mode="json") for e in entries]
+        console.print_json(json.dumps(data, indent=2))
+        return
+
+    if not entries:
+        console.print(f"[yellow]No entries for {component}.[/]")
+        return
+
+    table = Table(title=f"{component.upper()}s")
+    table.add_column("ID")
+    table.add_column("Version")
+    table.add_column("Status")
+    table.add_column("Key")
+    table.add_column("Description")
+    table.add_column("Updated")
+
+    status_colors = {
+        "approved": "green",
+        "review": "yellow",
+        "draft": "blue",
+        "rejected": "red",
+        "superseded": "dim",
+    }
+
+    for e in entries:
+        key = ""
+        if hasattr(e, "prompt_key") and e.prompt_key:
+            key = e.prompt_key
+        elif hasattr(e, "model_tier") and e.model_tier:
+            key = e.model_tier
+        elif hasattr(e, "agent_type") and e.agent_type:
+            key = e.agent_type
+
+        color = status_colors.get(e.status.value, "white")
+        table.add_row(
+            e.entry_id[:12],
+            e.version_label,
+            f"[{color}]{e.status.value}[/]",
+            key,
+            e.description[:40],
+            e.updated_at.strftime("%Y-%m-%d %H:%M"),
+        )
+
+    console.print(table)
+    console.print(f"\n[dim]{len(entries)} version(s)[/]")
+
+
+@registry_app.command("diff")
+def registry_diff(
+    component: str = typer.Argument(..., help="Component type: prompt, llm_config, compliance_rule, agent_logic"),
+    id_a: str = typer.Argument(..., help="First (newer) entry ID"),
+    id_b: str = typer.Argument(..., help="Second (older) entry ID"),
+) -> None:
+    from insureflow.registry import RegistryService
+
+    reg = RegistryService()
+    diff = reg.compute_diff(id_a, id_b)
+
+    if "error" in diff:
+        console.print(f"[red]{diff['error']}[/]")
+        raise typer.Exit(1)
+
+    console.print(f"[bold]Diff:[/] {diff.get('from_version')} → {diff.get('to_version')}")
+    console.print(f"[bold]Component:[/] {diff.get('component_type', component)}")
+    console.print(f"[bold]Key:[/] {diff.get('prompt_key') or diff.get('model_tier') or diff.get('agent_type', '')}")
+
+    if diff.get("hash_changed"):
+        console.print(f"\n[red]⚠ Content hash changed[/]")
+        console.print(f"  From: {diff.get('from_hash')}")
+        console.print(f"  To:   {diff.get('to_hash')}")
+
+    if diff.get("text_changed"):
+        console.print(f"\n[yellow]✎ Prompt text changed[/]")
+
+    if diff.get("changes"):
+        console.print(f"\n[yellow]✎ Configuration changes:[/]")
+        for field, change in diff["changes"].items():
+            console.print(f"  {field}: [red]{change['from']}[/] → [green]{change['to']}[/]")
+
+    if diff.get("added"):
+        console.print(f"\n[green]+ Added rules:[/] {', '.join(diff['added'])}")
+    if diff.get("removed"):
+        console.print(f"\n[red]- Removed rules:[/] {', '.join(diff['removed'])}")
+    if diff.get("changed"):
+        console.print(f"\n[yellow]~ Changed rules:[/] {', '.join(diff['changed'])}")
+
+
+@registry_app.command("show")
+def registry_show(
+    entry_id: str = typer.Argument(..., help="Entry ID"),
+    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
+) -> None:
+    from insureflow.registry import RegistryService
+
+    reg = RegistryService()
+    entry = reg.get(entry_id)
+    if not entry:
+        console.print(f"[red]Entry not found: {entry_id}[/]")
+        raise typer.Exit(1)
+
+    if json_output:
+        console.print_json(json.dumps(entry.model_dump(mode="json"), indent=2))
+        return
+
+    console.print(f"[bold]Entry:[/] {entry.entry_id}")
+    console.print(f"[bold]Type:[/] {entry.component_type.value}")
+    console.print(f"[bold]Version:[/] {entry.version_label}")
+    console.print(f"[bold]Status:[/] {entry.status.value}")
+    console.print(f"[bold]Description:[/] {entry.description}")
+    console.print(f"[bold]Change Notes:[/] {entry.change_notes or '(none)'}")
+    console.print(f"[bold]Created:[/] {entry.created_by or 'unknown'} @ {entry.created_at}")
+    console.print(f"[bold]Updated:[/] {entry.updated_at}")
+
+    if hasattr(entry, "prompt_key") and entry.prompt_key:
+        console.print(f"[bold]Prompt Key:[/] {entry.prompt_key}")
+    if hasattr(entry, "model_tier") and entry.model_tier:
+        console.print(f"[bold]Model Tier:[/] {entry.model_tier}")
+        console.print(f"[bold]Model:[/] {entry.provider}/{entry.model_name}")
+        console.print(f"[bold]Temperature:[/] {entry.temperature}")
+    if hasattr(entry, "agent_type") and entry.agent_type:
+        console.print(f"[bold]Agent Type:[/] {entry.agent_type}")
+        console.print(f"[bold]Source:[/] {entry.source_file}")
+    if hasattr(entry, "rules_snapshot") and entry.rules_snapshot:
+        console.print(f"[bold]Rules:[/] {len(entry.rules_snapshot)} rule(s)")
+
+    if entry.review_comments:
+        console.print(f"\n[bold]Review Comments ({len(entry.review_comments)}):[/]")
+        for c in entry.review_comments:
+            console.print(f"  [{c.reviewer}] {c.comment} @ {c.created_at}")
+
+
+@registry_app.command("create")
+def registry_create(
+    component: str = typer.Argument(..., help="Component type"),
+    key: str = typer.Option("", "--key", "-k", help="Component key (prompt_key, model_tier, agent_type)"),
+    description: str = typer.Option("", "--desc", "-d", help="Description"),
+    notes: str = typer.Option("", "--notes", "-n", help="Change notes"),
+    version: str = typer.Option("1.0.0", "--version", "-v", help="Version label"),
+    creator: str = typer.Option("cli", "--creator", "-c", help="Created by"),
+) -> None:
+    from insureflow.registry import ComponentType, RegistryService
+    from insureflow.registry.models import PromptVersion, LLMConfigVersion, ComplianceRuleVersion, AgentLogicVersion
+
+    reg = RegistryService()
+    ct = ComponentType(component)
+
+    if ct == ComponentType.PROMPT:
+        from insureflow.agents.prompts import SYSTEM_PROMPTS
+        prompt_text = SYSTEM_PROMPTS.get(key, "")
+        if not prompt_text:
+            console.print(f"[red]Unknown prompt key: {key}. Available: {', '.join(SYSTEM_PROMPTS.keys())}[/]")
+            raise typer.Exit(1)
+        entry = PromptVersion(
+            component_type=ct, version_label=version, created_by=creator,
+            description=description or f"Draft {key} prompt", change_notes=notes,
+            prompt_key=key, prompt_text=prompt_text,
+        )
+    elif ct == ComponentType.LLM_CONFIG:
+        entry = LLMConfigVersion(
+            component_type=ct, version_label=version, created_by=creator,
+            description=description or f"Draft {key} LLM config", change_notes=notes,
+            model_tier=key,
+        )
+    elif ct == ComponentType.COMPLIANCE_RULE:
+        from insureflow.mortgage.compliance import BANK_RULES
+        rules = {}
+        for rule in BANK_RULES:
+            rules[rule.rule_id] = {
+                "name": rule.name, "severity": rule.severity,
+                "product_lines": [p.value for p in rule.product_lines],
+            }
+        entry = ComplianceRuleVersion(
+            component_type=ct, version_label=version, created_by=creator,
+            description=description or "Draft compliance rules", change_notes=notes,
+            rules_snapshot=rules,
+        )
+    elif ct == ComponentType.AGENT_LOGIC:
+        entry = AgentLogicVersion(
+            component_type=ct, version_label=version, created_by=creator,
+            description=description or f"Draft {key} agent logic", change_notes=notes,
+            agent_type=key,
+        )
+    else:
+        console.print(f"[red]Unsupported component type: {component}[/]")
+        raise typer.Exit(1)
+
+    reg.create(entry)
+    console.print(f"[green]Created {component} version [bold]{entry.entry_id[:12]}[/] ({version})[/]")
+
+
+@registry_app.command("submit")
+def registry_submit(
+    entry_id: str = typer.Argument(..., help="Entry ID to submit for review"),
+) -> None:
+    from insureflow.registry import RegistryService
+
+    reg = RegistryService()
+    entry = reg.submit_for_review(entry_id)
+    if not entry:
+        console.print(f"[red]Could not submit {entry_id} — not found or not in DRAFT status[/]")
+        raise typer.Exit(1)
+    console.print(f"[yellow]Submitted [bold]{entry_id[:12]}[/] for review (status → review)[/]")
+
+
+@registry_app.command("approve")
+def registry_approve(
+    entry_id: str = typer.Argument(..., help="Entry ID to approve"),
+    reviewer: str = typer.Option("cli-user", "--reviewer", "-r", help="Reviewer name"),
+    comment: str = typer.Option("", "--comment", "-c", help="Review comment"),
+) -> None:
+    from insureflow.registry import RegistryService
+
+    reg = RegistryService()
+    entry = reg.get(entry_id)
+    if not entry:
+        console.print(f"[red]Entry not found: {entry_id}[/]")
+        raise typer.Exit(1)
+
+    old_active = reg.get_active_version(entry.component_type)
+    if old_active:
+        old_label = old_active.version_label
+    else:
+        old_label = "(none)"
+
+    entry = reg.approve(entry_id, reviewer=reviewer, comment=comment)
+    if not entry:
+        console.print(f"[red]Could not approve — not in REVIEW status[/]")
+        raise typer.Exit(1)
+
+    console.print(f"[green]✓ Approved [bold]{entry_id[:12]}[/] ({entry.version_label})[/]")
+    console.print(f"  Superseded: {old_label}")
+    console.print(f"  Reviewer: {reviewer}")
+    if comment:
+        console.print(f"  Comment: {comment}")
+
+
+@registry_app.command("reject")
+def registry_reject(
+    entry_id: str = typer.Argument(..., help="Entry ID to reject"),
+    reviewer: str = typer.Option("cli-user", "--reviewer", "-r", help="Reviewer name"),
+    comment: str = typer.Option("", "--comment", "-c", help="Review comment"),
+) -> None:
+    from insureflow.registry import RegistryService
+
+    reg = RegistryService()
+    entry = reg.reject(entry_id, reviewer=reviewer, comment=comment)
+    if not entry:
+        console.print(f"[red]Could not reject — not found or not in REVIEW status[/]")
+        raise typer.Exit(1)
+    console.print(f"[red]✗ Rejected [bold]{entry_id[:12]}[/][/]")
+    if comment:
+        console.print(f"  Comment: {comment}")
+
+
+@registry_app.command("snapshot")
+def registry_snapshot(
+    bundle_id: str = typer.Option("", "--bundle", "-b", help="Associated bundle ID"),
+    show: bool = typer.Option(False, "--show", "-s", help="Show latest snapshots"),
+    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
+) -> None:
+    from insureflow.registry import RegistryService
+
+    reg = RegistryService()
+
+    if show:
+        snapshots = reg.list_snapshots()
+        if not snapshots:
+            console.print("[yellow]No snapshots found.[/]")
+            return
+        if json_output:
+            data = [s.model_dump(mode="json") for s in snapshots]
+            console.print_json(json.dumps(data, indent=2))
+            return
+        table = Table(title="Snapshots")
+        table.add_column("ID")
+        table.add_column("Generated")
+        table.add_column("Prompts")
+        table.add_column("LLM Configs")
+        table.add_column("Rules")
+        table.add_column("Agent Logic")
+        table.add_column("Bundle")
+        for s in snapshots:
+            table.add_row(
+                s.snapshot_id[:12],
+                s.generated_at.strftime("%Y-%m-%d %H:%M"),
+                str(len(s.prompts)),
+                str(len(s.llm_configs)),
+                str(len(s.compliance_rules)),
+                str(len(s.agent_logic)),
+                s.bundle_id[:20] or "-",
+            )
+        console.print(table)
+        return
+
+    snapshot = reg.take_snapshot(bundle_id=bundle_id)
+    console.print(f"[green]Snapshot taken: [bold]{snapshot.snapshot_id}[/][/]")
+    console.print(f"  Prompts: {len(snapshot.prompts)} active")
+    console.print(f"  LLM Configs: {len(snapshot.llm_configs)} active")
+    console.print(f"  Compliance Rules: {len(snapshot.compliance_rules)} active")
+    console.print(f"  Agent Logic: {len(snapshot.agent_logic)} active")
+    if bundle_id:
+        console.print(f"  Bundle: {bundle_id}")
+
+
+@registry_app.command("bootstrap")
+def registry_bootstrap(
+    creator: str = typer.Option("system", "--creator", "-c", help="Creator label"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Show what would be created"),
+) -> None:
+    from insureflow.agents.prompts import SYSTEM_PROMPTS
+    from insureflow.mortgage.compliance import BANK_RULES
+    from insureflow.registry import RegistryService
+
+    if dry_run:
+        console.print("[bold]Would create:[/]")
+        for key in SYSTEM_PROMPTS:
+            console.print(f"  Prompt: {key}")
+        for tier in ("cheap", "expensive", "default"):
+            console.print(f"  LLM Config: {tier}")
+        console.print(f"  Compliance Rules: {len(BANK_RULES)} rules")
+        for agent_type in ("compliance_agent", "loss_run_analyst", "fraud_detection", "uw_decision", "risk_analyst"):
+            console.print(f"  Agent Logic: {agent_type}")
+        return
+
+    reg = RegistryService()
+    entries = reg.bootstrap(created_by=creator)
+    console.print(f"[green]Bootstrapped {len(entries)} approved version(s) from current code[/]")
+    for e in entries:
+        key = getattr(e, "prompt_key", None) or getattr(e, "model_tier", None) or getattr(e, "agent_type", None) or ""
+        console.print(f"  ✓ {e.component_type.value:18s} {key:20s} → {e.entry_id[:12]} ({e.version_label})")
+
+
+@registry_app.command("context")
+def registry_context(
+    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
+) -> None:
+    from insureflow.registry import RegistryService
+
+    reg = RegistryService()
+    ctx = reg.version_context()
+
+    if json_output:
+        console.print_json(json.dumps(ctx, indent=2))
+        return
+
+    console.print("[bold]Active Version Context[/]\n")
+    console.print("[underline]Prompts:[/]")
+    for key, info in ctx.get("prompts", {}).items():
+        console.print(f"  {key:20s} {info['version']:8s} {info['entry_id'][:12]} hash={info['hash']}")
+    console.print()
+    console.print("[underline]LLM Configs:[/]")
+    for tier, info in ctx.get("llm_configs", {}).items():
+        console.print(f"  {tier:20s} {info['version']:8s} {info['model']}")
+    console.print()
+    console.print("[underline]Compliance Rules:[/]")
+    for rid in ctx.get("compliance_rules", []):
+        console.print(f"  {rid[:12]}")
+    console.print()
+    console.print("[underline]Agent Logic:[/]")
+    for agent, info in ctx.get("agent_logic", {}).items():
+        console.print(f"  {agent:20s} {info['version']:8s} {info['source_file']}")
+
+
+app.add_typer(registry_app, name="registry", help="Model version registry & compliance review")
+app.add_typer(lending_app, name="lending", help="Lending underwriting for business & consumer loan products")
+
+
+# ── Document Analytics ───────────────────────────────────────────────────
+
+
+@app.command("doc-stats")
+def doc_stats(
+    vertical: str = typer.Option("", "--vertical", "-v", help="Filter: insurance, mortgage"),
+    distribution: bool = typer.Option(False, "--distribution", "-d", help="Show distribution instead of summary"),
+    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
+) -> None:
+    """Show average documents per application across pipeline runs."""
+    from insureflow.analytics.documents import DocumentAnalyticsEngine
+
+    engine = DocumentAnalyticsEngine()
+
+    if distribution:
+        dist = engine.distribution(vertical=vertical)
+        if json_output:
+            console.print_json(json.dumps(dist, indent=2))
+            return
+        table = Table(title=f"Document Count Distribution ({vertical or 'all'})")
+        table.add_column("Bucket")
+        table.add_column("Applications")
+        for bucket, count in dist.items():
+            table.add_row(bucket, str(count))
+        console.print(table)
+        return
+
+    summary = engine.summary(vertical=vertical)
+
+    if json_output:
+        console.print_json(json.dumps(summary, indent=2))
+        return
+
+    console.print(f"\n[bold]Document Analytics[/] ({summary['vertical']})")
+    console.print(f"  Total applications:      {summary['total_applications']}")
+    console.print(f"  Total documents:         {summary['total_documents_processed']}")
+    console.print(f"  [green]Avg docs/application:   {summary['avg_documents_per_application']}[/]")
+    console.print(f"  Median:                  {summary['median_documents']}")
+    console.print(f"  P95:                     {summary['p95_documents']}")
+    console.print(f"  Min:                     {summary['min_documents']}")
+    console.print(f"  Max:                     {summary['max_documents']}")
+    console.print(f"  With human review:       {summary['applications_with_review']}")
+    console.print(f"  Without review:          {summary['applications_without_review']}")
+    console.print()
+
+    if summary["by_vertical"]:
+        console.print("[underline]By vertical:[/]")
+        for v, stats in summary["by_vertical"].items():
+            console.print(f"  {v:15s} {stats['avg']:>8.1f} avg ({stats['min']}-{stats['max']})  n={stats['count']}")
+
+    if summary["by_decision"]:
+        console.print("[underline]By decision:[/]")
+        for decision, count in sorted(summary["by_decision"].items()):
+            console.print(f"  {decision:15s} {count}")
+
+
 if __name__ == "__main__":
     app()

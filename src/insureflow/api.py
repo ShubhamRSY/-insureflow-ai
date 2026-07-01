@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import uuid
 from pathlib import Path
 from typing import Any, Optional
@@ -30,6 +31,7 @@ logger = logging.getLogger(__name__)
 
 INSURANCE_NS = "insurance"
 MORTGAGE_NS = "mortgage"
+LENDING_NS = "lending"
 
 job_store: JobStore = get_job_store()
 
@@ -1218,6 +1220,31 @@ class MortgageSubmissionRequest(BaseModel):
     use_celery: bool = False
 
 
+class LendingSubmissionRequest(BaseModel):
+    product_type: str = "business_term_loan"
+    amount: float = 100000.0
+    term_months: int = 12
+    purpose: str = "other"
+    business_name: str = ""
+    industry: str = ""
+    revenue: float = 0.0
+    net_income: float = 0.0
+    ebitda: float = 0.0
+    debt_service: float = 0.0
+    total_assets: float = 0.0
+    total_liabilities: float = 0.0
+    current_assets: float = 0.0
+    current_liabilities: float = 0.0
+    collateral_value: float = 0.0
+    years_in_business: float = 0.0
+    credit_score: int = 0
+    annual_income: float = 0.0
+    monthly_debt: float = 0.0
+    employment_years: float = 0.0
+    bankruptcies: int = 0
+    foreclosures: int = 0
+
+
 class WebhookRegisterRequest(BaseModel):
     url: str
     events: list[str] = ["mortgage.completed", "mortgage.failed"]
@@ -1803,5 +1830,352 @@ def _run_pipeline_v2_task(job_id: str, request: PipelineConfigRequest, org_id: s
         job_store.set(INSURANCE_NS, job_id, {"status": "failed", "error": str(exc)}, org_id=org_id)
 
 
-# Ensure os is imported (used in integration_status)
-import os
+# ── Registry API (Model Versioning & Compliance Review) ────────────────
+
+
+@app.get("/registry/versions")
+def list_registry_versions(
+    component: str = "",
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    from insureflow.registry import ComponentType, RegistryService
+
+    reg = RegistryService()
+    if component:
+        try:
+            ct = ComponentType(component)
+            entries = reg.list_versions(ct)
+        except ValueError:
+            return {"error": f"Invalid component type: {component}"}
+    else:
+        entries = []
+        for ct in ComponentType:
+            entries.extend(reg.list_versions(ct))
+
+    return {
+        "total": len(entries),
+        "entries": [e.model_dump(mode="json") for e in entries],
+    }
+
+
+@app.get("/registry/versions/{entry_id}")
+def get_registry_version(
+    entry_id: str,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    from insureflow.registry import RegistryService
+
+    reg = RegistryService()
+    entry = reg.get(entry_id)
+    if not entry:
+        raise HTTPException(status_code=404, detail="Version entry not found")
+    return entry.model_dump(mode="json")
+
+
+@app.post("/registry/versions", status_code=201)
+def create_registry_version(
+    component: str,
+    key: str = "",
+    version: str = "1.0.0",
+    description: str = "",
+    change_notes: str = "",
+    creator: str = "api",
+    current: TokenData = Depends(require_role(Role.ADMIN)),
+) -> dict[str, Any]:
+    from insureflow.registry import ComponentType, RegistryService
+    from insureflow.registry.models import (
+        AgentLogicVersion,
+        ComplianceRuleVersion,
+        LLMConfigVersion,
+        PromptVersion,
+    )
+
+    reg = RegistryService()
+    ct = ComponentType(component)
+
+    if ct == ComponentType.PROMPT:
+        from insureflow.agents.prompts import SYSTEM_PROMPTS
+        prompt_text = SYSTEM_PROMPTS.get(key, "")
+        if not prompt_text:
+            raise HTTPException(status_code=400, detail=f"Unknown prompt key: {key}")
+        entry = PromptVersion(
+            component_type=ct, version_label=version, created_by=creator,
+            description=description, change_notes=change_notes,
+            prompt_key=key, prompt_text=prompt_text,
+        )
+    elif ct == ComponentType.LLM_CONFIG:
+        entry = LLMConfigVersion(
+            component_type=ct, version_label=version, created_by=creator,
+            description=description, change_notes=change_notes,
+            model_tier=key,
+        )
+    elif ct == ComponentType.COMPLIANCE_RULE:
+        from insureflow.mortgage.compliance import BANK_RULES
+        rules = {}
+        for rule in BANK_RULES:
+            rules[rule.rule_id] = {
+                "name": rule.name, "severity": rule.severity,
+                "product_lines": [p.value for p in rule.product_lines],
+            }
+        entry = ComplianceRuleVersion(
+            component_type=ct, version_label=version, created_by=creator,
+            description=description, change_notes=change_notes,
+            rules_snapshot=rules,
+        )
+    elif ct == ComponentType.AGENT_LOGIC:
+        entry = AgentLogicVersion(
+            component_type=ct, version_label=version, created_by=creator,
+            description=description, change_notes=change_notes,
+            agent_type=key,
+        )
+    else:
+        raise HTTPException(status_code=400, detail=f"Unsupported component: {component}")
+
+    result = reg.create(entry)
+    return result.model_dump(mode="json")
+
+
+@app.post("/registry/versions/{entry_id}/submit")
+def submit_registry_version(
+    entry_id: str,
+    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+) -> dict[str, Any]:
+    from insureflow.registry import RegistryService
+
+    reg = RegistryService()
+    entry = reg.submit_for_review(entry_id)
+    if not entry:
+        raise HTTPException(status_code=400, detail="Cannot submit — not found or not DRAFT")
+    return {"status": "submitted", "entry": entry.model_dump(mode="json")}
+
+
+class ReviewRequest(BaseModel):
+    reviewer: str = "api-user"
+    comment: str = ""
+
+
+@app.post("/registry/versions/{entry_id}/approve")
+def approve_registry_version(
+    entry_id: str,
+    req: ReviewRequest = ReviewRequest(),
+    current: TokenData = Depends(require_role(Role.ADMIN)),
+) -> dict[str, Any]:
+    from insureflow.registry import RegistryService
+
+    reg = RegistryService()
+    entry = reg.approve(entry_id, reviewer=req.reviewer, comment=req.comment)
+    if not entry:
+        raise HTTPException(status_code=400, detail="Cannot approve — not found or not in REVIEW")
+    return {"status": "approved", "entry": entry.model_dump(mode="json")}
+
+
+@app.post("/registry/versions/{entry_id}/reject")
+def reject_registry_version(
+    entry_id: str,
+    req: ReviewRequest = ReviewRequest(),
+    current: TokenData = Depends(require_role(Role.ADMIN)),
+) -> dict[str, Any]:
+    from insureflow.registry import RegistryService
+
+    reg = RegistryService()
+    entry = reg.reject(entry_id, reviewer=req.reviewer, comment=req.comment)
+    if not entry:
+        raise HTTPException(status_code=400, detail="Cannot reject — not found or not in REVIEW")
+    return {"status": "rejected", "entry": entry.model_dump(mode="json")}
+
+
+@app.get("/registry/diff")
+def diff_registry_versions(
+    id_a: str,
+    id_b: str,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    from insureflow.registry import RegistryService
+
+    reg = RegistryService()
+    diff = reg.compute_diff(id_a, id_b)
+    if "error" in diff:
+        raise HTTPException(status_code=404, detail=diff["error"])
+    return diff
+
+
+@app.get("/registry/context")
+def registry_version_context(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    from insureflow.registry import RegistryService
+
+    reg = RegistryService()
+    return reg.version_context()
+
+
+@app.post("/registry/snapshot", status_code=201)
+def take_registry_snapshot(
+    bundle_id: str = "",
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    from insureflow.registry import RegistryService
+
+    reg = RegistryService()
+    snapshot = reg.take_snapshot(bundle_id=bundle_id)
+    return snapshot.model_dump(mode="json")
+
+
+@app.get("/registry/snapshots")
+def list_registry_snapshots(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    from insureflow.registry import RegistryService
+
+    reg = RegistryService()
+    snapshots = reg.list_snapshots()
+    return {
+        "total": len(snapshots),
+        "snapshots": [s.model_dump(mode="json") for s in snapshots],
+    }
+
+
+@app.post("/registry/bootstrap", status_code=201)
+def bootstrap_registry(
+    creator: str = "api",
+    current: TokenData = Depends(require_role(Role.ADMIN)),
+) -> dict[str, Any]:
+    from insureflow.registry import RegistryService
+
+    reg = RegistryService()
+    entries = reg.bootstrap(created_by=creator)
+    return {
+        "message": f"Bootstrapped {len(entries)} approved versions",
+        "total": len(entries),
+        "entries": [e.model_dump(mode="json") for e in entries],
+    }
+
+
+# ── Document Analytics API ───────────────────────────────────────────────
+
+
+@app.get("/analytics/documents")
+def document_analytics(
+    vertical: str = "",
+    distribution: bool = False,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    from insureflow.analytics.documents import DocumentAnalyticsEngine
+
+    engine = DocumentAnalyticsEngine()
+    if distribution:
+        return {"distribution": engine.distribution(vertical=vertical)}
+    return engine.summary(vertical=vertical)
+
+
+# ── Lending API ──────────────────────────────────────────────────────────
+
+
+@app.post("/lending/pipeline/run", status_code=200)
+def run_lending_pipeline(
+    req: LendingSubmissionRequest,
+    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+) -> dict[str, Any]:
+    """Run lending underwriting for a business or consumer loan application."""
+    from insureflow.lending import LendingPipeline
+    from insureflow.lending.models import (
+        BusinessFinancialData,
+        BusinessLoanApplication,
+        ConsumerFinancialData,
+        ConsumerLoanApplication,
+        LoanProductType,
+        LoanPurpose,
+    )
+
+    product_map: dict[str, LoanProductType] = {
+        "business_term_loan": LoanProductType.BUSINESS_TERM_LOAN,
+        "business_loc": LoanProductType.BUSINESS_LINE_OF_CREDIT,
+        "cre": LoanProductType.COMMERCIAL_REAL_ESTATE,
+        "construction": LoanProductType.CONSTRUCTION_LOAN,
+        "sba_7a": LoanProductType.SBA_7A,
+        "sba_504": LoanProductType.SBA_504,
+        "equipment": LoanProductType.EQUIPMENT_FINANCING,
+        "invoice": LoanProductType.INVOICE_FINANCING,
+        "personal_term": LoanProductType.PERSONAL_TERM_LOAN,
+        "personal_loc": LoanProductType.PERSONAL_LINE_OF_CREDIT,
+        "auto": LoanProductType.AUTO_LOAN,
+        "boat": LoanProductType.BOAT_LOAN,
+        "heloc": LoanProductType.HOME_EQUITY_LINE,
+        "secured": LoanProductType.SECURED_PERSONAL,
+        "unsecured": LoanProductType.UNSECURED_PERSONAL,
+    }
+    purpose_map: dict[str, LoanPurpose] = {
+        "working_capital": LoanPurpose.WORKING_CAPITAL, "refinance": LoanPurpose.DEBT_REFINANCE,
+        "equipment": LoanPurpose.EQUIPMENT_PURCHASE, "real_estate": LoanPurpose.REAL_ESTATE_PURCHASE,
+        "construction": LoanPurpose.CONSTRUCTION, "expansion": LoanPurpose.BUSINESS_EXPANSION,
+        "inventory": LoanPurpose.INVENTORY_FINANCING, "acquisition": LoanPurpose.ACQUISITION,
+        "auto": LoanPurpose.AUTO_PURCHASE, "boat": LoanPurpose.BOAT_PURCHASE,
+        "home_improvement": LoanPurpose.HOME_IMPROVEMENT, "debt_consolidation": LoanPurpose.DEBT_CONSOLIDATION,
+        "education": LoanPurpose.EDUCATION, "medical": LoanPurpose.MEDICAL, "other": LoanPurpose.OTHER,
+    }
+
+    pt = product_map.get(req.product_type)
+    if pt is None:
+        raise HTTPException(status_code=400, detail=f"Unknown product: {req.product_type}")
+
+    purp = purpose_map.get(req.purpose, LoanPurpose.OTHER)
+    is_business = pt.value.startswith(("business_", "commercial_", "construction_", "sba_", "equipment_", "invoice_"))
+
+    if is_business:
+        from insureflow.lending.models import Collateral
+
+        fin = BusinessFinancialData(
+            annual_revenue=req.revenue, net_income=req.net_income, ebitda=req.ebitda,
+            debt_service=req.debt_service, total_assets=req.total_assets,
+            total_liabilities=req.total_liabilities, current_assets=req.current_assets,
+            current_liabilities=req.current_liabilities,
+        )
+        coll = ([Collateral(estimated_value=req.collateral_value)] if req.collateral_value > 0 else [])
+        app = BusinessLoanApplication(
+            business_name=req.business_name or "Unnamed Business", industry=req.industry,
+            years_in_business=req.years_in_business, product_type=pt, loan_purpose=purp,
+            requested_amount=req.amount, requested_term_months=req.term_months,
+            financials=[fin], collateral=coll,
+        )
+    else:
+        fin = ConsumerFinancialData(
+            annual_income=req.annual_income, total_monthly_debt=req.monthly_debt,
+            credit_score=req.credit_score, employment_years=req.employment_years,
+            bankruptcies_last_7_years=req.bankruptcies, foreclosures_last_7_years=req.foreclosures,
+        )
+        app = ConsumerLoanApplication(
+            product_type=pt, loan_purpose=purp, requested_amount=req.amount,
+            requested_term_months=req.term_months, financial_data=fin,
+        )
+
+    pipeline = LendingPipeline()
+    result = pipeline.run(app)
+    return {"result": result.model_dump(mode="json"), "application_id": app.application_id}
+
+
+@app.get("/lending/pipeline/result/{application_id}")
+def get_lending_result(
+    application_id: str,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    import json
+    audit_path = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)),
+        "..", "audit_logs", "lending",
+    )
+    for fname in os.listdir(audit_path):
+        if application_id in fname:
+            with open(os_mod.path.join(audit_path, fname)) as f:
+                return json.load(f)
+    raise HTTPException(status_code=404, detail=f"Lending result not found: {application_id}")
+
+
+@app.get("/lending/products")
+def list_lending_products(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, list[str]]:
+    from insureflow.lending.models import LoanProductType
+    return {"products": [p.value for p in LoanProductType]}
+
+
+
