@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 import typer
 from rich.console import Console
@@ -281,7 +281,7 @@ def agents(
     """Run multi-agent underwriting analysis on submission documents."""
     from insureflow.ingestion.loader import SubmissionLoader
 
-    docs: dict[str, str | list[str] | None] = {}
+    docs: dict[str, Any] = {}
     doc_labels: list[str] = []
 
     if acord_xml:
@@ -795,24 +795,7 @@ def lending_underwrite(
 
     with console.status("[bold green]Running lending underwriting..."):
         if is_business:
-            fin = BusinessFinancialData(
-                annual_revenue=revenue,
-                net_income=net_income,
-                ebitda=ebitda,
-                debt_service=debt_service,
-                total_assets=total_assets,
-                total_liabilities=total_liabilities,
-                current_assets=current_assets,
-                current_liabilities=current_liabilities,
-            )
-            coll = []
-            if collateral_value > 0:
-                from insureflow.lending.models import Collateral
-
-                coll.append(
-                    Collateral(estimated_value=collateral_value, description="General collateral")
-                )
-            app = BusinessLoanApplication(
+            app: BusinessLoanApplication | ConsumerLoanApplication = BusinessLoanApplication(
                 business_name=business_name or "Unnamed Business",
                 industry=industry,
                 years_in_business=years_in_business,
@@ -820,18 +803,23 @@ def lending_underwrite(
                 loan_purpose=purp,
                 requested_amount=amount,
                 requested_term_months=term,
-                financials=[fin],
-                collateral=coll,
+                financials=[
+                    BusinessFinancialData(
+                        annual_revenue=revenue,
+                        net_income=net_income,
+                        ebitda=ebitda,
+                        debt_service=debt_service,
+                        total_assets=total_assets,
+                        total_liabilities=total_liabilities,
+                        current_assets=current_assets,
+                        current_liabilities=current_liabilities,
+                    )
+                ],
+                collateral=[Collateral(estimated_value=collateral_value, description="General collateral")]
+                if collateral_value > 0
+                else [],
             )
         else:
-            fin = ConsumerFinancialData(
-                annual_income=annual_income,
-                total_monthly_debt=monthly_debt,
-                credit_score=credit_score,
-                employment_years=employment_years,
-                bankruptcies_last_7_years=bankruptcies,
-                foreclosures_last_7_years=foreclosures,
-            )
             app = ConsumerLoanApplication(
                 first_name=first_name or "Applicant",
                 last_name=last_name or "Unknown",
@@ -839,7 +827,14 @@ def lending_underwrite(
                 loan_purpose=purp,
                 requested_amount=amount,
                 requested_term_months=term,
-                financial_data=fin,
+                financial_data=ConsumerFinancialData(
+                    annual_income=annual_income,
+                    total_monthly_debt=monthly_debt,
+                    credit_score=credit_score,
+                    employment_years=employment_years,
+                    bankruptcies_last_7_years=bankruptcies,
+                    foreclosures_last_7_years=foreclosures,
+                ),
             )
 
         pipeline = LendingPipeline()
@@ -1015,16 +1010,23 @@ def registry_show(
     console.print(f"[bold]Created:[/] {entry.created_by or 'unknown'} @ {entry.created_at}")
     console.print(f"[bold]Updated:[/] {entry.updated_at}")
 
-    if hasattr(entry, "prompt_key") and entry.prompt_key:
+    from insureflow.registry.models import (
+        AgentLogicVersion,
+        ComplianceRuleVersion,
+        LLMConfigVersion,
+        PromptVersion,
+    )
+
+    if isinstance(entry, PromptVersion) and entry.prompt_key:
         console.print(f"[bold]Prompt Key:[/] {entry.prompt_key}")
-    if hasattr(entry, "model_tier") and entry.model_tier:
+    if isinstance(entry, LLMConfigVersion) and entry.model_tier:
         console.print(f"[bold]Model Tier:[/] {entry.model_tier}")
         console.print(f"[bold]Model:[/] {entry.provider}/{entry.model_name}")
         console.print(f"[bold]Temperature:[/] {entry.temperature}")
-    if hasattr(entry, "agent_type") and entry.agent_type:
+    if isinstance(entry, AgentLogicVersion) and entry.agent_type:
         console.print(f"[bold]Agent Type:[/] {entry.agent_type}")
         console.print(f"[bold]Source:[/] {entry.source_file}")
-    if hasattr(entry, "rules_snapshot") and entry.rules_snapshot:
+    if isinstance(entry, ComplianceRuleVersion) and entry.rules_snapshot:
         console.print(f"[bold]Rules:[/] {len(entry.rules_snapshot)} rule(s)")
 
     if entry.review_comments:
@@ -1054,6 +1056,7 @@ def registry_create(
 
     reg = RegistryService()
     ct = ComponentType(component)
+    entry: PromptVersion | LLMConfigVersion | ComplianceRuleVersion | AgentLogicVersion
 
     if ct == ComponentType.PROMPT:
         from insureflow.agents.prompts import SYSTEM_PROMPTS

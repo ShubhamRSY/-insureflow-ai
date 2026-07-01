@@ -45,7 +45,7 @@ class TestMCPServerModule:
         tool_calls = [call for call in mock_instance.tool.call_args_list]
         resource_calls = [call for call in mock_instance.resource.call_args_list]
         prompt_calls = [call for call in mock_instance.prompt.call_args_list]
-        assert len(tool_calls) == 9
+        assert len(tool_calls) == 13
         assert len(resource_calls) == 3
         assert len(prompt_calls) == 1
 

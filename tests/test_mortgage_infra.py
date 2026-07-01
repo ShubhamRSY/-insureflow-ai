@@ -90,7 +90,7 @@ class TestLoanPricing:
 class TestWebhooks:
     def test_register_and_dispatch(self) -> None:
         dispatcher = WebhookDispatcher()
-        sub = dispatcher.register("test-org", "http://localhost/hook", secret="test-secret")
+        sub = dispatcher.register("test-org", "http://localhost/hook", events=["mortgage.completed"], secret="test-secret")
 
         mock_resp = MagicMock()
         mock_resp.status = 200
