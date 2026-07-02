@@ -11,7 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Optional
+from typing import Any, Optional
 
 
 class MarketPhase(str, Enum):
@@ -121,7 +121,7 @@ class MarketCycleAwareness:
         avg_rate_mod = (self._cycle.property_rate_mod + self._cycle.liability_rate_mod + self._cycle.workers_comp_rate_mod + self._cycle.auto_rate_mod) / 4.0
         return base_premium * avg_rate_mod * self._cycle.reinsurance_cost_mod
 
-    def market_adjustment_narrative(self) -> dict:
+    def market_adjustment_narrative(self) -> dict[str, Any]:
         """Return human-readable market condition summary."""
         return {
             "phase": self._cycle.phase.value,

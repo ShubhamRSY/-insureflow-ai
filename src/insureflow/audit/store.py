@@ -2,14 +2,13 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 from insureflow.config import settings
 from insureflow.exceptions import StorageError
-from insureflow.models.audit import AuditTrail, SynthesisOutput
+from insureflow.models.audit import AuditTrail, ReconciliationResult, SynthesisOutput
 from insureflow.models.provenance import ProvenanceRecord
 from insureflow.models.submissions import SubmissionBundle
-from insureflow.reconciliation.engine import ReconciliationResult
 
 
 class AuditStore:
@@ -88,7 +87,7 @@ class AuditStore:
                     enc = EnvelopeEncryption()
                     if enc.enabled and path.read_text(encoding="utf-8").startswith("ENC:v1:"):
                         return enc.read_encrypted_file(str(path))
-                    return json.loads(path.read_text(encoding="utf-8"))
+                    return cast(dict[str, Any], json.loads(path.read_text(encoding="utf-8")))
                 except (json.JSONDecodeError, OSError, ValueError):
                     return None
         return None

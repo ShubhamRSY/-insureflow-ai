@@ -51,11 +51,11 @@ class PipelineOrchestrator:
         raw_docs: Optional[list[str]] = None,
         auto_classify: bool = False,
         bundle_id: Optional[str] = None,
-    ) -> dict:
+    ) -> dict[str, Any]:
         bundle_id = bundle_id or f"run-{uuid4().hex[:12]}"
         audit_trail = self.audit_logger.create_trail(bundle_id)
 
-        results: dict = {
+        results: dict[str, Any] = {
             "bundle_id": bundle_id,
             "status": "running",
             "steps": {},

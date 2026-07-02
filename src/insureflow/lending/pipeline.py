@@ -35,11 +35,11 @@ class LendingPipeline:
     def run(
         self,
         application: BusinessLoanApplication | ConsumerLoanApplication,
-        documents: list[dict] | None = None,
+        documents: list[dict[str, Any]] | None = None,
         pipeline_run_id: str | None = None,
     ) -> LendingPipelineResult:
         run_id = pipeline_run_id or f"lp-{application.application_id}"
-        timeline: list[dict] = []
+        timeline: list[dict[str, Any]] = []
 
         timeline.append(self._record("ingest", "start", run_id, application))
 
@@ -147,7 +147,7 @@ class LendingPipeline:
         self._record_document_analytics(run_id, application, documents, result)
         return result
 
-    def _record(self, phase: str, status: str, run_id: str, data: Any) -> dict:
+    def _record(self, phase: str, status: str, run_id: str, data: Any) -> dict[str, Any]:
         return {
             "phase": phase,
             "status": status,
@@ -175,7 +175,7 @@ class LendingPipeline:
     def _ingest_documents(
         self,
         application: BusinessLoanApplication | ConsumerLoanApplication,
-        documents: list[dict],
+        documents: list[dict[str, Any]],
     ) -> None:
         for doc in documents:
             doc["application_id"] = application.application_id
@@ -187,8 +187,8 @@ class LendingPipeline:
         run_id: str,
         application: Any,
         result: LendingPipelineResult,
-        timeline: list[dict],
-        documents: list[dict] | None,
+        timeline: list[dict[str, Any]],
+        documents: list[dict[str, Any]] | None,
     ) -> None:
         audit = {
             "run_id": run_id,
@@ -207,7 +207,7 @@ class LendingPipeline:
         self,
         run_id: str,
         application: Any,
-        documents: list[dict] | None,
+        documents: list[dict[str, Any]] | None,
         result: LendingPipelineResult,
     ) -> None:
         if not documents:

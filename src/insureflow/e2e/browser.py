@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Callable
 from urllib.error import URLError
 from urllib.request import urlopen
 
@@ -17,7 +17,7 @@ class BrowserResult:
     duration_ms: float = 0.0
 
 
-def _step(name: str, fn) -> BrowserResult:
+def _step(name: str, fn: Callable[[], Any]) -> BrowserResult:
     t0 = time.perf_counter()
     try:
         detail = fn() or "ok"
@@ -85,7 +85,7 @@ def run_browser_tests(
 
         def _main_heading() -> str:
             page.wait_for_selector("main h1", timeout=10000)
-            return page.locator("main h1").first.inner_text()
+            return str(page.locator("main h1").first.inner_text())
 
         def load_dashboard() -> str:
             page.goto(dashboard, wait_until="networkidle", timeout=30000)

@@ -134,7 +134,7 @@ class MortgagePipeline:
 
     def run_documents(
         self,
-        documents: list,
+        documents: list[Any],
         bundle_id: str,
         product_line: ProductLine,
         borrower_id: str | None = None,

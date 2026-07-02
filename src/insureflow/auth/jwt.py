@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-from typing import Optional
+from typing import Any, Optional
 
 import bcrypt
 from jose import JWTError, jwt
@@ -28,14 +28,14 @@ def hash_password(password: str) -> str:
 
 
 def create_access_token(
-    data: dict,
+    data: dict[str, Any],
     expires_delta: Optional[timedelta] = None,
     secret_key: str = SECRET_KEY,
 ) -> str:
     to_encode = data.copy()
     expire = datetime.now(tz=timezone.utc) + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, secret_key, algorithm=ALGORITHM)
+    return str(jwt.encode(to_encode, secret_key, algorithm=ALGORITHM))
 
 
 def decode_access_token(

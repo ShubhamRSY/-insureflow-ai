@@ -4,7 +4,7 @@ import base64
 import json
 import logging
 import os
-from typing import Any
+from typing import Any, cast
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +44,7 @@ class EnvelopeEncryption:
         if not self._fernet:
             return plaintext
         token = self._fernet.encrypt(plaintext.encode("utf-8"))
-        return _ENCRYPTION_PREFIX + token.decode("utf-8")
+        return cast(str, _ENCRYPTION_PREFIX + token.decode("utf-8"))
 
     def decrypt_text(self, ciphertext: str) -> str:
         if not ciphertext.startswith(_ENCRYPTION_PREFIX):
@@ -52,13 +52,13 @@ class EnvelopeEncryption:
         if not self._fernet:
             raise ValueError("Encrypted data found but ENCRYPTION_KEY is not configured")
         token = ciphertext[len(_ENCRYPTION_PREFIX) :].encode("utf-8")
-        return self._fernet.decrypt(token).decode("utf-8")
+        return cast(str, self._fernet.decrypt(token).decode("utf-8"))
 
     def encrypt_json(self, data: dict[str, Any]) -> str:
         return self.encrypt_text(json.dumps(data, default=str, ensure_ascii=False))
 
     def decrypt_json(self, ciphertext: str) -> dict[str, Any]:
-        return json.loads(self.decrypt_text(ciphertext))
+        return cast(dict[str, Any], json.loads(self.decrypt_text(ciphertext)))
 
     def write_encrypted_file(self, path: str, data: dict[str, Any]) -> None:
         from pathlib import Path
@@ -77,4 +77,4 @@ class EnvelopeEncryption:
         raw = p.read_text(encoding="utf-8")
         if raw.startswith(_ENCRYPTION_PREFIX):
             return self.decrypt_json(raw)
-        return json.loads(raw)
+        return cast(dict[str, Any], json.loads(raw))

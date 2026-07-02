@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
+from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, StateGraph
 
@@ -38,7 +39,7 @@ class PipelineGraph:
         self.graph = self._build()
         self.compiled = self.graph.compile(checkpointer=self.checkpointer)
 
-    def _build(self) -> StateGraph:
+    def _build(self) -> StateGraph[PipelineState]:
         graph = StateGraph(PipelineState)
 
         graph.add_node("ingest_docs", ingest_docs)
@@ -133,16 +134,16 @@ class PipelineGraph:
         return graph
 
     def run(self, initial_state: dict[str, Any]) -> dict[str, Any]:
-        config = {"configurable": {"thread_id": initial_state.get("bundle_id", "default")}}
-        result = self.compiled.invoke(initial_state, config=config)
-        return result
+        config: RunnableConfig = {"configurable": {"thread_id": initial_state.get("bundle_id", "default")}}
+        result: Any = self.compiled.invoke(initial_state, config=config)  # type: ignore[arg-type]
+        return cast(dict[str, Any], result)
 
     def get_state(self, thread_id: str) -> Any:
-        config = {"configurable": {"thread_id": thread_id}}
+        config: RunnableConfig = {"configurable": {"thread_id": thread_id}}
         return self.compiled.get_state(config)
 
     def update_state(self, thread_id: str, values: dict[str, Any]) -> None:
-        config = {"configurable": {"thread_id": thread_id}}
+        config: RunnableConfig = {"configurable": {"thread_id": thread_id}}
         self.compiled.update_state(config, values)
 
 
@@ -151,7 +152,7 @@ def build_pipeline_graph(checkpointer: Optional[Any] = None) -> PipelineGraph:
 
 
 def _parse_next_router(state: dict[str, Any]) -> str:
-    routes = state.get("classification_routes", [])
+    routes: list[str] = state.get("classification_routes", [])
     parsed_flags = {
         "parse_acord": state.get("parsed_acord", False),
         "parse_json": state.get("parsed_json", False),

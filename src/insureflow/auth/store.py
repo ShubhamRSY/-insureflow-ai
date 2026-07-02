@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import ItemsView
 from pathlib import Path
 
 from insureflow.auth.models import User
@@ -44,7 +45,7 @@ class UserStore:
     def __len__(self) -> int:
         return len(self._users)
 
-    def items(self):
+    def items(self) -> ItemsView[str, User]:
         return self._users.items()
 
     def __setitem__(self, username: str, user: User) -> None:

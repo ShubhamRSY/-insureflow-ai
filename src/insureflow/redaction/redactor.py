@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional
+from typing import Any, Optional
 
 from insureflow.redaction.detector import PIICategory, PIIDetector, PIISpan
 
@@ -47,10 +47,10 @@ class PIIRedactor:
 
     def redact_fields(
         self,
-        data: dict,
+        data: dict[str, Any],
         mask: bool = True,
-    ) -> dict:
-        redacted: dict = {}
+    ) -> dict[str, Any]:
+        redacted: dict[str, Any] = {}
         for key, value in data.items():
             if isinstance(value, str):
                 redacted[key] = self.redact(value, mask=mask)

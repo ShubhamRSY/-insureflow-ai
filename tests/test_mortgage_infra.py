@@ -46,8 +46,12 @@ class TestJobStore:
         store = MemoryJobStore()
         store.set("mortgage", "job-a", {"status": "completed"}, org_id="bank-a")
         store.set("mortgage", "job-a", {"status": "failed"}, org_id="bank-b")
-        assert store.get("mortgage", "job-a", org_id="bank-a")["status"] == "completed"
-        assert store.get("mortgage", "job-a", org_id="bank-b")["status"] == "failed"
+        result_a = store.get("mortgage", "job-a", org_id="bank-a")
+        assert result_a is not None
+        assert result_a["status"] == "completed"
+        result_b = store.get("mortgage", "job-a", org_id="bank-b")
+        assert result_b is not None
+        assert result_b["status"] == "failed"
         assert store.get("mortgage", "job-a", org_id="bank-c") is None
 
     def test_list_ids_scoped_by_org(self) -> None:

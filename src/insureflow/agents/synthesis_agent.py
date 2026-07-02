@@ -5,9 +5,8 @@ from typing import Any, Optional
 
 from insureflow.llm.client import LLMClient
 from insureflow.llm.prompts import SYNTHESIS_PROMPT
-from insureflow.models.audit import SynthesisOutput
+from insureflow.models.audit import ReconciliationResult, SynthesisOutput
 from insureflow.models.provenance import ProvenanceRecord
-from insureflow.reconciliation.engine import ReconciliationResult
 
 
 class SynthesisAgent:

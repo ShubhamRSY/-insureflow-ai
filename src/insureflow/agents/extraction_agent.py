@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional
+from typing import Any, Optional
 
 from insureflow.ingestion.acord_parser import ACORDParser
 from insureflow.ingestion.report_extractor import InspectionReportExtractor
@@ -57,7 +57,7 @@ class ExtractionAgent:
 
         for doc in bundle.unstructured:
             doc.raw_text = self.redactor.redact(doc.raw_text)
-            redacted_fields: dict[str, list] = {}
+            redacted_fields: dict[str, list[Any]] = {}
             for key, field_list in doc.extracted_fields.items():
                 redacted_fields[key] = [type(f)(**{**f.model_dump(), "value": self.redactor.redact(str(f.value))}) for f in field_list]
             doc.extracted_fields = redacted_fields
@@ -67,7 +67,7 @@ class ExtractionAgent:
 
         return bundle
 
-    def _merge_llm_results(self, submission: UnstructuredSubmission, llm_fields: dict) -> None:
+    def _merge_llm_results(self, submission: UnstructuredSubmission, llm_fields: dict[str, Any]) -> None:
         from insureflow.models.submissions import ExtractedField
 
         for key, value in llm_fields.items():

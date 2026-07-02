@@ -25,6 +25,7 @@ class ProvenanceEngine:
     def __init__(self, deduplicate: bool = True) -> None:
         self.hierarchy = ProvenanceHierarchy()
         self.deduplicate = deduplicate
+        self._resolver: Any = None
 
     def build_provenance(self, bundle: SubmissionBundle) -> ProvenanceRecord:
         if self.deduplicate:

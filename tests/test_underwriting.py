@@ -362,7 +362,7 @@ class TestPremiumAudit:
         audit = engine.create_audit("b-2", 50_000.0)
         engine.start_audit(audit.audit_id)
         assert audit.status == AuditStatus.IN_PROGRESS
-        engine.complete_audit(audit.audit_id, 52_000.0, notes="Clean audit")
+        audit = engine.complete_audit(audit.audit_id, 52_000.0, notes="Clean audit")
         assert audit.status == AuditStatus.COMPLETED
         assert audit.actual_premium == 52_000.0
 

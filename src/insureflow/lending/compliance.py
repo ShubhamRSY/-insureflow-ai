@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable
+from typing import Any, Callable
 
 from insureflow.lending.models import (
     BusinessLoanApplication,
@@ -18,10 +18,10 @@ class LendingRule:
     product_types: tuple[LoanProductType, ...]
     description: str
     regulation: str
-    check: Callable[[BusinessLoanApplication | ConsumerLoanApplication], dict | None]
+    check: Callable[[BusinessLoanApplication | ConsumerLoanApplication], dict[str, Any] | None]
 
 
-def _check_sba_7a_size(biz: BusinessLoanApplication | ConsumerLoanApplication) -> dict | None:
+def _check_sba_7a_size(biz: BusinessLoanApplication | ConsumerLoanApplication) -> dict[str, Any] | None:
     if isinstance(biz, BusinessLoanApplication) and biz.product_type == LoanProductType.SBA_7A:
         revenue = biz.financials[0].annual_revenue if biz.financials else 0
         if revenue > 15_000_000:
@@ -35,7 +35,7 @@ def _check_sba_7a_size(biz: BusinessLoanApplication | ConsumerLoanApplication) -
     return None
 
 
-def _check_reg_b_ecoaa(biz: BusinessLoanApplication | ConsumerLoanApplication) -> dict | None:
+def _check_reg_b_ecoaa(biz: BusinessLoanApplication | ConsumerLoanApplication) -> dict[str, Any] | None:
     return {
         "rule_id": "REG-B-001",
         "rule_name": "Equal Credit Opportunity Act",
@@ -45,7 +45,7 @@ def _check_reg_b_ecoaa(biz: BusinessLoanApplication | ConsumerLoanApplication) -
     }
 
 
-def _check_truth_in_lending(biz: BusinessLoanApplication | ConsumerLoanApplication) -> dict | None:
+def _check_truth_in_lending(biz: BusinessLoanApplication | ConsumerLoanApplication) -> dict[str, Any] | None:
     return {
         "rule_id": "REG-Z-001",
         "rule_name": "TILA Disclosure Required",
@@ -55,7 +55,7 @@ def _check_truth_in_lending(biz: BusinessLoanApplication | ConsumerLoanApplicati
     }
 
 
-def _check_bank_secrecy(biz: BusinessLoanApplication | ConsumerLoanApplication) -> dict | None:
+def _check_bank_secrecy(biz: BusinessLoanApplication | ConsumerLoanApplication) -> dict[str, Any] | None:
     return {
         "rule_id": "BSA-001",
         "rule_name": "BSA/AML Check Required",
@@ -65,7 +65,7 @@ def _check_bank_secrecy(biz: BusinessLoanApplication | ConsumerLoanApplication) 
     }
 
 
-def _check_business_cip(biz: BusinessLoanApplication | ConsumerLoanApplication) -> dict | None:
+def _check_business_cip(biz: BusinessLoanApplication | ConsumerLoanApplication) -> dict[str, Any] | None:
     if isinstance(biz, BusinessLoanApplication) and not biz.business_name:
         return {
             "rule_id": "CIP-001",
@@ -77,7 +77,7 @@ def _check_business_cip(biz: BusinessLoanApplication | ConsumerLoanApplication) 
     return None
 
 
-def _check_consumer_cip(biz: BusinessLoanApplication | ConsumerLoanApplication) -> dict | None:
+def _check_consumer_cip(biz: BusinessLoanApplication | ConsumerLoanApplication) -> dict[str, Any] | None:
     if isinstance(biz, ConsumerLoanApplication) and not biz.first_name:
         return {
             "rule_id": "CIP-002",
@@ -89,7 +89,7 @@ def _check_consumer_cip(biz: BusinessLoanApplication | ConsumerLoanApplication) 
     return None
 
 
-def _check_udaap_prohibited(biz: BusinessLoanApplication | ConsumerLoanApplication) -> dict | None:
+def _check_udaap_prohibited(biz: BusinessLoanApplication | ConsumerLoanApplication) -> dict[str, Any] | None:
     if isinstance(biz, ConsumerLoanApplication):
         rate = getattr(biz.financial_data, "credit_score", 0)
         if rate == 0:
@@ -105,7 +105,7 @@ def _check_udaap_prohibited(biz: BusinessLoanApplication | ConsumerLoanApplicati
 
 def _check_business_debt_service(
     biz: BusinessLoanApplication | ConsumerLoanApplication,
-) -> dict | None:
+) -> dict[str, Any] | None:
     if isinstance(biz, BusinessLoanApplication):
         financials = biz.financials
         if financials:
@@ -123,7 +123,7 @@ def _check_business_debt_service(
     return None
 
 
-def _check_consumer_dti(biz: BusinessLoanApplication | ConsumerLoanApplication) -> dict | None:
+def _check_consumer_dti(biz: BusinessLoanApplication | ConsumerLoanApplication) -> dict[str, Any] | None:
     if isinstance(biz, ConsumerLoanApplication):
         fin = biz.financial_data
         if fin.annual_income > 0:
@@ -142,7 +142,7 @@ def _check_consumer_dti(biz: BusinessLoanApplication | ConsumerLoanApplication) 
 
 def _check_collateral_coverage(
     biz: BusinessLoanApplication | ConsumerLoanApplication,
-) -> dict | None:
+) -> dict[str, Any] | None:
     if isinstance(biz, BusinessLoanApplication) and biz.collateral and biz.requested_amount > 0:
         total_collateral = sum(c.estimated_value for c in biz.collateral)
         ltv = biz.requested_amount / total_collateral * 100 if total_collateral > 0 else 999
@@ -159,7 +159,7 @@ def _check_collateral_coverage(
 
 def _check_sba_504_requirements(
     biz: BusinessLoanApplication | ConsumerLoanApplication,
-) -> dict | None:
+) -> dict[str, Any] | None:
     if isinstance(biz, BusinessLoanApplication) and biz.product_type == LoanProductType.SBA_504:
         if biz.requested_amount > 5_000_000:
             return {
@@ -172,7 +172,7 @@ def _check_sba_504_requirements(
     return None
 
 
-def _check_construction_loan(biz: BusinessLoanApplication | ConsumerLoanApplication) -> dict | None:
+def _check_construction_loan(biz: BusinessLoanApplication | ConsumerLoanApplication) -> dict[str, Any] | None:
     if isinstance(biz, BusinessLoanApplication) and biz.product_type in (
         LoanProductType.CONSTRUCTION_LOAN,
         LoanProductType.COMMERCIAL_REAL_ESTATE,
@@ -348,8 +348,8 @@ class LendingComplianceEngine:
     def evaluate(
         self,
         application: BusinessLoanApplication | ConsumerLoanApplication,
-    ) -> list[dict]:
-        violations: list[dict] = []
+    ) -> list[dict[str, Any]]:
+        violations: list[dict[str, Any]] = []
         for rule in LENDING_RULES:
             if application.product_type not in rule.product_types:
                 continue

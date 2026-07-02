@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from typing import Any
 
 from insureflow.models.agents import UnderwritingMemo
 from insureflow.models.submissions import SubmissionBundle
@@ -190,8 +191,8 @@ class InsuranceRatingEngine:
         # Loss experience mod (multi-tier)
         loss_ratio = self._loss_ratio(bundle)
         exp_mod = 0.0
-        for lo, hi, mod in LOSS_EXPERIENCE_MODIFIERS:
-            if (lo is None or loss_ratio >= lo) and (hi is None or loss_ratio < hi):
+        for lo_, hi_, mod in LOSS_EXPERIENCE_MODIFIERS:
+            if (lo_ is None or loss_ratio >= lo_) and (hi_ is None or loss_ratio < hi_):
                 exp_mod = mod
                 break
 
@@ -300,7 +301,7 @@ class InsuranceRatingEngine:
 
         return result
 
-    def bind(self, bundle_id: str, quote_reference: str, bound_by: str) -> dict:
+    def bind(self, bundle_id: str, quote_reference: str, bound_by: str) -> dict[str, Any]:
         return self.adapter.bind_policy(bundle_id, quote_reference, bound_by)
 
     def _estimate_tiv(self, bundle: SubmissionBundle) -> float:

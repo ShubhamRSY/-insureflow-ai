@@ -108,38 +108,38 @@ Coinsurance: 80%
 
 
 class TestDocumentClassifier:
-    def test_classify_acord_xml(self):
+    def test_classify_acord_xml(self) -> None:
         result = DocumentClassifier.classify('<?xml version="1.0"?><ACORD xmlns="http://www.acord.org/standards/PC_Surety/ACORD"><Submission/></ACORD>')
         assert result == DocumentType.ACORD_XML
 
-    def test_classify_json_broker(self):
+    def test_classify_json_broker(self) -> None:
         result = DocumentClassifier.classify(SAMPLE_JSON)
         assert result == DocumentType.BROKER_API_JSON
 
-    def test_classify_loss_run(self):
+    def test_classify_loss_run(self) -> None:
         result = DocumentClassifier.classify(SAMPLE_LOSS_RUN)
         assert result == DocumentType.LOSS_RUN
 
-    def test_classify_inspection_report(self):
+    def test_classify_inspection_report(self) -> None:
         text = "# COMMERCIAL PROPERTY INSPECTION REPORT\n## Building Construction\nThe building is steel frame."
         result = DocumentClassifier.classify(text)
         assert result == DocumentType.INSPECTION_REPORT
 
-    def test_classify_sov(self):
+    def test_classify_sov(self) -> None:
         result = DocumentClassifier.classify(SAMPLE_SOV)
         assert result == DocumentType.SCHEDULE_OF_VALUES
 
-    def test_classify_supplemental_fallback(self):
+    def test_classify_supplemental_fallback(self) -> None:
         result = DocumentClassifier.classify("Just a random note about something.")
         assert result == DocumentType.SUPPLEMENTAL
 
-    def test_classify_empty(self):
+    def test_classify_empty(self) -> None:
         result = DocumentClassifier.classify("")
         assert result == DocumentType.SUPPLEMENTAL
 
 
 class TestJSONBrokerParser:
-    def test_parse_named_insured(self):
+    def test_parse_named_insured(self) -> None:
         parser = JSONBrokerParser()
         sub = parser.parse(SAMPLE_JSON, "json-001")
         assert sub.named_insured is not None
@@ -147,21 +147,21 @@ class TestJSONBrokerParser:
         assert sub.named_insured.dba == "PCD Logistics"
         assert sub.named_insured.tax_id == "94-3328410"
 
-    def test_parse_broker(self):
+    def test_parse_broker(self) -> None:
         parser = JSONBrokerParser()
         sub = parser.parse(SAMPLE_JSON, "json-001")
         assert sub.broker is not None
         assert sub.broker.broker_name == "Golden Gate Insurance Brokers"
         assert sub.broker.contact_name == "Sarah Chen"
 
-    def test_parse_policy_period(self):
+    def test_parse_policy_period(self) -> None:
         parser = JSONBrokerParser()
         sub = parser.parse(SAMPLE_JSON, "json-001")
         assert sub.policy_period is not None
         assert sub.policy_period.effective_date.year == 2026
         assert sub.policy_period.expiration_date.year == 2027
 
-    def test_parse_coverages_with_sublimits(self):
+    def test_parse_coverages_with_sublimits(self) -> None:
         parser = JSONBrokerParser()
         sub = parser.parse(SAMPLE_JSON, "json-001")
         assert len(sub.coverages) == 1
@@ -170,21 +170,21 @@ class TestJSONBrokerParser:
         assert "Products Aggregate" in sub.coverages[0].sublimits
         assert sub.coverages[0].sublimits["Products Aggregate"] == 4_000_000
 
-    def test_parse_locations(self):
+    def test_parse_locations(self) -> None:
         parser = JSONBrokerParser()
         sub = parser.parse(SAMPLE_JSON, "json-001")
         assert len(sub.locations) == 1
         assert sub.locations[0].city == "Oakland"
         assert sub.locations[0].square_footage == 210_000
 
-    def test_parse_financial(self):
+    def test_parse_financial(self) -> None:
         parser = JSONBrokerParser()
         sub = parser.parse(SAMPLE_JSON, "json-001")
         assert sub.financial is not None
         assert sub.financial.annual_revenue == 94_700_000
         assert sub.financial.payroll == 18_400_000
 
-    def test_parse_risk_profile(self):
+    def test_parse_risk_profile(self) -> None:
         parser = JSONBrokerParser()
         sub = parser.parse(SAMPLE_JSON, "json-001")
         assert sub.risk_profile is not None
@@ -193,19 +193,19 @@ class TestJSONBrokerParser:
 
 
 class TestLossRunParser:
-    def test_parse_claims_count(self):
+    def test_parse_claims_count(self) -> None:
         parser = LossRunParser()
         result = parser.parse(SAMPLE_LOSS_RUN, "lr-001")
         assert "total_claims" in result.extracted_fields
         assert result.extracted_fields["total_claims"][0].value == "3"
 
-    def test_parse_structured_claims(self):
+    def test_parse_structured_claims(self) -> None:
         parser = LossRunParser()
         data = parser.parse_structured(SAMPLE_LOSS_RUN)
         assert data.total_claims == 3
         assert abs(data.total_incurred - 978300) < 1
 
-    def test_parse_claim_details(self):
+    def test_parse_claim_details(self) -> None:
         parser = LossRunParser()
         data = parser.parse_structured(SAMPLE_LOSS_RUN)
         claims = {c.claim_id: c for c in data.claims}
@@ -215,7 +215,7 @@ class TestLossRunParser:
         assert c.line_of_business == "Property"
         assert c.claim_status.value == "closed"
 
-    def test_parse_open_claim_with_reserve(self):
+    def test_parse_open_claim_with_reserve(self) -> None:
         parser = LossRunParser()
         data = parser.parse_structured(SAMPLE_LOSS_RUN)
         claims = {c.claim_id: c for c in data.claims}
@@ -224,7 +224,7 @@ class TestLossRunParser:
         assert c.claim_status.value == "open"
         assert abs(c.open_reserve - 23400) < 1
 
-    def test_parse_litigation_claim(self):
+    def test_parse_litigation_claim(self) -> None:
         parser = LossRunParser()
         data = parser.parse_structured(SAMPLE_LOSS_RUN)
         claims = {c.claim_id: c for c in data.claims}
@@ -234,7 +234,7 @@ class TestLossRunParser:
         assert c.paid_amount == 0
         assert "litigation" in c.cause.lower()
 
-    def test_empty_loss_run(self):
+    def test_empty_loss_run(self) -> None:
         parser = LossRunParser()
         data = parser.parse_structured("Nothing here")
         assert data.total_claims == 0
@@ -242,12 +242,12 @@ class TestLossRunParser:
 
 
 class TestSOVParser:
-    def test_parse_structured(self):
+    def test_parse_structured(self) -> None:
         parser = SOVParser()
         sows = parser.parse_structured(SAMPLE_SOV)
         assert len(sows) >= 1
 
-    def test_parse_values(self):
+    def test_parse_values(self) -> None:
         parser = SOVParser()
         sows = parser.parse_structured(SAMPLE_SOV)
         assert len(sows) >= 1
@@ -255,7 +255,7 @@ class TestSOVParser:
         large_values = [v for v in all_values if v >= 1_000_000]
         assert len(large_values) >= 3
 
-    def test_parse_sov_with_location(self):
+    def test_parse_sov_with_location(self) -> None:
         parser = SOVParser()
         sows = parser.parse_structured(SAMPLE_SOV)
         assert len(sows) > 0
@@ -264,7 +264,7 @@ class TestSOVParser:
 
 
 class TestEnhancedACORDParser:
-    def test_parse_sublimits_from_acord(self):
+    def test_parse_sublimits_from_acord(self) -> None:
         xml = """<?xml version="1.0" encoding="UTF-8"?>
 <ACORD xmlns="http://www.acord.org/standards/PC_Surety/ACORD">
   <Submission>
@@ -295,7 +295,7 @@ class TestEnhancedACORDParser:
         assert sub.coverages[0].sublimits["Building"] == 3_500_000
         assert sub.coverages[0].sublimits["Contents"] == 1_500_000
 
-    def test_parse_sprinklered(self):
+    def test_parse_sprinklered(self) -> None:
         xml = """<?xml version="1.0" encoding="UTF-8"?>
 <ACORD xmlns="http://www.acord.org/standards/PC_Surety/ACORD">
   <Submission>
@@ -310,7 +310,7 @@ class TestEnhancedACORDParser:
         assert sub.risk_profile is not None
         assert sub.risk_profile.sprinklered is True
 
-    def test_parse_sprinklered_no(self):
+    def test_parse_sprinklered_no(self) -> None:
         xml = """<?xml version="1.0" encoding="UTF-8"?>
 <ACORD xmlns="http://www.acord.org/standards/PC_Surety/ACORD">
   <Submission>
@@ -322,9 +322,10 @@ class TestEnhancedACORDParser:
 </ACORD>"""
         parser = ACORDParser()
         sub = parser.parse(xml, "test-sprinkler-no")
+        assert sub.risk_profile is not None
         assert sub.risk_profile.sprinklered is False
 
-    def test_parse_location_building_value(self):
+    def test_parse_location_building_value(self) -> None:
         xml = """<?xml version="1.0" encoding="UTF-8"?>
 <ACORD xmlns="http://www.acord.org/standards/PC_Surety/ACORD">
   <Submission>
@@ -347,7 +348,7 @@ class TestEnhancedACORDParser:
 
 
 class TestAutoClassification:
-    def test_auto_classify_mixed_docs(self):
+    def test_auto_classify_mixed_docs(self) -> None:
         loss_run = SAMPLE_LOSS_RUN
         sov = SAMPLE_SOV
         xml = '<?xml version="1.0"?><ACORD xmlns="http://www.acord.org/standards/PC_Surety/ACORD"><Submission><NamedInsured><GeneralPartyInfo><NameInfo><CommercialName><Name>Test Corp</Name></CommercialName></NameInfo><Addr1>123 Main</Addr1><City>SF</City><StateProvCd>CA</StateProvCd><PostalCode>94105</PostalCode></GeneralPartyInfo></NamedInsured><Risk><NAICSCode>123456</NAICSCode></Risk></Submission></ACORD>'  # noqa: E501
@@ -360,6 +361,7 @@ class TestAutoClassification:
         )
 
         assert bundle.structured is not None
+        assert bundle.structured.named_insured is not None
         assert bundle.structured.named_insured.legal_name == "Test Corp"
 
         loss_run_subs = [u for u in bundle.unstructured if u.document_type == "loss_run"]
@@ -367,7 +369,7 @@ class TestAutoClassification:
         assert len(loss_run_subs) >= 1
         assert len(sov_subs) >= 1
 
-    def test_auto_classify_json_only(self):
+    def test_auto_classify_json_only(self) -> None:
         loader = SubmissionLoader()
         bundle = loader.load_bundle(
             raw_docs=[SAMPLE_JSON],
@@ -375,10 +377,11 @@ class TestAutoClassification:
             bundle_id="test-json-only",
         )
         assert bundle.structured is not None
+        assert bundle.structured.named_insured is not None
         assert bundle.structured.source == "broker_api_json"
         assert bundle.structured.named_insured.legal_name == "Pacific Coast Distributors, Inc."
 
-    def test_auto_classify_no_structured(self):
+    def test_auto_classify_no_structured(self) -> None:
         loader = SubmissionLoader()
         bundle = loader.load_bundle(
             raw_docs=["Just some random text notes"],
@@ -390,17 +393,18 @@ class TestAutoClassification:
 
 
 class TestLoaderNewInputTypes:
-    def test_loader_json_payload(self):
+    def test_loader_json_payload(self) -> None:
         loader = SubmissionLoader()
         bundle = loader.load_bundle(
             json_payload=SAMPLE_JSON,
             bundle_id="test-json-loader",
         )
         assert bundle.structured is not None
+        assert bundle.structured.named_insured is not None
         assert bundle.structured.source == "broker_api_json"
         assert bundle.structured.named_insured.legal_name == "Pacific Coast Distributors, Inc."
 
-    def test_loader_loss_run(self):
+    def test_loader_loss_run(self) -> None:
         loader = SubmissionLoader()
         bundle = loader.load_bundle(
             loss_run=SAMPLE_LOSS_RUN,
@@ -409,7 +413,7 @@ class TestLoaderNewInputTypes:
         loss_run_subs = [u for u in bundle.unstructured if u.document_type == "loss_run"]
         assert len(loss_run_subs) == 1
 
-    def test_loader_sov(self):
+    def test_loader_sov(self) -> None:
         loader = SubmissionLoader()
         bundle = loader.load_bundle(
             schedule_of_values=SAMPLE_SOV,
@@ -417,3 +421,4 @@ class TestLoaderNewInputTypes:
         )
         sov_subs = [u for u in bundle.unstructured if u.document_type == "schedule_of_values"]
         assert len(sov_subs) == 1
+

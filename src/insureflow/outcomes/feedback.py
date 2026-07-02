@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from typing import Any
 from uuid import uuid4
 
 from insureflow.models.agents import UnderwritingMemo
@@ -91,7 +92,7 @@ class FeedbackEngine:
         self.store.save_experience(exp)
         return exp
 
-    def calibration_summary(self, org_id: str = "default") -> dict:
+    def calibration_summary(self, org_id: str = "default") -> dict[str, Any]:
         experiences = self.store.list_experiences(org_id)
         if not experiences:
             return {"org_id": org_id, "sample_size": 0, "avg_loss_ratio": 0.0}

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import Optional
+from typing import Any, Optional
 from uuid import uuid4
 
 from insureflow.outcomes.override import (
@@ -132,7 +132,7 @@ class OverrideAnalyticsEngine:
 
     def _detect_patterns(self) -> None:
         """Analyze existing overrides and group into patterns."""
-        patterns: dict[str, dict] = {}
+        patterns: dict[str, dict[str, Any]] = {}
 
         for o in self._overrides.values():
             if not o.decision_changed:

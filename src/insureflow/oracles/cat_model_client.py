@@ -38,7 +38,7 @@ class CATExposureResult:
             "wildfire": self.wildfire_risk_score,
             "flood": self.flood_risk_score,
         }
-        return max(scores, key=scores.get)
+        return max(scores, key=lambda k: scores[k])
 
     @property
     def risk_band(self) -> str:

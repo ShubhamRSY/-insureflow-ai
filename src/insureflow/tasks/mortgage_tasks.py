@@ -6,14 +6,14 @@ from uuid import uuid4
 from insureflow.tasks.celery_app import celery_app
 
 
-@celery_app.task(
+@celery_app.task(  # type: ignore[misc]
     bind=True,
     name="insureflow.tasks.mortgage_tasks.run_mortgage_pipeline",
     max_retries=3,
     default_retry_delay=10,
 )
 def run_mortgage_pipeline(
-    self,
+    self: Any,
     documents_data: list[dict[str, str]],
     bundle_id: str | None = None,
     product_line: str = "residential_mortgage",
@@ -49,12 +49,12 @@ def _persist_celery_job(job_id: str, org_id: str, payload: dict[str, Any], task_
     )
 
 
-@celery_app.task(
+@celery_app.task(  # type: ignore[misc]
     bind=True,
     name="insureflow.tasks.mortgage_tasks.run_mortgage_directory",
 )
 def run_mortgage_directory(
-    self,
+    self: Any,
     directory: str,
     bundle_id: str | None = None,
     product_line: str | None = None,
@@ -82,12 +82,12 @@ def run_mortgage_directory(
         raise
 
 
-@celery_app.task(
+@celery_app.task(  # type: ignore[misc]
     bind=True,
     name="insureflow.tasks.mortgage_tasks.run_mortgage_per_borrower",
 )
 def run_mortgage_per_borrower(
-    self,
+    self: Any,
     directory: str,
     product_line: str | None = None,
     use_llm: bool = True,
@@ -104,13 +104,13 @@ def run_mortgage_per_borrower(
     return result
 
 
-@celery_app.task(
+@celery_app.task(  # type: ignore[misc]
     bind=True,
     name="insureflow.tasks.mortgage_tasks.run_mortgage_langgraph",
     max_retries=2,
 )
 def run_mortgage_langgraph(
-    self,
+    self: Any,
     documents_data: list[dict[str, str]],
     bundle_id: str | None = None,
 ) -> dict[str, Any]:

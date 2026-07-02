@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date
+from typing import Any
 
 from insureflow.agents.compliance_agent import ComplianceAgent
 from insureflow.agents.fraud_detection_agent import FraudDetectionAgent
@@ -11,6 +12,7 @@ from insureflow.agents.tools import UnderwritingTools
 from insureflow.agents.uw_decision_agent import UWDecisionAgent
 from insureflow.models.agents import (
     AgentResult,
+    AgentType,
     Finding,
     RiskSeverity,
     UWDecision,
@@ -33,12 +35,12 @@ from insureflow.models.submissions import (
 
 
 def _make_bundle(
-    claims: list | None = None,
-    coverages: list | None = None,
-    locations: list | None = None,
-    risk_profile: dict | None = None,
-    sovs: list | None = None,
-    structured_claims: list | None = None,
+    claims: list[Any] | None = None,
+    coverages: list[Any] | None = None,
+    locations: list[Any] | None = None,
+    risk_profile: dict[str, Any] | None = None,
+    sovs: list[Any] | None = None,
+    structured_claims: list[Any] | None = None,
     insured_name: str = "Test Corp",
     loss_run: LossRunData | None = None,
     credit_rating: str | None = None,
@@ -71,12 +73,12 @@ def _make_bundle(
 
 
 class TestUnderwritingTools:
-    def test_loss_ratio(self):
+    def test_loss_ratio(self) -> None:
         assert UnderwritingTools.loss_ratio(50_000, 100_000) == 0.5
         assert UnderwritingTools.loss_ratio(0, 100_000) == 0.0
         assert UnderwritingTools.loss_ratio(50_000, 0) == 0.0
 
-    def test_claim_frequency(self):
+    def test_claim_frequency(self) -> None:
         claims = [
             ClaimRecord(
                 claim_id="C1",
@@ -89,7 +91,7 @@ class TestUnderwritingTools:
         assert UnderwritingTools.claim_frequency(claims, 5.0) == 0.2
         assert UnderwritingTools.claim_frequency([], 5.0) == 0.0
 
-    def test_average_severity(self):
+    def test_average_severity(self) -> None:
         claims = [
             ClaimRecord(
                 claim_id="C1",
@@ -108,7 +110,7 @@ class TestUnderwritingTools:
         ]
         assert UnderwritingTools.average_severity(claims) == 200_000.0
 
-    def test_large_loss_ratio(self):
+    def test_large_loss_ratio(self) -> None:
         claims = [
             ClaimRecord(
                 claim_id="C1",
@@ -127,7 +129,7 @@ class TestUnderwritingTools:
         ]
         assert UnderwritingTools.large_loss_ratio(claims) == 0.5
 
-    def test_open_claim_ratio(self):
+    def test_open_claim_ratio(self) -> None:
         claims = [
             ClaimRecord(
                 claim_id="C1",
@@ -148,7 +150,7 @@ class TestUnderwritingTools:
         ]
         assert UnderwritingTools.open_claim_ratio(claims) == 0.5
 
-    def test_litigation_ratio(self):
+    def test_litigation_ratio(self) -> None:
         claims = [
             ClaimRecord(
                 claim_id="C1",
@@ -169,25 +171,25 @@ class TestUnderwritingTools:
         ]
         assert UnderwritingTools.litigation_ratio(claims) == 0.5
 
-    def test_protection_class_risk(self):
+    def test_protection_class_risk(self) -> None:
         assert UnderwritingTools.protection_class_risk(3) == RiskSeverity.LOW
         assert UnderwritingTools.protection_class_risk(5) == RiskSeverity.MODERATE
         assert UnderwritingTools.protection_class_risk(7) == RiskSeverity.HIGH
         assert UnderwritingTools.protection_class_risk(9) == RiskSeverity.CRITICAL
         assert UnderwritingTools.protection_class_risk(None) == RiskSeverity.MODERATE
 
-    def test_sprinkler_risk(self):
+    def test_sprinkler_risk(self) -> None:
         assert UnderwritingTools.sprinkler_risk(True) == RiskSeverity.LOW
         assert UnderwritingTools.sprinkler_risk(False) == RiskSeverity.HIGH
         assert UnderwritingTools.sprinkler_risk(None) == RiskSeverity.MODERATE
 
-    def test_year_built_risk(self):
+    def test_year_built_risk(self) -> None:
         assert UnderwritingTools.year_built_risk(2020) == RiskSeverity.LOW
         assert UnderwritingTools.year_built_risk(2000) == RiskSeverity.MODERATE
         assert UnderwritingTools.year_built_risk(1980) == RiskSeverity.HIGH
         assert UnderwritingTools.year_built_risk(1950) == RiskSeverity.CRITICAL
 
-    def test_total_insurable_value(self):
+    def test_total_insurable_value(self) -> None:
         locs = [
             LocationData(
                 address="A",
@@ -202,7 +204,7 @@ class TestUnderwritingTools:
         ]
         assert UnderwritingTools.total_insurable_value(locs) == 3_750_000
 
-    def test_find_non_disclosed_losses(self):
+    def test_find_non_disclosed_losses(self) -> None:
         claims = [
             ClaimRecord(
                 claim_id="C1",
@@ -224,7 +226,7 @@ class TestUnderwritingTools:
         assert len(nd) == 1
         assert nd[0].claim_id == "C2"
 
-    def test_assess_overall_severity(self):
+    def test_assess_overall_severity(self) -> None:
         assert UnderwritingTools.assess_overall_severity([]) == RiskSeverity.LOW
         findings = [Finding(title="t", description="d", severity=RiskSeverity.HIGH)]
         assert UnderwritingTools.assess_overall_severity(findings) == RiskSeverity.HIGH
@@ -233,7 +235,7 @@ class TestUnderwritingTools:
 
 
 class TestRiskAnalystAgent:
-    def test_low_risk_construction(self):
+    def test_low_risk_construction(self) -> None:
         bundle = _make_bundle(
             risk_profile={"construction_type": "steel", "sprinklered": True, "protection_class": 3},
             locations=[
@@ -254,7 +256,7 @@ class TestRiskAnalystAgent:
         sevs = [f.severity for f in result.findings]
         assert RiskSeverity.CRITICAL not in sevs
 
-    def test_high_risk_construction(self):
+    def test_high_risk_construction(self) -> None:
         bundle = _make_bundle(
             risk_profile={
                 "construction_type": "wood frame",
@@ -268,7 +270,7 @@ class TestRiskAnalystAgent:
         sevs = [f.severity for f in result.findings]
         assert RiskSeverity.HIGH in sevs
 
-    def test_aging_building(self):
+    def test_aging_building(self) -> None:
         bundle = _make_bundle(
             risk_profile={},
             locations=[LocationData(address="Old", city="C", state="S", zip_code="Z", year_built=1950)],
@@ -277,14 +279,14 @@ class TestRiskAnalystAgent:
         result = agent.run(bundle)
         assert any("Aging" in f.title for f in result.findings)
 
-    def test_no_risk_profile(self):
+    def test_no_risk_profile(self) -> None:
         bundle = _make_bundle()
         bundle.structured = None
         agent = RiskAnalystAgent()
         result = agent.run(bundle)
         assert result.success
 
-    def test_credit_rating_low(self):
+    def test_credit_rating_low(self) -> None:
         bundle = _make_bundle(credit_rating="750")
         agent = RiskAnalystAgent()
         result = agent.run(bundle)
@@ -292,7 +294,7 @@ class TestRiskAnalystAgent:
         assert len(findings) == 1
         assert findings[0].severity == RiskSeverity.LOW
 
-    def test_credit_rating_critical(self):
+    def test_credit_rating_critical(self) -> None:
         bundle = _make_bundle(credit_rating="D")
         agent = RiskAnalystAgent()
         result = agent.run(bundle)
@@ -300,14 +302,14 @@ class TestRiskAnalystAgent:
         assert len(findings) == 1
         assert findings[0].severity == RiskSeverity.CRITICAL
 
-    def test_credit_rating_missing(self):
+    def test_credit_rating_missing(self) -> None:
         bundle = _make_bundle()
         agent = RiskAnalystAgent()
         result = agent.run(bundle)
         findings = [f for f in result.findings if f.category == "credit"]
         assert len(findings) == 0
 
-    def test_credit_rating_numeric_moderate(self):
+    def test_credit_rating_numeric_moderate(self) -> None:
         bundle = _make_bundle(credit_rating="680")
         agent = RiskAnalystAgent()
         result = agent.run(bundle)
@@ -315,7 +317,7 @@ class TestRiskAnalystAgent:
         assert len(findings) == 1
         assert findings[0].severity == RiskSeverity.MODERATE
 
-    def test_credit_rating_numeric_high(self):
+    def test_credit_rating_numeric_high(self) -> None:
         bundle = _make_bundle(credit_rating="580")
         agent = RiskAnalystAgent()
         result = agent.run(bundle)
@@ -325,14 +327,14 @@ class TestRiskAnalystAgent:
 
 
 class TestLossRunAnalystAgent:
-    def test_no_loss_run(self):
+    def test_no_loss_run(self) -> None:
         bundle = _make_bundle()
         bundle.structured = None
         agent = LossRunAnalystAgent()
         result = agent.run(bundle)
         assert any("No loss run" in f.title for f in result.findings)
 
-    def test_high_frequency(self):
+    def test_high_frequency(self) -> None:
         from datetime import timedelta
 
         base = date(2022, 1, 1)
@@ -351,7 +353,7 @@ class TestLossRunAnalystAgent:
         result = agent.run(bundle)
         assert any("High claim frequency" in f.title for f in result.findings)
 
-    def test_high_severity(self):
+    def test_high_severity(self) -> None:
         claims = [
             ClaimRecord(
                 claim_id="C1",
@@ -366,7 +368,7 @@ class TestLossRunAnalystAgent:
         result = agent.run(bundle)
         assert any("High average claim severity" in f.title for f in result.findings)
 
-    def test_large_loss_concentration(self):
+    def test_large_loss_concentration(self) -> None:
         claims = [
             ClaimRecord(
                 claim_id=f"C{i}",
@@ -382,7 +384,7 @@ class TestLossRunAnalystAgent:
         result = agent.run(bundle)
         assert any("Concentration" in f.title for f in result.findings)
 
-    def test_litigation_claim(self):
+    def test_litigation_claim(self) -> None:
         claims = [
             ClaimRecord(
                 claim_id="L1",
@@ -398,7 +400,7 @@ class TestLossRunAnalystAgent:
         result = agent.run(bundle)
         assert any("litigation" in f.title.lower() for f in result.findings)
 
-    def test_non_disclosed_notes(self):
+    def test_non_disclosed_notes(self) -> None:
         claims = [
             ClaimRecord(
                 claim_id="ND1",
@@ -414,7 +416,7 @@ class TestLossRunAnalystAgent:
         result = agent.run(bundle)
         assert any("non-disclosed" in f.title.lower() for f in result.findings)
 
-    def test_open_exposure(self):
+    def test_open_exposure(self) -> None:
         claims = [
             ClaimRecord(
                 claim_id="O1",
@@ -434,14 +436,14 @@ class TestLossRunAnalystAgent:
 
 
 class TestComplianceAgent:
-    def test_no_coverages(self):
+    def test_no_coverages(self) -> None:
         bundle = _make_bundle()
         bundle.structured = None
         agent = ComplianceAgent()
         result = agent.run(bundle)
         assert not result.success or any("No coverage" in f.title for f in result.findings)
 
-    def test_adequate_limits(self):
+    def test_adequate_limits(self) -> None:
         covs = [
             CoverageDetail(coverage_type="Property", limit_amount=10_000_000, deductible=10_000, premium=50_000),
         ]
@@ -463,7 +465,7 @@ class TestComplianceAgent:
         high_sev = [f for f in result.findings if f.severity == RiskSeverity.HIGH]
         assert len(high_sev) == 0
 
-    def test_inadequate_limits(self):
+    def test_inadequate_limits(self) -> None:
         covs = [
             CoverageDetail(coverage_type="Property", limit_amount=1_000_000, deductible=10_000, premium=50_000),
         ]
@@ -484,7 +486,7 @@ class TestComplianceAgent:
         result = agent.run(bundle)
         assert any("inadequate" in f.title.lower() for f in result.findings)
 
-    def test_high_deductible(self):
+    def test_high_deductible(self) -> None:
         covs = [
             CoverageDetail(coverage_type="Property", limit_amount=1_000_000, deductible=200_000, premium=50_000),
         ]
@@ -493,7 +495,7 @@ class TestComplianceAgent:
         result = agent.run(bundle)
         assert any("High" in f.title and "deductible" in f.title.lower() for f in result.findings)
 
-    def test_coverage_gaps(self):
+    def test_coverage_gaps(self) -> None:
         covs = [
             CoverageDetail(coverage_type="Property", limit_amount=1_000_000, deductible=10_000, premium=50_000),
         ]
@@ -502,7 +504,7 @@ class TestComplianceAgent:
         result = agent.run(bundle)
         assert any("coverage gaps" in f.title.lower() for f in result.findings)
 
-    def test_restrictive_sublimits(self):
+    def test_restrictive_sublimits(self) -> None:
         covs = [
             CoverageDetail(
                 coverage_type="Property",
@@ -517,7 +519,7 @@ class TestComplianceAgent:
         result = agent.run(bundle)
         assert any("sublimit" in f.title.lower() for f in result.findings)
 
-    def test_recommendation_built(self):
+    def test_recommendation_built(self) -> None:
         covs = [
             CoverageDetail(coverage_type="Property", limit_amount=100_000, deductible=10_000, premium=50_000),
         ]
@@ -534,7 +536,7 @@ class TestComplianceAgent:
 
 
 class TestFraudDetectionAgent:
-    def test_non_disclosed_claims(self):
+    def test_non_disclosed_claims(self) -> None:
         claims = [
             ClaimRecord(
                 claim_id="C1",
@@ -556,7 +558,7 @@ class TestFraudDetectionAgent:
         result = agent.run(bundle)
         assert any("Non-disclosed" in f.title for f in result.findings)
 
-    def no_disclosed_flag_in_notes(self):
+    def no_disclosed_flag_in_notes(self) -> None:
         claims = [
             ClaimRecord(
                 claim_id="ND1",
@@ -572,7 +574,7 @@ class TestFraudDetectionAgent:
         result = agent.run(bundle)
         assert any("non-disclosure" in f.title.lower() or "not disclosed" in f.description.lower() for f in result.findings)
 
-    def test_valuation_discrepancy(self):
+    def test_valuation_discrepancy(self) -> None:
         bundle = _make_bundle(
             locations=[
                 LocationData(
@@ -597,7 +599,7 @@ class TestFraudDetectionAgent:
         result = agent.run(bundle)
         assert any("valuation" in f.title.lower() for f in result.findings)
 
-    def test_entity_inconsistency(self):
+    def test_entity_inconsistency(self) -> None:
         bundle = _make_bundle(insured_name="Test Corp")
         from insureflow.models.submissions import (
             ExtractedField,
@@ -623,7 +625,7 @@ class TestFraudDetectionAgent:
         result = agent.run(bundle)
         assert any("Inconsistent entity" in f.title for f in result.findings)
 
-    def test_recent_loss_cluster(self):
+    def test_recent_loss_cluster(self) -> None:
         from datetime import timedelta
 
         base = date(2026, 1, 1)
@@ -644,10 +646,10 @@ class TestFraudDetectionAgent:
 
 
 class TestUWDecisionAgent:
-    def test_accept_decision(self):
+    def test_accept_decision(self) -> None:
         UWDecisionAgent()
         result = AgentResult(
-            agent_type="risk_analyst",
+            agent_type=AgentType.RISK_ANALYST,
             agent_name="RiskAnalystAgent",
             findings=[
                 Finding(
@@ -663,10 +665,10 @@ class TestUWDecisionAgent:
         assert uw_result.recommendation is not None
         assert uw_result.recommendation.action == "accept"
 
-    def test_refer_decision(self):
+    def test_refer_decision(self) -> None:
         agent = UWDecisionAgent()
         result = AgentResult(
-            agent_type="risk_analyst",
+            agent_type=AgentType.RISK_ANALYST,
             agent_name="RiskAnalystAgent",
             findings=[
                 Finding(
@@ -681,10 +683,10 @@ class TestUWDecisionAgent:
         assert uw_result.recommendation is not None
         assert uw_result.recommendation.action == "refer"
 
-    def test_decline_decision(self):
+    def test_decline_decision(self) -> None:
         agent = UWDecisionAgent()
         result = AgentResult(
-            agent_type="fraud_detection",
+            agent_type=AgentType.FRAUD_DETECTION,
             agent_name="FraudDetectionAgent",
             findings=[
                 Finding(
@@ -699,11 +701,11 @@ class TestUWDecisionAgent:
         assert uw_result.recommendation is not None
         assert uw_result.recommendation.action == "decline"
 
-    def test_produce_memo(self):
+    def test_produce_memo(self) -> None:
         agent = UWDecisionAgent()
         agent_results = [
             AgentResult(
-                agent_type="risk_analyst",
+                agent_type=AgentType.RISK_ANALYST,
                 agent_name="RiskAnalystAgent",
                 findings=[
                     Finding(
@@ -716,7 +718,7 @@ class TestUWDecisionAgent:
             ),
         ]
         uw_result = AgentResult(
-            agent_type="uw_decision",
+            agent_type=AgentType.UW_DECISION,
             agent_name="UWDecisionAgent",
             findings=[],
             recommendation=agent._build_recommendation(),
@@ -728,7 +730,7 @@ class TestUWDecisionAgent:
 
 
 class TestReActAgent:
-    def test_fallback_to_deterministic_no_llm_key(self):
+    def test_fallback_to_deterministic_no_llm_key(self) -> None:
         bundle = _make_bundle(
             risk_profile={"construction_type": "steel", "sprinklered": True},
             coverages=[
@@ -756,7 +758,7 @@ class TestReActAgent:
         assert result.success
         assert len(result.findings) >= 0
 
-    def test_tool_registry(self):
+    def test_tool_registry(self) -> None:
         bundle = _make_bundle(insured_name="Test Corp")
         from insureflow.agents.react_tools import ToolRegistry
 
@@ -771,7 +773,7 @@ class TestReActAgent:
         result = reg.call("get_named_insured")
         assert result == "Test Corp"
 
-    def test_tool_registry_unknown_tool(self):
+    def test_tool_registry_unknown_tool(self) -> None:
         bundle = _make_bundle()
         from insureflow.agents.react_tools import ToolRegistry
 
@@ -779,7 +781,7 @@ class TestReActAgent:
         result = reg.call("nonexistent_tool")
         assert "error" in result
 
-    def test_tool_get_risk_profile(self):
+    def test_tool_get_risk_profile(self) -> None:
         bundle = _make_bundle(risk_profile={"construction_type": "steel", "sprinklered": True})
         from insureflow.agents.react_tools import ToolRegistry
 
@@ -788,7 +790,7 @@ class TestReActAgent:
         assert result is not None
         assert result.get("construction_type") == "steel"
 
-    def test_tool_claim_frequency(self):
+    def test_tool_claim_frequency(self) -> None:
         claims = [
             ClaimRecord(
                 claim_id="C1",
@@ -812,7 +814,7 @@ class TestReActAgent:
         result = reg.call("compute_claim_frequency")
         assert result["frequency"] == 0.4
 
-    def test_tool_large_loss_ratio(self):
+    def test_tool_large_loss_ratio(self) -> None:
         claims = [
             ClaimRecord(
                 claim_id="C1",
@@ -836,7 +838,7 @@ class TestReActAgent:
         result = reg.call("compute_large_loss_ratio")
         assert result["large_loss_ratio"] == 0.5
 
-    def test_tool_non_disclosed(self):
+    def test_tool_non_disclosed(self) -> None:
         claims = [
             ClaimRecord(
                 claim_id="C1",
@@ -853,7 +855,7 @@ class TestReActAgent:
         result = reg.call("check_non_disclosed_claims")
         assert result["non_disclosed_count"] == 1
 
-    def test_tool_sov_vs_location(self):
+    def test_tool_sov_vs_location(self) -> None:
         bundle = _make_bundle(
             locations=[LocationData(address="A", city="C", state="S", zip_code="Z", building_value=1_000_000)],
             sovs=[
@@ -871,7 +873,7 @@ class TestReActAgent:
         result = reg.call("check_sov_vs_location_valuation")
         assert result["ratio"] == 0.5
 
-    def test_tool_coverage_adequacy(self):
+    def test_tool_coverage_adequacy(self) -> None:
         covs = [
             CoverageDetail(coverage_type="Property", limit_amount=1_000_000, deductible=10_000, premium=25_000),
         ]
@@ -887,7 +889,7 @@ class TestReActAgent:
         result = reg.call("check_coverage_adequacy", coverage_type="Property")
         assert result["status"] == "inadequate"
 
-    def test_react_parse_llm_final_answer(self):
+    def test_react_parse_llm_final_answer(self) -> None:
         from insureflow.agents.react_agent import ReActAgent
 
         agent = ReActAgent()
@@ -897,14 +899,14 @@ class TestReActAgent:
         assert parsed["action"] == "final_answer"
         assert len(parsed["findings"]) == 1
 
-    def test_react_parse_llm_with_code_block(self):
+    def test_react_parse_llm_with_code_block(self) -> None:
         from insureflow.agents.react_agent import ReActAgent
 
         agent = ReActAgent()
         parsed = agent._parse_llm_output('```json\n{"thought": "test", "action": "final_answer", "findings": [], "summary": "ok"}\n```')
         assert parsed["action"] == "final_answer"
 
-    def test_react_parse_llm_malformed(self):
+    def test_react_parse_llm_malformed(self) -> None:
         from insureflow.agents.react_agent import ReActAgent
 
         agent = ReActAgent()
@@ -913,7 +915,7 @@ class TestReActAgent:
 
 
 class TestSupervisorAgent:
-    def test_full_analysis(self):
+    def test_full_analysis(self) -> None:
         claims = [
             ClaimRecord(
                 claim_id="C1",
@@ -990,7 +992,7 @@ class TestSupervisorAgent:
         total_findings = sum(len(r.findings) for r in memo.agent_results.values())
         assert total_findings > 0
 
-    def test_structured_output(self):
+    def test_structured_output(self) -> None:
         bundle = _make_bundle()
         supervisor = SupervisorAgent()
         output = supervisor.analyze_submission_structured(bundle)
@@ -999,7 +1001,7 @@ class TestSupervisorAgent:
         assert "key_findings" in output
         assert "agent_results" in output
 
-    def test_parallel_execution(self):
+    def test_parallel_execution(self) -> None:
         bundle = _make_bundle(
             claims=[
                 ClaimRecord(

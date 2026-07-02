@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from insureflow.models.mortgage import (
     AssetSummary,
     BorrowerProfile,
@@ -201,7 +203,7 @@ class MortgageReconciliationEngine:
 
     def _build_assets(self, bundle: MortgageBundle) -> AssetSummary | None:
         total = 0.0
-        accounts: list[dict] = []
+        accounts: list[dict[str, Any]] = []
         gift_total = 0.0
 
         for stmt in bundle.documents_by_type(MortgageDocumentType.BANK_STATEMENT):

@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional, TypedDict
+from typing import Any, Optional, TypedDict, cast
 from uuid import uuid4
 
+from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, StateGraph
 
@@ -78,7 +79,7 @@ def default_mortgage_state(**overrides: Any) -> dict[str, Any]:
     }
 
 
-def ingest_and_classify(state: dict[str, Any]) -> dict[str, Any]:
+def ingest_and_classify(state: MortgagePipelineState) -> dict[str, Any]:
     bundle_id = state.get("bundle_id") or f"mortgage-{uuid4().hex[:12]}"
     raw_docs: list[dict[str, str]] = state.get("raw_documents", [])
     product_line_str = state.get("product_line", ProductLine.RESIDENTIAL_MORTGAGE.value)
@@ -106,7 +107,7 @@ def ingest_and_classify(state: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def extract_fields(state: dict[str, Any]) -> dict[str, Any]:
+def extract_fields(state: MortgagePipelineState) -> dict[str, Any]:
     bundle_dict = state.get("bundle")
     if not bundle_dict:
         return {"errors": ["No bundle to extract fields from"]}
@@ -122,7 +123,7 @@ def extract_fields(state: dict[str, Any]) -> dict[str, Any]:
     return {"bundle": bundle.model_dump()}
 
 
-def build_summaries_and_reconcile(state: dict[str, Any]) -> dict[str, Any]:
+def build_summaries_and_reconcile(state: MortgagePipelineState) -> dict[str, Any]:
     bundle_dict = state.get("bundle")
     if not bundle_dict:
         return {"errors": ["No bundle to reconcile"]}
@@ -138,7 +139,7 @@ def build_summaries_and_reconcile(state: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def run_compliance(state: dict[str, Any]) -> dict[str, Any]:
+def run_compliance(state: MortgagePipelineState) -> dict[str, Any]:
     bundle_dict = state.get("bundle")
     if not bundle_dict:
         return {"errors": ["No bundle for compliance check"]}
@@ -153,42 +154,42 @@ def run_compliance(state: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def run_income_agent(state: dict[str, Any]) -> dict[str, Any]:
+def run_income_agent(state: MortgagePipelineState) -> dict[str, Any]:
     bundle = MortgageBundle(**state["bundle"])
     agent = MortgageIncomeAgent()
     result = agent.analyze(bundle)
     return {"income_analysis": result.model_dump()}
 
 
-def run_credit_agent(state: dict[str, Any]) -> dict[str, Any]:
+def run_credit_agent(state: MortgagePipelineState) -> dict[str, Any]:
     bundle = MortgageBundle(**state["bundle"])
     agent = MortgageCreditAgent()
     result = agent.analyze(bundle)
     return {"credit_analysis": result.model_dump()}
 
 
-def run_asset_agent(state: dict[str, Any]) -> dict[str, Any]:
+def run_asset_agent(state: MortgagePipelineState) -> dict[str, Any]:
     bundle = MortgageBundle(**state["bundle"])
     agent = MortgageAssetAgent()
     result = agent.analyze(bundle)
     return {"asset_analysis": result.model_dump()}
 
 
-def run_collateral_agent(state: dict[str, Any]) -> dict[str, Any]:
+def run_collateral_agent(state: MortgagePipelineState) -> dict[str, Any]:
     bundle = MortgageBundle(**state["bundle"])
     agent = MortgageCollateralAgent()
     result = agent.analyze(bundle)
     return {"collateral_analysis": result.model_dump()}
 
 
-def run_fraud_detection(state: dict[str, Any]) -> dict[str, Any]:
+def run_fraud_detection(state: MortgagePipelineState) -> dict[str, Any]:
     bundle = MortgageBundle(**state["bundle"])
     agent = MortgageFraudDetectionAgent()
     result = agent.analyze(bundle)
     return {"fraud_analysis": result.model_dump()}
 
 
-def decide(state: dict[str, Any]) -> dict[str, Any]:
+def decide(state: MortgagePipelineState) -> dict[str, Any]:
     bundle = MortgageBundle(**state["bundle"])
     agent = MortgageDecisionAgent()
 
@@ -199,7 +200,7 @@ def decide(state: dict[str, Any]) -> dict[str, Any]:
         "collateral_analysis",
         "fraud_analysis",
     )
-    agent_results = [MortgageAgentResult(**state[k]) for k in result_keys if state.get(k)]
+    agent_results = [MortgageAgentResult(**cast(dict[str, Any], state).get(k, {})) for k in result_keys if state.get(k)]
     memo = agent.decide(bundle, agent_results)
 
     human_review_reasons: list[str] = []
@@ -219,17 +220,17 @@ def decide(state: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def check_human_review(state: dict[str, Any]) -> str:
+def check_human_review(state: MortgagePipelineState) -> str:
     if state.get("human_review_needed", False):
         return "human_review"
     return "audit"
 
 
-def human_review(state: dict[str, Any]) -> dict[str, Any]:
+def human_review(state: MortgagePipelineState) -> dict[str, Any]:
     return {"human_review_approved": True}
 
 
-def audit(state: dict[str, Any]) -> dict[str, Any]:
+def audit(state: MortgagePipelineState) -> dict[str, Any]:
     bundle_id = state.get("bundle_id", "")
     bundle_dict = state.get("bundle")
     memo_dict = state.get("memo")
@@ -255,7 +256,7 @@ class MortgagePipelineGraph:
         self.graph = self._build()
         self.compiled = self.graph.compile(checkpointer=self.checkpointer)
 
-    def _build(self) -> StateGraph:
+    def _build(self) -> StateGraph[MortgagePipelineState]:
         graph = StateGraph(MortgagePipelineState)
 
         graph.add_node("ingest_and_classify", ingest_and_classify)
@@ -304,16 +305,16 @@ class MortgagePipelineGraph:
         return graph
 
     def run(self, initial_state: dict[str, Any]) -> dict[str, Any]:
-        config = {"configurable": {"thread_id": initial_state.get("bundle_id", "default")}}
-        result = self.compiled.invoke(initial_state, config=config)
-        return result
+        config: RunnableConfig = {"configurable": {"thread_id": initial_state.get("bundle_id", "default")}}
+        result: Any = self.compiled.invoke(initial_state, config=config)  # type: ignore[arg-type]
+        return cast(dict[str, Any], result)
 
     def get_state(self, thread_id: str) -> Any:
-        config = {"configurable": {"thread_id": thread_id}}
+        config: RunnableConfig = {"configurable": {"thread_id": thread_id}}
         return self.compiled.get_state(config)
 
     def update_state(self, thread_id: str, values: dict[str, Any]) -> None:
-        config = {"configurable": {"thread_id": thread_id}}
+        config: RunnableConfig = {"configurable": {"thread_id": thread_id}}
         self.compiled.update_state(config, values)
 
 

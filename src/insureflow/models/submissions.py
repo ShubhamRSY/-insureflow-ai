@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import date, datetime, timezone
 from enum import Enum
-from typing import Optional
+from typing import Any, Optional
 
 from pydantic import BaseModel, Field
 
@@ -132,7 +132,7 @@ class FinancialData(BaseModel):
     total_asset_value: Optional[float] = None
     annual_revenue: Optional[float] = None
     payroll: Optional[float] = None
-    prior_losses: list[dict] = Field(default_factory=list)
+    prior_losses: list[dict[str, Any]] = Field(default_factory=list)
     loss_run: Optional[LossRunData] = None
     credit_rating: Optional[str] = None
 

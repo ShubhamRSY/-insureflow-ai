@@ -4,7 +4,7 @@ import hashlib
 import json
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from insureflow.registry.models import (
     AgentLogicVersion,
@@ -62,7 +62,7 @@ class RegistryService:
 
     @staticmethod
     def _load_entry(path: Path) -> dict[str, Any]:
-        return json.loads(path.read_text(encoding="utf-8"))
+        return cast(dict[str, Any], json.loads(path.read_text(encoding="utf-8")))
 
     @staticmethod
     def _entry_from_dict(data: dict[str, Any]) -> RegistryEntry:
@@ -356,7 +356,7 @@ class RegistryService:
         created: list[RegistryEntry] = []
 
         for prompt_key, prompt_text in SYSTEM_PROMPTS.items():
-            entry = PromptVersion(
+            entry: RegistryEntry = PromptVersion(
                 component_type=ComponentType.PROMPT,
                 version_label="1.0.0",
                 status=RegistryEntryStatus.APPROVED,

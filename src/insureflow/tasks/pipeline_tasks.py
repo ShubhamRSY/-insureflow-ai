@@ -10,14 +10,14 @@ logger = logging.getLogger(__name__)
 INSURANCE_NS = "insurance"
 
 
-@celery_app.task(
+@celery_app.task(  # type: ignore[misc]
     bind=True,
     name="insureflow.tasks.pipeline_tasks.run_pipeline",
     max_retries=2,
     default_retry_delay=30,
     acks_late=True,
 )
-def run_pipeline(self, job_id: str, request_data: dict[str, Any], org_id: str) -> dict[str, Any]:
+def run_pipeline(self: Any, job_id: str, request_data: dict[str, Any], org_id: str) -> dict[str, Any]:
     from insureflow.storage.job_store import get_job_store
 
     job_store = get_job_store()
@@ -27,6 +27,7 @@ def run_pipeline(self, job_id: str, request_data: dict[str, Any], org_id: str) -
 
         req = SubmissionRequest(**request_data)
 
+        pipeline: Any
         if req.use_legacy_pipeline:
             from insureflow.pipeline import UnderwritingPipeline
 
@@ -40,7 +41,7 @@ def run_pipeline(self, job_id: str, request_data: dict[str, Any], org_id: str) -
         else:
             from insureflow.insurance.pipeline import InsurancePipeline
 
-            docs = [d.model_dump() for d in req.documents] if req.documents else None
+            docs = [{"filename": d.filename, "content": d.content} for d in req.documents] if req.documents else None
             pipeline = InsurancePipeline(org_id=org_id, use_llm=req.use_llm)
             result = pipeline.run(
                 acord_xml=req.acord_xml,

@@ -4,7 +4,7 @@ import json
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, cast
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +73,7 @@ class RedisJobStore(JobStore):
         raw = self.client.get(self._key(namespace, job_id, org_id))
         if not raw:
             return None
-        return json.loads(raw)
+        return cast(dict[str, Any], json.loads(raw))
 
     def delete(self, namespace: str, job_id: str, org_id: str = "default") -> bool:
         key = self._key(namespace, job_id, org_id)
@@ -82,7 +82,7 @@ class RedisJobStore(JobStore):
         return bool(removed)
 
     def list_ids(self, namespace: str, org_id: str = "default") -> list[str]:
-        return sorted(self.client.smembers(self._index_key(namespace, org_id)))
+        return sorted(cast(set[Any], self.client.smembers(self._index_key(namespace, org_id))))
 
 
 def get_job_store() -> JobStore:
@@ -94,9 +94,9 @@ def get_job_store() -> JobStore:
     if backend == "memory":
         return MemoryJobStore()
 
-    if backend == "redis" or (backend == "auto" and redis_url.startswith("redis")):
+    if backend == "redis" or (backend == "auto" and redis_url and redis_url.startswith("redis")):
         try:
-            store = RedisJobStore(redis_url)
+            store = RedisJobStore(redis_url or "")
             store.client.ping()
             logger.info("Using Redis job store at %s", redis_url)
             return store

@@ -12,7 +12,7 @@ from insureflow.oracles.ncci_codes import (
 
 
 class TestCLUEClient:
-    def test_query_by_name_marine(self):
+    def test_query_by_name_marine(self) -> None:
         client = CLUEClient()
         result = client.query_by_name_and_address("Pacific Marine Supply", "123 Harbor Blvd")
         assert result.query_completed
@@ -20,67 +20,70 @@ class TestCLUEClient:
         assert any("general_liability" in r.loss_type for r in result.records)
         assert any("property" in r.loss_type for r in result.records)
 
-    def test_query_by_name_construction(self):
+    def test_query_by_name_construction(self) -> None:
         client = CLUEClient()
         result = client.query_by_name_and_address("Veririsk Construction", "456 Jobsite Rd")
         assert result.total_claims_found >= 1
         assert any("workers_comp" in r.loss_type for r in result.records)
 
-    def test_query_by_name_clean(self):
+    def test_query_by_name_clean(self) -> None:
         client = CLUEClient()
         result = client.query_by_name_and_address("CleanCo Inc", "789 Main St")
         assert result.total_claims_found == 0
         assert "Clean" in result.summary
 
-    def test_query_by_tax_id(self):
+    def test_query_by_tax_id(self) -> None:
         client = CLUEClient()
         result = client.query_by_tax_id("12-3456789")
         assert result.query_completed
         assert isinstance(result.total_claims_found, int)
 
-    def test_litigation_detected(self):
+    def test_litigation_detected(self) -> None:
         client = CLUEClient()
         result = client.query_by_name_and_address("Pacific Marine Supply")
         assert result.has_prior_litigation or not result.has_prior_litigation
 
-    def test_live_mode_stub(self):
+    def test_live_mode_stub(self) -> None:
         client = CLUEClient(mode="live")
         result = client.query_by_name_and_address("Test Name")
         assert "not yet implemented" in result.error
 
-    def test_disabled(self):
+    def test_disabled(self) -> None:
         client = CLUEClient(api_key="", mode="simulated")
         result = client.query_by_name_and_address("")
         assert result.query_completed  # simulated mode always works
 
 
 class TestNCCIClient:
-    def test_query_marine(self):
+    def test_query_marine(self) -> None:
         client = NCCIClient()
         result = client.query_by_fein("98-7654321", "Pacific Marine Supply")
         assert any(m.class_code == "8380" for m in result.experience_mods)
         assert result.worst_mod is not None
         assert result.worst_mod.mod_factor == 1.12
 
-    def test_query_construction(self):
+    def test_query_construction(self) -> None:
         client = NCCIClient()
         result = client.query_by_fein("98-7654321", "Veririsk Construction")
         assert any(m.class_code == "5221" for m in result.experience_mods)
+        assert result.worst_mod is not None
         assert result.worst_mod.mod_factor == 1.35
 
-    def test_query_northwind(self):
+    def test_query_northwind(self) -> None:
         client = NCCIClient()
         result = client.query_by_fein("98-7654321", "Northwind Trading")
         assert any(m.class_code == "8810" for m in result.experience_mods)
+        assert result.worst_mod is not None
         assert result.worst_mod.mod_factor == 0.88
 
-    def test_query_fallback(self):
+    def test_query_fallback(self) -> None:
         client = NCCIClient()
         result = client.query_by_fein("00-0000000", "Some Unknown Co")
         assert any(m.class_code == "5555" for m in result.experience_mods)
+        assert result.worst_mod is not None
         assert result.worst_mod.mod_factor == 1.00
 
-    def test_risk_bans(self):
+    def test_risk_bans(self) -> None:
         NCCIClient()
         c = NCCIClient()
         result = c.query_by_fein("00-0000000", "Veririsk Construction")
@@ -89,86 +92,87 @@ class TestNCCIClient:
         assert mod.is_debit_mod
         assert not mod.is_credit_mod
 
-    def test_credit_mod(self):
+    def test_credit_mod(self) -> None:
         client = NCCIClient()
         result = client.query_by_fein("00-0000000", "Northwind Trading")
         mod = result.experience_mods[0]
         assert mod.is_credit_mod
         assert not mod.is_debit_mod
 
-    def test_live_mode_stub(self):
+    def test_live_mode_stub(self) -> None:
         client = NCCIClient(mode="live")
         result = client.query_by_fein("00-0000000", "Test")
         assert "not yet implemented" in result.error
 
 
 class TestAPlusClient:
-    def test_query_marine(self):
+    def test_query_marine(self) -> None:
         client = APlusClient()
         result = client.query_by_property("Pacific Marine Supply", "123 Harbor Blvd")
         assert result.query_completed
         assert result.total_claims_found >= 1
         assert any(r.claim_type == PropertyClaimType.WATER_DAMAGE for r in result.records)
 
-    def test_query_construction(self):
+    def test_query_construction(self) -> None:
         client = APlusClient()
         result = client.query_by_property("Veririsk Construction", "456 Industrial Dr")
         assert result.total_claims_found >= 2
         assert any(r.claim_type == PropertyClaimType.FIRE for r in result.records)
         assert any(r.claim_type == PropertyClaimType.THEFT for r in result.records)
 
-    def test_query_northwind(self):
+    def test_query_northwind(self) -> None:
         client = APlusClient()
         result = client.query_by_property("Northwind Trading", "789 Main St")
         assert result.total_claims_found >= 1
         assert any(r.claim_type == PropertyClaimType.HAIL for r in result.records)
 
-    def test_coastal_address_triggers_wind(self):
+    def test_coastal_address_triggers_wind(self) -> None:
         client = APlusClient()
         result = client.query_by_property("Coastal Properties Inc", "100 Beach Blvd")
         assert result.total_claims_found >= 1
         assert any(r.claim_type == PropertyClaimType.WIND for r in result.records)
 
-    def test_clean_property(self):
+    def test_clean_property(self) -> None:
         client = APlusClient()
         result = client.query_by_property("CleanCo Inc", "999 Main St")
         assert result.total_claims_found == 0
 
-    def test_repeated_property_claims_flag(self):
+    def test_repeated_property_claims_flag(self) -> None:
         client = APlusClient()
         result = client.query_by_property("Veririsk Construction", "456 Industrial Dr")
         assert result.has_repeated_property_claims
 
-    def test_summary(self):
+    def test_summary(self) -> None:
         client = APlusClient()
         result = client.query_by_property("Pacific Marine Supply")
         assert "A-PLUS" in result.summary or "property" in result.summary
 
-    def test_live_mode_stub(self):
+    def test_live_mode_stub(self) -> None:
         client = APlusClient(mode="live")
         result = client.query_by_property("Test")
         assert "not yet implemented" in result.error
 
 
 class TestNCCICodes:
-    def test_class_code_lookup(self):
+    def test_class_code_lookup(self) -> None:
         assert get_ncci_description("8810") == "Clerical Office"
         assert get_ncci_description("9999") == "Unknown classification"
 
-    def test_risk_levels(self):
+    def test_risk_levels(self) -> None:
         assert get_ncci_risk_level("8810") == "low"
         assert get_ncci_risk_level("5221") == "high"
         assert get_ncci_risk_level("5222") == "critical"
         assert get_ncci_risk_level("9999") == "moderate"
 
-    def test_high_risk_detection(self):
+    def test_high_risk_detection(self) -> None:
         assert not is_high_risk_ncci_class("8810")
         assert not is_high_risk_ncci_class("7720")
         assert is_high_risk_ncci_class("5221")
         assert is_high_risk_ncci_class("5222")
         assert is_high_risk_ncci_class("8391")
 
-    def test_all_codes_have_risk_levels(self):
+    def test_all_codes_have_risk_levels(self) -> None:
         for code, entry in NCCI_CLASS_CODES.items():
             assert entry.risk_level in ("low", "moderate", "high", "critical")
             assert entry.description
+

@@ -97,7 +97,7 @@ class E2ERunner:
         method: str,
         path: str,
         *,
-        json_body: dict | None = None,
+        json_body: dict[str, Any] | None = None,
         auth: bool = False,
         expected: int | tuple[int, ...] = 200,
     ) -> Any:
@@ -145,7 +145,7 @@ class E2ERunner:
         method: str,
         path: str,
         *,
-        json_body: dict | None = None,
+        json_body: dict[str, Any] | None = None,
         auth: bool = False,
         expected: int | tuple[int, ...] = 200,
     ) -> Any:

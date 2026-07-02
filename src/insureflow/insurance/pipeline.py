@@ -315,12 +315,12 @@ class InsurancePipeline:
         doc_analytics = DocumentAnalyticsEngine()
         doc_analytics.record(
             bundle_id=bid,
-            document_count=summary["document_count"],
+            document_count=summary.get("document_count", 0),  # type: ignore[arg-type]
             vertical="insurance",
             structured_count=1 if bundle.structured else 0,
             unstructured_count=len(bundle.unstructured),
-            human_review_required=summary.get("human_review_required", False),
-            decision=summary.get("ai_decision", ""),
+            human_review_required=summary.get("human_review_required", False),  # type: ignore[arg-type]
+            decision=summary.get("ai_decision", ""),  # type: ignore[arg-type]
             org_id=self.org_id,
         )
 

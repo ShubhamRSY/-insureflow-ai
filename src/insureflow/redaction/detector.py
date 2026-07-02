@@ -32,7 +32,7 @@ class PIISpan:
     score: float
 
 
-PATTERNS: dict[PIICategory, list[re.Pattern]] = {
+PATTERNS: dict[PIICategory, list[re.Pattern[str]]] = {
     PIICategory.SSN: [
         re.compile(r"\b\d{3}-\d{2}-\d{4}\b"),
     ],

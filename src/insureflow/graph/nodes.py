@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, cast
 from uuid import uuid4
 
 from insureflow.audit.logger import AuditLogger
 from insureflow.audit.store import AuditStore
-from insureflow.graph.state import default_state
+from insureflow.graph.state import PipelineState, default_state
 from insureflow.ingestion.classifier import DocumentClassifier
 from insureflow.ingestion.loader import SubmissionLoader
 from insureflow.llm.client import LLMClient
@@ -24,7 +24,7 @@ def create_initial_state(**kwargs: Any) -> dict[str, Any]:
     return default_state(**kwargs)
 
 
-def ingest_docs(state: dict[str, Any]) -> dict[str, Any]:
+def ingest_docs(state: PipelineState) -> dict[str, Any]:
     _log_state("ingest_docs", state)
     bundle_id = state.get("bundle_id") or f"graph-{uuid4().hex[:12]}"
     loader = SubmissionLoader()
@@ -49,7 +49,7 @@ def ingest_docs(state: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def classify_docs(state: dict[str, Any]) -> dict[str, Any]:
+def classify_docs(state: PipelineState) -> dict[str, Any]:
     bundle: SubmissionBundle | None = state.get("bundle")
     _log_state("classify_docs", state)
 
@@ -113,18 +113,18 @@ def _doc_type_to_route(doc_type: DocumentType) -> str:
     return mapping.get(doc_type, "")
 
 
-def route_by_classification(state: dict[str, Any]) -> str:
+def route_by_classification(state: PipelineState) -> str:
     routes = state.get("classification_routes", [])
     _log_state("route_by_classification", state)
     if not routes:
         return "parse_supplemental"
     remaining = [r for r in routes if not state.get(f"parsed_{r.replace('parse_', '')}")]
     if remaining:
-        return remaining[0]
+        return str(remaining[0])
     return "merge_structured"
 
 
-def parse_acord(state: dict[str, Any]) -> dict[str, Any]:
+def parse_acord(state: PipelineState) -> dict[str, Any]:
     _log_state("parse_acord", state)
     bundle: SubmissionBundle = state["bundle"]
     bundle_id = state["bundle_id"]
@@ -173,7 +173,7 @@ def parse_acord(state: dict[str, Any]) -> dict[str, Any]:
     return {"bundle": bundle, "parsed_acord": True}
 
 
-def parse_json(state: dict[str, Any]) -> dict[str, Any]:
+def parse_json(state: PipelineState) -> dict[str, Any]:
     _log_state("parse_json", state)
     bundle: SubmissionBundle = state["bundle"]
     bundle_id = state["bundle_id"]
@@ -197,10 +197,10 @@ def parse_json(state: dict[str, Any]) -> dict[str, Any]:
         )
         return {"parsed_json": True}
 
-    from insureflow.ingestion.json_parser import BrokerJSONParser
+    from insureflow.ingestion.json_parser import JSONBrokerParser
 
     try:
-        parser = BrokerJSONParser()
+        parser = JSONBrokerParser()
         structured = parser.parse(json_payload, f"{bundle_id}-json")
         bundle.structured = structured
         _log_event(
@@ -222,7 +222,7 @@ def parse_json(state: dict[str, Any]) -> dict[str, Any]:
     return {"bundle": bundle, "parsed_json": True}
 
 
-def parse_loss_run(state: dict[str, Any]) -> dict[str, Any]:
+def parse_loss_run(state: PipelineState) -> dict[str, Any]:
     _log_state("parse_loss_run", state)
     bundle: SubmissionBundle = state["bundle"]
     bundle_id = state["bundle_id"]
@@ -275,7 +275,7 @@ def parse_loss_run(state: dict[str, Any]) -> dict[str, Any]:
     return {"bundle": bundle, "parsed_loss_run": True}
 
 
-def parse_sov(state: dict[str, Any]) -> dict[str, Any]:
+def parse_sov(state: PipelineState) -> dict[str, Any]:
     _log_state("parse_sov", state)
     bundle: SubmissionBundle = state["bundle"]
     bundle_id = state["bundle_id"]
@@ -319,7 +319,7 @@ def parse_sov(state: dict[str, Any]) -> dict[str, Any]:
     return {"bundle": bundle, "parsed_sov": True}
 
 
-def parse_inspection(state: dict[str, Any]) -> dict[str, Any]:
+def parse_inspection(state: PipelineState) -> dict[str, Any]:
     _log_state("parse_inspection", state)
     bundle: SubmissionBundle = state["bundle"]
     bundle_id = state["bundle_id"]
@@ -360,7 +360,7 @@ def parse_inspection(state: dict[str, Any]) -> dict[str, Any]:
     return {"bundle": bundle, "parsed_inspection": True}
 
 
-def parse_supplemental(state: dict[str, Any]) -> dict[str, Any]:
+def parse_supplemental(state: PipelineState) -> dict[str, Any]:
     _log_state("parse_supplemental", state)
     _log_event(
         state["bundle_id"],
@@ -371,7 +371,7 @@ def parse_supplemental(state: dict[str, Any]) -> dict[str, Any]:
     return {}
 
 
-def merge_structured(state: dict[str, Any]) -> dict[str, Any]:
+def merge_structured(state: PipelineState) -> dict[str, Any]:
     _log_state("merge_structured", state)
     bundle: SubmissionBundle = state["bundle"]
 
@@ -391,7 +391,7 @@ def merge_structured(state: dict[str, Any]) -> dict[str, Any]:
     return {"bundle": bundle}
 
 
-def extract_agents(state: dict[str, Any]) -> dict[str, Any]:
+def extract_agents(state: PipelineState) -> dict[str, Any]:
     bundle: SubmissionBundle = state["bundle"]
     bundle_id = state["bundle_id"]
     _log_state("extract_agents", state)
@@ -423,7 +423,7 @@ def extract_agents(state: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def should_retry_extraction(state: dict[str, Any]) -> str:
+def should_retry_extraction(state: PipelineState) -> str:
     retries = state.get("extraction_retries", 0)
     max_retries = state.get("max_extraction_retries", 3)
 
@@ -436,7 +436,7 @@ def should_retry_extraction(state: dict[str, Any]) -> str:
     return "build_provenance"
 
 
-def build_provenance(state: dict[str, Any]) -> dict[str, Any]:
+def build_provenance(state: PipelineState) -> dict[str, Any]:
     bundle: SubmissionBundle = state["bundle"]
     bundle_id = state["bundle_id"]
     _log_state("build_provenance", state)
@@ -466,7 +466,7 @@ def build_provenance(state: dict[str, Any]) -> dict[str, Any]:
     return {"provenance": record}
 
 
-def reconcile(state: dict[str, Any]) -> dict[str, Any]:
+def reconcile(state: PipelineState) -> dict[str, Any]:
     provenance = state.get("provenance")
     bundle_id = state["bundle_id"]
     _log_state("reconcile", state)
@@ -529,7 +529,7 @@ def reconcile(state: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def check_human_review(state: dict[str, Any]) -> str:
+def check_human_review(state: PipelineState) -> str:
     if state.get("human_review_needed", False):
         _log_state("check_human_review → human_review", state)
         return "human_review"
@@ -537,7 +537,7 @@ def check_human_review(state: dict[str, Any]) -> str:
     return "query_rag"
 
 
-def query_rag(state: dict[str, Any]) -> dict[str, Any]:
+def query_rag(state: PipelineState) -> dict[str, Any]:
     bundle_id = state["bundle_id"]
     _log_state("query_rag", state)
 
@@ -572,7 +572,7 @@ def query_rag(state: dict[str, Any]) -> dict[str, Any]:
     return {"rag_context": guidelines}
 
 
-def human_review(state: dict[str, Any]) -> dict[str, Any]:
+def human_review(state: PipelineState) -> dict[str, Any]:
     bundle_id = state["bundle_id"]
     _log_state("human_review", state)
     _log_event(bundle_id, PipelineEvent.HUMAN_REVIEW_REQUIRED, "human_review", "Waiting for human review")
@@ -587,7 +587,7 @@ def human_review(state: dict[str, Any]) -> dict[str, Any]:
     return {"human_review_reasons": reasons}
 
 
-def synthesize(state: dict[str, Any]) -> dict[str, Any]:
+def synthesize(state: PipelineState) -> dict[str, Any]:
     bundle_id = state["bundle_id"]
     provenance = state.get("provenance")
     reconciliation = state.get("reconciliation")
@@ -614,7 +614,12 @@ def synthesize(state: dict[str, Any]) -> dict[str, Any]:
     agent = SynthesisAgent(llm)
 
     try:
-        synthesis = agent.synthesize(provenance, reconciliation)
+        from insureflow.models.provenance import ProvenanceRecord
+
+        synthesis = agent.synthesize(
+            cast(ProvenanceRecord, provenance),
+            reconciliation,
+        )
         _log_event(
             bundle_id,
             PipelineEvent.SYNTHESIS_COMPLETE,
@@ -637,7 +642,7 @@ def synthesize(state: dict[str, Any]) -> dict[str, Any]:
     return {"synthesis": synthesis}
 
 
-def audit(state: dict[str, Any]) -> dict[str, Any]:
+def audit(state: PipelineState) -> dict[str, Any]:
     bundle_id = state["bundle_id"]
     _log_state("audit", state)
 
@@ -670,7 +675,7 @@ def audit(state: dict[str, Any]) -> dict[str, Any]:
     return {"audit_trail": trail}
 
 
-def _log_state(node: str, state: dict[str, Any]) -> None:
+def _log_state(node: str, state: PipelineState) -> None:
     logger.debug(
         "[Graph] Entering node '%s' (bundle_id=%s, retries=%d)",
         node,

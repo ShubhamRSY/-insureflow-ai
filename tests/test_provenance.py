@@ -5,6 +5,7 @@ from insureflow.models.provenance import (
     TrustLevel,
     VerificationStatus,
 )
+from insureflow.models.submissions import SubmissionBundle
 from insureflow.provenance.hierarchy import ProvenanceEngine
 from insureflow.provenance.rules import VerificationRule, VerificationRuleSet
 from insureflow.provenance.trust_scorer import TrustScorer
@@ -19,7 +20,7 @@ def test_provenance_hierarchy_ranking() -> None:
     assert higher == "broker_acord_xml"
 
 
-def test_provenance_engine_builds_record(sample_bundle) -> None:
+def test_provenance_engine_builds_record(sample_bundle: SubmissionBundle) -> None:
     engine = ProvenanceEngine()
     record = engine.build_provenance(sample_bundle)
 
@@ -27,7 +28,7 @@ def test_provenance_engine_builds_record(sample_bundle) -> None:
     assert record.record_count() > 0
 
 
-def test_provenance_engine_verification(sample_bundle) -> None:
+def test_provenance_engine_verification(sample_bundle: SubmissionBundle) -> None:
     engine = ProvenanceEngine()
     record = engine.build_provenance(sample_bundle)
 
@@ -80,7 +81,7 @@ def test_verification_rule_tolerance_exceeded() -> None:
     assert ok is False
 
 
-def test_trust_scorer(sample_bundle) -> None:
+def test_trust_scorer(sample_bundle: SubmissionBundle) -> None:
     engine = ProvenanceEngine()
     record = engine.build_provenance(sample_bundle)
 

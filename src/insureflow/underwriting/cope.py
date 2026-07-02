@@ -12,6 +12,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Optional
 
+from insureflow.models.submissions import SubmissionBundle
+
 
 class ConstructionClass(str, Enum):
     FRAME = "frame"  # Wood frame — highest fire risk
@@ -402,7 +404,7 @@ def analyze_cope(
 class COPERatingEngine:
     """Applies COPE analysis to produce schedule rating modifiers for the rating engine."""
 
-    def analyze(self, bundle) -> COPEAnalysisResult:
+    def analyze(self, bundle: SubmissionBundle) -> COPEAnalysisResult:
         constr = ""
         occup = ""
         prot_class = None

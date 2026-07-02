@@ -5,13 +5,13 @@ from typing import Any
 from insureflow.tasks.celery_app import celery_app
 
 
-@celery_app.task(
+@celery_app.task(  # type: ignore[misc]
     bind=True,
     name="insureflow.tasks.agent_tasks.run_agent",
     max_retries=3,
     default_retry_delay=10,
 )
-def run_agent(self, agent_name: str, bundle_data: dict[str, Any]) -> dict[str, Any]:
+def run_agent(self: Any, agent_name: str, bundle_data: dict[str, Any]) -> dict[str, Any]:
     from insureflow.agents.compliance_agent import ComplianceAgent
     from insureflow.agents.fraud_detection_agent import FraudDetectionAgent
     from insureflow.agents.loss_run_analyst import LossRunAnalystAgent
@@ -33,16 +33,16 @@ def run_agent(self, agent_name: str, bundle_data: dict[str, Any]) -> dict[str, A
     agent = agent_cls()
     result = agent.run(bundle)
 
-    return result.model_dump()
+    return result.model_dump()  # type: ignore[no-any-return]
 
 
-@celery_app.task(
+@celery_app.task(  # type: ignore[misc]
     bind=True,
     name="insureflow.tasks.agent_tasks.supervisor_consolidate",
     max_retries=2,
 )
 def supervisor_consolidate(
-    self,
+    self: Any,
     bundle_data: dict[str, Any],
     agent_results: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:

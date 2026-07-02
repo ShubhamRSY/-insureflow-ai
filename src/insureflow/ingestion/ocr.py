@@ -82,7 +82,7 @@ class OCRProcessor:
 
                 text = pytesseract.image_to_string(Image.open(file_path))
                 if text and text.strip():
-                    return text
+                    return str(text)
             except ImportError:
                 if self.engine == "tesseract":
                     raise
@@ -96,7 +96,7 @@ class OCRProcessor:
 
             text = extract_text(file_path)
             if text and text.strip():
-                return text
+                return str(text)
         except Exception:
             pass
 

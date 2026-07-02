@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import json
 import logging
-import sys
+import sys as _sys
+import types as _types
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -12,7 +13,6 @@ logger = logging.getLogger(__name__)
 # Ragas 0.4.3 tries: from langchain_community.chat_models.vertexai import ChatVertexAI
 # That module no longer exists in modern langchain-community.
 # ---------------------------------------------------------------------------
-import types as _types
 
 _MOD = _types.ModuleType("langchain_community.chat_models.vertexai")
 
@@ -26,17 +26,15 @@ class _DummyChatVertexAI:
 
 _MOD.ChatVertexAI = _DummyChatVertexAI
 
-import sys as _sys
-
 _sys.modules["langchain_community.chat_models.vertexai"] = _MOD
 
 # Now safe to import ragas
-from ragas import evaluate as ragas_evaluate
-from ragas.dataset_schema import EvaluationDataset, EvaluationResult, SingleTurnSample
-from ragas.metrics import answer_relevancy, context_precision, context_recall, faithfulness
+from ragas import evaluate as ragas_evaluate  # noqa: E402
+from ragas.dataset_schema import EvaluationDataset, EvaluationResult, SingleTurnSample  # noqa: E402
+from ragas.metrics import answer_relevancy, context_precision, context_recall, faithfulness  # noqa: E402
 
-from evaluations.golden_dataset import golden_dataset
-from evaluations.runner import extract_field
+from evaluations.golden_dataset import golden_dataset  # noqa: E402
+from evaluations.runner import extract_field  # noqa: E402
 
 
 def _avg(key: str, scores: list[dict[str, Any]]) -> float:
@@ -315,6 +313,6 @@ def evaluate_ragas(output_path: str | None = None) -> dict[str, Any]:
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    out = sys.argv[1] if len(sys.argv) > 1 else "ragas_scores.json"
+    out = _sys.argv[1] if len(_sys.argv) > 1 else "ragas_scores.json"
     result = evaluate_ragas(out)
     print(json.dumps(result, indent=2, default=str))

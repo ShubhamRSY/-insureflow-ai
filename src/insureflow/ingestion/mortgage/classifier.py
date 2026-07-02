@@ -276,6 +276,6 @@ class MortgageDocumentClassifier:
                 scores[doc_type] = scores.get(doc_type, 0) + hits * weight
 
         if scores:
-            return max(scores, key=scores.get)
+            return max(scores, key=lambda k: scores[k])
 
         return MortgageDocumentType.UNKNOWN

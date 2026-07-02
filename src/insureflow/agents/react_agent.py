@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import time
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 from insureflow.agents.base import BaseAgent
 from insureflow.agents.prompts import SYSTEM_PROMPTS
@@ -149,7 +149,7 @@ class ReActAgent(BaseAgent):
         cleaned = cleaned.strip()
 
         try:
-            return json.loads(cleaned)
+            return cast(dict[str, Any], json.loads(cleaned))
         except json.JSONDecodeError:
             pass
 
@@ -158,7 +158,7 @@ class ReActAgent(BaseAgent):
 
             json_match = re.search(r"\{.*\}", cleaned, re.DOTALL)
             if json_match:
-                return json.loads(json_match.group())
+                return cast(dict[str, Any], json.loads(json_match.group()))
         except (json.JSONDecodeError, AttributeError):
             pass
 

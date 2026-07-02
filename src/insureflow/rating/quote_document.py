@@ -64,7 +64,7 @@ def generate_quote_html(
     meta = quote.metadata or {}
     cope_grade = meta.get("cope_grade", "N/A")
     market_phase = meta.get("market_phase", "N/A")
-    tiv = sum((l.building_value or 0) + (l.contents_value or 0) + (l.bi_value or 0) for l in (bundle.structured.locations if bundle.structured else [])) or quote.metadata.get("tiv", 0)
+    tiv = sum((loc.building_value or 0) + (loc.contents_value or 0) + (loc.bi_value or 0) for loc in (bundle.structured.locations if bundle.structured else [])) or quote.metadata.get("tiv", 0)
 
     return f"""<!DOCTYPE html>
 <html lang="en">

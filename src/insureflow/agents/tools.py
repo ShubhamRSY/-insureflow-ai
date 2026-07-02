@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional
+from typing import Any, Optional
 
 from insureflow.models.agents import Finding, RiskSeverity
 from insureflow.models.submissions import (
@@ -57,7 +57,7 @@ class UnderwritingTools:
 
     @staticmethod
     def total_insurable_value(locations: list[LocationData]) -> float:
-        return sum((l.building_value or 0) + (l.contents_value or 0) + (l.bi_value or 0) for l in locations)
+        return sum((loc.building_value or 0) + (loc.contents_value or 0) + (loc.bi_value or 0) for loc in locations)
 
     @staticmethod
     def coverage_adequacy(coverage: CoverageDetail, total_insurable_value: float) -> tuple[float, str]:
@@ -107,7 +107,7 @@ class UnderwritingTools:
     @staticmethod
     def find_non_disclosed_losses(
         loss_run_claims: list[ClaimRecord],
-        structured_claims: list[dict],
+        structured_claims: list[dict[str, Any]],
     ) -> list[ClaimRecord]:
         structured_ids = {c.get("claim_id", "") for c in structured_claims}
         return [c for c in loss_run_claims if c.claim_id not in structured_ids]

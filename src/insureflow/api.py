@@ -23,9 +23,12 @@ from insureflow.auth.dependencies import (
 )
 from insureflow.auth.jwt import create_access_token, hash_password, verify_password
 from insureflow.auth.models import LoginRequest, Token, TokenData, User, UserCreateRequest
+from insureflow.insurance.pipeline import InsurancePipeline
 from insureflow.models.mortgage import ProductLine
+from insureflow.pipeline import UnderwritingPipeline
 from insureflow.storage.job_store import JobStore, get_job_store
 from insureflow.tasks.celery_app import celery_app
+from insureflow.underwriting.renewal import PremiumAuditEngine
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +46,7 @@ app = FastAPI(
     version="0.2.0",
 )
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
 
 STATIC_DIR = Path(__file__).parent / "static"
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -85,10 +88,8 @@ setTimeout(function(){window.location.href='/dashboard';},800);
 
 
 @app.get("/auth/reset")
-def reset_auth_get():
+def reset_auth_get() -> HTMLResponse:
     """One-click wipe: server accounts + redirect to dashboard."""
-    from fastapi.responses import HTMLResponse
-
     _do_auth_reset()
     return HTMLResponse(_RESET_HTML)
 
@@ -155,7 +156,7 @@ def create_user(
 
 
 @app.get("/auth/me")
-def get_me(current_user: TokenData = Depends(get_current_user)) -> dict[str, str]:
+def get_me(current_user: TokenData = Depends(get_current_user)) -> dict[str, str | None]:
     return {
         "username": current_user.username,
         "role": current_user.role.value if current_user.role else "none",
@@ -569,6 +570,8 @@ async def root() -> dict[str, str]:
 
 def _run_pipeline_task(job_id: str, request: SubmissionRequest, org_id: str) -> None:
     try:
+        pipeline: Any
+        result: Any
         if request.use_legacy_pipeline:
             pipeline = UnderwritingPipeline()
             result = pipeline.run(
@@ -578,7 +581,7 @@ def _run_pipeline_task(job_id: str, request: SubmissionRequest, org_id: str) -> 
                 bundle_id=request.bundle_id or job_id,
             )
         else:
-            docs = [d.model_dump() for d in request.documents] if request.documents else None
+            docs = [{"filename": d.filename, "content": d.content} for d in request.documents] if request.documents else None
             pipeline = InsurancePipeline(org_id=org_id, use_llm=request.use_llm)
             result = pipeline.run(
                 acord_xml=request.acord_xml,
@@ -1160,7 +1163,7 @@ def complete_premium_audit(
             actual_premium,
             audited_exposure=audited_exposure,
             notes=notes,
-            reconciled_by=current.username,
+            reconciled_by=current.username or "",
         )
     except KeyError:
         raise HTTPException(status_code=404, detail="Audit not found")
@@ -1881,7 +1884,7 @@ async def run_pipeline_v2(
 
 def _run_pipeline_v2_task(job_id: str, request: PipelineConfigRequest, org_id: str) -> None:
     try:
-        docs = [d.model_dump() for d in request.documents] if request.documents else None
+        docs = [{"filename": d.filename, "content": d.content} for d in request.documents] if request.documents else None
         pipeline = InsurancePipeline(org_id=org_id, use_llm=request.use_llm)
         result = pipeline.run(
             acord_xml=request.acord_xml,
@@ -1979,6 +1982,7 @@ def create_registry_version(
     reg = RegistryService()
     ct = ComponentType(component)
 
+    entry: Any
     if ct == ComponentType.PROMPT:
         from insureflow.agents.prompts import SYSTEM_PROMPTS
 
@@ -2231,6 +2235,8 @@ def run_lending_pipeline(
     purp = purpose_map.get(req.purpose, LoanPurpose.OTHER)
     is_business = pt.value.startswith(("business_", "commercial_", "construction_", "sba_", "equipment_", "invoice_"))
 
+    app: Any
+    fin: Any
     if is_business:
         from insureflow.lending.models import Collateral
 
@@ -2293,8 +2299,9 @@ def get_lending_result(
     )
     for fname in os.listdir(audit_path):
         if application_id in fname:
-            with open(os_mod.path.join(audit_path, fname)) as f:
-                return json.load(f)
+            with open(os.path.join(audit_path, fname)) as f:
+                result: dict[str, Any] = json.load(f)
+                return result
     raise HTTPException(status_code=404, detail=f"Lending result not found: {application_id}")
 
 

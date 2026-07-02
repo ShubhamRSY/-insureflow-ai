@@ -44,7 +44,7 @@ def test_graph_run_acord_only(sample_acord_xml: str) -> None:
     result = pg.run(state)
 
     assert result.get("bundle_id") is not None
-    bundle: SubmissionBundle = result.get("bundle")
+    bundle: SubmissionBundle | None = result.get("bundle")
     assert bundle is not None
     assert bundle.structured is not None
     assert bundle.structured.named_insured is not None
@@ -66,7 +66,7 @@ def test_graph_run_acord_with_inspection(sample_acord_xml: str, sample_inspectio
     )
     result = pg.run(state)
 
-    bundle: SubmissionBundle = result.get("bundle")
+    bundle: SubmissionBundle | None = result.get("bundle")
     assert bundle is not None
     assert bundle.structured is not None
     assert len(bundle.unstructured) >= 1
@@ -121,7 +121,7 @@ def test_graph_retry_limit() -> None:
 
     from insureflow.graph.nodes import should_retry_extraction
 
-    decision = should_retry_extraction(state)
+    decision = should_retry_extraction(state)  # type: ignore[arg-type]
     assert decision == "build_provenance"
 
 
@@ -134,7 +134,7 @@ def test_graph_retry_still_retrying() -> None:
 
     from insureflow.graph.nodes import should_retry_extraction
 
-    decision = should_retry_extraction(state)
+    decision = should_retry_extraction(state)  # type: ignore[arg-type]
     assert decision == "extract_agents"
 
 
@@ -145,7 +145,7 @@ def test_graph_human_review_triggered() -> None:
 
     from insureflow.graph.nodes import check_human_review
 
-    decision = check_human_review(state)
+    decision = check_human_review(state)  # type: ignore[arg-type]
     assert decision == "human_review"
 
 
@@ -156,7 +156,7 @@ def test_graph_human_review_skipped() -> None:
 
     from insureflow.graph.nodes import check_human_review
 
-    decision = check_human_review(state)
+    decision = check_human_review(state)  # type: ignore[arg-type]
     assert decision == "query_rag"
 
 
@@ -181,7 +181,7 @@ def test_graph_human_review_node() -> None:
 
     from insureflow.graph.nodes import human_review
 
-    result = human_review(state)
+    result = human_review(state)  # type: ignore[arg-type]
 
     reasons = result.get("human_review_reasons", [])
     assert len(reasons) == 1

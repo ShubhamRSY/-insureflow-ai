@@ -66,11 +66,11 @@ class JSONBrokerParser(BaseParser):
         return submission
 
     @staticmethod
-    def _get_nested(data: dict, *keys: str, default: Any = None) -> Any:
+    def _get_nested(data: dict[str, Any], *keys: str, default: Any = None) -> Any:
         for key in keys:
             if "." in key:
                 parts = key.split(".")
-                current = data
+                current: Any = data
                 for part in parts:
                     if isinstance(current, dict):
                         current = current.get(part)
@@ -84,7 +84,7 @@ class JSONBrokerParser(BaseParser):
         return default
 
     @staticmethod
-    def _first_match(data: dict, candidates: list[str], default: Any = None) -> Any:
+    def _first_match(data: dict[str, Any], candidates: list[str], default: Any = None) -> Any:
         for key in candidates:
             for dot_key in [key, f"insured.{key}", f"applicant.{key}", f"submission.{key}"]:
                 val = JSONBrokerParser._get_nested(data, dot_key)
@@ -92,7 +92,7 @@ class JSONBrokerParser(BaseParser):
                     return val
         return default
 
-    def _parse_named_insured(self, data: dict) -> Optional[NamedInsured]:
+    def _parse_named_insured(self, data: dict[str, Any]) -> Optional[NamedInsured]:
         insured_data = data.get("insured") or data.get("applicant") or data.get("namedInsured") or data
 
         if isinstance(insured_data, str):
@@ -120,7 +120,7 @@ class JSONBrokerParser(BaseParser):
             address=str(self._first_match(insured_data, ["address", "streetAddress", "addr1"])) if self._first_match(insured_data, ["address", "streetAddress", "addr1"]) else None,
         )
 
-    def _parse_broker(self, data: dict) -> Optional[BrokerInfo]:
+    def _parse_broker(self, data: dict[str, Any]) -> Optional[BrokerInfo]:
         broker_data = data.get("broker") or data.get("agency") or data.get("producer") or {}
 
         if not isinstance(broker_data, dict):
@@ -137,7 +137,7 @@ class JSONBrokerParser(BaseParser):
             contact_email=str(self._first_match(broker_data, ["email", "contactEmail"])) if self._first_match(broker_data, ["email", "contactEmail"]) else None,
         )
 
-    def _parse_policy_period(self, data: dict) -> Optional[PolicyPeriod]:
+    def _parse_policy_period(self, data: dict[str, Any]) -> Optional[PolicyPeriod]:
         policy = data.get("policy") or data.get("policyPeriod") or data
 
         eff = self._first_match(policy, ["effectiveDate", "effective_date", "inceptionDate", "policyEffective"])
@@ -165,7 +165,7 @@ class JSONBrokerParser(BaseParser):
 
         return PolicyPeriod(effective_date=eff_date, expiration_date=exp_date)
 
-    def _parse_coverages(self, data: dict) -> list[CoverageDetail]:
+    def _parse_coverages(self, data: dict[str, Any]) -> list[CoverageDetail]:
         coverages: list[CoverageDetail] = []
         raw = data.get("coverages") or data.get("coverage") or data.get("lines") or data.get("policyLines") or []
 
@@ -206,7 +206,7 @@ class JSONBrokerParser(BaseParser):
 
         return coverages
 
-    def _parse_locations(self, data: dict) -> list[LocationData]:
+    def _parse_locations(self, data: dict[str, Any]) -> list[LocationData]:
         locations: list[LocationData] = []
         raw = data.get("locations") or data.get("location") or data.get("premises") or data.get("sites") or []
 
@@ -237,7 +237,7 @@ class JSONBrokerParser(BaseParser):
 
         return locations
 
-    def _parse_financial(self, data: dict) -> Optional[FinancialData]:
+    def _parse_financial(self, data: dict[str, Any]) -> Optional[FinancialData]:
         fin = data.get("financial") or data.get("financialInfo") or data
 
         revenue = self._first_match(fin, ["annualRevenue", "revenue", "totalRevenue", "grossRevenue"])
@@ -255,7 +255,7 @@ class JSONBrokerParser(BaseParser):
             credit_rating=str(rating) if rating else None,
         )
 
-    def _parse_risk_profile(self, data: dict) -> Optional[RiskProfile]:
+    def _parse_risk_profile(self, data: dict[str, Any]) -> Optional[RiskProfile]:
         risk = data.get("risk") or data.get("riskProfile") or data.get("classification") or data
 
         naics = self._first_match(risk, ["naicsCode", "naics", "naics_code"])

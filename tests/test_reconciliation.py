@@ -2,12 +2,13 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
+from insureflow.models.submissions import SubmissionBundle
 from insureflow.provenance.hierarchy import ProvenanceEngine
 from insureflow.reconciliation.discrepancies import DiscrepancyDetector
 from insureflow.reconciliation.engine import ReconciliationEngine
 
 
-def test_reconciliation_matches(sample_bundle) -> None:
+def test_reconciliation_matches(sample_bundle: SubmissionBundle) -> None:
     engine = ProvenanceEngine()
     record = engine.build_provenance(sample_bundle)
 

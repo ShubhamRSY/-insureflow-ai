@@ -5,7 +5,7 @@ import json
 import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from insureflow.audit.store import AuditStore
 from insureflow.storage.encryption import EnvelopeEncryption
@@ -93,4 +93,4 @@ class RegulatoryPackageBuilder:
             return None
         if self.encryption.enabled:
             return self.encryption.read_encrypted_file(str(path))
-        return json.loads(path.read_text(encoding="utf-8"))
+        return cast(dict[str, Any], json.loads(path.read_text(encoding="utf-8")))

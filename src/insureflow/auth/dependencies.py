@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional
+from typing import Awaitable, Callable, Optional
 
 from fastapi import Depends, HTTPException, Security, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer, OAuth2PasswordBearer
@@ -36,7 +36,7 @@ async def get_current_user_optional(
     return decode_access_token(credentials.credentials)
 
 
-def require_role(min_role: Role):
+def require_role(min_role: Role) -> Callable[..., Awaitable[TokenData]]:
     async def _check_role(current_user: TokenData = Depends(get_current_user)) -> TokenData:
         user_role = current_user.role
         if user_role is None:

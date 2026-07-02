@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
+from typing import Any
 from uuid import uuid4
 
 from insureflow.models.agents import UnderwritingMemo
@@ -53,7 +54,7 @@ class StubPolicyAdminAdapter:
             policy_admin_reference=ref,
         )
 
-    def bind_policy(self, bundle_id: str, quote_reference: str, bound_by: str) -> dict:
+    def bind_policy(self, bundle_id: str, quote_reference: str, bound_by: str) -> dict[str, Any]:
         return {
             "status": "bound",
             "bundle_id": bundle_id,
@@ -63,7 +64,7 @@ class StubPolicyAdminAdapter:
             "bound_at": datetime.now(tz=timezone.utc).isoformat(),
         }
 
-    def sync_status(self, reference: str) -> dict:
+    def sync_status(self, reference: str) -> dict[str, Any]:
         return {
             "reference": reference,
             "status": "quoted",

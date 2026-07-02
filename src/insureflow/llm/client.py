@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 from insureflow.config import settings
 
@@ -109,7 +109,7 @@ class LLMClient:
             }
 
             response = client.messages.create(**kwargs)
-            return response.content[0].text if response.content else ""
+            return str(response.content[0].text) if response.content else ""
 
         else:
             msg = f"Unsupported LLM provider: {provider}"
@@ -133,7 +133,7 @@ class LLMClient:
         clean_raw = clean_raw.strip()
 
         try:
-            return response_model.model_validate_json(clean_raw)
+            return response_model.model_validate_json(clean_raw)  # type: ignore[attr-defined]
         except Exception:
             return response_model(raw=raw)
 
@@ -145,7 +145,7 @@ class LLMClient:
         if provider in ("openai", "vllm"):
             # Using OpenAI's standard embedding model
             response = client.embeddings.create(input=text, model="text-embedding-3-small")
-            return response.data[0].embedding
+            return cast(list[float], response.data[0].embedding)
 
         # Fallback for non-supported providers during local testing
         return [0.0] * 1536

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from insureflow.mcp.server import _parse_claims, _register_all, run_server
 from insureflow.rag.guidelines import GuidelineCategory
@@ -39,7 +39,7 @@ class TestMCPServerModule:
         assert len(cats) >= 6
 
     @patch("insureflow.mcp.server.FastMCP")
-    def test_register_all_tools(self, mock_fastmcp) -> None:
+    def test_register_all_tools(self, mock_fastmcp: MagicMock) -> None:
         mock_instance = mock_fastmcp.return_value
         _register_all(mock_instance)
         tool_calls = [call for call in mock_instance.tool.call_args_list]

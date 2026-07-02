@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 from insureflow.lending.compliance import LENDING_RULES, LendingComplianceEngine
 from insureflow.lending.models import (
@@ -21,7 +22,7 @@ from insureflow.lending.risk import LendingRiskEngine
 
 class TestLendingRiskEngine:
     def make_biz_app(self, **overrides: object) -> BusinessLoanApplication:
-        defaults: dict = dict(
+        defaults: dict[str, Any] = dict(
             business_name="Test Biz",
             industry="manufacturing",
             years_in_business=5,
@@ -46,7 +47,7 @@ class TestLendingRiskEngine:
         return BusinessLoanApplication(**defaults)
 
     def make_con_app(self, **overrides: object) -> ConsumerLoanApplication:
-        defaults: dict = dict(
+        defaults: dict[str, Any] = dict(
             first_name="Jane",
             last_name="Doe",
             product_type=LoanProductType.AUTO_LOAN,

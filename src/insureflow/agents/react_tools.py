@@ -185,6 +185,7 @@ class ToolRegistry:
         if not tool:
             return {"error": f"Unknown tool: {name}"}
         try:
+            assert tool.fn is not None
             result = tool.fn(**kwargs)
             return result
         except Exception as e:
