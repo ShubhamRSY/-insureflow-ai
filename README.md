@@ -226,44 +226,57 @@ docker compose up --build
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        FastAPI Gateway                          │
-│   JWT Auth · Org-scoped Jobs · Redis Job Store · Dashboard      │
-└───────────────┬─────────────────────────────┬───────────────────┘
-                │                             │
-        ┌───────▼────────┐            ┌───────▼────────┐
-        │   INSURANCE    │            │    MORTGAGE    │
-        │ InsurancePipeline           │ MortgagePipeline│
-        └───────┬────────┘            └───────┬────────┘
-                │                             │
-    ┌───────────▼───────────────────────────▼───────────┐
-    │              INGESTION + OCR                         │
-    │  ACORD · JSON · Loss Run · SOV · PDF/Image Upload   │
-    └───────────┬─────────────────────────────────────────┘
-                │
-    ┌───────────▼─────────────────────────────────────────┐
-    │  Provenance Engine → Reconciliation Engine           │
-    │  (deterministic source-of-truth hierarchy)           │
-    └───────────┬─────────────────────────────────────────┘
-                │
-    ┌───────────▼─────────────────────────────────────────┐
-    │  Specialist Agents (parallel, ReAct + fallback)      │
-    │  Insurance: Risk · Loss Run · Compliance · Fraud     │
-    │  Mortgage:  Income · Credit · Asset · Collateral     │
-    └───────────┬─────────────────────────────────────────┘
-                │
-    ┌───────────▼─────────────────────────────────────────┐
-    │  Decision + Rating                                   │
-    │  Insurance: UW Memo → P&C Rating → Policy Admin stub │
-    │  Mortgage:  Memo → Loan Pricing Engine → Rate Lock   │
-    └───────────┬─────────────────────────────────────────┘
-                │
-    ┌───────────▼─────────────────────────────────────────┐
-    │  Production Layer                                    │
-    │  Licensed UW Workflow · Bind/Loss Feedback           │
-    │  Fernet Encryption · Regulatory Audit ZIP            │
-    │  Webhooks (mortgage) · Celery async workers          │
-    └─────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────┐
+│                         FastAPI Gateway                             │
+│  JWT Auth · RBAC (viewer→cuo) · Org-scoped Jobs · Dashboard (10pg) │
+└──────┬───────────────┬──────────────────┬───────────────┬───────────┘
+       │               │                  │               │
+ ┌─────▼──────┐  ┌─────▼──────┐   ┌──────▼─────┐  ┌─────▼─────────┐
+ │ INSURANCE  │  │ MORTGAGE   │   │  LENDING   │  │   REGISTRY    │
+ │ Insurance  │  │ Mortgage   │   │ Lending    │  │ Model Version │
+ │ Pipeline   │  │ Pipeline   │   │ Pipeline   │  │ Compliance RW │
+ └─────┬──────┘  └─────┬──────┘   └──────┬─────┘  └───────┬───────┘
+       │               │                  │                │
+       └───────────────┴──────────────────┴────────────────┘
+                       │
+         ┌─────────────▼─────────────────────────────┐
+         │           INGESTION + OCR + REDACTION       │
+         │  ACORD · JSON · PDF · W-2 · Credit · App   │
+         │  PII Redaction · Entity Resolution          │
+         └─────────────┬─────────────────────────────┘
+                       │
+         ┌─────────────▼─────────────────────────────┐
+         │  Provenance Hierarchy → Reconciliation     │
+         │  (source-of-truth · cross-doc matching)    │
+         └─────────────┬─────────────────────────────┘
+                       │
+         ┌─────────────▼─────────────────────────────┐
+         │  Specialist Agents (ReAct + fallback)      │
+         │  Insurance: Risk · Loss Run · Compliance   │
+         │            Fraud · Triage · Reinsurance    │
+         │            Portfolio Risk · Oracle · RAG   │
+         │  Mortgage: Income · Credit · Asset         │
+         │            Collateral · Decision           │
+         │  Lending:  Credit Risk · Compliance        │
+         │            · Pricing                       │
+         └─────────────┬─────────────────────────────┘
+                       │
+         ┌─────────────▼─────────────────────────────┐
+         │  Decision + Rating                         │
+         │  Insurance: UW Memo → P&C Rating → Bind   │
+         │  Mortgage:  Memo → Loan Pricing → Rate Lock│
+         │  Lending:   Decision → Pricing → Adverse   │
+         │             Action Notice                  │
+         └─────────────┬─────────────────────────────┘
+                       │
+         ┌─────────────▼─────────────────────────────┐
+         │     Production Layer                       │
+         │  Licensed UW Sign-off · Bind/Loss Feedback │
+         │  Premium Audits · Material Adjustments     │
+         │  Fernet Encryption · Regulatory Audit ZIP  │
+         │  Broker Status Shares · Webhooks (both)    │
+         │  Celery Async Workers · Document Analytics │
+         └───────────────────────────────────────────┘
 ```
 
 ---
