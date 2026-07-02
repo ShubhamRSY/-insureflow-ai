@@ -1,10 +1,10 @@
 # InsureFlow AI
 
-> Enterprise multi-agent underwriting platform for **commercial insurance** and **bank mortgage** document processing.
+> Enterprise multi-agent underwriting platform for **commercial insurance**, **bank mortgage**, and **consumer/commercial lending** document processing.
 
 InsureFlow AI ingests multi-format submission packages — ACORD XML, broker PDFs, loss runs, W-2s, credit reports, appraisals — and produces an underwriting memo with a recommendation, premium or rate quote, encrypted audit trail, and optional licensed underwriter sign-off.
 
-Both verticals share a unified API, JWT authentication, org-scoped job store, Fernet encryption, and React dashboard. Pipelines operate **with or without an LLM API key** via deterministic agent fallbacks.
+All three verticals share a unified API, JWT authentication, org-scoped job store, Fernet encryption, and React dashboard. Pipelines operate **with or without an LLM API key** via deterministic agent fallbacks.
 
 ---
 
@@ -42,9 +42,10 @@ Modern SPA served at `/dashboard` (React 18, Vite, Tailwind CSS):
 | **Insurance** | Source connector hub, one-click demos, job history |
 | **Mortgage** | Loan package submission, job history, rate/DTI display |
 | **UW Sign-off** | Licensed review queue with View (job drawer), approve, refer, decline |
-| **Renewals** | Premium audit tracking, reconciliation status, material adjustments |
+| **Renewal Dashboard** | Premium audit tracking, reconciliation status, material adjustments |
 | **Authority Matrix** | UW tier overview, binding limits per authority level |
 | **Market Admin** | Market phase controls (hard/soft), rate impact cards |
+| **Broker Status** | Token-based broker share links, public status pages |
 | **Settings** | Session info, RBAC reference (role hierarchy + descriptions), credential reset |
 
 Features: JWT login with first-time setup, self-registration (viewer/underwriter), password visibility toggle, real-time job polling, responsive sidebar navigation.
@@ -119,6 +120,13 @@ Broker Package → OCR/Classify → Parse → Provenance → Reconcile
 ```
 Loan Package → OCR/Classify → Extract → Reconcile → Compliance Rules
     → Specialist Agents → Decision Memo → Loan Pricing → Webhook → Audit
+```
+
+### Lending
+
+```
+Application → Credit Pull → Risk Score → Compliance (Reg B/ECOA/HMDA)
+    → Pricing → Decision → Adverse Action Notice → Audit
 ```
 
 ### Example Insurance Output
