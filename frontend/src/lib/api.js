@@ -114,6 +114,60 @@ export const endpoints = {
     `/pipeline/audits/${auditId}/complete?actual_premium=${actual_premium}&notes=${encodeURIComponent(notes)}`,
     { method: 'POST' }
   ),
+  recordAuditAdjustment: (auditId, amount, reason) => api(
+    `/pipeline/audits/${auditId}/adjustment?amount=${amount}&reason=${encodeURIComponent(reason)}`,
+    { method: 'POST' }
+  ),
+  materialAdjustments: () => api('/pipeline/audits/material-adjustments'),
+
+  // Insurance audit trail & export
+  auditTrail: (bundleId) => api(`/pipeline/audit/${bundleId}`),
+  auditPackage: (bundleId) => api(`/pipeline/audit/${bundleId}/package`),
+  workflowDetail: (bundleId) => api(`/pipeline/workflow/${bundleId}`),
+  bindPolicy: (bundleId) => api(`/pipeline/workflow/${bundleId}/bind`, { method: 'POST' }),
+  insuranceQuote: (jobId) => api(`/pipeline/jobs/${jobId}/quote`),
+  deleteJob: (jobId, vertical) => api(`/${vertical}/pipeline/jobs/${jobId}`, { method: 'DELETE' }),
+
+  // Insurance products & outcomes
+  insuranceProducts: () => api('/pipeline/rating/products'),
+  lossExperience: (body) => api('/pipeline/outcomes/loss-experience', { method: 'POST', body }),
+  calibration: () => api('/pipeline/outcomes/calibration'),
+
+  // Override analytics
+  overrideAnalytics: () => api('/analytics/overrides'),
+  overridePatterns: () => api('/analytics/overrides/patterns'),
+  documentAnalytics: () => api('/analytics/documents'),
+
+  // Mortgage audit & products
+  mortgageAudit: (bundleId) => api(`/mortgage/audit/${bundleId}`),
+  mortgageProducts: () => api('/mortgage/products'),
+  mortgageWebhooks: () => api('/mortgage/webhooks'),
+  registerMortgageWebhook: (body) => api('/mortgage/webhooks', { method: 'POST', body }),
+  deleteMortgageWebhook: (id) => api(`/mortgage/webhooks/${id}`, { method: 'DELETE' }),
+
+  // Lending
+  lendingProducts: () => api('/lending/products'),
+  runLending: (body) => api('/lending/pipeline/run', { method: 'POST', body }),
+  lendingResult: (appId) => api(`/lending/pipeline/result/${appId}`),
+
+  // Registry
+  registryVersions: () => api('/registry/versions'),
+  registryVersion: (entryId) => api(`/registry/versions/${entryId}`),
+  createRegistryEntry: (body) => api('/registry/versions', { method: 'POST', body }),
+  submitRegistryEntry: (entryId) => api(`/registry/versions/${entryId}/submit`, { method: 'POST' }),
+  approveRegistryEntry: (entryId) => api(`/registry/versions/${entryId}/approve`, { method: 'POST' }),
+  rejectRegistryEntry: (entryId) => api(`/registry/versions/${entryId}/reject`, { method: 'POST' }),
+  registryDiff: (a, b) => api(`/registry/diff?a=${a}&b=${b}`),
+  registryContexts: () => api('/registry/context'),
+  registrySnapshot: () => api('/registry/snapshot', { method: 'POST' }),
+  registrySnapshots: () => api('/registry/snapshots'),
+  registryBootstrap: () => api('/registry/bootstrap', { method: 'POST' }),
+
+  // Admin
+  createUser: (body) => api('/auth/users', { method: 'POST', body }),
+  
+  // Pipeline v2
+  runInsuranceV2: (body) => api('/pipeline/v2/run', { method: 'POST', body }),
 };
 
 export function fmtCurrency(n) {

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Badge, EmptyState } from '../components/ui';
-import { ClipboardCheck, Shield, Search } from 'lucide-react';
+import { ClipboardCheck, Shield, Search, FileCheck } from 'lucide-react';
 import { endpoints } from '../lib/api';
 
 const REASON_CATEGORIES = [
@@ -19,6 +19,8 @@ const REASON_CATEGORIES = [
 export default function WorkflowPage({ pending, onRefresh, authorityData, onOpenJob }) {
   const [showSignOff, setShowSignOff] = useState(null);
   const [form, setForm] = useState({ action: 'approve', license_number: '', notes: '', override_reason: '', override_reason_category: 'other', uw_confidence: 'medium' });
+  const [workflowDetail, setWorkflowDetail] = useState(null);
+  const [detailBundleId, setDetailBundleId] = useState(null);
 
   const handleSignOff = async (bundleId) => {
     try {
@@ -79,12 +81,16 @@ export default function WorkflowPage({ pending, onRefresh, authorityData, onOpen
                   </div>
                   <p className="mt-2 text-sm text-slate-400">{p.recommendation || p.decision || 'Awaiting review'}</p>
 
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <button type="button" onClick={() => onOpenJob?.('insurance', id, id)} className="btn-secondary text-xs">View</button>
-                    <button type="button" onClick={() => { setShowSignOff(id); setForm(f => ({ ...f, action: 'approve' })); }} className="btn-primary btn-sm text-xs">Approve</button>
-                    <button type="button" onClick={() => { setShowSignOff(id); setForm(f => ({ ...f, action: 'refer' })); }} className="btn-secondary text-xs">Refer</button>
-                    <button type="button" onClick={() => { setShowSignOff(id); setForm(f => ({ ...f, action: 'decline' })); }} className="rounded-xl px-3 py-1.5 text-xs text-red-400 ring-1 ring-red-500/30 hover:bg-red-500/10">Decline</button>
-                  </div>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <button type="button" onClick={() => onOpenJob?.('insurance', id, id)} className="btn-secondary text-xs">View</button>
+                      <button type="button" onClick={() => { setShowSignOff(id); setForm(f => ({ ...f, action: 'approve' })); }} className="btn-primary btn-sm text-xs">Approve</button>
+                      <button type="button" onClick={() => { setShowSignOff(id); setForm(f => ({ ...f, action: 'refer' })); }} className="btn-secondary text-xs">Refer</button>
+                      <button type="button" onClick={() => { setShowSignOff(id); setForm(f => ({ ...f, action: 'decline' })); }} className="rounded-xl px-3 py-1.5 text-xs text-red-400 ring-1 ring-red-500/30 hover:bg-red-500/10">Decline</button>
+                      {p.state === 'approved' && (
+                        <button type="button" onClick={async () => { await endpoints.bindPolicy(id).catch(e => alert(e.message)); onRefresh?.(); }} className="rounded-xl px-3 py-1.5 text-xs text-emerald-400 ring-1 ring-emerald-500/30 hover:bg-emerald-500/10"><FileCheck className="h-3 w-3 inline" /> Bind</button>
+                      )}
+                      <button type="button" onClick={async () => { setDetailBundleId(id); try { const d = await endpoints.workflowDetail(id); setWorkflowDetail(d); } catch (e) { alert(e.message); } }} className="btn-secondary text-xs"><Search className="h-3 w-3 inline" /> Detail</button>
+                    </div>
 
                   {isOpen && (
                     <div className="mt-4 space-y-3 rounded-lg bg-black/20 p-4">
@@ -123,6 +129,45 @@ export default function WorkflowPage({ pending, onRefresh, authorityData, onOpen
                         </button>
                         <button type="button" onClick={() => setShowSignOff(null)} className="btn-secondary text-xs">Cancel</button>
                       </div>
+                    </div>
+                  )}
+
+                  {workflowDetail && detailBundleId === id && (
+                    <div className="mt-4 rounded-lg bg-black/20 p-3">
+                      <div className="mb-2 flex items-center justify-between">
+                        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Workflow State</p>
+                        <button onClick={() => { setWorkflowDetail(null); setDetailBundleId(null); }} className="text-xs text-slate-500 hover:text-slate-300">Close</button>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div className="rounded bg-surface-overlay p-2">
+                          <span className="text-slate-500">State</span>
+                          <p className="font-medium text-slate-300">{workflowDetail.state || workflowDetail.status || '—'}</p>
+                        </div>
+                        <div className="rounded bg-surface-overlay p-2">
+                          <span className="text-slate-500">Decision</span>
+                          <p className="font-medium text-slate-300">{workflowDetail.decision || '—'}</p>
+                        </div>
+                        <div className="rounded bg-surface-overlay p-2">
+                          <span className="text-slate-500">Sign-offs</span>
+                          <p className="font-medium text-slate-300">{(workflowDetail.sign_offs || workflowDetail.signoffs || []).length}</p>
+                        </div>
+                        <div className="rounded bg-surface-overlay p-2">
+                          <span className="text-slate-500">Created</span>
+                          <p className="font-medium text-slate-300">{workflowDetail.created_at ? new Date(workflowDetail.created_at).toLocaleString() : '—'}</p>
+                        </div>
+                      </div>
+                      {(workflowDetail.sign_offs || workflowDetail.signoffs || []).length > 0 && (
+                        <div className="mt-2 space-y-1">
+                          <p className="text-[10px] font-semibold uppercase text-slate-500">Sign-off History</p>
+                          {(workflowDetail.sign_offs || workflowDetail.signoffs || []).map((so, i) => (
+                            <div key={i} className="rounded bg-surface-overlay p-2 text-xs">
+                              <span className="text-slate-400">{so.license_number || so.license || '—'}</span>
+                              <span className="ml-2 text-slate-500">{so.action} by {so.username || '—'}</span>
+                              {so.notes && <p className="text-slate-500">{so.notes}</p>}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

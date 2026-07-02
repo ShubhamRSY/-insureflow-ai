@@ -1,7 +1,7 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Shield, Home, Activity, ClipboardCheck, Settings, LogOut, RefreshCw, Menu, X,
-  FileText, Users, BarChart3,
+  FileText, Users, BarChart3, BookOpen, Wallet, Layers, Link2, LineChart, Search, Database,
 } from 'lucide-react';
 import { useState } from 'react';
 import { auth, endpoints } from '../lib/api';
@@ -13,11 +13,19 @@ const nav = [
   { section: 'Underwriting' },
   { to: '/insurance', icon: Shield, label: 'Insurance', color: 'text-insurance' },
   { to: '/mortgage', icon: Home, label: 'Mortgage', color: 'text-mortgage' },
+  { to: '/lending', icon: Wallet, label: 'Lending', color: 'text-emerald-400' },
   { to: '/workflow', icon: ClipboardCheck, label: 'UW Sign-off', badge: true },
+  { to: '/queue', icon: Search, label: 'Queue' },
   { section: 'Analytics' },
   { to: '/renewals', icon: FileText, label: 'Renewals' },
+  { to: '/overrides', icon: LineChart, label: 'Override Analytics' },
+  { to: '/portfolio', icon: Layers, label: 'Portfolio' },
   { to: '/authority', icon: Users, label: 'Authority Matrix' },
   { to: '/market', icon: BarChart3, label: 'Market Cycle' },
+  { section: 'Governance' },
+  { to: '/registry', icon: BookOpen, label: 'Model Registry' },
+  { to: '/integrations', icon: Link2, label: 'Integrations' },
+  { to: '/webhooks', icon: Database, label: 'Webhooks' },
   { section: 'Account' },
   { to: '/settings', icon: Settings, label: 'Settings' },
 ];

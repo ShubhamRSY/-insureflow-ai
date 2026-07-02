@@ -7,12 +7,19 @@ import Overview from './pages/Overview';
 import SystemPage from './pages/System';
 import InsurancePage from './pages/Insurance';
 import MortgagePage from './pages/Mortgage';
+import LendingPage from './pages/Lending';
 import WorkflowPage from './pages/Workflow';
 import SettingsPage from './pages/Settings';
 import BrokerStatusPage from './pages/BrokerStatus';
 import AuthorityMatrix from './pages/AuthorityMatrix';
 import MarketAdmin from './pages/MarketAdmin';
 import RenewalDashboard from './pages/RenewalDashboard';
+import RegistryPage from './pages/Registry';
+import QueuePage from './pages/Queue';
+import OverrideAnalyticsPage from './pages/OverrideAnalytics';
+import PortfolioPage from './pages/Portfolio';
+import IntegrationsPage from './pages/Integrations';
+import WebhooksPage from './pages/Webhooks';
 import { auth, endpoints, AuthError } from './lib/api';
 
 function Protected({ children, onLogin }) {
@@ -39,6 +46,7 @@ function AppRoutes() {
   const [pending, setPending] = useState([]);
   const [marketCycle, setMarketCycle] = useState(null);
   const [queueStats, setQueueStats] = useState(null);
+  const [authorityData, setAuthorityData] = useState(null);
   const [drawer, setDrawer] = useState({ vertical: null, jobId: null, job: null });
 
   const loadHealth = useCallback(async () => {
@@ -76,6 +84,12 @@ function AppRoutes() {
   const loadQueueStats = useCallback(async () => {
     if (!auth.isLoggedIn) return;
     try { setQueueStats(await endpoints.submissionQueue()); }
+    catch { /* ignore */ }
+  }, []);
+
+  const loadAuthority = useCallback(async () => {
+    if (!auth.isLoggedIn) return;
+    try { setAuthorityData(await endpoints.authorityMatrix()); }
     catch { /* ignore */ }
   }, []);
 
@@ -118,8 +132,8 @@ function AppRoutes() {
   }, [handleAuthError]);
 
   const refreshAll = useCallback(async () => {
-    await Promise.all([loadHealth(), loadPresets(), loadOverview(), loadInsuranceJobs(), loadMortgageJobs(), loadMarketCycle(), loadQueueStats()]);
-  }, [loadHealth, loadPresets, loadOverview, loadInsuranceJobs, loadMortgageJobs, loadMarketCycle, loadQueueStats]);
+    await Promise.all([loadHealth(), loadPresets(), loadOverview(), loadInsuranceJobs(), loadMortgageJobs(), loadMarketCycle(), loadQueueStats(), loadAuthority()]);
+  }, [loadHealth, loadPresets, loadOverview, loadInsuranceJobs, loadMortgageJobs, loadMarketCycle, loadQueueStats, loadAuthority]);
 
   useEffect(() => {
     endpoints.authStatus().then((s) => {
@@ -206,8 +220,15 @@ function AppRoutes() {
           <Route path="system" element={<SystemPage health={health} />} />
           <Route path="insurance" element={<Protected onLogin={() => setLoginOpen(true)}><InsurancePage presets={presets} jobs={insuranceJobs} onRunDemo={runDemo} onOpenJob={openJob} onSubmit={submitInsurance} /></Protected>} />
           <Route path="mortgage" element={<Protected onLogin={() => setLoginOpen(true)}><MortgagePage presets={presets} jobs={mortgageJobs} onRunDemo={runDemo} onOpenJob={openJob} onSubmit={submitMortgage} /></Protected>} />
-          <Route path="workflow" element={<Protected onLogin={() => setLoginOpen(true)}><WorkflowPage pending={pending} onRefresh={loadOverview} onOpenJob={openJob} /></Protected>} />
+          <Route path="lending" element={<Protected onLogin={() => setLoginOpen(true)}><LendingPage /></Protected>} />
+          <Route path="workflow" element={<Protected onLogin={() => setLoginOpen(true)}><WorkflowPage pending={pending} onRefresh={loadOverview} onOpenJob={openJob} authorityData={authorityData} /></Protected>} />
           <Route path="renewals" element={<Protected onLogin={() => setLoginOpen(true)}><RenewalDashboard /></Protected>} />
+          <Route path="overrides" element={<Protected onLogin={() => setLoginOpen(true)}><OverrideAnalyticsPage /></Protected>} />
+          <Route path="portfolio" element={<Protected onLogin={() => setLoginOpen(true)}><PortfolioPage /></Protected>} />
+          <Route path="queue" element={<Protected onLogin={() => setLoginOpen(true)}><QueuePage queueStats={queueStats} onOpenJob={openJob} onRefresh={loadQueueStats} /></Protected>} />
+          <Route path="registry" element={<Protected onLogin={() => setLoginOpen(true)}><RegistryPage /></Protected>} />
+          <Route path="integrations" element={<Protected onLogin={() => setLoginOpen(true)}><IntegrationsPage /></Protected>} />
+          <Route path="webhooks" element={<Protected onLogin={() => setLoginOpen(true)}><WebhooksPage /></Protected>} />
           <Route path="authority" element={<Protected onLogin={() => setLoginOpen(true)}><AuthorityMatrix /></Protected>} />
           <Route path="market" element={<Protected onLogin={() => setLoginOpen(true)}><MarketAdmin /></Protected>} />
           <Route path="settings" element={<SettingsPage onLogin={() => setLoginOpen(true)} />} />

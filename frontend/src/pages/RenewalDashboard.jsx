@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { FileText, TrendingUp, TrendingDown, AlertTriangle, RefreshCw, Search } from 'lucide-react';
+import { FileText, TrendingUp, TrendingDown, AlertTriangle, RefreshCw, Search, Plus, CheckCircle } from 'lucide-react';
 import { StatCard, Badge, EmptyState } from '../components/ui';
 import { endpoints, fmtCurrency } from '../lib/api';
 
@@ -7,13 +7,22 @@ export default function RenewalDashboard() {
   const [renewals, setRenewals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showCreate, setShowCreate] = useState(false);
+  const [showComplete, setShowComplete] = useState(null);
+  const [createForm, setCreateForm] = useState({ bundle_id: '', estimated_premium: '', policy_number: '' });
+  const [completeForm, setCompleteForm] = useState({ actual_premium: '', notes: '' });
+  const [materialAdjustments, setMaterialAdjustments] = useState([]);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
-      const data = await endpoints.premiumAudits();
+      const [data, mat] = await Promise.all([
+        endpoints.premiumAudits(),
+        endpoints.materialAdjustments().catch(() => ({ adjustments: [] })),
+      ]);
       setRenewals(data.audits || []);
+      setMaterialAdjustments(mat.adjustments || []);
     } catch (e) {
       setError(e.message);
     } finally {
@@ -70,6 +79,44 @@ export default function RenewalDashboard() {
         />
       </div>
 
+      <div className="flex justify-end">
+        <button type="button" onClick={() => setShowCreate(true)} className="btn-primary btn-sm text-xs"><Plus className="h-3.5 w-3.5" /> Create Audit</button>
+      </div>
+
+      {showCreate && (
+        <div className="glass-card p-6">
+          <h3 className="mb-4 font-semibold">Create Premium Audit</h3>
+          <form onSubmit={async (e) => {
+            e.preventDefault();
+            try {
+              await endpoints.createPremiumAudit(createForm.bundle_id, Number(createForm.estimated_premium), { policy_number: createForm.policy_number });
+              setShowCreate(false);
+              setCreateForm({ bundle_id: '', estimated_premium: '', policy_number: '' });
+              await load();
+            } catch (e) { alert(e.message); }
+          }} className="space-y-4">
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-slate-400">Bundle ID</label>
+                <input className="input-field w-full text-sm" value={createForm.bundle_id} onChange={e => setCreateForm(f => ({ ...f, bundle_id: e.target.value }))} required />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-slate-400">Estimated Premium</label>
+                <input type="number" className="input-field w-full text-sm" value={createForm.estimated_premium} onChange={e => setCreateForm(f => ({ ...f, estimated_premium: e.target.value }))} required />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-slate-400">Policy Number</label>
+                <input className="input-field w-full text-sm" value={createForm.policy_number} onChange={e => setCreateForm(f => ({ ...f, policy_number: e.target.value }))} />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button type="submit" className="btn-primary btn-sm">Create</button>
+              <button type="button" onClick={() => setShowCreate(false)} className="btn-secondary btn-sm">Cancel</button>
+            </div>
+          </form>
+        </div>
+      )}
+
       {loading ? (
         <div className="flex justify-center py-16">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand border-t-transparent" />
@@ -118,11 +165,62 @@ export default function RenewalDashboard() {
                       <td className="px-5 py-3 text-right font-mono text-slate-400">
                         {a.adjustments?.length || 0}
                       </td>
+                      <td className="px-5 py-3 text-center">
+                        {a.status === 'in_progress' && (
+                          <button onClick={() => setShowComplete(a.audit_id)} className="rounded-lg bg-emerald-500/20 px-2 py-1 text-xs text-emerald-400 hover:bg-emerald-500/30"><CheckCircle className="h-3 w-3 inline" /> Complete</button>
+                        )}
+                      </td>
                     </tr>
                   );
                 })}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {showComplete && (
+        <div className="glass-card p-6">
+          <h3 className="mb-4 font-semibold">Complete Audit</h3>
+          <form onSubmit={async (e) => {
+            e.preventDefault();
+            try {
+              await endpoints.completePremiumAudit(showComplete, Number(completeForm.actual_premium), completeForm.notes);
+              setShowComplete(null);
+              setCompleteForm({ actual_premium: '', notes: '' });
+              await load();
+            } catch (e) { alert(e.message); }
+          }} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-slate-400">Actual Premium</label>
+                <input type="number" className="input-field w-full text-sm" value={completeForm.actual_premium} onChange={e => setCompleteForm(f => ({ ...f, actual_premium: e.target.value }))} required />
+              </div>
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-slate-400">Notes</label>
+              <textarea className="input-field w-full text-sm" rows={2} value={completeForm.notes} onChange={e => setCompleteForm(f => ({ ...f, notes: e.target.value }))} />
+            </div>
+            <div className="flex gap-2">
+              <button type="submit" className="btn-primary btn-sm">Complete</button>
+              <button type="button" onClick={() => setShowComplete(null)} className="btn-secondary btn-sm">Cancel</button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {materialAdjustments.length > 0 && (
+        <div className="glass-card p-5">
+          <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-slate-400">
+            <AlertTriangle className="h-4 w-4 text-amber-400" /> Material Adjustments Pending Review
+          </h3>
+          <div className="space-y-2">
+            {materialAdjustments.map((adj, i) => (
+              <div key={i} className="flex items-center justify-between rounded-lg bg-surface-overlay px-4 py-2">
+                <span className="text-xs text-slate-300">{adj.audit_id} — {adj.reason}</span>
+                <span className="font-mono text-xs text-amber-400">{adj.amount > 0 ? '+' : ''}{fmtCurrency(adj.amount)}</span>
+              </div>
+            ))}
           </div>
         </div>
       )}

@@ -2,18 +2,26 @@ import { useState } from 'react';
 import { Badge, DecisionBadge, EmptyState } from '../components/ui';
 import { fmtCurrency, extractInsurance, endpoints } from '../lib/api';
 import InsuranceSourceHub from '../components/InsuranceSourceHub';
-import { Shield, BarChart3, FileSearch } from 'lucide-react';
+import { Shield, BarChart3, FileSearch, Link, Zap, Package, TrendingDown, Target } from 'lucide-react';
 
 export default function InsurancePage({ presets, jobs, onRunDemo, onOpenJob, onSubmit }) {
   const [loading, setLoading] = useState(false);
   const [copeData, setCopeData] = useState(null);
   const [missingDocs, setMissingDocs] = useState(null);
   const [focusedJob, setFocusedJob] = useState(null);
+  const [useV2, setUseV2] = useState(false);
+  const [products, setProducts] = useState(null);
+  const [lossData, setLossData] = useState(null);
+  const [calibration, setCalibration] = useState(null);
 
   const handleSubmit = async (payload) => {
     setLoading(true);
     try {
-      await onSubmit(payload);
+      if (useV2) {
+        await endpoints.runInsuranceV2(payload);
+      } else {
+        await onSubmit(payload);
+      }
     } finally {
       setLoading(false);
     }
@@ -39,6 +47,33 @@ export default function InsurancePage({ presets, jobs, onRunDemo, onOpenJob, onS
     }
   };
 
+  const loadProducts = async () => {
+    try {
+      const data = await endpoints.insuranceProducts();
+      setProducts(data);
+    } catch (e) {
+      alert('Products: ' + e.message);
+    }
+  };
+
+  const loadLossExp = async (bundleId) => {
+    try {
+      const data = await endpoints.lossExperience({ bundle_id: bundleId });
+      setLossData(data);
+    } catch (e) {
+      alert('Loss experience: ' + e.message);
+    }
+  };
+
+  const loadCalibration = async () => {
+    try {
+      const data = await endpoints.calibration();
+      setCalibration(data);
+    } catch (e) {
+      alert('Calibration: ' + e.message);
+    }
+  };
+
   return (
     <div className="mx-auto max-w-4xl space-y-10 animate-fade-in">
       <div>
@@ -48,6 +83,16 @@ export default function InsurancePage({ presets, jobs, onRunDemo, onOpenJob, onS
         </p>
       </div>
 
+      <div className="flex items-center justify-between">
+        <label className="flex items-center gap-2 text-xs text-slate-400">
+          <input type="checkbox" checked={useV2} onChange={e => setUseV2(e.target.checked)} className="rounded" />
+          <Zap className="h-3.5 w-3.5 text-amber-400" /> Pipeline v2 (appetite filter, oracles, portfolio, integration, auto broker share)
+        </label>
+        <div className="flex gap-2">
+          <button type="button" onClick={loadProducts} className="btn-secondary text-xs"><Package className="h-3 w-3" /> Products</button>
+          <button type="button" onClick={loadCalibration} className="btn-secondary text-xs"><Target className="h-3 w-3" /> Calibration</button>
+        </div>
+      </div>
       <InsuranceSourceHub onSubmit={handleSubmit} loading={loading} />
 
       {/* COPE Analysis Panel */}
@@ -127,6 +172,51 @@ export default function InsurancePage({ presets, jobs, onRunDemo, onOpenJob, onS
         </div>
       )}
 
+      {products && (
+        <div className="glass-card p-5">
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400"><Package className="mr-2 inline h-4 w-4" /> Insurance Products</h3>
+            <button onClick={() => setProducts(null)} className="text-xs text-slate-500 hover:text-slate-300">Close</button>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {(products.products || products.rating_products || []).map((p, i) => (
+              <div key={i} className="rounded-lg bg-surface-overlay p-3 ring-1 ring-white/[0.04]">
+                <p className="text-sm font-medium text-slate-200">{p.name || p.product_name || p.product_code}</p>
+                <p className="text-xs text-slate-500">{p.description || p.line_of_business || ''}</p>
+                <p className="mt-1 text-xs text-slate-400">Min: {fmtCurrency(p.min_premium)} &middot; Max: {fmtCurrency(p.max_premium)}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {calibration && (
+        <div className="glass-card p-5">
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400"><Target className="mr-2 inline h-4 w-4" /> Calibration</h3>
+            <button onClick={() => setCalibration(null)} className="text-xs text-slate-500 hover:text-slate-300">Close</button>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {Object.entries(calibration).filter(([k]) => k !== 'bundle_id' && k !== 'org_id').map(([key, val]) => (
+              <div key={key} className="rounded-lg bg-surface-overlay p-3 ring-1 ring-white/[0.04]">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">{key.replace(/_/g, ' ')}</p>
+                <p className="mt-1 text-sm font-medium text-slate-300">{typeof val === 'number' ? val.toFixed(4) : String(val)}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {lossData && (
+        <div className="glass-card p-5">
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400"><TrendingDown className="mr-2 inline h-4 w-4" /> Loss Experience</h3>
+            <button onClick={() => setLossData(null)} className="text-xs text-slate-500 hover:text-slate-300">Close</button>
+          </div>
+          <pre className="max-h-60 overflow-y-auto text-xs text-slate-400">{JSON.stringify(lossData, null, 2)}</pre>
+        </div>
+      )}
+
       {(presets?.insurance || []).length > 0 && (
         <div className="space-y-3">
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">One-click samples</p>
@@ -186,6 +276,8 @@ export default function InsurancePage({ presets, jobs, onRunDemo, onOpenJob, onS
                             <>
                               <button onClick={() => loadCope(s.bundleId)} className="rounded-lg bg-black/30 px-2 py-1 text-xs text-slate-400 hover:text-slate-200" title="COPE Risk Analysis">COPE</button>
                               <button onClick={() => loadMissingDocs(s.bundleId)} className="rounded-lg bg-black/30 px-2 py-1 text-xs text-slate-400 hover:text-slate-200" title="Missing Documents">Docs</button>
+                              <button onClick={() => loadLossExp(s.bundleId)} className="rounded-lg bg-black/30 px-2 py-1 text-xs text-slate-400 hover:text-slate-200" title="Loss Experience">Loss</button>
+                              <button onClick={async () => { try { const r = await endpoints.createBrokerShare(s.bundleId); navigator.clipboard?.writeText(`${window.location.origin}/dashboard/broker/status/${r.token}`); alert('Share link copied!'); } catch (e) { alert(e.message); } }} className="rounded-lg bg-black/30 px-2 py-1 text-xs text-slate-400 hover:text-slate-200" title="Create broker share link"><Link className="h-3 w-3 inline" /> Share</button>
                             </>
                           )}
                         </div>

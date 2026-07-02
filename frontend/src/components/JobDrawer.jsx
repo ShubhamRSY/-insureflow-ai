@@ -1,16 +1,22 @@
-import { X } from 'lucide-react';
+import { X, FileText, FileCheck, ExternalLink } from 'lucide-react';
 import { Badge } from './ui';
-import { extractMortgage } from '../lib/api';
+import { extractMortgage, endpoints, fmtCurrency } from '../lib/api';
 import InsuranceMemoView from './InsuranceMemoView';
-import { fmtCurrency } from '../lib/api';
+import AuditTrailViewer from './AuditTrailViewer';
+import { useState } from 'react';
 
 export default function JobDrawer({ job, vertical, jobId, onClose }) {
+  const [audit, setAudit] = useState(null);
+  const [quote, setQuote] = useState(null);
   if (!jobId) return null;
 
   const processing = job?.status === 'processing';
   const failed = job?.status === 'failed';
   const isInsurance = vertical === 'insurance';
   const wide = isInsurance && !processing && !failed;
+
+  const bundleId = job?.results?.bundle_id;
+  const workflowState = job?.results?.workflow_state;
 
   let content;
   if (processing) {
@@ -26,7 +32,40 @@ export default function JobDrawer({ job, vertical, jobId, onClose }) {
       <div className="rounded-xl bg-red-500/10 p-4 text-sm text-red-300">{job.error || 'Unknown error'}</div>
     );
   } else if (isInsurance) {
-    content = <InsuranceMemoView job={job} />;
+    content = (
+      <>
+        <InsuranceMemoView job={job} />
+        {bundleId && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button type="button" onClick={async () => {
+              try { const d = await endpoints.auditTrail(bundleId); setAudit(d); } catch (e) { alert(e.message); }
+            }} className="btn-secondary btn-sm text-xs"><FileText className="h-3.5 w-3.5" /> Audit Trail</button>
+            <button type="button" onClick={async () => {
+              try { const d = await endpoints.insuranceQuote(jobId); setQuote(d); } catch { alert('Quote not available'); }
+            }} className="btn-secondary btn-sm text-xs"><FileCheck className="h-3.5 w-3.5" /> Quote</button>
+            {bundleId && (
+              <button type="button" onClick={async () => {
+                try { const r = await endpoints.createBrokerShare(bundleId); navigator.clipboard?.writeText(`${window.location.origin}/dashboard/broker/status/${r.token}`); alert('Share link copied!'); } catch (e) { alert(e.message); }
+              }} className="btn-secondary btn-sm text-xs"><ExternalLink className="h-3.5 w-3.5" /> Broker Share</button>
+            )}
+          </div>
+        )}
+        {audit && bundleId && (
+          <div className="mt-4 rounded-xl bg-surface-overlay p-4 ring-1 ring-white/[0.04]">
+            <AuditTrailViewer data={audit} bundleId={bundleId} onClose={() => setAudit(null)} />
+          </div>
+        )}
+        {quote && (
+          <div className="mt-4 rounded-xl bg-surface-overlay p-4 ring-1 ring-white/[0.04]">
+            <div className="mb-2 flex items-center justify-between">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Quote Document</p>
+              <button onClick={() => setQuote(null)} className="text-xs text-slate-500 hover:text-slate-300">Close</button>
+            </div>
+            <pre className="max-h-60 overflow-y-auto text-xs text-slate-400">{typeof quote === 'string' ? quote : JSON.stringify(quote, null, 2)}</pre>
+          </div>
+        )}
+      </>
+    );
   } else {
     const s = extractMortgage(job);
     const denied = String(s.decision || '').toLowerCase() === 'deny';
