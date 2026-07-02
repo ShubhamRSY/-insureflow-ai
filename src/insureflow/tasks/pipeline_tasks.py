@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 INSURANCE_NS = "insurance"
 
 
-@celery_app.task(  # type: ignore[misc]
+@celery_app.task(  # type: ignore
     bind=True,
     name="insureflow.tasks.pipeline_tasks.run_pipeline",
     max_retries=2,

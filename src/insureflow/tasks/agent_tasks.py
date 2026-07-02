@@ -5,7 +5,7 @@ from typing import Any
 from insureflow.tasks.celery_app import celery_app
 
 
-@celery_app.task(  # type: ignore[misc]
+@celery_app.task(  # type: ignore
     bind=True,
     name="insureflow.tasks.agent_tasks.run_agent",
     max_retries=3,
@@ -36,7 +36,7 @@ def run_agent(self: Any, agent_name: str, bundle_data: dict[str, Any]) -> dict[s
     return result.model_dump()  # type: ignore[no-any-return]
 
 
-@celery_app.task(  # type: ignore[misc]
+@celery_app.task(  # type: ignore
     bind=True,
     name="insureflow.tasks.agent_tasks.supervisor_consolidate",
     max_retries=2,

@@ -135,7 +135,7 @@ class PipelineGraph:
 
     def run(self, initial_state: dict[str, Any]) -> dict[str, Any]:
         config: RunnableConfig = {"configurable": {"thread_id": initial_state.get("bundle_id", "default")}}
-        result: Any = self.compiled.invoke(initial_state, config=config)  # type: ignore[arg-type]
+        result: Any = self.compiled.invoke(initial_state, config=config)  # type: ignore
         return cast(dict[str, Any], result)
 
     def get_state(self, thread_id: str) -> Any:

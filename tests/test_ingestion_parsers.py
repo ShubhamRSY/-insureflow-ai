@@ -421,4 +421,3 @@ class TestLoaderNewInputTypes:
         )
         sov_subs = [u for u in bundle.unstructured if u.document_type == "schedule_of_values"]
         assert len(sov_subs) == 1
-

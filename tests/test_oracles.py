@@ -175,4 +175,3 @@ class TestNCCICodes:
         for code, entry in NCCI_CLASS_CODES.items():
             assert entry.risk_level in ("low", "moderate", "high", "critical")
             assert entry.description
-

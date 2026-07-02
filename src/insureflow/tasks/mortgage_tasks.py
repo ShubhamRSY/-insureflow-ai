@@ -6,7 +6,7 @@ from uuid import uuid4
 from insureflow.tasks.celery_app import celery_app
 
 
-@celery_app.task(  # type: ignore[misc]
+@celery_app.task(  # type: ignore
     bind=True,
     name="insureflow.tasks.mortgage_tasks.run_mortgage_pipeline",
     max_retries=3,
@@ -49,7 +49,7 @@ def _persist_celery_job(job_id: str, org_id: str, payload: dict[str, Any], task_
     )
 
 
-@celery_app.task(  # type: ignore[misc]
+@celery_app.task(  # type: ignore
     bind=True,
     name="insureflow.tasks.mortgage_tasks.run_mortgage_directory",
 )
@@ -82,7 +82,7 @@ def run_mortgage_directory(
         raise
 
 
-@celery_app.task(  # type: ignore[misc]
+@celery_app.task(  # type: ignore
     bind=True,
     name="insureflow.tasks.mortgage_tasks.run_mortgage_per_borrower",
 )
@@ -104,7 +104,7 @@ def run_mortgage_per_borrower(
     return result
 
 
-@celery_app.task(  # type: ignore[misc]
+@celery_app.task(  # type: ignore
     bind=True,
     name="insureflow.tasks.mortgage_tasks.run_mortgage_langgraph",
     max_retries=2,
