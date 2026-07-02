@@ -14,13 +14,13 @@ InsureFlow AI is a production-ready underwriting operating system with the follo
 
 ### Core Underwriting
 
-| Capability | Insurance | Mortgage |
-|------------|-----------|----------|
-| Document ingestion & OCR | ACORD, broker PDF/JSON, loss runs, SOV, inspections | 30+ doc types (W-2, 1040, credit, appraisal, rent roll, …) |
-| Cross-document reconciliation | Provenance hierarchy (ACORD vs inspection vs loss run) | W-2 vs 1040, appraisal vs purchase price, identity checks |
-| Specialist agents | Risk, Loss Run, Compliance, Fraud, UW Decision | Income, Credit, Asset, Collateral, Decision |
-| Decision output | ACCEPT / REFER / DECLINE + P&C premium quote | Approve / Refer / Suspend / Deny + rate lock |
-| Audit & compliance | Encrypted audit bundle + regulatory ZIP export | Encrypted memo, trail, and pipeline summary |
+| Capability | Insurance | Mortgage | Lending |
+|------------|-----------|----------|---------|
+| Document ingestion & OCR | ACORD, broker PDF/JSON, loss runs, SOV, inspections | 30+ doc types (W-2, 1040, credit, appraisal, rent roll) | Application data, credit pulls, bank statements |
+| Cross-document reconciliation | Provenance hierarchy (ACORD vs inspection vs loss run) | W-2 vs 1040, appraisal vs purchase price, identity checks | Income vs application, debt verification |
+| Specialist agents | Risk, Loss Run, Compliance, Fraud, UW Decision (+ Triage, Reinsurance, Portfolio) | Income, Credit, Asset, Collateral, Decision | Credit Risk, Compliance, Pricing |
+| Decision output | ACCEPT / REFER / DECLINE + P&C premium quote | Approve / Refer / Suspend / Deny + rate lock | Approve / Counteroffer / Decline + pricing |
+| Audit & compliance | Encrypted audit bundle + regulatory ZIP export | Encrypted memo, trail, and pipeline summary | Adverse action notices, Reg B/ECOA/HMDA compliance |
 
 ### Production Insurance Workflow
 
@@ -66,17 +66,22 @@ Category-filtered connector hub with brand logos and pull-to-submit workflow.
 
 - **JWT auth + RBAC** — viewer → underwriter → licensed_uw → admin → cuo; org-scoped data isolation, self-registration for viewer/underwriter
 - **Persistent auth store** — file-backed user registry survives server reloads
-- **Redis job store** — org-scoped async job tracking for insurance and mortgage pipelines
+- **Redis job store** — org-scoped async job tracking for insurance, mortgage, and lending pipelines
 - **Celery workers** — async mortgage processing with job-store completion sync
 - **System diagnostics** — `cli.py doctor` and `GET /system/diagnostics` (LLM, Redis, Postgres/pgvector, OCR, encryption, examples)
-- **Mortgage webhooks** — HMAC-signed event subscriptions (`mortgage.completed`, `mortgage.failed`)
+- **Insurance & mortgage webhooks** — HMAC-signed event subscriptions for both verticals
+- **Broker status shares** — Token-based public share links for broker-facing status pages
+- **Model registry** — Version-controlled model & guideline registry with compliance approval workflow
+- **PII redaction** — Automated PII detection (SSN, EIN, DOB, etc.) and document redaction
+- **Document analytics** — Analytics engine for document counts, type distribution, field coverage
+- **Entity resolution** — Named entity extraction and cross-document entity matching
 - **Docker Compose** — Redis, PostgreSQL/pgvector, API, Celery worker
 
 ### Quality Assurance
 
 | Suite | Scope | Count |
 |-------|-------|-------|
-| **Unit tests** (`pytest`) | Parsers, agents, rating, workflow, encryption, mortgage reconciliation | ~200 |
+| **Unit tests** (`pytest`) | Parsers, agents, rating, workflow, underwriting, mortgage, lending, oracles, provenance, reconciliation, entities, MCP, document analytics | ~200 (20 test files) |
 | **E2E tests** (`scripts/e2e_test.py`) | Full API integration, connectors, production workflow, Celery, Playwright browser | 42 |
 
 E2E coverage includes: auth, diagnostics, all 24 connector pulls, insurance/mortgage demo pipelines, licensed UW sign-off, policy bind, loss experience, regulatory audit package, Celery mortgage path, and browser click-through (login, navigation, password toggle).
@@ -95,6 +100,7 @@ python cli.py e2e --fast                          # Same via CLI
 |----------|-------|--------|
 | **Insurance** | ACORD, broker JSON/PDF, loss runs, SOV, inspections | ACCEPT / REFER / DECLINE memo + P&C premium quote |
 | **Mortgage** | W-2, 1040, credit, bank statements, appraisals | Approve / Refer / Suspend / Deny + rate lock quote |
+| **Lending** | Application data, credit pulls, bank statements | Approve / Counteroffer / Decline + risk-based pricing |
 
 ---
 
@@ -186,6 +192,9 @@ python cli.py agents \
 # ── Mortgage CLI ──
 python cli.py mortgage --dir simulated_documents/home_mortgage/johnson_marcus_imani --no-llm
 python cli.py mortgage-borrowers --dir simulated_documents/home_mortgage --no-llm
+
+# ── Lending CLI ──
+python cli.py lending --application examples/lending/application_001.json
 
 # ── System health ──
 python cli.py doctor
@@ -279,8 +288,16 @@ Takes a commercial insurance submission and returns:
 | **ComplianceAgent** | Regulatory and guideline compliance |
 | **FraudDetectionAgent** | Submission inconsistencies and red flags |
 | **UWDecisionAgent** | Final recommendation with rationale |
+| **TriageAgent** | Submission scoring & prioritization (hot/warm/cold/no-fit) |
+| **ExtractionAgent** | Structured data extraction from documents |
+| **VerificationAgent** | Cross-document field verification |
+| **SynthesisAgent** | UW memo generation & summary synthesis |
+| **RAGAgent** | Guideline-backed Q&A retrieval |
+| **ReinsuranceAgent** | Treaty fit analysis (quota share, excess, facultative) |
+| **PortfolioRiskAgent** | Portfolio concentration scoring (geo + industry) |
+| **OracleAgent** | External data oracle query orchestration |
 
-All agents have a **deterministic fallback** when no LLM key is configured.
+All agents have a **deterministic fallback** when no LLM key is configured. The agent swarm is coordinated by an **OrchestratorAgent** and **SupervisorAgent** that route tasks, aggregate results, and manage the ReAct loop.
 
 ### Document parsers
 
@@ -315,31 +332,81 @@ All agents have a **deterministic fallback** when no LLM key is configured.
 | Bind/loss feedback | `outcomes/` | Prediction vs actual premium/loss calibration |
 | Regulatory audit pack | `audit/package.py` | Encrypted artifacts + ZIP with SHA-256 manifest |
 | Real-time broker status | `webhooks/` | Token-based public share links, HMAC-signed webhooks |
+| PII redaction | `redaction/` | PII detection (SSN, EIN, DOB, etc.) and document redaction |
+| Entity resolution | `entities/resolver.py` | Named entity extraction & cross-doc entity matching |
+| Model registry | `registry/` | Version-controlled model & guideline registry with approval workflow |
+| Document analytics | `analytics/documents.py` | Document count, type distribution, field coverage analysis |
+| Premium audits | `outcomes/store.py` | Post-binding premium audit with material adjustment tracking |
+| Insurance webhooks | `webhooks/dispatcher.py` | HMAC-signed event subscriptions for insurance events |
+| Pipeline v2 | `api.py` | Enhanced pipeline with skip flags (appetite, oracles, portfolio, integration) |
+| Lending underwriting | `lending/` | Consumer & commercial credit underwriting (Reg B, ECOA, HMDA) |
 
 ### Insurance API endpoints
 
 | Endpoint | Method | Role | Description |
 |----------|--------|------|-------------|
 | `/pipeline/run` | POST | underwriter | Submit insurance package (text or base64 PDF) |
+| `/pipeline/v2/run` | POST | underwriter | Enhanced pipeline with skip flags (appetite, oracles, portfolio, integration) + auto broker share |
 | `/pipeline/jobs` | GET | viewer | List org-scoped jobs |
-| `/pipeline/jobs/{id}` | GET | viewer | Job status + results |
+| `/pipeline/jobs/{job_id}` | GET | viewer | Job status + results |
+| `/pipeline/jobs/{job_id}/quote` | GET | viewer | Job quote HTML document |
+| `/pipeline/jobs/{job_id}` | DELETE | admin | Delete a job |
 | `/pipeline/audit/{bundle_id}` | GET | viewer | Full audit trail |
 | `/pipeline/audit/{bundle_id}/package` | GET | admin | Regulatory ZIP export |
 | `/pipeline/workflow/pending` | GET | viewer | Bundles awaiting UW review |
+| `/pipeline/workflow/{bundle_id}` | GET | viewer | Workflow status for a bundle |
 | `/pipeline/workflow/{bundle_id}/sign-off` | POST | licensed_uw | Approve / decline / refer (with override category, UW confidence) |
 | `/pipeline/workflow/{bundle_id}/bind` | POST | licensed_uw | Bind approved policy |
 | `/pipeline/outcomes/loss-experience` | POST | underwriter | Record actual loss data |
 | `/pipeline/outcomes/calibration` | GET | viewer | Portfolio loss ratio stats |
 | `/pipeline/rating/products` | GET | viewer | Available P&C lines + base rates |
 | `/pipeline/queue` | GET | viewer | Prioritized submission queue with triage scores |
-| `/pipeline/cope/{id}` | GET | viewer | COPE risk analysis (C-O-P-E breakdown + schedule mod) |
-| `/pipeline/documents/{id}/missing` | GET | viewer | Missing document checklist |
+| `/pipeline/cope/{bundle_id}` | GET | viewer | COPE risk analysis (C-O-P-E breakdown + schedule mod) |
+| `/pipeline/documents/{bundle_id}/missing` | GET | viewer | Missing document checklist |
+| `/pipeline/renewal/{bundle_id}` | POST | underwriter | Run renewal analysis |
+| `/pipeline/jobs/{bundle_id}/broker-share` | POST | underwriter | Create broker-facing status share link |
 | `/underwriting/market` | GET | viewer | Current market phase + rate impacts |
 | `/underwriting/market/set` | POST | cuo | Set market phase (hard/soft) |
 | `/underwriting/authority` | GET | viewer | All UW authority tiers & binding limits |
-| `/pipeline/renewal/{id}` | POST | underwriter | Run renewal analysis |
 | `/analytics/overrides` | GET | viewer | Override analytics with patterns |
 | `/analytics/overrides/patterns` | GET | viewer | Detected override patterns |
+| `/analytics/documents` | GET | viewer | Document analytics summary |
+
+### Premium Audit endpoints
+
+| Endpoint | Method | Role | Description |
+|----------|--------|------|-------------|
+| `/pipeline/audits/{bundle_id}/create` | POST | underwriter | Create premium audit for a bound policy |
+| `/pipeline/audits/{audit_id}/adjustment` | POST | underwriter | Record material premium adjustment |
+| `/pipeline/audits/{audit_id}/complete` | POST | underwriter | Finalize premium audit |
+| `/pipeline/audits` | GET | viewer | List all premium audits |
+| `/pipeline/audits/material-adjustments` | GET | underwriter | List material adjustments pending review |
+
+### Broker Status & Webhooks
+
+| Endpoint | Method | Role | Description |
+|----------|--------|------|-------------|
+| `/broker/status/{token}` | GET | None (public) | Broker-facing status page (token-based) |
+| `/webhooks/insurance` | POST | admin | Subscribe to insurance webhook events |
+| `/webhooks/insurance` | GET | admin | List insurance webhook subscriptions |
+| `/webhooks/{subscription_id}` | DELETE | admin | Delete a webhook subscription |
+
+### Portfolio & Integration
+
+| Endpoint | Method | Role | Description |
+|----------|--------|------|-------------|
+| `/portfolio/summary` | GET | viewer | Portfolio concentration summary (geo + industry) |
+| `/integration/status` | GET | viewer | System integration health status |
+
+### Demo & Sources
+
+| Endpoint | Method | Role | Description |
+|----------|--------|------|-------------|
+| `/api/demo/presets` | GET | None | Available demo presets (Pacific Coast, Johnson, Midwest) |
+| `/api/demo/insurance/{preset_id}` | POST | underwriter | Run insurance demo from preset |
+| `/api/demo/mortgage/{preset_id}` | POST | underwriter | Run mortgage demo from preset |
+| `/api/insurance/sources` | GET | None | List 24 insurance source connectors |
+| `/api/insurance/sources/{source_id}/pull` | POST | underwriter | Pull documents from a connector |
 
 **Submit with PDF upload:**
 
@@ -379,6 +446,10 @@ Processes residential and commercial mortgage loan packages:
 | `MortgageComplianceEngine` | Bank compliance rule engine |
 | `LoanPricingEngine` | 7 loan products, LLPA-style adjustments |
 | `MortgageAuditLogger` | Encrypted audit bundle persistence |
+| `MortgageGraph` | LangGraph mortgage state machine (17 nodes) |
+| `MortgageReconciliation` | Cross-document field reconciliation |
+| `LLMExtractor` | LLM-based field extraction from documents |
+| `DocumentBundler` | Document bundling & loan package assembly |
 | `WebhookDispatcher` | HMAC-signed event notifications |
 | `MortgageSubmissionLoader` | OCR on PDF/image uploads |
 
@@ -431,6 +502,66 @@ python cli.py mortgage --dir simulated_documents/commercial_mortgage --product c
 
 ---
 
+## Lending Module
+
+### What it does
+
+Consumer and commercial lending underwriting for bank and fintech workflows:
+- Application intake with consumer credit pulls (simulated)
+- Credit risk scoring (FICO tiers, DTI, LTV, payment history)
+- Lending compliance rules (Reg B, ECOA, HMDA, UDAAP, Fair Lending)
+- Risk-based loan pricing with rate adjustments
+- Adverse action notice generation
+
+### Key components
+
+| Component | Description |
+|-----------|-------------|
+| `LendingPipeline` | End-to-end application-to-decision flow |
+| `CreditRiskScorer` | FICO-based credit risk assessment |
+| `LendingComplianceEngine` | Reg B, ECOA, HMDA, UDAAP rule engine |
+| `LoanPricingEngine` | Risk-based pricing with rate cards |
+
+### Lending API endpoints
+
+| Endpoint | Method | Role | Description |
+|----------|--------|------|-------------|
+| `/lending/pipeline/run` | POST | underwriter | Submit lending application |
+| `/lending/pipeline/result/{application_id}` | GET | viewer | Application status + decision |
+| `/lending/products` | GET | viewer | Available loan products & rates |
+
+---
+
+## Model Registry
+
+### What it does
+
+Version-controlled model and guideline registry with compliance review workflow:
+- Register model versions with metadata, documentation, and validation status
+- Submit entries for compliance review with approval/rejection workflow
+- Diff viewer for comparing model versions
+- Context management for deployment tracking
+- Point-in-time snapshots for audit and reproducibility
+- Bootstrap seeding for initial registry setup
+
+### Registry API endpoints
+
+| Endpoint | Method | Role | Description |
+|----------|--------|------|-------------|
+| `/registry/versions` | GET | viewer | List all registry entries |
+| `/registry/versions/{entry_id}` | GET | viewer | Get entry details |
+| `/registry/versions` | POST | admin | Create a new registry entry |
+| `/registry/versions/{entry_id}/submit` | POST | underwriter | Submit entry for compliance review |
+| `/registry/versions/{entry_id}/approve` | POST | admin | Approve a submitted entry |
+| `/registry/versions/{entry_id}/reject` | POST | admin | Reject a submitted entry |
+| `/registry/diff` | GET | viewer | Compare two registry entries |
+| `/registry/context` | GET | viewer | List active deployment contexts |
+| `/registry/snapshot` | POST | viewer | Create point-in-time snapshot |
+| `/registry/snapshots` | GET | viewer | List available snapshots |
+| `/registry/bootstrap` | POST | admin | Seed registry with initial entries |
+
+---
+
 ## System Health & Web Dashboard
 
 ### CLI doctor
@@ -458,6 +589,7 @@ Open **http://localhost:8002/dashboard** after starting the API.
 | **Renewal Dashboard** | Yes | Premium audit history, material adjustment queue |
 | **Authority Matrix** | Yes | UW tier cards, binding limits per authority level |
 | **Market Admin** | Yes | Market phase selector, rate impact metrics |
+| **Broker Status** | Yes | Token-based broker share links, public status pages |
 | **Settings** | Optional | Account info, RBAC role reference, sign out, credential reset |
 
 ### Auth reset
@@ -555,54 +687,184 @@ python -c "from insureflow.storage.encryption import EnvelopeEncryption; print(E
 src/insureflow/
 ├── agents/                  # Insurance ReAct agents + mortgage specialists
 │   ├── appetite_filter.py   # Fast-fail appetite screening (9 checks)
-│   ├── triage_agent.py      # Submission scoring & prioritization
+│   ├── base.py              # Base agent class
+│   ├── compliance_agent.py  # Regulatory compliance checks
+│   ├── extraction_agent.py  # Data extraction agent
+│   ├── fraud_detection_agent.py  # Fraud red-flag detection
+│   ├── loss_run_analyst.py  # Loss run analysis (frequency/severity)
+│   ├── orchestrator.py      # Agent orchestration & routing
+│   ├── portfolio_risk_agent.py   # Portfolio concentration analysis
+│   ├── prompts.py           # Shared LLM prompt templates
+│   ├── rag_agent.py         # RAG-backed Q&A agent
+│   ├── react_agent.py       # ReAct agent implementation
+│   ├── react_tools.py       # ReAct tool definitions
 │   ├── reinsurance_agent.py # Reinsurance treaty fit analysis
-│   └── portfolio_risk_agent.py  # Portfolio concentration analysis
-├── api.py                   # FastAPI server (insurance + mortgage)
+│   ├── risk_analyst.py      # Risk analysis (occupancy, construction, TIV)
+│   ├── supervisor.py        # Insurance supervisor agent
+│   ├── synthesis_agent.py   # Synthesis/memo generation
+│   ├── tools.py             # Shared agent tools
+│   ├── triage_agent.py      # Submission scoring & prioritization
+│   ├── uw_decision_agent.py # UW decision recommendation
+│   ├── verification_agent.py # Cross-doc verification
+│   └── mortgage/
+│       ├── supervisor.py    # Mortgage specialist supervisor
+│       └── __init__.py
+├── analytics/               # Analytics engine
+│   └── documents.py         # Document analytics (exposed at /analytics/documents)
+├── api.py                   # FastAPI server (insurance + mortgage + lending + registry)
 ├── audit/                   # Audit store, insurance audit logger, regulatory ZIP
+│   ├── logger.py            # Audit event logging
+│   ├── package.py           # Regulatory audit ZIP packaging
+│   ├── store.py             # Audit artifact store
+│   └── trail.py             # Audit trail models
 ├── auth/                    # JWT, roles (viewer → licensed_uw → admin)
+│   ├── dependencies.py      # FastAPI dependency injection
+│   ├── jwt.py               # JWT token creation/validation
+│   ├── models.py            # Auth data models
+│   └── store.py             # Persistent user store
+├── config.py                # Settings singleton (dual-model LLM config)
+├── e2e/                     # End-to-end test runner + Playwright browser tests
+│   ├── browser.py           # Playwright browser automation
+│   └── runner.py            # E2E test orchestration
+├── entities/                # Entity resolution
+│   └── resolver.py          # Named entity resolution engine
+├── exceptions.py            # Custom exception hierarchy
 ├── graph/                   # LangGraph state machine (legacy insurance path)
+│   ├── builder.py           # Graph state machine builder
+│   ├── nodes.py             # LangGraph node definitions
+│   └── state.py             # Graph state models
+├── health/                  # System diagnostics (doctor)
+│   └── diagnostics.py       # Component health checks
 ├── ingestion/
+│   ├── acord_parser.py      # ACORD XML parser
+│   ├── base.py              # Base parser interface
+│   ├── chunker.py           # Document chunking
+│   ├── classifier.py        # Document type classifier
+│   ├── excel_parser.py      # Excel spreadsheet parser
+│   ├── json_parser.py       # JSON/API payload parser
+│   ├── loader.py            # Document loader
+│   ├── loss_run_parser.py   # Loss run markdown parser
+│   ├── ocr.py               # Tesseract + pdfminer OCR
+│   ├── report_extractor.py  # Inspection report extraction
+│   ├── sov_parser.py        # Schedule of values parser
 │   ├── insurance/           # Broker PDF OCR, classifier, extractors
 │   └── mortgage/            # Mortgage document loader, classifier, extractors
 ├── insurance/               # InsurancePipeline (production default)
+│   └── pipeline.py
+├── integration/             # Core system adapters
+│   ├── base_adapter.py      # Abstract adapter interface
+│   ├── britecore_adapter.py # BriteCore integration
+│   ├── guidewire_adapter.py # Guidewire PolicyCenter integration
+│   ├── hubspot_adapter.py   # HubSpot CRM integration
+│   ├── isimodotech_adapter.py  # Isimodotech integration
+│   ├── policy_admin_service.py # Policy admin service layer
+│   └── quicksilver_adapter.py  # Quicksilver MGA integration
+├── lending/                 # Consumer & commercial lending underwriting
+│   ├── compliance.py        # Lending compliance rules (Reg B, ECOA, HMDA, UDAAP)
+│   ├── models.py            # Lending data models
+│   ├── pipeline.py          # LendingPipeline (application-to-decision)
+│   ├── pricing.py           # Loan pricing engine (risk-based)
+│   └── risk.py              # Credit risk scoring & analysis
+├── llm/                     # LLM client & configuration
+│   ├── client.py            # Multi-provider LLM client (OpenAI, Anthropic)
+│   ├── main.py              # Legacy entry point
+│   └── prompts.py           # LLM prompt configuration
+├── mcp/                     # MCP server for Claude Desktop / Cursor
+│   ├── server.py            # MCP protocol server (SSE on :8010)
+│   └── __main__.py          # Entry point
+├── models/                  # Centralized Pydantic data models
+│   ├── agents.py            # Agent output/input models
+│   ├── audit.py             # Audit data models
+│   ├── mortgage.py          # Mortgage domain models
+│   ├── provenance.py        # Provenance data models
+│   └── submissions.py       # Submission bundle models
 ├── mortgage/                # MortgagePipeline, pricing, compliance, webhooks
-├── oracles/                 # External data oracles (CLUE, NCCI, CAT models)
-├── outcomes/                # Bind outcomes, loss experience, feedback loop, override analytics
+│   ├── audit.py             # MortgageAuditLogger
+│   ├── bundler.py           # Document bundling & packaging
+│   ├── compliance.py        # MortgageComplianceEngine
+│   ├── graph.py             # LangGraph mortgage state machine
+│   ├── llm_extractor.py     # LLM-based field extraction
+│   ├── pipeline.py          # MortgagePipeline
+│   ├── pricing.py           # LoanPricingEngine
+│   ├── reconciliation.py    # Cross-document reconciliation
+│   └── webhooks.py          # WebhookDispatcher
+├── oracles/                 # External data oracles
+│   ├── aplus_client.py      # A-Plus loss history
+│   ├── cat_model_client.py  # Catastrophe model simulation
+│   ├── clue_client.py       # CLUE claims history
+│   ├── ncci_client.py       # NCCI workers comp
+│   ├── ncci_codes.py        # NCCI classification codes
+│   └── oracle_agent.py      # Oracle query agent
+├── outcomes/                # Bind outcomes, loss experience, feedback loop
 │   ├── analytics.py         # Override pattern detection & knowledge base
-│   └── override.py          # Structured override detail model (premium deltas, reason taxonomy)
+│   ├── feedback.py          # Loss feedback & portfolio calibration
+│   ├── models.py            # Outcome data models
+│   ├── override.py          # Structured override detail model
+│   └── store.py             # Outcome persistence
+├── pipeline.py              # Legacy UnderwritingPipeline
 ├── portfolio/               # Portfolio concentration & reinsurance treaty stores
 │   ├── store.py             # Portfolio policy store + concentration analysis
 │   └── treaty.py            # Reinsurance treaty model (6 treaty types)
+├── provenance/              # Data provenance hierarchy
+│   ├── hierarchy.py         # Source-of-truth hierarchy
+│   ├── rules.py             # Provenance trust rules
+│   └── trust_scorer.py      # Provenance trust scoring
+├── rag/                     # Underwriting guidelines (in-memory + pgvector)
+│   ├── guidelines.py        # 18 UW guidelines across 8 categories
+│   ├── rag_agent.py         # RAG retrieval agent
+│   └── vector_store.py      # pgvector/char-n-gram store
 ├── rating/                  # P&C rating engine
 │   ├── engine.py            # ISO-style rating with COPE + market cycle adjustments
 │   ├── models.py            # Quote models, rate components
+│   ├── quote_document.py    # Quote document generation
 │   └── adapters/            # Policy admin adapter (Guidewire/Duck Creek stub)
-├── underwriting/            # Core underwriting domain (new)
-│   ├── cope.py              # COPE risk analysis (Construction/Occupancy/Protection/Exposure)
+├── reconciliation/          # Cross-document discrepancy detection
+│   ├── discrepancies.py     # Discrepancy type definitions
+│   ├── engine.py            # Reconciliation engine
+│   └── matcher.py           # Field matching & comparison
+├── redaction/               # PII redaction pipeline
+│   ├── detector.py          # PII pattern detection
+│   ├── pipeline.py          # Redaction pipeline orchestration
+│   └── redactor.py          # Document content redaction
+├── registry/                # Model versioning & compliance registry
+│   ├── models.py            # Registry data models
+│   └── service.py           # Version management & approval workflow
+├── storage/                 # Redis job store, Fernet encryption
+│   ├── base.py              # Storage base interface
+│   ├── encryption.py        # Fernet envelope encryption
+│   ├── job_store.py         # Org-scoped Redis job store
+│   └── memory.py            # In-memory job store fallback
+├── tasks/                   # Celery workers (insurance + mortgage)
+│   ├── agent_tasks.py       # Agent Celery tasks
+│   ├── celery_app.py        # Celery application config
+│   ├── mortgage_tasks.py    # Mortgage pipeline Celery tasks
+│   └── pipeline_tasks.py    # Insurance pipeline Celery tasks
+├── underwriting/            # Core underwriting domain
 │   ├── authority.py         # Delegation of authority matrix (Junior/Senior/CUO/MGA)
+│   ├── cope.py              # COPE risk analysis (Construction/Occupancy/Protection/Exposure)
 │   ├── market.py            # Market cycle awareness (hard/soft market pricing)
 │   └── renewal.py           # Pre-renewal engine (60-120 day window, bundling analysis)
-├── workflow/                # Licensed UW sign-off state machine
-├── storage/                 # Redis job store, Fernet encryption
 ├── webhooks/                # HMAC-signed event dispatch + broker status shares
-├── rag/                     # Underwriting guidelines (in-memory + pgvector)
-├── provenance/              # Data provenance hierarchy
-├── reconciliation/          # Cross-document discrepancy detection
-├── tasks/                   # Celery workers (insurance + mortgage)
-├── e2e/                     # End-to-end test runner + Playwright browser tests
-├── health/                  # System diagnostics (doctor)
-├── mcp/                     # MCP server for Claude Desktop / Cursor
-├── integration/             # Core system adapters (BriteCore, Guidewire)
+│   └── dispatcher.py        # Webhook event dispatcher
+├── workflow/                # Licensed UW sign-off state machine
+│   ├── models.py            # Workflow state models
+│   ├── service.py           # Workflow orchestration
+│   └── store.py             # Workflow persistence
 ├── static/ui/               # Built React dashboard (Vite output)
 └── cli.py                   # Typer CLI
 
 frontend/                    # React dashboard source (Vite + Tailwind)
-scripts/e2e_test.py          # E2E test CLI entry point
+├── src/
+│   ├── App.jsx
+│   ├── pages/               # 10 dashboard pages
+│   └── components/          # Shared UI components
+scripts/
+├── e2e_test.py              # E2E test CLI entry point
+└── init_db.sql              # PostgreSQL schema initialization
 
-examples/                    # 3 carrier insurance submissions (Pacific Coast, Northwind, Sample)
+examples/                    # 5 carrier insurance submissions (Pacific Coast, Northwind, Sample, Sunrise, Veririsk)
 simulated_documents/           # 80+ mortgage files across 10 borrower scenarios
-tests/                         # pytest suite
+tests/                         # pytest suite (20 test files)
 evaluations/                   # Ragas + Giskard MLOps evaluation
 docs/architecture.md           # Detailed system design
 ```
@@ -617,6 +879,8 @@ docs/architecture.md           # Detailed system design
 |---------|-------|-------------|
 | **Pacific Coast Distributors** | 5 | Cold storage, $43.5M TIV, ammonia refrigeration |
 | **Northwind Traders** | 4 | Heavy machinery plant, $31.7M TIV |
+| **Sunrise Artisan** | 2 | Small artisan contractor |
+| **Veririsk** | 3 | ISO loss run, inspection report, principal background |
 | **Sample Co** | 2 | Simple property risk |
 
 ### Mortgage (`simulated_documents/`)
@@ -679,10 +943,35 @@ docker compose up --build
 python -m pytest tests/ -q
 
 # Focused suites
-python -m pytest tests/test_mortgage.py tests/test_mortgage_infra.py -v
-python -m pytest tests/test_insurance_production.py -v
-python -m pytest tests/test_health.py -v
+python -m pytest tests/test_agents.py tests/test_underwriting.py -v
+python -m pytest tests/test_mortgage.py tests/test_mortgage_infra.py tests/test_reconciliation.py -v
+python -m pytest tests/test_insurance_production.py tests/test_pipeline_graph.py -v
+python -m pytest tests/test_lending.py tests/test_oracles.py -v
+python -m pytest tests/test_health.py tests/test_mcp_server.py -v
+python -m pytest tests/test_provenance.py tests/test_entities.py -v
+python -m pytest tests/test_ingestion_parsers.py tests/test_acord_parser.py -v
 ```
+
+| Test suite | Scope |
+|------------|-------|
+| `test_agents.py` | Agent orchestration, ReAct tools, extraction |
+| `test_underwriting.py` | COPE, market cycle, authority, renewal |
+| `test_mortgage.py` | Mortgage pipeline, pricing, compliance |
+| `test_mortgage_infra.py` | Mortgage graph, reconciliation, webhooks |
+| `test_reconciliation.py` | Cross-document discrepancy detection |
+| `test_insurance_production.py` | Full insurance production workflow |
+| `test_pipeline_graph.py` | LangGraph state machine |
+| `test_lending.py` | Lending pipeline, compliance, risk |
+| `test_oracles.py` | CLUE, NCCI, CAT model clients |
+| `test_health.py` | System diagnostics |
+| `test_mcp_server.py` | MCP protocol tools |
+| `test_provenance.py` | Provenance hierarchy & trust scoring |
+| `test_entities.py` | Entity resolution |
+| `test_ingestion_parsers.py` | JSON, Excel, SOV, loss run parsers |
+| `test_acord_parser.py` | ACORD XML parser |
+| `test_document_analytics.py` | Document analytics engine |
+| `test_pipeline.py` | Pipeline integration tests |
+| `test_e2e.py` | End-to-end pipeline scenarios |
 
 ### End-to-end tests (42 scenarios)
 
