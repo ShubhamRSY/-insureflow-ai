@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timezone
+from typing import Any
 from uuid import uuid4
 
 from insureflow.integration.base_adapter import (
@@ -9,8 +10,7 @@ from insureflow.integration.base_adapter import (
     IntegrationResult,
     PolicySubmissionPayload,
 )
-from insureflow.integrations.http_client import build_http_client
-from insureflow.integrations.http_client import IntegrationHTTPError
+from insureflow.integrations.http_client import IntegrationHTTPError, build_http_client
 from insureflow.oracles._live import resolve_integration_mode
 
 logger = logging.getLogger(__name__)
@@ -67,7 +67,7 @@ class BriteCoreAdapter(BasePolicyAdminAdapter):
             response_payload={"policy_number": policy_number, "status": "bound"},
         )
 
-    def status(self) -> dict:
+    def status(self) -> dict[str, Any]:
         return {
             "system": self.get_system_name(),
             "mode": self._resolved_mode(),

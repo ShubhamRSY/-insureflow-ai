@@ -6,8 +6,7 @@ from datetime import datetime, timezone
 from typing import Any
 from uuid import uuid4
 
-from insureflow.integrations.http_client import build_http_client
-from insureflow.integrations.http_client import IntegrationHTTPError
+from insureflow.integrations.http_client import IntegrationHTTPError, build_http_client
 from insureflow.oracles._live import resolve_integration_mode
 
 logger = logging.getLogger(__name__)

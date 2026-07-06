@@ -15,8 +15,8 @@ from insureflow.integrations.factory import (
 )
 from insureflow.integrations.health import IntegrationHealthService, effective_mode
 from insureflow.integrations.http_client import IntegrationHTTPError
-from insureflow.outcomes.feedback import FeedbackEngine
 from insureflow.oracles._live import resolve_integration_mode
+from insureflow.outcomes.feedback import FeedbackEngine
 
 
 class EnterpriseEcosystemService:
@@ -170,7 +170,7 @@ class EnterpriseEcosystemService:
         reviewer: str = "",
     ) -> dict[str, Any]:
         store = AuditStore()
-        raw = store.load_json(bundle_id, "checkpoints.json", org_id=org_id) or []
+        raw: dict[str, Any] | list[Any] = store.load_json(bundle_id, "checkpoints.json", org_id=org_id) or []
         checkpoints = raw.get("items", []) if isinstance(raw, dict) else list(raw)
         updated = []
         for cp in checkpoints:

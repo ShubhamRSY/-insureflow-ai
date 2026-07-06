@@ -5,7 +5,7 @@ from insureflow.integration.britecore_adapter import BriteCoreAdapter
 from insureflow.integration.guidewire_adapter import GuidewireAdapter
 from insureflow.integration.hubspot_adapter import HubSpotAdapter
 from insureflow.integration.policy_admin_service import PolicyAdminService
-from insureflow.integrations.http_client import build_http_client
+from insureflow.integrations.http_client import IntegrationHTTPClient, build_http_client
 
 
 def build_hubspot_adapter() -> HubSpotAdapter:
@@ -16,23 +16,23 @@ def build_hubspot_adapter() -> HubSpotAdapter:
     )
 
 
-def build_loss_control_client():
+def build_loss_control_client() -> IntegrationHTTPClient:
     return build_http_client(settings.loss_control_api_key, settings.loss_control_api_url)
 
 
-def build_claims_client():
+def build_claims_client() -> IntegrationHTTPClient:
     return build_http_client(settings.claims_api_key, settings.claims_api_url)
 
 
-def build_broker_portal_client():
+def build_broker_portal_client() -> IntegrationHTTPClient:
     return build_http_client(settings.broker_portal_api_key, settings.broker_portal_api_url)
 
 
-def build_actuarial_client():
+def build_actuarial_client() -> IntegrationHTTPClient:
     return build_http_client(settings.actuarial_api_key, settings.actuarial_api_url)
 
 
-def build_iso_rating_client():
+def build_iso_rating_client() -> IntegrationHTTPClient:
     return build_http_client(settings.iso_rating_api_key, settings.iso_rating_api_url)
 
 

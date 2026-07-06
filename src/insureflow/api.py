@@ -33,7 +33,7 @@ from insureflow.underwriting.renewal import PremiumAuditEngine
 try:
     from insureflow.gateway.router import router as integration_gateway_router
 except ImportError:
-    integration_gateway_router = None  # type: ignore[assignment,misc]
+    integration_gateway_router = None
 
 logger = logging.getLogger(__name__)
 
@@ -599,7 +599,7 @@ def _run_pipeline_task(job_id: str, request: SubmissionRequest, org_id: str) -> 
             docs = [{"filename": d.filename, "content": d.content} for d in request.documents] if request.documents else None
             pipeline = InsurancePipeline(org_id=org_id, use_llm=request.use_llm)
 
-            def on_progress(data: dict) -> None:
+            def on_progress(data: dict[str, Any]) -> None:
                 job_store.set(
                     INSURANCE_NS,
                     job_id,
@@ -1320,7 +1320,7 @@ def resolve_checkpoint(
         current.org_id,
         checkpoint_id,
         action,
-        reviewer=current.username,
+        reviewer=current.username or "underwriter",
     )
 
 

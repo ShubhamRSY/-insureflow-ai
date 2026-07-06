@@ -4,8 +4,6 @@ import dataclasses
 from typing import Any, Callable
 from uuid import uuid4
 
-from insureflow.insurance.progress import PipelineProgressTracker
-
 from insureflow.agents.appetite_filter import AppetiteFilterAgent
 from insureflow.agents.extraction_agent import ExtractionAgent
 from insureflow.agents.portfolio_risk_agent import PortfolioRiskAgent
@@ -17,6 +15,7 @@ from insureflow.audit.insurance_audit import InsuranceAuditLogger
 from insureflow.audit.store import AuditStore
 from insureflow.ingestion.insurance.loader import InsuranceDocumentLoader
 from insureflow.ingestion.loader import SubmissionLoader
+from insureflow.insurance.progress import PipelineProgressTracker
 from insureflow.integrations.factory import build_policy_admin_service
 from insureflow.llm.client import LLMClient
 from insureflow.models.audit import PipelineEvent

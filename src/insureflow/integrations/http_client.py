@@ -152,14 +152,16 @@ class IntegrationHTTPClient:
         return {"reachable": False, "mode": "unreachable", "error": "Health check failed on all paths"}
 
 
-def build_http_client(api_key: str, base_url: str, **kwargs: object) -> IntegrationHTTPClient:
+def build_http_client(api_key: str, base_url: str, **kwargs: Any) -> IntegrationHTTPClient:
     from insureflow.config import settings
 
+    timeout_raw = kwargs.get("timeout_seconds", settings.integration_timeout_seconds)
+    retries_raw = kwargs.get("max_retries", settings.integration_max_retries)
     return IntegrationHTTPClient(
         api_key=api_key,
         base_url=base_url,
-        timeout_seconds=float(kwargs.get("timeout_seconds", settings.integration_timeout_seconds)),  # type: ignore[arg-type]
-        max_retries=int(kwargs.get("max_retries", settings.integration_max_retries)),  # type: ignore[arg-type]
+        timeout_seconds=float(timeout_raw) if isinstance(timeout_raw, (int, float, str)) else settings.integration_timeout_seconds,
+        max_retries=int(retries_raw) if isinstance(retries_raw, (int, str)) else settings.integration_max_retries,
     )
 
 

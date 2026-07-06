@@ -120,7 +120,6 @@ class CatastropheModelClient:
                 city=city,
                 state=state,
                 zip_code=zip_code,
-                query_completed=False,
             )
 
         state_upper = (state or "").upper()

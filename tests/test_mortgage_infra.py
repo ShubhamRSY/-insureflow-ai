@@ -190,4 +190,4 @@ class TestMortgageAPIIntegration:
         client = TestClient(app)
         resp = client.get("/dashboard")
         assert resp.status_code == 200
-        assert "InsureFlow" in resp.text
+        assert "Rytera" in resp.text
