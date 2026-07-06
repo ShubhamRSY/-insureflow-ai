@@ -1,8 +1,10 @@
-# InsureFlow AI
+# Rytera
 
 > Enterprise multi-agent underwriting platform for **commercial insurance**, **bank mortgage**, and **consumer/commercial lending** document processing.
 
-InsureFlow AI ingests multi-format submission packages — ACORD XML, broker PDFs, loss runs, W-2s, credit reports, appraisals — and produces an underwriting memo with a recommendation, premium or rate quote, encrypted audit trail, and optional licensed underwriter sign-off.
+**Product:** [Rytera](https://rytera.ai) · **Package name:** `insureflow-ai` (internal Python module: `insureflow`)
+
+Rytera ingests multi-format submission packages — ACORD XML, broker PDFs, loss runs, W-2s, credit reports, appraisals — and produces an underwriting memo with a recommendation, premium or rate quote, encrypted audit trail, and optional licensed underwriter sign-off.
 
 All three verticals share a unified API, JWT authentication, org-scoped job store, Fernet encryption, and React dashboard. Pipelines operate **with or without an LLM API key** via deterministic agent fallbacks.
 
@@ -10,7 +12,7 @@ All three verticals share a unified API, JWT authentication, org-scoped job stor
 
 ## Platform Deliverables
 
-InsureFlow AI is a production-ready underwriting operating system with the following capabilities shipped and verified:
+Rytera is a production-ready underwriting operating system with the following capabilities shipped and verified:
 
 ### Core Underwriting
 

@@ -43,6 +43,15 @@ def run_pipeline(self: Any, job_id: str, request_data: dict[str, Any], org_id: s
 
             docs = [{"filename": d.filename, "content": d.content} for d in req.documents] if req.documents else None
             pipeline = InsurancePipeline(org_id=org_id, use_llm=req.use_llm)
+
+            def on_progress(data: dict) -> None:
+                job_store.set(
+                    INSURANCE_NS,
+                    job_id,
+                    {"status": "processing", "progress": data},
+                    org_id=org_id,
+                )
+
             result = pipeline.run(
                 acord_xml=req.acord_xml,
                 inspection_reports=req.inspection_reports,
@@ -53,6 +62,7 @@ def run_pipeline(self: Any, job_id: str, request_data: dict[str, Any], org_id: s
                 documents=docs,
                 pdf_paths=req.pdf_paths,
                 bundle_id=req.bundle_id or job_id,
+                progress_callback=on_progress,
             )
 
         job_store.set(INSURANCE_NS, job_id, {"status": "completed", "results": result}, org_id=org_id)

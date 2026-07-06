@@ -113,6 +113,12 @@ class PolicyAdminService:
 
         return results
 
+    def status(self) -> dict[str, Any]:
+        return {
+            "primary": self.primary.status() if hasattr(self.primary, "status") else {},
+            "fallback": self.fallback.status() if hasattr(self.fallback, "status") else {},
+        }
+
     def _build_payload(
         self,
         bundle: SubmissionBundle,

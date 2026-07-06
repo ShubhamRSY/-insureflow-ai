@@ -1,58 +1,49 @@
-import { X, FileText, FileCheck, ExternalLink } from 'lucide-react';
+import { X, FileCheck, ExternalLink } from 'lucide-react';
 import { Badge } from './ui';
 import { extractMortgage, endpoints, fmtCurrency } from '../lib/api';
 import InsuranceMemoView from './InsuranceMemoView';
-import AuditTrailViewer from './AuditTrailViewer';
+import SubmissionJourney from './SubmissionJourney';
 import { useState } from 'react';
 
 export default function JobDrawer({ job, vertical, jobId, onClose }) {
-  const [audit, setAudit] = useState(null);
   const [quote, setQuote] = useState(null);
   if (!jobId) return null;
 
   const processing = job?.status === 'processing';
   const failed = job?.status === 'failed';
   const isInsurance = vertical === 'insurance';
-  const wide = isInsurance && !processing && !failed;
+  const wide = isInsurance;
 
   const bundleId = job?.results?.bundle_id;
-  const workflowState = job?.results?.workflow_state;
 
   let content;
-  if (processing) {
-    content = (
-      <div className="flex flex-col items-center py-12 text-center">
-        <div className="mb-4 h-10 w-10 animate-spin rounded-full border-2 border-brand border-t-transparent" />
-        <p className="text-slate-300">Processing submission…</p>
-        <p className="mt-1 text-sm text-slate-500">Auto-refreshing every 3 seconds</p>
-      </div>
-    );
-  } else if (failed) {
+  if (failed) {
     content = (
       <div className="rounded-xl bg-red-500/10 p-4 text-sm text-red-300">{job.error || 'Unknown error'}</div>
     );
   } else if (isInsurance) {
     content = (
       <>
-        <InsuranceMemoView job={job} />
+        <SubmissionJourney job={job} />
+        {processing && (
+          <div className="mt-6 flex flex-col items-center py-6 text-center">
+            <div className="mb-3 h-8 w-8 animate-spin rounded-full border-2 border-brand border-t-transparent" />
+            <p className="text-sm text-slate-300">Running underwriting pipeline…</p>
+            <p className="mt-1 text-xs text-slate-500">Auto-refreshing every 3 seconds</p>
+          </div>
+        )}
+        {!processing && (
+          <>
+            <div className="my-6 border-t border-white/[0.06]" />
+            <InsuranceMemoView job={job} />
         {bundleId && (
           <div className="mt-4 flex flex-wrap gap-2">
             <button type="button" onClick={async () => {
-              try { const d = await endpoints.auditTrail(bundleId); setAudit(d); } catch (e) { alert(e.message); }
-            }} className="btn-secondary btn-sm text-xs"><FileText className="h-3.5 w-3.5" /> Audit Trail</button>
-            <button type="button" onClick={async () => {
               try { const d = await endpoints.insuranceQuote(jobId); setQuote(d); } catch { alert('Quote not available'); }
-            }} className="btn-secondary btn-sm text-xs"><FileCheck className="h-3.5 w-3.5" /> Quote</button>
-            {bundleId && (
-              <button type="button" onClick={async () => {
-                try { const r = await endpoints.createBrokerShare(bundleId); navigator.clipboard?.writeText(`${window.location.origin}/dashboard/broker/status/${r.token}`); alert('Share link copied!'); } catch (e) { alert(e.message); }
-              }} className="btn-secondary btn-sm text-xs"><ExternalLink className="h-3.5 w-3.5" /> Broker Share</button>
-            )}
-          </div>
-        )}
-        {audit && bundleId && (
-          <div className="mt-4 rounded-xl bg-surface-overlay p-4 ring-1 ring-white/[0.04]">
-            <AuditTrailViewer data={audit} bundleId={bundleId} onClose={() => setAudit(null)} />
+            }} className="btn-secondary btn-sm text-xs"><FileCheck className="h-3.5 w-3.5" /> Quote PDF</button>
+            <button type="button" onClick={async () => {
+              try { const r = await endpoints.createBrokerShare(bundleId); navigator.clipboard?.writeText(`${window.location.origin}/dashboard/broker/status/${r.token}`); alert('Share link copied!'); } catch (e) { alert(e.message); }
+            }} className="btn-secondary btn-sm text-xs"><ExternalLink className="h-3.5 w-3.5" /> Broker Share</button>
           </div>
         )}
         {quote && (
@@ -64,7 +55,17 @@ export default function JobDrawer({ job, vertical, jobId, onClose }) {
             <pre className="max-h-60 overflow-y-auto text-xs text-slate-400">{typeof quote === 'string' ? quote : JSON.stringify(quote, null, 2)}</pre>
           </div>
         )}
+          </>
+        )}
       </>
+    );
+  } else if (processing) {
+    content = (
+      <div className="flex flex-col items-center py-12 text-center">
+        <div className="mb-4 h-10 w-10 animate-spin rounded-full border-2 border-brand border-t-transparent" />
+        <p className="text-slate-300">Processing submission…</p>
+        <p className="mt-1 text-sm text-slate-500">Auto-refreshing every 3 seconds</p>
+      </div>
     );
   } else {
     const s = extractMortgage(job);
@@ -109,11 +110,11 @@ export default function JobDrawer({ job, vertical, jobId, onClose }) {
   return (
     <>
       <div className="fixed inset-0 z-[80] bg-black/50 backdrop-blur-sm animate-fade-in" onClick={onClose} />
-      <div className={`fixed inset-y-0 right-0 z-[90] flex flex-col border-l border-white/[0.06] bg-surface-raised shadow-2xl animate-slide-up ${wide ? 'w-full max-w-xl' : 'w-full max-w-md'}`}>
+      <div className={`fixed inset-y-0 right-0 z-[90] flex flex-col border-l border-white/[0.06] bg-surface-raised shadow-2xl animate-slide-up ${wide ? 'w-full max-w-2xl' : 'w-full max-w-md'}`}>
         <div className="flex items-center justify-between border-b border-white/[0.06] px-6 py-4">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
-              {isInsurance ? 'Underwriting Memo' : 'Job Detail'}
+              {isInsurance ? 'Submission Journey' : 'Job Detail'}
             </p>
             <p className="font-mono text-sm font-semibold">{jobId}</p>
           </div>
@@ -123,6 +124,9 @@ export default function JobDrawer({ job, vertical, jobId, onClose }) {
         </div>
         <div className="flex-1 overflow-y-auto p-6">
           {!isInsurance && <div className="mb-4"><Badge status={job?.status} pulse={processing} /></div>}
+          {isInsurance && processing && (
+            <div className="mb-4"><Badge status={job?.status} pulse /></div>
+          )}
           {content}
         </div>
       </div>

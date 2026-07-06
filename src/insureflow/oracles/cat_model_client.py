@@ -4,6 +4,10 @@ import logging
 from dataclasses import dataclass, field
 from typing import Any
 
+from insureflow.integrations.http_client import IntegrationHTTPError
+from insureflow.integrations.parsers import parse_cat_response
+from insureflow.oracles._live import build_oracle_http, resolve_integration_mode
+
 logger = logging.getLogger(__name__)
 
 
@@ -89,10 +93,18 @@ class CatastropheModelClient:
         self,
         api_key: str = "",
         base_url: str = "https://api.verisk.com/cat/v1",
+        mode: str = "simulated",
+        query_path: str = "/model",
     ):
         self.api_key = api_key
         self.base_url = base_url
-        self._enabled = bool(api_key) or True
+        self.mode = mode
+        self.query_path = query_path
+        self.http = build_oracle_http(api_key, base_url)
+        self._enabled = True
+
+    def _resolved_mode(self) -> str:
+        return resolve_integration_mode(self.mode, self.http)
 
     def model_location(
         self,
@@ -200,6 +212,9 @@ class CatastropheModelClient:
         locations: list[dict[str, Any]],
         total_tiv: float = 1_000_000.0,
     ) -> CATModelResult:
+        if self._resolved_mode() == "live":
+            return self._call_live_model(locations, total_tiv)
+
         results: list[CATExposureResult] = []
         for loc in locations:
             tiv = ((loc.get("building_value") or 0) + (loc.get("contents_value") or 0) + (loc.get("bi_value") or 0)) or total_tiv / max(len(locations), 1)
@@ -218,3 +233,40 @@ class CatastropheModelClient:
             portfolio_aggregate_pml_100yr=round(sum(r.estimated_pml_100yr for r in results), 2),
             portfolio_aggregate_pml_250yr=round(sum(r.estimated_pml_250yr for r in results), 2),
         )
+
+    def _call_live_model(self, locations: list[dict[str, Any]], total_tiv: float) -> CATModelResult:
+        try:
+            resp = self.http.post(self.query_path, {"locations": locations, "total_tiv": total_tiv})
+            if not resp.ok:
+                return CATModelResult(query_completed=False, error=f"CAT API HTTP {resp.status_code}")
+            parsed = parse_cat_response(resp.json_dict())
+            exposures: list[CATExposureResult] = []
+            for raw in parsed.get("exposures", []):
+                exposures.append(
+                    CATExposureResult(
+                        address=str(raw.get("address", "")),
+                        city=str(raw.get("city", "")),
+                        state=str(raw.get("state", "")),
+                        zip_code=str(raw.get("zip_code", "")),
+                        hurricane_risk_score=float(raw.get("hurricane_risk_score", 0)),
+                        earthquake_risk_score=float(raw.get("earthquake_risk_score", 0)),
+                        wildfire_risk_score=float(raw.get("wildfire_risk_score", 0)),
+                        flood_risk_score=float(raw.get("flood_risk_score", 0)),
+                        combined_cat_score=float(raw.get("combined_cat_score", 0)),
+                        in_coastal_zone=bool(raw.get("in_coastal_zone")),
+                        in_wildfire_zone=bool(raw.get("in_wildfire_zone")),
+                        in_flood_plain=bool(raw.get("in_flood_plain")),
+                        estimated_aal=float(raw.get("estimated_aal", 0)),
+                        estimated_pml_100yr=float(raw.get("estimated_pml_100yr", 0)),
+                        estimated_pml_250yr=float(raw.get("estimated_pml_250yr", 0)),
+                    )
+                )
+            return CATModelResult(
+                exposures=exposures,
+                portfolio_aggregate_aal=float(parsed.get("portfolio_aggregate_aal", sum(e.estimated_aal for e in exposures))),
+                portfolio_aggregate_pml_100yr=float(parsed.get("portfolio_aggregate_pml_100yr", sum(e.estimated_pml_100yr for e in exposures))),
+                portfolio_aggregate_pml_250yr=float(parsed.get("portfolio_aggregate_pml_250yr", sum(e.estimated_pml_250yr for e in exposures))),
+            )
+        except IntegrationHTTPError as exc:
+            logger.exception("CAT live model failed")
+            return CATModelResult(query_completed=False, error=str(exc))

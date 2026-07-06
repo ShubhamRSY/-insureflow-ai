@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import dataclasses
-from typing import Any
+from typing import Any, Callable
 from uuid import uuid4
+
+from insureflow.insurance.progress import PipelineProgressTracker
 
 from insureflow.agents.appetite_filter import AppetiteFilterAgent
 from insureflow.agents.extraction_agent import ExtractionAgent
@@ -15,11 +17,11 @@ from insureflow.audit.insurance_audit import InsuranceAuditLogger
 from insureflow.audit.store import AuditStore
 from insureflow.ingestion.insurance.loader import InsuranceDocumentLoader
 from insureflow.ingestion.loader import SubmissionLoader
-from insureflow.integration.policy_admin_service import PolicyAdminService
+from insureflow.integrations.factory import build_policy_admin_service
 from insureflow.llm.client import LLMClient
 from insureflow.models.audit import PipelineEvent
 from insureflow.models.submissions import SubmissionStatus
-from insureflow.oracles.oracle_agent import OracleAgent
+from insureflow.oracles.factory import build_oracle_agent
 from insureflow.outcomes.feedback import FeedbackEngine
 from insureflow.portfolio.store import get_portfolio_store
 from insureflow.provenance.hierarchy import ProvenanceEngine
@@ -68,11 +70,11 @@ class InsurancePipeline:
 
         # New pipeline stages
         self.appetite_filter = AppetiteFilterAgent()
-        self.oracle_agent = OracleAgent()
+        self.oracle_agent = build_oracle_agent()
         self.portfolio_risk = PortfolioRiskAgent()
         self.reinsurance = ReinsuranceAgent()
         self.triage = get_triage_agent()
-        self.policy_admin = PolicyAdminService()
+        self.policy_admin = build_policy_admin_service()
         self.portfolio_store = get_portfolio_store()
 
     def run(
@@ -92,12 +94,17 @@ class InsurancePipeline:
         skip_portfolio: bool = False,
         skip_reinsurance: bool = False,
         skip_core_integration: bool = False,
+        progress_callback: Callable[[dict[str, Any]], None] | None = None,
     ) -> dict[str, Any]:
         bid = bundle_id or f"ins-{uuid4().hex[:12]}"
         audit = InsuranceAuditLogger(self.audit_store, self.encryption, org_id=self.org_id)
         audit.start(bid)
+        progress = PipelineProgressTracker(on_update=progress_callback)
 
         # ── 1. SUBMISSION TRIAGE (score & prioritize before any processing) ──
+        progress.start("intake", "Intake", "Receiving submission package")
+        progress.complete("intake", detail="Submission received")
+        progress.start("triage", "Triage", "Scoring submission priority")
         triage_result = self.triage.score_submission(
             self._build_preliminary_bundle(
                 acord_xml=acord_xml,
@@ -106,8 +113,13 @@ class InsurancePipeline:
                 bundle_id=bid,
             )
         )
+        progress.complete(
+            "triage",
+            detail=f"Score {triage_result.score:.0f} · {triage_result.priority.value}",
+        )
 
         # ── 2. FAST-FAIL APPETITE FILTER (before expensive ingestion) ──
+        progress.start("appetite", "Appetite", "Checking carrier appetite")
         appetite_passed = True
         appetite_result = None
         if not skip_appetite_filter:
@@ -129,14 +141,34 @@ class InsurancePipeline:
                     },
                 )
                 if not appetite_result.needs_uw_referral:
-                    return self._build_appetite_decline_result(
+                    progress.fail("appetite", appetite_result.reason)
+                    for sid, label in [
+                        ("parse", "Parsed"),
+                        ("verify", "Verified"),
+                        ("reconcile", "Reconciled"),
+                        ("analyze", "Scored"),
+                        ("price", "Priced"),
+                    ]:
+                        progress.skip(sid, label, "Appetite decline")
+                    progress.start("decision", "Decision", "Declined")
+                    progress.complete("decision", detail="DECLINE", status="failed", findings=1)
+                    decline = self._build_appetite_decline_result(
                         bid,
                         appetite_result.reason,
                         appetite_result.findings,
                         audit,
                     )
+                    decline["pipeline_stages"] = progress.finish()
+                    return decline
+
+        progress.complete(
+            "appetite",
+            detail="Within appetite" if appetite_passed else "Referral required",
+            status="warning" if appetite_result and appetite_result.needs_uw_referral else "complete",
+        )
 
         # ── 2. Ingest ──
+        progress.start("parse", "Parsed", "Ingesting and parsing documents")
         if documents:
             bundle = self.doc_loader.load_from_documents(documents, bundle_id=bid)
             ocr_count = sum(1 for d in bundle.unstructured if d.extracted_fields.get("ocr_engine"))
@@ -158,6 +190,11 @@ class InsurancePipeline:
             f"Ingested {len(bundle.unstructured)} unstructured docs, structured={'yes' if bundle.structured else 'no'}",
             metadata={"ocr_documents": ocr_count},
         )
+        progress.complete(
+            "parse",
+            detail=f"{len(bundle.unstructured)} docs · OCR {ocr_count}",
+            findings=ocr_count,
+        )
 
         # ── 3. Extract (LLM on unstructured if enabled) ──
         if self.use_llm and getattr(self.extraction.llm, "api_key", None):
@@ -165,6 +202,7 @@ class InsurancePipeline:
         bundle.status = SubmissionStatus.EXTRACTED
 
         # ── 4. EXTERNAL DATA ORACLES (CLUE, NCCI, CAT) ──
+        progress.start("verify", "Verified", "Running external oracle checks")
         oracle_findings: list[Any] = []
         if not skip_oracles:
             bundle.status = SubmissionStatus.EXTERNAL_ORACLE_CHECK
@@ -179,11 +217,26 @@ class InsurancePipeline:
                 },
             )
 
+        progress.complete(
+            "verify",
+            detail=f"{len(oracle_findings)} oracle finding(s)",
+            findings=len(oracle_findings),
+            status="warning" if oracle_findings else "complete",
+        )
+
         # ── 5. Provenance + Reconciliation ──
+        progress.start("reconcile", "Reconciled", "Reconciling cross-document fields")
         provenance = self.provenance.build_provenance(bundle)
         reconciliation = self.reconciliation.reconcile(provenance)
+        progress.complete(
+            "reconcile",
+            detail=f"{len(reconciliation.discrepancies)} conflict(s) · {reconciliation.match_rate:.0%} match",
+            findings=len(reconciliation.discrepancies),
+            status="warning" if reconciliation.discrepancies else "complete",
+        )
 
         # ── 6. Agent swarm → UW memo ──
+        progress.start("analyze", "Scored", "Running specialist agent analysis")
         memo = self.supervisor.analyze_submission(bundle, parallel=True, use_celery=False)
 
         # Merge oracle findings into memo
@@ -192,6 +245,14 @@ class InsurancePipeline:
                 memo.key_findings.append(f)
                 if f.severity.value in ("critical", "high"):
                     memo.human_review_reasons.append(f.title)
+
+        agent_findings = len(memo.key_findings) - len(oracle_findings)
+        progress.complete(
+            "analyze",
+            detail=f"Risk {memo.overall_risk_score:.0%}" if memo.overall_risk_score else f"{agent_findings} agent finding(s)",
+            findings=max(agent_findings, 0),
+            status="warning" if memo.human_review_required else "complete",
+        )
 
         # ── 7. PORTFOLIO CONCENTRATION RISK ──
         portfolio_result = None
@@ -226,7 +287,12 @@ class InsurancePipeline:
             )
 
         # ── 9. Rating / policy admin quote ──
+        progress.start("price", "Priced", "Calculating indicated premium")
         quote = self.rating.quote(bundle, memo)
+        progress.complete(
+            "price",
+            detail=f"Indicated ${quote.adjusted_premium:,.0f}",
+        )
 
         # ── 9b. Generate quote document HTML ──
         try:
@@ -254,7 +320,15 @@ class InsurancePipeline:
         self._record_portfolio_policy(bundle, memo, quote)
 
         # ── 13. Workflow: submit for licensed UW review ──
+        progress.start("decision", "Decision", "Final underwriting recommendation")
         wf = self.workflow.submit_for_review(bid, self.org_id, memo.decision.value)
+        progress.complete(
+            "decision",
+            detail=memo.decision.value.upper(),
+            findings=len(memo.human_review_reasons),
+            status="warning" if memo.human_review_required else "complete",
+        )
+        progress.finish()
 
         # ── 14. Dispatch status webhooks for broker visibility ──
         webhook_dispatcher.dispatch(
@@ -290,6 +364,13 @@ class InsurancePipeline:
             "ocr_documents": ocr_count,
             "document_count": len(bundle.unstructured) + (1 if bundle.structured else 0),
             "reconciliation_discrepancies": len(reconciliation.discrepancies),
+            "pipeline_stages": progress.stages,
+            "provenance_summary": {
+                "total_fields": provenance.record_count(),
+                "verified_fields": provenance.verified_count(),
+                "contradicted_fields": provenance.discrepancy_count(),
+            },
+            "human_checkpoints": self._build_checkpoints(memo, reconciliation, oracle_findings),
             "quote": {
                 "adjusted_premium": quote.adjusted_premium,
                 "base_premium": quote.base_premium,
@@ -332,9 +413,36 @@ class InsurancePipeline:
             "quote_full": dataclasses.asdict(quote),
             "quote_html": quote_html,
             "reconciliation": reconciliation.model_dump(),
+            "provenance": provenance.model_dump(),
             "audit_paths": audit_paths,
             "audit_trail_entries": len(audit.trail.entries) if audit.trail else 0,
         }
+
+    def _build_checkpoints(self, memo: Any, reconciliation: Any, oracle_findings: list[Any]) -> list[dict[str, Any]]:
+        checkpoints: list[dict[str, Any]] = []
+        if oracle_findings:
+            checkpoints.append({
+                "id": "oracle_review",
+                "label": "Verify oracle results",
+                "status": "pending",
+                "reason": f"{len(oracle_findings)} external data finding(s) require review before bind",
+            })
+        critical = [d for d in reconciliation.discrepancies if getattr(d.severity, "value", str(d.severity)) == "critical"]
+        if critical:
+            checkpoints.append({
+                "id": "reconciliation_review",
+                "label": "Resolve critical conflicts",
+                "status": "pending",
+                "reason": f"{len(critical)} critical field conflict(s)",
+            })
+        if memo.human_review_required:
+            checkpoints.append({
+                "id": "uw_signoff",
+                "label": "Licensed UW sign-off",
+                "status": "pending",
+                "reason": "; ".join(memo.human_review_reasons[:3]) or "Human review required",
+            })
+        return checkpoints
 
     def _build_preliminary_bundle(
         self,

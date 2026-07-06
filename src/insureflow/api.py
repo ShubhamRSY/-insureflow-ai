@@ -41,8 +41,8 @@ job_store: JobStore = get_job_store()
 limiter = Limiter(key_func=get_remote_address, default_limits=["30/minute"])
 
 app = FastAPI(
-    title="InsureFlow AI",
-    description="Autonomous underwriting pipeline API — Insurance & Mortgage",
+    title="Rytera",
+    description="AI underwriting platform API — Insurance, Mortgage & Lending",
     version="0.2.0",
 )
 app.state.limiter = limiter
@@ -560,7 +560,7 @@ async def run_mortgage_demo(
 @app.get("/")
 async def root() -> dict[str, str]:
     return {
-        "service": "InsureFlow AI",
+        "service": "Rytera",
         "version": "0.2.0",
         "dashboard": "/dashboard",
         "diagnostics": "/system/diagnostics",
@@ -583,6 +583,15 @@ def _run_pipeline_task(job_id: str, request: SubmissionRequest, org_id: str) -> 
         else:
             docs = [{"filename": d.filename, "content": d.content} for d in request.documents] if request.documents else None
             pipeline = InsurancePipeline(org_id=org_id, use_llm=request.use_llm)
+
+            def on_progress(data: dict) -> None:
+                job_store.set(
+                    INSURANCE_NS,
+                    job_id,
+                    {"status": "processing", "progress": data},
+                    org_id=org_id,
+                )
+
             result = pipeline.run(
                 acord_xml=request.acord_xml,
                 inspection_reports=request.inspection_reports,
@@ -593,6 +602,7 @@ def _run_pipeline_task(job_id: str, request: SubmissionRequest, org_id: str) -> 
                 documents=docs,
                 pdf_paths=request.pdf_paths,
                 bundle_id=request.bundle_id or job_id,
+                progress_callback=on_progress,
             )
         job_store.set(INSURANCE_NS, job_id, {"status": "completed", "results": result}, org_id=org_id)
     except Exception as exc:
@@ -1228,7 +1238,75 @@ def get_missing_documents(
         "bundle_id": bundle_id,
         "completeness_pct": checklist.completeness_pct,
         "missing_documents": checklist.missing,
+        "present_documents": getattr(checklist, "present", []),
+        "can_request_from_broker": len(checklist.missing) > 0,
     }
+
+
+@app.post("/pipeline/documents/{bundle_id}/request")
+def request_broker_documents(
+    bundle_id: str,
+    body: dict[str, Any],
+    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+) -> dict[str, Any]:
+    """Request missing documents from broker (data quality gate)."""
+    from insureflow.enterprise.ecosystem import get_ecosystem_service
+
+    docs = body.get("documents") or body.get("missing_documents") or []
+    if not docs:
+        missing = get_missing_documents(bundle_id, current)
+        docs = missing.get("missing_documents", [])
+    return get_ecosystem_service().request_broker_documents(bundle_id, current.org_id, docs)
+
+
+@app.get("/pipeline/ecosystem/status")
+def ecosystem_status(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    from insureflow.integrations.health import IntegrationHealthService
+
+    return IntegrationHealthService().check_all(current.org_id)
+
+
+@app.get("/pipeline/ecosystem/{bundle_id}")
+def ecosystem_bundle(
+    bundle_id: str,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    from insureflow.enterprise.ecosystem import get_ecosystem_service
+
+    return get_ecosystem_service().bundle_ecosystem(bundle_id, current.org_id)
+
+
+@app.post("/pipeline/ecosystem/{bundle_id}/loss-control/dispatch")
+def dispatch_loss_control(
+    bundle_id: str,
+    body: dict[str, Any] | None = None,
+    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+) -> dict[str, Any]:
+    from insureflow.enterprise.ecosystem import get_ecosystem_service
+
+    notes = (body or {}).get("notes", "")
+    return get_ecosystem_service().loss_control_dispatch(bundle_id, current.org_id, notes)
+
+
+@app.post("/pipeline/checkpoints/{bundle_id}/{checkpoint_id}")
+def resolve_checkpoint(
+    bundle_id: str,
+    checkpoint_id: str,
+    body: dict[str, Any],
+    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+) -> dict[str, Any]:
+    from insureflow.enterprise.ecosystem import get_ecosystem_service
+
+    action = body.get("action", "approve")
+    return get_ecosystem_service().resolve_checkpoint(
+        bundle_id,
+        current.org_id,
+        checkpoint_id,
+        action,
+        reviewer=current.username,
+    )
 
 
 @app.get("/pipeline/rating/products")

@@ -6,6 +6,10 @@ from datetime import date, timedelta
 from enum import Enum
 from uuid import uuid4
 
+from insureflow.integrations.http_client import IntegrationHTTPError
+from insureflow.integrations.parsers import parse_aplus_response
+from insureflow.oracles._live import build_oracle_http, resolve_integration_mode
+
 logger = logging.getLogger(__name__)
 
 
@@ -68,11 +72,17 @@ class APlusClient:
         api_key: str = "",
         base_url: str = "https://api.verisk.com/aplus/v2",
         mode: str = "simulated",
+        query_path: str = "/queries",
     ):
         self.api_key = api_key
         self.base_url = base_url
         self.mode = mode
+        self.query_path = query_path
+        self.http = build_oracle_http(api_key, base_url)
         self._enabled = True
+
+    def _resolved_mode(self) -> str:
+        return resolve_integration_mode(self.mode, self.http)
 
     def query_by_property(
         self,
@@ -89,19 +99,76 @@ class APlusClient:
                 error="A-PLUS API not configured",
             )
 
-        if self.mode == "live":
+        resolved = self._resolved_mode()
+        if resolved == "live":
             return self._call_live_api(legal_name, property_address, tax_id, years_back)
+        if resolved == "misconfigured":
+            return APlusResult(
+                subject_name=legal_name,
+                subject_address=property_address,
+                query_completed=False,
+                error="A-PLUS live mode requires APLUS_API_KEY or VERISK_API_KEY and APLUS_API_URL",
+            )
 
         return self._simulated_query(legal_name, property_address, tax_id, years_back)
 
     def _call_live_api(self, legal_name: str, property_address: str, tax_id: str, years_back: int) -> APlusResult:
-        return APlusResult(
-            subject_name=legal_name,
-            subject_address=property_address,
-            query_completed=True,
-            total_claims_found=0,
-            error="Live A-PLUS adapter not yet implemented — set ORACLE_MODE=simulated",
-        )
+        try:
+            resp = self.http.post(
+                self.query_path,
+                {
+                    "legal_name": legal_name,
+                    "property_address": property_address,
+                    "tax_id": tax_id,
+                    "years_back": years_back,
+                },
+            )
+            if not resp.ok:
+                return APlusResult(
+                    subject_name=legal_name,
+                    subject_address=property_address,
+                    query_completed=False,
+                    error=f"A-PLUS API HTTP {resp.status_code}",
+                )
+            parsed = parse_aplus_response(resp.json_dict())
+            records: list[APlusRecord] = []
+            for raw in parsed.get("records", []):
+                claim_type_raw = str(raw.get("claim_type", "other")).lower()
+                try:
+                    claim_type = PropertyClaimType(claim_type_raw)
+                except ValueError:
+                    claim_type = PropertyClaimType.OTHER
+                dol = raw.get("date_of_loss") or raw.get("loss_date")
+                loss_date = date.fromisoformat(str(dol)[:10]) if dol else date.today()
+                records.append(
+                    APlusRecord(
+                        claim_id=str(raw.get("claim_id", raw.get("id", ""))),
+                        property_address=str(raw.get("property_address", property_address)),
+                        date_of_loss=loss_date,
+                        claim_type=claim_type,
+                        paid_amount=float(raw.get("paid_amount", 0) or 0),
+                        current_status=str(raw.get("current_status", raw.get("status", "closed"))),
+                        policy_type=str(raw.get("policy_type", "")),
+                        description=str(raw.get("description", "")),
+                    )
+                )
+            return APlusResult(
+                subject_name=legal_name,
+                subject_address=property_address,
+                records=records,
+                total_claims_found=int(parsed.get("total_claims_found", len(records))),
+                total_paid=float(parsed.get("total_paid", sum(r.paid_amount for r in records))),
+                has_repeated_property_claims=bool(parsed.get("has_repeated_property_claims")),
+                has_arson_or_fraud_flag=bool(parsed.get("has_arson_or_fraud_flag")),
+            )
+        except IntegrationHTTPError as exc:
+            logger.exception("A-PLUS live query failed")
+            return APlusResult(
+                subject_name=legal_name,
+                subject_address=property_address,
+                query_completed=False,
+                error=str(exc),
+            )
 
     def _simulated_query(self, legal_name: str, property_address: str, tax_id: str, years_back: int) -> APlusResult:
         today = date.today()

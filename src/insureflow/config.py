@@ -84,8 +84,63 @@ class Settings:
     extraction_chunk_size: int = 4000
     extraction_overlap: int = 200
 
-    # Oracle clients: simulated | live
-    oracle_mode: str = os.getenv("ORACLE_MODE", "simulated")
+    # Oracle clients: simulated | live | auto
+    oracle_mode: str = os.getenv("ORACLE_MODE", "auto")
+    clue_api_key: str = os.getenv("CLUE_API_KEY", "")
+    clue_api_url: str = os.getenv("CLUE_API_URL", "https://integrations.rytera.ai/oracles/clue/v2")
+    clue_query_path: str = os.getenv("CLUE_QUERY_PATH", "/queries")
+
+    verisk_api_key: str = os.getenv("VERISK_API_KEY", "")
+    ncci_api_key: str = os.getenv("NCCI_API_KEY", "")
+    ncci_api_url: str = os.getenv("NCCI_API_URL", "https://integrations.rytera.ai/oracles/ncci/v2")
+    ncci_query_path: str = os.getenv("NCCI_QUERY_PATH", "/experience")
+
+    aplus_api_key: str = os.getenv("APLUS_API_KEY", "")
+    aplus_api_url: str = os.getenv("APLUS_API_URL", "https://integrations.rytera.ai/oracles/aplus/v2")
+    aplus_query_path: str = os.getenv("APLUS_QUERY_PATH", "/queries")
+
+    cat_api_key: str = os.getenv("CAT_API_KEY", "")
+    cat_api_url: str = os.getenv("CAT_API_URL", "https://integrations.rytera.ai/oracles/cat/v1")
+    cat_query_path: str = os.getenv("CAT_QUERY_PATH", "/model")
+
+    iso_rating_api_key: str = os.getenv("ISO_RATING_API_KEY", "")
+    iso_rating_api_url: str = os.getenv("ISO_RATING_API_URL", "https://integrations.rytera.ai/oracles/iso/v1")
+    iso_rating_mode: str = os.getenv("ISO_RATING_MODE", "auto")
+
+    # Policy admin / core systems
+    guidewire_api_key: str = os.getenv("GUIDEWIRE_API_KEY", "")
+    guidewire_api_url: str = os.getenv("GUIDEWIRE_API_URL", "https://integrations.rytera.ai/policy/guidewire/v1")
+    guidewire_username: str = os.getenv("GUIDEWIRE_USERNAME", "")
+    guidewire_password: str = os.getenv("GUIDEWIRE_PASSWORD", "")
+    guidewire_mode: str = os.getenv("GUIDEWIRE_MODE", "auto")
+
+    britecore_api_key: str = os.getenv("BRITECORE_API_KEY", "")
+    britecore_api_url: str = os.getenv("BRITECORE_API_URL", "https://integrations.rytera.ai/policy/britecore/v2")
+    britecore_mode: str = os.getenv("BRITECORE_MODE", "auto")
+
+    # Enterprise ecosystem
+    loss_control_api_key: str = os.getenv("LOSS_CONTROL_API_KEY", "")
+    loss_control_api_url: str = os.getenv("LOSS_CONTROL_API_URL", "https://integrations.rytera.ai/enterprise/loss-control/v1")
+    loss_control_mode: str = os.getenv("LOSS_CONTROL_MODE", "auto")
+
+    claims_api_key: str = os.getenv("CLAIMS_API_KEY", "")
+    claims_api_url: str = os.getenv("CLAIMS_API_URL", "https://integrations.rytera.ai/enterprise/claims/v1")
+    claims_mode: str = os.getenv("CLAIMS_MODE", "auto")
+
+    broker_portal_api_key: str = os.getenv("BROKER_PORTAL_API_KEY", "")
+    broker_portal_api_url: str = os.getenv("BROKER_PORTAL_API_URL", "https://integrations.rytera.ai/enterprise/broker-portal/v1")
+    broker_portal_mode: str = os.getenv("BROKER_PORTAL_MODE", "auto")
+
+    actuarial_api_key: str = os.getenv("ACTUARIAL_API_KEY", "")
+    actuarial_api_url: str = os.getenv("ACTUARIAL_API_URL", "https://integrations.rytera.ai/enterprise/actuarial/v1")
+    actuarial_mode: str = os.getenv("ACTUARIAL_MODE", "auto")
+
+    hubspot_api_key: str = os.getenv("HUBSPOT_API_KEY", "")
+    hubspot_api_url: str = os.getenv("HUBSPOT_API_URL", "https://api.hubapi.com/crm/v3")
+    hubspot_mode: str = os.getenv("HUBSPOT_MODE", "auto")
+
+    integration_timeout_seconds: float = float(os.getenv("INTEGRATION_TIMEOUT_SECONDS", "30"))
+    integration_max_retries: int = int(os.getenv("INTEGRATION_MAX_RETRIES", "3"))
 
 
 settings = Settings()

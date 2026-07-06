@@ -91,3 +91,16 @@ class AuditStore:
                 except (json.JSONDecodeError, OSError, ValueError):
                     return None
         return None
+
+    def save_json(self, bundle_id: str, filename: str, data: Any, org_id: str | None = None) -> Path:
+        base = self.base_path / org_id / bundle_id if org_id else self.base_path / bundle_id
+        base.mkdir(parents=True, exist_ok=True)
+        path = base / filename
+        if isinstance(data, dict):
+            payload: dict[str, Any] = data
+        elif isinstance(data, list):
+            payload = {"items": data}
+        else:
+            payload = {"data": data}
+        self._write_json(path, payload)
+        return path

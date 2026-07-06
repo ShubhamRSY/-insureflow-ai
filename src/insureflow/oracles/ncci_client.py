@@ -3,6 +3,10 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 
+from insureflow.integrations.http_client import IntegrationHTTPError
+from insureflow.integrations.parsers import parse_ncci_response
+from insureflow.oracles._live import build_oracle_http, resolve_integration_mode
+
 logger = logging.getLogger(__name__)
 
 
@@ -77,11 +81,17 @@ class NCCIClient:
         api_key: str = "",
         base_url: str = "https://api.ncci.com/experience/v2",
         mode: str = "simulated",
+        query_path: str = "/experience",
     ):
         self.api_key = api_key
         self.base_url = base_url
         self.mode = mode
-        self._enabled = bool(api_key) or True
+        self.query_path = query_path
+        self.http = build_oracle_http(api_key, base_url)
+        self._enabled = True
+
+    def _resolved_mode(self) -> str:
+        return resolve_integration_mode(self.mode, self.http)
 
     def query_by_fein(self, fein: str, legal_name: str = "") -> NCCIResult:
         if not self._enabled:
@@ -92,8 +102,16 @@ class NCCIClient:
                 error="NCCI API not configured",
             )
 
-        if self.mode == "live":
+        resolved = self._resolved_mode()
+        if resolved == "live":
             return self._call_live_api(fein, legal_name)
+        if resolved == "misconfigured":
+            return NCCIResult(
+                employer_name=legal_name,
+                fein=fein,
+                query_completed=False,
+                error="NCCI live mode requires NCCI_API_KEY or VERISK_API_KEY and NCCI_API_URL",
+            )
 
         name_lower = (legal_name or "").lower()
         mods: list[NCCIExperienceMod] = []
@@ -160,9 +178,41 @@ class NCCIClient:
         )
 
     def _call_live_api(self, fein: str, legal_name: str) -> NCCIResult:
-        return NCCIResult(
-            employer_name=legal_name or fein,
-            fein=fein,
-            query_completed=True,
-            error="Live NCCI adapter not yet implemented — set ORACLE_MODE=simulated",
-        )
+        try:
+            resp = self.http.post(self.query_path, {"fein": fein, "legal_name": legal_name})
+            if not resp.ok:
+                return NCCIResult(
+                    employer_name=legal_name or fein,
+                    fein=fein,
+                    query_completed=False,
+                    error=f"NCCI API HTTP {resp.status_code}",
+                )
+            parsed = parse_ncci_response(resp.json_dict())
+            mods = [
+                NCCIExperienceMod(
+                    mod_factor=float(m.get("mod_factor", 1.0)),
+                    class_code=str(m.get("class_code", "")),
+                    class_code_description=str(m.get("class_code_description", "")),
+                    expected_losses=float(m.get("expected_losses", 0)),
+                    actual_losses=float(m.get("actual_losses", 0)),
+                    primary_losses=float(m.get("primary_losses", 0)),
+                    excess_losses=float(m.get("excess_losses", 0)),
+                    payroll=float(m.get("payroll", 0)),
+                )
+                for m in parsed.get("experience_mods", [])
+            ]
+            return NCCIResult(
+                employer_name=legal_name or fein,
+                fein=fein,
+                experience_mods=mods,
+                total_expected_losses=float(parsed.get("total_expected_losses", 0)),
+                total_actual_losses=float(parsed.get("total_actual_losses", 0)),
+            )
+        except IntegrationHTTPError as exc:
+            logger.exception("NCCI live query failed")
+            return NCCIResult(
+                employer_name=legal_name or fein,
+                fein=fein,
+                query_completed=False,
+                error=str(exc),
+            )

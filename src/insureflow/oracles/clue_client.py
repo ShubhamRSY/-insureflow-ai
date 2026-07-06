@@ -5,6 +5,10 @@ from dataclasses import dataclass, field
 from datetime import date, timedelta
 from uuid import uuid4
 
+from insureflow.integrations.http_client import IntegrationHTTPError
+from insureflow.integrations.parsers import parse_clue_response
+from insureflow.oracles._live import build_oracle_http, resolve_integration_mode
+
 logger = logging.getLogger(__name__)
 
 
@@ -56,11 +60,17 @@ class CLUEClient:
         api_key: str = "",
         base_url: str = "https://api.lexisnexis.com/clue/v2",
         mode: str = "simulated",
+        query_path: str = "/queries",
     ):
         self.api_key = api_key
         self.base_url = base_url
         self.mode = mode
-        self._enabled = bool(api_key) or True
+        self.query_path = query_path
+        self.http = build_oracle_http(api_key, base_url)
+        self._enabled = True
+
+    def _resolved_mode(self) -> str:
+        return resolve_integration_mode(self.mode, self.http)
 
     def query_by_name_and_address(
         self,
@@ -77,8 +87,15 @@ class CLUEClient:
                 error="CLUE API not configured",
             )
 
-        if self.mode == "live":
+        if self._resolved_mode() == "live":
             return self._call_live_api(legal_name, address, tax_id, years_back)
+        if self._resolved_mode() == "misconfigured":
+            return CLUEResult(
+                subject_name=legal_name,
+                subject_address=address,
+                query_completed=False,
+                error="CLUE live mode requires CLUE_API_KEY and CLUE_API_URL",
+            )
 
         # Simulated response
         today = date.today()
@@ -142,10 +159,60 @@ class CLUEClient:
         return self.query_by_name_and_address(name_lower if name_lower else "Unknown", tax_id=tax_id)
 
     def _call_live_api(self, legal_name: str, address: str, tax_id: str, years_back: int) -> CLUEResult:
-        return CLUEResult(
-            subject_name=legal_name,
-            subject_address=address,
-            query_completed=True,
-            total_claims_found=0,
-            error="Live CLUE adapter not yet implemented — set ORACLE_MODE=simulated",
-        )
+        try:
+            resp = self.http.post(
+                self.query_path,
+                {
+                    "legal_name": legal_name,
+                    "address": address,
+                    "tax_id": tax_id,
+                    "years_back": years_back,
+                },
+            )
+            if not resp.ok:
+                return CLUEResult(
+                    subject_name=legal_name,
+                    subject_address=address,
+                    query_completed=False,
+                    error=f"CLUE API HTTP {resp.status_code}",
+                )
+            parsed = parse_clue_response(resp.json_dict())
+            records: list[CLUERecord] = []
+            for raw in parsed.get("records", []):
+                dol = raw.get("date_of_loss") or raw.get("loss_date")
+                if isinstance(dol, str):
+                    try:
+                        loss_date = date.fromisoformat(dol[:10])
+                    except ValueError:
+                        loss_date = date.today()
+                else:
+                    loss_date = date.today()
+                records.append(
+                    CLUERecord(
+                        claim_id=str(raw.get("claim_id", raw.get("id", ""))),
+                        date_of_loss=loss_date,
+                        loss_type=str(raw.get("loss_type", "other")),
+                        paid_amount=float(raw.get("paid_amount", 0) or 0),
+                        current_status=str(raw.get("current_status", raw.get("status", "closed"))),
+                        policy_type=str(raw.get("policy_type", "")),
+                        claimant_name=str(raw.get("claimant_name", legal_name)),
+                        description=str(raw.get("description", "")),
+                    )
+                )
+            return CLUEResult(
+                subject_name=legal_name,
+                subject_address=address,
+                records=records,
+                total_claims_found=int(parsed.get("total_claims_found", len(records))),
+                total_paid=float(parsed.get("total_paid", sum(r.paid_amount for r in records))),
+                has_prior_litigation=bool(parsed.get("has_prior_litigation")),
+                has_prior_cancellation=bool(parsed.get("has_prior_cancellation")),
+            )
+        except IntegrationHTTPError as exc:
+            logger.exception("CLUE live query failed")
+            return CLUEResult(
+                subject_name=legal_name,
+                subject_address=address,
+                query_completed=False,
+                error=str(exc),
+            )

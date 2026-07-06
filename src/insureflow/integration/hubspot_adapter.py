@@ -6,6 +6,10 @@ from datetime import datetime, timezone
 from typing import Any
 from uuid import uuid4
 
+from insureflow.integrations.http_client import build_http_client
+from insureflow.integrations.http_client import IntegrationHTTPError
+from insureflow.oracles._live import resolve_integration_mode
+
 logger = logging.getLogger(__name__)
 
 
@@ -32,34 +36,27 @@ class CRMDeal:
 
 
 class HubSpotAdapter:
-    """Adapter for HubSpot CRM.
-
-    Syncs underwriting contacts and deals to HubSpot for broker
-    relationship management and pipeline tracking. Simulated mode
-    returns deterministic mock responses — set HUBSPOT_API_KEY and
-    HUBSPOT_MODE=live for production.
-    """
+    """Adapter for HubSpot CRM REST API."""
 
     def __init__(
         self,
         api_key: str = "",
         base_url: str = "https://api.hubapi.com/crm/v3",
-        mode: str = "simulated",
+        mode: str = "auto",
     ):
         self.api_key = api_key
         self.base_url = base_url
         self.mode = mode
-        self._enabled = bool(api_key) or True
+        self.http = build_http_client(api_key, base_url)
+
+    def _resolved_mode(self) -> str:
+        return resolve_integration_mode(self.mode, self.http)
 
     def create_contact(self, contact: CRMContact) -> dict[str, Any]:
-        if not self._enabled:
-            return {"success": False, "error": "HubSpot not configured"}
-
-        if self.mode == "live":
+        if self._resolved_mode() == "live":
             return self._call_live_api("contacts", contact.__dict__)
 
         contact.hubspot_id = f"contact-{uuid4().hex[:8]}"
-        logger.info("HubSpot contact created: %s (%s)", contact.email, contact.hubspot_id)
         return {
             "success": True,
             "hubspot_id": contact.hubspot_id,
@@ -69,14 +66,10 @@ class HubSpotAdapter:
         }
 
     def create_deal(self, deal: CRMDeal) -> dict[str, Any]:
-        if not self._enabled:
-            return {"success": False, "error": "HubSpot not configured"}
-
-        if self.mode == "live":
+        if self._resolved_mode() == "live":
             return self._call_live_api("deals", deal.__dict__)
 
         deal.hubspot_id = f"deal-{uuid4().hex[:8]}"
-        logger.info("HubSpot deal created: %s (%s) — $%.0f", deal.deal_name, deal.hubspot_id, deal.amount)
         return {
             "success": True,
             "hubspot_id": deal.hubspot_id,
@@ -99,7 +92,6 @@ class HubSpotAdapter:
             lifecycle_stage="opportunity",
         )
         contact_result = self.create_contact(contact)
-
         deal = CRMDeal(
             deal_name=f"Insurance Submission — {insured_name}",
             amount=premium,
@@ -107,7 +99,6 @@ class HubSpotAdapter:
             contact_ids=[contact_result.get("hubspot_id", "")] if contact_result.get("success") else [],
         )
         deal_result = self.create_deal(deal)
-
         return {
             "success": contact_result.get("success", False) and deal_result.get("success", False),
             "contact": contact_result,
@@ -115,7 +106,31 @@ class HubSpotAdapter:
         }
 
     def _call_live_api(self, endpoint: str, data: dict[str, Any]) -> dict[str, Any]:
-        return {
-            "success": False,
-            "error": f"Live HubSpot {endpoint} adapter not yet implemented — set HUBSPOT_MODE=simulated",
-        }
+        try:
+            if endpoint == "contacts":
+                body = {
+                    "properties": {
+                        "email": data.get("email", ""),
+                        "firstname": data.get("first_name", ""),
+                        "lastname": data.get("last_name", ""),
+                        "company": data.get("company", ""),
+                        "phone": data.get("phone", ""),
+                        "lifecyclestage": data.get("lifecycle_stage", "lead"),
+                    }
+                }
+                resp = self.http.post("/objects/contacts", body)
+            else:
+                body = {
+                    "properties": {
+                        "dealname": data.get("deal_name", ""),
+                        "amount": str(data.get("amount", 0)),
+                        "dealstage": data.get("stage", "appointmentscheduled"),
+                    }
+                }
+                resp = self.http.post("/objects/deals", body)
+            if not resp.ok:
+                return {"success": False, "error": f"HubSpot HTTP {resp.status_code}"}
+            payload = resp.json_dict()
+            return {"success": True, "hubspot_id": str(payload.get("id", "")), "response": payload}
+        except IntegrationHTTPError as exc:
+            return {"success": False, "error": str(exc)}

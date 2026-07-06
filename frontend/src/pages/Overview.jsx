@@ -2,9 +2,10 @@ import { useOutletContext } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { Zap, ArrowRight, TrendingUp, TrendingDown, AlertTriangle } from 'lucide-react';
 import { StatCard, DemoCard, VerticalExplainer, Badge, EmptyState } from '../components/ui';
+import JourneyMiniStrip from '../components/JourneyMiniStrip';
 import { endpoints } from '../lib/api';
 
-export default function Overview({ overview, health, presets, onRunDemo, onOpenJob, onLogin, marketCycle, queueStats }) {
+export default function Overview({ overview, health, presets, onRunDemo, onOpenJob, onLogin, marketCycle, queueStats, insuranceJobs }) {
   const { user } = useOutletContext() || {};
 
   const chartData = overview ? [
@@ -100,7 +101,9 @@ export default function Overview({ overview, health, presets, onRunDemo, onOpenJ
             <h3 className="font-semibold">Recent Activity</h3>
           </div>
           <div className="divide-y divide-white/[0.04]">
-            {(overview?.recent_jobs || []).slice(0, 8).map((j) => (
+            {(overview?.recent_jobs || []).slice(0, 8).map((j) => {
+              const fullJob = insuranceJobs?.find(({ id }) => id === j.job_id)?.job;
+              return (
               <button
                 key={j.job_id}
                 type="button"
@@ -109,10 +112,13 @@ export default function Overview({ overview, health, presets, onRunDemo, onOpenJ
               >
                 <Badge status={j.status} pulse={j.status === 'processing'} />
                 <span className="flex-1 truncate font-mono text-xs text-slate-400">{j.job_id}</span>
+                {j.vertical === 'insurance' && fullJob && (
+                  <JourneyMiniStrip job={fullJob} compact />
+                )}
                 <span className="text-xs capitalize text-slate-500">{j.vertical}</span>
                 <ArrowRight className="h-3.5 w-3.5 text-slate-600" />
               </button>
-            ))}
+            );})}
             {(!overview?.recent_jobs?.length) && (
               <EmptyState title="No jobs yet" description="Run a demo to see activity here" />
             )}

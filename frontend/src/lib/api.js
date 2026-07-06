@@ -103,6 +103,11 @@ export const endpoints = {
   authorityMatrix: () => api('/underwriting/authority'),
   renewalAnalysis: (bundleId) => api(`/pipeline/renewal/${bundleId}`, { method: 'POST' }),
   missingDocuments: (bundleId) => api(`/pipeline/documents/${bundleId}/missing`),
+  requestBrokerDocs: (bundleId, documents) => api(`/pipeline/documents/${bundleId}/request`, { method: 'POST', body: { documents } }),
+  ecosystemStatus: () => api('/pipeline/ecosystem/status'),
+  ecosystemBundle: (bundleId) => api(`/pipeline/ecosystem/${bundleId}`),
+  dispatchLossControl: (bundleId, notes = '') => api(`/pipeline/ecosystem/${bundleId}/loss-control/dispatch`, { method: 'POST', body: { notes } }),
+  resolveCheckpoint: (bundleId, checkpointId, action) => api(`/pipeline/checkpoints/${bundleId}/${checkpointId}`, { method: 'POST', body: { action } }),
 
   // Premium audit
   premiumAudits: (status) => api(`/pipeline/audits${status ? `?status=${status}` : ''}`),

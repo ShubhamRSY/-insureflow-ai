@@ -43,10 +43,11 @@ class TestCLUEClient:
         result = client.query_by_name_and_address("Pacific Marine Supply")
         assert result.has_prior_litigation or not result.has_prior_litigation
 
-    def test_live_mode_stub(self) -> None:
+    def test_live_mode_misconfigured(self) -> None:
         client = CLUEClient(mode="live")
         result = client.query_by_name_and_address("Test Name")
-        assert "not yet implemented" in result.error
+        assert result.query_completed is False
+        assert "CLUE_API_KEY" in result.error
 
     def test_disabled(self) -> None:
         client = CLUEClient(api_key="", mode="simulated")
@@ -99,10 +100,11 @@ class TestNCCIClient:
         assert mod.is_credit_mod
         assert not mod.is_debit_mod
 
-    def test_live_mode_stub(self) -> None:
+    def test_live_mode_misconfigured(self) -> None:
         client = NCCIClient(mode="live")
         result = client.query_by_fein("00-0000000", "Test")
-        assert "not yet implemented" in result.error
+        assert result.query_completed is False
+        assert "NCCI_API_KEY" in result.error
 
 
 class TestAPlusClient:
@@ -147,10 +149,11 @@ class TestAPlusClient:
         result = client.query_by_property("Pacific Marine Supply")
         assert "A-PLUS" in result.summary or "property" in result.summary
 
-    def test_live_mode_stub(self) -> None:
+    def test_live_mode_misconfigured(self) -> None:
         client = APlusClient(mode="live")
         result = client.query_by_property("Test")
-        assert "not yet implemented" in result.error
+        assert result.query_completed is False
+        assert "APLUS_API_KEY" in result.error
 
 
 class TestNCCICodes:

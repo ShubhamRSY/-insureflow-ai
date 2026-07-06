@@ -49,8 +49,8 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
             <Shield className="h-5 w-5 text-white" />
           </div>
           <div>
-            <h1 className="text-base font-bold tracking-tight">InsureFlow AI</h1>
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Underwriting OS</p>
+            <h1 className="text-base font-bold tracking-tight">Rytera</h1>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">AI Underwriting</p>
           </div>
           <button type="button" className="ml-auto lg:hidden" onClick={() => setMobileOpen(false)}>
             <X className="h-5 w-5 text-slate-400" />
@@ -131,6 +131,11 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
         <main className="flex-1 p-6 lg:p-8">
           <Outlet context={{ user, onLogin }} />
         </main>
+
+        <footer className="border-t border-white/[0.06] px-6 py-3 text-center text-[10px] text-slate-600">
+          Rytera™ · <a href="https://rytera.ai" className="text-slate-500 hover:text-slate-400">rytera.ai</a>
+          {' · '}Rytera is a trademark of Rytera, Inc. All rights reserved.
+        </footer>
       </div>
     </div>
   );

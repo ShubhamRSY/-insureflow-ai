@@ -77,7 +77,7 @@ export default function BrokerStatus() {
             <Shield className="h-6 w-6 text-brand-light" />
             <div>
               <h1 className="text-lg font-semibold text-slate-100">Submission Status</h1>
-              <p className="text-xs text-slate-500">Shared by your carrier via InsureFlow AI</p>
+              <p className="text-xs text-slate-500">Shared by your carrier via Rytera</p>
             </div>
           </div>
         </div>
@@ -150,7 +150,7 @@ export default function BrokerStatus() {
 
           {/* Footer */}
           <p className="border-t border-white/[0.04] pt-4 text-center text-[10px] text-slate-600">
-            Powered by InsureFlow AI — Real-time submission tracking
+            Powered by Rytera — Real-time submission tracking
           </p>
         </div>
       </div>
