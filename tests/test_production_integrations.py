@@ -10,11 +10,7 @@ from insureflow.oracles.clue_client import CLUEClient
 
 
 def test_parse_clue_response_records() -> None:
-    payload = {
-        "records": [
-            {"claim_id": "C1", "paid_amount": 1000, "loss_type": "property", "current_status": "closed", "date_of_loss": "2024-01-15"}
-        ]
-    }
+    payload = {"records": [{"claim_id": "C1", "paid_amount": 1000, "loss_type": "property", "current_status": "closed", "date_of_loss": "2024-01-15"}]}
     parsed = parse_clue_response(payload)
     assert parsed["total_claims_found"] == 1
     assert parsed["records"][0]["claim_id"] == "C1"

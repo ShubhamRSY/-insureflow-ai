@@ -121,13 +121,15 @@ class EnterpriseEcosystemService:
             crm.update({"hubspot": sync, "full_ams": True})
         else:
             bundle = AuditStore().load_json(bundle_id, "submission_bundle.json", org_id=org_id) or {}
-            broker = ((bundle.get("structured") or {}).get("broker") or {})
-            crm.update({
-                "full_ams": False,
-                "agency_name": broker.get("broker_name", "Broker portal"),
-                "producer_code": broker.get("producer_code", ""),
-                "submission_channel": broker.get("channel", "email_ingest"),
-            })
+            broker = (bundle.get("structured") or {}).get("broker") or {}
+            crm.update(
+                {
+                    "full_ams": False,
+                    "agency_name": broker.get("broker_name", "Broker portal"),
+                    "producer_code": broker.get("producer_code", ""),
+                    "submission_channel": broker.get("channel", "email_ingest"),
+                }
+            )
         return crm
 
     def request_broker_documents(self, bundle_id: str, org_id: str, documents: list[str]) -> dict[str, Any]:
@@ -180,12 +182,14 @@ class EnterpriseEcosystemService:
                 cp["reviewed_at"] = datetime.now(tz=timezone.utc).isoformat()
             updated.append(cp)
         if not updated:
-            updated = [{
-                "id": checkpoint_id,
-                "status": "approved" if action == "approve" else "rejected",
-                "reviewed_by": reviewer or "underwriter",
-                "reviewed_at": datetime.now(tz=timezone.utc).isoformat(),
-            }]
+            updated = [
+                {
+                    "id": checkpoint_id,
+                    "status": "approved" if action == "approve" else "rejected",
+                    "reviewed_by": reviewer or "underwriter",
+                    "reviewed_at": datetime.now(tz=timezone.utc).isoformat(),
+                }
+            ]
         store.save_json(bundle_id, "checkpoints.json", updated, org_id=org_id)
         return {
             "bundle_id": bundle_id,

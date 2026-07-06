@@ -420,27 +420,33 @@ class InsurancePipeline:
     def _build_checkpoints(self, memo: Any, reconciliation: Any, oracle_findings: list[Any]) -> list[dict[str, Any]]:
         checkpoints: list[dict[str, Any]] = []
         if oracle_findings:
-            checkpoints.append({
-                "id": "oracle_review",
-                "label": "Verify oracle results",
-                "status": "pending",
-                "reason": f"{len(oracle_findings)} external data finding(s) require review before bind",
-            })
+            checkpoints.append(
+                {
+                    "id": "oracle_review",
+                    "label": "Verify oracle results",
+                    "status": "pending",
+                    "reason": f"{len(oracle_findings)} external data finding(s) require review before bind",
+                }
+            )
         critical = [d for d in reconciliation.discrepancies if getattr(d.severity, "value", str(d.severity)) == "critical"]
         if critical:
-            checkpoints.append({
-                "id": "reconciliation_review",
-                "label": "Resolve critical conflicts",
-                "status": "pending",
-                "reason": f"{len(critical)} critical field conflict(s)",
-            })
+            checkpoints.append(
+                {
+                    "id": "reconciliation_review",
+                    "label": "Resolve critical conflicts",
+                    "status": "pending",
+                    "reason": f"{len(critical)} critical field conflict(s)",
+                }
+            )
         if memo.human_review_required:
-            checkpoints.append({
-                "id": "uw_signoff",
-                "label": "Licensed UW sign-off",
-                "status": "pending",
-                "reason": "; ".join(memo.human_review_reasons[:3]) or "Human review required",
-            })
+            checkpoints.append(
+                {
+                    "id": "uw_signoff",
+                    "label": "Licensed UW sign-off",
+                    "status": "pending",
+                    "reason": "; ".join(memo.human_review_reasons[:3]) or "Human review required",
+                }
+            )
         return checkpoints
 
     def _build_preliminary_bundle(
