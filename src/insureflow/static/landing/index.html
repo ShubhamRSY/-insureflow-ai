@@ -9,80 +9,778 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
-    :root { --bg: #0c0f17; --card: #121826; --text: #e2e8f0; --muted: #94a3b8; --brand: #6366f1; --brand2: #818cf8; }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: Inter, system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
-    .mesh { background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99,102,241,.18), transparent), var(--bg); }
-    header { display: flex; align-items: center; justify-content: space-between; padding: 1.25rem 2rem; border-bottom: 1px solid rgba(255,255,255,.06); }
-    .logo { font-weight: 700; font-size: 1.25rem; letter-spacing: -.02em; }
+    :root {
+      --bg: #0a0d14;
+      --card: #121826;
+      --card-hover: #181f30;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --brand: #6366f1;
+      --brand2: #818cf8;
+      --accent: #22d3ee;
+      --border: rgba(255,255,255,.07);
+      --max: 1120px;
+      --header-h: 64px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: Inter, system-ui, sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* Ambient background */
+    .bg-canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+    .orb {
+      position: absolute; border-radius: 50%; filter: blur(80px); opacity: .45;
+      animation: drift 18s ease-in-out infinite alternate;
+    }
+    .orb-1 { width: 520px; height: 520px; background: rgba(99,102,241,.35); top: -180px; left: 10%; }
+    .orb-2 { width: 400px; height: 400px; background: rgba(34,211,238,.15); top: 40%; right: -80px; animation-delay: -6s; }
+    .orb-3 { width: 300px; height: 300px; background: rgba(79,70,229,.25); bottom: 10%; left: 30%; animation-delay: -12s; }
+    @keyframes drift {
+      from { transform: translate(0, 0) scale(1); }
+      to { transform: translate(30px, -20px) scale(1.08); }
+    }
+    .grid-bg {
+      position: absolute; inset: 0;
+      background-image: linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, black, transparent);
+    }
+
+    .page { position: relative; z-index: 1; }
+
+    /* Header */
+    header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      height: var(--header-h);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2rem;
+      border-bottom: 1px solid transparent;
+      transition: background .3s, border-color .3s, box-shadow .3s;
+    }
+    header.scrolled {
+      background: rgba(10,13,20,.88);
+      border-color: var(--border);
+      backdrop-filter: blur(16px);
+      box-shadow: 0 4px 24px rgba(0,0,0,.25);
+    }
+    .logo { font-weight: 700; font-size: 1.25rem; letter-spacing: -.02em; text-decoration: none; color: var(--text); }
     .logo span { color: var(--brand2); }
-    nav a { color: var(--muted); text-decoration: none; margin-left: 1.5rem; font-size: .9rem; }
-    nav a:hover { color: var(--text); }
-    .btn { display: inline-block; padding: .65rem 1.25rem; border-radius: .75rem; font-weight: 600; font-size: .9rem; text-decoration: none; }
-    .btn-primary { background: linear-gradient(135deg, var(--brand), #4f46e5); color: #fff; }
-    .btn-secondary { border: 1px solid rgba(255,255,255,.12); color: var(--text); }
-    main { max-width: 1080px; margin: 0 auto; padding: 4rem 2rem 3rem; }
-    h1 { font-size: clamp(2rem, 5vw, 3.25rem); line-height: 1.1; letter-spacing: -.03em; max-width: 18ch; }
-    .lead { margin-top: 1.25rem; font-size: 1.125rem; color: var(--muted); max-width: 52ch; }
+    .nav-desktop { display: flex; align-items: center; gap: 1.5rem; }
+    .nav-desktop a {
+      color: var(--muted); text-decoration: none; font-size: .875rem;
+      position: relative; transition: color .2s;
+    }
+    .nav-desktop a::after {
+      content: ""; position: absolute; left: 0; bottom: -4px; width: 0; height: 2px;
+      background: var(--brand2); transition: width .25s;
+    }
+    .nav-desktop a:hover, .nav-desktop a.active { color: var(--text); }
+    .nav-desktop a:hover::after, .nav-desktop a.active::after { width: 100%; }
+    .menu-btn {
+      display: none; background: none; border: 1px solid var(--border);
+      color: var(--text); border-radius: .5rem; padding: .4rem .65rem; cursor: pointer;
+    }
+    .mobile-nav {
+      display: none; position: fixed; top: var(--header-h); left: 0; right: 0;
+      background: rgba(10,13,20,.97); backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border); padding: 1rem 2rem 1.5rem;
+      flex-direction: column; gap: .75rem; z-index: 99;
+    }
+    .mobile-nav.open { display: flex; }
+    .mobile-nav a { color: var(--muted); text-decoration: none; font-size: 1rem; padding: .35rem 0; }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+      padding: .7rem 1.35rem; border-radius: .75rem;
+      font-weight: 600; font-size: .9rem; text-decoration: none;
+      border: none; cursor: pointer; transition: transform .15s, box-shadow .2s, opacity .15s;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--brand), #4f46e5);
+      color: #fff; box-shadow: 0 4px 20px rgba(99,102,241,.35);
+    }
+    .btn-primary:hover { box-shadow: 0 6px 28px rgba(99,102,241,.45); }
+    .btn-ghost { background: rgba(255,255,255,.06); border: 1px solid var(--border); color: var(--text); }
+    .btn-ghost:hover { background: rgba(255,255,255,.1); }
+
+    main { max-width: var(--max); margin: 0 auto; padding: 0 2rem 3rem; }
+    section { padding: 5rem 0; border-bottom: 1px solid var(--border); }
+    section:last-of-type { border-bottom: none; }
+
+    .section-label {
+      font-size: .7rem; font-weight: 700; letter-spacing: .14em;
+      text-transform: uppercase; color: var(--brand2); margin-bottom: .75rem;
+    }
+    h1 {
+      font-size: clamp(2.25rem, 5.5vw, 3.5rem); line-height: 1.08;
+      letter-spacing: -.035em; max-width: 16ch;
+    }
+    h1 .gradient {
+      background: linear-gradient(135deg, #fff 30%, var(--brand2) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    h2 { font-size: clamp(1.5rem, 3vw, 2.1rem); letter-spacing: -.025em; margin-bottom: .75rem; }
+    h3 { font-size: 1.05rem; margin-bottom: .5rem; }
+    .lead { margin-top: 1.25rem; font-size: 1.125rem; color: var(--muted); max-width: 54ch; }
+    .section-desc { color: var(--muted); max-width: 58ch; margin-bottom: 2rem; font-size: .95rem; }
     .cta { margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap; }
-    .pipeline { margin-top: 4rem; display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
-    .step { background: var(--card); border: 1px solid rgba(255,255,255,.06); border-radius: 1rem; padding: 1rem; }
-    .step strong { display: block; font-size: .85rem; margin-bottom: .25rem; }
-    .step span { font-size: .75rem; color: var(--muted); }
-    .grid { margin-top: 3rem; display: grid; gap: 1.25rem; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
-    .card { background: var(--card); border: 1px solid rgba(255,255,255,.06); border-radius: 1rem; padding: 1.5rem; }
-    .card h3 { font-size: 1rem; margin-bottom: .5rem; }
-    .card p { font-size: .875rem; color: var(--muted); }
-    footer { margin-top: 4rem; padding: 2rem; border-top: 1px solid rgba(255,255,255,.06); text-align: center; font-size: .75rem; color: var(--muted); }
-    footer a { color: var(--muted); }
+
+    /* Reveal animations */
+    .reveal {
+      opacity: 0; transform: translateY(24px);
+      transition: opacity .7s ease, transform .7s ease;
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* Hero */
+    .hero { padding-top: calc(var(--header-h) + 4rem); border-bottom: none; }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: .5rem;
+      padding: .35rem .85rem; border-radius: 2rem;
+      background: rgba(99,102,241,.12); border: 1px solid rgba(99,102,241,.25);
+      font-size: .75rem; font-weight: 600; color: var(--brand2); margin-bottom: 1.25rem;
+    }
+    .hero-badge .dot {
+      width: 6px; height: 6px; border-radius: 50%; background: #4ade80;
+      animation: pulse 2s ease infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
+
+    .stats {
+      margin-top: 3.5rem; display: grid; gap: 1rem;
+      grid-template-columns: repeat(4, 1fr);
+    }
+    .stat {
+      background: rgba(18,24,38,.7); border: 1px solid var(--border);
+      border-radius: 1rem; padding: 1.35rem 1rem; text-align: center;
+      transition: border-color .25s, transform .25s;
+    }
+    .stat:hover { border-color: rgba(99,102,241,.35); transform: translateY(-3px); }
+    .stat .num {
+      display: block; font-size: 2rem; font-weight: 700;
+      background: linear-gradient(135deg, var(--brand2), var(--accent));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .stat span { font-size: .75rem; color: var(--muted); }
+
+    /* Interactive pipeline */
+    .pipeline-wrap { display: grid; grid-template-columns: 1fr 1.1fr; gap: 2rem; align-items: start; }
+    .pipeline-steps { display: flex; flex-direction: column; gap: .5rem; }
+    .pipeline-step {
+      display: flex; gap: 1rem; align-items: flex-start;
+      padding: 1rem 1.1rem; border-radius: .85rem;
+      border: 1px solid transparent; background: transparent;
+      cursor: pointer; text-align: left; color: inherit; font: inherit;
+      transition: background .2s, border-color .2s, transform .2s;
+    }
+    .pipeline-step:hover { background: rgba(255,255,255,.03); }
+    .pipeline-step.active {
+      background: var(--card); border-color: rgba(99,102,241,.4);
+      box-shadow: 0 0 0 1px rgba(99,102,241,.15);
+    }
+    .step-icon {
+      flex-shrink: 0; width: 36px; height: 36px; border-radius: .6rem;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .7rem; font-weight: 700; color: var(--brand2);
+      background: rgba(99,102,241,.15); border: 1px solid rgba(99,102,241,.25);
+      transition: background .2s, color .2s;
+    }
+    .pipeline-step.active .step-icon { background: var(--brand); color: #fff; }
+    .step-body strong { display: block; font-size: .9rem; margin-bottom: .15rem; }
+    .step-body span { font-size: .78rem; color: var(--muted); }
+
+    .pipeline-panel {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 1.25rem; padding: 1.75rem; min-height: 320px;
+      position: relative; overflow: hidden;
+    }
+    .pipeline-panel::before {
+      content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--brand), var(--accent));
+    }
+    .panel-tag {
+      font-size: .65rem; font-weight: 700; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: .5rem;
+    }
+    .panel-title { font-size: 1.35rem; font-weight: 700; margin-bottom: .75rem; }
+    .panel-desc { font-size: .9rem; color: var(--muted); margin-bottom: 1.25rem; }
+    .panel-list { list-style: none; display: flex; flex-direction: column; gap: .5rem; }
+    .panel-list li {
+      font-size: .85rem; color: var(--muted); padding-left: 1.25rem; position: relative;
+    }
+    .panel-list li::before {
+      content: "→"; position: absolute; left: 0; color: var(--brand2);
+    }
+    .panel-content { animation: fadeIn .35s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+    /* Vertical tabs */
+    .tabs { display: flex; gap: .5rem; margin-bottom: 1.75rem; flex-wrap: wrap; }
+    .tab {
+      padding: .55rem 1.1rem; border-radius: 2rem; font-size: .85rem; font-weight: 600;
+      background: transparent; border: 1px solid var(--border); color: var(--muted);
+      cursor: pointer; transition: all .2s;
+    }
+    .tab:hover { color: var(--text); border-color: rgba(255,255,255,.15); }
+    .tab.active {
+      background: rgba(99,102,241,.18); border-color: rgba(99,102,241,.45); color: var(--text);
+    }
+    .tab-panel { display: none; animation: fadeIn .4s ease; }
+    .tab-panel.active { display: block; }
+
+    .feature-grid { display: grid; gap: 1rem; grid-template-columns: repeat(2, 1fr); }
+    .feature-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 1rem; padding: 1.35rem;
+      transition: transform .25s, border-color .25s, box-shadow .25s;
+    }
+    .feature-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(99,102,241,.3);
+      box-shadow: 0 12px 40px rgba(0,0,0,.25);
+    }
+    .feature-card .icon {
+      width: 40px; height: 40px; border-radius: .65rem; margin-bottom: .85rem;
+      display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+      background: rgba(99,102,241,.12);
+    }
+    .feature-card p { font-size: .85rem; color: var(--muted); }
+    .feature-card ul { margin-top: .65rem; padding-left: 1rem; font-size: .8rem; color: var(--muted); }
+    .feature-card li { margin-bottom: .3rem; }
+
+    /* Platform bento */
+    .bento { display: grid; gap: 1rem; grid-template-columns: repeat(3, 1fr); margin-top: 3rem; }
+    .bento-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 1rem; padding: 1.35rem;
+      transition: border-color .25s;
+    }
+    .bento-card:hover { border-color: rgba(99,102,241,.3); }
+    .bento-card.wide { grid-column: span 2; }
+    .bento-card p { font-size: .85rem; color: var(--muted); margin-top: .35rem; }
+
+    /* Integrations filter */
+    .filter-bar { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+    .filter-btn {
+      padding: .4rem .9rem; border-radius: 2rem; font-size: .8rem;
+      background: transparent; border: 1px solid var(--border); color: var(--muted);
+      cursor: pointer; transition: all .2s;
+    }
+    .filter-btn.active, .filter-btn:hover {
+      background: rgba(99,102,241,.15); border-color: rgba(99,102,241,.4); color: var(--text);
+    }
+    .integration-grid { display: grid; gap: .75rem; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+    .integration-tile {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: .85rem; padding: 1rem; text-align: center;
+      font-size: .8rem; font-weight: 500;
+      transition: transform .2s, border-color .2s, background .2s;
+      cursor: default;
+    }
+    .integration-tile:hover {
+      transform: scale(1.03); border-color: rgba(99,102,241,.4);
+      background: var(--card-hover);
+    }
+    .integration-tile .cat {
+      display: block; font-size: .6rem; text-transform: uppercase;
+      letter-spacing: .08em; color: var(--brand2); margin-top: .35rem;
+    }
+    .integration-tile.hidden { display: none; }
+
+    /* FAQ */
+    .faq-search {
+      width: 100%; max-width: 400px; padding: .75rem 1rem;
+      border-radius: .75rem; border: 1px solid var(--border);
+      background: var(--card); color: var(--text); font-size: .9rem;
+      margin-bottom: 1.5rem; outline: none; transition: border-color .2s;
+    }
+    .faq-search:focus { border-color: rgba(99,102,241,.5); }
+    .faq-search::placeholder { color: var(--muted); }
+    .faq { display: flex; flex-direction: column; gap: .6rem; }
+    .faq-item {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: .85rem; overflow: hidden;
+      transition: border-color .2s;
+    }
+    .faq-item.open { border-color: rgba(99,102,241,.35); }
+    .faq-item.hidden { display: none; }
+    .faq-q {
+      width: 100%; display: flex; justify-content: space-between; align-items: center;
+      padding: 1.1rem 1.25rem; background: none; border: none;
+      color: var(--text); font-size: .95rem; font-weight: 600;
+      cursor: pointer; text-align: left;
+    }
+    .faq-q .chevron {
+      flex-shrink: 0; width: 20px; height: 20px; transition: transform .3s;
+      color: var(--brand2);
+    }
+    .faq-item.open .faq-q .chevron { transform: rotate(180deg); }
+    .faq-a {
+      max-height: 0; overflow: hidden;
+      transition: max-height .35s ease;
+    }
+    .faq-a-inner {
+      padding: 0 1.25rem 1.1rem; font-size: .875rem; color: var(--muted);
+      border-top: 1px solid var(--border); padding-top: .85rem;
+    }
+
+    /* Contact + modal */
+    .contact-box {
+      background: linear-gradient(145deg, rgba(99,102,241,.18), rgba(34,211,238,.06));
+      border: 1px solid rgba(99,102,241,.3); border-radius: 1.5rem;
+      padding: 3rem; text-align: center; position: relative; overflow: hidden;
+    }
+    .contact-box::after {
+      content: ""; position: absolute; width: 200px; height: 200px;
+      background: rgba(99,102,241,.2); filter: blur(60px); top: -50px; right: -50px;
+    }
+    .contact-box > * { position: relative; z-index: 1; }
+    .contact-box p { color: var(--muted); margin-bottom: 1.5rem; }
+    .contact-email { color: var(--brand2); text-decoration: none; font-weight: 600; }
+    .contact-email:hover { text-decoration: underline; }
+
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,.65); backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 1.5rem; opacity: 0; pointer-events: none;
+      transition: opacity .25s;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: auto; }
+    .modal {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 1.25rem; padding: 2rem; max-width: 420px; width: 100%;
+      transform: scale(.95); transition: transform .25s;
+    }
+    .modal-overlay.open .modal { transform: scale(1); }
+    .modal h3 { margin-bottom: .5rem; }
+    .modal p { font-size: .875rem; color: var(--muted); margin-bottom: 1.25rem; }
+    .modal input, .modal textarea {
+      width: 100%; padding: .7rem .9rem; margin-bottom: .75rem;
+      border-radius: .6rem; border: 1px solid var(--border);
+      background: var(--bg); color: var(--text); font: inherit; font-size: .9rem;
+      outline: none;
+    }
+    .modal input:focus, .modal textarea:focus { border-color: rgba(99,102,241,.5); }
+    .modal-actions { display: flex; gap: .75rem; margin-top: .5rem; }
+    .modal-close {
+      position: absolute; top: 1rem; right: 1rem; background: none; border: none;
+      color: var(--muted); font-size: 1.25rem; cursor: pointer;
+    }
+    .modal-wrap { position: relative; }
+
+    footer {
+      padding: 2.5rem 2rem; border-top: 1px solid var(--border);
+      text-align: center; font-size: .75rem; color: var(--muted);
+    }
+    footer a { color: var(--muted); text-decoration: none; }
+    footer a:hover { color: var(--text); }
+    footer .links { margin-top: .75rem; display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap; }
+
+    @media (max-width: 900px) {
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .pipeline-wrap { grid-template-columns: 1fr; }
+      .feature-grid, .bento { grid-template-columns: 1fr; }
+      .bento-card.wide { grid-column: span 1; }
+    }
+    @media (max-width: 640px) {
+      header { padding: 0 1.25rem; }
+      .nav-desktop { display: none; }
+      .menu-btn { display: block; }
+      main { padding: 0 1.25rem 2rem; }
+      section { padding: 3.5rem 0; }
+    }
   </style>
 </head>
-<body class="mesh">
-  <header>
-    <div class="logo">Rytera<span>™</span></div>
-    <nav>
+<body>
+  <div class="bg-canvas" aria-hidden="true">
+    <div class="grid-bg"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <div class="page">
+    <header id="header">
+      <a class="logo" href="#top">Rytera<span>™</span></a>
+      <nav class="nav-desktop" aria-label="Main">
+        <a href="#how-it-works" data-nav>How it works</a>
+        <a href="#features" data-nav>Features</a>
+        <a href="#integrations" data-nav>Integrations</a>
+        <a href="#faq" data-nav>FAQ</a>
+        <a href="/dashboard">Dashboard</a>
+        <button type="button" class="btn btn-primary" id="open-demo-nav">Request demo</button>
+      </nav>
+      <button class="menu-btn" id="menu-btn" aria-label="Open menu">☰</button>
+    </header>
+    <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile">
+      <a href="#how-it-works" data-nav>How it works</a>
+      <a href="#features" data-nav>Features</a>
+      <a href="#integrations" data-nav>Integrations</a>
+      <a href="#faq" data-nav>FAQ</a>
       <a href="/dashboard">Dashboard</a>
-      <a href="/docs">API Docs</a>
-      <a href="/health">Status</a>
+      <button type="button" class="btn btn-primary" id="open-demo-mobile" style="margin-top:.5rem">Request demo</button>
     </nav>
-  </header>
-  <main>
-    <h1>AI underwriting with every layer visible</h1>
-    <p class="lead">
-      Rytera ingests submission packages, runs multi-agent analysis, connects to carrier oracles and core systems,
-      and produces bind-ready decisions — with a full submission journey from intake to sign-off.
-    </p>
-    <div class="cta">
-      <a class="btn btn-primary" href="/dashboard">Open Dashboard</a>
-      <a class="btn btn-secondary" href="/docs">API Documentation</a>
-    </div>
 
-    <div class="pipeline" aria-label="Underwriting pipeline">
-      <div class="step"><strong>Intake</strong><span>Connect &amp; pull package</span></div>
-      <div class="step"><strong>Parse</strong><span>OCR &amp; extract</span></div>
-      <div class="step"><strong>Verify</strong><span>Oracles &amp; COPE</span></div>
-      <div class="step"><strong>Score</strong><span>Multi-agent risk</span></div>
-      <div class="step"><strong>Price</strong><span>Premium build-up</span></div>
-      <div class="step"><strong>Decide</strong><span>UW memo &amp; bind</span></div>
-    </div>
+    <main>
+      <section class="hero" id="top">
+        <div class="reveal">
+          <div class="hero-badge"><span class="dot"></span> Enterprise AI Underwriting</div>
+          <h1><span class="gradient">AI underwriting</span> with every layer visible</h1>
+          <p class="lead">
+            Rytera ingests submission packages, runs multi-agent analysis, connects to carrier oracles and core systems,
+            and produces bind-ready decisions — with a full submission journey from intake to sign-off.
+          </p>
+          <div class="cta">
+            <a class="btn btn-primary" href="/dashboard">Open Dashboard</a>
+            <button type="button" class="btn btn-ghost" id="open-demo-hero">Book a demo</button>
+          </div>
+        </div>
+        <div class="stats reveal" aria-label="Platform highlights">
+          <div class="stat"><span class="num" data-target="3">0</span><span>Verticals</span></div>
+          <div class="stat"><span class="num" data-target="340">0</span><span>Automated tests</span></div>
+          <div class="stat"><span class="num" data-target="24">0</span><span>Doc sources</span></div>
+          <div class="stat"><span class="num" data-target="13">0</span><span>Live integrations</span></div>
+        </div>
+      </section>
 
-    <div class="grid">
-      <div class="card">
-        <h3>Commercial Insurance</h3>
-        <p>ACORD, loss runs, SOV, inspections → premium quote, licensed sign-off, policy bind via Guidewire/BriteCore.</p>
+      <section id="how-it-works">
+        <div class="reveal">
+          <p class="section-label">How it works</p>
+          <h2>From intake to bind-ready decision</h2>
+          <p class="section-desc">Click each stage to explore what happens inside the pipeline — no black boxes.</p>
+        </div>
+        <div class="pipeline-wrap reveal">
+          <div class="pipeline-steps" role="tablist" aria-label="Pipeline stages">
+            <button class="pipeline-step active" data-step="0" role="tab" aria-selected="true">
+              <div class="step-icon">01</div>
+              <div class="step-body"><strong>Intake</strong><span>Pull packages from any source</span></div>
+            </button>
+            <button class="pipeline-step" data-step="1" role="tab" aria-selected="false">
+              <div class="step-icon">02</div>
+              <div class="step-body"><strong>Parse</strong><span>OCR &amp; structured extraction</span></div>
+            </button>
+            <button class="pipeline-step" data-step="2" role="tab" aria-selected="false">
+              <div class="step-icon">03</div>
+              <div class="step-body"><strong>Verify</strong><span>Reconcile &amp; oracle lookups</span></div>
+            </button>
+            <button class="pipeline-step" data-step="3" role="tab" aria-selected="false">
+              <div class="step-icon">04</div>
+              <div class="step-body"><strong>Score</strong><span>Multi-agent risk analysis</span></div>
+            </button>
+            <button class="pipeline-step" data-step="4" role="tab" aria-selected="false">
+              <div class="step-icon">05</div>
+              <div class="step-body"><strong>Price</strong><span>Premium &amp; rate build-up</span></div>
+            </button>
+            <button class="pipeline-step" data-step="5" role="tab" aria-selected="false">
+              <div class="step-icon">06</div>
+              <div class="step-body"><strong>Decide</strong><span>UW memo &amp; bind</span></div>
+            </button>
+          </div>
+          <div class="pipeline-panel" id="pipeline-panel" role="tabpanel"></div>
+        </div>
+      </section>
+
+      <section id="features">
+        <div class="reveal">
+          <p class="section-label">Features</p>
+          <h2>One platform, three underwriting verticals</h2>
+          <p class="section-desc">Insurance carriers, mortgage lenders, and commercial lenders share one dashboard and audit infrastructure.</p>
+        </div>
+        <div class="tabs reveal" role="tablist" aria-label="Verticals">
+          <button class="tab active" data-tab="insurance" role="tab">Commercial Insurance</button>
+          <button class="tab" data-tab="mortgage" role="tab">Mortgage</button>
+          <button class="tab" data-tab="lending" role="tab">Lending</button>
+        </div>
+        <div class="tab-panel active reveal" id="tab-insurance" role="tabpanel">
+          <div class="feature-grid">
+            <div class="feature-card"><div class="icon">📄</div><h3>Document ingestion</h3><p>ACORD XML, broker slips, loss runs, SOV, inspections — auto-classified and parsed.</p></div>
+            <div class="feature-card"><div class="icon">🤖</div><h3>Specialist agents</h3><p>Risk, loss run, compliance, fraud, and UW decision agents run in parallel.<ul><li>Deterministic fallbacks without LLM</li><li>Structured memo output</li></ul></p></div>
+            <div class="feature-card"><div class="icon">💰</div><h3>Premium &amp; bind</h3><p>ACCEPT / REFER / DECLINE with premium quote, licensed sign-off, and policy bind.</p></div>
+            <div class="feature-card"><div class="icon">🔍</div><h3>Submission journey</h3><p>Full pipeline panel per job — COPE, oracles, provenance, pricing build-up, audit trail.</p></div>
+          </div>
+        </div>
+        <div class="tab-panel reveal" id="tab-mortgage" role="tabpanel">
+          <div class="feature-grid">
+            <div class="feature-card"><div class="icon">🏠</div><h3>30+ document types</h3><p>W-2, 1040, credit reports, appraisals, bank statements, rent rolls.</p></div>
+            <div class="feature-card"><div class="icon">📊</div><h3>Income &amp; collateral</h3><p>Specialist agents for income, credit, assets, and collateral verification.</p></div>
+            <div class="feature-card"><div class="icon">🔒</div><h3>Rate lock &amp; compliance</h3><p>Approve / Refer / Suspend / Deny with TRID, Reg Z, and HMDA checks.</p></div>
+            <div class="feature-card"><div class="icon">⚡</div><h3>Async processing</h3><p>Celery workers with org-scoped jobs and HMAC-signed webhooks for LOS integration.</p></div>
+          </div>
+        </div>
+        <div class="tab-panel reveal" id="tab-lending" role="tabpanel">
+          <div class="feature-grid">
+            <div class="feature-card"><div class="icon">🏦</div><h3>Consumer &amp; commercial</h3><p>Business and consumer loan applications with unified decisioning.</p></div>
+            <div class="feature-card"><div class="icon">📈</div><h3>Credit &amp; pricing</h3><p>Credit risk engine, compliance rules, and dynamic pricing in one pipeline.</p></div>
+            <div class="feature-card"><div class="icon">⚖️</div><h3>Regulatory compliance</h3><p>Reg B, ECOA, adverse action notices, and collateral verification.</p></div>
+            <div class="feature-card"><div class="icon">🛡️</div><h3>Shared security</h3><p>JWT auth, org-scoped isolation, and encrypted audit trail across all verticals.</p></div>
+          </div>
+        </div>
+
+        <div class="bento reveal">
+          <div class="bento-card wide"><h3>Human-in-the-loop by design</h3><p>Licensed UW sign-off, checkpoint resolution, authority matrix tiers, and referral queues — AI assists, humans decide.</p></div>
+          <div class="bento-card"><h3>PII redaction</h3><p>Automated SSN, EIN, DOB detection and document redaction.</p></div>
+          <div class="bento-card"><h3>24 connectors</h3><p>S3, SharePoint, Applied Epic, email, SFTP, and more.</p></div>
+          <div class="bento-card"><h3>Queue triage</h3><p>Prioritized submission queue with fit scores and journey strips.</p></div>
+          <div class="bento-card wide"><h3>Encrypted audit bundles</h3><p>SHA-256 manifest ZIP exports for regulatory examiner review — every decision traceable.</p></div>
+        </div>
+      </section>
+
+      <section id="integrations">
+        <div class="reveal">
+          <p class="section-label">Integrations</p>
+          <h2>Connects to the systems you already use</h2>
+          <p class="section-desc">Filter by category. Every adapter supports live, simulated, and auto modes with health monitoring.</p>
+        </div>
+        <div class="filter-bar reveal">
+          <button class="filter-btn active" data-filter="all">All</button>
+          <button class="filter-btn" data-filter="oracles">Oracles</button>
+          <button class="filter-btn" data-filter="policy">Policy &amp; CRM</button>
+          <button class="filter-btn" data-filter="ops">Enterprise ops</button>
+          <button class="filter-btn" data-filter="sources">Doc sources</button>
+        </div>
+        <div class="integration-grid reveal" id="integration-grid"></div>
+      </section>
+
+      <section id="faq">
+        <div class="reveal">
+          <p class="section-label">FAQ</p>
+          <h2>Frequently asked questions</h2>
+          <p class="section-desc">Search or expand any question below.</p>
+        </div>
+        <input type="search" class="faq-search reveal" id="faq-search" placeholder="Search questions…" aria-label="Search FAQ" />
+        <div class="faq reveal" id="faq-list"></div>
+      </section>
+
+      <section id="contact">
+        <div class="contact-box reveal">
+          <h2>Ready to see Rytera in action?</h2>
+          <p>Walk through the submission journey, multi-agent pipeline, and live dashboard with our team.</p>
+          <button type="button" class="btn btn-primary" id="open-demo-contact">Request a demo</button>
+          <p style="margin-top:1.25rem;margin-bottom:0;font-size:.875rem">
+            Or email <a class="contact-email" href="mailto:hello@rytera.ai">hello@rytera.ai</a>
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div>Rytera™ · <a href="https://rytera.ai">rytera.ai</a></div>
+      <div class="links">
+        <a href="/dashboard">Dashboard</a>
+        <a href="/health">System Status</a>
+        <a href="#faq">FAQ</a>
+        <a href="#contact">Contact</a>
       </div>
-      <div class="card">
-        <h3>Mortgage</h3>
-        <p>W-2s, tax returns, credit, appraisals → approve/deny, rate lock, compliance checks.</p>
-      </div>
-      <div class="card">
-        <h3>Integration Gateway</h3>
-        <p>Production REST adapters for CLUE, NCCI, A-PLUS, CAT, loss control, claims, CRM — health-checked live or simulated.</p>
+      <div style="margin-top:.75rem">Rytera is a trademark of Rytera, Inc. All rights reserved.</div>
+    </footer>
+  </div>
+
+  <div class="modal-overlay" id="demo-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-wrap">
+      <div class="modal">
+        <button class="modal-close" id="close-demo" aria-label="Close">×</button>
+        <h3 id="modal-title">Request a demo</h3>
+        <p>Tell us about your team and we'll schedule a walkthrough.</p>
+        <form id="demo-form">
+          <input type="text" name="name" placeholder="Your name" required />
+          <input type="email" name="email" placeholder="Work email" required />
+          <input type="text" name="company" placeholder="Company" required />
+          <textarea name="message" rows="3" placeholder="What vertical are you interested in? (optional)"></textarea>
+          <div class="modal-actions">
+            <button type="submit" class="btn btn-primary" style="flex:1">Send request</button>
+            <a class="btn btn-ghost" href="/dashboard">Try dashboard</a>
+          </div>
+        </form>
       </div>
     </div>
-  </main>
-  <footer>
-    Rytera™ · <a href="https://rytera.ai">rytera.ai</a> · Rytera is a trademark of Rytera, Inc. All rights reserved.
-  </footer>
+  </div>
+
+  <script>
+    const PIPELINE = [
+      { tag: "Stage 01", title: "Intake", desc: "Submission packages arrive from anywhere your team already works.", items: ["24 enterprise connectors: S3, SharePoint, Box, Applied Epic, Vertafore", "Email ingestion via Exchange and Gmail", "Broker platforms and local folder drops", "Org-scoped job tracking from first byte"] },
+      { tag: "Stage 02", title: "Parse", desc: "Documents are classified, OCR'd, and structured into a unified bundle.", items: ["ACORD XML, broker PDFs/JSON, loss runs, SOV, inspections", "Mortgage: W-2, 1040, credit, appraisals, bank statements", "Entity extraction and cross-document field mapping", "Provenance tracking for every extracted value"] },
+      { tag: "Stage 03", title: "Verify", desc: "Cross-document reconciliation and third-party oracle verification.", items: ["Provenance hierarchy: ACORD vs inspection vs loss run", "COPE analysis for property risks", "CLUE, NCCI, A-PLUS, and CAT model lookups", "Discrepancy flags before scoring begins"] },
+      { tag: "Stage 04", title: "Score", desc: "Specialist agents analyze risk dimensions in parallel.", items: ["Risk, loss run, compliance, and fraud agents", "ReAct-style reasoning with tool use", "Deterministic fallbacks — no LLM required", "Structured findings feed the UW memo"] },
+      { tag: "Stage 05", title: "Price", desc: "Premium, rate lock, or loan pricing with market-cycle awareness.", items: ["P&C premium build-up with modifiers", "Mortgage rate lock and DTI analysis", "Lending spread and fee calculation", "Market cycle phase adjustments (hard/soft)"] },
+      { tag: "Stage 06", title: "Decide", desc: "Bind-ready output with human checkpoints and full audit trail.", items: ["ACCEPT / REFER / DECLINE (or mortgage/lending equivalent)", "Licensed UW sign-off with override notes", "Policy bind via Guidewire or BriteCore", "Encrypted audit bundle with SHA-256 manifest"] },
+    ];
+
+    const INTEGRATIONS = [
+      { name: "CLUE", cat: "oracles" }, { name: "NCCI", cat: "oracles" }, { name: "A-PLUS", cat: "oracles" },
+      { name: "CAT models", cat: "oracles" }, { name: "ISO loss costs", cat: "oracles" },
+      { name: "Guidewire", cat: "policy" }, { name: "BriteCore", cat: "policy" }, { name: "HubSpot CRM", cat: "policy" },
+      { name: "Loss control", cat: "ops" }, { name: "Claims", cat: "ops" }, { name: "Broker portal", cat: "ops" }, { name: "Actuarial", cat: "ops" },
+      { name: "Amazon S3", cat: "sources" }, { name: "Azure Blob", cat: "sources" }, { name: "SharePoint", cat: "sources" },
+      { name: "Applied Epic", cat: "sources" }, { name: "Vertafore", cat: "sources" }, { name: "Exchange / Gmail", cat: "sources" },
+      { name: "SFTP / FTP", cat: "sources" }, { name: "Google Drive", cat: "sources" },
+    ];
+
+    const FAQS = [
+      { q: "What is Rytera?", a: "Rytera is an enterprise AI underwriting platform for commercial insurance, mortgage, and lending. It ingests multi-format submission packages, runs specialist agent analysis, connects to carrier oracles and core systems, and produces bind-ready decisions with a full audit trail." },
+      { q: "Who is Rytera for?", a: "Insurance carriers and MGAs, mortgage lenders (residential and commercial), and consumer/commercial lending operations. Built for underwriting teams, operations leaders, and IT teams who need transparent, auditable AI-assisted decisions." },
+      { q: "Does Rytera replace Guidewire or our loan origination system?", a: "No. Rytera integrates with policy admin systems (Guidewire, BriteCore), CRM (HubSpot), and LOS workflows via webhooks. It accelerates the underwriting layer while your core systems remain the system of record." },
+      { q: "What documents and data sources do you support?", a: "Insurance: ACORD XML, broker PDFs/JSON, loss runs, SOV, inspections. Mortgage: 30+ types including W-2, 1040, credit reports, appraisals, and rent rolls. Lending: application data, credit pulls, and bank statements. Plus 24 enterprise source connectors." },
+      { q: "How does the AI underwriting pipeline work?", a: "Submissions move through six stages: Intake → Parse → Verify → Score → Price → Decide. Specialist agents analyze in parallel. Results feed a UW memo with ACCEPT/REFER/DECLINE and optional licensed sign-off before bind." },
+      { q: "Can underwriters override AI decisions?", a: "Yes. Licensed underwriters can approve, refer, or decline with notes and override reasons. Authority matrix tiers control binding limits. Checkpoint resolution lets teams pause and resume at any stage." },
+      { q: "Do I need an LLM API key to run Rytera?", a: "No. All pipelines include deterministic agent fallbacks. Adding an API key enables richer reasoning, but the platform is fully functional for demos and pilots without one." },
+      { q: "What integrations are live vs simulated?", a: "Each integration supports auto (live when configured, simulated otherwise), live, and simulated modes. The dashboard shows real-time health for every feed." },
+      { q: "How do you handle security and PII?", a: "JWT + RBAC, org-scoped isolation, Fernet encryption, automated PII redaction (SSN, EIN, DOB), and encrypted audit bundles with SHA-256 manifests." },
+      { q: "Is Rytera cloud, on-prem, or hybrid?", a: "Self-hosted via Docker Compose (Redis, PostgreSQL/pgvector, API, Celery). Deploy on your infrastructure or private cloud. Contact us for managed hosting." },
+      { q: "How long does a pilot take?", a: "Most pilots run 4–8 weeks: week 1 setup, weeks 2–4 live submissions with UW review, weeks 5–8 refinement and audit package review." },
+      { q: "How is pricing structured?", a: "Based on vertical, submission volume, and integration scope. Enterprise plans include dedicated support, custom connectors, and SLA options." },
+    ];
+
+    // Pipeline panel
+    const panel = document.getElementById("pipeline-panel");
+    function renderPanel(i) {
+      const s = PIPELINE[i];
+      panel.innerHTML = `<div class="panel-content"><div class="panel-tag">${s.tag}</div><div class="panel-title">${s.title}</div><p class="panel-desc">${s.desc}</p><ul class="panel-list">${s.items.map(x => `<li>${x}</li>`).join("")}</ul></div>`;
+    }
+    renderPanel(0);
+    document.querySelectorAll(".pipeline-step").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".pipeline-step").forEach(b => { b.classList.remove("active"); b.setAttribute("aria-selected", "false"); });
+        btn.classList.add("active");
+        btn.setAttribute("aria-selected", "true");
+        renderPanel(+btn.dataset.step);
+      });
+    });
+    let autoStep = 0;
+    setInterval(() => {
+      if (document.hidden) return;
+      autoStep = (autoStep + 1) % PIPELINE.length;
+      const btn = document.querySelector(`.pipeline-step[data-step="${autoStep}"]`);
+      if (btn && !document.querySelector(".pipeline-step:hover")) btn.click();
+    }, 5000);
+
+    // Vertical tabs
+    document.querySelectorAll(".tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+        document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+        tab.classList.add("active");
+        document.getElementById("tab-" + tab.dataset.tab).classList.add("active");
+      });
+    });
+
+    // Integrations
+    const grid = document.getElementById("integration-grid");
+    INTEGRATIONS.forEach(item => {
+      const el = document.createElement("div");
+      el.className = "integration-tile";
+      el.dataset.cat = item.cat;
+      el.innerHTML = `${item.name}<span class="cat">${item.cat}</span>`;
+      grid.appendChild(el);
+    });
+    document.querySelectorAll(".filter-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        const f = btn.dataset.filter;
+        grid.querySelectorAll(".integration-tile").forEach(tile => {
+          tile.classList.toggle("hidden", f !== "all" && tile.dataset.cat !== f);
+        });
+      });
+    });
+
+    // FAQ
+    const faqList = document.getElementById("faq-list");
+    FAQS.forEach((item, i) => {
+      const el = document.createElement("div");
+      el.className = "faq-item";
+      el.dataset.q = item.q.toLowerCase();
+      el.innerHTML = `<button class="faq-q" aria-expanded="false">${item.q}<svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></button><div class="faq-a"><div class="faq-a-inner">${item.a}</div></div>`;
+      el.querySelector(".faq-q").addEventListener("click", () => {
+        const open = el.classList.contains("open");
+        document.querySelectorAll(".faq-item").forEach(f => { f.classList.remove("open"); f.querySelector(".faq-a").style.maxHeight = "0"; f.querySelector(".faq-q").setAttribute("aria-expanded", "false"); });
+        if (!open) {
+          el.classList.add("open");
+          const a = el.querySelector(".faq-a");
+          a.style.maxHeight = a.scrollHeight + "px";
+          el.querySelector(".faq-q").setAttribute("aria-expanded", "true");
+        }
+      });
+      faqList.appendChild(el);
+    });
+    document.getElementById("faq-search").addEventListener("input", e => {
+      const q = e.target.value.toLowerCase();
+      faqList.querySelectorAll(".faq-item").forEach(item => {
+        item.classList.toggle("hidden", q && !item.dataset.q.includes(q));
+      });
+    });
+
+    // Animated counters
+    function animateCounters() {
+      document.querySelectorAll(".num[data-target]").forEach(el => {
+        const target = +el.dataset.target;
+        const suffix = el.dataset.suffix || (target >= 100 ? "+" : "");
+        let start = 0;
+        const dur = 1200;
+        const t0 = performance.now();
+        function tick(now) {
+          const p = Math.min((now - t0) / dur, 1);
+          el.textContent = Math.floor(target * (1 - Math.pow(1 - p, 3))) + (p >= 1 ? suffix : "");
+          if (p < 1) requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+      });
+    }
+
+    // Scroll reveal + nav highlight
+    const header = document.getElementById("header");
+    const navLinks = document.querySelectorAll("[data-nav]");
+    const sections = [...navLinks].map(a => document.querySelector(a.getAttribute("href"))).filter(Boolean);
+
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) entry.target.classList.add("visible");
+      });
+    }, { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
+    document.querySelectorAll(".reveal").forEach(el => observer.observe(el));
+
+    const statsObs = new IntersectionObserver(entries => {
+      if (entries.some(e => e.isIntersecting)) { animateCounters(); statsObs.disconnect(); }
+    }, { threshold: 0.5 });
+    const statsEl = document.querySelector(".stats");
+    if (statsEl) statsObs.observe(statsEl);
+
+    window.addEventListener("scroll", () => {
+      header.classList.toggle("scrolled", window.scrollY > 20);
+      const y = window.scrollY + 100;
+      let current = "";
+      sections.forEach(sec => { if (sec.offsetTop <= y) current = sec.id; });
+      navLinks.forEach(a => a.classList.toggle("active", a.getAttribute("href") === "#" + current));
+    }, { passive: true });
+
+    // Mobile menu
+    const mobileNav = document.getElementById("mobile-nav");
+    document.getElementById("menu-btn").addEventListener("click", () => mobileNav.classList.toggle("open"));
+    mobileNav.querySelectorAll("a").forEach(a => a.addEventListener("click", () => mobileNav.classList.remove("open")));
+
+    // Demo modal
+    const modal = document.getElementById("demo-modal");
+    const openModal = () => { modal.classList.add("open"); document.body.style.overflow = "hidden"; };
+    const closeModal = () => { modal.classList.remove("open"); document.body.style.overflow = ""; };
+    ["open-demo-nav", "open-demo-mobile", "open-demo-hero", "open-demo-contact"].forEach(id => {
+      document.getElementById(id)?.addEventListener("click", openModal);
+    });
+    document.getElementById("close-demo").addEventListener("click", closeModal);
+    modal.addEventListener("click", e => { if (e.target === modal) closeModal(); });
+    document.getElementById("demo-form").addEventListener("submit", e => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const subject = encodeURIComponent("Rytera demo request — " + fd.get("company"));
+      const body = encodeURIComponent(`Name: ${fd.get("name")}\nEmail: ${fd.get("email")}\nCompany: ${fd.get("company")}\n\n${fd.get("message") || ""}`);
+      window.location.href = `mailto:hello@rytera.ai?subject=${subject}&body=${body}`;
+      closeModal();
+    });
+  </script>
 </body>
 </html>
