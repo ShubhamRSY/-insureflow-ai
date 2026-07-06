@@ -6,7 +6,7 @@ import uuid
 from pathlib import Path
 from typing import Any, Optional
 
-from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Request, status
+from fastapi import APIRouter, BackgroundTasks, Depends, FastAPI, HTTPException, Request, status
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -30,10 +30,11 @@ from insureflow.storage.job_store import JobStore, get_job_store
 from insureflow.tasks.celery_app import celery_app
 from insureflow.underwriting.renewal import PremiumAuditEngine
 
+integration_gateway_router: APIRouter | None = None
 try:
     from insureflow.gateway.router import router as integration_gateway_router
 except ImportError:
-    integration_gateway_router = None
+    pass
 
 logger = logging.getLogger(__name__)
 

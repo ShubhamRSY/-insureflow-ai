@@ -77,32 +77,32 @@ def capture_screenshots(token: str) -> dict[str, Path]:
 def build_ppt(shots: dict[str, Path]) -> Path:
     from pptx import Presentation
     from pptx.dml.color import RGBColor
-    from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
+    from pptx.enum.text import PP_ALIGN
     from pptx.util import Inches, Pt
 
     prs = Presentation()
     prs.slide_width = Inches(13.333)
     prs.slide_height = Inches(7.5)
 
-    DARK = RGBColor(12, 15, 23)
-    PANEL = RGBColor(18, 24, 38)
-    BRAND = RGBColor(99, 102, 241)
-    BRAND_LIGHT = RGBColor(129, 140, 248)
-    MUTED = RGBColor(148, 163, 184)
-    WHITE = RGBColor(241, 245, 249)
-    SOFT = RGBColor(203, 213, 225)
+    dark = RGBColor(12, 15, 23)
+    panel_color = RGBColor(18, 24, 38)
+    brand = RGBColor(99, 102, 241)
+    brand_light = RGBColor(129, 140, 248)
+    muted = RGBColor(148, 163, 184)
+    white = RGBColor(241, 245, 249)
+    soft = RGBColor(203, 213, 225)
 
     slide_num = 0
 
     def _dark_bg(slide) -> None:
         bg = slide.background.fill
         bg.solid()
-        bg.fore_color.rgb = DARK
+        bg.fore_color.rgb = dark
 
     def _accent_bar(slide) -> None:
         bar = slide.shapes.add_shape(1, Inches(0), Inches(0), Inches(0.12), Inches(7.5))
         bar.fill.solid()
-        bar.fill.fore_color.rgb = BRAND
+        bar.fill.fore_color.rgb = brand
         bar.line.fill.background()
 
     def _footer(slide, label: str = "Rytera™ · rytera.ai") -> None:
@@ -110,7 +110,7 @@ def build_ppt(shots: dict[str, Path]) -> Path:
         p = box.text_frame.paragraphs[0]
         p.text = label
         p.font.size = Pt(10)
-        p.font.color.rgb = MUTED
+        p.font.color.rgb = muted
 
     def _slide_number(slide) -> None:
         nonlocal slide_num
@@ -119,10 +119,10 @@ def build_ppt(shots: dict[str, Path]) -> Path:
         p = box.text_frame.paragraphs[0]
         p.text = str(slide_num)
         p.font.size = Pt(10)
-        p.font.color.rgb = MUTED
+        p.font.color.rgb = muted
         p.alignment = PP_ALIGN.RIGHT
 
-    def _add_bullets(tf, items: list[str], *, size: int = 15, color=MUTED, bold_first: bool = False) -> None:
+    def _add_bullets(tf, items: list[str], *, size: int = 15, color=muted, bold_first: bool = False) -> None:
         for i, item in enumerate(items):
             p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
             p.text = item
@@ -133,7 +133,7 @@ def build_ppt(shots: dict[str, Path]) -> Path:
             p.space_after = Pt(4)
             if bold_first and i == 0:
                 p.font.bold = True
-                p.font.color.rgb = SOFT
+                p.font.color.rgb = soft
 
     def add_title_slide() -> None:
         slide = prs.slides.add_slide(prs.slide_layouts[6])
@@ -143,7 +143,7 @@ def build_ppt(shots: dict[str, Path]) -> Path:
         tag = slide.shapes.add_textbox(Inches(0.7), Inches(1.6), Inches(4), Inches(0.4))
         tag.text_frame.paragraphs[0].text = "PRODUCT OVERVIEW"
         tag.text_frame.paragraphs[0].font.size = Pt(11)
-        tag.text_frame.paragraphs[0].font.color.rgb = BRAND_LIGHT
+        tag.text_frame.paragraphs[0].font.color.rgb = brand_light
         tag.text_frame.paragraphs[0].font.bold = True
 
         title = slide.shapes.add_textbox(Inches(0.7), Inches(2.1), Inches(11.5), Inches(1.2))
@@ -151,13 +151,13 @@ def build_ppt(shots: dict[str, Path]) -> Path:
         tp.text = "Rytera™"
         tp.font.size = Pt(54)
         tp.font.bold = True
-        tp.font.color.rgb = WHITE
+        tp.font.color.rgb = white
 
         sub = slide.shapes.add_textbox(Inches(0.7), Inches(3.35), Inches(11), Inches(1.2))
         sp = sub.text_frame.paragraphs[0]
         sp.text = "AI underwriting with full pipeline visibility"
         sp.font.size = Pt(24)
-        sp.font.color.rgb = SOFT
+        sp.font.color.rgb = soft
 
         desc = slide.shapes.add_textbox(Inches(0.7), Inches(4.5), Inches(10.5), Inches(1.5))
         _add_bullets(
@@ -167,7 +167,7 @@ def build_ppt(shots: dict[str, Path]) -> Path:
                 "From document intake to bind-ready decision — every layer explained, not hidden",
             ],
             size=16,
-            color=MUTED,
+            color=muted,
         )
         _footer(slide, "Rytera™ · rytera.ai · Product overview deck")
         _slide_number(slide)
@@ -181,13 +181,13 @@ def build_ppt(shots: dict[str, Path]) -> Path:
         h.text_frame.paragraphs[0].text = heading
         h.text_frame.paragraphs[0].font.size = Pt(32)
         h.text_frame.paragraphs[0].font.bold = True
-        h.text_frame.paragraphs[0].font.color.rgb = WHITE
+        h.text_frame.paragraphs[0].font.color.rgb = white
 
         lead_box = slide.shapes.add_textbox(Inches(0.7), Inches(1.45), Inches(11.5), Inches(0.9))
         lp = lead_box.text_frame.paragraphs[0]
         lp.text = lead
         lp.font.size = Pt(17)
-        lp.font.color.rgb = SOFT
+        lp.font.color.rgb = soft
 
         body = slide.shapes.add_textbox(Inches(0.7), Inches(2.5), Inches(11.8), Inches(4.2))
         _add_bullets(body.text_frame, bullets, size=16)
@@ -209,7 +209,7 @@ def build_ppt(shots: dict[str, Path]) -> Path:
         # Left narrative panel
         panel = slide.shapes.add_shape(1, Inches(0.45), Inches(0.45), Inches(4.85), Inches(6.35))
         panel.fill.solid()
-        panel.fill.fore_color.rgb = PANEL
+        panel.fill.fore_color.rgb = panel_color
         panel.line.color.rgb = RGBColor(40, 48, 68)
         panel.line.width = Pt(0.75)
 
@@ -219,18 +219,18 @@ def build_ppt(shots: dict[str, Path]) -> Path:
         hp.text = heading
         hp.font.size = Pt(22)
         hp.font.bold = True
-        hp.font.color.rgb = WHITE
+        hp.font.color.rgb = white
 
         intro = slide.shapes.add_textbox(Inches(0.7), Inches(1.65), Inches(4.4), Inches(1.1))
         intro.text_frame.word_wrap = True
         ip = intro.text_frame.paragraphs[0]
         ip.text = what_it_is
         ip.font.size = Pt(13)
-        ip.font.color.rgb = BRAND_LIGHT
+        ip.font.color.rgb = brand_light
 
         body = slide.shapes.add_textbox(Inches(0.7), Inches(2.85), Inches(4.4), Inches(3.5))
         body.text_frame.word_wrap = True
-        _add_bullets(body.text_frame, bullets, size=12, color=MUTED)
+        _add_bullets(body.text_frame, bullets, size=12, color=muted)
 
         # Right screenshot
         slide.shapes.add_picture(str(image), Inches(5.55), Inches(0.55), width=Inches(7.35))
@@ -239,7 +239,7 @@ def build_ppt(shots: dict[str, Path]) -> Path:
         cp = cap.text_frame.paragraphs[0]
         cp.text = caption
         cp.font.size = Pt(10)
-        cp.font.color.rgb = MUTED
+        cp.font.color.rgb = muted
         cp.alignment = PP_ALIGN.CENTER
 
         _footer(slide)
@@ -353,7 +353,7 @@ def build_ppt(shots: dict[str, Path]) -> Path:
     tf.paragraphs[0].text = "See the full pipeline — not just the decision"
     tf.paragraphs[0].font.size = Pt(34)
     tf.paragraphs[0].font.bold = True
-    tf.paragraphs[0].font.color.rgb = WHITE
+    tf.paragraphs[0].font.color.rgb = white
     tf.paragraphs[0].alignment = PP_ALIGN.CENTER
     for line in [
         "Built for carriers, MGAs, banks, and credit unions",
@@ -363,7 +363,7 @@ def build_ppt(shots: dict[str, Path]) -> Path:
         p = tf.add_paragraph()
         p.text = line
         p.font.size = Pt(18)
-        p.font.color.rgb = BRAND_LIGHT if "rytera" in line else MUTED
+        p.font.color.rgb = brand_light if "rytera" in line else muted
         p.alignment = PP_ALIGN.CENTER
         p.space_before = Pt(14)
     _footer(slide)
