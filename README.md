@@ -35,22 +35,47 @@ End-to-end bind-ready workflow for carrier-grade operations:
 
 ### Web Dashboard (React)
 
-Modern SPA served at `/dashboard` (React 18, Vite, Tailwind CSS):
+Modern SPA served at `/dashboard` (React 18, Vite, Tailwind CSS). Product marketing landing page at `/` (HTML).
 
 | Page | Purpose |
 |------|---------|
-| **Overview** | Job metrics, quick demos, recent activity |
+| **Overview** | Pipeline narrative (intake → decide), job metrics, quick demos, recent activity with journey strips |
 | **System Health** | Live diagnostics (10 component checks) |
-| **Insurance** | Source connector hub, one-click demos, job history |
+| **Insurance** | Source connector hub, pipeline flow banner, ecosystem feed status, one-click demos, job history with journey strips |
 | **Mortgage** | Loan package submission, job history, rate/DTI display |
+| **Lending** | Consumer/commercial lending applications and decisions |
+| **Queue** | Prioritized submission queue with triage scores and mini journey indicators |
 | **UW Sign-off** | Licensed review queue with View (job drawer), approve, refer, decline |
+| **Integrations** | Enterprise connector and ecosystem health |
 | **Renewal Dashboard** | Premium audit tracking, reconciliation status, material adjustments |
 | **Authority Matrix** | UW tier overview, binding limits per authority level |
 | **Market Admin** | Market phase controls (hard/soft), rate impact cards |
 | **Broker Status** | Token-based broker share links, public status pages |
 | **Settings** | Session info, RBAC reference (role hierarchy + descriptions), credential reset |
 
-Features: JWT login with first-time setup, self-registration (viewer/underwriter), password visibility toggle, real-time job polling, responsive sidebar navigation.
+**Submission Journey** (job drawer): click any insurance job to open a full pipeline panel — timeline, COPE, oracle verification, agent findings, provenance reconciliation, pricing build-up, enterprise ops, human checkpoints, and audit trail. Replaces opaque “upload → decision” UX.
+
+Features: JWT login with first-time setup, self-registration (viewer/underwriter), password visibility toggle, real-time job polling, responsive sidebar navigation, Rytera™ branding.
+
+### Enterprise Integrations & Gateway
+
+Production HTTP adapters for carrier systems with `auto` / `live` / `simulated` modes and health-checked connectivity:
+
+| Category | Systems |
+|----------|---------|
+| **Oracles** | CLUE, NCCI, A-PLUS, CAT, ISO loss costs |
+| **Policy admin** | Guidewire PolicyCenter, BriteCore |
+| **CRM** | HubSpot (local gateway mock for dev) |
+| **Enterprise ops** | Loss control, claims, broker portal, actuarial |
+
+Bundled **integration gateway** at `/integrations` on the API server (deploy same routes at `integrations.rytera.ai` in production). Configure via `.env` — see `.env.example` and `docs/LAUNCH_CHECKLIST.md`.
+
+| Endpoint | Purpose |
+|----------|---------|
+| `GET /pipeline/ecosystem/status` | Live health for all feeds |
+| `GET /pipeline/ecosystem/{bundle_id}` | Per-submission ecosystem state |
+| `POST /pipeline/ecosystem/{bundle_id}/loss-control/dispatch` | Loss control dispatch |
+| `POST /pipeline/checkpoints/{bundle_id}/resolve` | Human checkpoint resolution |
 
 ### Insurance Source Connectors
 
@@ -84,7 +109,7 @@ Category-filtered connector hub with brand logos and pull-to-submit workflow.
 
 | Suite | Scope | Count |
 |-------|-------|-------|
-| **Unit tests** (`pytest`) | Parsers, agents, rating, workflow, underwriting, mortgage, lending, oracles, provenance, reconciliation, entities, MCP, document analytics | ~200 (20 test files) |
+| **Unit tests** (`pytest`) | Parsers, agents, rating, workflow, underwriting, mortgage, lending, oracles, provenance, reconciliation, gateway, production integrations | **340+** |
 | **E2E tests** (`scripts/e2e_test.py`) | Full API integration, connectors, production workflow, Celery, Playwright browser | 42 |
 
 E2E coverage includes: auth, diagnostics, all 24 connector pulls, insurance/mortgage demo pipelines, licensed UW sign-off, policy bind, loss experience, regulatory audit package, Celery mortgage path, and browser click-through (login, navigation, password toggle).
@@ -93,6 +118,8 @@ E2E coverage includes: auth, diagnostics, all 24 connector pulls, insurance/mort
 python scripts/e2e_test.py --timeout 360          # Full live-server E2E
 python scripts/e2e_test.py --fast --timeout 360   # Skip connector pulls (~6 min)
 python cli.py e2e --fast                          # Same via CLI
+python -m pytest tests/ -q                        # Unit + integration tests
+python scripts/build_linkedin_deck.py             # Product deck (screenshots + PPTX)
 ```
 
 ---
@@ -166,9 +193,11 @@ pip install -e ".[ocr]"
 # Optional: Playwright for browser E2E tests
 pip install playwright && playwright install chromium
 
-# Copy and configure environment
+# Copy and configure environment (dev keys + local gateway URLs included)
 cp .env.example .env
 ```
+
+Local dev uses the bundled gateway at `http://127.0.0.1:8002/integrations` with `ORACLE_MODE=auto` — feeds show **live** when the API is running. For production, point URLs at `https://integrations.rytera.ai` and replace `INTEGRATION_GATEWAY_API_KEY`. See `docs/LAUNCH_CHECKLIST.md` and `legal/TRADEMARK_NOTICE.md`.
 
 ### 2. Start infrastructure
 
@@ -182,11 +211,11 @@ docker compose up -d redis db    # Redis + PostgreSQL/pgvector
 # API + dashboard (port 8002 — 8000/8001 often in use)
 python cli.py serve --port 8002 --no-reload
 
-# Celery worker (required for async mortgage jobs)
+# Celery worker (required for async insurance + mortgage pipeline jobs)
 python -m celery -A insureflow.tasks.celery_app worker -Q agents,pipeline,mortgage
 ```
 
-Open **http://localhost:8002/dashboard** — use **First-time Setup** or sign in after `python cli.py auth-reset`.
+Open **http://localhost:8002/dashboard** — use **First-time Setup** or sign in after `python cli.py auth-reset`. Marketing landing page: **http://localhost:8002/**
 
 ### 4. CLI examples
 
