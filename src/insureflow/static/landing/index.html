@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rytera — AI Underwriting Platform</title>
+  <meta name="description" content="Rytera is the AI underwriting platform for commercial insurance, mortgage, and lending — every pipeline layer visible from intake to decision." />
+  <link rel="canonical" href="https://rytera.ai" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root { --bg: #0c0f17; --card: #121826; --text: #e2e8f0; --muted: #94a3b8; --brand: #6366f1; --brand2: #818cf8; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Inter, system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+    .mesh { background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99,102,241,.18), transparent), var(--bg); }
+    header { display: flex; align-items: center; justify-content: space-between; padding: 1.25rem 2rem; border-bottom: 1px solid rgba(255,255,255,.06); }
+    .logo { font-weight: 700; font-size: 1.25rem; letter-spacing: -.02em; }
+    .logo span { color: var(--brand2); }
+    nav a { color: var(--muted); text-decoration: none; margin-left: 1.5rem; font-size: .9rem; }
+    nav a:hover { color: var(--text); }
+    .btn { display: inline-block; padding: .65rem 1.25rem; border-radius: .75rem; font-weight: 600; font-size: .9rem; text-decoration: none; }
+    .btn-primary { background: linear-gradient(135deg, var(--brand), #4f46e5); color: #fff; }
+    .btn-secondary { border: 1px solid rgba(255,255,255,.12); color: var(--text); }
+    main { max-width: 1080px; margin: 0 auto; padding: 4rem 2rem 3rem; }
+    h1 { font-size: clamp(2rem, 5vw, 3.25rem); line-height: 1.1; letter-spacing: -.03em; max-width: 18ch; }
+    .lead { margin-top: 1.25rem; font-size: 1.125rem; color: var(--muted); max-width: 52ch; }
+    .cta { margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap; }
+    .pipeline { margin-top: 4rem; display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+    .step { background: var(--card); border: 1px solid rgba(255,255,255,.06); border-radius: 1rem; padding: 1rem; }
+    .step strong { display: block; font-size: .85rem; margin-bottom: .25rem; }
+    .step span { font-size: .75rem; color: var(--muted); }
+    .grid { margin-top: 3rem; display: grid; gap: 1.25rem; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .card { background: var(--card); border: 1px solid rgba(255,255,255,.06); border-radius: 1rem; padding: 1.5rem; }
+    .card h3 { font-size: 1rem; margin-bottom: .5rem; }
+    .card p { font-size: .875rem; color: var(--muted); }
+    footer { margin-top: 4rem; padding: 2rem; border-top: 1px solid rgba(255,255,255,.06); text-align: center; font-size: .75rem; color: var(--muted); }
+    footer a { color: var(--muted); }
+  </style>
+</head>
+<body class="mesh">
+  <header>
+    <div class="logo">Rytera<span>™</span></div>
+    <nav>
+      <a href="/dashboard">Dashboard</a>
+      <a href="/docs">API Docs</a>
+      <a href="/health">Status</a>
+    </nav>
+  </header>
+  <main>
+    <h1>AI underwriting with every layer visible</h1>
+    <p class="lead">
+      Rytera ingests submission packages, runs multi-agent analysis, connects to carrier oracles and core systems,
+      and produces bind-ready decisions — with a full submission journey from intake to sign-off.
+    </p>
+    <div class="cta">
+      <a class="btn btn-primary" href="/dashboard">Open Dashboard</a>
+      <a class="btn btn-secondary" href="/docs">API Documentation</a>
+    </div>
+
+    <div class="pipeline" aria-label="Underwriting pipeline">
+      <div class="step"><strong>Intake</strong><span>Connect &amp; pull package</span></div>
+      <div class="step"><strong>Parse</strong><span>OCR &amp; extract</span></div>
+      <div class="step"><strong>Verify</strong><span>Oracles &amp; COPE</span></div>
+      <div class="step"><strong>Score</strong><span>Multi-agent risk</span></div>
+      <div class="step"><strong>Price</strong><span>Premium build-up</span></div>
+      <div class="step"><strong>Decide</strong><span>UW memo &amp; bind</span></div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h3>Commercial Insurance</h3>
+        <p>ACORD, loss runs, SOV, inspections → premium quote, licensed sign-off, policy bind via Guidewire/BriteCore.</p>
+      </div>
+      <div class="card">
+        <h3>Mortgage</h3>
+        <p>W-2s, tax returns, credit, appraisals → approve/deny, rate lock, compliance checks.</p>
+      </div>
+      <div class="card">
+        <h3>Integration Gateway</h3>
+        <p>Production REST adapters for CLUE, NCCI, A-PLUS, CAT, loss control, claims, CRM — health-checked live or simulated.</p>
+      </div>
+    </div>
+  </main>
+  <footer>
+    Rytera™ · <a href="https://rytera.ai">rytera.ai</a> · Rytera is a trademark of Rytera, Inc. All rights reserved.
+  </footer>
+</body>
+</html>

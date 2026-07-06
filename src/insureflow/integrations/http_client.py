@@ -135,6 +135,11 @@ class IntegrationHTTPClient:
     def health_check(self, paths: tuple[str, ...] = ("/health", "/status", "/")) -> dict[str, Any]:
         if not self.configured:
             return {"reachable": False, "mode": "misconfigured", "error": "API key or base URL missing"}
+        from insureflow.gateway.health import bundled_gateway_health
+
+        bundled = bundled_gateway_health(self.base_url, self.api_key)
+        if bundled is not None:
+            return bundled
         for path in paths:
             try:
                 resp = self.get(path)

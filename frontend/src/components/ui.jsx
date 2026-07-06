@@ -86,47 +86,63 @@ export function DemoCard({ name, description, tag, tagColor = 'brand', onClick, 
   );
 }
 
+const PIPELINE_STEPS = [
+  { label: 'Intake', desc: 'Connect sources & pull package' },
+  { label: 'Parse', desc: 'OCR, classify, extract' },
+  { label: 'Verify', desc: 'Oracles, COPE, reconciliation' },
+  { label: 'Score', desc: 'Multi-agent risk analysis' },
+  { label: 'Price', desc: 'Indicated premium / rate' },
+  { label: 'Decide', desc: 'UW memo & workflow' },
+];
+
 export function VerticalExplainer() {
   return (
     <div className="glass-card overflow-hidden">
       <div className="border-b border-white/[0.06] px-6 py-4">
-        <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">One Platform, Two Verticals</h3>
-        <p className="mt-1 text-sm text-slate-500">Same engine — different document types and outputs</p>
+        <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">Intake to decision</h3>
+        <p className="mt-1 text-sm text-slate-500">
+          Every submission runs through a visible pipeline — open any job for the full submission journey
+        </p>
       </div>
-      <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-white/[0.06]">
-        <div className="p-6">
-          <div className="mb-3 flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-insurance/15">
-              <span className="text-lg">🛡️</span>
+      <div className="flex flex-wrap items-center gap-2 border-b border-white/[0.06] px-6 py-4">
+        {PIPELINE_STEPS.map((step, i) => (
+          <div key={step.label} className="flex items-center gap-2">
+            <div className="rounded-lg bg-surface-overlay px-3 py-2 ring-1 ring-white/[0.04]">
+              <p className="text-xs font-semibold text-slate-200">{step.label}</p>
+              <p className="text-[10px] text-slate-500">{step.desc}</p>
             </div>
-            <div>
-              <h4 className="font-semibold text-insurance">Commercial Insurance</h4>
-              <p className="text-xs text-slate-500">P&C carriers & MGAs</p>
-            </div>
+            {i < PIPELINE_STEPS.length - 1 && <span className="text-slate-600">→</span>}
           </div>
-          <ul className="space-y-2 text-sm text-slate-400">
-            <li><span className="text-slate-300">In:</span> ACORD, loss runs, SOV, inspections, broker PDFs</li>
-            <li><span className="text-slate-300">Out:</span> UW memo, premium quote, licensed sign-off, bind</li>
+        ))}
+      </div>
+      <div className="grid md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-white/[0.06]">
+        <div className="p-6">
+          <h4 className="font-semibold text-insurance">Commercial Insurance</h4>
+          <p className="mt-1 text-xs text-slate-500">P&C carriers & MGAs</p>
+          <ul className="mt-3 space-y-1.5 text-sm text-slate-400">
+            <li>ACORD, loss runs, SOV, inspections</li>
+            <li>Premium build-up, oracles, bind-ready memo</li>
           </ul>
         </div>
         <div className="p-6">
-          <div className="mb-3 flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-mortgage/15">
-              <span className="text-lg">🏠</span>
-            </div>
-            <div>
-              <h4 className="font-semibold text-mortgage">Mortgage / Lending</h4>
-              <p className="text-xs text-slate-500">Banks & credit unions</p>
-            </div>
-          </div>
-          <ul className="space-y-2 text-sm text-slate-400">
-            <li><span className="text-slate-300">In:</span> W-2s, tax returns, credit, bank statements, appraisals</li>
-            <li><span className="text-slate-300">Out:</span> Approve/deny decision, rate quote, compliance check</li>
+          <h4 className="font-semibold text-mortgage">Mortgage</h4>
+          <p className="mt-1 text-xs text-slate-500">Banks & credit unions</p>
+          <ul className="mt-3 space-y-1.5 text-sm text-slate-400">
+            <li>W-2s, tax returns, credit, appraisals</li>
+            <li>Income verification, collateral, rate lock</li>
+          </ul>
+        </div>
+        <div className="p-6">
+          <h4 className="font-semibold text-emerald-400">Lending</h4>
+          <p className="mt-1 text-xs text-slate-500">Consumer & commercial credit</p>
+          <ul className="mt-3 space-y-1.5 text-sm text-slate-400">
+            <li>Application data, credit pulls, bank statements</li>
+            <li>Pricing, compliance, adverse action notices</li>
           </ul>
         </div>
       </div>
       <div className="border-t border-white/[0.06] bg-white/[0.02] px-6 py-3 text-xs text-slate-500">
-        Shared: OCR ingestion · multi-agent analysis · job queue · auth · audit trail · encryption
+        Enterprise: oracle feeds · loss control · claims · CRM · human checkpoints · encrypted audit trail
       </div>
     </div>
   );

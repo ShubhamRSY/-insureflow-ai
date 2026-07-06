@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Request, status
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -30,6 +30,11 @@ from insureflow.storage.job_store import JobStore, get_job_store
 from insureflow.tasks.celery_app import celery_app
 from insureflow.underwriting.renewal import PremiumAuditEngine
 
+try:
+    from insureflow.gateway.router import router as integration_gateway_router
+except ImportError:
+    integration_gateway_router = None  # type: ignore[assignment,misc]
+
 logger = logging.getLogger(__name__)
 
 INSURANCE_NS = "insurance"
@@ -47,6 +52,9 @@ app = FastAPI(
 )
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
+
+if integration_gateway_router is not None:
+    app.include_router(integration_gateway_router, prefix="/integrations")
 
 STATIC_DIR = Path(__file__).parent / "static"
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -557,15 +565,22 @@ async def run_mortgage_demo(
     return {"job_id": job_id, "status": "processing", "preset": preset_id, "org_id": current.org_id}
 
 
-@app.get("/")
-async def root() -> dict[str, str]:
-    return {
-        "service": "Rytera",
-        "version": "0.2.0",
-        "dashboard": "/dashboard",
-        "diagnostics": "/system/diagnostics",
-        "health": "/health",
-    }
+@app.get("/", response_model=None)
+async def root(request: Request) -> FileResponse | JSONResponse:
+    accept = request.headers.get("accept", "")
+    landing = STATIC_DIR / "landing" / "index.html"
+    if landing.exists() and "text/html" in accept and not accept.strip().startswith("application/json"):
+        return FileResponse(landing)
+    return JSONResponse(
+        {
+            "service": "Rytera",
+            "version": "0.2.0",
+            "dashboard": "/dashboard",
+            "diagnostics": "/system/diagnostics",
+            "health": "/health",
+            "integration_gateway": "/integrations",
+        }
+    )
 
 
 def _run_pipeline_task(job_id: str, request: SubmissionRequest, org_id: str) -> None:

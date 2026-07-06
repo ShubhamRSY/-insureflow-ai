@@ -5,9 +5,10 @@ Use this checklist before public launch at [rytera.ai](https://rytera.ai).
 ## Domain & DNS
 
 - [ ] Register **rytera.ai** (and optionally rytera.com, getrytera.com)
-- [ ] Point `rytera.ai` → marketing site / landing page
-- [ ] Point `app.rytera.ai` → production dashboard (or path on main domain)
-- [ ] Point `integrations.rytera.ai` → integration gateway (orchestrates vendor APIs)
+- [x] Landing page built at `/` (serves `static/landing/index.html` when browser requests HTML)
+- [ ] Point `rytera.ai` → production host running this API
+- [ ] Point `app.rytera.ai` → production dashboard (`/dashboard`)
+- [x] Integration gateway built at `/integrations` (deploy same routes at `integrations.rytera.ai` in prod)
 - [ ] Enable HTTPS (Let's Encrypt or cloud provider cert)
 - [ ] Set SPF/DKIM/DMARC for `@rytera.ai` email
 
@@ -15,29 +16,27 @@ Use this checklist before public launch at [rytera.ai](https://rytera.ai).
 
 - [ ] Search USPTO TESS for "Rytera" conflicts in Class 42 (SaaS) and Class 36 (insurance/financial)
 - [ ] File intent-to-use (ITU) or use-based application for **RYTERA** word mark
-- [ ] Add ™ notice in product UI (done in dashboard footer)
+- [x] ™ notice in product UI (dashboard footer + landing page)
+- [x] Trademark notice document: `legal/TRADEMARK_NOTICE.md`
 - [ ] Switch to ® after USPTO registration issues
-- [ ] Update `docs/LAUNCH_CHECKLIST.md` status when filed
+- [ ] Update this file with USPTO serial number when filed
 
 **Notice (current):** Rytera™ · rytera.ai · Rytera is a trademark of Rytera, Inc. All rights reserved.
 
 ## Integration credentials
 
 1. Copy `.env.example` → `.env` (never commit `.env`)
-2. Set `ORACLE_MODE=auto` (default) — live when keys + health check pass, else simulated
-3. Paste vendor API keys into `.env`:
+2. **Local dev:** `.env.example` ships with dev gateway key + `http://127.0.0.1:8002/integrations/...` URLs — feeds run **live** against bundled gateway
+3. **Production:** replace `INTEGRATION_GATEWAY_API_KEY` and point URLs to `https://integrations.rytera.ai/...`
+4. **Real vendors:** swap gateway URLs for LexisNexis/Verisk/Guidewire endpoints and paste contract API keys
 
-| Variable | Source |
-|----------|--------|
-| `CLUE_API_KEY` | LexisNexis CLUE contract |
-| `VERISK_API_KEY` / `NCCI_API_KEY` / `APLUS_API_KEY` / `CAT_API_KEY` | Verisk carrier agreement |
-| `GUIDEWIRE_*` | Guidewire PolicyCenter REST credentials |
-| `BRITECORE_API_KEY` | BriteCore API key |
-| `HUBSPOT_API_KEY` | HubSpot private app token |
-| `LOSS_CONTROL_*` / `CLAIMS_*` / `BROKER_PORTAL_*` / `ACTUARIAL_*` | Carrier ops systems or gateway |
+| Variable | Local dev | Production |
+|----------|-----------|------------|
+| `INTEGRATION_GATEWAY_API_KEY` | `rytera-dev-gateway-key-change-in-production` | Strong secret |
+| `CLUE_API_URL` | `http://127.0.0.1:8002/integrations/oracles/clue/v2` | `https://integrations.rytera.ai/oracles/clue/v2` |
+| `*_API_KEY` | Same as gateway key | Vendor or gateway key |
 
-4. Default URLs point at `https://integrations.rytera.ai/...` — deploy your gateway there or override per-service URLs in `.env`
-5. Verify: `GET /pipeline/ecosystem/status` — feeds show `reachable: true` when live
+5. Verify: `GET /pipeline/ecosystem/status` — feeds show `mode: live` and `reachable: true`
 
 ## Pre-launch smoke test
 

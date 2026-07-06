@@ -1,9 +1,10 @@
 import { Search, RefreshCw, Shield } from 'lucide-react';
 import { Badge, DecisionBadge, EmptyState } from '../components/ui';
+import JourneyMiniStrip from '../components/JourneyMiniStrip';
 import { fmtCurrency } from '../lib/api';
 import { useState } from 'react';
 
-export default function QueuePage({ queueStats, onOpenJob, onRefresh }) {
+export default function QueuePage({ queueStats, insuranceJobs, onOpenJob, onRefresh }) {
   const [priority, setPriority] = useState('');
 
   const items = queueStats?.queue || [];
@@ -14,7 +15,7 @@ export default function QueuePage({ queueStats, onOpenJob, onRefresh }) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Submission Queue</h1>
-          <p className="mt-1 text-slate-400">Prioritized submission queue with triage scores</p>
+          <p className="mt-1 text-slate-400">Prioritized submissions with triage scores and pipeline progress</p>
         </div>
         <button type="button" onClick={onRefresh} className="btn-secondary btn-sm text-xs">
           <RefreshCw className="h-3.5 w-3.5" /> Refresh
@@ -53,21 +54,27 @@ export default function QueuePage({ queueStats, onOpenJob, onRefresh }) {
               <tr className="border-b border-white/[0.06] bg-surface-overlay text-left text-xs uppercase tracking-wider text-slate-500">
                 <th className="px-6 py-3">Bundle ID</th>
                 <th className="px-6 py-3">Insured</th>
+                <th className="px-6 py-3">Journey</th>
                 <th className="px-6 py-3">Priority</th>
                 <th className="px-6 py-3">Score</th>
                 <th className="px-6 py-3">Premium</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.04]">
-              {filtered.map((item) => (
+              {filtered.map((item) => {
+                const fullJob = insuranceJobs?.find(({ job }) => job?.results?.bundle_id === item.bundle_id)?.job;
+                return (
                 <tr key={item.bundle_id} onClick={() => onOpenJob?.('insurance', item.bundle_id, item.bundle_id)} className="cursor-pointer transition hover:bg-white/[0.02]">
                   <td className="px-6 py-3.5 font-mono text-xs text-slate-400">{item.bundle_id}</td>
                   <td className="px-6 py-3.5 text-slate-300">{item.insured_name || '—'}</td>
+                  <td className="px-6 py-3.5">
+                    {fullJob ? <JourneyMiniStrip job={fullJob} compact /> : <span className="text-xs text-slate-600">—</span>}
+                  </td>
                   <td className="px-6 py-3.5"><Badge status={item.priority} /></td>
                   <td className="px-6 py-3.5">{item.triage_score != null ? item.triage_score.toFixed(1) : '—'}</td>
                   <td className="px-6 py-3.5 font-mono">{fmtCurrency(item.estimated_premium)}</td>
                 </tr>
-              ))}
+              );})}
             </tbody>
           </table>
         )}

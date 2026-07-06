@@ -142,5 +142,11 @@ class Settings:
     integration_timeout_seconds: float = float(os.getenv("INTEGRATION_TIMEOUT_SECONDS", "30"))
     integration_max_retries: int = int(os.getenv("INTEGRATION_MAX_RETRIES", "3"))
 
+    # Rytera integration gateway (bundled in API at /integrations for local + self-hosted prod)
+    integration_gateway_api_key: str = os.getenv(
+        "INTEGRATION_GATEWAY_API_KEY", "rytera-dev-gateway-key-change-in-production"
+    )
+    api_port: int = int(os.getenv("API_PORT", "8002"))
+
 
 settings = Settings()

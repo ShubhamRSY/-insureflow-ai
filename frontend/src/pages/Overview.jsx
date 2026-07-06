@@ -22,8 +22,10 @@ export default function Overview({ overview, health, presets, onRunDemo, onOpenJ
   return (
     <div className="mx-auto max-w-6xl space-y-8 animate-fade-in">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="mt-1 text-slate-400">Autonomous underwriting for insurance carriers and mortgage lenders</p>
+        <h1 className="text-3xl font-bold tracking-tight">Overview</h1>
+        <p className="mt-1 text-slate-400">
+          Rytera AI underwriting — insurance, mortgage, and lending with every pipeline layer visible from intake to decision
+        </p>
       </div>
 
       {/* Market cycle + Queue stats banner */}
