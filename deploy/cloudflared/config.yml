@@ -3,5 +3,5 @@ credentials-file: /Users/disastershubz/.cloudflared/rytera.json
 
 ingress:
   - hostname: app.ryterainc.com
-    service: http://localhost:18000
+    service: http://localhost:8000
   - service: http_status:404
