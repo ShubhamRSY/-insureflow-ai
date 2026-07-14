@@ -44,7 +44,7 @@ export SECRET_KEY="$(openssl rand -hex 32)"
 export ENCRYPTION_KEY="$(python -c 'from insureflow.storage.encryption import EnvelopeEncryption; print(EnvelopeEncryption.generate_key())')"
 export POSTGRES_PASSWORD="$(openssl rand -hex 16)"
 export BANK_MODE=true ENVIRONMENT=production
-docker compose -f docker-compose.yml -f docker-compose.bank.yml up --build
+docker compose -f docker-compose.yml -f deploy/docker-compose.bank.yml up --build
 # https://localhost:8443/dashboard
 ```
 
