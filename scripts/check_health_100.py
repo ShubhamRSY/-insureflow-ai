@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Quick local health check without importing the full API stack."""
+
 from __future__ import annotations
 
 import json

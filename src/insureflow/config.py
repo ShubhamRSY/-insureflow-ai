@@ -21,9 +21,7 @@ except Exception:
 class Settings:
     # Runtime posture
     environment: str = os.getenv("ENVIRONMENT", "development")
-    bank_mode: bool = os.getenv("BANK_MODE", "").lower() in {"1", "true", "yes"} or (
-        os.getenv("ENVIRONMENT", "development").lower() == "production"
-    )
+    bank_mode: bool = os.getenv("BANK_MODE", "").lower() in {"1", "true", "yes"} or (os.getenv("ENVIRONMENT", "development").lower() == "production")
 
     # Legacy single-model config (backward compat)
     llm_provider: str = os.getenv("LLM_PROVIDER", "openai")
