@@ -127,11 +127,7 @@ def generate_report(
     hitl_cloud = track_hitl_to_langsmith(hitl_summary)
 
     report["sections"]["human_in_the_loop_eval"] = {
-        "description": (
-            "Licensed UW / CUO rubric scoring on golden cases "
-            "(field accuracy, decision fit, hallucination, compliance, provenance) "
-            "+ decision agree rates and feedback tags"
-        ),
+        "description": ("Licensed UW / CUO rubric scoring on golden cases (field accuracy, decision fit, hallucination, compliance, provenance) + decision agree rates and feedback tags"),
         "metrics": {
             "agree_rate": hitl_summary.agree_rate,
             "disagree_rate": hitl_summary.disagree_rate,

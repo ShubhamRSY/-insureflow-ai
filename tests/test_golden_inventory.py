@@ -10,20 +10,20 @@ from evaluations.qa_ground_truth import (
 )
 
 
-def test_golden_dataset_has_thirteen_cases():
+def test_golden_dataset_has_thirteen_cases() -> None:
     cases = golden_dataset()
     assert len(cases) == 13
     assert all(c.name and c.acord_xml for c in cases)
 
 
-def test_field_questions_generated_per_case():
+def test_field_questions_generated_per_case() -> None:
     case = golden_dataset()[0]
     qs = field_questions_from_case(case)
     assert len(qs) >= 8
     assert all(q.expected_answer for q in qs)
 
 
-def test_inventory_totals():
+def test_inventory_totals() -> None:
     inv = ground_truth_inventory()
     assert inv["maintained"] is True
     assert inv["insurance"]["golden_cases"] == 13
@@ -33,7 +33,7 @@ def test_inventory_totals():
     assert "interview_summary" in inv
 
 
-def test_all_questions_unique_ids():
+def test_all_questions_unique_ids() -> None:
     qs = all_ground_truth_questions()
     ids = [q.question_id for q in qs]
     assert len(ids) == len(set(ids))

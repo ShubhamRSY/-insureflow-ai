@@ -202,10 +202,7 @@ class HITLEvalStore:
         for r in reviews:
             for t in r.feedback_tags:
                 tag_counts[t] = tag_counts.get(t, 0) + 1
-        top_tags = [
-            {"tag": k, "count": v}
-            for k, v in sorted(tag_counts.items(), key=lambda x: -x[1])[:15]
-        ]
+        top_tags = [{"tag": k, "count": v} for k, v in sorted(tag_counts.items(), key=lambda x: -x[1])[:15]]
 
         return HITLEvalSummary(
             total_reviews=n,

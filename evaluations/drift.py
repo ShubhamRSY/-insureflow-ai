@@ -20,7 +20,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 from uuid import uuid4
 
 logger = logging.getLogger(__name__)
@@ -105,10 +105,7 @@ class DriftReport:
             "actionable_signals": [s.metric for s in self.signals if s.severity != DriftSeverity.NONE],
             "remediation": self.remediation,
             "interview_summary": self.interview_summary,
-            "rag_note": (
-                "Primary retrieval is vector-only (no secondary SQL retrieval). "
-                "Keyword/KG are non-SQL fallbacks when vector similarity is weak/empty."
-            ),
+            "rag_note": ("Primary retrieval is vector-only (no secondary SQL retrieval). Keyword/KG are non-SQL fallbacks when vector similarity is weak/empty."),
         }
 
 
@@ -162,7 +159,7 @@ class ChampionBaselineStore:
             base = default_champion_baseline()
             self.save(base)
             return base
-        return json.loads(self.path.read_text(encoding="utf-8"))
+        return cast(dict[str, Any], json.loads(self.path.read_text(encoding="utf-8")))
 
     def save(self, baseline: dict[str, Any]) -> dict[str, Any]:
         baseline = {**baseline, "updated_at": datetime.now(tz=timezone.utc).isoformat()}
@@ -198,10 +195,7 @@ def remediation_playbook(status: DriftSeverity, signals: list[DriftSignal]) -> l
         {
             "step": 2,
             "action": "classify_drift",
-            "detail": (
-                f"Tag DriftKind from signals: "
-                f"{sorted({s.kind.value for s in signals}) or ['none']} — metric vs behavioral vs decision."
-            ),
+            "detail": (f"Tag DriftKind from signals: {sorted({s.kind.value for s in signals}) or ['none']} — metric vs behavioral vs decision."),
         },
     ]
     if status in {DriftSeverity.ACTION, DriftSeverity.CRITICAL}:
@@ -209,10 +203,7 @@ def remediation_playbook(status: DriftSeverity, signals: list[DriftSignal]) -> l
             {
                 "step": 3,
                 "action": "open_regression_experiment",
-                "detail": (
-                    "Start ExperimentClass.REGRESSION in MLflow /experiments store; "
-                    "freeze challenger; do not promote while gates BLOCKED."
-                ),
+                "detail": ("Start ExperimentClass.REGRESSION in MLflow /experiments store; freeze challenger; do not promote while gates BLOCKED."),
             }
         )
     if status == DriftSeverity.CRITICAL:
@@ -220,20 +211,14 @@ def remediation_playbook(status: DriftSeverity, signals: list[DriftSignal]) -> l
             {
                 "step": 4,
                 "action": "rollback_champion",
-                "detail": (
-                    "Restore last approved registry snapshot + MLflow Production alias; "
-                    "canary traffic back to previous champion prompts/LLM config."
-                ),
+                "detail": ("Restore last approved registry snapshot + MLflow Production alias; canary traffic back to previous champion prompts/LLM config."),
             }
         )
         steps.append(
             {
                 "step": 5,
                 "action": "root_cause",
-                "detail": (
-                    "Diff prompt hash / LLM model / RAG top-k / provider change / guideline pack; "
-                    "check LangSmith traces + CloudWatch agent error spikes."
-                ),
+                "detail": ("Diff prompt hash / LLM model / RAG top-k / provider change / guideline pack; check LangSmith traces + CloudWatch agent error spikes."),
             }
         )
     else:
@@ -248,10 +233,7 @@ def remediation_playbook(status: DriftSeverity, signals: list[DriftSignal]) -> l
         {
             "step": 6 if status == DriftSeverity.CRITICAL else 4,
             "action": "fix_and_revalidate",
-            "detail": (
-                "Patch (prompt tighten / model pin / RAG knobs) → full release checklist → "
-                "quality gates PASS → HITL sample → re-promote champion baseline."
-            ),
+            "detail": ("Patch (prompt tighten / model pin / RAG knobs) → full release checklist → quality gates PASS → HITL sample → re-promote champion baseline."),
         }
     )
     steps.append(
@@ -349,7 +331,7 @@ def detect_from_trends(lookback: int = 5) -> DriftReport:
 
     store = EvalTrendStore()
     seed_demo_trends(store)
-    rows = store.list(limit=lookback)
+    rows = store.list_rows(limit=lookback)
     if not rows:
         return detect_drift({})
     # average last N metric dicts
@@ -419,8 +401,5 @@ def drift_policy_payload() -> dict[str, Any]:
             "Root-cause prompt/LLM/RAG/provider",
             "Fix → quality gates → HITL → re-promote baseline",
         ],
-        "rag_clarification": (
-            "No secondary SQL retrieval for guidelines — vector DB is primary; "
-            "keyword + knowledge graph are fallbacks only."
-        ),
+        "rag_clarification": ("No secondary SQL retrieval for guidelines — vector DB is primary; keyword + knowledge graph are fallbacks only."),
     }

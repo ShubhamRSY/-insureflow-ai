@@ -29,7 +29,7 @@ class EvalTrendStore:
             fh.write(json.dumps(row, default=str) + "\n")
         return row
 
-    def list(self, suite: str | None = None, limit: int = 90) -> list[dict[str, Any]]:
+    def list_rows(self, suite: str | None = None, limit: int = 90) -> list[dict[str, Any]]:
         if not self.path.exists():
             return []
         rows: list[dict[str, Any]] = []
@@ -44,7 +44,7 @@ class EvalTrendStore:
 
     def series(self, metric: str, suite: str | None = None, limit: int = 90) -> list[dict[str, Any]]:
         out = []
-        for row in self.list(suite=suite, limit=limit):
+        for row in self.list_rows(suite=suite, limit=limit):
             val = (row.get("metrics") or {}).get(metric)
             if val is None:
                 continue
@@ -55,7 +55,7 @@ class EvalTrendStore:
         return out
 
     def dashboard_payload(self) -> dict[str, Any]:
-        rows = self.list(limit=120)
+        rows = self.list_rows(limit=120)
         suites = sorted({r.get("suite", "") for r in rows if r.get("suite")})
         # Build multi-metric series for charts
         chart_metrics = [
@@ -82,7 +82,7 @@ class EvalTrendStore:
 def seed_demo_trends(store: EvalTrendStore | None = None) -> int:
     """Seed a short trend history so charts render without waiting for nights."""
     store = store or EvalTrendStore()
-    if store.list():
+    if store.list_rows():
         return 0
     demo = [
         {"precision": 0.82, "recall": 0.88, "hallucination_rate": 0.08, "ragas_quality_score": 0.76, "hitl_case_pass_rate": 0.72, "avg_agent_error_rate": 0.04, "avg_agent_latency_ms": 780},

@@ -92,3 +92,13 @@ testpaths = ["tests"]
 strict = true
 python_version = "3.12"
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+check_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = ["evaluations.ragas_eval", "evaluations.giskard_eval"]
+ignore_errors = true

@@ -40,10 +40,8 @@ def fuse_scores(
     keyword_score: float,
     cfg: RetrievalConfig,
 ) -> float:
-    return (
-        cfg.rerank_vector_weight * float(vector_score)
-        + cfg.rerank_keyword_weight * float(keyword_score)
-    )
+    total = cfg.rerank_vector_weight * float(vector_score) + cfg.rerank_keyword_weight * float(keyword_score)
+    return float(total)
 
 
 def mmr_select(
@@ -60,7 +58,7 @@ def mmr_select(
     q_tokens = tokenize(query)
 
     def _doc_tokens(g: Guideline) -> set[str]:
-        return tokenize(f"{g.title} {g.content}")
+        return set(tokenize(f"{g.title} {g.content}"))
 
     while remaining and len(selected) < top_k:
         best_idx = 0
@@ -96,7 +94,7 @@ def _cross_encoder_rerank(
     if not model_name or not candidates:
         return None
     try:
-        from sentence_transformers import CrossEncoder  # type: ignore
+        from sentence_transformers import CrossEncoder
 
         model = CrossEncoder(model_name)
         pairs = [(query, f"{g.title}. {g.content}") for g, _ in candidates]

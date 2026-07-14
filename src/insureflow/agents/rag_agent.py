@@ -21,7 +21,7 @@ class RAGAgent:
             "postgresql://insureflow:insureflow@localhost:5432/insureflow",
         )
         self.config = RetrievalConfig.from_env()
-        self._hybrid = None
+        self._hybrid: Any = None
 
     def _get_hybrid(self) -> Any:
         if self._hybrid is None:

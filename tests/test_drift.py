@@ -14,7 +14,7 @@ from evaluations.drift import (
 )
 
 
-def test_no_drift_near_baseline(tmp_path: Path):
+def test_no_drift_near_baseline(tmp_path: Path) -> None:
     store = ChampionBaselineStore(tmp_path / "champion.json")
     store.save(default_champion_baseline())
     report = detect_drift(
@@ -29,7 +29,7 @@ def test_no_drift_near_baseline(tmp_path: Path):
     assert report.signals == []
 
 
-def test_critical_precision_drop(tmp_path: Path):
+def test_critical_precision_drop(tmp_path: Path) -> None:
     store = ChampionBaselineStore(tmp_path / "champion.json")
     base = default_champion_baseline()
     store.save(base)
@@ -46,7 +46,7 @@ def test_critical_precision_drop(tmp_path: Path):
     assert any(s["action"] == "rollback_champion" for s in report.remediation)
 
 
-def test_hallucination_rise_action(tmp_path: Path):
+def test_hallucination_rise_action(tmp_path: Path) -> None:
     base = default_champion_baseline()
     report = detect_drift(
         {"hallucination_rate": 0.07},  # +0.04 from 0.03 → action
@@ -56,12 +56,12 @@ def test_hallucination_rise_action(tmp_path: Path):
     assert any(s.metric == "hallucination_rate" and s.direction == "worse" for s in report.signals)
 
 
-def test_policy_mentions_vector_only_rag():
+def test_policy_mentions_vector_only_rag() -> None:
     p = drift_policy_payload()
     assert "SQL" in p["rag_clarification"] or "vector" in p["rag_clarification"].lower()
     assert "rollback" in " ".join(p["response"]).lower()
 
 
-def test_remediation_watch_has_no_rollback():
+def test_remediation_watch_has_no_rollback() -> None:
     steps = remediation_playbook(DriftSeverity.WATCH, [])
     assert not any(s["action"] == "rollback_champion" for s in steps)

@@ -14,7 +14,7 @@ from evaluations.release_process import (
 )
 
 
-def test_checklist_has_eleven_steps():
+def test_checklist_has_eleven_steps() -> None:
     payload = checklist_payload()
     assert len(payload["steps"]) == 11
     assert payload["steps"][0]["id"] == "classify"
@@ -23,7 +23,7 @@ def test_checklist_has_eleven_steps():
     assert "canary" in payload["stages"]
 
 
-def test_experiment_lifecycle(tmp_path: Path):
+def test_experiment_lifecycle(tmp_path: Path) -> None:
     store = ExperimentStore(tmp_path)
     row = store.start_run(
         name="prompt-v2",
@@ -34,13 +34,17 @@ def test_experiment_lifecycle(tmp_path: Path):
     assert row["run_id"].startswith("exp-")
     assert row["stage"] == "draft"
     updated = store.log_metrics(row["run_id"], {"precision": 0.9, "recall": 0.93})
+    assert updated is not None
     assert updated["metrics"]["precision"] == 0.9
     promoted = store.promote(row["run_id"], ExperimentStage.CANARY)
+    assert promoted is not None
     assert promoted["stage"] == "canary"
-    assert store.get(row["run_id"])["stage"] == "canary"
+    got = store.get(row["run_id"])
+    assert got is not None
+    assert got["stage"] == "canary"
 
 
-def test_seed_and_walkthrough(tmp_path: Path):
+def test_seed_and_walkthrough(tmp_path: Path) -> None:
     store = ExperimentStore(tmp_path)
     assert seed_demo_experiments(store) == 4
     assert seed_demo_experiments(store) == 0

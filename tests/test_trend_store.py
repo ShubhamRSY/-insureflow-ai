@@ -13,7 +13,7 @@ def test_trend_store_record_and_series(tmp_path: Path) -> None:
     store.record("golden_nightly", {"precision": 0.91, "recall": 0.93})
     store.record("weekly", {"precision": 0.88})
 
-    rows = store.list(suite="golden_nightly")
+    rows = store.list_rows(suite="golden_nightly")
     assert len(rows) == 2
     series = store.series("precision", suite="golden_nightly")
     assert len(series) == 2

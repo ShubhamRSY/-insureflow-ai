@@ -50,13 +50,15 @@ def analyze_jsonl_logs(path: Path | str) -> dict[str, Any]:
     if not p.exists():
         return {"ok": False, "error": f"log path not found: {p}", "agents": {}}
 
-    by_agent: dict[str, dict[str, Any]] = defaultdict(lambda: {
-        "events": 0,
-        "errors": 0,
-        "warnings": 0,
-        "durations_ms": [],
-        "findings": 0,
-    })
+    by_agent: dict[str, dict[str, Any]] = defaultdict(
+        lambda: {
+            "events": 0,
+            "errors": 0,
+            "warnings": 0,
+            "durations_ms": [],
+            "findings": 0,
+        }
+    )
     total_lines = 0
     parse_errors = 0
 
@@ -170,10 +172,7 @@ def analyze_audit_directory(base: Path | str | None = None) -> dict[str, Any]:
         "llm_traces": "LangSmith Runs explorer",
         "queries": LOG_EXPLORER_QUERIES,
     }
-    merged["automation"] = (
-        "Automated: JSON logs → analyze_audit_directory on nightly eval job; "
-        "metrics appended to eval trend store; CloudWatch metric emit optional."
-    )
+    merged["automation"] = "Automated: JSON logs → analyze_audit_directory on nightly eval job; metrics appended to eval trend store; CloudWatch metric emit optional."
     return merged
 
 

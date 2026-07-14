@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
+from insureflow.rag.guidelines import builtin_guidelines
 from insureflow.rag.rag_agent import RAGAgent, retrieval_policy_payload
 from insureflow.rag.rerank import keyword_overlap_score, rerank
 from insureflow.rag.retrieval_config import RetrievalConfig
-from insureflow.rag.guidelines import builtin_guidelines
 
 
-def test_retrieval_policy_defaults():
+def test_retrieval_policy_defaults() -> None:
     p = retrieval_policy_payload()
     assert p["top_k"] == 5
     assert p["fetch_k"] >= 15
@@ -17,7 +17,7 @@ def test_retrieval_policy_defaults():
     assert len(p["fallback_ladder"]) >= 4
 
 
-def test_rerank_prefers_keyword_aligned():
+def test_rerank_prefers_keyword_aligned() -> None:
     cfg = RetrievalConfig(top_k=2, fetch_k=10, enable_rerank=True)
     guidelines = builtin_guidelines().guidelines
     # Fake equal vector scores — keyword should break ties toward sprinkler/protection
@@ -28,7 +28,7 @@ def test_rerank_prefers_keyword_aligned():
     assert "sprinkler" in blob or "protection" in blob or "class" in blob
 
 
-def test_hybrid_retrieve_includes_rerank_metadata():
+def test_hybrid_retrieve_includes_rerank_metadata() -> None:
     agent = RAGAgent(use_knowledge_graph=True, config=RetrievalConfig(top_k=3, fetch_k=12))
     ctx = agent.retrieve_contexts("chemical manufacturing masonry protection class 6", top_k=3)
     assert ctx["top_k"] == 3
@@ -39,7 +39,7 @@ def test_hybrid_retrieve_includes_rerank_metadata():
     assert len(ctx["retrieved_contexts"]) >= 1
 
 
-def test_fallback_no_context_on_nonsense_query():
+def test_fallback_no_context_on_nonsense_query() -> None:
     # Raise min_vector_score very high and disable keyword to force miss → KG or no_context
     cfg = RetrievalConfig(
         top_k=3,
@@ -55,6 +55,6 @@ def test_fallback_no_context_on_nonsense_query():
     assert "vector_miss" in ctx["fallbacks_used"] or ctx["no_context"] or ctx["knowledge_graph_facts"]
 
 
-def test_keyword_overlap_nonzero():
+def test_keyword_overlap_nonzero() -> None:
     g = builtin_guidelines().guidelines[0]
     assert keyword_overlap_score(g.title, g) > 0

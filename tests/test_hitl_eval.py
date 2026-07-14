@@ -2,24 +2,28 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
+from pytest import MonkeyPatch
+
 from evaluations.hitl_rubrics import (
+    RUBRIC_DEFINITIONS,
     AgreeLabel,
     HITLEvalStore,
     HumanEvalReview,
-    RUBRIC_DEFINITIONS,
     export_rubric_card,
     seed_demo_reviews,
 )
 
 
-def test_rubric_definitions_complete():
+def test_rubric_definitions_complete() -> None:
     assert len(RUBRIC_DEFINITIONS) >= 8
     for meta in RUBRIC_DEFINITIONS.values():
         assert "pass_threshold" in meta
         assert "description" in meta
 
 
-def test_submit_and_summary(tmp_path):
+def test_submit_and_summary(tmp_path: Path) -> None:
     store = HITLEvalStore(path=tmp_path / "hitl")
     review = HumanEvalReview(
         case_id="case-a",
@@ -47,7 +51,7 @@ def test_submit_and_summary(tmp_path):
     assert summary.case_pass_rate == 1.0
 
 
-def test_disagree_fails_case(tmp_path):
+def test_disagree_fails_case(tmp_path: Path) -> None:
     store = HITLEvalStore(path=tmp_path / "hitl")
     review = HumanEvalReview(
         case_id="case-b",
@@ -64,7 +68,7 @@ def test_disagree_fails_case(tmp_path):
     assert "human_disagrees_with_ai_decision" in stored.blocking_issues
 
 
-def test_seed_demo_and_rubric_card(tmp_path, monkeypatch):
+def test_seed_demo_and_rubric_card(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setenv("HITL_EVAL_PATH", str(tmp_path / "hitl"))
     store = HITLEvalStore(path=tmp_path / "hitl")
     seeded = seed_demo_reviews(store)

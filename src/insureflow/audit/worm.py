@@ -6,7 +6,6 @@ import hashlib
 import json
 import logging
 import os
-import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -26,7 +25,8 @@ class WormAuditStore:
         base_path: Path | str | None = None,
         retention_days: int | None = None,
     ) -> None:
-        self.base_path = Path(base_path or os.getenv("WORM_AUDIT_PATH", "./audit_logs/worm"))
+        raw_base = base_path if base_path is not None else os.getenv("WORM_AUDIT_PATH", "./audit_logs/worm")
+        self.base_path = Path(raw_base or "./audit_logs/worm")
         self.retention_days = retention_days or int(os.getenv("AUDIT_RETENTION_DAYS", "2555"))  # ~7 years
         self.s3_bucket = os.getenv("RETENTION_S3_BUCKET", "")
         self.base_path.mkdir(parents=True, exist_ok=True)
@@ -85,9 +85,7 @@ class WormAuditStore:
             Body=data,
             ContentType="application/json",
             ObjectLockMode=os.getenv("S3_OBJECT_LOCK_MODE", "GOVERNANCE"),
-            ObjectLockRetainUntilDate=datetime.now(tz=timezone.utc).replace(
-                year=datetime.now(tz=timezone.utc).year + 7
-            ),
+            ObjectLockRetainUntilDate=datetime.now(tz=timezone.utc).replace(year=datetime.now(tz=timezone.utc).year + 7),
         )
         return f"s3://{self.s3_bucket}/worm/{key}"
 
@@ -96,7 +94,7 @@ class WormAuditStore:
         data = json.loads(p.read_text(encoding="utf-8"))
         expected = data.pop("sha256", None)
         raw = json.dumps(data, sort_keys=True, default=str).encode("utf-8")
-        return expected == hashlib.sha256(raw).hexdigest()
+        return bool(expected == hashlib.sha256(raw).hexdigest())
 
     def list_sealed(self, org_id: str) -> list[str]:
         d = self.base_path / org_id

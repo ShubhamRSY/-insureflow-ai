@@ -6,9 +6,9 @@ init light so unit tests don't pull the full ML stack.
 
 from evaluations.golden_dataset import GoldenCase, golden_dataset
 from evaluations.hitl_rubrics import (
+    RUBRIC_DEFINITIONS,
     HITLEvalStore,
     HumanEvalReview,
-    RUBRIC_DEFINITIONS,
     export_rubric_card,
     seed_demo_reviews,
     track_hitl_to_langsmith,

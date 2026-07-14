@@ -33,7 +33,8 @@ def resolve_security_posture(
     environment: str | None = None,
     bank_mode: bool | None = None,
 ) -> SecurityPosture:
-    env = (environment or os.getenv("ENVIRONMENT", "development")).strip().lower()
+    env_raw = environment if environment is not None else os.getenv("ENVIRONMENT", "development")
+    env = str(env_raw or "development").strip().lower()
     if bank_mode is None:
         bank_mode = os.getenv("BANK_MODE", "").lower() in {"1", "true", "yes"} or env == "production"
 
@@ -71,15 +72,12 @@ def validate_startup_secrets(
 
     if posture.require_strong_secret:
         if not secret_key or secret_key == _INSECURE_SECRET or len(secret_key) < 32:
-            errors.append(
-                "BANK_MODE/production requires SECRET_KEY to be set to a unique value ≥ 32 characters "
-                "(not the default CHANGE_ME placeholder)."
-            )
+            errors.append("BANK_MODE/production requires SECRET_KEY to be set to a unique value ≥ 32 characters (not the default CHANGE_ME placeholder).")
 
     if posture.require_encryption and not encryption_key:
         errors.append(
             "BANK_MODE/production requires ENCRYPTION_KEY for audit encryption at rest. "
-            "Generate with: python -c \"from insureflow.storage.encryption import EnvelopeEncryption; print(EnvelopeEncryption.generate_key())\""
+            'Generate with: python -c "from insureflow.storage.encryption import EnvelopeEncryption; print(EnvelopeEncryption.generate_key())"'
         )
 
     return errors

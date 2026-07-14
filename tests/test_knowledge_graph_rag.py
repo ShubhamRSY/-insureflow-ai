@@ -6,7 +6,7 @@ from insureflow.rag.knowledge_graph import build_underwriting_knowledge_graph, g
 from insureflow.rag.rag_agent import RAGAgent
 
 
-def test_kg_has_nodes_and_edges():
+def test_kg_has_nodes_and_edges() -> None:
     kg = build_underwriting_knowledge_graph()
     stats = kg.stats()
     assert stats["nodes"] >= 20
@@ -15,7 +15,7 @@ def test_kg_has_nodes_and_edges():
     assert "guideline" in stats["node_types"]
 
 
-def test_kg_retrieve_manufacturing_context():
+def test_kg_retrieve_manufacturing_context() -> None:
     kg = get_knowledge_graph()
     facts = kg.retrieve_context("manufacturing frame construction protection class 5 sprinkler")
     assert facts
@@ -23,7 +23,7 @@ def test_kg_retrieve_manufacturing_context():
     assert "manufactur" in blob or "sprinkler" in blob or "frame" in blob
 
 
-def test_hybrid_rag_returns_vector_and_kg():
+def test_hybrid_rag_returns_vector_and_kg() -> None:
     agent = RAGAgent(use_knowledge_graph=True)
     ctx = agent.retrieve_contexts("chemical manufacturing masonry protection class 6", top_k=3)
     assert ctx["mode"] == "hybrid_rag_kg"

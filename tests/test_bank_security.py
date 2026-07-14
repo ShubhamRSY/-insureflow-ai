@@ -5,13 +5,13 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pytest
+from pytest import MonkeyPatch
 
 from insureflow.auth.jwt import create_access_token, decode_access_token
 from insureflow.security.posture import resolve_security_posture, validate_startup_secrets
 
 
-def test_jwt_uses_env_secret_key(monkeypatch):
+def test_jwt_uses_env_secret_key(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setenv("SECRET_KEY", "unit-test-secret-key-at-least-32-chars!!")
     token = create_access_token({"sub": "alice", "role": "admin", "org_id": "bank-a"})
     data = decode_access_token(token)
@@ -22,7 +22,7 @@ def test_jwt_uses_env_secret_key(monkeypatch):
     assert decode_access_token(token, secret_key="other-secret-key-xxxxxxxxxxxxxxx") is None
 
 
-def test_bank_mode_posture_locks_registration_and_reset(monkeypatch):
+def test_bank_mode_posture_locks_registration_and_reset(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setenv("BANK_MODE", "true")
     monkeypatch.delenv("ALLOW_OPEN_REGISTRATION", raising=False)
     monkeypatch.delenv("ALLOW_AUTH_RESET", raising=False)
@@ -34,7 +34,7 @@ def test_bank_mode_posture_locks_registration_and_reset(monkeypatch):
     assert posture.min_password_length >= 12
 
 
-def test_validate_startup_secrets_bank_requires_keys(monkeypatch):
+def test_validate_startup_secrets_bank_requires_keys(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setenv("BANK_MODE", "true")
     posture = resolve_security_posture()
     errors = validate_startup_secrets(
@@ -45,7 +45,7 @@ def test_validate_startup_secrets_bank_requires_keys(monkeypatch):
     assert len(errors) >= 2
 
 
-def test_validate_startup_secrets_ok_when_strong(monkeypatch):
+def test_validate_startup_secrets_ok_when_strong(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setenv("BANK_MODE", "true")
     posture = resolve_security_posture()
     errors = validate_startup_secrets(
@@ -56,7 +56,7 @@ def test_validate_startup_secrets_ok_when_strong(monkeypatch):
     assert errors == []
 
 
-def test_dev_posture_allows_open_registration(monkeypatch):
+def test_dev_posture_allows_open_registration(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setenv("BANK_MODE", "false")
     monkeypatch.setenv("ENVIRONMENT", "development")
     monkeypatch.delenv("ALLOW_OPEN_REGISTRATION", raising=False)
@@ -65,7 +65,7 @@ def test_dev_posture_allows_open_registration(monkeypatch):
     assert posture.allow_open_registration is True
 
 
-def test_worm_seal_and_verify(tmp_path):
+def test_worm_seal_and_verify(tmp_path: Path) -> None:
     from insureflow.audit.worm import WormAuditStore
 
     store = WormAuditStore(base_path=tmp_path / "worm", retention_days=2555)
@@ -78,7 +78,7 @@ def test_worm_seal_and_verify(tmp_path):
     assert record2["path"] != record["path"]
 
 
-def test_sso_status_disabled_by_default(monkeypatch):
+def test_sso_status_disabled_by_default(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.delenv("SSO_ENABLED", raising=False)
     monkeypatch.delenv("OIDC_ISSUER", raising=False)
     monkeypatch.delenv("COGNITO_DOMAIN", raising=False)
@@ -88,7 +88,7 @@ def test_sso_status_disabled_by_default(monkeypatch):
     assert sso_status()["enabled"] is False
 
 
-def test_cloudwatch_formatter_json():
+def test_cloudwatch_formatter_json() -> None:
     import logging
 
     from insureflow.observability.cloudwatch import CloudWatchJsonFormatter
@@ -107,7 +107,7 @@ def test_cloudwatch_formatter_json():
     assert payload["level"] == "INFO"
 
 
-def test_auth_reset_blocked_in_bank_mode(monkeypatch):
+def test_auth_reset_blocked_in_bank_mode(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setenv("BANK_MODE", "true")
     monkeypatch.setenv("ALLOW_AUTH_RESET", "false")
     from insureflow.security.posture import resolve_security_posture

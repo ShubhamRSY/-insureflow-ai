@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 from unittest.mock import MagicMock, patch
+
+from pytest import MonkeyPatch
 
 from evaluations.cloud_tracker import CloudEvalTracker, track_report
 
 
-def test_tracker_status_disabled_without_key(monkeypatch, tmp_path):
+def test_tracker_status_disabled_without_key(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.delenv("LANGSMITH_API_KEY", raising=False)
     monkeypatch.setenv("EVAL_CLOUD_CACHE_DIR", str(tmp_path))
     tracker = CloudEvalTracker(api_key="")
@@ -19,7 +22,7 @@ def test_tracker_status_disabled_without_key(monkeypatch, tmp_path):
     assert status["dashboard"] == "https://smith.langchain.com"
 
 
-def test_log_metrics_caches_when_disabled(monkeypatch, tmp_path):
+def test_log_metrics_caches_when_disabled(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.setenv("EVAL_CLOUD_CACHE_DIR", str(tmp_path))
     tracker = CloudEvalTracker(api_key="")
     result = tracker.log_metrics(
@@ -34,7 +37,7 @@ def test_log_metrics_caches_when_disabled(monkeypatch, tmp_path):
     assert payload["run_name"] == "unit-test-metrics"
 
 
-def test_log_metrics_uploads_when_enabled(monkeypatch, tmp_path):
+def test_log_metrics_uploads_when_enabled(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.setenv("EVAL_CLOUD_CACHE_DIR", str(tmp_path))
     fake_run = MagicMock()
     fake_run.id = "run-abc-123"
@@ -55,7 +58,7 @@ def test_log_metrics_uploads_when_enabled(monkeypatch, tmp_path):
     assert fake_client.create_feedback.call_count == 2
 
 
-def test_track_report_maps_summary_metrics(monkeypatch, tmp_path):
+def test_track_report_maps_summary_metrics(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.setenv("EVAL_CLOUD_CACHE_DIR", str(tmp_path))
     monkeypatch.delenv("LANGSMITH_API_KEY", raising=False)
     report = {
@@ -90,7 +93,7 @@ def test_track_report_maps_summary_metrics(monkeypatch, tmp_path):
     assert cached["metrics"]["faithfulness"] == 0.9
 
 
-def test_enable_runtime_tracing_sets_env(monkeypatch):
+def test_enable_runtime_tracing_sets_env(monkeypatch: MonkeyPatch) -> None:
     tracker = CloudEvalTracker(api_key="lsv2_key", project="insureflow-evals", tracing_enabled=True)
     assert tracker.enable_runtime_tracing() is True
     assert monkeypatch is not None

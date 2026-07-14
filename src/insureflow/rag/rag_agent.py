@@ -92,7 +92,8 @@ class RAGAgent:
         }
 
     def query(self, query: str, top_k: int = 5) -> list[Guideline]:
-        return self.search_scored(query, top_k=top_k)["guidelines"]
+        guidelines = self.search_scored(query, top_k=top_k)["guidelines"]
+        return list(guidelines)
 
     def retrieve_contexts(self, query: str, top_k: int = 5, kg_depth: int | None = None) -> dict[str, Any]:
         """Return structured retrieved contexts used by Ragas / synthesis.
@@ -110,18 +111,13 @@ class RAGAgent:
 
         vector_chunks: list[str] = []
         for g, score in zip(guidelines, scored["scores"]):
-            vector_chunks.append(
-                f"[{g.id}] score={score:.3f} ({g.category.value.upper()}, {g.source.value}) {g.title}\n"
-                f"Impact: {g.risk_impact}\n{g.content}"
-            )
+            vector_chunks.append(f"[{g.id}] score={score:.3f} ({g.category.value.upper()}, {g.source.value}) {g.title}\nImpact: {g.risk_impact}\n{g.content}")
 
         kg_facts: list[str] = []
         kg_block = ""
         fallbacks = list(scored["fallbacks_used"])
 
-        need_kg = self.use_knowledge_graph and cfg.enable_kg_fallback and (
-            not vector_chunks or "vector_miss" in fallbacks or "keyword" in fallbacks
-        )
+        need_kg = self.use_knowledge_graph and cfg.enable_kg_fallback and (not vector_chunks or "vector_miss" in fallbacks or "keyword" in fallbacks)
         # Always augment with KG in hybrid mode when enabled (not only on miss)
         if self.use_knowledge_graph:
             kg = get_knowledge_graph()
@@ -142,10 +138,7 @@ class RAGAgent:
         if not combined:
             no_context = True
             fallbacks.append("no_context")
-            combined.append(
-                "NO_RETRIEVED_CONTEXT: No matching underwriting guidelines or knowledge-graph "
-                "facts found. Do not invent guideline citations; escalate with documentation request."
-            )
+            combined.append("NO_RETRIEVED_CONTEXT: No matching underwriting guidelines or knowledge-graph facts found. Do not invent guideline citations; escalate with documentation request.")
 
         mode = "hybrid_rag_kg" if self.use_knowledge_graph else "vector_rag_only"
         if no_context:
@@ -193,19 +186,13 @@ class RAGAgent:
                 lines.append("")
             parts.append("\n".join(lines))
         elif scored["fallbacks_used"]:
-            parts.append(
-                "=== NO VECTOR / KEYWORD GUIDELINE HITS ===\n"
-                f"fallbacks_tried={scored['fallbacks_used']}"
-            )
+            parts.append(f"=== NO VECTOR / KEYWORD GUIDELINE HITS ===\nfallbacks_tried={scored['fallbacks_used']}")
         if self.use_knowledge_graph:
             kg_block = get_knowledge_graph().format_context_block(query)
             if kg_block:
                 parts.append(kg_block)
         if not parts:
-            return (
-                "=== NO_RETRIEVED_CONTEXT ===\n"
-                "No guidelines or graph facts matched. Do not fabricate citations."
-            )
+            return "=== NO_RETRIEVED_CONTEXT ===\nNo guidelines or graph facts matched. Do not fabricate citations."
         return "\n".join(parts)
 
     def augment_synthesis_prompt(self, query: str, original_prompt: str, top_k: int = 5) -> str:

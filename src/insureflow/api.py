@@ -26,7 +26,7 @@ from insureflow.auth.models import LoginRequest, Token, TokenData, User, UserCre
 from insureflow.insurance.pipeline import InsurancePipeline
 from insureflow.models.mortgage import ProductLine
 from insureflow.pipeline import UnderwritingPipeline
-from insureflow.security.posture import resolve_security_posture
+from insureflow.security.posture import SecurityPosture, resolve_security_posture
 from insureflow.storage.job_store import JobStore, get_job_store
 from insureflow.tasks.celery_app import celery_app
 from insureflow.underwriting.renewal import PremiumAuditEngine
@@ -81,7 +81,7 @@ EXAMPLES_DIR = PROJECT_ROOT / "examples"
 SIM_DOCS_DIR = PROJECT_ROOT / "simulated_documents"
 
 
-def _posture():
+def _posture() -> SecurityPosture:
     return resolve_security_posture()
 
 
@@ -1048,10 +1048,7 @@ def get_hitl_rubrics(
     return {
         "rubrics": RUBRIC_DEFINITIONS,
         "rubric_card_path": export_rubric_card(),
-        "production_hitl_note": (
-            "Production also tracks UW sign-off overrides, confidence, premium delta, "
-            "and bind/loss calibration via /analytics/overrides."
-        ),
+        "production_hitl_note": ("Production also tracks UW sign-off overrides, confidence, premium delta, and bind/loss calibration via /analytics/overrides."),
     }
 
 
@@ -1217,8 +1214,6 @@ def promote_experiment(
     return row
 
 
-
-
 @app.get("/evaluations/drift")
 def get_drift_status(
     current: TokenData = Depends(require_role(Role.VIEWER)),
@@ -1264,7 +1259,6 @@ def check_drift(
 
 
 @app.get("/rag/retrieval-policy")
-
 def get_rag_retrieval_policy(
     current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
@@ -1287,7 +1281,6 @@ def rag_retrieve_demo(
 
 
 @app.get("/analytics/agent-performance")
-
 def get_agent_performance(
     current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
@@ -1352,10 +1345,7 @@ def get_log_explorers(
             },
         ],
         "cloudwatch_insights_queries": LOG_EXPLORER_QUERIES,
-        "automation": (
-            "JSON logs emitted in BANK_MODE; nightly eval job runs agent log analyzer; "
-            "metrics appended to evaluation_trends for dashboard charts."
-        ),
+        "automation": ("JSON logs emitted in BANK_MODE; nightly eval job runs agent log analyzer; metrics appended to evaluation_trends for dashboard charts."),
     }
 
 

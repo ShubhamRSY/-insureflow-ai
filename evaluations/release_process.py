@@ -68,10 +68,7 @@ RELEASE_CHECKLIST: list[dict[str, Any]] = [
         "title": "Classify the change",
         "owner": "engineer",
         "required": True,
-        "detail": (
-            "Pick ExperimentClass (prompt / llm_config / rag / agent_logic / tooling / "
-            "eval_baseline / regression / canary / compliance) and name the hypothesis."
-        ),
+        "detail": ("Pick ExperimentClass (prompt / llm_config / rag / agent_logic / tooling / eval_baseline / regression / canary / compliance) and name the hypothesis."),
         "artifacts": ["experiment class", "hypothesis string", "linked registry draft id"],
     },
     {
@@ -80,10 +77,7 @@ RELEASE_CHECKLIST: list[dict[str, Any]] = [
         "title": "Open MLflow experiment run",
         "owner": "engineer",
         "required": True,
-        "detail": (
-            "Start a run under experiment 'insureflow-agent-releases'. Log params "
-            "(model, temp, prompt hash, RAG k, hybrid flag) and tags (class, git sha)."
-        ),
+        "detail": ("Start a run under experiment 'insureflow-agent-releases'. Log params (model, temp, prompt hash, RAG k, hybrid flag) and tags (class, git sha)."),
         "artifacts": ["mlflow_run_id", "params", "tags"],
     },
     {
@@ -119,10 +113,7 @@ RELEASE_CHECKLIST: list[dict[str, Any]] = [
         "title": "Quality gates (BLOCK / FLAG / PASS)",
         "owner": "ci",
         "required": True,
-        "detail": (
-            "BLOCK if precision <85%, recall <90%, hallucination >5%, RAG <80%, HITL pass <80%. "
-            "No champion promotion on BLOCKED."
-        ),
+        "detail": ("BLOCK if precision <85%, recall <90%, hallucination >5%, RAG <80%, HITL pass <80%. No champion promotion on BLOCKED."),
         "artifacts": ["gate_verdict"],
     },
     {
@@ -149,10 +140,7 @@ RELEASE_CHECKLIST: list[dict[str, Any]] = [
         "title": "Shadow / canary deployment",
         "owner": "platform",
         "required": True,
-        "detail": (
-            "Run challenger alongside champion on duplicate traffic or % canary. "
-            "Compare agent latency/error from CloudWatch + LangSmith; append trends."
-        ),
+        "detail": ("Run challenger alongside champion on duplicate traffic or % canary. Compare agent latency/error from CloudWatch + LangSmith; append trends."),
         "artifacts": ["canary experiment run", "agent_perf delta"],
     },
     {
@@ -170,10 +158,7 @@ RELEASE_CHECKLIST: list[dict[str, Any]] = [
         "title": "Post-release monitoring",
         "owner": "uw_ops",
         "required": True,
-        "detail": (
-            "Watch Eval Trends + override analytics for 7 days; weekly HITL spot-checks; "
-            "monthly loss/bind calibration."
-        ),
+        "detail": ("Watch Eval Trends + override analytics for 7 days; weekly HITL spot-checks; monthly loss/bind calibration."),
         "artifacts": ["eval trends", "override patterns", "loss calibration"],
     },
 ]
@@ -205,12 +190,12 @@ class ExperimentStore:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.experiment_name = DEFAULT_EXPERIMENT_NAME
 
-    def _mlflow_client(self):
+    def _mlflow_client(self) -> Any:
         uri = os.getenv("MLFLOW_TRACKING_URI", "").strip()
         if not uri:
             return None
         try:
-            import mlflow  # type: ignore
+            import mlflow
 
             mlflow.set_tracking_uri(uri)
             mlflow.set_experiment(self.experiment_name)
@@ -364,7 +349,7 @@ def seed_demo_experiments(store: ExperimentStore | None = None) -> int:
     store = store or ExperimentStore()
     if store.list_runs():
         return 0
-    demos = [
+    demos: list[dict[str, Any]] = [
         {
             "name": "prompt-uw-decision-v3",
             "experiment_class": ExperimentClass.PROMPT,
@@ -401,14 +386,14 @@ def seed_demo_experiments(store: ExperimentStore | None = None) -> int:
     n = 0
     for d in demos:
         row = store.start_run(
-            name=d["name"],
+            name=str(d["name"]),
             experiment_class=d["experiment_class"],
-            hypothesis=d["hypothesis"],
-            params=d["params"],
+            hypothesis=str(d["hypothesis"]),
+            params=dict(d["params"]),
             stage=ExperimentStage.DRAFT,
             tags={"seed": "true"},
         )
-        store.log_metrics(row["run_id"], d["metrics"])
+        store.log_metrics(row["run_id"], dict(d["metrics"]))
         store.promote(row["run_id"], d["stage"])
         n += 1
     return n
@@ -417,10 +402,7 @@ def seed_demo_experiments(store: ExperimentStore | None = None) -> int:
 def release_walkthrough() -> dict[str, Any]:
     """Interview-friendly narrative of the release process."""
     return {
-        "summary": (
-            "Every agent release is an experiment: classify → MLflow run → offline evals + gates → "
-            "HITL → registry approval → shadow/canary → champion/production → monitor."
-        ),
+        "summary": ("Every agent release is an experiment: classify → MLflow run → offline evals + gates → HITL → registry approval → shadow/canary → champion/production → monitor."),
         "checklist": checklist_payload(),
         "experiment_classes_explained": {
             ExperimentClass.PROMPT.value: "Prompt text / citation / rubric instruction changes",

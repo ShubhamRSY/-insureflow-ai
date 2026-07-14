@@ -94,7 +94,8 @@ class UnderwritingKnowledgeGraph:
         seeds = self.match_seeds(query)
         if not seeds:
             # Fallback: protection / construction hubs
-            seeds = [n for n in ("construction_masonry", "occupancy_manufacturing", "pc_5") if n in self.nodes][:2]
+            fallback = ("construction_masonry", "occupancy_manufacturing", "pc_5")
+            seeds = [n for n in fallback if n in self.nodes][:2]
 
         facts: list[str] = []
         seen_facts: set[str] = set()
@@ -105,10 +106,7 @@ class UnderwritingKnowledgeGraph:
                 facts.append(header)
                 seen_facts.add(header)
             for neighbor, relation, weight in self.neighbors(seed, depth=depth):
-                fact = (
-                    f"{seed_node.label} --{relation}--> {neighbor.label} "
-                    f"({neighbor.node_type}; w={weight:.1f})"
-                )
+                fact = f"{seed_node.label} --{relation}--> {neighbor.label} ({neighbor.node_type}; w={weight:.1f})"
                 if neighbor.properties.get("rule"):
                     fact += f" | rule: {neighbor.properties['rule']}"
                 if fact not in seen_facts:

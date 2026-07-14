@@ -40,16 +40,9 @@ class CloudEvalTracker:
     """Push precision/recall/Ragas/Giskard metrics to LangSmith."""
 
     api_key: str = field(default_factory=lambda: os.getenv("LANGSMITH_API_KEY", "").strip())
-    project: str = field(
-        default_factory=lambda: os.getenv("LANGSMITH_PROJECT", os.getenv("LANGCHAIN_PROJECT", DEFAULT_PROJECT))
-    )
-    endpoint: str = field(
-        default_factory=lambda: os.getenv("LANGSMITH_ENDPOINT", "https://api.smith.langchain.com").rstrip("/")
-    )
-    tracing_enabled: bool = field(
-        default_factory=lambda: os.getenv("LANGSMITH_TRACING", os.getenv("LANGCHAIN_TRACING_V2", "true")).lower()
-        in {"1", "true", "yes"}
-    )
+    project: str = field(default_factory=lambda: os.getenv("LANGSMITH_PROJECT", os.getenv("LANGCHAIN_PROJECT", DEFAULT_PROJECT)))
+    endpoint: str = field(default_factory=lambda: os.getenv("LANGSMITH_ENDPOINT", "https://api.smith.langchain.com").rstrip("/"))
+    tracing_enabled: bool = field(default_factory=lambda: os.getenv("LANGSMITH_TRACING", os.getenv("LANGCHAIN_TRACING_V2", "true")).lower() in {"1", "true", "yes"})
 
     def is_enabled(self) -> bool:
         return bool(self.api_key)
@@ -103,7 +96,7 @@ class CloudEvalTracker:
         tags: list[str] | None = None,
     ) -> CloudTrackResult:
         """Log an evaluation run + numeric feedback scores to LangSmith."""
-        payload = {
+        payload: dict[str, Any] = {
             "run_name": run_name,
             "metrics": metrics,
             "inputs": inputs or {},
@@ -129,11 +122,13 @@ class CloudEvalTracker:
 
         try:
             client = self._client()
+            outs: dict[str, Any] = dict(payload["outputs"] or {})
+            outs["metrics"] = metrics
             run = client.create_run(
                 name=run_name,
                 run_type="chain",
                 inputs=payload["inputs"] or {"metrics_keys": list(metrics.keys())},
-                outputs={**(payload["outputs"] or {}), "metrics": metrics},
+                outputs=outs,
                 project_name=self.project,
                 extra={"metadata": payload["metadata"]},
                 tags=payload["tags"],
