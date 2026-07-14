@@ -1,22 +1,37 @@
 version: "3.9"
 
+x-api-env: &api-env
+  LLM_API_KEY: ${LLM_API_KEY:-}
+  LLM_CHEAP_API_KEY: ${LLM_CHEAP_API_KEY:-}
+  LLM_EXPENSIVE_API_KEY: ${LLM_EXPENSIVE_API_KEY:-}
+  CLAUDE_API_KEY: ${CLAUDE_API_KEY:-}
+  LLM_MODEL: ${LLM_MODEL:-gpt-4o-mini}
+  LLM_CHEAP_MODEL: ${LLM_CHEAP_MODEL:-gpt-4o-mini}
+  LLM_EXPENSIVE_MODEL: ${LLM_EXPENSIVE_MODEL:-gpt-4o}
+  DATABASE_URL: postgresql://insureflow:${POSTGRES_PASSWORD:-insureflow}@db:5432/insureflow
+  REDIS_URL: redis://redis:6379/0
+  CELERY_BROKER_URL: redis://redis:6379/0
+  CELERY_RESULT_BACKEND: redis://redis:6379/0
+  JOB_STORE_BACKEND: redis
+  ENCRYPTION_KEY: ${ENCRYPTION_KEY:-}
+  SECRET_KEY: ${SECRET_KEY:-CHANGE_ME_TO_A_LONG_SECRET_KEY_IN_PRODUCTION}
+  ENVIRONMENT: ${ENVIRONMENT:-development}
+  BANK_MODE: ${BANK_MODE:-false}
+  LANGSMITH_API_KEY: ${LANGSMITH_API_KEY:-}
+  LANGSMITH_PROJECT: ${LANGSMITH_PROJECT:-insureflow-evals}
+  LANGSMITH_TRACING: ${LANGSMITH_TRACING:-true}
+  CLOUDWATCH_LOGS: ${CLOUDWATCH_LOGS:-false}
+  AWS_REGION: ${AWS_REGION:-us-east-1}
+  AWS_SECRETS_ARN: ${AWS_SECRETS_ARN:-}
+  PYTHONPATH: /app
+
 services:
   api:
     build: .
     ports:
       - "8000:8000"
     environment:
-      - LLM_API_KEY=${LLM_API_KEY:-}
-      - LLM_MODEL=${LLM_MODEL:-gpt-4o-mini}
-      - LLM_CHEAP_MODEL=${LLM_CHEAP_MODEL:-gpt-4o-mini}
-      - LLM_EXPENSIVE_MODEL=${LLM_EXPENSIVE_MODEL:-gpt-4o}
-      - DATABASE_URL=postgresql://insureflow:insureflow@db:5432/insureflow
-      - REDIS_URL=redis://redis:6379/0
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
-      - JOB_STORE_BACKEND=redis
-      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-}
-      - PYTHONPATH=/app
+      <<: *api-env
     depends_on:
       db:
         condition: service_healthy
@@ -28,14 +43,7 @@ services:
     build: .
     command: celery -A insureflow.tasks.celery_app worker -Q mortgage -l info --concurrency=2
     environment:
-      - LLM_API_KEY=${LLM_API_KEY:-}
-      - LLM_MODEL=${LLM_MODEL:-gpt-4o-mini}
-      - LLM_CHEAP_MODEL=${LLM_CHEAP_MODEL:-gpt-4o-mini}
-      - LLM_EXPENSIVE_MODEL=${LLM_EXPENSIVE_MODEL:-gpt-4o}
-      - DATABASE_URL=postgresql://insureflow:insureflow@db:5432/insureflow
-      - PYTHONPATH=/app
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      <<: *api-env
     depends_on:
       db:
         condition: service_healthy
@@ -55,7 +63,7 @@ services:
     image: pgvector/pgvector:pg17
     environment:
       - POSTGRES_USER=insureflow
-      - POSTGRES_PASSWORD=insureflow
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-insureflow}
       - POSTGRES_DB=insureflow
     ports:
       - "5432:5432"

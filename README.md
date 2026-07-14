@@ -595,6 +595,25 @@ Version-controlled model and guideline registry with compliance review workflow:
 - Context management for deployment tracking
 - Point-in-time snapshots for audit and reproducibility
 - Bootstrap seeding for initial registry setup
+- **Agent release checklist** + **MLflow-compatible experiment tracking** (classify → offline eval → gates → HITL → canary → production)
+
+### Agent release walkthrough
+
+Every change to prompts, LLM config, RAG, or agent logic is an **experiment**:
+
+1. **Classify** — `prompt` / `llm_config` / `rag` / `agent_logic` / `tooling` / `eval_baseline` / `regression` / `canary` / `compliance`
+2. **Open MLflow run** — params (model, temp, prompt hash, retrieval k) + tags; `MLFLOW_TRACKING_URI` or local `evaluation_experiments/`
+3. **Pytest regression** — PR CI
+4. **Golden offline eval** — precision / recall / hallucination
+5. **Ragas + Giskard** — RAG quality + adversarial scan
+6. **Quality gates** — BLOCK if below thresholds (no promote on BLOCKED)
+7. **HITL sample** — licensed UW rubric (≥5 cases)
+8. **Registry approve** — draft → review → approved
+9. **Shadow / canary** — challenger vs champion; CloudWatch + LangSmith latency/errors
+10. **Promote champion** — MLflow stage → Production + registry snapshot
+11. **Post-release monitor** — Eval Trends, overrides, loss calibration
+
+APIs: `GET /releases/checklist`, `GET|POST /releases/experiments`, promote via `POST /releases/experiments/{id}/promote`. UI: Model Registry page.
 
 ### Registry API endpoints
 
@@ -966,9 +985,30 @@ python -m insureflow.mcp   # SSE on :8010
 ```bash
 pip install -e ".[eval]"
 python -m evaluations.runner
+python -m evaluations.report   # precision/recall + Ragas + Giskard + HITL → LangSmith
+python -m evaluations.hitl_rubrics
 ```
 
 Ragas (faithfulness, relevancy) + Giskard (bias, robustness) on golden dataset.
+
+**Human-in-the-loop eval:** licensed UW/CUO rubric scores (8 dimensions), decision agree/disagree, feedback tags. Production HITL separately tracks UW sign-off overrides + bind/loss calibration. API: `/evaluations/hitl/*`.
+
+**Ground-truth gold set:** **13** insurance ACORD golden cases (`evaluations/golden_dataset.py`) → **~140** field-level Q&As; **6** mortgage borrower gold outcomes (`tests/golden_mortgage_outcomes.json`); **8** guideline RAG Q&As — see `GET /evaluations/golden/inventory` or `python -m evaluations.qa_ground_truth`.
+
+**Retrieved context for eval:** **hybrid** — vector RAG over underwriting guidelines (in-memory char-n-gram or pgvector) **plus** an underwriting **knowledge graph** (`insureflow.rag.knowledge_graph`) for construction/occupancy/NAICS/PC/hazard/control neighborhoods. Ragas `retrieved_contexts` includes both.
+
+**Top-K / re-rank / fallbacks:** final **top_k = 5** (pipeline synthesis **3**); over-fetch **fetch_k = 15** then **re-rank** via vector+keyword score fusion + **MMR** (optional cross-encoder if `RAG_CROSS_ENCODER_MODEL` set). **No secondary SQL retrieval** — vector DB is primary; keyword + knowledge graph are non-SQL fallbacks when vector is weak/empty; then `NO_RETRIEVED_CONTEXT`. See `GET /rag/retrieval-policy`.
+
+**Model / agent drift:** nightly + scorer compare metrics to a **champion baseline**. Drift kinds: metric (precision/recall/hallucination/RAG/HITL), behavioral (latency/error), decision (UW override rate). Severities: watch → action → critical. On **ACTION/CRITICAL** we open a `REGRESSION` experiment; on **CRITICAL** we **rollback** to the last champion registry snapshot, root-cause (prompt/LLM/RAG/provider), re-validate through quality gates + HITL, then re-promote. API: `GET /evaluations/drift`.
+
+**Eval / HITL frequency:** unit tests every PR; golden + Ragas **nightly**; Giskard + full report **weekly**; production UW sign-off **every submission**; eval rubric spot-checks **weekly (≥5)**; override patterns **biweekly**; loss calibration **monthly**. See `GET /evaluations/cadence` and `.github/workflows/scheduled_evals.yml`.
+
+**Automation vs manual:** mostly **automated jobs** (CI + scheduled GitHub Actions). HITL rubric reviews and UW sign-off are **human** on that cadence.  
+**Quality gates:** precision **≥85%** / recall **≥90%** / hallucination **≤5%** / RAG **≥80%** / HITL pass **≥80%** = **BLOCK** if breached; component Ragas metrics **FLAG** below faithfulness 80% / relevancy 75% / context P·R 70%. API: `GET /evaluations/quality-gates`.
+
+**Cloud tracking (LangSmith):** set `LANGSMITH_API_KEY` (see `.env.example`). Eval scores upload to project `insureflow-evals` at [smith.langchain.com](https://smith.langchain.com). Without a key, metrics are cached under `evaluation_cloud_cache/` and pytest stays offline-friendly. Pipeline API runs also trace to LangSmith when the key is set.
+
+**Log explorers + agent performance:** structured JSON agent/pipeline logs are analyzed by `insureflow.analytics.agent_perf` (latency, error rate, findings). Explorers: **Amazon CloudWatch Logs Insights** (infra + structured logs; query templates on `GET /observability/log-explorers`) and **LangSmith** (LLM/agent traces). Nightly CI runs the analyzer and appends metrics to `evaluation_trends/`. Dashboard: **/dashboard/eval-trends** (Recharts precision/recall/hallucination/RAG/agent latency trends) via `GET /evaluations/trends` and `GET /analytics/agent-performance`.
 
 ---
 
@@ -984,6 +1024,34 @@ docker compose up --build
 | `redis` | 6379 | Job store + Celery broker |
 | `db` | 5432 | PostgreSQL + pgvector |
 | `mortgage-worker` | — | Celery worker for async mortgage jobs |
+
+### Bank simulation (TLS, no DB/Redis on host)
+
+See [`docs/BANK_LANDING_ZONE.md`](docs/BANK_LANDING_ZONE.md).
+
+```bash
+./deploy/caddy/gen-certs.sh
+export SECRET_KEY="$(openssl rand -hex 32)"
+export ENCRYPTION_KEY="$(PYTHONPATH=src python -c 'from insureflow.storage.encryption import EnvelopeEncryption; print(EnvelopeEncryption.generate_key())')"
+export POSTGRES_PASSWORD="$(openssl rand -hex 16)"
+docker compose -f docker-compose.bank.standalone.yml up --build
+# https://localhost:8443/dashboard
+
+### Public web URL (any browser)
+
+```bash
+./deploy/public_tunnel.sh
+# → prints https://….ngrok-free.app/dashboard
+```
+
+For the branded name **`https://app.rytera.ai`**: reserve/custom domain in ngrok (paid) or Cloudflare Tunnel, CNAME `app` → tunnel target, then:
+
+```bash
+NGROK_DOMAIN=app.rytera.ai ./deploy/public_tunnel.sh
+```
+```
+
+AWS (VPC/ECS/RDS/Redis/Secrets/WAF/CloudTrail/Cognito): `infra/aws/`
 
 ---
 

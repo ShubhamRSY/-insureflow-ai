@@ -1,0 +1,8 @@
+aws_region           = "us-east-1"
+environment          = "production"
+project_name         = "rytera"
+acm_certificate_arn  = "arn:aws:acm:us-east-1:123456789012:certificate/REPLACE"
+container_image      = "ghcr.io/YOUR_ORG/insureflow-ai:latest"
+allowed_cidr_blocks  = ["10.0.0.0/8"]  # bank VPN / office
+langsmith_api_key    = ""               # or set via TF_VAR_langsmith_api_key
+enable_cognito       = true

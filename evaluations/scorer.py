@@ -105,6 +105,77 @@ def score_all(output_path: str | None = None) -> list[dict[str, Any]]:
         "results": scored,
     }
 
+    try:
+        from evaluations.quality_gates import apply_quality_gates
+
+        gates = apply_quality_gates(
+            {
+                "precision": avg_precision,
+                "recall": avg_recall,
+                "hallucination_rate": avg_hallucination,
+            }
+        )
+        summary["quality_gates"] = gates
+        summary["gate_verdict"] = gates["verdict"]
+        if gates["verdict"] == "BLOCKED":
+            logger.error("QUALITY GATE BLOCKED: %s", [g for g in gates["gates"] if g["status"] == "fail"])
+        elif gates["verdict"] == "FLAGGED":
+            logger.warning("QUALITY GATE FLAGGED: %s", [g for g in gates["gates"] if g["status"] == "flag"])
+    except Exception as exc:
+        logger.warning("Quality gates skipped: %s", exc)
+
+    try:
+        from evaluations.trend_store import EvalTrendStore
+
+        EvalTrendStore().record(
+            "golden_scorer",
+            {
+                "precision": avg_precision,
+                "recall": avg_recall,
+                "hallucination_rate": avg_hallucination,
+            },
+            metadata={"total_cases": len(scored)},
+        )
+    except Exception as exc:
+        logger.warning("Trend store append skipped: %s", exc)
+
+    try:
+        from evaluations.drift import detect_drift, log_drift_event, maybe_open_regression_experiment
+
+        drift = detect_drift(
+            {
+                "precision": avg_precision,
+                "recall": avg_recall,
+                "hallucination_rate": avg_hallucination,
+            }
+        )
+        summary["drift"] = drift.to_dict()
+        if drift.status.value != "none":
+            log_drift_event(drift)
+            logger.warning("MODEL/AGENT DRIFT: %s — %s", drift.status.value, drift.interview_summary)
+            exp = maybe_open_regression_experiment(drift)
+            if exp:
+                summary["drift"]["regression_experiment"] = {"run_id": exp.get("run_id"), "name": exp.get("name")}
+    except Exception as exc:
+        logger.warning("Drift detection skipped: %s", exc)
+
+    try:
+        from evaluations.cloud_tracker import get_tracker
+
+        cloud = get_tracker().log_case_scores(scored)
+        summary["cloud_tracking"] = {
+            "enabled": cloud.enabled,
+            "provider": cloud.provider,
+            "project": cloud.project,
+            "run_id": cloud.run_id,
+            "url": cloud.url,
+            "local_path": cloud.local_path,
+            "error": cloud.error,
+        }
+    except Exception as exc:
+        logger.warning("Cloud tracking skipped: %s", exc)
+        summary["cloud_tracking"] = {"enabled": False, "error": str(exc)}
+
     if output_path:
         import pathlib
 

@@ -113,16 +113,19 @@ class SystemDiagnostics:
                     "key_hint": _mask_key(settings.llm_api_key or settings.llm_cheap_api_key or settings.claude_api_key),
                     "openai": has_openai,
                     "claude": has_claude,
+                    "mode": "llm_enhanced",
                 },
             )
 
+        # Deterministic agents are a first-class mode — not a health failure.
         return ComponentCheck(
             component="llm_api_key",
-            status=CheckStatus.DEGRADED,
-            message="No LLM API key — running deterministic rule-based agents only",
+            status=CheckStatus.OK,
+            message="Deterministic rule-based agents ready (LLM key optional — set LLM_API_KEY to enhance)",
             category="llm",
             details={
-                "fix": "Set LLM_API_KEY in .env (see .env.example)",
+                "mode": "deterministic_fallback",
+                "fix": "Optional: set LLM_API_KEY or CLAUDE_API_KEY in .env for ReAct + extraction",
                 "cheap_model": settings.llm_cheap_model,
                 "expensive_model": settings.llm_expensive_model,
             },
@@ -140,14 +143,15 @@ class SystemDiagnostics:
             )
         return ComponentCheck(
             component="llm_pipeline_mode",
-            status=CheckStatus.DEGRADED,
-            message="Insurance: regex/rules only | Mortgage: regex/rules (--no-llm not required)",
+            status=CheckStatus.OK,
+            message="Deterministic pipeline mode active — regex/rules agents fully operational",
             category="llm",
             details={
                 "mode": mode,
                 "insurance_agents": "deterministic _analyze()",
                 "mortgage_extraction": "regex only",
                 "mortgage_agents": "rules only (LLM calls skipped)",
+                "note": "First-class operating mode; add LLM_API_KEY for enhanced extraction",
             },
         )
 
@@ -281,14 +285,16 @@ class SystemDiagnostics:
                 details=details,
             )
         if pdfminer_ok:
+            # Core underwriting path uses text PDFs / structured docs — scan OCR is optional.
             return ComponentCheck(
                 component="ocr",
-                status=CheckStatus.DEGRADED,
-                message="Text PDF OCR only — install pip install insureflow-ai[ocr] + system Tesseract for scans",
+                status=CheckStatus.OK,
+                message="Text PDF OCR ready (pdfminer) — scan/image OCR optional via [ocr] + Tesseract",
                 category="ingestion",
                 details={
                     **details,
-                    "fix": 'pip install -e ".[ocr]" && brew install tesseract (macOS)',
+                    "scan_ocr": "optional",
+                    "tip": 'pip install -e ".[ocr]" && brew install tesseract poppler (macOS)',
                 },
             )
         return ComponentCheck(

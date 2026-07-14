@@ -66,7 +66,7 @@ def _ensure_rag() -> None:
     if not _RAG_INITIALIZED:
         from insureflow.rag.rag_agent import RAGAgent
 
-        agent = RAGAgent()
+        agent = RAGAgent(use_knowledge_graph=True)
         agent.ensure_indexed()
         _RAG_INITIALIZED = True
 
@@ -157,15 +157,32 @@ def _build_sample(
             q_parts.append(f"{k.replace('_', ' ').title()}: {v}")
     question = ". ".join(q_parts)
 
-    # Contexts from RAG
+    # Contexts from hybrid RAG (vector guidelines) + knowledge graph
     contexts = []
     if rag_context:
-        for chunk in rag_context.split("=== RELEVANT UNDERWRITING GUIDELINES ==="):
-            chunk = chunk.strip()
-            if chunk:
-                contexts.append(chunk)
+        for marker in (
+            "=== RELEVANT UNDERWRITING GUIDELINES ===",
+            "=== UNDERWRITING KNOWLEDGE GRAPH CONTEXT ===",
+        ):
+            if marker in rag_context:
+                for chunk in rag_context.split(marker):
+                    chunk = chunk.strip()
+                    if chunk:
+                        contexts.append(chunk)
         if not contexts:
             contexts = [rag_context]
+
+    # Also pull explicit hybrid retrieval for Ragas when context is thin
+    if len(contexts) < 2:
+        try:
+            from insureflow.rag.rag_agent import RAGAgent
+
+            hybrid = RAGAgent(use_knowledge_graph=True).retrieve_contexts(question, top_k=3)
+            for c in hybrid.get("retrieved_contexts", []):
+                if c and c not in contexts:
+                    contexts.append(c)
+        except Exception:
+            pass
 
     # Ground truth from expected
     gt_parts = []
@@ -301,6 +318,34 @@ def evaluate_ragas(output_path: str | None = None) -> dict[str, Any]:
     }
     if overall is not None:
         summary["overall_quality_score"] = overall
+
+    try:
+        from evaluations.cloud_tracker import get_tracker
+
+        flat: dict[str, float | int | None] = {"samples_generated": len(samples)}
+        if overall is not None:
+            flat["overall_quality_score"] = float(overall)
+        for name, payload in metrics.items():
+            if isinstance(payload, dict) and "avg" in payload:
+                flat[name] = payload["avg"]
+        cloud = get_tracker().log_metrics(
+            run_name="ragas-eval",
+            metrics=flat,
+            outputs={"case_details": case_details, "errors": errors},
+            metadata={"framework": "ragas"},
+            tags=["evaluation", "ragas"],
+        )
+        summary["cloud_tracking"] = {
+            "enabled": cloud.enabled,
+            "provider": cloud.provider,
+            "project": cloud.project,
+            "run_id": cloud.run_id,
+            "url": cloud.url,
+            "local_path": cloud.local_path,
+            "error": cloud.error,
+        }
+    except Exception as exc:
+        logger.warning("LangSmith cloud tracking skipped for Ragas: %s", exc)
 
     if output_path:
         import pathlib

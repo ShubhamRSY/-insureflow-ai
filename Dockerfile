@@ -2,16 +2,24 @@ FROM python:3.12-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
+    tesseract-ocr \
+    poppler-utils \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 COPY pyproject.toml .
 COPY src/ src/
+COPY evaluations/ evaluations/
+COPY examples/ examples/
+COPY simulated_documents/ simulated_documents/
 COPY cli.py .
 COPY scripts/ scripts/
 
-RUN pip install --no-cache-dir -e ".[claude,pgvector,eval,dev]"
+# Default: runtime + OCR (health 100%). Override: --build-arg PIP_EXTRAS="claude,pgvector"
+ARG PIP_EXTRAS=claude,pgvector,ocr
+RUN pip install --no-cache-dir -U pip \
+    && pip install --no-cache-dir -e ".[${PIP_EXTRAS}]"
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1

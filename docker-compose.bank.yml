@@ -1,0 +1,46 @@
+# Bank simulation overlay — do NOT publish DB/Redis; terminate TLS at Caddy.
+# Usage:
+#   export BANK_MODE=true ENVIRONMENT=production
+#   export SECRET_KEY=... ENCRYPTION_KEY=... POSTGRES_PASSWORD=...
+#   docker compose -f docker-compose.yml -f docker-compose.bank.yml up --build
+#
+# Dashboard: https://localhost:8443/dashboard  (trust local CA or use mkcert)
+
+version: "3.9"
+
+services:
+  api:
+    ports: !reset []
+    expose:
+      - "8000"
+    environment:
+      ENVIRONMENT: production
+      BANK_MODE: "true"
+      CLOUDWATCH_LOGS: "true"
+      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY required for bank mode}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?ENCRYPTION_KEY required for bank mode}
+      ALLOW_OPEN_REGISTRATION: "false"
+      ALLOW_AUTH_RESET: "false"
+
+  redis:
+    ports: !reset []
+
+  db:
+    ports: !reset []
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD required for bank mode}
+
+  tls:
+    image: caddy:2-alpine
+    ports:
+      - "8443:8443"
+    volumes:
+      - ./deploy/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./deploy/caddy/certs:/certs:ro
+      - caddy_data:/data
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  caddy_data:

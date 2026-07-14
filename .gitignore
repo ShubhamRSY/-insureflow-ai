@@ -18,8 +18,16 @@ ragas_scores.json
 giskard_scan.json
 evaluation_results.json
 evaluation_scores.json
+evaluation_cloud_cache/
+evaluation_hitl/
+evaluation_trends/
+evaluation_experiments/
+evaluation_baselines/
+mlruns/
 /insureflow/
 .benchmarks/
 .DS_Store
 *.log
 *.sqlite3
+*.pem
+!deploy/caddy/certs/.gitkeep

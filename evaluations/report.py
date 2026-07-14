@@ -117,6 +117,76 @@ def generate_report(
         "issues": giskard_result.get("issues", []),
     }
 
+    # 4. Human-in-the-loop eval rubrics
+    from evaluations.hitl_rubrics import HITLEvalStore, export_rubric_card, seed_demo_reviews, track_hitl_to_langsmith
+
+    hitl_store = HITLEvalStore()
+    seed_demo_reviews(hitl_store)
+    export_rubric_card()
+    hitl_summary = hitl_store.summary()
+    hitl_cloud = track_hitl_to_langsmith(hitl_summary)
+
+    report["sections"]["human_in_the_loop_eval"] = {
+        "description": (
+            "Licensed UW / CUO rubric scoring on golden cases "
+            "(field accuracy, decision fit, hallucination, compliance, provenance) "
+            "+ decision agree rates and feedback tags"
+        ),
+        "metrics": {
+            "agree_rate": hitl_summary.agree_rate,
+            "disagree_rate": hitl_summary.disagree_rate,
+            "case_pass_rate": hitl_summary.case_pass_rate,
+            "avg_scores": hitl_summary.avg_scores,
+        },
+        "top_feedback_tags": hitl_summary.top_feedback_tags,
+        "below_threshold": hitl_summary.below_threshold,
+        "rubrics": hitl_summary.rubrics,
+        "total_reviews": hitl_summary.total_reviews,
+        "cloud_tracking": hitl_cloud,
+    }
+    report["summary"]["hitl_agree_rate"] = hitl_summary.agree_rate
+    report["summary"]["hitl_case_pass_rate"] = hitl_summary.case_pass_rate
+
+    # Ground-truth golden inventory
+    from evaluations.qa_ground_truth import ground_truth_inventory
+
+    gt = ground_truth_inventory()
+    report["sections"]["ground_truth_golden_set"] = {
+        "description": "Maintained gold / ground-truth datasets used for scoring",
+        **gt,
+    }
+    report["summary"]["golden_cases"] = gt["insurance"]["golden_cases"]
+    report["summary"]["ground_truth_questions"] = gt["totals"]["ground_truth_questions"]
+
+    from evaluations.cadence import cadence_inventory
+
+    report["sections"]["eval_and_hitl_cadence"] = {
+        "description": "How often automated evals and human-in-the-loop checks run",
+        **cadence_inventory(),
+    }
+
+    # 5. LangSmith cloud tracking (no-op without LANGSMITH_API_KEY)
+    from evaluations.cloud_tracker import track_report
+
+    cloud = track_report(report)
+    report["cloud_tracking"] = cloud
+    if cloud.get("enabled"):
+        logger.info("Eval metrics uploaded to LangSmith project=%s run_id=%s", cloud.get("project"), cloud.get("run_id"))
+    elif cloud.get("local_path"):
+        logger.info("LangSmith offline — metrics cached at %s", cloud.get("local_path"))
+
+    from evaluations.quality_gates import gates_from_report_summary
+
+    rag_section = report["sections"].get("rag_quality", {}).get("metrics", {})
+    gates = gates_from_report_summary(report["summary"], ragas_metrics=rag_section)
+    report["sections"]["quality_gates"] = {
+        "description": "Metric thresholds — beyond these we FLAG or BLOCK",
+        **gates,
+    }
+    report["summary"]["gate_verdict"] = gates["verdict"]
+    report["summary"]["gate_blocks"] = gates["blocks"]
+    report["summary"]["gate_flags"] = gates["flags"]
+
     if output_path:
         Path(output_path).write_text(json.dumps(report, indent=2, default=str))
         logger.info("Report written to %s", output_path)
@@ -188,12 +258,20 @@ def print_report(report: dict[str, Any]) -> None:
     print(f"  Generated: {report.get('generated_at', 'N/A')}")
     print("=" * 72)
     print(f"\n  VERDICT: {s.get('overall_verdict', 'N/A')}")
+    if s.get("gate_verdict"):
+        print(f"  GATE VERDICT: {s.get('gate_verdict')} (blocks={s.get('gate_blocks')}, flags={s.get('gate_flags')})")
     print(f"\n  ┌─{'─' * 50}─┐")
     print(f"  │ {'Metric':<30} {'Score':<18} │")
     print(f"  ├─{'─' * 50}─┤")
     print(f"  │ {'Precision':<30} {s.get('precision', 'N/A'):>8.1%} {'':>10} │")
     print(f"  │ {'Recall':<30} {s.get('recall', 'N/A'):>8.1%} {'':>10} │")
     print(f"  │ {'Hallucination Rate':<30} {s.get('hallucination_rate', 'N/A'):>8.1%} {'':>10} │")
+    hitl_a = s.get("hitl_agree_rate")
+    if isinstance(hitl_a, (int, float)):
+        print(f"  │ {'HITL Agree Rate':<30} {hitl_a:>8.1%} {'':>10} │")
+    hitl_p = s.get("hitl_case_pass_rate")
+    if isinstance(hitl_p, (int, float)):
+        print(f"  │ {'HITL Case Pass Rate':<30} {hitl_p:>8.1%} {'':>10} │")
     qs = s.get("ragas_quality_score", "N/A")
     if isinstance(qs, (int, float)):
         print(f"  │ {'RAG Quality Score':<30} {qs:>8.1%} {'':>10} │")
@@ -216,6 +294,19 @@ def print_report(report: dict[str, Any]) -> None:
     print("\n  Recommendations:")
     for r in report.get("recommendations", []):
         print(f"    • {r}")
+
+    cloud = report.get("cloud_tracking") or {}
+    print("\n  Cloud tracking (LangSmith):")
+    if cloud.get("enabled"):
+        print(f"    • Uploaded to project={cloud.get('project')} run_id={cloud.get('run_id')}")
+        if cloud.get("url"):
+            print(f"    • {cloud['url']}")
+    else:
+        reason = cloud.get("error") or "disabled"
+        cache = cloud.get("local_path")
+        print(f"    • Offline ({reason})")
+        if cache:
+            print(f"    • Local cache: {cache}")
     print("=" * 72)
 
 

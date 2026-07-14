@@ -8,9 +8,23 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# Pull bank secrets from AWS before Settings snapshots env (no-op without ARN).
+try:
+    from insureflow.security.secrets_loader import load_secrets_from_aws
+
+    load_secrets_from_aws()
+except Exception:
+    pass
+
 
 @dataclass(frozen=True)
 class Settings:
+    # Runtime posture
+    environment: str = os.getenv("ENVIRONMENT", "development")
+    bank_mode: bool = os.getenv("BANK_MODE", "").lower() in {"1", "true", "yes"} or (
+        os.getenv("ENVIRONMENT", "development").lower() == "production"
+    )
+
     # Legacy single-model config (backward compat)
     llm_provider: str = os.getenv("LLM_PROVIDER", "openai")
     llm_model: str = os.getenv("LLM_MODEL", "gpt-4o")
@@ -146,5 +160,51 @@ class Settings:
     integration_gateway_api_key: str = os.getenv("INTEGRATION_GATEWAY_API_KEY", "rytera-dev-gateway-key-change-in-production")
     api_port: int = int(os.getenv("API_PORT", "8002"))
 
+    # LangSmith cloud eval / pipeline tracing (https://smith.langchain.com)
+    langsmith_api_key: str = os.getenv("LANGSMITH_API_KEY", "")
+    langsmith_project: str = os.getenv("LANGSMITH_PROJECT", os.getenv("LANGCHAIN_PROJECT", "insureflow-evals"))
+    langsmith_endpoint: str = os.getenv("LANGSMITH_ENDPOINT", "https://api.smith.langchain.com")
+    langsmith_tracing: bool = os.getenv("LANGSMITH_TRACING", os.getenv("LANGCHAIN_TRACING_V2", "true")).lower() in {
+        "1",
+        "true",
+        "yes",
+    }
+
+    # AWS / bank landing zone
+    aws_region: str = os.getenv("AWS_REGION", os.getenv("AWS_DEFAULT_REGION", "us-east-1"))
+    aws_secrets_arn: str = os.getenv("AWS_SECRETS_ARN", os.getenv("AWS_SECRET_ID", ""))
+    cloudwatch_logs: bool = os.getenv("CLOUDWATCH_LOGS", "").lower() in {"1", "true", "yes"}
+    worm_audit_path: Path = Path(os.getenv("WORM_AUDIT_PATH", "./audit_logs/worm"))
+    audit_retention_days: int = int(os.getenv("AUDIT_RETENTION_DAYS", "2555"))
+    retention_s3_bucket: str = os.getenv("RETENTION_S3_BUCKET", "")
+
 
 settings = Settings()
+
+
+def maybe_enable_langsmith_tracing() -> bool:
+    """Enable LangSmith tracing when LANGSMITH_API_KEY is configured."""
+    if not settings.langsmith_api_key:
+        return False
+    os.environ.setdefault("LANGSMITH_API_KEY", settings.langsmith_api_key)
+    os.environ.setdefault("LANGCHAIN_API_KEY", settings.langsmith_api_key)
+    os.environ["LANGCHAIN_TRACING_V2"] = "true" if settings.langsmith_tracing else "false"
+    os.environ["LANGSMITH_TRACING"] = "true" if settings.langsmith_tracing else "false"
+    os.environ["LANGCHAIN_PROJECT"] = settings.langsmith_project
+    os.environ["LANGSMITH_PROJECT"] = settings.langsmith_project
+    if settings.langsmith_endpoint:
+        os.environ.setdefault("LANGSMITH_ENDPOINT", settings.langsmith_endpoint)
+        os.environ.setdefault("LANGCHAIN_ENDPOINT", settings.langsmith_endpoint)
+    return True
+
+
+def bootstrap_security() -> list[str]:
+    """Validate bank/prod posture; return error messages (empty = ok)."""
+    from insureflow.security.posture import resolve_security_posture, validate_startup_secrets
+
+    posture = resolve_security_posture(environment=settings.environment, bank_mode=settings.bank_mode)
+    return validate_startup_secrets(
+        secret_key=settings.secret_key,
+        encryption_key=settings.encryption_key,
+        posture=posture,
+    )

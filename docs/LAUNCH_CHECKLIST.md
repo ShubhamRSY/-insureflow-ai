@@ -9,8 +9,31 @@ Use this checklist before public launch at [rytera.ai](https://rytera.ai).
 - [ ] Point `rytera.ai` → production host running this API
 - [ ] Point `app.rytera.ai` → production dashboard (`/dashboard`)
 - [x] Integration gateway built at `/integrations` (deploy same routes at `integrations.rytera.ai` in prod)
-- [ ] Enable HTTPS (Let's Encrypt or cloud provider cert)
+- [x] TLS path: local Caddy bank profile (`deploy/caddy`) + AWS ALB/ACM (`infra/aws`)
+- [ ] Enable production HTTPS (ACM cert ARN in Terraform / Let's Encrypt)
 - [ ] Set SPF/DKIM/DMARC for `@rytera.ai` email
+
+## Bank security posture
+
+- [x] JWT signs/verifies with env `SECRET_KEY` (not hardcoded)
+- [x] `BANK_MODE` / `ENVIRONMENT=production` disables open registration + `/auth/reset`
+- [x] Encryption key required in bank mode
+- [x] Compose bank overlay: no host ports for Postgres/Redis; TLS on `:8443`
+- [x] AWS landing zone Terraform (VPC, ECS, RDS, Redis, Secrets/KMS, WAF, CloudTrail, Cognito)
+- [x] CloudWatch JSON logs + LangSmith AI tracing
+- [x] WORM audit retention module + S3 Object Lock bucket in Terraform
+- [x] SSO stubs (`/auth/sso/*`) for Cognito/Okta
+- [x] DPA / Privacy / SOC 2 questionnaire templates under `legal/`
+- [ ] Apply Terraform to a real AWS account + ACM certificate
+- [ ] Complete OIDC JWKS validation for production SSO tokens
+
+## Legal & compliance (carrier launch)
+
+- [x] Privacy policy template (`legal/PRIVACY_POLICY_TEMPLATE.md`)
+- [x] Data processing agreement template (`legal/DPA_TEMPLATE.md`)
+- [x] SOC 2 / security questionnaire materials (`legal/SOC2_QUESTIONNAIRE.md`)
+- [ ] Counsel review + customer countersign
+- [x] Model governance docs (registry, override analytics)
 
 ## Trademark
 
@@ -53,7 +76,8 @@ curl -H "Authorization: Bearer $TOKEN" http://127.0.0.1:8002/pipeline/ecosystem/
 
 ## Legal & compliance (carrier launch)
 
-- [ ] Privacy policy and terms of service on rytera.ai
-- [ ] Data processing agreement (DPA) for carrier customers
-- [ ] SOC 2 / security questionnaire materials
-- [ ] Model governance docs (registry, override analytics)
+- [x] Privacy policy template (`legal/PRIVACY_POLICY_TEMPLATE.md`) — publish counsel-approved copy to rytera.ai
+- [x] Data processing agreement template (`legal/DPA_TEMPLATE.md`)
+- [x] SOC 2 / security questionnaire materials (`legal/SOC2_QUESTIONNAIRE.md`)
+- [x] Model governance docs (registry, override analytics)
+- [ ] Counsel review + customer countersign / ToS on site

@@ -17,6 +17,7 @@ import RenewalDashboard from './pages/RenewalDashboard';
 import RegistryPage from './pages/Registry';
 import QueuePage from './pages/Queue';
 import OverrideAnalyticsPage from './pages/OverrideAnalytics';
+import EvalTrendsPage from './pages/EvalTrends';
 import PortfolioPage from './pages/Portfolio';
 import IntegrationsPage from './pages/Integrations';
 import WebhooksPage from './pages/Webhooks';
@@ -224,6 +225,7 @@ function AppRoutes() {
           <Route path="workflow" element={<Protected onLogin={() => setLoginOpen(true)}><WorkflowPage pending={pending} onRefresh={loadOverview} onOpenJob={openJob} authorityData={authorityData} /></Protected>} />
           <Route path="renewals" element={<Protected onLogin={() => setLoginOpen(true)}><RenewalDashboard /></Protected>} />
           <Route path="overrides" element={<Protected onLogin={() => setLoginOpen(true)}><OverrideAnalyticsPage /></Protected>} />
+          <Route path="eval-trends" element={<Protected onLogin={() => setLoginOpen(true)}><EvalTrendsPage /></Protected>} />
           <Route path="portfolio" element={<Protected onLogin={() => setLoginOpen(true)}><PortfolioPage /></Protected>} />
           <Route path="queue" element={<Protected onLogin={() => setLoginOpen(true)}><QueuePage queueStats={queueStats} insuranceJobs={insuranceJobs} onOpenJob={openJob} onRefresh={loadQueueStats} /></Protected>} />
           <Route path="registry" element={<Protected onLogin={() => setLoginOpen(true)}><RegistryPage /></Protected>} />

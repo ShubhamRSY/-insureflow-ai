@@ -1,0 +1,76 @@
+# Bank overlay without Compose !reset (compatible with older Docker Compose).
+# Prefer: docker compose -f docker-compose.yml -f docker-compose.bank.yml
+# If ports still leak on old Compose, use this file alone after building the image:
+#   docker compose -f docker-compose.bank.standalone.yml up --build
+
+version: "3.9"
+
+services:
+  api:
+    build: .
+    expose:
+      - "8000"
+    volumes:
+      - ./examples:/app/examples:ro
+      - ./simulated_documents:/app/simulated_documents:ro
+      - ./src:/app/src:ro
+    environment:
+      ENVIRONMENT: production
+      BANK_MODE: "true"
+      CLOUDWATCH_LOGS: "true"
+      ALLOW_OPEN_REGISTRATION: "false"
+      ALLOW_AUTH_RESET: "false"
+      SECRET_KEY: ${SECRET_KEY:?required}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?required}
+      DATABASE_URL: postgresql://insureflow:${POSTGRES_PASSWORD}@db:5432/insureflow
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      JOB_STORE_BACKEND: redis
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_CHEAP_API_KEY: ${LLM_CHEAP_API_KEY:-}
+      LLM_EXPENSIVE_API_KEY: ${LLM_EXPENSIVE_API_KEY:-}
+      CLAUDE_API_KEY: ${CLAUDE_API_KEY:-}
+      LANGSMITH_API_KEY: ${LANGSMITH_API_KEY:-}
+      LANGSMITH_PROJECT: ${LANGSMITH_PROJECT:-insureflow-evals}
+      PYTHONPATH: /app
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+
+  db:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_USER: insureflow
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?required}
+      POSTGRES_DB: insureflow
+    volumes:
+      - pgdata_bank:/var/lib/postgresql/data
+      - ./scripts/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U insureflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  tls:
+    image: caddy:2-alpine
+    ports:
+      - "8443:8443"
+    volumes:
+      - ./deploy/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./deploy/caddy/certs:/certs:ro
+      - caddy_data_bank:/data
+    depends_on:
+      - api
+
+volumes:
+  pgdata_bank:
+  caddy_data_bank:

@@ -566,7 +566,7 @@ def query_rag(state: PipelineState) -> dict[str, Any]:
             bundle_id,
             PipelineEvent.SYNTHESIS_START,
             "query_rag",
-            f"Retrieved {len(matches)} relevant guidelines",
+            f"Retrieved {len(matches)} hybrid RAG+KG context blocks",
         )
 
     return {"rag_context": guidelines}

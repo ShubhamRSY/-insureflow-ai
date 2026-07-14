@@ -26,9 +26,27 @@ from insureflow.auth.models import LoginRequest, Token, TokenData, User, UserCre
 from insureflow.insurance.pipeline import InsurancePipeline
 from insureflow.models.mortgage import ProductLine
 from insureflow.pipeline import UnderwritingPipeline
+from insureflow.security.posture import resolve_security_posture
 from insureflow.storage.job_store import JobStore, get_job_store
 from insureflow.tasks.celery_app import celery_app
 from insureflow.underwriting.renewal import PremiumAuditEngine
+
+try:
+    from insureflow.config import bootstrap_security, maybe_enable_langsmith_tracing
+    from insureflow.observability.cloudwatch import configure_cloudwatch_logging
+
+    configure_cloudwatch_logging()
+    maybe_enable_langsmith_tracing()
+    _security_errors = bootstrap_security()
+    if _security_errors:
+        for _err in _security_errors:
+            logging.getLogger(__name__).error("SECURITY: %s", _err)
+        if os.getenv("BANK_MODE", "").lower() in {"1", "true", "yes"} or os.getenv("ENVIRONMENT", "").lower() == "production":
+            raise RuntimeError("Bank/production security checks failed:\n- " + "\n- ".join(_security_errors))
+except RuntimeError:
+    raise
+except Exception:
+    pass
 
 integration_gateway_router: APIRouter | None = None
 try:
@@ -63,16 +81,67 @@ EXAMPLES_DIR = PROJECT_ROOT / "examples"
 SIM_DOCS_DIR = PROJECT_ROOT / "simulated_documents"
 
 
+def _posture():
+    return resolve_security_posture()
+
+
 # ── Auth Endpoints ──────────────────────────────────────────────
 
 
 @app.get("/auth/status")
-def auth_status() -> dict[str, bool]:
-    """Whether first-time admin setup is still required."""
-    return {"setup_required": not bool(get_user_store())}
+def auth_status() -> dict[str, Any]:
+    """Auth setup status + bank security posture flags."""
+    posture = _posture()
+    return {
+        "setup_required": not bool(get_user_store()),
+        "bank_mode": posture.bank_mode,
+        "environment": posture.environment,
+        "allow_open_registration": posture.allow_open_registration,
+        "allow_auth_reset": posture.allow_auth_reset,
+        "require_encryption": posture.require_encryption,
+    }
+
+
+@app.get("/security/status")
+def security_status() -> dict[str, Any]:
+    """Bank landing-zone security summary (no secrets)."""
+    from insureflow.auth.sso import sso_status
+    from insureflow.config import settings
+
+    posture = _posture()
+    return {
+        "posture": {
+            "environment": posture.environment,
+            "bank_mode": posture.bank_mode,
+            "hardened": posture.is_hardened,
+            "allow_open_registration": posture.allow_open_registration,
+            "allow_auth_reset": posture.allow_auth_reset,
+            "require_encryption": posture.require_encryption,
+            "encryption_configured": bool(settings.encryption_key),
+            "secret_key_is_default": settings.secret_key == "CHANGE_ME_TO_A_LONG_SECRET_KEY_IN_PRODUCTION",
+        },
+        "observability": {
+            "langsmith": bool(settings.langsmith_api_key),
+            "cloudwatch_logs": settings.cloudwatch_logs or posture.bank_mode,
+            "aws_region": settings.aws_region,
+            "aws_secrets_configured": bool(settings.aws_secrets_arn),
+        },
+        "sso": sso_status(),
+        "retention": {
+            "worm_path": str(settings.worm_audit_path),
+            "retention_days": settings.audit_retention_days,
+            "s3_bucket": settings.retention_s3_bucket or None,
+        },
+    }
 
 
 def _do_auth_reset() -> dict[str, str | int | bool]:
+    posture = _posture()
+    if not posture.allow_auth_reset:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Auth reset is disabled in BANK_MODE/production. Set ALLOW_AUTH_RESET=true only for emergency break-glass.",
+        )
     removed = clear_user_store()
     return {
         "message": "All credentials cleared. Use First-time Setup to create a new admin.",
@@ -176,13 +245,22 @@ def get_me(current_user: TokenData = Depends(get_current_user)) -> dict[str, str
 @app.post("/auth/register", status_code=201)
 @limiter.limit("3/hour")
 def register_user(req: UserCreateRequest, request: Request) -> dict[str, str]:
-    """Self-register — limited to VIEWER or UNDERWRITER roles."""
+    """Self-register — disabled in BANK_MODE/production unless ALLOW_OPEN_REGISTRATION=true."""
+    posture = _posture()
+    if not posture.allow_open_registration:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Open registration is disabled in BANK_MODE/production. An admin must create users via /auth/users or SSO.",
+        )
     store = get_user_store()
     username = req.username.strip()
     if not username or not req.password:
         raise HTTPException(status_code=400, detail="Username and password are required")
-    if len(req.password) < 4:
-        raise HTTPException(status_code=400, detail="Password must be at least 4 characters")
+    if len(req.password) < posture.min_password_length:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Password must be at least {posture.min_password_length} characters",
+        )
     role = req.role if req.role in (Role.VIEWER, Role.UNDERWRITER) else Role.VIEWER
     if username in store:
         raise HTTPException(status_code=409, detail="Username already exists")
@@ -194,6 +272,39 @@ def register_user(req: UserCreateRequest, request: Request) -> dict[str, str]:
         org_id=req.org_id or "default",
     )
     return {"message": f"User '{username}' created with role '{role.value}'"}
+
+
+@app.get("/auth/sso/status")
+def auth_sso_status() -> dict[str, Any]:
+    from insureflow.auth.sso import sso_status
+
+    return sso_status()
+
+
+@app.get("/auth/sso/login")
+def auth_sso_login() -> dict[str, str]:
+    """Start Cognito/Okta OIDC login — returns authorize URL for the SPA to redirect."""
+    from insureflow.auth.sso import build_authorize_url, sso_status
+
+    status_info = sso_status()
+    if not status_info.get("enabled"):
+        raise HTTPException(status_code=404, detail="SSO is not configured")
+    state = uuid.uuid4().hex
+    return {"authorize_url": build_authorize_url(state), "state": state}
+
+
+@app.post("/auth/sso/callback")
+def auth_sso_callback(payload: dict[str, Any]) -> dict[str, Any]:
+    """OIDC callback stub — exchanges code once JWKS validation is wired to the bank IdP."""
+    from insureflow.auth.sso import exchange_code_for_claims, sso_status
+
+    if not sso_status().get("enabled"):
+        raise HTTPException(status_code=404, detail="SSO is not configured")
+    code = str(payload.get("code") or "")
+    if not code:
+        raise HTTPException(status_code=400, detail="Missing authorization code")
+    claims = exchange_code_for_claims(code)
+    return {"claims": claims, "access_token": None, "note": "Complete JWKS validation before issuing app JWTs"}
 
 
 @app.get("/auth/roles")
@@ -909,6 +1020,400 @@ def list_override_patterns(
     return {
         "patterns": [p.model_dump() for p in engine.get_patterns()],
     }
+
+
+# ── HITL evaluation rubrics ─────────────────────────────────────
+
+
+class HITLEvalSubmitRequest(BaseModel):
+    case_id: str
+    bundle_id: str = ""
+    scores: dict[str, int] = {}
+    ai_decision: str = ""
+    human_preferred_decision: str = ""
+    decision_agree: str = "agree"  # agree | partial | disagree
+    decision_change_reason: str = ""
+    notes: str = ""
+    feedback_tags: list[str] = []
+    reviewer_role: str = "licensed_uw"
+
+
+@app.get("/evaluations/hitl/rubrics")
+def get_hitl_rubrics(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Human-in-the-loop eval rubric card (what reviewers score)."""
+    from evaluations.hitl_rubrics import RUBRIC_DEFINITIONS, export_rubric_card
+
+    return {
+        "rubrics": RUBRIC_DEFINITIONS,
+        "rubric_card_path": export_rubric_card(),
+        "production_hitl_note": (
+            "Production also tracks UW sign-off overrides, confidence, premium delta, "
+            "and bind/loss calibration via /analytics/overrides."
+        ),
+    }
+
+
+@app.get("/evaluations/golden/inventory")
+def get_golden_inventory(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Ground-truth gold-set inventory: case counts + question counts."""
+    from evaluations.qa_ground_truth import all_ground_truth_questions, ground_truth_inventory
+
+    inv = ground_truth_inventory()
+    return {
+        **inv,
+        "sample_questions": [
+            {
+                "question_id": q.question_id,
+                "question": q.question,
+                "expected_answer": q.expected_answer,
+                "category": q.category,
+            }
+            for q in all_ground_truth_questions()[:8]
+        ],
+    }
+
+
+@app.get("/evaluations/cadence")
+def get_eval_cadence(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Frequency of automated eval checks and human-in-the-loop reviews."""
+    from evaluations.cadence import cadence_inventory
+
+    return cadence_inventory()
+
+
+@app.get("/evaluations/quality-gates")
+def get_quality_gates(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Metric thresholds and flag/block rules for eval scoring."""
+    from evaluations.quality_gates import QUALITY_GATES, apply_quality_gates
+
+    return {
+        "gates": [
+            {
+                "metric": g.metric,
+                "threshold": g.threshold,
+                "direction": g.direction,
+                "severity": g.severity.value,
+                "category": g.category,
+                "description": g.description,
+            }
+            for g in QUALITY_GATES
+        ],
+        "automation_vs_manual": apply_quality_gates({}).get("automation"),
+        "interview_summary": apply_quality_gates({}).get("interview_summary"),
+    }
+
+
+class QualityGateCheckRequest(BaseModel):
+    metrics: dict[str, float] = {}
+
+
+@app.post("/evaluations/quality-gates/check")
+def check_quality_gates(
+    req: QualityGateCheckRequest,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Score a metric dict against thresholds — returns PASS / FLAGGED / BLOCKED."""
+    from evaluations.quality_gates import apply_quality_gates
+
+    return apply_quality_gates(req.metrics)
+
+
+@app.get("/releases/checklist")
+def get_release_checklist(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """11-step agent release checklist (classify → MLflow → gates → canary → prod)."""
+    from evaluations.release_process import release_walkthrough
+
+    return release_walkthrough()
+
+
+class ExperimentStartRequest(BaseModel):
+    name: str
+    experiment_class: str
+    hypothesis: str = ""
+    params: dict[str, Any] = {}
+    tags: dict[str, str] = {}
+    registry_entry_id: str = ""
+
+
+@app.get("/releases/experiments")
+def list_release_experiments(
+    experiment_class: str = "",
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """List MLflow-compatible experiment runs (local store + optional MLflow)."""
+    from evaluations.release_process import ExperimentStore, seed_demo_experiments
+
+    store = ExperimentStore()
+    seed_demo_experiments(store)
+    runs = store.list_runs(experiment_class=experiment_class or None)
+    return {
+        "runs": runs,
+        "summary": store.by_class_summary(),
+        "mlflow_tracking_uri": os.getenv("MLFLOW_TRACKING_URI", "") or None,
+        "experiment_name": os.getenv("MLFLOW_EXPERIMENT_NAME", "insureflow-agent-releases"),
+    }
+
+
+@app.post("/releases/experiments", status_code=201)
+def start_release_experiment(
+    req: ExperimentStartRequest,
+    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+) -> dict[str, Any]:
+    from evaluations.release_process import ExperimentStore
+
+    return ExperimentStore().start_run(
+        name=req.name,
+        experiment_class=req.experiment_class,
+        hypothesis=req.hypothesis,
+        params=req.params,
+        tags=req.tags,
+        registry_entry_id=req.registry_entry_id,
+    )
+
+
+class ExperimentMetricsRequest(BaseModel):
+    metrics: dict[str, float]
+
+
+@app.post("/releases/experiments/{run_id}/metrics")
+def log_experiment_metrics(
+    run_id: str,
+    req: ExperimentMetricsRequest,
+    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+) -> dict[str, Any]:
+    from evaluations.release_process import ExperimentStore
+
+    row = ExperimentStore().log_metrics(run_id, req.metrics)
+    if not row:
+        raise HTTPException(status_code=404, detail="experiment run not found")
+    return row
+
+
+class ExperimentPromoteRequest(BaseModel):
+    stage: str
+
+
+@app.post("/releases/experiments/{run_id}/promote")
+def promote_experiment(
+    run_id: str,
+    req: ExperimentPromoteRequest,
+    current: TokenData = Depends(require_role(Role.ADMIN)),
+) -> dict[str, Any]:
+    from evaluations.release_process import ExperimentStore
+
+    row = ExperimentStore().promote(run_id, req.stage)
+    if not row:
+        raise HTTPException(status_code=404, detail="experiment run not found")
+    return row
+
+
+
+
+@app.get("/evaluations/drift")
+def get_drift_status(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Compare recent eval trends to champion baseline — model/agent drift."""
+    from evaluations.drift import detect_from_trends, drift_policy_payload, maybe_open_regression_experiment
+
+    report = detect_from_trends()
+    exp = maybe_open_regression_experiment(report)
+    payload = report.to_dict()
+    payload["policy"] = drift_policy_payload()
+    if exp:
+        payload["regression_experiment"] = {"run_id": exp.get("run_id"), "name": exp.get("name")}
+    return payload
+
+
+@app.get("/evaluations/drift/policy")
+def get_drift_policy(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    from evaluations.drift import drift_policy_payload
+
+    return drift_policy_payload()
+
+
+class DriftCheckRequest(BaseModel):
+    metrics: dict[str, float] = {}
+
+
+@app.post("/evaluations/drift/check")
+def check_drift(
+    req: DriftCheckRequest,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    from evaluations.drift import detect_drift, maybe_open_regression_experiment
+
+    report = detect_drift(req.metrics)
+    exp = maybe_open_regression_experiment(report)
+    out = report.to_dict()
+    if exp:
+        out["regression_experiment"] = {"run_id": exp.get("run_id"), "name": exp.get("name")}
+    return out
+
+
+@app.get("/rag/retrieval-policy")
+
+def get_rag_retrieval_policy(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Top-K, re-ranking, and fallback ladder for guideline RAG."""
+    from insureflow.rag.rag_agent import retrieval_policy_payload
+
+    return retrieval_policy_payload()
+
+
+@app.get("/rag/retrieve")
+def rag_retrieve_demo(
+    q: str = "masonry construction protection class sprinkler",
+    top_k: int = 5,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Live retrieval with re-rank + fallbacks (for dashboards / demos)."""
+    from insureflow.rag.rag_agent import RAGAgent
+
+    return RAGAgent(use_knowledge_graph=True).retrieve_contexts(q, top_k=top_k)
+
+
+@app.get("/analytics/agent-performance")
+
+def get_agent_performance(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Log-analysis derived agent performance (+ demo seed if no logs)."""
+    from insureflow.analytics.agent_perf import analyze_audit_directory, seed_demo_agent_perf
+
+    live = analyze_audit_directory()
+    if not live.get("agents"):
+        demo = seed_demo_agent_perf()
+        demo["note"] = "No live agent logs found — returning seeded demo metrics"
+        return demo
+    return live
+
+
+@app.get("/evaluations/trends")
+def get_eval_trends(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Eval metric time series for trend visualization."""
+    from evaluations.trend_store import EvalTrendStore, seed_demo_trends
+    from insureflow.analytics.agent_perf import analyze_audit_directory, seed_demo_agent_perf
+
+    store = EvalTrendStore()
+    seed_demo_trends(store)
+    payload = store.dashboard_payload()
+
+    perf = analyze_audit_directory()
+    if not perf.get("agents"):
+        perf = seed_demo_agent_perf()
+    agents = perf.get("agents") or {}
+    if agents:
+        err_rates = [a["error_rate"] for a in agents.values() if a.get("error_rate") is not None]
+        latencies = [a["avg_duration_ms"] for a in agents.values() if a.get("avg_duration_ms") is not None]
+        payload["agent_snapshot"] = {
+            "agents": agents,
+            "avg_error_rate": round(sum(err_rates) / len(err_rates), 4) if err_rates else 0.0,
+            "avg_latency_ms": round(sum(latencies) / len(latencies), 2) if latencies else None,
+            "log_explorers": perf.get("log_explorers"),
+        }
+    return payload
+
+
+@app.get("/observability/log-explorers")
+def get_log_explorers(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Which log explorers we use + CloudWatch Insights query templates."""
+    from insureflow.analytics.agent_perf import LOG_EXPLORER_QUERIES
+
+    return {
+        "explorers": [
+            {
+                "name": "Amazon CloudWatch Logs Insights",
+                "role": "Infra + agent structured JSON log analysis, latency/error aggregates",
+                "url": "https://console.aws.amazon.com/cloudwatch/home#logsV2:logs-insights",
+            },
+            {
+                "name": "LangSmith",
+                "role": "LLM/agent trace explorer, eval feedback scores, latency/tokens",
+                "url": "https://smith.langchain.com",
+                "project": "insureflow-evals",
+            },
+        ],
+        "cloudwatch_insights_queries": LOG_EXPLORER_QUERIES,
+        "automation": (
+            "JSON logs emitted in BANK_MODE; nightly eval job runs agent log analyzer; "
+            "metrics appended to evaluation_trends for dashboard charts."
+        ),
+    }
+
+
+@app.get("/evaluations/hitl/summary")
+def get_hitl_summary(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    from evaluations.hitl_rubrics import HITLEvalStore, seed_demo_reviews, track_hitl_to_langsmith
+
+    store = HITLEvalStore()
+    seed_demo_reviews(store)
+    summary = store.summary()
+    cloud = track_hitl_to_langsmith(summary)
+    return {**summary.model_dump(), "cloud_tracking": cloud}
+
+
+@app.get("/evaluations/hitl/reviews")
+def list_hitl_reviews(
+    case_id: str = "",
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    from evaluations.hitl_rubrics import HITLEvalStore, seed_demo_reviews
+
+    store = HITLEvalStore()
+    seed_demo_reviews(store)
+    reviews = store.list_reviews(case_id or None)
+    return {"reviews": [r.model_dump() for r in reviews], "count": len(reviews)}
+
+
+@app.post("/evaluations/hitl/reviews", status_code=201)
+def submit_hitl_review(
+    req: HITLEvalSubmitRequest,
+    current: TokenData = Depends(require_role(Role.LICENSED_UW)),
+) -> dict[str, Any]:
+    """Submit a human rubric review for an eval / golden case."""
+    from evaluations.hitl_rubrics import AgreeLabel, HITLEvalStore, HumanEvalReview, track_hitl_to_langsmith
+
+    try:
+        agree = AgreeLabel(req.decision_agree.lower())
+    except ValueError:
+        raise HTTPException(status_code=400, detail="decision_agree must be agree|partial|disagree") from None
+
+    review = HumanEvalReview(
+        case_id=req.case_id,
+        bundle_id=req.bundle_id,
+        reviewer=current.username or "unknown",
+        reviewer_role=req.reviewer_role,
+        scores=req.scores,
+        ai_decision=req.ai_decision,
+        human_preferred_decision=req.human_preferred_decision,
+        decision_agree=agree,
+        decision_change_reason=req.decision_change_reason,
+        notes=req.notes,
+        feedback_tags=req.feedback_tags,
+    )
+    stored = HITLEvalStore().submit(review)
+    cloud = track_hitl_to_langsmith()
+    return {"review": stored.model_dump(), "cloud_tracking": cloud}
 
 
 # ── Underwriting Workspace Endpoints ──────────────────────────────

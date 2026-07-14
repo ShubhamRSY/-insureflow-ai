@@ -1,0 +1,18 @@
+{
+  auto_https off
+}
+
+# Accept any Host (localhost, LAN IP, ngrok, rytera.ai) on :8443
+https://:8443 {
+  tls /certs/localhost.pem /certs/localhost-key.pem
+
+  reverse_proxy api:8000
+
+  header {
+    Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    X-Content-Type-Options nosniff
+    X-Frame-Options DENY
+    Referrer-Policy no-referrer
+    -Server
+  }
+}

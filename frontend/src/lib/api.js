@@ -142,6 +142,9 @@ export const endpoints = {
   overrideAnalytics: () => api('/analytics/overrides'),
   overridePatterns: () => api('/analytics/overrides/patterns'),
   documentAnalytics: () => api('/analytics/documents'),
+  agentPerformance: () => api('/analytics/agent-performance'),
+  evalTrends: () => api('/evaluations/trends'),
+  logExplorers: () => api('/observability/log-explorers'),
 
   // Mortgage audit & products
   mortgageAudit: (bundleId) => api(`/mortgage/audit/${bundleId}`),
@@ -167,6 +170,10 @@ export const endpoints = {
   registrySnapshot: () => api('/registry/snapshot', { method: 'POST' }),
   registrySnapshots: () => api('/registry/snapshots'),
   registryBootstrap: () => api('/registry/bootstrap', { method: 'POST' }),
+  releaseChecklist: () => api('/releases/checklist'),
+  releaseExperiments: (experimentClass) => api(`/releases/experiments${experimentClass ? `?experiment_class=${encodeURIComponent(experimentClass)}` : ''}`),
+  startReleaseExperiment: (body) => api('/releases/experiments', { method: 'POST', body }),
+  promoteExperiment: (runId, stage) => api(`/releases/experiments/${runId}/promote`, { method: 'POST', body: { stage } }),
 
   // Admin
   createUser: (body) => api('/auth/users', { method: 'POST', body }),

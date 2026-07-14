@@ -1,0 +1,143 @@
+name: Scheduled Evals
+
+# Cadence:
+# - Nightly 06:00 UTC: golden field scorer (+ optional Ragas when LLM key present)
+# - Weekly Monday 07:00 UTC: full report path including Giskard when deps available
+# Manual: Actions → Scheduled Evals → Run workflow
+
+on:
+  schedule:
+    - cron: "0 6 * * *"   # nightly golden scorer
+    - cron: "0 7 * * 1"   # weekly Monday full report
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: "eval suite to run"
+        required: true
+        default: "nightly"
+        type: choice
+        options:
+          - nightly
+          - weekly
+
+jobs:
+  nightly-golden:
+    if: >
+      github.event_name == 'workflow_dispatch' && inputs.suite == 'nightly' ||
+      github.event_name == 'schedule' && github.event.schedule == '0 6 * * *'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -e ".[dev,eval]"
+      - name: Golden field scorer
+        env:
+          PYTHONPATH: ${{ github.workspace }}/src
+          LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
+          LANGSMITH_PROJECT: insureflow-evals-ci
+          LANGSMITH_TRACING: "false"
+        run: |
+          python -m evaluations.scorer evaluation_scores.json || true
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from evaluations.cadence import cadence_inventory
+          from evaluations.qa_ground_truth import ground_truth_inventory
+          from evaluations.quality_gates import apply_quality_gates
+
+          scores = {}
+          p = Path("evaluation_scores.json")
+          if p.exists():
+              data = json.loads(p.read_text())
+              # score_all writes results list; summary fields may be nested
+              if isinstance(data, dict):
+                  scores = {
+                      "precision": data.get("avg_precision"),
+                      "recall": data.get("avg_recall"),
+                      "hallucination_rate": data.get("avg_hallucination_rate"),
+                  }
+                  if data.get("quality_gates"):
+                      print(json.dumps(data["quality_gates"], indent=2))
+                  else:
+                      print(json.dumps(apply_quality_gates(scores), indent=2))
+          print(json.dumps({
+              "cadence": cadence_inventory()["summary"],
+              "ground_truth": ground_truth_inventory()["totals"],
+          }, indent=2))
+          PY
+      - name: Agent log analysis → trends
+        env:
+          PYTHONPATH: ${{ github.workspace }}/src
+          EVAL_TREND_PATH: ${{ github.workspace }}/evaluation_trends/trends.jsonl
+          AGENT_PERF_LOG_DIR: ${{ github.workspace }}/audit_logs
+        run: |
+          python - <<'PY'
+          from insureflow.analytics.agent_perf import analyze_audit_directory, seed_demo_agent_perf
+          from evaluations.trend_store import EvalTrendStore
+
+          perf = analyze_audit_directory()
+          if not perf.get("agents"):
+              perf = seed_demo_agent_perf()
+          agents = perf.get("agents") or {}
+          err = [a["error_rate"] for a in agents.values() if a.get("error_rate") is not None]
+          lat = [a["avg_duration_ms"] for a in agents.values() if a.get("avg_duration_ms") is not None]
+          EvalTrendStore().record(
+              "agent_log_nightly",
+              {
+                  "avg_agent_error_rate": round(sum(err) / len(err), 4) if err else 0.0,
+                  "avg_agent_latency_ms": round(sum(lat) / len(lat), 2) if lat else None,
+              },
+              metadata={"agents": list(agents), "files_scanned": perf.get("files_scanned"), "demo": perf.get("demo")},
+          )
+          print({"agents": len(agents), "avg_error_rate": err and sum(err)/len(err), "avg_latency_ms": lat and sum(lat)/len(lat)})
+          PY
+      - name: Upload score artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-eval-scores
+          path: |
+            evaluation_scores.json
+            evaluation_trends/
+          if-no-files-found: ignore
+
+  weekly-full-report:
+    if: >
+      github.event_name == 'workflow_dispatch' && inputs.suite == 'weekly' ||
+      github.event_name == 'schedule' && github.event.schedule == '0 7 * * 1'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -e ".[dev,eval]"
+      - name: Full eval report (scorer + HITL inventory; Ragas/Giskard best-effort)
+        env:
+          PYTHONPATH: ${{ github.workspace }}/src
+          LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
+          LANGSMITH_PROJECT: insureflow-evals-ci
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          LLM_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python -m evaluations.hitl_rubrics
+          python - <<'PY'
+          import json
+          from evaluations.cadence import cadence_inventory
+          print(json.dumps(cadence_inventory(), indent=2))
+          PY
+          # Full report may be heavy; run scorer always, report best-effort
+          python -m evaluations.scorer || true
+          python -m evaluations.report evaluation_report.json || true
+      - name: Upload weekly report
+        uses: actions/upload-artifact@v4
+        with:
+          name: weekly-eval-report
+          path: |
+            evaluation_report.json
+            evaluation_scores.json
+            evaluation_hitl/
+          if-no-files-found: ignore

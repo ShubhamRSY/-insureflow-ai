@@ -19,6 +19,7 @@ const nav = [
   { section: 'Analytics' },
   { to: '/renewals', icon: FileText, label: 'Renewals' },
   { to: '/overrides', icon: LineChart, label: 'Override Analytics' },
+  { to: '/eval-trends', icon: Activity, label: 'Eval Trends' },
   { to: '/portfolio', icon: Layers, label: 'Portfolio' },
   { to: '/authority', icon: Users, label: 'Authority Matrix' },
   { to: '/market', icon: BarChart3, label: 'Market Cycle' },

@@ -12,9 +12,12 @@ class TestSystemDiagnostics:
         assert "overall" in report
         assert "llm_mode" in report
         assert len(report["checks"]) >= 8
-        components = {c["component"] for c in report["checks"]}
+        components = {c["component"]: c for c in report["checks"]}
         assert "llm_api_key" in components
         assert "job_store" in components
+        # Deterministic mode is first-class — not degraded/missing
+        assert components["llm_api_key"]["status"] == "ok"
+        assert components["llm_pipeline_mode"]["status"] == "ok"
 
     def test_never_exposes_full_api_key(self) -> None:
         report = SystemDiagnostics().run_all()

@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
-import { BookOpen, RefreshCw, Plus, CheckCircle, XCircle, Send, Camera, GitCompare, Globe, Upload } from 'lucide-react';
+import { BookOpen, RefreshCw, Plus, CheckCircle, XCircle, Send, Camera, GitCompare, Globe, Upload, ListChecks, FlaskConical } from 'lucide-react';
 import { Badge, EmptyState } from '../components/ui';
 import { endpoints } from '../lib/api';
 
 export default function RegistryPage() {
   const [entries, setEntries] = useState([]);
   const [snapshots, setSnapshots] = useState([]);
+  const [checklist, setChecklist] = useState(null);
+  const [experiments, setExperiments] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
@@ -20,12 +22,16 @@ export default function RegistryPage() {
     setLoading(true);
     setError('');
     try {
-      const [v, s] = await Promise.all([
+      const [v, s, cl, ex] = await Promise.all([
         endpoints.registryVersions().catch(() => ({ entries: [] })),
         endpoints.registrySnapshots().catch(() => ({ snapshots: [] })),
+        endpoints.releaseChecklist().catch(() => null),
+        endpoints.releaseExperiments().catch(() => null),
       ]);
       setEntries(v.entries || []);
       setSnapshots(s.snapshots || []);
+      setChecklist(cl);
+      setExperiments(ex);
     } catch (e) {
       setError(e.message);
     } finally {
@@ -83,7 +89,7 @@ export default function RegistryPage() {
           </div>
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Model Registry</h1>
-            <p className="mt-1 text-slate-400">Version-controlled model and guideline registry with compliance review</p>
+            <p className="mt-1 text-slate-400">Registry + MLflow-style experiments + 11-step agent release checklist</p>
           </div>
         </div>
         <div className="flex gap-2">
@@ -97,6 +103,68 @@ export default function RegistryPage() {
       </div>
 
       {error && <div className="rounded-xl bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</div>}
+
+      {checklist && (
+        <div className="glass-card p-5">
+          <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-slate-400">
+            <ListChecks className="h-4 w-4" /> Agent release checklist
+          </h3>
+          <p className="mb-4 text-sm text-slate-400">{checklist.summary}</p>
+          <ol className="space-y-2">
+            {(checklist.checklist?.steps || []).map((s) => (
+              <li key={s.id} className="rounded-lg bg-surface-overlay px-3 py-2 text-sm ring-1 ring-white/[0.04]">
+                <span className="font-medium text-slate-200">{s.step}. {s.title}</span>
+                <span className="ml-2 text-xs text-slate-500">({s.owner})</span>
+                <p className="mt-1 text-xs text-slate-400">{s.detail}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+
+      {experiments && (
+        <div className="glass-card p-5">
+          <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-slate-400">
+            <FlaskConical className="h-4 w-4" /> Experiments (MLflow-compatible)
+          </h3>
+          <p className="mb-3 text-xs text-slate-500">
+            Experiment: {experiments.experiment_name}
+            {experiments.mlflow_tracking_uri ? ` · MLflow URI set` : ' · local store (set MLFLOW_TRACKING_URI for MLflow)'}
+            {' · '}{experiments.summary?.total_runs || 0} runs
+          </p>
+          <div className="mb-3 flex flex-wrap gap-2">
+            {Object.entries(experiments.summary?.by_class || {}).map(([k, v]) => (
+              <span key={k} className="rounded-lg bg-surface-overlay px-2.5 py-1 text-xs text-slate-400 ring-1 ring-white/[0.06]">
+                {k}: {v}
+              </span>
+            ))}
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-white/[0.06] text-left text-xs uppercase tracking-wider text-slate-500">
+                  <th className="px-3 py-2">Name</th>
+                  <th className="px-3 py-2">Class</th>
+                  <th className="px-3 py-2">Stage</th>
+                  <th className="px-3 py-2">Key metrics</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/[0.04]">
+                {(experiments.runs || []).slice().reverse().map((r) => (
+                  <tr key={r.run_id}>
+                    <td className="px-3 py-2 text-slate-300">{r.name}</td>
+                    <td className="px-3 py-2 text-slate-400">{r.experiment_class}</td>
+                    <td className="px-3 py-2"><Badge status={r.stage || 'pending'} /></td>
+                    <td className="px-3 py-2 font-mono text-xs text-slate-500">
+                      {Object.entries(r.metrics || {}).slice(0, 3).map(([k, v]) => `${k}=${v}`).join(' · ') || '—'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {diffData && (
         <div className="glass-card p-5">
