@@ -47,7 +47,8 @@ PATTERNS: dict[PIICategory, list[re.Pattern[str]]] = {
         re.compile(r"\b(?:\d{4}[-\s]?){3}\d{4}\b"),
     ],
     PIICategory.BANK_ACCOUNT: [
-        re.compile(r"\b\d{8,17}\b", re.ASCII),
+        re.compile(r"\b(?:Account|Acct|Routing|ABA)\s*(?:#|No\.?|Number)?\s*[:.]?\s*\d{8,17}\b", re.IGNORECASE),
+        re.compile(r"\b\d{3}-\d{1,6}-\d{1,6}\b"),
     ],
     PIICategory.TAX_ID: [
         re.compile(r"\b\d{2}-\d{7}\b"),
@@ -61,7 +62,7 @@ PATTERNS: dict[PIICategory, list[re.Pattern[str]]] = {
         ),
     ],
     PIICategory.IP_ADDRESS: [
-        re.compile(r"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b"),
+        re.compile(r"\b(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\b"),
     ],
 }
 

@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, FastAPI, HTTPException, Request, status
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -45,8 +45,8 @@ try:
             raise RuntimeError("Bank/production security checks failed:\n- " + "\n- ".join(_security_errors))
 except RuntimeError:
     raise
-except Exception:
-    pass
+except Exception as _sec_exc:
+    logging.getLogger(__name__).warning("Security bootstrap non-fatal error: %s", _sec_exc)
 
 integration_gateway_router: APIRouter | None = None
 try:
@@ -2901,3 +2901,193 @@ def list_lending_products(
     from insureflow.lending.models import LoanProductType
 
     return {"products": [p.value for p in LoanProductType]}
+
+
+# ── WebSocket / SSE: Real-time Job Status ────────────────────────
+
+import asyncio
+import json as _json
+from collections import defaultdict
+
+from fastapi import WebSocket, WebSocketDisconnect
+
+_job_ws_subscribers: dict[str, set[asyncio.Queue]] = defaultdict(set)
+_job_sse_subscribers: dict[str, set[asyncio.Queue]] = defaultdict(set)
+
+
+def _notify_job_subscribers(job_id: str, data: dict[str, Any]) -> None:
+    """Push status update to all WebSocket and SSE subscribers of a job."""
+    payload = _json.dumps(data, default=str)
+    for q in list(_job_ws_subscribers.get(job_id, set())):
+        try:
+            q.put_nowait(payload)
+        except asyncio.QueueFull:
+            pass
+    for q in list(_job_sse_subscribers.get(job_id, set())):
+        try:
+            q.put_nowait(payload)
+        except asyncio.QueueFull:
+            pass
+
+
+@app.websocket("/ws/jobs/{job_id}")
+async def websocket_job_status(websocket: WebSocket, job_id: str) -> None:
+    """WebSocket endpoint for real-time job status updates.
+
+    Connect with: ws://host/ws/jobs/{job_id}?token=<jwt>
+    Server pushes JSON messages whenever job status changes.
+    """
+    token = websocket.query_params.get("token", "")
+    if not token:
+        await websocket.close(code=4001, reason="Missing token")
+        return
+    from insureflow.auth.jwt import decode_access_token
+
+    user = decode_access_token(token)
+    if user is None:
+        await websocket.close(code=4001, reason="Invalid token")
+        return
+
+    job = job_store.get(INSURANCE_NS, job_id, org_id=user.org_id)
+    if not job:
+        await websocket.close(code=4004, reason="Job not found or access denied")
+        return
+
+    await websocket.accept()
+    queue: asyncio.Queue = asyncio.Queue(maxsize=100)
+    _job_ws_subscribers[job_id].add(queue)
+    try:
+        await websocket.send_json({"type": "connected", "job_id": job_id, "status": job.get("status", "unknown")})
+        while True:
+            try:
+                msg = await asyncio.wait_for(queue.get(), timeout=30.0)
+                await websocket.send_text(msg)
+            except asyncio.TimeoutError:
+                await websocket.send_json({"type": "heartbeat"})
+    except WebSocketDisconnect:
+        pass
+    finally:
+        _job_ws_subscribers[job_id].discard(queue)
+
+
+@app.get("/pipeline/jobs/{job_id}/stream")
+async def sse_job_status(
+    job_id: str,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> StreamingResponse:
+    """SSE endpoint for job status — returns text/event-stream.
+
+    Useful for clients that cannot use WebSocket (e.g., Load Balancers that strip Upgrade headers).
+    """
+    job = job_store.get(INSURANCE_NS, job_id, org_id=current.org_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    queue: asyncio.Queue = asyncio.Queue(maxsize=100)
+    _job_sse_subscribers[job_id].add(queue)
+
+    async def event_generator() -> Any:
+        try:
+            yield f"data: {_json.dumps({'type': 'connected', 'job_id': job_id, 'status': job.get('status', 'unknown')})}\n\n"
+            while True:
+                try:
+                    msg = await asyncio.wait_for(queue.get(), timeout=30.0)
+                    yield f"data: {msg}\n\n"
+                except asyncio.TimeoutError:
+                    yield f"data: {_json.dumps({'type': 'heartbeat'})}\n\n"
+        finally:
+            _job_sse_subscribers[job_id].discard(queue)
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+
+# ── Row-Level Permission Enforcement ──────────────────────────────
+
+
+def _check_row_access(resource_org_id: str, user_org_id: str) -> None:
+    """Raise 403 if the user's org_id doesn't match the resource's org_id."""
+    if resource_org_id and resource_org_id != user_org_id:
+        raise HTTPException(
+            status_code=403,
+            detail=f"Access denied: resource belongs to org '{resource_org_id}', you are in '{user_org_id}'",
+        )
+
+
+# Patched pipeline endpoints with row-level checks
+
+@app.post("/v2/pipeline/run", status_code=202)
+@limiter.limit("10/minute")
+async def run_pipeline_v2(
+    req: SubmissionRequest,
+    background_tasks: BackgroundTasks,
+    request: Request,
+    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+) -> dict[str, Any]:
+    """Pipeline run with enforced org isolation — jobs always scoped to caller's org."""
+    job_id = f"job-{uuid.uuid4().hex[:12]}"
+    job_store.set(INSURANCE_NS, job_id, {"status": "processing"}, org_id=current.org_id)
+    celery_app.send_task(
+        "insureflow.tasks.pipeline_tasks.run_pipeline",
+        args=[job_id, req.model_dump(), current.org_id],
+        queue="pipeline",
+    )
+    _notify_job_subscribers(job_id, {"type": "status", "status": "processing", "job_id": job_id})
+    return {"job_id": job_id, "status": "processing", "org_id": current.org_id}
+
+
+@app.get("/v2/pipeline/jobs/{job_id}")
+def get_job_status_v2(
+    job_id: str,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Job status with row-level permission check."""
+    job = job_store.get(INSURANCE_NS, job_id, org_id=current.org_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    _check_row_access(job.get("org_id", "default"), current.org_id)
+    return job
+
+
+@app.get("/v2/pipeline/workflow/{bundle_id}")
+def get_workflow_v2(
+    bundle_id: str,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Workflow with row-level org isolation."""
+    from insureflow.workflow.service import WorkflowService
+
+    svc = WorkflowService()
+    record = svc.store.get(bundle_id, current.org_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="Workflow not found")
+    _check_row_access(record.org_id, current.org_id)
+    return record.model_dump(mode="json")
+
+
+@app.post("/v2/pipeline/workflow/{bundle_id}/sign-off")
+def sign_off_v2(
+    bundle_id: str,
+    req: dict[str, Any],
+    current: TokenData = Depends(require_role(Role.LICENSED_UW)),
+) -> dict[str, Any]:
+    """Sign-off with row-level permission check — user must be in the same org."""
+    from insureflow.workflow.models import SignOffAction
+    from insureflow.workflow.service import WorkflowService
+
+    svc = WorkflowService()
+    record = svc.store.get(bundle_id, current.org_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="Workflow not found")
+    _check_row_access(record.org_id, current.org_id)
+    action = SignOffAction(req.get("action", "approve"))
+    result = svc.sign_off(
+        bundle_id=bundle_id,
+        org_id=current.org_id,
+        action=action,
+        signed_by=current.username,
+        license_number=req.get("license_number", ""),
+        notes=req.get("notes", ""),
+        override_reason=req.get("override_reason", ""),
+    )
+    _notify_job_subscribers(bundle_id, {"type": "workflow_update", "state": result.state.value})
+    return result.model_dump(mode="json")

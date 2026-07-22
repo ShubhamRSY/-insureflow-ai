@@ -9,6 +9,7 @@ import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+from uuid import uuid4
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +46,7 @@ class WormAuditStore:
         digest = hashlib.sha256(raw).hexdigest()
         body["sha256"] = digest
 
-        rel = Path(org_id) / f"{bundle_id}_{stamp.strftime('%Y%m%dT%H%M%SZ')}_{digest[:12]}.json"
+        rel = Path(org_id) / f"{bundle_id}_{stamp.strftime('%Y%m%dT%H%M%SZ')}_{digest[:12]}_{uuid4().hex[:8]}.json"
         dest = self.base_path / rel
         dest.parent.mkdir(parents=True, exist_ok=True)
         if dest.exists():
@@ -94,7 +95,9 @@ class WormAuditStore:
         data = json.loads(p.read_text(encoding="utf-8"))
         expected = data.pop("sha256", None)
         raw = json.dumps(data, sort_keys=True, default=str).encode("utf-8")
-        return bool(expected == hashlib.sha256(raw).hexdigest())
+        result = bool(expected == hashlib.sha256(raw).hexdigest())
+        data["sha256"] = expected
+        return result
 
     def list_sealed(self, org_id: str) -> list[str]:
         d = self.base_path / org_id

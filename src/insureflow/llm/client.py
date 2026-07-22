@@ -1,16 +1,21 @@
 from __future__ import annotations
 
+import logging
 from typing import Any, Optional, cast
 
 from insureflow.config import settings
+
+logger = logging.getLogger(__name__)
 
 
 class LLMClient:
     def __init__(
         self,
         model_tier: str = "default",
+        agent: str = "",
     ) -> None:
         self.model_tier = model_tier
+        self.agent = agent
         self._client: Any = None
 
         if model_tier == "cheap":
@@ -31,6 +36,49 @@ class LLMClient:
 
         self.temperature = settings.llm_temperature
         self.max_tokens = settings.llm_max_tokens
+
+        self._tracker: Any = None
+        self._budget: Any = None
+
+    def _get_tracker(self) -> Any:
+        if self._tracker is None:
+            try:
+                from insureflow.llm.tracker import get_token_tracker
+                self._tracker = get_token_tracker()
+            except Exception:
+                pass
+        return self._tracker
+
+    def _get_budget(self) -> Any:
+        if self._budget is None:
+            try:
+                from insureflow.llm.budget import get_budget_manager
+                self._budget = get_budget_manager()
+            except Exception:
+                pass
+        return self._budget
+
+    def _track_usage(self, response: Any) -> None:
+        tracker = self._get_tracker()
+        if tracker is None:
+            return
+        input_tokens = 0
+        output_tokens = 0
+        try:
+            usage = getattr(response, "usage", None)
+            if usage is not None:
+                input_tokens = getattr(usage, "prompt_tokens", 0) or 0
+                output_tokens = getattr(usage, "completion_tokens", 0) or 0
+        except Exception:
+            pass
+        if input_tokens > 0 or output_tokens > 0:
+            tracker.record(
+                model=self.model,
+                tier=self.model_tier,
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
+                agent=self.agent,
+            )
 
     def _get_client(self) -> Any:
         if self._client is not None:
@@ -73,6 +121,10 @@ class LLMClient:
         user_prompt: str,
         response_format: Optional[type] = None,
     ) -> str:
+        budget = self._get_budget()
+        if budget is not None:
+            budget.enforce()
+
         client = self._get_client()
         provider = self.provider
 
@@ -97,6 +149,7 @@ class LLMClient:
                     pass
 
             response = client.chat.completions.create(**kwargs)
+            self._track_usage(response)
             return response.choices[0].message.content or ""
 
         elif provider == "anthropic" or provider == "claude":
@@ -109,6 +162,7 @@ class LLMClient:
             }
 
             response = client.messages.create(**kwargs)
+            self._track_usage(response)
             return str(response.content[0].text) if response.content else ""
 
         else:

@@ -69,10 +69,9 @@ class PIIRedactor:
         label = REDACT_LABELS.get(span.category, "[REDACTED]")
         if span.category in (PIICategory.SSN, PIICategory.EMAIL, PIICategory.PHONE):
             if span.category == PIICategory.SSN:
-                return span.text[:4] + "XX-XXXX"
+                return "***-**-" + span.text[-4:] if len(span.text) >= 4 else label
             elif span.category == PIICategory.EMAIL:
-                local, domain = span.text.split("@", 1)
-                return local[:2] + "***@" + domain
+                return "***@" + span.text.split("@", 1)[-1] if "@" in span.text else label
             elif span.category == PIICategory.PHONE:
                 return "***-***-" + span.text[-4:] if len(span.text) >= 4 else label
         return label

@@ -56,8 +56,12 @@ def decode_access_token(
             return None
         from insureflow.auth import Role
 
-        return TokenData(username=username, role=Role(role) if role else None, org_id=org_id)
-    except JWTError:
+        try:
+            parsed_role = Role(role) if role else None
+        except (ValueError, KeyError):
+            parsed_role = None
+        return TokenData(username=username, role=parsed_role, org_id=org_id)
+    except (JWTError, ValueError):
         return None
 
 

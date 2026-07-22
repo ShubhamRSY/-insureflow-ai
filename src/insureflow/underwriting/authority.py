@@ -147,6 +147,11 @@ class AuthorityMatrix:
 
         ba = auth.binding_authority
 
+        if premium < 0:
+            return False, f"Premium must be non-negative, got ${premium:,.0f}"
+        if tiv < 0:
+            return False, f"TIV must be non-negative, got ${tiv:,.0f}"
+
         if premium > ba.max_premium:
             if ba.requires_co_sign or premium > ba.co_sign_threshold_premium:
                 return False, (f"Premium ${premium:,.0f} exceeds ${ba.max_premium:,.0f} {auth.tier.value} limit for {auth.display_name} — requires co-sign from senior UW/CUO")

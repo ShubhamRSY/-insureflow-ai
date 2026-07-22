@@ -14,6 +14,7 @@ from insureflow.ingestion.insurance.classifier import (
     InsuranceDocumentType,
 )
 from insureflow.ingestion.insurance.extractors import extract_fields
+from insureflow.ingestion.insurance.normalizers import get_normalizer
 from insureflow.ingestion.json_parser import JSONBrokerParser
 from insureflow.ingestion.loss_run_parser import LossRunParser
 from insureflow.ingestion.ocr import OCRProcessor
@@ -103,6 +104,34 @@ class InsuranceDocumentLoader:
                 }
             )
         return self.load_from_documents(docs, bundle_id=bundle_id)
+
+    def load_from_source(
+        self,
+        source_id: str,
+        raw_data: dict[str, str],
+        bundle_id: str | None = None,
+    ) -> SubmissionBundle:
+        """Normalize raw data from a specific enterprise source into a SubmissionBundle.
+
+        Uses the source-specific normalizer to transform proprietary field names
+        and structures into the common StructuredSubmission schema.
+        """
+        normalizer = get_normalizer(source_id)
+        if normalizer is None:
+            raise ValueError(
+                f"No normalizer registered for source '{source_id}'. "
+                f"Use supported_sources() to see available sources."
+            )
+        bid = bundle_id or f"bundle-{uuid4().hex[:12]}"
+        structured = normalizer.normalize(raw_data, submission_id=f"{bid}-src")
+        bundle = SubmissionBundle(
+            bundle_id=bid,
+            status=SubmissionStatus.RECEIVED,
+            structured=structured,
+        )
+        if structured:
+            bundle.status = SubmissionStatus.PARSED
+        return bundle
 
     def _resolve_content(self, content: str, filename: str, encoding: str) -> tuple[str, str]:
         ext = Path(filename).suffix.lower()

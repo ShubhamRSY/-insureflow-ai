@@ -19,6 +19,37 @@ logger = logging.getLogger(__name__)
 
 _AUDIT_LOGGER = AuditLogger()
 
+_metrics: Any = None
+
+
+def _get_metrics() -> Any:
+    global _metrics
+    if _metrics is None:
+        try:
+            from insureflow.analytics.metrics import get_pipeline_metrics
+            _metrics = get_pipeline_metrics()
+        except Exception:
+            pass
+    return _metrics
+
+
+def _track_stage(bundle_id: str, stage: str) -> None:
+    m = _get_metrics()
+    if m is not None:
+        m.cycle_time.start_stage(bundle_id, stage)
+
+
+def _finish_stage(bundle_id: str, stage: str) -> None:
+    m = _get_metrics()
+    if m is not None:
+        m.cycle_time.finish_stage(bundle_id, stage)
+
+
+def _track_fill_rate(bundle_id: str, fields: dict[str, Any], agent: str = "") -> None:
+    m = _get_metrics()
+    if m is not None:
+        m.fill_rate.record_bundle_fields(bundle_id, fields, agent=agent)
+
 
 def create_initial_state(**kwargs: Any) -> dict[str, Any]:
     return default_state(**kwargs)
@@ -27,6 +58,7 @@ def create_initial_state(**kwargs: Any) -> dict[str, Any]:
 def ingest_docs(state: PipelineState) -> dict[str, Any]:
     _log_state("ingest_docs", state)
     bundle_id = state.get("bundle_id") or f"graph-{uuid4().hex[:12]}"
+    _track_stage(bundle_id, "ingest")
     loader = SubmissionLoader()
 
     bundle = loader.load_bundle(
@@ -41,6 +73,7 @@ def ingest_docs(state: PipelineState) -> dict[str, Any]:
         bundle_id=bundle_id,
     )
 
+    _finish_stage(bundle_id, "ingest")
     _log_event(bundle_id, PipelineEvent.SUBMISSION_RECEIVED, "ingest_docs", f"Bundle loaded: {bundle_id}")
 
     return {
@@ -373,17 +406,22 @@ def parse_supplemental(state: PipelineState) -> dict[str, Any]:
 
 def merge_structured(state: PipelineState) -> dict[str, Any]:
     _log_state("merge_structured", state)
+    bundle_id = state["bundle_id"]
+    _track_stage(bundle_id, "merge")
     bundle: SubmissionBundle = state["bundle"]
 
     if not bundle.structured:
         from insureflow.models.submissions import StructuredSubmission
 
         bundle.structured = StructuredSubmission(
-            submission_id=f"{state['bundle_id']}-merged",
+            submission_id=f"{bundle_id}-merged",
         )
 
+    _track_fill_rate(bundle_id, _extract_fields_from_bundle(bundle), agent="merge_structured")
+
+    _finish_stage(bundle_id, "merge")
     _log_event(
-        state["bundle_id"],
+        bundle_id,
         PipelineEvent.STRUCTURED_PARSE_COMPLETE,
         "merge_structured",
         "All parsed data merged into bundle",
@@ -391,10 +429,43 @@ def merge_structured(state: PipelineState) -> dict[str, Any]:
     return {"bundle": bundle}
 
 
+def _extract_fields_from_bundle(bundle: SubmissionBundle) -> dict[str, Any]:
+    fields: dict[str, Any] = {}
+    if not bundle.structured:
+        return fields
+    s = bundle.structured
+    if s.named_insured:
+        fields["named_insured"] = s.named_insured.legal_name
+    if s.broker:
+        fields["broker_name"] = s.broker.broker_name
+    if s.policy_period:
+        fields["effective_date"] = str(s.policy_period.effective_date) if s.policy_period.effective_date else ""
+        fields["expiration_date"] = str(s.policy_period.expiration_date) if s.policy_period.expiration_date else ""
+    if s.risk_profile:
+        fields["naics_code"] = s.risk_profile.naics_code or ""
+        fields["construction_type"] = s.risk_profile.construction_type or ""
+        fields["occupancy_type"] = s.risk_profile.occupancy_type or ""
+        fields["year_built"] = s.risk_profile.total_square_footage or 0
+    if s.locations:
+        loc = s.locations[0]
+        fields["state"] = loc.state or ""
+    if s.coverages:
+        cov = s.coverages[0]
+        fields["coverage_type"] = cov.coverage_type or ""
+        fields["limit_amount"] = cov.limit_amount or 0
+        fields["deductible"] = cov.deductible or 0
+        fields["premium"] = cov.premium or 0
+    if s.financial:
+        fields["total_claims"] = len(s.financial.prior_losses) if s.financial.prior_losses else 0
+        fields["total_incurred"] = sum(l.get("incurred_amount", 0) for l in s.financial.prior_losses) if s.financial.prior_losses else 0
+    return fields
+
+
 def extract_agents(state: PipelineState) -> dict[str, Any]:
     bundle: SubmissionBundle = state["bundle"]
     bundle_id = state["bundle_id"]
     _log_state("extract_agents", state)
+    _track_stage(bundle_id, "extract")
     _log_event(bundle_id, PipelineEvent.EXTRACTION_START, "extract_agents", "Running agent extraction")
 
     llm = LLMClient()
@@ -417,6 +488,7 @@ def extract_agents(state: PipelineState) -> dict[str, Any]:
         )
         retries = state.get("extraction_retries", 0) + 1
 
+    _finish_stage(bundle_id, "extract")
     return {
         "bundle": bundle,
         "extraction_retries": retries,
@@ -440,6 +512,7 @@ def build_provenance(state: PipelineState) -> dict[str, Any]:
     bundle: SubmissionBundle = state["bundle"]
     bundle_id = state["bundle_id"]
     _log_state("build_provenance", state)
+    _track_stage(bundle_id, "provenance")
     _log_event(bundle_id, PipelineEvent.PROVENANCE_CHECK, "build_provenance", "Building provenance records")
 
     engine = ProvenanceEngine()
@@ -463,6 +536,7 @@ def build_provenance(state: PipelineState) -> dict[str, Any]:
         )
         record = None
 
+    _finish_stage(bundle_id, "provenance")
     return {"provenance": record}
 
 
@@ -470,6 +544,7 @@ def reconcile(state: PipelineState) -> dict[str, Any]:
     provenance = state.get("provenance")
     bundle_id = state["bundle_id"]
     _log_state("reconcile", state)
+    _track_stage(bundle_id, "reconcile")
     _log_event(bundle_id, PipelineEvent.RECONCILIATION_START, "reconcile", "Running reconciliation")
 
     if not provenance:
@@ -523,6 +598,7 @@ def reconcile(state: PipelineState) -> dict[str, Any]:
         result = None
         human_review = True
 
+    _finish_stage(bundle_id, "reconcile")
     return {
         "reconciliation": result,
         "human_review_needed": human_review,
@@ -592,6 +668,7 @@ def synthesize(state: PipelineState) -> dict[str, Any]:
     provenance = state.get("provenance")
     reconciliation = state.get("reconciliation")
     _log_state("synthesize", state)
+    _track_stage(bundle_id, "synthesize")
     _log_event(bundle_id, PipelineEvent.SYNTHESIS_START, "synthesize", "Building synthesis output")
 
     if not reconciliation:
@@ -639,12 +716,14 @@ def synthesize(state: PipelineState) -> dict[str, Any]:
             severity=EventSeverity.ERROR,
         )
 
+    _finish_stage(bundle_id, "synthesize")
     return {"synthesis": synthesis}
 
 
 def audit(state: PipelineState) -> dict[str, Any]:
     bundle_id = state["bundle_id"]
     _log_state("audit", state)
+    _track_stage(bundle_id, "audit")
 
     audit_store = AuditStore()
 
@@ -671,6 +750,12 @@ def audit(state: PipelineState) -> dict[str, Any]:
 
     _AUDIT_LOGGER.complete_trail(bundle_id)
     audit_store.persist_audit_trail(trail)
+
+    _finish_stage(bundle_id, "audit")
+    m = _get_metrics()
+    if m is not None:
+        status = "completed" if not state.get("errors") else "failed"
+        m.cycle_time.finish_pipeline(bundle_id, status=status)
 
     return {"audit_trail": trail}
 

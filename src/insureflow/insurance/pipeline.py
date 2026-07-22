@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import dataclasses
+import logging
 from typing import Any, Callable
 from uuid import uuid4
 
@@ -31,6 +32,8 @@ from insureflow.storage.encryption import EnvelopeEncryption
 from insureflow.webhooks.dispatcher import webhook_dispatcher
 from insureflow.workflow.models import WorkflowState
 from insureflow.workflow.service import WorkflowService
+
+logger = logging.getLogger(__name__)
 
 
 class InsurancePipeline:
@@ -225,8 +228,30 @@ class InsurancePipeline:
 
         # ── 5. Provenance + Reconciliation ──
         progress.start("reconcile", "Reconciled", "Reconciling cross-document fields")
-        provenance = self.provenance.build_provenance(bundle)
-        reconciliation = self.reconciliation.reconcile(provenance)
+        try:
+            provenance = self.provenance.build_provenance(bundle)
+        except Exception as exc:
+            logger.error("Provenance build failed: %s", exc)
+            audit.log(
+                PipelineEvent.VERIFICATION_COMPLETE,
+                f"Provenance build failed: {exc}",
+                metadata={"provenance_error": str(exc)},
+            )
+            from insureflow.models.provenance import ProvenanceRecord
+            provenance = ProvenanceRecord(record_id=f"prov-{bid}", bundle_id=bid)
+
+        try:
+            reconciliation = self.reconciliation.reconcile(provenance)
+        except Exception as exc:
+            logger.error("Reconciliation failed: %s", exc)
+            audit.log(
+                PipelineEvent.RECONCILIATION_COMPLETE,
+                f"Reconciliation failed: {exc}",
+                metadata={"reconciliation_error": str(exc)},
+            )
+            from insureflow.models.audit import ReconciliationResult
+            reconciliation = ReconciliationResult(bundle_id=bid)
+
         progress.complete(
             "reconcile",
             detail=f"{len(reconciliation.discrepancies)} conflict(s) · {reconciliation.match_rate:.0%} match",
@@ -298,7 +323,13 @@ class InsurancePipeline:
             from insureflow.rating.quote_document import generate_quote_html
 
             quote_html = generate_quote_html(bundle, memo, quote)
-        except Exception:
+        except Exception as exc:
+            logger.error("Quote HTML generation failed: %s", exc)
+            audit.log(
+                PipelineEvent.PIPELINE_COMPLETE,
+                f"Quote document generation failed: {exc}",
+                metadata={"quote_html_error": str(exc)},
+            )
             quote_html = ""
 
         # ── 10. CORE SYSTEM INTEGRATION (push to BriteCore/Guidewire) ──
@@ -532,5 +563,5 @@ class InsurancePipeline:
                 occupancy_type=occupancy,
             )
             self.portfolio_store.add_policy(policy)
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.error("Portfolio recording failed: %s", exc)

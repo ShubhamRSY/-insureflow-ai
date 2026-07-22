@@ -10,6 +10,20 @@ class WorkflowService:
     def __init__(self, store: WorkflowStore | None = None) -> None:
         self.store = store or WorkflowStore()
 
+    def _track_override(self, bundle_id: str, ai_decision: str, human_decision: str, signed_by: str, override_reason: str, org_id: str) -> None:
+        try:
+            from insureflow.analytics.metrics import get_pipeline_metrics
+            get_pipeline_metrics().override_rate.record_sign_off(
+                bundle_id=bundle_id,
+                ai_decision=ai_decision,
+                human_decision=human_decision,
+                signed_by=signed_by,
+                override_reason=override_reason,
+                org_id=org_id,
+            )
+        except Exception:
+            pass
+
     def start(self, bundle_id: str, org_id: str, ai_decision: str) -> WorkflowRecord:
         record = WorkflowRecord(
             bundle_id=bundle_id,
@@ -22,6 +36,8 @@ class WorkflowService:
 
     def submit_for_review(self, bundle_id: str, org_id: str, ai_decision: str) -> WorkflowRecord:
         record = self.store.get(bundle_id, org_id) or WorkflowRecord(bundle_id=bundle_id, org_id=org_id)
+        if record.state in (WorkflowState.APPROVED, WorkflowState.BOUND):
+            raise ValueError(f"Cannot reopen workflow in {record.state.value} state")
         record.state = WorkflowState.PENDING_REVIEW
         record.ai_decision = ai_decision
         self.store.save(record)
@@ -42,8 +58,8 @@ class WorkflowService:
         if not record:
             raise ValueError(f"No workflow found for bundle {bundle_id}")
 
-        if record.state not in (WorkflowState.PENDING_REVIEW, WorkflowState.ANALYZING):
-            raise ValueError(f"Cannot sign off — workflow state is {record.state.value}")
+        if record.state not in (WorkflowState.PENDING_REVIEW,):
+            raise ValueError(f"Cannot sign off — workflow state is {record.state.value}. Must be PENDING_REVIEW.")
 
         sign_off = SignOffRecord(
             sign_off_id=f"so-{uuid4().hex[:10]}",
@@ -57,6 +73,15 @@ class WorkflowService:
             override_reason=override_reason,
         )
         record.sign_offs.append(sign_off)
+
+        self._track_override(
+            bundle_id=bundle_id,
+            ai_decision=ai_decision or record.ai_decision,
+            human_decision=action.value,
+            signed_by=signed_by,
+            override_reason=override_reason,
+            org_id=org_id,
+        )
 
         if action == SignOffAction.APPROVE:
             record.state = WorkflowState.APPROVED

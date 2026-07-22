@@ -99,7 +99,7 @@ class MortgageReconciliationEngine:
         # Gift letter amount should appear as deposit pattern (flag if large gift)
         for gift in gifts:
             amount = gift.get_float("gift_amount")
-            if amount >= 10000:
+            if amount is not None and amount >= 10000:
                 issues.append(
                     ReconciliationIssue(
                         field_path="assets.gift_verification",
@@ -184,10 +184,11 @@ class MortgageReconciliationEngine:
         if not reports:
             return None
         cr = reports[0]
-        score = int(cr.get_float("credit_score"))
+        score_raw = cr.get_float("credit_score")
+        score = int(score_raw) if score_raw is not None else 0
         flags: list[str] = []
         util = cr.get_float("utilization_rate")
-        if util > 30:
+        if util is not None and util > 30:
             flags.append(f"High utilization ({util}%)")
         if score and score < 620:
             flags.append(f"Below minimum credit score ({score})")
@@ -197,7 +198,7 @@ class MortgageReconciliationEngine:
             total_balance=cr.get_float("total_balance"),
             total_monthly_payment=cr.get_float("total_monthly_payment"),
             utilization_rate=util,
-            open_accounts=int(cr.get_float("open_accounts")),
+            open_accounts=int(cr.get_float("open_accounts") or 0),
             derogatory_flags=flags,
         )
 
@@ -213,7 +214,7 @@ class MortgageReconciliationEngine:
                 accounts.append({"source": stmt.source_path, "balance": bal, "type": "bank"})
 
         for gift in bundle.documents_by_type(MortgageDocumentType.GIFT_LETTER):
-            gift_total += gift.get_float("gift_amount")
+            gift_total += gift.get_float("gift_amount") or 0.0
 
         if not total and not gift_total:
             return None

@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 from insureflow.config import settings
 from insureflow.outcomes.models import BindOutcome, LossExperience, PredictionRecord
+
+logger = logging.getLogger(__name__)
 
 
 class OutcomeStore:
@@ -40,8 +43,8 @@ class OutcomeStore:
                 continue
             try:
                 results.append(LossExperience.model_validate_json(path.read_text(encoding="utf-8")))
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.warning("Skipping corrupt experience file %s: %s", path.name, exc)
         return results
 
     def save_prediction(self, record: PredictionRecord, org_id: str = "default") -> None:

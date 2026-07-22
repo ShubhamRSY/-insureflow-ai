@@ -111,5 +111,4 @@ def enterprise_ack(service: str, body: dict[str, Any] | None = None) -> dict[str
         "status": "accepted",
         "service": service,
         "reference_id": f"{service[:3].upper()}-{uuid4().hex[:8]}",
-        "payload": body or {},
     }

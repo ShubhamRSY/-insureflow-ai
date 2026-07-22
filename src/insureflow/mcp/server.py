@@ -35,9 +35,12 @@ def _get_pipeline() -> UnderwritingPipeline:
 
 
 def _parse_claims(claims_json: str) -> list[ClaimRecord]:
-    data = json.loads(claims_json)
+    try:
+        data = json.loads(claims_json)
+    except (json.JSONDecodeError, TypeError):
+        return []
     if isinstance(data, list):
-        return [ClaimRecord(**c) for c in data]
+        return [ClaimRecord(**c) for c in data if isinstance(c, dict)]
     return []
 
 
@@ -186,9 +189,14 @@ def _register_all(server: FastMCP) -> None:
         description="Execute the underwriting pipeline from an ACORD XML file path on the server.",
     )
     def run_pipeline_from_file(acord_xml_path: str, bundle_id: Optional[str] = None) -> str:
+        import os as _os
+        resolved = _os.path.realpath(acord_xml_path)
+        base_dir = _os.path.realpath(os.getenv("MCP_FILE_BASE_DIR", _os.path.dirname(_os.path.abspath(__file__))))
+        if not resolved.startswith(base_dir + _os.sep) and resolved != base_dir:
+            return json.dumps({"error": "Access denied: path is outside the allowed directory"})
         pipeline = _get_pipeline()
         result = pipeline.run_from_files(
-            acord_xml_path=acord_xml_path,
+            acord_xml_path=resolved,
             bundle_id=bundle_id,
         )
         summary = {
@@ -348,6 +356,10 @@ def _register_all(server: FastMCP) -> None:
         insurance: float = 0.0,
         hoa: float = 0.0,
     ) -> str:
+        if loan_amount <= 0:
+            return json.dumps({"error": "loan_amount must be positive"})
+        if loan_term_years <= 0:
+            return json.dumps({"error": "loan_term_years must be a positive integer"})
         monthly_rate = interest_rate / 100 / 12
         num_payments = loan_term_years * 12
 
