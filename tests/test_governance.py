@@ -5,17 +5,13 @@ from __future__ import annotations
 import json
 import tempfile
 import threading
-from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
-from unittest.mock import MagicMock, patch
 
 import pytest
 
-from insureflow.llm.budget import BudgetExceededError, BudgetManager, get_budget_manager
-from insureflow.llm.tracker import TokenUsageRecord, TokenUsageTracker, estimate_cost, get_token_tracker
-from insureflow.observability.telemetry import PipelineTrace, Span, TelemetryCollector, get_telemetry_collector
-
+from insureflow.llm.budget import BudgetExceededError, BudgetManager
+from insureflow.llm.tracker import TokenUsageRecord, TokenUsageTracker, estimate_cost
+from insureflow.observability.telemetry import PipelineTrace, Span, TelemetryCollector
 
 # ---------------------------------------------------------------------------
 # Token Usage Tracker
@@ -207,7 +203,7 @@ class TestBudgetManager:
             tracker.record("gpt-4o", "default", 5000, 2000)
             alerts: list[tuple[str, float, float]] = []
             mgr = BudgetManager(daily_limit=0.01, monthly_limit=0, hard_stop=False, tracker=tracker)
-            mgr.add_alert_callback(lambda t, c, l: alerts.append((t, c, l)))
+            mgr.add_alert_callback(lambda t, c, limit: alerts.append((t, c, limit)))
             mgr.check_budget()
             assert len(alerts) >= 1
             assert alerts[0][0] == "daily_limit_exceeded"
@@ -218,7 +214,7 @@ class TestBudgetManager:
             tracker.record("gpt-4o", "default", 5000, 2000)
             alerts: list[tuple[str, float, float]] = []
             mgr = BudgetManager(daily_limit=0.01, monthly_limit=0, hard_stop=False, tracker=tracker)
-            mgr.add_alert_callback(lambda t, c, l: alerts.append((t, c, l)))
+            mgr.add_alert_callback(lambda t, c, limit: alerts.append((t, c, limit)))
             mgr.check_budget()
             mgr.check_budget()
             assert len(alerts) == 1
@@ -243,7 +239,7 @@ class TestBudgetManager:
             mgr.check_budget()
             mgr.reset_alerts()
             alerts: list[tuple[str, float, float]] = []
-            mgr.add_alert_callback(lambda t, c, l: alerts.append((t, c, l)))
+            mgr.add_alert_callback(lambda t, c, limit: alerts.append((t, c, limit)))
             mgr.check_budget()
             assert len(alerts) == 1
 

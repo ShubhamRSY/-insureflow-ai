@@ -26,7 +26,7 @@ MODEL_PRICING: dict[str, dict[str, float]] = {
 
 
 def estimate_cost(model: str, input_tokens: int, output_tokens: int) -> float:
-    pricing = MODEL_PRICING.get(model, MODEL_PRICING.get("gpt-4o"))
+    pricing = MODEL_PRICING.get(model) or MODEL_PRICING.get("gpt-4o", {"input": 0.0, "output": 0.0})
     return (input_tokens * pricing["input"] + output_tokens * pricing["output"]) / 1000
 
 

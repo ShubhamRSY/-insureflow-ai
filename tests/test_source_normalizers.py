@@ -6,9 +6,11 @@ import json
 
 import pytest
 
+from insureflow.ingestion.insurance.loader import InsuranceDocumentLoader
 from insureflow.ingestion.insurance.normalizers import (
     ACORDAL3Normalizer,
     AppliedEpicNormalizer,
+    AzureBlobNormalizer,
     BoldPenguinNormalizer,
     BoxNormalizer,
     CoreLogicNormalizer,
@@ -24,18 +26,15 @@ from insureflow.ingestion.insurance.normalizers import (
     MicrosoftTeamsNormalizer,
     S3BucketNormalizer,
     SalesforceNormalizer,
+    SFTPNormalizer,
     SharePointNormalizer,
     SlackIntakeNormalizer,
     SnowflakeNormalizer,
-    SFTPNormalizer,
-    AzureBlobNormalizer,
     VeriskISONormalizer,
     get_normalizer,
     normalize_source,
     supported_sources,
 )
-from insureflow.ingestion.insurance.loader import InsuranceDocumentLoader
-
 
 SAMPLE_PAYLOAD = {
     "insured_name": "Pacific Coast Distributors, Inc.",
@@ -267,7 +266,12 @@ class TestIVANSDownloadNormalizer:
 
     def test_normalize_ivans_xml(self) -> None:
         norm = IVANSDownloadNormalizer()
-        xml = '<?xml version="1.0"?><ACORD xmlns="http://www.acord.org/standards/PC_Surety/ACORD"><Submission><NamedInsured><GeneralPartyInfo><NameInfo><CommercialName><Name>IVANS Corp</Name></CommercialName></NameInfo></GeneralPartyInfo></NamedInsured><Risk><NAICSCode>999999</NAICSCode></Risk></Submission></ACORD>'
+        xml = (
+            '<?xml version="1.0"?><ACORD xmlns="http://www.acord.org/standards/PC_Surety/ACORD">'
+            "<Submission><NamedInsured><GeneralPartyInfo><NameInfo><CommercialName>"
+            "<Name>IVANS Corp</Name></CommercialName></NameInfo></GeneralPartyInfo>"
+            "</NamedInsured><Risk><NAICSCode>999999</NAICSCode></Risk></Submission></ACORD>"
+        )
         raw = {"transaction": {"format": "acord_xml", "content": xml}}
         sub = norm.normalize(raw)
         assert sub.named_insured is not None
@@ -279,7 +283,12 @@ class TestIVANSDownloadNormalizer:
 class TestACORDAL3Normalizer:
     def test_normalize_acord_xml(self) -> None:
         norm = ACORDAL3Normalizer()
-        xml = '<?xml version="1.0"?><ACORD xmlns="http://www.acord.org/standards/PC_Surety/ACORD"><Submission><NamedInsured><GeneralPartyInfo><NameInfo><CommercialName><Name>AL3 Corp</Name></CommercialName></NameInfo></GeneralPartyInfo></NamedInsured><Risk><NAICSCode>111111</NAICSCode></Risk></Submission></ACORD>'
+        xml = (
+            '<?xml version="1.0"?><ACORD xmlns="http://www.acord.org/standards/PC_Surety/ACORD">'
+            "<Submission><NamedInsured><GeneralPartyInfo><NameInfo><CommercialName>"
+            "<Name>AL3 Corp</Name></CommercialName></NameInfo></GeneralPartyInfo>"
+            "</NamedInsured><Risk><NAICSCode>111111</NAICSCode></Risk></Submission></ACORD>"
+        )
         raw = {"content": xml}
         sub = norm.normalize(raw)
         assert sub.named_insured is not None

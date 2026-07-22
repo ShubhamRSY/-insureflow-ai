@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import hashlib
 import logging
-from collections import defaultdict
 from datetime import datetime, timezone
 from typing import Any, Optional
 
@@ -145,7 +144,6 @@ class PatternDetector:
                     get_tacit_store()._persist()
                     continue
 
-                avg_score = sum(e["risk_score"] for e in matching) / len(matching)
                 bundles = [e["bundle_id"] for e in matching[-5:]]
 
                 description = self._build_description(dimension, key, new_entry["decision"], len(matching))

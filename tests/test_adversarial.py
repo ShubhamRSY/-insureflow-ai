@@ -9,20 +9,15 @@ These tests verify:
 
 from __future__ import annotations
 
-import hashlib
 import json
-import os
-import tempfile
 import threading
 import time
 from pathlib import Path
 from typing import Any
-from unittest.mock import MagicMock, patch
 
 import pytest
 
 from insureflow.auth.jwt import create_access_token, decode_access_token
-from insureflow.auth.models import TokenData
 from insureflow.config import settings
 from insureflow.gateway.auth import verify_gateway_key
 from insureflow.gateway.payloads import enterprise_ack, policy_bind, policy_submit
@@ -32,7 +27,6 @@ from insureflow.redaction.redactor import PIIRedactor
 from insureflow.workflow.models import SignOffAction, WorkflowState
 from insureflow.workflow.service import WorkflowService
 from insureflow.workflow.store import WorkflowStore
-
 
 # ===========================================================================
 # 1. PII REDACTION — Breaking the masking
@@ -353,7 +347,7 @@ class TestKnowledgeStoreAdversarial:
     """Try to inject arbitrary attributes into tacit rules."""
 
     def test_cannot_overwrite_rule_id(self, tmp_path: Any) -> None:
-        from insureflow.knowledge.tacit_store import TacitKnowledgeStore, TacitRule, KnowledgeType
+        from insureflow.knowledge.tacit_store import KnowledgeType, TacitKnowledgeStore, TacitRule
         store = TacitKnowledgeStore(persist_path=tmp_path / "knowledge.json")
         rule = TacitRule(rule_type=KnowledgeType.PATTERN, title="Original", description="test")
         store.add_rule(rule)
@@ -364,7 +358,7 @@ class TestKnowledgeStoreAdversarial:
         assert original.rule_id == rule.rule_id
 
     def test_cannot_reactivate_dead_rule(self, tmp_path: Any) -> None:
-        from insureflow.knowledge.tacit_store import TacitKnowledgeStore, TacitRule, KnowledgeType
+        from insureflow.knowledge.tacit_store import KnowledgeType, TacitKnowledgeStore, TacitRule
         store = TacitKnowledgeStore(persist_path=tmp_path / "knowledge.json")
         rule = TacitRule(rule_type=KnowledgeType.PATTERN, title="Dead", description="test", confidence=0.0, is_active=False)
         store.add_rule(rule)
@@ -374,7 +368,7 @@ class TestKnowledgeStoreAdversarial:
         assert updated.is_active is False
 
     def test_cannot_inject_confidence(self, tmp_path: Any) -> None:
-        from insureflow.knowledge.tacit_store import TacitKnowledgeStore, TacitRule, KnowledgeType
+        from insureflow.knowledge.tacit_store import KnowledgeType, TacitKnowledgeStore, TacitRule
         store = TacitKnowledgeStore(persist_path=tmp_path / "knowledge.json")
         rule = TacitRule(rule_type=KnowledgeType.PATTERN, title="Low", description="test", confidence=0.1)
         store.add_rule(rule)
@@ -384,7 +378,7 @@ class TestKnowledgeStoreAdversarial:
         assert updated.confidence == 0.1
 
     def test_title_update_works(self, tmp_path: Any) -> None:
-        from insureflow.knowledge.tacit_store import TacitKnowledgeStore, TacitRule, KnowledgeType
+        from insureflow.knowledge.tacit_store import KnowledgeType, TacitKnowledgeStore, TacitRule
         store = TacitKnowledgeStore(persist_path=tmp_path / "knowledge.json")
         rule = TacitRule(rule_type=KnowledgeType.PATTERN, title="Original", description="test")
         store.add_rule(rule)
@@ -657,7 +651,7 @@ class TestMetricsAdversarial:
         assert rate2["total"] == 2
 
     def test_persistence_files_created(self, tmp_path: Any) -> None:
-        from insureflow.analytics.metrics import FillRateTracker, OverrideRateTracker, CycleTimeTracker
+        from insureflow.analytics.metrics import CycleTimeTracker, FillRateTracker, OverrideRateTracker
         fill = FillRateTracker(persist_path=tmp_path / "fill.jsonl")
         override = OverrideRateTracker(persist_path=tmp_path / "override.jsonl")
         cycle = CycleTimeTracker(persist_path=tmp_path / "cycle.jsonl")

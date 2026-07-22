@@ -457,7 +457,7 @@ def _extract_fields_from_bundle(bundle: SubmissionBundle) -> dict[str, Any]:
         fields["premium"] = cov.premium or 0
     if s.financial:
         fields["total_claims"] = len(s.financial.prior_losses) if s.financial.prior_losses else 0
-        fields["total_incurred"] = sum(l.get("incurred_amount", 0) for l in s.financial.prior_losses) if s.financial.prior_losses else 0
+        fields["total_incurred"] = sum(loss.get("incurred_amount", 0) for loss in s.financial.prior_losses) if s.financial.prior_losses else 0
     return fields
 
 

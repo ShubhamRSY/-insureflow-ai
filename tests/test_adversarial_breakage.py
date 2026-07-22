@@ -11,11 +11,10 @@ These tests target every layer of the system with adversarial inputs to find:
 from __future__ import annotations
 
 import json
-import os
 import tempfile
 import threading
 import time
-from datetime import date, timedelta
+from datetime import date
 from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -23,16 +22,12 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from insureflow.models.submissions import (
-    ClaimRecord,
     CoverageDetail,
     FinancialData,
-    LocationData,
-    NamedInsured,
     PolicyPeriod,
     RiskProfile,
     StructuredSubmission,
 )
-
 
 # ===========================================================================
 # 1. INGESTION — ACORD XML Parser
@@ -61,8 +56,9 @@ class TestACORDParserAdversarial:
             pass
 
     def test_float_nan_not_propagated(self) -> None:
-        from insureflow.ingestion.acord_parser import ACORDParser
         import math
+
+        from insureflow.ingestion.acord_parser import ACORDParser
         xml = """<ACORD>
             <InsuranceSvcRq>
                 <CommercialPackagePolicy>
@@ -156,8 +152,9 @@ class TestJSONParserAdversarial:
             pass
 
     def test_extreme_premium_values(self) -> None:
-        from insureflow.ingestion.json_parser import JSONBrokerParser
         import math
+
+        from insureflow.ingestion.json_parser import JSONBrokerParser
         payload = json.dumps({
             "coverages": [{
                 "type": "GL",
@@ -272,7 +269,6 @@ class TestMCPToolsAdversarial:
         assert result == []
 
     def test_mcp_path_traversal_blocked(self) -> None:
-        from insureflow.mcp.server import _get_pipeline
         with patch("insureflow.mcp.server._get_pipeline") as mock_pipeline:
             mock_pipeline.return_value = MagicMock()
             from insureflow.mcp.server import _parse_claims
@@ -528,9 +524,9 @@ class TestAuthStoreAdversarial:
         assert len(store) == 0
 
     def test_concurrent_writes_no_crash(self, tmp_path: Path) -> None:
-        from insureflow.auth.store import UserStore
-        from insureflow.auth.models import User
         from insureflow.auth import Role
+        from insureflow.auth.models import User
+        from insureflow.auth.store import UserStore
         store = UserStore(path=tmp_path / "users.json")
         errors: list[str] = []
 
@@ -650,8 +646,8 @@ class TestLendingRiskAdversarial:
     """Breaking lending risk engine with extreme inputs."""
 
     def test_zero_income_zero_debt(self) -> None:
+        from insureflow.lending.models import ConsumerFinancialData, ConsumerLoanApplication, LoanProductType, LoanPurpose
         from insureflow.lending.risk import LendingRiskEngine
-        from insureflow.lending.models import ConsumerLoanApplication, ConsumerFinancialData, LoanProductType, LoanPurpose
         app = ConsumerLoanApplication(
             product_type=LoanProductType.PERSONAL_TERM_LOAN,
             loan_purpose=LoanPurpose.DEBT_CONSOLIDATION,
@@ -669,8 +665,8 @@ class TestLendingRiskAdversarial:
         assert hasattr(result, "risk_rating") or hasattr(result, "decision")
 
     def test_extreme_dti_ratio(self) -> None:
+        from insureflow.lending.models import ConsumerFinancialData, ConsumerLoanApplication, LoanProductType, LoanPurpose
         from insureflow.lending.risk import LendingRiskEngine
-        from insureflow.lending.models import ConsumerLoanApplication, ConsumerFinancialData, LoanProductType, LoanPurpose
         app = ConsumerLoanApplication(
             product_type=LoanProductType.PERSONAL_TERM_LOAN,
             loan_purpose=LoanPurpose.DEBT_CONSOLIDATION,
@@ -687,8 +683,8 @@ class TestLendingRiskAdversarial:
         assert result is not None
 
     def test_negative_income(self) -> None:
+        from insureflow.lending.models import ConsumerFinancialData, ConsumerLoanApplication, LoanProductType, LoanPurpose
         from insureflow.lending.risk import LendingRiskEngine
-        from insureflow.lending.models import ConsumerLoanApplication, ConsumerFinancialData, LoanProductType, LoanPurpose
         app = ConsumerLoanApplication(
             product_type=LoanProductType.PERSONAL_TERM_LOAN,
             loan_purpose=LoanPurpose.DEBT_CONSOLIDATION,
@@ -705,8 +701,8 @@ class TestLendingRiskAdversarial:
         assert result is not None
 
     def test_zero_credit_score(self) -> None:
+        from insureflow.lending.models import ConsumerFinancialData, ConsumerLoanApplication, LoanProductType, LoanPurpose
         from insureflow.lending.risk import LendingRiskEngine
-        from insureflow.lending.models import ConsumerLoanApplication, ConsumerFinancialData, LoanProductType, LoanPurpose
         app = ConsumerLoanApplication(
             product_type=LoanProductType.PERSONAL_TERM_LOAN,
             loan_purpose=LoanPurpose.DEBT_CONSOLIDATION,
@@ -796,8 +792,9 @@ class TestGatewayAuthAdversarial:
 
     @patch("insureflow.gateway.auth.settings")
     def test_missing_bearer_raises_401(self, mock_settings: MagicMock) -> None:
-        from insureflow.gateway.auth import verify_gateway_key
         from fastapi import HTTPException
+
+        from insureflow.gateway.auth import verify_gateway_key
         mock_settings.integration_gateway_api_key = "real-key-123"
         with pytest.raises(HTTPException) as exc_info:
             verify_gateway_key(authorization=None)
@@ -805,8 +802,9 @@ class TestGatewayAuthAdversarial:
 
     @patch("insureflow.gateway.auth.settings")
     def test_wrong_bearer_key_raises_403(self, mock_settings: MagicMock) -> None:
-        from insureflow.gateway.auth import verify_gateway_key
         from fastapi import HTTPException
+
+        from insureflow.gateway.auth import verify_gateway_key
         mock_settings.integration_gateway_api_key = "real-key-123"
         with pytest.raises(HTTPException) as exc_info:
             verify_gateway_key(authorization="Bearer wrong-key")
@@ -959,8 +957,7 @@ class TestKnowledgeStoreAdversarial:
     """Breaking tacit knowledge store with adversarial updates."""
 
     def test_add_and_get_rule(self) -> None:
-        from insureflow.knowledge.tacit_store import TacitKnowledgeStore, TacitRule
-        from insureflow.knowledge.tacit_store import KnowledgeType
+        from insureflow.knowledge.tacit_store import KnowledgeType, TacitKnowledgeStore, TacitRule
         store = TacitKnowledgeStore()
         rule = TacitRule(
             rule_type=KnowledgeType.HEURISTIC,
@@ -983,8 +980,7 @@ class TestKnowledgeStoreAdversarial:
         assert rule is None
 
     def test_add_rule_minimal_fields(self) -> None:
-        from insureflow.knowledge.tacit_store import TacitKnowledgeStore, TacitRule
-        from insureflow.knowledge.tacit_store import KnowledgeType
+        from insureflow.knowledge.tacit_store import KnowledgeType, TacitKnowledgeStore, TacitRule
         store = TacitKnowledgeStore()
         rule = TacitRule(
             rule_type=KnowledgeType.HEURISTIC,
@@ -1125,8 +1121,9 @@ class TestRowLevelPermissions:
         assert store.get("ns", "job-1", org_id="org_a") is not None
 
     def test_check_row_access_mismatch_raises(self) -> None:
-        from insureflow.api import _check_row_access
         from fastapi import HTTPException
+
+        from insureflow.api import _check_row_access
         with pytest.raises(HTTPException) as exc_info:
             _check_row_access("org_a", "org_b")
         assert exc_info.value.status_code == 403
@@ -1148,16 +1145,18 @@ class TestMCPMortgageMetrics:
     """Breaking MCP mortgage metrics calculator."""
 
     def test_zero_term_years_returns_error(self) -> None:
-        from insureflow.mcp.server import _register_all
         from mcp.server.fastmcp import FastMCP
+
+        from insureflow.mcp.server import _register_all
         server = FastMCP("test")
         _register_all(server)
         tools = {t.name: t for t in server._tool_manager.list_tools()}
         assert "calculate_mortgage_metrics" in tools
 
     def test_negative_loan_amount_handled(self) -> None:
-        from insureflow.mcp.server import _register_all
         from mcp.server.fastmcp import FastMCP
+
+        from insureflow.mcp.server import _register_all
         server = FastMCP("test")
         _register_all(server)
 
@@ -1188,6 +1187,7 @@ class TestPipelineCrashResilience:
         """BUG 2 FIX: When ProvenanceEngine.build_provenance() raises, the pipeline
         creates an empty ProvenanceRecord instead of crashing."""
         from unittest.mock import MagicMock, patch
+
         from insureflow.models.provenance import ProvenanceRecord
 
         mock_bundle = MagicMock()
@@ -1206,9 +1206,10 @@ class TestPipelineCrashResilience:
     def test_reconciliation_failure_returns_empty_result(self) -> None:
         """BUG 2 FIX: When ReconciliationEngine.reconcile() raises, the pipeline
         creates an empty ReconciliationResult instead of crashing."""
-        from unittest.mock import MagicMock, patch
-        from insureflow.models.provenance import ProvenanceRecord
+        from unittest.mock import patch
+
         from insureflow.models.audit import ReconciliationResult
+        from insureflow.models.provenance import ProvenanceRecord
 
         mock_prov = ProvenanceRecord(record_id="prov-test", bundle_id="test-bundle")
         with patch('insureflow.reconciliation.engine.ReconciliationEngine.reconcile',
@@ -1227,6 +1228,7 @@ class TestPipelineCrashResilience:
     def test_portfolio_recording_failure_is_logged(self) -> None:
         """BUG 2 FIX: Portfolio recording failure is logged, not swallowed silently."""
         from unittest.mock import MagicMock, patch
+
         from insureflow.insurance.pipeline import InsurancePipeline
 
         pipeline = InsurancePipeline(org_id="test-org", use_llm=False)
@@ -1253,6 +1255,7 @@ class TestOutcomeStoreCorruptFileLogging:
 
     def test_corrupt_experience_file_is_logged(self) -> None:
         from unittest.mock import patch
+
         from insureflow.outcomes.store import OutcomeStore
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -1300,6 +1303,7 @@ class TestSecurityBootstrapLogging:
     def test_source_has_logging_not_pass(self) -> None:
         """Verify the api.py file no longer has bare `except Exception: pass` in security bootstrap."""
         import inspect
+
         from insureflow import api
         source = inspect.getsource(api)
         # The old code had `except Exception:\n    pass` right after the security bootstrap
@@ -1317,6 +1321,7 @@ class TestQuoteHTMLFailureLogging:
     def test_insurance_pipeline_logs_quote_html_failure(self) -> None:
         """Verify the insurance pipeline source has error logging for quote HTML."""
         import inspect
+
         from insureflow.insurance import pipeline as ip_mod
         source = inspect.getsource(ip_mod)
         assert "Quote HTML generation failed" in source

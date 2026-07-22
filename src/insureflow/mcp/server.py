@@ -191,7 +191,7 @@ def _register_all(server: FastMCP) -> None:
     def run_pipeline_from_file(acord_xml_path: str, bundle_id: Optional[str] = None) -> str:
         import os as _os
         resolved = _os.path.realpath(acord_xml_path)
-        base_dir = _os.path.realpath(os.getenv("MCP_FILE_BASE_DIR", _os.path.dirname(_os.path.abspath(__file__))))
+        base_dir = _os.path.realpath(_os.getenv("MCP_FILE_BASE_DIR", _os.path.dirname(_os.path.abspath(__file__))))
         if not resolved.startswith(base_dir + _os.sep) and resolved != base_dir:
             return json.dumps({"error": "Access denied: path is outside the allowed directory"})
         pipeline = _get_pipeline()

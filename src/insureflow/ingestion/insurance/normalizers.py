@@ -8,7 +8,6 @@ underwriting pipeline.
 
 from __future__ import annotations
 
-import re
 from abc import ABC, abstractmethod
 from datetime import date, datetime, timezone
 from typing import Any, Optional
@@ -25,8 +24,6 @@ from insureflow.models.submissions import (
     NamedInsured,
     PolicyPeriod,
     RiskProfile,
-    ScheduleItem,
-    ScheduleOfValues,
     StructuredSubmission,
 )
 
@@ -201,7 +198,6 @@ class EmailInboxNormalizer(SourceNormalizer):
                 broker_name=email.get("broker_name", email.get("from_name", "")),
                 contact_email=email.get("from", email.get("from_email")),
             )
-        body_text = email.get("body", email.get("text", ""))
         for att in email.get("attachments", raw.get("attachments", [])):
             content = att.get("content", "")
             if "acord" in att.get("filename", "").lower() or "<acord" in content[:200].lower():
@@ -686,7 +682,7 @@ class CoreLogicNormalizer(SourceNormalizer):
                 prior_losses=prior_losses,
             )
             sub.financial = fin
-            total_cat_loss = sum(l.get("amount", 0) for l in prior_losses)
+            total_cat_loss = sum(loss.get("amount", 0) for loss in prior_losses)
             if total_cat_loss > 0 and sub.risk_profile:
                 existing_claims = sub.risk_profile.prior_claims
                 for pl in prior_losses:

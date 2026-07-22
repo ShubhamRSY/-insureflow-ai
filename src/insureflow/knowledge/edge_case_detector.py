@@ -4,10 +4,9 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
-from datetime import datetime, timezone
 from typing import Any, Optional
 
-from insureflow.knowledge.tacit_store import KnowledgeType, TacitKnowledgeStore, TacitRule, get_tacit_store
+from insureflow.knowledge.tacit_store import KnowledgeType, TacitKnowledgeStore, get_tacit_store
 
 logger = logging.getLogger(__name__)
 

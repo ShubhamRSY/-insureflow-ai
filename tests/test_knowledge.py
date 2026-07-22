@@ -2,17 +2,13 @@
 
 from __future__ import annotations
 
-import tempfile
 from pathlib import Path
 from typing import Any
 
-import pytest
-
-from insureflow.knowledge.tacit_store import KnowledgeType, TacitKnowledgeStore, TacitRule
-from insureflow.knowledge.pattern_detector import PatternDetector
 from insureflow.knowledge.edge_case_detector import EdgeCaseDetector
 from insureflow.knowledge.heuristic_learner import HeuristicLearner
-
+from insureflow.knowledge.pattern_detector import PatternDetector
+from insureflow.knowledge.tacit_store import KnowledgeType, TacitKnowledgeStore, TacitRule
 
 # ---------------------------------------------------------------------------
 # TacitKnowledgeStore

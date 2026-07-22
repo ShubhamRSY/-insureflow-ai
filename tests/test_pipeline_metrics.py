@@ -7,15 +7,12 @@ import time
 from pathlib import Path
 from typing import Any
 
-import pytest
-
 from insureflow.analytics.metrics import (
     CycleTimeTracker,
     FillRateTracker,
     OverrideRateTracker,
     PipelineMetrics,
 )
-
 
 # ---------------------------------------------------------------------------
 # Fill Rate Tracker

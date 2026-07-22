@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 import logging
 import os
@@ -47,13 +46,14 @@ def _fetch_jwks(issuer: str) -> dict[str, Any]:
     """Fetch JWKS keys from the issuer, with caching."""
     now = time.time()
     if _jwks_cache["keys"] and (now - _jwks_cache["fetched_at"]) < _JWKS_CACHE_TTL:
-        return _jwks_cache["keys"]
+        result: dict[str, Any] = _jwks_cache["keys"]
+        return result
 
     well_known = issuer.rstrip("/") + "/.well-known/openid-configuration"
     try:
         req = urllib.request.Request(well_known, headers={"Accept": "application/json"})
         with urllib.request.urlopen(req, timeout=10) as resp:
-            config = json.loads(resp.read().decode())
+            config: dict[str, Any] = json.loads(resp.read().decode())
         jwks_uri = config.get("jwks_uri", issuer.rstrip("/") + "/oauth2/v1/keys")
     except Exception:
         jwks_uri = issuer.rstrip("/") + "/oauth2/v1/keys"
@@ -61,21 +61,24 @@ def _fetch_jwks(issuer: str) -> dict[str, Any]:
     try:
         req = urllib.request.Request(jwks_uri, headers={"Accept": "application/json"})
         with urllib.request.urlopen(req, timeout=10) as resp:
-            keys_data = json.loads(resp.read().decode())
+            keys_data: dict[str, Any] = json.loads(resp.read().decode())
         _jwks_cache["keys"] = keys_data
         _jwks_cache["fetched_at"] = now
         return keys_data
     except Exception as exc:
         logger.warning("Failed to fetch JWKS from %s: %s", jwks_uri, exc)
-        return _jwks_cache.get("keys", {})
+        fallback: dict[str, Any] = _jwks_cache.get("keys", {})
+        return fallback
 
 
 def _base64url_decode(data: str) -> bytes:
     """Decode base64url-encoded data."""
+    import base64
     padding = 4 - len(data) % 4
     if padding != 4:
         data += "=" * padding
-    return __import__("base64").urlsafe_b64decode(data)
+    decoded: bytes = base64.urlsafe_b64decode(data)
+    return decoded
 
 
 def _verify_jwt_signature(token: str, keys_data: dict[str, Any]) -> dict[str, Any] | None:
@@ -84,9 +87,8 @@ def _verify_jwt_signature(token: str, keys_data: dict[str, Any]) -> dict[str, An
         parts = token.split(".")
         if len(parts) != 3:
             return None
-        header_b64, payload_b64, signature_b64 = parts
+        header_b64, _payload_b64, signature_b64 = parts
         header = json.loads(_base64url_decode(header_b64))
-        payload = json.loads(_base64url_decode(payload_b64))
 
         kid = header.get("kid")
         alg = header.get("alg", "")
@@ -104,7 +106,7 @@ def _verify_jwt_signature(token: str, keys_data: dict[str, Any]) -> dict[str, An
         from jose import jwt as jose_jwt
         for key in key_candidates:
             try:
-                verified = jose_jwt.decode(
+                verified: dict[str, Any] = jose_jwt.decode(
                     token,
                     key,
                     algorithms=[alg],

@@ -1,12 +1,25 @@
 from __future__ import annotations
 
+import asyncio
+import json as _json
 import logging
 import os
 import uuid
+from collections import defaultdict
 from pathlib import Path
 from typing import Any, Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, FastAPI, HTTPException, Request, status
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    FastAPI,
+    HTTPException,
+    Request,
+    WebSocket,
+    WebSocketDisconnect,
+    status,
+)
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -2905,12 +2918,6 @@ def list_lending_products(
 
 # ── WebSocket / SSE: Real-time Job Status ────────────────────────
 
-import asyncio
-import json as _json
-from collections import defaultdict
-
-from fastapi import WebSocket, WebSocketDisconnect
-
 _job_ws_subscribers: dict[str, set[asyncio.Queue]] = defaultdict(set)
 _job_sse_subscribers: dict[str, set[asyncio.Queue]] = defaultdict(set)
 
@@ -3017,7 +3024,7 @@ def _check_row_access(resource_org_id: str, user_org_id: str) -> None:
 
 @app.post("/v2/pipeline/run", status_code=202)
 @limiter.limit("10/minute")
-async def run_pipeline_v2(
+async def run_pipeline_row_level(
     req: SubmissionRequest,
     background_tasks: BackgroundTasks,
     request: Request,

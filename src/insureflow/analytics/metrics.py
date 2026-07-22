@@ -5,7 +5,6 @@ These answer the measurement problem: "It works" isn't a metric.
 
 from __future__ import annotations
 
-import json
 import logging
 import os
 import threading
