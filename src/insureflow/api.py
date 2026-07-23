@@ -80,7 +80,7 @@ limiter = Limiter(key_func=get_remote_address, default_limits=["30/minute"])
 app = FastAPI(
     title="Rytera",
     description="AI underwriting platform API — Insurance, Mortgage & Lending",
-    version="0.2.0",
+    version="0.3.0",
 )
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
@@ -445,7 +445,7 @@ class InsuranceSourcePullRequest(BaseModel):
 
 @app.get("/health")
 async def health() -> dict[str, str]:
-    return {"status": "ok", "version": "0.2.0"}
+    return {"status": "ok", "version": "0.3.0"}
 
 
 @app.get("/system/diagnostics")
@@ -699,7 +699,7 @@ async def root(request: Request) -> FileResponse | JSONResponse:
     return JSONResponse(
         {
             "service": "Rytera",
-            "version": "0.2.0",
+            "version": "0.3.0",
             "dashboard": "/dashboard",
             "diagnostics": "/system/diagnostics",
             "health": "/health",
