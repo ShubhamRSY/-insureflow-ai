@@ -36,7 +36,7 @@ def _get_pipeline() -> UnderwritingPipeline:
 
 def _parse_claims(claims_json: str | None) -> list[ClaimRecord]:
     try:
-        data = json.loads(claims_json)
+        data = json.loads(claims_json or "[]")
     except (json.JSONDecodeError, TypeError):
         return []
     if isinstance(data, list):

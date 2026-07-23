@@ -4,6 +4,7 @@ import base64
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
 from uuid import uuid4
 
 from insureflow.ingestion.acord_parser import ACORDParser
@@ -108,7 +109,7 @@ class InsuranceDocumentLoader:
     def load_from_source(
         self,
         source_id: str,
-        raw_data: dict[str, str],
+        raw_data: dict[str, Any],
         bundle_id: str | None = None,
     ) -> SubmissionBundle:
         """Normalize raw data from a specific enterprise source into a SubmissionBundle.

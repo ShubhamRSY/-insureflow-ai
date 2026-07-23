@@ -902,8 +902,7 @@ class TestGatewayAuthAdversarial:
         from insureflow.gateway.auth import verify_gateway_key
 
         mock_settings.integration_gateway_api_key = "real-key-123"
-        result = verify_gateway_key(authorization="Bearer real-key-123")
-        assert result is None
+        verify_gateway_key(authorization="Bearer real-key-123")
 
 
 # ===========================================================================

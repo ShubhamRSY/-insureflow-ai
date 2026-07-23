@@ -204,6 +204,7 @@ class TestEmailInboxNormalizer:
         }
         sub = norm.normalize(raw)
         assert sub.source == "email-inbox"
+        assert sub.named_insured is not None
         assert sub.named_insured.legal_name == "Email Corp"
         assert sub.broker is not None
         assert sub.broker.broker_name == "Broker Bob"
@@ -234,6 +235,7 @@ class TestSFTPNormalizer:
         raw = {"file": {"format": "csv", "content": "name,amount\nAcme,1000", "insured_name": "Plain Corp"}}
         sub = norm.normalize(raw)
         assert sub.source == "sftp"
+        assert sub.named_insured is not None
         assert sub.named_insured.legal_name == "Plain Corp"
 
 
@@ -253,6 +255,7 @@ class TestBoldPenguinNormalizer:
         }
         sub = norm.normalize(raw)
         assert sub.source == "bold-penguin"
+        assert sub.named_insured is not None
         assert sub.named_insured.legal_name == "BP Logistics"
         assert len(sub.locations) == 1
         assert len(sub.coverages) == 1
@@ -316,10 +319,13 @@ class TestGuidewireNormalizer:
         }
         sub = norm.normalize(raw)
         assert sub.source == "guidewire-policycenter"
+        assert sub.named_insured is not None
         assert sub.named_insured.legal_name == "GW Corp"
+        assert sub.broker is not None
         assert sub.broker.broker_name == "GW Broker"
         assert len(sub.coverages) == 1
         assert sub.coverages[0].limit_amount == 3_000_000
+        assert sub.risk_profile is not None
         assert sub.risk_profile.sprinklered is True
 
 
@@ -357,8 +363,11 @@ class TestAppliedEpicNormalizer:
         }
         sub = norm.normalize(raw)
         assert sub.source == "applied-epic"
+        assert sub.named_insured is not None
         assert sub.named_insured.legal_name == "Epic Logistics"
+        assert sub.broker is not None
         assert sub.broker.broker_name == "Epic Agent"
+        assert sub.financial is not None
         assert sub.financial.annual_revenue == 8_000_000
 
 
@@ -387,6 +396,7 @@ class TestSalesforceNormalizer:
         }
         sub = norm.normalize(raw)
         assert sub.source == "salesforce-crm"
+        assert sub.named_insured is not None
         assert sub.named_insured.legal_name == "SF Logistics Inc"
         assert len(sub.coverages) == 1
 
@@ -408,6 +418,7 @@ class TestVeriskISONormalizer:
         }
         sub = norm.normalize(raw)
         assert sub.source == "verisk-iso"
+        assert sub.risk_profile is not None
         assert sub.risk_profile.naics_code == "332710"
         assert len(sub.coverages) == 1
 
@@ -440,6 +451,7 @@ class TestImageRightNormalizer:
         raw = {"document": {"metadata": {"insured_name": "IR Corp", "broker_name": "IR Broker"}}}
         sub = norm.normalize(raw)
         assert sub.source == "imageright"
+        assert sub.named_insured is not None
         assert sub.named_insured.legal_name == "IR Corp"
 
 
@@ -460,6 +472,7 @@ class TestDocuSignNormalizer:
         }
         sub = norm.normalize(raw)
         assert sub.source == "docusign"
+        assert sub.named_insured is not None
         assert sub.named_insured.legal_name == "DS Corp"
 
 
@@ -478,6 +491,7 @@ class TestMicrosoftTeamsNormalizer:
         }
         sub = norm.normalize(raw)
         assert sub.source == "microsoft-teams"
+        assert sub.named_insured is not None
         assert sub.named_insured.legal_name == "Teams Corp"
 
 
@@ -493,6 +507,7 @@ class TestSlackIntakeNormalizer:
         }
         sub = norm.normalize(raw)
         assert sub.source == "slack-intake"
+        assert sub.named_insured is not None
         assert sub.named_insured.legal_name == "Slack Corp"
 
 
@@ -519,9 +534,12 @@ class TestSnowflakeNormalizer:
         }
         sub = norm.normalize(raw)
         assert sub.source == "snowflake"
+        assert sub.named_insured is not None
         assert sub.named_insured.legal_name == "SF Snow Corp"
+        assert sub.financial is not None
         assert sub.financial.loss_run is not None
         assert sub.financial.loss_run.total_claims == 1
+        assert sub.risk_profile is not None
         assert sub.risk_profile.prior_claims[0].claim_id == "SN-001"
 
 
@@ -539,6 +557,7 @@ class TestLoaderFromSource:
         assert bundle.bundle_id == "loader-test-001"
         assert bundle.structured is not None
         assert bundle.structured.source == "google-drive"
+        assert bundle.structured.named_insured is not None
         assert bundle.structured.named_insured.legal_name == "Loader Test Corp"
         assert bundle.status.value == "parsed"
 
