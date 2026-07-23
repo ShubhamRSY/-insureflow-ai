@@ -56,6 +56,7 @@ class RiskAnalystAgent(BaseAgent):
             self._assess_sov_adequacy(sovs, locations)
 
         self._assess_credit_rating(bundle)
+        self._ml_loss_prediction(bundle)
 
     def _assess_construction(self, profile: Any) -> None:
         ctype = profile.construction_type
@@ -251,3 +252,43 @@ class RiskAnalystAgent(BaseAgent):
             return int(float(cleaned))
         except (ValueError, TypeError):
             return None
+
+    def _ml_loss_prediction(self, bundle: SubmissionBundle) -> None:
+        """Run ML loss prediction model on submission."""
+        from insureflow.agents.tools import MLTools
+
+        tiv = 0.0
+        prior_claims = 0
+
+        if bundle.structured:
+            for loc in bundle.structured.locations:
+                tiv += (loc.building_value or 0) + (loc.contents_value or 0) + (loc.bi_value or 0)
+            if bundle.structured.risk_profile:
+                prior_claims = len(bundle.structured.risk_profile.prior_claims)
+
+        if tiv == 0:
+            return
+
+        try:
+            result = MLTools.predict_loss(tiv=tiv, loss_ratio=0.5, prior_claims_count=prior_claims)
+        except Exception:
+            return
+
+        if "error" in result:
+            return
+
+        expected_loss = result.get("expected_loss", 0)
+        confidence = result.get("confidence", 0)
+        risk_factors = result.get("top_risk_factors", [])
+
+        if expected_loss > 0:
+            self._add_finding(
+                Finding(
+                    title="ML loss prediction",
+                    description=f"Expected annual loss: ${expected_loss:,.0f} (confidence: {confidence:.0%})",
+                    severity=RiskSeverity.HIGH if expected_loss > tiv * 0.05 else RiskSeverity.MODERATE,
+                    category="ml_loss",
+                    source_value=expected_loss,
+                    evidence=risk_factors[:5] if risk_factors else [f"Range: ${result.get('loss_range_low', 0):,.0f} - ${result.get('loss_range_high', 0):,.0f}"],
+                )
+            )

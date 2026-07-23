@@ -160,3 +160,67 @@ class UnderwritingTools:
         if bundle.structured and bundle.structured.named_insured:
             return bundle.structured.named_insured.legal_name
         return bundle.bundle_id
+
+
+class MLTools:
+    """ML prediction tools callable by any agent."""
+
+    @staticmethod
+    def predict_loss(tiv: float, loss_ratio: float, prior_claims_count: int = 0, credit_score: float = 700) -> dict[str, Any]:
+        from insureflow.ml.features import FeatureVector
+        from insureflow.ml.models import ModelType
+        from insureflow.ml.registry import get_ml_registry
+
+        registry = get_ml_registry()
+        model = registry.get(ModelType.LOSS_PREDICTION)
+        if model is None:
+            return {"error": "Model not available"}
+        fv = FeatureVector(tiv=tiv, loss_ratio=loss_ratio, prior_claims_count=prior_claims_count, credit_score=credit_score)
+        return model.predict(fv)
+
+    @staticmethod
+    def predict_fraud(tiv: float, loss_ratio: float, credit_score: float = 700, prior_claims_count: int = 0, prior_cancellations: int = 0) -> dict[str, Any]:
+        from insureflow.ml.features import FeatureVector
+        from insureflow.ml.models import ModelType
+        from insureflow.ml.registry import get_ml_registry
+
+        registry = get_ml_registry()
+        model = registry.get(ModelType.FRAUD_DETECTION)
+        if model is None:
+            return {"error": "Model not available"}
+        fv = FeatureVector(tiv=tiv, loss_ratio=loss_ratio, credit_score=credit_score, prior_claims_count=prior_claims_count, prior_cancellations=prior_cancellations)
+        return model.predict(fv)
+
+    @staticmethod
+    def predict_premium(tiv: float, loss_ratio: float, credit_score: float = 700, prior_claims_count: int = 0) -> dict[str, Any]:
+        from insureflow.ml.features import FeatureVector
+        from insureflow.ml.models import ModelType
+        from insureflow.ml.registry import get_ml_registry
+
+        registry = get_ml_registry()
+        model = registry.get(ModelType.PREMIUM_OPTIMIZER)
+        if model is None:
+            return {"error": "Model not available"}
+        fv = FeatureVector(tiv=tiv, loss_ratio=loss_ratio, credit_score=credit_score, prior_claims_count=prior_claims_count)
+        return model.predict(fv)
+
+    @staticmethod
+    def predict_churn(loss_ratio: float, credit_score: float = 700, years_in_business: float = 5.0) -> dict[str, Any]:
+        from insureflow.ml.features import FeatureVector
+        from insureflow.ml.models import ModelType
+        from insureflow.ml.registry import get_ml_registry
+
+        registry = get_ml_registry()
+        model = registry.get(ModelType.CHURN_PREDICTION)
+        if model is None:
+            return {"error": "Model not available"}
+        fv = FeatureVector(loss_ratio=loss_ratio, credit_score=credit_score, years_in_business=years_in_business)
+        return model.predict(fv)
+
+    @staticmethod
+    def simulate_portfolio_risk(exposures: list[float], loss_probabilities: list[float], severity_means: list[float]) -> dict[str, Any]:
+        from insureflow.ml.portfolio_risk import PortfolioRiskModel
+
+        model = PortfolioRiskModel(n_simulations=5000)
+        result = model.simulate(exposures, loss_probabilities, severity_means)
+        return result.model_dump()

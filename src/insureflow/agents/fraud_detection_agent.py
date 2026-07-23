@@ -17,6 +17,7 @@ class FraudDetectionAgent(ReActAgent):
         self._check_valuation_discrepancies(bundle)
         self._check_entity_consistency(bundle)
         self._check_recent_loss_cluster(bundle)
+        self._ml_fraud_scoring(bundle)
 
     def _check_non_disclosed_losses(self, bundle: SubmissionBundle) -> None:
         loss_run = self.tools.get_loss_run(bundle)
@@ -132,3 +133,58 @@ class FraudDetectionAgent(ReActAgent):
                         evidence=[f"{c.claim_id}: {c.date_of_loss}" for c in recent],
                     )
                 )
+
+    def _ml_fraud_scoring(self, bundle: SubmissionBundle) -> None:
+        """Run ML fraud anomaly detection on submission features."""
+        from insureflow.agents.tools import MLTools
+
+        tiv = 0.0
+        prior_claims = 0
+
+        if bundle.structured:
+            for loc in bundle.structured.locations:
+                tiv += (loc.building_value or 0) + (loc.contents_value or 0) + (loc.bi_value or 0)
+            if bundle.structured.risk_profile:
+                prior_claims = len(bundle.structured.risk_profile.prior_claims)
+
+        if tiv == 0:
+            return
+
+        try:
+            result = MLTools.predict_fraud(
+                tiv=tiv,
+                loss_ratio=0.5,
+                prior_claims_count=prior_claims,
+            )
+        except Exception:
+            return
+
+        if "error" in result:
+            return
+
+        prob = result.get("fraud_probability", 0)
+        risk_level = result.get("risk_level", "low")
+        patterns = result.get("flagged_patterns", [])
+
+        if risk_level in ("high", "critical"):
+            sev = RiskSeverity.CRITICAL if risk_level == "critical" else RiskSeverity.HIGH
+            self._add_finding(
+                Finding(
+                    title="ML fraud anomaly detected",
+                    description=f"ML fraud probability: {prob:.1%}, risk level: {risk_level}",
+                    severity=sev,
+                    category="ml_fraud",
+                    source_value=prob,
+                    evidence=patterns or [f"Anomaly score: {result.get('anomaly_score', 0):.4f}"],
+                )
+            )
+        elif risk_level == "medium":
+            self._add_finding(
+                Finding(
+                    title="ML fraud model flagged elevated risk",
+                    description=f"ML fraud probability: {prob:.1%}, risk level: {risk_level}",
+                    severity=RiskSeverity.MODERATE,
+                    category="ml_fraud",
+                    source_value=prob,
+                )
+            )
