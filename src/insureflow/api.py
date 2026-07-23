@@ -102,7 +102,9 @@ def _posture() -> SecurityPosture:
 def debug_env_check() -> dict[str, Any]:
     """Temporary: check env var state (no secrets exposed)."""
     import os
+    from insureflow.config import Settings
     raw = os.getenv("ENCRYPTION_KEY", "")
+    s = Settings()
     return {
         "encryption_key_set": bool(raw),
         "encryption_key_length": len(raw),
@@ -110,9 +112,9 @@ def debug_env_check() -> dict[str, Any]:
         "encryption_key_has_whitespace": raw != raw.strip(),
         "encryption_key_first_char": raw[0] if raw else None,
         "encryption_key_last_char": raw[-1] if raw else None,
-        "settings_encryption_key_set": bool(settings.encryption_key),
-        "settings_encryption_key_length": len(settings.encryption_key),
-        "settings_encryption_key_stripped_length": len(settings.encryption_key.strip()),
+        "settings_encryption_key_set": bool(s.encryption_key),
+        "settings_encryption_key_length": len(s.encryption_key),
+        "settings_encryption_key_stripped_length": len(s.encryption_key.strip()),
     }
 
 
