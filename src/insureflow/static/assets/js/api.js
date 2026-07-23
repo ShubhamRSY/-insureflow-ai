@@ -51,6 +51,7 @@ export const endpoints = {
   insuranceJob: (id) => api(`/pipeline/jobs/${id}`),
   runInsurance: (body) => api('/pipeline/run', { method: 'POST', body }),
   runInsuranceDemo: (preset) => api(`/api/demo/insurance/${preset}`, { method: 'POST' }),
+  v2Job: (id) => api(`/v2/pipeline/jobs/${id}`),
 
   mortgageJobs: () => api('/mortgage/pipeline/jobs'),
   mortgageJob: (id) => api(`/mortgage/pipeline/jobs/${id}`),
@@ -64,4 +65,21 @@ export const endpoints = {
   bind: (bundleId, body) => api(`/pipeline/workflow/${bundleId}/bind`, { method: 'POST', body }),
   audit: (bundleId) => api(`/pipeline/audit/${bundleId}`),
   ratingProducts: () => api('/pipeline/rating/products'),
+
+  portfolioSummary: () => api('/portfolio/summary'),
+  cope: (bundleId) => api(`/pipeline/cope/${bundleId}`),
+  quote: (jobId) => api(`/pipeline/jobs/${jobId}/quote`),
+
+  lendingProducts: () => api('/lending/products'),
+  lendingResult: (appId) => api(`/lending/pipeline/result/${appId}`),
+
+  qualityGates: () => api('/evaluations/quality-gates'),
+  hitlSummary: () => api('/evaluations/hitl/summary'),
+  hitlReviews: () => api('/evaluations/hitl/reviews'),
+  drift: () => api('/evaluations/drift'),
+  trends: () => api('/evaluations/trends'),
+  cadence: () => api('/evaluations/cadence'),
+
+  registryContext: () => api('/registry/context'),
+  registryVersions: () => api('/registry/versions'),
 };

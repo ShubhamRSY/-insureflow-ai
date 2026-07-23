@@ -41,6 +41,22 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
           Mortgage
         </button>
+        <button class="nav-item" data-route="lending">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+          Lending
+        </button>
+
+        <div class="nav-section">Analytics</div>
+        <button class="nav-item" data-route="portfolio">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          Portfolio
+        </button>
+        <button class="nav-item" data-route="evaluations">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+          Evaluations
+        </button>
+
+        <div class="nav-section">Operations</div>
         <button class="nav-item" data-route="workflow">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
           UW Sign-off
@@ -183,6 +199,38 @@
             <div class="card-header"><h3>Job Queue</h3></div>
             <div class="card-body" id="mortgageJobTable"></div>
           </div>
+        </div>
+
+        <!-- Lending -->
+        <div id="view-lending" class="view">
+          <div class="card" style="margin-bottom:1.5rem">
+            <div class="card-header"><h3>Lending Products</h3></div>
+            <div class="card-body"><div class="grid-2" id="lendingProducts"></div></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3>Application Results</h3></div>
+            <div class="card-body" id="lendingContent"></div>
+          </div>
+        </div>
+
+        <!-- Portfolio -->
+        <div id="view-portfolio" class="view">
+          <div class="grid-4" id="portfolioStats"></div>
+          <div class="grid-2" style="margin-top:1.5rem">
+            <div class="card">
+              <div class="card-header"><h3>Concentration Buckets</h3></div>
+              <div class="card-body" id="portfolioBuckets"></div>
+            </div>
+            <div class="card">
+              <div class="card-header"><h3>Top Lines of Business</h3></div>
+              <div class="card-body" id="portfolioTopLines"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Evaluations -->
+        <div id="view-evaluations" class="view">
+          <div id="evaluationsContent"></div>
         </div>
 
         <!-- Workflow -->

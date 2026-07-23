@@ -3,10 +3,13 @@ import {
   escapeHtml, formatCurrency, statusBadge, toast, icons,
   renderHealthHero, renderCheckList, renderJobDetail,
   extractInsuranceSummary, extractMortgageSummary,
+  renderPipelineStages, renderCopeScores, renderQuoteBreakdown,
+  renderProvenance, renderReconciliationSummary, renderMemo,
+  renderLendingResult, renderEvalMetricCard,
 } from './components.js';
 
-const VIEWS = ['overview', 'system', 'insurance', 'mortgage', 'workflow', 'settings'];
-const PROTECTED = new Set(['insurance', 'mortgage', 'workflow']);
+const VIEWS = ['overview', 'system', 'insurance', 'mortgage', 'lending', 'portfolio', 'evaluations', 'workflow', 'settings'];
+const PROTECTED = new Set(['insurance', 'mortgage', 'lending', 'portfolio', 'evaluations', 'workflow']);
 
 const state = {
   route: 'overview',
@@ -25,6 +28,9 @@ const titles = {
   system: ['System Health', 'Environment diagnostics and configuration'],
   insurance: ['Commercial Insurance', 'P&C underwriting pipeline'],
   mortgage: ['Mortgage Underwriting', 'Residential & commercial loan packages'],
+  lending: ['Consumer & Commercial Lending', 'Credit decisioning pipeline'],
+  portfolio: ['Portfolio Concentration', 'Risk aggregate exposure'],
+  evaluations: ['Evaluations & Quality', 'HITL scoring, drift detection, quality gates'],
   workflow: ['UW Sign-off Queue', 'Licensed underwriter review workflow'],
   settings: ['Account', 'Authentication and organization settings'],
 };
@@ -54,6 +60,9 @@ async function loadView(route) {
       case 'system': await loadSystem(); break;
       case 'insurance': await loadInsurance(); break;
       case 'mortgage': await loadMortgage(); break;
+      case 'lending': await loadLending(); break;
+      case 'portfolio': await loadPortfolio(); break;
+      case 'evaluations': await loadEvaluations(); break;
       case 'workflow': await loadWorkflow(); break;
       case 'settings': renderSettings(); break;
     }
@@ -108,8 +117,8 @@ async function loadOverview() {
   $('#overviewStats').innerHTML = overview ? `
     <div class="stat-card"><div class="stat-label">Insurance Jobs</div><div class="stat-value">${overview.insurance?.total || 0}</div><div class="stat-sub">${overview.insurance?.completed || 0} completed · ${overview.insurance?.processing || 0} running</div></div>
     <div class="stat-card"><div class="stat-label">Mortgage Jobs</div><div class="stat-value">${overview.mortgage?.total || 0}</div><div class="stat-sub">${overview.mortgage?.completed || 0} completed · ${overview.mortgage?.processing || 0} running</div></div>
+    <div class="stat-card"><div class="stat-label">Lending Apps</div><div class="stat-value">${overview.lending?.total || 0}</div><div class="stat-sub">${overview.lending?.completed || 0} completed · ${overview.lending?.processing || 0} running</div></div>
     <div class="stat-card"><div class="stat-label">Pending UW Review</div><div class="stat-value">${overview.pending_reviews || 0}</div><div class="stat-sub">Requires licensed sign-off</div></div>
-    <div class="stat-card"><div class="stat-label">System Health</div><div class="stat-value" style="font-size:1.25rem;color:var(--accent)">${escapeHtml(diag.overall)}</div><div class="stat-sub">LLM: ${escapeHtml(diag.llm_mode || 'unknown')}</div></div>
   ` : `
     <div class="stat-card" style="grid-column:1/-1"><div class="stat-label">Sign in required</div><div class="stat-value" style="font-size:1.1rem">Authenticate to view job metrics</div><div class="stat-sub"><button class="btn btn-primary btn-sm" onclick="document.getElementById('loginModal').classList.remove('hidden')">Sign In</button></div></div>`;
 
@@ -195,6 +204,163 @@ async function loadMortgage() {
   await renderJobTable('mortgage', state.mortgageJobs, '#mortgageJobTable');
 }
 
+async function loadLending() {
+  try {
+    const products = await endpoints.lendingProducts();
+    const items = products.products || products || [];
+    const arr = Array.isArray(items) ? items : [];
+    $('#lendingProducts').innerHTML = arr.length
+      ? arr.map(p => `
+        <div class="demo-card">
+          <h4>${escapeHtml(p.name || p.id || 'Product')}</h4>
+          <p>${escapeHtml(p.description || p.category || '')}</p>
+          <span class="tag">${escapeHtml(p.type || p.product_type || 'lending')}</span>
+        </div>`).join('')
+      : '<div class="empty-state"><p>No lending products configured</p></div>';
+  } catch {
+    $('#lendingProducts').innerHTML = '<div class="empty-state"><p>Lending module unavailable</p></div>';
+  }
+
+  $('#lendingContent').innerHTML = '<div class="empty-state"><p>Submit an application to view results here</p></div>';
+}
+
+async function loadPortfolio() {
+  try {
+    const data = await endpoints.portfolioSummary();
+    const buckets = data.concentration_buckets || data.buckets || [];
+    const totalExposure = data.total_exposure || 0;
+    const topLines = data.top_lines || [];
+
+    $('#portfolioStats').innerHTML = `
+      <div class="stat-card"><div class="stat-label">Total Exposure</div><div class="stat-value">${formatCurrency(totalExposure)}</div></div>
+      <div class="stat-card"><div class="stat-label">Active Policies</div><div class="stat-value">${data.active_policies || 0}</div></div>
+      <div class="stat-card"><div class="stat-label">Buckets</div><div class="stat-value">${buckets.length}</div></div>
+      <div class="stat-card"><div class="stat-label">Top Lines</div><div class="stat-value">${topLines.length}</div></div>`;
+
+    $('#portfolioBuckets').innerHTML = buckets.length
+      ? `<div class="table-wrap"><table>
+          <thead><tr><th>Bucket</th><th>Exposure</th><th>Count</th><th>Avg Premium</th></tr></thead>
+          <tbody>${buckets.map(b => `
+            <tr>
+              <td>${escapeHtml(b.bucket || b.name || '—')}</td>
+              <td>${formatCurrency(b.exposure || b.total_exposure)}</td>
+              <td>${b.count || b.policy_count || 0}</td>
+              <td>${formatCurrency(b.avg_premium || b.average_premium)}</td>
+            </tr>`).join('')}</tbody>
+        </table></div>`
+      : '<div class="empty-state"><p>No concentration data available</p></div>';
+
+    $('#portfolioTopLines').innerHTML = topLines.length
+      ? `<div class="table-wrap"><table>
+          <thead><tr><th>Line</th><th>Exposure</th><th>Count</th></tr></thead>
+          <tbody>${topLines.map(l => `
+            <tr>
+              <td>${escapeHtml(l.line || l.name || '—')}</td>
+              <td>${formatCurrency(l.exposure || l.total_exposure)}</td>
+              <td>${l.count || 0}</td>
+            </tr>`).join('')}</tbody>
+        </table></div>`
+      : '';
+  } catch (e) {
+    $('#portfolioStats').innerHTML = '<div class="empty-state"><p>Portfolio data unavailable</p></div>';
+    $('#portfolioBuckets').innerHTML = '';
+    $('#portfolioTopLines').innerHTML = '';
+  }
+}
+
+async function loadEvaluations() {
+  const sections = [];
+
+  try {
+    const gates = await endpoints.qualityGates();
+    const gateList = gates.gates || gates.results || [];
+    sections.push(`<div class="eval-section"><h3>Quality Gates</h3>
+      ${gateList.length ? `<div class="table-wrap"><table>
+        <thead><tr><th>Gate</th><th>Status</th><th>Last Run</th><th>Details</th></tr></thead>
+        <tbody>${gateList.map(g => `
+          <tr>
+            <td>${escapeHtml(g.name || g.gate_name || '—')}</td>
+            <td>${statusBadge(g.status || g.result || '—')}</td>
+            <td>${escapeHtml(g.last_run || g.timestamp || '—')}</td>
+            <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis">${escapeHtml(g.details || g.message || '')}</td>
+          </tr>`).join('')}</tbody>
+      </table></div>`
+      : '<div class="empty-state"><p>No quality gates configured</p></div>'}
+    </div>`);
+  } catch {
+    sections.push('<div class="eval-section"><h3>Quality Gates</h3><div class="empty-state"><p>Unavailable</p></div></div>');
+  }
+
+  try {
+    const hitl = await endpoints.hitlSummary();
+    const reviews = hitl.reviews || hitl.results || [];
+    sections.push(`<div class="eval-section"><h3>Human-in-the-Loop Reviews</h3>
+      <div class="eval-metrics-row">
+        ${renderEvalMetricCard('Total Reviews', hitl.total_reviews ?? reviews.length ?? 0)}
+        ${renderEvalMetricCard('Avg Score', hitl.avg_score != null ? hitl.avg_score.toFixed(2) : '—')}
+        ${renderEvalMetricCard('Approval Rate', hitl.approval_rate != null ? `${(hitl.approval_rate * 100).toFixed(0)}%` : '—')}
+        ${renderEvalMetricCard('Pending', hitl.pending ?? '—')}
+      </div>
+      ${reviews.length ? `<div class="table-wrap"><table>
+        <thead><tr><th>Review ID</th><th>Bundle</th><th>Score</th><th>Decision</th><th>Reviewer</th></tr></thead>
+        <tbody>${reviews.slice(0, 20).map(r => `
+          <tr>
+            <td class="mono">${escapeHtml(r.review_id || r.id || '—')}</td>
+            <td class="mono">${escapeHtml(r.bundle_id || '—')}</td>
+            <td>${r.score != null ? r.score.toFixed(2) : '—'}</td>
+            <td>${statusBadge(r.decision || r.outcome || '—')}</td>
+            <td>${escapeHtml(r.reviewer || r.underwriter || '—')}</td>
+          </tr>`).join('')}</tbody>
+      </table></div>` : ''}
+    </div>`);
+  } catch {
+    sections.push('<div class="eval-section"><h3>Human-in-the-Loop Reviews</h3><div class="empty-state"><p>Unavailable</p></div></div>');
+  }
+
+  try {
+    const drift = await endpoints.drift();
+    const metrics = drift.metrics || drift.results || [];
+    sections.push(`<div class="eval-section"><h3>Drift Detection</h3>
+      ${metrics.length ? `<div class="table-wrap"><table>
+        <thead><tr><th>Metric</th><th>Current</th><th>Baseline</th><th>Drift</th><th>Status</th></tr></thead>
+        <tbody>${metrics.map(m => `
+          <tr>
+            <td>${escapeHtml(m.metric || m.name || '—')}</td>
+            <td>${m.current != null ? m.current.toFixed(3) : '—'}</td>
+            <td>${m.baseline != null ? m.baseline.toFixed(3) : '—'}</td>
+            <td>${m.drift != null ? m.drift.toFixed(3) : '—'}</td>
+            <td>${statusBadge(m.status || (m.drift && Math.abs(m.drift) > 0.1 ? 'degraded' : 'ok'))}</td>
+          </tr>`).join('')}</tbody>
+      </table></div>`
+      : '<div class="empty-state"><p>No drift data available</p></div>'}
+    </div>`);
+  } catch {
+    sections.push('<div class="eval-section"><h3>Drift Detection</h3><div class="empty-state"><p>Unavailable</p></div></div>');
+  }
+
+  try {
+    const trends = await endpoints.trends();
+    const trendData = trends.trends || trends.results || [];
+    sections.push(`<div class="eval-section"><h3>Performance Trends</h3>
+      ${trendData.length ? `<div class="table-wrap"><table>
+        <thead><tr><th>Metric</th><th>Value</th><th>Trend</th><th>Period</th></tr></thead>
+        <tbody>${trendData.map(t => `
+          <tr>
+            <td>${escapeHtml(t.metric || t.name || '—')}</td>
+            <td>${t.value != null ? (typeof t.value === 'number' ? t.value.toFixed(2) : t.value) : '—'}</td>
+            <td>${t.trend ? (t.trend > 0 ? '&#9650;' : t.trend < 0 ? '&#9660;' : '&#8212;') : '—'}</td>
+            <td>${escapeHtml(t.period || t.date || '—')}</td>
+          </tr>`).join('')}</tbody>
+      </table></div>`
+      : '<div class="empty-state"><p>No trend data available</p></div>'}
+    </div>`);
+  } catch {
+    sections.push('<div class="eval-section"><h3>Performance Trends</h3><div class="empty-state"><p>Unavailable</p></div></div>');
+  }
+
+  $('#evaluationsContent').innerHTML = sections.join('');
+}
+
 async function renderJobTable(vertical, jobIds, containerSel) {
   const container = $(containerSel);
   if (!jobIds.length) {
@@ -235,7 +401,7 @@ async function renderJobTable(vertical, jobIds, containerSel) {
 async function openJob(vertical, jobId) {
   state.selectedVertical = vertical;
   state.selectedJob = jobId;
-  const fetchJob = vertical === 'insurance' ? endpoints.insuranceJob : endpoints.mortgageJob;
+  const fetchJob = vertical === 'insurance' ? endpoints.insuranceJob : vertical === 'mortgage' ? endpoints.mortgageJob : endpoints.lendingResult;
   let job = await fetchJob(jobId);
 
   $('#drawerTitle').textContent = jobId;
