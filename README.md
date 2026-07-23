@@ -2,11 +2,11 @@
 
 > Enterprise multi-agent underwriting platform for **commercial insurance**, **bank mortgage**, and **consumer/commercial lending** document processing.
 
-**Product:** [Rytera](https://rytera.ai) · **Package name:** `insureflow-ai` (internal Python module: `insureflow`)
+**Production:** [ryterainc.com](https://ryterainc.com) · **Package:** `insureflow-ai` · **Module:** `insureflow`
 
 Rytera ingests multi-format submission packages — ACORD XML, broker PDFs, loss runs, W-2s, credit reports, appraisals — and produces an underwriting memo with a recommendation, premium or rate quote, encrypted audit trail, and optional licensed underwriter sign-off.
 
-All three verticals share a unified API, JWT authentication, org-scoped job store, Fernet encryption, and React dashboard. Pipelines operate **with or without an LLM API key** via deterministic agent fallbacks.
+All three verticals share a unified API, JWT authentication, org-scoped job store, Redis-backed persistence, Fernet encryption, PostgreSQL/pgvector RAG, and vanilla JS dashboard. Pipelines operate **with or without an LLM API key** via deterministic agent fallbacks.
 
 ---
 
@@ -33,25 +33,23 @@ End-to-end bind-ready workflow for carrier-grade operations:
 - **Loss feedback loop** — record actual loss experience; portfolio calibration by loss ratio
 - **Regulatory audit package** — SHA-256 manifest ZIP with encrypted artifacts for examiner review
 
-### Web Dashboard (React)
+### Web Dashboard (Vanilla JS SPA)
 
-Modern SPA served at `/dashboard` (React 18, Vite, Tailwind CSS). Product marketing landing page at `/` (HTML).
+Modern SPA served at `/dashboard` (vanilla JS, modular CSS). Marketing landing page at `/` (HTML).
 
-| Page | Purpose |
-|------|---------|
-| **Overview** | Pipeline narrative (intake → decide), job metrics, quick demos, recent activity with journey strips |
-| **System Health** | Live diagnostics (10 component checks) |
-| **Insurance** | Source connector hub, pipeline flow banner, ecosystem feed status, one-click demos, job history with journey strips |
-| **Mortgage** | Loan package submission, job history, rate/DTI display |
-| **Lending** | Consumer/commercial lending applications and decisions |
-| **Queue** | Prioritized submission queue with triage scores and mini journey indicators |
-| **UW Sign-off** | Licensed review queue with View (job drawer), approve, refer, decline |
-| **Integrations** | Enterprise connector and ecosystem health |
-| **Renewal Dashboard** | Premium audit tracking, reconciliation status, material adjustments |
-| **Authority Matrix** | UW tier overview, binding limits per authority level |
-| **Market Admin** | Market phase controls (hard/soft), rate impact cards |
-| **Broker Status** | Token-based broker share links, public status pages |
-| **Settings** | Session info, RBAC reference (role hierarchy + descriptions), credential reset |
+| Page | Auth | Purpose |
+|------|------|---------|
+| **Overview** | Optional | Pipeline metrics, quick demos, recent activity, lending job counts |
+| **System Health** | No | Live 10-component diagnostics with LLM mode indicator |
+| **Insurance** | Yes | One-click demos, custom submission form, job queue, 9-stage pipeline visualization |
+| **Mortgage** | Yes | Loan package demos, custom submission, rate/DTI display, pipeline stages |
+| **Lending** | Yes | Consumer/commercial lending products and application results |
+| **Portfolio** | Yes | Concentration buckets, top lines of business, total exposure |
+| **Evaluations** | Yes | Quality gates, HITL review scores, drift detection, performance trends |
+| **UW Sign-off** | Yes | Licensed review queue — approve, refer, decline |
+| **Settings** | Optional | Account info, sign out, credential reset |
+
+**Job Detail Drawer:** click any job to open a full pipeline panel — 9-stage progress bar, COPE risk scores with per-field bars, quote breakdown (base/adjusted/binding premiums, carrier, validity), provenance tracking (verified/unverified fields), reconciliation summary (fields checked, verified, discrepancies), compliance violations with severity levels, and raw JSON toggle.
 
 **Submission Journey** (job drawer): click any insurance job to open a full pipeline panel — timeline, COPE, oracle verification, agent findings, provenance reconciliation, pricing build-up, enterprise ops, human checkpoints, and audit trail. Replaces opaque “upload → decision” UX.
 
@@ -94,9 +92,11 @@ Category-filtered connector hub with brand logos and pull-to-submit workflow.
 
 - **JWT auth + RBAC** — viewer → underwriter → licensed_uw → admin → cuo; org-scoped data isolation, self-registration for viewer/underwriter
 - **Persistent auth store** — file-backed user registry survives server reloads
-- **Redis job store** — org-scoped async job tracking for insurance, mortgage, and lending pipelines
+- **Redis job store** — org-scoped async job tracking for insurance, mortgage, and lending pipelines (persistent via Railway Redis)
 - **Celery workers** — async mortgage processing with job-store completion sync
-- **System diagnostics** — `cli.py doctor` and `GET /system/diagnostics` (LLM, Redis, Postgres/pgvector, OCR, encryption, examples)
+- **PostgreSQL + pgvector** — production RAG with vector embeddings for underwriting guidelines
+- **Fernet encryption** — envelope encryption for audit bundles at rest
+- **System diagnostics** — `cli.py doctor` and `GET /system/diagnostics` (10 checks: LLM, Redis, job store, encryption, OCR, audit, examples, mortgage fixtures, pgvector)
 - **Insurance & mortgage webhooks** — HMAC-signed event subscriptions for both verticals
 - **Broker status shares** — Token-based public share links for broker-facing status pages
 - **Model registry** — Version-controlled model & guideline registry with compliance approval workflow
@@ -104,23 +104,25 @@ Category-filtered connector hub with brand logos and pull-to-submit workflow.
 - **Document analytics** — Analytics engine for document counts, type distribution, field coverage
 - **Entity resolution** — Named entity extraction and cross-document entity matching
 - **Docker Compose** — Redis, PostgreSQL/pgvector, API, Celery worker
+- **Railway deployment** — Production deployment at ryterainc.com with Redis, PostgreSQL, and Fernet encryption
 
 ### Quality Assurance
 
 | Suite | Scope | Count |
 |-------|-------|-------|
-| **Unit tests** (`pytest`) | Parsers, agents, rating, workflow, underwriting, mortgage, lending, oracles, provenance, reconciliation, gateway, production integrations | **340+** |
-| **E2E tests** (`scripts/e2e_test.py`) | Full API integration, connectors, production workflow, Celery, Playwright browser | 42 |
-
-E2E coverage includes: auth, diagnostics, all 24 connector pulls, insurance/mortgage demo pipelines, licensed UW sign-off, policy bind, loss experience, regulatory audit package, Celery mortgage path, and browser click-through (login, navigation, password toggle).
+| **Unit tests** (`pytest`) | Parsers, agents, rating, workflow, underwriting, mortgage, lending, oracles, provenance, reconciliation, gateway, production integrations, security, SSO | **705** |
+| **Skipped** | Pre-existing E2E timeout test (needs live LLM) | **1** |
 
 ```bash
+python -m pytest tests/ -q                        # Unit + integration tests
+python -m pytest tests/ -q --ignore=tests/test_e2e.py   # Skip E2E (faster)
 python scripts/e2e_test.py --timeout 360          # Full live-server E2E
 python scripts/e2e_test.py --fast --timeout 360   # Skip connector pulls (~6 min)
 python cli.py e2e --fast                          # Same via CLI
-python -m pytest tests/ -q                        # Unit + integration tests
 python scripts/build_linkedin_deck.py             # Product deck (screenshots + PPTX)
 ```
+
+CI checks: `ruff check .`, `ruff format --check .`, `mypy src/ tests/`, `pytest`
 
 ---
 
@@ -182,7 +184,17 @@ Application → Credit Pull → Risk Score → Compliance (Reg B/ECOA/HMDA)
 
 ## Quick Start
 
-### 1. Install
+### Production (Railway)
+
+The platform is deployed at **[ryterainc.com](https://ryterainc.com)** on Railway with:
+- Redis (persistent job store)
+- PostgreSQL + pgvector (production RAG)
+- Fernet encryption (audit bundles at rest)
+- LLM-enhanced mode (OpenAI gpt-4o-mini + gpt-4o)
+
+### Local Development
+
+#### 1. Install
 
 ```bash
 pip install -e .
@@ -199,13 +211,13 @@ cp .env.example .env
 
 Local dev uses the bundled gateway at `http://127.0.0.1:8002/integrations` with `ORACLE_MODE=auto` — feeds show **live** when the API is running. For production, point URLs at `https://integrations.rytera.ai` and replace `INTEGRATION_GATEWAY_API_KEY`. See `docs/LAUNCH_CHECKLIST.md` and `legal/TRADEMARK_NOTICE.md`.
 
-### 2. Start infrastructure
+#### 2. Start infrastructure
 
 ```bash
 docker compose up -d redis db    # Redis + PostgreSQL/pgvector
 ```
 
-### 3. Start services
+#### 3. Start services
 
 ```bash
 # API + dashboard (port 8002 — 8000/8001 often in use)
@@ -217,7 +229,7 @@ python -m celery -A insureflow.tasks.celery_app worker -Q agents,pipeline,mortga
 
 Open **http://localhost:8002/dashboard** — use **First-time Setup** or sign in after `python cli.py auth-reset`. Marketing landing page: **http://localhost:8002/**
 
-### 4. CLI examples
+#### 4. CLI examples
 
 ```bash
 # ── Insurance CLI ──
@@ -247,14 +259,14 @@ python cli.py e2e --fast
 python -m pytest tests/ -q
 ```
 
-### 5. Frontend development (optional)
+#### 5. Frontend development (optional)
 
 ```bash
 cd frontend && npm install && npm run dev    # Vite dev server with API proxy
 cd frontend && npm run build                 # Build into src/insureflow/static/ui/
 ```
 
-### Docker (full stack)
+#### Docker (full stack)
 
 ```bash
 docker compose up --build
@@ -646,22 +658,21 @@ Checks ten components: LLM API key, Redis, job store, encryption, OCR, audit pat
 
 ### Web dashboard
 
-Open **http://localhost:8002/dashboard** after starting the API.
+Open **http://localhost:8002/dashboard** after starting the API. Production: **https://ryterainc.com/dashboard**
 
 > Use `insureflow.api:app` via `python cli.py serve`, not `insureflow.llm.main:app`.
 
 | Page | Auth | Purpose |
 |------|------|---------|
-| **Overview** | Optional | Dashboard metrics, quick demos, job chart |
-| **System Health** | No | Live component status with LLM mode indicator |
-| **Insurance** | Yes | Connector hub (24 sources), Pacific Coast demo, job table |
-| **Mortgage** | Yes | Johnson / Midwest demos, job submission, rate & DTI |
-| **UW Sign-off** | Yes | Licensed review queue — View (opens job drawer with full memo), approve, refer, decline |
-| **Renewal Dashboard** | Yes | Premium audit history, material adjustment queue |
-| **Authority Matrix** | Yes | UW tier cards, binding limits per authority level |
-| **Market Admin** | Yes | Market phase selector, rate impact metrics |
-| **Broker Status** | Yes | Token-based broker share links, public status pages |
-| **Settings** | Optional | Account info, RBAC role reference, sign out, credential reset |
+| **Overview** | Optional | Dashboard metrics, quick demos, recent activity |
+| **System Health** | No | Live 10-component status with LLM mode indicator |
+| **Insurance** | Yes | Pacific Coast demo, custom submission, 9-stage pipeline visualization, COPE scores |
+| **Mortgage** | Yes | Johnson / Midwest demos, job submission, pipeline stages |
+| **Lending** | Yes | Consumer/commercial lending products and results |
+| **Portfolio** | Yes | Concentration buckets, top lines, total exposure |
+| **Evaluations** | Yes | Quality gates, HITL reviews, drift detection, performance trends |
+| **UW Sign-off** | Yes | Licensed review queue — approve, refer, decline |
+| **Settings** | Optional | Account info, sign out, credential reset |
 
 ### Auth reset
 
@@ -1068,7 +1079,7 @@ Provisions: VPC, ALB + TLS, ECS Fargate, RDS Postgres, ElastiCache Redis, WAF, C
 
 ## Tests
 
-### Unit tests (~200)
+### Unit tests (705)
 
 ```bash
 python -m pytest tests/ -q
@@ -1135,14 +1146,15 @@ python cli.py e2e --fast --timeout 360
 
 ## Key Design Decisions
 
-- **Dual verticals, shared infra** — Insurance and mortgage share auth, job store, encryption, and API; separate pipelines and agents per domain
+- **Triple verticals, shared infra** — Insurance, mortgage, and lending share auth, job store, encryption, and API; separate pipelines and agents per domain
 - **Deterministic fallback always present** — Agents work without any LLM API key; LLM enhances analysis when configured
 - **Provenance hierarchy** — Structured broker data (ACORD) wins over AI-extracted PDF fields; eliminates hallucinations on critical limits
 - **Licensed UW gate** — AI recommends; a licensed underwriter with license number signs off before bind
 - **Encrypted audit at rest** — Fernet envelope encryption on all persisted bundles; regulatory ZIP with checksums for examiners
 - **Org-scoped isolation** — Jobs, workflows, audit trails, and webhooks scoped per `org_id` in JWT
 - **Connector abstraction** — Unified pull API for cloud, DMS, broker, and legacy sources with simulated enterprise integrations
-- **Test-driven delivery** — ~200 unit tests plus 42-scenario E2E suite covering API, production workflow, Celery, and browser UI
+- **Test-driven delivery** — 705 unit/integration tests plus E2E suite covering API, production workflow, Celery, and browser UI
+- **Production on Railway** — Redis for persistent job store, PostgreSQL/pgvector for RAG, all 10 diagnostic checks green at ryterainc.com
 
 ---
 
