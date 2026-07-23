@@ -118,7 +118,7 @@ class LossPredictionModel(BaseMLModel):
             expected_loss=round(max(expected_loss, 0), 2),
             loss_range_low=round(max(expected_loss * 0.5, 0), 2),
             loss_range_high=round(expected_loss * 2.0, 2),
-            confidence=round(min(0.95, self.metrics.get("val_r2", 0.5) + 0.3), 2),
+            confidence=round(max(0.0, min(0.95, self.metrics.get("val_r2", 0.5) + 0.3)), 2),
             top_risk_factors=[],
             model_version=self.version,
         ).model_dump()

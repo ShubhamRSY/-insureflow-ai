@@ -38,13 +38,10 @@ class PremiumOptimizerModel(BaseMLModel):
         return self.elasticity_model
 
     def _get_feature_names(self) -> list[str]:
-        return get_feature_names() + ["price_ratio", "margin_target"]
+        return get_feature_names()
 
     def _extract_features(self, fv: FeatureVector) -> np.ndarray:
-        base = extract_features(fv)
-        price_ratio = fv.requested_premium / max(fv.tiv, 1)
-        margin_target = 0.15
-        return np.append(base, [price_ratio, margin_target])
+        return extract_features(fv)
 
     def _fit_model(self, X: np.ndarray, y: np.ndarray, **kwargs: Any) -> None:
         n = len(X)

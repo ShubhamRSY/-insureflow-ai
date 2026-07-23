@@ -177,6 +177,26 @@ def generate_synthetic_dataset(
         ]
     )
 
+    revenue = X[:, 0]
+    employees = X[:, 1]
+    years = X[:, 2]
+    claims_count = X[:, 3]
+    tiv = X[:, 5]
+    premium = X[:, 6]
+    loss_ratio = X[:, 7]
+    credit_score = X[:, 8]
+    cancellations = X[:, 21]
+
+    revenue_per_emp = revenue / np.maximum(employees, 1)
+    claims_per_yr = claims_count / np.maximum(years, 1)
+    tiv_to_rev = tiv / np.maximum(revenue, 1)
+    prem_to_tiv = premium / np.maximum(tiv, 1)
+    risk_score = (
+        loss_ratio * 0.3 + (1 - np.clip(credit_score / 850, 0, 1)) * 0.2 + np.clip(claims_count / 10, 0, 1) * 0.2 + np.clip(cancellations / 5, 0, 1) * 0.15 + (1 - np.clip(years / 30, 0, 1)) * 0.15
+    )
+
+    X = np.column_stack([X, revenue_per_emp, claims_per_yr, tiv_to_rev, prem_to_tiv, risk_score])
+
     if model_type == "loss_prediction":
         y = _generate_loss_target(X, rng)
     elif model_type == "fraud_detection":
@@ -223,7 +243,12 @@ def _generate_fraud_target(X: np.ndarray, rng: np.random.RandomState) -> np.ndar
 def _generate_premium_target(X: np.ndarray, rng: np.random.RandomState) -> np.ndarray:
     """Generate optimal premium targets."""
     tiv = X[:, 5]
-    risk_score = X[:, 28]
+    loss_ratio = X[:, 7]
+    credit = X[:, 8]
+    claims = X[:, 3]
+    cancellations = X[:, 21]
+    years = X[:, 2]
+    risk_score = loss_ratio * 0.3 + (1 - np.clip(credit / 850, 0, 1)) * 0.2 + np.clip(claims / 10, 0, 1) * 0.2 + np.clip(cancellations / 5, 0, 1) * 0.15 + (1 - np.clip(years / 30, 0, 1)) * 0.15
     base = tiv * 0.005
     risk_adj = base * risk_score
     margin = rng.uniform(0.1, 0.3, len(X))
@@ -231,7 +256,7 @@ def _generate_premium_target(X: np.ndarray, rng: np.random.RandomState) -> np.nd
 
 
 def _generate_churn_target(X: np.ndarray, rng: np.random.RandomState) -> np.ndarray:
-    """Generate churn probability targets."""
+    """Generate churn labels (0=renew, 1=churn) based on risk factors."""
     loss_ratio = X[:, 7]
     credit = X[:, 8]
     years = X[:, 2]
@@ -240,4 +265,5 @@ def _generate_churn_target(X: np.ndarray, rng: np.random.RandomState) -> np.ndar
     churn_base += np.where(credit < 600, 0.15, 0)
     churn_base += np.where(years < 2, 0.2, 0)
     churn_base += rng.normal(0, 0.05, len(X))
-    return np.clip(churn_base, 0, 1)
+    churn_prob = np.clip(churn_base, 0, 1)
+    return (rng.random(len(X)) < churn_prob).astype(float)

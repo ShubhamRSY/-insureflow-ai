@@ -31,3 +31,4 @@ mlruns/
 *.sqlite3
 *.pem
 !deploy/caddy/certs/.gitkeep
+ml_models/

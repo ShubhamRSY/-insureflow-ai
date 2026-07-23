@@ -82,6 +82,7 @@ select = ["E", "F", "I", "N", "W"]
 "src/insureflow/rag/guidelines.py" = ["E501"]
 "src/insureflow/rating/quote_document.py" = ["E501"]
 "src/insureflow/ml/*.py" = ["N803", "N806", "N817"]
+"tests/test_ml.py" = ["N806"]
 
 [tool.pytest.ini_options]
 markers = [
