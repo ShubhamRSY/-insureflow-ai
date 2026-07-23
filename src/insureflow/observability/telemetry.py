@@ -20,8 +20,16 @@ class Span:
     """A single unit of work within a pipeline trace."""
 
     __slots__ = (
-        "trace_id", "span_id", "parent_span_id", "name", "layer",
-        "start_time", "end_time", "status", "attributes", "events",
+        "trace_id",
+        "span_id",
+        "parent_span_id",
+        "name",
+        "layer",
+        "start_time",
+        "end_time",
+        "status",
+        "attributes",
+        "events",
     )
 
     def __init__(
@@ -52,11 +60,13 @@ class Span:
         self.attributes[key] = value
 
     def add_event(self, name: str, attributes: Optional[dict[str, Any]] = None) -> None:
-        self.events.append({
-            "name": name,
-            "timestamp": datetime.now(tz=timezone.utc).isoformat(),
-            "attributes": attributes or {},
-        })
+        self.events.append(
+            {
+                "name": name,
+                "timestamp": datetime.now(tz=timezone.utc).isoformat(),
+                "attributes": attributes or {},
+            }
+        )
 
     def finish(self, status: str = "OK") -> None:
         self.end_time = time.monotonic()

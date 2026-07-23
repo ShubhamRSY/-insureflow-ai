@@ -44,6 +44,7 @@ class LLMClient:
         if self._tracker is None:
             try:
                 from insureflow.llm.tracker import get_token_tracker
+
                 self._tracker = get_token_tracker()
             except Exception:
                 pass
@@ -53,6 +54,7 @@ class LLMClient:
         if self._budget is None:
             try:
                 from insureflow.llm.budget import get_budget_manager
+
                 self._budget = get_budget_manager()
             except Exception:
                 pass

@@ -18,6 +18,7 @@ from insureflow.analytics.metrics import (
 # Fill Rate Tracker
 # ---------------------------------------------------------------------------
 
+
 class TestFillRateTracker:
     def _make_tracker(self, tmp: str) -> FillRateTracker:
         return FillRateTracker(persist_path=Path(tmp) / "fill_rate.jsonl")
@@ -41,7 +42,7 @@ class TestFillRateTracker:
         for i in range(8):
             tracker.record_field("naics_code", filled=True, bundle_id=f"b-{i}")
         for i in range(2):
-            tracker.record_field("naics_code", filled=False, bundle_id=f"b-{i+8}")
+            tracker.record_field("naics_code", filled=False, bundle_id=f"b-{i + 8}")
         rate = tracker.get_fill_rate("naics_code")
         assert rate["total"] == 10
         assert rate["filled"] == 8
@@ -108,6 +109,7 @@ class TestFillRateTracker:
 # Override Rate Tracker
 # ---------------------------------------------------------------------------
 
+
 class TestOverrideRateTracker:
     def _make_tracker(self, tmp: str) -> OverrideRateTracker:
         return OverrideRateTracker(persist_path=Path(tmp) / "override_rate.jsonl")
@@ -152,7 +154,7 @@ class TestOverrideRateTracker:
         for i in range(7):
             tracker.record_sign_off(bundle_id=f"b-{i}", ai_decision="approve", human_decision="approve", signed_by="uw1")
         for i in range(3):
-            tracker.record_sign_off(bundle_id=f"b-{i+7}", ai_decision="approve", human_decision="decline", signed_by="uw1")
+            tracker.record_sign_off(bundle_id=f"b-{i + 7}", ai_decision="approve", human_decision="decline", signed_by="uw1")
         rate = tracker.get_override_rate()
         assert rate["total"] == 10
         assert rate["overrides"] == 3
@@ -171,13 +173,19 @@ class TestOverrideRateTracker:
         tracker = self._make_tracker(str(tmp_path))
         for _ in range(3):
             tracker.record_sign_off(
-                bundle_id="b-1", ai_decision="approve", human_decision="decline",
-                signed_by="uw1", override_reason="Loss ratio too high",
+                bundle_id="b-1",
+                ai_decision="approve",
+                human_decision="decline",
+                signed_by="uw1",
+                override_reason="Loss ratio too high",
             )
         for _ in range(2):
             tracker.record_sign_off(
-                bundle_id="b-2", ai_decision="approve", human_decision="decline",
-                signed_by="uw1", override_reason="Missing inspection",
+                bundle_id="b-2",
+                ai_decision="approve",
+                human_decision="decline",
+                signed_by="uw1",
+                override_reason="Missing inspection",
             )
         reasons = tracker.get_common_override_reasons()
         assert reasons[0]["reason"] == "Loss ratio too high"
@@ -195,6 +203,7 @@ class TestOverrideRateTracker:
 # ---------------------------------------------------------------------------
 # Cycle Time Tracker
 # ---------------------------------------------------------------------------
+
 
 class TestCycleTimeTracker:
     def _make_tracker(self, tmp: str) -> CycleTimeTracker:
@@ -268,6 +277,7 @@ class TestCycleTimeTracker:
 # ---------------------------------------------------------------------------
 # PipelineMetrics (aggregate)
 # ---------------------------------------------------------------------------
+
 
 class TestPipelineMetrics:
     def test_get_all(self, tmp_path: Any) -> None:

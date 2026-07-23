@@ -23,8 +23,10 @@ logger = logging.getLogger(__name__)
 # Models
 # ---------------------------------------------------------------------------
 
+
 class FieldFillRecord(BaseModel):
     """Tracks whether a specific field was filled by the AI or left empty."""
+
     field_name: str
     filled: bool
     confidence: float = 0.0
@@ -36,6 +38,7 @@ class FieldFillRecord(BaseModel):
 
 class OverrideRecord(BaseModel):
     """Tracks a human override of an AI decision."""
+
     bundle_id: str
     ai_decision: str
     human_decision: str
@@ -49,6 +52,7 @@ class OverrideRecord(BaseModel):
 
 class CycleTimeRecord(BaseModel):
     """Tracks end-to-end pipeline cycle time with stage breakdowns."""
+
     bundle_id: str
     started_at: datetime
     completed_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
@@ -311,10 +315,7 @@ class OverrideRateTracker:
             if r.is_override and r.override_reason:
                 reasons[r.override_reason] += 1
 
-        return [
-            {"reason": reason, "count": count}
-            for reason, count in sorted(reasons.items(), key=lambda x: -x[1])
-        ]
+        return [{"reason": reason, "count": count} for reason, count in sorted(reasons.items(), key=lambda x: -x[1])]
 
     def _persist(self, entry: OverrideRecord) -> None:
         try:
@@ -438,10 +439,7 @@ class CycleTimeTracker:
                 stage_totals[stage] += dur
                 stage_counts[stage] += 1
 
-        stage_avg = {
-            stage: round(stage_totals[stage] / stage_counts[stage], 3)
-            for stage in stage_totals
-        }
+        stage_avg = {stage: round(stage_totals[stage] / stage_counts[stage], 3) for stage in stage_totals}
 
         return {
             "total_runs": len(records),
@@ -471,6 +469,7 @@ class CycleTimeTracker:
 # ---------------------------------------------------------------------------
 # Aggregate Metrics
 # ---------------------------------------------------------------------------
+
 
 class PipelineMetrics:
     """Unified access to all pipeline business metrics."""

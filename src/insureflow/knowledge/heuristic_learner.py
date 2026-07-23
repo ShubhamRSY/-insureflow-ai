@@ -119,10 +119,7 @@ class HeuristicLearner:
         if not reason:
             return proposed
 
-        same_reason = [
-            d for d in self._decisions
-            if d.get("override_reason", "") == reason
-        ]
+        same_reason = [d for d in self._decisions if d.get("override_reason", "") == reason]
 
         if len(same_reason) >= self.min_occurrences:
             decisions = [d["decision"] for d in same_reason]
@@ -133,16 +130,18 @@ class HeuristicLearner:
                 heuristic_id = f"heuristic-override-{hashlib.sha256(reason.encode()).hexdigest()[:10]}"
                 existing = self.store.get_rule(heuristic_id)
                 if existing is None:
-                    proposed.append(ProposedHeuristic(
-                        heuristic_id=heuristic_id,
-                        title=f"Override pattern: {reason[:50]}",
-                        description=f"When UW overrides with reason '{reason}', they tend to {most_common} ({len(same_reason)} occurrences)",
-                        trigger=f"override_reason={reason}",
-                        action=most_common,
-                        confidence=confidence,
-                        evidence_count=len(same_reason),
-                        source_bundles=[d["bundle_id"] for d in same_reason[-5:]],
-                    ))
+                    proposed.append(
+                        ProposedHeuristic(
+                            heuristic_id=heuristic_id,
+                            title=f"Override pattern: {reason[:50]}",
+                            description=f"When UW overrides with reason '{reason}', they tend to {most_common} ({len(same_reason)} occurrences)",
+                            trigger=f"override_reason={reason}",
+                            action=most_common,
+                            confidence=confidence,
+                            evidence_count=len(same_reason),
+                            source_bundles=[d["bundle_id"] for d in same_reason[-5:]],
+                        )
+                    )
 
         return proposed
 
@@ -153,10 +152,7 @@ class HeuristicLearner:
             return proposed
 
         for condition in conditions:
-            same_condition = [
-                d for d in self._decisions
-                if condition in d.get("conditions", [])
-            ]
+            same_condition = [d for d in self._decisions if condition in d.get("conditions", [])]
 
             if len(same_condition) >= self.min_occurrences:
                 decisions = [d["decision"] for d in same_condition]
@@ -167,16 +163,18 @@ class HeuristicLearner:
                     heuristic_id = f"heuristic-condition-{hashlib.sha256(condition.encode()).hexdigest()[:10]}"
                     existing = self.store.get_rule(heuristic_id)
                     if existing is None:
-                        proposed.append(ProposedHeuristic(
-                            heuristic_id=heuristic_id,
-                            title=f"Condition pattern: {condition[:50]}",
-                            description=f"When condition '{condition}' is applied, UWs tend to {most_common} ({len(same_condition)} occurrences)",
-                            trigger=f"condition={condition}",
-                            action=most_common,
-                            confidence=confidence,
-                            evidence_count=len(same_condition),
-                            source_bundles=[d["bundle_id"] for d in same_condition[-5:]],
-                        ))
+                        proposed.append(
+                            ProposedHeuristic(
+                                heuristic_id=heuristic_id,
+                                title=f"Condition pattern: {condition[:50]}",
+                                description=f"When condition '{condition}' is applied, UWs tend to {most_common} ({len(same_condition)} occurrences)",
+                                trigger=f"condition={condition}",
+                                action=most_common,
+                                confidence=confidence,
+                                evidence_count=len(same_condition),
+                                source_bundles=[d["bundle_id"] for d in same_condition[-5:]],
+                            )
+                        )
 
         return proposed
 
@@ -186,10 +184,7 @@ class HeuristicLearner:
         if not broker:
             return proposed
 
-        same_broker = [
-            d for d in self._decisions
-            if d.get("broker_name", "") == broker
-        ]
+        same_broker = [d for d in self._decisions if d.get("broker_name", "") == broker]
 
         if len(same_broker) >= self.min_occurrences:
             decisions = [d["decision"] for d in same_broker]
@@ -200,16 +195,18 @@ class HeuristicLearner:
                 heuristic_id = f"heuristic-broker-{hashlib.sha256(broker.encode()).hexdigest()[:10]}"
                 existing = self.store.get_rule(heuristic_id)
                 if existing is None:
-                    proposed.append(ProposedHeuristic(
-                        heuristic_id=heuristic_id,
-                        title=f"Broker pattern: {broker[:50]}",
-                        description=f"Submissions from broker '{broker}' are consistently {most_common} ({len(same_broker)} occurrences)",
-                        trigger=f"broker={broker}",
-                        action=most_common,
-                        confidence=confidence,
-                        evidence_count=len(same_broker),
-                        source_bundles=[d["bundle_id"] for d in same_broker[-5:]],
-                    ))
+                    proposed.append(
+                        ProposedHeuristic(
+                            heuristic_id=heuristic_id,
+                            title=f"Broker pattern: {broker[:50]}",
+                            description=f"Submissions from broker '{broker}' are consistently {most_common} ({len(same_broker)} occurrences)",
+                            trigger=f"broker={broker}",
+                            action=most_common,
+                            confidence=confidence,
+                            evidence_count=len(same_broker),
+                            source_bundles=[d["bundle_id"] for d in same_broker[-5:]],
+                        )
+                    )
 
         return proposed
 
@@ -220,10 +217,7 @@ class HeuristicLearner:
             return proposed
 
         for cat in finding_cats:
-            same_cat = [
-                d for d in self._decisions
-                if cat in d.get("finding_categories", [])
-            ]
+            same_cat = [d for d in self._decisions if cat in d.get("finding_categories", [])]
 
             if len(same_cat) >= self.min_occurrences:
                 decisions = [d["decision"] for d in same_cat]
@@ -234,16 +228,18 @@ class HeuristicLearner:
                     heuristic_id = f"heuristic-finding-{hashlib.sha256(cat.encode()).hexdigest()[:10]}"
                     existing = self.store.get_rule(heuristic_id)
                     if existing is None:
-                        proposed.append(ProposedHeuristic(
-                            heuristic_id=heuristic_id,
-                            title=f"Finding pattern: {cat[:50]}",
-                            description=f"When finding category '{cat}' appears, UWs tend to {most_common} ({len(same_cat)} occurrences)",
-                            trigger=f"finding_category={cat}",
-                            action=most_common,
-                            confidence=confidence,
-                            evidence_count=len(same_cat),
-                            source_bundles=[d["bundle_id"] for d in same_cat[-5:]],
-                        ))
+                        proposed.append(
+                            ProposedHeuristic(
+                                heuristic_id=heuristic_id,
+                                title=f"Finding pattern: {cat[:50]}",
+                                description=f"When finding category '{cat}' appears, UWs tend to {most_common} ({len(same_cat)} occurrences)",
+                                trigger=f"finding_category={cat}",
+                                action=most_common,
+                                confidence=confidence,
+                                evidence_count=len(same_cat),
+                                source_bundles=[d["bundle_id"] for d in same_cat[-5:]],
+                            )
+                        )
 
         return proposed
 

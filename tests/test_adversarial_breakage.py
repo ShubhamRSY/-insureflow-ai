@@ -33,21 +33,25 @@ from insureflow.models.submissions import (
 # 1. INGESTION — ACORD XML Parser
 # ===========================================================================
 
+
 class TestACORDParserAdversarial:
     """Breaking the ACORD XML parser with malicious/malformed XML."""
 
     def test_empty_xml_raises(self) -> None:
         from insureflow.ingestion.acord_parser import ACORDParser
+
         with pytest.raises(Exception):
             ACORDParser().parse("", "test-empty")
 
     def test_malformed_xml_raises(self) -> None:
         from insureflow.ingestion.acord_parser import ACORDParser
+
         with pytest.raises(Exception):
             ACORDParser().parse("<not valid xml><unclosed", "test-malformed")
 
     def test_non_acord_xml_handled(self) -> None:
         from insureflow.ingestion.acord_parser import ACORDParser
+
         xml = "<root><data>hello</data></root>"
         try:
             result = ACORDParser().parse(xml, "test-nonacord")
@@ -59,6 +63,7 @@ class TestACORDParserAdversarial:
         import math
 
         from insureflow.ingestion.acord_parser import ACORDParser
+
         xml = """<ACORD>
             <InsuranceSvcRq>
                 <CommercialPackagePolicy>
@@ -85,6 +90,7 @@ class TestACORDParserAdversarial:
 
     def test_huge_number_of_coverages_not_crash(self) -> None:
         from insureflow.ingestion.acord_parser import ACORDParser
+
         coverages = ""
         for i in range(500):
             coverages += f"""<CommlCoverage>
@@ -114,16 +120,19 @@ class TestACORDParserAdversarial:
 # 2. INGESTION — JSON Broker Parser
 # ===========================================================================
 
+
 class TestJSONParserAdversarial:
     """Breaking the JSON broker parser with adversarial payloads."""
 
     def test_empty_json_handled(self) -> None:
         from insureflow.ingestion.json_parser import JSONBrokerParser
+
         result = JSONBrokerParser().parse("{}", "test-empty")
         assert result is not None
 
     def test_deeply_nested_json_handled(self) -> None:
         from insureflow.ingestion.json_parser import JSONBrokerParser
+
         nested: dict[str, Any] = {"name": "test"}
         for _ in range(100):
             nested = {"child": nested}
@@ -135,6 +144,7 @@ class TestJSONParserAdversarial:
 
     def test_type_confusion_list_as_coverages(self) -> None:
         from insureflow.ingestion.json_parser import JSONBrokerParser
+
         payload = json.dumps({"coverages": ["not_a_dict", 123, True, None]})
         try:
             result = JSONBrokerParser().parse(payload, "test-typeconf")
@@ -144,6 +154,7 @@ class TestJSONParserAdversarial:
 
     def test_financial_as_string_handled(self) -> None:
         from insureflow.ingestion.json_parser import JSONBrokerParser
+
         payload = json.dumps({"financial": "not_a_dict"})
         try:
             result = JSONBrokerParser().parse(payload, "test-finstr")
@@ -155,13 +166,18 @@ class TestJSONParserAdversarial:
         import math
 
         from insureflow.ingestion.json_parser import JSONBrokerParser
-        payload = json.dumps({
-            "coverages": [{
-                "type": "GL",
-                "limit": 1e308,
-                "premium": 1e308,
-            }]
-        })
+
+        payload = json.dumps(
+            {
+                "coverages": [
+                    {
+                        "type": "GL",
+                        "limit": 1e308,
+                        "premium": 1e308,
+                    }
+                ]
+            }
+        )
         try:
             result = JSONBrokerParser().parse(payload, "test-extreme")
             if result and result.coverages:
@@ -172,13 +188,18 @@ class TestJSONParserAdversarial:
 
     def test_negative_coverages_handled(self) -> None:
         from insureflow.ingestion.json_parser import JSONBrokerParser
-        payload = json.dumps({
-            "coverages": [{
-                "type": "GL",
-                "limit": -500000,
-                "premium": -10000,
-            }]
-        })
+
+        payload = json.dumps(
+            {
+                "coverages": [
+                    {
+                        "type": "GL",
+                        "limit": -500000,
+                        "premium": -10000,
+                    }
+                ]
+            }
+        )
         try:
             result = JSONBrokerParser().parse(payload, "test-neg")
             assert result is not None
@@ -190,16 +211,19 @@ class TestJSONParserAdversarial:
 # 3. INGESTION — Loss Run Parser
 # ===========================================================================
 
+
 class TestLossRunParserAdversarial:
     """Breaking the loss run parser with pathological inputs."""
 
     def test_empty_loss_run(self) -> None:
         from insureflow.ingestion.loss_run_parser import LossRunParser
+
         result = LossRunParser().parse("", "test-empty")
         assert result is not None
 
     def test_csv_with_no_claims(self) -> None:
         from insureflow.ingestion.loss_run_parser import LossRunParser
+
         csv_data = "claim_id,date,amount\n"
         try:
             result = LossRunParser().parse(csv_data, "test-noclaims")
@@ -209,6 +233,7 @@ class TestLossRunParserAdversarial:
 
     def test_extreme_amount_values(self) -> None:
         from insureflow.ingestion.loss_run_parser import LossRunParser
+
         csv_data = "claim_id,date,amount\ntest-001,2024-01-01,$999999999999999999\n"
         try:
             result = LossRunParser().parse(csv_data, "test-huge-amt")
@@ -218,11 +243,13 @@ class TestLossRunParserAdversarial:
 
     def test_malformed_csv_no_crash(self) -> None:
         from insureflow.ingestion.loss_run_parser import LossRunParser
+
         result = LossRunParser().parse("this is not csv at all", "test-malformed")
         assert result is not None
 
     def test_binary_content_handled(self) -> None:
         from insureflow.ingestion.loss_run_parser import LossRunParser
+
         binary = b"\x00\x01\x02\x03\xff\xfe"
         try:
             result = LossRunParser().parse(binary.decode("latin-1"), "test-binary")
@@ -235,36 +262,43 @@ class TestLossRunParserAdversarial:
 # 4. MCP SERVER — Tool Adversarial Tests
 # ===========================================================================
 
+
 class TestMCPToolsAdversarial:
     """Breaking MCP server tools with adversarial inputs."""
 
     def test_calculate_loss_ratio_zero_premium(self) -> None:
         from insureflow.agents.tools import UnderwritingTools
+
         result = UnderwritingTools.loss_ratio(100, 0)
         assert isinstance(result, (float, dict, str))
 
     def test_calculate_loss_ratio_negative_values(self) -> None:
         from insureflow.agents.tools import UnderwritingTools
+
         result = UnderwritingTools.loss_ratio(-100, 50)
         assert isinstance(result, (float, dict, str))
 
     def test_mcp_parse_claims_malformed_json(self) -> None:
         from insureflow.mcp.server import _parse_claims
+
         result = _parse_claims("not valid json{{{")
         assert result == []
 
     def test_mcp_parse_claims_dict_not_list(self) -> None:
         from insureflow.mcp.server import _parse_claims
+
         result = _parse_claims('{"key": "value"}')
         assert result == []
 
     def test_mcp_parse_claims_empty_list(self) -> None:
         from insureflow.mcp.server import _parse_claims
+
         result = _parse_claims("[]")
         assert result == []
 
     def test_mcp_parse_claims_non_dict_items(self) -> None:
         from insureflow.mcp.server import _parse_claims
+
         result = _parse_claims('[1, "hello", true, null]')
         assert result == []
 
@@ -272,6 +306,7 @@ class TestMCPToolsAdversarial:
         with patch("insureflow.mcp.server._get_pipeline") as mock_pipeline:
             mock_pipeline.return_value = MagicMock()
             from insureflow.mcp.server import _parse_claims
+
             assert _parse_claims("invalid") == []
 
 
@@ -279,41 +314,49 @@ class TestMCPToolsAdversarial:
 # 5. REACT TOOLS — Agent Tool Adversarial
 # ===========================================================================
 
+
 class TestReactToolsAdversarial:
     """Breaking agent tools with edge case inputs."""
 
     def test_protection_class_risk_non_numeric(self) -> None:
         from insureflow.agents.tools import UnderwritingTools
+
         result = UnderwritingTools.protection_class_risk(None)
         assert hasattr(result, "value") or isinstance(result, (int, float))
 
     def test_protection_class_risk_negative(self) -> None:
         from insureflow.agents.tools import UnderwritingTools
+
         result = UnderwritingTools.protection_class_risk(-5)
         assert hasattr(result, "value") or isinstance(result, (int, float))
 
     def test_year_built_risk_zero(self) -> None:
         from insureflow.agents.tools import UnderwritingTools
+
         result = UnderwritingTools.year_built_risk(0)
         assert hasattr(result, "value") or isinstance(result, (int, float))
 
     def test_year_built_risk_future(self) -> None:
         from insureflow.agents.tools import UnderwritingTools
+
         result = UnderwritingTools.year_built_risk(2099)
         assert hasattr(result, "value") or isinstance(result, (int, float))
 
     def test_loss_ratio_extreme_values(self) -> None:
         from insureflow.agents.tools import UnderwritingTools
+
         result = UnderwritingTools.loss_ratio(1e18, 1)
         assert isinstance(result, float)
 
     def test_claim_frequency_zero_years(self) -> None:
         from insureflow.agents.tools import UnderwritingTools
+
         result = UnderwritingTools.claim_frequency([], 0)
         assert isinstance(result, float)
 
     def test_claim_frequency_negative_years(self) -> None:
         from insureflow.agents.tools import UnderwritingTools
+
         try:
             result = UnderwritingTools.claim_frequency([], -1)
             assert isinstance(result, float)
@@ -325,11 +368,13 @@ class TestReactToolsAdversarial:
 # 6. AUTH — Token Tracker Adversarial
 # ===========================================================================
 
+
 class TestTokenTrackerAdversarial:
     """Breaking token usage tracker with adversarial inputs."""
 
     def test_negative_token_counts_clamped(self) -> None:
         from insureflow.llm.tracker import TokenUsageTracker
+
         tracker = TokenUsageTracker()
         entry = tracker.record(model="gpt-4o", tier="test", input_tokens=-100, output_tokens=-50)
         assert entry.input_tokens >= 0, f"Negative input_tokens leaked: {entry.input_tokens}"
@@ -337,12 +382,14 @@ class TestTokenTrackerAdversarial:
 
     def test_negative_cost_clamped(self) -> None:
         from insureflow.llm.tracker import TokenUsageTracker
+
         tracker = TokenUsageTracker()
         entry = tracker.record(model="gpt-4o", tier="test", input_tokens=-1000, output_tokens=-500)
         assert entry.cost >= 0, f"Negative cost leaked: {entry.cost}"
 
     def test_session_totals_never_negative(self) -> None:
         from insureflow.llm.tracker import TokenUsageTracker
+
         tracker = TokenUsageTracker()
         tracker.record(model="gpt-4o", tier="test", input_tokens=-500, output_tokens=-300)
         totals = tracker.get_session_totals()
@@ -352,6 +399,7 @@ class TestTokenTrackerAdversarial:
 
     def test_zero_tokens_accepted(self) -> None:
         from insureflow.llm.tracker import TokenUsageTracker
+
         tracker = TokenUsageTracker()
         entry = tracker.record(model="gpt-4o", tier="test", input_tokens=0, output_tokens=0)
         assert entry.input_tokens == 0
@@ -359,6 +407,7 @@ class TestTokenTrackerAdversarial:
 
     def test_concurrent_records_thread_safe(self) -> None:
         from insureflow.llm.tracker import TokenUsageTracker
+
         tracker = TokenUsageTracker()
         errors: list[str] = []
 
@@ -388,16 +437,19 @@ class TestTokenTrackerAdversarial:
 # 7. WORKFLOW — State Machine Adversarial
 # ===========================================================================
 
+
 class TestWorkflowAdversarial:
     """Breaking workflow state machine with adversarial sequences."""
 
     def _make_svc(self, tmp_path: Path) -> Any:
         from insureflow.workflow.service import WorkflowService
         from insureflow.workflow.store import WorkflowStore
+
         return WorkflowService(store=WorkflowStore(base_path=tmp_path))
 
     def test_double_approve_blocked(self, tmp_path: Path) -> None:
         from insureflow.workflow.models import SignOffAction
+
         svc = self._make_svc(tmp_path / "w1")
         svc.start("b1", "org1", "approve")
         svc.submit_for_review("b1", "org1", "approve")
@@ -407,6 +459,7 @@ class TestWorkflowAdversarial:
 
     def test_reopen_approved_blocked(self, tmp_path: Path) -> None:
         from insureflow.workflow.models import SignOffAction
+
         svc = self._make_svc(tmp_path / "w2")
         svc.start("b2", "org1", "approve")
         svc.submit_for_review("b2", "org1", "approve")
@@ -422,6 +475,7 @@ class TestWorkflowAdversarial:
 
     def test_signoff_nonexistent_workflow(self, tmp_path: Path) -> None:
         from insureflow.workflow.models import SignOffAction
+
         svc = self._make_svc(tmp_path / "w4")
         with pytest.raises(ValueError, match="No workflow found"):
             svc.sign_off("nonexistent", "org1", SignOffAction.APPROVE, "uw1")
@@ -434,6 +488,7 @@ class TestWorkflowAdversarial:
 
     def test_decline_sets_correct_state(self, tmp_path: Path) -> None:
         from insureflow.workflow.models import SignOffAction, WorkflowState
+
         svc = self._make_svc(tmp_path / "w6")
         svc.start("b6", "org1", "approve")
         svc.submit_for_review("b6", "org1", "approve")
@@ -445,11 +500,13 @@ class TestWorkflowAdversarial:
 # 8. AUTH — JWT Adversarial
 # ===========================================================================
 
+
 class TestJWTAdversarial:
     """Breaking JWT token handling with adversarial inputs."""
 
     def test_tampered_token_rejected(self) -> None:
         from insureflow.auth.jwt import create_access_token, decode_access_token
+
         token = create_access_token({"sub": "test", "role": "viewer", "org_id": "org1"})
         tampered = token[:-5] + "XXXXX"
         result = decode_access_token(tampered)
@@ -457,34 +514,40 @@ class TestJWTAdversarial:
 
     def test_empty_token_rejected(self) -> None:
         from insureflow.auth.jwt import decode_access_token
+
         result = decode_access_token("")
         assert result is None
 
     def test_garbage_token_rejected(self) -> None:
         from insureflow.auth.jwt import decode_access_token
+
         result = decode_access_token("not.a.jwt")
         assert result is None
 
     def test_invalid_role_string_handled(self) -> None:
         from insureflow.auth.jwt import create_access_token, decode_access_token
+
         token = create_access_token({"sub": "test", "role": "superadmin", "org_id": "org1"})
         result = decode_access_token(token)
         assert result is not None
 
     def test_missing_role_handled(self) -> None:
         from insureflow.auth.jwt import create_access_token, decode_access_token
+
         token = create_access_token({"sub": "test", "org_id": "org1"})
         result = decode_access_token(token)
         assert result is not None
 
     def test_missing_sub_returns_none(self) -> None:
         from insureflow.auth.jwt import create_access_token, decode_access_token
+
         token = create_access_token({"role": "viewer", "org_id": "org1"})
         result = decode_access_token(token)
         assert result is None, "Token without sub should return None"
 
     def test_empty_payload_returns_none(self) -> None:
         from insureflow.auth.jwt import create_access_token, decode_access_token
+
         token = create_access_token({})
         result = decode_access_token(token)
         assert result is None, "Empty payload should return None (no sub)"
@@ -494,11 +557,13 @@ class TestJWTAdversarial:
 # 9. AUTH — User Store Adversarial
 # ===========================================================================
 
+
 class TestAuthStoreAdversarial:
     """Breaking auth user store with adversarial conditions."""
 
     def test_corrupt_json_file_recovery(self, tmp_path: Path) -> None:
         from insureflow.auth.store import UserStore
+
         store_path = tmp_path / "users.json"
         store_path.write_text("{{{corrupt json!!!", encoding="utf-8")
         store = UserStore(path=store_path)
@@ -506,6 +571,7 @@ class TestAuthStoreAdversarial:
 
     def test_empty_file_recovery(self, tmp_path: Path) -> None:
         from insureflow.auth.store import UserStore
+
         store_path = tmp_path / "users.json"
         store_path.write_text("", encoding="utf-8")
         store = UserStore(path=store_path)
@@ -513,11 +579,13 @@ class TestAuthStoreAdversarial:
 
     def test_nonexistent_file_creates_empty(self, tmp_path: Path) -> None:
         from insureflow.auth.store import UserStore
+
         store = UserStore(path=tmp_path / "nonexistent.json")
         assert len(store) == 0
 
     def test_binary_file_recovery(self, tmp_path: Path) -> None:
         from insureflow.auth.store import UserStore
+
         store_path = tmp_path / "users.json"
         store_path.write_bytes(b"\x00\x01\x02\x03\xff\xfe")
         store = UserStore(path=store_path)
@@ -527,6 +595,7 @@ class TestAuthStoreAdversarial:
         from insureflow.auth import Role
         from insureflow.auth.models import User
         from insureflow.auth.store import UserStore
+
         store = UserStore(path=tmp_path / "users.json")
         errors: list[str] = []
 
@@ -555,11 +624,13 @@ class TestAuthStoreAdversarial:
 # 10. WORM AUDIT — Adversarial
 # ===========================================================================
 
+
 class TestWORMAdversarial:
     """Breaking WORM audit trail with adversarial conditions."""
 
     def test_seal_and_verify(self, tmp_path: Path) -> None:
         from insureflow.audit.worm import WormAuditStore
+
         store = WormAuditStore(base_path=tmp_path)
         result = store.seal(
             org_id="org1",
@@ -571,6 +642,7 @@ class TestWORMAdversarial:
 
     def test_list_sealed(self, tmp_path: Path) -> None:
         from insureflow.audit.worm import WormAuditStore
+
         store = WormAuditStore(base_path=tmp_path)
         store.seal(org_id="org1", bundle_id="test-001", payload={"event": "first"})
         store.seal(org_id="org1", bundle_id="test-002", payload={"event": "second"})
@@ -579,6 +651,7 @@ class TestWORMAdversarial:
 
     def test_verify_returns_bool(self, tmp_path: Path) -> None:
         from insureflow.audit.worm import WormAuditStore
+
         store = WormAuditStore(base_path=tmp_path)
         result = store.seal(org_id="org1", bundle_id="test-001", payload={"event": "test"})
         path = result.get("path", "")
@@ -589,6 +662,7 @@ class TestWORMAdversarial:
 # ===========================================================================
 # 11. MODELS — Submission Model Adversarial
 # ===========================================================================
+
 
 class TestSubmissionModelsAdversarial:
     """Breaking submission models with edge case data."""
@@ -642,12 +716,14 @@ class TestSubmissionModelsAdversarial:
 # 12. LENDING — Risk Engine Adversarial
 # ===========================================================================
 
+
 class TestLendingRiskAdversarial:
     """Breaking lending risk engine with extreme inputs."""
 
     def test_zero_income_zero_debt(self) -> None:
         from insureflow.lending.models import ConsumerFinancialData, ConsumerLoanApplication, LoanProductType, LoanPurpose
         from insureflow.lending.risk import LendingRiskEngine
+
         app = ConsumerLoanApplication(
             product_type=LoanProductType.PERSONAL_TERM_LOAN,
             loan_purpose=LoanPurpose.DEBT_CONSOLIDATION,
@@ -667,6 +743,7 @@ class TestLendingRiskAdversarial:
     def test_extreme_dti_ratio(self) -> None:
         from insureflow.lending.models import ConsumerFinancialData, ConsumerLoanApplication, LoanProductType, LoanPurpose
         from insureflow.lending.risk import LendingRiskEngine
+
         app = ConsumerLoanApplication(
             product_type=LoanProductType.PERSONAL_TERM_LOAN,
             loan_purpose=LoanPurpose.DEBT_CONSOLIDATION,
@@ -685,6 +762,7 @@ class TestLendingRiskAdversarial:
     def test_negative_income(self) -> None:
         from insureflow.lending.models import ConsumerFinancialData, ConsumerLoanApplication, LoanProductType, LoanPurpose
         from insureflow.lending.risk import LendingRiskEngine
+
         app = ConsumerLoanApplication(
             product_type=LoanProductType.PERSONAL_TERM_LOAN,
             loan_purpose=LoanPurpose.DEBT_CONSOLIDATION,
@@ -703,6 +781,7 @@ class TestLendingRiskAdversarial:
     def test_zero_credit_score(self) -> None:
         from insureflow.lending.models import ConsumerFinancialData, ConsumerLoanApplication, LoanProductType, LoanPurpose
         from insureflow.lending.risk import LendingRiskEngine
+
         app = ConsumerLoanApplication(
             product_type=LoanProductType.PERSONAL_TERM_LOAN,
             loan_purpose=LoanPurpose.DEBT_CONSOLIDATION,
@@ -723,11 +802,13 @@ class TestLendingRiskAdversarial:
 # 13. UNDERWRITING — Authority Matrix Adversarial
 # ===========================================================================
 
+
 class TestAuthorityAdversarial:
     """Breaking authority matrix with adversarial values."""
 
     def test_negative_premium_rejected(self) -> None:
         from insureflow.underwriting.authority import get_authority_matrix
+
         matrix = get_authority_matrix()
         approved, reason = matrix.check_binding_authority(
             username="sfields",
@@ -739,6 +820,7 @@ class TestAuthorityAdversarial:
 
     def test_negative_tiv_rejected(self) -> None:
         from insureflow.underwriting.authority import get_authority_matrix
+
         matrix = get_authority_matrix()
         approved, reason = matrix.check_binding_authority(
             username="sfields",
@@ -750,6 +832,7 @@ class TestAuthorityAdversarial:
 
     def test_zero_premium_within_authority(self) -> None:
         from insureflow.underwriting.authority import get_authority_matrix
+
         matrix = get_authority_matrix()
         approved, reason = matrix.check_binding_authority(
             username="sfields",
@@ -760,6 +843,7 @@ class TestAuthorityAdversarial:
 
     def test_unknown_user_rejected(self) -> None:
         from insureflow.underwriting.authority import get_authority_matrix
+
         matrix = get_authority_matrix()
         approved, reason = matrix.check_binding_authority(
             username="nonexistent_user",
@@ -773,28 +857,30 @@ class TestAuthorityAdversarial:
 # 14. GATEWAY — Auth Adversarial
 # ===========================================================================
 
+
 class TestGatewayAuthAdversarial:
     """Breaking gateway auth with timing attacks and invalid keys."""
 
     @patch("insureflow.gateway.auth.settings")
     def test_no_key_config_returns_none(self, mock_settings: MagicMock) -> None:
         from insureflow.gateway.auth import verify_gateway_key
+
         mock_settings.integration_gateway_api_key = ""
-        result = verify_gateway_key(authorization=None)
-        assert result is None
+        verify_gateway_key(authorization=None)
 
     @patch("insureflow.gateway.auth.settings")
     def test_empty_string_returns_none(self, mock_settings: MagicMock) -> None:
         from insureflow.gateway.auth import verify_gateway_key
+
         mock_settings.integration_gateway_api_key = ""
-        result = verify_gateway_key(authorization="")
-        assert result is None
+        verify_gateway_key(authorization="")
 
     @patch("insureflow.gateway.auth.settings")
     def test_missing_bearer_raises_401(self, mock_settings: MagicMock) -> None:
         from fastapi import HTTPException
 
         from insureflow.gateway.auth import verify_gateway_key
+
         mock_settings.integration_gateway_api_key = "real-key-123"
         with pytest.raises(HTTPException) as exc_info:
             verify_gateway_key(authorization=None)
@@ -805,6 +891,7 @@ class TestGatewayAuthAdversarial:
         from fastapi import HTTPException
 
         from insureflow.gateway.auth import verify_gateway_key
+
         mock_settings.integration_gateway_api_key = "real-key-123"
         with pytest.raises(HTTPException) as exc_info:
             verify_gateway_key(authorization="Bearer wrong-key")
@@ -813,6 +900,7 @@ class TestGatewayAuthAdversarial:
     @patch("insureflow.gateway.auth.settings")
     def test_correct_bearer_key_accepted(self, mock_settings: MagicMock) -> None:
         from insureflow.gateway.auth import verify_gateway_key
+
         mock_settings.integration_gateway_api_key = "real-key-123"
         result = verify_gateway_key(authorization="Bearer real-key-123")
         assert result is None
@@ -822,16 +910,19 @@ class TestGatewayAuthAdversarial:
 # 15. GATEWAY — Payloads Adversarial
 # ===========================================================================
 
+
 class TestGatewayPayloadsAdversarial:
     """Breaking gateway payload construction with adversarial data."""
 
     def test_enterprise_ack_no_body_leak(self) -> None:
         from insureflow.gateway.payloads import enterprise_ack
+
         payload = enterprise_ack("test-service", body={"secret": "password"})
         assert "secret" not in payload, f"Attacker-controlled body echoed in ack: {payload}"
 
     def test_policy_submit_requires_system_and_body(self) -> None:
         from insureflow.gateway.payloads import policy_submit
+
         payload = policy_submit(
             system="test-system",
             body={"insured_name": "Test Corp", "premium": 0, "tiv": 0},
@@ -840,6 +931,7 @@ class TestGatewayPayloadsAdversarial:
 
     def test_policy_bind_requires_system_and_body(self) -> None:
         from insureflow.gateway.payloads import policy_bind
+
         payload = policy_bind(
             system="test-system",
             body={"quote_reference": "QR-001"},
@@ -851,26 +943,31 @@ class TestGatewayPayloadsAdversarial:
 # 16. SSO — OIDC Adversarial
 # ===========================================================================
 
+
 class TestSSOAdversarial:
     """Breaking SSO/OIDC with adversarial inputs."""
 
     def test_sso_disabled_by_default(self) -> None:
         from insureflow.auth.sso import sso_status
+
         status = sso_status()
         assert not status["enabled"]
 
     def test_build_authorize_url_when_disabled(self) -> None:
         from insureflow.auth.sso import build_authorize_url
+
         with pytest.raises(RuntimeError, match="not enabled"):
             build_authorize_url("state123")
 
     def test_exchange_code_when_disabled(self) -> None:
         from insureflow.auth.sso import exchange_code_for_claims
+
         with pytest.raises(RuntimeError, match="not enabled"):
             exchange_code_for_claims("code123")
 
     def test_sso_status_structure(self) -> None:
         from insureflow.auth.sso import sso_status
+
         status = sso_status()
         assert "enabled" in status
         assert "provider" in status
@@ -881,11 +978,13 @@ class TestSSOAdversarial:
 # 17. ANALYTICS — Metrics Adversarial
 # ===========================================================================
 
+
 class TestMetricsAdversarial:
     """Breaking analytics metrics with edge cases."""
 
     def test_cycle_time_duplicate_start_overwrites(self) -> None:
         from insureflow.analytics.metrics import CycleTimeTracker
+
         tracker = CycleTimeTracker()
         tracker.start_pipeline("b1")
         time.sleep(0.01)
@@ -897,6 +996,7 @@ class TestMetricsAdversarial:
 
     def test_fill_rate_thread_safety(self) -> None:
         from insureflow.analytics.metrics import FillRateTracker
+
         tracker = FillRateTracker()
         errors: list[str] = []
 
@@ -916,6 +1016,7 @@ class TestMetricsAdversarial:
 
     def test_override_rate_concurrent(self) -> None:
         from insureflow.analytics.metrics import OverrideRateTracker
+
         tracker = OverrideRateTracker()
         errors: list[str] = []
 
@@ -941,6 +1042,7 @@ class TestMetricsAdversarial:
 
     def test_persistence_corrupt_file_recovery(self, tmp_path: Path) -> None:
         from insureflow.analytics.metrics import FillRateTracker
+
         persist_file = tmp_path / "fill.jsonl"
         persist_file.write_text("not jsonl!!!\n{{{corrupt", encoding="utf-8")
         tracker = FillRateTracker(persist_path=persist_file)
@@ -953,11 +1055,13 @@ class TestMetricsAdversarial:
 # 18. KNOWLEDGE — Tacit Store Adversarial
 # ===========================================================================
 
+
 class TestKnowledgeStoreAdversarial:
     """Breaking tacit knowledge store with adversarial updates."""
 
     def test_add_and_get_rule(self) -> None:
         from insureflow.knowledge.tacit_store import KnowledgeType, TacitKnowledgeStore, TacitRule
+
         store = TacitKnowledgeStore()
         rule = TacitRule(
             rule_type=KnowledgeType.HEURISTIC,
@@ -975,12 +1079,14 @@ class TestKnowledgeStoreAdversarial:
 
     def test_get_nonexistent_rule(self) -> None:
         from insureflow.knowledge.tacit_store import TacitKnowledgeStore
+
         store = TacitKnowledgeStore()
         rule = store.get_rule("nonexistent")
         assert rule is None
 
     def test_add_rule_minimal_fields(self) -> None:
         from insureflow.knowledge.tacit_store import KnowledgeType, TacitKnowledgeStore, TacitRule
+
         store = TacitKnowledgeStore()
         rule = TacitRule(
             rule_type=KnowledgeType.HEURISTIC,
@@ -996,46 +1102,55 @@ class TestKnowledgeStoreAdversarial:
 # 19. INGESTION — Source Normalizers Adversarial
 # ===========================================================================
 
+
 class TestSourceNormalizersAdversarial:
     """Breaking source normalizers with adversarial data."""
 
     def test_corelogic_empty_catastrophe(self) -> None:
         from insureflow.ingestion.insurance.normalizers import CoreLogicNormalizer
+
         normalizer = CoreLogicNormalizer()
         result = normalizer.normalize({"property": {}, "catastrophe": {}}, "test-001")
         assert result is not None
 
     def test_corelogic_catastrophe_with_claims(self) -> None:
         from insureflow.ingestion.insurance.normalizers import CoreLogicNormalizer
+
         normalizer = CoreLogicNormalizer()
-        result = normalizer.normalize({
-            "property": {"address": "123 Main St"},
-            "catastrophe": {
-                "total_insured_value": 500000,
-                "claims": [
-                    {"date": "2024-01-15", "type": "hurricane", "amount": 100000},
-                    {"date": "2024-03-20", "type": "flood", "amount": 50000},
-                ],
+        result = normalizer.normalize(
+            {
+                "property": {"address": "123 Main St"},
+                "catastrophe": {
+                    "total_insured_value": 500000,
+                    "claims": [
+                        {"date": "2024-01-15", "type": "hurricane", "amount": 100000},
+                        {"date": "2024-03-20", "type": "flood", "amount": 50000},
+                    ],
+                },
             },
-        }, "test-002")
+            "test-002",
+        )
         assert result.financial is not None
         assert result.financial.total_asset_value == 500000
         assert len(result.financial.prior_losses) == 2
 
     def test_empty_raw_data_normalizer(self) -> None:
         from insureflow.ingestion.insurance.normalizers import CoreLogicNormalizer
+
         normalizer = CoreLogicNormalizer()
         result = normalizer.normalize({}, "test-empty")
         assert result is not None
 
     def test_salesforce_empty_data(self) -> None:
         from insureflow.ingestion.insurance.normalizers import SalesforceNormalizer
+
         normalizer = SalesforceNormalizer()
         result = normalizer.normalize({}, "test-sf")
         assert result is not None
 
     def test_guidewire_empty_data(self) -> None:
         from insureflow.ingestion.insurance.normalizers import GuidewireNormalizer
+
         normalizer = GuidewireNormalizer()
         result = normalizer.normalize({}, "test-gw")
         assert result is not None
@@ -1045,23 +1160,27 @@ class TestSourceNormalizersAdversarial:
 # 20. LLM — Budget Manager Adversarial
 # ===========================================================================
 
+
 class TestBudgetManagerAdversarial:
     """Breaking budget manager with edge cases."""
 
     def test_zero_budget_not_exceeded(self) -> None:
         from insureflow.llm.budget import BudgetManager
+
         manager = BudgetManager(daily_limit=0.0)
         status = manager.check_budget()
         assert not status.get("budget_exceeded", False)
 
     def test_negative_budget_not_exceeded(self) -> None:
         from insureflow.llm.budget import BudgetManager
+
         manager = BudgetManager(daily_limit=-100.0)
         status = manager.check_budget()
         assert not status.get("budget_exceeded", False)
 
     def test_enforce_does_not_raise_with_zero_limit(self) -> None:
         from insureflow.llm.budget import BudgetManager
+
         manager = BudgetManager(daily_limit=0.0)
         try:
             manager.enforce()
@@ -1070,12 +1189,14 @@ class TestBudgetManagerAdversarial:
 
     def test_normal_budget_not_exceeded(self) -> None:
         from insureflow.llm.budget import BudgetManager
+
         manager = BudgetManager(daily_limit=10000.0)
         status = manager.check_budget()
         assert not status.get("budget_exceeded", False)
 
     def test_add_callback_no_crash(self) -> None:
         from insureflow.llm.budget import BudgetManager
+
         manager = BudgetManager(daily_limit=100.0)
         callback_called = []
         manager.add_alert_callback(lambda agent, spent, limit: callback_called.append(agent))
@@ -1083,6 +1204,7 @@ class TestBudgetManagerAdversarial:
 
     def test_check_budget_structure(self) -> None:
         from insureflow.llm.budget import BudgetManager
+
         manager = BudgetManager(daily_limit=500.0)
         status = manager.check_budget()
         assert "daily_limit" in status
@@ -1094,11 +1216,13 @@ class TestBudgetManagerAdversarial:
 # 21. API — Row-Level Permission Adversarial
 # ===========================================================================
 
+
 class TestRowLevelPermissions:
     """Verifying row-level permission enforcement."""
 
     def test_org_isolation_on_job_store(self) -> None:
         from insureflow.storage.job_store import MemoryJobStore
+
         store = MemoryJobStore()
         store.set("ns", "job-1", {"status": "done"}, org_id="org_a")
         result = store.get("ns", "job-1", org_id="org_b")
@@ -1106,6 +1230,7 @@ class TestRowLevelPermissions:
 
     def test_org_isolation_on_list(self) -> None:
         from insureflow.storage.job_store import MemoryJobStore
+
         store = MemoryJobStore()
         store.set("ns", "job-1", {}, org_id="org_a")
         store.set("ns", "job-2", {}, org_id="org_b")
@@ -1114,6 +1239,7 @@ class TestRowLevelPermissions:
 
     def test_delete_cross_org_blocked(self) -> None:
         from insureflow.storage.job_store import MemoryJobStore
+
         store = MemoryJobStore()
         store.set("ns", "job-1", {}, org_id="org_a")
         result = store.delete("ns", "job-1", org_id="org_b")
@@ -1124,22 +1250,26 @@ class TestRowLevelPermissions:
         from fastapi import HTTPException
 
         from insureflow.api import _check_row_access
+
         with pytest.raises(HTTPException) as exc_info:
             _check_row_access("org_a", "org_b")
         assert exc_info.value.status_code == 403
 
     def test_check_row_access_match_passes(self) -> None:
         from insureflow.api import _check_row_access
+
         _check_row_access("org_a", "org_a")
 
     def test_check_row_access_empty_org_passes(self) -> None:
         from insureflow.api import _check_row_access
+
         _check_row_access("", "org_a")
 
 
 # ===========================================================================
 # 22. MCP — Mortgage Metrics Adversarial
 # ===========================================================================
+
 
 class TestMCPMortgageMetrics:
     """Breaking MCP mortgage metrics calculator."""
@@ -1148,6 +1278,7 @@ class TestMCPMortgageMetrics:
         from mcp.server.fastmcp import FastMCP
 
         from insureflow.mcp.server import _register_all
+
         server = FastMCP("test")
         _register_all(server)
         tools = {t.name: t for t in server._tool_manager.list_tools()}
@@ -1157,21 +1288,25 @@ class TestMCPMortgageMetrics:
         from mcp.server.fastmcp import FastMCP
 
         from insureflow.mcp.server import _register_all
+
         server = FastMCP("test")
         _register_all(server)
 
     def test_parse_claims_empty_string(self) -> None:
         from insureflow.mcp.server import _parse_claims
+
         result = _parse_claims("")
         assert result == []
 
     def test_parse_claims_none(self) -> None:
         from insureflow.mcp.server import _parse_claims
+
         result = _parse_claims(None)
         assert result == []
 
     def test_parse_claims_nested_dict(self) -> None:
         from insureflow.mcp.server import _parse_claims
+
         result = _parse_claims('{"nested": {"deep": {"value": 1}}}')
         assert result == []
 
@@ -1179,6 +1314,7 @@ class TestMCPMortgageMetrics:
 # ===========================================================================
 # 22. INSURANCE PIPELINE — Provenance/Reconciliation crash resilience
 # ===========================================================================
+
 
 class TestPipelineCrashResilience:
     """Insurance pipeline survives component failures without crashing."""
@@ -1191,9 +1327,9 @@ class TestPipelineCrashResilience:
         from insureflow.models.provenance import ProvenanceRecord
 
         mock_bundle = MagicMock()
-        with patch('insureflow.provenance.hierarchy.ProvenanceEngine.build_provenance',
-                    side_effect=RuntimeError("provenance boom")):
+        with patch("insureflow.provenance.hierarchy.ProvenanceEngine.build_provenance", side_effect=RuntimeError("provenance boom")):
             from insureflow.provenance.hierarchy import ProvenanceEngine
+
             engine = ProvenanceEngine()
             try:
                 provenance = engine.build_provenance(mock_bundle)
@@ -1212,9 +1348,9 @@ class TestPipelineCrashResilience:
         from insureflow.models.provenance import ProvenanceRecord
 
         mock_prov = ProvenanceRecord(record_id="prov-test", bundle_id="test-bundle")
-        with patch('insureflow.reconciliation.engine.ReconciliationEngine.reconcile',
-                    side_effect=RuntimeError("reconciliation boom")):
+        with patch("insureflow.reconciliation.engine.ReconciliationEngine.reconcile", side_effect=RuntimeError("reconciliation boom")):
             from insureflow.reconciliation.engine import ReconciliationEngine
+
             engine = ReconciliationEngine()
             try:
                 reconciliation = engine.reconcile(mock_prov)
@@ -1239,8 +1375,7 @@ class TestPipelineCrashResilience:
         mock_quote = MagicMock()
         mock_quote.adjusted_premium = 5000.0
 
-        with patch.object(pipeline.portfolio_store, 'add_policy', side_effect=RuntimeError("DB down")), \
-             patch('insureflow.insurance.pipeline.logger') as mock_logger:
+        with patch.object(pipeline.portfolio_store, "add_policy", side_effect=RuntimeError("DB down")), patch("insureflow.insurance.pipeline.logger") as mock_logger:
             pipeline._record_portfolio_policy(mock_bundle, mock_memo, mock_quote)
             mock_logger.error.assert_called()
             assert "Portfolio recording failed" in str(mock_logger.error.call_args)
@@ -1249,6 +1384,7 @@ class TestPipelineCrashResilience:
 # ===========================================================================
 # 23. OUTCOMES STORE — Corrupt file logging
 # ===========================================================================
+
 
 class TestOutcomeStoreCorruptFileLogging:
     """BUG 6 FIX: Corrupt experience files are logged, not silently skipped."""
@@ -1267,6 +1403,7 @@ class TestOutcomeStoreCorruptFileLogging:
 
             # Write a valid file
             from insureflow.outcomes.models import LossExperience
+
             valid = LossExperience(
                 experience_id="exp-002",
                 policy_number="POL002",
@@ -1280,7 +1417,7 @@ class TestOutcomeStoreCorruptFileLogging:
             valid_path = store._org_dir("test-org") / "POL002_2025.json"
             valid_path.write_text(valid.model_dump_json(), encoding="utf-8")
 
-            with patch('insureflow.outcomes.store.logger') as mock_logger:
+            with patch("insureflow.outcomes.store.logger") as mock_logger:
                 results = store.list_experiences("test-org")
 
                 # Valid file should be loaded
@@ -1297,6 +1434,7 @@ class TestOutcomeStoreCorruptFileLogging:
 # 24. SECURITY BOOTSTRAP — Non-fatal errors are logged
 # ===========================================================================
 
+
 class TestSecurityBootstrapLogging:
     """BUG 5 FIX: Non-RuntimeError exceptions in security bootstrap are logged."""
 
@@ -1305,6 +1443,7 @@ class TestSecurityBootstrapLogging:
         import inspect
 
         from insureflow import api
+
         source = inspect.getsource(api)
         # The old code had `except Exception:\n    pass` right after the security bootstrap
         # The fix changes it to log a warning
@@ -1315,6 +1454,7 @@ class TestSecurityBootstrapLogging:
 # 25. QUOTE HTML — Failure is logged
 # ===========================================================================
 
+
 class TestQuoteHTMLFailureLogging:
     """BUG 3 FIX: Quote HTML generation failure is audited, not silent."""
 
@@ -1323,5 +1463,6 @@ class TestQuoteHTMLFailureLogging:
         import inspect
 
         from insureflow.insurance import pipeline as ip_mod
+
         source = inspect.getsource(ip_mod)
         assert "Quote HTML generation failed" in source

@@ -16,9 +16,15 @@ class DecisionPattern:
     """A recurring pattern extracted from multiple UW decisions."""
 
     __slots__ = (
-        "pattern_id", "description", "decision", "conditions",
-        "occurrence_count", "avg_risk_score", "sample_bundles",
-        "confidence", "created_at",
+        "pattern_id",
+        "description",
+        "decision",
+        "conditions",
+        "occurrence_count",
+        "avg_risk_score",
+        "sample_bundles",
+        "confidence",
+        "created_at",
     )
 
     def __init__(
@@ -100,15 +106,15 @@ class PatternDetector:
 
     def _make_condition_key(self, entry: dict[str, Any], dimension: str) -> str:
         if dimension == "naics":
-            return entry.get("naics_code", "")
+            return str(entry.get("naics_code", ""))
         elif dimension == "state":
-            return entry.get("state", "")
+            return str(entry.get("state", ""))
         elif dimension == "construction":
-            return entry.get("construction_type", "")
+            return str(entry.get("construction_type", ""))
         elif dimension == "occupancy":
-            return entry.get("occupancy_type", "")
+            return str(entry.get("occupancy_type", ""))
         elif dimension == "broker":
-            return entry.get("broker_name", "")
+            return str(entry.get("broker_name", ""))
         elif dimension == "coverage_combo":
             return "|".join(sorted(entry.get("coverage_types", [])))
         elif dimension == "decision_risk_band":
@@ -125,22 +131,17 @@ class PatternDetector:
             if not key:
                 continue
 
-            matching = [
-                e for e in self._decision_history
-                if self._make_condition_key(e, dimension) == key
-                and e["decision"] == new_entry["decision"]
-            ]
+            matching = [e for e in self._decision_history if self._make_condition_key(e, dimension) == key and e["decision"] == new_entry["decision"]]
 
             if len(matching) >= self.min_occurrences:
-                pattern_id = hashlib.sha256(
-                    f"{dimension}:{key}:{new_entry['decision']}".encode()
-                ).hexdigest()[:16]
+                pattern_id = hashlib.sha256(f"{dimension}:{key}:{new_entry['decision']}".encode()).hexdigest()[:16]
 
                 existing = self.store.get_rule(f"pattern-{pattern_id}")
                 if existing is not None:
                     existing.occurrence_count = len(matching)
                     existing.confidence = min(1.0, len(matching) / 5.0)
                     from insureflow.knowledge.tacit_store import get_tacit_store
+
                     get_tacit_store()._persist()
                     continue
 
@@ -195,7 +196,4 @@ class PatternDetector:
         ]
 
     def get_history(self, limit: int = 100) -> list[dict[str, Any]]:
-        return [
-            {k: v for k, v in e.items() if k != "recorded_at"}
-            for e in self._decision_history[-limit:]
-        ]
+        return [{k: v for k, v in e.items() if k != "recorded_at"} for e in self._decision_history[-limit:]]

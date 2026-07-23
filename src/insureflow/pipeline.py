@@ -104,6 +104,7 @@ class UnderwritingPipeline:
         resolved_bundle_id = state.get("bundle_id", "")
         try:
             from insureflow.analytics.metrics import get_pipeline_metrics
+
             get_pipeline_metrics().cycle_time.start_pipeline(resolved_bundle_id)
         except Exception:
             pass

@@ -74,6 +74,7 @@ def _fetch_jwks(issuer: str) -> dict[str, Any]:
 def _base64url_decode(data: str) -> bytes:
     """Decode base64url-encoded data."""
     import base64
+
     padding = 4 - len(data) % 4
     if padding != 4:
         data += "=" * padding
@@ -104,6 +105,7 @@ def _verify_jwt_signature(token: str, keys_data: dict[str, Any]) -> dict[str, An
             return None
 
         from jose import jwt as jose_jwt
+
         for key in key_candidates:
             try:
                 verified: dict[str, Any] = jose_jwt.decode(
@@ -171,13 +173,15 @@ def exchange_code_for_claims(code: str) -> dict[str, Any]:
 
     try:
         token_endpoint = cfg.issuer.rstrip("/") + "/oauth2/token"
-        post_data = urlencode({
-            "grant_type": "authorization_code",
-            "client_id": cfg.client_id,
-            "client_secret": cfg.client_secret,
-            "code": code,
-            "redirect_uri": cfg.redirect_uri,
-        }).encode()
+        post_data = urlencode(
+            {
+                "grant_type": "authorization_code",
+                "client_id": cfg.client_id,
+                "client_secret": cfg.client_secret,
+                "code": code,
+                "redirect_uri": cfg.redirect_uri,
+            }
+        ).encode()
         req = urllib.request.Request(
             token_endpoint,
             data=post_data,

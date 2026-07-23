@@ -97,21 +97,23 @@ class EdgeCaseDetector:
             values = stats["values"]
             mean = sum(values) / len(values)
             variance = sum((v - mean) ** 2 for v in values) / len(values)
-            std_dev = variance ** 0.5
+            std_dev = variance**0.5
 
             if std_dev == 0:
                 continue
 
             z_score = abs(value - mean) / std_dev
             if z_score > 2.5:
-                signals.append(EdgeCaseSignal(
-                    signal_type="numeric_outlier",
-                    field=field,
-                    value=value,
-                    expected_range=f"{mean - 2 * std_dev:.0f} - {mean + 2 * std_dev:.0f}",
-                    anomaly_score=min(1.0, z_score / 5.0),
-                    reason=f"{field}={value} is {z_score:.1f} standard deviations from mean ({mean:.0f})",
-                ))
+                signals.append(
+                    EdgeCaseSignal(
+                        signal_type="numeric_outlier",
+                        field=field,
+                        value=value,
+                        expected_range=f"{mean - 2 * std_dev:.0f} - {mean + 2 * std_dev:.0f}",
+                        anomaly_score=min(1.0, z_score / 5.0),
+                        reason=f"{field}={value} is {z_score:.1f} standard deviations from mean ({mean:.0f})",
+                    )
+                )
 
         return signals
 
@@ -134,21 +136,20 @@ class EdgeCaseDetector:
             if total < 20:
                 continue
 
-            combo_count = sum(
-                1 for s in self._submissions
-                if str(s.get(field_a, "")) == val_a and str(s.get(field_b, "")) == val_b
-            )
+            combo_count = sum(1 for s in self._submissions if str(s.get(field_a, "")) == val_a and str(s.get(field_b, "")) == val_b)
             combo_pct = combo_count / total
 
             if combo_pct < 0.02 and combo_count <= 2:
-                signals.append(EdgeCaseSignal(
-                    signal_type="rare_combination",
-                    field=f"{field_a}+{field_b}",
-                    value=combo_key,
-                    expected_range=f"Seen in >2% of submissions (only {combo_count}/{total})",
-                    anomaly_score=min(1.0, (1 - combo_pct) * 0.8),
-                    reason=f"Combination {combo_key} appears only {combo_count} times in {total} submissions",
-                ))
+                signals.append(
+                    EdgeCaseSignal(
+                        signal_type="rare_combination",
+                        field=f"{field_a}+{field_b}",
+                        value=combo_key,
+                        expected_range=f"Seen in >2% of submissions (only {combo_count}/{total})",
+                        anomaly_score=min(1.0, (1 - combo_pct) * 0.8),
+                        reason=f"Combination {combo_key} appears only {combo_count} times in {total} submissions",
+                    )
+                )
 
         return signals
 
@@ -159,14 +160,16 @@ class EdgeCaseDetector:
         for rule in known_edge_cases:
             score = rule.matches_submission(submission)
             if score > 0.5:
-                signals.append(EdgeCaseSignal(
-                    signal_type="known_edge_case",
-                    field="multi_factor",
-                    value=rule.title,
-                    expected_range=rule.description,
-                    anomaly_score=score * rule.confidence,
-                    reason=f"Matches known edge case: {rule.title} (confidence={rule.confidence:.2f})",
-                ))
+                signals.append(
+                    EdgeCaseSignal(
+                        signal_type="known_edge_case",
+                        field="multi_factor",
+                        value=rule.title,
+                        expected_range=rule.description,
+                        anomaly_score=score * rule.confidence,
+                        reason=f"Matches known edge case: {rule.title} (confidence={rule.confidence:.2f})",
+                    )
+                )
 
         return signals
 
@@ -180,11 +183,7 @@ class EdgeCaseDetector:
         if not naics:
             return signals
 
-        naics_scores = [
-            s.get("risk_score", 0.5)
-            for s in self._submissions
-            if s.get("naics_code") == naics and s.get("risk_score") is not None
-        ]
+        naics_scores = [s.get("risk_score", 0.5) for s in self._submissions if s.get("naics_code") == naics and s.get("risk_score") is not None]
 
         if len(naics_scores) < 5:
             return signals
@@ -192,14 +191,16 @@ class EdgeCaseDetector:
         mean_score = sum(naics_scores) / len(naics_scores)
         if abs(risk_score - mean_score) > 0.3:
             direction = "higher" if risk_score > mean_score else "lower"
-            signals.append(EdgeCaseSignal(
-                signal_type="risk_score_anomaly",
-                field="risk_score",
-                value=risk_score,
-                expected_range=f"Mean for NAICS {naics}: {mean_score:.2f}",
-                anomaly_score=min(1.0, abs(risk_score - mean_score)),
-                reason=f"Risk score {risk_score:.2f} is significantly {direction} than typical for NAICS {naics} (mean={mean_score:.2f})",
-            ))
+            signals.append(
+                EdgeCaseSignal(
+                    signal_type="risk_score_anomaly",
+                    field="risk_score",
+                    value=risk_score,
+                    expected_range=f"Mean for NAICS {naics}: {mean_score:.2f}",
+                    anomaly_score=min(1.0, abs(risk_score - mean_score)),
+                    reason=f"Risk score {risk_score:.2f} is significantly {direction} than typical for NAICS {naics} (mean={mean_score:.2f})",
+                )
+            )
 
         return signals
 

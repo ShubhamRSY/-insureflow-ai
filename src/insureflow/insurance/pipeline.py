@@ -238,6 +238,7 @@ class InsurancePipeline:
                 metadata={"provenance_error": str(exc)},
             )
             from insureflow.models.provenance import ProvenanceRecord
+
             provenance = ProvenanceRecord(record_id=f"prov-{bid}", bundle_id=bid)
 
         try:
@@ -250,6 +251,7 @@ class InsurancePipeline:
                 metadata={"reconciliation_error": str(exc)},
             )
             from insureflow.models.audit import ReconciliationResult
+
             reconciliation = ReconciliationResult(bundle_id=bid)
 
         progress.complete(

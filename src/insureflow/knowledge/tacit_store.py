@@ -122,11 +122,22 @@ class TacitKnowledgeStore:
         with self._lock:
             return self._rules.get(rule_id)
 
-    _ALLOWED_UPDATE_ATTRS = frozenset({
-        "title", "description", "trigger_conditions", "action", "rationale",
-        "tags", "naics_codes", "coverage_types", "states",
-        "min_tiv", "max_tiv", "min_claims",
-    })
+    _ALLOWED_UPDATE_ATTRS = frozenset(
+        {
+            "title",
+            "description",
+            "trigger_conditions",
+            "action",
+            "rationale",
+            "tags",
+            "naics_codes",
+            "coverage_types",
+            "states",
+            "min_tiv",
+            "max_tiv",
+            "min_claims",
+        }
+    )
 
     def update_rule(self, rule_id: str, **kwargs: Any) -> Optional[TacitRule]:
         with self._lock:

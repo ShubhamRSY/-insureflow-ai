@@ -32,6 +32,7 @@ from insureflow.workflow.store import WorkflowStore
 # 1. PII REDACTION — Breaking the masking
 # ===========================================================================
 
+
 class TestRedactionAdversarial:
     """Verify SSN, email, bank account, and IP masking is actually secure."""
 
@@ -112,6 +113,7 @@ class TestRedactionAdversarial:
 # 2. WORKFLOW — State machine violations
 # ===========================================================================
 
+
 class TestWorkflowAdversarial:
     """Try to break the workflow state machine."""
 
@@ -191,6 +193,7 @@ class TestWorkflowAdversarial:
 # 3. JWT — Forged tokens with invalid roles
 # ===========================================================================
 
+
 class TestJWTAdversarial:
     """Try to crash JWT handling with malformed tokens."""
 
@@ -247,6 +250,7 @@ class TestJWTAdversarial:
 # 4. GATEWAY — Auth bypass attempts
 # ===========================================================================
 
+
 class TestGatewayAuthAdversarial:
     """Try to bypass gateway authentication."""
 
@@ -288,11 +292,13 @@ class TestGatewayAuthAdversarial:
 # 5. WORM AUDIT — Immutability violations
 # ===========================================================================
 
+
 class TestWORMAdversarial:
     """Try to corrupt the immutable audit trail."""
 
     def test_sealed_file_unique_even_in_same_second(self, tmp_path: Any) -> None:
         from insureflow.audit.worm import WormAuditStore
+
         store = WormAuditStore(base_path=tmp_path / "worm")
         r1 = store.seal("org", "b1", {"data": "first"})
         r2 = store.seal("org", "b1", {"data": "second"})
@@ -300,6 +306,7 @@ class TestWORMAdversarial:
 
     def test_verify_does_not_mutate_original(self, tmp_path: Any) -> None:
         from insureflow.audit.worm import WormAuditStore
+
         store = WormAuditStore(base_path=tmp_path / "worm")
         record = store.seal("org", "b1", {"data": "test"})
         p = Path(record["path"])
@@ -311,6 +318,7 @@ class TestWORMAdversarial:
 
     def test_tampered_hash_fails_verification(self, tmp_path: Any) -> None:
         from insureflow.audit.worm import WormAuditStore
+
         store = WormAuditStore(base_path=tmp_path / "worm")
         record = store.seal("org", "b1", {"data": "test"})
         p = Path(record["path"])
@@ -322,18 +330,21 @@ class TestWORMAdversarial:
 
     def test_empty_payload_still_seals(self, tmp_path: Any) -> None:
         from insureflow.audit.worm import WormAuditStore
+
         store = WormAuditStore(base_path=tmp_path / "worm")
         record = store.seal("org", "b1", {})
         assert record["sealed"] is True
 
     def test_seal_with_empty_org(self, tmp_path: Any) -> None:
         from insureflow.audit.worm import WormAuditStore
+
         store = WormAuditStore(base_path=tmp_path / "worm")
         record = store.seal("", "b1", {"data": "test"})
         assert record["sealed"] is True
 
     def test_list_sealed_empty_org(self, tmp_path: Any) -> None:
         from insureflow.audit.worm import WormAuditStore
+
         store = WormAuditStore(base_path=tmp_path / "worm")
         result = store.list_sealed("nonexistent")
         assert result == []
@@ -343,11 +354,13 @@ class TestWORMAdversarial:
 # 6. KNOWLEDGE STORE — Attribute injection
 # ===========================================================================
 
+
 class TestKnowledgeStoreAdversarial:
     """Try to inject arbitrary attributes into tacit rules."""
 
     def test_cannot_overwrite_rule_id(self, tmp_path: Any) -> None:
         from insureflow.knowledge.tacit_store import KnowledgeType, TacitKnowledgeStore, TacitRule
+
         store = TacitKnowledgeStore(persist_path=tmp_path / "knowledge.json")
         rule = TacitRule(rule_type=KnowledgeType.PATTERN, title="Original", description="test")
         store.add_rule(rule)
@@ -359,6 +372,7 @@ class TestKnowledgeStoreAdversarial:
 
     def test_cannot_reactivate_dead_rule(self, tmp_path: Any) -> None:
         from insureflow.knowledge.tacit_store import KnowledgeType, TacitKnowledgeStore, TacitRule
+
         store = TacitKnowledgeStore(persist_path=tmp_path / "knowledge.json")
         rule = TacitRule(rule_type=KnowledgeType.PATTERN, title="Dead", description="test", confidence=0.0, is_active=False)
         store.add_rule(rule)
@@ -369,6 +383,7 @@ class TestKnowledgeStoreAdversarial:
 
     def test_cannot_inject_confidence(self, tmp_path: Any) -> None:
         from insureflow.knowledge.tacit_store import KnowledgeType, TacitKnowledgeStore, TacitRule
+
         store = TacitKnowledgeStore(persist_path=tmp_path / "knowledge.json")
         rule = TacitRule(rule_type=KnowledgeType.PATTERN, title="Low", description="test", confidence=0.1)
         store.add_rule(rule)
@@ -379,6 +394,7 @@ class TestKnowledgeStoreAdversarial:
 
     def test_title_update_works(self, tmp_path: Any) -> None:
         from insureflow.knowledge.tacit_store import KnowledgeType, TacitKnowledgeStore, TacitRule
+
         store = TacitKnowledgeStore(persist_path=tmp_path / "knowledge.json")
         rule = TacitRule(rule_type=KnowledgeType.PATTERN, title="Original", description="test")
         store.add_rule(rule)
@@ -389,6 +405,7 @@ class TestKnowledgeStoreAdversarial:
 
     def test_update_nonexistent_rule(self, tmp_path: Any) -> None:
         from insureflow.knowledge.tacit_store import TacitKnowledgeStore
+
         store = TacitKnowledgeStore(persist_path=tmp_path / "knowledge.json")
         result = store.update_rule("nonexistent", title="X")
         assert result is None
@@ -397,6 +414,7 @@ class TestKnowledgeStoreAdversarial:
 # ===========================================================================
 # 7. PIPELINE STATE — Edge cases
 # ===========================================================================
+
 
 class TestPipelineStateAdversarial:
     """Try to break the pipeline with bad initial states."""
@@ -437,11 +455,13 @@ class TestPipelineStateAdversarial:
 # 8. CONCURRENT OPERATIONS — Race conditions
 # ===========================================================================
 
+
 class TestConcurrencyAdversarial:
     """Stress-test thread safety across stores."""
 
     def test_fill_rate_thread_safety(self) -> None:
         from insureflow.analytics.metrics import FillRateTracker
+
         tracker = FillRateTracker()
         errors: list[Exception] = []
 
@@ -463,6 +483,7 @@ class TestConcurrencyAdversarial:
 
     def test_override_rate_thread_safety(self) -> None:
         from insureflow.analytics.metrics import OverrideRateTracker
+
         tracker = OverrideRateTracker()
         errors: list[Exception] = []
 
@@ -489,6 +510,7 @@ class TestConcurrencyAdversarial:
 
     def test_cycle_time_thread_safety(self) -> None:
         from insureflow.analytics.metrics import CycleTimeTracker
+
         tracker = CycleTimeTracker()
         errors: list[Exception] = []
 
@@ -518,52 +540,61 @@ class TestConcurrencyAdversarial:
 # 9. INPUT VALIDATION — Parser edge cases
 # ===========================================================================
 
+
 class TestParserAdversarial:
     """Try to break parsers with adversarial inputs."""
 
     def test_acord_parser_malformed_xml(self) -> None:
         from insureflow.ingestion.acord_parser import ACORDParser
+
         parser = ACORDParser()
         with pytest.raises(Exception):
             parser.parse("<root><unclosed>", "b1")
 
     def test_json_broker_parser_empty(self) -> None:
         from insureflow.ingestion.json_parser import JSONBrokerParser
+
         parser = JSONBrokerParser()
         result = parser.parse("{}", "b1")
         assert result is not None
 
     def test_json_broker_parser_malformed(self) -> None:
         from insureflow.ingestion.json_parser import JSONBrokerParser
+
         parser = JSONBrokerParser()
         with pytest.raises(Exception):
             parser.parse("{invalid json", "b1")
 
     def test_loss_run_parser_empty(self) -> None:
         from insureflow.ingestion.loss_run_parser import LossRunParser
+
         parser = LossRunParser()
         result = parser.parse("", "b1")
         assert result is not None
 
     def test_document_classifier_empty(self) -> None:
         from insureflow.ingestion.classifier import DocumentClassifier
+
         result = DocumentClassifier.classify("")
         assert result is not None
 
     def test_document_classifier_binary_garbage(self) -> None:
         from insureflow.ingestion.classifier import DocumentClassifier
+
         garbage = "".join(chr(i) for i in range(256))
         result = DocumentClassifier.classify(garbage)
         assert result is not None
 
     def test_document_classifier_huge_json(self) -> None:
         from insureflow.ingestion.classifier import DocumentClassifier
+
         huge_json = '{"data": "' + "x" * 100000 + '"}'
         result = DocumentClassifier.classify(huge_json)
         assert result is not None
 
     def test_loader_empty_bundle(self) -> None:
         from insureflow.ingestion.loader import SubmissionLoader
+
         loader = SubmissionLoader()
         bundle = loader.load_bundle()
         assert bundle is not None
@@ -574,11 +605,13 @@ class TestParserAdversarial:
 # 10. AUTH STORE — Data corruption
 # ===========================================================================
 
+
 class TestAuthStoreAdversarial:
     """Try to corrupt the user store."""
 
     def test_corrupt_json_file_resets_gracefully(self, tmp_path: Any) -> None:
         from insureflow.auth.store import UserStore
+
         store_path = tmp_path / "users.json"
         store_path.write_text("{corrupt json data!!!")
         store = UserStore(path=store_path)
@@ -586,6 +619,7 @@ class TestAuthStoreAdversarial:
 
     def test_empty_file_resets_gracefully(self, tmp_path: Any) -> None:
         from insureflow.auth.store import UserStore
+
         store_path = tmp_path / "users.json"
         store_path.write_text("")
         store = UserStore(path=store_path)
@@ -593,6 +627,7 @@ class TestAuthStoreAdversarial:
 
     def test_binary_file_resets_gracefully(self, tmp_path: Any) -> None:
         from insureflow.auth.store import UserStore
+
         store_path = tmp_path / "users.json"
         store_path.write_bytes(b"\x00\x01\x02\x03")
         store = UserStore(path=store_path)
@@ -603,11 +638,13 @@ class TestAuthStoreAdversarial:
 # 11. METRICS — Edge cases
 # ===========================================================================
 
+
 class TestMetricsAdversarial:
     """Try to break the metrics system."""
 
     def test_fill_rate_zero_not_treated_as_empty(self) -> None:
         from insureflow.analytics.metrics import FillRateTracker
+
         tracker = FillRateTracker()
         tracker.record_bundle_fields("b1", {"total_claims": 0, "total_incurred": 0.0})
         rate = tracker.get_fill_rate("total_claims")
@@ -615,6 +652,7 @@ class TestMetricsAdversarial:
 
     def test_fill_rate_none_still_empty(self) -> None:
         from insureflow.analytics.metrics import FillRateTracker
+
         tracker = FillRateTracker()
         tracker.record_bundle_fields("b1", {"total_claims": None})
         rate = tracker.get_fill_rate("total_claims")
@@ -622,6 +660,7 @@ class TestMetricsAdversarial:
 
     def test_fill_rate_empty_string_still_empty(self) -> None:
         from insureflow.analytics.metrics import FillRateTracker
+
         tracker = FillRateTracker()
         tracker.record_bundle_fields("b1", {"named_insured": ""})
         rate = tracker.get_fill_rate("named_insured")
@@ -629,6 +668,7 @@ class TestMetricsAdversarial:
 
     def test_cycle_time_empty_stats(self) -> None:
         from insureflow.analytics.metrics import CycleTimeTracker
+
         tracker = CycleTimeTracker()
         stats = tracker.get_stats()
         assert stats["total_runs"] == 0
@@ -636,12 +676,14 @@ class TestMetricsAdversarial:
 
     def test_override_rate_empty(self) -> None:
         from insureflow.analytics.metrics import OverrideRateTracker
+
         tracker = OverrideRateTracker()
         rate = tracker.get_override_rate()
         assert rate["total"] == 0
 
     def test_get_fill_rate_returns_copy(self) -> None:
         from insureflow.analytics.metrics import FillRateTracker
+
         tracker = FillRateTracker()
         tracker.record_field("test", filled=True)
         rate1 = tracker.get_fill_rate("test")
@@ -652,6 +694,7 @@ class TestMetricsAdversarial:
 
     def test_persistence_files_created(self, tmp_path: Any) -> None:
         from insureflow.analytics.metrics import CycleTimeTracker, FillRateTracker, OverrideRateTracker
+
         fill = FillRateTracker(persist_path=tmp_path / "fill.jsonl")
         override = OverrideRateTracker(persist_path=tmp_path / "override.jsonl")
         cycle = CycleTimeTracker(persist_path=tmp_path / "cycle.jsonl")

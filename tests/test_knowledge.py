@@ -14,6 +14,7 @@ from insureflow.knowledge.tacit_store import KnowledgeType, TacitKnowledgeStore,
 # TacitKnowledgeStore
 # ---------------------------------------------------------------------------
 
+
 class TestTacitKnowledgeStore:
     def _make_store(self, tmp: str) -> TacitKnowledgeStore:
         return TacitKnowledgeStore(persist_path=Path(tmp) / "knowledge.json")
@@ -121,15 +122,17 @@ class TestTacitKnowledgeStore:
 
     def test_match_submission(self, tmp_path: Any) -> None:
         store = self._make_store(str(tmp_path))
-        store.add_rule(TacitRule(
-            rule_type=KnowledgeType.HEURISTIC,
-            title="Restaurant decline",
-            description="Decline restaurants",
-            trigger_conditions=["naics=722"],
-            action="decline",
-            naics_codes=["722"],
-            confidence=0.8,
-        ))
+        store.add_rule(
+            TacitRule(
+                rule_type=KnowledgeType.HEURISTIC,
+                title="Restaurant decline",
+                description="Decline restaurants",
+                trigger_conditions=["naics=722"],
+                action="decline",
+                naics_codes=["722"],
+                confidence=0.8,
+            )
+        )
         submission = {"naics_code": "722", "state": "FL", "tiv": 500000}
         matches = store.match_submission(submission, min_score=0.3)
         assert len(matches) >= 1
@@ -149,6 +152,7 @@ class TestTacitKnowledgeStore:
 # ---------------------------------------------------------------------------
 # PatternDetector
 # ---------------------------------------------------------------------------
+
 
 class TestPatternDetector:
     def test_detects_naics_pattern(self, tmp_path: Any) -> None:
@@ -225,6 +229,7 @@ class TestPatternDetector:
 # EdgeCaseDetector
 # ---------------------------------------------------------------------------
 
+
 class TestEdgeCaseDetector:
     def _make_detector(self, tmp: str) -> EdgeCaseDetector:
         store = TacitKnowledgeStore(persist_path=Path(tmp) / "knowledge.json")
@@ -250,30 +255,38 @@ class TestEdgeCaseDetector:
     def test_detects_rare_combination(self, tmp_path: Any) -> None:
         detector = self._make_detector(str(tmp_path))
         for i in range(25):
-            detector.learn_from_submission({
-                "construction_type": "Frame",
-                "occupancy_type": "Office",
+            detector.learn_from_submission(
+                {
+                    "construction_type": "Frame",
+                    "occupancy_type": "Office",
+                    "state": "FL",
+                }
+            )
+        signals = detector.detect_edge_cases(
+            {
+                "construction_type": "Masonry",
+                "occupancy_type": "Restaurant",
                 "state": "FL",
-            })
-        signals = detector.detect_edge_cases({
-            "construction_type": "Masonry",
-            "occupancy_type": "Restaurant",
-            "state": "FL",
-        })
+            }
+        )
         rare = [s for s in signals if s.signal_type == "rare_combination"]
         assert len(rare) >= 1
 
     def test_risk_score_anomaly(self, tmp_path: Any) -> None:
         detector = self._make_detector(str(tmp_path))
         for i in range(10):
-            detector.learn_from_submission({
+            detector.learn_from_submission(
+                {
+                    "naics_code": "722",
+                    "risk_score": 0.3,
+                }
+            )
+        signals = detector.detect_edge_cases(
+            {
                 "naics_code": "722",
-                "risk_score": 0.3,
-            })
-        signals = detector.detect_edge_cases({
-            "naics_code": "722",
-            "risk_score": 0.9,
-        })
+                "risk_score": 0.9,
+            }
+        )
         risk_anomalies = [s for s in signals if s.signal_type == "risk_score_anomaly"]
         assert len(risk_anomalies) >= 1
 
@@ -289,6 +302,7 @@ class TestEdgeCaseDetector:
 # ---------------------------------------------------------------------------
 # HeuristicLearner
 # ---------------------------------------------------------------------------
+
 
 class TestHeuristicLearner:
     def _make_learner(self, tmp: str) -> HeuristicLearner:

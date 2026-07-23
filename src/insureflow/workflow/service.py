@@ -13,6 +13,7 @@ class WorkflowService:
     def _track_override(self, bundle_id: str, ai_decision: str, human_decision: str, signed_by: str, override_reason: str, org_id: str) -> None:
         try:
             from insureflow.analytics.metrics import get_pipeline_metrics
+
             get_pipeline_metrics().override_rate.record_sign_off(
                 bundle_id=bundle_id,
                 ai_decision=ai_decision,

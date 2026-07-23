@@ -2918,8 +2918,8 @@ def list_lending_products(
 
 # ── WebSocket / SSE: Real-time Job Status ────────────────────────
 
-_job_ws_subscribers: dict[str, set[asyncio.Queue]] = defaultdict(set)
-_job_sse_subscribers: dict[str, set[asyncio.Queue]] = defaultdict(set)
+_job_ws_subscribers: dict[str, set[asyncio.Queue[str]]] = defaultdict(set)
+_job_sse_subscribers: dict[str, set[asyncio.Queue[str]]] = defaultdict(set)
 
 
 def _notify_job_subscribers(job_id: str, data: dict[str, Any]) -> None:
@@ -2961,7 +2961,7 @@ async def websocket_job_status(websocket: WebSocket, job_id: str) -> None:
         return
 
     await websocket.accept()
-    queue: asyncio.Queue = asyncio.Queue(maxsize=100)
+    queue: asyncio.Queue[str] = asyncio.Queue(maxsize=100)
     _job_ws_subscribers[job_id].add(queue)
     try:
         await websocket.send_json({"type": "connected", "job_id": job_id, "status": job.get("status", "unknown")})
@@ -2990,7 +2990,7 @@ async def sse_job_status(
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
 
-    queue: asyncio.Queue = asyncio.Queue(maxsize=100)
+    queue: asyncio.Queue[str] = asyncio.Queue(maxsize=100)
     _job_sse_subscribers[job_id].add(queue)
 
     async def event_generator() -> Any:
@@ -3021,6 +3021,7 @@ def _check_row_access(resource_org_id: str, user_org_id: str) -> None:
 
 
 # Patched pipeline endpoints with row-level checks
+
 
 @app.post("/v2/pipeline/run", status_code=202)
 @limiter.limit("10/minute")
@@ -3091,7 +3092,7 @@ def sign_off_v2(
         bundle_id=bundle_id,
         org_id=current.org_id,
         action=action,
-        signed_by=current.username,
+        signed_by=current.username or "",
         license_number=req.get("license_number", ""),
         notes=req.get("notes", ""),
         override_reason=req.get("override_reason", ""),

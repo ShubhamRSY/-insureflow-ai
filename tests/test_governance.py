@@ -17,6 +17,7 @@ from insureflow.observability.telemetry import PipelineTrace, Span, TelemetryCol
 # Token Usage Tracker
 # ---------------------------------------------------------------------------
 
+
 class TestEstimateCost:
     def test_gpt4o_cost(self) -> None:
         cost = estimate_cost("gpt-4o", input_tokens=1000, output_tokens=1000)
@@ -156,6 +157,7 @@ class TestTokenUsageTracker:
 # Budget Manager
 # ---------------------------------------------------------------------------
 
+
 class TestBudgetManager:
     def test_no_limits_always_passes(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -247,6 +249,7 @@ class TestBudgetManager:
 # ---------------------------------------------------------------------------
 # Pipeline Telemetry
 # ---------------------------------------------------------------------------
+
 
 class TestSpan:
     def test_basic_lifecycle(self) -> None:

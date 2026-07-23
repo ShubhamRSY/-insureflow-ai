@@ -212,15 +212,17 @@ class TestEmailInboxNormalizer:
 class TestSFTPNormalizer:
     def test_normalize_sftp_json(self) -> None:
         norm = SFTPNormalizer()
-        nested_json = json.dumps({
-            "insured": {
-                "legalName": "Pacific Coast Distributors, Inc.",
-                "taxId": "94-3328410",
-            },
-            "broker": {"brokerName": "Golden Gate Insurance Brokers"},
-            "policy": {"effectiveDate": "2026-09-01", "expirationDate": "2027-09-01"},
-            "coverages": [{"coverageType": "GL", "limitAmount": 1000000, "deductible": 0, "annualPremium": 25000}],
-        })
+        nested_json = json.dumps(
+            {
+                "insured": {
+                    "legalName": "Pacific Coast Distributors, Inc.",
+                    "taxId": "94-3328410",
+                },
+                "broker": {"brokerName": "Golden Gate Insurance Brokers"},
+                "policy": {"effectiveDate": "2026-09-01", "expirationDate": "2027-09-01"},
+                "coverages": [{"coverageType": "GL", "limitAmount": 1000000, "deductible": 0, "annualPremium": 25000}],
+            }
+        )
         raw = {"file": {"format": "json", "content": nested_json}}
         sub = norm.normalize(raw)
         assert sub.source == "sftp"
@@ -512,9 +514,7 @@ class TestSnowflakeNormalizer:
                 "naics_code": "423310",
                 "locations": [{"address": "1 Snow Way", "city": "Denver", "state": "CO", "zip_code": "80202"}],
                 "coverages": [{"type": "Inland Marine", "limit": 1000000, "deductible": 5000, "premium": 8000}],
-                "loss_run": [
-                    {"claim_id": "SN-001", "date_of_loss": "2025-01-15", "line": "Property", "cause": "Fire", "incurred": 100000, "paid": 90000, "reserve": 10000, "status": "open"}
-                ],
+                "loss_run": [{"claim_id": "SN-001", "date_of_loss": "2025-01-15", "line": "Property", "cause": "Fire", "incurred": 100000, "paid": 90000, "reserve": 10000, "status": "open"}],
             }
         }
         sub = norm.normalize(raw)

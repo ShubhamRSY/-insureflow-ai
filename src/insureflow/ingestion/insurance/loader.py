@@ -118,10 +118,7 @@ class InsuranceDocumentLoader:
         """
         normalizer = get_normalizer(source_id)
         if normalizer is None:
-            raise ValueError(
-                f"No normalizer registered for source '{source_id}'. "
-                f"Use supported_sources() to see available sources."
-            )
+            raise ValueError(f"No normalizer registered for source '{source_id}'. Use supported_sources() to see available sources.")
         bid = bundle_id or f"bundle-{uuid4().hex[:12]}"
         structured = normalizer.normalize(raw_data, submission_id=f"{bid}-src")
         bundle = SubmissionBundle(

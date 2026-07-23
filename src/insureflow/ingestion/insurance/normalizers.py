@@ -65,8 +65,8 @@ def _to_int(value: Any) -> Optional[int]:
     return int(f) if f is not None else None
 
 
-def _nested(data: dict, *keys: str) -> Any:
-    current = data
+def _nested(data: dict[str, Any], *keys: str) -> Any:
+    current: Any = data
     for key in keys:
         if isinstance(current, dict):
             current = current.get(key)
@@ -93,8 +93,7 @@ class SourceNormalizer(ABC):
     source_name: str = ""
 
     @abstractmethod
-    def normalize(self, raw: dict[str, Any], submission_id: str | None = None) -> StructuredSubmission:
-        ...
+    def normalize(self, raw: dict[str, Any], submission_id: str | None = None) -> StructuredSubmission: ...
 
     def _make_submission(self, submission_id: str | None = None) -> StructuredSubmission:
         return StructuredSubmission(
@@ -125,21 +124,25 @@ class GoogleDriveNormalizer(SourceNormalizer):
         if eff and exp:
             sub.policy_period = PolicyPeriod(effective_date=eff, expiration_date=exp)
         for loc in raw.get("locations", meta.get("locations", [])):
-            sub.locations.append(LocationData(
-                address=loc.get("address", ""),
-                city=loc.get("city", ""),
-                state=loc.get("state", ""),
-                zip_code=loc.get("zip", loc.get("zip_code", "")),
-                year_built=_to_int(loc.get("year_built")),
-                square_footage=_to_float(loc.get("square_footage")),
-            ))
+            sub.locations.append(
+                LocationData(
+                    address=loc.get("address", ""),
+                    city=loc.get("city", ""),
+                    state=loc.get("state", ""),
+                    zip_code=loc.get("zip", loc.get("zip_code", "")),
+                    year_built=_to_int(loc.get("year_built")),
+                    square_footage=_to_float(loc.get("square_footage")),
+                )
+            )
         for cov in raw.get("coverages", meta.get("coverages", [])):
-            sub.coverages.append(CoverageDetail(
-                coverage_type=cov.get("type", cov.get("coverage_type", "")),
-                limit_amount=_to_float(cov.get("limit", cov.get("limit_amount"))) or 0,
-                deductible=_to_float(cov.get("deductible")) or 0,
-                premium=_to_float(cov.get("premium", cov.get("annual_premium"))) or 0,
-            ))
+            sub.coverages.append(
+                CoverageDetail(
+                    coverage_type=cov.get("type", cov.get("coverage_type", "")),
+                    limit_amount=_to_float(cov.get("limit", cov.get("limit_amount"))) or 0,
+                    deductible=_to_float(cov.get("deductible")) or 0,
+                    premium=_to_float(cov.get("premium", cov.get("annual_premium"))) or 0,
+                )
+            )
         fin = raw.get("financial", meta.get("financial", {}))
         if fin:
             sub.financial = FinancialData(
@@ -202,6 +205,7 @@ class EmailInboxNormalizer(SourceNormalizer):
             content = att.get("content", "")
             if "acord" in att.get("filename", "").lower() or "<acord" in content[:200].lower():
                 from insureflow.ingestion.acord_parser import ACORDParser
+
                 try:
                     parsed = ACORDParser().parse(content, submission_id or "email-001")
                     if parsed.named_insured:
@@ -233,6 +237,7 @@ class SFTPNormalizer(SourceNormalizer):
         content = file_data.get("content", "")
         if file_data.get("format") == "acord_xml" or content.strip().startswith("<?xml") or "<acord" in content[:500].lower():
             from insureflow.ingestion.acord_parser import ACORDParser
+
             try:
                 sub = ACORDParser().parse(content, submission_id or "sftp-001")
                 sub.source = self.source_id
@@ -241,6 +246,7 @@ class SFTPNormalizer(SourceNormalizer):
                 pass
         if file_data.get("format") == "json" or content.strip().startswith("{"):
             from insureflow.ingestion.json_parser import JSONBrokerParser
+
             try:
                 sub = JSONBrokerParser().parse(content, submission_id or "sftp-001")
                 sub.source = self.source_id
@@ -277,22 +283,26 @@ class BoldPenguinNormalizer(SourceNormalizer):
         if eff and exp:
             sub.policy_period = PolicyPeriod(effective_date=eff, expiration_date=exp)
         for loc in app.get("locations", []):
-            sub.locations.append(LocationData(
-                address=loc.get("street_address", loc.get("address", "")),
-                city=loc.get("city", ""),
-                state=loc.get("state", ""),
-                zip_code=loc.get("zip_code", loc.get("zip", "")),
-                year_built=_to_int(loc.get("year_built")),
-                square_footage=_to_float(loc.get("square_footage")),
-                building_value=_to_float(loc.get("building_value")),
-            ))
+            sub.locations.append(
+                LocationData(
+                    address=loc.get("street_address", loc.get("address", "")),
+                    city=loc.get("city", ""),
+                    state=loc.get("state", ""),
+                    zip_code=loc.get("zip_code", loc.get("zip", "")),
+                    year_built=_to_int(loc.get("year_built")),
+                    square_footage=_to_float(loc.get("square_footage")),
+                    building_value=_to_float(loc.get("building_value")),
+                )
+            )
         for cov in app.get("coverages", app.get("requested_coverages", [])):
-            sub.coverages.append(CoverageDetail(
-                coverage_type=cov.get("type", cov.get("coverage_type", "")),
-                limit_amount=_to_float(cov.get("limit", cov.get("limit_amount"))) or 0,
-                deductible=_to_float(cov.get("deductible")) or 0,
-                premium=_to_float(cov.get("premium")) or 0,
-            ))
+            sub.coverages.append(
+                CoverageDetail(
+                    coverage_type=cov.get("type", cov.get("coverage_type", "")),
+                    limit_amount=_to_float(cov.get("limit", cov.get("limit_amount"))) or 0,
+                    deductible=_to_float(cov.get("deductible")) or 0,
+                    premium=_to_float(cov.get("premium")) or 0,
+                )
+            )
         risk = app.get("risk", app.get("business_info", {}))
         if risk:
             sub.risk_profile = RiskProfile(
@@ -321,6 +331,7 @@ class IVANSDownloadNormalizer(SourceNormalizer):
             return self._parse_al3(content, submission_id)
         if transaction.get("format") == "acord_xml" or "<acord" in content[:500].lower():
             from insureflow.ingestion.acord_parser import ACORDParser
+
             try:
                 return ACORDParser().parse(content, submission_id or "ivans-001")
             except Exception:
@@ -371,6 +382,7 @@ class ACORDAL3Normalizer(SourceNormalizer):
         content = raw.get("content", raw.get("xml", ""))
         if isinstance(content, str) and ("<acord" in content[:500].lower() or "<?xml" in content[:100].lower()):
             from insureflow.ingestion.acord_parser import ACORDParser
+
             try:
                 sub = ACORDParser().parse(content, submission_id or "acord-al3-001")
                 sub.source = self.source_id
@@ -413,27 +425,31 @@ class GuidewireNormalizer(SourceNormalizer):
         if eff and exp:
             sub.policy_period = PolicyPeriod(effective_date=eff, expiration_date=exp)
         for cov in policy.get("coverages", policy.get("lines", [])):
-            sub.coverages.append(CoverageDetail(
-                coverage_type=cov.get("coverageType", cov.get("line", cov.get("type", ""))),
-                limit_amount=_to_float(cov.get("limitAmount", cov.get("limit"))) or 0,
-                deductible=_to_float(cov.get("deductibleAmount", cov.get("deductible"))) or 0,
-                premium=_to_float(cov.get("premium", cov.get("totalPremium"))) or 0,
-                sublimits={k: _to_float(v) or 0 for k, v in cov.get("sublimits", {}).items()},
-            ))
+            sub.coverages.append(
+                CoverageDetail(
+                    coverage_type=cov.get("coverageType", cov.get("line", cov.get("type", ""))),
+                    limit_amount=_to_float(cov.get("limitAmount", cov.get("limit"))) or 0,
+                    deductible=_to_float(cov.get("deductibleAmount", cov.get("deductible"))) or 0,
+                    premium=_to_float(cov.get("premium", cov.get("totalPremium"))) or 0,
+                    sublimits={k: _to_float(v) or 0 for k, v in cov.get("sublimits", {}).items()},
+                )
+            )
         for loc in policy.get("locations", []):
             addr = loc.get("address", loc)
-            sub.locations.append(LocationData(
-                address=addr.get("addressLine1", addr.get("address", "")),
-                city=addr.get("city", ""),
-                state=addr.get("state", addr.get("stateCode", "")),
-                zip_code=addr.get("postalCode", addr.get("zipCode", addr.get("zip", ""))),
-                year_built=_to_int(loc.get("yearBuilt")),
-                square_footage=_to_float(loc.get("squareFeet", loc.get("squareFootage"))),
-                construction_type=loc.get("constructionType"),
-                occupancy_type=loc.get("occupancyType", loc.get("occupancy")),
-                building_value=_to_float(loc.get("buildingValue")),
-                contents_value=_to_float(loc.get("contentsValue")),
-            ))
+            sub.locations.append(
+                LocationData(
+                    address=addr.get("addressLine1", addr.get("address", "")),
+                    city=addr.get("city", ""),
+                    state=addr.get("state", addr.get("stateCode", "")),
+                    zip_code=addr.get("postalCode", addr.get("zipCode", addr.get("zip", ""))),
+                    year_built=_to_int(loc.get("yearBuilt")),
+                    square_footage=_to_float(loc.get("squareFeet", loc.get("squareFootage"))),
+                    construction_type=loc.get("constructionType"),
+                    building_occupancy=loc.get("occupancyType", loc.get("occupancy")),
+                    building_value=_to_float(loc.get("buildingValue")),
+                    contents_value=_to_float(loc.get("contentsValue")),
+                )
+            )
         fin = policy.get("financial", policy.get("financialInfo", {}))
         if fin:
             sub.financial = FinancialData(
@@ -505,21 +521,25 @@ class AppliedEpicNormalizer(SourceNormalizer):
         if eff and exp:
             sub.policy_period = PolicyPeriod(effective_date=eff, expiration_date=exp)
         for loc in epic.get("locations", client.get("locations", [])):
-            sub.locations.append(LocationData(
-                address=loc.get("address", loc.get("street", "")),
-                city=loc.get("city", ""),
-                state=loc.get("state", ""),
-                zip_code=loc.get("zip", loc.get("zipCode", "")),
-                year_built=_to_int(loc.get("yearBuilt")),
-                square_footage=_to_float(loc.get("squareFootage", loc.get("sqft"))),
-            ))
+            sub.locations.append(
+                LocationData(
+                    address=loc.get("address", loc.get("street", "")),
+                    city=loc.get("city", ""),
+                    state=loc.get("state", ""),
+                    zip_code=loc.get("zip", loc.get("zipCode", "")),
+                    year_built=_to_int(loc.get("yearBuilt")),
+                    square_footage=_to_float(loc.get("squareFootage", loc.get("sqft"))),
+                )
+            )
         for cov in epic.get("coverages", policy.get("coverages", [])):
-            sub.coverages.append(CoverageDetail(
-                coverage_type=cov.get("classCode", cov.get("type", cov.get("coverageType", ""))),
-                limit_amount=_to_float(cov.get("limit", cov.get("limitAmount"))) or 0,
-                deductible=_to_float(cov.get("deductible")) or 0,
-                premium=_to_float(cov.get("premium", cov.get("annualPremium"))) or 0,
-            ))
+            sub.coverages.append(
+                CoverageDetail(
+                    coverage_type=cov.get("classCode", cov.get("type", cov.get("coverageType", ""))),
+                    limit_amount=_to_float(cov.get("limit", cov.get("limitAmount"))) or 0,
+                    deductible=_to_float(cov.get("deductible")) or 0,
+                    premium=_to_float(cov.get("premium", cov.get("annualPremium"))) or 0,
+                )
+            )
         fin = epic.get("financial", client.get("financial", {}))
         if fin:
             sub.financial = FinancialData(
@@ -574,21 +594,25 @@ class SalesforceNormalizer(SourceNormalizer):
         if eff and exp:
             sub.policy_period = PolicyPeriod(effective_date=eff, expiration_date=exp)
         for loc in opp.get("locations", opp.get("Locations__r", [])):
-            sub.locations.append(LocationData(
-                address=loc.get("Address__c", loc.get("address", "")),
-                city=loc.get("City__c", loc.get("city", "")),
-                state=loc.get("State__c", loc.get("state", "")),
-                zip_code=loc.get("Zip__c", loc.get("zip", "")),
-                year_built=_to_int(loc.get("Year_Built__c")),
-                square_footage=_to_float(loc.get("Square_Footage__c")),
-            ))
+            sub.locations.append(
+                LocationData(
+                    address=loc.get("Address__c", loc.get("address", "")),
+                    city=loc.get("City__c", loc.get("city", "")),
+                    state=loc.get("State__c", loc.get("state", "")),
+                    zip_code=loc.get("Zip__c", loc.get("zip", "")),
+                    year_built=_to_int(loc.get("Year_Built__c")),
+                    square_footage=_to_float(loc.get("Square_Footage__c")),
+                )
+            )
         for cov in opp.get("coverages", opp.get("Coverages__r", [])):
-            sub.coverages.append(CoverageDetail(
-                coverage_type=cov.get("Type__c", cov.get("type", "")),
-                limit_amount=_to_float(cov.get("Limit__c", cov.get("limit"))) or 0,
-                deductible=_to_float(cov.get("Deductible__c", cov.get("deductible"))) or 0,
-                premium=_to_float(cov.get("Premium__c", cov.get("premium"))) or 0,
-            ))
+            sub.coverages.append(
+                CoverageDetail(
+                    coverage_type=cov.get("Type__c", cov.get("type", "")),
+                    limit_amount=_to_float(cov.get("Limit__c", cov.get("limit"))) or 0,
+                    deductible=_to_float(cov.get("Deductible__c", cov.get("deductible"))) or 0,
+                    premium=_to_float(cov.get("Premium__c", cov.get("premium"))) or 0,
+                )
+            )
         fin = opp.get("financial", opp.get("Financial__c", {}))
         if fin:
             sub.financial = FinancialData(
@@ -626,19 +650,23 @@ class VeriskISONormalizer(SourceNormalizer):
         )
         territory = data.get("territory", {})
         if territory:
-            sub.locations.append(LocationData(
-                address=territory.get("address", ""),
-                city=territory.get("city", ""),
-                state=territory.get("state", ""),
-                zip_code=territory.get("zip_code", ""),
-            ))
+            sub.locations.append(
+                LocationData(
+                    address=territory.get("address", ""),
+                    city=territory.get("city", ""),
+                    state=territory.get("state", ""),
+                    zip_code=territory.get("zip_code", ""),
+                )
+            )
         for loss_cost in data.get("loss_costs", []):
-            sub.coverages.append(CoverageDetail(
-                coverage_type=loss_cost.get("line", loss_cost.get("coverage", "")),
-                limit_amount=0,
-                deductible=0,
-                premium=_to_float(loss_cost.get("loss_cost", loss_cost.get("rate"))) or 0,
-            ))
+            sub.coverages.append(
+                CoverageDetail(
+                    coverage_type=loss_cost.get("line", loss_cost.get("coverage", "")),
+                    limit_amount=0,
+                    deductible=0,
+                    premium=_to_float(loss_cost.get("loss_cost", loss_cost.get("rate"))) or 0,
+                )
+            )
         return sub
 
 
@@ -650,16 +678,18 @@ class CoreLogicNormalizer(SourceNormalizer):
         sub = self._make_submission(submission_id)
         prop = raw.get("property", raw)
         sub.named_insured = NamedInsured(legal_name=prop.get("insured_name", prop.get("owner_name", "Unknown")))
-        sub.locations.append(LocationData(
-            address=prop.get("address", prop.get("street_address", "")),
-            city=prop.get("city", ""),
-            state=prop.get("state", ""),
-            zip_code=prop.get("zip_code", prop.get("zip", "")),
-            year_built=_to_int(prop.get("year_built", prop.get("yearBuilt"))),
-            square_footage=_to_float(prop.get("square_footage", prop.get("grossLivingArea"))),
-            construction_type=prop.get("construction_type", prop.get("construction")),
-            building_value=_to_float(prop.get("replacement_cost", prop.get("replacementCostValue"))),
-        ))
+        sub.locations.append(
+            LocationData(
+                address=prop.get("address", prop.get("street_address", "")),
+                city=prop.get("city", ""),
+                state=prop.get("state", ""),
+                zip_code=prop.get("zip_code", prop.get("zip", "")),
+                year_built=_to_int(prop.get("year_built", prop.get("yearBuilt"))),
+                square_footage=_to_float(prop.get("square_footage", prop.get("grossLivingArea"))),
+                construction_type=prop.get("construction_type", prop.get("construction")),
+                building_value=_to_float(prop.get("replacement_cost", prop.get("replacementCostValue"))),
+            )
+        )
         risk = prop.get("risk", prop.get("riskData", {}))
         if risk:
             sub.risk_profile = RiskProfile(
@@ -671,12 +701,14 @@ class CoreLogicNormalizer(SourceNormalizer):
         if cat:
             prior_losses = []
             for claim in cat.get("claims", cat.get("prior_losses", [])):
-                prior_losses.append({
-                    "date": claim.get("date", ""),
-                    "type": claim.get("type", claim.get("event_type", "")),
-                    "amount": _to_float(claim.get("amount", claim.get("loss_amount", 0))),
-                    "description": claim.get("description", ""),
-                })
+                prior_losses.append(
+                    {
+                        "date": claim.get("date", ""),
+                        "type": claim.get("type", claim.get("event_type", "")),
+                        "amount": _to_float(claim.get("amount", claim.get("loss_amount", 0))),
+                        "description": claim.get("description", ""),
+                    }
+                )
             fin = FinancialData(
                 total_asset_value=_to_float(cat.get("total_insured_value", cat.get("total_asset_value"))),
                 prior_losses=prior_losses,
@@ -686,13 +718,16 @@ class CoreLogicNormalizer(SourceNormalizer):
             if total_cat_loss > 0 and sub.risk_profile:
                 existing_claims = sub.risk_profile.prior_claims
                 for pl in prior_losses:
-                    existing_claims.append(ClaimRecord(
-                        claim_id=pl.get("type", "cat"),
-                        date_received=_parse_date(pl.get("date")),
-                        claim_type="catastrophe",
-                        severity="cat",
-                        status=ClaimStatus.OPEN,
-                    ))
+                    existing_claims.append(
+                        ClaimRecord(
+                            claim_id=pl.get("type", "cat"),
+                            date_of_loss=_parse_date(pl.get("date")) or date.min,
+                            line_of_business="catastrophe",
+                            cause=pl.get("type", "cat"),
+                            incurred_amount=_to_float(pl.get("amount", 0)) or 0.0,
+                            claim_status=ClaimStatus.OPEN,
+                        )
+                    )
         return sub
 
 
@@ -709,6 +744,7 @@ class ImageRightNormalizer(SourceNormalizer):
         content = doc.get("content", "")
         if "<acord" in content[:500].lower() or "<?xml" in content[:100].lower():
             from insureflow.ingestion.acord_parser import ACORDParser
+
             try:
                 return ACORDParser().parse(content, submission_id or "imageright-001")
             except Exception:
@@ -735,6 +771,7 @@ class DocuSignNormalizer(SourceNormalizer):
             name = doc.get("name", doc.get("documentName", "")).lower()
             if "acord" in name or "<acord" in content[:500].lower():
                 from insureflow.ingestion.acord_parser import ACORDParser
+
                 try:
                     sub = ACORDParser().parse(content, submission_id or "docusign-001")
                     sub.source = self.source_id
@@ -768,12 +805,14 @@ class MicrosoftTeamsNormalizer(SourceNormalizer):
             filename = att.get("filename", att.get("name", "")).lower()
             if "acord" in filename or "<acord" in content[:500].lower():
                 from insureflow.ingestion.acord_parser import ACORDParser
+
                 try:
                     return ACORDParser().parse(content, submission_id or "teams-001")
                 except Exception:
                     pass
             if filename.endswith(".json") and content.strip().startswith("{"):
                 from insureflow.ingestion.json_parser import JSONBrokerParser
+
                 try:
                     return JSONBrokerParser().parse(content, submission_id or "teams-001")
                 except Exception:
@@ -798,12 +837,14 @@ class SlackIntakeNormalizer(SourceNormalizer):
             name = f.get("name", f.get("title", "")).lower()
             if "acord" in name or "<acord" in content[:500].lower():
                 from insureflow.ingestion.acord_parser import ACORDParser
+
                 try:
                     return ACORDParser().parse(content, submission_id or "slack-001")
                 except Exception:
                     pass
             if name.endswith(".json") and content.strip().startswith("{"):
                 from insureflow.ingestion.json_parser import JSONBrokerParser
+
                 try:
                     return JSONBrokerParser().parse(content, submission_id or "slack-001")
                 except Exception:
@@ -856,17 +897,19 @@ class SnowflakeNormalizer(SourceNormalizer):
             claims_raw = row.get("loss_run", row.get("prior_claims", []))
             claims = []
             for c in claims_raw:
-                claims.append(ClaimRecord(
-                    claim_id=c.get("claim_id", f"SF-{uuid4().hex[:6]}"),
-                    date_of_loss=_parse_date(c.get("date_of_loss")) or date.today(),
-                    line_of_business=c.get("line", c.get("lob", "")),
-                    cause=c.get("cause", ""),
-                    description=c.get("description", ""),
-                    incurred_amount=_to_float(c.get("incurred")) or 0,
-                    paid_amount=_to_float(c.get("paid")) or 0,
-                    open_reserve=_to_float(c.get("reserve")) or 0,
-                    claim_status=_find_claim_status(c.get("status", "open")),
-                ))
+                claims.append(
+                    ClaimRecord(
+                        claim_id=c.get("claim_id", f"SF-{uuid4().hex[:6]}"),
+                        date_of_loss=_parse_date(c.get("date_of_loss")) or date.today(),
+                        line_of_business=c.get("line", c.get("lob", "")),
+                        cause=c.get("cause", ""),
+                        description=c.get("description", ""),
+                        incurred_amount=_to_float(c.get("incurred")) or 0,
+                        paid_amount=_to_float(c.get("paid")) or 0,
+                        open_reserve=_to_float(c.get("reserve")) or 0,
+                        claim_status=_find_claim_status(c.get("status", "open")),
+                    )
+                )
             total_incurred = sum(c.incurred_amount for c in claims)
             total_paid = sum(c.paid_amount for c in claims)
             sub.financial.loss_run = LossRunData(
@@ -879,23 +922,27 @@ class SnowflakeNormalizer(SourceNormalizer):
             sub.risk_profile.prior_claims = claims
         if row.get("locations"):
             for loc in row["locations"]:
-                sub.locations.append(LocationData(
-                    address=loc.get("address", ""),
-                    city=loc.get("city", ""),
-                    state=loc.get("state", ""),
-                    zip_code=loc.get("zip_code", ""),
-                    year_built=_to_int(loc.get("year_built")),
-                    square_footage=_to_float(loc.get("square_footage")),
-                    building_value=_to_float(loc.get("building_value")),
-                ))
+                sub.locations.append(
+                    LocationData(
+                        address=loc.get("address", ""),
+                        city=loc.get("city", ""),
+                        state=loc.get("state", ""),
+                        zip_code=loc.get("zip_code", ""),
+                        year_built=_to_int(loc.get("year_built")),
+                        square_footage=_to_float(loc.get("square_footage")),
+                        building_value=_to_float(loc.get("building_value")),
+                    )
+                )
         if row.get("coverages"):
             for cov in row["coverages"]:
-                sub.coverages.append(CoverageDetail(
-                    coverage_type=cov.get("type", cov.get("coverage_type", "")),
-                    limit_amount=_to_float(cov.get("limit")) or 0,
-                    deductible=_to_float(cov.get("deductible")) or 0,
-                    premium=_to_float(cov.get("premium")) or 0,
-                ))
+                sub.coverages.append(
+                    CoverageDetail(
+                        coverage_type=cov.get("type", cov.get("coverage_type", "")),
+                        limit_amount=_to_float(cov.get("limit")) or 0,
+                        deductible=_to_float(cov.get("deductible")) or 0,
+                        premium=_to_float(cov.get("premium")) or 0,
+                    )
+                )
         return sub
 
 
