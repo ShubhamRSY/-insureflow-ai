@@ -3099,3 +3099,197 @@ def sign_off_v2(
     )
     _notify_job_subscribers(bundle_id, {"type": "workflow_update", "state": result.state.value})
     return result.model_dump(mode="json")
+
+
+# ── ML Predictive Analytics Endpoints ──────────────────────────
+
+
+@app.get("/ml/status")
+def ml_status() -> dict[str, Any]:
+    """ML module status — all models, versions, and metrics."""
+    from insureflow.ml.training import get_training_status
+
+    return get_training_status()
+
+
+@app.post("/ml/train")
+def ml_train_all() -> dict[str, Any]:
+    """Train or retrain all ML models with synthetic data."""
+    from insureflow.ml.training import train_all_models
+
+    results = train_all_models(force=True)
+    return {
+        "trained": len(results),
+        "results": [r.model_dump() for r in results],
+    }
+
+
+@app.post("/ml/train/{model_type}")
+def ml_train_single(model_type: str) -> dict[str, Any]:
+    """Retrain a single ML model."""
+    from insureflow.ml.models import ModelType as ModelTypeEnum
+    from insureflow.ml.training import retrain_model
+
+    try:
+        mt = ModelTypeEnum(model_type)
+    except ValueError:
+        raise HTTPException(status_code=400, detail=f"Invalid model type: {model_type}. Valid: {[e.value for e in ModelTypeEnum]}")
+
+    result = retrain_model(mt)
+    if result is None:
+        raise HTTPException(status_code=400, detail=f"Cannot train {model_type}")
+    return result.model_dump()
+
+
+@app.post("/ml/predict/loss")
+def ml_predict_loss(features: dict[str, Any]) -> dict[str, Any]:
+    """Loss prediction — expected claim frequency, severity, and total loss."""
+    from insureflow.ml.features import FeatureVector
+    from insureflow.ml.models import ModelType
+    from insureflow.ml.registry import get_ml_registry
+
+    registry = get_ml_registry()
+    model = registry.get(ModelType.LOSS_PREDICTION)
+    if model is None:
+        raise HTTPException(status_code=503, detail="Loss prediction model not available")
+    fv = FeatureVector(**{k: v for k, v in features.items() if k in FeatureVector.model_fields})
+    return model.predict(fv)
+
+
+@app.post("/ml/predict/fraud")
+def ml_predict_fraud(features: dict[str, Any]) -> dict[str, Any]:
+    """Fraud anomaly detection — probability, risk level, flagged patterns."""
+    from insureflow.ml.features import FeatureVector
+    from insureflow.ml.models import ModelType
+    from insureflow.ml.registry import get_ml_registry
+
+    registry = get_ml_registry()
+    model = registry.get(ModelType.FRAUD_DETECTION)
+    if model is None:
+        raise HTTPException(status_code=503, detail="Fraud detection model not available")
+    fv = FeatureVector(**{k: v for k, v in features.items() if k in FeatureVector.model_fields})
+    return model.predict(fv)
+
+
+@app.post("/ml/predict/premium")
+def ml_predict_premium(features: dict[str, Any]) -> dict[str, Any]:
+    """Premium optimization — recommended price, elasticity, retention probability."""
+    from insureflow.ml.features import FeatureVector
+    from insureflow.ml.models import ModelType
+    from insureflow.ml.registry import get_ml_registry
+
+    registry = get_ml_registry()
+    model = registry.get(ModelType.PREMIUM_OPTIMIZER)
+    if model is None:
+        raise HTTPException(status_code=503, detail="Premium optimizer model not available")
+    fv = FeatureVector(**{k: v for k, v in features.items() if k in FeatureVector.model_fields})
+    return model.predict(fv)
+
+
+@app.post("/ml/predict/churn")
+def ml_predict_churn(features: dict[str, Any]) -> dict[str, Any]:
+    """Churn prediction — non-renewal probability, LTV, retention actions."""
+    from insureflow.ml.features import FeatureVector
+    from insureflow.ml.models import ModelType
+    from insureflow.ml.registry import get_ml_registry
+
+    registry = get_ml_registry()
+    model = registry.get(ModelType.CHURN_PREDICTION)
+    if model is None:
+        raise HTTPException(status_code=503, detail="Churn prediction model not available")
+    fv = FeatureVector(**{k: v for k, v in features.items() if k in FeatureVector.model_fields})
+    return model.predict(fv)
+
+
+@app.post("/ml/predict/portfolio-risk")
+def ml_portfolio_risk(portfolio: dict[str, Any]) -> dict[str, Any]:
+    """Portfolio risk modeling — VaR, tail risk, Monte Carlo simulation."""
+    from insureflow.ml.portfolio_risk import PortfolioRiskModel
+
+    exposures = portfolio.get("exposures", [1000000.0])
+    probabilities = portfolio.get("loss_probabilities", [0.05])
+    severities = portfolio.get("severity_means", [50000.0])
+    severity_stds = portfolio.get("severity_stds")
+    cat_weight = portfolio.get("cat_weight", 0.15)
+
+    model = PortfolioRiskModel(n_simulations=portfolio.get("n_simulations", 10000))
+    result = model.simulate(exposures, probabilities, severities, severity_stds, cat_weight)
+    return result.model_dump()
+
+
+@app.post("/ml/predict/portfolio-stress")
+def ml_portfolio_stress(portfolio: dict[str, Any]) -> dict[str, Any]:
+    """Portfolio stress testing across multiple scenarios."""
+    from insureflow.ml.portfolio_risk import PortfolioRiskModel
+
+    model = PortfolioRiskModel(n_simulations=portfolio.get("n_simulations", 10000))
+    results = model.stress_test(
+        exposures=portfolio.get("exposures", [1000000.0]),
+        loss_probabilities=portfolio.get("loss_probabilities", [0.05]),
+        severity_means=portfolio.get("severity_means", [50000.0]),
+        stress_scenarios=portfolio.get("scenarios"),
+    )
+    return {"scenarios": results}
+
+
+@app.post("/ml/score/broker")
+def ml_score_broker(broker_data: dict[str, Any]) -> dict[str, Any]:
+    """Behavioral scoring — broker quality, consistency, accuracy."""
+    from insureflow.ml.behavioral import BehavioralScoringModel
+
+    model = BehavioralScoringModel()
+    return model.score_broker(
+        broker_id=broker_data.get("broker_id", "unknown"),
+        submission_count=broker_data.get("submission_count", 0),
+        avg_data_completeness=broker_data.get("avg_data_completeness", 0.5),
+        override_rate=broker_data.get("override_rate", 0),
+        avg_loss_ratio=broker_data.get("avg_loss_ratio", 0.5),
+        on_time_rate=broker_data.get("on_time_rate", 0.9),
+        accuracy_rate=broker_data.get("accuracy_rate", 0.85),
+        loss_ratio_history=broker_data.get("loss_ratio_history", []),
+    ).model_dump()
+
+
+@app.post("/ml/score/submission")
+def ml_score_submission(submission_data: dict[str, Any]) -> dict[str, Any]:
+    """Behavioral scoring — submission data quality."""
+    from insureflow.ml.behavioral import BehavioralScoringModel
+
+    model = BehavioralScoringModel()
+    return model.score_submission(
+        submission_id=submission_data.get("submission_id", "unknown"),
+        data_fields_present=submission_data.get("data_fields_present", 10),
+        total_fields_expected=submission_data.get("total_fields_expected", 20),
+        has_acord=submission_data.get("has_acord", False),
+        has_loss_run=submission_data.get("has_loss_run", False),
+        has_inspection=submission_data.get("has_inspection", False),
+        has_sov=submission_data.get("has_sov", False),
+    ).model_dump()
+
+
+@app.get("/ml/models")
+def ml_list_models() -> dict[str, Any]:
+    """List all registered ML models with status and metrics."""
+    from insureflow.ml.registry import get_ml_registry
+
+    return {"models": get_ml_registry().get_status()}
+
+
+@app.get("/ml/explain/{model_type}")
+def ml_explain(model_type: str, features: dict[str, Any]) -> dict[str, Any]:
+    """Get feature importance explanation for a prediction."""
+    from insureflow.ml.features import FeatureVector
+    from insureflow.ml.models import ModelType
+    from insureflow.ml.registry import get_ml_registry
+
+    registry = get_ml_registry()
+    try:
+        mt = ModelType(model_type)
+    except ValueError:
+        raise HTTPException(status_code=400, detail=f"Invalid model type: {model_type}")
+
+    model = registry.get(mt)
+    if model is None or not hasattr(model, "explain"):
+        raise HTTPException(status_code=403, detail=f"Model {model_type} does not support explanations")
+    fv = FeatureVector(**{k: v for k, v in features.items() if k in FeatureVector.model_fields})
+    return model.explain(fv)

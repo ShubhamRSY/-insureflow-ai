@@ -8,8 +8,8 @@ import {
   renderLendingResult, renderEvalMetricCard,
 } from './components.js';
 
-const VIEWS = ['overview', 'system', 'insurance', 'mortgage', 'lending', 'portfolio', 'evaluations', 'workflow', 'settings'];
-const PROTECTED = new Set(['insurance', 'mortgage', 'lending', 'portfolio', 'evaluations', 'workflow']);
+const VIEWS = ['overview', 'system', 'insurance', 'mortgage', 'lending', 'portfolio', 'evaluations', 'ml', 'workflow', 'settings'];
+const PROTECTED = new Set(['insurance', 'mortgage', 'lending', 'portfolio', 'evaluations', 'ml', 'workflow']);
 
 const state = {
   route: 'overview',
@@ -31,6 +31,7 @@ const titles = {
   lending: ['Consumer & Commercial Lending', 'Credit decisioning pipeline'],
   portfolio: ['Portfolio Concentration', 'Risk aggregate exposure'],
   evaluations: ['Evaluations & Quality', 'HITL scoring, drift detection, quality gates'],
+  ml: ['ML Predictive Analytics', 'Loss prediction, fraud detection, premium optimization'],
   workflow: ['UW Sign-off Queue', 'Licensed underwriter review workflow'],
   settings: ['Account', 'Authentication and organization settings'],
 };
@@ -63,6 +64,7 @@ async function loadView(route) {
       case 'lending': await loadLending(); break;
       case 'portfolio': await loadPortfolio(); break;
       case 'evaluations': await loadEvaluations(); break;
+      case 'ml': await loadML(); break;
       case 'workflow': await loadWorkflow(); break;
       case 'settings': renderSettings(); break;
     }
@@ -451,6 +453,62 @@ async function runDemo(vertical, presetId) {
   }
 }
 
+async function loadML() {
+  let status;
+  try {
+    status = await endpoints.mlStatus();
+  } catch {
+    status = { models: [] };
+  }
+
+  const models = status.models || [];
+  $('#mlModels').innerHTML = models.length ? `
+    <div class="table-wrap"><table>
+      <thead><tr><th>Model</th><th>Version</th><th>Status</th><th>Key Metric</th></tr></thead>
+      <tbody>${models.map(m => {
+        const metric = m.metrics?.val_r2 != null ? `R²: ${m.metrics.val_r2.toFixed(3)}`
+          : m.metrics?.val_f1 != null ? `F1: ${m.metrics.val_f1.toFixed(3)}`
+          : m.metrics?.val_accuracy != null ? `Acc: ${(m.metrics.val_accuracy * 100).toFixed(1)}%`
+          : 'Trained';
+        return `<tr>
+          <td><strong>${escapeHtml(m.model_name || m.model_type)}</strong></td>
+          <td class="mono">${escapeHtml(m.version || '—')}</td>
+          <td>${statusBadge(m.status || (m.is_trained ? 'ready' : 'draft'))}</td>
+          <td>${escapeHtml(metric)}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table></div>`
+    : '<div class="empty-state"><p>No models trained yet — click "Train All" to bootstrap</p></div>';
+
+  $('#mlQuickPredict').innerHTML = `
+    <div class="eval-metrics-row">
+      ${renderEvalMetricCard('Loss Prediction', models.find(m => m.model_type === 'loss_prediction')?.version || '—', 'Frequency × Severity')}
+      ${renderEvalMetricCard('Fraud Detection', models.find(m => m.model_type === 'fraud_detection')?.version || '—', 'Isolation Forest + GBM')}
+      ${renderEvalMetricCard('Premium Optimizer', models.find(m => m.model_type === 'premium_optimizer')?.version || '—', 'Elasticity + Margin')}
+      ${renderEvalMetricCard('Churn Prediction', models.find(m => m.model_type === 'churn_prediction')?.version || '—', 'Non-Renewal Risk')}
+      ${renderEvalMetricCard('Portfolio Risk', '1.0.0', 'Monte Carlo VaR')}
+      ${renderEvalMetricCard('Behavioral Scoring', '1.0.0', 'Broker Quality')}
+    </div>`;
+
+  const history = status.history || [];
+  $('#mlHistory').innerHTML = history.length
+    ? `<div class="table-wrap"><table>
+        <thead><tr><th>Model</th><th>Version</th><th>Trained At</th><th>Val R²/Acc</th></tr></thead>
+        <tbody>${history.map(h => {
+          const score = h.metrics?.val_r2 != null ? h.metrics.val_r2.toFixed(3)
+            : h.metrics?.val_accuracy != null ? (h.metrics.val_accuracy * 100).toFixed(1) + '%'
+            : '—';
+          return `<tr>
+            <td>${escapeHtml(h.model_type)}</td>
+            <td class="mono">${escapeHtml(h.version)}</td>
+            <td>${escapeHtml(h.trained_at?.slice(0, 19)?.replace('T', ' ') || '—')}</td>
+            <td>${escapeHtml(score)}</td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table></div>`
+    : '<div class="empty-state"><p>No training history yet</p></div>';
+}
+
 async function loadWorkflow() {
   const data = await endpoints.pendingWorkflow();
   const pending = data.pending || [];
@@ -613,6 +671,17 @@ function init() {
   $('#loginModalClose')?.addEventListener('click', hideLoginModal);
   $('#insuranceForm')?.addEventListener('submit', submitInsuranceCustom);
   $('#mortgageForm')?.addEventListener('submit', submitMortgageCustom);
+  $('#mlTrainAllBtn')?.addEventListener('click', async () => {
+    if (!auth.isLoggedIn) { showLoginModal(); return; }
+    try {
+      toast('Training all ML models…', 'info');
+      const res = await endpoints.mlTrainAll();
+      toast(`Trained ${res.trained} models`, 'success');
+      loadML();
+    } catch (e) {
+      toast(e.message, 'error');
+    }
+  });
   $('#mobileMenuBtn')?.addEventListener('click', () => $('#sidebar').classList.toggle('open'));
 
   if (auth.isLoggedIn) {

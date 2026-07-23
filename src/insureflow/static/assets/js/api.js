@@ -82,4 +82,18 @@ export const endpoints = {
 
   registryContext: () => api('/registry/context'),
   registryVersions: () => api('/registry/versions'),
+
+  mlStatus: () => api('/ml/status'),
+  mlModels: () => api('/ml/models'),
+  mlTrainAll: () => api('/ml/train', { method: 'POST' }),
+  mlTrainSingle: (modelType) => api(`/ml/train/${modelType}`, { method: 'POST' }),
+  mlPredictLoss: (features) => api('/ml/predict/loss', { method: 'POST', body: features }),
+  mlPredictFraud: (features) => api('/ml/predict/fraud', { method: 'POST', body: features }),
+  mlPredictPremium: (features) => api('/ml/predict/premium', { method: 'POST', body: features }),
+  mlPredictChurn: (features) => api('/ml/predict/churn', { method: 'POST', body: features }),
+  mlPortfolioRisk: (portfolio) => api('/ml/predict/portfolio-risk', { method: 'POST', body: portfolio }),
+  mlPortfolioStress: (portfolio) => api('/ml/predict/portfolio-stress', { method: 'POST', body: portfolio }),
+  mlScoreBroker: (data) => api('/ml/score/broker', { method: 'POST', body: data }),
+  mlScoreSubmission: (data) => api('/ml/score/submission', { method: 'POST', body: data }),
+  mlExplain: (modelType, features) => api(`/ml/explain/${modelType}?${new URLSearchParams(features)}`),
 };

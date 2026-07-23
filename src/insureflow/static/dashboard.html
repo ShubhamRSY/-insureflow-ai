@@ -55,6 +55,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
           Evaluations
         </button>
+        <button class="nav-item" data-route="ml">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          ML Analytics
+        </button>
 
         <div class="nav-section">Operations</div>
         <button class="nav-item" data-route="workflow">
@@ -231,6 +235,25 @@
         <!-- Evaluations -->
         <div id="view-evaluations" class="view">
           <div id="evaluationsContent"></div>
+        </div>
+
+        <!-- ML Analytics -->
+        <div id="view-ml" class="view">
+          <div class="card" style="margin-bottom:1.5rem">
+            <div class="card-header">
+              <h3>ML Models</h3>
+              <button class="btn btn-primary btn-sm" id="mlTrainAllBtn">Train All Models</button>
+            </div>
+            <div class="card-body" id="mlModels"></div>
+          </div>
+          <div class="card" style="margin-bottom:1.5rem">
+            <div class="card-header"><h3>Model Overview</h3></div>
+            <div class="card-body" id="mlQuickPredict"></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3>Training History</h3></div>
+            <div class="card-body" id="mlHistory"></div>
+          </div>
         </div>
 
         <!-- Workflow -->
