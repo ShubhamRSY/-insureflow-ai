@@ -17,7 +17,7 @@ COPY cli.py .
 COPY scripts/ scripts/
 
 # Default: runtime + OCR (health 100%). Override: --build-arg PIP_EXTRAS="claude,pgvector"
-ARG PIP_EXTRAS=claude,pgvector,ocr
+ARG PIP_EXTRAS=claude,pgvector,ocr,ml
 RUN pip install --no-cache-dir -U pip \
     && pip install --no-cache-dir -e ".[${PIP_EXTRAS}]"
 
