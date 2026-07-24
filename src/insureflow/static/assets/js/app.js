@@ -582,12 +582,7 @@ function renderSettings() {
 }
 
 async function showLoginModal() {
-  try {
-    const status = await fetch('/auth/status').then(r => r.json());
-    switchAuthTab(status.setup_required ? 'setup' : 'login');
-  } catch {
-    switchAuthTab('login');
-  }
+  switchAuthTab('login');
   $('#loginModal').classList.remove('hidden');
 }
 
