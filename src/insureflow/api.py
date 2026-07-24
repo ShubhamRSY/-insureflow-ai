@@ -3140,13 +3140,14 @@ def ml_train_single(model_type: str) -> dict[str, Any]:
 @app.post("/ml/predict/loss")
 def ml_predict_loss(features: dict[str, Any]) -> dict[str, Any]:
     """Loss prediction — expected claim frequency, severity, and total loss."""
+    from insureflow.ml.base import BaseMLModel
     from insureflow.ml.features import FeatureVector
     from insureflow.ml.models import ModelType
     from insureflow.ml.registry import get_ml_registry
 
     registry = get_ml_registry()
     model = registry.get(ModelType.LOSS_PREDICTION)
-    if model is None:
+    if model is None or not isinstance(model, BaseMLModel):
         raise HTTPException(status_code=503, detail="Loss prediction model not available")
     fv = FeatureVector(**{k: v for k, v in features.items() if k in FeatureVector.model_fields})
     return model.predict(fv)
@@ -3155,13 +3156,14 @@ def ml_predict_loss(features: dict[str, Any]) -> dict[str, Any]:
 @app.post("/ml/predict/fraud")
 def ml_predict_fraud(features: dict[str, Any]) -> dict[str, Any]:
     """Fraud anomaly detection — probability, risk level, flagged patterns."""
+    from insureflow.ml.base import BaseMLModel
     from insureflow.ml.features import FeatureVector
     from insureflow.ml.models import ModelType
     from insureflow.ml.registry import get_ml_registry
 
     registry = get_ml_registry()
     model = registry.get(ModelType.FRAUD_DETECTION)
-    if model is None:
+    if model is None or not isinstance(model, BaseMLModel):
         raise HTTPException(status_code=503, detail="Fraud detection model not available")
     fv = FeatureVector(**{k: v for k, v in features.items() if k in FeatureVector.model_fields})
     return model.predict(fv)
@@ -3170,13 +3172,14 @@ def ml_predict_fraud(features: dict[str, Any]) -> dict[str, Any]:
 @app.post("/ml/predict/premium")
 def ml_predict_premium(features: dict[str, Any]) -> dict[str, Any]:
     """Premium optimization — recommended price, elasticity, retention probability."""
+    from insureflow.ml.base import BaseMLModel
     from insureflow.ml.features import FeatureVector
     from insureflow.ml.models import ModelType
     from insureflow.ml.registry import get_ml_registry
 
     registry = get_ml_registry()
     model = registry.get(ModelType.PREMIUM_OPTIMIZER)
-    if model is None:
+    if model is None or not isinstance(model, BaseMLModel):
         raise HTTPException(status_code=503, detail="Premium optimizer model not available")
     fv = FeatureVector(**{k: v for k, v in features.items() if k in FeatureVector.model_fields})
     return model.predict(fv)
@@ -3185,13 +3188,14 @@ def ml_predict_premium(features: dict[str, Any]) -> dict[str, Any]:
 @app.post("/ml/predict/churn")
 def ml_predict_churn(features: dict[str, Any]) -> dict[str, Any]:
     """Churn prediction — non-renewal probability, LTV, retention actions."""
+    from insureflow.ml.base import BaseMLModel
     from insureflow.ml.features import FeatureVector
     from insureflow.ml.models import ModelType
     from insureflow.ml.registry import get_ml_registry
 
     registry = get_ml_registry()
     model = registry.get(ModelType.CHURN_PREDICTION)
-    if model is None:
+    if model is None or not isinstance(model, BaseMLModel):
         raise HTTPException(status_code=503, detail="Churn prediction model not available")
     fv = FeatureVector(**{k: v for k, v in features.items() if k in FeatureVector.model_fields})
     return model.predict(fv)

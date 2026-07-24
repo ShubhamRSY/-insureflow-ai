@@ -29,12 +29,13 @@ class MLModelRegistry:
         self._initialize_models()
 
     def _initialize_models(self) -> None:
-        for model_cls in [
+        trainable: list[type[BaseMLModel]] = [
             LossPredictionModel,
             FraudDetectionModel,
             PremiumOptimizerModel,
             ChurnPredictionModel,
-        ]:
+        ]
+        for model_cls in trainable:
             model = model_cls()
             model.load()
             self._models[model.model_type] = model

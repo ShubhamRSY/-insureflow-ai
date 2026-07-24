@@ -6,6 +6,8 @@ import numpy as np
 
 from insureflow.ml.models import FeatureVector
 
+__all__ = ["FeatureVector", "extract_features", "generate_synthetic_dataset"]
+
 # Categorical mappings for encoding
 CONSTRUCTION_MAP = {
     "frame": 0,
@@ -218,7 +220,7 @@ def _generate_loss_target(X: np.ndarray, rng: np.random.RandomState) -> np.ndarr
     claims_count = X[:, 3]
     base_loss = tiv * loss_ratio * 0.01
     noise = rng.normal(0, base_loss * 0.2)
-    return np.maximum(base_loss + noise + claims_count * 5000, 0)
+    return np.maximum(base_loss + noise + claims_count * 5000, 0)  # type: ignore[no-any-return]
 
 
 def _generate_fraud_target(X: np.ndarray, rng: np.random.RandomState) -> np.ndarray:
@@ -260,10 +262,10 @@ def _generate_churn_target(X: np.ndarray, rng: np.random.RandomState) -> np.ndar
     loss_ratio = X[:, 7]
     credit = X[:, 8]
     years = X[:, 2]
-    churn_base = 0.1
-    churn_base += np.where(loss_ratio > 1.2, 0.3, 0)
-    churn_base += np.where(credit < 600, 0.15, 0)
-    churn_base += np.where(years < 2, 0.2, 0)
-    churn_base += rng.normal(0, 0.05, len(X))
+    churn_base: np.ndarray = np.full(len(X), 0.1)
+    churn_base = churn_base + np.where(loss_ratio > 1.2, 0.3, 0)
+    churn_base = churn_base + np.where(credit < 600, 0.15, 0)
+    churn_base = churn_base + np.where(years < 2, 0.2, 0)
+    churn_base = churn_base + rng.normal(0, 0.05, len(X))
     churn_prob = np.clip(churn_base, 0, 1)
-    return (rng.random(len(X)) < churn_prob).astype(float)
+    return (rng.random(len(X)) < churn_prob).astype(float)  # type: ignore[no-any-return]

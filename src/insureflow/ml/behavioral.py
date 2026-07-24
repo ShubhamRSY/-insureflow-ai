@@ -50,7 +50,7 @@ class BehavioralScoringModel:
         grade = "A" if overall >= 85 else "B" if overall >= 70 else "C" if overall >= 55 else "D" if overall >= 40 else "F"
 
         trend = "stable"
-        if len(loss_ratio_history or []) >= 3:
+        if loss_ratio_history and len(loss_ratio_history) >= 3:
             recent = np.mean(loss_ratio_history[-3:])
             earlier = np.mean(loss_ratio_history[:-3]) if len(loss_ratio_history) > 3 else recent
             if recent < earlier * 0.9:

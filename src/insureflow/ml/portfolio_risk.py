@@ -101,7 +101,7 @@ class PortfolioRiskModel:
         exposures: list[float],
         loss_probabilities: list[float],
         severity_means: list[float],
-        stress_scenarios: list[dict[str, float]] | None = None,
+        stress_scenarios: list[dict[str, Any]] | None = None,
     ) -> list[dict[str, Any]]:
         """Run stress test scenarios on the portfolio."""
         if stress_scenarios is None:

@@ -4,9 +4,14 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import numpy as np
 import pytest
 
+pytest.importorskip("sklearn")
+pytest.importorskip("numpy")
+
+import numpy as np
+
+from insureflow.ml.base import BaseMLModel
 from insureflow.ml.behavioral import BehavioralScoringModel
 from insureflow.ml.churn import ChurnPredictionModel
 from insureflow.ml.features import (
@@ -530,6 +535,7 @@ class TestMLModelRegistry:
 
         model = registry.get(ModelType.LOSS_PREDICTION)
         assert model is not None
+        assert isinstance(model, BaseMLModel)
         assert model.status == ModelStatus.CHAMPION
 
     def test_registry_history(self) -> None:
