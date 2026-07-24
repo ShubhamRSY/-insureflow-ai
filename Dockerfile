@@ -16,7 +16,6 @@ COPY simulated_documents/ simulated_documents/
 COPY cli.py .
 COPY scripts/ scripts/
 
-# Default: runtime + OCR (health 100%). Override: --build-arg PIP_EXTRAS="claude,pgvector"
 ARG PIP_EXTRAS=claude,pgvector,ocr
 RUN pip install --no-cache-dir -U pip \
     && pip install --no-cache-dir -e ".[${PIP_EXTRAS}]"
@@ -25,8 +24,8 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 EXPOSE 8000
-EXPOSE 8010
 
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
-ENTRYPOINT ["/app/entrypoint.sh"]
+
+CMD ["python3", "-m", "uvicorn", "insureflow.api:app", "--host", "0.0.0.0", "--port", "8000"]
