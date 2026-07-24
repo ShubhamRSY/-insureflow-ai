@@ -77,7 +77,7 @@ limiter = Limiter(key_func=get_remote_address, default_limits=["30/minute"])
 
 
 @asynccontextmanager
-async def lifespan(_app: FastAPI):
+async def lifespan(_app: FastAPI) -> Any:
     logger.info("Rytera API started on port %s", os.getenv("PORT", "unknown"))
     yield
 
