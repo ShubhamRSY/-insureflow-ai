@@ -42,8 +42,6 @@ def configure_cloudwatch_logging(level: int = logging.INFO) -> None:
     root.setLevel(level)
     handler = logging.StreamHandler()
     handler.setFormatter(CloudWatchJsonFormatter())
-    # Replace plain handlers so ECS awslogs driver gets one JSON line per event
-    root.handlers.clear()
     root.addHandler(handler)
 
 

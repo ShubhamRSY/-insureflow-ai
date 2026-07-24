@@ -56,6 +56,7 @@ try:
             logging.getLogger(__name__).error("SECURITY: %s", _err)
 except Exception as _sec_exc:
     logging.getLogger(__name__).warning("Security bootstrap non-fatal error: %s", _sec_exc)
+    print(f"=== SECURITY BOOTSTRAP ERROR: {_sec_exc} ===", flush=True)
 
 integration_gateway_router: APIRouter | None = None
 try:
@@ -439,8 +440,15 @@ class InsuranceSourcePullRequest(BaseModel):
     environment: Optional[str] = None
 
 
+@app.on_event("startup")
+async def _startup_log() -> None:
+    print("=== RYTERA STARTUP COMPLETE — HEALTHCHECK SHOULD WORK ===", flush=True)
+    logger.info("Rytera API started successfully on port %s", os.getenv("PORT", "unknown"))
+
+
 @app.get("/health")
 async def health() -> dict[str, str]:
+    print("=== HEALTH ENDPOINT HIT ===", flush=True)
     return {"status": "ok", "version": "0.3.0"}
 
 
