@@ -32,6 +32,7 @@ from insureflow.auth import Role
 from insureflow.auth.dependencies import (
     clear_user_store,
     get_current_user,
+    get_current_user_optional,
     get_user_store,
     require_role,
 )
@@ -574,21 +575,22 @@ def _load_pacific_coast_submission() -> SubmissionRequest:
 async def run_insurance_demo(
     preset_id: str,
     background_tasks: BackgroundTasks,
-    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+    current: TokenData | None = Depends(get_current_user_optional),
 ) -> dict[str, Any]:
+    org_id = current.org_id if current and current.org_id else "demo"
     if preset_id != "pacific-coast":
         raise HTTPException(status_code=404, detail=f"Unknown insurance preset: {preset_id}")
     if not (EXAMPLES_DIR / "pacific_coast_acord.xml").exists():
         raise HTTPException(status_code=503, detail="Example data not found on server")
     job_id = f"demo-{uuid.uuid4().hex[:12]}"
     req = _load_pacific_coast_submission()
-    job_store.set(INSURANCE_NS, job_id, {"status": "processing", "demo": True}, org_id=current.org_id)
+    job_store.set(INSURANCE_NS, job_id, {"status": "processing", "demo": True}, org_id=org_id)
     celery_app.send_task(
         "insureflow.tasks.pipeline_tasks.run_pipeline",
-        args=[job_id, req.model_dump(), current.org_id],
+        args=[job_id, req.model_dump(), org_id],
         queue="pipeline",
     )
-    return {"job_id": job_id, "status": "processing", "preset": preset_id, "org_id": current.org_id}
+    return {"job_id": job_id, "status": "processing", "preset": preset_id, "org_id": org_id}
 
 
 @app.get("/api/insurance/sources")
@@ -666,8 +668,9 @@ def pull_insurance_source(
 async def run_mortgage_demo(
     preset_id: str,
     background_tasks: BackgroundTasks,
-    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+    current: TokenData | None = Depends(get_current_user_optional),
 ) -> dict[str, Any]:
+    org_id = current.org_id if current and current.org_id else "demo"
     presets = {
         "johnson-residential": (
             SIM_DOCS_DIR / "home_mortgage" / "johnson_marcus_imani",
@@ -690,9 +693,9 @@ async def run_mortgage_demo(
         use_llm=True,
         bundle_id=job_id,
     )
-    job_store.set(MORTGAGE_NS, job_id, {"status": "processing", "demo": True}, org_id=current.org_id)
-    background_tasks.add_task(_run_mortgage_task, job_id, req, current.org_id)
-    return {"job_id": job_id, "status": "processing", "preset": preset_id, "org_id": current.org_id}
+    job_store.set(MORTGAGE_NS, job_id, {"status": "processing", "demo": True}, org_id=org_id)
+    background_tasks.add_task(_run_mortgage_task, job_id, req, org_id)
+    return {"job_id": job_id, "status": "processing", "preset": preset_id, "org_id": org_id}
 
 
 @app.get("/", response_model=None)

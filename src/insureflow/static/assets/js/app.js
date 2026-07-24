@@ -388,14 +388,14 @@ async function renderJobTable(vertical, jobIds, containerSel) {
 
   container.innerHTML = `
     <div class="table-wrap"><table>
-      <thead><tr><th>Job ID</th><th>Status</th><th>Decision</th><th>${vertical === 'insurance' ? 'Premium' : 'Rate'}</th><th></th></tr></thead>
+      <thead><tr><th>Job ID</th><th>Status</th><th>Decision</th><th>${vertical === 'insurance' ? 'Premium' : 'Rate'}</th><th>Actions</th></tr></thead>
       <tbody>${rows.map(({ id, job, s }) => `
         <tr data-job="${escapeHtml(id)}" data-vertical="${vertical}">
           <td class="mono">${escapeHtml(id)}</td>
           <td>${statusBadge(job.status)}</td>
           <td>${s.decision ? statusBadge(s.decision) : '—'}</td>
           <td>${vertical === 'insurance' ? formatCurrency(s.premium) : (s.rate != null ? `${s.rate}%` : '—')}</td>
-          <td><button class="btn btn-ghost btn-sm">View</button></td>
+          <td><button class="btn btn-outline btn-sm" onclick="event.stopPropagation()">View</button></td>
         </tr>`).join('')}</tbody>
     </table></div>`;
 
@@ -449,7 +449,6 @@ function closeDrawer() {
 }
 
 async function runDemo(vertical, presetId) {
-  if (!auth.isLoggedIn) { showLoginModal(); return; }
   try {
     toast(`Starting ${presetId}…`, 'info');
     const res = vertical === 'insurance'
@@ -653,11 +652,12 @@ async function submitInsuranceCustom(e) {
 
 async function submitMortgageCustom(e) {
   e.preventDefault();
-  const directory = $('#mortDirectory').value.trim();
-  if (!directory) { toast('Directory path is required', 'error'); return; }
+  const docName = $('#mortDocName').value.trim();
+  const docContent = $('#mortDocContent').value.trim();
+  if (!docName || !docContent) { toast('Document name and content are required', 'error'); return; }
   try {
     const res = await endpoints.runMortgage({
-      directory,
+      documents: [{ filename: docName, content: docContent }],
       product_line: $('#mortProduct').value,
       use_llm: $('#mortUseLlm').checked,
       per_borrower: $('#mortPerBorrower').checked,
