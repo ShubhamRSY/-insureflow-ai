@@ -4,6 +4,7 @@ import json
 import logging
 import os
 from collections.abc import ItemsView
+from typing import Any
 from pathlib import Path
 
 from insureflow.auth.models import User
@@ -15,7 +16,7 @@ _DEFAULT_PATH = Path.cwd() / ".insureflow" / "auth_users.json"
 _REDIS_KEY = "rytera:auth:users"
 
 
-def _get_redis_client() -> object | None:
+def _get_redis_client() -> Any:
     redis_url = os.getenv("REDIS_URL") or os.getenv("CELERY_BROKER_URL", "")
     if not redis_url or not redis_url.startswith("redis"):
         return None
