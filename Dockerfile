@@ -17,7 +17,7 @@ COPY cli.py .
 COPY scripts/ scripts/
 
 # Default: runtime + OCR (health 100%). Override: --build-arg PIP_EXTRAS="claude,pgvector"
-ARG PIP_EXTRAS=claude,pgvector,ocr,ml
+ARG PIP_EXTRAS=claude,pgvector,ocr
 RUN pip install --no-cache-dir -U pip \
     && pip install --no-cache-dir -e ".[${PIP_EXTRAS}]"
 
@@ -27,4 +27,4 @@ ENV PYTHONUNBUFFERED=1
 EXPOSE 8000
 EXPOSE 8010
 
-CMD ["sh", "-c", "uvicorn insureflow.api:app --host 0.0.0.0 --port 8000"]
+CMD ["sh", "-c", "uvicorn insureflow.api:app --host 0.0.0.0 --port ${PORT:-8000}"]

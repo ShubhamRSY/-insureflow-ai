@@ -53,7 +53,12 @@ class RedisJobStore(JobStore):
     def __init__(self, url: str, ttl_seconds: int = 86400 * 7) -> None:
         import redis
 
-        self.client = redis.from_url(url, decode_responses=True)
+        self.client = redis.from_url(
+            url,
+            decode_responses=True,
+            socket_connect_timeout=5,
+            socket_timeout=5,
+        )
         self.ttl = ttl_seconds
 
     def _key(self, namespace: str, job_id: str, org_id: str) -> str:
