@@ -6,6 +6,7 @@ import logging
 import os
 import uuid
 from collections import defaultdict
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any, Optional
 
@@ -73,10 +74,18 @@ job_store: JobStore = get_job_store()
 
 limiter = Limiter(key_func=get_remote_address, default_limits=["30/minute"])
 
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    logger.info("Rytera API started on port %s", os.getenv("PORT", "unknown"))
+    yield
+
+
 app = FastAPI(
     title="Rytera",
     description="AI underwriting platform API — Insurance, Mortgage & Lending",
     version="0.3.0",
+    lifespan=lifespan,
 )
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
@@ -175,15 +184,15 @@ setTimeout(function(){window.location.href='/dashboard';},800);
 
 
 @app.get("/auth/reset")
-def reset_auth_get() -> HTMLResponse:
-    """One-click wipe: server accounts + redirect to dashboard."""
+def reset_auth_get(current: TokenData = Depends(require_role(Role.ADMIN))) -> HTMLResponse:
+    """One-click wipe: server accounts + redirect to dashboard. Requires admin auth."""
     _do_auth_reset()
     return HTMLResponse(_RESET_HTML)
 
 
 @app.post("/auth/reset")
-def reset_auth_post() -> dict[str, str | int | bool]:
-    """Clear all server accounts (JSON). Client should wipe localStorage too."""
+def reset_auth_post(current: TokenData = Depends(require_role(Role.ADMIN))) -> dict[str, str | int | bool]:
+    """Clear all server accounts (JSON). Requires admin auth."""
     return _do_auth_reset()
 
 
@@ -437,11 +446,6 @@ class InsuranceSourcePullRequest(BaseModel):
     mailbox: Optional[str] = None
     host: Optional[str] = None
     environment: Optional[str] = None
-
-
-@app.on_event("startup")
-async def _startup_log() -> None:
-    logger.info("Rytera API started on port %s", os.getenv("PORT", "unknown"))
 
 
 @app.get("/health")

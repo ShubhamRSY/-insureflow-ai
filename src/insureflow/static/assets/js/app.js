@@ -100,7 +100,11 @@ function updateUserUI() {
 }
 
 async function loadDiagnostics() {
-  state.diagnostics = await endpoints.diagnostics();
+  try {
+    state.diagnostics = await endpoints.diagnostics();
+  } catch {
+    state.diagnostics = { overall: 'unknown', llm_mode: '' };
+  }
   const pill = $('#sidebarHealthPill');
   if (pill) {
     const s = state.diagnostics.overall;
@@ -404,7 +408,13 @@ async function openJob(vertical, jobId) {
   state.selectedVertical = vertical;
   state.selectedJob = jobId;
   const fetchJob = vertical === 'insurance' ? endpoints.insuranceJob : vertical === 'mortgage' ? endpoints.mortgageJob : endpoints.lendingResult;
-  let job = await fetchJob(jobId);
+  let job;
+  try {
+    job = await fetchJob(jobId);
+  } catch (e) {
+    toast(`Failed to load job: ${e.message}`, 'error');
+    return;
+  }
 
   $('#drawerTitle').textContent = jobId;
   $('#drawerBody').innerHTML = renderJobDetail(vertical, job);

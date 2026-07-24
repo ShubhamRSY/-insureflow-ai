@@ -23,7 +23,12 @@ export async function api(path, opts = {}) {
   }
   if (auth.token) headers['Authorization'] = `Bearer ${auth.token}`;
 
-  const res = await fetch(path, { ...opts, headers });
+  let res;
+  try {
+    res = await fetch(path, { ...opts, headers });
+  } catch (err) {
+    throw new Error('Network error — server may be unreachable');
+  }
   let data = null;
   const ct = res.headers.get('content-type') || '';
   if (ct.includes('application/json')) {
@@ -95,5 +100,5 @@ export const endpoints = {
   mlPortfolioStress: (portfolio) => api('/ml/predict/portfolio-stress', { method: 'POST', body: portfolio }),
   mlScoreBroker: (data) => api('/ml/score/broker', { method: 'POST', body: data }),
   mlScoreSubmission: (data) => api('/ml/score/submission', { method: 'POST', body: data }),
-  mlExplain: (modelType, features) => api(`/ml/explain/${modelType}?${new URLSearchParams(features)}`),
+  mlExplain: (modelType, features) => api(`/ml/explain/${modelType}`, { method: 'POST', body: features }),
 };

@@ -1,6 +1,6 @@
 [project]
 name = "insureflow-ai"
-version = "0.1.0"
+version = "0.3.0"
 description = "Autonomous agentic pipeline for commercial underwriting data ingestion, reconciliation, and synthesis"
 requires-python = ">=3.11"
 dependencies = [

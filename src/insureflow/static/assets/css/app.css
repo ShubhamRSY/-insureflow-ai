@@ -831,16 +831,6 @@ textarea { min-height: 100px; resize: vertical; }
 .empty-state svg { width: 48px; height: 48px; opacity: 0.35; margin-bottom: 1rem; }
 .empty-state p { font-size: 0.9rem; }
 
-.violation-list { list-style: none; }
-.violation-list li {
-  padding: 0.5rem 0.75rem;
-  background: var(--danger-bg);
-  border-radius: var(--radius-sm);
-  font-size: 0.82rem;
-  color: var(--danger);
-  margin-bottom: 0.35rem;
-}
-
 .workflow-card {
   padding: 1rem;
   border: 1px solid var(--border);

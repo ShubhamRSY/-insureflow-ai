@@ -770,11 +770,11 @@ class TestMLEndpoints:
         assert "quality_score" in data
 
     def test_ml_explain_invalid_type(self) -> None:
-        resp = self.client.request("GET", "/ml/explain/invalid_model_type", json={})
+        resp = self.client.request("POST", "/ml/explain/invalid_model_type", json={})
         assert resp.status_code in (400, 404)
 
     def test_ml_explain_loss(self) -> None:
-        resp = self.client.request("GET", "/ml/explain/loss_prediction", json={"tiv": 5_000_000})
+        resp = self.client.request("POST", "/ml/explain/loss_prediction", json={"tiv": 5_000_000})
         assert resp.status_code == 200
         data = resp.json()
         assert "method" in data
