@@ -15,7 +15,7 @@ _DEFAULT_PATH = Path.cwd() / ".insureflow" / "auth_users.json"
 _REDIS_KEY = "rytera:auth:users"
 
 
-def _get_redis_client():
+def _get_redis_client() -> object | None:
     redis_url = os.getenv("REDIS_URL") or os.getenv("CELERY_BROKER_URL", "")
     if not redis_url or not redis_url.startswith("redis"):
         return None
@@ -33,10 +33,10 @@ def _get_redis_client():
 class UserStore:
     """Redis-backed user store with file fallback — survives container redeploys."""
 
-    def __init__(self) -> None:
+    def __init__(self, path: Path | None = None) -> None:
         self._users: dict[str, User] = {}
         self._redis = _get_redis_client()
-        self._path = _DEFAULT_PATH
+        self._path = path or _DEFAULT_PATH
         self.load()
 
     def load(self) -> None:
