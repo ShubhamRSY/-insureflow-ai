@@ -1,4 +1,3 @@
 #!/bin/sh
 set -e
-PORT="${PORT:-8000}"
-exec python3 -m uvicorn insureflow.api:app --host 0.0.0.0 --port "$PORT"
+exec python3 -m uvicorn insureflow.api:app --host 0.0.0.0 --port 8000
