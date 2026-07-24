@@ -582,6 +582,7 @@ function renderSettings() {
 }
 
 function showLoginModal() {
+  switchAuthTab('login');
   $('#loginModal').classList.remove('hidden');
 }
 
