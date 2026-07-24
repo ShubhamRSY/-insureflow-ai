@@ -32,3 +32,4 @@ mlruns/
 *.pem
 !deploy/caddy/certs/.gitkeep
 ml_models/
+# Railway redeploy trigger Thu Jul 23 20:27:06 EDT 2026
