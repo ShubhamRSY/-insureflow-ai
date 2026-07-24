@@ -715,4 +715,6 @@ function init() {
   }, 60000);
 }
 
+window.switchAuthTab = switchAuthTab;
+
 document.addEventListener('DOMContentLoaded', init);
