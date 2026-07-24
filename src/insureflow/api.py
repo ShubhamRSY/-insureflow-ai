@@ -3280,7 +3280,7 @@ def ml_list_models() -> dict[str, Any]:
     return {"models": get_ml_registry().get_status()}
 
 
-@app.get("/ml/explain/{model_type}")
+@app.post("/ml/explain/{model_type}")
 def ml_explain(model_type: str, features: dict[str, Any]) -> dict[str, Any]:
     """Get feature importance explanation for a prediction."""
     from insureflow.ml.features import FeatureVector

@@ -16,7 +16,7 @@ COPY simulated_documents/ simulated_documents/
 COPY cli.py .
 COPY scripts/ scripts/
 
-ARG PIP_EXTRAS=claude,pgvector,ocr
+ARG PIP_EXTRAS=claude,pgvector,ocr,ml
 RUN pip install --no-cache-dir -U pip \
     && pip install --no-cache-dir -e ".[${PIP_EXTRAS}]"
 
