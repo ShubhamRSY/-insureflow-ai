@@ -585,11 +585,7 @@ async def run_insurance_demo(
     job_id = f"demo-{uuid.uuid4().hex[:12]}"
     req = _load_pacific_coast_submission()
     job_store.set(INSURANCE_NS, job_id, {"status": "processing", "demo": True}, org_id=org_id)
-    celery_app.send_task(
-        "insureflow.tasks.pipeline_tasks.run_pipeline",
-        args=[job_id, req.model_dump(), org_id],
-        queue="pipeline",
-    )
+    background_tasks.add_task(_run_pipeline_task, job_id, req, org_id)
     return {"job_id": job_id, "status": "processing", "preset": preset_id, "org_id": org_id}
 
 
@@ -768,11 +764,7 @@ async def run_pipeline(
 ) -> dict[str, Any]:
     job_id = f"job-{uuid.uuid4().hex[:12]}"
     job_store.set(INSURANCE_NS, job_id, {"status": "processing"}, org_id=current.org_id)
-    celery_app.send_task(
-        "insureflow.tasks.pipeline_tasks.run_pipeline",
-        args=[job_id, req.model_dump(), current.org_id],
-        queue="pipeline",
-    )
+    background_tasks.add_task(_run_pipeline_task, job_id, req, current.org_id)
     return {"job_id": job_id, "status": "processing", "org_id": current.org_id}
 
 
@@ -796,6 +788,23 @@ def list_jobs(current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[s
 def delete_job(job_id: str, current: TokenData = Depends(require_role(Role.ADMIN))) -> None:
     if not job_store.delete(INSURANCE_NS, job_id, org_id=current.org_id):
         raise HTTPException(status_code=404, detail="Job not found")
+
+
+@app.get("/pipeline/jobs/{job_id}/download")
+def download_job(job_id: str, current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
+    job = job_store.get(INSURANCE_NS, job_id, org_id=current.org_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return {"job_id": job_id, "status": job.get("status"), "results": job.get("results", {}), "error": job.get("error")}
+
+
+@app.delete("/pipeline/jobs/bulk", status_code=204)
+def bulk_delete_jobs(
+    job_ids: list[str],
+    current: TokenData = Depends(require_role(Role.ADMIN)),
+) -> None:
+    for jid in job_ids:
+        job_store.delete(INSURANCE_NS, jid, org_id=current.org_id)
 
 
 @app.get("/pipeline/jobs/{job_id}/quote")

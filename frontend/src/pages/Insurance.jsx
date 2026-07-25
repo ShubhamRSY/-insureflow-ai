@@ -3,7 +3,7 @@ import { Badge, DecisionBadge, EmptyState } from '../components/ui';
 import { fmtCurrency, extractInsurance, endpoints } from '../lib/api';
 import InsuranceSourceHub from '../components/InsuranceSourceHub';
 import JourneyMiniStrip from '../components/JourneyMiniStrip';
-import { Shield, Zap, Package, Target, ArrowRight, Building2 } from 'lucide-react';
+import { Shield, ArrowRight, Download, Trash2 } from 'lucide-react';
 
 const FLOW_STEPS = [
   { label: 'Intake', desc: 'Connect & pull broker package' },
@@ -17,13 +17,6 @@ const FLOW_STEPS = [
 export default function InsurancePage({ presets, jobs, onRunDemo, onOpenJob, onSubmit }) {
   const [loading, setLoading] = useState(false);
   const [useV2, setUseV2] = useState(false);
-  const [products, setProducts] = useState(null);
-  const [calibration, setCalibration] = useState(null);
-  const [ecosystemStatus, setEcosystemStatus] = useState(null);
-
-  useEffect(() => {
-    endpoints.ecosystemStatus().then(setEcosystemStatus).catch(() => {});
-  }, []);
 
   const handleSubmit = async (payload) => {
     setLoading(true);
@@ -38,12 +31,34 @@ export default function InsurancePage({ presets, jobs, onRunDemo, onOpenJob, onS
     }
   };
 
-  const loadProducts = async () => {
-    try { setProducts(await endpoints.insuranceProducts()); } catch (e) { alert(e.message); }
+  const handleDownload = async (e, id) => {
+    e.stopPropagation();
+    try {
+      const data = await endpoints.downloadJob(id);
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${id}-results.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      alert(err.message);
+    }
   };
 
-  const loadCalibration = async () => {
-    try { setCalibration(await endpoints.calibration()); } catch (e) { alert(e.message); }
+  const handleClearAll = async () => {
+    if (!confirm('Clear all insurance jobs?')) return;
+    try {
+      const resp = await endpoints.insuranceJobs();
+      const ids = resp.jobs || [];
+      for (const j of ids) {
+        await endpoints.deleteJob(j).catch(() => {});
+      }
+      location.reload();
+    } catch (err) {
+      alert(err.message);
+    }
   };
 
   return (
@@ -72,67 +87,7 @@ export default function InsurancePage({ presets, jobs, onRunDemo, onOpenJob, onS
         <p className="mt-3 text-xs text-slate-500">Open any job to see the full submission journey — COPE, provenance, checkpoints, and pricing breakdown.</p>
       </div>
 
-      {ecosystemStatus && (
-        <div className="flex flex-wrap gap-2">
-          {(ecosystemStatus.feeds || []).map((f) => {
-            const isLive = f.mode === 'live' && f.reachable;
-            const label = isLive ? 'live' : (f.configured === false ? 'not configured' : f.mode);
-            return (
-              <span key={f.name} title={isLive ? undefined : (f.hint || `Set the API key for ${f.name} in Railway Variables to enable live data`)} className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-[10px] ring-1 cursor-default ${isLive ? 'text-emerald-400 ring-emerald-500/30' : f.mode === 'degraded' ? 'text-amber-400 ring-amber-500/30' : 'text-slate-400 ring-white/10'}`}>
-                <Building2 className="h-3 w-3" /> {f.name}: {label}
-              </span>
-            );
-          })}
-        </div>
-      )}
-
-      <div className="flex items-center justify-between">
-        <label className="flex items-center gap-2 text-xs text-slate-400">
-          <input type="checkbox" checked={useV2} onChange={(e) => setUseV2(e.target.checked)} className="rounded" />
-          <Zap className="h-3.5 w-3.5 text-amber-400" /> Pipeline v2 (appetite, oracles, portfolio, integration)
-        </label>
-        <div className="flex gap-2">
-          <button type="button" onClick={loadProducts} className="btn-secondary text-xs"><Package className="h-3 w-3" /> Products</button>
-          <button type="button" onClick={loadCalibration} className="btn-secondary text-xs"><Target className="h-3 w-3" /> Calibration</button>
-        </div>
-      </div>
-
       <InsuranceSourceHub onSubmit={handleSubmit} loading={loading} />
-
-      {products && (
-        <div className="glass-card p-5">
-          <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">Insurance Products</h3>
-            <button onClick={() => setProducts(null)} className="text-xs text-slate-500">Close</button>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {(products.products || products.rating_products || []).map((p, i) => (
-              <div key={i} className="rounded-lg bg-surface-overlay p-3 ring-1 ring-white/[0.04]">
-                <p className="text-sm font-medium text-slate-200">{p.name || p.product_name || p.product_code}</p>
-                <p className="text-xs text-slate-500">{p.description || p.line_of_business || ''}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {calibration && (
-        <div className="glass-card p-5">
-          <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">Actuarial Calibration Loop</h3>
-            <button onClick={() => setCalibration(null)} className="text-xs text-slate-500">Close</button>
-          </div>
-          <p className="mb-3 text-xs text-slate-500">{ecosystemStatus?.actuarial_loop?.recommended_action || 'Claims → actuarial feedback (simulated)'}</p>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {Object.entries(calibration).filter(([k]) => !['bundle_id', 'org_id'].includes(k)).map(([key, val]) => (
-              <div key={key} className="rounded-lg bg-surface-overlay p-3 ring-1 ring-white/[0.04]">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">{key.replace(/_/g, ' ')}</p>
-                <p className="mt-1 text-sm font-medium text-slate-300">{typeof val === 'number' ? val.toFixed(4) : String(val)}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {(presets?.insurance || []).length > 0 && (
         <div className="space-y-3">
@@ -150,9 +105,16 @@ export default function InsurancePage({ presets, jobs, onRunDemo, onOpenJob, onS
       )}
 
       <div className="glass-card overflow-hidden">
-        <div className="border-b border-white/[0.06] px-5 py-3">
-          <h3 className="text-sm font-semibold">Recent jobs</h3>
-          <p className="text-xs text-slate-500">Journey strip shows pipeline progress — click row for full detail</p>
+        <div className="border-b border-white/[0.06] px-5 py-3 flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-semibold">Recent jobs</h3>
+            <p className="text-xs text-slate-500">Click row for full detail</p>
+          </div>
+          {jobs?.length > 0 && (
+            <button type="button" onClick={handleClearAll} className="text-xs text-red-400/70 hover:text-red-400 flex items-center gap-1">
+              <Trash2 className="h-3 w-3" /> Clear all
+            </button>
+          )}
         </div>
         {!jobs?.length ? (
           <EmptyState icon={Shield} title="No insurance jobs" description="Upload a broker package or run a demo" />
@@ -167,6 +129,7 @@ export default function InsurancePage({ presets, jobs, onRunDemo, onOpenJob, onS
                   <th className="px-6 py-3">Status</th>
                   <th className="px-6 py-3">Decision</th>
                   <th className="px-6 py-3">Premium</th>
+                  <th className="px-6 py-3">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/[0.04]">
@@ -180,6 +143,11 @@ export default function InsurancePage({ presets, jobs, onRunDemo, onOpenJob, onS
                       <td className="px-6 py-3.5"><Badge status={job?.status} pulse={job?.status === 'processing'} /></td>
                       <td className="px-6 py-3.5"><DecisionBadge decision={s.decision} jobStatus={job?.status} /></td>
                       <td className="px-6 py-3.5 font-medium">{fmtCurrency(s.premium)}</td>
+                      <td className="px-6 py-3.5">
+                        <button type="button" onClick={(e) => handleDownload(e, id)} className="text-slate-500 hover:text-brand-light transition" title="Download results">
+                          <Download className="h-4 w-4" />
+                        </button>
+                      </td>
                     </tr>
                   );
                 })}
