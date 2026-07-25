@@ -14,18 +14,13 @@ const FLOW_STEPS = [
   { label: 'Decide', desc: 'UW memo & workflow' },
 ];
 
-export default function InsurancePage({ presets, jobs, onRunDemo, onOpenJob, onSubmit }) {
+export default function InsurancePage({ presets, jobs, onRunDemo, onOpenJob, onSubmit, onRefresh }) {
   const [loading, setLoading] = useState(false);
-  const [useV2, setUseV2] = useState(false);
 
   const handleSubmit = async (payload) => {
     setLoading(true);
     try {
-      if (useV2) {
-        await endpoints.runInsuranceV2(payload);
-      } else {
-        await onSubmit(payload);
-      }
+      await onSubmit(payload);
     } finally {
       setLoading(false);
     }
@@ -47,18 +42,23 @@ export default function InsurancePage({ presets, jobs, onRunDemo, onOpenJob, onS
     }
   };
 
-  const handleClearAll = async () => {
-    if (!confirm('Clear all insurance jobs?')) return;
+  const handleDelete = async (e, id) => {
+    e.stopPropagation();
     try {
-      const resp = await endpoints.insuranceJobs();
-      const ids = resp.jobs || [];
-      for (const j of ids) {
-        await endpoints.deleteJob(j).catch(() => {});
-      }
-      location.reload();
+      await endpoints.deleteJob(id);
+      if (onRefresh) onRefresh();
     } catch (err) {
       alert(err.message);
     }
+  };
+
+  const handleClearAll = async () => {
+    if (!confirm('Clear all insurance jobs?')) return;
+    const ids = (jobs || []).map((j) => j.id);
+    for (const id of ids) {
+      await endpoints.deleteJob(id).catch(() => {});
+    }
+    if (onRefresh) onRefresh();
   };
 
   return (
@@ -144,9 +144,14 @@ export default function InsurancePage({ presets, jobs, onRunDemo, onOpenJob, onS
                       <td className="px-6 py-3.5"><DecisionBadge decision={s.decision} jobStatus={job?.status} /></td>
                       <td className="px-6 py-3.5 font-medium">{fmtCurrency(s.premium)}</td>
                       <td className="px-6 py-3.5">
-                        <button type="button" onClick={(e) => handleDownload(e, id)} className="text-slate-500 hover:text-brand-light transition" title="Download results">
-                          <Download className="h-4 w-4" />
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button type="button" onClick={(e) => handleDownload(e, id)} className="text-slate-500 hover:text-brand-light transition" title="Download results">
+                            <Download className="h-4 w-4" />
+                          </button>
+                          <button type="button" onClick={(e) => handleDelete(e, id)} className="text-slate-500 hover:text-red-400 transition" title="Delete job">
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

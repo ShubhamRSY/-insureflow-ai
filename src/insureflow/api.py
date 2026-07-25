@@ -780,19 +780,30 @@ def get_job_status(
 
 
 @app.get("/pipeline/jobs")
-def list_jobs(current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, list[str]]:
-    return {"jobs": job_store.list_ids(INSURANCE_NS, org_id=current.org_id)}
+def list_jobs(
+    current: TokenData | None = Depends(get_current_user_optional),
+) -> dict[str, list[str]]:
+    org_id = current.org_id if current and current.org_id else "demo"
+    return {"jobs": job_store.list_ids(INSURANCE_NS, org_id=org_id)}
 
 
 @app.delete("/pipeline/jobs/{job_id}", status_code=204)
-def delete_job(job_id: str, current: TokenData = Depends(require_role(Role.ADMIN))) -> None:
-    if not job_store.delete(INSURANCE_NS, job_id, org_id=current.org_id):
+def delete_job(
+    job_id: str,
+    current: TokenData | None = Depends(get_current_user_optional),
+) -> None:
+    org_id = current.org_id if current and current.org_id else "demo"
+    if not job_store.delete(INSURANCE_NS, job_id, org_id=org_id):
         raise HTTPException(status_code=404, detail="Job not found")
 
 
 @app.get("/pipeline/jobs/{job_id}/download")
-def download_job(job_id: str, current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
-    job = job_store.get(INSURANCE_NS, job_id, org_id=current.org_id)
+def download_job(
+    job_id: str,
+    current: TokenData | None = Depends(get_current_user_optional),
+) -> dict[str, Any]:
+    org_id = current.org_id if current and current.org_id else "demo"
+    job = job_store.get(INSURANCE_NS, job_id, org_id=org_id)
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
     return {"job_id": job_id, "status": job.get("status"), "results": job.get("results", {}), "error": job.get("error")}
