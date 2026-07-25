@@ -70,11 +70,15 @@ class IntegrationHealthService:
 
     def _service_feed(self, name: str, http: IntegrationHTTPClient, mode_setting: str) -> dict[str, Any]:
         mode = effective_mode(mode_setting, http)
-        health = http.health_check() if http.configured else {"reachable": False, "error": "not configured"}
+        if http.configured:
+            health = http.health_check()
+        else:
+            health = {"reachable": False, "error": "API key not configured"}
         return {
             "name": name,
             "mode": mode,
             "configured": http.configured,
             "reachable": health.get("reachable", False),
             "health": health,
+            "hint": "" if http.configured else f"Set the {name} API key in Railway Variables to enable live data",
         }

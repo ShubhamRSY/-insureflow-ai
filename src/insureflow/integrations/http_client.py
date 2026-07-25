@@ -149,7 +149,7 @@ class IntegrationHTTPClient:
                 if exc.status_code in (401, 403):
                     return {"reachable": True, "mode": "live", "path": path, "status_code": exc.status_code, "note": "auth_required"}
                 continue
-        return {"reachable": False, "mode": "unreachable", "error": "Health check failed on all paths"}
+        return {"reachable": False, "mode": "degraded", "error": "Health check failed on all paths"}
 
 
 def build_http_client(api_key: str, base_url: str, **kwargs: Any) -> IntegrationHTTPClient:

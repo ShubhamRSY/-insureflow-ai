@@ -268,11 +268,15 @@ function EnterpriseOpsPanel({ ecosystem, onDispatchLC }) {
       <div>
         <p className="mb-1 font-semibold uppercase tracking-wider text-slate-500">External data feeds</p>
         <div className="flex flex-wrap gap-2">
-          {feeds.map((f) => (
-            <span key={f.name} className={`rounded-full px-2 py-0.5 ring-1 ${f.mode === 'live' && f.reachable ? 'text-emerald-400 ring-emerald-500/30' : 'text-slate-400 ring-white/10'}`}>
-              {f.name}: {f.mode}
-            </span>
-          ))}
+          {feeds.map((f) => {
+            const isLive = f.mode === 'live' && f.reachable;
+            const label = isLive ? 'live' : (f.configured === false ? 'not configured' : f.mode);
+            return (
+              <span key={f.name} title={isLive ? undefined : `Set the API key for ${f.name} in Railway Variables to enable live data`} className={`rounded-full px-2 py-0.5 ring-1 cursor-default ${isLive ? 'text-emerald-400 ring-emerald-500/30' : 'text-slate-400 ring-white/10'}`}>
+                {f.name}: {label}
+              </span>
+            );
+          })}
         </div>
       </div>
       <div className="grid gap-2 sm:grid-cols-2">

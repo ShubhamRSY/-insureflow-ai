@@ -74,11 +74,15 @@ export default function InsurancePage({ presets, jobs, onRunDemo, onOpenJob, onS
 
       {ecosystemStatus && (
         <div className="flex flex-wrap gap-2">
-          {(ecosystemStatus.feeds || []).map((f) => (
-            <span key={f.name} className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-[10px] ring-1 ${f.mode === 'live' && f.reachable ? 'text-emerald-400 ring-emerald-500/30' : f.mode === 'degraded' ? 'text-amber-400 ring-amber-500/30' : 'text-slate-400 ring-white/10'}`}>
-              <Building2 className="h-3 w-3" /> {f.name}: {f.mode}{f.reachable ? '' : ' (unreachable)'}
-            </span>
-          ))}
+          {(ecosystemStatus.feeds || []).map((f) => {
+            const isLive = f.mode === 'live' && f.reachable;
+            const label = isLive ? 'live' : (f.configured === false ? 'not configured' : f.mode);
+            return (
+              <span key={f.name} title={isLive ? undefined : (f.hint || `Set the API key for ${f.name} in Railway Variables to enable live data`)} className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-[10px] ring-1 cursor-default ${isLive ? 'text-emerald-400 ring-emerald-500/30' : f.mode === 'degraded' ? 'text-amber-400 ring-amber-500/30' : 'text-slate-400 ring-white/10'}`}>
+                <Building2 className="h-3 w-3" /> {f.name}: {label}
+              </span>
+            );
+          })}
         </div>
       )}
 
