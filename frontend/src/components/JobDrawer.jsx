@@ -39,7 +39,7 @@ export default function JobDrawer({ job, vertical, jobId, onClose }) {
         {bundleId && (
           <div className="mt-4 flex flex-wrap gap-2">
             <button type="button" onClick={async () => {
-              try { const d = await endpoints.insuranceQuote(jobId); setQuote(d); } catch { alert('Quote not available'); }
+              try { const d = await endpoints.insuranceQuote(jobId); setQuote(d); } catch (e) { alert(e.message || 'Quote not available'); }
             }} className="btn-secondary btn-sm text-xs"><FileCheck className="h-3.5 w-3.5" /> Quote PDF</button>
             <button type="button" onClick={async () => {
               try { const r = await endpoints.createBrokerShare(bundleId); navigator.clipboard?.writeText(`${window.location.origin}/dashboard/broker/status/${r.token}`); alert('Share link copied!'); } catch (e) { alert(e.message); }
@@ -52,7 +52,7 @@ export default function JobDrawer({ job, vertical, jobId, onClose }) {
               <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Quote Document</p>
               <button onClick={() => setQuote(null)} className="text-xs text-slate-500 hover:text-slate-300">Close</button>
             </div>
-            <pre className="max-h-60 overflow-y-auto text-xs text-slate-400">{typeof quote === 'string' ? quote : JSON.stringify(quote, null, 2)}</pre>
+            <div className="max-h-[500px] overflow-y-auto rounded-lg border border-white/[0.06]" dangerouslySetInnerHTML={{ __html: typeof quote === 'string' ? quote : '' }} />
           </div>
         )}
           </>

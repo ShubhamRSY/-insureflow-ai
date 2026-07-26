@@ -39,6 +39,8 @@ export async function api(path, opts = {}) {
   const ct = res.headers.get('content-type') || '';
   if (ct.includes('application/json')) {
     try { data = await res.json(); } catch { /* empty */ }
+  } else if (ct.includes('text/html')) {
+    try { data = await res.text(); } catch { /* empty */ }
   }
   if (!res.ok) {
     const msg = data?.detail
