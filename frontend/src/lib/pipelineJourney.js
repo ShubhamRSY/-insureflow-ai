@@ -264,10 +264,10 @@ export function buildSubmissionQuality(job) {
   let score = 100;
   const issues = [];
 
-  if (!r.document_count) {
+  if (!r.document_count && !r.ai_decision && !r.triage_score) {
     score -= 25;
     issues.push('No documents ingested');
-  } else if (r.document_count < 2) {
+  } else if (r.document_count != null && r.document_count < 2) {
     score -= 10;
     issues.push('Thin submission — only one document');
   }
