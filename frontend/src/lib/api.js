@@ -140,6 +140,17 @@ export const endpoints = {
   workflowDetail: (bundleId) => api(`/pipeline/workflow/${bundleId}`),
   bindPolicy: (bundleId) => api(`/pipeline/workflow/${bundleId}/bind`, { method: 'POST' }),
   insuranceQuote: (jobId) => api(`/pipeline/jobs/${jobId}/quote`),
+  insuranceReport: async (jobId) => {
+    const headers = {};
+    if (auth.token) headers.Authorization = `Bearer ${auth.token}`;
+    const res = await fetch(`/pipeline/jobs/${jobId}/report`, { headers });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const blob = await res.blob();
+    const cd = res.headers.get('content-disposition') || '';
+    const ext = cd.includes('.pdf') ? 'pdf' : 'html';
+    const name = (cd.match(/filename="?(.+?)"?$/) || [])[1] || `Rytera_Report.${ext}`;
+    return { blob, filename: name };
+  },
   deleteJob: (jobId) => api(`/pipeline/jobs/${jobId}`, { method: 'DELETE' }),
 
   // Insurance products & outcomes

@@ -3,7 +3,7 @@ import { Badge, DecisionBadge, EmptyState } from '../components/ui';
 import { fmtCurrency, extractInsurance, endpoints } from '../lib/api';
 import InsuranceSourceHub from '../components/InsuranceSourceHub';
 import JourneyMiniStrip from '../components/JourneyMiniStrip';
-import { Shield, ArrowRight, Download, Trash2, Camera, Upload, AlertTriangle, RotateCcw } from 'lucide-react';
+import { Shield, ArrowRight, Download, Trash2, Camera, Upload, AlertTriangle, RotateCcw, FileText } from 'lucide-react';
 
 const FLOW_STEPS = [
   { label: 'Intake', desc: 'Connect & pull broker package' },
@@ -77,6 +77,21 @@ export default function InsurancePage({ presets, jobs, onRunDemo, onOpenJob, onS
       await endpoints.deleteJob(id).catch(() => {});
     }
     if (onRefresh) onRefresh();
+  };
+
+  const handleReport = async (e, id) => {
+    e.stopPropagation();
+    try {
+      const { blob, filename } = await endpoints.insuranceReport(id);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      alert(err.message);
+    }
   };
 
   const handlePhotoUpload = async (e) => {
@@ -277,6 +292,9 @@ export default function InsurancePage({ presets, jobs, onRunDemo, onOpenJob, onS
                         <div className="flex items-center gap-2">
                           <button type="button" onClick={(e) => handleRetry(e, id)} disabled={retryingId === id} className="text-slate-500 hover:text-amber-400 transition disabled:opacity-40" title={retryingId === id ? 'Retrying…' : 'Retry pipeline'}>
                             <RotateCcw className={`h-4 w-4 ${retryingId === id ? 'animate-spin' : ''}`} />
+                          </button>
+                          <button type="button" onClick={(e) => handleReport(e, id)} className="text-slate-500 hover:text-emerald-400 transition" title="Download full report (PDF)">
+                            <FileText className="h-4 w-4" />
                           </button>
                           <button type="button" onClick={(e) => handleDownload(e, id)} className="text-slate-500 hover:text-brand-light transition" title="Download results">
                             <Download className="h-4 w-4" />

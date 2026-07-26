@@ -1,4 +1,4 @@
-import { X, FileCheck, ExternalLink } from 'lucide-react';
+import { X, FileCheck, ExternalLink, FileText } from 'lucide-react';
 import { Badge } from './ui';
 import { extractMortgage, endpoints, fmtCurrency } from '../lib/api';
 import InsuranceMemoView from './InsuranceMemoView';
@@ -41,6 +41,17 @@ export default function JobDrawer({ job, vertical, jobId, onClose }) {
             <button type="button" onClick={async () => {
               try { const d = await endpoints.insuranceQuote(jobId); setQuote(d); } catch (e) { alert(e.message || 'Quote not available'); }
             }} className="btn-secondary btn-sm text-xs"><FileCheck className="h-3.5 w-3.5" /> Quote PDF</button>
+            <button type="button" onClick={async () => {
+              try {
+                const { blob, filename } = await endpoints.insuranceReport(jobId);
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                a.click();
+                URL.revokeObjectURL(url);
+              } catch (e) { alert(e.message || 'Report not available'); }
+            }} className="btn-secondary btn-sm text-xs"><FileText className="h-3.5 w-3.5" /> Full Report</button>
             <button type="button" onClick={async () => {
               try { const r = await endpoints.createBrokerShare(bundleId); navigator.clipboard?.writeText(`${window.location.origin}/dashboard/broker/status/${r.token}`); alert('Share link copied!'); } catch (e) { alert(e.message); }
             }} className="btn-secondary btn-sm text-xs"><ExternalLink className="h-3.5 w-3.5" /> Broker Share</button>
