@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import io
 import logging
+from typing import Any
 
 from insureflow.ml.vision.models import PhotoAnalysis, PhotoQuality, VisualFinding
 
@@ -18,7 +19,7 @@ _MIN_HEIGHT = 480
 _MIN_QUALITY_SCORE = 0.3
 
 
-def _get_image_lib():
+def _get_image_lib() -> tuple[str | None, Any, Any]:
     try:
         import cv2
         import numpy as np
@@ -76,8 +77,9 @@ def _compute_brightness(image_data: bytes) -> float:
     if engine == "pil":
         img = lib.open(io.BytesIO(image_data))
         grayscale = img.convert("L")
-        pixels = list(grayscale.getdata())
-        return sum(pixels) / (len(pixels) * 255.0)
+        pixels: list[int] = list(grayscale.getdata())
+        total = sum(pixels)
+        return total / (len(pixels) * 255.0)
     return 0.5
 
 
@@ -93,7 +95,8 @@ def _get_dimensions(image_data: bytes) -> tuple[int, int]:
             return w, h
     if engine == "pil":
         img = lib.open(io.BytesIO(image_data))
-        return img.size
+        size: tuple[int, int] = img.size
+        return size
     return 0, 0
 
 
