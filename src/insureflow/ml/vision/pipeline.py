@@ -14,6 +14,7 @@ from typing import Any
 
 from insureflow.ml.vision.analyzer import VisionLLMAnalyzer
 from insureflow.ml.vision.damage_detector import DamageDetector
+from insureflow.ml.vision.local_analyzer import enrich_with_local_analysis
 from insureflow.ml.vision.models import (
     PhotoAnalysis,
     PhotoQuality,
@@ -92,6 +93,8 @@ class PropertyPhotoAnalyzer:
 
         if self._vision.available:
             analysis = self._vision.enrich_analysis(analysis, image_data)
+        else:
+            analysis = enrich_with_local_analysis(analysis)
 
         return analysis
 
@@ -166,11 +169,11 @@ class PropertyPhotoAnalyzer:
         if self._vision.available:
             parts.append("Vision LLM: active")
         else:
-            parts.append("Vision LLM: unavailable (set OPENAI_API_KEY or ANTHROPIC_API_KEY)")
+            parts.append("Vision LLM: local heuristic fallback")
         if self._satellite.available:
             parts.append("Satellite: active")
         else:
-            parts.append("Satellite: unavailable (set GOOGLE_MAPS_API_KEY)")
+            parts.append("Satellite: Nominatim/Overpass fallback")
         return " | ".join(parts)
 
 

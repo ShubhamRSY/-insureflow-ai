@@ -1,7 +1,9 @@
-"""Satellite imagery provider — Google Maps Static API for aerial/roof inspection.
+"""Satellite imagery provider — Google Maps Static API + Nominatim fallback.
 
 Fetches satellite imagery of insured properties and performs basic analysis
 of roof condition, lot coverage, nearby hazards, and vegetation proximity.
+When no paid API key is configured, falls back to free OpenStreetMap Nominatim
+for geocoding and nearby-feature risk assessment.
 """
 
 from __future__ import annotations
@@ -12,12 +14,17 @@ import os
 
 import httpx
 
-from insureflow.ml.vision.models import SatelliteAnalysis
+from insureflow.ml.vision.models import SatelliteAnalysis, VisualFinding, VisualRisk
 
 logger = logging.getLogger(__name__)
 
 _GOOGLE_STATIC_MAPS_URL = "https://maps.googleapis.com/maps/api/staticmap"
 _NEARMAP_URL = "https://api.nearmap.com/maps/v3/coverage"
+_NOMINATIM_URL = "https://nominatim.openstreetmap.org"
+_OVERPASS_URL = "https://overpass-api.de/api/interpreter"
+
+# Nominatim usage policy: max 1 req/sec, identify yourself
+_NOMINATIM_HEADERS = {"User-Agent": "RyteraInsuranceAI/1.0 (insurance-underwriting)"}
 
 
 class SatelliteImageryProvider:
@@ -107,10 +114,89 @@ class SatelliteImageryProvider:
         )
         if not image_data:
             image_data = self.fetch_satellite_image(latitude, longitude)
-        if not image_data:
-            analysis.analysis_notes = "No satellite imagery available — API key not configured or fetch failed"
+        if image_data:
+            analysis.analysis_notes = "Satellite image retrieved — AI analysis pending"
             return analysis
-        analysis.analysis_notes = "Satellite image retrieved — AI analysis pending"
+
+        # ── Fallback: Nominatim + Overpass free APIs ──
+        return self._nominatim_fallback(analysis, latitude, longitude, address)
+
+    def _nominatim_fallback(
+        self,
+        analysis: SatelliteAnalysis,
+        lat: float,
+        lng: float,
+        address: str,
+    ) -> SatelliteAnalysis:
+        """Use free OpenStreetMap APIs for location risk assessment."""
+        try:
+            # Reverse geocode to get location details
+            resp = self._http.get(
+                f"{_NOMINATIM_URL}/reverse",
+                params={"lat": lat, "lon": lng, "format": "jsonv2", "addressdetails": 1},
+                headers=_NOMINATIM_HEADERS,
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                addr = data.get("address", {})
+                analysis.analysis_notes = (
+                    f"Nominatim fallback: {data.get('display_name', address)} | Land use: {addr.get('landuse', 'unknown')} | Suburb: {addr.get('suburb', addr.get('city', 'unknown'))}"
+                )
+
+                # Check for risk-relevant land use
+                landuse = (addr.get("landuse") or "").lower()
+                if landuse in ("industrial", "commercial"):
+                    analysis.findings.append(
+                        VisualFinding(
+                            category="location",
+                            description=f"Property in {landuse} zone — review exposure to neighboring operations",
+                            severity="warning",
+                            confidence=0.6,
+                        )
+                    )
+                    analysis.aerial_risk = VisualRisk.MODERATE
+
+                # Check for proximity to water
+                if any(k in addr for k in ("waterway", "river", "canal", "bay", "ocean")):
+                    analysis.findings.append(
+                        VisualFinding(
+                            category="flood",
+                            description="Property near water feature — assess flood zone exposure",
+                            severity="warning",
+                            confidence=0.5,
+                        )
+                    )
+                    analysis.aerial_risk = max(analysis.aerial_risk, VisualRisk.MODERATE, key=lambda v: v.value)
+            else:
+                analysis.analysis_notes = f"Nominatim returned {resp.status_code} — location assessment limited"
+        except Exception as exc:
+            logger.warning("Nominatim fallback failed: %s", exc)
+            analysis.analysis_notes = f"Nominatim unavailable: {exc}"
+
+        # Try Overpass for nearby hazard features
+        try:
+            overpass_query = f'[out:json][timeout:10];node(around:500,{lat},{lng})["hazard"|"landuse"="industrial"];out body 10;'
+            resp = self._http.post(
+                _OVERPASS_URL,
+                data={"data": overpass_query},
+                timeout=12.0,
+            )
+            if resp.status_code == 200:
+                elements = resp.json().get("elements", [])
+                for el in elements:
+                    tags = el.get("tags", {})
+                    name = tags.get("name", tags.get("landuse", "nearby feature"))
+                    analysis.findings.append(
+                        VisualFinding(
+                            category="nearby_hazard",
+                            description=f"Nearby feature within 500m: {name}",
+                            severity="info",
+                            confidence=0.4,
+                        )
+                    )
+        except Exception as exc:
+            logger.debug("Overpass query failed (non-critical): %s", exc)
+
         return analysis
 
     def close(self) -> None:

@@ -847,7 +847,7 @@ def get_job_quote(
         job = job_store.get(INSURANCE_NS, job_id)
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
-    html = job.get("quote_html", "")
+    html = (job.get("results") or {}).get("quote_html", "")
     if not html:
         raise HTTPException(status_code=404, detail="Quote document not available")
     return HTMLResponse(content=html, status_code=200)
