@@ -198,6 +198,47 @@ class InsurancePipeline:
             findings=ocr_count,
         )
 
+        # ── 2.5. PROPERTY PHOTO ANALYSIS (vision LLM + satellite + damage detection) ──
+        visual_profile = None
+        photos = [d for d in documents if d.get("filename", "").lower().endswith((".jpg", ".jpeg", ".png", ".gif", ".webp", ".tiff", ".bmp"))] if documents else []
+        if photos:
+            progress.start("vision", "Vision", "Analyzing property photos")
+            try:
+                from insureflow.ml.vision.pipeline import PropertyPhotoAnalyzer
+
+                vision_analyzer = PropertyPhotoAnalyzer()
+                lat = None
+                lng = None
+                addr = ""
+                if bundle.structured and bundle.structured.locations:
+                    loc = bundle.structured.locations[0]
+                    addr = f"{loc.address}, {loc.city}, {loc.state} {loc.zip_code}"
+                visual_profile = vision_analyzer.analyze_photos(
+                    photos,
+                    latitude=lat,
+                    longitude=lng,
+                    address=addr,
+                    bundle_id=bid,
+                )
+                audit.log(
+                    PipelineEvent.STRUCTURED_PARSE_COMPLETE,
+                    f"Vision analysis: {visual_profile.analyzed_photos} photos, risk={visual_profile.overall_visual_risk.value}",
+                    metadata={
+                        "vision_photos": visual_profile.analyzed_photos,
+                        "vision_risk": visual_profile.overall_visual_risk.value,
+                        "vision_damage_count": visual_profile.damage_count,
+                    },
+                )
+                progress.complete(
+                    "vision",
+                    detail=f"{visual_profile.analyzed_photos} photos · {visual_profile.overall_visual_risk.value} risk",
+                    findings=visual_profile.damage_count,
+                    status="warning" if visual_profile.damage_count > 0 else "complete",
+                )
+            except Exception as exc:
+                logger.warning("Vision analysis failed: %s", exc)
+                progress.complete("vision", detail="Vision analysis skipped", status="warning")
+
         # ── 3. Extract (LLM on unstructured if enabled) ──
         if self.use_llm and getattr(self.extraction.llm, "api_key", None):
             bundle = self.extraction.process_bundle(bundle)
@@ -420,6 +461,10 @@ class InsurancePipeline:
             summary["portfolio_concentration_score"] = portfolio_result.risk_score
             portfolio_findings = [f.model_dump() for f in portfolio_result.findings]
             summary["portfolio_findings"] = portfolio_findings
+
+        # Add visual analysis data if available
+        if visual_profile:
+            summary["visual_analysis"] = visual_profile.to_dict()
 
         registry = RegistryService()
         version_context = registry.version_context()

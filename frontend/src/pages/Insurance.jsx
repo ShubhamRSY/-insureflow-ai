@@ -3,7 +3,7 @@ import { Badge, DecisionBadge, EmptyState } from '../components/ui';
 import { fmtCurrency, extractInsurance, endpoints } from '../lib/api';
 import InsuranceSourceHub from '../components/InsuranceSourceHub';
 import JourneyMiniStrip from '../components/JourneyMiniStrip';
-import { Shield, ArrowRight, Download, Trash2 } from 'lucide-react';
+import { Shield, ArrowRight, Download, Trash2, Camera, Upload, AlertTriangle } from 'lucide-react';
 
 const FLOW_STEPS = [
   { label: 'Intake', desc: 'Connect & pull broker package' },
@@ -16,6 +16,10 @@ const FLOW_STEPS = [
 
 export default function InsurancePage({ presets, jobs, onRunDemo, onOpenJob, onSubmit, onRefresh }) {
   const [loading, setLoading] = useState(false);
+  const [photoFiles, setPhotoFiles] = useState([]);
+  const [photoAnalysis, setPhotoAnalysis] = useState(null);
+  const [photoLoading, setPhotoLoading] = useState(false);
+  const [showPhotoUpload, setShowPhotoUpload] = useState(false);
 
   const handleSubmit = async (payload) => {
     setLoading(true);
@@ -61,6 +65,34 @@ export default function InsurancePage({ presets, jobs, onRunDemo, onOpenJob, onS
     if (onRefresh) onRefresh();
   };
 
+  const handlePhotoUpload = async (e) => {
+    const files = Array.from(e.target.files || []);
+    const photos = await Promise.all(files.map(async (file) => {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const base64 = String(reader.result).split(',')[1] || '';
+          resolve({ filename: file.name, image_data: atob(base64).split('').map(c => c.charCodeAt(0)) });
+        };
+        reader.readAsDataURL(file);
+      });
+    }));
+    setPhotoFiles(photos);
+  };
+
+  const handleAnalyzePhotos = async () => {
+    if (!photoFiles.length) return;
+    setPhotoLoading(true);
+    try {
+      const result = await endpoints.analyzePhotos({ photos: photoFiles });
+      setPhotoAnalysis(result);
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setPhotoLoading(false);
+    }
+  };
+
   return (
     <div className="mx-auto max-w-5xl space-y-8 animate-fade-in">
       <div>
@@ -85,6 +117,90 @@ export default function InsurancePage({ presets, jobs, onRunDemo, onOpenJob, onS
           ))}
         </div>
         <p className="mt-3 text-xs text-slate-500">Open any job to see the full submission journey — COPE, provenance, checkpoints, and pricing breakdown.</p>
+      </div>
+
+      {/* Property Photo Analysis */}
+      <div className="glass-card p-5">
+        <button type="button" onClick={() => setShowPhotoUpload(!showPhotoUpload)}
+          className="flex items-center justify-between w-full text-left">
+          <div className="flex items-center gap-2">
+            <Camera className="h-4 w-4 text-brand" />
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Property Photo Analysis</p>
+          </div>
+          <span className="text-xs text-slate-500">{showPhotoUpload ? 'Collapse' : 'Expand'}</span>
+        </button>
+        {showPhotoUpload && (
+          <div className="mt-4 space-y-4">
+            <p className="text-xs text-slate-400">
+              Upload property photos for AI-powered analysis: building condition, damage detection, satellite imagery, and risk assessment.
+            </p>
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-2 rounded-lg border border-white/[0.06] bg-surface-overlay/30 px-4 py-2 text-sm text-slate-300 hover:border-brand/30 cursor-pointer transition">
+                <Upload className="h-4 w-4" />
+                Select photos
+                <input type="file" accept="image/*" multiple onChange={handlePhotoUpload} className="hidden" />
+              </label>
+              {photoFiles.length > 0 && (
+                <span className="text-xs text-slate-500">{photoFiles.length} photo(s) selected</span>
+              )}
+            </div>
+            {photoFiles.length > 0 && (
+              <button type="button" onClick={handleAnalyzePhotos} disabled={photoLoading}
+                className="rounded-lg bg-brand/20 border border-brand/30 px-4 py-2 text-sm font-medium text-brand-light hover:bg-brand/30 transition disabled:opacity-50">
+                {photoLoading ? 'Analyzing...' : 'Analyze photos'}
+              </button>
+            )}
+            {photoAnalysis && (
+              <div className="rounded-lg border border-white/[0.06] bg-surface-overlay/20 p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-semibold text-slate-200">Analysis Results</h4>
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${
+                    photoAnalysis.overall_visual_risk === 'critical' ? 'bg-red-500/20 text-red-400' :
+                    photoAnalysis.overall_visual_risk === 'high' ? 'bg-orange-500/20 text-orange-400' :
+                    photoAnalysis.overall_visual_risk === 'moderate' ? 'bg-yellow-500/20 text-yellow-400' :
+                    'bg-green-500/20 text-green-400'
+                  }`}>
+                    Risk: {photoAnalysis.overall_visual_risk}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400">{photoAnalysis.processing_notes}</p>
+                <div className="grid grid-cols-3 gap-3 text-xs">
+                  <div className="text-center">
+                    <p className="text-slate-500">Photos</p>
+                    <p className="text-lg font-bold text-slate-200">{photoAnalysis.analyzed_photos}/{photoAnalysis.total_photos}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-slate-500">Damage</p>
+                    <p className="text-lg font-bold text-slate-200">{photoAnalysis.damage_count}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-slate-500">Quality</p>
+                    <p className="text-lg font-bold text-slate-200">{photoAnalysis.overall_quality}</p>
+                  </div>
+                </div>
+                {photoAnalysis.risk_factors?.length > 0 && (
+                  <div>
+                    <p className="text-xs font-semibold text-slate-500 mb-1">Risk Factors</p>
+                    {photoAnalysis.risk_factors.map((f, i) => (
+                      <div key={i} className="flex items-start gap-1 text-xs text-orange-400/80">
+                        <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0" />
+                        {f}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {photoAnalysis.recommendations?.length > 0 && (
+                  <div>
+                    <p className="text-xs font-semibold text-slate-500 mb-1">Recommendations</p>
+                    {photoAnalysis.recommendations.map((r, i) => (
+                      <p key={i} className="text-xs text-slate-400">• {r}</p>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <InsuranceSourceHub onSubmit={handleSubmit} loading={loading} />

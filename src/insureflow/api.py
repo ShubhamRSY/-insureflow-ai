@@ -1811,6 +1811,47 @@ def request_broker_documents(
     return get_ecosystem_service().request_broker_documents(bundle_id, current.org_id, docs)
 
 
+@app.post("/pipeline/vision/analyze")
+async def analyze_property_photos_endpoint(
+    request: Request,
+    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+) -> dict[str, Any]:
+    """Upload and analyze property photos — quality scoring, damage detection, satellite imagery."""
+    from insureflow.ml.vision.pipeline import PropertyPhotoAnalyzer
+
+    body = await request.json()
+    photos = body.get("photos", [])
+    if not photos:
+        raise HTTPException(status_code=400, detail="No photos provided")
+
+    latitude = body.get("latitude")
+    longitude = body.get("longitude")
+    address = body.get("address", "")
+    bundle_id = body.get("bundle_id", f"vision-{uuid.uuid4().hex[:12]}")
+
+    analyzer = PropertyPhotoAnalyzer()
+    profile = analyzer.analyze_photos(
+        photos,
+        latitude=latitude,
+        longitude=longitude,
+        address=address,
+        bundle_id=bundle_id,
+    )
+    return profile.to_dict()
+
+
+@app.get("/pipeline/vision/status")
+def vision_status() -> dict[str, Any]:
+    """Check which vision providers are configured."""
+    import os
+
+    return {
+        "vision_llm": bool(os.getenv("OPENAI_API_KEY") or os.getenv("ANTHROPIC_API_KEY")),
+        "satellite": bool(os.getenv("GOOGLE_MAPS_API_KEY") or os.getenv("NEARMAP_API_KEY")),
+        "vision_model": os.getenv("VISION_MODEL", "gpt-4o"),
+    }
+
+
 @app.get("/pipeline/ecosystem/status")
 def ecosystem_status(
     current: TokenData = Depends(require_role(Role.VIEWER)),

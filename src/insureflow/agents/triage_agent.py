@@ -151,6 +151,8 @@ class TriageAgent:
         if bundle.supplemental:
             has_supplemental = True
 
+        has_photos = bool(bundle.visual_analysis and bundle.visual_analysis.get("analyzed_photos", 0) > 0)
+
         # NAICS fit
         naics_fit = 0.0
         if naics:
@@ -201,6 +203,7 @@ class TriageAgent:
             schedule_of_values=has_sov,
             inspection_report=has_inspection,
             supplemental=has_supplemental,
+            photos=has_photos,
             signed_application=bool(bundle.structured and bundle.structured.named_insured),
         )
 

@@ -208,6 +208,7 @@ class SubmissionBundle(BaseModel):
     structured: Optional[StructuredSubmission] = None
     unstructured: list[UnstructuredSubmission] = Field(default_factory=list)
     supplemental: list[UnstructuredSubmission] = Field(default_factory=list)
+    visual_analysis: Optional[dict[str, Any]] = None
 
     def all_sources(self) -> list[str]:
         sources = []
