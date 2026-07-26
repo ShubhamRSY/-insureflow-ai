@@ -307,8 +307,9 @@ def html_to_pdf(html: str) -> bytes:
     is not installed, so the endpoint never hard-fails.
     """
     try:
-        from weasyprint import HTML  # type: ignore[import-untyped]
+        from weasyprint import HTML
 
-        return HTML(string=html).write_pdf()
+        pdf: bytes = HTML(string=html).write_pdf()
+        return pdf
     except (ImportError, OSError):
         return html.encode("utf-8")
