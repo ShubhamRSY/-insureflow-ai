@@ -10,14 +10,15 @@ from insureflow.auth.jwt import decode_access_token
 from insureflow.auth.models import TokenData
 from insureflow.auth.store import clear_user_store, get_user_store
 
-security = HTTPBearer()
+security = HTTPBearer(auto_error=False)
+security_required = HTTPBearer()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
-__all__ = ["get_user_store", "clear_user_store", "get_current_user", "require_role", "security"]
+__all__ = ["get_user_store", "clear_user_store", "get_current_user", "get_current_user_optional", "require_role", "security"]
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Security(security),
+    credentials: HTTPAuthorizationCredentials = Security(security_required),
 ) -> TokenData:
     token_data = decode_access_token(credentials.credentials)
     if token_data is None:
