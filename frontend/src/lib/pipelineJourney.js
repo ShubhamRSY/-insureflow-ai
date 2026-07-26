@@ -84,10 +84,10 @@ export function buildPipelineStages(job) {
     {
       id: 'appetite',
       label: 'Appetite',
-      detail: r.appetite_filter_passed === false
-        ? (r.decline_reason || 'Outside appetite')
-        : r.appetite_needs_uw_referral
-          ? 'Referral required'
+      detail: r.appetite_needs_uw_referral
+        ? 'Referral required'
+        : r.appetite_filter_passed === false
+          ? (r.decline_reason || 'Outside appetite')
           : 'Within appetite',
       status: processing
         ? 'pending'
@@ -272,12 +272,12 @@ export function buildSubmissionQuality(job) {
     issues.push('Thin submission — only one document');
   }
 
-  if (r.appetite_filter_passed === false) {
-    score -= 35;
-    issues.push('Outside appetite');
-  } else if (r.appetite_needs_uw_referral) {
+  if (r.appetite_needs_uw_referral) {
     score -= 10;
     issues.push('Appetite referral required');
+  } else if (r.appetite_filter_passed === false) {
+    score -= 35;
+    issues.push('Outside appetite');
   }
 
   if (recon.match_rate != null && recon.match_rate < 0.8) {
@@ -349,7 +349,7 @@ export function buildPricingBreakdown(job) {
     .map((m) => ({
       key: m.name,
       label: humanModName(m.name),
-      pct: m.modifier_pct ?? 0,
+      pct: Math.round((m.modifier_pct ?? 0) * 100) / 100,
       basis: m.basis || '',
     }));
 
@@ -359,7 +359,7 @@ export function buildPricingBreakdown(job) {
       premiumMods.push({
         key: 'deductible_credit',
         label: 'Deductible credit',
-        pct: meta.deductible_credit,
+        pct: Math.round(meta.deductible_credit * 100) / 100,
         basis: 'deductible',
       });
     }
@@ -371,7 +371,7 @@ export function buildPricingBreakdown(job) {
       premiumMods.push({
         key: 'years_in_business',
         label: 'Years in business',
-        pct: meta.years_in_business_mod_pct,
+        pct: Math.round(meta.years_in_business_mod_pct * 100) / 100,
         basis: 'tenure',
       });
     }

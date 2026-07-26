@@ -29,7 +29,7 @@ export default function JobDrawer({ job, vertical, jobId, onClose }) {
           <div className="mt-6 flex flex-col items-center py-6 text-center">
             <div className="mb-3 h-8 w-8 animate-spin rounded-full border-2 border-brand border-t-transparent" />
             <p className="text-sm text-slate-300">Running underwriting pipeline…</p>
-            <p className="mt-1 text-xs text-slate-500">Auto-refreshing every 3 seconds</p>
+            <p className="mt-1 text-xs text-slate-500">Results will appear automatically</p>
           </div>
         )}
         {!processing && (
@@ -64,7 +64,7 @@ export default function JobDrawer({ job, vertical, jobId, onClose }) {
       <div className="flex flex-col items-center py-12 text-center">
         <div className="mb-4 h-10 w-10 animate-spin rounded-full border-2 border-brand border-t-transparent" />
         <p className="text-slate-300">Processing submission…</p>
-        <p className="mt-1 text-sm text-slate-500">Auto-refreshing every 3 seconds</p>
+        <p className="mt-1 text-sm text-slate-500">Results will appear automatically</p>
       </div>
     );
   } else {
