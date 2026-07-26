@@ -159,6 +159,7 @@ class InsurancePipeline:
                         appetite_result.reason,
                         appetite_result.findings,
                         audit,
+                        triage_result=triage_result,
                     )
                     decline["pipeline_stages"] = progress.finish()
                     return decline
@@ -197,6 +198,9 @@ class InsurancePipeline:
             detail=f"{len(bundle.unstructured)} docs · OCR {ocr_count}",
             findings=ocr_count,
         )
+
+        # ── 2b. RE-SCORE DOCUMENT CHECKLIST on fully-ingested bundle ──
+        triage_result = self.triage.score_submission(bundle)
 
         # ── 2.5. PROPERTY PHOTO ANALYSIS (vision LLM + satellite + damage detection) ──
         visual_profile = None
@@ -568,8 +572,30 @@ class InsurancePipeline:
         reason: str,
         appetite_findings: list[Any],
         audit: InsuranceAuditLogger,
+        triage_result: Any = None,
     ) -> dict[str, Any]:
         wf = self.workflow.submit_for_review(bundle_id, self.org_id, "decline")
+        checklist: dict[str, Any] = {}
+        if triage_result and hasattr(triage_result, "document_checklist"):
+            cl = triage_result.document_checklist
+            checklist = {
+                "completeness_pct": cl.completeness_pct,
+                "missing_documents": cl.missing,
+                "present_documents": [
+                    k
+                    for k, v in {
+                        "acord_form": cl.acord_form,
+                        "loss_run": cl.loss_run,
+                        "financials": cl.financials,
+                        "property_photos": cl.photos,
+                        "inspection_report": cl.inspection_report,
+                        "schedule_of_values": cl.schedule_of_values,
+                        "supplemental_forms": cl.supplemental,
+                        "signed_application": cl.signed_application,
+                    }.items()
+                    if v
+                ],
+            }
         result = {
             "status": "completed",
             "bundle_id": bundle_id,
@@ -581,6 +607,7 @@ class InsurancePipeline:
             "human_review_required": False,
             "ocr_documents": 0,
             "document_count": 0,
+            "document_checklist": checklist or None,
             "reconciliation_discrepancies": 0,
             "quote": {},
             "encryption_at_rest": self.encryption.enabled,

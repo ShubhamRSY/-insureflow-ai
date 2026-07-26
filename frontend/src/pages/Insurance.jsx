@@ -20,6 +20,7 @@ export default function InsurancePage({ presets, jobs, onRunDemo, onOpenJob, onS
   const [photoAnalysis, setPhotoAnalysis] = useState(null);
   const [photoLoading, setPhotoLoading] = useState(false);
   const [showPhotoUpload, setShowPhotoUpload] = useState(false);
+  const [retryingId, setRetryingId] = useState(null);
 
   const handleSubmit = async (payload) => {
     setLoading(true);
@@ -58,12 +59,14 @@ export default function InsurancePage({ presets, jobs, onRunDemo, onOpenJob, onS
 
   const handleRetry = async (e, id) => {
     e.stopPropagation();
+    setRetryingId(id);
     try {
       const r = await endpoints.retryJob(id);
-      alert(`Retry started — new job: ${r.job_id}`);
       if (onRefresh) onRefresh();
     } catch (err) {
       alert(err.message);
+    } finally {
+      setRetryingId(null);
     }
   };
 
@@ -272,8 +275,8 @@ export default function InsurancePage({ presets, jobs, onRunDemo, onOpenJob, onS
                       <td className="px-6 py-3.5 font-medium">{fmtCurrency(s.premium)}</td>
                       <td className="px-6 py-3.5">
                         <div className="flex items-center gap-2">
-                          <button type="button" onClick={(e) => handleRetry(e, id)} className="text-slate-500 hover:text-amber-400 transition" title="Retry pipeline">
-                            <RotateCcw className="h-4 w-4" />
+                          <button type="button" onClick={(e) => handleRetry(e, id)} disabled={retryingId === id} className="text-slate-500 hover:text-amber-400 transition disabled:opacity-40" title={retryingId === id ? 'Retrying…' : 'Retry pipeline'}>
+                            <RotateCcw className={`h-4 w-4 ${retryingId === id ? 'animate-spin' : ''}`} />
                           </button>
                           <button type="button" onClick={(e) => handleDownload(e, id)} className="text-slate-500 hover:text-brand-light transition" title="Download results">
                             <Download className="h-4 w-4" />

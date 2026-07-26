@@ -326,7 +326,7 @@ class AppetiteFilterAgent(BaseAgent):
                         Finding(
                             title="Prior carrier cancellation or non-renewal detected",
                             description=f"Submission contains reference to '{term}' — prior cancellation/non-renewal within 3 years is ineligible (APT-008)",
-                            severity=RiskSeverity.CRITICAL,
+                            severity=RiskSeverity.HIGH,
                             category="carrier_appetite",
                             evidence=[term],
                         )

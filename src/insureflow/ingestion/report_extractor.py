@@ -68,6 +68,7 @@ class InspectionReportExtractor(BaseParser):
         submission = UnstructuredSubmission(
             submission_id=submission_id,
             source="inspection_report",
+            document_type="inspection_report",
             raw_text=raw_text,
             processed_at=datetime.now(timezone.utc),
         )
