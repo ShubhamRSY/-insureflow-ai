@@ -133,7 +133,7 @@ export const endpoints = {
   workflowDetail: (bundleId) => api(`/pipeline/workflow/${bundleId}`),
   bindPolicy: (bundleId) => api(`/pipeline/workflow/${bundleId}/bind`, { method: 'POST' }),
   insuranceQuote: (jobId) => api(`/pipeline/jobs/${jobId}/quote`),
-  deleteJob: (jobId, vertical) => api(`/${vertical}/pipeline/jobs/${jobId}`, { method: 'DELETE' }),
+  deleteJob: (jobId) => api(`/pipeline/jobs/${jobId}`, { method: 'DELETE' }),
 
   // Insurance products & outcomes
   insuranceProducts: () => api('/pipeline/rating/products'),
