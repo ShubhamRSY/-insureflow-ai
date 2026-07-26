@@ -120,6 +120,8 @@ class TriageAgent:
         has_loss_run = False
         has_sov = False
         has_financials = False
+        has_inspection = False
+        has_supplemental = False
 
         if bundle.structured:
             if bundle.structured.risk_profile:
@@ -141,6 +143,13 @@ class TriageAgent:
                 has_loss_run = True
             elif doc.document_type == "schedule_of_values":
                 has_sov = True
+            elif doc.document_type == "inspection_report":
+                has_inspection = True
+            elif doc.document_type not in ("loss_run", "schedule_of_values"):
+                has_supplemental = True
+
+        if bundle.supplemental:
+            has_supplemental = True
 
         # NAICS fit
         naics_fit = 0.0
@@ -190,6 +199,8 @@ class TriageAgent:
             loss_run=has_loss_run,
             financials=has_financials,
             schedule_of_values=has_sov,
+            inspection_report=has_inspection,
+            supplemental=has_supplemental,
             signed_application=bool(bundle.structured and bundle.structured.named_insured),
         )
 
