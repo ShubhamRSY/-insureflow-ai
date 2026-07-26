@@ -2,10 +2,7 @@
 
 from __future__ import annotations
 
-import json
-from unittest.mock import MagicMock, patch
-
-import pytest
+from unittest.mock import patch
 
 from insureflow.ml.vision.damage_detector import DamageAssessment, DamageDetector, DamageSeverity, DamageType
 from insureflow.ml.vision.models import (
@@ -18,8 +15,8 @@ from insureflow.ml.vision.models import (
 )
 from insureflow.ml.vision.photo_scorer import score_photo_quality
 
-
 # ─── Data Model Tests ───
+
 
 class TestPhotoAnalysis:
     def test_default_values(self):
@@ -99,6 +96,7 @@ class TestVisualFinding:
 
 # ─── Photo Quality Scorer Tests ───
 
+
 class TestPhotoQualityScorer:
     def test_with_minimal_image(self):
         image_data = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100
@@ -115,6 +113,7 @@ class TestPhotoQualityScorer:
 
 
 # ─── Damage Detector Tests ───
+
 
 class TestDamageDetector:
     def test_empty_findings(self):
@@ -149,9 +148,7 @@ class TestDamageDetector:
     def test_parse_damage_response(self):
         detector = DamageDetector()
         response = {
-            "damages": [
-                {"type": "hail", "severity": "moderate", "location": "roof", "description": "Hail dents on shingles"}
-            ],
+            "damages": [{"type": "hail", "severity": "moderate", "location": "roof", "description": "Hail dents on shingles"}],
             "overall_damage_level": "moderate",
             "summary": "Moderate hail damage visible on roof",
         }
@@ -162,6 +159,7 @@ class TestDamageDetector:
 
 
 # ─── Vision LLM Analyzer Tests ───
+
 
 class TestVisionLLMAnalyzer:
     def test_unavailable_without_keys(self):
@@ -194,6 +192,7 @@ class TestVisionLLMAnalyzer:
 
 # ─── Satellite Tests ───
 
+
 class TestSatelliteImageryProvider:
     def test_unavailable_without_keys(self):
         from insureflow.ml.vision.satellite import SatelliteImageryProvider
@@ -212,6 +211,7 @@ class TestSatelliteImageryProvider:
 
 
 # ─── Pipeline Orchestrator Tests ───
+
 
 class TestPropertyPhotoAnalyzer:
     def test_analyze_photos_empty(self):
@@ -247,6 +247,7 @@ class TestPropertyPhotoAnalyzer:
 
 # ─── Triage Agent Photo Detection Tests ───
 
+
 class TestTriagePhotoDetection:
     def test_photos_detected_with_visual_analysis(self):
         from insureflow.agents.triage_agent import TriageAgent
@@ -273,11 +274,13 @@ class TestTriagePhotoDetection:
 
         agent = TriageAgent()
         bundle = SubmissionBundle(bundle_id="b1")
-        bundle.unstructured.append(UnstructuredSubmission(
-            submission_id="u1",
-            source="inspection_report",
-            document_type="inspection_report",
-            raw_text="Inspection report content",
-        ))
+        bundle.unstructured.append(
+            UnstructuredSubmission(
+                submission_id="u1",
+                source="inspection_report",
+                document_type="inspection_report",
+                raw_text="Inspection report content",
+            )
+        )
         result = agent.score_submission(bundle)
         assert result.document_checklist.inspection_report is True

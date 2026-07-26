@@ -267,12 +267,12 @@ class E2ERunner:
 
         def dashboard_html() -> str:
             html = self._request("GET", "/dashboard")
-            assert isinstance(html, str) and "InsureFlow" in html
+            assert isinstance(html, str) and ("Rytera" in html or "InsureFlow" in html)
             return "SPA shell served"
 
         def dashboard_spa_route() -> str:
             html = self._request("GET", "/dashboard/insurance")
-            assert isinstance(html, str) and "InsureFlow" in html
+            assert isinstance(html, str) and ("Rytera" in html or "InsureFlow" in html)
             return "client route ok"
 
         self._step("GET /health", health)
