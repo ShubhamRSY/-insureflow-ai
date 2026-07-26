@@ -3,7 +3,7 @@ import { Badge, DecisionBadge, EmptyState } from '../components/ui';
 import { fmtCurrency, extractInsurance, endpoints } from '../lib/api';
 import InsuranceSourceHub from '../components/InsuranceSourceHub';
 import JourneyMiniStrip from '../components/JourneyMiniStrip';
-import { Shield, ArrowRight, Download, Trash2, Camera, Upload, AlertTriangle } from 'lucide-react';
+import { Shield, ArrowRight, Download, Trash2, Camera, Upload, AlertTriangle, RotateCcw } from 'lucide-react';
 
 const FLOW_STEPS = [
   { label: 'Intake', desc: 'Connect & pull broker package' },
@@ -50,6 +50,17 @@ export default function InsurancePage({ presets, jobs, onRunDemo, onOpenJob, onS
     e.stopPropagation();
     try {
       await endpoints.deleteJob(id);
+      if (onRefresh) onRefresh();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleRetry = async (e, id) => {
+    e.stopPropagation();
+    try {
+      const r = await endpoints.retryJob(id);
+      alert(`Retry started — new job: ${r.job_id}`);
       if (onRefresh) onRefresh();
     } catch (err) {
       alert(err.message);
@@ -261,6 +272,9 @@ export default function InsurancePage({ presets, jobs, onRunDemo, onOpenJob, onS
                       <td className="px-6 py-3.5 font-medium">{fmtCurrency(s.premium)}</td>
                       <td className="px-6 py-3.5">
                         <div className="flex items-center gap-2">
+                          <button type="button" onClick={(e) => handleRetry(e, id)} className="text-slate-500 hover:text-amber-400 transition" title="Retry pipeline">
+                            <RotateCcw className="h-4 w-4" />
+                          </button>
                           <button type="button" onClick={(e) => handleDownload(e, id)} className="text-slate-500 hover:text-brand-light transition" title="Download results">
                             <Download className="h-4 w-4" />
                           </button>

@@ -809,6 +809,24 @@ def download_job(
     return {"job_id": job_id, "status": job.get("status"), "results": job.get("results", {}), "error": job.get("error")}
 
 
+@app.post("/pipeline/jobs/{job_id}/retry", status_code=202)
+async def retry_job(
+    job_id: str,
+    background_tasks: BackgroundTasks,
+    current: TokenData | None = Depends(get_current_user_optional),
+) -> dict[str, Any]:
+    """Re-run a failed or completed insurance pipeline job."""
+    org_id = current.org_id if current and current.org_id else "demo"
+    old_job = job_store.get(INSURANCE_NS, job_id, org_id=org_id)
+    if not old_job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    req = _load_pacific_coast_submission()
+    new_id = f"retry-{uuid.uuid4().hex[:12]}"
+    job_store.set(INSURANCE_NS, new_id, {"status": "processing", "retry_of": job_id}, org_id=org_id)
+    background_tasks.add_task(_run_pipeline_task, new_id, req, org_id)
+    return {"job_id": new_id, "status": "processing", "retry_of": job_id}
+
+
 @app.delete("/pipeline/jobs/bulk", status_code=204)
 def bulk_delete_jobs(
     job_ids: list[str],

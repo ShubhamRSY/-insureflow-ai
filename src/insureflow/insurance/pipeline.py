@@ -436,6 +436,24 @@ class InsurancePipeline:
             "oracle_findings_count": len(oracle_findings),
             "ocr_documents": ocr_count,
             "document_count": len(bundle.unstructured) + (1 if bundle.structured else 0),
+            "document_checklist": {
+                "completeness_pct": triage_result.document_checklist.completeness_pct,
+                "missing_documents": triage_result.document_checklist.missing,
+                "present_documents": [
+                    k
+                    for k, v in {
+                        "acord_form": triage_result.document_checklist.acord_form,
+                        "loss_run": triage_result.document_checklist.loss_run,
+                        "financials": triage_result.document_checklist.financials,
+                        "property_photos": triage_result.document_checklist.photos,
+                        "inspection_report": triage_result.document_checklist.inspection_report,
+                        "schedule_of_values": triage_result.document_checklist.schedule_of_values,
+                        "supplemental_forms": triage_result.document_checklist.supplemental,
+                        "signed_application": triage_result.document_checklist.signed_application,
+                    }.items()
+                    if v
+                ],
+            },
             "reconciliation_discrepancies": len(reconciliation.discrepancies),
             "pipeline_stages": progress.stages,
             "provenance_summary": {

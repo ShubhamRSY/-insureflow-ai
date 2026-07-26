@@ -384,10 +384,14 @@ export default function SubmissionJourney({ job }) {
   useEffect(() => {
     if (!ctx.bundleId) return;
     let cancelled = false;
+    const fromResults = job?.results?.document_checklist;
+    if (fromResults && !cancelled) {
+      setDocQuality(fromResults);
+    }
     const load = async () => {
       const tasks = [
         endpoints.copeAnalysis(ctx.bundleId).then((d) => { if (!cancelled) setCope(d); }).catch(() => {}),
-        endpoints.missingDocuments(ctx.bundleId).then((d) => { if (!cancelled) setDocQuality(d); }).catch(() => {}),
+        endpoints.missingDocuments(ctx.bundleId).then((d) => { if (!cancelled && d) setDocQuality(d); }).catch(() => {}),
         endpoints.auditTrail(ctx.bundleId).then((d) => { if (!cancelled) setAudit(d); }).catch(() => {}),
         endpoints.ecosystemBundle(ctx.bundleId).then((d) => { if (!cancelled) setEcosystem(d); }).catch(() => {}),
       ];

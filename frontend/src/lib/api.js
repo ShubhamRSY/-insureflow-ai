@@ -68,6 +68,7 @@ export const endpoints = {
   insuranceJob: (id) => api(`/pipeline/jobs/${id}`),
   downloadJob: (id) => api(`/pipeline/jobs/${id}/download`),
   deleteJob: (id) => api(`/pipeline/jobs/${id}`, { method: 'DELETE' }),
+  retryJob: (id) => api(`/pipeline/jobs/${id}/retry`, { method: 'POST' }),
   runInsurance: (body) => api('/pipeline/run', { method: 'POST', body }),
   runInsuranceDemo: (preset) => api(`/api/demo/insurance/${preset}`, { method: 'POST' }),
   mortgageJobs: () => api('/mortgage/pipeline/jobs'),
