@@ -1,4 +1,4 @@
-"""Full submission report HTML generator for PDF export."""
+"""Professional underwriting report HTML generator for PDF export."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from typing import Any
 
 
 def generate_report_html(results: dict[str, Any], job_id: str) -> str:
-    """Build a comprehensive HTML report from pipeline results dict.
+    """Build a professional, client-facing HTML report from pipeline results.
 
     Works with the raw dict stored in the job store (not model objects)
     so it can render any completed job without re-running the pipeline.
@@ -17,7 +17,6 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
     quote_full = r.get("quote_full") or {}
     quote = r.get("quote") or {}
     recon = r.get("reconciliation") or {}
-    provenance = r.get("provenance") or {}
     now = datetime.now(tz=timezone.utc).strftime("%B %d, %Y at %H:%M UTC")
 
     insured = memo.get("insured_name") or r.get("insured_name") or "Named Insured"
@@ -26,7 +25,6 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
     risk_pct = round(risk_score * 100) if risk_score is not None else None
     severity = memo.get("severity") or "—"
     triage_score = r.get("triage_score")
-    triage_priority = r.get("triage_priority") or "normal"
     doc_count = r.get("document_count") or 0
     document_checklist = r.get("document_checklist") or {}
     base_premium = quote.get("base_premium") or quote_full.get("base_premium") or 0
@@ -39,111 +37,104 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
     oracle_findings_count = r.get("oracle_findings_count") or 0
     premiums_mods = quote_full.get("schedule_modifications") or []
 
-    # Decision badge colour
-    decision_colors = {
-        "ACCEPT": "#22c55e",
-        "REFER": "#f59e0b",
-        "DECLINE": "#ef4444",
-    }
+    # ── Colors ──
+    decision_colors = {"ACCEPT": "#16a34a", "REFER": "#d97706", "DECLINE": "#dc2626"}
     decision_color = decision_colors.get(decision, "#64748b")
 
-    # Risk score color
     if risk_pct is not None:
         if risk_pct >= 75:
-            risk_color = "#ef4444"
+            risk_color = "#dc2626"
         elif risk_pct >= 50:
-            risk_color = "#f59e0b"
+            risk_color = "#d97706"
         else:
-            risk_color = "#22c55e"
+            risk_color = "#16a34a"
     else:
         risk_color = "#64748b"
 
-    # ── Findings by category ──
-    findings_by_cat: dict[str, list[dict[str, Any]]] = {}
-    for f in key_findings:
-        cat = f.get("category", "other")
-        findings_by_cat.setdefault(cat, []).append(f)
-
-    # ── Build HTML sections ──
-
-    # Document checklist
-    present_docs = document_checklist.get("present_documents") or []
-    missing_docs = document_checklist.get("missing_documents") or []
-    completeness = document_checklist.get("completeness_pct")
-    doc_rows = ""
-    for d in present_docs:
-        doc_rows += f'<tr><td style="padding:4px 8px;color:#16a34a;">&#10003; {d}</td><td style="padding:4px 8px;text-align:right;color:#16a34a;">Present</td></tr>'
-    for d in missing_docs:
-        doc_rows += f'<tr><td style="padding:4px 8px;color:#dc2626;">&#10007; {d}</td><td style="padding:4px 8px;text-align:right;color:#dc2626;">Missing</td></tr>'
-    if not doc_rows:
-        doc_rows = '<tr><td style="padding:4px 8px;color:#94a3b8;">No document data available</td></tr>'
-
-    # Findings rows
-    findings_html = ""
-    sev_colors = {"critical": "#dc2626", "high": "#ea580c", "moderate": "#d97706", "low": "#64748b"}
+    sev_colors = {
+        "critical": "#dc2626",
+        "high": "#dc2626",
+        "moderate": "#d97706",
+        "low": "#16a34a",
+    }
     cat_labels = {
         "risk": "Risk Assessment",
         "loss_history": "Loss History",
         "compliance": "Compliance",
         "coverage": "Coverage",
         "fraud": "Fraud Detection",
-        "external_oracle": "External Oracle",
+        "external_oracle": "External Data",
     }
+
+    # ── Document checklist ──
+    present_docs = document_checklist.get("present_documents") or []
+    missing_docs = document_checklist.get("missing_documents") or []
+    completeness_raw = document_checklist.get("completeness_pct")
+    # completeness_pct is stored as 0-1 float; convert to display percentage
+    completeness_display = (
+        f"{round(completeness_raw * 100)}%"
+        if completeness_raw is not None
+        else "—"
+    )
+
+    doc_rows = ""
+    for d in present_docs:
+        label = d.replace("_", " ").title()
+        doc_rows += f'<tr><td class="doc-name">{label}</td><td class="doc-status present">&#10003; Present</td></tr>'
+    for d in missing_docs:
+        label = d.replace("_", " ").title()
+        doc_rows += f'<tr><td class="doc-name">{label}</td><td class="doc-status missing">&#10007; Missing</td></tr>'
+    if not doc_rows:
+        doc_rows = '<tr><td class="doc-name" style="color:#94a3b8;">No document data available</td></tr>'
+
+    # ── Key findings ──
+    findings_by_cat: dict[str, list[dict[str, Any]]] = {}
+    for f in key_findings:
+        cat = f.get("category", "other")
+        findings_by_cat.setdefault(cat, []).append(f)
+
+    findings_html = ""
     for cat, findings in findings_by_cat.items():
         label = cat_labels.get(cat, cat.replace("_", " ").title())
-        findings_html += f'<h3 style="font-size:13px;font-weight:600;margin:16px 0 6px;color:#334155;">{label}</h3>'
+        findings_html += f'<h3 class="findings-category">{label}</h3>'
         for f in findings:
             sev = (f.get("severity") or "moderate").lower()
             sc = sev_colors.get(sev, "#64748b")
             findings_html += f"""
-            <div style="border-left:3px solid {sc};padding:6px 12px;margin-bottom:8px;background:#f8fafc;border-radius:0 6px 6px 0;">
-              <div style="font-weight:600;font-size:12px;color:#1e293b;">{f.get("title", "Finding")}</div>
-              <div style="font-size:11px;color:#64748b;margin-top:2px;">{f.get("description", "")}</div>
-              <div style="font-size:10px;color:{sc};margin-top:2px;text-transform:uppercase;font-weight:600;">{sev}</div>
+            <div class="finding-item" style="border-left-color:{sc};">
+              <div class="finding-title">{f.get("title", "Finding")}</div>
+              <div class="finding-desc">{f.get("description", "")}</div>
+              <div class="finding-severity" style="color:{sc};">{sev.upper()}</div>
             </div>"""
 
     if not findings_html:
-        findings_html = '<p style="color:#94a3b8;font-size:12px;">No findings recorded.</p>'
+        findings_html = '<p style="color:#94a3b8;font-size:12px;padding:8px 0;">No findings recorded.</p>'
 
-    # Premium breakdown
-    premium_rows = f'<tr><td style="padding:5px 8px;">Base Premium</td><td style="padding:5px 8px;text-align:right;font-weight:600;">${base_premium:,.2f}</td></tr>'
+    # ── Premium breakdown ──
+    premium_rows = ""
+    premium_rows += _row("Base Premium", f"${base_premium:,.2f}")
     for mod in premiums_mods:
         pct = mod.get("modifier_pct", 0)
         label = mod.get("name", "").replace("_", " ").title()
-        color = "#dc2626" if pct > 0 else "#16a34a" if pct < 0 else "#94a3b8"
+        color = "#dc2626" if pct > 0 else "#16a34a" if pct < 0 else "#64748b"
         sign = "+" if pct > 0 else ""
-        premium_rows += f'<tr><td style="padding:5px 8px;">{label}</td><td style="padding:5px 8px;text-align:right;color:{color};">{sign}{pct:.1f}%</td></tr>'
-    premium_rows += (
-        '<tr><td style="padding:8px;border-top:2px solid #e2e8f0;font-weight:700;">Indicated Premium</td>'
-        f'<td style="padding:8px;border-top:2px solid #e2e8f0;text-align:right;font-weight:700;font-size:16px;color:#16a34a;">${adjusted_premium:,.2f}</td></tr>'
+        premium_rows += _row(label, f"{sign}{pct:.1f}%", color=color)
+    premium_rows += _row(
+        "Indicated Premium",
+        f"${adjusted_premium:,.2f}",
+        bold=True,
+        color="#0f172a",
+        border_top=True,
     )
 
-    # Reconciliation
+    # ── Reconciliation ──
     match_rate = recon.get("match_rate")
     match_pct = round(match_rate * 100) if match_rate is not None else None
-    discrepancies = recon.get("discrepancies") or []
-    recon_status = recon.get("overall_status") or "—"
+    recon_status = (recon.get("overall_status") or "—").upper()
 
-    recon_bg = "#dcfce7" if recon_status == "reconciled" else "#fef3c7"
-    recon_fg = "#16a34a" if recon_status == "reconciled" else "#d97706"
-    recon_html = f'<div style="display:inline-block;padding:4px 12px;border-radius:6px;font-size:12px;font-weight:600;background:{recon_bg};color:{recon_fg};">{recon_status.upper()}</div>'
-    if match_pct is not None:
-        recon_html += f' <span style="margin-left:8px;color:#64748b;">{match_pct}% field match rate</span>'
-    recon_html += f'<span style="margin-left:8px;color:#64748b;">{len(discrepancies)} discrepancy(ies)</span>'
-
-    # Provenance
-    prov_fields = provenance.get("fields") or []
-    prov_count = provenance.get("total_fields") or len(prov_fields)
-    verified = provenance.get("verified_fields") or 0
-
-    # Oracle findings
-    oracle_findings = memo.get("key_findings") or []
-    oracle_findings = [f for f in oracle_findings if f.get("category") == "external_oracle"]
-
-    # Recommendation
-    rec_action = recommendation.get("action") or "—"
+    # ── Recommendation ──
+    rec_action = (recommendation.get("action") or "—").upper()
     rec_conditions = recommendation.get("conditions") or []
-    conditions_html = "".join(f"<li>{c}</li>" for c in rec_conditions) if rec_conditions else "<li>No conditions</li>"
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -153,54 +144,202 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
 <style>
   @page {{
     size: A4;
-    margin: 20mm 15mm;
-    @bottom-center {{ content: "Page " counter(page) " of " counter(pages); font-size: 10px; color: #94a3b8; }}
+    margin: 18mm 16mm 20mm 16mm;
+    @bottom-center {{
+      content: "Page " counter(page) " of " counter(pages);
+      font-size: 9px;
+      color: #94a3b8;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }}
   }}
+
   * {{ box-sizing: border-box; margin: 0; padding: 0; }}
-  body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif; color: #1e293b; font-size: 12px; line-height: 1.5; background: white; }}
-  h1 {{ font-size: 20px; font-weight: 700; margin-bottom: 2px; }}
-  h2 {{ font-size: 14px; font-weight: 700; margin: 20px 0 8px; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 4px; }}
-  h3 {{ margin-bottom: 4px; }}
-  .header {{ display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 3px solid #0f172a; }}
-  .meta {{ font-size: 11px; color: #64748b; }}
-  .badge {{ display: inline-block; padding: 4px 12px; border-radius: 6px; font-size: 13px; font-weight: 700; letter-spacing: 0.03em; }}
-  .row {{ display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #f1f5f9; }}
-  .row .label {{ color: #64748b; min-width: 140px; }}
-  .row .value {{ font-weight: 500; text-align: right; }}
-  .card {{ background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 10px; }}
-  .grid-2 {{ display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }}
-  .grid-3 {{ display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }}
+
+  body {{
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    color: #1e293b;
+    font-size: 11px;
+    line-height: 1.55;
+    background: white;
+    -webkit-font-smoothing: antialiased;
+  }}
+
+  /* ── Header ── */
+  .report-header {{
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-bottom: 14px;
+    border-bottom: 2px solid #0f172a;
+    margin-bottom: 18px;
+  }}
+  .report-header h1 {{
+    font-size: 20px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 2px;
+  }}
+  .report-meta {{
+    font-size: 10px;
+    color: #64748b;
+    margin-top: 2px;
+  }}
+  .report-header-right {{
+    text-align: right;
+  }}
+  .decision-badge {{
+    display: inline-block;
+    padding: 5px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }}
+
+  /* ── Sections ── */
+  .section-title {{
+    font-size: 12px;
+    font-weight: 700;
+    color: #0f172a;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 20px 0 8px 0;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #e2e8f0;
+  }}
+
+  /* ── Cards ── */
+  .card {{
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+  }}
+
+  /* ── Grids ── */
+  .grid-3 {{ display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }}
+  .grid-2 {{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }}
+
+  /* ── Stats ── */
+  .stat {{ text-align: center; padding: 8px 4px; }}
+  .stat-value {{ font-size: 22px; font-weight: 700; line-height: 1.2; }}
+  .stat-label {{ font-size: 9px; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 2px; }}
+
+  /* ── Key-value rows ── */
+  .kv-row {{
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    border-bottom: 1px solid #f1f5f9;
+  }}
+  .kv-row:last-child {{ border-bottom: none; }}
+  .kv-label {{ color: #64748b; min-width: 130px; }}
+  .kv-value {{ font-weight: 500; text-align: right; }}
+
+  /* ── Tables ── */
   table {{ width: 100%; border-collapse: collapse; }}
-  table th {{ text-align: left; font-size: 10px; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em; padding: 4px 8px; border-bottom: 2px solid #e2e8f0; }}
-  .section-label {{ font-size: 10px; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em; margin-bottom: 4px; font-weight: 600; }}
-  .footer {{ margin-top: 24px; padding-top: 12px; border-top: 1px solid #e2e8f0; font-size: 10px; color: #94a3b8; text-align: center; }}
-  ul {{ list-style: none; padding: 0; }}
-  ul li {{ padding: 3px 0; font-size: 11px; }}
-  ul li::before {{ content: "— "; color: #cbd5e1; }}
-  .stat {{ text-align: center; }}
-  .stat-value {{ font-size: 22px; font-weight: 700; }}
-  .stat-label {{ font-size: 10px; color: #64748b; text-transform: uppercase; }}
+  th {{
+    text-align: left;
+    font-size: 9px;
+    text-transform: uppercase;
+    color: #64748b;
+    letter-spacing: 0.05em;
+    padding: 5px 8px;
+    border-bottom: 2px solid #e2e8f0;
+    font-weight: 600;
+  }}
+  td {{
+    padding: 5px 8px;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 11px;
+  }}
+  .doc-name {{ font-weight: 500; }}
+  .doc-status {{ text-align: right; font-weight: 600; font-size: 10px; }}
+  .doc-status.present {{ color: #16a34a; }}
+  .doc-status.missing {{ color: #dc2626; }}
+
+  /* ── Findings ── */
+  .findings-category {{
+    font-size: 11px;
+    font-weight: 700;
+    color: #334155;
+    margin: 14px 0 6px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }}
+  .finding-item {{
+    border-left: 3px solid #e2e8f0;
+    padding: 6px 10px;
+    margin-bottom: 6px;
+    background: #f8fafc;
+    border-radius: 0 4px 4px 0;
+  }}
+  .finding-title {{
+    font-weight: 600;
+    font-size: 11px;
+    color: #1e293b;
+  }}
+  .finding-desc {{
+    font-size: 10px;
+    color: #64748b;
+    margin-top: 2px;
+    line-height: 1.4;
+  }}
+  .finding-severity {{
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    margin-top: 2px;
+  }}
+
+  /* ── Footer ── */
+  .report-footer {{
+    margin-top: 24px;
+    padding-top: 12px;
+    border-top: 1px solid #e2e8f0;
+    text-align: center;
+    font-size: 9px;
+    color: #94a3b8;
+  }}
+  .report-footer p {{ margin-bottom: 1px; }}
+
+  /* ── Utility ── */
+  .text-muted {{ color: #64748b; }}
+  .text-right {{ text-align: right; }}
+  .mt-8 {{ margin-top: 8px; }}
+  .mb-4 {{ margin-bottom: 4px; }}
+  .inline-badge {{
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+  }}
 </style>
 </head>
 <body>
 
-<div class="header">
+<!-- ═══════════════════════════════════════════ HEADER ═══════════════════════════════════════════ -->
+<div class="report-header">
   <div>
     <h1>{insured}</h1>
-    <div class="meta">Underwriting Report &mdash; Generated {now}</div>
-    <div class="meta">Job ID: {job_id}</div>
+    <div class="report-meta">Underwriting Report &mdash; {now}</div>
+    <div class="report-meta">Job ID: {job_id}</div>
   </div>
-  <div style="text-align:right;">
-    <div class="badge" style="background:{decision_color}15;color:{decision_color};border:1px solid {decision_color}40;">{decision}</div>
-    <div style="margin-top:6px;" class="meta">Quote #{policy_ref}</div>
-    <div class="meta">Expires {valid_until}</div>
+  <div class="report-header-right">
+    <div class="decision-badge" style="background:{decision_color}12;color:{decision_color};border:1px solid {decision_color}30;">{decision}</div>
+    <div class="report-meta" style="margin-top:6px;">Quote #{policy_ref}</div>
+    <div class="report-meta">Expires {valid_until}</div>
   </div>
 </div>
 
-<h2>Submission Overview</h2>
+<!-- ═══════════════════════════════════════════ SUMMARY ═══════════════════════════════════════════ -->
+<div class="section-title">Submission Summary</div>
 <div class="grid-3">
   <div class="card stat">
-    <div class="stat-value" style="color:{risk_color};">{risk_pct if risk_pct is not None else "—"}/100</div>
+    <div class="stat-value" style="color:{risk_color};">{risk_pct if risk_pct is not None else "—"}</div>
     <div class="stat-label">Risk Score</div>
   </div>
   <div class="card stat">
@@ -208,96 +347,113 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
     <div class="stat-label">Indicated Premium</div>
   </div>
   <div class="card stat">
-    <div class="stat-value" style="color:#0f172a;">{doc_count}</div>
-    <div class="stat-label">Documents</div>
+    <div class="stat-value" style="color:#0f172a;">{completeness_display}</div>
+    <div class="stat-label">Doc Completeness</div>
   </div>
 </div>
 
 <div class="grid-2">
-  <div>
-    <div class="row"><span class="label">Decision</span><span class="value" style="color:{decision_color};font-weight:700;">{decision}</span></div>
-    <div class="row"><span class="label">Severity</span><span class="value">{severity.title()}</span></div>
-    <div class="row"><span class="label">Triage Score</span><span class="value">{triage_score if triage_score is not None else "—"} ({triage_priority})</span></div>
-    <div class="row"><span class="label">Risk Score</span><span class="value" style="color:{risk_color};">{risk_pct}%</span></div>
+  <div class="card">
+    <div class="kv-row"><span class="kv-label">Decision</span><span class="kv-value" style="color:{decision_color};font-weight:700;">{decision}</span></div>
+    <div class="kv-row"><span class="kv-label">Severity</span><span class="kv-value">{severity.title()}</span></div>
+    <div class="kv-row"><span class="kv-label">Triage Score</span><span class="kv-value">{triage_score if triage_score is not None else "—"}</span></div>
+    <div class="kv-row"><span class="kv-label">Risk Score</span><span class="kv-value" style="color:{risk_color};">{risk_pct}%</span></div>
   </div>
-  <div>
-    <div class="row"><span class="label">Base Premium</span><span class="value">${base_premium:,.2f}</span></div>
-    <div class="row"><span class="label">Indicated Premium</span><span class="value" style="font-weight:700;">${adjusted_premium:,.2f}</span></div>
-    <div class="row"><span class="label">Oracle Checks</span><span class="value">{oracle_findings_count}</span></div>
-    <div class="row"><span class="label">Reconciliation</span><span class="value">{recon_status.title()} ({match_pct or 0}% match)</span></div>
+  <div class="card">
+    <div class="kv-row"><span class="kv-label">Base Premium</span><span class="kv-value">${base_premium:,.2f}</span></div>
+    <div class="kv-row"><span class="kv-label">Indicated Premium</span><span class="kv-value" style="font-weight:700;">${adjusted_premium:,.2f}</span></div>
+    <div class="kv-row"><span class="kv-label">Oracle Checks</span><span class="kv-value">{oracle_findings_count}</span></div>
+    <div class="kv-row"><span class="kv-label">Reconciliation</span><span class="kv-value">{match_pct or 0}% match</span></div>
   </div>
 </div>
 
-<h2>Document Checklist</h2>
+<!-- ═══════════════════════════════════════════ DOCUMENTS ═══════════════════════════════════════════ -->
+<div class="section-title">Document Checklist</div>
 <div class="card" style="padding:0;">
   <table>
-    <thead><tr><th style="text-align:left;">Document</th><th style="text-align:right;">Status</th></tr></thead>
+    <thead><tr><th style="text-align:left;">Document</th><th style="text-align:right;width:90px;">Status</th></tr></thead>
     <tbody>{doc_rows}</tbody>
   </table>
 </div>
-<div class="meta" style="margin-top:4px;">Completeness: {completeness if completeness is not None else "—"}%</div>
+<div class="report-meta mt-8" style="margin-top:6px;">Completeness: {completeness_display} &mdash; {len(present_docs)} of {len(present_docs) + len(missing_docs)} required documents present</div>
 
-<h2>Key Findings</h2>
+<!-- ═══════════════════════════════════════════ KEY FINDINGS ═══════════════════════════════════════════ -->
+<div class="section-title">Key Findings</div>
 {findings_html}
 
-<h2>Premium Breakdown</h2>
+<!-- ═══════════════════════════════════════════ PRICING ═══════════════════════════════════════════ -->
+<div class="section-title">Premium Breakdown</div>
 <div class="card" style="padding:0;">
   <table>
+    <thead><tr><th style="text-align:left;">Component</th><th style="text-align:right;width:100px;">Amount / Factor</th></tr></thead>
     <tbody>{premium_rows}</tbody>
   </table>
 </div>
 
-<h2>Pricing Modifiers</h2>
-<div class="grid-2">
+<div class="grid-2 mt-8">
   <div class="card">
-    <div class="section-label">Base Rate</div>
-    <div class="row"><span class="label">ISO Loss Cost</span><span class="value">${meta.get("loss_cost", 0):.4f}/$100</span></div>
-    <div class="row"><span class="label">Rate per $100 TIV</span><span class="value">{quote_full.get("rate_per_100_tiv") or meta.get("rate_per_100_tiv") or "—"}</span></div>
+    <div class="findings-category" style="margin-top:0;">Base Rate</div>
+    <div class="kv-row"><span class="kv-label">ISO Loss Cost</span><span class="kv-value">${meta.get("loss_cost", 0):.4f}/$100</span></div>
+    <div class="kv-row"><span class="kv-label">Rate per $100 TIV</span><span class="kv-value">{quote_full.get("rate_per_100_tiv") or meta.get("rate_per_100_tiv") or "—"}</span></div>
   </div>
   <div class="card">
-    <div class="section-label">Modifiers</div>
-    <div class="row"><span class="label">COPE</span><span class="value">{meta.get("cope_mod_pct", 0):+.1f}%</span></div>
-    <div class="row"><span class="label">Market</span><span class="value">{meta.get("market_mod_pct", 0):+.1f}%</span></div>
-    <div class="row"><span class="label">Deductible</span><span class="value">{meta.get("deductible_credit", 0):+.1f}%</span></div>
-    <div class="row"><span class="label">Loss Experience</span><span class="value">{meta.get("loss_experience_mod_pct", 0):+.1f}%</span></div>
-    <div class="row"><span class="label">Tenure</span><span class="value">{meta.get("years_in_business_mod_pct", 0):+.1f}%</span></div>
+    <div class="findings-category" style="margin-top:0;">Modifiers</div>
+    <div class="kv-row"><span class="kv-label">COPE Schedule</span><span class="kv-value">{meta.get("cope_mod_pct", 0):+.1f}%</span></div>
+    <div class="kv-row"><span class="kv-label">Market Cycle</span><span class="kv-value">{meta.get("market_mod_pct", 0):+.1f}%</span></div>
+    <div class="kv-row"><span class="kv-label">Deductible</span><span class="kv-value">{meta.get("deductible_credit", 0):+.1f}%</span></div>
+    <div class="kv-row"><span class="kv-label">Loss Experience</span><span class="kv-value">{meta.get("loss_experience_mod_pct", 0):+.1f}%</span></div>
+    <div class="kv-row"><span class="kv-label">Years in Business</span><span class="kv-value">{meta.get("years_in_business_mod_pct", 0):+.1f}%</span></div>
   </div>
 </div>
 
-<h2>Reconciliation</h2>
-<div style="margin-bottom:8px;">{recon_html}</div>
-{"<p style='font-size:11px;color:#64748b;'>No discrepancies found.</p>" if not discrepancies else ""}
-
-<h2>Underwriting Recommendation</h2>
+<!-- ═══════════════════════════════════════════ RECONCILIATION ═══════════════════════════════════════════ -->
+<div class="section-title">Reconciliation</div>
 <div class="card">
-  <div class="row"><span class="label">Action</span><span class="value" style="font-weight:700;">{rec_action.title()}</span></div>
-  <div style="margin-top:8px;">
-    <div class="section-label">Conditions</div>
-    <ul>{conditions_html}</ul>
+  <div class="kv-row">
+    <span class="kv-label">Status</span>
+    <span class="kv-value">
+      <span class="inline-badge" style="background:{'#dcfce7' if recon_status == 'RECONCILIED' else '#fef3c7'};color:{'#16a34a' if recon_status == 'RECONCILIED' else '#d97706'};">{recon_status}</span>
+    </span>
   </div>
+  <div class="kv-row"><span class="kv-label">Field Match Rate</span><span class="kv-value">{match_pct or 0}%</span></div>
 </div>
 
-<h2>Provenance</h2>
-<div class="grid-2">
-  <div class="card">
-    <div class="row"><span class="label">Fields Tracked</span><span class="value">{prov_count}</span></div>
-    <div class="row"><span class="label">Verified</span><span class="value">{verified}</span></div>
+<!-- ═══════════════════════════════════════════ RECOMMENDATION ═══════════════════════════════════════════ -->
+<div class="section-title">Underwriting Recommendation</div>
+<div class="card">
+  <div class="kv-row">
+    <span class="kv-label">Action</span>
+    <span class="kv-value" style="font-weight:700;">{rec_action}</span>
   </div>
-  <div class="card">
-    <div class="section-label">Encryption</div>
-    <div class="row"><span class="label">At Rest</span><span class="value">{"Yes" if r.get("encryption_at_rest") else "No"}</span></div>
-    <div class="row"><span class="label">Audit Trail</span><span class="value">{r.get("audit_trail_entries", 0)} entries</span></div>
-  </div>
+  {"<div class='mt-8'><div class='findings-category' style='margin-top:0;'>Conditions</div><ul style='list-style:none;padding:0;'>" + "".join(f"<li style='padding:2px 0;font-size:11px;color:#475569;'>&mdash; {c}</li>" for c in rec_conditions) + "</ul></div>" if rec_conditions else '<div style="margin-top:6px;font-size:11px;color:#94a3b8;">No conditions</div>'}
 </div>
 
-<div class="footer">
-  <p>This report is generated by Rytera AI Underwriting Platform for informational purposes only.</p>
-  <p style="margin-top:2px;">It does not constitute a binder of insurance or a binding agreement.</p>
+<!-- ═══════════════════════════════════════════ FOOTER ═══════════════════════════════════════════ -->
+<div class="report-footer">
+  <p>This report is generated by the Rytera AI Underwriting Platform for informational purposes only.</p>
+  <p>It does not constitute a binder of insurance or a binding agreement.</p>
   <p style="margin-top:4px;font-weight:600;">Rytera &bull; {now}</p>
 </div>
 
 </body>
 </html>"""
+
+
+def _row(
+    label: str,
+    value: str,
+    *,
+    color: str = "#1e293b",
+    bold: bool = False,
+    border_top: bool = False,
+) -> str:
+    """Build a single premium breakdown table row."""
+    border = "border-top:2px solid #e2e8f0;" if border_top else ""
+    weight = "font-weight:700;" if bold else ""
+    return (
+        f'<tr><td style="padding:5px 8px;{border}">{label}</td>'
+        f'<td style="padding:5px 8px;text-align:right;color:{color};{weight}{border}">{value}</td></tr>'
+    )
 
 
 def html_to_pdf(html: str) -> bytes:
