@@ -104,7 +104,11 @@ class EntityResolver:
     def _compute_similarity(self, a: ProvenanceNode, b: ProvenanceNode) -> float:
         vec_a = self._embed(str(a.value))
         vec_b = self._embed(str(b.value))
-        return self._cosine_similarity(vec_a, vec_b)
+        sim = self._cosine_similarity(vec_a, vec_b)
+        if sim >= self.threshold:
+            return sim
+        # Fallback: token-overlap catches abbreviations like "Corp" vs "Corporation"
+        return max(sim, _string_similarity(str(a.value), str(b.value)))
 
     def _embed(self, text: str) -> list[float]:
         cached = self._vectors.get(text)
@@ -134,9 +138,49 @@ class EntityResolver:
         return dot / (na * nb)
 
 
+def _string_similarity(a: str, b: str) -> float:
+    """String similarity combining token overlap and prefix/substring checks.
+
+    Catches abbreviations like "Corp" vs "Corporation" and
+    "Manufacturing" vs "Mfg" by checking both directions.
+    """
+    a_clean = re.sub(r"[^a-z0-9]", "", a.lower())
+    b_clean = re.sub(r"[^a-z0-9]", "", b.lower())
+    if not a_clean or not b_clean:
+        return 0.0
+    # Exact match after cleaning
+    if a_clean == b_clean:
+        return 1.0
+    # One is a prefix of the other (catches "corp" in "corporation")
+    if a_clean.startswith(b_clean) or b_clean.startswith(a_clean):
+        shorter = min(len(a_clean), len(b_clean))
+        longer = max(len(a_clean), len(b_clean))
+        return shorter / longer
+    # Token-level overlap
+    sa = set(a.lower().split())
+    sb = set(b.lower().split())
+    if sa and sb:
+        token_sim = len(sa & sb) / len(sa | sb)
+        if token_sim > 0:
+            return token_sim
+
+    # Character n-gram Jaccard
+    def ngrams(s: str, n: int = 3) -> set[str]:
+        return {s[i : i + n] for i in range(len(s) - n + 1)}
+
+    ag = ngrams(a_clean)
+    bg = ngrams(b_clean)
+    if ag and bg:
+        return len(ag & bg) / len(ag | bg)
+    return 0.0
+
+
 def embedding_similarity(a: str, b: str, threshold: float = SIMILARITY_THRESHOLD) -> bool:
     resolver = EntityResolver(threshold=threshold)
     vec_a = resolver._embed(a)
     vec_b = resolver._embed(b)
     sim = resolver._cosine_similarity(vec_a, vec_b)
-    return sim >= threshold
+    if sim >= threshold:
+        return True
+    # Fallback: token-overlap catches abbreviations like "Corp" vs "Corporation"
+    return _string_similarity(a, b) >= threshold
