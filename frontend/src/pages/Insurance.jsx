@@ -19,7 +19,6 @@ export default function InsurancePage({ presets, jobs, onRunDemo, onOpenJob, onS
   const [photoFiles, setPhotoFiles] = useState([]);
   const [photoAnalysis, setPhotoAnalysis] = useState(null);
   const [photoLoading, setPhotoLoading] = useState(false);
-  const [showPhotoUpload, setShowPhotoUpload] = useState(false);
   const [retryingId, setRetryingId] = useState(null);
 
   const handleSubmit = async (payload) => {
@@ -150,86 +149,93 @@ export default function InsurancePage({ presets, jobs, onRunDemo, onOpenJob, onS
 
       {/* Property Photo Analysis */}
       <div className="glass-card p-5">
-        <button type="button" onClick={() => setShowPhotoUpload(!showPhotoUpload)}
-          className="flex items-center justify-between w-full text-left">
-          <div className="flex items-center gap-2">
-            <Camera className="h-4 w-4 text-brand" />
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Property Photo Analysis</p>
+        <div className="flex items-center gap-2 mb-4">
+          <Camera className="h-4 w-4 text-brand" />
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Property Photo Analysis</p>
+        </div>
+        <p className="text-xs text-slate-400 mb-4">
+          Upload property photos for AI-powered analysis — building condition, damage detection, satellite imagery, and risk assessment.
+        </p>
+
+        {!photoFiles.length && !photoAnalysis ? (
+          <label className="flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-white/[0.08] bg-surface-overlay/20 px-6 py-10 cursor-pointer transition hover:border-brand/30 hover:bg-surface-overlay/30">
+            <Upload className="h-8 w-8 text-slate-500" />
+            <div className="text-center">
+              <p className="text-sm font-medium text-slate-300">Click to upload photos</p>
+              <p className="text-xs text-slate-500 mt-1">JPG, PNG, WEBP — up to 10 photos at once</p>
+            </div>
+            <input type="file" accept="image/*" multiple onChange={handlePhotoUpload} className="hidden" />
+          </label>
+        ) : photoFiles.length > 0 && !photoAnalysis ? (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between rounded-lg border border-white/[0.06] bg-surface-overlay/20 px-4 py-3">
+              <span className="text-sm text-slate-300">{photoFiles.length} photo(s) selected</span>
+              <button type="button" onClick={() => setPhotoFiles([])} className="text-xs text-red-400/70 hover:text-red-400">Clear</button>
+            </div>
+            <button type="button" onClick={handleAnalyzePhotos} disabled={photoLoading}
+              className="w-full rounded-lg bg-brand/20 border border-brand/30 px-4 py-3 text-sm font-medium text-brand-light hover:bg-brand/30 transition disabled:opacity-50 flex items-center justify-center gap-2">
+              {photoLoading ? (
+                <><span className="animate-spin">⏳</span> Analyzing photos...</>
+              ) : (
+                <><Camera className="h-4 w-4" /> Analyze photos</>
+              )}
+            </button>
           </div>
-          <span className="text-xs text-slate-500">{showPhotoUpload ? 'Collapse' : 'Expand'}</span>
-        </button>
-        {showPhotoUpload && (
-          <div className="mt-4 space-y-4">
-            <p className="text-xs text-slate-400">
-              Upload property photos for AI-powered analysis: building condition, damage detection, satellite imagery, and risk assessment.
-            </p>
-            <div className="flex items-center gap-3">
-              <label className="flex items-center gap-2 rounded-lg border border-white/[0.06] bg-surface-overlay/30 px-4 py-2 text-sm text-slate-300 hover:border-brand/30 cursor-pointer transition">
-                <Upload className="h-4 w-4" />
-                Select photos
-                <input type="file" accept="image/*" multiple onChange={handlePhotoUpload} className="hidden" />
-              </label>
-              {photoFiles.length > 0 && (
-                <span className="text-xs text-slate-500">{photoFiles.length} photo(s) selected</span>
+        ) : photoAnalysis ? (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between rounded-lg border border-white/[0.06] bg-surface-overlay/20 px-4 py-3">
+              <span className="text-sm text-slate-300">{photoFiles.length} photo(s) analyzed</span>
+              <button type="button" onClick={() => { setPhotoFiles([]); setPhotoAnalysis(null); }} className="text-xs text-slate-500 hover:text-slate-300">New analysis</button>
+            </div>
+            <div className="rounded-lg border border-white/[0.06] bg-surface-overlay/20 p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-semibold text-slate-200">Analysis Results</h4>
+                <span className={`text-xs px-2 py-0.5 rounded-full ${
+                  photoAnalysis.overall_visual_risk === 'critical' ? 'bg-red-500/20 text-red-400' :
+                  photoAnalysis.overall_visual_risk === 'high' ? 'bg-orange-500/20 text-orange-400' :
+                  photoAnalysis.overall_visual_risk === 'moderate' ? 'bg-yellow-500/20 text-yellow-400' :
+                  'bg-green-500/20 text-green-400'
+                }`}>
+                  Risk: {photoAnalysis.overall_visual_risk}
+                </span>
+              </div>
+              <p className="text-xs text-slate-400">{photoAnalysis.processing_notes}</p>
+              <div className="grid grid-cols-3 gap-3 text-xs">
+                <div className="text-center">
+                  <p className="text-slate-500">Photos</p>
+                  <p className="text-lg font-bold text-slate-200">{photoAnalysis.analyzed_photos}/{photoAnalysis.total_photos}</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-slate-500">Damage</p>
+                  <p className="text-lg font-bold text-slate-200">{photoAnalysis.damage_count}</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-slate-500">Quality</p>
+                  <p className="text-lg font-bold text-slate-200">{photoAnalysis.overall_quality}</p>
+                </div>
+              </div>
+              {photoAnalysis.risk_factors?.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 mb-1">Risk Factors</p>
+                  {photoAnalysis.risk_factors.map((f, i) => (
+                    <div key={i} className="flex items-start gap-1 text-xs text-orange-400/80">
+                      <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0" />
+                      {f}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {photoAnalysis.recommendations?.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 mb-1">Recommendations</p>
+                  {photoAnalysis.recommendations.map((r, i) => (
+                    <p key={i} className="text-xs text-slate-400">&bull; {r}</p>
+                  ))}
+                </div>
               )}
             </div>
-            {photoFiles.length > 0 && (
-              <button type="button" onClick={handleAnalyzePhotos} disabled={photoLoading}
-                className="rounded-lg bg-brand/20 border border-brand/30 px-4 py-2 text-sm font-medium text-brand-light hover:bg-brand/30 transition disabled:opacity-50">
-                {photoLoading ? 'Analyzing...' : 'Analyze photos'}
-              </button>
-            )}
-            {photoAnalysis && (
-              <div className="rounded-lg border border-white/[0.06] bg-surface-overlay/20 p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-semibold text-slate-200">Analysis Results</h4>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${
-                    photoAnalysis.overall_visual_risk === 'critical' ? 'bg-red-500/20 text-red-400' :
-                    photoAnalysis.overall_visual_risk === 'high' ? 'bg-orange-500/20 text-orange-400' :
-                    photoAnalysis.overall_visual_risk === 'moderate' ? 'bg-yellow-500/20 text-yellow-400' :
-                    'bg-green-500/20 text-green-400'
-                  }`}>
-                    Risk: {photoAnalysis.overall_visual_risk}
-                  </span>
-                </div>
-                <p className="text-xs text-slate-400">{photoAnalysis.processing_notes}</p>
-                <div className="grid grid-cols-3 gap-3 text-xs">
-                  <div className="text-center">
-                    <p className="text-slate-500">Photos</p>
-                    <p className="text-lg font-bold text-slate-200">{photoAnalysis.analyzed_photos}/{photoAnalysis.total_photos}</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-slate-500">Damage</p>
-                    <p className="text-lg font-bold text-slate-200">{photoAnalysis.damage_count}</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-slate-500">Quality</p>
-                    <p className="text-lg font-bold text-slate-200">{photoAnalysis.overall_quality}</p>
-                  </div>
-                </div>
-                {photoAnalysis.risk_factors?.length > 0 && (
-                  <div>
-                    <p className="text-xs font-semibold text-slate-500 mb-1">Risk Factors</p>
-                    {photoAnalysis.risk_factors.map((f, i) => (
-                      <div key={i} className="flex items-start gap-1 text-xs text-orange-400/80">
-                        <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0" />
-                        {f}
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {photoAnalysis.recommendations?.length > 0 && (
-                  <div>
-                    <p className="text-xs font-semibold text-slate-500 mb-1">Recommendations</p>
-                    {photoAnalysis.recommendations.map((r, i) => (
-                      <p key={i} className="text-xs text-slate-400">• {r}</p>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
           </div>
-        )}
+        ) : null}
       </div>
 
       <InsuranceSourceHub onSubmit={handleSubmit} loading={loading} />
