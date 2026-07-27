@@ -56,6 +56,7 @@ class WormAuditStore:
         try:
             dest.chmod(0o444)
         except OSError:
+            logger.error("WORM audit trail: failed to set read-only permissions on %s", dest, exc_info=True)
             pass
 
         s3_uri = None

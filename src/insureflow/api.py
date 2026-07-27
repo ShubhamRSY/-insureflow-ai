@@ -1909,6 +1909,7 @@ def get_missing_documents(
             result = get_triage_agent().score_submission(bundle)
             checklist = result.document_checklist
         except Exception:
+            logger.warning("Triage agent scoring failed for bundle %s, falling back to job data", bundle_id, exc_info=True)
             pass
 
     if checklist is None:

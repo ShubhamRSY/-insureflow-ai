@@ -47,6 +47,7 @@ class LLMClient:
 
                 self._tracker = get_token_tracker()
             except Exception:
+                logger.warning("Failed to initialise token tracker", exc_info=True)
                 pass
         return self._tracker
 
@@ -57,6 +58,7 @@ class LLMClient:
 
                 self._budget = get_budget_manager()
             except Exception:
+                logger.warning("Failed to initialise budget manager", exc_info=True)
                 pass
         return self._budget
 
@@ -72,6 +74,7 @@ class LLMClient:
                 input_tokens = getattr(usage, "prompt_tokens", 0) or 0
                 output_tokens = getattr(usage, "completion_tokens", 0) or 0
         except Exception:
+            logger.warning("Failed to extract usage from LLM response", exc_info=True)
             pass
         if input_tokens > 0 or output_tokens > 0:
             tracker.record(

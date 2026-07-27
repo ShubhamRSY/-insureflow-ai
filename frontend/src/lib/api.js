@@ -152,8 +152,6 @@ export const endpoints = {
     const name = (cd.match(/filename="?(.+?)"?$/) || [])[1] || `Rytera_Report.${ext}`;
     return { blob, filename: name };
   },
-  deleteJob: (jobId) => api(`/pipeline/jobs/${jobId}`, { method: 'DELETE' }),
-
   // Insurance products & outcomes
   insuranceProducts: () => api('/pipeline/rating/products'),
   lossExperience: (body) => api('/pipeline/outcomes/loss-experience', { method: 'POST', body }),
@@ -198,9 +196,6 @@ export const endpoints = {
 
   // Admin
   createUser: (body) => api('/auth/users', { method: 'POST', body }),
-  
-  // Pipeline v2
-  runInsuranceV2: (body) => api('/pipeline/v2/run', { method: 'POST', body }),
 };
 
 export function fmtCurrency(n) {
