@@ -15,6 +15,7 @@ Environment variables:
 
 from __future__ import annotations
 
+import base64
 import email
 import imaplib
 import logging
@@ -90,18 +91,20 @@ def _extract_attachments(msg: Message) -> list[dict[str, str]]:
             continue
 
         payload = part.get_payload(decode=True)
-        if payload is None:
+        if payload is None or not isinstance(payload, bytes):
             continue
 
         if len(payload) > max_bytes:
-            logger.warning("Attachment %s exceeds %dMB limit, skipping", filename, MAX_ATTACHMENT_SIZE_MB)
+            logger.warning(
+                "Attachment %s exceeds %dMB limit, skipping",
+                filename,
+                MAX_ATTACHMENT_SIZE_MB,
+            )
             continue
 
         is_binary = ext in {".pdf", ".png", ".jpg", ".jpeg", ".tiff", ".bmp", ".tif"}
 
         if is_binary:
-            import base64
-
             docs.append(
                 {
                     "filename": filename,
@@ -159,44 +162,51 @@ class ImapConnection:
         if not self.is_configured:
             raise ConnectionError("IMAP not configured. Set IMAP_HOST, IMAP_USERNAME, and IMAP_PASSWORD environment variables.")
 
-        if self.use_ssl:
-            self._conn = imaplib.IMAP4_SSL(self.host, self.port)
-        else:
-            self._conn = imaplib.IMAP4(self.host, self.port)
+        host = str(self.host)
+        port = int(self.port) if self.port else 993
+        username = str(self.username)
+        password = str(self.password)
 
-        self._conn.login(self.username, self.password)
-        logger.info("Connected to %s as %s", self.host, self.username)
+        if self.use_ssl:
+            self._conn = imaplib.IMAP4_SSL(host, port)
+        else:
+            self._conn = imaplib.IMAP4(host, port)
+
+        self._conn.login(username, password)
+        logger.info("Connected to %s as %s", host, username)
 
     def select_mailbox(self) -> int:
         """Select the target mailbox and return the message count."""
         if self._conn is None:
             raise ConnectionError("Not connected")
-        status, data = self._conn.select(self.mailbox)
+        status, data = self._conn.select(str(self.mailbox))
         if status != "OK":
             raise ConnectionError(f"Failed to select mailbox {self.mailbox}: {data}")
-        return int(data[0])
+        raw = data[0] if data else b"0"
+        return int(raw) if raw else 0
 
     def search_unread(self) -> list[str]:
         """Search for unread message IDs in the selected mailbox."""
         if self._conn is None:
             raise ConnectionError("Not connected")
         status, data = self._conn.search(None, "UNSEEN")
-        if status != "OK":
+        if status != "OK" or not data:
             return []
-        return data[0].split()
+        raw: bytes = data[0] if data else b""
+        return [s.decode("ascii") for s in raw.split() if isinstance(s, bytes)]
 
     def search_all(self, limit: int = MAX_EMAILS) -> list[str]:
-        """Search for recent messages (newest first), limited to `limit`."""
+        """Search for recent messages (newest first), limited to ``limit``."""
         if self._conn is None:
             raise ConnectionError("Not connected")
         status, data = self._conn.search(None, "ALL")
-        if status != "OK":
+        if status != "OK" or not data:
             return []
-        all_ids = data[0].split()
-        # Return newest first, limited
+        raw: bytes = data[0] if data else b""
+        all_ids = [s.decode("ascii") for s in raw.split() if isinstance(s, bytes)]
         return all_ids[-limit:][::-1]
 
-    def fetch_message(self, msg_id: bytes) -> Message | None:
+    def fetch_message(self, msg_id: str) -> Message | None:
         """Fetch a single message by ID and return the parsed Message object."""
         if self._conn is None:
             raise ConnectionError("Not connected")
@@ -204,6 +214,8 @@ class ImapConnection:
         if status != "OK" or not data or not data[0]:
             return None
         raw_email = data[0][1]
+        if not isinstance(raw_email, bytes):
+            return None
         return email.message_from_bytes(raw_email)
 
     def close(self) -> None:
@@ -259,7 +271,7 @@ def pull_email_submissions(
             date_str = _parse_email_date(msg.get("Date"))
             attachments = _extract_attachments(msg)
 
-            email_entry = {
+            email_entry: dict[str, Any] = {
                 "id": f"email-{idx}",
                 "subject": subject,
                 "from": from_addr,
