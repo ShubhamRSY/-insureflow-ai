@@ -228,10 +228,10 @@ def pull_email_submissions(
     """Connect to IMAP, search for broker submission emails, extract attachments.
 
     Returns a dict with:
-        - documents: list of {filename, content, encoding} dicts
+        - emails: list of email metadata dicts, each with its own documents
+        - documents: flat list of all {filename, content, encoding} dicts
         - emails_found: number of emails scanned
         - documents_found: total attachment documents extracted
-        - subjects: list of email subjects found
     """
     conn = ImapConnection(mailbox=mailbox)
     if not conn.is_configured:
@@ -246,26 +246,49 @@ def pull_email_submissions(
         else:
             msg_ids = conn.search_all(limit=limit)
 
-        documents: list[dict[str, str]] = []
-        subjects: list[str] = []
+        emails: list[dict[str, Any]] = []
+        all_documents: list[dict[str, str]] = []
 
-        for msg_id in msg_ids[:limit]:
+        for idx, msg_id in enumerate(msg_ids[:limit]):
             msg = conn.fetch_message(msg_id)
             if msg is None:
                 continue
 
             subject = _decode_header_value(msg.get("Subject"))
-            subjects.append(subject)
-
+            from_addr = _decode_header_value(msg.get("From"))
+            date_str = _parse_email_date(msg.get("Date"))
             attachments = _extract_attachments(msg)
-            documents.extend(attachments)
+
+            email_entry = {
+                "id": f"email-{idx}",
+                "subject": subject,
+                "from": from_addr,
+                "date": date_str,
+                "attachment_count": len(attachments),
+                "documents": attachments,
+            }
+            emails.append(email_entry)
+            all_documents.extend(attachments)
 
         return {
-            "documents": documents,
+            "emails": emails,
+            "documents": all_documents,
             "emails_found": len(msg_ids),
-            "documents_found": len(documents),
-            "subjects": subjects,
+            "documents_found": len(all_documents),
         }
 
     finally:
         conn.close()
+
+
+def filter_emails_by_ids(
+    emails: list[dict[str, Any]],
+    selected_ids: list[str],
+) -> list[dict[str, str]]:
+    """Filter email list by IDs and return flat document list."""
+    selected = {eid for eid in selected_ids}
+    docs: list[dict[str, str]] = []
+    for email_entry in emails:
+        if email_entry["id"] in selected:
+            docs.extend(email_entry.get("documents", []))
+    return docs

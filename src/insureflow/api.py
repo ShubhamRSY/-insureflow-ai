@@ -628,7 +628,10 @@ def pull_insurance_source(
 
         # Real IMAP email connector — falls back to demo if not configured
         if source_id == "email-inbox":
-            from insureflow.ingestion.insurance.email_connector import ImapConnection, pull_email_submissions
+            from insureflow.ingestion.insurance.email_connector import (
+                ImapConnection,
+                pull_email_submissions,
+            )
 
             imap_conn = ImapConnection(mailbox=req.mailbox)
             if imap_conn.is_configured:
@@ -640,10 +643,10 @@ def pull_insurance_source(
                     "source_id": source_id,
                     "simulated": False,
                     "connection_label": f"Email › {req.mailbox or imap_conn.mailbox}",
+                    "emails": result["emails"],
                     "documents": result["documents"],
                     "file_count": result["documents_found"],
                     "emails_found": result["emails_found"],
-                    "subjects": result["subjects"],
                 }
             # Fallback to demo package when IMAP is not configured
             package_id = req.package_id or "pacific-coast"
@@ -692,6 +695,48 @@ def pull_insurance_source(
         raise HTTPException(status_code=404, detail=f"Unknown source: {source_id}")
     except FileNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
+
+
+class EmailFilterRequest(BaseModel):
+    email_ids: list[str]
+
+
+@app.post("/api/insurance/sources/email-inbox/filter")
+def filter_email_documents(
+    req: EmailFilterRequest,
+    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+) -> dict[str, Any]:
+    """Filter email documents by selected email IDs.
+
+    The frontend stores the full email list after pull, then calls this
+    endpoint with the IDs the user selected to get only those documents.
+    """
+    from insureflow.ingestion.insurance.email_connector import (
+        ImapConnection,
+        pull_email_submissions,
+    )
+
+    imap_conn = ImapConnection()
+    if not imap_conn.is_configured:
+        raise HTTPException(
+            status_code=503,
+            detail="Email integration not configured",
+        )
+
+    result = pull_email_submissions()
+    emails = result.get("emails", [])
+    selected = {eid for eid in req.email_ids}
+
+    filtered_docs: list[dict[str, str]] = []
+    for email_entry in emails:
+        if email_entry["id"] in selected:
+            filtered_docs.extend(email_entry.get("documents", []))
+
+    return {
+        "documents": filtered_docs,
+        "file_count": len(filtered_docs),
+        "emails_selected": len(selected),
+    }
 
 
 @app.post("/api/demo/mortgage/{preset_id}", status_code=202)

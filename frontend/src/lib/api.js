@@ -81,6 +81,7 @@ export const endpoints = {
   signOff: (bundleId, body) => api(`/pipeline/workflow/${bundleId}/sign-off`, { method: 'POST', body }),
   insuranceSources: () => api('/api/insurance/sources'),
   pullInsuranceSource: (sourceId, body = {}) => api(`/api/insurance/sources/${sourceId}/pull`, { method: 'POST', body }),
+  filterEmails: (emailIds) => api('/api/insurance/sources/email-inbox/filter', { method: 'POST', body: { email_ids: emailIds } }),
 
   // New v2 pipeline
   runInsuranceV2: (body) => api('/pipeline/v2/run', { method: 'POST', body }),
