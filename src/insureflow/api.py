@@ -601,7 +601,7 @@ def list_insurance_sources() -> dict[str, Any]:
 def pull_insurance_source(
     source_id: str,
     req: InsuranceSourcePullRequest,
-    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+    current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
     """Pull submission documents from a connected source (library, folder, or simulated cloud)."""
     from insureflow.ingestion.insurance.sources import (
@@ -693,7 +693,7 @@ class EmailFilterRequest(BaseModel):
 @app.post("/api/insurance/sources/email-inbox/filter")
 def filter_email_documents(
     req: EmailFilterRequest,
-    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+    current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
     """Filter email documents by selected email IDs.
 
@@ -828,7 +828,7 @@ async def run_pipeline(
     req: SubmissionRequest,
     background_tasks: BackgroundTasks,
     request: Request,
-    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+    current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
     job_id = f"job-{uuid.uuid4().hex[:12]}"
     job_store.set(INSURANCE_NS, job_id, {"status": "processing"}, org_id=current.org_id)
@@ -1125,7 +1125,7 @@ def bind_policy(
 @app.post("/pipeline/outcomes/loss-experience", status_code=201)
 def record_loss_experience(
     req: LossExperienceRequest,
-    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+    current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
     from insureflow.outcomes.feedback import FeedbackEngine
 
@@ -1328,7 +1328,7 @@ def list_release_experiments(
 @app.post("/releases/experiments", status_code=201)
 def start_release_experiment(
     req: ExperimentStartRequest,
-    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+    current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
     from evaluations.release_process import ExperimentStore
 
@@ -1350,7 +1350,7 @@ class ExperimentMetricsRequest(BaseModel):
 def log_experiment_metrics(
     run_id: str,
     req: ExperimentMetricsRequest,
-    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+    current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
     from evaluations.release_process import ExperimentStore
 
@@ -1746,7 +1746,7 @@ def list_underwriting_authorities(
 @app.post("/pipeline/renewal/{bundle_id}")
 def analyze_renewal(
     bundle_id: str,
-    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+    current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
     """Run renewal analysis on an existing policy."""
     from insureflow.underwriting.renewal import RenewalEngine
@@ -1791,7 +1791,7 @@ def create_premium_audit(
     policy_period_start: Optional[str] = None,
     policy_period_end: Optional[str] = None,
     policy_number: str = "",
-    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+    current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
     """Create a premium audit for end-of-year reconciliation."""
     engine = _get_audit_engine()
@@ -1816,7 +1816,7 @@ def add_audit_adjustment(
     adjustment_type: str,
     description: str,
     amount: float,
-    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+    current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
     """Add an adjustment to a premium audit."""
     from insureflow.underwriting.renewal import AuditAdjustmentType
@@ -1838,7 +1838,7 @@ def complete_premium_audit(
     actual_premium: float,
     audited_exposure: str = "",
     notes: str = "",
-    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+    current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
     """Complete a premium audit with actual figures."""
     engine = _get_audit_engine()
@@ -1871,7 +1871,7 @@ def list_premium_audits(
 
 @app.get("/pipeline/audits/material-adjustments")
 def material_audit_adjustments(
-    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+    current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
     """Audits with material adjustments needing UW review."""
     engine = _get_audit_engine()
@@ -1942,7 +1942,7 @@ def get_missing_documents(
 def request_broker_documents(
     bundle_id: str,
     body: dict[str, Any],
-    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+    current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
     """Request missing documents from broker (data quality gate)."""
     from insureflow.enterprise.ecosystem import get_ecosystem_service
@@ -1957,7 +1957,7 @@ def request_broker_documents(
 @app.post("/pipeline/vision/analyze")
 async def analyze_property_photos_endpoint(
     request: Request,
-    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+    current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
     """Upload and analyze property photos — quality scoring, damage detection, satellite imagery."""
     from insureflow.ml.vision.pipeline import PropertyPhotoAnalyzer
@@ -2018,7 +2018,7 @@ def ecosystem_bundle(
 def dispatch_loss_control(
     bundle_id: str,
     body: dict[str, Any] | None = None,
-    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+    current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
     from insureflow.enterprise.ecosystem import get_ecosystem_service
 
@@ -2031,7 +2031,7 @@ def resolve_checkpoint(
     bundle_id: str,
     checkpoint_id: str,
     body: dict[str, Any],
-    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+    current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
     from insureflow.enterprise.ecosystem import get_ecosystem_service
 
@@ -2274,7 +2274,7 @@ def _dispatch_mortgage_celery(job_id: str, request: MortgageSubmissionRequest, o
 async def run_mortgage_pipeline(
     req: MortgageSubmissionRequest,
     background_tasks: BackgroundTasks,
-    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+    current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
     job_id = req.bundle_id or f"mortgage-job-{uuid.uuid4().hex[:12]}"
     job_store.set(MORTGAGE_NS, job_id, {"status": "processing"}, org_id=current.org_id)
@@ -2382,7 +2382,7 @@ def register_webhook(
 
 
 @app.get("/mortgage/webhooks")
-def list_webhooks(current: TokenData = Depends(require_role(Role.ADMIN))) -> dict[str, Any]:
+def list_webhooks(current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
     from insureflow.mortgage.webhooks import webhook_dispatcher
 
     subs = webhook_dispatcher.list_for_org(current.org_id)
@@ -2462,7 +2462,7 @@ class BrokerShareRequest(BaseModel):
 def create_broker_share(
     bundle_id: str,
     req: BrokerShareRequest,
-    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+    current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, str]:
     """Generate a shareable broker status link for this bundle."""
     from insureflow.webhooks.dispatcher import webhook_dispatcher
@@ -2515,7 +2515,7 @@ def register_insurance_webhook(
 
 @app.get("/webhooks/insurance")
 def list_insurance_webhooks(
-    current: TokenData = Depends(require_role(Role.ADMIN)),
+    current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
     from insureflow.webhooks.dispatcher import webhook_dispatcher
 
@@ -2677,7 +2677,7 @@ class PipelineConfigRequest(BaseModel):
 async def run_pipeline_v2(
     req: PipelineConfigRequest,
     background_tasks: BackgroundTasks,
-    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+    current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
     """Enhanced pipeline run with appetite filter, oracles, portfolio, and core integration."""
     job_id = f"job-{uuid.uuid4().hex[:12]}"
@@ -2858,7 +2858,7 @@ def create_registry_version(
 @app.post("/registry/versions/{entry_id}/submit")
 def submit_registry_version(
     entry_id: str,
-    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+    current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
     from insureflow.registry import RegistryService
 
@@ -2994,7 +2994,7 @@ def document_analytics(
 @app.post("/lending/pipeline/run", status_code=200)
 def run_lending_pipeline(
     req: LendingSubmissionRequest,
-    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+    current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
     """Run lending underwriting for a business or consumer loan application."""
     from insureflow.lending import LendingPipeline
@@ -3241,7 +3241,7 @@ async def run_pipeline_row_level(
     req: SubmissionRequest,
     background_tasks: BackgroundTasks,
     request: Request,
-    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+    current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
     """Pipeline run with enforced org isolation — jobs always scoped to caller's org."""
     job_id = f"job-{uuid.uuid4().hex[:12]}"
