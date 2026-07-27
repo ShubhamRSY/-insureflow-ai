@@ -138,25 +138,56 @@ class EntityResolver:
         return dot / (na * nb)
 
 
+ABBREVIATIONS: dict[str, str] = {
+    "corp": "corporation",
+    "inc": "incorporated",
+    "llc": "limitedliabilitycompany",
+    "ltd": "limited",
+    "mfg": "manufacturing",
+    "mfr": "manufacturing",
+    "co": "company",
+    "mgt": "management",
+    "assoc": "associates",
+    "intl": "international",
+    "dev": "development",
+    "maint": "maintenance",
+}
+
+
+def _expand_abbreviations(text: str) -> str:
+    """Expand known business abbreviations in a cleaned string."""
+    words = re.split(r"[^a-z0-9]", text.lower())
+    expanded = []
+    for w in words:
+        expanded.append(ABBREVIATIONS.get(w, w))
+    return "".join(expanded)
+
+
 def _string_similarity(a: str, b: str) -> float:
-    """String similarity combining token overlap and prefix/substring checks.
+    """String similarity combining token overlap, abbreviation expansion, and n-gram checks.
 
     Catches abbreviations like "Corp" vs "Corporation" and
-    "Manufacturing" vs "Mfg" by checking both directions.
+    "Manufacturing" vs "Mfg" by expanding known abbreviations
+    before comparing.
     """
     a_clean = re.sub(r"[^a-z0-9]", "", a.lower())
     b_clean = re.sub(r"[^a-z0-9]", "", b.lower())
     if not a_clean or not b_clean:
         return 0.0
-    # Exact match after cleaning
     if a_clean == b_clean:
         return 1.0
-    # One is a prefix of the other (catches "corp" in "corporation")
-    if a_clean.startswith(b_clean) or b_clean.startswith(a_clean):
-        shorter = min(len(a_clean), len(b_clean))
-        longer = max(len(a_clean), len(b_clean))
-        return shorter / longer
-    # Token-level overlap
+
+    a_expanded = _expand_abbreviations(a)
+    b_expanded = _expand_abbreviations(b)
+    if a_expanded == b_expanded:
+        return 1.0
+
+    if a_expanded.startswith(b_expanded) or b_expanded.startswith(a_expanded):
+        shorter = min(len(a_expanded), len(b_expanded))
+        longer = max(len(a_expanded), len(b_expanded))
+        if shorter / longer >= 0.85:
+            return shorter / longer
+
     sa = set(a.lower().split())
     sb = set(b.lower().split())
     if sa and sb:
@@ -164,12 +195,11 @@ def _string_similarity(a: str, b: str) -> float:
         if token_sim > 0:
             return token_sim
 
-    # Character n-gram Jaccard
     def ngrams(s: str, n: int = 3) -> set[str]:
         return {s[i : i + n] for i in range(len(s) - n + 1)}
 
-    ag = ngrams(a_clean)
-    bg = ngrams(b_clean)
+    ag = ngrams(a_expanded)
+    bg = ngrams(b_expanded)
     if ag and bg:
         return len(ag & bg) / len(ag | bg)
     return 0.0
