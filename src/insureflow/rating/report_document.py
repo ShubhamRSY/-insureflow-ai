@@ -380,10 +380,6 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
 </div>
 <div class="report-meta mt-8" style="margin-top:6px;">Completeness: {completeness_display} &mdash; {len(present_docs)} of {len(present_docs) + len(missing_docs)} required documents present</div>
 
-<!-- ═══════════════════════════════════════════ KEY FINDINGS ═══════════════════════════════════════════ -->
-<div class="section-title">Key Findings</div>
-{findings_html}
-
 <!-- ═══════════════════════════════════════════ PRICING ═══════════════════════════════════════════ -->
 <div class="section-title">Premium Breakdown</div>
 <div class="card" style="padding:0;">
@@ -430,6 +426,10 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
   </div>
   {_render_conditions(rec_conditions)}
 </div>
+
+<!-- ═══════════════════════════════════════════ KEY FINDINGS ═══════════════════════════════════════════ -->
+<div class="section-title">Key Findings</div>
+{findings_html}
 
 <!-- ═══════════════════════════════════════════ FOOTER ═══════════════════════════════════════════ -->
 <div class="report-footer">
