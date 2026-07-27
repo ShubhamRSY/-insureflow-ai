@@ -448,9 +448,6 @@ class InsuranceSourcePullRequest(BaseModel):
     host: Optional[str] = None
     environment: Optional[str] = None
     unread_only: Optional[bool] = None
-    imap_host: Optional[str] = None
-    imap_username: Optional[str] = None
-    imap_password: Optional[str] = None
 
 
 @app.get("/health")
@@ -629,58 +626,29 @@ def pull_insurance_source(
                 "file_count": len(documents),
             }
 
-        # Real IMAP email connector — uses user-provided credentials from the UI
+        # Real IMAP email connector — credentials from env vars (admin-configured)
         if source_id == "email-inbox":
             from insureflow.ingestion.insurance.email_connector import (
                 ImapConnection,
                 pull_email_submissions,
             )
 
-            imap_host = req.imap_host
-            imap_username = req.imap_username
-            imap_password = req.imap_password
-            mailbox_name = req.mailbox or "INBOX"
-
-            # User provided credentials in the UI config form
-            if imap_host and imap_username and imap_password:
-                result = pull_email_submissions(
-                    host=imap_host,
-                    username=imap_username,
-                    password=imap_password,
-                    mailbox=mailbox_name,
-                    unread_only=bool(req.unread_only),
-                )
+            conn = ImapConnection()
+            if conn.is_configured:
+                result = pull_email_submissions()
                 return {
                     "source_id": source_id,
                     "simulated": False,
-                    "connection_label": f"Email › {imap_username}",
+                    "connection_label": f"Email › {conn.username}",
                     "emails": result["emails"],
                     "documents": result["documents"],
                     "file_count": result["documents_found"],
                     "emails_found": result["emails_found"],
                 }
 
-            # Fallback: env vars (for Railway / server-level config)
-            env_conn = ImapConnection(mailbox=mailbox_name)
-            if env_conn.is_configured:
-                result = pull_email_submissions(
-                    mailbox=mailbox_name,
-                    unread_only=bool(req.unread_only),
-                )
-                return {
-                    "source_id": source_id,
-                    "simulated": False,
-                    "connection_label": f"Email › {env_conn.username}",
-                    "emails": result["emails"],
-                    "documents": result["documents"],
-                    "file_count": result["documents_found"],
-                    "emails_found": result["emails_found"],
-                }
-
-            # No credentials at all — return error
             raise HTTPException(
-                status_code=400,
-                detail="Enter IMAP credentials (server, email, password) to connect to your mailbox.",
+                status_code=503,
+                detail="Email integration not configured. Admin must set IMAP_HOST, IMAP_USERNAME, IMAP_PASSWORD.",
             )
 
         if source_id in DEMO_CONNECTORS:

@@ -91,14 +91,9 @@ DEMO_CONNECTORS: dict[str, dict[str, Any]] = {
         "name": "Email Inbox",
         "type": "email",
         "category": "Submission Intake",
-        "description": "Connect any IMAP mailbox to pull broker submission attachments",
-        "config_fields": [
-            {"key": "imap_host", "label": "IMAP Server", "placeholder": "imap.gmail.com"},
-            {"key": "imap_username", "label": "Email Address", "placeholder": "you@gmail.com"},
-            {"key": "imap_password", "label": "Password / App Password", "placeholder": "xxxx-xxxx-xxxx-xxxx"},
-            {"key": "mailbox", "label": "Mailbox (optional)", "placeholder": "INBOX"},
-        ],
-        "label": lambda req: f"Email › {req.imap_username or req.mailbox or 'connect'}",
+        "description": "Pull broker submission attachments from the configured mailbox",
+        "config_fields": [],
+        "label": lambda req: "Email Inbox",
     },
     "sftp": {
         "name": "SFTP / Broker Portal",
