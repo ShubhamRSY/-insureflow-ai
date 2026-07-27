@@ -236,16 +236,20 @@ def pull_email_submissions(
     mailbox: str | None = None,
     unread_only: bool = False,
     limit: int = MAX_EMAILS,
+    host: str | None = None,
+    username: str | None = None,
+    password: str | None = None,
 ) -> dict[str, Any]:
     """Connect to IMAP, search for broker submission emails, extract attachments.
 
-    Returns a dict with:
-        - emails: list of email metadata dicts, each with its own documents
-        - documents: flat list of all {filename, content, encoding} dicts
-        - emails_found: number of emails scanned
-        - documents_found: total attachment documents extracted
+    Credentials can be passed directly (from UI) or read from env vars.
     """
-    conn = ImapConnection(mailbox=mailbox)
+    conn = ImapConnection(
+        host=host,
+        username=username,
+        password=password,
+        mailbox=mailbox,
+    )
     if not conn.is_configured:
         raise ConnectionError("Email integration not configured. Set IMAP_HOST, IMAP_USERNAME, and IMAP_PASSWORD in your environment.")
 

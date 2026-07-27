@@ -91,9 +91,14 @@ DEMO_CONNECTORS: dict[str, dict[str, Any]] = {
         "name": "Email Inbox",
         "type": "email",
         "category": "Submission Intake",
-        "description": "Poll submissions@yourmga.com for broker attachments",
-        "config_fields": [{"key": "mailbox", "label": "Mailbox", "placeholder": "submissions@insureflow.demo"}],
-        "label": lambda req: req.mailbox or "submissions@insureflow.demo",
+        "description": "Connect any IMAP mailbox to pull broker submission attachments",
+        "config_fields": [
+            {"key": "imap_host", "label": "IMAP Server", "placeholder": "imap.gmail.com"},
+            {"key": "imap_username", "label": "Email Address", "placeholder": "you@gmail.com"},
+            {"key": "imap_password", "label": "Password / App Password", "placeholder": "xxxx-xxxx-xxxx-xxxx"},
+            {"key": "mailbox", "label": "Mailbox (optional)", "placeholder": "INBOX"},
+        ],
+        "label": lambda req: f"Email › {req.imap_username or req.mailbox or 'connect'}",
     },
     "sftp": {
         "name": "SFTP / Broker Portal",

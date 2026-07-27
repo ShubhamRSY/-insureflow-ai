@@ -448,6 +448,9 @@ class InsuranceSourcePullRequest(BaseModel):
     host: Optional[str] = None
     environment: Optional[str] = None
     unread_only: Optional[bool] = None
+    imap_host: Optional[str] = None
+    imap_username: Optional[str] = None
+    imap_password: Optional[str] = None
 
 
 @app.get("/health")
@@ -626,41 +629,59 @@ def pull_insurance_source(
                 "file_count": len(documents),
             }
 
-        # Real IMAP email connector — falls back to demo if not configured
+        # Real IMAP email connector — uses user-provided credentials from the UI
         if source_id == "email-inbox":
             from insureflow.ingestion.insurance.email_connector import (
                 ImapConnection,
                 pull_email_submissions,
             )
 
-            imap_conn = ImapConnection(mailbox=req.mailbox)
-            if imap_conn.is_configured:
+            imap_host = req.imap_host
+            imap_username = req.imap_username
+            imap_password = req.imap_password
+            mailbox_name = req.mailbox or "INBOX"
+
+            # User provided credentials in the UI config form
+            if imap_host and imap_username and imap_password:
                 result = pull_email_submissions(
-                    mailbox=req.mailbox,
+                    host=imap_host,
+                    username=imap_username,
+                    password=imap_password,
+                    mailbox=mailbox_name,
                     unread_only=bool(req.unread_only),
                 )
                 return {
                     "source_id": source_id,
                     "simulated": False,
-                    "connection_label": f"Email › {req.mailbox or imap_conn.mailbox}",
+                    "connection_label": f"Email › {imap_username}",
                     "emails": result["emails"],
                     "documents": result["documents"],
                     "file_count": result["documents_found"],
                     "emails_found": result["emails_found"],
                 }
-            # Fallback to demo package when IMAP is not configured
-            package_id = req.package_id or "pacific-coast"
-            documents = load_package(EXAMPLES_DIR, package_id)
-            meta = INSURANCE_PACKAGES[package_id]
-            return {
-                "source_id": source_id,
-                "simulated": True,
-                "connection_label": f"Email (demo) › {req.mailbox or 'submissions@insureflow.demo'}",
-                "package_id": package_id,
-                "package_name": meta["name"],
-                "documents": documents,
-                "file_count": len(documents),
-            }
+
+            # Fallback: env vars (for Railway / server-level config)
+            env_conn = ImapConnection(mailbox=mailbox_name)
+            if env_conn.is_configured:
+                result = pull_email_submissions(
+                    mailbox=mailbox_name,
+                    unread_only=bool(req.unread_only),
+                )
+                return {
+                    "source_id": source_id,
+                    "simulated": False,
+                    "connection_label": f"Email › {env_conn.username}",
+                    "emails": result["emails"],
+                    "documents": result["documents"],
+                    "file_count": result["documents_found"],
+                    "emails_found": result["emails_found"],
+                }
+
+            # No credentials at all — return error
+            raise HTTPException(
+                status_code=400,
+                detail="Enter IMAP credentials (server, email, password) to connect to your mailbox.",
+            )
 
         if source_id in DEMO_CONNECTORS:
             package_id = req.package_id or "pacific-coast"
