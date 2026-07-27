@@ -45,8 +45,74 @@ class JSONBrokerParser(BaseParser):
         "zip": ["zip", "zipCode", "postalCode", "postcode"],
     }
 
+    @staticmethod
+    def _normalize_acord_flat_keys(data: dict[str, Any]) -> dict[str, Any]:
+        """Convert ACORD flat keys (ACORD_Policy_Insured1_Name) to nested structure."""
+        if not any(k.startswith("ACORD_") for k in data):
+            return data
+
+        normalized: dict[str, Any] = {}
+
+        for key, val in data.items():
+            if key.startswith("_") or not key.startswith("ACORD_"):
+                normalized[key] = val
+                continue
+
+            parts = key.split("_", 2)
+            if len(parts) < 3:
+                continue
+            category = parts[1]
+            remainder = "_".join(parts[2:])
+
+            if category == "Policy":
+                if remainder.startswith("Insured"):
+                    insured = normalized.setdefault("insured", {})
+                    if "Name" in remainder:
+                        insured.setdefault("legalName", val)
+                    elif "MailingAddress" in remainder:
+                        insured.setdefault("address", val)
+                    elif "SIC" in remainder:
+                        insured.setdefault("sicCode", val)
+                elif "EffectiveDate" in remainder:
+                    normalized.setdefault("policy", {})["effectiveDate"] = val
+                elif "ExpirationDate" in remainder:
+                    normalized.setdefault("policy", {})["expirationDate"] = val
+                elif "PolicyPremium" in remainder:
+                    pass
+                elif "Number" in remainder:
+                    normalized.setdefault("policy", {})["policyNumber"] = val
+            elif category == "Agency":
+                broker = normalized.setdefault("broker", {})
+                broker.setdefault("agencyName", val)
+            elif category == "Carrier":
+                pass
+            elif category == "NatureOfBusiness":
+                if "Description" in remainder:
+                    normalized.setdefault("risk", {})["businessDescription"] = val
+
+        raw_locations = data.get("locations", {})
+        if isinstance(raw_locations, dict):
+            loc_list = []
+            for loc_key, loc_data in raw_locations.items():
+                if isinstance(loc_data, dict):
+                    flat_loc: dict[str, Any] = {}
+                    if "address" in loc_data:
+                        flat_loc["address"] = loc_data["address"]
+                    if "sqft" in loc_data:
+                        flat_loc["squareFootage"] = loc_data["sqft"]
+                    if "year_built" in loc_data:
+                        flat_loc["yearBuilt"] = loc_data["year_built"]
+                    if "construction" in loc_data:
+                        flat_loc["construction"] = loc_data["construction"]
+                    loc_list.append(flat_loc)
+            if loc_list:
+                normalized["locations"] = loc_list
+
+        return normalized
+
     def parse(self, raw_json: str, submission_id: str) -> StructuredSubmission:
         data = json.loads(raw_json)
+        data = self._normalize_acord_flat_keys(data)
         submission = StructuredSubmission(
             submission_id=submission_id,
             source="broker_api_json",

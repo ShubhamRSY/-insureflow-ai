@@ -1,0 +1,91 @@
+{
+    "_meta": {
+        "generated": "2026-01-15",
+        "version": "v1",
+        "description": "Example input for acord-filler. All data is fictional."
+    },
+    "ACORD_AgencyName": "Alliance Risk Insurance Services LLC\n250 West 57th Street, Suite 1301\nNew York, NY 10107",
+    "ACORD_CarrierName": "Example Surplus Company",
+    "ACORD_PolicyNumber": "CCP-0000000",
+    "ACORD_Policy_EffectiveDate": "06/01/2026",
+    "ACORD_Policy_ExpirationDate": "06/01/2027",
+    "ACORD_Policy_Insured1_Name": "Acme Industrial LLC",
+    "ACORD_Policy_Insured1_MailingAddress": "123 Main Street, Anytown, TX 77000",
+    "ACORD_Policy_Insured1_SIC": "5065",
+    "ACORD_NatureOfBusiness_Description": "Industrial Equipment Distribution - Sales, storage, repair/service",
+    "ACORD_Policy_PolicyPremium": "35,000.00",
+    "entity_type": "llc",
+    "transaction_type": "quote",
+    "locations": {
+        "loc1": {
+            "premises": "1",
+            "building": "1",
+            "address": "123 Main Street, Anytown, TX 77000",
+            "county": "Example",
+            "description": "Industrial Equip Dist - Sales/Storage/Service",
+            "sqft": 6000,
+            "stories": 1,
+            "basements": 0,
+            "year_built": 2013,
+            "construction": "NC",
+            "roof": "Built-up",
+            "protection_class": "5",
+            "interest": "owner",
+            "limit": 1000000,
+            "coinsurance": 80,
+            "valuation": "RC",
+            "cause_of_loss": "Spcl excl Theft",
+            "deductible": 2500,
+            "ded_type": "Flat",
+            "exposures": {
+                "front": {"desc": "Comm bldg", "dist": "30"},
+                "rear": {"desc": "Comm bldg", "dist": "60"},
+                "right": {"desc": "Road/resid", "dist": "100"},
+                "left": {"desc": "Comm bldg", "dist": "30"}
+            }
+        },
+        "loc2": {
+            "premises": "2",
+            "building": "1",
+            "address": "456 Commerce Drive, Somewhere, TX 77001",
+            "county": "Example",
+            "description": "Industrial Equip Dist - Warehouse",
+            "sqft": 8000,
+            "stories": 1,
+            "basements": 0,
+            "year_built": 2022,
+            "construction": "NC",
+            "roof": "Metal SSM",
+            "protection_class": "1",
+            "interest": "owner",
+            "limit": 850000,
+            "coinsurance": 80,
+            "valuation": "RC",
+            "cause_of_loss": "Spcl incl Theft",
+            "deductible": 2500,
+            "ded_type": "Flat",
+            "exposures": {
+                "front": {"desc": "Parking/road", "dist": "50"},
+                "rear": {"desc": "Open field", "dist": "300+"},
+                "right": {"desc": "Open land/road", "dist": "25"},
+                "left": {"desc": "Comm warehouse", "dist": "150"}
+            }
+        }
+    },
+    "prior_carrier": {
+        "carrier": "Example Surplus Company",
+        "policy_number": "CCP-0000000",
+        "premium": "35,000",
+        "effective": "06/01/2025",
+        "expiration": "06/01/2026"
+    },
+    "general_info_all_no": true,
+    "loss_history_none": true,
+    "broker_notes": [
+        "Loc 2 building limit of $850K may be below replacement cost — estimate $1.2-1.8M based on NC construction at $150-225/sqft for 8,000 sqft",
+        "Theft excluded at Location 1 — significant gap if equipment stored on-site",
+        "No BPP scheduled — confirm if landlord-only or if tenant COIs cover contents",
+        "No Business Income or Equipment Breakdown — recommend quoting at renewal",
+        "Surplus lines placement — consider admitted market alternatives for cost savings"
+    ]
+}
