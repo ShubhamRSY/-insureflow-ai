@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, FileCheck, ExternalLink, FileText, RefreshCw } from 'lucide-react';
+import { ArrowLeft, FileCheck, ExternalLink, FileText, RefreshCw, Camera, AlertTriangle } from 'lucide-react';
 import { endpoints } from '../lib/api';
 import SubmissionJourney from '../components/SubmissionJourney';
 import InsuranceMemoView from '../components/InsuranceMemoView';
@@ -138,6 +138,57 @@ export default function InsuranceJobDetail() {
       {/* Content */}
       <div className="mx-auto max-w-7xl px-6 py-6">
         <SubmissionJourney job={job} />
+
+        {!processing && job.results?.visual_analysis && (
+          <div className="mt-6 rounded-xl bg-surface-overlay p-5 ring-1 ring-white/[0.04]">
+            <div className="flex items-center gap-2 mb-4">
+              <Camera className="h-4 w-4 text-brand" />
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Visual Analysis</p>
+              <span className={`ml-auto text-xs px-2 py-0.5 rounded-full ${
+                job.results.visual_analysis.overall_visual_risk === 'critical' ? 'bg-red-500/20 text-red-400' :
+                job.results.visual_analysis.overall_visual_risk === 'high' ? 'bg-orange-500/20 text-orange-400' :
+                job.results.visual_analysis.overall_visual_risk === 'moderate' ? 'bg-yellow-500/20 text-yellow-400' :
+                'bg-green-500/20 text-green-400'
+              }`}>
+                Risk: {job.results.visual_analysis.overall_visual_risk}
+              </span>
+            </div>
+            <p className="text-xs text-slate-400 mb-3">{job.results.visual_analysis.processing_notes}</p>
+            <div className="grid grid-cols-3 gap-3 mb-3">
+              <div className="text-center rounded-lg bg-black/20 py-2">
+                <p className="text-[10px] text-slate-500 uppercase">Photos</p>
+                <p className="text-lg font-bold text-slate-200">{job.results.visual_analysis.analyzed_photos}/{job.results.visual_analysis.total_photos}</p>
+              </div>
+              <div className="text-center rounded-lg bg-black/20 py-2">
+                <p className="text-[10px] text-slate-500 uppercase">Damage</p>
+                <p className="text-lg font-bold text-slate-200">{job.results.visual_analysis.damage_count}</p>
+              </div>
+              <div className="text-center rounded-lg bg-black/20 py-2">
+                <p className="text-[10px] text-slate-500 uppercase">Quality</p>
+                <p className="text-lg font-bold text-slate-200">{job.results.visual_analysis.overall_quality}</p>
+              </div>
+            </div>
+            {job.results.visual_analysis.risk_factors?.length > 0 && (
+              <div className="mb-3">
+                <p className="text-xs font-semibold text-slate-500 mb-1">Risk Factors</p>
+                {job.results.visual_analysis.risk_factors.map((f, i) => (
+                  <div key={i} className="flex items-start gap-1 text-xs text-orange-400/80">
+                    <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0" />
+                    {f}
+                  </div>
+                ))}
+              </div>
+            )}
+            {job.results.visual_analysis.recommendations?.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-slate-500 mb-1">Recommendations</p>
+                {job.results.visual_analysis.recommendations.map((r, i) => (
+                  <p key={i} className="text-xs text-slate-400">&bull; {r}</p>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {!processing && (
           <div className="mt-6">
