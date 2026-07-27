@@ -448,6 +448,7 @@ class InsuranceSourcePullRequest(BaseModel):
     host: Optional[str] = None
     environment: Optional[str] = None
     unread_only: Optional[bool] = None
+    bundle_id: Optional[str] = None  # accumulate into existing draft bundle
 
 
 @app.get("/health")
@@ -603,7 +604,13 @@ def pull_insurance_source(
     req: InsuranceSourcePullRequest,
     current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
-    """Pull submission documents from a connected source (library, folder, or simulated cloud)."""
+    """Pull submission documents from a connected source (library, folder, or simulated cloud).
+
+    If ``bundle_id`` is provided in the request, pulled documents are accumulated
+    into that draft bundle instead of being returned as loose data.  This enables
+    multi-source intake: pull from email → accumulate → pull from S3 → accumulate
+    → run the pipeline with everything.
+    """
     from insureflow.ingestion.insurance.sources import (
         DEMO_CONNECTORS,
         INSURANCE_PACKAGES,
@@ -612,11 +619,37 @@ def pull_insurance_source(
         simulated_connection_label,
     )
 
+    def _accumulate(
+        documents: list[dict[str, str]],
+        source_id_val: str,
+        connection_label: str,
+    ) -> dict[str, Any] | None:
+        """If bundle_id is set, push documents into the draft bundle."""
+        if not req.bundle_id:
+            return None
+        from insureflow.storage.draft_bundle_store import get_draft_bundle_store
+
+        store = get_draft_bundle_store()
+        bundle = store.add_documents(
+            req.bundle_id,
+            documents,
+            source_id=source_id_val,
+            connection_label=connection_label,
+            org_id=current.org_id,
+        )
+        if not bundle:
+            return None
+        return {
+            "bundle_id": bundle["bundle_id"],
+            "document_count": len(bundle.get("documents", [])),
+            "added": len(documents),
+        }
+
     try:
         if source_id in INSURANCE_PACKAGES:
             documents = load_package(EXAMPLES_DIR, source_id)
             meta = INSURANCE_PACKAGES[source_id]
-            return {
+            result: dict[str, Any] = {
                 "source_id": source_id,
                 "simulated": False,
                 "connection_label": meta["name"],
@@ -625,6 +658,10 @@ def pull_insurance_source(
                 "documents": documents,
                 "file_count": len(documents),
             }
+            accum = _accumulate(documents, source_id, meta["name"])
+            if accum:
+                result["accumulated"] = accum
+            return result
 
         # Real IMAP email connector — credentials from env vars (admin-configured)
         if source_id == "email-inbox":
@@ -635,16 +672,21 @@ def pull_insurance_source(
 
             conn = ImapConnection()
             if conn.is_configured:
-                result = pull_email_submissions()
-                return {
+                pull_result = pull_email_submissions()
+                label = f"Email › {conn.username}"
+                result = {
                     "source_id": source_id,
                     "simulated": False,
-                    "connection_label": f"Email › {conn.username}",
-                    "emails": result["emails"],
-                    "documents": result["documents"],
-                    "file_count": result["documents_found"],
-                    "emails_found": result["emails_found"],
+                    "connection_label": label,
+                    "emails": pull_result["emails"],
+                    "documents": pull_result["documents"],
+                    "file_count": pull_result["documents_found"],
+                    "emails_found": pull_result["emails_found"],
                 }
+                accum = _accumulate(pull_result["documents"], source_id, label)
+                if accum:
+                    result["accumulated"] = accum
+                return result
 
             raise HTTPException(
                 status_code=503,
@@ -655,15 +697,20 @@ def pull_insurance_source(
             package_id = req.package_id or "pacific-coast"
             documents = load_package(EXAMPLES_DIR, package_id)
             meta = INSURANCE_PACKAGES[package_id]
-            return {
+            label = simulated_connection_label(source_id, req)
+            result = {
                 "source_id": source_id,
                 "simulated": True,
-                "connection_label": simulated_connection_label(source_id, req),
+                "connection_label": label,
                 "package_id": package_id,
                 "package_name": meta["name"],
                 "documents": documents,
                 "file_count": len(documents),
             }
+            accum = _accumulate(documents, source_id, label)
+            if accum:
+                result["accumulated"] = accum
+            return result
 
         if source_id == "server-folder":
             raw = req.path or "examples"
@@ -673,13 +720,18 @@ def pull_insurance_source(
             if not str(directory).startswith(str(PROJECT_ROOT.resolve())):
                 raise HTTPException(status_code=400, detail="Path must be under project root")
             documents = load_directory(directory)
-            return {
+            label = str(directory)
+            result = {
                 "source_id": source_id,
                 "simulated": False,
-                "connection_label": str(directory),
+                "connection_label": label,
                 "documents": documents,
                 "file_count": len(documents),
             }
+            accum = _accumulate(documents, source_id, label)
+            if accum:
+                result["accumulated"] = accum
+            return result
 
         raise HTTPException(status_code=404, detail=f"Unknown source: {source_id}")
     except FileNotFoundError as exc:
@@ -726,6 +778,182 @@ def filter_email_documents(
         "file_count": len(filtered_docs),
         "emails_selected": len(selected),
     }
+
+
+# ── Draft Bundle Endpoints (multi-source intake) ─────────────────────
+
+
+class DraftBundleCreateRequest(BaseModel):
+    name: str = ""
+
+
+class DraftBundleAddDocsRequest(BaseModel):
+    documents: list[InsuranceDocumentPayload]
+    source_id: str = ""
+    connection_label: str = ""
+
+
+@app.get("/pipeline/bundles")
+def list_draft_bundles(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    from insureflow.storage.draft_bundle_store import get_draft_bundle_store
+
+    store = get_draft_bundle_store()
+    bundles = store.list_all(org_id=current.org_id)
+    # Return summaries without document content (large payloads)
+    summaries = []
+    for b in bundles:
+        summaries.append(
+            {
+                "bundle_id": b["bundle_id"],
+                "name": b.get("name", ""),
+                "status": b.get("status", ""),
+                "document_count": len(b.get("documents", [])),
+                "sources": list({d.get("source_id", "") for d in b.get("documents", []) if d.get("source_id")}),
+                "created_at": b.get("created_at", ""),
+                "updated_at": b.get("updated_at", ""),
+            }
+        )
+    return {"bundles": summaries}
+
+
+@app.post("/pipeline/bundles", status_code=201)
+def create_draft_bundle(
+    req: DraftBundleCreateRequest,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    from insureflow.storage.draft_bundle_store import get_draft_bundle_store
+
+    store = get_draft_bundle_store()
+    bundle = store.create(org_id=current.org_id, name=req.name)
+    return {
+        "bundle_id": bundle["bundle_id"],
+        "name": bundle["name"],
+        "status": bundle["status"],
+        "document_count": 0,
+    }
+
+
+@app.get("/pipeline/bundles/{bundle_id}")
+def get_draft_bundle(
+    bundle_id: str,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    from insureflow.storage.draft_bundle_store import get_draft_bundle_store
+
+    store = get_draft_bundle_store()
+    bundle = store.get(bundle_id, org_id=current.org_id)
+    if not bundle:
+        raise HTTPException(status_code=404, detail="Draft bundle not found")
+    # Return without document content for the list view
+    return {
+        "bundle_id": bundle["bundle_id"],
+        "name": bundle.get("name", ""),
+        "status": bundle.get("status", ""),
+        "documents": [
+            {
+                "doc_id": d["doc_id"],
+                "filename": d["filename"],
+                "source_id": d.get("source_id", ""),
+                "connection_label": d.get("connection_label", ""),
+                "added_at": d.get("added_at", ""),
+            }
+            for d in bundle.get("documents", [])
+        ],
+        "document_count": len(bundle.get("documents", [])),
+        "created_at": bundle.get("created_at", ""),
+        "updated_at": bundle.get("updated_at", ""),
+    }
+
+
+@app.post("/pipeline/bundles/{bundle_id}/documents")
+def add_documents_to_draft(
+    bundle_id: str,
+    req: DraftBundleAddDocsRequest,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    from insureflow.storage.draft_bundle_store import get_draft_bundle_store
+
+    store = get_draft_bundle_store()
+    docs = [{"filename": d.filename, "content": d.content, "encoding": d.encoding} for d in req.documents]
+    bundle = store.add_documents(
+        bundle_id,
+        docs,
+        source_id=req.source_id,
+        connection_label=req.connection_label,
+        org_id=current.org_id,
+    )
+    if not bundle:
+        raise HTTPException(status_code=404, detail="Draft bundle not found")
+    return {
+        "bundle_id": bundle["bundle_id"],
+        "document_count": len(bundle.get("documents", [])),
+        "added": len(docs),
+    }
+
+
+@app.delete("/pipeline/bundles/{bundle_id}/documents/{doc_id}")
+def remove_document_from_draft(
+    bundle_id: str,
+    doc_id: str,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    from insureflow.storage.draft_bundle_store import get_draft_bundle_store
+
+    store = get_draft_bundle_store()
+    bundle = store.remove_document(bundle_id, doc_id, org_id=current.org_id)
+    if not bundle:
+        raise HTTPException(status_code=404, detail="Draft bundle not found")
+    return {
+        "bundle_id": bundle["bundle_id"],
+        "document_count": len(bundle.get("documents", [])),
+    }
+
+
+@app.delete("/pipeline/bundles/{bundle_id}")
+def delete_draft_bundle(
+    bundle_id: str,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, str]:
+    from insureflow.storage.draft_bundle_store import get_draft_bundle_store
+
+    store = get_draft_bundle_store()
+    deleted = store.delete(bundle_id, org_id=current.org_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Draft bundle not found")
+    return {"detail": "deleted"}
+
+
+@app.post("/pipeline/bundles/{bundle_id}/run", status_code=202)
+def run_draft_bundle(
+    bundle_id: str,
+    background_tasks: BackgroundTasks,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+    use_llm: bool = True,
+) -> dict[str, Any]:
+    """Execute the pipeline using all accumulated documents in a draft bundle."""
+    from insureflow.storage.draft_bundle_store import DRAFT_NS, get_draft_bundle_store
+
+    store = get_draft_bundle_store()
+    docs = store.to_pipeline_documents(bundle_id, org_id=current.org_id)
+    if not docs:
+        raise HTTPException(status_code=400, detail="Draft bundle has no documents")
+
+    job_id = f"job-{uuid.uuid4().hex[:12]}"
+    job_store.set(INSURANCE_NS, job_id, {"status": "processing"}, org_id=current.org_id)
+
+    req = SubmissionRequest(documents=[InsuranceDocumentPayload(**d) for d in docs], use_llm=use_llm)
+    background_tasks.add_task(_run_pipeline_task, job_id, req, current.org_id)
+
+    # Mark draft as submitted
+    bundle = store.get(bundle_id, org_id=current.org_id)
+    if bundle:
+        bundle["status"] = "submitted"
+        bundle["submitted_job_id"] = job_id
+        store._store.set(DRAFT_NS, bundle_id, bundle, org_id=current.org_id)
+
+    return {"job_id": job_id, "status": "processing", "bundle_id": bundle_id}
 
 
 @app.post("/api/demo/mortgage/{preset_id}", status_code=202)

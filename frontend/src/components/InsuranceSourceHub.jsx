@@ -1,13 +1,14 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Cloud, FolderOpen, Database, FileText, CheckCircle2, Loader2, ChevronDown,
   Building2, PenLine, MessageSquare, Briefcase, Link2, Package, Inbox,
   ArrowLeftRight, Warehouse, Mail, Check,
 } from 'lucide-react';
 import { endpoints } from '../lib/api';
-import { buildSubmissionPayload, validatePackage, detectDocType } from '../lib/insuranceDocs';
+import { detectDocType } from '../lib/insuranceDocs';
 import { groupSourcesByCategory } from '../lib/connectorBrands';
 import ConnectorLogo from './ConnectorLogo';
+import DocumentAccumulator from './DocumentAccumulator';
 
 const SECTION_ICONS = {
   package: Package,
@@ -104,11 +105,15 @@ export default function InsuranceSourceHub({ onSubmit, loading }) {
   const [connected, setConnected] = useState(null);
   const [emails, setEmails] = useState([]);
   const [selectedEmailIds, setSelectedEmailIds] = useState(new Set());
-  const [files, setFiles] = useState([]);
   const [pulling, setPulling] = useState(false);
   const [useLlm, setUseLlm] = useState(true);
   const [error, setError] = useState('');
   const [showManual, setShowManual] = useState(false);
+
+  // Draft bundle state (persistent across source switches)
+  const [bundleId, setBundleId] = useState(null);
+  const [bundleDocs, setBundleDocs] = useState([]);
+  const [bundleLoading, setBundleLoading] = useState(false);
 
   const sections = useMemo(() => groupSourcesByCategory(sources), [sources]);
   const activeSection = sections.find((s) => s.id === categoryId) || sections[0];
@@ -146,30 +151,52 @@ export default function InsuranceSourceHub({ onSubmit, loading }) {
 
   useState(() => { loadSources(); }, []);
 
+  // Ensure a draft bundle exists
+  const ensureBundle = async () => {
+    if (bundleId) return bundleId;
+    try {
+      const result = await endpoints.createDraftBundle('New submission');
+      setBundleId(result.bundle_id);
+      return result.bundle_id;
+    } catch (e) {
+      setError(e.message);
+      return null;
+    }
+  };
+
+  // Refresh bundle documents from server
+  const refreshBundle = async (bid) => {
+    if (!bid) return;
+    try {
+      const detail = await endpoints.getDraftBundle(bid);
+      setBundleDocs(detail.documents || []);
+    } catch { /* noop */ }
+  };
+
+  // Pull source and accumulate into draft bundle
   const pullSource = async (sourceId, cfg) => {
     setPulling(true);
     setError('');
     try {
-      const result = await endpoints.pullInsuranceSource(sourceId, cfg);
+      const bid = await ensureBundle();
+      if (!bid) return;
+
+      const pullCfg = { ...cfg, bundle_id: bid };
+      const result = await endpoints.pullInsuranceSource(sourceId, pullCfg);
+
       setConnected(result);
 
-      // Email source returns emails metadata
+      // If email source, show email picker for selection
       if (result.emails?.length) {
         setEmails(result.emails);
-        // Auto-select all emails by default
         const allIds = new Set(result.emails.map((e) => e.id));
         setSelectedEmailIds(allIds);
-        const mapped = rebuildFilesFromSelection(result.emails, allIds);
-        setFiles(mapped);
-      } else {
-        // Non-email source: map documents directly
-        const mapped = (result.documents || []).map((d, i) => ({
-          ...d,
-          id: `${d.filename}-${i}`,
-          slot: detectDocType(d.filename, d.encoding === 'utf-8' ? d.content.slice(0, 4000) : ''),
-        }));
-        setFiles(mapped);
+        // For emails, we accumulate the full set initially — user can then deselect
+        // The pull already accumulated all docs into the bundle
       }
+
+      // Refresh bundle doc list from server
+      await refreshBundle(bid);
     } catch (e) {
       setError(e.message);
     } finally {
@@ -183,7 +210,6 @@ export default function InsuranceSourceHub({ onSubmit, loading }) {
     setConnected(null);
     setEmails([]);
     setSelectedEmailIds(new Set());
-    setFiles([]);
     setConfig({});
     if (source.type === 'library') {
       await pullSource(source.id, {});
@@ -196,11 +222,12 @@ export default function InsuranceSourceHub({ onSubmit, loading }) {
     setConnected(null);
     setEmails([]);
     setSelectedEmailIds(new Set());
-    setFiles([]);
     setConfig({});
     setError('');
+    // NOTE: bundle state is NOT cleared — documents persist across source switches
   };
 
+  // Email selection: re-pull with filtered email IDs into the bundle
   const handleToggleEmail = (emailId) => {
     setSelectedEmailIds((prev) => {
       const next = new Set(prev);
@@ -209,8 +236,6 @@ export default function InsuranceSourceHub({ onSubmit, loading }) {
       } else {
         next.add(emailId);
       }
-      const mapped = rebuildFilesFromSelection(emails, next);
-      setFiles(mapped);
       return next;
     });
   };
@@ -218,12 +243,44 @@ export default function InsuranceSourceHub({ onSubmit, loading }) {
   const handleSelectAllEmails = () => {
     if (selectedEmailIds.size === emails.length) {
       setSelectedEmailIds(new Set());
-      setFiles([]);
     } else {
-      const allIds = new Set(emails.map((e) => e.id));
-      setSelectedEmailIds(allIds);
-      const mapped = rebuildFilesFromSelection(emails, allIds);
-      setFiles(mapped);
+      setSelectedEmailIds(new Set(emails.map((e) => e.id)));
+    }
+  };
+
+  // After email selection changes, re-filter: remove old email docs, add selected
+  const handleEmailConfirm = async () => {
+    if (!bundleId || !isEmailSource) return;
+    setPulling(true);
+    try {
+      // Filter emails via API
+      const selectedIds = Array.from(selectedEmailIds);
+      if (selectedIds.length === 0) {
+        // Remove all email docs from bundle
+        const detail = await endpoints.getDraftBundle(bundleId);
+        for (const doc of (detail.documents || [])) {
+          if (doc.source_id === 'email-inbox') {
+            await endpoints.removeDocFromDraft(bundleId, doc.doc_id).catch(() => {});
+          }
+        }
+      } else {
+        const result = await endpoints.filterEmails(selectedIds);
+        // Remove old email docs, add new ones
+        const detail = await endpoints.getDraftBundle(bundleId);
+        for (const doc of (detail.documents || [])) {
+          if (doc.source_id === 'email-inbox') {
+            await endpoints.removeDocFromDraft(bundleId, doc.doc_id).catch(() => {});
+          }
+        }
+        if (result.documents?.length) {
+          await endpoints.addDocsToDraft(bundleId, result.documents, 'email-inbox', connected?.connection_label || 'Email');
+        }
+      }
+      await refreshBundle(bundleId);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setPulling(false);
     }
   };
 
@@ -232,16 +289,70 @@ export default function InsuranceSourceHub({ onSubmit, loading }) {
     pullSource(activeSource.id, config);
   };
 
-  const handleSubmit = async () => {
-    const validation = validatePackage(files);
-    if (validation) { setError(validation); return; }
-    setError('');
-    await onSubmit(buildSubmissionPayload(files, useLlm));
-    setFiles([]);
-    setConnected(null);
-    setActiveSource(null);
-    setEmails([]);
-    setSelectedEmailIds(new Set());
+  const handleRemoveDoc = async (bid, docId) => {
+    try {
+      await endpoints.removeDocFromDraft(bid, docId);
+      await refreshBundle(bid);
+    } catch (e) {
+      setError(e.message);
+    }
+  };
+
+  const handleClearAll = async (bid) => {
+    try {
+      await endpoints.deleteDraftBundle(bid);
+      setBundleId(null);
+      setBundleDocs([]);
+      setConnected(null);
+      setActiveSource(null);
+      setEmails([]);
+      setSelectedEmailIds(new Set());
+    } catch (e) {
+      setError(e.message);
+    }
+  };
+
+  const handleRunPipeline = async (bid, llm) => {
+    try {
+      const result = await endpoints.runDraftBundle(bid, llm);
+      // Reset state after successful run
+      setBundleId(null);
+      setBundleDocs([]);
+      setConnected(null);
+      setActiveSource(null);
+      setEmails([]);
+      setSelectedEmailIds(new Set());
+      // Trigger parent refresh
+      await onSubmit?.({ _jobId: result.job_id });
+    } catch (e) {
+      setError(e.message);
+    }
+  };
+
+  const handleManualUpload = async (e) => {
+    const { readFileForUpload, detectDocType: detect } = await import('../lib/insuranceDocs');
+    const incoming = await Promise.all(
+      Array.from(e.target.files || []).map(async (file) => {
+        const doc = await readFileForUpload(file);
+        return {
+          filename: doc.filename,
+          content: doc.content,
+          encoding: doc.encoding,
+        };
+      }),
+    );
+    if (!incoming.length) return;
+
+    const bid = await ensureBundle();
+    if (!bid) return;
+
+    try {
+      await endpoints.addDocsToDraft(bid, incoming, 'manual-upload', 'Manual upload');
+      await refreshBundle(bid);
+      setConnected({ connection_label: 'Manual upload', file_count: incoming.length });
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   return (
@@ -252,7 +363,7 @@ export default function InsuranceSourceHub({ onSubmit, loading }) {
             <Link2 className="h-5 w-5 text-insurance" />
             <div>
               <h3 className="font-semibold">Connect input source</h3>
-              <p className="text-xs text-slate-500">Pick a category, then choose your provider</p>
+              <p className="text-xs text-slate-500">Pull from one or more sources — documents accumulate until you run</p>
             </div>
           </div>
           <div className="min-w-[220px]">
@@ -323,52 +434,79 @@ export default function InsuranceSourceHub({ onSubmit, loading }) {
           <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4">
             <div className="flex items-center gap-2 text-emerald-400">
               <CheckCircle2 className="h-5 w-5" />
-              <span className="font-semibold text-sm">Connected · {connected.connection_label}</span>
+              <span className="font-semibold text-sm">
+                {connected.accumulated
+                  ? `Added ${connected.accumulated.added} doc(s) to bundle`
+                  : `Connected · ${connected.connection_label}`}
+              </span>
             </div>
             <p className="mt-1 text-xs text-slate-400">
-              {connected.file_count} document{connected.file_count !== 1 ? 's' : ''} ready
+              {connected.accumulated
+                ? `${connected.accumulated.document_count} total document(s) in bundle`
+                : `${connected.file_count} document${connected.file_count !== 1 ? 's' : ''} ready`}
               {isEmailSource && hasEmails && ` from ${selectedCount} email(s)`}
             </p>
           </div>
         )}
 
         {connected && isEmailSource && hasEmails && (
-          <EmailPicker
-            emails={emails}
-            selectedIds={selectedEmailIds}
-            onToggle={handleToggleEmail}
-            onSelectAll={handleSelectAllEmails}
-          />
+          <div className="space-y-3">
+            <EmailPicker
+              emails={emails}
+              selectedIds={selectedEmailIds}
+              onToggle={handleToggleEmail}
+              onSelectAll={handleSelectAllEmails}
+            />
+            <button
+              type="button"
+              onClick={handleEmailConfirm}
+              disabled={pulling}
+              className="btn-primary btn-sm"
+            >
+              {pulling ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Update selection'}
+            </button>
+          </div>
         )}
 
-        {connected && files.length > 0 && (
-          <div className="rounded-xl border border-white/[0.06] bg-surface-overlay/20 p-3">
-            <p className="text-xs font-semibold text-slate-500 mb-2">Documents</p>
-            <ul className="max-h-40 space-y-1 overflow-y-auto">
-              {files.map((f) => (
-                <li key={f.id} className="flex items-center gap-2 px-2 py-1 text-xs">
-                  <FileText className="h-3.5 w-3.5 shrink-0 text-insurance" />
-                  <span className="truncate text-slate-300">{f.filename}</span>
-                  {f.email_subject && (
-                    <span className="truncate text-[10px] text-slate-600">from: {f.email_subject}</span>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
+        {/* Persistent document accumulator — survives source switches */}
+        {bundleId && (
+          <DocumentAccumulator
+            bundleId={bundleId}
+            documents={bundleDocs}
+            onRemove={handleRemoveDoc}
+            onRunPipeline={handleRunPipeline}
+            onClearAll={handleClearAll}
+            loading={loading}
+            useLlm={useLlm}
+            onToggleLlm={setUseLlm}
+          />
         )}
 
         {error && <p className="rounded-xl bg-red-500/10 px-4 py-2 text-sm text-red-300">{error}</p>}
 
-        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-white/[0.06] pt-4">
-          <label className="flex items-center gap-2 text-sm text-slate-400">
-            <input type="checkbox" checked={useLlm} onChange={(e) => setUseLlm(e.target.checked)} className="rounded" />
-            LLM enhancement
-          </label>
-          <button type="button" onClick={handleSubmit} disabled={loading || !files.length} className="btn-primary">
-            {loading ? 'Submitting…' : 'Run underwriting pipeline'}
-          </button>
-        </div>
+        {/* Legacy quick-run for single-source flow (no bundle) */}
+        {!bundleId && (
+          <div className="flex items-center justify-between border-t border-white/[0.06] pt-4">
+            <label className="flex items-center gap-2 text-sm text-slate-400">
+              <input type="checkbox" checked={useLlm} onChange={(e) => setUseLlm(e.target.checked)} className="rounded" />
+              LLM enhancement
+            </label>
+            <button
+              type="button"
+              onClick={async () => {
+                // Fallback: create bundle and run immediately
+                const bid = await ensureBundle();
+                if (bid && bundleDocs.length > 0) {
+                  handleRunPipeline(bid, useLlm);
+                }
+              }}
+              disabled={loading || !bundleDocs.length}
+              className="btn-primary"
+            >
+              {loading ? 'Submitting…' : 'Run underwriting pipeline'}
+            </button>
+          </div>
+        )}
 
         <button
           type="button"
@@ -387,21 +525,7 @@ export default function InsuranceSourceHub({ onSubmit, loading }) {
               multiple
               className="hidden"
               accept=".xml,.json,.pdf,.txt,.md"
-              onChange={async (e) => {
-                const { readFileForUpload, detectDocType } = await import('../lib/insuranceDocs');
-                const incoming = await Promise.all(
-                  Array.from(e.target.files || []).map(async (file) => {
-                    const doc = await readFileForUpload(file);
-                    return {
-                      ...doc,
-                      id: file.name,
-                      slot: detectDocType(file.name, doc.encoding === 'utf-8' ? doc.content.slice(0, 4000) : ''),
-                    };
-                  }),
-                );
-                setFiles(incoming);
-                setConnected({ connection_label: 'Manual upload', file_count: incoming.length });
-              }}
+              onChange={handleManualUpload}
             />
           </label>
         )}

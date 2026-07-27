@@ -83,6 +83,18 @@ export const endpoints = {
   pullInsuranceSource: (sourceId, body = {}) => api(`/api/insurance/sources/${sourceId}/pull`, { method: 'POST', body }),
   filterEmails: (emailIds) => api('/api/insurance/sources/email-inbox/filter', { method: 'POST', body: { email_ids: emailIds } }),
 
+  // Draft bundles (multi-source intake)
+  draftBundles: () => api('/pipeline/bundles'),
+  createDraftBundle: (name = '') => api('/pipeline/bundles', { method: 'POST', body: { name } }),
+  getDraftBundle: (id) => api(`/pipeline/bundles/${id}`),
+  addDocsToDraft: (id, documents, sourceId = '', connectionLabel = '') =>
+    api(`/pipeline/bundles/${id}/documents`, { method: 'POST', body: { documents, source_id: sourceId, connection_label: connectionLabel } }),
+  removeDocFromDraft: (bundleId, docId) =>
+    api(`/pipeline/bundles/${bundleId}/documents/${docId}`, { method: 'DELETE' }),
+  deleteDraftBundle: (id) => api(`/pipeline/bundles/${id}`, { method: 'DELETE' }),
+  runDraftBundle: (id, useLlm = true) =>
+    api(`/pipeline/bundles/${id}/run?use_llm=${useLlm}`, { method: 'POST' }),
+
   // New v2 pipeline
   runInsuranceV2: (body) => api('/pipeline/v2/run', { method: 'POST', body }),
 
