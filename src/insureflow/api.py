@@ -447,6 +447,7 @@ class InsuranceSourcePullRequest(BaseModel):
     mailbox: Optional[str] = None
     host: Optional[str] = None
     environment: Optional[str] = None
+    unread_only: Optional[bool] = None
 
 
 @app.get("/health")
@@ -620,6 +621,39 @@ def pull_insurance_source(
                 "simulated": False,
                 "connection_label": meta["name"],
                 "package_id": source_id,
+                "package_name": meta["name"],
+                "documents": documents,
+                "file_count": len(documents),
+            }
+
+        # Real IMAP email connector — falls back to demo if not configured
+        if source_id == "email-inbox":
+            from insureflow.ingestion.insurance.email_connector import ImapConnection, pull_email_submissions
+
+            imap_conn = ImapConnection(mailbox=req.mailbox)
+            if imap_conn.is_configured:
+                result = pull_email_submissions(
+                    mailbox=req.mailbox,
+                    unread_only=bool(req.unread_only),
+                )
+                return {
+                    "source_id": source_id,
+                    "simulated": False,
+                    "connection_label": f"Email › {req.mailbox or imap_conn.mailbox}",
+                    "documents": result["documents"],
+                    "file_count": result["documents_found"],
+                    "emails_found": result["emails_found"],
+                    "subjects": result["subjects"],
+                }
+            # Fallback to demo package when IMAP is not configured
+            package_id = req.package_id or "pacific-coast"
+            documents = load_package(EXAMPLES_DIR, package_id)
+            meta = INSURANCE_PACKAGES[package_id]
+            return {
+                "source_id": source_id,
+                "simulated": True,
+                "connection_label": f"Email (demo) › {req.mailbox or 'submissions@insureflow.demo'}",
+                "package_id": package_id,
                 "package_name": meta["name"],
                 "documents": documents,
                 "file_count": len(documents),
