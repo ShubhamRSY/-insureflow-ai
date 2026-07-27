@@ -6,10 +6,10 @@ from uuid import uuid4
 
 from insureflow.models.agents import UnderwritingMemo
 from insureflow.models.submissions import SubmissionBundle
-from insureflow.rating.models import InsuranceLine, QuoteRequest, QuoteResult, RateComponent
+from insureflow.rating.models import InsuranceLine, QuoteRequest, QuoteResult, RateComponent, RatingAdapter
 
 
-class StubPolicyAdminAdapter:
+class StubPolicyAdminAdapter(RatingAdapter):
     """Deterministic stub for Guidewire/Duck Creek-style policy admin integration."""
 
     def submit_quote(self, request: QuoteRequest, memo: UnderwritingMemo, bundle: SubmissionBundle) -> QuoteResult:

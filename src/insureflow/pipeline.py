@@ -106,8 +106,8 @@ class UnderwritingPipeline:
             from insureflow.analytics.metrics import get_pipeline_metrics
 
             get_pipeline_metrics().cycle_time.start_pipeline(resolved_bundle_id)
-        except Exception:
-            pass
+        except Exception as exc:
+            logging.getLogger(__name__).debug("Pipeline metrics init failed: %s", exc)
 
         result = self.graph.run(state)
 

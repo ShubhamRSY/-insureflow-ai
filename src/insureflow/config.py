@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -8,13 +9,15 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+logger = logging.getLogger(__name__)
+
 # Pull bank secrets from AWS before Settings snapshots env (no-op without ARN).
 try:
     from insureflow.security.secrets_loader import load_secrets_from_aws
 
     load_secrets_from_aws()
-except Exception:
-    pass
+except Exception as exc:
+    logger.warning("AWS secrets loading failed (non-fatal): %s", exc)
 
 
 @dataclass(frozen=True)

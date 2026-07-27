@@ -191,5 +191,8 @@ class PgVectorStore(VectorStore):
                 input=text[:8000],
             )
             return resp.data[0].embedding
-        except Exception:
+        except Exception as exc:
+            import logging as _log
+
+            _log.getLogger(__name__).warning("OpenAI embedding failed, using zero vector: %s", exc)
             return [0.0] * 1536

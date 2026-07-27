@@ -5,8 +5,7 @@ from typing import Any
 
 from insureflow.models.agents import UnderwritingMemo
 from insureflow.models.submissions import SubmissionBundle
-from insureflow.rating.adapters.stub import StubPolicyAdminAdapter
-from insureflow.rating.models import InsuranceLine, QuoteRequest, QuoteResult, RateComponent
+from insureflow.rating.models import InsuranceLine, QuoteRequest, QuoteResult, RateComponent, RatingAdapter
 from insureflow.underwriting.cope import COPERatingEngine
 from insureflow.underwriting.market import get_market_cycle
 
@@ -144,8 +143,12 @@ class InsuranceRatingEngine:
 
     EXPENSE_CONSTANT: float = 75.0  # Flat policy fee
 
-    def __init__(self, adapter: StubPolicyAdminAdapter | None = None) -> None:
-        self.adapter = adapter or StubPolicyAdminAdapter()
+    def __init__(self, adapter: RatingAdapter | None = None) -> None:
+        if adapter is None:
+            from insureflow.rating.adapters.iso_adapter import ISORatingAdapter
+
+            adapter = ISORatingAdapter()
+        self.adapter = adapter
         self._cope = COPERatingEngine()
         self._market = get_market_cycle()
 

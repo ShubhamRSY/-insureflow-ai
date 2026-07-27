@@ -29,8 +29,10 @@ def _get_metrics() -> Any:
             from insureflow.analytics.metrics import get_pipeline_metrics
 
             _metrics = get_pipeline_metrics()
-        except Exception:
-            pass
+        except Exception as exc:
+            import logging as _log
+
+            _log.getLogger(__name__).debug("Pipeline metrics unavailable: %s", exc)
     return _metrics
 
 
@@ -794,8 +796,10 @@ def _log_event(
                 message=message,
             )
             entries.append(entry.model_dump())
-        except Exception:
-            pass
+        except Exception as exc:
+            import logging as _log
+
+            _log.getLogger(__name__).warning("Audit entry creation failed: %s", exc)
     else:
         _AUDIT_LOGGER.log(
             bundle_or_state,

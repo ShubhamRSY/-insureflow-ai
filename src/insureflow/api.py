@@ -314,8 +314,11 @@ def auth_sso_login() -> dict[str, str]:
 
 @app.post("/auth/sso/callback")
 def auth_sso_callback(payload: dict[str, Any]) -> dict[str, Any]:
-    """OIDC callback stub — exchanges code once JWKS validation is wired to the bank IdP."""
+    """OIDC callback — exchanges code, validates JWKS, issues local app JWT."""
+    from insureflow.auth.jwt import create_access_token
+    from insureflow.auth.models import Role
     from insureflow.auth.sso import exchange_code_for_claims, sso_status
+    from insureflow.auth.store import get_user_store
 
     if not sso_status().get("enabled"):
         raise HTTPException(status_code=404, detail="SSO is not configured")
@@ -323,7 +326,36 @@ def auth_sso_callback(payload: dict[str, Any]) -> dict[str, Any]:
     if not code:
         raise HTTPException(status_code=400, detail="Missing authorization code")
     claims = exchange_code_for_claims(code)
-    return {"claims": claims, "access_token": None, "note": "Complete JWKS validation before issuing app JWTs"}
+
+    if claims.get("status") != "validated" or not claims.get("email"):
+        return {"claims": claims, "access_token": None, "error": claims.get("status", "unknown")}
+
+    email = claims["email"]
+    username = claims.get("sub", email.split("@")[0])
+    name = claims.get("name", username)
+    org_id = str(payload.get("org_id") or "default")
+
+    store = get_user_store()
+    user = store.get(username)
+    if not user:
+        from insureflow.auth.models import User
+
+        user = User(
+            username=username,
+            email=email,
+            full_name=name,
+            role=Role.VIEWER,
+            org_id=org_id,
+        )
+        store[username] = user
+
+    token = create_access_token({"sub": username, "role": user.role.value, "org_id": user.org_id, "email": email})
+    return {
+        "claims": claims,
+        "access_token": token,
+        "token_type": "bearer",
+        "user": {"username": username, "role": user.role.value, "email": email},
+    }
 
 
 @app.get("/auth/roles")
@@ -2218,7 +2250,9 @@ def vision_status() -> dict[str, Any]:
 
     return {
         "vision_llm": bool(os.getenv("OPENAI_API_KEY") or os.getenv("ANTHROPIC_API_KEY")),
-        "satellite": bool(os.getenv("GOOGLE_MAPS_API_KEY") or os.getenv("NEARMAP_API_KEY")),
+        "satellite_imagery": bool(os.getenv("GOOGLE_MAPS_API_KEY") or os.getenv("NEARMAP_API_KEY")),
+        "satellite_geocoding": True,
+        "satellite_note": "Nominatim + Overpass free fallback always available. Add GOOGLE_MAPS_API_KEY for satellite imagery.",
         "vision_model": os.getenv("VISION_MODEL", "gpt-4o"),
     }
 

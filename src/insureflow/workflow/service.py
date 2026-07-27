@@ -22,8 +22,10 @@ class WorkflowService:
                 override_reason=override_reason,
                 org_id=org_id,
             )
-        except Exception:
-            pass
+        except Exception as exc:
+            import logging as _log
+
+            _log.getLogger(__name__).debug("Override rate tracking failed: %s", exc)
 
     def start(self, bundle_id: str, org_id: str, ai_decision: str) -> WorkflowRecord:
         record = WorkflowRecord(

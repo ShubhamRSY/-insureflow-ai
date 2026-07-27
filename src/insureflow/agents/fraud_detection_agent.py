@@ -156,7 +156,10 @@ class FraudDetectionAgent(ReActAgent):
                 loss_ratio=0.5,
                 prior_claims_count=prior_claims,
             )
-        except Exception:
+        except Exception as exc:
+            import logging as _log
+
+            _log.getLogger(__name__).debug("ML fraud prediction failed: %s", exc)
             return
 
         if "error" in result:

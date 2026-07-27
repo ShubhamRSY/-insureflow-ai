@@ -49,7 +49,7 @@ class TestInsuranceRating:
         memo = UnderwritingMemo(bundle_id="rate-test", decision=UWDecision.ACCEPT, insured_name="Test Co")
         quote = InsuranceRatingEngine().quote(bundle, memo)
         assert quote.adjusted_premium > 0
-        assert quote.policy_admin_reference.startswith("PA-")
+        assert quote.policy_admin_reference.startswith(("PA-", "ISO-"))
 
 
 class TestWorkflowSignOff:
