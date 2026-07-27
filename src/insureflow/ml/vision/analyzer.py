@@ -51,7 +51,7 @@ Be specific and factual. If something is not visible, say so rather than guessin
 
 
 def _detect_vision_provider() -> str:
-    if os.getenv("OPENAI_API_KEY") or os.getenv("OPENAI_API_BASE"):
+    if os.getenv("LLM_API_KEY") or os.getenv("OPENAI_API_KEY") or os.getenv("ANTHROPIC_API_KEY"):
         return "openai"
     if os.getenv("ANTHROPIC_API_KEY"):
         return "anthropic"
@@ -79,7 +79,7 @@ def _call_openai_vision(image_data: bytes, filename: str) -> dict[str, Any]:
     try:
         import openai
 
-        api_key = os.getenv("OPENAI_API_KEY", "")
+        api_key = os.getenv("LLM_API_KEY") or os.getenv("OPENAI_API_KEY", "")
         base_url = os.getenv("OPENAI_API_BASE")
         client_kwargs: dict[str, Any] = {"api_key": api_key}
         if base_url:
