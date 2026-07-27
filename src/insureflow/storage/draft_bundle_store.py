@@ -36,7 +36,8 @@ class DraftBundleStore:
         return bundle
 
     def get(self, bundle_id: str, org_id: str = "default") -> Optional[dict[str, Any]]:
-        return self._store.get(DRAFT_NS, bundle_id, org_id=org_id)
+        result: Optional[dict[str, Any]] = self._store.get(DRAFT_NS, bundle_id, org_id=org_id)
+        return result
 
     def list_all(self, org_id: str = "default") -> list[dict[str, Any]]:
         ids = self._store.list_ids(DRAFT_NS, org_id=org_id)
@@ -90,7 +91,8 @@ class DraftBundleStore:
         return bundle
 
     def delete(self, bundle_id: str, org_id: str = "default") -> bool:
-        return self._store.delete(DRAFT_NS, bundle_id, org_id=org_id)
+        result: bool = self._store.delete(DRAFT_NS, bundle_id, org_id=org_id)
+        return result
 
     def to_pipeline_documents(self, bundle_id: str, org_id: str = "default") -> list[dict[str, str]]:
         """Convert accumulated documents to the format expected by pipeline.run()."""

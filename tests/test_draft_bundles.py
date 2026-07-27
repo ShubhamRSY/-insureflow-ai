@@ -37,9 +37,7 @@ def test_add_documents() -> None:
         {"filename": "acord.xml", "content": "<xml/>", "encoding": "utf-8"},
         {"filename": "loss_run.md", "content": "# Loss Run", "encoding": "utf-8"},
     ]
-    result = store.add_documents(
-        bundle["bundle_id"], docs, source_id="email-inbox", connection_label="Email", org_id="test"
-    )
+    result = store.add_documents(bundle["bundle_id"], docs, source_id="email-inbox", connection_label="Email", org_id="test")
     assert result is not None
     assert len(result["documents"]) == 2
     assert result["documents"][0]["source_id"] == "email-inbox"
@@ -72,6 +70,7 @@ def test_remove_document() -> None:
         org_id="test",
     )
     full = store.get(bundle["bundle_id"], org_id="test")
+    assert full is not None
     doc_id = full["documents"][0]["doc_id"]
     result = store.remove_document(bundle["bundle_id"], doc_id, org_id="test")
     assert result is not None
@@ -117,7 +116,7 @@ def test_to_pipeline_documents() -> None:
 def test_org_isolation() -> None:
     store = _make_store()
     b1 = store.create(org_id="org-a", name="A")
-    b2 = store.create(org_id="org-b", name="B")
+    store.create(org_id="org-b", name="B")
     assert store.get(b1["bundle_id"], org_id="org-a") is not None
     assert store.get(b1["bundle_id"], org_id="org-b") is None
     assert len(store.list_all(org_id="org-a")) == 1

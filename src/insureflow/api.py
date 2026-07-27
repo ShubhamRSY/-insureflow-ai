@@ -658,7 +658,7 @@ def pull_insurance_source(
                 "documents": documents,
                 "file_count": len(documents),
             }
-            accum = _accumulate(documents, source_id, meta["name"])
+            accum = _accumulate(documents, source_id, str(meta["name"]))
             if accum:
                 result["accumulated"] = accum
             return result
