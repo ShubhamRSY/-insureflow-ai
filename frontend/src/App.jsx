@@ -21,6 +21,7 @@ import EvalTrendsPage from './pages/EvalTrends';
 import PortfolioPage from './pages/Portfolio';
 import IntegrationsPage from './pages/Integrations';
 import WebhooksPage from './pages/Webhooks';
+import InsuranceJobDetail from './pages/InsuranceJobDetail';
 import { auth, endpoints, AuthError } from './lib/api';
 
 function Protected({ children, onLogin }) {
@@ -175,13 +176,15 @@ function AppRoutes() {
   }, [drawer.jobId, drawer.vertical, drawer.job?.status, refreshAll, handleAuthError]);
 
   const openJob = async (vertical, jobId, bundleId) => {
-    // If called with bundle_id (not job_id), look up the job_id first
     const actualJobId = bundleId
       ? (insuranceJobs.find(r => r.job?.results?.bundle_id === bundleId)?.id || jobId)
       : jobId;
+    if (vertical === 'insurance') {
+      navigate(`/insurance/${actualJobId}`);
+      return;
+    }
     try {
-      const fetch = vertical === 'insurance' ? endpoints.insuranceJob : endpoints.mortgageJob;
-      const job = await fetch(actualJobId);
+      const job = await endpoints.mortgageJob(actualJobId);
       setDrawer({ vertical, jobId: actualJobId, job });
     } catch (e) {
       if (e instanceof AuthError) handleAuthError();
@@ -194,15 +197,19 @@ function AppRoutes() {
     const res = vertical === 'insurance'
       ? await endpoints.runInsuranceDemo(presetId)
       : await endpoints.runMortgageDemo(presetId);
-    navigate(vertical === 'insurance' ? '/insurance' : '/mortgage');
     await refreshAll();
-    openJob(vertical, res.job_id);
+    if (vertical === 'insurance') {
+      navigate(`/insurance/${res.job_id}`);
+    } else {
+      navigate('/mortgage');
+      openJob('mortgage', res.job_id);
+    }
   };
 
   const submitInsurance = async (body) => {
     const res = await endpoints.runInsurance(body);
     await loadInsuranceJobs();
-    openJob('insurance', res.job_id);
+    navigate(`/insurance/${res.job_id}`);
   };
 
   const submitMortgage = async (body) => {
@@ -218,6 +225,7 @@ function AppRoutes() {
         <Route element={<Layout health={health} pendingCount={pending.length} onRefresh={refreshAll} onLogin={() => setLoginOpen(true)} user={user} setUser={setUser} />}>
           <Route index element={<Overview overview={overview} health={health} presets={presets} onRunDemo={runDemo} onOpenJob={openJob} onLogin={() => setLoginOpen(true)} marketCycle={marketCycle} queueStats={queueStats} insuranceJobs={insuranceJobs} />} />
           <Route path="system" element={<SystemPage health={health} />} />
+          <Route path="insurance/:jobId" element={<Protected onLogin={() => setLoginOpen(true)}><InsuranceJobDetail /></Protected>} />
           <Route path="insurance" element={<Protected onLogin={() => setLoginOpen(true)}><InsurancePage presets={presets} jobs={insuranceJobs} onRunDemo={runDemo} onOpenJob={openJob} onSubmit={submitInsurance} onRefresh={loadInsuranceJobs} /></Protected>} />
           <Route path="mortgage" element={<Protected onLogin={() => setLoginOpen(true)}><MortgagePage presets={presets} jobs={mortgageJobs} onRunDemo={runDemo} onOpenJob={openJob} onSubmit={submitMortgage} /></Protected>} />
           <Route path="lending" element={<Protected onLogin={() => setLoginOpen(true)}><LendingPage /></Protected>} />
