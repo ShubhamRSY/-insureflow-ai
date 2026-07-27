@@ -6,6 +6,14 @@ from datetime import datetime, timezone
 from typing import Any
 
 
+def _render_conditions(conditions: list[str]) -> str:
+    """Render conditions list as HTML."""
+    if not conditions:
+        return '<div style="margin-top:6px;font-size:11px;color:#94a3b8;">No conditions</div>'
+    items = "".join(f"<li style='padding:2px 0;font-size:11px;color:#475569;'>&mdash; {c}</li>" for c in conditions)
+    return f"<div class='mt-8'><div class='findings-category' style='margin-top:0;'>Conditions</div><ul style='list-style:none;padding:0;'>{items}</ul></div>"
+
+
 def generate_report_html(results: dict[str, Any], job_id: str) -> str:
     """Build a professional, client-facing HTML report from pipeline results.
 
@@ -25,7 +33,6 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
     risk_pct = round(risk_score * 100) if risk_score is not None else None
     severity = memo.get("severity") or "—"
     triage_score = r.get("triage_score")
-    doc_count = r.get("document_count") or 0
     document_checklist = r.get("document_checklist") or {}
     base_premium = quote.get("base_premium") or quote_full.get("base_premium") or 0
     adjusted_premium = quote.get("adjusted_premium") or quote_full.get("adjusted_premium") or 0
@@ -71,11 +78,7 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
     missing_docs = document_checklist.get("missing_documents") or []
     completeness_raw = document_checklist.get("completeness_pct")
     # completeness_pct is stored as 0-1 float; convert to display percentage
-    completeness_display = (
-        f"{round(completeness_raw * 100)}%"
-        if completeness_raw is not None
-        else "—"
-    )
+    completeness_display = f"{round(completeness_raw * 100)}%" if completeness_raw is not None else "—"
 
     doc_rows = ""
     for d in present_docs:
@@ -412,7 +415,7 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
   <div class="kv-row">
     <span class="kv-label">Status</span>
     <span class="kv-value">
-      <span class="inline-badge" style="background:{'#dcfce7' if recon_status == 'RECONCILIED' else '#fef3c7'};color:{'#16a34a' if recon_status == 'RECONCILIED' else '#d97706'};">{recon_status}</span>
+      <span class="inline-badge" style="background:{"#dcfce7" if recon_status == "RECONCILIED" else "#fef3c7"};color:{"#16a34a" if recon_status == "RECONCILIED" else "#d97706"};">{recon_status}</span>
     </span>
   </div>
   <div class="kv-row"><span class="kv-label">Field Match Rate</span><span class="kv-value">{match_pct or 0}%</span></div>
@@ -425,7 +428,7 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
     <span class="kv-label">Action</span>
     <span class="kv-value" style="font-weight:700;">{rec_action}</span>
   </div>
-  {"<div class='mt-8'><div class='findings-category' style='margin-top:0;'>Conditions</div><ul style='list-style:none;padding:0;'>" + "".join(f"<li style='padding:2px 0;font-size:11px;color:#475569;'>&mdash; {c}</li>" for c in rec_conditions) + "</ul></div>" if rec_conditions else '<div style="margin-top:6px;font-size:11px;color:#94a3b8;">No conditions</div>'}
+  {_render_conditions(rec_conditions)}
 </div>
 
 <!-- ═══════════════════════════════════════════ FOOTER ═══════════════════════════════════════════ -->
@@ -450,10 +453,7 @@ def _row(
     """Build a single premium breakdown table row."""
     border = "border-top:2px solid #e2e8f0;" if border_top else ""
     weight = "font-weight:700;" if bold else ""
-    return (
-        f'<tr><td style="padding:5px 8px;{border}">{label}</td>'
-        f'<td style="padding:5px 8px;text-align:right;color:{color};{weight}{border}">{value}</td></tr>'
-    )
+    return f'<tr><td style="padding:5px 8px;{border}">{label}</td><td style="padding:5px 8px;text-align:right;color:{color};{weight}{border}">{value}</td></tr>'
 
 
 def html_to_pdf(html: str) -> bytes:
