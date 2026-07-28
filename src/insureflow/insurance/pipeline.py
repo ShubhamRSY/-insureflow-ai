@@ -202,6 +202,83 @@ class InsurancePipeline:
         # ── 2b. RE-SCORE DOCUMENT CHECKLIST on fully-ingested bundle ──
         triage_result = self.triage.score_submission(bundle)
 
+        # ── 2c. REQUIRED DATA VALIDATION (hard gate against silent missing-data failures) ──
+        validation_findings: list[Any] = []
+        missing_docs = triage_result.document_checklist.missing
+        required_docs = {
+            "Loss run (5 year claims history)": "loss_run",
+            "ACORD application form": "acord",
+            "Schedule of values": "sov",
+        }
+        for label in required_docs:
+            if label in missing_docs:
+                from insureflow.models.agents import Finding, RiskSeverity
+
+                validation_findings.append(
+                    Finding(
+                        title=f"Missing required document: {label}",
+                        description=f"{label} was not provided or could not be parsed. Pricing without this data risks underestimating exposure.",
+                        severity=RiskSeverity.CRITICAL,
+                        category="data_quality",
+                        field_path=required_docs[label],
+                    )
+                )
+
+        loss_run_raw = loss_run or ""
+        if bundle.structured:
+            fin = bundle.structured.financial
+            has_claims = fin and fin.loss_run and len(fin.loss_run.claims) > 0
+            if not has_claims and loss_run_raw.strip():
+                from insureflow.models.agents import Finding, RiskSeverity
+
+                validation_findings.append(
+                    Finding(
+                        title="Loss run provided but empty — no claims extracted",
+                        description="Loss run attached but zero claims parsed (password-protected, corrupted, or unrecognized format). This is NOT a clean history — data is missing.",
+                        severity=RiskSeverity.CRITICAL,
+                        category="data_quality",
+                        field_path="financial.loss_run.claims",
+                    )
+                )
+
+        if bundle.structured is None:
+            from insureflow.models.agents import Finding, RiskSeverity
+
+            validation_findings.append(
+                Finding(
+                    title="No structured submission data",
+                    description="No ACORD XML, JSON payload, or broker API data was received. Coverage limits, named insured, and policy terms are unknown.",
+                    severity=RiskSeverity.CRITICAL,
+                    category="data_quality",
+                    field_path="structured",
+                )
+            )
+        else:
+            has_coverage_limits = bool(bundle.structured.coverages and any(c.limit_amount and c.limit_amount > 0 for c in bundle.structured.coverages))
+            if not has_coverage_limits:
+                from insureflow.models.agents import Finding, RiskSeverity
+
+                validation_findings.append(
+                    Finding(
+                        title="No coverage limits available",
+                        description="No coverage limits were extracted from any source. Premium cannot be accurately rated without limit data.",
+                        severity=RiskSeverity.CRITICAL,
+                        category="data_quality",
+                        field_path="coverages[].limit",
+                    )
+                )
+
+        if validation_findings:
+            logger.warning("Required-data validation: %d missing-critical finding(s)", len(validation_findings))
+            audit.log(
+                PipelineEvent.STRUCTURED_PARSE_COMPLETE,
+                f"Required-data validation: {len(validation_findings)} critical missing-data finding(s)",
+                metadata={
+                    "validation_findings": [f.title for f in validation_findings],
+                    "human_review_required": True,
+                },
+            )
+
         # ── 2.5. PROPERTY PHOTO ANALYSIS (vision LLM + satellite + damage detection) ──
         visual_profile = None
         photos = [d for d in documents if d.get("filename", "").lower().endswith((".jpg", ".jpeg", ".png", ".gif", ".webp", ".tiff", ".bmp"))] if documents else []
@@ -341,7 +418,14 @@ class InsurancePipeline:
                 if f.severity.value in ("critical", "high"):
                     memo.human_review_reasons.append(f.title)
 
-        agent_findings = len(memo.key_findings) - len(oracle_findings)
+        # Merge required-data validation findings into memo
+        if validation_findings:
+            for f in validation_findings:
+                memo.key_findings.append(f)
+                memo.human_review_reasons.append(f.title)
+            memo.human_review_required = True
+
+        agent_findings = len(memo.key_findings) - len(oracle_findings) - len(validation_findings)
         progress.complete(
             "analyze",
             detail=f"Risk {memo.overall_risk_score:.0%}" if memo.overall_risk_score else f"{agent_findings} agent finding(s)",
