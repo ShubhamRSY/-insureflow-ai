@@ -269,11 +269,66 @@ class InsurancePipeline:
                     )
                 )
 
+        # ── 2d. NON-STANDARD / MANUSCRIPT DOCUMENT DETECTION ──
+        manuscript_keywords = (
+            "endorsement",
+            "manuscript",
+            "rider",
+            "amendment",
+            "exclusion",
+            "waiver",
+            "limitation of liability",
+            "additional insured",
+            "policy change",
+            "modification",
+        )
+        scrutinized: list[str] = []
+        for doc in bundle.unstructured:
+            if doc.document_type in ("loss_run", "schedule_of_values", "inspection_report"):
+                continue
+            text = (doc.raw_text or "").lower()
+            matches = [kw for kw in manuscript_keywords if kw in text]
+            if not matches:
+                continue
+            from insureflow.models.agents import Finding, RiskSeverity
+
+            validation_findings.append(
+                Finding(
+                    title=f"Non-standard document with legal terms: {doc.document_type}",
+                    description=f"Document '{doc.document_type}' has {len(matches)} manuscript keyword(s): {', '.join(matches)}. May impose liability or restrict coverage outside structured data.",
+                    severity=RiskSeverity.CRITICAL,
+                    category="compliance",
+                    field_path="unstructured",
+                    evidence=[doc.submission_id, doc.raw_text[:500]],
+                )
+            )
+            scrutinized.append(doc.document_type)
+        for doc in bundle.supplemental:
+            text = (doc.raw_text or "").lower()
+            matches = [kw for kw in manuscript_keywords if kw in text]
+            if not matches:
+                continue
+            from insureflow.models.agents import Finding, RiskSeverity
+
+            validation_findings.append(
+                Finding(
+                    title=f"Supplemental document with legal terms: {doc.document_type}",
+                    description=f"Supplemental doc has {len(matches)} manuscript keyword(s): {', '.join(matches)}. May modify policy terms outside standard endorsements.",
+                    severity=RiskSeverity.CRITICAL,
+                    category="compliance",
+                    field_path="supplemental",
+                    evidence=[doc.submission_id, doc.raw_text[:500]],
+                )
+            )
+            scrutinized.append("supplemental")
+        if scrutinized:
+            logger.warning("Manuscript detection: %d non-standard doc(s) flagged with legal keywords", len(scrutinized))
+
         if validation_findings:
-            logger.warning("Required-data validation: %d missing-critical finding(s)", len(validation_findings))
+            logger.warning("Required-data validation: %d finding(s)", len(validation_findings))
             audit.log(
                 PipelineEvent.STRUCTURED_PARSE_COMPLETE,
-                f"Required-data validation: {len(validation_findings)} critical missing-data finding(s)",
+                f"Validation: {len(validation_findings)} finding(s)",
                 metadata={
                     "validation_findings": [f.title for f in validation_findings],
                     "human_review_required": True,
