@@ -3,7 +3,7 @@ import {
   CheckCircle2, Circle, AlertTriangle, XCircle, MinusCircle,
   Shield, GitCompare, DollarSign, ClipboardCheck, Loader2,
   Users, FileText, BarChart3, Layers, Send, Truck, Building2,
-  ChevronDown, ChevronRight, Clock,
+  ChevronDown, ChevronRight,
 } from 'lucide-react';
 import { fmtCurrency, endpoints } from '../lib/api';
 import { getJourneyContext } from '../lib/pipelineJourney';
@@ -49,41 +49,30 @@ function Section({ title, icon: Icon, children, defaultOpen = true }) {
 
 function PipelineTimeline({ stages, processing, currentStage }) {
   return (
-    <div className="relative">
-      <div className="absolute left-[11px] top-3 bottom-3 w-px bg-white/[0.06]" />
-      <div className="space-y-1">
-        {stages.map((stage) => {
+    <div className="overflow-x-auto">
+      <div className="flex items-stretch gap-1.5 min-w-max">
+        {stages.map((stage, i) => {
           const status = processing && currentStage === stage.id ? 'active' : stage.status;
           const { Icon, cls } = STATUS_ICON[status] || STATUS_ICON.pending;
+          const activeCls = status === 'active' || status === 'complete' ? 'border-brand/20 bg-brand/5' : status === 'failed' ? 'border-red-500/20 bg-red-500/5' : 'border-white/[0.04] bg-surface/30';
           return (
-            <div key={stage.id} className="relative flex gap-3 rounded-lg px-1 py-2">
-              <div className={`relative z-10 mt-0.5 shrink-0 ${cls}`}>
-                <Icon className="h-[22px] w-[22px]" />
+            <div key={stage.id} className="flex items-stretch gap-0">
+              <div className={`flex flex-col items-center gap-1.5 rounded-lg border px-3 py-2 min-w-[110px] ${activeCls}`}>
+                <Icon className={`h-4 w-4 ${cls}`} />
+                <span className="text-xs font-semibold text-slate-200 text-center leading-tight">{stage.label}</span>
+                <span className="text-[9px] text-slate-500 text-center leading-tight">{stage.detail}</span>
               </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-sm font-medium text-slate-200">{stage.label}</p>
-                  <div className="flex items-center gap-2">
-                    {stage.duration && (
-                      <span className="flex items-center gap-0.5 text-[10px] text-slate-600">
-                        <Clock className="h-2.5 w-2.5" />{stage.duration}
-                      </span>
-                    )}
-                    {stage.findings > 0 && stage.status !== 'skipped' && (
-                      <span className="shrink-0 rounded-full bg-white/[0.06] px-2 py-0.5 text-[10px] text-slate-400">
-                        {stage.findings}
-                      </span>
-                    )}
-                  </div>
+              {i < stages.length - 1 && (
+                <div className="flex items-center px-0.5">
+                  <div className="h-px w-2 bg-white/[0.08]" />
                 </div>
-                <p className="text-xs text-slate-500">{stage.detail}</p>
-              </div>
+              )}
             </div>
           );
         })}
       </div>
       {processing && (
-        <p className="mt-2 pl-8 text-xs text-brand-light/80">Live — {currentStage ? `Running ${currentStage}` : 'pipeline in progress'}</p>
+        <p className="mt-2 text-xs text-brand-light/80">Live — {currentStage ? `Running ${currentStage}` : 'pipeline in progress'}</p>
       )}
     </div>
   );
