@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 from unittest.mock import MagicMock
 
-from insureflow.mcp import run_server
 from insureflow.mcp.server import _parse_claims, _register_all
 from insureflow.rag.guidelines import GuidelineCategory
 
