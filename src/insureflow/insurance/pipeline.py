@@ -225,10 +225,11 @@ class InsurancePipeline:
                 )
 
         loss_run_raw = loss_run or ""
+        loss_run_expected = "Loss run (5 year claims history)" not in missing_docs
         if bundle.structured:
             fin = bundle.structured.financial
             has_claims = fin and fin.loss_run and len(fin.loss_run.claims) > 0
-            if not has_claims and loss_run_raw.strip():
+            if not has_claims and (loss_run_raw.strip() or loss_run_expected):
                 from insureflow.models.agents import Finding, RiskSeverity
 
                 validation_findings.append(
