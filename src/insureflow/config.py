@@ -78,6 +78,13 @@ class Settings:
             "sprinklered": "risk_profile.sprinklered",
             "protection_class": "risk_profile.protection_class",
             "prior_claims": "financial.prior_losses",
+            "total_insurable_value": "coverage.0.limit",
+            "building_value": "coverage.0.limit",
+            "bpp_value": "coverage.0.limit",
+            "limit": "coverage.0.limit",
+            "deductible": "coverage.0.deductible",
+            "premium": "coverage.0.premium",
+            "total_premium": "coverage.0.premium",
         }
     )
 

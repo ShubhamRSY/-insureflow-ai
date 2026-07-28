@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from datetime import datetime, timezone
 from typing import Any
 from uuid import uuid4
@@ -112,6 +113,10 @@ class ProvenanceEngine:
     ) -> None:
         trust = TrustLevel.MEDIUM if is_supplemental else TrustLevel.LOW
         source_name = unstructured.source
+
+        has_ocr = any(fn == "ocr_engine" for fn in unstructured.extracted_fields)
+        base_confidence = 0.4 if has_ocr else 0.6
+
         source = DataSource(
             source_id=unstructured.submission_id,
             source_type=SourceType.UNSTRUCTURED,
@@ -124,6 +129,8 @@ class ProvenanceEngine:
         fields: dict[str, Any] = {}
 
         for field_name, extracted_list in unstructured.extracted_fields.items():
+            if field_name == "ocr_engine":
+                continue
             for ef in extracted_list:
                 key = f"extracted.{field_name}"
                 if key not in fields:
@@ -138,14 +145,25 @@ class ProvenanceEngine:
 
         if not is_supplemental:
             for field_name, extracted_list in unstructured.extracted_fields.items():
+                if field_name == "ocr_engine":
+                    continue
                 for ef in extracted_list:
                     mapped_key = self._map_extracted_to_structured(field_name)
                     fields[mapped_key] = ef.value
 
-        self._add_nodes(record, fields, source, confidence=0.6)
+        self._add_nodes(record, fields, source, confidence=base_confidence)
 
     def _map_extracted_to_structured(self, field_name: str) -> str:
-        return settings.field_mapping.get(field_name, f"extracted.{field_name}")
+        mapped = settings.field_mapping.get(field_name)
+        if mapped:
+            return mapped
+        sov_total = re.match(r"sov\.(\d+)\.total", field_name)
+        if sov_total:
+            return f"coverage.{sov_total.group(1)}.limit"
+        sov_type = re.match(r"sov\.(\d+)\.type", field_name)
+        if sov_type:
+            return f"coverage.{sov_type.group(1)}.type"
+        return f"extracted.{field_name}"
 
     def _add_nodes(
         self,

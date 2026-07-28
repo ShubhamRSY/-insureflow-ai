@@ -55,10 +55,25 @@ def extract_loss_run_pdf(text: str) -> dict[str, list[ExtractedField]]:
     return fields
 
 
+def extract_sov(text: str) -> dict[str, list[ExtractedField]]:
+    fields: dict[str, list[ExtractedField]] = {}
+    tiv_match = re.search(r"(?:TOTAL|TOTAL INSURABLE VALUE|Total Insurable Value)[^$]*?\$([\d,]+)", text, re.IGNORECASE)
+    if tiv_match and tiv_match.group(1):
+        fields["total_insurable_value"] = _field("total_insurable_value", tiv_match.group(1))
+    building_match = re.search(r"Buildings?[^$]*?\$([\d,]+)", text, re.IGNORECASE)
+    if building_match and building_match.group(1):
+        fields["building_value"] = _field("building_value", building_match.group(1))
+    bpp_match = re.search(r"(?:Business Personal Property|BPP)[^$]*?\$([\d,]+)", text, re.IGNORECASE)
+    if bpp_match and bpp_match.group(1):
+        fields["bpp_value"] = _field("bpp_value", bpp_match.group(1))
+    return fields
+
+
 EXTRACTORS = {
     "broker_slip": extract_broker_slip,
     "dec_page": extract_dec_page,
     "loss_run": extract_loss_run_pdf,
+    "schedule_of_values": extract_sov,
 }
 
 

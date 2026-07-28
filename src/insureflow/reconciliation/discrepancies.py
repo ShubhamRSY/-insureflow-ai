@@ -15,6 +15,9 @@ class DiscrepancyDetector:
         "financial.annual_revenue",
     }
 
+    CRITICAL_PREFIXES = ("coverage.",)
+    CRITICAL_SUFFIXES = (".limit", ".deductible", ".premium")
+
     HIGH_FIELDS = {
         "risk_profile.construction_type",
         "risk_profile.occupancy_type",
@@ -65,8 +68,11 @@ class DiscrepancyDetector:
             provenance_node_ids=[n.node_id for n in sorted_nodes],
         )
 
+    def _is_coverage_financial_field(self, field_path: str) -> bool:
+        return field_path.startswith(self.CRITICAL_PREFIXES) and field_path.endswith(self.CRITICAL_SUFFIXES)
+
     def _determine_severity(self, field_path: str, unique_count: int, total_sources: int) -> EventSeverity:
-        if field_path in self.CRITICAL_FIELDS:
+        if field_path in self.CRITICAL_FIELDS or self._is_coverage_financial_field(field_path):
             return EventSeverity.CRITICAL
         if field_path in self.HIGH_FIELDS:
             return EventSeverity.WARNING
