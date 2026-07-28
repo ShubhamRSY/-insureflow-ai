@@ -1274,15 +1274,8 @@ class TestMCPMortgageMetrics:
     """Breaking MCP mortgage metrics calculator."""
 
     def test_zero_term_years_returns_error(self) -> None:
-        FastMCP = None
-        try:
-            from mcp.server.fastmcp import FastMCP as _F  # type: ignore[import-untyped]
-
-            FastMCP = _F
-        except ImportError:
-            pass
-        if FastMCP is None:
-            return
+        pytest.importorskip("mcp.server.fastmcp")
+        from mcp.server.fastmcp import FastMCP
 
         from insureflow.mcp.server import _register_all
 
@@ -1292,15 +1285,8 @@ class TestMCPMortgageMetrics:
         assert "calculate_mortgage_metrics" in tools
 
     def test_negative_loan_amount_handled(self) -> None:
-        FastMCP = None
-        try:
-            from mcp.server.fastmcp import FastMCP as _F  # type: ignore[import-untyped]
-
-            FastMCP = _F
-        except ImportError:
-            pass
-        if FastMCP is None:
-            return
+        pytest.importorskip("mcp.server.fastmcp")
+        from mcp.server.fastmcp import FastMCP
 
         from insureflow.mcp.server import _register_all
 
