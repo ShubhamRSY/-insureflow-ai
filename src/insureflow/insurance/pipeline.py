@@ -310,6 +310,30 @@ class InsurancePipeline:
         progress.start("analyze", "Scored", "Running specialist agent analysis")
         memo = self.supervisor.analyze_submission(bundle, parallel=True, use_celery=False)
 
+        # ── 6a. Low-confidence critical field hold ──
+        confidence_floor = 0.6
+        low_conf_fields = []
+        for field_path, fr in (reconciliation.field_reconciliation or {}).items():
+            if field_path.startswith("coverage.") and field_path.endswith((".limit", ".deductible", ".premium")):
+                conf = fr.get("confidence", 0) or 0
+                if conf < confidence_floor:
+                    low_conf_fields.append((field_path, conf))
+        if low_conf_fields:
+            detail = "; ".join(f"{p} @ {c:.0%}" for p, c in low_conf_fields)
+            from insureflow.models.agents import Finding, RiskSeverity
+
+            memo.key_findings.append(
+                Finding(
+                    title="Low-confidence extraction on critical field",
+                    description=f"Coverage financial fields have resolved confidence below {confidence_floor:.0%}, indicating possible OCR error: {detail}",
+                    severity=RiskSeverity.HIGH,
+                    category="data_quality",
+                    confidence=0.95,
+                )
+            )
+            memo.human_review_required = True
+            memo.human_review_reasons.append(f"Low-confidence critical fields require review: {detail}")
+
         # Merge oracle findings into memo
         if oracle_findings:
             for f in oracle_findings:
