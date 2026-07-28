@@ -81,6 +81,7 @@ class UWDecisionAgent(ReActAgent):
     def _build_recommendation(self) -> Recommendation | None:
         has_critical = any(f.severity == RiskSeverity.CRITICAL for f in self._findings)
         has_high = any(f.severity == RiskSeverity.HIGH for f in self._findings)
+        has_moderate = any(f.severity == RiskSeverity.MODERATE for f in self._findings)
         score = self._calculate_aggregate_risk(self._findings)
 
         if has_critical:
@@ -96,10 +97,17 @@ class UWDecisionAgent(ReActAgent):
                 suggested_premium_modification=1.15 if score > 0.6 else None,
                 conditions=[f.title for f in self._findings if f.severity in (RiskSeverity.HIGH, RiskSeverity.CRITICAL)],
             )
+        if has_moderate:
+            moderate = [f for f in self._findings if f.severity == RiskSeverity.MODERATE]
+            return Recommendation(
+                action="conditional_accept",
+                rationale=f"Aggregate risk score: {score:.2f}. {len(moderate)} moderate finding(s) require subjectivities before bind. Issuing conditional quote.",
+                conditions=[f"SUBJECT TO: {f.field_path or f.category} — {f.title}: {f.description[:120]}" for f in moderate],
+            )
         return Recommendation(
             action="accept",
-            rationale=f"Acceptable risk profile. Aggregate risk score: {score:.2f}. No high-severity findings.",
-            conditions=[f.title for f in self._findings if f.severity == RiskSeverity.MODERATE],
+            rationale=f"Acceptable risk profile. Aggregate risk score: {score:.2f}. No findings requiring conditions.",
+            conditions=[],
         )
 
     def produce_underwriting_memo(
@@ -118,6 +126,8 @@ class UWDecisionAgent(ReActAgent):
         if rec:
             if rec.action == "accept":
                 decision = UWDecision.ACCEPT
+            elif rec.action == "conditional_accept":
+                decision = UWDecision.CONDITIONAL_ACCEPT
             elif rec.action == "decline":
                 decision = UWDecision.DECLINE
 

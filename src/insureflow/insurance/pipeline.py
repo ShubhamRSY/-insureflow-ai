@@ -269,7 +269,37 @@ class InsurancePipeline:
                     )
                 )
 
-        # ── 2d. NON-STANDARD / MANUSCRIPT DOCUMENT DETECTION ──
+        # ── 2d. NON-CRITICAL (GUIDELINE) DATA GAPS — triggers conditional_accept, not hard refer ──
+        if bundle.structured and bundle.structured.locations:
+            for li, loc in enumerate(bundle.structured.locations):
+                if loc.year_built is None or loc.year_built == 0:
+                    from insureflow.models.agents import Finding, RiskSeverity
+
+                    validation_findings.append(
+                        Finding(
+                            title="Roof age or year built not provided",
+                            description=f"Location {li}: year built is unknown. Age of roof is required per underwriting guidelines for hail-prone regions.",
+                            severity=RiskSeverity.MODERATE,
+                            category="data_quality",
+                            field_path=f"locations[{li}].year_built",
+                            confidence=0.95,
+                        )
+                    )
+                if loc.protection_class is None or loc.protection_class == 0:
+                    from insureflow.models.agents import Finding, RiskSeverity
+
+                    validation_findings.append(
+                        Finding(
+                            title="Protection class not provided",
+                            description=f"Location {li}: ISO protection class is unknown. May affect fire rating.",
+                            severity=RiskSeverity.MODERATE,
+                            category="data_quality",
+                            field_path=f"locations[{li}].protection_class",
+                            confidence=0.95,
+                        )
+                    )
+
+        # ── 2e. NON-STANDARD / MANUSCRIPT DOCUMENT DETECTION ──
         manuscript_keywords = (
             "endorsement",
             "manuscript",

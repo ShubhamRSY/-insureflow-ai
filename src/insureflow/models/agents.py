@@ -29,6 +29,7 @@ class RiskSeverity(str, Enum):
 
 class UWDecision(str, Enum):
     ACCEPT = "accept"
+    CONDITIONAL_ACCEPT = "conditional_accept"
     REFER = "refer"
     DECLINE = "decline"
 
