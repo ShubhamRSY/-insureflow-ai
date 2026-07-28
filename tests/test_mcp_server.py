@@ -1,18 +1,14 @@
 from __future__ import annotations
 
 import json
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-from insureflow.mcp.server import _parse_claims, _register_all, run_server
+from insureflow.mcp import run_server
+from insureflow.mcp.server import _parse_claims, _register_all
 from insureflow.rag.guidelines import GuidelineCategory
 
 
 class TestMCPServerModule:
-    def test_import(self) -> None:
-        from insureflow.mcp import run_server as rs
-
-        assert rs is run_server
-
     def test_parse_claims_empty(self) -> None:
         assert _parse_claims("[]") == []
 
@@ -38,9 +34,8 @@ class TestMCPServerModule:
         cats = list(GuidelineCategory)
         assert len(cats) >= 6
 
-    @patch("insureflow.mcp.server.FastMCP")
-    def test_register_all_tools(self, mock_fastmcp: MagicMock) -> None:
-        mock_instance = mock_fastmcp.return_value
+    def test_register_all_tools(self) -> None:
+        mock_instance = MagicMock()
         _register_all(mock_instance)
         tool_calls = [call for call in mock_instance.tool.call_args_list]
         resource_calls = [call for call in mock_instance.resource.call_args_list]

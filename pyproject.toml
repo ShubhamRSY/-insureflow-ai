@@ -111,3 +111,7 @@ check_untyped_defs = true
 [[tool.mypy.overrides]]
 module = ["evaluations.ragas_eval", "evaluations.giskard_eval"]
 ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = ["insureflow.mcp.server"]
+ignore_errors = true

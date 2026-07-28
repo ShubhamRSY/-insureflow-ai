@@ -149,7 +149,7 @@ export default function InsuranceSourceHub({ onSubmit, loading }) {
     } catch { /* noop */ }
   };
 
-  useState(() => { loadSources(); }, []);
+  useEffect(() => { loadSources(); }, []);
 
   // Ensure a draft bundle exists
   const ensureBundle = async () => {

@@ -2,9 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Optional
-
-from mcp.server.fastmcp import FastMCP
+from typing import Any, Optional
 
 from insureflow.agents.tools import UnderwritingTools
 from insureflow.models.mortgage import ProductLine
@@ -12,6 +10,11 @@ from insureflow.models.submissions import ClaimRecord
 from insureflow.pipeline import UnderwritingPipeline
 from insureflow.rag.guidelines import GuidelineCategory, builtin_guidelines
 from insureflow.rag.rag_agent import RAGAgent
+
+try:
+    from mcp.server.fastmcp import FastMCP as _FastMC
+except ImportError:
+    _FastMC = None  # type: ignore[misc]
 
 logger = logging.getLogger(__name__)
 
@@ -50,9 +53,9 @@ def run_server(host: str = "127.0.0.1", port: int = 8010) -> None:
     Can connect via any MCP client (Claude Desktop, VS Code, Cursor, etc.).
     """
     logger.info("Starting InsureFlow MCP server on %s:%d", host, port)
-    from mcp.server.fastmcp import FastMCP
-
-    server = FastMCP(
+    if _FastMC is None:
+        raise ImportError("mcp package is not installed. Run: pip install mcp>=1.0")
+    server: Any = _FastMC(
         "InsureFlow Underwriting",
         instructions="Multi-agent AI underwriting system for commercial property and casualty insurance",
         host=host,
@@ -62,7 +65,7 @@ def run_server(host: str = "127.0.0.1", port: int = 8010) -> None:
     server.run(transport="sse")
 
 
-def _register_all(server: FastMCP) -> None:
+def _register_all(server: Any) -> None:
     """Register all tools, resources, and prompts on a FastMCP instance."""
 
     # -----------------------------------------------------------------------
