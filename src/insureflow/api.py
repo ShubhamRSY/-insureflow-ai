@@ -751,9 +751,7 @@ def pull_insurance_source(
             # Require at least one config field to be filled
             connector = DEMO_CONNECTORS[source_id]
             config_keys = [f["key"] for f in (connector.get("config_fields") or [])]
-            has_config = any(
-                getattr(req, k, None) for k in config_keys
-            )
+            has_config = any(getattr(req, k, None) for k in config_keys)
             if config_keys and not has_config:
                 raise HTTPException(
                     status_code=400,
@@ -763,7 +761,7 @@ def pull_insurance_source(
             documents = load_package(EXAMPLES_DIR, package_id)
             meta = INSURANCE_PACKAGES[package_id]
             label = simulated_connection_label(source_id, req)
-            result: dict[str, Any] = {
+            result = {
                 "source_id": source_id,
                 "simulated": True,
                 "connection_label": label,
