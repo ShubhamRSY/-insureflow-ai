@@ -1,9 +1,9 @@
 # COMMERCIAL PROPERTY INSPECTION REPORT
 
-**Insured:** Pacific Coast Distributors, Inc.
-**Location:** 2450 Maritime Boulevard, Oakland, CA 94607
-**Surveyor:** Michael Delgado, P.E., ARM
-**Date:** 2026-07-15
+**Insured:** Northwind Logistics LLC
+**Location:** 8900 W 192nd Street, Mokena, IL 60448
+**Surveyor:** James Kowalski, CPE, ARM
+**Date:** 2026-08-20
 
 ---
 
@@ -11,54 +11,59 @@
 
 | Field | Application | Surveyor |
 |---|---|---|
-| Construction Type | Masonry Non-Combustible | Steel Frame with IMP Insulation |
-| Year Built | 2005 | 1999 (original); 2005 addition |
-| Square Footage | 210,000 sq ft | 198,750 sq ft |
+| Construction Type | Steel Frame / Masonry | Steel Frame with IMP Insulation |
+| Year Built | 2010 | 2010 |
+| Square Footage | 185,000 sq ft | 172,400 sq ft |
 | Stories | 1 | 1 |
-| Sprinklered | Yes (fully) | Partial (8,000 sq ft unsprinklered) |
-| Protection Class | 3 | 4 |
+| Sprinklered | Yes (fully) | Partial (12,000 sq ft cross-dock unsprinklered) |
+| Protection Class | 4 | 5 |
 
 ### EXECUTIVE SUMMARY
 
-This report documents a physical inspection of the primary cold storage warehouse operated by Pacific Coast Distributors, Inc. The facility is generally well-maintained with above-average housekeeping. However, several material discrepancies were identified that require reconciliation before binding.
+This report documents a physical inspection of the primary cross-dock trucking terminal and warehouse operated by Northwind Logistics LLC. The facility is functional with good overall maintenance practices. However, several discrepancies were identified that require reconciliation before binding.
 
-The most significant finding is that the building construction type is steel frame with combustible insulated metal panels, not masonry non-combustible as stated on the application. Additionally, approximately 8,000 sq ft of the transload dock area (2018 addition) is not sprinklered, contrary to the application's representation of full sprinkler coverage.
+The most significant finding is that approximately 12,000 sq ft of the cross-dock bay area (2020 addition) is not sprinklered, contrary to the application's representation of full sprinkler coverage. Additionally, yard tractor parking on-site presents a fire exposure not reflected in the application.
 
 ### BUILDING CONSTRUCTION
 
-The building is a single-story steel frame structure with insulated metal panel (IMP) walls, originally constructed in 1999 with a major addition in 2005. The roof is a single-ply TPO membrane replaced in 2020 and in good condition. Clear height is 28 feet to the roof structure. Pallet racking is installed to 26 feet with seismic clips and cross-bracing.
+The building is a single-story steel frame structure with insulated metal panel (IMP) walls and a standing-seam metal roof in good condition. Clear height is 24 feet at the dock area and 30 feet in the warehouse. Pallet racking is installed to 24 feet with seismic clips and cross-bracing in the storage sections.
 
-The refrigeration system uses ammonia (R-717) with two 200 HP screw compressors and one 150 HP reciprocating compressor. PSM/RMP documentation was reviewed; the most recent mechanical integrity inspection records for the low-stage compressor were missing.
+The fleet maintenance bay attached to the southeast corner contains a parts washer, used oil storage, and charging stations for 20 yard trucks. This area has a dedicated fire suppression system but uses combustible construction (wood-framed mezzanine for parts storage).
 
-Several IMP panels in the freezer aisle have impact damage with exposed foam insulation, presenting a fire hazard.
+Several IMP panels in the north elevation have impact damage from trailer maneuvering, with exposed foam insulation.
 
 ### OCCUPANCY
 
-The facility operates as a third-party refrigerated warehousing and distribution center running 24/6 with three shifts. Approximately 60% of the space is frozen storage (-10F), 30% refrigerated (34-38F), and 10% ambient dock area. The facility serves 45 active client accounts and holds an AA rating from the American Institute of Baking (AIB).
+The facility operates as a regional trucking terminal running 24/5 with two shifts. Approximately 65% of the building is dedicated cross-dock (truck-to-truck transfer), 25% dry storage for customer overflow, and 10% fleet maintenance and administrative offices. The yard accommodates 87 tractors and 243 trailers, with 20 yard trucks operating on-site. An average of 115 trucks enter/exit the facility daily.
+
+The Joliet auxiliary facility at 4501 Freight Avenue primarily serves as dry storage (120,000 sq ft) with fleet yard parking and a fueling station. That location was not inspected as part of this engagement.
 
 ### FIRE PROTECTION
 
-The 2005 addition is fully sprinklered with wet pipe ESFR. The 1999 original warehouse has dry pipe ESFR. However, the 2018 transload dock addition (8,000 sq ft) is **not sprinklered** and contains combustible packaging materials. This is the highest-priority recommendation.
+The original 2010 warehouse and office areas are fully sprinklered with wet pipe ESFR. The 2020 cross-dock addition (12,000 sq ft) is **not sprinklered** and contains combustible freight packaging (pallets, cardboard, shrink wrap). This is the highest-priority recommendation.
 
-Central station fire alarm with addressable smoke detection and ammonia gas detection in the engine room. Water supply flow test: 1,850 gpm at 20 psi residual.
+The fleet maintenance bay has a dry-chemical system above the parts washer area. Portable fire extinguishers are present and current on inspection tags. Central station fire alarm with addressable smoke detection and heat detectors in the maintenance bay.
+
+No fire hydrant on the immediate property; fire department relies on a dry hydrant at a retention pond 800 feet south. Water supply flow test: 1,250 gpm at 18 psi residual.
 
 ### PRIOR LOSSES
 
-Two prior losses were identified during inspection that do not appear on the broker application:
-- **2023-10-12:** Ammonia refrigerant leak caused $180,000 in product spoilage (freezer aisle B). OSHA recordable.
-- **2021-11-05:** Employee slip and fall in freezer aisle; fractured wrist. $45,000 workers comp claim.
+The 2026 forklift engine fire (Claim 14 on loss run) originated in the warehouse and caused $521,400 in equipment and smoke damage. The investigation determined the fire was caused by an electrical fault in the forklift battery charger. No sprinkler impairment during this event.
 
-An active premises liability claim (2025-001233) involving a dock leveler injury is pending litigation with $150,000 in reserves.
+The 2023 yard tractor fire (Claim 7) totaled a yard truck in the parking area with $89,000 in damage.
+
+An active auto liability claim (2025-001891) involving a tire blowout rollover on I-57 is pending with $53,000 in reserves.
 
 ### RECOMMENDATIONS
 
-1. Retrofit sprinkler protection to the 8,000 sq ft transload dock addition
-2. Repair damaged IMP panels with exposed foam insulation
-3. Locate missing PSM mechanical integrity inspection records
-4. Reconcile construction type, square footage, and protection class before quoting
-5. Obtain complete 5-year loss run to verify undisclosed losses
-6. Consider spoilage coverage adequacy ($3M limit vs. $8.5M peak inventory)
+1. Retrofit sprinkler protection to the 12,000 sq ft cross-dock addition
+2. Repair damaged IMP panels with exposed foam insulation on north elevation
+3. Address wood-framed mezzanine in maintenance bay — consider fire-rated construction
+4. Reconcile square footage discrepancy (185,000 vs. 172,400)
+5. Evaluate adequacy of cargo theft prevention measures (GPS tracking, secure parking)
+6. Increase water supply testing frequency due to reliance on off-site dry hydrant
+7. Investigate feasibility of on-site fire hydrant or water storage tank
 
 ---
 
-*Report reference: PRS-2026-07923 | This report is for underwriting purposes only and does not replace a professional engineering assessment.*
+*Report reference: PRS-2026-08417 | This report is for underwriting purposes only and does not replace a professional engineering assessment.*

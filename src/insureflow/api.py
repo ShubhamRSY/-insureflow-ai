@@ -499,7 +499,7 @@ async def demo_presets() -> dict[str, Any]:
     insurance = [
         {
             "id": "pacific-coast",
-            "name": "Pacific Coast Marine",
+            "name": "Pacific Coast Distributors, Inc.",
             "description": "Commercial P&C — ACORD, loss run, SOV, inspection, broker API",
             "vertical": "insurance",
         },
