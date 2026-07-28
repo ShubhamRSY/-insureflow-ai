@@ -8,7 +8,7 @@ import uuid
 from collections import defaultdict
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Callable, Optional
 
 from fastapi import (
     APIRouter,
@@ -416,10 +416,7 @@ def _dashboard_index() -> FileResponse:
     ui_index = STATIC_DIR / "ui" / "index.html"
     if ui_index.exists():
         return FileResponse(ui_index)
-    path = STATIC_DIR / "dashboard.html"
-    if not path.exists():
-        raise HTTPException(status_code=404, detail="Dashboard not found")
-    return FileResponse(path)
+    raise HTTPException(status_code=404, detail="Dashboard not found")
 
 
 # ── Insurance Pipeline ──────────────────────────────────────────
@@ -505,7 +502,13 @@ async def demo_presets() -> dict[str, Any]:
             "name": "Pacific Coast Marine",
             "description": "Commercial P&C — ACORD, loss run, SOV, inspection, broker API",
             "vertical": "insurance",
-        }
+        },
+        {
+            "id": "northwind",
+            "name": "Northwind Logistics LLC",
+            "description": "Transportation & logistics — ACORD, loss run, SOV, inspection",
+            "vertical": "insurance",
+        },
     ]
     mortgage = [
         {
@@ -605,6 +608,20 @@ def _load_pacific_coast_submission() -> SubmissionRequest:
     )
 
 
+def _load_northwind_submission() -> SubmissionRequest:
+    acord = (EXAMPLES_DIR / "northwind_acord.xml").read_text(encoding="utf-8")
+    loss_run = (EXAMPLES_DIR / "northwind_loss_run.md").read_text(encoding="utf-8")
+    sov = (EXAMPLES_DIR / "northwind_sov.md").read_text(encoding="utf-8")
+    inspection = (EXAMPLES_DIR / "northwind_inspection_report.md").read_text(encoding="utf-8")
+    return SubmissionRequest(
+        acord_xml=acord,
+        loss_run=loss_run,
+        schedule_of_values=sov,
+        inspection_reports=[inspection],
+        use_llm=True,
+    )
+
+
 @app.post("/api/demo/insurance/{preset_id}", status_code=202)
 async def run_insurance_demo(
     preset_id: str,
@@ -612,12 +629,17 @@ async def run_insurance_demo(
     current: TokenData | None = Depends(get_current_user_optional),
 ) -> dict[str, Any]:
     org_id = current.org_id if current and current.org_id else "demo"
-    if preset_id != "pacific-coast":
+    preset_map: dict[str, tuple[str, Callable[[], SubmissionRequest]]] = {
+        "pacific-coast": ("pacific_coast_acord.xml", _load_pacific_coast_submission),
+        "northwind": ("northwind_acord.xml", _load_northwind_submission),
+    }
+    if preset_id not in preset_map:
         raise HTTPException(status_code=404, detail=f"Unknown insurance preset: {preset_id}")
-    if not (EXAMPLES_DIR / "pacific_coast_acord.xml").exists():
+    filename, loader = preset_map[preset_id]
+    if not (EXAMPLES_DIR / filename).exists():
         raise HTTPException(status_code=503, detail="Example data not found on server")
     job_id = f"demo-{uuid.uuid4().hex[:12]}"
-    req = _load_pacific_coast_submission()
+    req = loader()
     job_store.set(INSURANCE_NS, job_id, {"status": "processing", "demo": True}, org_id=org_id)
     background_tasks.add_task(_run_pipeline_task, job_id, req, org_id)
     return {"job_id": job_id, "status": "processing", "preset": preset_id, "org_id": org_id}

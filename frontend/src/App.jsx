@@ -207,6 +207,10 @@ function AppRoutes() {
   };
 
   const submitInsurance = async (body) => {
+    if (body._jobId) {
+      navigate(`/insurance/${body._jobId}`);
+      return;
+    }
     const res = await endpoints.runInsurance(body);
     await loadInsuranceJobs();
     navigate(`/insurance/${res.job_id}`);

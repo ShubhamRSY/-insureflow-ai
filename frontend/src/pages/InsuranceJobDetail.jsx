@@ -12,6 +12,7 @@ export default function InsuranceJobDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [quote, setQuote] = useState(null);
+  const [quoteLoading, setQuoteLoading] = useState(false);
 
   const fetchJob = async () => {
     try {
@@ -38,6 +39,7 @@ export default function InsuranceJobDetail() {
 
   const processing = job?.status === 'processing';
   const bundleId = job?.results?.bundle_id;
+  const insuredName = job?.results?.insured_name || job?.results?.memo?.insured_name || '';
 
   const handleReport = async () => {
     try {
@@ -54,11 +56,14 @@ export default function InsuranceJobDetail() {
   };
 
   const handleQuote = async () => {
+    setQuoteLoading(true);
     try {
       const d = await endpoints.insuranceQuote(jobId);
       setQuote(d);
     } catch (e) {
       alert(e.message || 'Quote not available');
+    } finally {
+      setQuoteLoading(false);
     }
   };
 
@@ -109,6 +114,7 @@ export default function InsuranceJobDetail() {
             <div>
               <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Insurance Submission</p>
               <p className="font-mono text-sm font-semibold">{jobId}</p>
+              {insuredName && <p className="text-xs text-slate-400">{insuredName}</p>}
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -120,8 +126,8 @@ export default function InsuranceJobDetail() {
             )}
             {bundleId && (
               <>
-                <button onClick={handleQuote} className="btn-secondary btn-sm text-xs">
-                  <FileCheck className="h-3.5 w-3.5" /> Quote PDF
+                <button onClick={handleQuote} disabled={quoteLoading} className="btn-secondary btn-sm text-xs">
+                  {quoteLoading ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <FileCheck className="h-3.5 w-3.5" />} Quote PDF
                 </button>
                 <button onClick={handleReport} className="btn-secondary btn-sm text-xs">
                   <FileText className="h-3.5 w-3.5" /> Full Report
