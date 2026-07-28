@@ -1,94 +1,45 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  Cloud, FolderOpen, Database, FileText, CheckCircle2, Loader2, ChevronDown,
+  Cloud, FolderOpen, Database, FileText, CheckCircle2, Loader2,
   Building2, PenLine, MessageSquare, Briefcase, Link2, Package, Inbox,
-  ArrowLeftRight, Warehouse, Mail, Check,
+  ArrowLeftRight, Warehouse, Mail, Check, Upload, X,
 } from 'lucide-react';
 import { endpoints } from '../lib/api';
 import { detectDocType } from '../lib/insuranceDocs';
 import { groupSourcesByCategory } from '../lib/connectorBrands';
 import ConnectorLogo from './ConnectorLogo';
-import DocumentAccumulator from './DocumentAccumulator';
 
 const SECTION_ICONS = {
-  package: Package,
-  cloud: Cloud,
-  inbox: Inbox,
-  exchange: ArrowLeftRight,
-  policy: Building2,
-  agency: Briefcase,
-  crm: Briefcase,
-  data: Database,
-  signature: PenLine,
-  messaging: MessageSquare,
-  warehouse: Warehouse,
+  package: Package, cloud: Cloud, inbox: Inbox, exchange: ArrowLeftRight,
+  policy: Building2, agency: Briefcase, crm: Briefcase, data: Database,
+  signature: PenLine, messaging: MessageSquare, warehouse: Warehouse,
 };
-
-function SourceCard({ src, isActive, onConnect }) {
-  return (
-    <button
-      type="button"
-      onClick={() => onConnect(src)}
-      className={`flex w-full items-center gap-4 rounded-xl border px-4 py-3 text-left transition ${
-        isActive
-          ? 'border-brand/40 bg-brand/5 ring-1 ring-brand/20'
-          : 'border-white/[0.06] bg-surface-overlay/30 hover:border-white/10 hover:bg-white/[0.02]'
-      }`}
-    >
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/[0.06] p-1">
-        <ConnectorLogo sourceId={src.id} name={src.name} size={28} />
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="font-medium text-sm text-slate-100">{src.name}</p>
-        <p className="truncate text-xs text-slate-500">{src.description}</p>
-      </div>
-      <span className="shrink-0 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
-        Ready
-      </span>
-    </button>
-  );
-}
 
 function EmailPicker({ emails, selectedIds, onToggle, onSelectAll }) {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <p className="text-xs font-semibold text-slate-400">{emails.length} email(s) found</p>
+        <p className="text-xs text-slate-400">{emails.length} email(s)</p>
         <button type="button" onClick={onSelectAll}
-          className="text-xs text-brand hover:text-brand-light transition">
+          className="text-xs text-brand hover:text-brand-light">
           {selectedIds.size === emails.length ? 'Deselect all' : 'Select all'}
         </button>
       </div>
-      <div className="max-h-64 space-y-1 overflow-y-auto rounded-lg border border-white/[0.06] bg-surface/40 p-2">
+      <div className="max-h-48 space-y-0.5 overflow-y-auto rounded-lg border border-white/[0.06] bg-surface/40 p-1.5">
         {emails.map((em) => {
           const checked = selectedIds.has(em.id);
           return (
-            <button
-              key={em.id}
-              type="button"
-              onClick={() => onToggle(em.id)}
-              className={`flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left transition ${
-                checked
-                  ? 'bg-brand/10 ring-1 ring-brand/20'
-                  : 'hover:bg-white/[0.02]'
-              }`}
-            >
-              <div className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
+            <button key={em.id} type="button" onClick={() => onToggle(em.id)}
+              className={`flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left transition text-xs ${
+                checked ? 'bg-brand/10 ring-1 ring-brand/20' : 'hover:bg-white/[0.02]'
+              }`}>
+              <div className={`flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded border ${
                 checked ? 'border-brand bg-brand text-white' : 'border-slate-600'
               }`}>
-                {checked && <Check className="h-3 w-3" />}
+                {checked && <Check className="h-2.5 w-2.5" />}
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm text-slate-200 truncate">{em.subject || '(no subject)'}</p>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-[10px] text-slate-500 truncate">{em.from}</span>
-                  {em.date && <span className="text-[10px] text-slate-600">·</span>}
-                  <span className="text-[10px] text-slate-600">{em.date?.split(',')[0] || ''}</span>
-                </div>
-              </div>
-              <span className="shrink-0 text-[10px] text-slate-500 mt-0.5">
-                {em.attachment_count} doc{em.attachment_count !== 1 ? 's' : ''}
-              </span>
+              <span className="truncate text-slate-200 flex-1">{em.subject || '(no subject)'}</span>
+              <span className="shrink-0 text-slate-500">{em.attachment_count}</span>
             </button>
           );
         })}
@@ -108,428 +59,262 @@ export default function InsuranceSourceHub({ onSubmit, loading }) {
   const [pulling, setPulling] = useState(false);
   const [useLlm, setUseLlm] = useState(true);
   const [error, setError] = useState('');
-  const [showManual, setShowManual] = useState(false);
 
-  // Draft bundle state (persistent across source switches)
   const [bundleId, setBundleId] = useState(null);
   const [bundleDocs, setBundleDocs] = useState([]);
-  const [bundleLoading, setBundleLoading] = useState(false);
 
   const sections = useMemo(() => groupSourcesByCategory(sources), [sources]);
   const activeSection = sections.find((s) => s.id === categoryId) || sections[0];
   const SectionIcon = activeSection ? (SECTION_ICONS[activeSection.icon] || FolderOpen) : FolderOpen;
-
   const isEmailSource = activeSource?.id === 'email-inbox';
   const hasEmails = emails.length > 0;
-  const selectedCount = selectedEmailIds.size;
-
-  // Rebuild file list from selected emails
-  const rebuildFilesFromSelection = (emailList, ids) => {
-    const selected = new Set(ids);
-    const docs = [];
-    for (const em of emailList) {
-      if (selected.has(em.id)) {
-        for (const d of (em.documents || [])) {
-          docs.push({
-            ...d,
-            id: `${em.id}-${d.filename}`,
-            email_subject: em.subject,
-            slot: detectDocType(d.filename, d.encoding === 'utf-8' ? d.content.slice(0, 4000) : ''),
-          });
-        }
-      }
-    }
-    return docs;
-  };
 
   const loadSources = async () => {
-    try {
-      const r = await endpoints.insuranceSources();
-      setSources(r.sources || []);
-    } catch { /* noop */ }
+    try { const r = await endpoints.insuranceSources(); setSources(r.sources || []); }
+    catch { /* noop */ }
   };
 
   useEffect(() => { loadSources(); }, []);
 
-  // Ensure a draft bundle exists
   const ensureBundle = async () => {
     if (bundleId) return bundleId;
     try {
       const result = await endpoints.createDraftBundle('New submission');
       setBundleId(result.bundle_id);
       return result.bundle_id;
-    } catch (e) {
-      setError(e.message);
-      return null;
-    }
+    } catch (e) { setError(e.message); return null; }
   };
 
-  // Refresh bundle documents from server
   const refreshBundle = async (bid) => {
     if (!bid) return;
-    try {
-      const detail = await endpoints.getDraftBundle(bid);
-      setBundleDocs(detail.documents || []);
-    } catch { /* noop */ }
+    try { const detail = await endpoints.getDraftBundle(bid); setBundleDocs(detail.documents || []); }
+    catch { /* noop */ }
   };
 
-  // Pull source and accumulate into draft bundle
   const pullSource = async (sourceId, cfg) => {
-    setPulling(true);
-    setError('');
+    setPulling(true); setError('');
     try {
       const bid = await ensureBundle();
       if (!bid) return;
-
-      const pullCfg = { ...cfg, bundle_id: bid };
-      const result = await endpoints.pullInsuranceSource(sourceId, pullCfg);
-
+      const result = await endpoints.pullInsuranceSource(sourceId, { ...cfg, bundle_id: bid });
       setConnected(result);
-
-      // If email source, show email picker for selection
       if (result.emails?.length) {
         setEmails(result.emails);
-        const allIds = new Set(result.emails.map((e) => e.id));
-        setSelectedEmailIds(allIds);
-        // For emails, we accumulate the full set initially — user can then deselect
-        // The pull already accumulated all docs into the bundle
+        setSelectedEmailIds(new Set(result.emails.map((e) => e.id)));
       }
-
-      // Refresh bundle doc list from server
       await refreshBundle(bid);
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setPulling(false);
-    }
+    } catch (e) { setError(e.message); }
+    finally { setPulling(false); }
   };
 
   const handleConnect = async (source) => {
-    setActiveSource(source);
-    setError('');
-    setConnected(null);
-    setEmails([]);
-    setSelectedEmailIds(new Set());
-    setConfig({});
-    if (source.type === 'library') {
-      await pullSource(source.id, {});
-    }
+    setActiveSource(source); setError(''); setConnected(null); setEmails([]);
+    setSelectedEmailIds(new Set()); setConfig({});
+    if (source.type === 'library') await pullSource(source.id, {});
   };
 
-  const handleCategoryChange = (id) => {
-    setCategoryId(id);
-    setActiveSource(null);
-    setConnected(null);
-    setEmails([]);
-    setSelectedEmailIds(new Set());
-    setConfig({});
-    setError('');
-    // NOTE: bundle state is NOT cleared — documents persist across source switches
-  };
-
-  // Email selection: re-pull with filtered email IDs into the bundle
-  const handleToggleEmail = (emailId) => {
-    setSelectedEmailIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(emailId)) {
-        next.delete(emailId);
-      } else {
-        next.add(emailId);
-      }
-      return next;
-    });
-  };
-
-  const handleSelectAllEmails = () => {
-    if (selectedEmailIds.size === emails.length) {
-      setSelectedEmailIds(new Set());
-    } else {
-      setSelectedEmailIds(new Set(emails.map((e) => e.id)));
-    }
-  };
-
-  // After email selection changes, re-filter: remove old email docs, add selected
   const handleEmailConfirm = async () => {
     if (!bundleId || !isEmailSource) return;
     setPulling(true);
     try {
-      // Filter emails via API
       const selectedIds = Array.from(selectedEmailIds);
-      if (selectedIds.length === 0) {
-        // Remove all email docs from bundle
-        const detail = await endpoints.getDraftBundle(bundleId);
-        for (const doc of (detail.documents || [])) {
-          if (doc.source_id === 'email-inbox') {
-            await endpoints.removeDocFromDraft(bundleId, doc.doc_id).catch(() => {});
-          }
-        }
-      } else {
+      const detail = await endpoints.getDraftBundle(bundleId);
+      for (const doc of (detail.documents || [])) {
+        if (doc.source_id === 'email-inbox')
+          await endpoints.removeDocFromDraft(bundleId, doc.doc_id).catch(() => {});
+      }
+      if (selectedIds.length > 0) {
         const result = await endpoints.filterEmails(selectedIds);
-        // Remove old email docs, add new ones
-        const detail = await endpoints.getDraftBundle(bundleId);
-        for (const doc of (detail.documents || [])) {
-          if (doc.source_id === 'email-inbox') {
-            await endpoints.removeDocFromDraft(bundleId, doc.doc_id).catch(() => {});
-          }
-        }
-        if (result.documents?.length) {
+        if (result.documents?.length)
           await endpoints.addDocsToDraft(bundleId, result.documents, 'email-inbox', connected?.connection_label || 'Email');
-        }
       }
       await refreshBundle(bundleId);
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setPulling(false);
-    }
-  };
-
-  const handlePull = () => {
-    if (!activeSource) return;
-    pullSource(activeSource.id, config);
+    } catch (e) { setError(e.message); }
+    finally { setPulling(false); }
   };
 
   const handleRemoveDoc = async (bid, docId) => {
-    try {
-      await endpoints.removeDocFromDraft(bid, docId);
-      await refreshBundle(bid);
-    } catch (e) {
-      setError(e.message);
-    }
+    try { await endpoints.removeDocFromDraft(bid, docId); await refreshBundle(bid); }
+    catch (e) { setError(e.message); }
   };
 
   const handleClearAll = async (bid) => {
-    try {
-      await endpoints.deleteDraftBundle(bid);
-      setBundleId(null);
-      setBundleDocs([]);
-      setConnected(null);
-      setActiveSource(null);
-      setEmails([]);
-      setSelectedEmailIds(new Set());
-    } catch (e) {
-      setError(e.message);
-    }
+    try { await endpoints.deleteDraftBundle(bid); setBundleId(null); setBundleDocs([]); setConnected(null); setActiveSource(null); setEmails([]); setSelectedEmailIds(new Set()); }
+    catch (e) { setError(e.message); }
   };
 
   const handleRunPipeline = async (bid, llm) => {
     try {
       const result = await endpoints.runDraftBundle(bid, llm);
-      // Reset state after successful run
-      setBundleId(null);
-      setBundleDocs([]);
-      setConnected(null);
-      setActiveSource(null);
-      setEmails([]);
-      setSelectedEmailIds(new Set());
-      // Trigger parent refresh
+      setBundleId(null); setBundleDocs([]); setConnected(null); setActiveSource(null);
+      setEmails([]); setSelectedEmailIds(new Set());
       await onSubmit?.({ _jobId: result.job_id });
-    } catch (e) {
-      setError(e.message);
-    }
+    } catch (e) { setError(e.message); }
   };
 
   const handleManualUpload = async (e) => {
-    const { readFileForUpload, detectDocType: detect } = await import('../lib/insuranceDocs');
+    const { readFileForUpload } = await import('../lib/insuranceDocs');
     const incoming = await Promise.all(
       Array.from(e.target.files || []).map(async (file) => {
         const doc = await readFileForUpload(file);
-        return {
-          filename: doc.filename,
-          content: doc.content,
-          encoding: doc.encoding,
-        };
+        return { filename: doc.filename, content: doc.content, encoding: doc.encoding };
       }),
     );
     if (!incoming.length) return;
-
     const bid = await ensureBundle();
     if (!bid) return;
-
     try {
       await endpoints.addDocsToDraft(bid, incoming, 'manual-upload', 'Manual upload');
       await refreshBundle(bid);
       setConnected({ connection_label: 'Manual upload', file_count: incoming.length });
-    } catch (err) {
-      setError(err.message);
-    }
+    } catch (err) { setError(err.message); }
   };
 
+  const totalDocs = bundleDocs.length;
+
   return (
-    <div className="glass-card overflow-hidden">
-      <div className="border-b border-white/[0.06] px-5 py-4 sm:px-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-2">
-            <Link2 className="h-5 w-5 text-insurance" />
-            <div>
-              <h3 className="font-semibold">Connect input source</h3>
-              <p className="text-xs text-slate-500">Pull from one or more sources — documents accumulate until you run</p>
-            </div>
-          </div>
-          <div className="min-w-[220px]">
-            <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-              Service category
-            </label>
-            <select
-              className="input-field text-sm"
-              value={categoryId}
-              onChange={(e) => handleCategoryChange(e.target.value)}
-            >
-              {sections.map((s) => (
-                <option key={s.id} value={s.id}>{s.title}</option>
-              ))}
-            </select>
-          </div>
+    <div className="rounded-xl border border-white/[0.06] bg-surface-overlay/40">
+      {/* Header row */}
+      <div className="flex items-center gap-3 border-b border-white/[0.06] px-4 py-2.5">
+        <Link2 className="h-4 w-4 text-insurance shrink-0" />
+        <span className="text-sm font-semibold text-slate-200">Input sources</span>
+        <div className="ml-auto flex items-center gap-1 overflow-x-auto">
+          {sections.map((s) => {
+            const Icon = SECTION_ICONS[s.icon] || FolderOpen;
+            const isActive = s.id === categoryId;
+            return (
+              <button key={s.id} type="button" onClick={() => { setCategoryId(s.id); setActiveSource(null); setConnected(null); setEmails([]); setSelectedEmailIds(new Set()); setConfig({}); setError(''); }}
+                className={`flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-medium transition ${
+                  isActive ? 'bg-brand/15 text-brand ring-1 ring-brand/20' : 'text-slate-500 hover:text-slate-300 hover:bg-white/[0.04]'
+                }`}>
+                <Icon className="h-3.5 w-3.5" />
+                {s.title}
+              </button>
+            );
+          })}
         </div>
+        {totalDocs > 0 && (
+          <span className="shrink-0 rounded-full bg-brand/15 px-2 py-0.5 text-[10px] font-semibold text-brand">
+            {totalDocs}
+          </span>
+        )}
       </div>
 
-      <div className="space-y-6 p-5 sm:p-6">
-        {activeSection && (
-          <div className="flex items-start gap-3 rounded-xl bg-white/[0.02] px-4 py-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-insurance/10">
-              <SectionIcon className="h-4 w-4 text-insurance" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-slate-200">{activeSection.title}</p>
-              <p className="text-xs text-slate-500">{activeSection.subtitle}</p>
-            </div>
-          </div>
-        )}
-
-        <div className="space-y-2">
-          {(activeSection?.sources || []).map((src) => (
-            <SourceCard
-              key={src.id}
-              src={src}
-              isActive={activeSource?.id === src.id}
-              onConnect={handleConnect}
-            />
-          ))}
+      {/* Body */}
+      <div className="p-3 space-y-3">
+        {/* Source grid */}
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+          {(activeSection?.sources || []).map((src) => {
+            const sel = activeSource?.id === src.id;
+            return (
+              <button key={src.id} type="button" onClick={() => handleConnect(src)}
+                className={`flex items-center gap-2.5 rounded-lg border p-2.5 text-left transition ${
+                  sel
+                    ? 'border-brand/40 bg-brand/5 ring-1 ring-brand/20'
+                    : 'border-white/[0.06] bg-surface/30 hover:border-white/10 hover:bg-white/[0.02]'
+                }`}>
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-white/[0.06] p-0.5">
+                  <ConnectorLogo sourceId={src.id} name={src.name} size={18} />
+                </div>
+                <span className="truncate text-xs font-medium text-slate-200">{src.name}</span>
+              </button>
+            );
+          })}
         </div>
 
+        {/* Config inline */}
         {activeSource && activeSource.config_fields?.length > 0 && !connected && (
-          <div className="rounded-xl border border-white/[0.08] bg-surface/40 p-4 space-y-3">
-            <div className="flex items-center gap-3">
-              <ConnectorLogo sourceId={activeSource.id} name={activeSource.name} size={32} />
-              <p className="text-sm font-medium">Connect to {activeSource.name}</p>
-            </div>
+          <div className="flex flex-wrap items-end gap-2 rounded-lg border border-white/[0.06] bg-surface/40 p-3">
             {activeSource.config_fields.map((f) => (
-              <div key={f.key}>
-                <label className="mb-1 block text-xs text-slate-500">{f.label}</label>
-                <input
-                  className="input-field text-sm"
-                  placeholder={f.placeholder}
+              <div key={f.key} className="min-w-0 flex-1 basis-40">
+                <label className="mb-0.5 block text-[10px] text-slate-500">{f.label}</label>
+                <input className="input-field text-xs w-full" placeholder={f.placeholder}
                   value={config[f.key] || ''}
-                  onChange={(e) => setConfig((c) => ({ ...c, [f.key]: e.target.value }))}
-                />
+                  onChange={(e) => setConfig((c) => ({ ...c, [f.key]: e.target.value }))} />
               </div>
             ))}
-            <button type="button" onClick={handlePull} disabled={pulling} className="btn-primary btn-sm">
-              {pulling ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Connect & pull files'}
+            <button type="button" onClick={() => pullSource(activeSource.id, config)}
+              disabled={pulling} className="btn-primary btn-sm text-xs shrink-0">
+              {pulling ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Pull'}
             </button>
           </div>
         )}
 
+        {/* Connected badge */}
         {connected && (
-          <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4">
-            <div className="flex items-center gap-2 text-emerald-400">
-              <CheckCircle2 className="h-5 w-5" />
-              <span className="font-semibold text-sm">
-                {connected.accumulated
-                  ? `Added ${connected.accumulated.added} doc(s) to bundle`
-                  : `Connected · ${connected.connection_label}`}
-              </span>
-            </div>
-            <p className="mt-1 text-xs text-slate-400">
+          <div className="flex items-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-3 py-2">
+            <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+            <span className="text-xs text-emerald-300 flex-1">
               {connected.accumulated
-                ? `${connected.accumulated.document_count} total document(s) in bundle`
-                : `${connected.file_count} document${connected.file_count !== 1 ? 's' : ''} ready`}
-              {isEmailSource && hasEmails && ` from ${selectedCount} email(s)`}
-            </p>
+                ? `+${connected.accumulated.added} doc(s) · ${connected.accumulated.document_count} total`
+                : `Connected · ${connected.connection_label}`}
+            </span>
+            {connected.file_count != null && (
+              <span className="text-[10px] text-slate-500">{connected.file_count} file(s)</span>
+            )}
+            {isEmailSource && hasEmails && (
+              <button type="button" onClick={handleEmailConfirm} disabled={pulling}
+                className="text-[10px] text-brand hover:text-brand-light">
+                {pulling ? <Loader2 className="h-3 w-3 animate-spin" /> : `Update (${selectedEmailIds.size})`}
+              </button>
+            )}
           </div>
         )}
 
-        {connected && isEmailSource && hasEmails && (
-          <div className="space-y-3">
-            <EmailPicker
-              emails={emails}
-              selectedIds={selectedEmailIds}
-              onToggle={handleToggleEmail}
-              onSelectAll={handleSelectAllEmails}
-            />
-            <button
-              type="button"
-              onClick={handleEmailConfirm}
-              disabled={pulling}
-              className="btn-primary btn-sm"
-            >
-              {pulling ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Update selection'}
-            </button>
-          </div>
-        )}
+        {/* Email picker */}
+        {connected && isEmailSource && hasEmails && <EmailPicker emails={emails} selectedIds={selectedEmailIds} onToggle={(id) => setSelectedEmailIds((p) => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; })} onSelectAll={() => setSelectedEmailIds((p) => p.size === emails.length ? new Set() : new Set(emails.map((e) => e.id)))} />}
 
-        {/* Persistent document accumulator — survives source switches */}
-        {bundleId && (
-          <DocumentAccumulator
-            bundleId={bundleId}
-            documents={bundleDocs}
-            onRemove={handleRemoveDoc}
-            onRunPipeline={handleRunPipeline}
-            onClearAll={handleClearAll}
-            loading={loading}
-            useLlm={useLlm}
-            onToggleLlm={setUseLlm}
-          />
-        )}
+        {/* Error */}
+        {error && <p className="rounded-lg bg-red-500/10 px-3 py-1.5 text-xs text-red-300">{error}</p>}
 
-        {error && <p className="rounded-xl bg-red-500/10 px-4 py-2 text-sm text-red-300">{error}</p>}
-
-        {/* Legacy quick-run for single-source flow (no bundle) */}
-        {!bundleId && (
-          <div className="flex items-center justify-between border-t border-white/[0.06] pt-4">
-            <label className="flex items-center gap-2 text-sm text-slate-400">
-              <input type="checkbox" checked={useLlm} onChange={(e) => setUseLlm(e.target.checked)} className="rounded" />
-              LLM enhancement
-            </label>
-            <button
-              type="button"
-              onClick={async () => {
-                // Fallback: create bundle and run immediately
-                const bid = await ensureBundle();
-                if (bid && bundleDocs.length > 0) {
-                  handleRunPipeline(bid, useLlm);
-                }
-              }}
-              disabled={loading || !bundleDocs.length}
-              className="btn-primary"
-            >
-              {loading ? 'Submitting…' : 'Run underwriting pipeline'}
-            </button>
-          </div>
-        )}
-
-        <button
-          type="button"
-          onClick={() => setShowManual((v) => !v)}
-          className="flex items-center gap-1 text-xs text-slate-600 hover:text-slate-400"
-        >
-          <ChevronDown className={`h-3.5 w-3.5 transition ${showManual ? 'rotate-180' : ''}`} />
-          Manual file upload
-        </button>
-
-        {showManual && (
-          <label className="btn-secondary inline-flex cursor-pointer text-xs">
-            Choose files
-            <input
-              type="file"
-              multiple
-              className="hidden"
-              accept=".xml,.json,.pdf,.txt,.md"
-              onChange={handleManualUpload}
-            />
-          </label>
-        )}
+        {/* Manual upload */}
+        <label className="inline-flex cursor-pointer items-center gap-1.5 text-xs text-slate-500 hover:text-slate-300 transition">
+          <Upload className="h-3.5 w-3.5" />
+          Upload files
+          <input type="file" multiple className="hidden" accept=".xml,.json,.pdf,.txt,.md" onChange={handleManualUpload} />
+        </label>
       </div>
+
+      {/* Document accumulator footer */}
+      {bundleId && totalDocs > 0 && (
+        <div className="border-t border-white/[0.06] px-3 py-2">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <Package className="h-3.5 w-3.5 text-brand" />
+              <span className="text-xs font-medium text-slate-300">{totalDocs} document{totalDocs !== 1 ? 's' : ''}</span>
+              <span className="rounded-full bg-brand/15 px-1.5 py-0.5 text-[9px] font-semibold text-brand">Multi-source</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="flex items-center gap-1.5 text-[10px] text-slate-500">
+                <input type="checkbox" checked={useLlm} onChange={(e) => setUseLlm(e.target.checked)} className="rounded" />
+                LLM
+              </label>
+              <button type="button" onClick={() => handleClearAll(bundleId)}
+                className="text-[10px] text-red-400/70 hover:text-red-400">Clear</button>
+            </div>
+          </div>
+
+          {/* Doc list compact */}
+          <div className="mb-2 max-h-32 space-y-0.5 overflow-y-auto">
+            {bundleDocs.map((doc) => (
+              <div key={doc.doc_id} className="flex items-center gap-2 rounded-md bg-white/[0.02] px-2 py-1 group">
+                <FileText className="h-3 w-3 shrink-0 text-insurance" />
+                <span className="truncate text-[11px] text-slate-400 flex-1">{doc.filename}</span>
+                <span className="text-[9px] text-slate-600 shrink-0">{doc.source_id}</span>
+                <button type="button" onClick={() => handleRemoveDoc(bundleId, doc.doc_id)}
+                  className="opacity-0 group-hover:opacity-100 text-slate-600 hover:text-red-400 transition">
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <button type="button" onClick={() => handleRunPipeline(bundleId, useLlm)}
+            disabled={loading} className="btn-primary w-full text-xs py-2">
+            {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : `Run pipeline (${totalDocs} docs)`}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
