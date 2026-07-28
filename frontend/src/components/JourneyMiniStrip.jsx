@@ -2,12 +2,12 @@ import { CheckCircle2, Circle, AlertTriangle, XCircle, MinusCircle, Loader2 } fr
 import { buildMiniStripStages } from '../lib/pipelineJourney';
 
 const ICONS = {
-  complete: { Icon: CheckCircle2, dot: 'bg-emerald-400' },
-  warning: { Icon: AlertTriangle, dot: 'bg-amber-400' },
-  failed: { Icon: XCircle, dot: 'bg-red-400' },
-  skipped: { Icon: MinusCircle, dot: 'bg-slate-600' },
-  pending: { Icon: Circle, dot: 'bg-slate-700' },
-  active: { Icon: Loader2, dot: 'bg-brand animate-pulse' },
+  complete: { Icon: CheckCircle2, dot: 'bg-emerald-400', text: 'text-emerald-400' },
+  warning: { Icon: AlertTriangle, dot: 'bg-amber-400', text: 'text-amber-400' },
+  failed: { Icon: XCircle, dot: 'bg-red-400', text: 'text-red-400' },
+  skipped: { Icon: MinusCircle, dot: 'bg-slate-600', text: 'text-slate-600' },
+  pending: { Icon: Circle, dot: 'bg-slate-700', text: 'text-slate-600' },
+  active: { Icon: Loader2, dot: 'bg-brand animate-pulse', text: 'text-brand-light' },
 };
 
 const LABELS = {
@@ -46,9 +46,9 @@ export default function JourneyMiniStrip({ job, compact = false }) {
         const Icon = cfg.Icon;
         return (
           <div key={stage.id} className="flex items-center gap-1.5">
-            <div className="flex items-center gap-1 rounded-full bg-black/20 px-2 py-0.5" title={stage.detail}>
-              <Icon className={`h-3 w-3 ${stage.status === 'active' ? 'animate-spin text-brand-light' : 'text-slate-400'}`} />
-              <span className="text-[10px] text-slate-400">{LABELS[stage.id] || stage.label}</span>
+            <div className={`flex items-center gap-1 rounded-full px-2 py-0.5 ${stage.status === 'failed' ? 'bg-red-500/10' : stage.status === 'complete' ? 'bg-emerald-500/10' : 'bg-black/20'}`} title={stage.detail}>
+              <Icon className={`h-3 w-3 ${cfg.text || 'text-slate-400'} ${stage.status === 'active' ? 'animate-spin' : ''}`} />
+              <span className={`text-[10px] ${cfg.text || 'text-slate-400'}`}>{LABELS[stage.id] || stage.label}</span>
             </div>
             {i < stages.length - 1 && <span className="text-[10px] text-slate-600">→</span>}
           </div>
