@@ -37,7 +37,8 @@ def real_acord_json() -> str:
 
 @pytest.fixture(scope="module")
 def real_acord_data(real_acord_json: str) -> dict[str, Any]:
-    return json.loads(real_acord_json)
+    result: dict[str, Any] = json.loads(real_acord_json)
+    return result
 
 
 @pytest.fixture(scope="module")
@@ -230,6 +231,7 @@ class TestRealDataEdgeCases:
         loader = SubmissionLoader()
         bundle = loader.load_bundle(json_payload=json.dumps(data))
         assert bundle.structured is not None
+        assert bundle.structured.named_insured is not None
         assert "Ünïcödé" in bundle.structured.named_insured.legal_name
 
     def test_json_special_characters_in_address(self) -> None:
@@ -289,7 +291,7 @@ class TestRealDataEdgeCases:
 
     def test_real_claims_year_distribution(self, real_claims_rows: list[dict[str, str]]) -> None:
         years = [int(r["Year"]) for r in real_claims_rows]
-        year_counts = {}
+        year_counts: dict[int, int] = {}
         for y in years:
             year_counts[y] = year_counts.get(y, 0) + 1
         assert len(year_counts) >= 2, "Claims should span multiple years"

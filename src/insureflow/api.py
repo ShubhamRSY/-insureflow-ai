@@ -315,8 +315,8 @@ def auth_sso_login() -> dict[str, str]:
 @app.post("/auth/sso/callback")
 def auth_sso_callback(payload: dict[str, Any]) -> dict[str, Any]:
     """OIDC callback — exchanges code, validates JWKS, issues local app JWT."""
+    from insureflow.auth import Role
     from insureflow.auth.jwt import create_access_token
-    from insureflow.auth.models import Role
     from insureflow.auth.sso import exchange_code_for_claims, sso_status
     from insureflow.auth.store import get_user_store
 

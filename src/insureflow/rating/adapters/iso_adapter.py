@@ -162,7 +162,8 @@ class ISORatingAdapter(RatingAdapter):
             },
         )
         with urllib.request.urlopen(req, timeout=15) as resp:
-            return json.loads(resp.read().decode())
+            result: dict[str, Any] = json.loads(resp.read().decode())
+            return result
 
     def sync_status(self, reference: str) -> dict[str, Any]:
         return {

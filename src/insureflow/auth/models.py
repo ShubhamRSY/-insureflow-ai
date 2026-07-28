@@ -10,7 +10,8 @@ from insureflow.auth import Role
 
 class User(BaseModel):
     username: str
-    hashed_password: str
+    email: str = ""
+    hashed_password: str = ""
     role: Role = Role.VIEWER
     disabled: bool = False
     org_id: str = "default"
