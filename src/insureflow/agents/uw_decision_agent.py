@@ -84,26 +84,59 @@ class UWDecisionAgent(ReActAgent):
         has_moderate = any(f.severity == RiskSeverity.MODERATE for f in self._findings)
         score = self._calculate_aggregate_risk(self._findings)
 
+        frequency_val = 0.0
+        severity_val = 0.0
+        for f in self._findings:
+            if f.category == "frequency" and f.source_value is not None:
+                frequency_val = float(f.source_value)
+            if f.category == "severity" and f.source_value is not None:
+                severity_val = float(f.source_value)
+
+        freq_surcharge = 0.0
+        if frequency_val > 3:
+            freq_surcharge = 15.0 + (frequency_val - 3) * 15.0
+        elif frequency_val > 1.5:
+            freq_surcharge = 10.0
+
+        sev_surcharge = 0.0
+        if severity_val > 200_000:
+            sev_surcharge = 10.0 + (severity_val - 200_000) / 20_000
+        elif severity_val > 75_000:
+            sev_surcharge = 5.0
+
+        total_surcharge = min(freq_surcharge + sev_surcharge, 100.0)
+
+        if frequency_val >= 10:
+            return Recommendation(
+                action="decline",
+                rationale=f"Extreme claim frequency: {frequency_val:.1f} claims/year indicates systemic operational issues. Aggregate risk score: {score:.2f}.",
+                conditions=[f"Claim frequency of {frequency_val:.1f}/yr exceeds maximum acceptable threshold (10/yr)."],
+            )
+
         if has_critical:
             return Recommendation(
                 action="decline",
                 rationale=f"Critical findings present. Aggregate risk score: {score:.2f}",
                 conditions=[],
             )
+
         if has_high or score >= 0.7:
             return Recommendation(
                 action="refer",
                 rationale=f"Aggregate risk score: {score:.2f}. {sum(1 for f in self._findings if f.severity == RiskSeverity.HIGH)} high-severity findings require UW review.",
-                suggested_premium_modification=1.15 if score > 0.6 else None,
+                suggested_premium_modification=total_surcharge if total_surcharge > 0 and score > 0.6 else None,
                 conditions=[f.title for f in self._findings if f.severity in (RiskSeverity.HIGH, RiskSeverity.CRITICAL)],
             )
+
         if has_moderate:
             moderate = [f for f in self._findings if f.severity == RiskSeverity.MODERATE]
             return Recommendation(
                 action="conditional_accept",
                 rationale=f"Aggregate risk score: {score:.2f}. {len(moderate)} moderate finding(s) require subjectivities before bind. Issuing conditional quote.",
                 conditions=[f"SUBJECT TO: {f.field_path or f.category} — {f.title}: {f.description[:120]}" for f in moderate],
+                suggested_premium_modification=total_surcharge if total_surcharge > 0 else None,
             )
+
         return Recommendation(
             action="accept",
             rationale=f"Acceptable risk profile. Aggregate risk score: {score:.2f}. No findings requiring conditions.",
