@@ -4,13 +4,24 @@
 
 @layer base {
   body {
-    @apply min-h-screen;
+    @apply min-h-screen bg-surface text-slate-100 antialiased;
+  }
+
+  /* Lift low-contrast white/opacity text used across the app */
+  .text-white\/40,
+  .text-white\/50 {
+    color: rgb(226 232 240 / 0.72) !important;
+  }
+
+  .text-white\/60,
+  .text-white\/70 {
+    color: rgb(226 232 240 / 0.85) !important;
   }
 }
 
 @layer components {
   .glass-card {
-    @apply rounded-2xl border border-white/[0.06] bg-surface-raised/80 backdrop-blur-xl shadow-card;
+    @apply rounded-2xl border border-white/[0.08] bg-surface-raised/85 backdrop-blur-xl shadow-card;
   }
 
   .btn-primary {
@@ -18,15 +29,15 @@
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-surface-overlay px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:bg-surface-hover;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-surface-overlay px-4 py-2.5 text-sm font-medium text-slate-100 transition hover:bg-surface-hover;
   }
 
   .input-field {
-    @apply w-full rounded-xl border border-white/10 bg-surface px-3.5 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30;
+    @apply w-full rounded-xl border border-white/15 bg-surface px-3.5 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30;
   }
 
   .nav-link {
-    @apply flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-400 transition hover:bg-white/[0.04] hover:text-slate-100;
+    @apply flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-300 transition hover:bg-white/[0.05] hover:text-slate-50;
   }
 
   .nav-link-active {
@@ -37,4 +48,4 @@
 /* scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.18); border-radius: 3px; }
