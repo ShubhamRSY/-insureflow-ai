@@ -3,15 +3,16 @@
 | Folder | Contents |
 |--------|----------|
 | [architecture/](./architecture/) | System design |
-| [product/](./product/) | Pilot partner brief |
+| [product/](./product/) | **[Application guide](./product/PRODUCT_GUIDE.md)** (screenshots), pilot partner brief |
 | [ops/](./ops/) | Launch, sandbox, oracle wiring, gap status, bank landing zone |
 | [outreach/](./outreach/) | This-week emails + vendor sandbox templates |
 
 ## Start here
 
-1. Pilot ask → [product/PILOT_PARTNER_BRIEF.md](./product/PILOT_PARTNER_BRIEF.md)
-2. Send emails → [outreach/THIS_WEEK_OUTREACH.md](./outreach/THIS_WEEK_OUTREACH.md)
-3. Wire oracles → [ops/ORACLE_LIVE_WIRING.md](./ops/ORACLE_LIVE_WIRING.md)
-4. Launch leftovers → [ops/LAUNCH_CHECKLIST.md](./ops/LAUNCH_CHECKLIST.md)
+1. **What the app does** → [product/PRODUCT_GUIDE.md](./product/PRODUCT_GUIDE.md) (with screenshots)
+2. Pilot ask → [product/PILOT_PARTNER_BRIEF.md](./product/PILOT_PARTNER_BRIEF.md)
+3. Send emails → [outreach/THIS_WEEK_OUTREACH.md](./outreach/THIS_WEEK_OUTREACH.md)
+4. Wire oracles → [ops/ORACLE_LIVE_WIRING.md](./ops/ORACLE_LIVE_WIRING.md)
+5. Launch leftovers → [ops/LAUNCH_CHECKLIST.md](./ops/LAUNCH_CHECKLIST.md)
 
 Repo map: [../STRUCTURE.md](../STRUCTURE.md)
