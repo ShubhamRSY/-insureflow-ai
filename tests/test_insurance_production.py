@@ -28,7 +28,7 @@ from insureflow.workflow.models import SignOffAction, WorkflowState
 from insureflow.workflow.service import WorkflowService
 
 SIM = Path(__file__).resolve().parent.parent / "simulated_documents"
-EXAMPLES = Path(__file__).resolve().parent.parent / "examples"
+EXAMPLES = Path(__file__).resolve().parent.parent / "examples" / "insurance"
 
 
 class TestInsuranceOCR:

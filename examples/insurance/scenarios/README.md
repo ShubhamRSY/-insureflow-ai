@@ -7,7 +7,7 @@ intentional risk signals covering production decision paths.
 ## Run
 
 ```bash
-PYTHONPATH=src python scripts/run_realworld_scenarios.py
+PYTHONPATH=src python scripts/pilot/run_realworld_scenarios.py
 PYTHONPATH=src python -m pytest tests/test_realworld_scenarios.py -q
 ```
 

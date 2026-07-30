@@ -8,8 +8,8 @@ honest (`synthetic: true`) and must not be treated as a clean loss history.
 ## 0. One-command status (no secrets printed)
 
 ```bash
-PYTHONPATH=src python scripts/verify_oracles.py
-PYTHONPATH=src python scripts/verify_oracles.py --ping   # after keys are set
+PYTHONPATH=src python scripts/pilot/verify_oracles.py
+PYTHONPATH=src python scripts/pilot/verify_oracles.py --ping   # after keys are set
 ```
 
 Exit code `2` = required keys still missing. Exit `0` = CLUE + A-PLUS configured.

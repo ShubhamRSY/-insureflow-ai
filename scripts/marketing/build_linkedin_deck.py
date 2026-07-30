@@ -8,9 +8,9 @@ import sys
 import urllib.request
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-OUT_DIR = ROOT / "assets" / "linkedin_deck"
-PPT_PATH = ROOT / "Rytera_LinkedIn_Deck.pptx"
+ROOT = Path(__file__).resolve().parents[2]
+OUT_DIR = ROOT / "marketing" / "assets" / "linkedin_deck"
+PPT_PATH = ROOT / "marketing" / "assets" / "Rytera_LinkedIn_Deck.pptx"
 BASE = "http://127.0.0.1:8002"
 DASHBOARD = f"{BASE}/dashboard"
 JOB_ID = "demo-linkedin-001"

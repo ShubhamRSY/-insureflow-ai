@@ -30,7 +30,7 @@ Customer authorizes use of infrastructure subprocessors (e.g., AWS regions contr
 
 ## 6. Security measures
 
-Aligned with `docs/BANK_LANDING_ZONE.md` and `legal/SOC2_QUESTIONNAIRE.md`: VPC isolation, Secrets Manager, CloudTrail, WAF, encrypted RDS, WORM audit option, LangSmith for AI eval governance (no substitute for infrastructure logging).
+Aligned with `docs/ops/BANK_LANDING_ZONE.md` and `legal/SOC2_QUESTIONNAIRE.md`: VPC isolation, Secrets Manager, CloudTrail, WAF, encrypted RDS, WORM audit option, LangSmith for AI eval governance (no substitute for infrastructure logging).
 
 ## 7. Governing law
 

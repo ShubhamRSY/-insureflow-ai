@@ -66,7 +66,7 @@ Production HTTP adapters for carrier systems with `auto` / `live` / `simulated` 
 | **CRM** | HubSpot (local gateway mock for dev) |
 | **Enterprise ops** | Loss control, claims, broker portal, actuarial |
 
-Bundled **integration gateway** at `/integrations` on the API server (deploy same routes at `integrations.rytera.ai` in production). Configure via `.env` — see `.env.example` and `docs/LAUNCH_CHECKLIST.md`.
+Bundled **integration gateway** at `/integrations` on the API server (deploy same routes at `integrations.rytera.ai` in production). Configure via `.env` — see `.env.example` and `docs/ops/LAUNCH_CHECKLIST.md`.
 
 | Endpoint | Purpose |
 |----------|---------|
@@ -116,10 +116,10 @@ Category-filtered connector hub with brand logos and pull-to-submit workflow.
 ```bash
 python -m pytest tests/ -q                        # Unit + integration tests
 python -m pytest tests/ -q --ignore=tests/test_e2e.py   # Skip E2E (faster)
-python scripts/e2e_test.py --timeout 360          # Full live-server E2E
-python scripts/e2e_test.py --fast --timeout 360   # Skip connector pulls (~6 min)
+python scripts/ops/e2e_test.py --timeout 360          # Full live-server E2E
+python scripts/ops/e2e_test.py --fast --timeout 360   # Skip connector pulls (~6 min)
 python cli.py e2e --fast                          # Same via CLI
-python scripts/build_linkedin_deck.py             # Product deck (screenshots + PPTX)
+python scripts/marketing/build_linkedin_deck.py             # Product deck (screenshots + PPTX)
 ```
 
 CI checks: `ruff check .`, `ruff format --check .`, `mypy src/ tests/`, `pytest`
@@ -209,7 +209,7 @@ pip install playwright && playwright install chromium
 cp .env.example .env
 ```
 
-Local dev uses the bundled gateway at `http://127.0.0.1:8002/integrations` with `ORACLE_MODE=auto` — feeds show **live** when the API is running. For production, point URLs at `https://integrations.rytera.ai` and replace `INTEGRATION_GATEWAY_API_KEY`. See `docs/LAUNCH_CHECKLIST.md` and `legal/TRADEMARK_NOTICE.md`.
+Local dev uses the bundled gateway at `http://127.0.0.1:8002/integrations` with `ORACLE_MODE=auto` — feeds show **live** when the API is running. For production, point URLs at `https://integrations.rytera.ai` and replace `INTEGRATION_GATEWAY_API_KEY`. See `docs/ops/LAUNCH_CHECKLIST.md` and `legal/TRADEMARK_NOTICE.md`.
 
 #### 2. Start infrastructure
 
@@ -234,11 +234,11 @@ Open **http://localhost:8002/dashboard** — use **First-time Setup** or sign in
 ```bash
 # ── Insurance CLI ──
 python cli.py agents \
-  examples/pacific_coast_acord.xml \
-  examples/pacific_coast_broker_api.json \
-  examples/pacific_coast_loss_run.md \
-  examples/pacific_coast_inspection_report.md \
-  examples/pacific_coast_sov.md
+  examples/insurance/pacific_coast_acord.xml \
+  examples/insurance/pacific_coast_broker_api.json \
+  examples/insurance/pacific_coast_loss_run.md \
+  examples/insurance/pacific_coast_inspection_report.md \
+  examples/insurance/pacific_coast_sov.md
 
 # ── Mortgage CLI ──
 python cli.py mortgage --dir simulated_documents/home_mortgage/johnson_marcus_imani --no-llm
@@ -252,7 +252,7 @@ python cli.py doctor
 python cli.py doctor --json
 
 # ── End-to-end test suite ──
-python scripts/e2e_test.py --timeout 360
+python scripts/ops/e2e_test.py --timeout 360
 python cli.py e2e --fast
 
 # ── Unit tests ──
@@ -948,7 +948,7 @@ examples/                    # 5 carrier insurance submissions (Pacific Coast, N
 simulated_documents/           # 80+ mortgage files across 10 borrower scenarios
 tests/                         # pytest suite (20 test files)
 evaluations/                   # Ragas + Giskard MLOps evaluation
-docs/architecture.md           # Detailed system design
+docs/architecture/architecture.md           # Detailed system design
 ```
 
 ---
@@ -1038,7 +1038,7 @@ docker compose up --build
 
 ### Bank simulation (TLS, no DB/Redis on host)
 
-See [`docs/BANK_LANDING_ZONE.md`](docs/BANK_LANDING_ZONE.md).
+See [`docs/ops/BANK_LANDING_ZONE.md`](docs/ops/BANK_LANDING_ZONE.md).
 
 ```bash
 ./deploy/caddy/gen-certs.sh
@@ -1121,11 +1121,11 @@ Full integration suite against the live API — auth, diagnostics, connectors, p
 
 ```bash
 # Prerequisites: API on :8002, Docker Redis/Postgres, Celery worker
-python scripts/e2e_test.py --timeout 360           # Full (includes 24 connector pulls)
-python scripts/e2e_test.py --fast --timeout 360    # Skip connector pulls
-python scripts/e2e_test.py --in-process --fast     # TestClient (no live server)
-python scripts/e2e_test.py --no-browser            # Skip Playwright UI tests
-python scripts/e2e_test.py --no-celery             # Skip Celery worker test
+python scripts/ops/e2e_test.py --timeout 360           # Full (includes 24 connector pulls)
+python scripts/ops/e2e_test.py --fast --timeout 360    # Skip connector pulls
+python scripts/ops/e2e_test.py --in-process --fast     # TestClient (no live server)
+python scripts/ops/e2e_test.py --no-browser            # Skip Playwright UI tests
+python scripts/ops/e2e_test.py --no-celery             # Skip Celery worker test
 python cli.py e2e --fast --timeout 360
 ```
 

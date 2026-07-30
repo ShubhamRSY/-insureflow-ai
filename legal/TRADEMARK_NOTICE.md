@@ -24,7 +24,7 @@ Insurance underwriting services; insurance risk assessment services provided via
 1. Search [USPTO TESS](https://tmsearch.uspto.gov/) for "Rytera" and phonetic variants.
 2. File Intent-to-Use (ITU) if not yet in interstate commerce, or Use-Based if live at rytera.ai.
 3. Specimen: screenshot of dashboard footer + landing page showing Rytera™.
-4. Record serial number in `docs/LAUNCH_CHECKLIST.md` when filed.
+4. Record serial number in `docs/ops/LAUNCH_CHECKLIST.md` when filed.
 
 ## Contact
 

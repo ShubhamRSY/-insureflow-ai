@@ -5,7 +5,7 @@
 | In-memory state | High | **FILLED** (Redis jobs + file fallback; audit on disk + Redis dual-write; portfolio JSON) | `storage/job_store.py`, `storage/file_job_store.py`, `audit/store.py`, `portfolio/store.py` — Postgres PAS sync still optional/future |
 | Synthetic ML only | High | **FILLED** (real CSV path + export from audit outcomes) | `ml/training.py`, `ml/export_training.py`, `POST /ml/export-training`, `ml_data/README.md` |
 | Lending ingestion | High | **FILLED** (regex + OCR + LLM extraction) | `ingestion/lending/loader.py`, `lending/llm_extractor.py`, `/lending/pipeline/run` accepts `documents`/`directory` |
-| Simulated oracles | Medium | **CODE-READY / blocked on keys** | Live HTTP in `oracles/*` + `docs/ORACLE_LIVE_WIRING.md` — needs LexisNexis/Verisk sandbox credentials |
+| Simulated oracles | Medium | **CODE-READY / blocked on keys** | Live HTTP in `oracles/*` + `docs/ops/ORACLE_LIVE_WIRING.md` — needs LexisNexis/Verisk sandbox credentials |
 | No Celery for insurance | Medium | **FILLED** | `tasks/pipeline_tasks.py`; `/pipeline/run` honors `use_celery` or `INSURANCE_USE_CELERY=true` |
 | Pricing calibration | Medium | **FILLED** (file/URL rate curves) | `rating/calibration.py`, `data/rate_curves.json`, `RATE_CURVES_URL` / `RATE_CURVES_PATH` |
 | Stub connectors | Medium | **FILLED** (2 priority real fetches) | **Email IMAP** + **AWS S3** real pull; others remain demo stubs until vendor creds |

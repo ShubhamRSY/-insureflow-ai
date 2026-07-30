@@ -622,7 +622,7 @@ tests/
 
 ### 11.2 E2E Tests (42 scenarios)
 
-`python scripts/e2e_test.py` covers: health, auth (setup + login), diagnostics (10/10 checks), all 24 connector pulls, insurance demo pipeline, full production workflow (sign-off → bind → ZIP → loss experience → calibration), mortgage demo, Celery async path, Playwright browser UI (login, navigation, password toggle).
+`python scripts/ops/e2e_test.py` covers: health, auth (setup + login), diagnostics (10/10 checks), all 24 connector pulls, insurance demo pipeline, full production workflow (sign-off → bind → ZIP → loss experience → calibration), mortgage demo, Celery async path, Playwright browser UI (login, navigation, password toggle).
 
 ---
 

@@ -105,9 +105,11 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # ty
 if integration_gateway_router is not None:
     app.include_router(integration_gateway_router, prefix="/integrations")
 
-STATIC_DIR = Path(__file__).parent / "static"
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-EXAMPLES_DIR = PROJECT_ROOT / "examples"
+# api/app.py → package dir → insureflow/ → src/ → repo root
+_PKG_ROOT = Path(__file__).resolve().parent.parent  # src/insureflow
+STATIC_DIR = _PKG_ROOT / "static"
+PROJECT_ROOT = _PKG_ROOT.parent.parent  # repo root
+EXAMPLES_DIR = PROJECT_ROOT / "examples" / "insurance"
 SIM_DOCS_DIR = PROJECT_ROOT / "simulated_documents"
 
 
@@ -3944,12 +3946,7 @@ def get_lending_result(
     if stored:
         return stored.get("audit") or stored
 
-    audit_path = os.path.join(
-        os.path.dirname(os.path.dirname(__file__)),
-        "..",
-        "audit_logs",
-        "lending",
-    )
+    audit_path = str(PROJECT_ROOT / "audit_logs" / "lending")
     if os.path.isdir(audit_path):
         for fname in os.listdir(audit_path):
             if application_id in fname:

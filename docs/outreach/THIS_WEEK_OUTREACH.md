@@ -35,7 +35,7 @@ Best,
 [title] · Rytera  
 [phone] · [email]
 
-**Attach / link:** `docs/PILOT_PARTNER_BRIEF.md` (export to PDF if preferred)
+**Attach / link:** `docs/product/PILOT_PARTNER_BRIEF.md` (export to PDF if preferred)
 
 ---
 
@@ -116,7 +116,7 @@ Technical contact: [you@…]
 # ORACLE_MODE=auto
 # PILOT_SHADOW_MODE=true
 
-PYTHONPATH=src python scripts/verify_oracles.py --ping
+PYTHONPATH=src python scripts/pilot/verify_oracles.py --ping
 PYTHONPATH=src python cli.py sandbox-status
 ```
 

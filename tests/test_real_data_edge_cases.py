@@ -1,8 +1,8 @@
 """Tests using real-world insurance data for edge case coverage.
 
 Uses data from:
-- examples/real_acord_industrial_llc.json (ACORD form, Acme Industrial LLC)
-- examples/real_claims_wisconsin.csv (6,258 real WI claims from NAIC data)
+- examples/insurance/real_acord_industrial_llc.json (ACORD form, Acme Industrial LLC)
+- examples/insurance/real_claims_wisconsin.csv (6,258 real WI claims from NAIC data)
 
 Verifies the full pipeline handles real production-like data correctly
 and catches edge cases that synthetic test data misses.
@@ -22,7 +22,7 @@ from insureflow.ingestion.loader import SubmissionLoader
 from insureflow.ingestion.loss_run_parser import LossRunParser
 from insureflow.models.submissions import CoverageDetail, SubmissionBundle
 
-EXAMPLES = Path(__file__).resolve().parents[1] / "examples"
+EXAMPLES = Path(__file__).resolve().parents[1] / "examples" / "insurance"
 
 
 # ── Fixtures ─────────────────────────────────────────────────────────

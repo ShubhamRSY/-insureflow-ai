@@ -72,7 +72,7 @@ PYTHONPATH=src python cli.py pilot redact --partner demo --submission coastal_fl
 # Optional: IMAP broker inbox → packages (auto-redacts blocking PII)
 PYTHONPATH=src python cli.py pilot ingest-email --partner email --limit 10
 PYTHONPATH=src python cli.py pilot run --all
-PYTHONPATH=src python scripts/smoke_pilot_deploy.py
+PYTHONPATH=src python scripts/pilot/smoke_pilot_deploy.py
 ```
 
 ## 5. Go / no-go

@@ -179,7 +179,7 @@ export default function PilotPage() {
         <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">Free outreach (mailto)</h3>
         <p className="text-sm text-slate-400">
           Opens your mail client with a draft — no paid tools. Full templates live in{' '}
-          <code className="text-slate-300">docs/THIS_WEEK_OUTREACH.md</code>.
+          <code className="text-slate-300">docs/outreach/THIS_WEEK_OUTREACH.md</code>.
         </p>
         <div className="flex flex-wrap gap-2">
           <a
