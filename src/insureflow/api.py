@@ -1129,6 +1129,30 @@ async def root(request: Request) -> FileResponse | JSONResponse:
     )
 
 
+@app.get("/robots.txt", include_in_schema=False)
+def robots_txt() -> FileResponse:
+    path = STATIC_DIR / "landing" / "robots.txt"
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="robots.txt not found")
+    return FileResponse(path, media_type="text/plain")
+
+
+@app.get("/sitemap.xml", include_in_schema=False)
+def sitemap_xml() -> FileResponse:
+    path = STATIC_DIR / "landing" / "sitemap.xml"
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="sitemap.xml not found")
+    return FileResponse(path, media_type="application/xml")
+
+
+@app.get("/favicon.svg", include_in_schema=False)
+def favicon_svg() -> FileResponse:
+    path = STATIC_DIR / "landing" / "favicon.svg"
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="favicon not found")
+    return FileResponse(path, media_type="image/svg+xml")
+
+
 def _run_pipeline_task(job_id: str, request: SubmissionRequest, org_id: str) -> None:
     try:
         pipeline: Any
@@ -3892,11 +3916,19 @@ def run_lending_pipeline(
         documents=doc_payloads or None,
         require_documents=req.require_documents or bool(req.directory or req.documents),
     )
+    timeline: list[Any] = []
+    try:
+        stored = job_store.get(LENDING_NS, app.application_id, org_id=current.org_id)
+        if stored:
+            timeline = list((stored.get("audit") or stored).get("timeline") or [])
+    except Exception:
+        timeline = []
     return {
         "result": result.model_dump(mode="json"),
         "application_id": app.application_id,
         "documents_ingested": len(doc_payloads),
         "extracted_from_docs": bool(loaded_docs),
+        "timeline": timeline,
     }
 
 

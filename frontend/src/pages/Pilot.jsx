@@ -175,6 +175,63 @@ export default function PilotPage() {
         </div>
       )}
 
+      <section className="glass-card p-5 space-y-3">
+        <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">Free outreach (mailto)</h3>
+        <p className="text-sm text-slate-400">
+          Opens your mail client with a draft — no paid tools. Full templates live in{' '}
+          <code className="text-slate-300">docs/THIS_WEEK_OUTREACH.md</code>.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <a
+            className="btn-secondary btn-sm text-xs"
+            href={`mailto:?subject=${encodeURIComponent('30-day shadow UW pilot — redacted commercial submissions')}&body=${encodeURIComponent(
+              `Hi [First name],
+
+I'm with Rytera (ryterainc.com). We run multi-agent commercial underwriting with licensed UW sign-off.
+
+Looking for a 30-day shadow pilot: 20–50 redacted packages + one UW 2–4 hrs/week. Bind stays off.
+
+Open to 15 minutes this week?
+
+Best,
+[Your name]`,
+            )}`}
+          >
+            Pilot carrier / MGA
+          </a>
+          <a
+            className="btn-secondary btn-sm text-xs"
+            href={`mailto:?subject=${encodeURIComponent('Sandbox API access — Rytera commercial UW (CLUE)')}&body=${encodeURIComponent(
+              `Hello,
+
+Rytera (ryterainc.com) needs sandbox / UAT CLUE Commercial access for a shadow underwriting pilot.
+
+Please advise sandbox URL, auth, test FEINs, rate limits, and commercial contact.
+
+Thank you,
+[Your name]`,
+            )}`}
+          >
+            LexisNexis CLUE
+          </a>
+          <a
+            className="btn-secondary btn-sm text-xs"
+            href={`mailto:?subject=${encodeURIComponent('Sandbox API access — A-PLUS for Rytera commercial UW pilot')}&body=${encodeURIComponent(
+              `Hello,
+
+Requesting sandbox credentials for A-PLUS property loss history for Rytera's multi-agent underwriting platform.
+
+Please send sandbox URL, API key process, and sample request/response docs.
+
+Thank you,
+[Your name]`,
+            )}`}
+          >
+            Verisk A-PLUS
+          </a>
+        </div>
+      </section>
+
       <section className="glass-card overflow-hidden">
         <div className="border-b border-white/[0.06] px-5 py-3">
           <h3 className="text-sm font-semibold">Integration feeds</h3>

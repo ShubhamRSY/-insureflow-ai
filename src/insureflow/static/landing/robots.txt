@@ -1,0 +1,11 @@
+# robots.txt for https://ryterainc.com
+User-agent: *
+Allow: /
+Allow: /dashboard
+Disallow: /auth/
+Disallow: /integrations/
+Disallow: /ops/
+Disallow: /pilot/
+Disallow: /api/
+
+Sitemap: https://ryterainc.com/sitemap.xml

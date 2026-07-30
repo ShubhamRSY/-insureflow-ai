@@ -79,3 +79,14 @@ def test_landing_page_html() -> None:
     api = client.get("/", headers={"Accept": "application/json"})
     assert api.status_code == 200
     assert api.json()["service"] == "Rytera"
+
+    robots = client.get("/robots.txt")
+    assert robots.status_code == 200
+    assert "Sitemap:" in robots.text
+
+    sitemap = client.get("/sitemap.xml")
+    assert sitemap.status_code == 200
+    assert "ryterainc.com" in sitemap.text
+
+    favicon = client.get("/favicon.svg")
+    assert favicon.status_code == 200

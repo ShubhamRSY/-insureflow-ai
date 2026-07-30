@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { DemoCard, Badge, EmptyState } from '../components/ui';
 import { extractMortgage, endpoints, fmtCurrency } from '../lib/api';
+import StageStrip, { stagesFromProgress } from '../components/StageStrip';
 import { Home, Package, FileText } from 'lucide-react';
 
 export default function MortgagePage({ presets, jobs, onRunDemo, onOpenJob, onSubmit }) {
@@ -126,6 +127,7 @@ export default function MortgagePage({ presets, jobs, onRunDemo, onOpenJob, onSu
                 <tr className="border-b border-white/[0.06] bg-surface-overlay text-left text-xs uppercase tracking-wider text-slate-500">
                   <th className="px-6 py-3">Job ID</th>
                   <th className="px-6 py-3">Status</th>
+                  <th className="px-6 py-3">Journey</th>
                   <th className="px-6 py-3">Decision</th>
                   <th className="px-6 py-3">Rate</th>
                   <th className="px-6 py-3">Actions</th>
@@ -138,6 +140,7 @@ export default function MortgagePage({ presets, jobs, onRunDemo, onOpenJob, onSu
                     <tr key={id} onClick={() => onOpenJob('mortgage', id)} className="cursor-pointer transition hover:bg-white/[0.02]">
                       <td className="px-6 py-3.5 font-mono text-xs text-slate-400">{id}</td>
                       <td className="px-6 py-3.5"><Badge status={job?.status} pulse={job?.status === 'processing'} /></td>
+                      <td className="px-6 py-3.5"><StageStrip stages={stagesFromProgress(job)} compact /></td>
                       <td className="px-6 py-3.5">{s.decision ? <Badge status={s.decision} /> : '—'}</td>
                       <td className="px-6 py-3.5 font-medium">{s.rate != null ? `${s.rate}%` : '—'}</td>
                       <td className="px-6 py-3.5">

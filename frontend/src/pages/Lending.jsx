@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Wallet, RefreshCw, FileUp, FolderOpen } from 'lucide-react';
 import { Badge, EmptyState } from '../components/ui';
 import { endpoints, fmtCurrency } from '../lib/api';
+import StageStrip, { stagesFromProgress } from '../components/StageStrip';
 
 const emptyForm = {
   product_type: 'business_term_loan',
@@ -106,6 +107,7 @@ export default function LendingPage() {
         human_review_required: result.human_review_required,
         document_count: result.document_count || res.documents_ingested || 0,
         extracted_from_docs: res.extracted_from_docs,
+        timeline: res.timeline || [],
       }, ...prev]);
       setMessage(
         `Decision: ${result.decision}` +
@@ -283,6 +285,7 @@ export default function LendingPage() {
               <thead>
                 <tr className="border-b border-white/[0.06] bg-surface-overlay text-left text-xs uppercase tracking-wider text-slate-500">
                   <th className="px-6 py-3">Application</th>
+                  <th className="px-6 py-3">Journey</th>
                   <th className="px-6 py-3">Decision</th>
                   <th className="px-6 py-3">Rate</th>
                   <th className="px-6 py-3">Amount</th>
@@ -294,6 +297,9 @@ export default function LendingPage() {
                 {results.map((r) => (
                   <tr key={r.application_id}>
                     <td className="px-6 py-3.5 font-mono text-xs text-slate-300">{r.application_id}</td>
+                    <td className="px-6 py-3.5">
+                      <StageStrip stages={stagesFromProgress(r)} />
+                    </td>
                     <td className="px-6 py-3.5"><Badge status={r.decision} /></td>
                     <td className="px-6 py-3.5 font-medium">{r.approved_rate != null ? `${Number(r.approved_rate).toFixed(2)}%` : '—'}</td>
                     <td className="px-6 py-3.5 font-mono">{fmtCurrency(r.approved_amount)}</td>
