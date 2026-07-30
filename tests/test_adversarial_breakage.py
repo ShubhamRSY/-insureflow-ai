@@ -1440,14 +1440,12 @@ class TestSecurityBootstrapLogging:
     """BUG 5 FIX: Non-RuntimeError exceptions in security bootstrap are logged."""
 
     def test_source_has_logging_not_pass(self) -> None:
-        """Verify the api.py file no longer has bare `except Exception: pass` in security bootstrap."""
+        """Verify api app module logs non-fatal security bootstrap errors (not bare pass)."""
         import inspect
 
-        from insureflow import api
+        import insureflow.api.app as api_mod
 
-        source = inspect.getsource(api)
-        # The old code had `except Exception:\n    pass` right after the security bootstrap
-        # The fix changes it to log a warning
+        source = inspect.getsource(api_mod)
         assert "Security bootstrap non-fatal error" in source or "non-fatal" in source
 
 
