@@ -208,8 +208,12 @@ class SystemDiagnostics:
             )
         return ComponentCheck(
             component="job_store",
-            status=CheckStatus.DEGRADED,
-            message="Using MemoryJobStore (in-process, not persistent)",
+            status=CheckStatus.OK if store_type == "FileJobStore" else CheckStatus.DEGRADED,
+            message=(
+                "Using FileJobStore (durable on disk)"
+                if store_type == "FileJobStore"
+                else f"Using {store_type} — prefer Redis in production"
+            ),
             category="storage",
             details={"backend": backend, "implementation": store_type},
         )

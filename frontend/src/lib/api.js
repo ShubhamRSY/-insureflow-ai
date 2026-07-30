@@ -131,6 +131,18 @@ export const endpoints = {
   dispatchLossControl: (bundleId, notes = '') => api(`/pipeline/ecosystem/${bundleId}/loss-control/dispatch`, { method: 'POST', body: { notes } }),
   resolveCheckpoint: (bundleId, checkpointId, action) => api(`/pipeline/checkpoints/${bundleId}/${checkpointId}`, { method: 'POST', body: { action } }),
 
+  // Pilot lab
+  pilotSandboxStatus: () => api('/pilot/sandbox-status'),
+  pilotPackages: () => api('/pilot/packages'),
+  pilotRun: (body) => api('/pilot/packages/run', { method: 'POST', body }),
+  pilotScanPii: (partner, submissionId) => api(`/pilot/packages/${partner}/${submissionId}/pii`),
+  pilotRedact: (body) => api('/pilot/packages/redact', { method: 'POST', body }),
+  pilotIngestEmail: (body) => api('/pilot/ingest/email', { method: 'POST', body }),
+  pilotCalibrate: () => api('/pilot/calibrate', { method: 'POST' }),
+  pilotCalibration: () => api('/pilot/calibration'),
+  pilotSeed: () => api('/pilot/seed', { method: 'POST' }),
+  pilotRecordHuman: (body) => api('/pilot/calibration/human', { method: 'POST', body }),
+
   // Premium audit
   premiumAudits: (status) => api(`/pipeline/audits${status ? `?status=${status}` : ''}`),
   createPremiumAudit: (bundleId, estimated_premium, opts = {}) => api(

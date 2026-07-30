@@ -1,12 +1,13 @@
-import { useOutletContext } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { Zap, ArrowRight, TrendingUp, TrendingDown, AlertTriangle } from 'lucide-react';
+import { Zap, ArrowRight, TrendingUp, TrendingDown, AlertTriangle, FlaskConical } from 'lucide-react';
 import { StatCard, DemoCard, VerticalExplainer, Badge, EmptyState } from '../components/ui';
 import JourneyMiniStrip from '../components/JourneyMiniStrip';
 import { endpoints } from '../lib/api';
 
 export default function Overview({ overview, health, presets, onRunDemo, onOpenJob, onLogin, marketCycle, queueStats, insuranceJobs }) {
   const { user } = useOutletContext() || {};
+  const navigate = useNavigate();
 
   const chartData = overview ? [
     { name: 'Insurance', completed: overview.insurance?.completed || 0, processing: overview.insurance?.processing || 0, failed: overview.insurance?.failed || 0 },
@@ -47,6 +48,23 @@ export default function Overview({ overview, health, presets, onRunDemo, onOpenJ
       )}
 
       <VerticalExplainer />
+
+      {user && (
+        <button
+          type="button"
+          onClick={() => navigate('/pilot')}
+          className="group flex w-full items-center justify-between rounded-2xl border border-amber-500/20 bg-gradient-to-r from-amber-500/10 to-transparent px-5 py-4 text-left transition hover:border-amber-500/40"
+        >
+          <div className="flex items-center gap-3">
+            <FlaskConical className="h-5 w-5 text-amber-400" />
+            <div>
+              <p className="font-semibold text-amber-100">Pilot Lab</p>
+              <p className="text-sm text-slate-400">Sandbox readiness · redacted packages · shadow UW · calibration</p>
+            </div>
+          </div>
+          <ArrowRight className="h-4 w-4 text-amber-400 transition group-hover:translate-x-0.5" />
+        </button>
+      )}
 
       {user && overview ? (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

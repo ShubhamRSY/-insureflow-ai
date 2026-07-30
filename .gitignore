@@ -7,6 +7,8 @@ build/
 .env
 .insureflow/
 audit_logs/
+pilot_packages/**
+!pilot_packages/README.md
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
@@ -32,4 +34,9 @@ mlruns/
 *.pem
 !deploy/caddy/certs/.gitkeep
 ml_models/
+data/*
+!data/rate_curves.json
+# Keep schema docs for real training datasets
+!ml_data/
+!ml_data/README.md
 # Railway redeploy trigger Thu Jul 23 20:27:06 EDT 2026

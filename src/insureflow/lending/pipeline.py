@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 from datetime import datetime, timezone
 from typing import Any
@@ -16,6 +17,8 @@ from insureflow.lending.models import (
 )
 from insureflow.lending.pricing import LendingPricingEngine
 from insureflow.lending.risk import LendingRiskEngine
+
+logger = logging.getLogger(__name__)
 
 AUDIT_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
@@ -37,11 +40,77 @@ class LendingPipeline:
         application: BusinessLoanApplication | ConsumerLoanApplication,
         documents: list[dict[str, Any]] | None = None,
         pipeline_run_id: str | None = None,
+        *,
+        require_documents: bool = False,
     ) -> LendingPipelineResult:
         run_id = pipeline_run_id or f"lp-{application.application_id}"
         timeline: list[dict[str, Any]] = []
 
+        try:
+            return self._run_inner(
+                application,
+                documents=documents,
+                run_id=run_id,
+                timeline=timeline,
+                require_documents=require_documents,
+            )
+        except Exception as exc:
+            logger.exception("Lending pipeline failed for %s", application.application_id)
+            result = LendingPipelineResult(
+                application_id=application.application_id,
+                product_type=application.product_type,
+                decision=LoanDecision.REFERRED,
+                human_review_required=True,
+                human_review_reasons=[f"Pipeline error (fail-closed): {exc}"],
+                lender_notes="Fail-closed referral due to unhandled exception",
+                document_count=len(documents) if documents else 0,
+            )
+            timeline.append(self._record("error", "failed", run_id, {"error": str(exc)}))
+            try:
+                self._save_audit(run_id, application, result, timeline, documents)
+            except Exception:  # noqa: BLE001
+                logger.exception("Failed to persist lending audit after error")
+            return result
+
+    def _run_inner(
+        self,
+        application: BusinessLoanApplication | ConsumerLoanApplication,
+        *,
+        documents: list[dict[str, Any]] | None,
+        run_id: str,
+        timeline: list[dict[str, Any]],
+        require_documents: bool,
+    ) -> LendingPipelineResult:
         timeline.append(self._record("ingest", "start", run_id, application))
+
+        if require_documents and not documents:
+            result = LendingPipelineResult(
+                application_id=application.application_id,
+                product_type=application.product_type,
+                decision=LoanDecision.SUSPENDED,
+                human_review_required=True,
+                human_review_reasons=["No supporting documents provided — cannot underwrite from form fields alone"],
+            )
+            timeline.append(self._record("ingest", "blocked", run_id, {"reason": "missing_documents"}))
+            self._save_audit(run_id, application, result, timeline, documents)
+            return result
+
+        # Zero / missing critical financials → refer (fail-closed), not silent approve
+        missing_fin = self._missing_financial_signals(application)
+        if missing_fin:
+            result = LendingPipelineResult(
+                application_id=application.application_id,
+                product_type=application.product_type,
+                decision=LoanDecision.REFERRED,
+                human_review_required=True,
+                human_review_reasons=missing_fin,
+                lender_notes="Insufficient financial evidence for automated decision",
+                document_count=len(documents) if documents else 0,
+            )
+            timeline.append(self._record("validation", "referred", run_id, {"missing": missing_fin}))
+            self._save_audit(run_id, application, result, timeline, documents)
+            self._record_document_analytics(run_id, application, documents, result)
+            return result
 
         violations = self._compliance.evaluate(application)
         timeline.append(self._record("compliance", "completed", run_id, {"violations_count": len(violations)}))
@@ -147,6 +216,24 @@ class LendingPipeline:
         self._record_document_analytics(run_id, application, documents, result)
         return result
 
+    @staticmethod
+    def _missing_financial_signals(application: BusinessLoanApplication | ConsumerLoanApplication) -> list[str]:
+        reasons: list[str] = []
+        if application.requested_amount <= 0:
+            reasons.append("Requested amount missing or zero")
+        if isinstance(application, BusinessLoanApplication):
+            if not application.financials:
+                reasons.append("No business financial statements provided")
+            else:
+                fin = application.financials[0]
+                if fin.annual_revenue <= 0 and fin.net_income == 0 and fin.ebitda == 0:
+                    reasons.append("Business revenue/income/EBITDA all missing — cannot score DSCR")
+        else:
+            fin = application.financial_data
+            if fin.annual_income <= 0 and fin.credit_score <= 0:
+                reasons.append("Consumer income and credit score both missing")
+        return reasons
+
     def _record(self, phase: str, status: str, run_id: str, data: Any) -> dict[str, Any]:
         return {
             "phase": phase,
@@ -196,12 +283,28 @@ class LendingPipeline:
             "application": application.model_dump(),
             "result": result.model_dump(mode="json"),
             "timeline": timeline,
-            "documents": documents or [],
+            "documents": [
+                {k: v for k, v in d.items() if k != "content"} | {"content_chars": len(str(d.get("content") or ""))}
+                for d in (documents or [])
+            ],
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
         path = os.path.join(AUDIT_DIR, f"{run_id}.json")
         with open(path, "w") as f:
             json.dump(audit, f, indent=2, default=str)
+
+        # Also persist to job store so API results survive process restart
+        try:
+            from insureflow.storage.job_store import get_job_store
+
+            get_job_store().set(
+                "lending",
+                application.application_id,
+                {"status": "completed", "audit": audit, "result": result.model_dump(mode="json")},
+                org_id="default",
+            )
+        except Exception:  # noqa: BLE001
+            logger.warning("Could not persist lending result to job store", exc_info=True)
 
     def _record_document_analytics(
         self,

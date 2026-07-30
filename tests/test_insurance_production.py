@@ -45,11 +45,39 @@ class TestInsuranceOCR:
 
 class TestInsuranceRating:
     def test_quote_from_bundle(self) -> None:
-        bundle = SubmissionBundle(bundle_id="rate-test")
+        from insureflow.models.submissions import CoverageDetail, LocationData, NamedInsured, StructuredSubmission
+
+        bundle = SubmissionBundle(
+            bundle_id="rate-test",
+            structured=StructuredSubmission(
+                submission_id="rate-test",
+                named_insured=NamedInsured(legal_name="Test Co"),
+                locations=[
+                    LocationData(
+                        address="1 Main",
+                        city="Austin",
+                        state="TX",
+                        zip_code="78701",
+                        building_value=2_500_000,
+                        contents_value=500_000,
+                    )
+                ],
+                coverages=[CoverageDetail(coverage_type="Property", limit_amount=3_000_000, deductible=10_000, premium=0)],
+            ),
+        )
         memo = UnderwritingMemo(bundle_id="rate-test", decision=UWDecision.ACCEPT, insured_name="Test Co")
         quote = InsuranceRatingEngine().quote(bundle, memo)
         assert quote.adjusted_premium > 0
+        assert quote.eligible is True
         assert quote.policy_admin_reference.startswith(("PA-", "ISO-"))
+
+    def test_quote_without_tiv_is_ineligible(self) -> None:
+        bundle = SubmissionBundle(bundle_id="rate-empty")
+        memo = UnderwritingMemo(bundle_id="rate-empty", decision=UWDecision.ACCEPT, insured_name="Empty Co")
+        quote = InsuranceRatingEngine().quote(bundle, memo)
+        assert quote.adjusted_premium == 0
+        assert quote.eligible is False
+        assert "TIV could not be determined" in quote.ineligibility_reasons
 
 
 class TestWorkflowSignOff:
@@ -119,7 +147,9 @@ class TestInsurancePipelineIntegration:
             bundle_id="integration-test",
         )
         assert result["status"] == "completed"
-        assert result["ai_decision"] in ("accept", "refer", "decline")
+        assert result["ai_decision"] in ("accept", "conditional_accept", "refer", "decline")
+        assert "human_checkpoints" in result
+        assert "open_conditions" in result
         assert result["workflow_state"] == "pending_review"
         assert "quote" in result
         assert result["audit_trail_entries"] >= 1

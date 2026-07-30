@@ -8,9 +8,10 @@ from insureflow.models.submissions import SubmissionBundle
 from insureflow.rating.models import InsuranceLine, QuoteRequest, QuoteResult, RateComponent, RatingAdapter
 from insureflow.underwriting.cope import COPERatingEngine
 from insureflow.underwriting.market import get_market_cycle
+from insureflow.rating.calibration import calibrated_lcm, calibrated_loss_costs, calibrated_territory, load_rate_curves
 
 # ISO-style base loss costs (per $100 of TIV) — representative values
-# These would come from ISO/Verisk filings in production
+# Overridden by data/rate_curves.json or RATE_CURVES_URL when present
 ISO_LOSS_COSTS: dict[InsuranceLine, float] = {
     InsuranceLine.COMMERCIAL_PROPERTY: 0.28,
     InsuranceLine.GENERAL_LIABILITY: 0.08,
@@ -160,17 +161,24 @@ class InsuranceRatingEngine:
     ) -> QuoteResult:
         tiv = self._estimate_tiv(bundle)
         state = self._primary_state(bundle)
+        tiv_unknown = tiv <= 0
 
         # COPE analysis
         cope_result = self._cope.analyze(bundle)
         cope_mod = cope_result.score.schedule_mod_pct
 
-        # ISO-style base rate
-        iso_cost = ISO_LOSS_COSTS.get(line, 0.30)
-        lcm = LCM.get(line, 2.0)
-        territory_rel = TERRITORY_RELATIVITIES.get(state, {}).get(line, 1.0)
+        # ISO-style base rate (calibrated from data/rate_curves.json or RATE_CURVES_URL when present)
+        curves = load_rate_curves()
+        loss_costs = calibrated_loss_costs(ISO_LOSS_COSTS)
+        lcms = calibrated_lcm(LCM)
+        territories = calibrated_territory(TERRITORY_RELATIVITIES)
+        iso_cost = loss_costs.get(line, 0.30)
+        lcm = lcms.get(line, 2.0)
+        territory_rel = territories.get(state, {}).get(line, 1.0)
+        if not isinstance(territory_rel, (int, float)):
+            territory_rel = 1.0
 
-        base_premium = (tiv / 100.0) * iso_cost * lcm * territory_rel
+        base_premium = (tiv / 100.0) * iso_cost * lcm * territory_rel if not tiv_unknown else 0.0
 
         # Market cycle adjustment
         market_cycle_mod = self._get_market_mod(line)
@@ -202,14 +210,15 @@ class InsuranceRatingEngine:
         # Years-in-business modifier (generic tiers)
         years_mod = self._years_in_business_mod(bundle)
 
-        # Final premium
-        adjusted_premium = cope_adjusted * (1 + schedule_mod / 100.0) * (1 + deductible_credit / 100.0) * (1 + exp_mod / 100.0) * (1 + years_mod / 100.0)
-        adjusted_premium += self.EXPENSE_CONSTANT
-
-        # Minimum premium
-        min_prem = MINIMUM_PREMIUMS.get(line, 500.0)
-        adjusted_premium = max(adjusted_premium, min_prem)
-        adjusted_premium = round(adjusted_premium, 2)
+        # Final premium — never invent premium when TIV is unknown
+        if tiv_unknown:
+            adjusted_premium = 0.0
+        else:
+            adjusted_premium = cope_adjusted * (1 + schedule_mod / 100.0) * (1 + deductible_credit / 100.0) * (1 + exp_mod / 100.0) * (1 + years_mod / 100.0)
+            adjusted_premium += self.EXPENSE_CONSTANT
+            min_prem = MINIMUM_PREMIUMS.get(line, 500.0)
+            adjusted_premium = max(adjusted_premium, min_prem)
+            adjusted_premium = round(adjusted_premium, 2)
 
         # Build rate components
         components: list[RateComponent] = [
@@ -286,6 +295,10 @@ class InsuranceRatingEngine:
         result.adjusted_premium = adjusted_premium
         result.schedule_modifications = components
         result.rate_per_100_tiv = round(adjusted_premium / (tiv / 100.0), 4) if tiv > 0 else 0.0
+        if tiv_unknown:
+            result.eligible = False
+            if "TIV could not be determined" not in result.ineligibility_reasons:
+                result.ineligibility_reasons.append("TIV could not be determined")
 
         # Attach COPE and market data
         result.metadata = {
@@ -297,9 +310,12 @@ class InsuranceRatingEngine:
             "territory_relativity": territory_rel,
             "loss_cost": iso_cost * lcm,
             "deductible_credit": deductible_credit,
-            "expense_constant": self.EXPENSE_CONSTANT,
+            "expense_constant": self.EXPENSE_CONSTANT if not tiv_unknown else 0.0,
             "years_in_business_mod_pct": years_mod,
             "loss_experience_mod_pct": exp_mod,
+            "tiv_unknown": tiv_unknown,
+            "rate_curve_source": curves.get("source", "builtin"),
+            "rate_curve_synthetic": bool(curves.get("synthetic", True)),
         }
 
         return result
@@ -324,7 +340,7 @@ class InsuranceRatingEngine:
                     return float(fields.value.replace(",", ""))
                 except ValueError:
                     pass
-        return 1_000_000.0
+        return 0.0
 
     def _loss_ratio(self, bundle: SubmissionBundle) -> float:
         fin = bundle.structured.financial if bundle.structured else None

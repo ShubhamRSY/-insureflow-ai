@@ -8,6 +8,7 @@ export function Badge({ status, pulse = false }) {
     approved: 'bg-emerald-500/15 text-emerald-400 ring-emerald-500/20',
     approve: 'bg-emerald-500/15 text-emerald-400 ring-emerald-500/20',
     accept: 'bg-emerald-500/15 text-emerald-400 ring-emerald-500/20',
+    conditional_accept: 'bg-amber-500/15 text-amber-400 ring-amber-500/20',
     processing: 'bg-amber-500/15 text-amber-400 ring-amber-500/20',
     degraded: 'bg-amber-500/15 text-amber-400 ring-amber-500/20',
     pending: 'bg-amber-500/15 text-amber-400 ring-amber-500/20',

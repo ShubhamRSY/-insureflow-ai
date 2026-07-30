@@ -126,14 +126,39 @@ class ISORatingAdapter(RatingAdapter):
         )
 
     def bind_policy(self, bundle_id: str, quote_reference: str, bound_by: str) -> dict[str, Any]:
+        from insureflow.security.posture import allow_simulated_bind, resolve_security_posture
+
         if self._guidewire_key:
             try:
                 return self._live_bind(bundle_id, quote_reference, bound_by)
             except Exception as exc:
-                logger.warning("Live bind failed, using local: %s", exc)
+                logger.warning("Live bind failed: %s", exc)
+                if resolve_security_posture().is_hardened and not allow_simulated_bind():
+                    return {
+                        "status": "failed",
+                        "success": False,
+                        "bundle_id": bundle_id,
+                        "quote_reference": quote_reference,
+                        "bound_by": bound_by,
+                        "error": f"Live policy-admin bind failed: {exc}",
+                        "bound_at": datetime.now(tz=timezone.utc).isoformat(),
+                    }
+
+        if resolve_security_posture().is_hardened and not allow_simulated_bind():
+            return {
+                "status": "failed",
+                "success": False,
+                "bundle_id": bundle_id,
+                "quote_reference": quote_reference,
+                "bound_by": bound_by,
+                "error": "Simulated bind is disabled in BANK_MODE/production. Configure live Guidewire bind or set ALLOW_SIMULATED_BIND=true.",
+                "bound_at": datetime.now(tz=timezone.utc).isoformat(),
+            }
 
         return {
             "status": "bound",
+            "success": True,
+            "mode": "simulated",
             "bundle_id": bundle_id,
             "policy_number": f"POL-{uuid4().hex[:8].upper()}",
             "quote_reference": quote_reference,

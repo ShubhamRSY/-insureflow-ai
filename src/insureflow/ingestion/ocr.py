@@ -65,12 +65,22 @@ class OCRProcessor:
             os.unlink(tmp_path)
 
     def _ocr_image(self, file_path: str, submission_id: str) -> UnstructuredSubmission:
+        from insureflow.models.submissions import ExtractedField
+
         text = self._extract_image_text(file_path)
+        failed = not text or not text.strip()
+        raw = text if text and text.strip() else "[OCR: No text could be extracted from image]"
+        fields: dict[str, list[ExtractedField]] = {
+            "ocr_engine": [ExtractedField(field_name="ocr_engine", value="tesseract", confidence=1.0 if not failed else 0.0)],
+        }
+        if failed:
+            fields["ocr_failed"] = [ExtractedField(field_name="ocr_failed", value="true", confidence=1.0)]
         return UnstructuredSubmission(
             submission_id=submission_id,
             source="ocr_processor",
             document_type="ocr_text",
-            raw_text=text or "[OCR: No text could be extracted from image]",
+            raw_text=raw,
+            extracted_fields=fields,
         )
 
     def _extract_image_text(self, file_path: str) -> str:
@@ -124,12 +134,22 @@ class OCRProcessor:
         )
 
     def _ocr_pdf_pdfminer(self, file_path: str, submission_id: str) -> UnstructuredSubmission:
+        from insureflow.models.submissions import ExtractedField
+
         text = self._extract_pdf_text(file_path)
+        failed = not text or not text.strip() or text.strip().startswith("[OCR: No text")
+        raw = text if text and text.strip() else "[OCR: No text could be extracted]"
+        fields: dict[str, list[ExtractedField]] = {
+            "ocr_engine": [ExtractedField(field_name="ocr_engine", value="pdfminer", confidence=1.0 if not failed else 0.0)],
+        }
+        if failed:
+            fields["ocr_failed"] = [ExtractedField(field_name="ocr_failed", value="true", confidence=1.0)]
         return UnstructuredSubmission(
             submission_id=submission_id,
             source="ocr_processor",
             document_type="ocr_text",
-            raw_text=text or "[OCR: No text could be extracted]",
+            raw_text=raw,
+            extracted_fields=fields,
         )
 
     def _extract_pdf_text(self, file_path: str) -> str:

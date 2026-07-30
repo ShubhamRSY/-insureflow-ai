@@ -48,6 +48,7 @@ class MortgagePipeline:
         product_line: ProductLine | None = None,
         loan_product: str | None = None,
         loan_amount: float | None = None,
+        progress_callback: Any | None = None,
     ) -> dict[str, Any]:
         bid = bundle_id or f"mortgage-{uuid4().hex[:12]}"
         inferred = product_line or self._infer_product_line(directory)
@@ -58,6 +59,7 @@ class MortgagePipeline:
             product_line=inferred,
             loan_product=loan_product,
             loan_amount=loan_amount,
+            progress_callback=progress_callback,
         )
 
     def run_from_paths(
@@ -68,6 +70,7 @@ class MortgagePipeline:
         borrower_id: str | None = None,
         loan_product: str | None = None,
         loan_amount: float | None = None,
+        progress_callback: Any | None = None,
     ) -> dict[str, Any]:
         bid = bundle_id or f"mortgage-{uuid4().hex[:12]}"
         inferred = product_line or (self._infer_product_line(paths[0]) if paths else ProductLine.RESIDENTIAL_MORTGAGE)
@@ -79,6 +82,7 @@ class MortgagePipeline:
             borrower_id=borrower_id,
             loan_product=loan_product,
             loan_amount=loan_amount,
+            progress_callback=progress_callback,
         )
 
     def run_from_texts(
@@ -89,6 +93,7 @@ class MortgagePipeline:
         borrower_id: str | None = None,
         loan_product: str | None = None,
         loan_amount: float | None = None,
+        progress_callback: Any | None = None,
     ) -> dict[str, Any]:
         bid = bundle_id or f"mortgage-{uuid4().hex[:12]}"
         loaded = self.loader.load_from_texts(documents, bundle_id=bid, product_line=product_line)
@@ -99,6 +104,7 @@ class MortgagePipeline:
             borrower_id=borrower_id,
             loan_product=loan_product,
             loan_amount=loan_amount,
+            progress_callback=progress_callback,
         )
 
     def run_per_borrower(
@@ -140,10 +146,67 @@ class MortgagePipeline:
         borrower_id: str | None = None,
         loan_product: str | None = None,
         loan_amount: float | None = None,
+        progress_callback: Any | None = None,
     ) -> dict[str, Any]:
+        from insureflow.insurance.progress import PipelineProgressTracker
+
         audit = MortgageAuditLogger(self.audit_store, self.encryption)
         audit.start(bundle_id)
+        progress = PipelineProgressTracker(on_update=progress_callback)
 
+        try:
+            result = self._run_documents_inner(
+                documents,
+                bundle_id=bundle_id,
+                product_line=product_line,
+                borrower_id=borrower_id,
+                loan_product=loan_product,
+                loan_amount=loan_amount,
+                audit=audit,
+                progress=progress,
+            )
+            progress.finish()
+            result["pipeline_stages"] = progress.stages
+            return result
+        except Exception as exc:
+            progress.fail(progress._active_id or "pipeline", str(exc))
+            audit.log(
+                PipelineEvent.PIPELINE_FAILED,
+                f"Mortgage pipeline failed (fail-closed): {exc}",
+                metadata={"error": str(exc), "org_id": self.org_id},
+            )
+            fail_summary = {
+                "status": "failed",
+                "bundle_id": bundle_id,
+                "org_id": self.org_id,
+                "borrower_id": borrower_id,
+                "product_line": product_line.value,
+                "document_count": len(documents),
+                "decision": "refer",
+                "human_review_required": True,
+                "error": str(exc),
+                "fail_closed": True,
+                "pipeline_stages": progress.stages,
+            }
+            webhook_dispatcher.dispatch("mortgage.failed", self.org_id, fail_summary)
+            return fail_summary
+
+    def _run_documents_inner(
+        self,
+        documents: list[Any],
+        *,
+        bundle_id: str,
+        product_line: ProductLine,
+        borrower_id: str | None,
+        loan_product: str | None,
+        loan_amount: float | None,
+        audit: MortgageAuditLogger,
+        progress: Any,
+    ) -> dict[str, Any]:
+        if not documents:
+            raise ValueError("No mortgage documents provided — cannot underwrite empty package")
+
+        progress.start("parse", "Parse", f"Parsing {len(documents)} documents")
         audit.log(
             PipelineEvent.STRUCTURED_PARSE_START,
             f"Parsing {len(documents)} mortgage documents (LLM={'on' if self.use_llm else 'off'})",
@@ -162,6 +225,7 @@ class MortgagePipeline:
             PipelineEvent.STRUCTURED_PARSE_COMPLETE,
             f"Classified and extracted {len(documents)} documents",
         )
+        progress.complete("parse", detail=f"{len(documents)} docs · LLM={llm_doc_count} OCR={ocr_doc_count}")
 
         bundle = MortgageBundle(
             bundle_id=bundle_id,
@@ -170,6 +234,7 @@ class MortgagePipeline:
             status=MortgageBundleStatus.PARSED,
         )
 
+        progress.start("reconcile", "Reconcile", "Cross-document reconciliation")
         audit.log(
             PipelineEvent.RECONCILIATION_START,
             "Building summaries and cross-document reconciliation",
@@ -180,15 +245,22 @@ class MortgagePipeline:
             PipelineEvent.RECONCILIATION_COMPLETE,
             f"Reconciliation complete: {len(bundle.reconciliation_issues)} issue(s)",
         )
+        progress.complete("reconcile", findings=len(bundle.reconciliation_issues))
 
+        progress.start("compliance", "Compliance", "Bank compliance rules")
         audit.log(PipelineEvent.PROVENANCE_CHECK, "Running bank compliance rules")
         self.compliance.evaluate(bundle)
+        progress.complete("compliance", findings=len(bundle.compliance_violations))
 
+        progress.start("underwrite", "Underwrite", "Supervisor decision")
         memo = self.supervisor.analyze(bundle)
         bundle.status = MortgageBundleStatus.COMPLETED
+        progress.complete("underwrite", detail=memo.decision.value)
 
+        progress.start("pricing", "Pricing", "Rate quote")
         product_enum = LoanProduct(loan_product) if loan_product else None
         rate_quote = self.pricing.quote(bundle, memo, loan_amount=loan_amount, product=product_enum)
+        progress.complete("pricing", detail=f"{rate_quote.adjusted_rate}%")
 
         dti_ratio = memo.dti_ratio
         if bundle.income and bundle.credit and rate_quote.monthly_pi:

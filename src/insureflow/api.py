@@ -49,14 +49,28 @@ from insureflow.underwriting.renewal import PremiumAuditEngine
 try:
     from insureflow.config import bootstrap_security, maybe_enable_langsmith_tracing
     from insureflow.observability.cloudwatch import configure_cloudwatch_logging
+    from insureflow.security.posture import resolve_security_posture as _resolve_boot_posture
 
     configure_cloudwatch_logging()
     maybe_enable_langsmith_tracing()
     _security_errors = bootstrap_security()
     if _security_errors:
+        _boot_posture = _resolve_boot_posture()
         for _err in _security_errors:
             logging.getLogger(__name__).error("SECURITY: %s", _err)
+        if _boot_posture.is_hardened:
+            raise SystemExit(
+                "Refusing to start in BANK_MODE/production with security posture errors:\n- "
+                + "\n- ".join(_security_errors)
+            )
+except SystemExit:
+    raise
 except Exception as _sec_exc:
+    from insureflow.security.posture import resolve_security_posture as _resolve_boot_posture
+
+    logging.getLogger(__name__).error("Security bootstrap failed: %s", _sec_exc)
+    if _resolve_boot_posture().is_hardened:
+        raise SystemExit(f"Refusing to start: security bootstrap failed: {_sec_exc}") from _sec_exc
     logging.getLogger(__name__).warning("Security bootstrap non-fatal error: %s", _sec_exc)
 
 integration_gateway_router: APIRouter | None = None
@@ -85,7 +99,7 @@ async def lifespan(_app: FastAPI) -> Any:
 app = FastAPI(
     title="Rytera",
     description="AI underwriting platform API — Insurance, Mortgage & Lending",
-    version="0.3.0",
+    version="0.3.1",
     lifespan=lifespan,
 )
 app.state.limiter = limiter
@@ -115,6 +129,7 @@ def auth_status() -> dict[str, Any]:
         "setup_required": not bool(get_user_store()),
         "bank_mode": posture.bank_mode,
         "environment": posture.environment,
+        "hardened": posture.is_hardened,
         "allow_open_registration": posture.allow_open_registration,
         "allow_auth_reset": posture.allow_auth_reset,
         "require_encryption": posture.require_encryption,
@@ -440,6 +455,7 @@ class SubmissionRequest(BaseModel):
     bundle_id: Optional[str] = None
     use_llm: bool = True
     use_legacy_pipeline: bool = False
+    use_celery: bool = False
 
 
 class SignOffRequest(BaseModel):
@@ -482,7 +498,19 @@ class InsuranceSourcePullRequest(BaseModel):
 
 @app.get("/health")
 async def health() -> dict[str, str]:
-    return {"status": "ok", "version": "0.3.0"}
+    return {"status": "ok", "version": "0.3.1"}
+
+
+@app.get("/ops/snapshot")
+def ops_snapshot(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Production ops snapshot — job counts, sandbox readiness, alerts for Railway dashboards."""
+    from insureflow.observability.ops_snapshot import collect_ops_snapshot
+
+    snap = collect_ops_snapshot(job_store)
+    snap["org_id"] = current.org_id
+    return snap
 
 
 @app.get("/system/diagnostics")
@@ -628,6 +656,8 @@ async def run_insurance_demo(
     background_tasks: BackgroundTasks,
     current: TokenData | None = Depends(get_current_user_optional),
 ) -> dict[str, Any]:
+    if _posture().is_hardened:
+        raise HTTPException(status_code=403, detail="Demo presets are disabled in BANK_MODE/production")
     org_id = current.org_id if current and current.org_id else "demo"
     preset_map: dict[str, tuple[str, Callable[[], SubmissionRequest]]] = {
         "pacific-coast": ("pacific_coast_acord.xml", _load_pacific_coast_submission),
@@ -646,10 +676,12 @@ async def run_insurance_demo(
 
 
 @app.get("/api/insurance/sources")
-def list_insurance_sources() -> dict[str, Any]:
+def list_insurance_sources(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
     from insureflow.ingestion.insurance.sources import list_sources
 
-    return {"sources": list_sources(EXAMPLES_DIR)}
+    return {"sources": list_sources(EXAMPLES_DIR), "hardened": _posture().is_hardened}
 
 
 @app.post("/api/insurance/sources/{source_id}/pull")
@@ -792,6 +824,32 @@ def pull_insurance_source(
                 "file_count": len(documents),
             }
             accum = _accumulate(documents, source_id, label)
+            if accum:
+                result["accumulated"] = accum
+            return result
+
+        if source_id == "s3-bucket":
+            from insureflow.ingestion.insurance.s3_connector import pull_s3_submissions, s3_configured
+
+            if not s3_configured(req.bucket):
+                raise HTTPException(
+                    status_code=400,
+                    detail="S3 not configured — set bucket on request or S3_SUBMISSIONS_BUCKET / AWS credentials",
+                )
+            try:
+                pull = pull_s3_submissions(bucket=req.bucket, prefix=req.prefix or "")
+            except Exception as exc:
+                raise HTTPException(status_code=502, detail=f"S3 pull failed: {exc}") from exc
+            label = f"s3://{pull['bucket']}/{pull.get('prefix') or ''}"
+            result = {
+                "source_id": source_id,
+                "simulated": False,
+                "connection_label": label,
+                "documents": pull["documents"],
+                "file_count": pull["documents_found"],
+                "objects_considered": pull.get("objects_considered", 0),
+            }
+            accum = _accumulate(pull["documents"], source_id, label)
             if accum:
                 result["accumulated"] = accum
             return result
@@ -1062,7 +1120,7 @@ async def root(request: Request) -> FileResponse | JSONResponse:
     return JSONResponse(
         {
             "service": "Rytera",
-            "version": "0.3.0",
+            "version": "0.3.1",
             "dashboard": "/dashboard",
             "diagnostics": "/system/diagnostics",
             "health": "/health",
@@ -1122,9 +1180,41 @@ async def run_pipeline(
     current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
     job_id = f"job-{uuid.uuid4().hex[:12]}"
-    job_store.set(INSURANCE_NS, job_id, {"status": "processing"}, org_id=current.org_id)
+    use_celery = req.use_celery or os.getenv("INSURANCE_USE_CELERY", "").lower() in {"1", "true", "yes"}
+    job_store.set(
+        INSURANCE_NS,
+        job_id,
+        {"status": "processing", "backend": "celery" if use_celery else "background"},
+        org_id=current.org_id,
+    )
+    if use_celery:
+        from insureflow.tasks.celery_app import celery_app
+
+        async_result = celery_app.send_task(
+            "insureflow.tasks.pipeline_tasks.run_pipeline",
+            args=[job_id, req.model_dump(), current.org_id],
+            queue="pipeline",
+        )
+        job_store.set(
+            INSURANCE_NS,
+            job_id,
+            {
+                "status": "processing",
+                "backend": "celery",
+                "celery_task_id": async_result.id,
+            },
+            org_id=current.org_id,
+        )
+        return {
+            "job_id": job_id,
+            "status": "processing",
+            "org_id": current.org_id,
+            "use_celery": True,
+            "celery_task_id": async_result.id,
+        }
+
     background_tasks.add_task(_run_pipeline_task, job_id, req, current.org_id)
-    return {"job_id": job_id, "status": "processing", "org_id": current.org_id}
+    return {"job_id": job_id, "status": "processing", "org_id": current.org_id, "use_celery": False}
 
 
 @app.get("/pipeline/jobs/{job_id}")
@@ -1307,9 +1397,11 @@ def get_workflow_status(
 
 
 @app.post("/pipeline/workflow/{bundle_id}/sign-off")
+@limiter.limit("20/minute")
 def licensed_uw_sign_off(
     bundle_id: str,
     req: SignOffRequest,
+    request: Request,
     current: TokenData = Depends(require_role(Role.LICENSED_UW)),
 ) -> dict[str, Any]:
     from insureflow.workflow.models import SignOffAction
@@ -1370,14 +1462,17 @@ def licensed_uw_sign_off(
 
 
 @app.post("/pipeline/workflow/{bundle_id}/bind")
+@limiter.limit("10/minute")
 def bind_policy(
     bundle_id: str,
     req: BindRequest,
+    request: Request,
     current: TokenData = Depends(require_role(Role.LICENSED_UW)),
 ) -> dict[str, Any]:
     from insureflow.audit.store import AuditStore
     from insureflow.outcomes.feedback import FeedbackEngine
     from insureflow.rating.engine import InsuranceRatingEngine
+    from insureflow.underwriting.authority import get_authority_matrix
     from insureflow.workflow.service import WorkflowService
 
     wf = WorkflowService()
@@ -1385,17 +1480,88 @@ def bind_policy(
     if not record or record.state.value != "approved":
         raise HTTPException(status_code=400, detail="Policy must be UW-approved before bind")
 
+    from insureflow.pilot.sandbox_readiness import is_shadow_mode
+
+    if is_shadow_mode():
+        raise HTTPException(
+            status_code=403,
+            detail=(
+                "Pilot shadow mode is active — bind is disabled. "
+                "Configure live Guidewire credentials and set PILOT_SHADOW_MODE=false to enable bind."
+            ),
+        )
+
     store = AuditStore()
     summary = store.load_json(bundle_id, "pipeline_summary.json", org_id=current.org_id) or {}
-    quote_ref = summary.get("quote", {}).get("policy_admin_reference", "")
+    quote = summary.get("quote", {}) or {}
+    quote_ref = quote.get("policy_admin_reference", "")
+    if not quote.get("eligible", True):
+        raise HTTPException(status_code=400, detail="Quote is not eligible for bind")
+    if not quote_ref:
+        raise HTTPException(status_code=400, detail="Missing policy admin quote reference — cannot bind")
+
+    checkpoints = summary.get("human_checkpoints") or []
+    open_checkpoints = [c for c in checkpoints if str(c.get("status", "pending")).lower() not in {"approved", "cleared", "waived"}]
+    if open_checkpoints:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "message": "Cannot bind while human checkpoints remain open",
+                "open_checkpoints": open_checkpoints,
+            },
+        )
+
+    open_conditions = list(summary.get("open_conditions") or [])
+    if open_conditions:
+        raise HTTPException(
+            status_code=400,
+            detail={"message": "Cannot bind with outstanding subjectivities/conditions", "open_conditions": open_conditions},
+        )
+
+    premium = float(req.bound_premium or quote.get("adjusted_premium") or 0.0)
+    tiv = float(summary.get("tiv") or quote.get("tiv") or 0.0)
+    authorized, authority_reason = get_authority_matrix().check_binding_authority(
+        username=current.username or "",
+        premium=premium,
+        tiv=tiv,
+        state=str(summary.get("primary_state") or ""),
+    )
+    if not authorized:
+        # In non-hardened / demo environments, allow bind when no matrix row exists for the user.
+        has_row = get_authority_matrix().get_authority(current.username or "") is not None
+        if has_row or _posture().is_hardened:
+            raise HTTPException(status_code=403, detail=authority_reason)
 
     rating = InsuranceRatingEngine()
     bind_result = rating.bind(bundle_id, quote_ref, current.username or "")
+    if bind_result.get("success") is False or bind_result.get("status") == "failed":
+        raise HTTPException(
+            status_code=502,
+            detail=bind_result.get("error") or "Policy bind failed on policy-admin system",
+        )
 
     policy_number = req.policy_number or bind_result.get("policy_number", "")
-    bound_premium = req.bound_premium or summary.get("quote", {}).get("adjusted_premium", 0.0)
+    bound_premium = req.bound_premium or quote.get("adjusted_premium", 0.0)
 
     wf.mark_bound(bundle_id, current.org_id, policy_number)
+
+    # Record in portfolio only after successful bind
+    try:
+        from insureflow.portfolio.store import PortfolioPolicy, get_portfolio_store
+
+        get_portfolio_store().add_policy(
+            PortfolioPolicy(
+                policy_id=f"pol-{policy_number or bundle_id}",
+                bundle_id=bundle_id,
+                org_id=current.org_id,
+                insured_name=str(summary.get("insured_name") or ""),
+                premium=float(bound_premium or 0.0),
+                tiv=tiv,
+                state=str(summary.get("primary_state") or ""),
+            )
+        )
+    except Exception as exc:
+        logger.warning("Portfolio bind recording failed: %s", exc)
 
     feedback = FeedbackEngine()
     outcome = feedback.record_bind(
@@ -2288,13 +2454,252 @@ def vision_status() -> dict[str, Any]:
     }
 
 
+@app.get("/pilot/sandbox-status")
+def pilot_sandbox_status(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Integration readiness for carrier/MGA pilots (sandbox vs live)."""
+    from insureflow.pilot.sandbox_readiness import assess_sandbox_readiness
+
+    report = assess_sandbox_readiness(ping=True)
+    report["org_id"] = current.org_id
+    return report
+
+
+@app.get("/pilot/packages")
+def list_pilot_packages(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    from insureflow.pilot.package_loader import discover_pilot_packages
+
+    packages = discover_pilot_packages()
+    return {
+        "count": len(packages),
+        "packages": [
+            {
+                "partner": p.partner,
+                "submission_id": p.submission_id,
+                "path": str(p.path),
+                "insured_name": p.insured_name,
+                "has_acord": bool(p.acord_xml),
+                "has_loss_run": bool(p.loss_run),
+                "has_sov": bool(p.schedule_of_values),
+                "inspection_count": len(p.inspection_reports),
+                "meta": p.meta,
+            }
+            for p in packages
+        ],
+    }
+
+
+class PilotRunRequest(BaseModel):
+    partner: str
+    submission_id: str
+    use_llm: bool = False
+
+
+@app.post("/pilot/packages/run", status_code=202)
+async def run_pilot_package_api(
+    req: PilotRunRequest,
+    background_tasks: BackgroundTasks,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    from insureflow.pilot.package_loader import discover_pilot_packages
+    from insureflow.pilot.pii_gate import scan_pilot_package
+
+    match = next(
+        (p for p in discover_pilot_packages() if p.partner == req.partner and p.submission_id == req.submission_id),
+        None,
+    )
+    if match is None:
+        raise HTTPException(status_code=404, detail="Pilot package not found — drop files under pilot_packages/")
+
+    scan = scan_pilot_package(match)
+    if not scan["ok_to_run"]:
+        raise HTTPException(status_code=400, detail={"message": scan["message"], "pii": scan})
+
+    job_id = f"pilot-{uuid.uuid4().hex[:12]}"
+    job_store.set(INSURANCE_NS, job_id, {"status": "processing", "pilot": True}, org_id=current.org_id)
+
+    def _task() -> None:
+        from insureflow.pilot.package_loader import run_pilot_package
+
+        try:
+            result = run_pilot_package(match, org_id=current.org_id, use_llm=req.use_llm)
+            job_store.set(INSURANCE_NS, job_id, {"status": "completed", **result}, org_id=current.org_id)
+        except Exception as exc:
+            logger.exception("Pilot package run failed")
+            job_store.set(
+                INSURANCE_NS,
+                job_id,
+                {"status": "failed", "error": str(exc)},
+                org_id=current.org_id,
+            )
+
+    background_tasks.add_task(_task)
+    return {
+        "job_id": job_id,
+        "status": "processing",
+        "partner": req.partner,
+        "submission_id": req.submission_id,
+        "pii": scan,
+    }
+
+
+@app.get("/pilot/packages/{partner}/{submission_id}/pii")
+def scan_pilot_pii(
+    partner: str,
+    submission_id: str,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    from insureflow.pilot.package_loader import discover_pilot_packages
+    from insureflow.pilot.pii_gate import scan_pilot_package
+
+    match = next(
+        (p for p in discover_pilot_packages() if p.partner == partner and p.submission_id == submission_id),
+        None,
+    )
+    if match is None:
+        raise HTTPException(status_code=404, detail="Pilot package not found")
+    return scan_pilot_package(match)
+
+
+class PilotRedactRequest(BaseModel):
+    partner: str
+    submission_id: str
+    inplace: bool = False
+
+
+@app.post("/pilot/packages/redact")
+def redact_pilot_package_api(
+    req: PilotRedactRequest,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Auto-redact blocking PII in a pilot package (copy or inplace)."""
+    from insureflow.pilot.auto_redact import redact_pilot_package
+    from insureflow.pilot.package_loader import discover_pilot_packages
+
+    match = next(
+        (p for p in discover_pilot_packages() if p.partner == req.partner and p.submission_id == req.submission_id),
+        None,
+    )
+    if match is None:
+        raise HTTPException(status_code=404, detail="Pilot package not found")
+    return redact_pilot_package(match, inplace=req.inplace)
+
+
+class PilotEmailIngestRequest(BaseModel):
+    partner: str = "email"
+    limit: int = 10
+    unread_only: bool = True
+    auto_redact: bool = True
+
+
+@app.post("/pilot/ingest/email")
+def ingest_pilot_email_api(
+    req: PilotEmailIngestRequest,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Pull IMAP attachments into pilot_packages/ and optionally auto-redact."""
+    from insureflow.pilot.email_intake import ingest_imap_to_pilot
+
+    result = ingest_imap_to_pilot(
+        partner=req.partner,
+        unread_only=req.unread_only,
+        limit=max(1, min(req.limit, 50)),
+        auto_redact=req.auto_redact,
+    )
+    if not result.get("ok"):
+        raise HTTPException(status_code=400, detail=result.get("error") or "IMAP ingest failed")
+    return result
+
+
+@app.post("/pilot/calibrate")
+def calibrate_pilot_batch(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+    use_llm: bool = False,
+) -> dict[str, Any]:
+    from insureflow.pilot.calibration import run_batch_calibration
+    from insureflow.pilot.package_loader import discover_pilot_packages
+
+    packages = discover_pilot_packages()
+    if not packages:
+        raise HTTPException(status_code=404, detail="No pilot packages found — run: python cli.py pilot seed")
+    return run_batch_calibration(packages, org_id=current.org_id, use_llm=use_llm)
+
+
+@app.get("/pilot/calibration")
+def get_pilot_calibration(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    from insureflow.pilot.calibration import PilotCalibrationStore
+
+    return PilotCalibrationStore().summarize()
+
+
+@app.post("/pilot/seed")
+def seed_pilot_packages_api(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    from insureflow.pilot.package_loader import export_scenario_as_pilot_package
+    from insureflow.testing.realworld_scenarios import build_all_scenarios
+
+    if _posture().is_hardened:
+        raise HTTPException(status_code=403, detail="Demo seed disabled in BANK_MODE/production")
+    dest_root = PROJECT_ROOT / "pilot_packages" / "demo"
+    dest_root.mkdir(parents=True, exist_ok=True)
+    exported = []
+    for scenario in build_all_scenarios():
+        out = export_scenario_as_pilot_package(scenario.id, dest_root / scenario.id)
+        exported.append(str(out))
+    return {"seeded": len(exported), "paths": exported}
+
+
+@app.post("/pilot/calibration/human")
+def record_pilot_human_decision(
+    body: dict[str, Any],
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Record licensed-UW decision vs AI for override-rate tracking."""
+    from insureflow.pilot.calibration import PilotCalibrationStore, PilotRunRecord
+
+    ai = str(body.get("ai_decision") or "").lower()
+    human = str(body.get("human_decision") or "").lower()
+    if not ai or not human:
+        raise HTTPException(status_code=400, detail="ai_decision and human_decision required")
+    expected = body.get("expected_decision")
+    row = PilotRunRecord(
+        partner=str(body.get("partner") or "manual"),
+        submission_id=str(body.get("submission_id") or body.get("bundle_id") or "unknown"),
+        bundle_id=str(body.get("bundle_id") or ""),
+        ai_decision=ai,
+        expected_decision=str(expected).lower() if expected else None,
+        human_decision=human,
+        decision_match=(ai == str(expected).lower()) if expected else None,
+        override=human != ai,
+        notes=str(body.get("notes") or f"recorded_by={current.username}"),
+    )
+    store = PilotCalibrationStore()
+    store.record(row)
+    return {"recorded": True, "override": row.override, "summary": store.summarize()}
+
+
 @app.get("/pipeline/ecosystem/status")
 def ecosystem_status(
     current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
     from insureflow.integrations.health import IntegrationHealthService
+    from insureflow.pilot.sandbox_readiness import assess_sandbox_readiness, is_shadow_mode
 
-    return IntegrationHealthService().check_all(current.org_id)
+    status = IntegrationHealthService().check_all(current.org_id)
+    readiness = assess_sandbox_readiness(ping=False)
+    status["pilot"] = {
+        "overall": readiness["overall"],
+        "shadow_mode": is_shadow_mode(),
+        "required_ready": readiness["required_ready"],
+        "required_total": readiness["required_total"],
+    }
+    return status
 
 
 @app.get("/pipeline/ecosystem/{bundle_id}")
@@ -2399,6 +2804,10 @@ class LendingSubmissionRequest(BaseModel):
     employment_years: float = 0.0
     bankruptcies: int = 0
     foreclosures: int = 0
+    # Raw application intake (parity with mortgage/insurance)
+    documents: Optional[list[InsuranceDocumentPayload]] = None
+    directory: Optional[str] = None
+    require_documents: bool = False
 
 
 class WebhookRegisterRequest(BaseModel):
@@ -2427,6 +2836,14 @@ def _run_mortgage_task(job_id: str, request: MortgageSubmissionRequest, org_id: 
     from insureflow.mortgage.pipeline import MortgagePipeline
     from insureflow.mortgage.webhooks import webhook_dispatcher
 
+    def on_progress(data: dict[str, Any]) -> None:
+        job_store.set(
+            MORTGAGE_NS,
+            job_id,
+            {"status": "processing", "progress": data},
+            org_id=org_id,
+        )
+
     pipeline = MortgagePipeline(use_llm=request.use_llm, org_id=org_id)
     try:
         product_line = _parse_product_line(request.product_line)
@@ -2440,6 +2857,7 @@ def _run_mortgage_task(job_id: str, request: MortgageSubmissionRequest, org_id: 
                 product_line=product_line,
                 loan_product=request.loan_product,
                 loan_amount=request.loan_amount,
+                progress_callback=on_progress,
             )
         elif request.documents:
             docs = [d.model_dump() for d in request.documents]
@@ -2450,6 +2868,7 @@ def _run_mortgage_task(job_id: str, request: MortgageSubmissionRequest, org_id: 
                 borrower_id=request.borrower_id,
                 loan_product=request.loan_product,
                 loan_amount=request.loan_amount,
+                progress_callback=on_progress,
             )
         else:
             job_store.set(
@@ -2973,6 +3392,18 @@ async def run_pipeline_v2(
     current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
     """Enhanced pipeline run with appetite filter, oracles, portfolio, and core integration."""
+    if _posture().is_hardened and any(
+        [
+            req.skip_appetite_filter,
+            req.skip_oracles,
+            req.skip_portfolio,
+            req.skip_core_integration,
+        ]
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Pipeline skip flags are disabled in BANK_MODE/production",
+        )
     job_id = f"job-{uuid.uuid4().hex[:12]}"
     job_store.set(
         INSURANCE_NS,
@@ -3289,7 +3720,10 @@ def run_lending_pipeline(
     req: LendingSubmissionRequest,
     current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
-    """Run lending underwriting for a business or consumer loan application."""
+    """Run lending underwriting for a business or consumer loan application.
+
+    Accepts structured fields and/or raw documents / a directory of applications.
+    """
     from insureflow.lending import LendingPipeline
     from insureflow.lending.models import (
         BusinessFinancialData,
@@ -3342,53 +3776,132 @@ def run_lending_pipeline(
     purp = purpose_map.get(req.purpose, LoanPurpose.OTHER)
     is_business = pt.value.startswith(("business_", "commercial_", "construction_", "sba_", "equipment_", "invoice_"))
 
-    app: Any
-    fin: Any
-    if is_business:
-        from insureflow.lending.models import Collateral
+    doc_payloads: list[dict[str, Any]] = []
+    loaded_docs = None
+    try:
+        if req.directory:
+            from insureflow.ingestion.lending import (
+                application_from_documents,
+                load_lending_documents_from_directory,
+            )
 
-        fin = BusinessFinancialData(
-            annual_revenue=req.revenue,
-            net_income=req.net_income,
-            ebitda=req.ebitda,
-            debt_service=req.debt_service,
-            total_assets=req.total_assets,
-            total_liabilities=req.total_liabilities,
-            current_assets=req.current_assets,
-            current_liabilities=req.current_liabilities,
-        )
-        coll = [Collateral(estimated_value=req.collateral_value)] if req.collateral_value > 0 else []
-        app = BusinessLoanApplication(
-            business_name=req.business_name or "Unnamed Business",
-            industry=req.industry,
-            years_in_business=req.years_in_business,
-            product_type=pt,
-            loan_purpose=purp,
-            requested_amount=req.amount,
-            requested_term_months=req.term_months,
-            financials=[fin],
-            collateral=coll,
-        )
-    else:
-        fin = ConsumerFinancialData(
-            annual_income=req.annual_income,
-            total_monthly_debt=req.monthly_debt,
-            credit_score=req.credit_score,
-            employment_years=req.employment_years,
-            bankruptcies_last_7_years=req.bankruptcies,
-            foreclosures_last_7_years=req.foreclosures,
-        )
-        app = ConsumerLoanApplication(
-            product_type=pt,
-            loan_purpose=purp,
-            requested_amount=req.amount,
-            requested_term_months=req.term_months,
-            financial_data=fin,
-        )
+            loaded_docs = load_lending_documents_from_directory(req.directory)
+            if not loaded_docs:
+                raise HTTPException(status_code=400, detail=f"No readable documents in {req.directory}")
+            doc_payloads = [{"filename": d.filename, "content": d.content, "document_type": d.document_type.value} for d in loaded_docs]
+            overrides = {
+                "amount": req.amount,
+                "term_months": req.term_months,
+                "business_name": req.business_name,
+                "annual_revenue": req.revenue,
+                "net_income": req.net_income,
+                "ebitda": req.ebitda,
+                "debt_service": req.debt_service,
+                "total_assets": req.total_assets,
+                "total_liabilities": req.total_liabilities,
+                "annual_income": req.annual_income,
+                "credit_score": req.credit_score,
+                "years_in_business": req.years_in_business,
+            }
+            app = application_from_documents(
+                loaded_docs,
+                product_type=pt,
+                purpose=purp,
+                is_business=is_business,
+                overrides=overrides,
+            )
+        elif req.documents:
+            from insureflow.ingestion.lending import (
+                application_from_documents,
+                load_lending_documents_from_payloads,
+            )
+
+            payloads = [{"filename": d.filename, "content": d.content} for d in req.documents]
+            loaded_docs = load_lending_documents_from_payloads(payloads)
+            doc_payloads = payloads
+            overrides = {
+                "amount": req.amount,
+                "term_months": req.term_months,
+                "business_name": req.business_name,
+                "annual_revenue": req.revenue,
+                "net_income": req.net_income,
+                "ebitda": req.ebitda,
+                "debt_service": req.debt_service,
+                "total_assets": req.total_assets,
+                "total_liabilities": req.total_liabilities,
+                "annual_income": req.annual_income,
+                "credit_score": req.credit_score,
+                "years_in_business": req.years_in_business,
+            }
+            app = application_from_documents(
+                loaded_docs,
+                product_type=pt,
+                purpose=purp,
+                is_business=is_business,
+                overrides=overrides,
+            )
+        else:
+            app: Any
+            fin: Any
+            if is_business:
+                from insureflow.lending.models import Collateral
+
+                fin = BusinessFinancialData(
+                    annual_revenue=req.revenue,
+                    net_income=req.net_income,
+                    ebitda=req.ebitda,
+                    debt_service=req.debt_service,
+                    total_assets=req.total_assets,
+                    total_liabilities=req.total_liabilities,
+                    current_assets=req.current_assets,
+                    current_liabilities=req.current_liabilities,
+                )
+                coll = [Collateral(estimated_value=req.collateral_value)] if req.collateral_value > 0 else []
+                app = BusinessLoanApplication(
+                    business_name=req.business_name or "Unnamed Business",
+                    industry=req.industry,
+                    years_in_business=req.years_in_business,
+                    product_type=pt,
+                    loan_purpose=purp,
+                    requested_amount=req.amount,
+                    requested_term_months=req.term_months,
+                    financials=[fin],
+                    collateral=coll,
+                )
+            else:
+                fin = ConsumerFinancialData(
+                    annual_income=req.annual_income,
+                    total_monthly_debt=req.monthly_debt,
+                    credit_score=req.credit_score,
+                    employment_years=req.employment_years,
+                    bankruptcies_last_7_years=req.bankruptcies,
+                    foreclosures_last_7_years=req.foreclosures,
+                )
+                app = ConsumerLoanApplication(
+                    product_type=pt,
+                    loan_purpose=purp,
+                    requested_amount=req.amount,
+                    requested_term_months=req.term_months,
+                    financial_data=fin,
+                )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.exception("Lending intake failed")
+        raise HTTPException(status_code=400, detail=f"Lending document intake failed: {exc}") from exc
 
     pipeline = LendingPipeline()
-    result = pipeline.run(app)
-    return {"result": result.model_dump(mode="json"), "application_id": app.application_id}
+    result = pipeline.run(
+        app,
+        documents=doc_payloads or None,
+        require_documents=req.require_documents or bool(req.directory or req.documents),
+    )
+    return {
+        "result": result.model_dump(mode="json"),
+        "application_id": app.application_id,
+        "documents_ingested": len(doc_payloads),
+        "extracted_from_docs": bool(loaded_docs),
+    }
 
 
 @app.get("/lending/pipeline/result/{application_id}")
@@ -3398,17 +3911,23 @@ def get_lending_result(
 ) -> dict[str, Any]:
     import json
 
+    # Prefer durable job store (survives restart)
+    stored = job_store.get(LENDING_NS, application_id, org_id=current.org_id)
+    if stored:
+        return stored.get("audit") or stored
+
     audit_path = os.path.join(
         os.path.dirname(os.path.dirname(__file__)),
         "..",
         "audit_logs",
         "lending",
     )
-    for fname in os.listdir(audit_path):
-        if application_id in fname:
-            with open(os.path.join(audit_path, fname)) as f:
-                result: dict[str, Any] = json.load(f)
-                return result
+    if os.path.isdir(audit_path):
+        for fname in os.listdir(audit_path):
+            if application_id in fname:
+                with open(os.path.join(audit_path, fname)) as f:
+                    result: dict[str, Any] = json.load(f)
+                    return result
     raise HTTPException(status_code=404, detail=f"Lending result not found: {application_id}")
 
 
@@ -3578,9 +4097,11 @@ def get_workflow_v2(
 
 
 @app.post("/v2/pipeline/workflow/{bundle_id}/sign-off")
+@limiter.limit("20/minute")
 def sign_off_v2(
     bundle_id: str,
     req: dict[str, Any],
+    request: Request,
     current: TokenData = Depends(require_role(Role.LICENSED_UW)),
 ) -> dict[str, Any]:
     """Sign-off with row-level permission check — user must be in the same org."""
@@ -3618,20 +4139,34 @@ def ml_status() -> dict[str, Any]:
 
 
 @app.post("/ml/train")
-def ml_train_all() -> dict[str, Any]:
-    """Train or retrain all ML models with synthetic data."""
-    from insureflow.ml.training import train_all_models
+def ml_train_all(allow_synthetic: bool = True) -> dict[str, Any]:
+    """Train or retrain all ML models — prefers ml_data/*.csv over synthetic."""
+    from insureflow.ml.training import get_training_status, train_all_models
 
-    results = train_all_models(force=True)
+    results = train_all_models(force=True, allow_synthetic=allow_synthetic)
+    status = get_training_status()
     return {
         "trained": len(results),
         "results": [r.model_dump() for r in results],
+        "datasets": status.get("datasets"),
+        "history_tail": (status.get("history") or [])[-len(results) :],
     }
 
 
+@app.post("/ml/export-training")
+def ml_export_training(
+    model_type: str = "loss_prediction",
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Build ml_data/*.csv from persisted insurance/lending audit outcomes."""
+    from insureflow.ml.export_training import export_from_audit_logs
+
+    return export_from_audit_logs(model_type=model_type)
+
+
 @app.post("/ml/train/{model_type}")
-def ml_train_single(model_type: str) -> dict[str, Any]:
-    """Retrain a single ML model."""
+def ml_train_single(model_type: str, allow_synthetic: bool = True) -> dict[str, Any]:
+    """Retrain a single ML model from CSV when present."""
     from insureflow.ml.models import ModelType as ModelTypeEnum
     from insureflow.ml.training import retrain_model
 
@@ -3640,7 +4175,10 @@ def ml_train_single(model_type: str) -> dict[str, Any]:
     except ValueError:
         raise HTTPException(status_code=400, detail=f"Invalid model type: {model_type}. Valid: {[e.value for e in ModelTypeEnum]}")
 
-    result = retrain_model(mt)
+    try:
+        result = retrain_model(mt, allow_synthetic=allow_synthetic)
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     if result is None:
         raise HTTPException(status_code=400, detail=f"Cannot train {model_type}")
     return result.model_dump()

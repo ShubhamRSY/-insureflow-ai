@@ -44,27 +44,51 @@ class BriteCoreAdapter(BasePolicyAdminAdapter):
         return resolve_integration_mode(self.mode, self.http)
 
     def submit_quote(self, payload: PolicySubmissionPayload) -> IntegrationResult:
+        from insureflow.security.posture import allow_simulated_bind
+
         if self._resolved_mode() == "live":
             return self._submit_live(payload)
         quote_ref = f"BC-Q-{uuid4().hex[:10].upper()}"
         self.last_quote_reference = quote_ref
+        allowed = allow_simulated_bind()
         return IntegrationResult(
-            success=True,
+            success=allowed,
             system=self.get_system_name(),
-            external_reference=quote_ref,
-            response_payload={"quote_id": quote_ref, "status": "quoted", "integration_type": "simulated"},
+            external_reference=quote_ref if allowed else "",
+            error="" if allowed else "Simulated BriteCore submit disabled in BANK_MODE/production",
+            response_payload={
+                "quote_id": quote_ref if allowed else "",
+                "status": "quoted" if allowed else "blocked",
+                "integration_type": "simulated",
+                "synthetic": True,
+            },
         )
 
     def bind_policy(self, payload: PolicySubmissionPayload, quote_reference: str) -> IntegrationResult:
+        from insureflow.security.posture import allow_simulated_bind, resolve_security_posture
+
         if self._resolved_mode() == "live":
             return self._bind_live(payload, quote_reference)
+        if resolve_security_posture().is_hardened and not allow_simulated_bind():
+            return IntegrationResult(
+                success=False,
+                system=self.get_system_name(),
+                external_reference=quote_reference,
+                error="Simulated BriteCore bind disabled in BANK_MODE/production",
+                response_payload={"status": "blocked", "integration_type": "simulated", "synthetic": True},
+            )
         policy_number = f"BC-{datetime.now(tz=timezone.utc).year}-{uuid4().hex[:8].upper()}"
         return IntegrationResult(
             success=True,
             system=self.get_system_name(),
             external_reference=quote_reference,
             policy_number=policy_number,
-            response_payload={"policy_number": policy_number, "status": "bound"},
+            response_payload={
+                "policy_number": policy_number,
+                "status": "bound",
+                "integration_type": "simulated",
+                "synthetic": True,
+            },
         )
 
     def status(self) -> dict[str, Any]:

@@ -1,7 +1,7 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Shield, Home, Activity, ClipboardCheck, Settings, LogOut, RefreshCw, Menu, X,
-  FileText, Users, BarChart3, BookOpen, Wallet, Layers, Link2, LineChart, Search, Database,
+  FileText, Users, BarChart3, BookOpen, Wallet, Layers, Link2, LineChart, Search, Database, FlaskConical,
 } from 'lucide-react';
 import { useState } from 'react';
 import { auth, endpoints } from '../lib/api';
@@ -12,6 +12,7 @@ const nav = [
   { to: '/system', icon: Activity, label: 'System Health' },
   { section: 'Underwriting' },
   { to: '/insurance', icon: Shield, label: 'Insurance', color: 'text-insurance' },
+  { to: '/pilot', icon: FlaskConical, label: 'Pilot Lab', color: 'text-amber-400' },
   { to: '/mortgage', icon: Home, label: 'Mortgage', color: 'text-mortgage' },
   { to: '/lending', icon: Wallet, label: 'Lending', color: 'text-emerald-400' },
   { to: '/workflow', icon: ClipboardCheck, label: 'UW Sign-off', badge: true },

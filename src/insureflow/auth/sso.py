@@ -108,12 +108,22 @@ def _verify_jwt_signature(token: str, keys_data: dict[str, Any]) -> dict[str, An
 
         for key in key_candidates:
             try:
-                verified: dict[str, Any] = jose_jwt.decode(
-                    token,
-                    key,
-                    algorithms=[alg],
-                    options={"verify_aud": False},
-                )
+                options = {
+                    "verify_aud": bool(os.getenv("OIDC_CLIENT_ID") or os.getenv("COGNITO_CLIENT_ID")),
+                    "verify_iss": bool(os.getenv("OIDC_ISSUER")),
+                    "verify_exp": True,
+                }
+                decode_kwargs: dict[str, Any] = {
+                    "algorithms": [alg],
+                    "options": options,
+                }
+                audience = os.getenv("OIDC_CLIENT_ID") or os.getenv("COGNITO_CLIENT_ID") or ""
+                issuer = os.getenv("OIDC_ISSUER", "")
+                if audience and options["verify_aud"]:
+                    decode_kwargs["audience"] = audience
+                if issuer and options["verify_iss"]:
+                    decode_kwargs["issuer"] = issuer
+                verified: dict[str, Any] = jose_jwt.decode(token, key, **decode_kwargs)
                 return verified
             except Exception:
                 continue

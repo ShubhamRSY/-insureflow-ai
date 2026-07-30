@@ -1,0 +1,28 @@
+{
+  "source": "example-carrier-filing",
+  "as_of": "2026-01-01",
+  "synthetic": false,
+  "loss_costs": {
+    "commercial_property": 0.30,
+    "general_liability": 0.09,
+    "workers_comp": 0.055,
+    "bop": 0.34,
+    "umbrella": 0.032
+  },
+  "lcm": {
+    "commercial_property": 2.05,
+    "general_liability": 2.20,
+    "workers_comp": 2.35,
+    "bop": 1.95,
+    "umbrella": 2.45
+  },
+  "territory_relativities": {
+    "FL": {
+      "commercial_property": 1.55,
+      "bop": 1.40
+    },
+    "TX": {
+      "commercial_property": 1.12
+    }
+  }
+}

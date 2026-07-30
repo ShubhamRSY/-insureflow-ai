@@ -438,6 +438,7 @@ class InsurancePipeline:
         progress.start("reconcile", "Reconciled", "Reconciling cross-document fields")
         try:
             provenance = self.provenance.build_provenance(bundle)
+            provenance_failed = False
         except Exception as exc:
             logger.error("Provenance build failed: %s", exc)
             audit.log(
@@ -448,9 +449,11 @@ class InsurancePipeline:
             from insureflow.models.provenance import ProvenanceRecord
 
             provenance = ProvenanceRecord(record_id=f"prov-{bid}", bundle_id=bid)
+            provenance_failed = True
 
         try:
             reconciliation = self.reconciliation.reconcile(provenance)
+            reconciliation_failed = False
         except Exception as exc:
             logger.error("Reconciliation failed: %s", exc)
             audit.log(
@@ -461,17 +464,61 @@ class InsurancePipeline:
             from insureflow.models.audit import ReconciliationResult
 
             reconciliation = ReconciliationResult(bundle_id=bid)
+            reconciliation_failed = True
 
         progress.complete(
             "reconcile",
             detail=f"{len(reconciliation.discrepancies)} conflict(s) · {reconciliation.match_rate:.0%} match",
             findings=len(reconciliation.discrepancies),
-            status="warning" if reconciliation.discrepancies else "complete",
+            status="warning" if reconciliation.discrepancies or provenance_failed or reconciliation_failed else "complete",
         )
 
         # ── 6. Agent swarm → UW memo ──
         progress.start("analyze", "Scored", "Running specialist agent analysis")
         memo = self.supervisor.analyze_submission(bundle, parallel=True, use_celery=False)
+
+        if provenance_failed or reconciliation_failed:
+            from insureflow.models.agents import Finding, RiskSeverity, UWDecision
+
+            memo.key_findings.append(
+                Finding(
+                    title="Provenance/reconciliation pipeline failure",
+                    description=(
+                        "Provenance or reconciliation failed during processing. "
+                        "Decision forced to REFER — do not treat empty reconciliation as clean."
+                    ),
+                    severity=RiskSeverity.HIGH,
+                    category="data_quality",
+                )
+            )
+            memo.human_review_required = True
+            memo.human_review_reasons.append("Provenance/reconciliation failure")
+            if memo.decision != UWDecision.DECLINE:
+                memo.decision = UWDecision.REFER
+
+        # OCR failure signals from ingestion
+        ocr_failures = [
+            d
+            for d in bundle.unstructured
+            if d.extracted_fields.get("ocr_failed")
+            or (isinstance(d.raw_text, str) and d.raw_text.startswith("[OCR: No text"))
+        ]
+        if ocr_failures:
+            from insureflow.models.agents import Finding, RiskSeverity, UWDecision
+
+            memo.key_findings.append(
+                Finding(
+                    title="OCR extraction failed on required document(s)",
+                    description=f"{len(ocr_failures)} document(s) produced no usable OCR text",
+                    severity=RiskSeverity.HIGH,
+                    category="data_quality",
+                    evidence=[getattr(d, "submission_id", "") for d in ocr_failures[:5]],
+                )
+            )
+            memo.human_review_required = True
+            memo.human_review_reasons.append("OCR failure on required documents")
+            if memo.decision not in (UWDecision.DECLINE, UWDecision.REFER):
+                memo.decision = UWDecision.REFER
 
         # ── 6a. Low-confidence critical field hold ──
         confidence_floor = 0.6
@@ -504,12 +551,36 @@ class InsurancePipeline:
                 if f.severity.value in ("critical", "high"):
                     memo.human_review_reasons.append(f.title)
 
-        # Merge required-data validation findings into memo
+        # Merge required-data validation findings into memo — CRITICAL forces REFER
         if validation_findings:
+            from insureflow.models.agents import UWDecision
+
             for f in validation_findings:
                 memo.key_findings.append(f)
                 memo.human_review_reasons.append(f.title)
             memo.human_review_required = True
+            critical_validation = [f for f in validation_findings if getattr(f.severity, "value", "") == "critical"]
+            if critical_validation and memo.decision not in (UWDecision.DECLINE, UWDecision.REFER):
+                memo.decision = UWDecision.REFER
+                memo.conditions = list(memo.conditions or []) + [
+                    f"SUBJECT TO resolution of: {f.title}" for f in critical_validation[:5]
+                ]
+
+        # Carry appetite referral findings into the memo (they otherwise only live in audit)
+        if appetite_result and appetite_result.findings:
+            from insureflow.models.agents import UWDecision
+
+            for f in appetite_result.findings:
+                memo.key_findings.append(f)
+                if f.severity.value in ("critical", "high"):
+                    memo.human_review_reasons.append(f.title)
+            if appetite_result.needs_uw_referral:
+                memo.human_review_required = True
+                if memo.decision not in (UWDecision.DECLINE, UWDecision.REFER):
+                    memo.decision = UWDecision.REFER
+                memo.conditions = list(memo.conditions or []) + [
+                    f"SUBJECT TO appetite clearance: {appetite_result.reason}"
+                ]
 
         agent_findings = len(memo.key_findings) - len(oracle_findings) - len(validation_findings)
         progress.complete(
@@ -574,8 +645,11 @@ class InsurancePipeline:
             quote_html = ""
 
         # ── 10. CORE SYSTEM INTEGRATION (push to BriteCore/Guidewire) ──
+        # Skip provisional core push for referrals/declines — avoid fake "submitted" status.
         core_results: list[dict[str, Any]] = []
-        if not skip_core_integration:
+        skip_core_for_decision = memo.decision.value in {"decline", "refer"}
+        appetite_referral = bool(appetite_result and appetite_result.needs_uw_referral and not appetite_passed)
+        if not skip_core_integration and not skip_core_for_decision and not appetite_referral:
             core_results = self.policy_admin.submit_to_core_systems(bundle, memo, quote, self.org_id)
             successful = [r for r in core_results if r.get("success")]
             audit.log(
@@ -583,12 +657,17 @@ class InsurancePipeline:
                 f"Core system integration: {len(successful)}/{len(core_results)} systems updated",
                 metadata={"core_results": core_results},
             )
+        elif skip_core_for_decision or appetite_referral:
+            audit.log(
+                PipelineEvent.PIPELINE_COMPLETE,
+                "Core system integration skipped (referral/decline — provisional only)",
+                metadata={"ai_decision": memo.decision.value, "appetite_referral": appetite_referral},
+            )
 
         # ── 11. Feedback loop: record prediction ──
         prediction = self.feedback.record_prediction(bid, memo, quote, org_id=self.org_id)
 
-        # ── 12. Portfolio: record this new policy ──
-        self._record_portfolio_policy(bundle, memo, quote)
+        # Portfolio is recorded only after successful bind (see bind_policy API), not at quote time.
 
         # ── 13. Workflow: submit for licensed UW review ──
         progress.start("decision", "Decision", "Final underwriting recommendation")
@@ -615,8 +694,30 @@ class InsurancePipeline:
         )
 
         broker_name = ""
+        primary_state = ""
+        estimated_tiv = 0.0
         if bundle.structured and bundle.structured.broker:
             broker_name = bundle.structured.broker.broker_name
+        if bundle.structured and bundle.structured.locations:
+            loc0 = bundle.structured.locations[0]
+            primary_state = loc0.state or ""
+            estimated_tiv = (loc0.building_value or 0) + (loc0.contents_value or 0) + (loc0.bi_value or 0)
+        if estimated_tiv <= 0:
+            estimated_tiv = float(getattr(quote, "tiv", 0) or 0) or float(
+                (getattr(quote, "metadata", {}) or {}).get("tiv") or 0
+            )
+
+        human_checkpoints = self._build_checkpoints(memo, reconciliation, oracle_findings)
+        open_conditions = list(memo.conditions or [])
+        if memo.decision.value == "conditional_accept" and open_conditions:
+            human_checkpoints.append(
+                {
+                    "id": "subjectivities",
+                    "label": "Clear subjectivities",
+                    "status": "pending",
+                    "reason": "; ".join(open_conditions[:3]),
+                }
+            )
 
         summary = {
             "status": "completed",
@@ -624,6 +725,8 @@ class InsurancePipeline:
             "org_id": self.org_id,
             "insured_name": memo.insured_name,
             "broker_name": broker_name,
+            "primary_state": primary_state,
+            "tiv": estimated_tiv,
             "triage_priority": triage_result.priority.value,
             "triage_score": triage_result.score,
             "ai_decision": memo.decision.value,
@@ -631,6 +734,7 @@ class InsurancePipeline:
             "human_review_required": memo.human_review_required or wf.state == WorkflowState.PENDING_REVIEW,
             "appetite_filter_passed": appetite_passed,
             "appetite_needs_uw_referral": appetite_result.needs_uw_referral if appetite_result else False,
+            "appetite_reason": appetite_result.reason if appetite_result else "",
             "oracle_findings_count": len(oracle_findings),
             "ocr_documents": ocr_count,
             "document_count": len(bundle.unstructured) + (1 if bundle.structured else 0),
@@ -659,13 +763,16 @@ class InsurancePipeline:
                 "verified_fields": provenance.verified_count(),
                 "contradicted_fields": provenance.discrepancy_count(),
             },
-            "human_checkpoints": self._build_checkpoints(memo, reconciliation, oracle_findings),
+            "human_checkpoints": human_checkpoints,
+            "open_conditions": open_conditions,
             "quote": {
                 "adjusted_premium": quote.adjusted_premium,
                 "base_premium": quote.base_premium,
                 "eligible": quote.eligible,
                 "policy_admin_reference": quote.policy_admin_reference,
                 "quote_valid_until": quote.quote_valid_until,
+                "tiv": estimated_tiv,
+                "ineligibility_reasons": list(getattr(quote, "ineligibility_reasons", []) or []),
             },
             "core_integration": core_results,
             "encryption_at_rest": self.encryption.enabled,
@@ -699,6 +806,10 @@ class InsurancePipeline:
         )
 
         audit_paths = audit.persist(bundle, memo, provenance, reconciliation, extra=summary)
+        try:
+            audit.store.save_json(bid, "checkpoints.json", human_checkpoints, org_id=self.org_id)
+        except Exception as exc:
+            logger.warning("Failed to persist checkpoints.json: %s", exc)
 
         return {
             **summary,

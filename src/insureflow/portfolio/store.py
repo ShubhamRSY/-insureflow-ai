@@ -1,9 +1,14 @@
 from __future__ import annotations
 
+import json
+import logging
 from datetime import datetime, timezone
+from pathlib import Path
 from uuid import uuid4
 
 from pydantic import BaseModel, Field
+
+logger = logging.getLogger(__name__)
 
 
 class PortfolioPolicy(BaseModel):
@@ -56,14 +61,43 @@ class PortfolioConcentrationSummary(BaseModel):
 
 
 class PortfolioStore:
-    """In-memory store tracking portfolio policies for concentration analysis.
+    """Durable portfolio store for concentration analysis.
 
-    In production, this queries the carrier's policy administration database.
+    Persists to JSON under data/portfolio/ so restarts keep written policies.
+    In production, prefer querying the carrier PAS; this is the local durable layer.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, path: Path | None = None) -> None:
+        self._path = path or Path.cwd() / "data" / "portfolio" / "policies.json"
         self._policies: dict[str, PortfolioPolicy] = {}
-        self._load_demo_seed()
+        self._load()
+        from insureflow.security.posture import load_demo_assets
+
+        if not self._policies and load_demo_assets():
+            self._load_demo_seed()
+            self._persist()
+
+    def _load(self) -> None:
+        if not self._path.exists():
+            return
+        try:
+            raw = json.loads(self._path.read_text(encoding="utf-8"))
+            for item in raw.get("policies", []):
+                policy = PortfolioPolicy.model_validate(item)
+                self._policies[policy.policy_id] = policy
+            logger.info("Loaded %d portfolio policies from %s", len(self._policies), self._path)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Failed to load portfolio store: %s", exc)
+
+    def _persist(self) -> None:
+        self._path.parent.mkdir(parents=True, exist_ok=True)
+        payload = {
+            "updated_at": datetime.now(tz=timezone.utc).isoformat(),
+            "policies": [p.model_dump(mode="json") for p in self._policies.values()],
+        }
+        tmp = self._path.with_suffix(".tmp")
+        tmp.write_text(json.dumps(payload, indent=2, default=str), encoding="utf-8")
+        tmp.replace(self._path)
 
     def _load_demo_seed(self) -> None:
         seeds = [
@@ -183,6 +217,7 @@ class PortfolioStore:
 
     def add_policy(self, policy: PortfolioPolicy) -> None:
         self._policies[policy.policy_id] = policy
+        self._persist()
 
     def list_policies(self, org_id: str = "default") -> list[PortfolioPolicy]:
         return [p for p in self._policies.values() if p.org_id == org_id and p.is_active]

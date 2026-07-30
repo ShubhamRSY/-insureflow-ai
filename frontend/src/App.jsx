@@ -22,6 +22,7 @@ import PortfolioPage from './pages/Portfolio';
 import IntegrationsPage from './pages/Integrations';
 import WebhooksPage from './pages/Webhooks';
 import InsuranceJobDetail from './pages/InsuranceJobDetail';
+import PilotPage from './pages/Pilot';
 import { auth, endpoints, AuthError } from './lib/api';
 
 function Protected({ children, onLogin }) {
@@ -231,6 +232,7 @@ function AppRoutes() {
           <Route path="system" element={<SystemPage health={health} />} />
           <Route path="insurance/:jobId" element={<Protected onLogin={() => setLoginOpen(true)}><InsuranceJobDetail /></Protected>} />
           <Route path="insurance" element={<Protected onLogin={() => setLoginOpen(true)}><InsurancePage presets={presets} jobs={insuranceJobs} onRunDemo={runDemo} onOpenJob={openJob} onSubmit={submitInsurance} onRefresh={loadInsuranceJobs} /></Protected>} />
+          <Route path="pilot" element={<Protected onLogin={() => setLoginOpen(true)}><PilotPage /></Protected>} />
           <Route path="mortgage" element={<Protected onLogin={() => setLoginOpen(true)}><MortgagePage presets={presets} jobs={mortgageJobs} onRunDemo={runDemo} onOpenJob={openJob} onSubmit={submitMortgage} /></Protected>} />
           <Route path="lending" element={<Protected onLogin={() => setLoginOpen(true)}><LendingPage /></Protected>} />
           <Route path="workflow" element={<Protected onLogin={() => setLoginOpen(true)}><WorkflowPage pending={pending} onRefresh={loadOverview} onOpenJob={openJob} authorityData={authorityData} /></Protected>} />

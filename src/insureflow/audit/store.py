@@ -72,6 +72,19 @@ class AuditStore:
             path.write_text(json.dumps(data, indent=2, default=str, ensure_ascii=False), encoding="utf-8")
         except OSError as e:
             raise StorageError(f"Failed to write JSON to {path}: {e}")
+        # Dual-write index to Redis when available so audits survive multi-instance restarts
+        try:
+            import os
+
+            redis_url = os.getenv("REDIS_URL") or os.getenv("CELERY_BROKER_URL") or ""
+            if redis_url.startswith("redis"):
+                import redis
+
+                client = redis.from_url(redis_url, decode_responses=True, socket_connect_timeout=2)
+                key = f"insureflow:audit:{path.parent.name}:{path.name}"
+                client.setex(key, 86400 * 30, json.dumps(data, default=str))
+        except Exception:
+            pass
 
     def load_json(self, bundle_id: str, filename: str, org_id: str | None = None) -> Optional[dict[str, Any]]:
         candidates = []

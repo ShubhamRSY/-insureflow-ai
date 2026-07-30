@@ -174,14 +174,17 @@ class ACORDParser(BaseParser):
                     city=city,
                     state=state,
                     zip_code=zip_code,
-                    building_occupancy=self._find_text(loc_elem, ".//acord:Occupancy"),
+                    building_occupancy=self._find_text(loc_elem, ".//acord:Occupancy")
+                    or self._find_text(loc_elem, ".//acord:BuildingOccupancy"),
                     year_built=self._find_int(loc_elem, ".//acord:YearBuilt"),
                     square_footage=self._find_float(loc_elem, ".//acord:SquareFootage"),
                     construction_type=self._find_text(loc_elem, ".//acord:ConstructionType"),
                     protection_class=self._find_int(loc_elem, ".//acord:ProtectionClass"),
-                    building_value=self._find_float(loc_elem, ".//acord:EstimatedValue"),
+                    building_value=self._find_float(loc_elem, ".//acord:EstimatedValue")
+                    or self._find_float(loc_elem, ".//acord:BuildingValue"),
                     contents_value=self._find_float(loc_elem, ".//acord:ContentsValue"),
-                    bi_value=self._find_float(loc_elem, ".//acord:BusinessIncomeValue"),
+                    bi_value=self._find_float(loc_elem, ".//acord:BusinessIncomeValue")
+                    or self._find_float(loc_elem, ".//acord:BIValue"),
                 )
             )
         return locations

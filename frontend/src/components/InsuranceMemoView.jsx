@@ -54,6 +54,7 @@ export default function InsuranceMemoView({ job }) {
   const decision = (s.decision || 'refer').toLowerCase();
   const decisionStyle = {
     accept: 'from-emerald-600/30 to-emerald-900/10 border-emerald-500/40 text-emerald-300',
+    conditional_accept: 'from-amber-600/30 to-amber-900/10 border-amber-500/40 text-amber-300',
     refer: 'from-sky-600/30 to-sky-900/10 border-sky-500/40 text-sky-300',
     decline: 'from-red-600/30 to-red-900/10 border-red-500/40 text-red-300',
   }[decision] || 'from-slate-600/30 to-slate-900/10 border-white/10 text-slate-300';

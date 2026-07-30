@@ -246,6 +246,25 @@ class LossRunParser(BaseParser):
         )
         for match in table_pattern.finditer(text):
             ratios[match.group(1)] = float(match.group(4))
+        # Also accept markdown table rows: | 2021-2026 | $200,000 | $184,000 | 92.0% |
+        md_pattern = re.compile(
+            r"(?i)\|\s*(\d{4}[-–]\d{4}|\d{4})\s*\|"
+            r"\s*\$?([\d,]+)\s*\|"
+            r"\s*\$?([\d,]+)\s*\|"
+            r"\s*([\d.]+)\s*%?\s*\|"
+        )
+        for match in md_pattern.finditer(text):
+            ratios[match.group(1)] = float(match.group(4))
+        # Headline "Loss Ratio: 92%" / "5-year loss ratio: 0.92"
+        if not ratios:
+            headline = re.search(r"(?i)loss\s*ratio[:\s]+([\d.]+)\s*%", text)
+            if headline:
+                ratios["aggregate"] = float(headline.group(1)) / 100.0 if float(headline.group(1)) > 1 else float(headline.group(1))
+            else:
+                headline_pct = re.search(r"(?i)loss\s*ratio[:\s]+([\d.]+)\s*%?", text)
+                if headline_pct:
+                    val = float(headline_pct.group(1))
+                    ratios["aggregate"] = val / 100.0 if val > 1 else val
         return ratios
 
     def _chunk_by_claims(self, text: str, claims: list[ClaimRecord]) -> list[ExtractedChunk]:

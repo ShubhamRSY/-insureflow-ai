@@ -584,6 +584,338 @@ def e2e(
         raise typer.Exit(1)
 
 
+@app.command("sandbox-status")
+def sandbox_status(
+    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
+    ping: bool = typer.Option(True, "--ping/--no-ping", help="HTTP health-check configured feeds"),
+) -> None:
+    """Show insurance sandbox / live integration readiness for pilots."""
+    from insureflow.pilot.sandbox_readiness import assess_sandbox_readiness
+
+    report = assess_sandbox_readiness(ping=ping)
+    if json_output:
+        console.print_json(json.dumps(report, indent=2, default=str))
+        return
+
+    overall = report["overall"]
+    color = {"pilot_live_ready": "green bold", "pilot_shadow_ready": "yellow bold", "not_ready": "red bold"}.get(
+        overall, "white"
+    )
+    console.print("\n[bold]Rytera Sandbox Readiness[/]")
+    console.print(f"Overall: [{color}]{overall}[/]")
+    console.print(f"Shadow mode: [bold]{report['shadow_mode']}[/]  ·  Bank mode: {report['bank_mode']}")
+    console.print(f"Required feeds ready: {report['required_ready']}/{report['required_total']}\n")
+
+    table = Table(show_header=True, header_style="bold")
+    table.add_column("Feed")
+    table.add_column("Category")
+    table.add_column("Status")
+    table.add_column("Next action")
+    style = {
+        "ready": "green",
+        "sandbox_ready": "cyan",
+        "simulated": "yellow",
+        "missing": "red",
+        "degraded": "red bold",
+    }
+    for feed in report["feeds"]:
+        st = feed["status"]
+        table.add_row(
+            feed["name"],
+            feed["category"],
+            f"[{style.get(st, 'white')}]{st}[/]",
+            feed["next_action"][:80],
+        )
+    console.print(table)
+
+    console.print("\n[bold]Pilot checklist[/]")
+    for step in report["checklist"]:
+        mark = "[green]✓[/]" if step.get("done") else "[red]○[/]"
+        console.print(f"  {mark} {step['step']}. {step['title']}")
+        if step.get("cmd") and not step.get("done"):
+            console.print(f"      [dim]{step['cmd']}[/]")
+
+    console.print("\n[bold]Ask your pilot partner for:[/]")
+    for item in report["partner_ask"]:
+        console.print(f"  • {item}")
+    console.print()
+
+
+pilot_app = typer.Typer(help="Carrier/MGA pilot: redacted packages + shadow underwriting")
+
+
+@pilot_app.command("list")
+def pilot_list(
+    root: Optional[Path] = typer.Option(None, "--root", help="pilot_packages root"),
+) -> None:
+    from insureflow.pilot.package_loader import discover_pilot_packages
+
+    packages = discover_pilot_packages(root)
+    if not packages:
+        console.print("[yellow]No packages found.[/] Drop submissions under pilot_packages/<partner>/<id>/")
+        console.print("Or seed samples: python cli.py pilot seed")
+        return
+    table = Table(title="Pilot packages")
+    table.add_column("Partner")
+    table.add_column("Submission")
+    table.add_column("Insured")
+    table.add_column("ACORD")
+    table.add_column("Loss")
+    table.add_column("SOV")
+    for p in packages:
+        table.add_row(
+            p.partner,
+            p.submission_id,
+            p.insured_name[:32],
+            "yes" if p.acord_xml else "no",
+            "yes" if p.loss_run else "no",
+            "yes" if p.schedule_of_values else "no",
+        )
+    console.print(table)
+
+
+@pilot_app.command("seed")
+def pilot_seed(
+    dest: Path = typer.Option(Path("pilot_packages/demo"), "--dest", help="Destination root"),
+) -> None:
+    """Export built-in realworld scenarios as pilot package folders."""
+    from insureflow.pilot.package_loader import export_scenario_as_pilot_package
+    from insureflow.testing.realworld_scenarios import build_all_scenarios
+
+    dest.mkdir(parents=True, exist_ok=True)
+    for scenario in build_all_scenarios():
+        out = export_scenario_as_pilot_package(scenario.id, dest / scenario.id)
+        console.print(f"[green]✓[/] {out}")
+    console.print(f"\n[bold]Seeded {len(build_all_scenarios())} packages → {dest}[/]")
+
+
+@pilot_app.command("prepare")
+def pilot_prepare(
+    seed: bool = typer.Option(True, "--seed/--no-seed", help="Seed demo packages if missing"),
+    redact: bool = typer.Option(True, "--redact/--no-redact", help="Auto-redact blocking PII"),
+    calibrate: bool = typer.Option(True, "--calibrate/--no-calibrate", help="Run batch calibration"),
+    use_llm: bool = typer.Option(False, "--llm"),
+) -> None:
+    """One-shot: seed → redact → calibrate → print sandbox status."""
+    from insureflow.pilot.auto_redact import redact_pilot_package
+    from insureflow.pilot.calibration import run_batch_calibration
+    from insureflow.pilot.package_loader import discover_pilot_packages, export_scenario_as_pilot_package
+    from insureflow.pilot.pii_gate import scan_pilot_package
+    from insureflow.pilot.sandbox_readiness import assess_sandbox_readiness
+    from insureflow.testing.realworld_scenarios import build_all_scenarios
+
+    packages = discover_pilot_packages()
+    if seed and not packages:
+        dest = Path("pilot_packages/demo")
+        dest.mkdir(parents=True, exist_ok=True)
+        for scenario in build_all_scenarios():
+            export_scenario_as_pilot_package(scenario.id, dest / scenario.id)
+        packages = discover_pilot_packages()
+        console.print(f"[green]Seeded {len(packages)} packages[/]")
+
+    if not packages:
+        console.print("[red]No packages found[/]")
+        raise typer.Exit(1)
+
+    if redact:
+        fixed = 0
+        for pkg in packages:
+            scan = scan_pilot_package(pkg)
+            if not scan["ok_to_run"]:
+                redact_pilot_package(pkg, inplace=True)
+                fixed += 1
+        console.print(f"PII redact: {fixed} package(s) cleaned")
+
+    if calibrate:
+        with console.status(f"Calibrating {len(packages)} packages…"):
+            report = run_batch_calibration(discover_pilot_packages(), use_llm=use_llm)
+        summary = report["summary"]
+        console.print(
+            f"Calibration: ran={report['ran']} blocked_pii={report['blocked_pii']} "
+            f"match={summary.get('match_rate')}"
+        )
+
+    status = assess_sandbox_readiness(ping=False)
+    color = {"pilot_live_ready": "green bold", "pilot_shadow_ready": "yellow bold", "not_ready": "red bold"}.get(
+        status["overall"], "white"
+    )
+    console.print(f"\nSandbox: [{color}]{status['overall']}[/]  shadow={status['shadow_mode']}")
+    console.print(f"Required infra/feeds: {status['required_ready']}/{status['required_total']}")
+    if status["overall"] == "not_ready":
+        console.print("[yellow]Still need ENCRYPTION_KEY, REDIS_URL, non-dev gateway key — see sandbox-status[/]")
+
+
+@pilot_app.command("run")
+def pilot_run(
+    path: Optional[Path] = typer.Option(None, "--path", "-p", help="Path to one package folder"),
+    partner: str = typer.Option("", "--partner", help="Partner folder name"),
+    submission: str = typer.Option("", "--submission", "-s", help="Submission folder name"),
+    all_packages: bool = typer.Option(False, "--all", help="Run every discovered package"),
+    use_llm: bool = typer.Option(False, "--llm", help="Enable LLM agents"),
+    json_output: bool = typer.Option(False, "--json"),
+) -> None:
+    """Run insurance pipeline on redacted pilot packages (shadow mode by default)."""
+    from insureflow.pilot.package_loader import discover_pilot_packages, load_pilot_package, run_pilot_package
+    from insureflow.pilot.sandbox_readiness import is_shadow_mode
+
+    packages = []
+    if path:
+        packages = [load_pilot_package(path)]
+    elif all_packages:
+        packages = discover_pilot_packages()
+    elif partner and submission:
+        packages = [p for p in discover_pilot_packages() if p.partner == partner and p.submission_id == submission]
+    else:
+        console.print("[red]Provide --path, or --partner + --submission, or --all[/]")
+        raise typer.Exit(2)
+
+    if not packages:
+        console.print("[red]No matching pilot packages[/]")
+        raise typer.Exit(1)
+
+    console.print(f"Shadow mode: [bold]{is_shadow_mode()}[/]  ·  Running {len(packages)} package(s)\n")
+    rows = []
+    for pkg in packages:
+        with console.status(f"Underwriting {pkg.partner}/{pkg.submission_id}…"):
+            result = run_pilot_package(pkg, use_llm=use_llm)
+        rows.append(
+            {
+                "partner": pkg.partner,
+                "submission": pkg.submission_id,
+                "decision": result.get("ai_decision"),
+                "appetite": result.get("appetite_filter_passed"),
+                "review": result.get("human_review_required"),
+                "bundle_id": result.get("bundle_id"),
+                "match": (result.get("pilot") or {}).get("decision_match"),
+            }
+        )
+        if not json_output:
+            console.print(
+                f"  {pkg.submission_id}: decision=[bold]{result.get('ai_decision')}[/] "
+                f"appetite={result.get('appetite_filter_passed')} review={result.get('human_review_required')}"
+            )
+
+    if json_output:
+        console.print_json(json.dumps(rows, indent=2))
+    else:
+        console.print(f"\n[green]Done.[/] {len(rows)} package(s). Bind disabled while shadow mode is on.")
+
+
+@pilot_app.command("calibrate")
+def pilot_calibrate(
+    use_llm: bool = typer.Option(False, "--llm"),
+    json_output: bool = typer.Option(False, "--json"),
+) -> None:
+    """Run all packages, screen PII, and summarize decision match rates."""
+    from insureflow.pilot.calibration import run_batch_calibration
+    from insureflow.pilot.package_loader import discover_pilot_packages
+
+    packages = discover_pilot_packages()
+    if not packages:
+        console.print("[yellow]No packages — run: python cli.py pilot seed[/]")
+        raise typer.Exit(1)
+    with console.status(f"Calibrating {len(packages)} packages…"):
+        report = run_batch_calibration(packages, use_llm=use_llm)
+    if json_output:
+        console.print_json(json.dumps(report, indent=2, default=str))
+        return
+    summary = report["summary"]
+    console.print(f"\n[bold]Pilot calibration[/]")
+    console.print(f"  Ran: {report['ran']}  ·  Blocked (PII): {report['blocked_pii']}")
+    console.print(f"  Sample: {summary.get('sample_size')}  ·  Labeled: {summary.get('labeled_sample_size')}")
+    if summary.get("match_rate") is not None:
+        console.print(f"  Match rate: [bold]{summary['match_rate']:.0%}[/]")
+    if summary.get("override_rate") is not None:
+        console.print(f"  Override rate: {summary['override_rate']:.0%} (target < 25%)")
+    console.print(f"  By decision: {summary.get('by_decision')}")
+    if summary.get("mismatches"):
+        console.print("\n[yellow]Mismatches:[/]")
+        for m in summary["mismatches"][:10]:
+            console.print(f"  {m['submission_id']}: ai={m['ai']} expected={m['expected']}")
+    console.print()
+
+
+@pilot_app.command("scan-pii")
+def pilot_scan_pii(
+    partner: str = typer.Option(..., "--partner"),
+    submission: str = typer.Option(..., "--submission", "-s"),
+) -> None:
+    from insureflow.pilot.package_loader import discover_pilot_packages
+    from insureflow.pilot.pii_gate import scan_pilot_package
+
+    match = next(
+        (p for p in discover_pilot_packages() if p.partner == partner and p.submission_id == submission),
+        None,
+    )
+    if not match:
+        console.print("[red]Package not found[/]")
+        raise typer.Exit(1)
+    scan = scan_pilot_package(match)
+    color = "green" if scan["ok_to_run"] else "red"
+    console.print(f"[{color}]{scan['message']}[/]  (block={scan['blocking_count']} warn={scan['warning_count']})")
+    for f in scan["findings"][:20]:
+        console.print(f"  [{f['level']}] {f['source']}: {f['category']} → {f['preview']}")
+
+
+@pilot_app.command("redact")
+def pilot_redact(
+    partner: str = typer.Option(..., "--partner"),
+    submission: str = typer.Option(..., "--submission", "-s"),
+    inplace: bool = typer.Option(False, "--inplace", help="Overwrite package in place"),
+) -> None:
+    """Auto-redact blocking PII (SSN, cards, bank, DOB, etc.)."""
+    from insureflow.pilot.auto_redact import redact_pilot_package
+    from insureflow.pilot.package_loader import discover_pilot_packages
+
+    match = next(
+        (p for p in discover_pilot_packages() if p.partner == partner and p.submission_id == submission),
+        None,
+    )
+    if not match:
+        console.print("[red]Package not found[/]")
+        raise typer.Exit(1)
+    result = redact_pilot_package(match, inplace=inplace)
+    after = result["after"]
+    color = "green" if after["ok_to_run"] else "red"
+    console.print(
+        f"[{color}]Redacted → {result['path']}[/]  "
+        f"files={len(result['files_changed'])}  "
+        f"block {result['before']['blocking_count']}→{after['blocking_count']}"
+    )
+    for name in result["files_changed"][:12]:
+        console.print(f"  · {name}")
+
+
+@pilot_app.command("ingest-email")
+def pilot_ingest_email(
+    partner: str = typer.Option("email", "--partner", help="Partner folder name"),
+    limit: int = typer.Option(10, "--limit", "-n"),
+    unread_only: bool = typer.Option(True, "--unread-only/--all"),
+    no_redact: bool = typer.Option(False, "--no-redact", help="Skip auto-redact after ingest"),
+) -> None:
+    """Pull IMAP broker emails with attachments into pilot_packages/."""
+    from insureflow.pilot.email_intake import ingest_imap_to_pilot
+
+    result = ingest_imap_to_pilot(
+        partner=partner,
+        unread_only=unread_only,
+        limit=limit,
+        auto_redact=not no_redact,
+    )
+    if not result.get("ok"):
+        console.print(f"[red]{result.get('error')}[/]")
+        raise typer.Exit(1)
+    console.print(f"[green]Ingested {result['count']} package(s)[/] from {result.get('emails_found', 0)} email(s)")
+    for pkg in result.get("packages") or []:
+        red = pkg.get("redaction") or {}
+        after = (red.get("after") or {})
+        console.print(
+            f"  · {pkg['partner']}/{pkg['submission_id']}  "
+            f"acord={'yes' if pkg.get('has_acord') else 'no'}  "
+            f"pii_ok={after.get('ok_to_run', 'n/a')}"
+        )
+
+
 @app.command()
 def doctor(
     json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
@@ -632,6 +964,7 @@ def doctor(
         console.print("\n[yellow]Tip:[/] Add LLM_API_KEY to .env for full ReAct agent reasoning.")
         console.print("     cp .env.example .env  →  edit LLM_API_KEY=sk-...")
     console.print("\n[dim]Web UI: python cli.py serve --port 8002  →  /dashboard[/]\n")
+    console.print("[dim]Pilot readiness: python cli.py sandbox-status[/]\n")
 
 
 # ── Lending ─────────────────────────────────────────────────────────────
@@ -1216,6 +1549,7 @@ def registry_context(
 
 app.add_typer(registry_app, name="registry", help="Model version registry & compliance review")
 app.add_typer(lending_app, name="lending", help="Lending underwriting for business & consumer loan products")
+app.add_typer(pilot_app, name="pilot", help="Carrier/MGA pilot packages + shadow underwriting")
 
 
 # ── Document Analytics ───────────────────────────────────────────────────

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from enum import Enum
+from pathlib import Path
 from typing import Optional
 
 from pydantic import BaseModel, Field
@@ -76,11 +77,40 @@ class TreatyAttachmentResult(BaseModel):
 
 
 class TreatyStore:
-    """In-memory store of reinsurance treaties with utilization tracking."""
+    """Durable reinsurance treaty store (JSON under data/portfolio/)."""
 
-    def __init__(self) -> None:
+    def __init__(self, path: Path | None = None) -> None:
+        self._path = path or Path.cwd() / "data" / "portfolio" / "treaties.json"
         self._treaties: dict[str, ReinsuranceTreaty] = {}
-        self._load_demo_treaties()
+        self._load()
+        if not self._treaties:
+            self._load_demo_treaties()
+            self._persist()
+
+    def _load(self) -> None:
+        if not self._path.exists():
+            return
+        try:
+            import json
+
+            raw = json.loads(self._path.read_text(encoding="utf-8"))
+            for item in raw.get("treaties", []):
+                t = ReinsuranceTreaty.model_validate(item)
+                self._treaties[t.treaty_id] = t
+        except Exception:
+            pass
+
+    def _persist(self) -> None:
+        import json
+
+        self._path.parent.mkdir(parents=True, exist_ok=True)
+        payload = {
+            "updated_at": datetime.now(tz=timezone.utc).isoformat(),
+            "treaties": [t.model_dump(mode="json") for t in self._treaties.values()],
+        }
+        tmp = self._path.with_suffix(".tmp")
+        tmp.write_text(json.dumps(payload, indent=2, default=str), encoding="utf-8")
+        tmp.replace(self._path)
 
     def _load_demo_treaties(self) -> None:
         treaties = [
@@ -129,6 +159,10 @@ class TreatyStore:
 
     def get_treaty(self, treaty_id: str) -> Optional[ReinsuranceTreaty]:
         return self._treaties.get(treaty_id)
+
+    def upsert_treaty(self, treaty: ReinsuranceTreaty) -> None:
+        self._treaties[treaty.treaty_id] = treaty
+        self._persist()
 
     def list_treaties(self, active_only: bool = True) -> list[ReinsuranceTreaty]:
         if active_only:
@@ -193,6 +227,7 @@ class TreatyStore:
         if treaty.aggregate_used + amount > treaty.aggregate_limit:
             return False
         treaty.aggregate_used += amount
+        self._persist()
         return True
 
     def _evaluate_treaty(

@@ -208,7 +208,9 @@ class AppetiteFilterAgent(BaseAgent):
         findings: list[Finding] = []
         loss_run = self.tools.get_loss_run(bundle)
         if loss_run and loss_run.loss_ratios:
-            max_lr = max(loss_run.loss_ratios.values())
+            raw = max(loss_run.loss_ratios.values())
+            # Parsers may emit percent (92.0) or ratio (0.92)
+            max_lr = raw / 100.0 if raw > 1.0 else raw
             if max_lr > 0.80:
                 findings.append(
                     Finding(

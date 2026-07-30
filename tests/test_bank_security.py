@@ -47,6 +47,21 @@ def test_validate_startup_secrets_bank_requires_keys(monkeypatch: MonkeyPatch) -
 
 def test_validate_startup_secrets_ok_when_strong(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setenv("BANK_MODE", "true")
+    monkeypatch.setenv("ALLOW_OPEN_REGISTRATION", "false")
+    monkeypatch.setenv("ALLOW_AUTH_RESET", "false")
+    monkeypatch.setenv("INTEGRATION_GATEWAY_API_KEY", "prod-gateway-key-not-the-dev-placeholder-xx")
+    monkeypatch.setenv("JOB_STORE_BACKEND", "redis")
+    monkeypatch.setenv("REDIS_URL", "redis://localhost:6379/0")
+    for key in (
+        "CLUE_API_KEY",
+        "APLUS_API_KEY",
+        "NCCI_API_KEY",
+        "CAT_API_KEY",
+        "GUIDEWIRE_API_KEY",
+        "BRITECORE_API_KEY",
+        "ISO_RATING_API_KEY",
+    ):
+        monkeypatch.setenv(key, "prod-vendor-key-xxxxxxxxxxxxxxxxxxxx")
     posture = resolve_security_posture()
     errors = validate_startup_secrets(
         secret_key="a" * 32,
@@ -54,6 +69,21 @@ def test_validate_startup_secrets_ok_when_strong(monkeypatch: MonkeyPatch) -> No
         posture=posture,
     )
     assert errors == []
+
+
+def test_validate_startup_rejects_dev_gateway_key(monkeypatch: MonkeyPatch) -> None:
+    monkeypatch.setenv("BANK_MODE", "true")
+    monkeypatch.setenv("ALLOW_OPEN_REGISTRATION", "false")
+    monkeypatch.setenv("ALLOW_AUTH_RESET", "false")
+    monkeypatch.setenv("INTEGRATION_GATEWAY_API_KEY", "rytera-dev-gateway-key-change-in-production")
+    monkeypatch.setenv("JOB_STORE_BACKEND", "redis")
+    posture = resolve_security_posture()
+    errors = validate_startup_secrets(
+        secret_key="a" * 32,
+        encryption_key="fernet-or-derived-key-value",
+        posture=posture,
+    )
+    assert any("INTEGRATION_GATEWAY_API_KEY" in e for e in errors)
 
 
 def test_dev_posture_allows_open_registration(monkeypatch: MonkeyPatch) -> None:

@@ -50,16 +50,51 @@ class GuidewireAdapter(BasePolicyAdminAdapter):
             return self._submit_live(payload)
         return self._submit_simulated(payload)
 
+    def _submit_simulated(self, payload: PolicySubmissionPayload) -> IntegrationResult:
+        from insureflow.security.posture import allow_simulated_bind
+
+        job_number = f"GW-JOB-{uuid4().hex[:10].upper()}"
+        self.last_quote_reference = job_number
+        allowed = allow_simulated_bind()
+        return IntegrationResult(
+            success=allowed,
+            system=self.get_system_name(),
+            external_reference=job_number if allowed else "",
+            error="" if allowed else "Simulated Guidewire submit disabled in BANK_MODE/production",
+            response_payload={
+                "job_number": job_number if allowed else "",
+                "status": "in_review" if allowed else "blocked",
+                "insured": payload.insured_name,
+                "integration_type": "simulated",
+                "synthetic": True,
+            },
+        )
+
     def bind_policy(self, payload: PolicySubmissionPayload, quote_reference: str) -> IntegrationResult:
+        from insureflow.security.posture import allow_simulated_bind, resolve_security_posture
+
         if self._resolved_mode() == "live":
             return self._bind_live(payload, quote_reference)
+        if resolve_security_posture().is_hardened and not allow_simulated_bind():
+            return IntegrationResult(
+                success=False,
+                system=self.get_system_name(),
+                external_reference=quote_reference,
+                error="Simulated Guidewire bind disabled in BANK_MODE/production",
+                response_payload={"status": "blocked", "integration_type": "simulated", "synthetic": True},
+            )
         policy_number = f"GW-POL-{datetime.now(tz=timezone.utc).year}-{uuid4().hex[:8].upper()}"
         return IntegrationResult(
             success=True,
             system=self.get_system_name(),
             external_reference=quote_reference,
             policy_number=policy_number,
-            response_payload={"policy_number": policy_number, "status": "in_force"},
+            response_payload={
+                "policy_number": policy_number,
+                "status": "in_force",
+                "integration_type": "simulated",
+                "synthetic": True,
+            },
         )
 
     def status(self) -> dict[str, Any]:
@@ -69,21 +104,6 @@ class GuidewireAdapter(BasePolicyAdminAdapter):
             "configured": self.http.configured,
             "health": self.http.health_check() if self.http.configured else {"reachable": False},
         }
-
-    def _submit_simulated(self, payload: PolicySubmissionPayload) -> IntegrationResult:
-        job_number = f"GW-JOB-{uuid4().hex[:10].upper()}"
-        self.last_quote_reference = job_number
-        return IntegrationResult(
-            success=True,
-            system=self.get_system_name(),
-            external_reference=job_number,
-            response_payload={
-                "job_number": job_number,
-                "status": "in_review",
-                "insured": payload.insured_name,
-                "integration_type": "simulated",
-            },
-        )
 
     def _submit_live(self, payload: PolicySubmissionPayload) -> IntegrationResult:
         try:

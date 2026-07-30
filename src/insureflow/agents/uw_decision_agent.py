@@ -170,6 +170,11 @@ class UWDecisionAgent(ReActAgent):
         results_map = {ar.agent_name: ar for ar in agent_results}
         results_map[uw_decision_result.agent_name] = uw_decision_result
 
+        # Preserve all CRITICAL/HIGH findings; truncate only lower severities
+        critical_high = [f for f in all_findings if f.severity in (RiskSeverity.CRITICAL, RiskSeverity.HIGH)]
+        other = [f for f in all_findings if f.severity not in (RiskSeverity.CRITICAL, RiskSeverity.HIGH)]
+        key_findings = critical_high + other[: max(0, 20 - len(critical_high))]
+
         return UnderwritingMemo(
             bundle_id=bundle.bundle_id,
             insured_name=self.tools.get_named_insured(bundle),
@@ -177,7 +182,7 @@ class UWDecisionAgent(ReActAgent):
             overall_risk_score=score,
             overall_risk_severity=severity,
             summary=self._build_memo_summary(decision, score, all_findings),
-            key_findings=all_findings[:10],
+            key_findings=key_findings,
             risk_analyst_findings=self._agent_findings(agent_results, "RiskAnalystAgent"),
             loss_run_findings=self._agent_findings(agent_results, "LossRunAnalystAgent"),
             compliance_findings=self._agent_findings(agent_results, "ComplianceAgent"),
@@ -185,7 +190,8 @@ class UWDecisionAgent(ReActAgent):
             recommendation=rec,
             conditions=rec.conditions if rec else [],
             review_notes=self._build_review_notes(all_findings),
-            human_review_required=decision in (UWDecision.REFER, UWDecision.DECLINE),
+            human_review_required=decision
+            in (UWDecision.REFER, UWDecision.DECLINE, UWDecision.CONDITIONAL_ACCEPT),
             human_review_reasons=[f.title for f in all_findings if f.severity in (RiskSeverity.HIGH, RiskSeverity.CRITICAL)],
             agent_results=results_map,
         )

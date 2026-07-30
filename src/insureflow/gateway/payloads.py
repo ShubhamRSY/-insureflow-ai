@@ -31,6 +31,8 @@ def clue_query(body: dict[str, Any]) -> dict[str, Any]:
         "total_paid": sum(float(r.get("paid_amount", 0)) for r in records),
         "has_prior_litigation": False,
         "has_prior_cancellation": False,
+        "synthetic": True,
+        "mode": "gateway_synthetic",
     }
 
 
@@ -52,6 +54,8 @@ def ncci_query(body: dict[str, Any]) -> dict[str, Any]:
         ],
         "total_expected_losses": 45000,
         "total_actual_losses": 45000 * mod,
+        "synthetic": True,
+        "mode": "gateway_synthetic",
     }
 
 
@@ -62,6 +66,8 @@ def aplus_query(body: dict[str, Any]) -> dict[str, Any]:
         "total_paid": 0,
         "has_repeated_property_claims": False,
         "has_arson_or_fraud_flag": False,
+        "synthetic": True,
+        "mode": "gateway_synthetic",
     }
 
 
@@ -78,6 +84,8 @@ def cat_query(body: dict[str, Any]) -> dict[str, Any]:
         "portfolio_aggregate_aal": 12500,
         "portfolio_aggregate_pml_100yr": 85000,
         "portfolio_aggregate_pml_250yr": 142000,
+        "synthetic": True,
+        "mode": "gateway_synthetic",
     }
 
 

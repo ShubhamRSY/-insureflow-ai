@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { Badge } from '../components/ui';
 
 export default function SystemPage({ health }) {
@@ -31,6 +32,9 @@ export default function SystemPage({ health }) {
             <span className="rounded-full bg-amber-500/15 px-2.5 py-0.5 text-xs font-semibold text-amber-400">{health.summary?.degraded} Degraded</span>
             <span className="rounded-full bg-red-500/15 px-2.5 py-0.5 text-xs font-semibold text-red-400">{health.summary?.missing} Missing</span>
           </div>
+          <Link to="/pilot" className="mt-4 inline-flex text-sm font-medium text-amber-400 hover:text-amber-300">
+            Open Pilot Lab → sandbox feeds &amp; packages
+          </Link>
         </div>
       </div>
 

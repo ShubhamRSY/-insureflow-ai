@@ -114,14 +114,32 @@ class OracleAgent(BaseAgent):
             )
 
         if result.total_claims_found == 0:
-            findings.append(
-                Finding(
-                    title="CLUE: Clean external loss history",
-                    description=f"No claims found in CLUE database for {insured_name}",
-                    severity=RiskSeverity.LOW,
-                    category="external_oracle",
+            unverified = bool(getattr(result, "synthetic", False)) or getattr(result, "mode", "") in {
+                "simulated",
+                "gateway_synthetic",
+            } or self.clue._resolved_mode() != "live"
+            if unverified:
+                findings.append(
+                    Finding(
+                        title="CLUE: External verification unavailable (synthetic/simulated)",
+                        description=(
+                            f"CLUE response for {insured_name} is synthetic or simulated — "
+                            "do not treat as a verified clean loss history. Configure live LexisNexis credentials."
+                        ),
+                        severity=RiskSeverity.HIGH,
+                        category="external_oracle",
+                        evidence=["synthetic=true" if getattr(result, "synthetic", False) else f"mode={self.clue._resolved_mode()}"],
+                    )
                 )
-            )
+            else:
+                findings.append(
+                    Finding(
+                        title="CLUE: Clean external loss history",
+                        description=f"No claims found in CLUE database for {insured_name}",
+                        severity=RiskSeverity.LOW,
+                        category="external_oracle",
+                    )
+                )
 
         return findings
 
@@ -192,14 +210,28 @@ class OracleAgent(BaseAgent):
             )
 
         if result.total_claims_found == 0:
-            findings.append(
-                Finding(
-                    title="A-PLUS: Clean property loss history",
-                    description=f"No property claims found in A-PLUS database for {insured_name}",
-                    severity=RiskSeverity.LOW,
-                    category="external_oracle",
+            unverified = self.aplus._resolved_mode() != "live" or bool(getattr(result, "synthetic", False))
+            if unverified:
+                findings.append(
+                    Finding(
+                        title="A-PLUS: External verification unavailable (synthetic/simulated)",
+                        description=(
+                            f"A-PLUS response for {insured_name} is synthetic or simulated — "
+                            "do not treat as a verified clean property history."
+                        ),
+                        severity=RiskSeverity.HIGH,
+                        category="external_oracle",
+                    )
                 )
-            )
+            else:
+                findings.append(
+                    Finding(
+                        title="A-PLUS: Clean property loss history",
+                        description=f"No property claims found in A-PLUS database for {insured_name}",
+                        severity=RiskSeverity.LOW,
+                        category="external_oracle",
+                    )
+                )
 
         return findings
 

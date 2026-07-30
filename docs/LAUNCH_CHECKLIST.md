@@ -25,7 +25,7 @@ Use this checklist before public launch at [rytera.ai](https://rytera.ai).
 - [x] SSO stubs (`/auth/sso/*`) for Cognito/Okta
 - [x] DPA / Privacy / SOC 2 questionnaire templates under `legal/`
 - [ ] Apply Terraform to a real AWS account + ACM certificate
-- [ ] Complete OIDC JWKS validation for production SSO tokens
+- [x] Complete OIDC JWKS validation for production SSO tokens (aud/iss/exp enforced when configured)
 
 ## Legal & compliance (carrier launch)
 

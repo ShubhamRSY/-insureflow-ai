@@ -13,6 +13,7 @@ const STATUS_META = {
 
 const DECISION_UI = {
   accept: { label: 'Accepted', class: 'text-emerald-400' },
+  conditional_accept: { label: 'Conditional Accept', class: 'text-amber-400' },
   refer: { label: 'Referred to UW', class: 'text-amber-400' },
   decline: { label: 'Declined', class: 'text-red-400' },
 };

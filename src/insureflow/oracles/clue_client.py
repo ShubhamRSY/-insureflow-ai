@@ -35,6 +35,8 @@ class CLUEResult:
     has_prior_cancellation: bool = False
     query_completed: bool = True
     error: str = ""
+    synthetic: bool = False
+    mode: str = ""
 
     @property
     def summary(self) -> str:
@@ -45,6 +47,8 @@ class CLUEResult:
             parts.append("Prior litigation detected")
         if self.has_prior_cancellation:
             parts.append("Prior cancellation/non-renewal detected")
+        if self.synthetic or self.mode in {"simulated", "gateway_synthetic"}:
+            parts.append("SYNTHETIC/UNVERIFIED")
         return " | ".join(parts)
 
 
@@ -152,6 +156,8 @@ class CLUEClient:
             total_paid=total_paid,
             has_prior_litigation=any("litigation" in r.description.lower() or "lawsuit" in r.description.lower() for r in records),
             has_prior_cancellation=False,
+            synthetic=True,
+            mode="simulated",
         )
 
     def query_by_tax_id(self, tax_id: str, years_back: int = 7) -> CLUEResult:
@@ -207,6 +213,8 @@ class CLUEClient:
                 total_paid=float(parsed.get("total_paid", sum(r.paid_amount for r in records))),
                 has_prior_litigation=bool(parsed.get("has_prior_litigation")),
                 has_prior_cancellation=bool(parsed.get("has_prior_cancellation")),
+                synthetic=bool(parsed.get("synthetic", False)),
+                mode=str(parsed.get("mode") or "live"),
             )
         except IntegrationHTTPError as exc:
             logger.exception("CLUE live query failed")
