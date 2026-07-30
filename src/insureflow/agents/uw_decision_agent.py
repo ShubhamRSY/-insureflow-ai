@@ -190,8 +190,7 @@ class UWDecisionAgent(ReActAgent):
             recommendation=rec,
             conditions=rec.conditions if rec else [],
             review_notes=self._build_review_notes(all_findings),
-            human_review_required=decision
-            in (UWDecision.REFER, UWDecision.DECLINE, UWDecision.CONDITIONAL_ACCEPT),
+            human_review_required=decision in (UWDecision.REFER, UWDecision.DECLINE, UWDecision.CONDITIONAL_ACCEPT),
             human_review_reasons=[f.title for f in all_findings if f.severity in (RiskSeverity.HIGH, RiskSeverity.CRITICAL)],
             agent_results=results_map,
         )

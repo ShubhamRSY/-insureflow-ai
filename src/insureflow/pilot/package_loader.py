@@ -121,11 +121,7 @@ def run_pilot_package(
         "meta": package.meta,
     }
     if shadow_mode:
-        result["pilot_note"] = (
-            "Shadow mode: AI recommendation + UW review only. "
-            "Policy bind is disabled until live PAS credentials are configured "
-            "and PILOT_SHADOW_MODE=false."
-        )
+        result["pilot_note"] = "Shadow mode: AI recommendation + UW review only. Policy bind is disabled until live PAS credentials are configured and PILOT_SHADOW_MODE=false."
     expected = package.meta.get("expected_decision")
     if expected:
         actual = str(result.get("ai_decision") or "").lower()
@@ -167,9 +163,7 @@ def export_scenario_as_pilot_package(scenario_id: str, dest: Path) -> Path:
         "condition": scenario.condition,
         "title": scenario.title,
         "source": f"realworld_scenario:{scenario.id}",
-        "expected_decision": scenario.expectation.decision_in[0]
-        if len(scenario.expectation.decision_in) == 1
-        else None,
+        "expected_decision": scenario.expectation.decision_in[0] if len(scenario.expectation.decision_in) == 1 else None,
         "notes": scenario.expectation.description,
     }
     (dest / "meta.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")

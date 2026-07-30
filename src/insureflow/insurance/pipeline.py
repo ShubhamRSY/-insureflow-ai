@@ -483,10 +483,7 @@ class InsurancePipeline:
             memo.key_findings.append(
                 Finding(
                     title="Provenance/reconciliation pipeline failure",
-                    description=(
-                        "Provenance or reconciliation failed during processing. "
-                        "Decision forced to REFER — do not treat empty reconciliation as clean."
-                    ),
+                    description=("Provenance or reconciliation failed during processing. Decision forced to REFER — do not treat empty reconciliation as clean."),
                     severity=RiskSeverity.HIGH,
                     category="data_quality",
                 )
@@ -497,12 +494,7 @@ class InsurancePipeline:
                 memo.decision = UWDecision.REFER
 
         # OCR failure signals from ingestion
-        ocr_failures = [
-            d
-            for d in bundle.unstructured
-            if d.extracted_fields.get("ocr_failed")
-            or (isinstance(d.raw_text, str) and d.raw_text.startswith("[OCR: No text"))
-        ]
+        ocr_failures = [d for d in bundle.unstructured if d.extracted_fields.get("ocr_failed") or (isinstance(d.raw_text, str) and d.raw_text.startswith("[OCR: No text"))]
         if ocr_failures:
             from insureflow.models.agents import Finding, RiskSeverity, UWDecision
 
@@ -562,9 +554,7 @@ class InsurancePipeline:
             critical_validation = [f for f in validation_findings if getattr(f.severity, "value", "") == "critical"]
             if critical_validation and memo.decision not in (UWDecision.DECLINE, UWDecision.REFER):
                 memo.decision = UWDecision.REFER
-                memo.conditions = list(memo.conditions or []) + [
-                    f"SUBJECT TO resolution of: {f.title}" for f in critical_validation[:5]
-                ]
+                memo.conditions = list(memo.conditions or []) + [f"SUBJECT TO resolution of: {f.title}" for f in critical_validation[:5]]
 
         # Carry appetite referral findings into the memo (they otherwise only live in audit)
         if appetite_result and appetite_result.findings:
@@ -578,9 +568,7 @@ class InsurancePipeline:
                 memo.human_review_required = True
                 if memo.decision not in (UWDecision.DECLINE, UWDecision.REFER):
                     memo.decision = UWDecision.REFER
-                memo.conditions = list(memo.conditions or []) + [
-                    f"SUBJECT TO appetite clearance: {appetite_result.reason}"
-                ]
+                memo.conditions = list(memo.conditions or []) + [f"SUBJECT TO appetite clearance: {appetite_result.reason}"]
 
         agent_findings = len(memo.key_findings) - len(oracle_findings) - len(validation_findings)
         progress.complete(
@@ -703,9 +691,7 @@ class InsurancePipeline:
             primary_state = loc0.state or ""
             estimated_tiv = (loc0.building_value or 0) + (loc0.contents_value or 0) + (loc0.bi_value or 0)
         if estimated_tiv <= 0:
-            estimated_tiv = float(getattr(quote, "tiv", 0) or 0) or float(
-                (getattr(quote, "metadata", {}) or {}).get("tiv") or 0
-            )
+            estimated_tiv = float(getattr(quote, "tiv", 0) or 0) or float((getattr(quote, "metadata", {}) or {}).get("tiv") or 0)
 
         human_checkpoints = self._build_checkpoints(memo, reconciliation, oracle_findings)
         open_conditions = list(memo.conditions or [])

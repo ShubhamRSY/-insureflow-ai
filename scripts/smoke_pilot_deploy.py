@@ -24,9 +24,9 @@ def main() -> int:
         errors.append(f"pyproject version unreadable: {exc}")
         version = "?"
 
-    from insureflow.pilot.sandbox_readiness import assess_sandbox_readiness, is_shadow_mode
     from insureflow.pilot.auto_redact import redact_blocking_categories_in_text
     from insureflow.pilot.email_intake import documents_to_pilot_package
+    from insureflow.pilot.sandbox_readiness import assess_sandbox_readiness, is_shadow_mode
 
     report = assess_sandbox_readiness(ping=False)
     if "overall" not in report:

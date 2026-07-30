@@ -282,9 +282,7 @@ def application_from_documents(
 
     business = is_business
     if business is None:
-        business = product_type.value.startswith(
-            ("business_", "commercial_", "construction_", "sba_", "equipment_", "invoice_")
-        )
+        business = product_type.value.startswith(("business_", "commercial_", "construction_", "sba_", "equipment_", "invoice_"))
 
     app_id = f"lend-{uuid4().hex[:12]}"
     amount = float(merged.get("requested_amount") or 0)

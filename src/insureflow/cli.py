@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 import logging
+import subprocess
+import sys
 from pathlib import Path
 from typing import Any, Optional
 
@@ -598,9 +600,7 @@ def sandbox_status(
         return
 
     overall = report["overall"]
-    color = {"pilot_live_ready": "green bold", "pilot_shadow_ready": "yellow bold", "not_ready": "red bold"}.get(
-        overall, "white"
-    )
+    color = {"pilot_live_ready": "green bold", "pilot_shadow_ready": "yellow bold", "not_ready": "red bold"}.get(overall, "white")
     console.print("\n[bold]Rytera Sandbox Readiness[/]")
     console.print(f"Overall: [{color}]{overall}[/]")
     console.print(f"Shadow mode: [bold]{report['shadow_mode']}[/]  ·  Bank mode: {report['bank_mode']}")
@@ -639,6 +639,22 @@ def sandbox_status(
     for item in report["partner_ask"]:
         console.print(f"  • {item}")
     console.print()
+    console.print("[dim]Oracle keys only: python cli.py oracle-verify [--ping][/]\n")
+
+
+@app.command("oracle-verify")
+def oracle_verify(
+    ping: bool = typer.Option(False, "--ping", help="HTTP health-check when keys are set"),
+    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
+) -> None:
+    """Check CLUE / A-PLUS (etc.) wiring without printing secret values."""
+    script = Path(__file__).resolve().parents[2] / "scripts" / "verify_oracles.py"
+    cmd = [sys.executable, str(script)]
+    if ping:
+        cmd.append("--ping")
+    if json_output:
+        cmd.append("--json")
+    raise SystemExit(subprocess.call(cmd, cwd=str(script.parent.parent)))
 
 
 pilot_app = typer.Typer(help="Carrier/MGA pilot: redacted packages + shadow underwriting")
@@ -730,15 +746,10 @@ def pilot_prepare(
         with console.status(f"Calibrating {len(packages)} packages…"):
             report = run_batch_calibration(discover_pilot_packages(), use_llm=use_llm)
         summary = report["summary"]
-        console.print(
-            f"Calibration: ran={report['ran']} blocked_pii={report['blocked_pii']} "
-            f"match={summary.get('match_rate')}"
-        )
+        console.print(f"Calibration: ran={report['ran']} blocked_pii={report['blocked_pii']} match={summary.get('match_rate')}")
 
     status = assess_sandbox_readiness(ping=False)
-    color = {"pilot_live_ready": "green bold", "pilot_shadow_ready": "yellow bold", "not_ready": "red bold"}.get(
-        status["overall"], "white"
-    )
+    color = {"pilot_live_ready": "green bold", "pilot_shadow_ready": "yellow bold", "not_ready": "red bold"}.get(status["overall"], "white")
     console.print(f"\nSandbox: [{color}]{status['overall']}[/]  shadow={status['shadow_mode']}")
     console.print(f"Required infra/feeds: {status['required_ready']}/{status['required_total']}")
     if status["overall"] == "not_ready":
@@ -790,10 +801,7 @@ def pilot_run(
             }
         )
         if not json_output:
-            console.print(
-                f"  {pkg.submission_id}: decision=[bold]{result.get('ai_decision')}[/] "
-                f"appetite={result.get('appetite_filter_passed')} review={result.get('human_review_required')}"
-            )
+            console.print(f"  {pkg.submission_id}: decision=[bold]{result.get('ai_decision')}[/] appetite={result.get('appetite_filter_passed')} review={result.get('human_review_required')}")
 
     if json_output:
         console.print_json(json.dumps(rows, indent=2))
@@ -820,7 +828,7 @@ def pilot_calibrate(
         console.print_json(json.dumps(report, indent=2, default=str))
         return
     summary = report["summary"]
-    console.print(f"\n[bold]Pilot calibration[/]")
+    console.print("\n[bold]Pilot calibration[/]")
     console.print(f"  Ran: {report['ran']}  ·  Blocked (PII): {report['blocked_pii']}")
     console.print(f"  Sample: {summary.get('sample_size')}  ·  Labeled: {summary.get('labeled_sample_size')}")
     if summary.get("match_rate") is not None:
@@ -877,11 +885,7 @@ def pilot_redact(
     result = redact_pilot_package(match, inplace=inplace)
     after = result["after"]
     color = "green" if after["ok_to_run"] else "red"
-    console.print(
-        f"[{color}]Redacted → {result['path']}[/]  "
-        f"files={len(result['files_changed'])}  "
-        f"block {result['before']['blocking_count']}→{after['blocking_count']}"
-    )
+    console.print(f"[{color}]Redacted → {result['path']}[/]  files={len(result['files_changed'])}  block {result['before']['blocking_count']}→{after['blocking_count']}")
     for name in result["files_changed"][:12]:
         console.print(f"  · {name}")
 
@@ -908,12 +912,8 @@ def pilot_ingest_email(
     console.print(f"[green]Ingested {result['count']} package(s)[/] from {result.get('emails_found', 0)} email(s)")
     for pkg in result.get("packages") or []:
         red = pkg.get("redaction") or {}
-        after = (red.get("after") or {})
-        console.print(
-            f"  · {pkg['partner']}/{pkg['submission_id']}  "
-            f"acord={'yes' if pkg.get('has_acord') else 'no'}  "
-            f"pii_ok={after.get('ok_to_run', 'n/a')}"
-        )
+        after = red.get("after") or {}
+        console.print(f"  · {pkg['partner']}/{pkg['submission_id']}  acord={'yes' if pkg.get('has_acord') else 'no'}  pii_ok={after.get('ok_to_run', 'n/a')}")
 
 
 @app.command()

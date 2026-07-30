@@ -101,10 +101,7 @@ def get_job_store() -> JobStore:
 
     if backend == "memory":
         if hardened:
-            raise RuntimeError(
-                "JOB_STORE_BACKEND=memory is not allowed in BANK_MODE/production. "
-                "Configure REDIS_URL and JOB_STORE_BACKEND=redis|auto."
-            )
+            raise RuntimeError("JOB_STORE_BACKEND=memory is not allowed in BANK_MODE/production. Configure REDIS_URL and JOB_STORE_BACKEND=redis|auto.")
         logger.warning("Using in-memory job store — state is lost on restart")
         return MemoryJobStore()
 
@@ -118,25 +115,20 @@ def get_job_store() -> JobStore:
 
     if backend == "redis" or (backend == "auto" and redis_url and redis_url.startswith("redis")):
         try:
-            store = RedisJobStore(redis_url or "")
-            store.client.ping()
+            redis_store = RedisJobStore(redis_url or "")
+            redis_store.client.ping()
             logger.info("Using Redis job store at %s", redis_url)
-            return store
+            return redis_store
         except Exception as exc:
             if hardened or backend == "redis":
-                raise RuntimeError(
-                    f"Redis job store required but unavailable ({exc}). "
-                    "Fix REDIS_URL or set JOB_STORE_BACKEND=file for durable local storage."
-                ) from exc
+                raise RuntimeError(f"Redis job store required but unavailable ({exc}). Fix REDIS_URL or set JOB_STORE_BACKEND=file for durable local storage.") from exc
             logger.warning("Redis unavailable (%s), falling back to file job store", exc)
             from insureflow.storage.file_job_store import FileJobStore
 
             return FileJobStore()
 
     if hardened:
-        raise RuntimeError(
-            "BANK_MODE/production requires a reachable Redis job store (REDIS_URL / CELERY_BROKER_URL)."
-        )
+        raise RuntimeError("BANK_MODE/production requires a reachable Redis job store (REDIS_URL / CELERY_BROKER_URL).")
 
     # Default durable path for local/dev — never silent memory
     from insureflow.storage.file_job_store import FileJobStore

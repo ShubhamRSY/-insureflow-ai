@@ -62,9 +62,10 @@ class FileJobStore(JobStore):
         if not path.exists():
             return None
         try:
-            return json.loads(path.read_text(encoding="utf-8"))
+            raw = json.loads(path.read_text(encoding="utf-8"))
         except json.JSONDecodeError:
             return None
+        return raw if isinstance(raw, dict) else None
 
     def delete(self, namespace: str, job_id: str, org_id: str = "default") -> bool:
         with self._lock:

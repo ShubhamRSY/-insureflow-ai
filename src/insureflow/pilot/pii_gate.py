@@ -70,9 +70,5 @@ def scan_pilot_package(package: PilotPackage) -> dict[str, Any]:
         "blocking_count": blocking,
         "warning_count": warning,
         "findings": findings[:100],
-        "message": (
-            "Clear blocking PII (SSN, cards, bank accounts, DOB, etc.) before pilot run"
-            if blocking
-            else "No blocking PII detected — safe for shadow underwriting"
-        ),
+        "message": ("Clear blocking PII (SSN, cards, bank accounts, DOB, etc.) before pilot run" if blocking else "No blocking PII detected — safe for shadow underwriting"),
     }

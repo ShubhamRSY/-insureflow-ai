@@ -59,10 +59,7 @@ try:
         for _err in _security_errors:
             logging.getLogger(__name__).error("SECURITY: %s", _err)
         if _boot_posture.is_hardened:
-            raise SystemExit(
-                "Refusing to start in BANK_MODE/production with security posture errors:\n- "
-                + "\n- ".join(_security_errors)
-            )
+            raise SystemExit("Refusing to start in BANK_MODE/production with security posture errors:\n- " + "\n- ".join(_security_errors))
 except SystemExit:
     raise
 except Exception as _sec_exc:
@@ -1485,10 +1482,7 @@ def bind_policy(
     if is_shadow_mode():
         raise HTTPException(
             status_code=403,
-            detail=(
-                "Pilot shadow mode is active — bind is disabled. "
-                "Configure live Guidewire credentials and set PILOT_SHADOW_MODE=false to enable bind."
-            ),
+            detail=("Pilot shadow mode is active — bind is disabled. Configure live Guidewire credentials and set PILOT_SHADOW_MODE=false to enable bind."),
         )
 
     store = AuditStore()
@@ -3778,6 +3772,7 @@ def run_lending_pipeline(
 
     doc_payloads: list[dict[str, Any]] = []
     loaded_docs = None
+    app: Any
     try:
         if req.directory:
             from insureflow.ingestion.lending import (
@@ -3841,12 +3836,10 @@ def run_lending_pipeline(
                 overrides=overrides,
             )
         else:
-            app: Any
-            fin: Any
             if is_business:
                 from insureflow.lending.models import Collateral
 
-                fin = BusinessFinancialData(
+                biz_fin = BusinessFinancialData(
                     annual_revenue=req.revenue,
                     net_income=req.net_income,
                     ebitda=req.ebitda,
@@ -3865,11 +3858,11 @@ def run_lending_pipeline(
                     loan_purpose=purp,
                     requested_amount=req.amount,
                     requested_term_months=req.term_months,
-                    financials=[fin],
+                    financials=[biz_fin],
                     collateral=coll,
                 )
             else:
-                fin = ConsumerFinancialData(
+                consumer_fin = ConsumerFinancialData(
                     annual_income=req.annual_income,
                     total_monthly_debt=req.monthly_debt,
                     credit_score=req.credit_score,
@@ -3882,7 +3875,7 @@ def run_lending_pipeline(
                     loan_purpose=purp,
                     requested_amount=req.amount,
                     requested_term_months=req.term_months,
-                    financial_data=fin,
+                    financial_data=consumer_fin,
                 )
     except HTTPException:
         raise

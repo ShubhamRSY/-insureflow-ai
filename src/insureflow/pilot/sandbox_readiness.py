@@ -51,8 +51,8 @@ def assess_sandbox_readiness(*, ping: bool = True) -> dict[str, Any]:
         ("NCCI", "NCCI_API_KEY", "NCCI_API_URL", build_ncci_client, False),
         ("CAT", "CAT_API_KEY", "CAT_API_URL", build_cat_client, False),
     ]
-    for label, key_env, url_env, builder, required in oracle_specs:
-        client = builder()
+    for label, key_env, url_env, builder, is_required in oracle_specs:
+        client: Any = builder()
         configured = _key_ok(key_env) and bool(os.getenv(url_env))
         reachable: bool | None = None
         mode = _mode("ORACLE_MODE")
@@ -71,7 +71,7 @@ def assess_sandbox_readiness(*, ping: bool = True) -> dict[str, Any]:
             FeedReadiness(
                 name=label,
                 category="oracle",
-                required_for_pilot=required,
+                required_for_pilot=is_required,
                 mode=mode,
                 configured=configured,
                 reachable=reachable,
@@ -86,7 +86,7 @@ def assess_sandbox_readiness(*, ping: bool = True) -> dict[str, Any]:
         ("BriteCore", "BRITECORE_API_KEY", "BRITECORE_API_URL", "BRITECORE_MODE", False),
         ("ISO Rating", "ISO_RATING_API_KEY", "ISO_RATING_API_URL", "ISO_RATING_MODE", False),
     ]
-    for label, key_env, url_env, mode_env, required in policy_specs:
+    for label, key_env, url_env, mode_env, is_required in policy_specs:
         configured = _key_ok(key_env) and bool(os.getenv(url_env))
         reachable = None
         mode = _mode(mode_env)
@@ -106,7 +106,7 @@ def assess_sandbox_readiness(*, ping: bool = True) -> dict[str, Any]:
             FeedReadiness(
                 name=label,
                 category="policy_admin",
-                required_for_pilot=required,
+                required_for_pilot=is_required,
                 mode=mode,
                 configured=configured,
                 reachable=reachable,
@@ -142,11 +142,7 @@ def assess_sandbox_readiness(*, ping: bool = True) -> dict[str, Any]:
             configured=enc_ok,
             reachable=None,
             status="ready" if enc_ok else "missing",
-            next_action=(
-                'Generate ENCRYPTION_KEY: python -c "from insureflow.storage.encryption import EnvelopeEncryption; print(EnvelopeEncryption.generate_key())"'
-                if not enc_ok
-                else "OK"
-            ),
+            next_action=('Generate ENCRYPTION_KEY: python -c "from insureflow.storage.encryption import EnvelopeEncryption; print(EnvelopeEncryption.generate_key())"' if not enc_ok else "OK"),
             env_keys=["ENCRYPTION_KEY"],
         )
     )
@@ -170,19 +166,17 @@ def assess_sandbox_readiness(*, ping: bool = True) -> dict[str, Any]:
     posture = resolve_security_posture()
     shadow = is_shadow_mode()
 
-    required = [f for f in feeds if f.required_for_pilot]
-    ready_required = [f for f in required if f.status in {"ready", "sandbox_ready"}]
-    blocked = [f for f in required if f.status in {"missing", "degraded", "simulated"}]
-    infra_required = [f for f in required if f.category == "infra"]
+    required_feeds = [f for f in feeds if f.required_for_pilot]
+    ready_required = [f for f in required_feeds if f.status in {"ready", "sandbox_ready"}]
+    blocked = [f for f in required_feeds if f.status in {"missing", "degraded", "simulated"}]
+    infra_required = [f for f in required_feeds if f.category == "infra"]
     infra_ready = all(f.status in {"ready", "sandbox_ready"} for f in infra_required)
-    oracle_live = any(
-        f.status in {"ready", "sandbox_ready"} for f in feeds if f.category == "oracle" and f.required_for_pilot
-    )
+    oracle_live = any(f.status in {"ready", "sandbox_ready"} for f in feeds if f.category == "oracle" and f.required_for_pilot)
     packages_ok = _pilot_packages_present()
 
     # Shadow-ready = durable local infra + packages; oracles may still be simulated (fail-closed).
     # Live-ready = every required feed (oracles + PAS + infra) configured.
-    if len(ready_required) == len(required):
+    if len(ready_required) == len(required_feeds):
         overall = "pilot_live_ready"
     elif infra_ready and packages_ok and shadow:
         overall = "pilot_shadow_ready"
@@ -220,7 +214,7 @@ def assess_sandbox_readiness(*, ping: bool = True) -> dict[str, Any]:
         "shadow_mode": shadow,
         "bank_mode": posture.is_hardened,
         "required_ready": len(ready_required),
-        "required_total": len(required),
+        "required_total": len(required_feeds),
         "blocked": [asdict(f) for f in blocked],
         "feeds": [asdict(f) for f in feeds],
         "checklist": checklist,

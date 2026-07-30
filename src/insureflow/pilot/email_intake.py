@@ -17,7 +17,7 @@ BINARY_SUFFIXES = {".pdf", ".png", ".jpg", ".jpeg", ".tiff", ".bmp", ".tif"}
 
 def _slug(value: str, fallback: str = "submission") -> str:
     cleaned = re.sub(r"[^a-zA-Z0-9._-]+", "-", (value or "").strip()).strip("-").lower()
-    return (cleaned[:48] or fallback)
+    return cleaned[:48] or fallback
 
 
 def documents_to_pilot_package(
@@ -64,8 +64,7 @@ def documents_to_pilot_package(
                 note_dir = dest / "supplemental"
                 note_dir.mkdir(exist_ok=True)
                 (note_dir / f"{Path(filename).stem}_binary_note.md").write_text(
-                    f"# Binary attachment stored\n\nOriginal filename: {filename}\n"
-                    "Provide a text extract or run OCR before shadow underwriting.\n",
+                    f"# Binary attachment stored\n\nOriginal filename: {filename}\nProvide a text extract or run OCR before shadow underwriting.\n",
                     encoding="utf-8",
                 )
         else:

@@ -7,7 +7,6 @@ import time
 from datetime import datetime, timezone
 from typing import Any
 
-
 _STARTED_AT = time.time()
 
 

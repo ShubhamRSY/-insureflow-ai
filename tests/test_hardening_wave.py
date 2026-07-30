@@ -12,10 +12,14 @@ def test_file_job_store_survives_reload(tmp_path: Path) -> None:
 
     store = FileJobStore(tmp_path / "jobs")
     store.set("insurance", "job-1", {"status": "completed", "x": 1}, org_id="org-a")
-    assert store.get("insurance", "job-1", org_id="org-a")["x"] == 1
+    got = store.get("insurance", "job-1", org_id="org-a")
+    assert got is not None
+    assert got["x"] == 1
 
     store2 = FileJobStore(tmp_path / "jobs")
-    assert store2.get("insurance", "job-1", org_id="org-a")["status"] == "completed"
+    got2 = store2.get("insurance", "job-1", org_id="org-a")
+    assert got2 is not None
+    assert got2["status"] == "completed"
     assert "job-1" in store2.list_ids("insurance", org_id="org-a")
 
 
@@ -93,6 +97,9 @@ def test_lending_document_ingest_builds_application(tmp_path: Path) -> None:
     docs = load_lending_documents_from_directory(pkg)
     assert len(docs) == 1
     app = application_from_documents(docs)
+    from insureflow.lending.models import BusinessLoanApplication
+
+    assert isinstance(app, BusinessLoanApplication)
     assert "Riverside" in app.business_name
     assert app.requested_amount == 250_000
     assert app.financials[0].annual_revenue == 2_500_000

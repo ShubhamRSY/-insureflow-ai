@@ -209,11 +209,7 @@ class SystemDiagnostics:
         return ComponentCheck(
             component="job_store",
             status=CheckStatus.OK if store_type == "FileJobStore" else CheckStatus.DEGRADED,
-            message=(
-                "Using FileJobStore (durable on disk)"
-                if store_type == "FileJobStore"
-                else f"Using {store_type} — prefer Redis in production"
-            ),
+            message=("Using FileJobStore (durable on disk)" if store_type == "FileJobStore" else f"Using {store_type} — prefer Redis in production"),
             category="storage",
             details={"backend": backend, "implementation": store_type},
         )

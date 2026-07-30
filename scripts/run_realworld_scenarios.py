@@ -17,7 +17,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from insureflow.testing.realworld_scenarios import build_all_scenarios, run_all_scenarios
+from insureflow.testing.realworld_scenarios import build_all_scenarios, run_all_scenarios  # noqa: E402
 
 
 def main() -> int:
@@ -43,10 +43,7 @@ def main() -> int:
         width = max(len(r["id"]) for r in rows) if rows else 10
         for r in rows:
             mark = "PASS" if r["passed"] else "FAIL"
-            print(
-                f"[{mark}] {r['id']:<{width}}  decision={r['decision']!s:<20} "
-                f"appetite={r['appetite_passed']} review={r['human_review']}"
-            )
+            print(f"[{mark}] {r['id']:<{width}}  decision={r['decision']!s:<20} appetite={r['appetite_passed']} review={r['human_review']}")
             for f in r["failures"]:
                 print(f"       → {f}")
         passed = sum(1 for r in rows if r["passed"])

@@ -93,5 +93,5 @@ def calibrated_territory(builtin: dict[str, dict[Any, float]]) -> dict[str, dict
                     break
             if not matched:
                 # Keep string key for later resolution
-                bucket[line_key] = float(value)  # type: ignore[index]
+                bucket[line_key] = float(value)
     return out

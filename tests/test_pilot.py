@@ -135,7 +135,6 @@ def test_auto_redact_clears_blocking_ssn(tmp_path: Path) -> None:
 
 def test_email_documents_to_pilot_package(tmp_path: Path) -> None:
     from insureflow.pilot.email_intake import documents_to_pilot_package
-    from insureflow.pilot.package_loader import discover_pilot_packages
 
     result = documents_to_pilot_package(
         [
@@ -155,4 +154,3 @@ def test_email_documents_to_pilot_package(tmp_path: Path) -> None:
     assert (tmp_path / "broker-co" / "email-42" / "acord.xml").exists()
     found = discover_pilot_packages(tmp_path)
     assert any(p.submission_id == "email-42" for p in found)
-

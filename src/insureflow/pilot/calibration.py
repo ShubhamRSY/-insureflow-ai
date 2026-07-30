@@ -86,9 +86,7 @@ class PilotCalibrationStore:
             "by_decision": by_decision,
             "mismatches": mismatches,
             "target_override_rate": 0.25,
-            "on_track": (
-                (len(overrides) / len(rows) < 0.25) if rows and overrides is not None else None
-            ),
+            "on_track": ((len(overrides) / len(rows) < 0.25) if rows and overrides is not None else None),
         }
 
 

@@ -2,6 +2,9 @@
 
 Copy/adapt these when requesting sandbox credentials.
 
+**This week pack** (carrier pilot + vendor emails + tracking sheet): [`THIS_WEEK_OUTREACH.md`](./THIS_WEEK_OUTREACH.md)  
+**Wiring after keys arrive:** [`ORACLE_LIVE_WIRING.md`](./ORACLE_LIVE_WIRING.md)
+
 ---
 
 ## LexisNexis — CLUE Commercial

@@ -225,12 +225,12 @@ class LendingPipeline:
             if not application.financials:
                 reasons.append("No business financial statements provided")
             else:
-                fin = application.financials[0]
-                if fin.annual_revenue <= 0 and fin.net_income == 0 and fin.ebitda == 0:
+                biz_fin = application.financials[0]
+                if biz_fin.annual_revenue <= 0 and biz_fin.net_income == 0 and biz_fin.ebitda == 0:
                     reasons.append("Business revenue/income/EBITDA all missing — cannot score DSCR")
-        else:
-            fin = application.financial_data
-            if fin.annual_income <= 0 and fin.credit_score <= 0:
+        elif isinstance(application, ConsumerLoanApplication):
+            consumer_fin = application.financial_data
+            if consumer_fin.annual_income <= 0 and consumer_fin.credit_score <= 0:
                 reasons.append("Consumer income and credit score both missing")
         return reasons
 
@@ -283,10 +283,7 @@ class LendingPipeline:
             "application": application.model_dump(),
             "result": result.model_dump(mode="json"),
             "timeline": timeline,
-            "documents": [
-                {k: v for k, v in d.items() if k != "content"} | {"content_chars": len(str(d.get("content") or ""))}
-                for d in (documents or [])
-            ],
+            "documents": [{k: v for k, v in d.items() if k != "content"} | {"content_chars": len(str(d.get("content") or ""))} for d in (documents or [])],
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
         path = os.path.join(AUDIT_DIR, f"{run_id}.json")

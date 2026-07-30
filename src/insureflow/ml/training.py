@@ -106,10 +106,7 @@ def load_dataset_for_model(
         return X, y, meta
 
     if not allow_synthetic:
-        raise FileNotFoundError(
-            f"No training CSV for {model_type.value}. Place labeled data at "
-            f"ml_data/{model_type.value}.csv (features + target column)."
-        )
+        raise FileNotFoundError(f"No training CSV for {model_type.value}. Place labeled data at ml_data/{model_type.value}.csv (features + target column).")
 
     config = TRAINING_CONFIGS.get(model_type, {"n_samples": 2000, "seed": 42})
     X, y = generate_synthetic_dataset(
@@ -117,13 +114,17 @@ def load_dataset_for_model(
         model_type=model_type.value,
         seed=config["seed"],
     )
-    return X, y, {
-        "model_type": model_type.value,
-        "n_samples": len(y),
-        "source": "synthetic",
-        "synthetic": True,
-        "warning": "Trained on synthetic data — replace with ml_data/*.csv for production models",
-    }
+    return (
+        X,
+        y,
+        {
+            "model_type": model_type.value,
+            "n_samples": len(y),
+            "source": "synthetic",
+            "synthetic": True,
+            "warning": "Trained on synthetic data — replace with ml_data/*.csv for production models",
+        },
+    )
 
 
 def train_all_models(

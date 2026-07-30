@@ -34,9 +34,7 @@ class RealWorldScenario:
     schedule_of_values: str | None = None
     inspection_reports: tuple[str, ...] = ()
     supplemental_docs: tuple[str, ...] = ()
-    expectation: ScenarioExpectation = field(
-        default_factory=lambda: ScenarioExpectation(decision_in=("accept", "conditional_accept", "refer", "decline"))
-    )
+    expectation: ScenarioExpectation = field(default_factory=lambda: ScenarioExpectation(decision_in=("accept", "conditional_accept", "refer", "decline")))
 
 
 def _acord(

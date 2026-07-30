@@ -103,26 +103,17 @@ def validate_startup_secrets(
     if posture.is_hardened:
         gateway_key = os.getenv("INTEGRATION_GATEWAY_API_KEY", "")
         if not gateway_key or gateway_key == _DEV_GATEWAY_KEY:
-            errors.append(
-                "BANK_MODE/production requires INTEGRATION_GATEWAY_API_KEY to be a unique production secret "
-                "(not the rytera-dev-gateway-key placeholder)."
-            )
+            errors.append("BANK_MODE/production requires INTEGRATION_GATEWAY_API_KEY to be a unique production secret (not the rytera-dev-gateway-key placeholder).")
 
         job_backend = (os.getenv("JOB_STORE_BACKEND") or "auto").strip().lower()
         if job_backend == "memory":
-            errors.append(
-                "BANK_MODE/production forbids JOB_STORE_BACKEND=memory. Use redis or auto with a reachable REDIS_URL."
-            )
+            errors.append("BANK_MODE/production forbids JOB_STORE_BACKEND=memory. Use redis or auto with a reachable REDIS_URL.")
 
         if posture.allow_open_registration:
-            errors.append(
-                "BANK_MODE/production forbids ALLOW_OPEN_REGISTRATION=true. Disable open registration for hardened deployments."
-            )
+            errors.append("BANK_MODE/production forbids ALLOW_OPEN_REGISTRATION=true. Disable open registration for hardened deployments.")
 
         if posture.allow_auth_reset:
-            errors.append(
-                "BANK_MODE/production forbids ALLOW_AUTH_RESET=true. Disable auth reset for hardened deployments."
-            )
+            errors.append("BANK_MODE/production forbids ALLOW_AUTH_RESET=true. Disable auth reset for hardened deployments.")
 
         for key_name in (
             "CLUE_API_KEY",
@@ -136,15 +127,12 @@ def validate_startup_secrets(
             val = os.getenv(key_name, "")
             if val == _DEV_GATEWAY_KEY:
                 errors.append(
-                    f"BANK_MODE/production: {key_name} still uses the development gateway placeholder. "
-                    "Replace with a production secret or clear it and set ORACLE_MODE/policy modes appropriately."
+                    f"BANK_MODE/production: {key_name} still uses the development gateway placeholder. Replace with a production secret or clear it and set ORACLE_MODE/policy modes appropriately."
                 )
 
         if os.getenv("REQUIRE_LIVE_ORACLES", "").lower() in {"1", "true", "yes"}:
             oracle_mode = (os.getenv("ORACLE_MODE") or "auto").strip().lower()
             if oracle_mode in {"simulated", ""}:
-                errors.append(
-                    "REQUIRE_LIVE_ORACLES=true but ORACLE_MODE is simulated. Set ORACLE_MODE=live or auto with live credentials."
-                )
+                errors.append("REQUIRE_LIVE_ORACLES=true but ORACLE_MODE is simulated. Set ORACLE_MODE=live or auto with live credentials.")
 
     return errors

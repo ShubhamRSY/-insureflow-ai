@@ -12,13 +12,10 @@ from insureflow.testing.realworld_scenarios import (
 
 
 @pytest.mark.parametrize("scenario", build_all_scenarios(), ids=lambda s: s.id)
-def test_realworld_scenario(scenario) -> None:  # type: ignore[no-untyped-def]
+def test_realworld_scenario(scenario) -> None:
     result = run_scenario(scenario, org_id="pytest-realworld")
     failures = evaluate_result(scenario, result)
-    assert not failures, (
-        f"{scenario.id} ({scenario.title}): decision={result.get('ai_decision')} "
-        f"appetite={result.get('appetite_filter_passed')} failures={failures}"
-    )
+    assert not failures, f"{scenario.id} ({scenario.title}): decision={result.get('ai_decision')} appetite={result.get('appetite_filter_passed')} failures={failures}"
 
 
 def test_scenario_catalog_covers_core_conditions() -> None:

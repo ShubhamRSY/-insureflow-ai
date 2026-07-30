@@ -114,18 +114,20 @@ class OracleAgent(BaseAgent):
             )
 
         if result.total_claims_found == 0:
-            unverified = bool(getattr(result, "synthetic", False)) or getattr(result, "mode", "") in {
-                "simulated",
-                "gateway_synthetic",
-            } or self.clue._resolved_mode() != "live"
+            unverified = (
+                bool(getattr(result, "synthetic", False))
+                or getattr(result, "mode", "")
+                in {
+                    "simulated",
+                    "gateway_synthetic",
+                }
+                or self.clue._resolved_mode() != "live"
+            )
             if unverified:
                 findings.append(
                     Finding(
                         title="CLUE: External verification unavailable (synthetic/simulated)",
-                        description=(
-                            f"CLUE response for {insured_name} is synthetic or simulated — "
-                            "do not treat as a verified clean loss history. Configure live LexisNexis credentials."
-                        ),
+                        description=(f"CLUE response for {insured_name} is synthetic or simulated — do not treat as a verified clean loss history. Configure live LexisNexis credentials."),
                         severity=RiskSeverity.HIGH,
                         category="external_oracle",
                         evidence=["synthetic=true" if getattr(result, "synthetic", False) else f"mode={self.clue._resolved_mode()}"],
@@ -215,10 +217,7 @@ class OracleAgent(BaseAgent):
                 findings.append(
                     Finding(
                         title="A-PLUS: External verification unavailable (synthetic/simulated)",
-                        description=(
-                            f"A-PLUS response for {insured_name} is synthetic or simulated — "
-                            "do not treat as a verified clean property history."
-                        ),
+                        description=(f"A-PLUS response for {insured_name} is synthetic or simulated — do not treat as a verified clean property history."),
                         severity=RiskSeverity.HIGH,
                         category="external_oracle",
                     )
