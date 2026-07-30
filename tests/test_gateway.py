@@ -88,5 +88,9 @@ def test_landing_page_html() -> None:
     assert sitemap.status_code == 200
     assert "ryterainc.com" in sitemap.text
 
-    favicon = client.get("/favicon.svg")
+    favicon = client.get("/favicon.ico")
     assert favicon.status_code == 200
+
+    og = client.get("/og-image.png")
+    assert og.status_code == 200
+    assert og.headers.get("content-type", "").startswith("image/")

@@ -1147,12 +1147,60 @@ def sitemap_xml() -> FileResponse:
     return FileResponse(path, media_type="application/xml")
 
 
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon_ico() -> FileResponse:
+    path = STATIC_DIR / "landing" / "favicon.ico"
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="favicon not found")
+    return FileResponse(path, media_type="image/x-icon")
+
+
+@app.get("/favicon.png", include_in_schema=False)
+def favicon_png() -> FileResponse:
+    path = STATIC_DIR / "landing" / "favicon.png"
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="favicon not found")
+    return FileResponse(path, media_type="image/png")
+
+
 @app.get("/favicon.svg", include_in_schema=False)
 def favicon_svg() -> FileResponse:
     path = STATIC_DIR / "landing" / "favicon.svg"
     if not path.exists():
         raise HTTPException(status_code=404, detail="favicon not found")
     return FileResponse(path, media_type="image/svg+xml")
+
+
+@app.get("/apple-touch-icon.png", include_in_schema=False)
+def apple_touch_icon() -> FileResponse:
+    path = STATIC_DIR / "landing" / "apple-touch-icon.png"
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="apple-touch-icon not found")
+    return FileResponse(path, media_type="image/png")
+
+
+@app.get("/og-image.png", include_in_schema=False)
+def og_image() -> FileResponse:
+    path = STATIC_DIR / "landing" / "og-image.png"
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="og-image not found")
+    return FileResponse(path, media_type="image/png")
+
+
+@app.get("/icon-192.png", include_in_schema=False)
+def icon_192() -> FileResponse:
+    path = STATIC_DIR / "landing" / "icon-192.png"
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="icon not found")
+    return FileResponse(path, media_type="image/png")
+
+
+@app.get("/icon-512.png", include_in_schema=False)
+def icon_512() -> FileResponse:
+    path = STATIC_DIR / "landing" / "icon-512.png"
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="icon not found")
+    return FileResponse(path, media_type="image/png")
 
 
 def _run_pipeline_task(job_id: str, request: SubmissionRequest, org_id: str) -> None:
