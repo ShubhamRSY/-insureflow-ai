@@ -35,7 +35,14 @@ class TestDiagnosticsAPI:
 
     def test_root_points_to_dashboard(self) -> None:
         client = TestClient(app)
-        resp = client.get("/")
+        # Marketing HTML is default; API clients must request JSON
+        html = client.get("/")
+        assert html.status_code == 200
+        assert "text/html" in html.headers.get("content-type", "")
+        assert "Rytera" in html.text
+
+        resp = client.get("/", headers={"Accept": "application/json"})
+        assert resp.status_code == 200
         assert resp.json()["dashboard"] == "/dashboard"
 
     def test_dashboard_served(self) -> None:
