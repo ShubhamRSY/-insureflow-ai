@@ -105,7 +105,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # ty
 if integration_gateway_router is not None:
     app.include_router(integration_gateway_router, prefix="/integrations")
 
-# api/app.py → package dir → insureflow/ → src/ → repo root
+# api/main.py → package dir → insureflow/ → src/ → repo root
 _PKG_ROOT = Path(__file__).resolve().parent.parent  # src/insureflow
 STATIC_DIR = _PKG_ROOT / "static"
 PROJECT_ROOT = _PKG_ROOT.parent.parent  # repo root

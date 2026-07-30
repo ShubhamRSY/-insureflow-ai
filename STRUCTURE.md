@@ -5,7 +5,7 @@ High-level layout for Rytera / InsureFlow AI (`insureflow-ai` package).
 ```
 .
 ├── src/insureflow/          # Python application package
-│   ├── api/                 # FastAPI app (uvicorn insureflow.api:app)
+│   ├── api/                 # FastAPI app (uvicorn insureflow.api:app → api/main.py)
 │   ├── agents/              # Specialist UW agents
 │   ├── insurance|mortgage|lending/
 │   ├── oracles/             # CLUE / A-PLUS / NCCI / CAT clients

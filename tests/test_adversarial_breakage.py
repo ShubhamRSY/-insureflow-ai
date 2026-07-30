@@ -1440,11 +1440,13 @@ class TestSecurityBootstrapLogging:
     """BUG 5 FIX: Non-RuntimeError exceptions in security bootstrap are logged."""
 
     def test_source_has_logging_not_pass(self) -> None:
-        """Verify api app module logs non-fatal security bootstrap errors (not bare pass)."""
+        """Verify api main module logs non-fatal security bootstrap errors (not bare pass)."""
         import inspect
+        import sys
 
-        import insureflow.api.app as api_mod
+        import insureflow.api  # noqa: F401
 
+        api_mod = sys.modules["insureflow.api.main"]
         source = inspect.getsource(api_mod)
         assert "Security bootstrap non-fatal error" in source or "non-fatal" in source
 
