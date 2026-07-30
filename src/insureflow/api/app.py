@@ -1155,6 +1155,14 @@ def favicon_ico() -> FileResponse:
     return FileResponse(path, media_type="image/x-icon")
 
 
+@app.get("/googlee8bd725babd1be66.html", include_in_schema=False)
+def google_site_verification() -> FileResponse:
+    path = STATIC_DIR / "landing" / "googlee8bd725babd1be66.html"
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="verification file not found")
+    return FileResponse(path, media_type="text/html")
+
+
 @app.get("/favicon.png", include_in_schema=False)
 def favicon_png() -> FileResponse:
     path = STATIC_DIR / "landing" / "favicon.png"
