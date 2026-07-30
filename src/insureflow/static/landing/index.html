@@ -4,21 +4,21 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Rytera — AI Underwriting Platform</title>
-  <meta name="description" content="Rytera is the AI underwriting platform for commercial insurance, mortgage, and lending — every pipeline layer visible from intake to decision." />
-  <link rel="canonical" href="https://rytera.ai" />
+  <meta name="description" content="Rytera is the AI underwriting platform for commercial insurance, mortgage, and lending — every pipeline layer visible from intake to decision. Shadow pilots, live oracles, and human-in-the-loop sign-off." />
+  <link rel="canonical" href="https://ryterainc.com/" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #0a0d14;
-      --card: #121826;
-      --card-hover: #181f30;
-      --text: #e2e8f0;
-      --muted: #94a3b8;
-      --brand: #6366f1;
-      --brand2: #818cf8;
+      --bg: #10141f;
+      --card: #161d2c;
+      --card-hover: #1c2538;
+      --text: #f1f5f9;
+      --muted: #b4c2d6;
+      --brand: #5b8def;
+      --brand2: #8bb0f7;
       --accent: #22d3ee;
-      --border: rgba(255,255,255,.07);
+      --border: rgba(255,255,255,.1);
       --max: 1120px;
       --header-h: 64px;
     }
@@ -254,16 +254,28 @@
     .feature-card ul { margin-top: .65rem; padding-left: 1rem; font-size: .8rem; color: var(--muted); }
     .feature-card li { margin-bottom: .3rem; }
 
-    /* Platform bento */
-    .bento { display: grid; gap: 1rem; grid-template-columns: repeat(3, 1fr); margin-top: 3rem; }
+    /* Platform capabilities */
+    .platform-cap { margin-top: 3.5rem; padding-top: 3rem; border-top: 1px solid var(--border); }
+    .platform-cap .section-desc { margin-bottom: 1.75rem; }
+    .bento { display: grid; gap: 1rem; grid-template-columns: repeat(3, 1fr); }
     .bento-card {
       background: var(--card); border: 1px solid var(--border);
-      border-radius: 1rem; padding: 1.35rem;
-      transition: border-color .25s;
+      border-radius: 1rem; padding: 1.35rem 1.45rem;
+      transition: border-color .25s, transform .25s;
     }
-    .bento-card:hover { border-color: rgba(99,102,241,.3); }
+    .bento-card:hover { border-color: rgba(91,141,239,.4); transform: translateY(-2px); }
     .bento-card.wide { grid-column: span 2; }
-    .bento-card p { font-size: .85rem; color: var(--muted); margin-top: .35rem; }
+    .bento-kicker {
+      font-size: .65rem; font-weight: 700; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--brand2); margin-bottom: .45rem;
+    }
+    .bento-card h3 {
+      font-size: 1.1rem; font-weight: 700; letter-spacing: -.02em;
+      margin-bottom: .55rem; color: var(--text); line-height: 1.25;
+    }
+    .bento-card p {
+      font-size: .9rem; color: var(--muted); margin: 0; line-height: 1.55;
+    }
 
     /* Integrations filter */
     .filter-bar { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
@@ -412,6 +424,7 @@
       <nav class="nav-desktop" aria-label="Main">
         <a href="#how-it-works" data-nav>How it works</a>
         <a href="#features" data-nav>Features</a>
+        <a href="#capabilities" data-nav>Capabilities</a>
         <a href="#integrations" data-nav>Integrations</a>
         <a href="#faq" data-nav>FAQ</a>
         <a href="/dashboard">Dashboard</a>
@@ -422,6 +435,7 @@
     <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile">
       <a href="#how-it-works" data-nav>How it works</a>
       <a href="#features" data-nav>Features</a>
+      <a href="#capabilities" data-nav>Capabilities</a>
       <a href="#integrations" data-nav>Integrations</a>
       <a href="#faq" data-nav>FAQ</a>
       <a href="/dashboard">Dashboard</a>
@@ -431,11 +445,11 @@
     <main>
       <section class="hero" id="top">
         <div class="reveal">
-          <div class="hero-badge"><span class="dot"></span> Enterprise AI Underwriting</div>
+          <div class="hero-badge"><span class="dot"></span> v0.3 · Shadow pilots ready</div>
           <h1><span class="gradient">AI underwriting</span> with every layer visible</h1>
           <p class="lead">
-            Rytera ingests submission packages, runs multi-agent analysis, connects to carrier oracles and core systems,
-            and produces bind-ready decisions — with a full submission journey from intake to sign-off.
+            Rytera ingests commercial packages, runs multi-agent analysis, wires live CLUE / A-PLUS oracles when configured,
+            and produces bind-ready memos — licensed underwriters decide; bind stays off until you approve.
           </p>
           <div class="cta">
             <a class="btn btn-primary" href="/dashboard">Open Dashboard</a>
@@ -444,7 +458,7 @@
         </div>
         <div class="stats reveal" aria-label="Platform highlights">
           <div class="stat"><span class="num" data-target="3">0</span><span>Verticals</span></div>
-          <div class="stat"><span class="num" data-target="340">0</span><span>Automated tests</span></div>
+          <div class="stat"><span class="num" data-target="30">0</span><span>Day shadow pilots</span></div>
           <div class="stat"><span class="num" data-target="24">0</span><span>Doc sources</span></div>
           <div class="stat"><span class="num" data-target="13">0</span><span>Live integrations</span></div>
         </div>
@@ -500,10 +514,10 @@
         </div>
         <div class="tab-panel active reveal" id="tab-insurance" role="tabpanel">
           <div class="feature-grid">
-            <div class="feature-card"><div class="icon">📄</div><h3>Document ingestion</h3><p>ACORD XML, broker slips, loss runs, SOV, inspections — auto-classified and parsed.</p></div>
-            <div class="feature-card"><div class="icon">🤖</div><h3>Specialist agents</h3><p>Risk, loss run, compliance, fraud, and UW decision agents run in parallel.<ul><li>Deterministic fallbacks without LLM</li><li>Structured memo output</li></ul></p></div>
-            <div class="feature-card"><div class="icon">💰</div><h3>Premium &amp; bind</h3><p>ACCEPT / REFER / DECLINE with premium quote, licensed sign-off, and policy bind.</p></div>
-            <div class="feature-card"><div class="icon">🔍</div><h3>Submission journey</h3><p>Full pipeline panel per job — COPE, oracles, provenance, pricing build-up, audit trail.</p></div>
+            <div class="feature-card"><div class="icon">📄</div><h3>Document ingestion</h3><p>ACORD XML, broker slips, loss runs, SOV, inspections — auto-classified, parsed, and PII-screened for pilots.</p></div>
+            <div class="feature-card"><div class="icon">🤖</div><h3>Specialist agents</h3><p>Risk, loss run, compliance, fraud, and UW decision agents run in parallel.<ul><li>Deterministic fallbacks without LLM</li><li>CONDITIONAL_ACCEPT when docs need subjectivities</li></ul></p></div>
+            <div class="feature-card"><div class="icon">💰</div><h3>Premium &amp; shadow bind</h3><p>ACCEPT / CONDITIONAL_ACCEPT / REFER / DECLINE with indicated premium. Shadow mode blocks live bind until PAS is ready.</p></div>
+            <div class="feature-card"><div class="icon">🔍</div><h3>Submission journey</h3><p>Full pipeline panel per job — COPE, live oracles, provenance, pricing build-up, and encrypted audit trail.</p></div>
           </div>
         </div>
         <div class="tab-panel reveal" id="tab-mortgage" role="tabpanel">
@@ -523,12 +537,50 @@
           </div>
         </div>
 
-        <div class="bento reveal">
-          <div class="bento-card wide"><h3>Human-in-the-loop by design</h3><p>Licensed UW sign-off, checkpoint resolution, authority matrix tiers, and referral queues — AI assists, humans decide.</p></div>
-          <div class="bento-card"><h3>PII redaction</h3><p>Automated SSN, EIN, DOB detection and document redaction.</p></div>
-          <div class="bento-card"><h3>24 connectors</h3><p>S3, SharePoint, Applied Epic, email, SFTP, and more.</p></div>
-          <div class="bento-card"><h3>Queue triage</h3><p>Prioritized submission queue with fit scores and journey strips.</p></div>
-          <div class="bento-card wide"><h3>Encrypted audit bundles</h3><p>SHA-256 manifest ZIP exports for regulatory examiner review — every decision traceable.</p></div>
+        <div class="platform-cap reveal" id="capabilities">
+          <p class="section-label">Platform capabilities</p>
+          <h2>Controls, intake, and audit you can defend</h2>
+          <p class="section-desc">
+            Production underwriting needs more than a model score. Rytera ships governance, redaction, connectors,
+            triage, and examiner-ready audit as first-class product — not bolt-ons.
+          </p>
+          <div class="bento">
+            <div class="bento-card wide">
+              <p class="bento-kicker">Governance</p>
+              <h3>Human-in-the-loop by design</h3>
+              <p>Licensed UW sign-off, checkpoint resolution, authority matrix tiers, and referral queues — AI assists, humans decide. Shadow pilots keep bind off until your team is ready.</p>
+            </div>
+            <div class="bento-card">
+              <p class="bento-kicker">Privacy</p>
+              <h3>PII redaction</h3>
+              <p>Automated SSN, EIN, and DOB detection with document redaction before packages enter the pilot lane.</p>
+            </div>
+            <div class="bento-card">
+              <p class="bento-kicker">Intake</p>
+              <h3>24 connectors</h3>
+              <p>S3, SharePoint, Applied Epic, real IMAP email, SFTP, and more — live when configured, honest simulated otherwise.</p>
+            </div>
+            <div class="bento-card">
+              <p class="bento-kicker">Operations</p>
+              <h3>Queue triage</h3>
+              <p>Prioritized submission queue with fit scores and journey strips so UW time goes to the right files first.</p>
+            </div>
+            <div class="bento-card wide">
+              <p class="bento-kicker">Compliance</p>
+              <h3>Encrypted audit bundles</h3>
+              <p>SHA-256 manifest ZIP exports for regulatory examiner review — every decision, override, and oracle call traceable.</p>
+            </div>
+            <div class="bento-card">
+              <p class="bento-kicker">Oracles</p>
+              <h3>Live loss history</h3>
+              <p>CLUE, A-PLUS, NCCI, and CAT feeds in auto mode — no fake clean history when keys are missing.</p>
+            </div>
+            <div class="bento-card">
+              <p class="bento-kicker">Reliability</p>
+              <h3>Durable job stores</h3>
+              <p>Redis or file-backed jobs survive restarts — no silent in-memory loss in pilot or bank mode.</p>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -571,7 +623,7 @@
     </main>
 
     <footer>
-      <div>Rytera™ · <a href="https://rytera.ai">rytera.ai</a></div>
+      <div>Rytera™ · <a href="https://ryterainc.com">ryterainc.com</a></div>
       <div class="links">
         <a href="/dashboard">Dashboard</a>
         <a href="/health">System Status</a>
@@ -606,10 +658,10 @@
     const PIPELINE = [
       { tag: "Stage 01", title: "Intake", desc: "Submission packages arrive from anywhere your team already works.", items: ["24 enterprise connectors: S3, SharePoint, Box, Applied Epic, Vertafore", "Email ingestion via Exchange and Gmail", "Broker platforms and local folder drops", "Org-scoped job tracking from first byte"] },
       { tag: "Stage 02", title: "Parse", desc: "Documents are classified, OCR'd, and structured into a unified bundle.", items: ["ACORD XML, broker PDFs/JSON, loss runs, SOV, inspections", "Mortgage: W-2, 1040, credit, appraisals, bank statements", "Entity extraction and cross-document field mapping", "Provenance tracking for every extracted value"] },
-      { tag: "Stage 03", title: "Verify", desc: "Cross-document reconciliation and third-party oracle verification.", items: ["Provenance hierarchy: ACORD vs inspection vs loss run", "COPE analysis for property risks", "CLUE, NCCI, A-PLUS, and CAT model lookups", "Discrepancy flags before scoring begins"] },
+      { tag: "Stage 03", title: "Verify", desc: "Cross-document reconciliation and third-party oracle verification.", items: ["Provenance hierarchy: ACORD vs inspection vs loss run", "COPE analysis for property risks", "Live CLUE / A-PLUS / NCCI / CAT when keys are set — simulated flagged when not", "Discrepancy flags before scoring begins"] },
       { tag: "Stage 04", title: "Score", desc: "Specialist agents analyze risk dimensions in parallel.", items: ["Risk, loss run, compliance, and fraud agents", "ReAct-style reasoning with tool use", "Deterministic fallbacks — no LLM required", "Structured findings feed the UW memo"] },
-      { tag: "Stage 05", title: "Price", desc: "Premium, rate lock, or loan pricing with market-cycle awareness.", items: ["P&C premium build-up with modifiers", "Mortgage rate lock and DTI analysis", "Lending spread and fee calculation", "Market cycle phase adjustments (hard/soft)"] },
-      { tag: "Stage 06", title: "Decide", desc: "Bind-ready output with human checkpoints and full audit trail.", items: ["ACCEPT / REFER / DECLINE (or mortgage/lending equivalent)", "Licensed UW sign-off with override notes", "Policy bind via Guidewire or BriteCore", "Encrypted audit bundle with SHA-256 manifest"] },
+      { tag: "Stage 05", title: "Price", desc: "Premium, rate lock, or loan pricing with market-cycle awareness.", items: ["P&C premium build-up with calibrated rate curves", "Mortgage rate lock and DTI analysis", "Lending spread and fee calculation", "Market cycle phase adjustments (hard/soft)"] },
+      { tag: "Stage 06", title: "Decide", desc: "Bind-ready output with human checkpoints and full audit trail.", items: ["ACCEPT / CONDITIONAL_ACCEPT / REFER / DECLINE", "Licensed UW sign-off with override notes", "Shadow mode blocks bind until PAS wiring is approved", "Encrypted audit bundle with SHA-256 manifest"] },
     ];
 
     const INTEGRATIONS = [
@@ -631,10 +683,11 @@
       { q: "Can underwriters override AI decisions?", a: "Yes. Licensed underwriters can approve, refer, or decline with notes and override reasons. Authority matrix tiers control binding limits. Checkpoint resolution lets teams pause and resume at any stage." },
       { q: "Do I need an LLM API key to run Rytera?", a: "No. All pipelines include deterministic agent fallbacks. Adding an API key enables richer reasoning, but the platform is fully functional for demos and pilots without one." },
       { q: "What integrations are live vs simulated?", a: "Each integration supports auto (live when configured, simulated otherwise), live, and simulated modes. The dashboard shows real-time health for every feed." },
-      { q: "How do you handle security and PII?", a: "JWT + RBAC, org-scoped isolation, Fernet encryption, automated PII redaction (SSN, EIN, DOB), and encrypted audit bundles with SHA-256 manifests." },
-      { q: "Is Rytera cloud, on-prem, or hybrid?", a: "Self-hosted via Docker Compose (Redis, PostgreSQL/pgvector, API, Celery). Deploy on your infrastructure or private cloud. Contact us for managed hosting." },
-      { q: "How long does a pilot take?", a: "Most pilots run 4–8 weeks: week 1 setup, weeks 2–4 live submissions with UW review, weeks 5–8 refinement and audit package review." },
-      { q: "How is pricing structured?", a: "Based on vertical, submission volume, and integration scope. Enterprise plans include dedicated support, custom connectors, and SLA options." },
+      { q: "How do you handle security and PII?", a: "JWT + RBAC, org-scoped isolation, Fernet encryption at rest, automated PII redaction (SSN, EIN, DOB) for pilot packages, durable Redis/file job stores, and encrypted audit bundles with SHA-256 manifests." },
+      { q: "Is Rytera cloud, on-prem, or hybrid?", a: "Self-hosted via Docker Compose (Redis, PostgreSQL/pgvector, API, Celery). Deploy on your infrastructure or private cloud. Production also runs at ryterainc.com." },
+      { q: "How long does a pilot take?", a: "We recommend a 30-day shadow program: 20–50 redacted packages, one UW for 2–4 hrs/week, bind disabled. Success gates include override rate under 25%, no silent ACCEPT on missing docs, and UW time-to-review under 15 minutes." },
+      { q: "What is shadow mode?", a: "PILOT_SHADOW_MODE runs full analysis and UW sign-off while blocking live policy bind. Use it until Guidewire/PAS UAT and oracle sandboxes are wired — so pilots never invent a bind." },
+      { q: "How is pricing structured?", a: "Pilots typically start per-submission. Committed accounts can move to platform SaaS by volume. Enterprise plans include dedicated support, custom connectors, and SLA options." },
     ];
 
     // Pipeline panel

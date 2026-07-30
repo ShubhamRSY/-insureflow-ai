@@ -1110,9 +1110,11 @@ async def run_mortgage_demo(
 
 @app.get("/", response_model=None)
 async def root(request: Request) -> FileResponse | JSONResponse:
-    accept = request.headers.get("accept", "")
+    """Serve the marketing landing by default; JSON only when explicitly requested."""
+    accept = (request.headers.get("accept") or "*/*").lower()
+    wants_json_only = "application/json" in accept and "text/html" not in accept
     landing = STATIC_DIR / "landing" / "index.html"
-    if landing.exists() and "text/html" in accept and not accept.strip().startswith("application/json"):
+    if landing.exists() and not wants_json_only:
         return FileResponse(landing)
     return JSONResponse(
         {
@@ -1122,6 +1124,7 @@ async def root(request: Request) -> FileResponse | JSONResponse:
             "diagnostics": "/system/diagnostics",
             "health": "/health",
             "integration_gateway": "/integrations",
+            "landing": "/",
         }
     )
 

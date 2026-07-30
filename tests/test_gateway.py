@@ -69,3 +69,13 @@ def test_landing_page_html() -> None:
     resp = client.get("/", headers={"Accept": "text/html"})
     assert resp.status_code == 200
     assert "Rytera" in resp.text
+    assert "Platform capabilities" in resp.text
+    assert "Human-in-the-loop by design" in resp.text
+
+    default = client.get("/")
+    assert default.status_code == 200
+    assert "text/html" in default.headers.get("content-type", "")
+
+    api = client.get("/", headers={"Accept": "application/json"})
+    assert api.status_code == 200
+    assert api.json()["service"] == "Rytera"
