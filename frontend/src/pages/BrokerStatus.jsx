@@ -23,12 +23,15 @@ export default function BrokerStatus() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [polling, setPolling] = useState(true);
+  const [responseNote, setResponseNote] = useState('');
+  const [responding, setResponding] = useState(false);
+  const [respondMsg, setRespondMsg] = useState('');
 
   const fetchStatus = useCallback(async () => {
     try {
       const res = await api(`/broker/status/${token}`);
       setData(res);
-      if (res.status !== 'processing') setPolling(false);
+      if (res.status !== 'processing' && !res.awaiting_broker_info) setPolling(false);
     } catch (e) {
       setError(e.message || 'Failed to load submission status');
       setPolling(false);
@@ -41,6 +44,28 @@ export default function BrokerStatus() {
     const iv = setInterval(fetchStatus, 5000);
     return () => clearInterval(iv);
   }, [fetchStatus, polling]);
+
+  const handleRespond = async (requestId) => {
+    setResponding(true);
+    setRespondMsg('');
+    try {
+      await api(`/broker/status/${token}/respond`, {
+        method: 'POST',
+        body: {
+          request_id: requestId || '',
+          response_note: responseNote || 'Documents / information provided',
+          mark_all_pending: !requestId,
+        },
+      });
+      setResponseNote('');
+      setRespondMsg('Response submitted — underwriter notified.');
+      await fetchStatus();
+    } catch (e) {
+      setRespondMsg(e.message || 'Failed to submit response');
+    } finally {
+      setResponding(false);
+    }
+  };
 
   if (error) {
     return (
@@ -118,6 +143,35 @@ export default function BrokerStatus() {
               </div>
             )}
           </div>
+
+          {(data.pending_info_requests || []).length > 0 && (
+            <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-wider text-amber-300">Action required — information requested</p>
+              {(data.pending_info_requests || []).map((req) => (
+                <div key={req.request_id} className="rounded-lg bg-black/20 p-3 text-xs text-slate-300">
+                  <p className="font-medium text-slate-200">{(req.documents || []).join(', ') || 'Additional information'}</p>
+                  {req.notes && <p className="mt-1 text-slate-500">{req.notes}</p>}
+                  <p className="mt-1 text-[10px] text-slate-600">Request {req.request_id}</p>
+                </div>
+              ))}
+              <textarea
+                className="input-field w-full text-sm"
+                rows={2}
+                placeholder="Describe what you’re sending / attach note for UW…"
+                value={responseNote}
+                onChange={(e) => setResponseNote(e.target.value)}
+              />
+              <button
+                type="button"
+                disabled={responding}
+                onClick={() => handleRespond('')}
+                className="btn-primary btn-sm text-xs"
+              >
+                {responding ? 'Submitting…' : 'Mark requests fulfilled'}
+              </button>
+              {respondMsg && <p className="text-xs text-slate-400">{respondMsg}</p>}
+            </div>
+          )}
 
           {/* Timeline */}
           <div>

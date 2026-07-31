@@ -92,6 +92,33 @@ class WorkflowService:
         elif action == SignOffAction.DECLINE:
             record.state = WorkflowState.DECLINED
             record.final_decision = "decline"
+        elif action == SignOffAction.REQUEST_INFO:
+            record.state = WorkflowState.PENDING_REVIEW
+            record.final_decision = "request_info"
+            try:
+                from insureflow.insurance.collaboration import get_collaboration_store
+
+                docs: list[str] = []
+                if notes:
+                    # Prefer explicit "docs: a, b" lines; else use notes as freeform ask
+                    lowered = notes.lower()
+                    if "docs:" in lowered:
+                        part = notes.split(":", 1)[1]
+                        docs = [d.strip() for d in part.split(",") if d.strip()]
+                    else:
+                        docs = [notes[:240]]
+                get_collaboration_store().add_info_request(
+                    bundle_id,
+                    org_id,
+                    docs or ["Additional underwriting information"],
+                    notes=notes,
+                    requested_by=signed_by,
+                    source="uw_signoff",
+                )
+            except Exception as exc:
+                import logging as _log
+
+                _log.getLogger(__name__).debug("Info request persist failed: %s", exc)
         else:
             record.state = WorkflowState.PENDING_REVIEW
             record.final_decision = action.value

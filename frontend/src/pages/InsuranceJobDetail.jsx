@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, FileCheck, ExternalLink, FileText, RefreshCw, Camera, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, FileCheck, ExternalLink, FileText, RefreshCw, Camera, AlertTriangle, MessageSquare } from 'lucide-react';
 import { endpoints } from '../lib/api';
 import SubmissionJourney from '../components/SubmissionJourney';
 import InsuranceMemoView from '../components/InsuranceMemoView';
@@ -13,6 +13,10 @@ export default function InsuranceJobDetail() {
   const [error, setError] = useState(null);
   const [quote, setQuote] = useState(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
+  const [notes, setNotes] = useState([]);
+  const [noteText, setNoteText] = useState('');
+  const [checklist, setChecklist] = useState(null);
+  const [infoRequests, setInfoRequests] = useState([]);
 
   const fetchJob = async () => {
     try {
@@ -40,6 +44,24 @@ export default function InsuranceJobDetail() {
   const processing = job?.status === 'processing';
   const bundleId = job?.results?.bundle_id;
   const insuredName = job?.results?.insured_name || job?.results?.memo?.insured_name || '';
+
+  useEffect(() => {
+    if (!bundleId) return;
+    endpoints.relationshipNotes(bundleId).then((r) => setNotes(r.notes || [])).catch(() => {});
+    endpoints.packageChecklist(bundleId).then(setChecklist).catch(() => {});
+    endpoints.infoRequests(bundleId).then((r) => setInfoRequests(r.requests || [])).catch(() => {});
+  }, [bundleId]);
+
+  const handleAddNote = async () => {
+    if (!bundleId || !noteText.trim()) return;
+    try {
+      const n = await endpoints.addRelationshipNote(bundleId, { text: noteText, role: 'uw' });
+      setNotes((prev) => [...prev, n]);
+      setNoteText('');
+    } catch (e) {
+      alert(e.message);
+    }
+  };
 
   const handleReport = async () => {
     try {
@@ -144,6 +166,54 @@ export default function InsuranceJobDetail() {
       {/* Content */}
       <div className="mx-auto max-w-7xl px-6 py-6">
         <SubmissionJourney job={job} />
+
+        {bundleId && (
+          <div className="mt-6 grid gap-4 lg:grid-cols-2">
+            <div className="rounded-xl bg-surface-overlay p-5 ring-1 ring-white/[0.04]">
+              <div className="mb-3 flex items-center gap-2">
+                <MessageSquare className="h-4 w-4 text-brand" />
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Relationship notes</p>
+              </div>
+              <div className="mb-3 max-h-40 space-y-2 overflow-y-auto">
+                {!notes.length && <p className="text-xs text-slate-500">No broker/carrier notes yet.</p>}
+                {notes.map((n) => (
+                  <div key={n.note_id} className="rounded-lg bg-black/20 px-3 py-2 text-xs">
+                    <p className="text-slate-300">{n.text}</p>
+                    <p className="mt-1 text-[10px] text-slate-600">{n.role} · {n.author} · {n.created_at ? new Date(n.created_at).toLocaleString() : ''}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <input className="input-field flex-1 text-xs" placeholder="Add UW / broker context…" value={noteText} onChange={(e) => setNoteText(e.target.value)} />
+                <button type="button" onClick={handleAddNote} className="btn-secondary btn-sm text-xs">Add</button>
+              </div>
+            </div>
+
+            <div className="rounded-xl bg-surface-overlay p-5 ring-1 ring-white/[0.04]">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Package checklist {checklist?.lob ? `(${checklist.lob})` : ''}
+              </p>
+              {checklist ? (
+                <>
+                  <p className="mb-2 text-sm text-slate-300">{checklist.completeness_pct}% complete</p>
+                  <p className="text-[10px] uppercase text-slate-500 mb-1">Missing</p>
+                  <ul className="mb-3 space-y-1 text-xs text-amber-300/90">
+                    {(checklist.missing || []).length ? checklist.missing.map((m) => <li key={m}>• {m}</li>) : <li className="text-slate-500">None</li>}
+                  </ul>
+                  <p className="text-[10px] uppercase text-slate-500 mb-1">Info requests</p>
+                  <ul className="space-y-1 text-xs text-slate-400">
+                    {!infoRequests.length && <li>None yet</li>}
+                    {infoRequests.map((r) => (
+                      <li key={r.request_id}>{r.status}: {(r.documents || []).join(', ')}</li>
+                    ))}
+                  </ul>
+                </>
+              ) : (
+                <p className="text-xs text-slate-500">Checklist unavailable for this job.</p>
+              )}
+            </div>
+          </div>
+        )}
 
         {!processing && job.results?.visual_analysis && (
           <div className="mt-6 rounded-xl bg-surface-overlay p-5 ring-1 ring-white/[0.04]">

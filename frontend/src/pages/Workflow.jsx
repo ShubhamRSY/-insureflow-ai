@@ -84,6 +84,7 @@ export default function WorkflowPage({ pending, onRefresh, authorityData, onOpen
                     <div className="mt-4 flex flex-wrap gap-2">
                       <button type="button" onClick={() => onOpenJob?.('insurance', id, id)} className="btn-secondary text-xs">View</button>
                       <button type="button" onClick={() => { setShowSignOff(id); setForm(f => ({ ...f, action: 'approve' })); }} className="btn-primary btn-sm text-xs">Approve</button>
+                      <button type="button" onClick={() => { setShowSignOff(id); setForm(f => ({ ...f, action: 'request_info' })); }} className="btn-secondary text-xs">Request info</button>
                       <button type="button" onClick={() => { setShowSignOff(id); setForm(f => ({ ...f, action: 'refer' })); }} className="btn-secondary text-xs">Refer</button>
                       <button type="button" onClick={() => { setShowSignOff(id); setForm(f => ({ ...f, action: 'decline' })); }} className="rounded-xl px-3 py-1.5 text-xs text-red-400 ring-1 ring-red-500/30 hover:bg-red-500/10">Decline</button>
                       {p.state === 'approved' && (
@@ -120,7 +121,8 @@ export default function WorkflowPage({ pending, onRefresh, authorityData, onOpen
                         />
                       </div>
                       <textarea
-                        placeholder="Notes…" className="input-field w-full text-sm" rows={2}
+                        placeholder={form.action === 'request_info' ? 'What do you need from the broker? (e.g. docs: loss run, SOV)' : 'Notes…'}
+                        className="input-field w-full text-sm" rows={2}
                         value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
                       />
                       <div className="flex gap-2">

@@ -2488,14 +2488,89 @@ def request_broker_documents(
     body: dict[str, Any],
     current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
-    """Request missing documents from broker (data quality gate)."""
+    """Request missing documents from broker (persisted pending → broker respond loop)."""
     from insureflow.enterprise.ecosystem import get_ecosystem_service
 
     docs = body.get("documents") or body.get("missing_documents") or []
+    notes = str(body.get("notes") or "")
     if not docs:
         missing = get_missing_documents(bundle_id, current)
         docs = missing.get("missing_documents", [])
-    return get_ecosystem_service().request_broker_documents(bundle_id, current.org_id, docs)
+    result = get_ecosystem_service().request_broker_documents(bundle_id, current.org_id, docs, notes=notes)
+    return result
+
+
+@app.get("/pipeline/jobs/{bundle_id}/info-requests")
+def list_info_requests(
+    bundle_id: str,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    from insureflow.insurance.collaboration import get_collaboration_store
+
+    items = get_collaboration_store().list_info_requests(bundle_id, current.org_id)
+    return {
+        "bundle_id": bundle_id,
+        "requests": items,
+        "pending_count": sum(1 for r in items if r.get("status") == "pending"),
+    }
+
+
+@app.get("/pipeline/jobs/{bundle_id}/relationship-notes")
+def list_relationship_notes(
+    bundle_id: str,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    from insureflow.insurance.collaboration import get_collaboration_store
+
+    return {"bundle_id": bundle_id, "notes": get_collaboration_store().list_notes(bundle_id, current.org_id)}
+
+
+@app.post("/pipeline/jobs/{bundle_id}/relationship-notes", status_code=201)
+def add_relationship_note(
+    bundle_id: str,
+    body: dict[str, Any],
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    from insureflow.insurance.collaboration import get_collaboration_store
+
+    note = get_collaboration_store().add_note(
+        bundle_id,
+        current.org_id,
+        str(body.get("text") or ""),
+        author=str(body.get("author") or current.username or "underwriter"),
+        role=str(body.get("role") or "uw"),
+    )
+    return note
+
+
+@app.get("/pipeline/jobs/{bundle_id}/package-checklist")
+def insurance_package_checklist(
+    bundle_id: str,
+    lob: str = "auto",
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Property or D&O completeness checklist for the submission package."""
+    from insureflow.audit.store import AuditStore
+    from insureflow.insurance.package_checklist import detect_lob, package_checklist
+
+    store = AuditStore()
+    summary = store.load_json(bundle_id, "underwriting_memo.json", org_id=current.org_id) or {}
+    bundle = store.load_json(bundle_id, "submission_bundle.json", org_id=current.org_id) or {}
+    types: list[str] = []
+    for doc in bundle.get("unstructured") or bundle.get("documents") or []:
+        if isinstance(doc, dict):
+            t = doc.get("document_type") or doc.get("doc_type") or ""
+            if t:
+                types.append(str(t))
+    job = job_store.get(INSURANCE_NS, bundle_id, org_id=current.org_id) or {}
+    results = job.get("results") or {}
+    type_counts = results.get("document_types") or {}
+    if isinstance(type_counts, dict):
+        types.extend(list(type_counts.keys()))
+    text_blob = " ".join(types) + " " + str(summary.get("product_line") or results.get("product_line") or "")
+    resolved = lob if lob in ("property", "do") else detect_lob(text_blob)
+    checklist = package_checklist(types, lob=resolved)
+    return {"bundle_id": bundle_id, **checklist}
 
 
 @app.post("/pipeline/vision/analyze")
@@ -3227,6 +3302,7 @@ def broker_submission_status(
     token: str,
 ) -> dict[str, Any]:
     """Public (no-auth) endpoint for brokers to check submission status via share token."""
+    from insureflow.insurance.collaboration import get_collaboration_store
     from insureflow.webhooks.dispatcher import webhook_dispatcher
 
     share = webhook_dispatcher.get_broker_share(token)
@@ -3239,6 +3315,9 @@ def broker_submission_status(
 
     status = (job or {}).get("status", "unknown")
     results = (job or {}).get("results") or {}
+    collab = get_collaboration_store()
+    info_requests = collab.list_info_requests(share.bundle_id, share.org_id)
+    pending = [r for r in info_requests if r.get("status") == "pending"]
 
     return {
         "bundle_id": share.bundle_id,
@@ -3249,7 +3328,48 @@ def broker_submission_status(
         "workflow_state": results.get("workflow_state", ""),
         "estimated_completion": None,
         "last_updated": (job or {}).get("updated_at", ""),
+        "info_requests": info_requests,
+        "pending_info_requests": pending,
+        "awaiting_broker_info": len(pending) > 0,
     }
+
+
+@app.post("/broker/status/{token}/respond")
+def broker_respond_info_request(
+    token: str,
+    body: dict[str, Any],
+) -> dict[str, Any]:
+    """Broker responds to a pending info request via share token (no login)."""
+    from insureflow.insurance.collaboration import get_collaboration_store
+    from insureflow.webhooks.dispatcher import webhook_dispatcher
+
+    share = webhook_dispatcher.get_broker_share(token)
+    if not share:
+        raise HTTPException(status_code=404, detail="Invalid or expired broker status link")
+
+    request_id = str(body.get("request_id") or "")
+    note = str(body.get("response_note") or body.get("notes") or "")
+    mark_all = bool(body.get("mark_all_pending"))
+    try:
+        updated = get_collaboration_store().respond_info_request(
+            share.bundle_id,
+            share.org_id,
+            request_id,
+            response_note=note,
+            responded_by=str(body.get("responded_by") or share.broker_name or "broker"),
+            mark_all_pending=mark_all or not request_id,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    get_collaboration_store().add_note(
+        share.bundle_id,
+        share.org_id,
+        note or f"Broker fulfilled info request {updated.get('request_id')}",
+        author=str(body.get("responded_by") or share.broker_name or "broker"),
+        role="broker",
+    )
+    return {"status": "fulfilled", "request": updated}
 
 
 class BrokerShareRequest(BaseModel):

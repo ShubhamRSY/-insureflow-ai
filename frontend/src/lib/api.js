@@ -125,7 +125,15 @@ export const endpoints = {
   authorityMatrix: () => api('/underwriting/authority'),
   renewalAnalysis: (bundleId) => api(`/pipeline/renewal/${bundleId}`, { method: 'POST' }),
   missingDocuments: (bundleId) => api(`/pipeline/documents/${bundleId}/missing`),
-  requestBrokerDocs: (bundleId, documents) => api(`/pipeline/documents/${bundleId}/request`, { method: 'POST', body: { documents } }),
+  requestBrokerDocs: (bundleId, documents, notes = '') =>
+    api(`/pipeline/documents/${bundleId}/request`, { method: 'POST', body: { documents, notes } }),
+  infoRequests: (bundleId) => api(`/pipeline/jobs/${bundleId}/info-requests`),
+  relationshipNotes: (bundleId) => api(`/pipeline/jobs/${bundleId}/relationship-notes`),
+  addRelationshipNote: (bundleId, body) =>
+    api(`/pipeline/jobs/${bundleId}/relationship-notes`, { method: 'POST', body }),
+  packageChecklist: (bundleId, lob = 'auto') =>
+    api(`/pipeline/jobs/${bundleId}/package-checklist?lob=${lob}`),
+  brokerRespond: (token, body) => api(`/broker/status/${token}/respond`, { method: 'POST', body }),
   ecosystemStatus: () => api('/pipeline/ecosystem/status'),
   ecosystemBundle: (bundleId) => api(`/pipeline/ecosystem/${bundleId}`),
   dispatchLossControl: (bundleId, notes = '') => api(`/pipeline/ecosystem/${bundleId}/loss-control/dispatch`, { method: 'POST', body: { notes } }),

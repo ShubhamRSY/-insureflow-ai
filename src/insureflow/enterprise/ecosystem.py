@@ -132,7 +132,24 @@ class EnterpriseEcosystemService:
             )
         return crm
 
-    def request_broker_documents(self, bundle_id: str, org_id: str, documents: list[str]) -> dict[str, Any]:
+    def request_broker_documents(
+        self,
+        bundle_id: str,
+        org_id: str,
+        documents: list[str],
+        notes: str = "",
+    ) -> dict[str, Any]:
+        from insureflow.insurance.collaboration import get_collaboration_store
+
+        persisted = get_collaboration_store().add_info_request(
+            bundle_id,
+            org_id,
+            list(documents),
+            notes=notes,
+            requested_by="underwriter",
+            source="document_request",
+        )
+
         client = build_broker_portal_client()
         if resolve_integration_mode(settings.broker_portal_mode, client) == "live":
             try:
@@ -143,24 +160,34 @@ class EnterpriseEcosystemService:
                 if resp.ok:
                     data = resp.json_dict()
                     return {
-                        "request_id": data.get("request_id", f"br-{uuid4().hex[:8]}"),
+                        "request_id": persisted["request_id"],
+                        "external_request_id": data.get("request_id", ""),
                         "bundle_id": bundle_id,
-                        "status": data.get("status", "sent"),
+                        "status": "pending",
                         "requested_documents": documents,
                         "broker_notified": True,
                         "mode": "live",
+                        "info_request": persisted,
                     }
             except IntegrationHTTPError as exc:
-                return {"bundle_id": bundle_id, "status": "failed", "error": str(exc), "mode": "live"}
+                return {
+                    "request_id": persisted["request_id"],
+                    "bundle_id": bundle_id,
+                    "status": "pending",
+                    "error": str(exc),
+                    "mode": "live",
+                    "info_request": persisted,
+                }
         return {
-            "request_id": f"br-{uuid4().hex[:8]}",
+            "request_id": persisted["request_id"],
             "bundle_id": bundle_id,
             "org_id": org_id,
-            "status": "sent",
+            "status": "pending",
             "requested_documents": documents,
             "broker_notified": True,
-            "message": "Document request queued (simulated)",
+            "message": "Info request logged — pending broker response on share link",
             "mode": "simulated",
+            "info_request": persisted,
         }
 
     def resolve_checkpoint(
