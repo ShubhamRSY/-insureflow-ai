@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from insureflow.ingestion.mortgage.loader import MortgageDocumentParser
-from insureflow.mortgage.privacy import mask_ssn_value, sanitize_document, sanitize_extracted_fields
 from insureflow.models.mortgage import ExtractedMortgageField, MortgageDocument, MortgageDocumentType, ProductLine
+from insureflow.mortgage.privacy import mask_ssn_value, sanitize_document, sanitize_extracted_fields
 from insureflow.redaction.detector import PIICategory, PIIDetector
 from insureflow.redaction.pipeline import RedactedLLMClient
 from insureflow.redaction.redactor import PIIRedactor
