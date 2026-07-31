@@ -93,9 +93,9 @@ export default function InsurancePage({ presets, jobs, onRunDemo, onOpenJob, onS
   return (
     <div className="mx-auto max-w-5xl space-y-8 animate-fade-in">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Commercial Insurance</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Insurance Underwriting</h1>
         <p className="mt-2 text-sm text-slate-400">
-          Structured underwriting pipeline — every submission runs through parse, verify, score, price, and decide.
+          Commercial P&amp;C plus personal homeowners, auto, and life — parse, verify, score, price, decide.
         </p>
       </div>
 
@@ -124,9 +124,14 @@ export default function InsurancePage({ presets, jobs, onRunDemo, onOpenJob, onS
           <div className="flex flex-col gap-2">
             {(presets?.insurance || []).map((d) => (
               <button key={d.id} type="button" onClick={() => onRunDemo('insurance', d.id)}
-                className="flex items-center justify-between rounded-xl border border-white/[0.06] bg-surface-overlay/30 px-4 py-3 text-left transition hover:border-brand/30">
-                <span className="text-sm font-medium text-slate-200">{d.name}</span>
-                <span className="text-xs text-slate-500">Run sample →</span>
+                className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.06] bg-surface-overlay/30 px-4 py-3 text-left transition hover:border-brand/30">
+                <span className="min-w-0">
+                  <span className="block text-sm font-medium text-slate-200">{d.name}</span>
+                  <span className="block text-xs text-slate-500 truncate">{d.description}</span>
+                </span>
+                <span className="shrink-0 rounded-md bg-white/[0.04] px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-400">
+                  {(d.insurance_line || 'commercial').replace(/_/g, ' ')}
+                </span>
               </button>
             ))}
           </div>

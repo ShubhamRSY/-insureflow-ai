@@ -452,6 +452,7 @@ class SubmissionRequest(BaseModel):
     documents: Optional[list[InsuranceDocumentPayload]] = None
     pdf_paths: Optional[list[str]] = None
     bundle_id: Optional[str] = None
+    insurance_line: Optional[str] = None  # commercial_* | personal_homeowners | personal_auto | life
     use_llm: bool = True
     use_legacy_pipeline: bool = False
     use_celery: bool = False
@@ -529,12 +530,35 @@ async def demo_presets() -> dict[str, Any]:
             "name": "Pacific Coast Distributors, Inc.",
             "description": "Commercial P&C — ACORD, loss run, SOV, inspection, broker API",
             "vertical": "insurance",
+            "insurance_line": "commercial_property",
         },
         {
             "id": "northwind",
             "name": "Northwind Logistics LLC",
             "description": "Transportation & logistics — ACORD, loss run, SOV, inspection",
             "vertical": "insurance",
+            "insurance_line": "commercial_property",
+        },
+        {
+            "id": "maya-homeowners",
+            "name": "Maya Chen (Homeowners)",
+            "description": "Personal HO-3 — application, dwelling inspection, CLUE",
+            "vertical": "insurance",
+            "insurance_line": "personal_homeowners",
+        },
+        {
+            "id": "jordan-auto",
+            "name": "Jordan Blake (Personal Auto)",
+            "description": "Personal auto — application, MVR, vehicle declarations",
+            "vertical": "insurance",
+            "insurance_line": "personal_auto",
+        },
+        {
+            "id": "priya-life",
+            "name": "Priya Nair (Term Life)",
+            "description": "Term life — application, paramedical exam, beneficiary",
+            "vertical": "insurance",
+            "insurance_line": "life",
         },
     ]
     mortgage = [
@@ -619,6 +643,45 @@ def dashboard_overview(
     }
 
 
+def _load_docs_from_dir(subdir: str) -> list[InsuranceDocumentPayload]:
+    root = EXAMPLES_DIR / subdir
+    docs: list[InsuranceDocumentPayload] = []
+    for path in sorted(root.glob("*")):
+        if path.is_file() and path.suffix.lower() in {".md", ".txt", ".json", ".xml"}:
+            docs.append(
+                InsuranceDocumentPayload(
+                    filename=path.name,
+                    content=path.read_text(encoding="utf-8"),
+                    encoding="utf-8",
+                )
+            )
+    return docs
+
+
+def _load_maya_homeowners_submission() -> SubmissionRequest:
+    return SubmissionRequest(
+        documents=_load_docs_from_dir("personal_homeowners"),
+        insurance_line="personal_homeowners",
+        use_llm=True,
+    )
+
+
+def _load_jordan_auto_submission() -> SubmissionRequest:
+    return SubmissionRequest(
+        documents=_load_docs_from_dir("personal_auto"),
+        insurance_line="personal_auto",
+        use_llm=True,
+    )
+
+
+def _load_priya_life_submission() -> SubmissionRequest:
+    return SubmissionRequest(
+        documents=_load_docs_from_dir("life"),
+        insurance_line="life",
+        use_llm=True,
+    )
+
+
 def _load_pacific_coast_submission() -> SubmissionRequest:
     acord = (EXAMPLES_DIR / "pacific_coast_acord.xml").read_text(encoding="utf-8")
     loss_run = (EXAMPLES_DIR / "pacific_coast_loss_run.md").read_text(encoding="utf-8")
@@ -661,6 +724,9 @@ async def run_insurance_demo(
     preset_map: dict[str, tuple[str, Callable[[], SubmissionRequest]]] = {
         "pacific-coast": ("pacific_coast_acord.xml", _load_pacific_coast_submission),
         "northwind": ("northwind_acord.xml", _load_northwind_submission),
+        "maya-homeowners": ("personal_homeowners/homeowners_application.md", _load_maya_homeowners_submission),
+        "jordan-auto": ("personal_auto/auto_application.md", _load_jordan_auto_submission),
+        "priya-life": ("life/life_application.md", _load_priya_life_submission),
     }
     if preset_id not in preset_map:
         raise HTTPException(status_code=404, detail=f"Unknown insurance preset: {preset_id}")
@@ -1253,6 +1319,7 @@ def _run_pipeline_task(job_id: str, request: SubmissionRequest, org_id: str) -> 
                 documents=docs,
                 pdf_paths=request.pdf_paths,
                 bundle_id=request.bundle_id or job_id,
+                insurance_line=request.insurance_line,
                 progress_callback=on_progress,
             )
         job_store.set(INSURANCE_NS, job_id, {"status": "completed", "results": result}, org_id=org_id)
@@ -2567,8 +2634,8 @@ def insurance_package_checklist(
     type_counts = results.get("document_types") or {}
     if isinstance(type_counts, dict):
         types.extend(list(type_counts.keys()))
-    text_blob = " ".join(types) + " " + str(summary.get("product_line") or results.get("product_line") or "")
-    resolved = lob if lob in ("property", "do") else detect_lob(text_blob)
+    text_blob = " ".join(types) + " " + str(summary.get("product_line") or results.get("product_line") or results.get("insurance_line") or "")
+    resolved = lob if lob in ("property", "do", "homeowners", "auto", "life") else detect_lob(text_blob)
     checklist = package_checklist(types, lob=resolved)
     return {"bundle_id": bundle_id, **checklist}
 

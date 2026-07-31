@@ -91,6 +91,7 @@ class InsurancePipeline:
         documents: list[dict[str, str]] | None = None,
         pdf_paths: list[str] | None = None,
         bundle_id: str | None = None,
+        insurance_line: str | None = None,
         skip_appetite_filter: bool = False,
         skip_oracles: bool = False,
         skip_portfolio: bool = False,
@@ -122,6 +123,9 @@ class InsurancePipeline:
 
         # ── 2. FAST-FAIL APPETITE FILTER (before expensive ingestion) ──
         progress.start("appetite", "Appetite", "Checking carrier appetite")
+        from insureflow.underwriting.personal_lines import detect_insurance_line, parse_insurance_line
+
+        resolved_line = parse_insurance_line(insurance_line)
         appetite_passed = True
         appetite_result = None
         if not skip_appetite_filter:
@@ -131,7 +135,21 @@ class InsurancePipeline:
                 loss_run=loss_run,
                 bundle_id=bid,
             )
-            appetite_result = self.appetite_filter.check_appetite(pre_bundle)
+            if resolved_line is None:
+                pre_blob = " ".join(
+                    [
+                        acord_xml or "",
+                        json_payload or "",
+                        loss_run or "",
+                        " ".join(inspection_reports or []),
+                        " ".join(d.get("filename", "") + " " + d.get("content", "")[:2000] for d in (documents or [])),
+                    ]
+                )
+                resolved_line = detect_insurance_line(pre_blob, insurance_line or "")
+            appetite_result = self.appetite_filter.check_appetite(
+                pre_bundle,
+                insurance_line=resolved_line.value if resolved_line else None,
+            )
             if not appetite_result.passed:
                 appetite_passed = False
                 audit.log(
@@ -612,10 +630,19 @@ class InsurancePipeline:
 
         # ── 9. Rating / policy admin quote ──
         progress.start("price", "Priced", "Calculating indicated premium")
-        quote = self.rating.quote(bundle, memo)
+        from insureflow.rating.models import InsuranceLine
+        from insureflow.underwriting.personal_lines import detect_insurance_line, parse_insurance_line
+
+        line_for_quote = parse_insurance_line(insurance_line) or resolved_line
+        if line_for_quote is None:
+            doc_blob = " ".join((getattr(d, "filename", "") or "") + " " + (getattr(d, "raw_text", "") or "")[:3000] for d in (bundle.unstructured or []))
+            line_for_quote = detect_insurance_line(doc_blob, insurance_line or "")
+        if not isinstance(line_for_quote, InsuranceLine):
+            line_for_quote = InsuranceLine.COMMERCIAL_PROPERTY
+        quote = self.rating.quote(bundle, memo, line=line_for_quote)
         progress.complete(
             "price",
-            detail=f"Indicated ${quote.adjusted_premium:,.0f}",
+            detail=f"{line_for_quote.value} · Indicated ${quote.adjusted_premium:,.0f}",
         )
 
         # ── 9b. Generate quote document HTML ──
@@ -717,6 +744,8 @@ class InsurancePipeline:
             "triage_score": triage_result.score,
             "ai_decision": memo.decision.value,
             "workflow_state": wf.state.value,
+            "insurance_line": line_for_quote.value,
+            "product_line": line_for_quote.value,
             "human_review_required": memo.human_review_required or wf.state == WorkflowState.PENDING_REVIEW,
             "appetite_filter_passed": appetite_passed,
             "appetite_needs_uw_referral": appetite_result.needs_uw_referral if appetite_result else False,

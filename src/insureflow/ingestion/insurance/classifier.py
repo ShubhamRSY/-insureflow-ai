@@ -22,6 +22,19 @@ class InsuranceDocumentType(str, Enum):
     DO_OWNERSHIP_CHART = "do_ownership_chart"
     DO_CLAIMS_HISTORY = "do_claims_history"
     DO_PRIOR_ACTS_WARRANTY = "do_prior_acts_warranty"
+    # Personal homeowners
+    HOMEOWNERS_APPLICATION = "homeowners_application"
+    DWELLING_INSPECTION = "dwelling_inspection"
+    HOME_CLAIMS_HISTORY = "home_claims_history"
+    # Personal auto
+    AUTO_APPLICATION = "auto_application"
+    MVR_REPORT = "mvr_report"
+    VEHICLE_DECLARATIONS = "vehicle_declarations"
+    # Life
+    LIFE_APPLICATION = "life_application"
+    MEDICAL_EXAM = "medical_exam"
+    APS_RECORDS = "aps_records"
+    BENEFICIARY_FORM = "beneficiary_form"
 
 
 class InsuranceDocumentClassifier:
@@ -34,6 +47,28 @@ class InsuranceDocumentClassifier:
 
         if filename.endswith(".xml") or "<acord" in combined or "acord xmlns" in combined:
             return InsuranceDocumentType.ACORD_XML
+
+        # Personal lines (before generic financials / supplemental)
+        if any(k in name or k in combined for k in ("life application", "life_application", "term life application", "whole life application")):
+            return InsuranceDocumentType.LIFE_APPLICATION
+        if any(k in name or k in combined for k in ("paramedical", "medical exam", "medical_exam", "examone")):
+            return InsuranceDocumentType.MEDICAL_EXAM
+        if any(k in name or k in combined for k in ("attending physician", "aps_", "aps records", "medical records summary")):
+            return InsuranceDocumentType.APS_RECORDS
+        if any(k in name or k in combined for k in ("beneficiary designation", "beneficiary form", "beneficiary_form")):
+            return InsuranceDocumentType.BENEFICIARY_FORM
+        if any(k in name or k in combined for k in ("mvr", "motor vehicle report", "driving record report")):
+            return InsuranceDocumentType.MVR_REPORT
+        if any(k in name or k in combined for k in ("auto application", "personal auto application", "auto_application")):
+            return InsuranceDocumentType.AUTO_APPLICATION
+        if any(k in name or k in combined for k in ("vehicle declarations", "auto declarations", "vin declaration")):
+            return InsuranceDocumentType.VEHICLE_DECLARATIONS
+        if any(k in name or k in combined for k in ("homeowners application", "ho-3 application", "homeowners_application", "dwelling application")):
+            return InsuranceDocumentType.HOMEOWNERS_APPLICATION
+        if any(k in name or k in combined for k in ("dwelling inspection", "home inspection", "residential inspection")):
+            return InsuranceDocumentType.DWELLING_INSPECTION
+        if any(k in name or k in combined for k in ("home claims history", "homeowners claims", "clue report")):
+            return InsuranceDocumentType.HOME_CLAIMS_HISTORY
 
         # D&O package heuristics (before generic financials / supplemental)
         if any(k in name or k in combined for k in ("prior_acts", "prior acts warranty", "continuity date")):

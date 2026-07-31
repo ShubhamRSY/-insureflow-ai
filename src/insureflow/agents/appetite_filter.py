@@ -53,7 +53,29 @@ class AppetiteFilterAgent(BaseAgent):
             for f in result.findings:
                 self._add_finding(f)
 
-    def check_appetite(self, bundle: SubmissionBundle) -> AppetiteFilterResult:
+    def check_appetite(self, bundle: SubmissionBundle, insurance_line: str | None = None) -> AppetiteFilterResult:
+        from insureflow.rating.models import PERSONAL_LINES
+        from insureflow.underwriting.personal_lines import parse_insurance_line, personal_appetite_check
+
+        line = parse_insurance_line(insurance_line) if insurance_line else None
+        if line is None:
+            from insureflow.underwriting.personal_lines import detect_insurance_line
+
+            blob_parts = []
+            for doc in bundle.unstructured or []:
+                blob_parts.append(getattr(doc, "raw_text", "") or "")
+                blob_parts.append(getattr(doc, "filename", "") or "")
+            line = detect_insurance_line("\n".join(blob_parts))
+
+        if line in PERSONAL_LINES:
+            passed, findings, reason, needs_referral = personal_appetite_check(bundle, line)
+            return AppetiteFilterResult(
+                passed=passed,
+                findings=findings,
+                reason=reason,
+                needs_uw_referral=needs_referral,
+            )
+
         findings: list[Finding] = []
 
         findings.extend(self._check_naics(bundle))

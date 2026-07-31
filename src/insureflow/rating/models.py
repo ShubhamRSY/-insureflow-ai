@@ -15,6 +15,19 @@ class InsuranceLine(str, Enum):
     WORKERS_COMP = "workers_comp"
     BOP = "business_owners_policy"
     UMBRELLA = "umbrella"
+    # Personal lines
+    PERSONAL_HOMEOWNERS = "personal_homeowners"
+    PERSONAL_AUTO = "personal_auto"
+    LIFE = "life"
+
+
+PERSONAL_LINES = frozenset(
+    {
+        InsuranceLine.PERSONAL_HOMEOWNERS,
+        InsuranceLine.PERSONAL_AUTO,
+        InsuranceLine.LIFE,
+    }
+)
 
 
 @dataclass(frozen=True)

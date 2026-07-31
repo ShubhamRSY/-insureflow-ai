@@ -6,9 +6,10 @@ from typing import Any
 from insureflow.models.agents import UnderwritingMemo
 from insureflow.models.submissions import SubmissionBundle
 from insureflow.rating.calibration import calibrated_lcm, calibrated_loss_costs, calibrated_territory, load_rate_curves
-from insureflow.rating.models import InsuranceLine, QuoteRequest, QuoteResult, RateComponent, RatingAdapter
+from insureflow.rating.models import PERSONAL_LINES, InsuranceLine, QuoteRequest, QuoteResult, RateComponent, RatingAdapter
 from insureflow.underwriting.cope import COPERatingEngine
 from insureflow.underwriting.market import get_market_cycle
+from insureflow.underwriting.personal_lines import personal_schedule_and_exposure
 
 # ISO-style base loss costs (per $100 of TIV) — representative values
 # Overridden by data/rate_curves.json or RATE_CURVES_URL when present
@@ -18,6 +19,10 @@ ISO_LOSS_COSTS: dict[InsuranceLine, float] = {
     InsuranceLine.WORKERS_COMP: 0.05,
     InsuranceLine.BOP: 0.32,
     InsuranceLine.UMBRELLA: 0.03,
+    # Personal lines — representative synthetic rates (per $100 exposure)
+    InsuranceLine.PERSONAL_HOMEOWNERS: 0.35,
+    InsuranceLine.PERSONAL_AUTO: 1.20,
+    InsuranceLine.LIFE: 0.08,
 }
 
 # Loss Cost Multipliers (LCM) — carrier's expense + profit loading
@@ -28,6 +33,9 @@ LCM: dict[InsuranceLine, float] = {
     InsuranceLine.WORKERS_COMP: 2.40,
     InsuranceLine.BOP: 2.00,
     InsuranceLine.UMBRELLA: 2.50,
+    InsuranceLine.PERSONAL_HOMEOWNERS: 1.85,
+    InsuranceLine.PERSONAL_AUTO: 1.95,
+    InsuranceLine.LIFE: 1.60,
 }
 
 # Territory relativities by state (1.0 = national average)
@@ -90,7 +98,29 @@ MINIMUM_PREMIUMS: dict[InsuranceLine, float] = {
     InsuranceLine.WORKERS_COMP: 1_000.0,
     InsuranceLine.BOP: 1_500.0,
     InsuranceLine.UMBRELLA: 1_000.0,
+    InsuranceLine.PERSONAL_HOMEOWNERS: 450.0,
+    InsuranceLine.PERSONAL_AUTO: 650.0,
+    InsuranceLine.LIFE: 250.0,
 }
+
+# Territory defaults for personal lines (merged into each state below)
+_PERSONAL_TERRITORY = {
+    InsuranceLine.PERSONAL_HOMEOWNERS: 1.10,
+    InsuranceLine.PERSONAL_AUTO: 1.05,
+    InsuranceLine.LIFE: 1.00,
+}
+
+for _state, _rels in TERRITORY_RELATIVITIES.items():
+    for _line, _rel in _PERSONAL_TERRITORY.items():
+        _rels.setdefault(_line, _rel)
+# FL/CA/LA homeowners CAT load
+for _state, _bump in (("FL", 1.55), ("LA", 1.45), ("CA", 1.35)):
+    if _state in TERRITORY_RELATIVITIES:
+        TERRITORY_RELATIVITIES[_state][InsuranceLine.PERSONAL_HOMEOWNERS] = _bump
+for _state, _bump in (("FL", 1.25), ("NY", 1.20), ("CA", 1.30)):
+    if _state in TERRITORY_RELATIVITIES:
+        TERRITORY_RELATIVITIES[_state][InsuranceLine.PERSONAL_AUTO] = _bump
+
 
 # Deductible credit factors
 DEDUCTIBLE_CREDITS: dict[tuple[float, float], float] = {
@@ -159,15 +189,21 @@ class InsuranceRatingEngine:
         memo: UnderwritingMemo,
         line: InsuranceLine = InsuranceLine.COMMERCIAL_PROPERTY,
     ) -> QuoteResult:
-        tiv = self._estimate_tiv(bundle)
+        personal = line in PERSONAL_LINES
+        personal_meta: dict[str, Any] = {}
+        if personal:
+            personal_mod, personal_exp, _findings, personal_meta = personal_schedule_and_exposure(bundle, line)
+            tiv = personal_exp if personal_exp > 0 else self._estimate_tiv(bundle)
+            cope_mod = personal_mod
+            cope_result = None
+        else:
+            tiv = self._estimate_tiv(bundle)
+            cope_result = self._cope.analyze(bundle)
+            cope_mod = cope_result.score.schedule_mod_pct
+
         state = self._primary_state(bundle)
         tiv_unknown = tiv <= 0
 
-        # COPE analysis
-        cope_result = self._cope.analyze(bundle)
-        cope_mod = cope_result.score.schedule_mod_pct
-
-        # ISO-style base rate (calibrated from data/rate_curves.json or RATE_CURVES_URL when present)
         curves = load_rate_curves()
         loss_costs = calibrated_loss_costs(ISO_LOSS_COSTS)
         lcms = calibrated_lcm(LCM)
@@ -180,26 +216,21 @@ class InsuranceRatingEngine:
 
         base_premium = (tiv / 100.0) * iso_cost * lcm * territory_rel if not tiv_unknown else 0.0
 
-        # Market cycle adjustment
         market_cycle_mod = self._get_market_mod(line)
         market_adjusted = base_premium * (1 + market_cycle_mod / 100.0)
-
-        # COPE schedule rating
         cope_adjusted = market_adjusted * (1 + cope_mod / 100.0)
 
-        # UW memo schedule modification (from agent findings)
         schedule_mod = memo.recommendation.suggested_premium_modification if memo.recommendation else 0.0
         schedule_mod = schedule_mod or 0.0
 
-        # Deductible credit
-        deductible = self._estimate_deductible(bundle)
+        deductible = 0.0 if line == InsuranceLine.LIFE else self._estimate_deductible(bundle)
         deductible_credit = 0.0
-        for (lo, hi), cr in DEDUCTIBLE_CREDITS.items():
-            if lo <= deductible < hi:
-                deductible_credit = cr
-                break
+        if line != InsuranceLine.LIFE:
+            for (lo, hi), cr in DEDUCTIBLE_CREDITS.items():
+                if lo <= deductible < hi:
+                    deductible_credit = cr
+                    break
 
-        # Loss experience mod (multi-tier)
         loss_ratio = self._loss_ratio(bundle)
         exp_mod = 0.0
         for lo_, hi_, mod in LOSS_EXPERIENCE_MODIFIERS:
@@ -207,10 +238,8 @@ class InsuranceRatingEngine:
                 exp_mod = mod
                 break
 
-        # Years-in-business modifier (generic tiers)
-        years_mod = self._years_in_business_mod(bundle)
+        years_mod = 0.0 if personal else self._years_in_business_mod(bundle)
 
-        # Final premium — never invent premium when TIV is unknown
         if tiv_unknown:
             adjusted_premium = 0.0
         else:
@@ -220,63 +249,22 @@ class InsuranceRatingEngine:
             adjusted_premium = max(adjusted_premium, min_prem)
             adjusted_premium = round(adjusted_premium, 2)
 
-        # Build rate components
+        schedule_label = "personal_schedule_rating" if personal else "cope_schedule_rating"
         components: list[RateComponent] = [
-            RateComponent(
-                name="iso_base_loss_cost",
-                amount=round(iso_cost, 4),
-                basis="per_100_tiv",
-                modifier_pct=0.0,
-            ),
+            RateComponent(name="iso_base_loss_cost", amount=round(iso_cost, 4), basis="per_100_tiv", modifier_pct=0.0),
             RateComponent(name="loss_cost_multiplier", amount=lcm, basis="expense_profit", modifier_pct=0.0),
-            RateComponent(
-                name=f"territory_relativity_{state}",
-                amount=territory_rel,
-                basis="state",
-                modifier_pct=0.0,
-            ),
-            RateComponent(
-                name="cope_schedule_rating",
-                amount=round(cope_mod, 1),
-                basis="schedule",
-                modifier_pct=cope_mod,
-            ),
-            RateComponent(
-                name="market_cycle_adjustment",
-                amount=round(market_cycle_mod, 1),
-                basis="market",
-                modifier_pct=market_cycle_mod,
-            ),
+            RateComponent(name=f"territory_relativity_{state}", amount=territory_rel, basis="state", modifier_pct=0.0),
+            RateComponent(name=schedule_label, amount=round(cope_mod, 1), basis="schedule", modifier_pct=cope_mod),
+            RateComponent(name="market_cycle_adjustment", amount=round(market_cycle_mod, 1), basis="market", modifier_pct=market_cycle_mod),
         ]
         if deductible_credit != 0:
-            components.append(
-                RateComponent(
-                    name="deductible_credit",
-                    amount=deductible,
-                    basis="deductible",
-                    modifier_pct=deductible_credit,
-                )
-            )
+            components.append(RateComponent(name="deductible_credit", amount=deductible, basis="deductible", modifier_pct=deductible_credit))
         if exp_mod != 0:
-            components.append(
-                RateComponent(
-                    name="loss_experience",
-                    amount=round(loss_ratio, 4),
-                    basis="loss_ratio",
-                    modifier_pct=exp_mod,
-                )
-            )
+            components.append(RateComponent(name="loss_experience", amount=round(loss_ratio, 4), basis="loss_ratio", modifier_pct=exp_mod))
         if years_mod != 0:
             components.append(RateComponent(name="years_in_business", amount=0, basis="tenure", modifier_pct=years_mod))
         if schedule_mod != 0:
-            components.append(
-                RateComponent(
-                    name="uw_schedule_modification",
-                    amount=0,
-                    basis="uw_discretion",
-                    modifier_pct=schedule_mod,
-                )
-            )
+            components.append(RateComponent(name="uw_schedule_modification", amount=0, basis="uw_discretion", modifier_pct=schedule_mod))
 
         result = self.adapter.submit_quote(
             QuoteRequest(
@@ -300,10 +288,9 @@ class InsuranceRatingEngine:
             if "TIV could not be determined" not in result.ineligibility_reasons:
                 result.ineligibility_reasons.append("TIV could not be determined")
 
-        # Attach COPE and market data
         result.metadata = {
-            "cope_grade": cope_result.score.risk_grade.value,
-            "cope_score": cope_result.score.total_score,
+            "cope_grade": cope_result.score.risk_grade.value if cope_result is not None else "personal",
+            "cope_score": cope_result.score.total_score if cope_result is not None else None,
             "cope_mod_pct": cope_mod,
             "market_phase": self._market.current.phase.value,
             "market_mod_pct": market_cycle_mod,
@@ -314,9 +301,14 @@ class InsuranceRatingEngine:
             "years_in_business_mod_pct": years_mod,
             "loss_experience_mod_pct": exp_mod,
             "tiv_unknown": tiv_unknown,
+            "tiv": tiv,
+            "insurance_line": line.value,
+            "personal_lines": personal,
             "rate_curve_source": curves.get("source", "builtin"),
             "rate_curve_synthetic": bool(curves.get("synthetic", True)),
         }
+        if personal_meta:
+            result.metadata["personal_factors"] = {k: v for k, v in personal_meta.items() if k != "findings"}
 
         return result
 
@@ -400,4 +392,10 @@ class InsuranceRatingEngine:
             return (cycle.workers_comp_rate_mod - 1.0) * 100.0
         elif line == InsuranceLine.UMBRELLA:
             return (cycle.liability_rate_mod - 1.0) * 100.0
+        elif line == InsuranceLine.PERSONAL_HOMEOWNERS:
+            return (cycle.property_rate_mod - 1.0) * 100.0
+        elif line == InsuranceLine.PERSONAL_AUTO:
+            return (cycle.auto_rate_mod - 1.0) * 100.0
+        elif line == InsuranceLine.LIFE:
+            return 0.0
         return (cycle.auto_rate_mod - 1.0) * 100.0
