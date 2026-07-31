@@ -1,15 +1,13 @@
 import { useState } from 'react';
-import { DemoCard, Badge, EmptyState } from '../components/ui';
+import { Badge, EmptyState } from '../components/ui';
 import { extractMortgage, endpoints, fmtCurrency } from '../lib/api';
-import { readFileForUpload } from '../lib/insuranceDocs';
+import MortgageSourceHub from '../components/MortgageSourceHub';
 import StageStrip, { stagesFromProgress } from '../components/StageStrip';
-import { Home, Package, FileText, FileUp, FolderOpen } from 'lucide-react';
+import { Home, Package, FileText } from 'lucide-react';
 
 export default function MortgagePage({ presets, jobs, onRunDemo, onOpenJob, onSubmit }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [mode, setMode] = useState('upload'); // upload | directory
-  const [files, setFiles] = useState([]);
   const [mortgageProducts, setMortgageProducts] = useState(null);
   const [mortgageAudit, setMortgageAudit] = useState(null);
 
@@ -21,31 +19,11 @@ export default function MortgagePage({ presets, jobs, onRunDemo, onOpenJob, onSu
     try { setMortgageAudit(await endpoints.mortgageAudit(bundleId)); } catch (e) { alert('No audit data: ' + e.message); }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (body) => {
     setLoading(true);
     setError('');
-    const fd = new FormData(e.target);
     try {
-      const body = {
-        product_line: fd.get('product_line'),
-        use_llm: fd.get('use_llm') === 'on',
-        per_borrower: false,
-      };
-
-      if (mode === 'directory') {
-        const directory = String(fd.get('directory') || '').trim();
-        if (!directory) throw new Error('Enter a server document directory');
-        body.directory = directory;
-        body.per_borrower = fd.get('per_borrower') === 'on';
-      } else {
-        if (!files.length) throw new Error('Choose at least one loan package file');
-        body.documents = await Promise.all([...files].map(readFileForUpload));
-      }
-
       await onSubmit(body);
-      setFiles([]);
-      if (e.target.reset) e.target.reset();
     } catch (err) {
       setError(err.message || String(err));
     } finally {
@@ -54,22 +32,17 @@ export default function MortgagePage({ presets, jobs, onRunDemo, onOpenJob, onSu
   };
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8 animate-fade-in">
+    <div className="mx-auto max-w-5xl space-y-8 animate-fade-in">
       <div className="flex items-start justify-between gap-4">
-        <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-mortgage/15">
-            <Home className="h-6 w-6 text-mortgage" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Mortgage Underwriting</h1>
-            <p className="mt-1 max-w-xl text-slate-400">
-              Upload a loan package or run a demo — income, credit, property docs → approve/deny + rate quote
-            </p>
-          </div>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Mortgage Underwriting</h1>
+          <p className="mt-2 text-sm text-slate-400 max-w-xl">
+            Pull a loan package from an input source, then underwrite — income, credit, property → decision + rate.
+          </p>
         </div>
-        <div className="flex gap-2">
-          <button type="button" onClick={loadMortgageProducts} className="btn-secondary btn-sm text-xs"><Package className="h-3 w-3" /> Products</button>
-        </div>
+        <button type="button" onClick={loadMortgageProducts} className="btn-secondary btn-sm text-xs">
+          <Package className="h-3 w-3" /> Products
+        </button>
       </div>
 
       {error && <div className="rounded-xl bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</div>}
@@ -77,7 +50,9 @@ export default function MortgagePage({ presets, jobs, onRunDemo, onOpenJob, onSu
       {mortgageProducts && (
         <div className="glass-card p-5">
           <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400"><Package className="mr-2 inline h-4 w-4" /> Mortgage Products</h3>
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
+              <Package className="mr-2 inline h-4 w-4" /> Mortgage Products
+            </h3>
             <button onClick={() => setMortgageProducts(null)} className="text-xs text-slate-500 hover:text-slate-300">Close</button>
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -96,105 +71,28 @@ export default function MortgagePage({ presets, jobs, onRunDemo, onOpenJob, onSu
       {mortgageAudit && (
         <div className="glass-card p-5">
           <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400"><FileText className="mr-2 inline h-4 w-4" /> Mortgage Audit Trail</h3>
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
+              <FileText className="mr-2 inline h-4 w-4" /> Mortgage Audit Trail
+            </h3>
             <button onClick={() => setMortgageAudit(null)} className="text-xs text-slate-500 hover:text-slate-300">Close</button>
           </div>
           <pre className="max-h-80 overflow-y-auto rounded-lg bg-black/20 p-3 text-xs text-slate-400">{JSON.stringify(mortgageAudit, null, 2)}</pre>
         </div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="glass-card p-6">
-          <h3 className="mb-4 font-semibold">Demo Loan Packages</h3>
-          <div className="space-y-3">
-            {(presets?.mortgage || []).map((d) => (
-              <DemoCard key={d.id} name={d.name} description={d.description} tag={d.product_line} tagColor="mortgage" onClick={() => onRunDemo('mortgage', d.id)} />
-            ))}
-          </div>
-        </div>
-
-        <div className="glass-card p-6">
-          <h3 className="mb-4 font-semibold">Custom Submission</h3>
-          <div className="mb-4 flex flex-wrap gap-2">
-            {[
-              ['upload', 'Upload files', FileUp],
-              ['directory', 'Server directory', FolderOpen],
-            ].map(([id, label, Icon]) => (
-              <button
-                key={id}
-                type="button"
-                className={`btn-sm text-xs inline-flex items-center gap-1.5 ${mode === id ? 'btn-primary' : 'btn-secondary'}`}
-                onClick={() => { setMode(id); setError(''); }}
-              >
-                <Icon className="h-3.5 w-3.5" /> {label}
-              </button>
-            ))}
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {mode === 'upload' ? (
-              <div>
-                <label className="mb-1.5 flex items-center gap-2 text-xs font-medium text-slate-400">
-                  <FileUp className="h-3.5 w-3.5" /> Loan package files *
-                </label>
-                <input
-                  type="file"
-                  multiple
-                  accept=".pdf,.txt,.md,.xml,.json,.csv,.png,.jpg,.jpeg,.tiff,.tif,.bmp"
-                  className="input-field w-full text-sm"
-                  onChange={(e) => setFiles(e.target.files || [])}
-                />
-                <p className="mt-1.5 text-xs text-slate-500">
-                  {files.length
-                    ? `${files.length} file(s) selected — W-2s, 1003, credit, appraisal, bank statements, etc.`
-                    : 'Drop the package from the browser. No server path needed.'}
-                </p>
-              </div>
-            ) : (
-              <div>
-                <label className="mb-1.5 flex items-center gap-2 text-xs font-medium text-slate-400">
-                  <FolderOpen className="h-3.5 w-3.5" /> Document directory on API host *
-                </label>
-                <input
-                  name="directory"
-                  required={mode === 'directory'}
-                  className="input-field font-mono text-xs"
-                  placeholder="simulated_documents/home_mortgage/johnson_marcus_imani"
-                />
-                <p className="mt-1.5 text-xs text-slate-500">
-                  Ops / sandbox only — path must exist on the server running Rytera.
-                </p>
-              </div>
-            )}
-
-            <div>
-              <label className="mb-1.5 block text-xs font-medium text-slate-400">Product Line</label>
-              <select name="product_line" className="input-field" defaultValue="residential_mortgage">
-                <option value="residential_mortgage">Residential Mortgage</option>
-                <option value="commercial_mortgage">Commercial Mortgage</option>
-              </select>
-            </div>
-            <label className="flex items-center gap-2 text-sm text-slate-400">
-              <input type="checkbox" name="use_llm" defaultChecked className="rounded" /> Use LLM
-            </label>
-            {mode === 'directory' && (
-              <label className="flex items-center gap-2 text-sm text-slate-400">
-                <input type="checkbox" name="per_borrower" className="rounded" /> Per borrower (split folder packages)
-              </label>
-            )}
-            <button type="submit" disabled={loading} className="btn-primary">
-              {loading ? 'Running…' : mode === 'upload' ? 'Upload & Run Pipeline' : 'Run Pipeline'}
-            </button>
-          </form>
-        </div>
-      </div>
+      <MortgageSourceHub
+        presets={presets}
+        onSubmit={handleSubmit}
+        onRunDemo={onRunDemo}
+        loading={loading}
+      />
 
       <div className="glass-card overflow-hidden">
         <div className="border-b border-white/[0.06] px-6 py-4">
           <h3 className="font-semibold">Job Queue</h3>
         </div>
         {!jobs?.length ? (
-          <EmptyState icon={Home} title="No mortgage jobs" description="Upload a package or run Johnson Family demo to get started" />
+          <EmptyState icon={Home} title="No mortgage jobs" description="Upload a package or open Sample packages to get started" />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
