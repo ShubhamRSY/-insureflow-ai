@@ -200,20 +200,23 @@ export default function InsuranceSourceHub({ onSubmit, loading }) {
       {/* Body */}
       <div className="p-3 space-y-3">
         {/* Source grid */}
-        <div className="grid grid-cols-2 gap-2">
+        <div className="flex flex-col gap-1.5">
           {(activeSection?.sources || []).map((src) => {
             const sel = activeSource?.id === src.id;
             return (
               <button key={src.id} type="button" onClick={() => handleConnect(src)}
-                className={`flex items-center gap-2.5 rounded-lg border p-2.5 text-left transition ${
+                className={`flex items-center gap-2.5 rounded-lg border px-2.5 py-2 text-left transition ${
                   sel
                     ? 'border-brand/40 bg-brand/5 ring-1 ring-brand/20'
                     : 'border-white/[0.06] bg-surface/30 hover:border-white/10 hover:bg-white/[0.02]'
                 }`}>
                 <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-white/[0.06] p-0.5">
-                  <ConnectorLogo sourceId={src.id} name={src.name} size={18} />
+                  <ConnectorLogo sourceId={src.id} name={src.name} size={16} />
                 </div>
-                <span className="truncate text-xs font-medium text-slate-200">{src.name}</span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-xs font-medium text-slate-200">{src.name}</span>
+                  <span className="block truncate text-[10px] text-slate-500">{src.description}</span>
+                </span>
               </button>
             );
           })}
