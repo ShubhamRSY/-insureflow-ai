@@ -116,13 +116,21 @@ export function VerticalExplainer() {
           </div>
         ))}
       </div>
-      <div className="grid md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-white/[0.06]">
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-white/[0.06]">
         <div className="p-6">
           <h4 className="font-semibold text-insurance">Commercial Insurance</h4>
           <p className="mt-1 text-xs text-slate-500">P&C carriers & MGAs</p>
           <ul className="mt-3 space-y-1.5 text-sm text-slate-400">
             <li>ACORD, loss runs, SOV, inspections</li>
             <li>Premium build-up, oracles, bind-ready memo</li>
+          </ul>
+        </div>
+        <div className="p-6">
+          <h4 className="font-semibold text-amber-400">Personal Lines</h4>
+          <p className="mt-1 text-xs text-slate-500">Homeowners · Auto · Life</p>
+          <ul className="mt-3 space-y-1.5 text-sm text-slate-400">
+            <li>HO-3, MVR, paramedical exams</li>
+            <li>Filing-grade rating & medical underwriting</li>
           </ul>
         </div>
         <div className="p-6">

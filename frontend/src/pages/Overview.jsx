@@ -25,7 +25,7 @@ export default function Overview({ overview, health, presets, onRunDemo, onOpenJ
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Overview</h1>
         <p className="mt-1 text-slate-400">
-          Rytera AI underwriting — insurance, mortgage, and lending with every pipeline layer visible from intake to decision
+          Rytera AI underwriting — commercial &amp; personal lines insurance, mortgage, and lending with every pipeline layer visible from intake to decision
         </p>
       </div>
 

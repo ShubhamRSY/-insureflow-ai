@@ -31,7 +31,7 @@
     "name": "Rytera",
     "url": "https://ryterainc.com/",
     "logo": "https://ryterainc.com/icon-512.png",
-    "description": "AI underwriting platform for commercial insurance, mortgage, and lending."
+    "description": "AI underwriting platform for commercial & personal lines insurance, mortgage, and lending."
   }
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -524,7 +524,7 @@
           </div>
         </div>
         <div class="stats reveal" aria-label="Platform highlights">
-          <div class="stat"><span class="num" data-target="3">0</span><span>Verticals</span></div>
+          <div class="stat"><span class="num" data-target="4">0</span><span>Verticals</span></div>
           <div class="stat"><span class="num" data-target="30">0</span><span>Day shadow pilots</span></div>
           <div class="stat"><span class="num" data-target="24">0</span><span>Doc sources</span></div>
           <div class="stat"><span class="num" data-target="13">0</span><span>Live integrations</span></div>
@@ -629,11 +629,12 @@
       <section id="features">
         <div class="reveal">
           <p class="section-label">Features</p>
-          <h2>One platform, three underwriting verticals</h2>
-          <p class="section-desc">Insurance carriers, mortgage lenders, and commercial lenders share one dashboard and audit infrastructure.</p>
+          <h2>One platform, four underwriting verticals</h2>
+          <p class="section-desc">Commercial &amp; personal lines carriers, mortgage lenders, and commercial lenders share one dashboard, agent spine, and audit infrastructure.</p>
         </div>
         <div class="tabs reveal" role="tablist" aria-label="Verticals">
           <button class="tab active" data-tab="insurance" role="tab">Commercial Insurance</button>
+          <button class="tab" data-tab="personal" role="tab">Personal Lines</button>
           <button class="tab" data-tab="mortgage" role="tab">Mortgage</button>
           <button class="tab" data-tab="lending" role="tab">Lending</button>
         </div>
@@ -643,6 +644,14 @@
             <div class="feature-card"><div class="icon">🤖</div><h3>Specialist agents</h3><p>Risk, loss run, compliance, fraud, and UW decision agents run in parallel.<ul><li>Deterministic fallbacks without LLM</li><li>CONDITIONAL_ACCEPT when docs need subjectivities</li></ul></p></div>
             <div class="feature-card"><div class="icon">💰</div><h3>Premium &amp; shadow bind</h3><p>ACCEPT / CONDITIONAL_ACCEPT / REFER / DECLINE with indicated premium. Shadow mode blocks live bind until PAS is ready.</p></div>
             <div class="feature-card"><div class="icon">🔍</div><h3>Submission journey</h3><p>Full pipeline panel per job — COPE, live oracles, provenance, pricing build-up, and encrypted audit trail.</p></div>
+          </div>
+        </div>
+        <div class="tab-panel reveal" id="tab-personal" role="tabpanel">
+          <div class="feature-grid">
+            <div class="feature-card"><div class="icon">🏠</div><h3>Homeowners</h3><p>HO-3 applications, dwelling coverage, CLUE checks, and inspection-based risk scoring with filing-grade rate manuals.</p></div>
+            <div class="feature-card"><div class="icon">🚗</div><h3>Personal auto</h3><p>Applications, MVRs, and vehicle declarations — driver &amp; vehicle risk scoring with state rate manual build-up.</p></div>
+            <div class="feature-card"><div class="icon">🩺</div><h3>Term life</h3><p>Applications, paramedical exams, and medical underwriting — mortality scoring with life rate and medical guides.</p></div>
+            <div class="feature-card"><div class="icon">📋</div><h3>Filing-grade rating</h3><p>Homeowners, auto, and life rating engines driven by tracked rate manuals and state filing books.</p></div>
           </div>
         </div>
         <div class="tab-panel reveal" id="tab-mortgage" role="tabpanel">
@@ -704,6 +713,16 @@
               <p class="bento-kicker">Reliability</p>
               <h3>Durable job stores</h3>
               <p>Redis or file-backed jobs survive restarts — no silent in-memory loss in pilot or bank mode.</p>
+            </div>
+            <div class="bento-card">
+              <p class="bento-kicker">Renewals</p>
+              <h3>Renewal &amp; premium audit</h3>
+              <p>Pre-renewal tracking, premium audit, and loss feedback loops keep the book healthy between policy cycles.</p>
+            </div>
+            <div class="bento-card">
+              <p class="bento-kicker">Portfolio</p>
+              <h3>Book &amp; concentration</h3>
+              <p>Portfolio exposure, concentration buckets, and top lines of business — with market-cycle phase adjustments built in.</p>
             </div>
           </div>
         </div>
@@ -782,10 +801,10 @@
   <script>
     const PIPELINE = [
       { tag: "Stage 01", title: "Intake", desc: "Submission packages arrive from anywhere your team already works.", items: ["24 enterprise connectors: S3, SharePoint, Box, Applied Epic, Vertafore", "Email ingestion via Exchange and Gmail", "Broker platforms and local folder drops", "Org-scoped job tracking from first byte"] },
-      { tag: "Stage 02", title: "Parse", desc: "Documents are classified, OCR'd, and structured into a unified bundle.", items: ["ACORD XML, broker PDFs/JSON, loss runs, SOV, inspections", "Mortgage: W-2, 1040, credit, appraisals, bank statements", "Entity extraction and cross-document field mapping", "Provenance tracking for every extracted value"] },
+      { tag: "Stage 02", title: "Parse", desc: "Documents are classified, OCR'd, and structured into a unified bundle.", items: ["ACORD XML, broker PDFs/JSON, loss runs, SOV, inspections", "Personal lines: HO-3 applications, MVRs, paramedical exams", "Mortgage: W-2, 1040, credit, appraisals, bank statements", "Entity extraction and cross-document field mapping", "Provenance tracking for every extracted value"] },
       { tag: "Stage 03", title: "Verify", desc: "Cross-document reconciliation and third-party oracle verification.", items: ["Provenance hierarchy: ACORD vs inspection vs loss run", "COPE analysis for property risks", "Live CLUE / A-PLUS / NCCI / CAT when keys are set — simulated flagged when not", "Discrepancy flags before scoring begins"] },
       { tag: "Stage 04", title: "Score", desc: "Specialist agents analyze risk dimensions in parallel.", items: ["Risk, loss run, compliance, and fraud agents", "ReAct-style reasoning with tool use", "Deterministic fallbacks — no LLM required", "Structured findings feed the UW memo"] },
-      { tag: "Stage 05", title: "Price", desc: "Premium, rate lock, or loan pricing with market-cycle awareness.", items: ["P&C premium build-up with calibrated rate curves", "Mortgage rate lock and DTI analysis", "Lending spread and fee calculation", "Market cycle phase adjustments (hard/soft)"] },
+      { tag: "Stage 05", title: "Price", desc: "Premium, rate lock, or loan pricing with market-cycle awareness.", items: ["P&C premium build-up with calibrated rate curves", "Filing-grade homeowners, auto, and life rate manuals", "Mortgage rate lock and DTI analysis", "Lending spread and fee calculation", "Market cycle phase adjustments (hard/soft)"] },
       { tag: "Stage 06", title: "Decide", desc: "Bind-ready output with human checkpoints and full audit trail.", items: ["ACCEPT / CONDITIONAL_ACCEPT / REFER / DECLINE", "Licensed UW sign-off with override notes", "Shadow mode blocks bind until PAS wiring is approved", "Encrypted audit bundle with SHA-256 manifest"] },
     ];
 
@@ -800,10 +819,10 @@
     ];
 
     const FAQS = [
-      { q: "What is Rytera?", a: "Rytera is an enterprise AI underwriting platform for commercial insurance, mortgage, and lending. It ingests multi-format submission packages, runs specialist agent analysis, connects to carrier oracles and core systems, and produces bind-ready decisions with a full audit trail." },
-      { q: "Who is Rytera for?", a: "Insurance carriers, MGAs, and MGA aggregators, plus mortgage lenders (residential and commercial) and consumer/commercial lending operations. Built for underwriting teams, operations leaders, and IT teams who need transparent, auditable AI-assisted decisions." },
+      { q: "What is Rytera?", a: "Rytera is an enterprise AI underwriting platform for commercial &amp; personal lines insurance (homeowners, auto, life), mortgage, and lending. It ingests multi-format submission packages, runs specialist agent analysis, connects to carrier oracles and core systems, and produces bind-ready decisions with a full audit trail." },
+      { q: "Who is Rytera for?", a: "Insurance carriers, MGAs, and MGA aggregators — commercial and personal lines — plus mortgage lenders (residential and commercial) and consumer/commercial lending operations. Built for underwriting teams, operations leaders, and IT teams who need transparent, auditable AI-assisted decisions." },
       { q: "Does Rytera replace Guidewire or our loan origination system?", a: "No. Rytera integrates with policy admin systems (Guidewire, BriteCore), CRM (HubSpot), and LOS workflows via webhooks. It accelerates the underwriting layer while your core systems remain the system of record." },
-      { q: "What documents and data sources do you support?", a: "Insurance: ACORD XML, broker PDFs/JSON, loss runs, SOV, inspections. Mortgage: 30+ types including W-2, 1040, credit reports, appraisals, and rent rolls. Lending: application data, credit pulls, and bank statements. Plus 24 enterprise source connectors." },
+      { q: "What documents and data sources do you support?", a: "Insurance: ACORD XML, broker PDFs/JSON, loss runs, SOV, inspections. Personal lines: HO-3 applications, MVRs, paramedical exams. Mortgage: 30+ types including W-2, 1040, credit reports, appraisals, and rent rolls. Lending: application data, credit pulls, and bank statements. Plus 24 enterprise source connectors." },
       { q: "How does the AI underwriting pipeline work?", a: "Submissions move through six stages: Intake → Parse → Verify → Score → Price → Decide. Specialist agents analyze in parallel. Results feed a UW memo with ACCEPT/REFER/DECLINE and optional licensed sign-off before bind." },
       { q: "Can underwriters override AI decisions?", a: "Yes. Licensed underwriters can approve, refer, or decline with notes and override reasons. Authority matrix tiers control binding limits. Checkpoint resolution lets teams pause and resume at any stage." },
       { q: "Do I need an LLM API key to run Rytera?", a: "No. All pipelines include deterministic agent fallbacks. Adding an API key enables richer reasoning, but the platform is fully functional for demos and pilots without one." },
