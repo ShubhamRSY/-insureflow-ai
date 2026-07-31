@@ -93,7 +93,7 @@ export default function InsurancePage({ presets, jobs, onRunDemo, onOpenJob, onS
           {/* Pipeline flow narrative */}
           <div className="glass-card p-5">
             <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Underwriting pipeline</p>
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {FLOW_STEPS.map((step, i) => (
                 <div key={step.label} className="flex shrink-0 items-center gap-1.5">
                   <div className="whitespace-nowrap rounded-lg bg-surface-overlay px-2.5 py-1.5 ring-1 ring-white/[0.04]">
