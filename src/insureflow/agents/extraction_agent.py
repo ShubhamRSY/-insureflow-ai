@@ -31,19 +31,32 @@ class ExtractionAgent:
 
     def extract_unstructured(self, raw_text: str, bundle_id: str, doc_index: int = 0) -> UnstructuredSubmission:
         regex_based = self.report_extractor.parse(raw_text, bundle_id)
+        return self.enhance_unstructured(regex_based)
 
-        if self.llm.api_key:
-            text_for_llm = self.redactor.redact(raw_text[:8000]) if self.redactor else raw_text[:8000]
+    def enhance_unstructured(self, submission: UnstructuredSubmission) -> UnstructuredSubmission:
+        """LLM-enhance a single unstructured submission (ZTA LLM path).
+
+        Deterministic regex extraction always runs first; the LLM only merges
+        additional fields in when the router decided this document genuinely
+        needs it.
+        """
+        if not self.llm.api_key:
+            return submission
+        raw_text = submission.raw_text or ""
+        text_for_llm = self.redactor.redact(raw_text[:8000]) if self.redactor else raw_text[:8000]
+        try:
             llm_result = self.llm.complete(EXTRACTION_PROMPT, text_for_llm)
-            try:
-                import json
+        except Exception:
+            return submission
 
-                parsed = json.loads(llm_result)
-                self._merge_llm_results(regex_based, parsed)
-            except (json.JSONDecodeError, TypeError):
-                pass
+        try:
+            import json
 
-        return regex_based
+            parsed = json.loads(llm_result)
+            self._merge_llm_results(submission, parsed)
+        except (json.JSONDecodeError, TypeError):
+            pass
+        return submission
 
     def redact_bundle(self, bundle: SubmissionBundle) -> SubmissionBundle:
         if not self.redactor:

@@ -2683,6 +2683,65 @@ def vision_status() -> dict[str, Any]:
     }
 
 
+class ZtaRouteRequest(BaseModel):
+    task: str
+    text: Optional[str] = None
+    regex_field_count: int = 0
+    expected_fields: int = 0
+    doc_type: str = ""
+    conflict_count: int = 0
+    critical_conflict_count: int = 0
+    required_features_present: bool = True
+    missing_required: list[str] = []
+    photo_count: int = 0
+
+
+@app.get("/api/zta/status")
+def zta_status() -> dict[str, Any]:
+    """Zero Token Architecture process-wide stats and config."""
+    from insureflow.zta.config import ZtaConfig
+    from insureflow.zta.report import get_zta_stats
+
+    config = ZtaConfig()
+    stats = get_zta_stats()
+    stats["config"] = config.to_dict()
+    stats["policy"] = "Use AI only when you must. Everything else, solve deterministically."
+    return stats
+
+
+@app.post("/api/zta/route")
+def zta_route(payload: ZtaRouteRequest) -> dict[str, Any]:
+    """Ask the ZTA router how a single pipeline task would be resolved."""
+    from insureflow.zta.config import ZtaConfig
+    from insureflow.zta.models import RouteContext, ZtaTask
+    from insureflow.zta.report import ZtaReporter
+    from insureflow.zta.router import ZeroTokenRouter
+
+    try:
+        task = ZtaTask(payload.task)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=f"Unknown task: {payload.task}") from exc
+
+    router = ZeroTokenRouter(config=ZtaConfig())
+    reporter = ZtaReporter(router)
+    result = reporter.route(
+        task,
+        RouteContext(
+            text=payload.text,
+            regex_field_count=payload.regex_field_count,
+            expected_fields=payload.expected_fields,
+            doc_type=payload.doc_type,
+            conflict_count=payload.conflict_count,
+            critical_conflict_count=payload.critical_conflict_count,
+            required_features_present=payload.required_features_present,
+            missing_required=list(payload.missing_required),
+            photo_count=payload.photo_count,
+        ),
+    )
+    report = reporter.report()
+    return {"route": result.to_dict(), "zta_report": report}
+
+
 @app.get("/pilot/sandbox-status")
 def pilot_sandbox_status(
     current: TokenData = Depends(require_role(Role.VIEWER)),

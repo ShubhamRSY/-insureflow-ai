@@ -32,6 +32,10 @@ from insureflow.storage.encryption import EnvelopeEncryption
 from insureflow.webhooks.dispatcher import webhook_dispatcher
 from insureflow.workflow.models import WorkflowState
 from insureflow.workflow.service import WorkflowService
+from insureflow.zta.config import ZtaConfig
+from insureflow.zta.models import RouteContext, RouteDecision, ZtaTask
+from insureflow.zta.report import ZtaReporter
+from insureflow.zta.router import ZeroTokenRouter
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +73,14 @@ class InsurancePipeline:
         self.feedback = FeedbackEngine()
         self.audit_store = audit_store or AuditStore()
         self.encryption = EnvelopeEncryption()
+
+        # Zero Token Architecture — deterministic-first routing layer
+        self.zta_config = ZtaConfig()
+        self.zta_router = ZeroTokenRouter(
+            config=self.zta_config,
+            llm_available=bool(use_llm and getattr(self.extraction.llm, "api_key", None)),
+        )
+        self.zta_reporter = ZtaReporter(self.zta_router)
 
         # New pipeline stages
         self.appetite_filter = AppetiteFilterAgent()
@@ -387,44 +399,62 @@ class InsurancePipeline:
         visual_profile = None
         photos = [d for d in documents if d.get("filename", "").lower().endswith((".jpg", ".jpeg", ".png", ".gif", ".webp", ".tiff", ".bmp"))] if documents else []
         if photos:
+            vision_route = self.zta_reporter.route(
+                ZtaTask.VISION,
+                RouteContext(photo_count=len(photos)),
+            )
             progress.start("vision", "Vision", "Analyzing property photos")
-            try:
-                from insureflow.ml.vision.pipeline import PropertyPhotoAnalyzer
+            if vision_route.decision == RouteDecision.SKIP:
+                progress.complete("vision", detail="Skipped (no deterministic substitute, zero-token mode)", status="warning")
+            else:
+                try:
+                    from insureflow.ml.vision.pipeline import PropertyPhotoAnalyzer
 
-                vision_analyzer = PropertyPhotoAnalyzer()
-                lat = None
-                lng = None
-                addr = ""
-                if bundle.structured and bundle.structured.locations:
-                    loc = bundle.structured.locations[0]
-                    addr = f"{loc.address}, {loc.city}, {loc.state} {loc.zip_code}"
-                visual_profile = vision_analyzer.analyze_photos(
-                    photos,
-                    latitude=lat,
-                    longitude=lng,
-                    address=addr,
-                    bundle_id=bid,
-                )
-                audit.log(
-                    PipelineEvent.STRUCTURED_PARSE_COMPLETE,
-                    f"Vision analysis: {visual_profile.analyzed_photos} photos, risk={visual_profile.overall_visual_risk.value}",
-                    metadata={
-                        "vision_photos": visual_profile.analyzed_photos,
-                        "vision_risk": visual_profile.overall_visual_risk.value,
-                        "vision_damage_count": visual_profile.damage_count,
-                    },
-                )
-                progress.complete(
-                    "vision",
-                    detail=f"{visual_profile.analyzed_photos} photos · {visual_profile.overall_visual_risk.value} risk",
-                    findings=visual_profile.damage_count,
-                    status="warning" if visual_profile.damage_count > 0 else "complete",
-                )
-            except Exception as exc:
-                logger.warning("Vision analysis failed: %s", exc)
-                progress.complete("vision", detail="Vision analysis skipped", status="warning")
+                    vision_analyzer = PropertyPhotoAnalyzer()
+                    lat = None
+                    lng = None
+                    addr = ""
+                    if bundle.structured and bundle.structured.locations:
+                        loc = bundle.structured.locations[0]
+                        addr = f"{loc.address}, {loc.city}, {loc.state} {loc.zip_code}"
+                    visual_profile = vision_analyzer.analyze_photos(
+                        photos,
+                        latitude=lat,
+                        longitude=lng,
+                        address=addr,
+                        bundle_id=bid,
+                    )
+                    audit.log(
+                        PipelineEvent.STRUCTURED_PARSE_COMPLETE,
+                        f"Vision analysis: {visual_profile.analyzed_photos} photos, risk={visual_profile.overall_visual_risk.value}",
+                        metadata={
+                            "vision_photos": visual_profile.analyzed_photos,
+                            "vision_risk": visual_profile.overall_visual_risk.value,
+                            "vision_damage_count": visual_profile.damage_count,
+                        },
+                    )
+                    progress.complete(
+                        "vision",
+                        detail=f"{visual_profile.analyzed_photos} photos · {visual_profile.overall_visual_risk.value} risk",
+                        findings=visual_profile.damage_count,
+                        status="warning" if visual_profile.damage_count > 0 else "complete",
+                    )
+                except Exception as exc:
+                    logger.warning("Vision analysis failed: %s", exc)
+                    progress.complete("vision", detail="Vision analysis skipped", status="warning")
 
-        # ── 3. Extract (LLM on unstructured if enabled) ──
+        # ── 3. Extract (ZTA: deterministic regex first, LLM only when a doc genuinely needs it) ──
+        for doc in bundle.unstructured:
+            extract_route = self.zta_reporter.route(
+                ZtaTask.EXTRACT_UNSTRUCTURED,
+                RouteContext(
+                    text=getattr(doc, "raw_text", None),
+                    regex_field_count=len(getattr(doc, "extracted_fields", {}) or {}),
+                    doc_type="inspection_report",
+                ),
+            )
+            if extract_route.decision == RouteDecision.LLM and self.zta_config.enabled:
+                self.extraction.enhance_unstructured(doc)
         if self.use_llm and getattr(self.extraction.llm, "api_key", None):
             bundle = self.extraction.process_bundle(bundle)
         bundle.status = SubmissionStatus.EXTRACTED
@@ -491,9 +521,26 @@ class InsurancePipeline:
             status="warning" if reconciliation.discrepancies or provenance_failed or reconciliation_failed else "complete",
         )
 
-        # ── 6. Agent swarm → UW memo ──
+        # ── 6. Agent swarm → UW memo (ZTA: LLM only when conflicts need reasoning) ──
         progress.start("analyze", "Scored", "Running specialist agent analysis")
-        memo = self.supervisor.analyze_submission(bundle, parallel=True, use_celery=False)
+        reconcile_route = self.zta_reporter.route(
+            ZtaTask.RECONCILE,
+            RouteContext(
+                conflict_count=len(reconciliation.discrepancies),
+                critical_conflict_count=sum(1 for d in reconciliation.discrepancies if getattr(d.severity, "value", str(d.severity)) == "critical"),
+            ),
+        )
+        memo_route = self.zta_reporter.route(
+            ZtaTask.MEMO,
+            RouteContext(conflict_count=len(reconciliation.discrepancies)),
+        )
+        resolve_with_llm = reconcile_route.decision == RouteDecision.LLM or memo_route.decision == RouteDecision.LLM
+        memo = self.supervisor.analyze_submission(
+            bundle,
+            parallel=True,
+            use_celery=False,
+            resolve_with_llm=resolve_with_llm,
+        )
 
         if provenance_failed or reconciliation_failed:
             from insureflow.models.agents import Finding, RiskSeverity, UWDecision
@@ -747,6 +794,24 @@ class InsurancePipeline:
 
         human_checkpoints = self._build_checkpoints(memo, reconciliation, oracle_findings)
         open_conditions = list(memo.conditions or [])
+
+        # ZTA routing records for the deterministic scoring/pricing/decision stages
+        self.zta_reporter.route(
+            ZtaTask.SCORE,
+            RouteContext(
+                required_features_present=not missing_docs,
+                missing_required=list(missing_docs)[:5],
+            ),
+        )
+        self.zta_reporter.route(ZtaTask.PRICE, RouteContext(required_features_present=True))
+        self.zta_reporter.route(
+            ZtaTask.DECIDE,
+            RouteContext(
+                required_features_present=not memo.human_review_required,
+                missing_required=memo.human_review_reasons[:5],
+            ),
+        )
+        zta_report = self.zta_reporter.report()
         if memo.decision.value == "conditional_accept" and open_conditions:
             human_checkpoints.append(
                 {
@@ -831,6 +896,8 @@ class InsurancePipeline:
             "core_integration": core_results,
             "encryption_at_rest": self.encryption.enabled,
             "prediction_id": prediction.prediction_id,
+            "zta_mode": self.zta_config.mode,
+            "zta_report": zta_report,
         }
 
         # Add portfolio concentration data if available

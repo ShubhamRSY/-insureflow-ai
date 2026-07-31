@@ -60,6 +60,7 @@ class SupervisorAgent(BaseAgent):
         bundle: SubmissionBundle,
         parallel: bool = True,
         use_celery: bool = False,
+        resolve_with_llm: Optional[bool] = None,
     ) -> UnderwritingMemo:
         start = time.time()
 
@@ -70,7 +71,7 @@ class SupervisorAgent(BaseAgent):
         else:
             agent_results = self._run_agents_sequential(bundle)
 
-        conflict_resolution = self._resolve_conflicts(agent_results)
+        conflict_resolution = self._resolve_conflicts(agent_results, resolve_with_llm=resolve_with_llm)
 
         agents_map = {ar.agent_name: ar for ar in agent_results}
         uw_result = self.uw_decision.run(bundle, agent_results=agents_map)
@@ -175,8 +176,10 @@ class SupervisorAgent(BaseAgent):
             },
         }
 
-    def _resolve_conflicts(self, results: list[AgentResult]) -> list[str]:
-        if not self.llm.api_key:
+    def _resolve_conflicts(self, results: list[AgentResult], resolve_with_llm: Optional[bool] = None) -> list[str]:
+        if resolve_with_llm is None:
+            resolve_with_llm = bool(self.llm.api_key)
+        if not resolve_with_llm:
             return self._resolve_conflicts_deterministic(results)
 
         try:
