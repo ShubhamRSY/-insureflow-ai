@@ -178,32 +178,29 @@ export default function InsuranceSourceHub({ onSubmit, loading }) {
       <div className="flex items-center gap-3 border-b border-white/[0.06] px-4 py-2.5">
         <Link2 className="h-4 w-4 text-insurance shrink-0" />
         <span className="text-sm font-semibold text-slate-200">Input sources</span>
-        <div className="ml-auto flex items-center gap-1 overflow-x-auto">
-          {sections.map((s) => {
-            const Icon = SECTION_ICONS[s.icon] || FolderOpen;
-            const isActive = s.id === categoryId;
-            return (
-              <button key={s.id} type="button" onClick={() => { setCategoryId(s.id); setActiveSource(null); setConnected(null); setEmails([]); setSelectedEmailIds(new Set()); setConfig({}); setError(''); }}
-                className={`flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-medium transition ${
-                  isActive ? 'bg-brand/15 text-brand ring-1 ring-brand/20' : 'text-slate-500 hover:text-slate-300 hover:bg-white/[0.04]'
-                }`}>
-                <Icon className="h-3.5 w-3.5" />
-                {s.title}
-              </button>
-            );
-          })}
+        <div className="ml-auto flex items-center gap-1">
+          <select
+            value={categoryId}
+            onChange={(e) => { setCategoryId(e.target.value); setActiveSource(null); setConnected(null); setEmails([]); setSelectedEmailIds(new Set()); setConfig({}); setError(''); }}
+            className="input-field w-40 text-[11px]"
+            aria-label="Source category"
+          >
+            {sections.map((s) => (
+              <option key={s.id} value={s.id}>{s.title}</option>
+            ))}
+          </select>
+          {totalDocs > 0 && (
+            <span className="shrink-0 rounded-full bg-brand/15 px-2 py-0.5 text-[10px] font-semibold text-brand">
+              {totalDocs}
+            </span>
+          )}
         </div>
-        {totalDocs > 0 && (
-          <span className="shrink-0 rounded-full bg-brand/15 px-2 py-0.5 text-[10px] font-semibold text-brand">
-            {totalDocs}
-          </span>
-        )}
       </div>
 
       {/* Body */}
       <div className="p-3 space-y-3">
         {/* Source grid */}
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2">
           {(activeSection?.sources || []).map((src) => {
             const sel = activeSource?.id === src.id;
             return (

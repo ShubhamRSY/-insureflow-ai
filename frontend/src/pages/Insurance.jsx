@@ -91,7 +91,7 @@ export default function InsurancePage({ presets, jobs, onRunDemo, onOpenJob, onS
   };
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8 animate-fade-in">
+    <div className="mx-auto max-w-7xl space-y-8 animate-fade-in">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Insurance Underwriting</h1>
         <p className="mt-2 text-sm text-slate-400">
@@ -99,46 +99,55 @@ export default function InsurancePage({ presets, jobs, onRunDemo, onOpenJob, onS
         </p>
       </div>
 
-      {/* Pipeline flow narrative */}
-      <div className="glass-card p-5">
-        <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-slate-500">Underwriting pipeline</p>
-        <div className="flex flex-wrap items-center gap-2">
-          {FLOW_STEPS.map((step, i) => (
-            <div key={step.label} className="flex items-center gap-2">
-              <div className="rounded-lg bg-surface-overlay px-3 py-2 ring-1 ring-white/[0.04]">
-                <p className="text-xs font-semibold text-slate-200">{step.label}</p>
-                <p className="text-[10px] text-slate-500">{step.desc}</p>
-              </div>
-              {i < FLOW_STEPS.length - 1 && <ArrowRight className="h-3.5 w-3.5 text-slate-600" />}
-            </div>
-          ))}
-        </div>
-        <p className="mt-3 text-xs text-slate-500">Open any job to see the full submission journey — COPE, provenance, checkpoints, and pricing breakdown.</p>
-      </div>
-
-      <InsuranceSourceHub onSubmit={handleSubmit} loading={loading} />
-
-      {(presets?.insurance || []).length > 0 && (
-        <div className="space-y-3">
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">One-click samples</p>
-          <div className="flex flex-col gap-2">
-            {(presets?.insurance || []).map((d) => (
-              <button key={d.id} type="button" onClick={() => onRunDemo('insurance', d.id)}
-                className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.06] bg-surface-overlay/30 px-4 py-3 text-left transition hover:border-brand/30">
-                <span className="min-w-0">
-                  <span className="block text-sm font-medium text-slate-200">{d.name}</span>
-                  <span className="block text-xs text-slate-500 truncate">{d.description}</span>
-                </span>
-                <span className="shrink-0 rounded-md bg-white/[0.04] px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-400">
-                  {(d.insurance_line || 'commercial').replace(/_/g, ' ')}
-                </span>
-              </button>
-            ))}
+      <div className="grid gap-6 lg:grid-cols-12">
+        {/* Left rail — input sources */}
+        <div className="lg:col-span-4">
+          <div className="lg:sticky lg:top-20">
+            <InsuranceSourceHub onSubmit={handleSubmit} loading={loading} />
           </div>
         </div>
-      )}
 
-      <div className="glass-card overflow-hidden">
+        {/* Right column — recent runs + samples */}
+        <div className="lg:col-span-8 space-y-6">
+          {/* Pipeline flow narrative */}
+          <div className="glass-card p-5">
+            <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-slate-500">Underwriting pipeline</p>
+            <div className="flex flex-wrap items-center gap-2">
+              {FLOW_STEPS.map((step, i) => (
+                <div key={step.label} className="flex items-center gap-2">
+                  <div className="rounded-lg bg-surface-overlay px-3 py-2 ring-1 ring-white/[0.04]">
+                    <p className="text-xs font-semibold text-slate-200">{step.label}</p>
+                    <p className="text-[10px] text-slate-500">{step.desc}</p>
+                  </div>
+                  {i < FLOW_STEPS.length - 1 && <ArrowRight className="h-3.5 w-3.5 text-slate-600" />}
+                </div>
+              ))}
+            </div>
+            <p className="mt-3 text-xs text-slate-500">Open any job to see the full submission journey — COPE, provenance, checkpoints, and pricing breakdown.</p>
+          </div>
+
+          {/* Quick samples */}
+          {(presets?.insurance || []).length > 0 && (
+            <div className="glass-card p-5">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Quick samples</p>
+              <div className="flex flex-col gap-2">
+                {(presets?.insurance || []).map((d) => (
+                  <button key={d.id} type="button" onClick={() => onRunDemo('insurance', d.id)}
+                    className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.06] bg-surface-overlay/30 px-4 py-3 text-left transition hover:border-brand/30">
+                    <span className="min-w-0">
+                      <span className="block text-sm font-medium text-slate-200">{d.name}</span>
+                      <span className="block text-xs text-slate-500 truncate">{d.description}</span>
+                    </span>
+                    <span className="shrink-0 rounded-md bg-white/[0.04] px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-400">
+                      {(d.insurance_line || 'commercial').replace(/_/g, ' ')}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="glass-card overflow-hidden">
         <div className="border-b border-white/[0.06] px-5 py-3 flex items-center justify-between">
           <div>
             <h3 className="text-sm font-semibold">Recent jobs</h3>
@@ -201,6 +210,8 @@ export default function InsurancePage({ presets, jobs, onRunDemo, onOpenJob, onS
           </div>
         )}
       </div>
+      </div>
+    </div>
     </div>
   );
 }

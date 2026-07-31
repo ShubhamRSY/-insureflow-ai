@@ -3,7 +3,7 @@ import { Badge, EmptyState } from '../components/ui';
 import { extractMortgage, endpoints, fmtCurrency } from '../lib/api';
 import MortgageSourceHub from '../components/MortgageSourceHub';
 import StageStrip, { stagesFromProgress } from '../components/StageStrip';
-import { Home, Package, FileText } from 'lucide-react';
+import { Home, Package, FileText, Building2 } from 'lucide-react';
 
 export default function MortgagePage({ presets, jobs, onRunDemo, onOpenJob, onSubmit }) {
   const [loading, setLoading] = useState(false);
@@ -32,7 +32,7 @@ export default function MortgagePage({ presets, jobs, onRunDemo, onOpenJob, onSu
   };
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8 animate-fade-in">
+    <div className="mx-auto max-w-7xl space-y-8 animate-fade-in">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Mortgage Underwriting</h1>
@@ -80,14 +80,49 @@ export default function MortgagePage({ presets, jobs, onRunDemo, onOpenJob, onSu
         </div>
       )}
 
-      <MortgageSourceHub
-        presets={presets}
-        onSubmit={handleSubmit}
-        onRunDemo={onRunDemo}
-        loading={loading}
-      />
+      <div className="grid gap-6 lg:grid-cols-12">
+        {/* Left rail — loan package input */}
+        <div className="lg:col-span-4">
+          <div className="lg:sticky lg:top-20">
+            <MortgageSourceHub
+              presets={presets}
+              onSubmit={handleSubmit}
+              onRunDemo={onRunDemo}
+              loading={loading}
+            />
+          </div>
+        </div>
 
-      <div className="glass-card overflow-hidden">
+        {/* Right column — recent runs + samples */}
+        <div className="lg:col-span-8 space-y-6">
+          {/* Quick samples */}
+          {(presets?.mortgage || []).length > 0 && (
+            <div className="glass-card p-5">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Quick samples</p>
+              <div className="flex flex-col gap-2">
+                {(presets?.mortgage || []).map((d) => {
+                  const isCommercial = String(d.product_line || '').includes('commercial');
+                  return (
+                    <button key={d.id} type="button" onClick={() => onRunDemo('mortgage', d.id)}
+                      className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.06] bg-surface-overlay/30 px-4 py-3 text-left transition hover:border-mortgage/35">
+                      <span className="min-w-0 flex items-center gap-3">
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-mortgage/15">
+                          {isCommercial ? <Building2 className="h-4 w-4 text-mortgage" /> : <Home className="h-4 w-4 text-mortgage" />}
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block text-sm font-medium text-slate-200 truncate">{d.name}</span>
+                          <span className="block text-xs text-slate-500 truncate">{d.description}</span>
+                        </span>
+                      </span>
+                      <span className="shrink-0 rounded-md bg-white/[0.04] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-mortgage">Run</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          <div className="glass-card overflow-hidden">
         <div className="border-b border-white/[0.06] px-6 py-4">
           <h3 className="font-semibold">Job Queue</h3>
         </div>
@@ -131,6 +166,8 @@ export default function MortgagePage({ presets, jobs, onRunDemo, onOpenJob, onSu
           </div>
         )}
       </div>
+      </div>
+    </div>
     </div>
   );
 }
