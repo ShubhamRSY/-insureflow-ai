@@ -230,21 +230,6 @@ DEMO_CONNECTORS: dict[str, dict[str, Any]] = {
         "config_fields": [{"key": "site_url", "label": "API endpoint", "placeholder": "https://api.corelogic.com"}],
         "label": lambda req: f"CoreLogic › {req.site_url or 'property-risk-api'}",
     },
-    "imageright": {
-        "name": "ImageRight (Vertafore)",
-        "type": "document",
-        "category": "Document Storage",
-        "description": "Document management for small carriers — policy forms, applications, inspection reports",
-        "config_fields": [
-            {
-                "key": "host",
-                "label": "ImageRight server / tenant",
-                "placeholder": "imageright.carrier.com",
-            },
-            {"key": "folder_id", "label": "Document queue / folder", "placeholder": "UW-Intake"},
-        ],
-        "label": lambda req: f"ImageRight › {req.host or 'imageright.carrier.com'}/{req.folder_id or 'UW-Intake'}",
-    },
     "bold-penguin": {
         "name": "Bold Penguin",
         "type": "marketplace",

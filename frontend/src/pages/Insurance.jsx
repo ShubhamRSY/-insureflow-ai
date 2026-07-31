@@ -126,27 +126,6 @@ export default function InsurancePage({ presets, jobs, onRunDemo, onOpenJob, onS
             <p className="mt-3 text-xs text-slate-500">Open any job to see the full submission journey — COPE, provenance, checkpoints, and pricing breakdown.</p>
           </div>
 
-          {/* Quick samples */}
-          {(presets?.insurance || []).length > 0 && (
-            <div className="glass-card p-5">
-              <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Quick samples</p>
-              <div className="flex flex-col gap-2">
-                {(presets?.insurance || []).map((d) => (
-                  <button key={d.id} type="button" onClick={() => onRunDemo('insurance', d.id)}
-                    className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.06] bg-surface-overlay/30 px-4 py-3 text-left transition hover:border-brand/30">
-                    <span className="min-w-0">
-                      <span className="block text-sm font-medium text-slate-200">{d.name}</span>
-                      <span className="block text-xs text-slate-500 truncate">{d.description}</span>
-                    </span>
-                    <span className="shrink-0 rounded-md bg-white/[0.04] px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-400">
-                      {(d.insurance_line || 'commercial').replace(/_/g, ' ')}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
           <div className="glass-card overflow-hidden">
         <div className="border-b border-white/[0.06] px-5 py-3 flex items-center justify-between">
           <div>
@@ -210,6 +189,27 @@ export default function InsurancePage({ presets, jobs, onRunDemo, onOpenJob, onS
           </div>
         )}
       </div>
+
+      {/* Quick samples */}
+      {(presets?.insurance || []).length > 0 && (
+        <div className="glass-card p-5">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Quick samples</p>
+          <div className="flex flex-col gap-2">
+            {(presets?.insurance || []).map((d) => (
+              <button key={d.id} type="button" onClick={() => onRunDemo('insurance', d.id)}
+                className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.06] bg-surface-overlay/30 px-4 py-3 text-left transition hover:border-brand/30">
+                <span className="min-w-0">
+                  <span className="block text-sm font-medium text-slate-200">{d.name}</span>
+                  <span className="block text-xs text-slate-500 truncate">{d.description}</span>
+                </span>
+                <span className="shrink-0 rounded-md bg-white/[0.04] px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-400">
+                  {(d.insurance_line || 'commercial').replace(/_/g, ' ')}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       </div>
     </div>
     </div>
