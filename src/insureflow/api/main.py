@@ -3037,10 +3037,7 @@ def _dispatch_mortgage_celery(job_id: str, request: MortgageSubmissionRequest, o
             org_id=org_id,
         )
     elif request.documents:
-        docs = [
-            {"filename": d.filename, "content": d.content, "encoding": d.encoding}
-            for d in request.documents
-        ]
+        docs = [{"filename": d.filename, "content": d.content, "encoding": d.encoding} for d in request.documents]
         task = run_mortgage_pipeline.delay(
             docs,
             bundle_id=job_id,
