@@ -3,6 +3,7 @@ import { Badge, DecisionBadge, EmptyState } from '../components/ui';
 import { fmtCurrency, extractInsurance, endpoints } from '../lib/api';
 import InsuranceSourceHub from '../components/InsuranceSourceHub';
 import JourneyMiniStrip from '../components/JourneyMiniStrip';
+import RunSelector from '../components/RunSelector';
 import { Shield, ArrowRight, Download, Trash2, RotateCcw, FileText } from 'lucide-react';
 
 const FLOW_STEPS = [
@@ -126,6 +127,8 @@ export default function InsurancePage({ presets, jobs, onRunDemo, onOpenJob, onS
             <p className="mt-3 text-xs text-slate-500">Open any job to see the full submission journey — COPE, provenance, checkpoints, and pricing breakdown.</p>
           </div>
 
+          <RunSelector presets={presets} onRunDemo={onRunDemo} onSubmit={onSubmit} />
+
           <div className="glass-card overflow-hidden">
         <div className="border-b border-white/[0.06] px-5 py-3 flex items-center justify-between">
           <div>
@@ -141,9 +144,9 @@ export default function InsurancePage({ presets, jobs, onRunDemo, onOpenJob, onS
         {!jobs?.length ? (
           <EmptyState icon={Shield} title="No insurance jobs" description="Upload a broker package or run a demo" />
         ) : (
-          <div className="overflow-x-auto">
+          <div className="max-h-[28rem] overflow-auto">
             <table className="w-full text-sm">
-              <thead>
+              <thead className="sticky top-0 z-10">
                 <tr className="border-b border-white/[0.06] bg-surface-overlay text-left text-xs uppercase tracking-wider text-slate-500">
                   <th className="px-6 py-3">Job</th>
                   <th className="px-6 py-3">Insured</th>
