@@ -6,8 +6,7 @@ import numpy as np
 
 from insureflow.ml.models import FeatureVector
 
-__all__ = ["FeatureVector", "extract_features", "generate_synthetic_dataset"]
-
+__all__ = ["FeatureVector", "extract_features", "extract_lending_features", "extract_mortgage_features", "generate_synthetic_dataset"]
 # Categorical mappings for encoding
 CONSTRUCTION_MAP = {
     "frame": 0,
@@ -80,6 +79,62 @@ DEFAULT_FEATURE_NAMES = [
     "risk_score_raw",
 ]
 
+MORTGAGE_FEATURE_NAMES = [
+    "credit_score",
+    "dti_ratio",
+    "ltv_ratio",
+    "loan_amount",
+    "annual_income",
+    "reserves",
+    "employment_years",
+    "self_employment_income",
+    "utilization_rate",
+    "derogatory_marks",
+    "property_age",
+    "bankruptcies",
+    "foreclosures",
+    "prior_cancellations",
+    "loan_to_income",
+    "reserves_to_loan",
+    "utilization_norm",
+    "income_stability",
+]
+
+LENDING_FEATURE_NAMES = [
+    "loan_segment_business",
+    "credit_score",
+    "dti_ratio",
+    "annual_income",
+    "loan_amount",
+    "years_in_business",
+    "employment_years",
+    "dscr",
+    "current_ratio",
+    "leverage_ratio",
+    "profit_margin",
+    "debt_service",
+    "ebitda",
+    "total_assets",
+    "total_liabilities",
+    "bankruptcies",
+    "foreclosures",
+    "loan_to_income",
+]
+
+MODEL_FEATURE_NAMES: dict[str, list[str]] = {
+    "loss_prediction": DEFAULT_FEATURE_NAMES,
+    "fraud_detection": DEFAULT_FEATURE_NAMES,
+    "premium_optimizer": DEFAULT_FEATURE_NAMES,
+    "churn_prediction": DEFAULT_FEATURE_NAMES,
+    "mortgage_default_risk": MORTGAGE_FEATURE_NAMES,
+    "lending_default_risk": LENDING_FEATURE_NAMES,
+}
+
+
+def get_model_feature_names(model_type: str) -> list[str]:
+    """Return the feature column order for a given model type."""
+    return MODEL_FEATURE_NAMES.get(model_type, DEFAULT_FEATURE_NAMES)
+
 
 def encode_categorical(value: str, mapping: dict[str, int]) -> int:
     """Encode a categorical string to an integer."""
@@ -137,6 +192,80 @@ def extract_features(fv: FeatureVector) -> np.ndarray:
 def get_feature_names() -> list[str]:
     """Return ordered feature names matching extract_features output."""
     return DEFAULT_FEATURE_NAMES
+
+
+def extract_mortgage_features(fv: FeatureVector) -> np.ndarray:
+    """Transform a FeatureVector into the mortgage default-risk feature array."""
+    annual_income = fv.revenue
+    loan_to_income = fv.loan_amount / max(annual_income, 1)
+    reserves_to_loan = fv.reserves / max(fv.loan_amount, 1)
+    utilization_norm = min(max(fv.utilization_rate, 0), 100) / 100.0
+    income_stability = min(max(fv.employment_years, 0), 10) / 10.0
+
+    return np.array(
+        [
+            fv.credit_score,
+            fv.dti_ratio,
+            fv.ltv_ratio,
+            fv.loan_amount,
+            annual_income,
+            fv.reserves,
+            fv.employment_years,
+            fv.self_employment_income,
+            fv.utilization_rate,
+            fv.derogatory_marks,
+            fv.property_age,
+            fv.bankruptcies,
+            fv.foreclosures,
+            fv.prior_cancellations,
+            loan_to_income,
+            reserves_to_loan,
+            utilization_norm,
+            income_stability,
+        ],
+        dtype=np.float64,
+    )
+
+
+def get_mortgage_feature_names() -> list[str]:
+    """Return ordered feature names matching extract_mortgage_features output."""
+    return MORTGAGE_FEATURE_NAMES
+
+
+def extract_lending_features(fv: FeatureVector) -> np.ndarray:
+    """Transform a FeatureVector into the lending default-risk feature array."""
+    annual_income = fv.revenue
+    loan_to_income = fv.loan_amount / max(annual_income, 1)
+    segment_business = 1.0 if (fv.loan_segment or "").lower() in ("business", "b2b") else 0.0
+
+    return np.array(
+        [
+            segment_business,
+            fv.credit_score,
+            fv.dti_ratio,
+            annual_income,
+            fv.loan_amount,
+            fv.years_in_business,
+            fv.employment_years,
+            fv.dscr,
+            fv.current_ratio,
+            fv.leverage_ratio,
+            fv.profit_margin,
+            fv.debt_service,
+            fv.ebitda,
+            fv.total_assets,
+            fv.total_liabilities,
+            fv.bankruptcies,
+            fv.foreclosures,
+            loan_to_income,
+        ],
+        dtype=np.float64,
+    )
+
+
+def get_lending_feature_names() -> list[str]:
+    """Return ordered feature names matching extract_lending_features output."""
+    return LENDING_FEATURE_NAMES
 
 
 def generate_synthetic_dataset(
@@ -207,8 +336,143 @@ def generate_synthetic_dataset(
         y = _generate_premium_target(X, rng)
     elif model_type == "churn_prediction":
         y = _generate_churn_target(X, rng)
+    elif model_type == "mortgage_default_risk":
+        return _generate_mortgage_synthetic_dataset(n_samples, seed)
+    elif model_type == "lending_default_risk":
+        return _generate_lending_synthetic_dataset(n_samples, seed)
     else:
         y = rng.uniform(0, 1, n_samples)
+
+    return X.astype(np.float64), y.astype(np.float64)
+
+
+def _generate_mortgage_synthetic_dataset(n_samples: int, seed: int) -> tuple[np.ndarray, np.ndarray]:
+    """Generate synthetic mortgage default training data (feature-order == MORTGAGE_FEATURE_NAMES)."""
+    rng = np.random.RandomState(seed)
+
+    credit_score = rng.normal(720, 80, n_samples).clip(500, 850)
+    dti = rng.uniform(20, 55, n_samples)
+    ltv = rng.uniform(60, 98, n_samples)
+    annual_income = rng.uniform(4e4, 5e6, n_samples)
+    loan_amount = annual_income * rng.uniform(1.5, 6.0, n_samples)
+    reserves = rng.uniform(0, 2e5, n_samples)
+    employment_years = rng.uniform(0, 40, n_samples)
+    self_employment_income = np.where(rng.random(n_samples) < 0.2, annual_income * rng.uniform(0.1, 1.0, n_samples), 0.0)
+    utilization = rng.uniform(0, 100, n_samples)
+    derogatory_marks = rng.poisson(0.6, n_samples)
+    property_age = rng.uniform(0, 100, n_samples)
+    bankruptcies = rng.binomial(1, 0.03, n_samples)
+    foreclosures = rng.binomial(1, 0.02, n_samples)
+    prior_cancellations = rng.poisson(0.3, n_samples)
+
+    loan_to_income = loan_amount / np.maximum(annual_income, 1)
+    reserves_to_loan = reserves / np.maximum(loan_amount, 1)
+    utilization_norm = utilization / 100.0
+    income_stability = np.clip(employment_years, 0, 10) / 10.0
+
+    X = np.column_stack(
+        [
+            credit_score,
+            dti,
+            ltv,
+            loan_amount,
+            annual_income,
+            reserves,
+            employment_years,
+            self_employment_income,
+            utilization,
+            derogatory_marks,
+            property_age,
+            bankruptcies,
+            foreclosures,
+            prior_cancellations,
+            loan_to_income,
+            reserves_to_loan,
+            utilization_norm,
+            income_stability,
+        ]
+    )
+
+    default_prob = (
+        0.03
+        + np.where(credit_score < 620, 0.25, np.where(credit_score < 680, 0.10, 0.0))
+        + np.where(dti > 43, 0.15, 0.0)
+        + np.where(ltv > 80, 0.10, 0.0)
+        + np.where(reserves < 10000, 0.08, 0.0)
+        + 0.08 * bankruptcies
+        + 0.08 * foreclosures
+        + 0.02 * np.minimum(derogatory_marks, 4)
+        + rng.normal(0, 0.05, n_samples)
+    )
+    default_prob = np.clip(default_prob, 0.01, 0.95)
+    y = (rng.random(n_samples) < default_prob).astype(float)
+
+    return X.astype(np.float64), y.astype(np.float64)
+
+
+def _generate_lending_synthetic_dataset(n_samples: int, seed: int) -> tuple[np.ndarray, np.ndarray]:
+    """Generate synthetic lending default training data (feature-order == LENDING_FEATURE_NAMES)."""
+    rng = np.random.RandomState(seed)
+    n_business = int(n_samples * 0.6)
+
+    seg = np.zeros(n_samples)
+    seg[:n_business] = 1.0
+
+    credit_score = rng.normal(700, 85, n_samples).clip(480, 850)
+    dti = rng.uniform(20, 60, n_samples)
+    annual_income = rng.uniform(3e4, 5e6, n_samples)
+    loan_amount = annual_income * rng.uniform(1.0, 5.0, n_samples)
+    years_in_business = np.where(seg == 1, rng.uniform(0.5, 30, n_samples), 0.0)
+    employment_years = np.where(seg == 1, 0.0, rng.uniform(0, 40, n_samples))
+    dscr = np.where(seg == 1, rng.uniform(0.8, 2.2, n_samples), 0.0)
+    current_ratio = np.where(seg == 1, rng.uniform(0.5, 3.0, n_samples), 0.0)
+    leverage_ratio = np.where(seg == 1, rng.uniform(0.5, 7.0, n_samples), 0.0)
+    profit_margin = np.where(seg == 1, rng.uniform(-5, 30, n_samples), 0.0)
+    debt_service = np.where(seg == 1, rng.uniform(5e3, 5e6, n_samples), 0.0)
+    ebitda = np.where(seg == 1, rng.uniform(1e4, 5e6, n_samples), 0.0)
+    total_assets = np.where(seg == 1, rng.uniform(1e5, 5e7, n_samples), 0.0)
+    total_liabilities = np.where(seg == 1, rng.uniform(0, 4e7, n_samples), 0.0)
+    bankruptcies = rng.binomial(1, 0.04, n_samples)
+    foreclosures = rng.binomial(1, 0.03, n_samples)
+    loan_to_income = loan_amount / np.maximum(annual_income, 1)
+
+    X = np.column_stack(
+        [
+            seg,
+            credit_score,
+            dti,
+            annual_income,
+            loan_amount,
+            years_in_business,
+            employment_years,
+            dscr,
+            current_ratio,
+            leverage_ratio,
+            profit_margin,
+            debt_service,
+            ebitda,
+            total_assets,
+            total_liabilities,
+            bankruptcies,
+            foreclosures,
+            loan_to_income,
+        ]
+    )
+
+    default_prob = (
+        0.04
+        + np.where(credit_score < 620, 0.22, np.where(credit_score < 680, 0.08, 0.0))
+        + np.where(dti > 43, 0.10, 0.0)
+        + np.where(seg == 1, np.where(dscr < 1.15, 0.12, 0.0), 0.0)
+        + np.where(seg == 1, np.where(leverage_ratio > 4.0, 0.08, 0.0), 0.0)
+        + np.where(seg == 1, np.where(current_ratio < 1.0, 0.05, 0.0), 0.0)
+        + np.where(seg == 1, np.where(years_in_business < 2, 0.06, 0.0), 0.0)
+        + 0.07 * bankruptcies
+        + 0.07 * foreclosures
+        + rng.normal(0, 0.05, n_samples)
+    )
+    default_prob = np.clip(default_prob, 0.01, 0.95)
+    y = (rng.random(n_samples) < default_prob).astype(float)
 
     return X.astype(np.float64), y.astype(np.float64)
 

@@ -9,7 +9,7 @@ from typing import Any
 
 import numpy as np
 
-from insureflow.ml.features import DEFAULT_FEATURE_NAMES, generate_synthetic_dataset
+from insureflow.ml.features import DEFAULT_FEATURE_NAMES, generate_synthetic_dataset, get_model_feature_names
 from insureflow.ml.models import ModelType, TrainingResult
 from insureflow.ml.registry import get_ml_registry
 
@@ -20,6 +20,8 @@ TRAINING_CONFIGS: dict[ModelType, dict[str, Any]] = {
     ModelType.FRAUD_DETECTION: {"n_samples": 3000, "seed": 43},
     ModelType.PREMIUM_OPTIMIZER: {"n_samples": 2000, "seed": 44},
     ModelType.CHURN_PREDICTION: {"n_samples": 2500, "seed": 45},
+    ModelType.MORTGAGE_DEFAULT_RISK: {"n_samples": 2500, "seed": 46},
+    ModelType.LENDING_DEFAULT_RISK: {"n_samples": 3000, "seed": 47},
 }
 
 # Default layout: ml_data/<model_type>.csv with feature columns + target
@@ -98,9 +100,10 @@ def load_dataset_for_model(
     allow_synthetic: bool = True,
 ) -> tuple[np.ndarray, np.ndarray, dict[str, Any]]:
     """Prefer real CSV under ml_data/; fall back to synthetic only if allowed."""
+    feature_columns = get_model_feature_names(model_type.value)
     path = Path(csv_path) if csv_path else resolve_dataset_path(model_type, data_root)
     if path is not None:
-        X, y, meta = load_training_csv(path)
+        X, y, meta = load_training_csv(path, feature_columns=feature_columns)
         meta["model_type"] = model_type.value
         meta["synthetic"] = False
         return X, y, meta

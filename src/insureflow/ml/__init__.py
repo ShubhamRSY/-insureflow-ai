@@ -12,21 +12,25 @@ if TYPE_CHECKING:
     from insureflow.ml.behavioral import BehavioralScoringModel
     from insureflow.ml.churn import ChurnPredictionModel
     from insureflow.ml.fraud_detection import FraudDetectionModel
+    from insureflow.ml.lending_default import LendingDefaultRiskModel
     from insureflow.ml.loss_prediction import LossPredictionModel
     from insureflow.ml.models import (
         BehavioralScore,
         ChurnPrediction,
         FeatureVector,
         FraudScore,
+        LendingDefaultScore,
         LossPrediction,
         ModelStatus,
         ModelType,
+        MortgageDefaultScore,
         PortfolioRiskResult,
         PredictionRequest,
         PredictionResponse,
         PremiumRecommendation,
         TrainingResult,
     )
+    from insureflow.ml.mortgage_default import MortgageDefaultRiskModel
     from insureflow.ml.portfolio_risk import PortfolioRiskModel
     from insureflow.ml.premium_optimizer import PremiumOptimizerModel
     from insureflow.ml.registry import MLModelRegistry, get_ml_registry
@@ -42,7 +46,9 @@ def __getattr__(name: str) -> object:
         "BehavioralScoringModel": ("insureflow.ml.behavioral", "BehavioralScoringModel"),
         "ChurnPredictionModel": ("insureflow.ml.churn", "ChurnPredictionModel"),
         "FraudDetectionModel": ("insureflow.ml.fraud_detection", "FraudDetectionModel"),
+        "LendingDefaultRiskModel": ("insureflow.ml.lending_default", "LendingDefaultRiskModel"),
         "LossPredictionModel": ("insureflow.ml.loss_prediction", "LossPredictionModel"),
+        "MortgageDefaultRiskModel": ("insureflow.ml.mortgage_default", "MortgageDefaultRiskModel"),
         "PortfolioRiskModel": ("insureflow.ml.portfolio_risk", "PortfolioRiskModel"),
         "PremiumOptimizerModel": ("insureflow.ml.premium_optimizer", "PremiumOptimizerModel"),
         "MLModelRegistry": ("insureflow.ml.registry", "MLModelRegistry"),
@@ -51,8 +57,10 @@ def __getattr__(name: str) -> object:
         "retrain_model": ("insureflow.ml.training", "retrain_model"),
         "train_all_models": ("insureflow.ml.training", "train_all_models"),
         "FeatureVector": ("insureflow.ml.models", "FeatureVector"),
+        "LendingDefaultScore": ("insureflow.ml.models", "LendingDefaultScore"),
         "ModelType": ("insureflow.ml.models", "ModelType"),
         "ModelStatus": ("insureflow.ml.models", "ModelStatus"),
+        "MortgageDefaultScore": ("insureflow.ml.models", "MortgageDefaultScore"),
         "LossPrediction": ("insureflow.ml.models", "LossPrediction"),
         "FraudScore": ("insureflow.ml.models", "FraudScore"),
         "PremiumRecommendation": ("insureflow.ml.models", "PremiumRecommendation"),
@@ -81,11 +89,15 @@ __all__ = [
     "FeatureVector",
     "FraudDetectionModel",
     "FraudScore",
+    "LendingDefaultRiskModel",
+    "LendingDefaultScore",
     "LossPrediction",
     "LossPredictionModel",
     "MLModelRegistry",
     "ModelStatus",
     "ModelType",
+    "MortgageDefaultRiskModel",
+    "MortgageDefaultScore",
     "PortfolioRiskModel",
     "PortfolioRiskResult",
     "PremiumOptimizerModel",

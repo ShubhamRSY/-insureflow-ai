@@ -21,22 +21,30 @@ from insureflow.ml.features import (
     ROOF_MAP,
     encode_categorical,
     extract_features,
+    extract_lending_features,
+    extract_mortgage_features,
     generate_synthetic_dataset,
     get_feature_names,
+    get_lending_feature_names,
+    get_mortgage_feature_names,
 )
 from insureflow.ml.fraud_detection import FraudDetectionModel
+from insureflow.ml.lending_default import LendingDefaultRiskModel
 from insureflow.ml.loss_prediction import LossPredictionModel
 from insureflow.ml.models import (
     ChurnPrediction,
     FeatureVector,
     FraudScore,
+    LendingDefaultScore,
     LossPrediction,
     ModelStatus,
     ModelType,
+    MortgageDefaultScore,
     PortfolioRiskResult,
     PremiumRecommendation,
     TrainingResult,
 )
+from insureflow.ml.mortgage_default import MortgageDefaultRiskModel
 from insureflow.ml.portfolio_risk import PortfolioRiskModel
 from insureflow.ml.premium_optimizer import PremiumOptimizerModel
 from insureflow.ml.registry import get_ml_registry
@@ -138,10 +146,32 @@ class TestMLModels:
         assert cp.churn_probability >= 0 and cp.churn_probability <= 1
         assert cp.lifetime_value > 0
 
+    def test_mortgage_default_score_validates(self) -> None:
+        mds = MortgageDefaultScore(
+            default_probability=0.42,
+            risk_level="high",
+            delinquency_band="60-90",
+            top_risk_factors=["DTI exceeds 43%"],
+            recommended_action="manual_underwriting_review",
+        )
+        assert 0 <= mds.default_probability <= 1
+        assert mds.risk_level in ("low", "medium", "high", "critical")
+
+    def test_lending_default_score_validates(self) -> None:
+        lds = LendingDefaultScore(
+            default_probability=0.33,
+            risk_level="medium",
+            top_factors=["DSCR below 1.15x"],
+            recommended_structure="guarantor_required",
+        )
+        assert 0 <= lds.default_probability <= 1
+
     def test_model_type_enum(self) -> None:
         assert ModelType.LOSS_PREDICTION.value == "loss_prediction"
         assert ModelType.FRAUD_DETECTION.value == "fraud_detection"
-        assert len(ModelType) == 6
+        assert ModelType.MORTGAGE_DEFAULT_RISK.value == "mortgage_default_risk"
+        assert ModelType.LENDING_DEFAULT_RISK.value == "lending_default_risk"
+        assert len(ModelType) == 8
 
     def test_model_status_enum(self) -> None:
         assert ModelStatus.DRAFT.value == "draft"
@@ -215,11 +245,67 @@ class TestFeatureEngineering:
         names = get_feature_names()
         assert len(names) == 29
 
+    def test_mortgage_feature_names(self) -> None:
+        fv = FeatureVector(
+            credit_score=720,
+            dti_ratio=36,
+            ltv_ratio=78,
+            loan_amount=400_000,
+            revenue=120_000,
+            reserves=45_000,
+            employment_years=8,
+            utilization_rate=35,
+        )
+        features = extract_mortgage_features(fv)
+        assert features.shape == (18,)
+        assert features[0] == 720
+        assert features[14] == 400_000 / 120_000  # loan_to_income
+        assert features[15] == 45_000 / 400_000  # reserves_to_loan
+        names = get_mortgage_feature_names()
+        assert len(names) == 18
+
+    def test_mortgage_features_safety(self) -> None:
+        fv = FeatureVector()
+        features = extract_mortgage_features(fv)
+        assert np.all(np.isfinite(features))
+
+    def test_lending_feature_names(self) -> None:
+        fv = FeatureVector(
+            loan_segment="business",
+            dscr=1.35,
+            revenue=2_000_000,
+            loan_amount=500_000,
+            years_in_business=12,
+        )
+        features = extract_lending_features(fv)
+        assert features.shape == (18,)
+        assert features[0] == 1.0  # segment_business
+        assert features[7] == 1.35  # dscr
+        assert features[17] == 500_000 / 2_000_000  # loan_to_income
+        names = get_lending_feature_names()
+        assert len(names) == 18
+
+    def test_lending_consumer_segment(self) -> None:
+        fv = FeatureVector(loan_segment="consumer")
+        features = extract_lending_features(fv)
+        assert features[0] == 0.0
+
     def test_generate_synthetic_dataset_shapes(self) -> None:
         for model_type in ["loss_prediction", "fraud_detection", "premium_optimizer", "churn_prediction"]:
             X, y = generate_synthetic_dataset(n_samples=100, model_type=model_type, seed=42)
             assert X.shape == (100, 29)
             assert y.shape == (100,)
+
+    def test_generate_synthetic_mortgage_shapes(self) -> None:
+        X, y = generate_synthetic_dataset(n_samples=200, model_type="mortgage_default_risk", seed=42)
+        assert X.shape == (200, 18)
+        assert set(np.unique(y)).issubset({0.0, 1.0})
+        assert 0.01 < y.mean() < 0.5
+
+    def test_generate_synthetic_lending_shapes(self) -> None:
+        X, y = generate_synthetic_dataset(n_samples=200, model_type="lending_default_risk", seed=42)
+        assert X.shape == (200, 18)
+        assert set(np.unique(y)).issubset({0.0, 1.0})
 
     def test_generate_synthetic_dataset_deterministic(self) -> None:
         X1, y1 = generate_synthetic_dataset(n_samples=50, model_type="loss_prediction", seed=99)
@@ -430,6 +516,105 @@ class TestChurnPredictionModel:
         assert 0 <= pred["churn_probability"] <= 1
 
 
+class TestMortgageDefaultRiskModel:
+    """Test MortgageDefaultRiskModel training, prediction, fallback."""
+
+    def test_init(self) -> None:
+        model = MortgageDefaultRiskModel()
+        assert model.model_type == ModelType.MORTGAGE_DEFAULT_RISK
+        assert model.status == ModelStatus.DRAFT
+        assert not model.is_trained
+
+    def test_train(self) -> None:
+        model = MortgageDefaultRiskModel()
+        X, y = generate_synthetic_dataset(500, "mortgage_default_risk", seed=42)
+        result = model.train(X, y)
+        assert model.is_trained
+        assert model.status == ModelStatus.READY
+        assert "val_accuracy" in result.metrics
+        assert result.training_samples == 400
+
+    def test_predict_trained(self) -> None:
+        model = MortgageDefaultRiskModel()
+        X, y = generate_synthetic_dataset(500, "mortgage_default_risk", seed=42)
+        model.train(X, y)
+        fv = FeatureVector(credit_score=640, dti_ratio=45, ltv_ratio=85, loan_amount=300_000, revenue=90_000, reserves=5_000)
+        pred = model.predict(fv)
+        assert "default_probability" in pred
+        assert "delinquency_band" in pred
+        assert 0 <= pred["default_probability"] <= 1
+
+    def test_predict_untrained_fallback(self) -> None:
+        model = MortgageDefaultRiskModel()
+        fv = FeatureVector(credit_score=580, dti_ratio=50, ltv_ratio=95, reserves=1_000)
+        pred = model.predict(fv)
+        assert pred["model_version"] == "fallback"
+        assert pred["risk_level"] in ("low", "medium", "high", "critical")
+        assert len(pred["top_risk_factors"]) > 0
+
+    def test_fallback_high_risk_input(self) -> None:
+        model = MortgageDefaultRiskModel()
+        fv = FeatureVector(
+            credit_score=550,
+            dti_ratio=50,
+            ltv_ratio=95,
+            reserves=500,
+            bankruptcies=1,
+            foreclosures=1,
+            utilization_rate=85,
+        )
+        pred = model.predict(fv)
+        assert pred["default_probability"] >= 0.5
+        assert pred["risk_level"] in ("high", "critical")
+
+    def test_fallback_clean_input_low_risk(self) -> None:
+        model = MortgageDefaultRiskModel()
+        fv = FeatureVector(credit_score=800, dti_ratio=25, ltv_ratio=60, reserves=100_000)
+        pred = model.predict(fv)
+        assert pred["default_probability"] < 0.3
+        assert pred["risk_level"] == "low"
+
+
+class TestLendingDefaultRiskModel:
+    """Test LendingDefaultRiskModel training, prediction, fallback."""
+
+    def test_init(self) -> None:
+        model = LendingDefaultRiskModel()
+        assert model.model_type == ModelType.LENDING_DEFAULT_RISK
+
+    def test_train(self) -> None:
+        model = LendingDefaultRiskModel()
+        X, y = generate_synthetic_dataset(500, "lending_default_risk", seed=42)
+        result = model.train(X, y)
+        assert model.is_trained
+        assert "val_accuracy" in result.metrics
+
+    def test_predict_trained(self) -> None:
+        model = LendingDefaultRiskModel()
+        X, y = generate_synthetic_dataset(500, "lending_default_risk", seed=42)
+        model.train(X, y)
+        fv = FeatureVector(loan_segment="consumer", credit_score=620, dti_ratio=40, revenue=60_000, loan_amount=30_000)
+        pred = model.predict(fv)
+        assert "default_probability" in pred
+        assert "recommended_structure" in pred
+        assert 0 <= pred["default_probability"] <= 1
+
+    def test_predict_untrained_fallback_business(self) -> None:
+        model = LendingDefaultRiskModel()
+        fv = FeatureVector(loan_segment="business", dscr=0.9, leverage_ratio=6.0, current_ratio=0.8, years_in_business=1)
+        pred = model.predict(fv)
+        assert pred["model_version"] == "fallback"
+        assert pred["risk_level"] in ("high", "critical")
+        assert pred["recommended_structure"] == "secured_with_guarantor"
+
+    def test_predict_untrained_fallback_consumer(self) -> None:
+        model = LendingDefaultRiskModel()
+        fv = FeatureVector(loan_segment="consumer", credit_score=800, dti_ratio=20, employment_years=10)
+        pred = model.predict(fv)
+        assert pred["risk_level"] == "low"
+        assert pred["recommended_structure"] == "standard_terms"
+
+
 class TestBehavioralScoringModel:
     """Test BehavioralScoringModel — no sklearn training needed."""
 
@@ -518,7 +703,7 @@ class TestMLModelRegistry:
     def test_registry_status(self) -> None:
         registry = get_ml_registry()
         statuses = registry.get_status()
-        assert len(statuses) == 6
+        assert len(statuses) == 8
         types_found = {s["model_type"] for s in statuses}
         for mt in ModelType:
             assert mt.value in types_found
@@ -557,7 +742,7 @@ class TestTrainingPipeline:
 
     def test_train_all_models(self) -> None:
         results = train_all_models(force=True)
-        assert len(results) >= 4  # loss, fraud, premium, churn
+        assert len(results) >= 6  # loss, fraud, premium, churn, mortgage, lending
 
         for r in results:
             assert r.training_samples > 0
@@ -574,7 +759,7 @@ class TestTrainingPipeline:
         assert "models" in status
         assert "history" in status
         assert "training_configs" in status
-        assert len(status["models"]) == 6
+        assert len(status["models"]) == 8
 
     def test_training_configs_cover_all_types(self) -> None:
         for mt in ModelType:
@@ -631,7 +816,7 @@ class TestMLEndpoints:
         assert resp.status_code == 200
         data = resp.json()
         assert "models" in data
-        assert len(data["models"]) == 6
+        assert len(data["models"]) == 8
 
     def test_ml_models_list(self) -> None:
         resp = self.client.get("/ml/models")
@@ -644,7 +829,7 @@ class TestMLEndpoints:
         assert resp.status_code == 200
         data = resp.json()
         assert "results" in data
-        assert data["trained"] >= 4
+        assert data["trained"] >= 6
 
     def test_ml_train_single_invalid_type(self) -> None:
         resp = self.client.post("/ml/train/invalid_model_type")
@@ -712,6 +897,40 @@ class TestMLEndpoints:
         assert resp.status_code == 200
         data = resp.json()
         assert "churn_probability" in data
+
+    def test_ml_predict_mortgage_default(self) -> None:
+        resp = self.client.post(
+            "/ml/predict/mortgage-default",
+            json={
+                "credit_score": 640,
+                "dti_ratio": 45,
+                "ltv_ratio": 85,
+                "loan_amount": 300_000,
+                "revenue": 90_000,
+                "reserves": 5_000,
+            },
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "default_probability" in data
+        assert "delinquency_band" in data
+        assert "risk_level" in data
+
+    def test_ml_predict_lending_default(self) -> None:
+        resp = self.client.post(
+            "/ml/predict/lending-default",
+            json={
+                "loan_segment": "business",
+                "dscr": 1.0,
+                "leverage_ratio": 5.0,
+                "annual_income": 2_000_000,
+                "loan_amount": 500_000,
+            },
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "default_probability" in data
+        assert "recommended_structure" in data
 
     def test_ml_predict_portfolio_risk(self) -> None:
         resp = self.client.post(

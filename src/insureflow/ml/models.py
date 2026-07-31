@@ -16,6 +16,8 @@ class ModelType(str, Enum):
     PORTFOLIO_RISK = "portfolio_risk"
     BEHAVIORAL_SCORING = "behavioral_scoring"
     CHURN_PREDICTION = "churn_prediction"
+    MORTGAGE_DEFAULT_RISK = "mortgage_default_risk"
+    LENDING_DEFAULT_RISK = "lending_default_risk"
 
 
 class ModelStatus(str, Enum):
@@ -60,6 +62,24 @@ class FeatureVector(BaseModel):
     product_line: str = ""
     month_of_binding: int = 0
     quarter: int = 0
+    # ── Mortgage / lending shared risk fields ────────────────────────────────
+    loan_amount: float = 0.0
+    loan_segment: str = Field(default="", description="business / consumer")
+    reserves: float = 0.0
+    self_employment_income: float = 0.0
+    utilization_rate: float = 0.0
+    derogatory_marks: int = 0
+    employment_years: float = 0.0
+    bankruptcies: int = 0
+    foreclosures: int = 0
+    current_ratio: float = 0.0
+    dscr: float = 0.0
+    leverage_ratio: float = 0.0
+    profit_margin: float = 0.0
+    debt_service: float = 0.0
+    ebitda: float = 0.0
+    total_assets: float = 0.0
+    total_liabilities: float = 0.0
     custom_features: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -144,6 +164,27 @@ class ChurnPrediction(BaseModel):
     lifetime_value: float = Field(description="Predicted LTV if retained")
     churn_cost: float = Field(description="Estimated cost of losing this policy")
     renewal_premium_suggestion: float = 0.0
+    model_version: str = ""
+
+
+class MortgageDefaultScore(BaseModel):
+    """Mortgage delinquency / default risk prediction."""
+
+    default_probability: float = Field(ge=0, le=1, description="Predicted probability of mortgage default")
+    risk_level: str = Field(description="low / medium / high / critical")
+    delinquency_band: str = Field(description="Expected delinquency band (e.g. 0-30, 30-60, 60-90, 90+)")
+    top_risk_factors: list[str] = Field(default_factory=list)
+    recommended_action: str = ""
+    model_version: str = ""
+
+
+class LendingDefaultScore(BaseModel):
+    """Lending default risk prediction for business and consumer loans."""
+
+    default_probability: float = Field(ge=0, le=1)
+    risk_level: str = Field(description="low / medium / high / critical")
+    top_factors: list[str] = Field(default_factory=list)
+    recommended_structure: str = Field(description="e.g. secured, guarantor_required, shorter_term")
     model_version: str = ""
 
 

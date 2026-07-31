@@ -258,6 +258,7 @@ class MortgagePipeline:
         bundle.status = MortgageBundleStatus.COMPLETED
         progress.complete("underwrite", detail=memo.decision.value)
 
+        ml_default = self._ml_default_risk(bundle, memo, loan_amount=loan_amount)
         progress.start("pricing", "Pricing", "Rate quote")
         product_enum = LoanProduct(loan_product) if loan_product else None
         rate_quote = self.pricing.quote(bundle, memo, loan_amount=loan_amount, product=product_enum)
@@ -290,6 +291,7 @@ class MortgagePipeline:
             "risk_score": memo.risk_score,
             "dti_ratio": dti_ratio,
             "ltv_ratio": memo.ltv_ratio,
+            "ml_default_risk": ml_default,
             "human_review_required": memo.human_review_required,
             "rate_quote": {
                 "product": rate_quote.product.value,
@@ -340,3 +342,83 @@ class MortgagePipeline:
         if "commercial_mortgage" in path.lower():
             return ProductLine.COMMERCIAL_MORTGAGE
         return ProductLine.RESIDENTIAL_MORTGAGE
+
+    def _ml_default_risk(
+        self,
+        bundle: MortgageBundle,
+        memo: Any,
+        loan_amount: float | None = None,
+    ) -> dict[str, Any]:
+        """Run ML mortgage default-risk model on the borrower + property profile.
+
+        Falls back to deterministic rules when no trained model is available.
+        """
+        try:
+            from insureflow.ml.base import BaseMLModel
+            from insureflow.ml.features import FeatureVector
+            from insureflow.ml.models import ModelType
+            from insureflow.ml.registry import get_ml_registry
+
+            credit = bundle.credit
+            income = bundle.income
+            assets = bundle.assets
+
+            credit_score = float(credit.credit_score) if credit else 0.0
+            utilization = float(credit.utilization_rate) if credit else 0.0
+            derogatory_marks = len(credit.derogatory_flags) if credit else 0
+
+            bankruptcies = 0
+            foreclosures = 0
+            if credit:
+                for flag in credit.derogatory_flags:
+                    lowered = flag.lower()
+                    if "bankrupt" in lowered:
+                        bankruptcies += 1
+                    if "foreclos" in lowered:
+                        foreclosures += 1
+
+            annual_income = 0.0
+            self_employment = 0.0
+            if income:
+                annual_income = float(income.adjusted_gross_income or income.total_income or 0)
+                self_employment = float(income.self_employment_income or 0)
+
+            reserves = float(assets.total_liquid_assets) if assets else 0.0
+
+            dti = memo.dti_ratio if memo and memo.dti_ratio is not None else 0.0
+            ltv = memo.ltv_ratio if memo and memo.ltv_ratio is not None else 0.0
+
+            requested = float(loan_amount or 0)
+            if not requested and bundle.collateral and bundle.collateral.appraised_value > 0:
+                requested = bundle.collateral.appraised_value * (float(ltv or 80) / 100.0)
+
+            fv = FeatureVector(
+                credit_score=credit_score,
+                dti_ratio=float(dti),
+                ltv_ratio=float(ltv),
+                loan_amount=requested,
+                revenue=annual_income,
+                reserves=reserves,
+                employment_years=0.0,
+                self_employment_income=self_employment,
+                utilization_rate=utilization,
+                derogatory_marks=derogatory_marks,
+                bankruptcies=bankruptcies,
+                foreclosures=foreclosures,
+            )
+
+            model = get_ml_registry().get(ModelType.MORTGAGE_DEFAULT_RISK)
+            if model is None or not isinstance(model, BaseMLModel):
+                return {"error": "mortgage_default_risk model unavailable"}
+            return model.predict(fv)
+        except Exception:  # noqa: BLE001
+            from insureflow.ml.models import MortgageDefaultScore
+
+            return MortgageDefaultScore(
+                default_probability=0.0,
+                risk_level="unknown",
+                delinquency_band="unknown",
+                top_risk_factors=[],
+                recommended_action="standard_processing",
+                model_version="error",
+            ).model_dump()

@@ -218,5 +218,6 @@ class LendingPipelineResult(BaseModel):
     human_review_reasons: list[str] = Field(default_factory=list)
     compliance_violations: list[dict[str, Any]] = Field(default_factory=list)
     credit_analysis: Optional[CreditAnalysis] = None
+    ml_default_risk: dict[str, Any] = Field(default_factory=dict)
     document_count: int = 0
     lender_notes: str = ""

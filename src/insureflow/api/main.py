@@ -4563,6 +4563,38 @@ def ml_predict_churn(features: dict[str, Any]) -> dict[str, Any]:
     return model.predict(fv)
 
 
+@app.post("/ml/predict/mortgage-default")
+def ml_predict_mortgage_default(features: dict[str, Any]) -> dict[str, Any]:
+    """Mortgage default risk — probability, delinquency band, risk factors."""
+    from insureflow.ml.base import BaseMLModel
+    from insureflow.ml.features import FeatureVector
+    from insureflow.ml.models import ModelType
+    from insureflow.ml.registry import get_ml_registry
+
+    registry = get_ml_registry()
+    model = registry.get(ModelType.MORTGAGE_DEFAULT_RISK)
+    if model is None or not isinstance(model, BaseMLModel):
+        raise HTTPException(status_code=503, detail="Mortgage default-risk model not available")
+    fv = FeatureVector(**{k: v for k, v in features.items() if k in FeatureVector.model_fields})
+    return model.predict(fv)
+
+
+@app.post("/ml/predict/lending-default")
+def ml_predict_lending_default(features: dict[str, Any]) -> dict[str, Any]:
+    """Lending default risk — probability, risk level, recommended structure."""
+    from insureflow.ml.base import BaseMLModel
+    from insureflow.ml.features import FeatureVector
+    from insureflow.ml.models import ModelType
+    from insureflow.ml.registry import get_ml_registry
+
+    registry = get_ml_registry()
+    model = registry.get(ModelType.LENDING_DEFAULT_RISK)
+    if model is None or not isinstance(model, BaseMLModel):
+        raise HTTPException(status_code=503, detail="Lending default-risk model not available")
+    fv = FeatureVector(**{k: v for k, v in features.items() if k in FeatureVector.model_fields})
+    return model.predict(fv)
+
+
 @app.post("/ml/predict/portfolio-risk")
 def ml_portfolio_risk(portfolio: dict[str, Any]) -> dict[str, Any]:
     """Portfolio risk modeling — VaR, tail risk, Monte Carlo simulation."""

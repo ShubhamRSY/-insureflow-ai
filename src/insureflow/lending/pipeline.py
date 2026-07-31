@@ -9,6 +9,7 @@ from typing import Any
 from insureflow.analytics.documents import DocumentAnalyticsEngine
 from insureflow.lending.compliance import LendingComplianceEngine
 from insureflow.lending.models import (
+    BusinessFinancialData,
     BusinessLoanApplication,
     ConsumerLoanApplication,
     CreditAnalysis,
@@ -147,6 +148,16 @@ class LendingPipeline:
             )
         )
 
+        ml_default_risk = self._ml_default_risk(application, risk_analysis)
+        timeline.append(
+            self._record(
+                "ml",
+                "completed",
+                run_id,
+                {"risk_level": ml_default_risk.get("risk_level"), "probability": ml_default_risk.get("default_probability")},
+            )
+        )
+
         if documents:
             self._ingest_documents(application, documents)
         doc_count = len(documents) if documents else 0
@@ -209,12 +220,77 @@ class LendingPipeline:
             human_review_reasons=human_reasons,
             compliance_violations=violations,
             credit_analysis=risk_analysis,
+            ml_default_risk=ml_default_risk,
             document_count=doc_count,
         )
 
         self._save_audit(run_id, application, result, timeline, documents)
         self._record_document_analytics(run_id, application, documents, result)
         return result
+
+    def _ml_default_risk(
+        self,
+        application: BusinessLoanApplication | ConsumerLoanApplication,
+        analysis: CreditAnalysis,
+    ) -> dict[str, Any]:
+        """Run ML lending default-risk model on the application.
+
+        Falls back to deterministic rules when no trained model is available.
+        """
+        try:
+            from insureflow.ml.features import FeatureVector
+            from insureflow.ml.models import ModelType
+            from insureflow.ml.registry import get_ml_registry
+
+            if isinstance(application, BusinessLoanApplication):
+                biz_fin = application.financials[0] if application.financials else BusinessFinancialData()
+                fv = FeatureVector(
+                    loan_segment="business",
+                    credit_score=float(application.guarantors[0].credit_score if application.guarantors else 0),
+                    revenue=float(biz_fin.annual_revenue),
+                    loan_amount=float(application.requested_amount),
+                    years_in_business=float(application.years_in_business),
+                    dscr=float(analysis.dscr),
+                    current_ratio=float(analysis.liquidity_ratio),
+                    leverage_ratio=float(analysis.leverage_ratio),
+                    profit_margin=float(analysis.profitability_score),
+                    debt_service=float(biz_fin.debt_service),
+                    ebitda=float(biz_fin.ebitda),
+                    total_assets=float(biz_fin.total_assets),
+                    total_liabilities=float(biz_fin.total_liabilities),
+                )
+            else:
+                con_fin = application.financial_data
+                fv = FeatureVector(
+                    loan_segment="consumer",
+                    credit_score=float(con_fin.credit_score),
+                    dti_ratio=float(analysis.debt_to_income_ratio),
+                    revenue=float(con_fin.annual_income),
+                    loan_amount=float(application.requested_amount),
+                    employment_years=float(con_fin.employment_years),
+                    total_assets=float(con_fin.total_assets),
+                    total_liabilities=float(con_fin.total_liabilities),
+                    bankruptcies=int(con_fin.bankruptcies_last_7_years),
+                    foreclosures=int(con_fin.foreclosures_last_7_years),
+                )
+
+            from insureflow.ml.base import BaseMLModel
+
+            model = get_ml_registry().get(ModelType.LENDING_DEFAULT_RISK)
+            if model is None or not isinstance(model, BaseMLModel):
+                return {"error": "lending_default_risk model unavailable"}
+            return model.predict(fv)
+        except Exception:  # noqa: BLE001
+            logger.warning("Lending ML default-risk prediction failed", exc_info=True)
+            from insureflow.ml.models import LendingDefaultScore
+
+            return LendingDefaultScore(
+                default_probability=0.0,
+                risk_level="unknown",
+                top_factors=[],
+                recommended_structure="standard_terms",
+                model_version="error",
+            ).model_dump()
 
     @staticmethod
     def _missing_financial_signals(application: BusinessLoanApplication | ConsumerLoanApplication) -> list[str]:

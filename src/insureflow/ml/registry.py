@@ -10,8 +10,10 @@ from insureflow.ml.base import BaseMLModel
 from insureflow.ml.behavioral import BehavioralScoringModel
 from insureflow.ml.churn import ChurnPredictionModel
 from insureflow.ml.fraud_detection import FraudDetectionModel
+from insureflow.ml.lending_default import LendingDefaultRiskModel
 from insureflow.ml.loss_prediction import LossPredictionModel
 from insureflow.ml.models import ModelStatus, ModelType, TrainingResult
+from insureflow.ml.mortgage_default import MortgageDefaultRiskModel
 from insureflow.ml.portfolio_risk import PortfolioRiskModel
 from insureflow.ml.premium_optimizer import PremiumOptimizerModel
 
@@ -34,6 +36,8 @@ class MLModelRegistry:
             FraudDetectionModel,
             PremiumOptimizerModel,
             ChurnPredictionModel,
+            MortgageDefaultRiskModel,
+            LendingDefaultRiskModel,
         ]
         for model_cls in trainable:
             model = model_cls()
