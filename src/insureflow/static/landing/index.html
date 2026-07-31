@@ -3,21 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Rytera — AI Underwriting Platform</title>
-  <meta name="description" content="Rytera is the AI underwriting platform for commercial insurance, mortgage, and lending — every pipeline layer visible from intake to decision. Shadow pilots, live oracles, and human-in-the-loop sign-off." />
+  <title>Rytera — AI-Native Underwriting for Carriers, MGAs &amp; Aggregators</title>
+  <meta name="description" content="Underwriting, reimagined. See how carriers, MGAs, and MGA aggregators use Rytera's agentic AI to move from intake to quote faster — one platform for data, triage, and decisions." />
   <link rel="canonical" href="https://ryterainc.com/" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://ryterainc.com/" />
-  <meta property="og:title" content="Rytera — AI Underwriting Platform" />
-  <meta property="og:description" content="Multi-agent underwriting for insurance, mortgage, and lending — shadow pilots, live oracles, human-in-the-loop sign-off." />
+  <meta property="og:title" content="Rytera — AI-Native Underwriting for Carriers, MGAs &amp; Aggregators" />
+  <meta property="og:description" content="Underwriting, reimagined. One platform for data, triage, and decisions to move from intake to quote faster. AI-native for carriers, MGAs, and MGA aggregators." />
   <meta property="og:site_name" content="Rytera" />
   <meta property="og:image" content="https://ryterainc.com/og-image.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:image:alt" content="Rytera — AI underwriting platform" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Rytera — AI Underwriting Platform" />
-  <meta name="twitter:description" content="AI underwriting with every layer visible. Shadow pilots ready." />
+  <meta name="twitter:title" content="Rytera — AI-Native Underwriting for Carriers, MGAs &amp; Aggregators" />
+  <meta name="twitter:description" content="Underwriting, reimagined. One platform for data, triage, and decisions — from intake to quote faster. Book a demo." />
   <meta name="twitter:image" content="https://ryterainc.com/og-image.png" />
   <link rel="icon" href="/favicon.ico" sizes="any" />
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
@@ -305,6 +305,43 @@
       font-size: .9rem; color: var(--muted); margin: 0; line-height: 1.55;
     }
 
+    /* AI-native vs legacy comparison */
+    .compare { display: grid; gap: 1rem; grid-template-columns: 1fr 1fr; align-items: start; }
+    .compare-col {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 1rem; overflow: hidden;
+    }
+    .compare-col .compare-head {
+      padding: .85rem 1.25rem; font-weight: 700; font-size: .95rem; letter-spacing: -.01em;
+    }
+    .compare-col .compare-head.legacy { background: rgba(244,63,94,.08); color: #fda4af; }
+    .compare-col .compare-head.ai { background: rgba(34,211,238,.08); color: #67e8f9; }
+    .compare-list { list-style: none; padding: 1rem 1.25rem 1.25rem; }
+    .compare-list li {
+      position: relative; padding-left: 1.25rem; margin-bottom: .55rem;
+      font-size: .875rem; color: var(--muted); line-height: 1.5;
+    }
+    .compare-col .compare-head.legacy + .compare-list li::before {
+      content: "✕"; position: absolute; left: 0; color: #f87171; font-size: .8rem; line-height: 1.4;
+    }
+    .compare-col .compare-head.ai + .compare-list li::before {
+      content: "✓"; position: absolute; left: 0; color: #34d399; font-size: .8rem; line-height: 1.4;
+    }
+
+    /* Agentic platform grid */
+    .agent-grid { display: grid; gap: 1rem; grid-template-columns: repeat(4, 1fr); }
+    .agent-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 1rem; padding: 1.35rem 1.45rem;
+      transition: border-color .25s, transform .25s;
+    }
+    .agent-card:hover { border-color: rgba(34,211,238,.4); transform: translateY(-2px); }
+    .agent-card h3 {
+      font-size: 1.05rem; font-weight: 700; letter-spacing: -.02em;
+      margin-bottom: .55rem; color: var(--text); line-height: 1.25;
+    }
+    .agent-card p { font-size: .875rem; color: var(--muted); margin: 0; line-height: 1.55; }
+
     /* Integrations filter */
     .filter-bar { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
     .filter-btn {
@@ -426,7 +463,7 @@
     @media (max-width: 900px) {
       .stats { grid-template-columns: repeat(2, 1fr); }
       .pipeline-wrap { grid-template-columns: 1fr; }
-      .feature-grid, .bento { grid-template-columns: 1fr; }
+      .feature-grid, .bento, .agent-grid, .compare { grid-template-columns: 1fr; }
       .bento-card.wide { grid-column: span 1; }
     }
     @media (max-width: 640px) {
@@ -450,38 +487,40 @@
     <header id="header">
       <a class="logo" href="#top">Rytera<span>™</span></a>
       <nav class="nav-desktop" aria-label="Main">
+        <a href="#ai-native" data-nav>Why Rytera</a>
         <a href="#how-it-works" data-nav>How it works</a>
         <a href="#features" data-nav>Features</a>
         <a href="#capabilities" data-nav>Capabilities</a>
         <a href="#integrations" data-nav>Integrations</a>
         <a href="#faq" data-nav>FAQ</a>
         <a href="/dashboard">Dashboard</a>
-        <button type="button" class="btn btn-primary" id="open-demo-nav">Request demo</button>
+        <button type="button" class="btn btn-primary" id="open-demo-nav">Book a demo</button>
       </nav>
       <button class="menu-btn" id="menu-btn" aria-label="Open menu">☰</button>
     </header>
     <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile">
+      <a href="#ai-native" data-nav>Why Rytera</a>
       <a href="#how-it-works" data-nav>How it works</a>
       <a href="#features" data-nav>Features</a>
       <a href="#capabilities" data-nav>Capabilities</a>
       <a href="#integrations" data-nav>Integrations</a>
       <a href="#faq" data-nav>FAQ</a>
       <a href="/dashboard">Dashboard</a>
-      <button type="button" class="btn btn-primary" id="open-demo-mobile" style="margin-top:.5rem">Request demo</button>
+      <button type="button" class="btn btn-primary" id="open-demo-mobile" style="margin-top:.5rem">Book a demo</button>
     </nav>
 
     <main>
       <section class="hero" id="top">
         <div class="reveal">
-          <div class="hero-badge"><span class="dot"></span> v0.3 · Shadow pilots ready</div>
-          <h1><span class="gradient">AI underwriting</span> with every layer visible</h1>
+          <div class="hero-badge"><span class="dot"></span> AI-Native Underwriting · Shadow pilots ready</div>
+          <h1><span class="gradient">Underwriting,</span> Reimagined</h1>
           <p class="lead">
-            Rytera ingests commercial packages, runs multi-agent analysis, wires live CLUE / A-PLUS oracles when configured,
-            and produces bind-ready memos — licensed underwriters decide; bind stays off until you approve.
+            See how carriers, MGAs, and MGA aggregators use AI to grow. One platform for data, triage, and decisions —
+            move from intake to quote faster with context-aware agentic underwriting.
           </p>
           <div class="cta">
-            <a class="btn btn-primary" href="/dashboard">Open Dashboard</a>
-            <button type="button" class="btn btn-ghost" id="open-demo-hero">Book a demo</button>
+            <button type="button" class="btn btn-primary" id="open-demo-hero">Book a demo</button>
+            <a class="btn btn-ghost" href="/dashboard">Open Dashboard</a>
           </div>
         </div>
         <div class="stats reveal" aria-label="Platform highlights">
@@ -489,6 +528,64 @@
           <div class="stat"><span class="num" data-target="30">0</span><span>Day shadow pilots</span></div>
           <div class="stat"><span class="num" data-target="24">0</span><span>Doc sources</span></div>
           <div class="stat"><span class="num" data-target="13">0</span><span>Live integrations</span></div>
+        </div>
+      </section>
+
+      <section id="ai-native">
+        <div class="reveal">
+          <p class="section-label">Why Rytera</p>
+          <h2>AI-native vs. the old core</h2>
+          <p class="section-desc">Legacy workbenches were built for document storage, not decisions. Rytera is built for what underwriting actually needs.</p>
+        </div>
+        <div class="compare reveal">
+          <div class="compare-col">
+            <div class="compare-head legacy">Legacy Workbench</div>
+            <ul class="compare-list">
+              <li>Intake from a fax queue or a shared drive</li>
+              <li>Manual triage — underwriters hunt for red flags</li>
+              <li>Re-keying data across screens and systems</li>
+              <li>Decisions after hours of document review</li>
+              <li>Appetite and exposure checked in the underwriter's head</li>
+              <li>No audit trail of why a file was declined</li>
+            </ul>
+          </div>
+          <div class="compare-col">
+            <div class="compare-head ai">Rytera AI-Native</div>
+            <ul class="compare-list">
+              <li>Intake from 24 connectors — email, S3, SharePoint, SFTP</li>
+              <li>Context-aware triage that prioritizes by appetite, impact, and exposure</li>
+              <li>Documents parsed, reconciled, and deduplicated automatically</li>
+              <li>Bind-ready UW memo in minutes — not hours</li>
+              <li>Appetite filters, COPE, and exposure scored before a human opens the file</li>
+              <li>Encrypted audit trail behind every decision</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section id="agentic">
+        <div class="reveal">
+          <p class="section-label">The agentic AI platform</p>
+          <h2>Replace the legacy workbench</h2>
+          <p class="section-desc">Specialist agents handle triage, extraction, verification, scoring, and pricing in parallel — so your underwriters work the exceptions, not the stack.</p>
+        </div>
+        <div class="agent-grid reveal">
+          <div class="agent-card">
+            <h3>Real-time steering</h3>
+            <p>Live submission queue ranked by appetite fit, impact, and exposure — underwriters see the highest-value files first and steer the book in real time.</p>
+          </div>
+          <div class="agent-card">
+            <h3>Context-aware AI</h3>
+            <p>Prioritization built for appetite, impact, and exposure — not a generic score. Appetite filters, coastal CAT, NCCI class codes, and loss ratios fire before a human opens the file.</p>
+          </div>
+          <div class="agent-card">
+            <h3>Human-in-the-loop</h3>
+            <p>Licensed UW sign-off, authority matrix tiers, and referral queues. AI proposes, underwriters dispose — every override traceable.</p>
+          </div>
+          <div class="agent-card">
+            <h3>Grows with you</h3>
+            <p>Shadow pilot → live oracle feeds → policy admin integration. Bind stays off until your team approves the cutover.</p>
+          </div>
         </div>
       </section>
 
@@ -704,7 +801,7 @@
 
     const FAQS = [
       { q: "What is Rytera?", a: "Rytera is an enterprise AI underwriting platform for commercial insurance, mortgage, and lending. It ingests multi-format submission packages, runs specialist agent analysis, connects to carrier oracles and core systems, and produces bind-ready decisions with a full audit trail." },
-      { q: "Who is Rytera for?", a: "Insurance carriers and MGAs, mortgage lenders (residential and commercial), and consumer/commercial lending operations. Built for underwriting teams, operations leaders, and IT teams who need transparent, auditable AI-assisted decisions." },
+      { q: "Who is Rytera for?", a: "Insurance carriers, MGAs, and MGA aggregators, plus mortgage lenders (residential and commercial) and consumer/commercial lending operations. Built for underwriting teams, operations leaders, and IT teams who need transparent, auditable AI-assisted decisions." },
       { q: "Does Rytera replace Guidewire or our loan origination system?", a: "No. Rytera integrates with policy admin systems (Guidewire, BriteCore), CRM (HubSpot), and LOS workflows via webhooks. It accelerates the underwriting layer while your core systems remain the system of record." },
       { q: "What documents and data sources do you support?", a: "Insurance: ACORD XML, broker PDFs/JSON, loss runs, SOV, inspections. Mortgage: 30+ types including W-2, 1040, credit reports, appraisals, and rent rolls. Lending: application data, credit pulls, and bank statements. Plus 24 enterprise source connectors." },
       { q: "How does the AI underwriting pipeline work?", a: "Submissions move through six stages: Intake → Parse → Verify → Score → Price → Decide. Specialist agents analyze in parallel. Results feed a UW memo with ACCEPT/REFER/DECLINE and optional licensed sign-off before bind." },
