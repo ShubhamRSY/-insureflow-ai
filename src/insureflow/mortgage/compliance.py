@@ -440,54 +440,78 @@ class MortgageComplianceEngine:
         present: list[str] = []
         missing: list[str] = []
         catalog: list[tuple[str, tuple[MortgageDocumentType, ...]]] = [
-            ("Government ID / passport / residency", (
-                MortgageDocumentType.GOVERNMENT_ID,
-                MortgageDocumentType.PASSPORT,
-                MortgageDocumentType.PERMANENT_RESIDENT_CARD,
-                MortgageDocumentType.VISA_DOCUMENT,
-                MortgageDocumentType.RESIDENCY_DOCUMENT,
-            )),
+            (
+                "Government ID / passport / residency",
+                (
+                    MortgageDocumentType.GOVERNMENT_ID,
+                    MortgageDocumentType.PASSPORT,
+                    MortgageDocumentType.PERMANENT_RESIDENT_CARD,
+                    MortgageDocumentType.VISA_DOCUMENT,
+                    MortgageDocumentType.RESIDENCY_DOCUMENT,
+                ),
+            ),
             ("SSN card / verification", (MortgageDocumentType.SSN_CARD, MortgageDocumentType.SSN_VERIFICATION)),
             ("W-2", (MortgageDocumentType.W2,)),
             ("Pay stubs", (MortgageDocumentType.PAY_STUB,)),
             ("Tax returns", (MortgageDocumentType.TAX_RETURN_1040, MortgageDocumentType.TAX_RETURN_1065)),
-            ("K-1 / SSA-1099 / 1099-R / award letter", (
-                MortgageDocumentType.FORM_K1,
-                MortgageDocumentType.SSA_1099,
-                MortgageDocumentType.FORM_1099_R,
-                MortgageDocumentType.SOCIAL_SECURITY_AWARD,
-            )),
-            ("Child support / alimony", (
-                MortgageDocumentType.CHILD_SUPPORT_ORDER,
-                MortgageDocumentType.ALIMONY_DOCUMENTATION,
-            )),
+            (
+                "K-1 / SSA-1099 / 1099-R / award letter",
+                (
+                    MortgageDocumentType.FORM_K1,
+                    MortgageDocumentType.SSA_1099,
+                    MortgageDocumentType.FORM_1099_R,
+                    MortgageDocumentType.SOCIAL_SECURITY_AWARD,
+                ),
+            ),
+            (
+                "Child support / alimony",
+                (
+                    MortgageDocumentType.CHILD_SUPPORT_ORDER,
+                    MortgageDocumentType.ALIMONY_DOCUMENTATION,
+                ),
+            ),
             ("Bank / asset statements", (MortgageDocumentType.BANK_STATEMENT,)),
             ("Gift letter", (MortgageDocumentType.GIFT_LETTER,)),
             ("Earnest money receipt", (MortgageDocumentType.EARNEST_MONEY_RECEIPT,)),
             ("Credit report", (MortgageDocumentType.CREDIT_REPORT,)),
-            ("Bankruptcy / judgment", (
-                MortgageDocumentType.BANKRUPTCY_DISCHARGE,
-                MortgageDocumentType.JUDGMENT_DOCUMENT,
-            )),
-            ("Landlord verification", (
-                MortgageDocumentType.LANDLORD_VERIFICATION,
-                MortgageDocumentType.RENTAL_HISTORY,
-            )),
+            (
+                "Bankruptcy / judgment",
+                (
+                    MortgageDocumentType.BANKRUPTCY_DISCHARGE,
+                    MortgageDocumentType.JUDGMENT_DOCUMENT,
+                ),
+            ),
+            (
+                "Landlord verification",
+                (
+                    MortgageDocumentType.LANDLORD_VERIFICATION,
+                    MortgageDocumentType.RENTAL_HISTORY,
+                ),
+            ),
             ("Purchase agreement", (MortgageDocumentType.PURCHASE_AGREEMENT,)),
             ("Appraisal", (MortgageDocumentType.RESIDENTIAL_APPRAISAL, MortgageDocumentType.COMMERCIAL_APPRAISAL)),
-            ("HOI / hazard", (
-                MortgageDocumentType.HOMEOWNERS_INSURANCE,
-                MortgageDocumentType.HAZARD_INSURANCE,
-                MortgageDocumentType.HAZARD_INSURANCE_DECLARATION,
-            )),
-            ("Condo / HOA questionnaire", (
-                MortgageDocumentType.CONDO_HOA_QUESTIONNAIRE,
-                MortgageDocumentType.HOA_STATEMENT,
-            )),
-            ("1003 / URLA", (
-                MortgageDocumentType.LOAN_APPLICATION_1003,
-                MortgageDocumentType.UNIFORM_RESIDENTIAL_LOAN_APPLICATION,
-            )),
+            (
+                "HOI / hazard",
+                (
+                    MortgageDocumentType.HOMEOWNERS_INSURANCE,
+                    MortgageDocumentType.HAZARD_INSURANCE,
+                    MortgageDocumentType.HAZARD_INSURANCE_DECLARATION,
+                ),
+            ),
+            (
+                "Condo / HOA questionnaire",
+                (
+                    MortgageDocumentType.CONDO_HOA_QUESTIONNAIRE,
+                    MortgageDocumentType.HOA_STATEMENT,
+                ),
+            ),
+            (
+                "1003 / URLA",
+                (
+                    MortgageDocumentType.LOAN_APPLICATION_1003,
+                    MortgageDocumentType.UNIFORM_RESIDENTIAL_LOAN_APPLICATION,
+                ),
+            ),
         ]
         for label, types in catalog:
             if _has_any(bundle, types):
