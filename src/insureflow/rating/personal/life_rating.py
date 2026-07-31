@@ -38,9 +38,13 @@ def rate_life(bundle: SubmissionBundle) -> QuoteResult:
     class_f = float(class_factors.get(medical.underwriting_class, class_factors.get("standard", 1.0)))
     sex_f = float((manual.get("sex_factors") or {}).get(sex, 1.0))
     tobacco_f = float(manual.get("tobacco_factor", 1.85)) if medical.tobacco else 1.0
+    band_f = 1.0
+    for band in sorted(manual.get("band_discounts") or [], key=lambda b: float(b.get("min_face") or 0)):
+        if face >= float(band.get("min_face") or 0):
+            band_f = float(band.get("factor", 1.0))
 
     base_premium = (face / 1000.0) * q
-    adjusted = base_premium * class_f * sex_f * tobacco_f
+    adjusted = base_premium * class_f * sex_f * tobacco_f * band_f
     adjusted += (face / 1000.0) * medical.flat_extras_per_1000
     adjusted += float(manual.get("policy_fee", 60.0))
     adjusted = max(adjusted, float(manual.get("minimum_premium", 250.0)))
@@ -54,6 +58,7 @@ def rate_life(bundle: SubmissionBundle) -> QuoteResult:
         RateComponent(name="underwriting_class", amount=class_f, basis=medical.underwriting_class),
         RateComponent(name="sex_factor", amount=sex_f, basis=sex),
         RateComponent(name="tobacco_factor", amount=tobacco_f, basis="tobacco" if medical.tobacco else "non_tobacco"),
+        RateComponent(name="band_discount", amount=band_f, basis=f"face={face}"),
         RateComponent(name="flat_extras", amount=medical.flat_extras_per_1000, basis="per_1000"),
         RateComponent(name="policy_fee", amount=float(manual.get("policy_fee", 60.0)), basis="policy"),
     ]
@@ -61,6 +66,7 @@ def rate_life(bundle: SubmissionBundle) -> QuoteResult:
     meta: dict[str, Any] = {
         "filing_id": manual.get("filing_id"),
         "product": manual.get("product"),
+        "serff_tracking": manual.get("serff_tracking"),
         "rating_engine": "life_filing",
         "face_amount": face,
         "medical": medical.to_metadata(),

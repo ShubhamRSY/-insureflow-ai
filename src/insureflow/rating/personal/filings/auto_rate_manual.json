@@ -3,52 +3,241 @@
   "product": "Personal Auto PP",
   "carrier": "Rytera Personal Lines",
   "effective_date": "2026-01-01",
+  "expiration_date": "2026-12-31",
   "state_of_filing": "IL",
+  "serff_tracking": "RYT-PL-PA-2026-001",
   "expense_constant": 55.0,
   "minimum_premium": 650.0,
   "coverages": {
-    "bi_pd": {"base": 420.0, "description": "Bodily injury / property damage liability package"},
-    "comp": {"base": 180.0, "description": "Comprehensive"},
-    "coll": {"base": 320.0, "description": "Collision"}
+    "bi_pd": {
+      "base": 420.0,
+      "description": "Bodily injury / property damage liability package"
+    },
+    "comp": {
+      "base": 180.0,
+      "description": "Comprehensive"
+    },
+    "coll": {
+      "base": 320.0,
+      "description": "Collision"
+    },
+    "um_uim": {
+      "base": 95.0,
+      "description": "Uninsured / underinsured motorist"
+    },
+    "medpay": {
+      "base": 40.0,
+      "description": "Medical payments"
+    }
   },
   "territory": {
-    "TX": 1.08, "FL": 1.28, "CA": 1.32, "NY": 1.22, "LA": 1.18, "IL": 1.00, "GA": 1.05,
+    "AL": 0.98,
+    "AK": 1.06,
+    "AZ": 1.12,
+    "AR": 1.01,
+    "CA": 1.32,
+    "CO": 1.09,
+    "CT": 1.03,
+    "DE": 0.99,
+    "FL": 1.28,
+    "GA": 0.99,
+    "HI": 1.33,
+    "ID": 0.97,
+    "IL": 1.0,
+    "IN": 0.98,
+    "IA": 0.96,
+    "KS": 1.01,
+    "KY": 0.96,
+    "LA": 1.18,
+    "ME": 0.98,
+    "MD": 1.01,
+    "MA": 1.05,
+    "MI": 1.03,
+    "MN": 0.94,
+    "MS": 1.1,
+    "MO": 0.97,
+    "MT": 0.99,
+    "NE": 1.0,
+    "NV": 1.15,
+    "NH": 0.97,
+    "NJ": 1.07,
+    "NM": 1.06,
+    "NY": 1.22,
+    "NC": 1.01,
+    "ND": 0.98,
+    "OH": 0.98,
+    "OK": 1.1,
+    "OR": 1.03,
+    "PA": 0.99,
+    "RI": 1.03,
+    "SC": 1.03,
+    "SD": 0.97,
+    "TN": 0.98,
+    "TX": 1.03,
+    "UT": 0.99,
+    "VT": 0.96,
+    "VA": 0.98,
+    "WA": 1.05,
+    "WV": 0.99,
+    "WI": 0.98,
+    "WY": 0.98,
+    "DC": 1.06,
     "DEFAULT": 1.06
   },
   "driver_class": [
-    {"max_age": 20, "min_years": 0, "factor": 2.15},
-    {"max_age": 24, "min_years": 0, "factor": 1.55},
-    {"max_age": 24, "min_years": 3, "factor": 1.35},
-    {"max_age": 49, "min_years": 0, "factor": 1.05},
-    {"max_age": 49, "min_years": 5, "factor": 0.92},
-    {"max_age": 69, "min_years": 0, "factor": 1.00},
-    {"max_age": 69, "min_years": 10, "factor": 0.90},
-    {"max_age": null, "min_years": 0, "factor": 1.18}
+    {
+      "max_age": 18,
+      "min_years": 0,
+      "factor": 2.4
+    },
+    {
+      "max_age": 20,
+      "min_years": 0,
+      "factor": 2.15
+    },
+    {
+      "max_age": 24,
+      "min_years": 0,
+      "factor": 1.55
+    },
+    {
+      "max_age": 24,
+      "min_years": 3,
+      "factor": 1.35
+    },
+    {
+      "max_age": 29,
+      "min_years": 0,
+      "factor": 1.15
+    },
+    {
+      "max_age": 29,
+      "min_years": 5,
+      "factor": 1.0
+    },
+    {
+      "max_age": 49,
+      "min_years": 0,
+      "factor": 1.05
+    },
+    {
+      "max_age": 49,
+      "min_years": 5,
+      "factor": 0.92
+    },
+    {
+      "max_age": 64,
+      "min_years": 0,
+      "factor": 0.98
+    },
+    {
+      "max_age": 64,
+      "min_years": 10,
+      "factor": 0.9
+    },
+    {
+      "max_age": 69,
+      "min_years": 0,
+      "factor": 1.0
+    },
+    {
+      "max_age": 69,
+      "min_years": 10,
+      "factor": 0.92
+    },
+    {
+      "max_age": null,
+      "min_years": 0,
+      "factor": 1.18
+    }
   ],
   "vehicle_symbol": [
-    {"max_value": 15000, "factor": 0.85, "symbol": "1-5"},
-    {"max_value": 25000, "factor": 1.00, "symbol": "6-10"},
-    {"max_value": 40000, "factor": 1.18, "symbol": "11-15"},
-    {"max_value": 60000, "factor": 1.40, "symbol": "16-20"},
-    {"max_value": null, "factor": 1.75, "symbol": "21+"}
+    {
+      "max_value": 10000,
+      "factor": 0.78,
+      "symbol": "1-3"
+    },
+    {
+      "max_value": 15000,
+      "factor": 0.85,
+      "symbol": "4-5"
+    },
+    {
+      "max_value": 25000,
+      "factor": 1.0,
+      "symbol": "6-10"
+    },
+    {
+      "max_value": 40000,
+      "factor": 1.18,
+      "symbol": "11-15"
+    },
+    {
+      "max_value": 60000,
+      "factor": 1.4,
+      "symbol": "16-20"
+    },
+    {
+      "max_value": 90000,
+      "factor": 1.6,
+      "symbol": "21-25"
+    },
+    {
+      "max_value": null,
+      "factor": 1.85,
+      "symbol": "26+"
+    }
   ],
   "mileage": [
-    {"max": 5000, "factor": 0.88},
-    {"max": 7500, "factor": 0.94},
-    {"max": 12000, "factor": 1.00},
-    {"max": 15000, "factor": 1.06},
-    {"max": 20000, "factor": 1.14},
-    {"max": null, "factor": 1.25}
+    {
+      "max": 3000,
+      "factor": 0.82
+    },
+    {
+      "max": 5000,
+      "factor": 0.88
+    },
+    {
+      "max": 7500,
+      "factor": 0.94
+    },
+    {
+      "max": 12000,
+      "factor": 1.0
+    },
+    {
+      "max": 15000,
+      "factor": 1.06
+    },
+    {
+      "max": 20000,
+      "factor": 1.14
+    },
+    {
+      "max": 25000,
+      "factor": 1.2
+    },
+    {
+      "max": null,
+      "factor": 1.28
+    }
   ],
   "use_factors": {
-    "personal": 1.00,
+    "personal": 1.0,
     "commute": 1.08,
     "rideshare": 1.55,
-    "delivery": 1.70
+    "delivery": 1.7,
+    "business": 1.45
   },
   "high_performance_factor": 1.35,
-  "violation_points": {"each": 0.12, "cap": 0.60},
-  "at_fault_points": {"each": 0.18, "cap": 0.72},
+  "violation_points": {
+    "each": 0.12,
+    "cap": 0.6
+  },
+  "at_fault_points": {
+    "each": 0.18,
+    "cap": 0.72
+  },
   "eligibility": {
     "max_violations": 3,
     "dui_decline": true,
@@ -56,6 +245,58 @@
     "rideshare_refer": true
   },
   "state_minimum_bi": {
-    "IL": "25/50", "TX": "30/60", "FL": "10/20", "CA": "15/30", "NY": "25/50", "DEFAULT": "25/50"
-  }
+    "AL": "25/50",
+    "AK": "50/100",
+    "AZ": "25/50",
+    "AR": "25/50",
+    "CA": "15/30",
+    "CO": "25/50",
+    "CT": "25/50",
+    "DE": "25/50",
+    "FL": "10/20",
+    "GA": "25/50",
+    "HI": "20/40",
+    "ID": "25/50",
+    "IL": "25/50",
+    "IN": "25/50",
+    "IA": "20/40",
+    "KS": "25/50",
+    "KY": "25/50",
+    "LA": "15/30",
+    "ME": "50/100",
+    "MD": "30/60",
+    "MA": "20/40",
+    "MI": "50/100",
+    "MN": "30/60",
+    "MS": "25/50",
+    "MO": "25/50",
+    "MT": "25/50",
+    "NE": "25/50",
+    "NV": "25/50",
+    "NH": "25/50",
+    "NJ": "25/50",
+    "NM": "25/50",
+    "NY": "25/50",
+    "NC": "30/60",
+    "ND": "25/50",
+    "OH": "25/50",
+    "OK": "25/50",
+    "OR": "25/50",
+    "PA": "15/30",
+    "RI": "25/50",
+    "SC": "25/50",
+    "SD": "25/50",
+    "TN": "25/50",
+    "TX": "30/60",
+    "UT": "25/65",
+    "VT": "25/50",
+    "VA": "30/60",
+    "WA": "25/50",
+    "WV": "25/50",
+    "WI": "25/50",
+    "WY": "25/50",
+    "DC": "25/50",
+    "DEFAULT": "25/50"
+  },
+  "notes": "Company PP rate manual. Pilot exhibit; swap for SERFF-approved pages for production binding."
 }

@@ -2975,16 +2975,55 @@ def resolve_checkpoint(
 @app.get("/pipeline/rating/products")
 def list_insurance_products(_: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
     from insureflow.rating.engine import ISO_LOSS_COSTS
-    from insureflow.rating.models import InsuranceLine
+    from insureflow.rating.models import PERSONAL_LINES, InsuranceLine
+    from insureflow.rating.personal.manuals import auto_manual, homeowners_manual, life_manual, life_medical_guide
+
+    filings = []
+    for loader, line_id in (
+        (homeowners_manual, "personal_homeowners"),
+        (auto_manual, "personal_auto"),
+        (life_manual, "life"),
+    ):
+        try:
+            m = loader()
+            filings.append(
+                {
+                    "line": line_id,
+                    "filing_id": m.get("filing_id"),
+                    "product": m.get("product"),
+                    "serff_tracking": m.get("serff_tracking"),
+                    "effective_date": m.get("effective_date"),
+                    "expiration_date": m.get("expiration_date"),
+                    "carrier": m.get("carrier"),
+                }
+            )
+        except Exception:
+            continue
+    try:
+        med = life_medical_guide()
+        filings.append(
+            {
+                "line": "life_medical",
+                "filing_id": med.get("guide_id"),
+                "product": med.get("product"),
+                "serff_tracking": med.get("serff_tracking"),
+                "effective_date": med.get("effective_date"),
+                "version": med.get("version"),
+            }
+        )
+    except Exception:
+        pass
 
     return {
         "lines": [
             {
                 "id": line.value,
                 "base_rate_per_100": ISO_LOSS_COSTS.get(line, 0.0),
+                "personal": line in PERSONAL_LINES,
             }
             for line in InsuranceLine
-        ]
+        ],
+        "filings": filings,
     }
 
 

@@ -815,6 +815,7 @@ class InsurancePipeline:
                 "ineligibility_reasons": list(getattr(quote, "ineligibility_reasons", []) or []),
                 "filing_id": (quote.metadata or {}).get("filing_id"),
                 "rating_engine": (quote.metadata or {}).get("rating_engine"),
+                "serff_tracking": (quote.metadata or {}).get("serff_tracking"),
                 "insurance_line": line_for_quote.value,
                 "medical": (quote.metadata or {}).get("medical"),
                 "components": [

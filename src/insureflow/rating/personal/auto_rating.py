@@ -58,7 +58,9 @@ def rate_personal_auto(bundle: SubmissionBundle, *, state: str = "") -> QuoteRes
     bi = float((coverages.get("bi_pd") or {}).get("base", 420))
     comp = float((coverages.get("comp") or {}).get("base", 180))
     coll = float((coverages.get("coll") or {}).get("base", 320))
-    package_base = bi + comp + coll
+    um = float((coverages.get("um_uim") or {}).get("base", 0))
+    med = float((coverages.get("medpay") or {}).get("base", 0))
+    package_base = bi + comp + coll + um + med
 
     terr = (manual.get("territory") or {}).get(state.upper() if state else "", None)
     terr = float(terr if terr is not None else (manual.get("territory") or {}).get("DEFAULT", 1.06))
@@ -92,13 +94,25 @@ def rate_personal_auto(bundle: SubmissionBundle, *, state: str = "") -> QuoteRes
         RateComponent(name="bi_pd_base", amount=bi, basis="liability"),
         RateComponent(name="comp_base", amount=comp, basis="physical"),
         RateComponent(name="coll_base", amount=coll, basis="physical"),
-        RateComponent(name="territory", amount=terr, basis=state or "DEFAULT"),
-        RateComponent(name="driver_class", amount=driver_f, basis=f"age={factors.driver_age}"),
-        RateComponent(name="vehicle_symbol", amount=symbol_f, basis=f"value={exposure}"),
-        RateComponent(name="mileage", amount=mileage_f, basis=str(miles)),
-        RateComponent(name="use", amount=use_f, basis=use),
-        RateComponent(name="driving_record", amount=round(record_f, 3), basis=f"v={factors.violations},af={factors.at_fault_accidents}"),
     ]
+    if um:
+        components.append(RateComponent(name="um_uim_base", amount=um, basis="liability"))
+    if med:
+        components.append(RateComponent(name="medpay_base", amount=med, basis="medical"))
+    components.extend(
+        [
+            RateComponent(name="territory", amount=terr, basis=state or "DEFAULT"),
+            RateComponent(name="driver_class", amount=driver_f, basis=f"age={factors.driver_age}"),
+            RateComponent(name="vehicle_symbol", amount=symbol_f, basis=f"value={exposure}"),
+            RateComponent(name="mileage", amount=mileage_f, basis=str(miles)),
+            RateComponent(name="use", amount=use_f, basis=use),
+            RateComponent(
+                name="driving_record",
+                amount=round(record_f, 3),
+                basis=f"v={factors.violations},af={factors.at_fault_accidents}",
+            ),
+        ]
+    )
     if factors.high_performance:
         components.append(RateComponent(name="high_performance", amount=perf_f, basis="vehicle"))
 
@@ -116,6 +130,7 @@ def rate_personal_auto(bundle: SubmissionBundle, *, state: str = "") -> QuoteRes
         metadata={
             "filing_id": manual.get("filing_id"),
             "product": manual.get("product"),
+            "serff_tracking": manual.get("serff_tracking"),
             "rating_engine": "auto_filing",
             "state_minimum_bi": state_min,
             "personal_factors": {k: v for k, v in factors.__dict__.items() if k != "findings"},

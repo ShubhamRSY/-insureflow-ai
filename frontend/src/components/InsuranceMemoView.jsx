@@ -172,7 +172,55 @@ export default function InsuranceMemoView({ job }) {
             <Badge status={s.workflowState} />
           </div>
         )}
+        {s.quote?.filing_id && (
+          <div className="rounded-xl bg-surface-overlay p-3 ring-1 ring-white/[0.04]">
+            <p className="text-[10px] uppercase text-slate-500">Rate filing</p>
+            <p className="font-mono text-xs text-slate-200">{s.quote.filing_id}</p>
+            {s.quote.rating_engine && (
+              <p className="mt-0.5 text-[10px] text-slate-500">{s.quote.rating_engine}</p>
+            )}
+          </div>
+        )}
+        {s.quote?.medical?.underwriting_class && (
+          <div className="rounded-xl bg-surface-overlay p-3 ring-1 ring-white/[0.04]">
+            <p className="text-[10px] uppercase text-slate-500">Life UW class</p>
+            <p className="text-xs font-semibold capitalize text-slate-200">
+              {String(s.quote.medical.underwriting_class).replace(/_/g, ' ')}
+            </p>
+            {s.quote.medical.tobacco != null && (
+              <p className="mt-0.5 text-[10px] text-slate-500">
+                {s.quote.medical.tobacco ? 'Tobacco' : 'Non-tobacco'}
+              </p>
+            )}
+          </div>
+        )}
       </div>
+
+      {(s.quote?.components || []).length > 0 && (
+        <div>
+          <h4 className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">Premium build-up</h4>
+          <div className="overflow-hidden rounded-xl border border-white/[0.06]">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-white/[0.06] bg-surface-overlay text-left text-[10px] uppercase tracking-wider text-slate-500">
+                  <th className="px-3 py-2">Component</th>
+                  <th className="px-3 py-2">Basis</th>
+                  <th className="px-3 py-2 text-right">Amount</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/[0.04]">
+                {s.quote.components.map((c, i) => (
+                  <tr key={i}>
+                    <td className="px-3 py-1.5 text-slate-200">{c.name}</td>
+                    <td className="px-3 py-1.5 text-slate-500">{c.basis || '—'}</td>
+                    <td className="px-3 py-1.5 text-right font-mono text-slate-300">{c.amount}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       <p className="font-mono text-[10px] text-slate-600">Bundle {s.bundleId}</p>
     </div>

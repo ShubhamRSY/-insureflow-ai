@@ -113,6 +113,7 @@ def rate_homeowners(
     meta: dict[str, Any] = {
         "filing_id": manual.get("filing_id"),
         "product": manual.get("product"),
+        "serff_tracking": manual.get("serff_tracking"),
         "rating_engine": "homeowners_filing",
         "construction": construction,
         "protection_class": ppc,
