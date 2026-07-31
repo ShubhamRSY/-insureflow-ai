@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Badge, DecisionBadge, EmptyState } from '../components/ui';
 import { fmtCurrency, extractInsurance, endpoints } from '../lib/api';
-import InsuranceSourceHub from '../components/InsuranceSourceHub';
 import JourneyMiniStrip from '../components/JourneyMiniStrip';
 import RunSelector from '../components/RunSelector';
 import { Shield, ArrowRight, Download, Trash2, RotateCcw, FileText } from 'lucide-react';
@@ -16,17 +15,7 @@ const FLOW_STEPS = [
 ];
 
 export default function InsurancePage({ presets, jobs, onRunDemo, onOpenJob, onSubmit, onRefresh }) {
-  const [loading, setLoading] = useState(false);
   const [retryingId, setRetryingId] = useState(null);
-
-  const handleSubmit = async (payload) => {
-    setLoading(true);
-    try {
-      await onSubmit(payload);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleDownload = async (e, id) => {
     e.stopPropagation();
@@ -100,31 +89,22 @@ export default function InsurancePage({ presets, jobs, onRunDemo, onOpenJob, onS
         </p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-12">
-        {/* Left rail — input sources */}
-        <div className="lg:col-span-4">
-          <div className="lg:sticky lg:top-20">
-            <InsuranceSourceHub onSubmit={handleSubmit} loading={loading} />
-          </div>
-        </div>
-
-        {/* Right column — recent runs + samples */}
-        <div className="lg:col-span-8 space-y-6">
+      <div className="space-y-6">
           {/* Pipeline flow narrative */}
           <div className="glass-card p-5">
-            <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-slate-500">Underwriting pipeline</p>
-            <div className="flex flex-wrap items-center gap-2">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Underwriting pipeline</p>
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
               {FLOW_STEPS.map((step, i) => (
-                <div key={step.label} className="flex items-center gap-2">
-                  <div className="rounded-lg bg-surface-overlay px-3 py-2 ring-1 ring-white/[0.04]">
-                    <p className="text-xs font-semibold text-slate-200">{step.label}</p>
-                    <p className="text-[10px] text-slate-500">{step.desc}</p>
+                <div key={step.label} className="flex shrink-0 items-center gap-1.5">
+                  <div className="whitespace-nowrap rounded-lg bg-surface-overlay px-2.5 py-1.5 ring-1 ring-white/[0.04]">
+                    <span className="text-xs font-semibold text-slate-200">{step.label}</span>
+                    <span className="ml-1.5 text-[10px] text-slate-500">{step.desc}</span>
                   </div>
-                  {i < FLOW_STEPS.length - 1 && <ArrowRight className="h-3.5 w-3.5 text-slate-600" />}
+                  {i < FLOW_STEPS.length - 1 && <ArrowRight className="h-3 w-3 shrink-0 text-slate-600" />}
                 </div>
               ))}
             </div>
-            <p className="mt-3 text-xs text-slate-500">Open any job to see the full submission journey — COPE, provenance, checkpoints, and pricing breakdown.</p>
+            <p className="mt-2.5 text-xs text-slate-500">Open any job to see the full submission journey — COPE, provenance, checkpoints, and pricing breakdown.</p>
           </div>
 
           <RunSelector presets={presets} onRunDemo={onRunDemo} onSubmit={onSubmit} />
@@ -214,7 +194,6 @@ export default function InsurancePage({ presets, jobs, onRunDemo, onOpenJob, onS
         </div>
       )}
       </div>
-    </div>
     </div>
   );
 }
