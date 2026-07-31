@@ -6,7 +6,6 @@ from typing import Any, Iterable
 
 from insureflow.ingestion.insurance.classifier import InsuranceDocumentType
 
-
 PROPERTY_CATALOG: list[tuple[str, tuple[InsuranceDocumentType, ...]]] = [
     ("ACORD application", (InsuranceDocumentType.ACORD_XML,)),
     ("Loss run", (InsuranceDocumentType.LOSS_RUN,)),
