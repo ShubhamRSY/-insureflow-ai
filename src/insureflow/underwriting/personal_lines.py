@@ -336,7 +336,7 @@ def extract_auto_factors(bundle: SubmissionBundle) -> PersonalAutoFactors:
                 title="Driving record adverse activity",
                 description=f"{f.violations} violation signal(s), {f.at_fault_accidents} at-fault signal(s)",
                 severity=RiskSeverity.HIGH if (f.violations + f.at_fault_accidents) >= 2 else RiskSeverity.MODERATE,
-                source_agent="personal_auto",
+                category="personal_auto",
             )
         )
     if f.rideshare:
@@ -419,14 +419,14 @@ def personal_schedule_and_exposure(
 ) -> tuple[float, float, list[Finding], dict[str, Any]]:
     """Return (schedule_mod_pct, exposure_base, findings, factor_dict)."""
     if line == InsuranceLine.PERSONAL_HOMEOWNERS:
-        f = extract_home_factors(bundle)
-        return f.schedule_mod_pct, f.exposure, f.findings, f.__dict__
+        home = extract_home_factors(bundle)
+        return home.schedule_mod_pct, home.exposure, home.findings, home.__dict__
     if line == InsuranceLine.PERSONAL_AUTO:
-        f = extract_auto_factors(bundle)
-        return f.schedule_mod_pct, f.exposure, f.findings, f.__dict__
+        auto = extract_auto_factors(bundle)
+        return auto.schedule_mod_pct, auto.exposure, auto.findings, auto.__dict__
     if line == InsuranceLine.LIFE:
-        f = extract_life_factors(bundle)
-        return f.schedule_mod_pct, f.exposure, f.findings, f.__dict__
+        life = extract_life_factors(bundle)
+        return life.schedule_mod_pct, life.exposure, life.findings, life.__dict__
     return 0.0, 0.0, [], {}
 
 
@@ -437,9 +437,9 @@ def personal_appetite_check(bundle: SubmissionBundle, line: InsuranceLine) -> tu
         return True, findings, "", False
 
     if line == InsuranceLine.PERSONAL_HOMEOWNERS:
-        f = extract_home_factors(bundle)
-        findings.extend(f.findings)
-        if f.prior_claims >= 4:
+        home = extract_home_factors(bundle)
+        findings.extend(home.findings)
+        if home.prior_claims >= 4:
             findings.append(
                 Finding(
                     title="Excessive homeowners claims history",
@@ -448,7 +448,7 @@ def personal_appetite_check(bundle: SubmissionBundle, line: InsuranceLine) -> tu
                     category="personal_homeowners",
                 )
             )
-        if f.coastal_or_cat and f.dwelling_limit > 2_000_000:
+        if home.coastal_or_cat and home.dwelling_limit > 2_000_000:
             findings.append(
                 Finding(
                     title="High-value coastal dwelling",
@@ -458,9 +458,9 @@ def personal_appetite_check(bundle: SubmissionBundle, line: InsuranceLine) -> tu
                 )
             )
     elif line == InsuranceLine.PERSONAL_AUTO:
-        f = extract_auto_factors(bundle)
-        findings.extend(f.findings)
-        if f.violations >= 4 or "dui" in _blob(bundle) or "dwi" in _blob(bundle):
+        auto = extract_auto_factors(bundle)
+        findings.extend(auto.findings)
+        if auto.violations >= 4 or "dui" in _blob(bundle) or "dwi" in _blob(bundle):
             findings.append(
                 Finding(
                     title="Unacceptable driving record",
@@ -469,7 +469,7 @@ def personal_appetite_check(bundle: SubmissionBundle, line: InsuranceLine) -> tu
                     category="personal_auto",
                 )
             )
-        if f.driver_age is not None and f.driver_age < 18:
+        if auto.driver_age is not None and auto.driver_age < 18:
             findings.append(
                 Finding(
                     title="Underage primary driver",
@@ -479,11 +479,11 @@ def personal_appetite_check(bundle: SubmissionBundle, line: InsuranceLine) -> tu
                 )
             )
     elif line == InsuranceLine.LIFE:
-        f = extract_life_factors(bundle)
-        findings.extend(f.findings)
-        if f.criminal_history:
+        life = extract_life_factors(bundle)
+        findings.extend(life.findings)
+        if life.criminal_history:
             pass  # already critical finding
-        if f.age is not None and f.age > 85:
+        if life.age is not None and life.age > 85:
             findings.append(
                 Finding(
                     title="Age outside life appetite",
@@ -492,7 +492,7 @@ def personal_appetite_check(bundle: SubmissionBundle, line: InsuranceLine) -> tu
                     category="life",
                 )
             )
-        if f.face_amount > 10_000_000:
+        if life.face_amount > 10_000_000:
             findings.append(
                 Finding(
                     title="Jumbo face amount",

@@ -331,7 +331,7 @@ class SystemDiagnostics:
             )
 
     def _check_example_data(self) -> ComponentCheck:
-        examples = self.project_root / "examples"
+        examples = self.project_root / "examples" / "insurance"
         required = [
             "pacific_coast_acord.xml",
             "pacific_coast_inspection_report.md",
@@ -350,7 +350,7 @@ class SystemDiagnostics:
             status=CheckStatus.MISSING,
             message=f"Missing example files: {', '.join(missing)}",
             category="data",
-            details={"path": str(examples)},
+            details={"path": str(examples), "missing": missing},
         )
 
     def _check_mortgage_fixtures(self) -> ComponentCheck:

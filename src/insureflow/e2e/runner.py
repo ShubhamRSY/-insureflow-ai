@@ -670,7 +670,7 @@ class E2ERunner:
         def insurance_sync() -> str:
             from insureflow.insurance.pipeline import InsurancePipeline
 
-            examples = PROJECT_ROOT / "examples"
+            examples = PROJECT_ROOT / "examples" / "insurance"
             acord = (examples / "pacific_coast_acord.xml").read_text(encoding="utf-8")
             inspection = (examples / "pacific_coast_inspection_report.md").read_text(encoding="utf-8")
             loss = (examples / "pacific_coast_loss_run.md").read_text(encoding="utf-8")

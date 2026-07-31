@@ -90,10 +90,10 @@ class AppetiteFilterAgent(BaseAgent):
             )
 
         if line in PERSONAL_LINES:
-            passed, findings, reason, needs_referral = personal_appetite_check(bundle, line)
+            passed, personal_findings, reason, needs_referral = personal_appetite_check(bundle, line)
             return AppetiteFilterResult(
                 passed=passed,
-                findings=findings,
+                findings=personal_findings,
                 reason=reason,
                 needs_uw_referral=needs_referral,
             )

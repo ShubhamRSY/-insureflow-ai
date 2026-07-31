@@ -6,7 +6,7 @@ import json
 import os
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 
 def _default_root() -> Path:
@@ -29,7 +29,7 @@ def _load_manual_cached(name: str) -> dict[str, Any]:
     path = _default_root() / name
     if not path.exists():
         raise FileNotFoundError(f"Personal lines manual not found: {path}")
-    return json.loads(path.read_text(encoding="utf-8"))
+    return cast(dict[str, Any], json.loads(path.read_text(encoding="utf-8")))
 
 
 def clear_manual_cache() -> None:
