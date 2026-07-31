@@ -640,6 +640,31 @@ class InsurancePipeline:
         if not isinstance(line_for_quote, InsuranceLine):
             line_for_quote = InsuranceLine.COMMERCIAL_PROPERTY
         quote = self.rating.quote(bundle, memo, line=line_for_quote)
+        # Apply life medical / personal filing decision hints onto the memo
+        if line_for_quote == InsuranceLine.LIFE:
+            from insureflow.models.agents import UWDecision
+            from insureflow.underwriting.life_medical import underwrite_life
+
+            medical = underwrite_life(bundle)
+            for f in medical.findings:
+                memo.key_findings.append(f)
+            memo.decision = medical.decision
+            if medical.decision in (UWDecision.DECLINE, UWDecision.REFER, UWDecision.CONDITIONAL_ACCEPT):
+                memo.human_review_required = True
+                memo.human_review_reasons.extend(medical.reasons)
+            memo.conditions.extend((quote.metadata or {}).get("conditions") or [])
+            memo.summary = (memo.summary or "") + f" Life class={medical.underwriting_class}; tobacco={medical.tobacco}."
+        elif line_for_quote in (InsuranceLine.PERSONAL_HOMEOWNERS, InsuranceLine.PERSONAL_AUTO):
+            for flag in (quote.metadata or {}).get("referral_flags") or []:
+                memo.human_review_reasons.append(str(flag))
+                memo.human_review_required = True
+            if quote.eligible is False:
+                from insureflow.models.agents import UWDecision
+
+                memo.decision = UWDecision.DECLINE
+                memo.human_review_required = True
+                memo.human_review_reasons.extend(quote.ineligibility_reasons or [])
+
         progress.complete(
             "price",
             detail=f"{line_for_quote.value} · Indicated ${quote.adjusted_premium:,.0f}",
@@ -788,6 +813,19 @@ class InsurancePipeline:
                 "quote_valid_until": quote.quote_valid_until,
                 "tiv": estimated_tiv,
                 "ineligibility_reasons": list(getattr(quote, "ineligibility_reasons", []) or []),
+                "filing_id": (quote.metadata or {}).get("filing_id"),
+                "rating_engine": (quote.metadata or {}).get("rating_engine"),
+                "insurance_line": line_for_quote.value,
+                "medical": (quote.metadata or {}).get("medical"),
+                "components": [
+                    {
+                        "name": c.name,
+                        "amount": c.amount,
+                        "basis": c.basis,
+                        "modifier_pct": c.modifier_pct,
+                    }
+                    for c in (quote.schedule_modifications or [])
+                ],
             },
             "core_integration": core_results,
             "encryption_at_rest": self.encryption.enabled,

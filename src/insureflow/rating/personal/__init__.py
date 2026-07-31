@@ -1,0 +1,30 @@
+"""Personal lines filing-style rating entrypoints."""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from insureflow.models.submissions import SubmissionBundle
+    from insureflow.rating.models import InsuranceLine, QuoteResult
+
+
+def rate_personal_line(
+    bundle: "SubmissionBundle",
+    line: "InsuranceLine",
+    *,
+    state: str = "",
+    deductible: float = 1000.0,
+) -> "QuoteResult":
+    from insureflow.rating.models import InsuranceLine
+    from insureflow.rating.personal.auto_rating import rate_personal_auto
+    from insureflow.rating.personal.homeowners_rating import rate_homeowners
+    from insureflow.rating.personal.life_rating import rate_life
+
+    if line == InsuranceLine.PERSONAL_HOMEOWNERS:
+        return rate_homeowners(bundle, state=state, deductible=deductible)
+    if line == InsuranceLine.PERSONAL_AUTO:
+        return rate_personal_auto(bundle, state=state)
+    if line == InsuranceLine.LIFE:
+        return rate_life(bundle)
+    raise ValueError(f"Not a personal line: {line}")

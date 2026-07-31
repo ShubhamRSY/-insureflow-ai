@@ -1,0 +1,47 @@
+{
+  "guide_id": "RYT-MED-2026-01",
+  "product": "Term Life Medical Underwriting Guide",
+  "carrier": "Rytera Life",
+  "effective_date": "2026-01-01",
+  "knockouts": [
+    {"id": "KO-CANCER-ACTIVE", "pattern": "active cancer|metastatic|chemotherapy", "action": "decline", "reason": "Active malignancy"},
+    {"id": "KO-HIV", "pattern": "hiv positive|aids diagnosis", "action": "decline", "reason": "HIV/AIDS — outside standard issue"},
+    {"id": "KO-SUBSTANCE", "pattern": "current substance abuse|active addiction|iv drug", "action": "decline", "reason": "Active substance abuse"},
+    {"id": "KO-FELONY", "pattern": "felony conviction|currently incarcerated|criminal history\\s*:\\s*(?!none\\b|no\\b|n/a\\b)\\w+", "action": "decline", "reason": "Criminal history knockout"},
+    {"id": "KO-SUICIDE", "pattern": "suicide attempt|suicidal ideation", "action": "decline", "reason": "Suicide history"},
+    {"id": "KO-TRANSPLANT", "pattern": "organ transplant|awaiting transplant", "action": "decline", "reason": "Transplant history"}
+  ],
+  "referrals": [
+    {"id": "RF-CAD", "pattern": "(?<!no )(?<!without )(?:coronary artery|heart attack|myocardial infarction|coronary stent|bypass surgery)", "action": "refer", "reason": "Cardiac history — medical director review"},
+    {"id": "RF-DIABETES", "pattern": "(?<!no )\\bdiabetes\\b|insulin dependent|a1c\\s*[:=]?\\s*[7-9]", "action": "refer", "reason": "Diabetes — labs and control review"},
+    {"id": "RF-JUMBO", "pattern": "face amount.*(1[0-9],?000,?000|[5-9],?000,?000)", "action": "refer", "reason": "Jumbo / facultative face amount"},
+    {"id": "RF-TOBACCO", "pattern": "current smoker|nicotine\\s*:\\s*positive|tobacco\\s*:\\s*(?!none\\b|no\\b|non-)\\w+", "action": "refer", "reason": "Tobacco use — smoker rates"}
+  ],
+  "class_rules": [
+    {"id": "CL-TOBACCO", "pattern": "current smoker|nicotine\\s*:\\s*positive|tobacco\\s*:\\s*(?!none\\b|no\\b|non-)\\w+", "class_floor": "standard", "tobacco": true},
+    {"id": "CL-SUBSTD", "pattern": "substandard|table rating|rated table", "class_floor": "table_b"},
+    {"id": "CL-PREF", "pattern": "preferred plus|super preferred|preferred best", "class_cap": "super_preferred"},
+    {"id": "CL-PREF2", "pattern": "\\bpreferred\\b", "class_cap": "preferred"}
+  ],
+  "vitals_bands": {
+    "bp_systolic": {"preferred_max": 130, "standard_max": 140, "table_a_max": 150, "decline_above": 180},
+    "bmi": {"preferred_max": 27, "standard_max": 32, "table_a_max": 36, "decline_above": 42},
+    "cholesterol": {"preferred_max": 220, "standard_max": 260, "table_a_max": 300, "decline_above": 350}
+  },
+  "aps_requirements": [
+    {"min_age": 50, "min_face": 0, "require_aps": true},
+    {"min_age": 40, "min_face": 1000000, "require_aps": true},
+    {"min_age": 18, "min_face": 2500000, "require_aps": true}
+  ],
+  "paramed_requirements": [
+    {"min_age": 18, "min_face": 100000, "require_paramed": true},
+    {"min_age": 50, "min_face": 0, "require_paramed": true}
+  ],
+  "avocation_flat_extras": {
+    "scuba": 2.50,
+    "skydiving": 3.50,
+    "aviation": 3.00,
+    "motorsport": 4.00,
+    "hang gliding": 3.00
+  }
+}

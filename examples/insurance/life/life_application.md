@@ -12,3 +12,4 @@ Hazardous avocation: none
 Foreign travel: none
 Criminal history: none
 Beneficiary: spouse — primary
+Preferred best candidate — clean medical history

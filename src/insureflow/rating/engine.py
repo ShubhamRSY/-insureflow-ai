@@ -9,7 +9,6 @@ from insureflow.rating.calibration import calibrated_lcm, calibrated_loss_costs,
 from insureflow.rating.models import PERSONAL_LINES, InsuranceLine, QuoteRequest, QuoteResult, RateComponent, RatingAdapter
 from insureflow.underwriting.cope import COPERatingEngine
 from insureflow.underwriting.market import get_market_cycle
-from insureflow.underwriting.personal_lines import personal_schedule_and_exposure
 
 # ISO-style base loss costs (per $100 of TIV) — representative values
 # Overridden by data/rate_curves.json or RATE_CURVES_URL when present
@@ -190,16 +189,45 @@ class InsuranceRatingEngine:
         line: InsuranceLine = InsuranceLine.COMMERCIAL_PROPERTY,
     ) -> QuoteResult:
         personal = line in PERSONAL_LINES
-        personal_meta: dict[str, Any] = {}
         if personal:
-            personal_mod, personal_exp, _findings, personal_meta = personal_schedule_and_exposure(bundle, line)
-            tiv = personal_exp if personal_exp > 0 else self._estimate_tiv(bundle)
-            cope_mod = personal_mod
-            cope_result = None
-        else:
-            tiv = self._estimate_tiv(bundle)
-            cope_result = self._cope.analyze(bundle)
-            cope_mod = cope_result.score.schedule_mod_pct
+            from insureflow.rating.personal import rate_personal_line
+            from insureflow.underwriting.personal_lines import _blob, _state_from_blob
+
+            state = self._primary_state(bundle) or _state_from_blob(_blob(bundle))
+            deductible = 0.0 if line == InsuranceLine.LIFE else self._estimate_deductible(bundle)
+            if deductible <= 0 and line == InsuranceLine.PERSONAL_HOMEOWNERS:
+                deductible = 1000.0
+            result = rate_personal_line(bundle, line, state=state, deductible=deductible)
+            # Preserve adapter reference fields
+            adapted = self.adapter.submit_quote(
+                QuoteRequest(
+                    bundle_id=bundle.bundle_id,
+                    line=line,
+                    tiv=float((result.metadata or {}).get("tiv") or 0),
+                    state=state,
+                    naics_code="",
+                    loss_ratio=0.0,
+                    schedule_mod_pct=0.0,
+                ),
+                memo,
+                bundle,
+            )
+            adapted.base_premium = result.base_premium
+            adapted.adjusted_premium = result.adjusted_premium
+            adapted.schedule_modifications = result.schedule_modifications
+            adapted.rate_per_100_tiv = result.rate_per_100_tiv
+            adapted.eligible = result.eligible
+            adapted.ineligibility_reasons = list(result.ineligibility_reasons or [])
+            meta = dict(result.metadata or {})
+            meta["market_phase"] = self._market.current.phase.value
+            meta["market_mod_pct"] = self._get_market_mod(line)
+            adapted.metadata = meta
+            return adapted
+
+        personal_meta: dict[str, Any] = {}
+        tiv = self._estimate_tiv(bundle)
+        cope_result = self._cope.analyze(bundle)
+        cope_mod = cope_result.score.schedule_mod_pct
 
         state = self._primary_state(bundle)
         tiv_unknown = tiv <= 0

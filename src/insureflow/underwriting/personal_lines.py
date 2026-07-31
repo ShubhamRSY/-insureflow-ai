@@ -261,6 +261,17 @@ class LifeFactors:
         return mod
 
 
+def _state_from_blob(blob: str) -> str:
+    m = re.search(r"\bstate\s*[:=]\s*([a-z]{2})\b", blob, re.I)
+    if m:
+        return m.group(1).upper()
+    # City, ST ZIP
+    m = re.search(r",\s*([a-z]{2})\s+\d{5}", blob, re.I)
+    if m:
+        return m.group(1).upper()
+    return ""
+
+
 def extract_home_factors(bundle: SubmissionBundle) -> PersonalHomeFactors:
     blob = _blob(bundle)
     f = PersonalHomeFactors(
@@ -353,11 +364,23 @@ def extract_life_factors(bundle: SubmissionBundle) -> LifeFactors:
         face_amount=_money(blob, "face amount", "death benefit", "coverage amount", "sum assured"),
         age=_int_field(blob, "applicant age", "insured age", "age:"),
         sex="female" if "female" in blob or " sex: f" in blob else ("male" if "male" in blob or " sex: m" in blob else ""),
-        smoker=any(k in blob for k in ("smoker", "tobacco", "nicotine", "cigarettes")),
+        smoker=bool(
+            re.search(
+                r"(?:current smoker|nicotine\s*:\s*positive|tobacco\s*:\s*(?!none\b|no\b|non-)\w+|cigarettes\s*:\s*(?!none\b|no\b|0)\w+)",
+                blob,
+                re.I,
+            )
+        ),
         health_class=health,
         hazardous_avocation=any(k in blob for k in ("scuba", "skydiving", "hang gliding", "motorsport", "pilot", "aviation")),
         foreign_travel=any(k in blob for k in ("foreign travel", "travel to", "overseas residence")),
-        criminal_history=any(k in blob for k in ("felony", "incarceration", "criminal history", "conviction")),
+        criminal_history=bool(
+            re.search(
+                r"(?:felony conviction|currently incarcerated|criminal history\s*:\s*(?!none\b|no\b|n/a\b)\w+)",
+                blob,
+                re.I,
+            )
+        ),
         income=_money(blob, "annual income", "income", "salary", "net worth"),
     )
     if f.smoker:

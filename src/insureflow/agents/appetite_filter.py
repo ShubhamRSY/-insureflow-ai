@@ -54,7 +54,8 @@ class AppetiteFilterAgent(BaseAgent):
                 self._add_finding(f)
 
     def check_appetite(self, bundle: SubmissionBundle, insurance_line: str | None = None) -> AppetiteFilterResult:
-        from insureflow.rating.models import PERSONAL_LINES
+        from insureflow.rating.models import PERSONAL_LINES, InsuranceLine
+        from insureflow.underwriting.life_medical import underwrite_life
         from insureflow.underwriting.personal_lines import parse_insurance_line, personal_appetite_check
 
         line = parse_insurance_line(insurance_line) if insurance_line else None
@@ -64,8 +65,29 @@ class AppetiteFilterAgent(BaseAgent):
             blob_parts = []
             for doc in bundle.unstructured or []:
                 blob_parts.append(getattr(doc, "raw_text", "") or "")
-                blob_parts.append(getattr(doc, "filename", "") or "")
+                blob_parts.append(getattr(doc, "filename", "") or getattr(doc, "source", "") or "")
             line = detect_insurance_line("\n".join(blob_parts))
+
+        if line == InsuranceLine.LIFE:
+            medical = underwrite_life(bundle)
+            if medical.decision.value == "decline":
+                return AppetiteFilterResult(
+                    passed=False,
+                    findings=medical.findings,
+                    reason="; ".join(medical.reasons) or "Life medical decline",
+                )
+            if medical.decision.value == "refer":
+                return AppetiteFilterResult(
+                    passed=False,
+                    findings=medical.findings,
+                    reason="; ".join(medical.reasons) or "Life medical referral",
+                    needs_uw_referral=True,
+                )
+            return AppetiteFilterResult(
+                passed=True,
+                findings=medical.findings,
+                reason="Life medical underwriting passed",
+            )
 
         if line in PERSONAL_LINES:
             passed, findings, reason, needs_referral = personal_appetite_check(bundle, line)

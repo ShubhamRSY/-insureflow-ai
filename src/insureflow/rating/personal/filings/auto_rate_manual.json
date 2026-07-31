@@ -1,0 +1,61 @@
+{
+  "filing_id": "RYT-PA-2026-01",
+  "product": "Personal Auto PP",
+  "carrier": "Rytera Personal Lines",
+  "effective_date": "2026-01-01",
+  "state_of_filing": "IL",
+  "expense_constant": 55.0,
+  "minimum_premium": 650.0,
+  "coverages": {
+    "bi_pd": {"base": 420.0, "description": "Bodily injury / property damage liability package"},
+    "comp": {"base": 180.0, "description": "Comprehensive"},
+    "coll": {"base": 320.0, "description": "Collision"}
+  },
+  "territory": {
+    "TX": 1.08, "FL": 1.28, "CA": 1.32, "NY": 1.22, "LA": 1.18, "IL": 1.00, "GA": 1.05,
+    "DEFAULT": 1.06
+  },
+  "driver_class": [
+    {"max_age": 20, "min_years": 0, "factor": 2.15},
+    {"max_age": 24, "min_years": 0, "factor": 1.55},
+    {"max_age": 24, "min_years": 3, "factor": 1.35},
+    {"max_age": 49, "min_years": 0, "factor": 1.05},
+    {"max_age": 49, "min_years": 5, "factor": 0.92},
+    {"max_age": 69, "min_years": 0, "factor": 1.00},
+    {"max_age": 69, "min_years": 10, "factor": 0.90},
+    {"max_age": null, "min_years": 0, "factor": 1.18}
+  ],
+  "vehicle_symbol": [
+    {"max_value": 15000, "factor": 0.85, "symbol": "1-5"},
+    {"max_value": 25000, "factor": 1.00, "symbol": "6-10"},
+    {"max_value": 40000, "factor": 1.18, "symbol": "11-15"},
+    {"max_value": 60000, "factor": 1.40, "symbol": "16-20"},
+    {"max_value": null, "factor": 1.75, "symbol": "21+"}
+  ],
+  "mileage": [
+    {"max": 5000, "factor": 0.88},
+    {"max": 7500, "factor": 0.94},
+    {"max": 12000, "factor": 1.00},
+    {"max": 15000, "factor": 1.06},
+    {"max": 20000, "factor": 1.14},
+    {"max": null, "factor": 1.25}
+  ],
+  "use_factors": {
+    "personal": 1.00,
+    "commute": 1.08,
+    "rideshare": 1.55,
+    "delivery": 1.70
+  },
+  "high_performance_factor": 1.35,
+  "violation_points": {"each": 0.12, "cap": 0.60},
+  "at_fault_points": {"each": 0.18, "cap": 0.72},
+  "eligibility": {
+    "max_violations": 3,
+    "dui_decline": true,
+    "min_driver_age": 18,
+    "rideshare_refer": true
+  },
+  "state_minimum_bi": {
+    "IL": "25/50", "TX": "30/60", "FL": "10/20", "CA": "15/30", "NY": "25/50", "DEFAULT": "25/50"
+  }
+}
