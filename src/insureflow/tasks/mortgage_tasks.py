@@ -23,7 +23,14 @@ def run_mortgage_pipeline(
     from insureflow.models.mortgage import ProductLine
     from insureflow.mortgage.pipeline import MortgagePipeline
 
-    docs: list[dict[str, str]] = [{"filename": d["filename"], "content": d["content"]} for d in documents_data]
+    docs: list[dict[str, str]] = [
+        {
+            "filename": d["filename"],
+            "content": d["content"],
+            "encoding": d.get("encoding", "utf-8"),
+        }
+        for d in documents_data
+    ]
 
     pipeline = MortgagePipeline(use_llm=use_llm)
     result = pipeline.run_from_texts(

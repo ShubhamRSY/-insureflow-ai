@@ -1,11 +1,15 @@
 import { useState } from 'react';
 import { DemoCard, Badge, EmptyState } from '../components/ui';
 import { extractMortgage, endpoints, fmtCurrency } from '../lib/api';
+import { readFileForUpload } from '../lib/insuranceDocs';
 import StageStrip, { stagesFromProgress } from '../components/StageStrip';
-import { Home, Package, FileText } from 'lucide-react';
+import { Home, Package, FileText, FileUp, FolderOpen } from 'lucide-react';
 
 export default function MortgagePage({ presets, jobs, onRunDemo, onOpenJob, onSubmit }) {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [mode, setMode] = useState('upload'); // upload | directory
+  const [files, setFiles] = useState([]);
   const [mortgageProducts, setMortgageProducts] = useState(null);
   const [mortgageAudit, setMortgageAudit] = useState(null);
 
@@ -20,14 +24,30 @@ export default function MortgagePage({ presets, jobs, onRunDemo, onOpenJob, onSu
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
     const fd = new FormData(e.target);
     try {
-      await onSubmit({
-        directory: fd.get('directory'),
+      const body = {
         product_line: fd.get('product_line'),
         use_llm: fd.get('use_llm') === 'on',
-        per_borrower: fd.get('per_borrower') === 'on',
-      });
+        per_borrower: false,
+      };
+
+      if (mode === 'directory') {
+        const directory = String(fd.get('directory') || '').trim();
+        if (!directory) throw new Error('Enter a server document directory');
+        body.directory = directory;
+        body.per_borrower = fd.get('per_borrower') === 'on';
+      } else {
+        if (!files.length) throw new Error('Choose at least one loan package file');
+        body.documents = await Promise.all([...files].map(readFileForUpload));
+      }
+
+      await onSubmit(body);
+      setFiles([]);
+      if (e.target.reset) e.target.reset();
+    } catch (err) {
+      setError(err.message || String(err));
     } finally {
       setLoading(false);
     }
@@ -42,13 +62,17 @@ export default function MortgagePage({ presets, jobs, onRunDemo, onOpenJob, onSu
           </div>
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Mortgage Underwriting</h1>
-            <p className="mt-1 max-w-xl text-slate-400">Residential & commercial lending — income, credit, property docs → approve/deny + rate quote</p>
+            <p className="mt-1 max-w-xl text-slate-400">
+              Upload a loan package or run a demo — income, credit, property docs → approve/deny + rate quote
+            </p>
           </div>
         </div>
         <div className="flex gap-2">
           <button type="button" onClick={loadMortgageProducts} className="btn-secondary btn-sm text-xs"><Package className="h-3 w-3" /> Products</button>
         </div>
       </div>
+
+      {error && <div className="rounded-xl bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</div>}
 
       {mortgageProducts && (
         <div className="glass-card p-5">
@@ -91,14 +115,61 @@ export default function MortgagePage({ presets, jobs, onRunDemo, onOpenJob, onSu
 
         <div className="glass-card p-6">
           <h3 className="mb-4 font-semibold">Custom Submission</h3>
+          <div className="mb-4 flex flex-wrap gap-2">
+            {[
+              ['upload', 'Upload files', FileUp],
+              ['directory', 'Server directory', FolderOpen],
+            ].map(([id, label, Icon]) => (
+              <button
+                key={id}
+                type="button"
+                className={`btn-sm text-xs inline-flex items-center gap-1.5 ${mode === id ? 'btn-primary' : 'btn-secondary'}`}
+                onClick={() => { setMode(id); setError(''); }}
+              >
+                <Icon className="h-3.5 w-3.5" /> {label}
+              </button>
+            ))}
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="mb-1.5 block text-xs font-medium text-slate-400">Document Directory *</label>
-              <input name="directory" required className="input-field font-mono text-xs" placeholder="simulated_documents/home_mortgage/johnson_marcus_imani" />
-            </div>
+            {mode === 'upload' ? (
+              <div>
+                <label className="mb-1.5 flex items-center gap-2 text-xs font-medium text-slate-400">
+                  <FileUp className="h-3.5 w-3.5" /> Loan package files *
+                </label>
+                <input
+                  type="file"
+                  multiple
+                  accept=".pdf,.txt,.md,.xml,.json,.csv,.png,.jpg,.jpeg,.tiff,.tif,.bmp"
+                  className="input-field w-full text-sm"
+                  onChange={(e) => setFiles(e.target.files || [])}
+                />
+                <p className="mt-1.5 text-xs text-slate-500">
+                  {files.length
+                    ? `${files.length} file(s) selected — W-2s, 1003, credit, appraisal, bank statements, etc.`
+                    : 'Drop the package from the browser. No server path needed.'}
+                </p>
+              </div>
+            ) : (
+              <div>
+                <label className="mb-1.5 flex items-center gap-2 text-xs font-medium text-slate-400">
+                  <FolderOpen className="h-3.5 w-3.5" /> Document directory on API host *
+                </label>
+                <input
+                  name="directory"
+                  required={mode === 'directory'}
+                  className="input-field font-mono text-xs"
+                  placeholder="simulated_documents/home_mortgage/johnson_marcus_imani"
+                />
+                <p className="mt-1.5 text-xs text-slate-500">
+                  Ops / sandbox only — path must exist on the server running Rytera.
+                </p>
+              </div>
+            )}
+
             <div>
               <label className="mb-1.5 block text-xs font-medium text-slate-400">Product Line</label>
-              <select name="product_line" className="input-field">
+              <select name="product_line" className="input-field" defaultValue="residential_mortgage">
                 <option value="residential_mortgage">Residential Mortgage</option>
                 <option value="commercial_mortgage">Commercial Mortgage</option>
               </select>
@@ -106,10 +177,14 @@ export default function MortgagePage({ presets, jobs, onRunDemo, onOpenJob, onSu
             <label className="flex items-center gap-2 text-sm text-slate-400">
               <input type="checkbox" name="use_llm" defaultChecked className="rounded" /> Use LLM
             </label>
-            <label className="flex items-center gap-2 text-sm text-slate-400">
-              <input type="checkbox" name="per_borrower" className="rounded" /> Per borrower
-            </label>
-            <button type="submit" disabled={loading} className="btn-primary">{loading ? 'Running…' : 'Run Pipeline'}</button>
+            {mode === 'directory' && (
+              <label className="flex items-center gap-2 text-sm text-slate-400">
+                <input type="checkbox" name="per_borrower" className="rounded" /> Per borrower (split folder packages)
+              </label>
+            )}
+            <button type="submit" disabled={loading} className="btn-primary">
+              {loading ? 'Running…' : mode === 'upload' ? 'Upload & Run Pipeline' : 'Run Pipeline'}
+            </button>
           </form>
         </div>
       </div>
@@ -119,7 +194,7 @@ export default function MortgagePage({ presets, jobs, onRunDemo, onOpenJob, onSu
           <h3 className="font-semibold">Job Queue</h3>
         </div>
         {!jobs?.length ? (
-          <EmptyState icon={Home} title="No mortgage jobs" description="Run Johnson Family demo to get started" />
+          <EmptyState icon={Home} title="No mortgage jobs" description="Upload a package or run Johnson Family demo to get started" />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
