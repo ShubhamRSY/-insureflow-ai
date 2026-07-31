@@ -110,6 +110,43 @@ class MortgageDocumentClassifier:
             re.compile(r"mortgage_statement|mtg.*statement", re.I),
             MortgageDocumentType.MORTGAGE_STATEMENT,
         ),
+        # Identity / residency / specialty checklist docs
+        (re.compile(r"passport", re.I), MortgageDocumentType.PASSPORT),
+        (re.compile(r"ssn_card|social_security_card", re.I), MortgageDocumentType.SSN_CARD),
+        (re.compile(r"ssn_verif|ssn_proof|social_security_verif", re.I), MortgageDocumentType.SSN_VERIFICATION),
+        (
+            re.compile(r"green_card|permanent_resident|i[-_]?551", re.I),
+            MortgageDocumentType.PERMANENT_RESIDENT_CARD,
+        ),
+        (re.compile(r"visa[_-]?(stamp|document|page)|i[-_]?94", re.I), MortgageDocumentType.VISA_DOCUMENT),
+        (re.compile(r"residency|immigration_status", re.I), MortgageDocumentType.RESIDENCY_DOCUMENT),
+        (re.compile(r"\bk1\b|form_k1|schedule_k[-_]?1", re.I), MortgageDocumentType.FORM_K1),
+        (re.compile(r"ssa[-_]?1099|social_security_benefit", re.I), MortgageDocumentType.SSA_1099),
+        (re.compile(r"1099[-_]?r|form_1099r", re.I), MortgageDocumentType.FORM_1099_R),
+        (
+            re.compile(r"award_letter|social_security_award|ssa_award", re.I),
+            MortgageDocumentType.SOCIAL_SECURITY_AWARD,
+        ),
+        (re.compile(r"child_support", re.I), MortgageDocumentType.CHILD_SUPPORT_ORDER),
+        (re.compile(r"alimony", re.I), MortgageDocumentType.ALIMONY_DOCUMENTATION),
+        (
+            re.compile(r"earnest_money|emd_receipt|wire_confirmation.*earnest|earnest.*wire", re.I),
+            MortgageDocumentType.EARNEST_MONEY_RECEIPT,
+        ),
+        (
+            re.compile(r"condo_questionnaire|hoa_questionnaire|condo_hoa", re.I),
+            MortgageDocumentType.CONDO_HOA_QUESTIONNAIRE,
+        ),
+        (re.compile(r"hoa_statement|hoa_dues", re.I), MortgageDocumentType.HOA_STATEMENT),
+        (
+            re.compile(r"bankruptcy|discharge_order|chapter_7|chapter_13", re.I),
+            MortgageDocumentType.BANKRUPTCY_DISCHARGE,
+        ),
+        (re.compile(r"judgment|lien_release", re.I), MortgageDocumentType.JUDGMENT_DOCUMENT),
+        (
+            re.compile(r"landlord_verif|landlord_reference|voe_rent|rent_voe", re.I),
+            MortgageDocumentType.LANDLORD_VERIFICATION,
+        ),
     ]
 
     CONTENT_RULES: list[tuple[re.Pattern[str], MortgageDocumentType, int]] = [
@@ -147,9 +184,14 @@ class MortgageDocumentClassifier:
             4,
         ),
         (
-            re.compile(r"purchase agreement|earnest money", re.I),
+            re.compile(r"purchase agreement|purchase and sale", re.I),
             MortgageDocumentType.PURCHASE_AGREEMENT,
             4,
+        ),
+        (
+            re.compile(r"earnest money (receipt|deposit|wire)|wire confirmation|cleared check.*earnest", re.I),
+            MortgageDocumentType.EARNEST_MONEY_RECEIPT,
+            5,
         ),
         (re.compile(r"gift letter|non.?repayable", re.I), MortgageDocumentType.GIFT_LETTER, 4),
         (re.compile(r"rent roll|tenant estoppel", re.I), MortgageDocumentType.RENT_ROLL, 4),
@@ -251,6 +293,50 @@ class MortgageDocumentClassifier:
             MortgageDocumentType.MORTGAGE_STATEMENT,
             3,
         ),
+        (re.compile(r"passport|united states of america\s+passport", re.I), MortgageDocumentType.PASSPORT, 5),
+        (
+            re.compile(r"social security card|social security administration\s+card", re.I),
+            MortgageDocumentType.SSN_CARD,
+            5,
+        ),
+        (
+            re.compile(r"permanent resident|alien registration|form i-551|green card", re.I),
+            MortgageDocumentType.PERMANENT_RESIDENT_CARD,
+            5,
+        ),
+        (re.compile(r"nonimmigrant visa|visa type|form i-94", re.I), MortgageDocumentType.VISA_DOCUMENT, 4),
+        (re.compile(r"schedule k-1|form k-1|partner.?s share", re.I), MortgageDocumentType.FORM_K1, 5),
+        (re.compile(r"form ssa-1099|social security benefit statement", re.I), MortgageDocumentType.SSA_1099, 5),
+        (re.compile(r"form 1099-r|distributions from pensions", re.I), MortgageDocumentType.FORM_1099_R, 5),
+        (
+            re.compile(r"social security (?:administration )?award|benefit award letter", re.I),
+            MortgageDocumentType.SOCIAL_SECURITY_AWARD,
+            5,
+        ),
+        (
+            re.compile(r"child support (?:order|obligation)|court.?ordered support", re.I),
+            MortgageDocumentType.CHILD_SUPPORT_ORDER,
+            5,
+        ),
+        (re.compile(r"alimony (?:order|award|payment)", re.I), MortgageDocumentType.ALIMONY_DOCUMENTATION, 4),
+        (
+            re.compile(r"condo(?:minium)? questionnaire|hoa questionnaire|project questionnaire", re.I),
+            MortgageDocumentType.CONDO_HOA_QUESTIONNAIRE,
+            5,
+        ),
+        (re.compile(r"hoa (?:dues|statement)|association dues", re.I), MortgageDocumentType.HOA_STATEMENT, 3),
+        (
+            re.compile(r"bankruptcy (?:discharge|order)|chapter (?:7|13) discharge", re.I),
+            MortgageDocumentType.BANKRUPTCY_DISCHARGE,
+            5,
+        ),
+        (re.compile(r"judgment (?:lien|order)|abstract of judgment", re.I), MortgageDocumentType.JUDGMENT_DOCUMENT, 4),
+        (
+            re.compile(r"landlord (?:verification|reference)|verification of rent", re.I),
+            MortgageDocumentType.LANDLORD_VERIFICATION,
+            5,
+        ),
+        (re.compile(r"driver'?s license|state id|government.?issued id", re.I), MortgageDocumentType.GOVERNMENT_ID, 3),
     ]
 
     @classmethod

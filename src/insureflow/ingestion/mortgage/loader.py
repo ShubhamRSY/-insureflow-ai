@@ -16,6 +16,7 @@ from insureflow.models.mortgage import (
     ProductLine,
 )
 from insureflow.mortgage.llm_extractor import MortgageLLMExtractor
+from insureflow.mortgage.privacy import sanitize_document
 
 SUPPORTED_EXTENSIONS = {".txt", ".pdf", ".png", ".jpg", ".jpeg", ".tiff", ".bmp", ".tif"}
 
@@ -78,7 +79,7 @@ class MortgageDocumentParser(BaseParser):
                     confidence=1.0,
                 )
             )
-        return doc
+        return sanitize_document(doc, redact_raw_text=True)
 
     def parse_file(
         self,

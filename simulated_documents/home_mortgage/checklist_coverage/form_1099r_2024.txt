@@ -1,0 +1,7 @@
+FORM 1099-R
+Distributions From Pensions, Annuities, Retirement
+Tax Year: 2024
+Recipient Name: Robert K. Hayes
+Payer Name: Fidelity Investments
+Gross Distribution: $12,000
+Box 1: 12000

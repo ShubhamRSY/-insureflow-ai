@@ -1,9 +1,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable
+from typing import Callable, Iterable
 
-from insureflow.models.mortgage import ComplianceViolation, MortgageBundle, ProductLine
+from insureflow.models.mortgage import (
+    ComplianceViolation,
+    MortgageBundle,
+    MortgageDocumentType,
+    ProductLine,
+)
 
 
 @dataclass(frozen=True)
@@ -13,6 +18,16 @@ class BankRule:
     severity: str
     product_lines: tuple[ProductLine, ...]
     check: Callable[[MortgageBundle], ComplianceViolation | None]
+
+
+def _has_any(bundle: MortgageBundle, types: Iterable[MortgageDocumentType]) -> bool:
+    return any(bundle.documents_by_type(t) for t in types)
+
+
+def _corpus(bundle: MortgageBundle) -> str:
+    parts = [d.source_path for d in bundle.documents]
+    parts.extend(d.raw_text[:1500] for d in bundle.documents[:40])
+    return "\n".join(parts).lower()
 
 
 def _min_credit_score_620(bundle: MortgageBundle) -> ComplianceViolation | None:
@@ -64,16 +79,28 @@ def _max_ltv_80(bundle: MortgageBundle) -> ComplianceViolation | None:
 
 
 def _income_documentation(bundle: MortgageBundle) -> ComplianceViolation | None:
-    from insureflow.models.mortgage import MortgageDocumentType
-
     w2_count = len(bundle.documents_by_type(MortgageDocumentType.W2))
     tax_count = len(bundle.documents_by_type(MortgageDocumentType.TAX_RETURN_1040))
-    if w2_count == 0 and tax_count == 0:
+    other_income = _has_any(
+        bundle,
+        (
+            MortgageDocumentType.FORM_K1,
+            MortgageDocumentType.SSA_1099,
+            MortgageDocumentType.FORM_1099_R,
+            MortgageDocumentType.SOCIAL_SECURITY_AWARD,
+            MortgageDocumentType.CHILD_SUPPORT_ORDER,
+            MortgageDocumentType.ALIMONY_DOCUMENTATION,
+            MortgageDocumentType.PROFIT_LOSS,
+            MortgageDocumentType.SCHEDULE_C,
+            MortgageDocumentType.TAX_RETURN_1065,
+        ),
+    )
+    if w2_count == 0 and tax_count == 0 and not other_income:
         return ComplianceViolation(
             rule_id="INCOME-001",
             rule_name="Income Documentation Required",
             severity="critical",
-            message="No W-2 or tax return found in loan package",
+            message="No W-2, tax return, or alternative income docs found in loan package",
         )
     return None
 
@@ -110,8 +137,6 @@ def _reconciliation_blockers(bundle: MortgageBundle) -> ComplianceViolation | No
 
 
 def _commercial_dscr(bundle: MortgageBundle) -> ComplianceViolation | None:
-    from insureflow.models.mortgage import MortgageDocumentType
-
     if bundle.product_line != ProductLine.COMMERCIAL_MORTGAGE:
         return None
     for doc in bundle.documents_by_type(MortgageDocumentType.OPERATING_STATEMENT):
@@ -124,6 +149,200 @@ def _commercial_dscr(bundle: MortgageBundle) -> ComplianceViolation | None:
                 message=f"DSCR {dscr:.2f}x below bank minimum of 1.20x",
             )
     return None
+
+
+def _identity_docs(bundle: MortgageBundle) -> ComplianceViolation | None:
+    if _has_any(
+        bundle,
+        (
+            MortgageDocumentType.GOVERNMENT_ID,
+            MortgageDocumentType.PASSPORT,
+            MortgageDocumentType.PERMANENT_RESIDENT_CARD,
+            MortgageDocumentType.VISA_DOCUMENT,
+            MortgageDocumentType.RESIDENCY_DOCUMENT,
+        ),
+    ):
+        return None
+    return ComplianceViolation(
+        rule_id="PKG-ID-001",
+        rule_name="Borrower Identity",
+        severity="high",
+        message="Missing government-issued ID, passport, or residency document",
+    )
+
+
+def _ssn_docs(bundle: MortgageBundle) -> ComplianceViolation | None:
+    if _has_any(
+        bundle,
+        (
+            MortgageDocumentType.SSN_CARD,
+            MortgageDocumentType.SSN_VERIFICATION,
+        ),
+    ):
+        return None
+    # 1003 often carries SSN — treat as soft condition, not hard fail
+    if _has_any(
+        bundle,
+        (
+            MortgageDocumentType.LOAN_APPLICATION_1003,
+            MortgageDocumentType.UNIFORM_RESIDENTIAL_LOAN_APPLICATION,
+        ),
+    ):
+        return ComplianceViolation(
+            rule_id="PKG-SSN-001",
+            rule_name="SSN Verification",
+            severity="warning",
+            message="No SSN card/verification on file — confirm SSN from 1003 / SSA docs before closing",
+        )
+    return ComplianceViolation(
+        rule_id="PKG-SSN-001",
+        rule_name="SSN Verification",
+        severity="high",
+        message="Missing SSN card or Social Security verification document",
+    )
+
+
+def _core_package_docs(bundle: MortgageBundle) -> ComplianceViolation | None:
+    missing: list[str] = []
+    checks: list[tuple[str, tuple[MortgageDocumentType, ...]]] = [
+        (
+            "loan application (1003/URLA)",
+            (
+                MortgageDocumentType.LOAN_APPLICATION_1003,
+                MortgageDocumentType.UNIFORM_RESIDENTIAL_LOAN_APPLICATION,
+            ),
+        ),
+        ("credit report", (MortgageDocumentType.CREDIT_REPORT,)),
+        ("bank / asset statements", (MortgageDocumentType.BANK_STATEMENT, MortgageDocumentType.VOD, MortgageDocumentType.VERIFICATION_OF_DEPOSIT)),
+        (
+            "purchase agreement or current mortgage statement",
+            (MortgageDocumentType.PURCHASE_AGREEMENT, MortgageDocumentType.MORTGAGE_STATEMENT),
+        ),
+    ]
+    for label, types in checks:
+        if not _has_any(bundle, types):
+            missing.append(label)
+    if not missing:
+        return None
+    return ComplianceViolation(
+        rule_id="PKG-CORE-001",
+        rule_name="Core Package Completeness",
+        severity="high",
+        message="Missing core package item(s): " + "; ".join(missing),
+    )
+
+
+def _conditional_specialty_docs(bundle: MortgageBundle) -> ComplianceViolation | None:
+    """Issue conditions when package signals specialty docs that are absent."""
+    text = _corpus(bundle)
+    gaps: list[str] = []
+
+    if ("condo" in text or "hoa" in text) and not _has_any(
+        bundle,
+        (MortgageDocumentType.CONDO_HOA_QUESTIONNAIRE, MortgageDocumentType.HOA_STATEMENT),
+    ):
+        gaps.append("condo/HOA questionnaire or HOA dues statement")
+
+    if ("gift" in text or "gift letter" in text) and not _has_any(bundle, (MortgageDocumentType.GIFT_LETTER,)):
+        gaps.append("signed gift letter")
+
+    if ("earnest" in text or "emd" in text) and not _has_any(bundle, (MortgageDocumentType.EARNEST_MONEY_RECEIPT,)):
+        gaps.append("earnest money receipt / wire confirmation")
+
+    if ("self-employed" in text or "schedule c" in text or "1099" in text) and not _has_any(
+        bundle,
+        (
+            MortgageDocumentType.PROFIT_LOSS,
+            MortgageDocumentType.BALANCE_SHEET,
+            MortgageDocumentType.TAX_RETURN_1065,
+            MortgageDocumentType.SCHEDULE_C,
+            MortgageDocumentType.FORM_K1,
+        ),
+    ):
+        gaps.append("self-employed financials (P&L / balance sheet / K-1 / business return)")
+
+    if ("child support" in text or "alimony" in text) and not _has_any(
+        bundle,
+        (MortgageDocumentType.CHILD_SUPPORT_ORDER, MortgageDocumentType.ALIMONY_DOCUMENTATION, MortgageDocumentType.DIVORCE_DECREE),
+    ):
+        gaps.append("child support / alimony order + payment proof")
+
+    if ("social security" in text or "retirement income" in text or "pension" in text) and not _has_any(
+        bundle,
+        (
+            MortgageDocumentType.SSA_1099,
+            MortgageDocumentType.FORM_1099_R,
+            MortgageDocumentType.SOCIAL_SECURITY_AWARD,
+        ),
+    ):
+        gaps.append("SSA-1099 / 1099-R / award letter for retirement or SSA income")
+
+    if ("bankruptcy" in text or "chapter 7" in text or "chapter 13" in text) and not _has_any(
+        bundle,
+        (MortgageDocumentType.BANKRUPTCY_DISCHARGE,),
+    ):
+        gaps.append("bankruptcy discharge / court order")
+
+    if ("judgment" in text or "lien" in text) and not _has_any(bundle, (MortgageDocumentType.JUDGMENT_DOCUMENT,)):
+        gaps.append("judgment / lien documentation")
+
+    if ("rent" in text or "landlord" in text or "tenant" in text) and not _has_any(
+        bundle,
+        (
+            MortgageDocumentType.LANDLORD_VERIFICATION,
+            MortgageDocumentType.RENTAL_HISTORY,
+            MortgageDocumentType.RENTAL_HISTORY_LETTER,
+            MortgageDocumentType.RENT_HISTORY,
+        ),
+    ):
+        # Only if no purchase agreement (likely renter) — soft
+        if not _has_any(bundle, (MortgageDocumentType.PURCHASE_AGREEMENT,)):
+            gaps.append("landlord verification / rental payment history")
+
+    if ("permanent resident" in text or "visa" in text or "non-citizen" in text or "alien" in text) and not _has_any(
+        bundle,
+        (
+            MortgageDocumentType.PERMANENT_RESIDENT_CARD,
+            MortgageDocumentType.VISA_DOCUMENT,
+            MortgageDocumentType.RESIDENCY_DOCUMENT,
+        ),
+    ):
+        gaps.append("residency / green card / visa documentation")
+
+    if not gaps:
+        return None
+    return ComplianceViolation(
+        rule_id="PKG-COND-001",
+        rule_name="Specialty Document Conditions",
+        severity="warning",
+        message="Request from borrower/broker: " + "; ".join(gaps),
+    )
+
+
+def _property_protection_docs(bundle: MortgageBundle) -> ComplianceViolation | None:
+    missing: list[str] = []
+    if not _has_any(
+        bundle,
+        (
+            MortgageDocumentType.HOMEOWNERS_INSURANCE,
+            MortgageDocumentType.HAZARD_INSURANCE,
+            MortgageDocumentType.HAZARD_INSURANCE_DECLARATION,
+        ),
+    ):
+        missing.append("homeowners / hazard insurance")
+    if not _has_any(
+        bundle,
+        (MortgageDocumentType.RESIDENTIAL_APPRAISAL, MortgageDocumentType.COMMERCIAL_APPRAISAL),
+    ):
+        missing.append("appraisal")
+    if not missing:
+        return None
+    return ComplianceViolation(
+        rule_id="PKG-PROP-001",
+        rule_name="Property Documentation",
+        severity="warning",
+        message="Missing property item(s): " + "; ".join(missing),
+    )
 
 
 BANK_RULES: list[BankRule] = [
@@ -164,6 +383,41 @@ BANK_RULES: list[BankRule] = [
         (ProductLine.COMMERCIAL_MORTGAGE,),
         _commercial_dscr,
     ),
+    BankRule(
+        "PKG-ID-001",
+        "Borrower Identity",
+        "high",
+        (ProductLine.RESIDENTIAL_MORTGAGE,),
+        _identity_docs,
+    ),
+    BankRule(
+        "PKG-SSN-001",
+        "SSN Verification",
+        "warning",
+        (ProductLine.RESIDENTIAL_MORTGAGE,),
+        _ssn_docs,
+    ),
+    BankRule(
+        "PKG-CORE-001",
+        "Core Package Completeness",
+        "high",
+        (ProductLine.RESIDENTIAL_MORTGAGE,),
+        _core_package_docs,
+    ),
+    BankRule(
+        "PKG-PROP-001",
+        "Property Documentation",
+        "warning",
+        (ProductLine.RESIDENTIAL_MORTGAGE,),
+        _property_protection_docs,
+    ),
+    BankRule(
+        "PKG-COND-001",
+        "Specialty Document Conditions",
+        "warning",
+        (ProductLine.RESIDENTIAL_MORTGAGE,),
+        _conditional_specialty_docs,
+    ),
 ]
 
 
@@ -180,3 +434,64 @@ class MortgageComplianceEngine:
                 violations.append(result)
         bundle.compliance_violations = violations
         return violations
+
+    def package_checklist(self, bundle: MortgageBundle) -> dict[str, list[str]]:
+        """Return present vs missing checklist labels for UI / audit."""
+        present: list[str] = []
+        missing: list[str] = []
+        catalog: list[tuple[str, tuple[MortgageDocumentType, ...]]] = [
+            ("Government ID / passport / residency", (
+                MortgageDocumentType.GOVERNMENT_ID,
+                MortgageDocumentType.PASSPORT,
+                MortgageDocumentType.PERMANENT_RESIDENT_CARD,
+                MortgageDocumentType.VISA_DOCUMENT,
+                MortgageDocumentType.RESIDENCY_DOCUMENT,
+            )),
+            ("SSN card / verification", (MortgageDocumentType.SSN_CARD, MortgageDocumentType.SSN_VERIFICATION)),
+            ("W-2", (MortgageDocumentType.W2,)),
+            ("Pay stubs", (MortgageDocumentType.PAY_STUB,)),
+            ("Tax returns", (MortgageDocumentType.TAX_RETURN_1040, MortgageDocumentType.TAX_RETURN_1065)),
+            ("K-1 / SSA-1099 / 1099-R / award letter", (
+                MortgageDocumentType.FORM_K1,
+                MortgageDocumentType.SSA_1099,
+                MortgageDocumentType.FORM_1099_R,
+                MortgageDocumentType.SOCIAL_SECURITY_AWARD,
+            )),
+            ("Child support / alimony", (
+                MortgageDocumentType.CHILD_SUPPORT_ORDER,
+                MortgageDocumentType.ALIMONY_DOCUMENTATION,
+            )),
+            ("Bank / asset statements", (MortgageDocumentType.BANK_STATEMENT,)),
+            ("Gift letter", (MortgageDocumentType.GIFT_LETTER,)),
+            ("Earnest money receipt", (MortgageDocumentType.EARNEST_MONEY_RECEIPT,)),
+            ("Credit report", (MortgageDocumentType.CREDIT_REPORT,)),
+            ("Bankruptcy / judgment", (
+                MortgageDocumentType.BANKRUPTCY_DISCHARGE,
+                MortgageDocumentType.JUDGMENT_DOCUMENT,
+            )),
+            ("Landlord verification", (
+                MortgageDocumentType.LANDLORD_VERIFICATION,
+                MortgageDocumentType.RENTAL_HISTORY,
+            )),
+            ("Purchase agreement", (MortgageDocumentType.PURCHASE_AGREEMENT,)),
+            ("Appraisal", (MortgageDocumentType.RESIDENTIAL_APPRAISAL, MortgageDocumentType.COMMERCIAL_APPRAISAL)),
+            ("HOI / hazard", (
+                MortgageDocumentType.HOMEOWNERS_INSURANCE,
+                MortgageDocumentType.HAZARD_INSURANCE,
+                MortgageDocumentType.HAZARD_INSURANCE_DECLARATION,
+            )),
+            ("Condo / HOA questionnaire", (
+                MortgageDocumentType.CONDO_HOA_QUESTIONNAIRE,
+                MortgageDocumentType.HOA_STATEMENT,
+            )),
+            ("1003 / URLA", (
+                MortgageDocumentType.LOAN_APPLICATION_1003,
+                MortgageDocumentType.UNIFORM_RESIDENTIAL_LOAN_APPLICATION,
+            )),
+        ]
+        for label, types in catalog:
+            if _has_any(bundle, types):
+                present.append(label)
+            else:
+                missing.append(label)
+        return {"present": present, "missing": missing}

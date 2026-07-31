@@ -87,7 +87,7 @@ Prioritized queue with fit / triage scores and journey strips so UW attention hi
 | Area | Purpose |
 |------|---------|
 | System Health | LLM, job store, encryption — healthy / degraded / missing (no secrets) |
-| Mortgage / Lending | Upload packages (or demos); stage strips and loan decisions |
+| Mortgage / Lending | Upload packages (or demos); stage strips and loan decisions; mortgage PII masked before LLM / storage |
 | Renewals | Pre-renewal / premium audit tracking |
 | Override Analytics | UW vs AI — pilot KPI (target override &lt; 25% by day 30) |
 | Eval Trends | Quality / release-gate trends over time |

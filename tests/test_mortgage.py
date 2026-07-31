@@ -46,6 +46,27 @@ class TestMortgageClassifier:
         content = Path(path).read_text()
         assert MortgageDocumentClassifier.classify(content, path) == MortgageDocumentType.RENT_ROLL
 
+    def test_classify_checklist_coverage_docs(self) -> None:
+        coverage = HOME / "checklist_coverage"
+        expected = {
+            "passport_sample.txt": MortgageDocumentType.PASSPORT,
+            "permanent_resident_card.txt": MortgageDocumentType.PERMANENT_RESIDENT_CARD,
+            "form_k1_2024.txt": MortgageDocumentType.FORM_K1,
+            "ssa_1099_2024.txt": MortgageDocumentType.SSA_1099,
+            "form_1099r_2024.txt": MortgageDocumentType.FORM_1099_R,
+            "social_security_award_letter.txt": MortgageDocumentType.SOCIAL_SECURITY_AWARD,
+            "child_support_order.txt": MortgageDocumentType.CHILD_SUPPORT_ORDER,
+            "earnest_money_receipt.txt": MortgageDocumentType.EARNEST_MONEY_RECEIPT,
+            "condo_hoa_questionnaire.txt": MortgageDocumentType.CONDO_HOA_QUESTIONNAIRE,
+            "bankruptcy_discharge.txt": MortgageDocumentType.BANKRUPTCY_DISCHARGE,
+            "judgment_document.txt": MortgageDocumentType.JUDGMENT_DOCUMENT,
+            "landlord_verification.txt": MortgageDocumentType.LANDLORD_VERIFICATION,
+        }
+        for name, doc_type in expected.items():
+            path = coverage / name
+            assert path.exists(), name
+            assert MortgageDocumentClassifier.classify(path.read_text(), str(path)) == doc_type
+
     def test_infer_product_line(self) -> None:
         assert MortgageDocumentClassifier.infer_product_line(str(HOME)) == ProductLine.RESIDENTIAL_MORTGAGE
         assert MortgageDocumentClassifier.infer_product_line(str(COMMERCIAL)) == ProductLine.COMMERCIAL_MORTGAGE
@@ -199,6 +220,10 @@ class TestMortgagePipeline:
         violations = results.get("compliance_violations", [])
         rule_ids = {v["rule_id"] for v in violations}
         assert "INCOME-001" in rule_ids
+        assert "PKG-ID-001" in rule_ids or "PKG-CORE-001" in rule_ids
+        checklist = results.get("package_checklist") or {}
+        assert "missing" in checklist
+        assert "present" in checklist
 
     def test_api_text_submission(self, audit_store: AuditStore, monkeypatch: pytest.MonkeyPatch) -> None:
         w2 = (HOME / "income" / "w2_2024_john_thompson.txt").read_text()

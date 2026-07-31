@@ -54,6 +54,20 @@ PATTERNS: dict[PIICategory, list[re.Pattern[str]]] = {
         re.compile(r"\b\d{2}-\d{7}\b"),
         re.compile(r"\bEIN\s*[:#]?\s*\d{2}-\d{7}\b", re.IGNORECASE),
     ],
+    PIICategory.PASSPORT: [
+        re.compile(
+            r"\b(?:Passport(?: Number|#)?|Passport No\.?)\s*[:#]?\s*[A-Z0-9]{6,12}\b",
+            re.IGNORECASE,
+        ),
+        re.compile(r"\bPassport Number:\s*([A-Z0-9]{6,12})\b", re.IGNORECASE),
+    ],
+    PIICategory.DRIVERS_LICENSE: [
+        re.compile(
+            r"\b(?:Driver'?s License|DL|State ID)(?: Number|#)?\s*[:#]?\s*[A-Z0-9]{5,15}\b",
+            re.IGNORECASE,
+        ),
+        re.compile(r"\bDocument Number:\s*([A-Z0-9]{5,15})\b", re.IGNORECASE),
+    ],
     PIICategory.DATE_OF_BIRTH: [
         re.compile(
             r"\b(?:DOB|Date of Birth|Birth Date|Born)"

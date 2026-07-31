@@ -384,6 +384,118 @@ def extract_pre_approval(text: str) -> dict[str, list[ExtractedMortgageField]]:
     return fields
 
 
+def extract_identity_document(text: str) -> dict[str, list[ExtractedMortgageField]]:
+    fields: dict[str, list[ExtractedMortgageField]] = {}
+    for key, pattern in {
+        "full_name": re.compile(r"(?:Full Name|Name|Cardholder):\s*(.+)", re.I),
+        "document_number": re.compile(r"(?:Document|Passport|ID|Alien|A-)(?: Number|#):\s*(\S+)", re.I),
+        "date_of_birth": re.compile(r"(?:Date of Birth|DOB):\s*(.+)", re.I),
+        "ssn": re.compile(r"(?:SSN|Social Security(?: Number)?):\s*(\d{3}-\d{2}-\d{4})", re.I),
+        "expiration_date": re.compile(r"Expiration(?: Date)?:\s*(.+)", re.I),
+        "issuing_country": re.compile(r"(?:Issuing Country|Nationality|Country):\s*(.+)", re.I),
+        "status": re.compile(r"(?:Immigration Status|Visa Type|Class):\s*(.+)", re.I),
+    }.items():
+        fields[key] = _field(key, _first(pattern, text))
+    return fields
+
+
+def extract_other_income(text: str) -> dict[str, list[ExtractedMortgageField]]:
+    fields: dict[str, list[ExtractedMortgageField]] = {}
+    for key, pattern in {
+        "recipient_name": re.compile(r"(?:Recipient|Payee|Beneficiary|Taxpayer)(?: Name)?:\s*(.+)", re.I),
+        "payer_name": re.compile(r"(?:Payer|Payor|Partnership|Plan)(?: Name)?:\s*(.+)", re.I),
+        "tax_year": re.compile(r"(?:Tax Year|Calendar Year):\s*(\d{4})", re.I),
+        "amount": re.compile(
+            r"(?:Gross Distribution|Box 1|Ordinary Income|Monthly Benefit|Award Amount|Payment Amount):\s*\$?([\d,]+(?:\.\d+)?)",
+            re.I,
+        ),
+        "monthly_amount": re.compile(r"Monthly (?:Amount|Benefit|Payment):\s*\$?([\d,]+(?:\.\d+)?)", re.I),
+        "start_date": re.compile(r"(?:Start|Effective|Award) Date:\s*(.+)", re.I),
+        "ein": re.compile(r"(?:EIN|Employer ID):\s*(\S+)", re.I),
+    }.items():
+        val = _money(pattern, text) if "amount" in key else _first(pattern, text)
+        fields[key] = _field(key, val)
+    return fields
+
+
+def extract_support_order(text: str) -> dict[str, list[ExtractedMortgageField]]:
+    fields: dict[str, list[ExtractedMortgageField]] = {}
+    for key, pattern in {
+        "payee": re.compile(r"(?:Payee|Obligee|Recipient):\s*(.+)", re.I),
+        "payor": re.compile(r"(?:Payor|Obligor|Payer):\s*(.+)", re.I),
+        "monthly_amount": re.compile(r"(?:Monthly|Court.?Ordered) (?:Amount|Support|Alimony):\s*\$?([\d,]+(?:\.\d+)?)", re.I),
+        "case_number": re.compile(r"Case(?: Number|#):\s*(\S+)", re.I),
+        "order_date": re.compile(r"(?:Order|Decree) Date:\s*(.+)", re.I),
+        "months_received": re.compile(r"(?:Months Received|Payment History Months):\s*(\d+)", re.I),
+    }.items():
+        val = _money(pattern, text) if "amount" in key else _first(pattern, text)
+        fields[key] = _field(key, val)
+    return fields
+
+
+def extract_earnest_money(text: str) -> dict[str, list[ExtractedMortgageField]]:
+    fields: dict[str, list[ExtractedMortgageField]] = {}
+    for key, pattern in {
+        "payer_name": re.compile(r"(?:Payer|From|Buyer):\s*(.+)", re.I),
+        "amount": re.compile(r"(?:Amount|Wire Amount|Deposit):\s*\$?([\d,]+(?:\.\d+)?)", re.I),
+        "cleared_date": re.compile(r"(?:Cleared|Posted|Wire) Date:\s*(.+)", re.I),
+        "reference": re.compile(r"(?:Confirmation|Reference|Check)(?: Number|#):\s*(\S+)", re.I),
+        "escrow_agent": re.compile(r"(?:Escrow|Title)(?: Company| Agent)?:\s*(.+)", re.I),
+        "property_address": re.compile(r"Property(?: Address)?:\s*(.+)", re.I),
+    }.items():
+        val = _money(pattern, text) if key == "amount" else _first(pattern, text)
+        fields[key] = _field(key, val)
+    return fields
+
+
+def extract_hoa_questionnaire(text: str) -> dict[str, list[ExtractedMortgageField]]:
+    fields: dict[str, list[ExtractedMortgageField]] = {}
+    for key, pattern in {
+        "hoa_name": re.compile(r"(?:HOA|Association) Name:\s*(.+)", re.I),
+        "monthly_dues": re.compile(r"(?:Monthly |HOA )?Dues:\s*\$?([\d,]+(?:\.\d+)?)", re.I),
+        "special_assessment": re.compile(r"Special Assessment:\s*\$?([\d,]+(?:\.\d+)?)", re.I),
+        "units": re.compile(r"(?:Number of )?Units:\s*(\d+)", re.I),
+        "litigation": re.compile(r"(?:Pending )?Litigation:\s*(Yes|No)", re.I),
+        "insurance_master": re.compile(r"Master (?:Policy|Insurance):\s*(Yes|No|.+)", re.I),
+        "property_address": re.compile(r"(?:Property|Condo) Address:\s*(.+)", re.I),
+    }.items():
+        val = _money(pattern, text) if any(x in key for x in ("dues", "assessment")) else _first(pattern, text)
+        fields[key] = _field(key, val)
+    return fields
+
+
+def extract_bankruptcy_judgment(text: str) -> dict[str, list[ExtractedMortgageField]]:
+    fields: dict[str, list[ExtractedMortgageField]] = {}
+    for key, pattern in {
+        "case_number": re.compile(r"Case(?: Number|#):\s*(\S+)", re.I),
+        "court": re.compile(r"Court:\s*(.+)", re.I),
+        "filing_date": re.compile(r"Filing Date:\s*(.+)", re.I),
+        "discharge_date": re.compile(r"Discharge(?: Date)?:\s*(.+)", re.I),
+        "chapter": re.compile(r"Chapter:\s*(\d+)", re.I),
+        "judgment_amount": re.compile(r"(?:Judgment |Claim )?Amount:\s*\$?([\d,]+(?:\.\d+)?)", re.I),
+        "party_name": re.compile(r"(?:Debtor|Defendant|Plaintiff):\s*(.+)", re.I),
+    }.items():
+        val = _money(pattern, text) if "amount" in key else _first(pattern, text)
+        fields[key] = _field(key, val)
+    return fields
+
+
+def extract_landlord_verification(text: str) -> dict[str, list[ExtractedMortgageField]]:
+    fields: dict[str, list[ExtractedMortgageField]] = {}
+    for key, pattern in {
+        "tenant_name": re.compile(r"Tenant(?: Name)?:\s*(.+)", re.I),
+        "landlord_name": re.compile(r"Landlord(?: Name)?:\s*(.+)", re.I),
+        "landlord_phone": re.compile(r"Landlord Phone:\s*(.+)", re.I),
+        "monthly_rent": re.compile(r"Monthly Rent:\s*\$?([\d,]+(?:\.\d+)?)", re.I),
+        "occupancy_start": re.compile(r"(?:Lease Start|Occupancy Start|Moved In):\s*(.+)", re.I),
+        "on_time_payments": re.compile(r"(?:On.?Time|Timely) Payments:\s*(Yes|No|.+)", re.I),
+        "property_address": re.compile(r"(?:Rental |Property )?Address:\s*(.+)", re.I),
+    }.items():
+        val = _money(pattern, text) if "rent" in key else _first(pattern, text)
+        fields[key] = _field(key, val)
+    return fields
+
+
 def extract_generic(text: str) -> dict[str, list[ExtractedMortgageField]]:
     """Fallback: extract labeled key-value pairs common across mortgage docs."""
     fields: dict[str, list[ExtractedMortgageField]] = {}
@@ -426,6 +538,7 @@ EXTRACTOR_MAP: dict[MortgageDocumentType, Callable[[str], dict[str, list[Extract
     MortgageDocumentType.VOD: extract_bank_statement,
     MortgageDocumentType.HAZARD_INSURANCE_DECLARATION: extract_hazard_insurance,
     MortgageDocumentType.HAZARD_INSURANCE: extract_hazard_insurance,
+    MortgageDocumentType.HOMEOWNERS_INSURANCE: extract_hazard_insurance,
     MortgageDocumentType.PROPERTY_TAX_BILL: extract_property_tax,
     MortgageDocumentType.PROPERTY_TAX_RECEIPT: extract_property_tax,
     MortgageDocumentType.UNDERWRITING_APPROVAL_MEMO: extract_uw_approval_memo,
@@ -434,8 +547,29 @@ EXTRACTOR_MAP: dict[MortgageDocumentType, Callable[[str], dict[str, list[Extract
     MortgageDocumentType.TRID_CLOSING_DISCLOSURE: extract_closing_disclosure,
     MortgageDocumentType.LOAN_ESTIMATE: extract_form_1003,
     MortgageDocumentType.PAYOFF_STATEMENT: extract_property_tax,
-    MortgageDocumentType.RENTAL_HISTORY: extract_property_tax,
+    MortgageDocumentType.RENTAL_HISTORY: extract_landlord_verification,
+    MortgageDocumentType.RENTAL_HISTORY_LETTER: extract_landlord_verification,
     MortgageDocumentType.MORTGAGE_STATEMENT: extract_property_tax,
+    MortgageDocumentType.GOVERNMENT_ID: extract_identity_document,
+    MortgageDocumentType.PASSPORT: extract_identity_document,
+    MortgageDocumentType.SSN_CARD: extract_identity_document,
+    MortgageDocumentType.SSN_VERIFICATION: extract_identity_document,
+    MortgageDocumentType.RESIDENCY_DOCUMENT: extract_identity_document,
+    MortgageDocumentType.PERMANENT_RESIDENT_CARD: extract_identity_document,
+    MortgageDocumentType.VISA_DOCUMENT: extract_identity_document,
+    MortgageDocumentType.FORM_K1: extract_other_income,
+    MortgageDocumentType.SSA_1099: extract_other_income,
+    MortgageDocumentType.FORM_1099_R: extract_other_income,
+    MortgageDocumentType.SOCIAL_SECURITY_AWARD: extract_other_income,
+    MortgageDocumentType.CHILD_SUPPORT_ORDER: extract_support_order,
+    MortgageDocumentType.ALIMONY_DOCUMENTATION: extract_support_order,
+    MortgageDocumentType.EARNEST_MONEY_RECEIPT: extract_earnest_money,
+    MortgageDocumentType.CONDO_HOA_QUESTIONNAIRE: extract_hoa_questionnaire,
+    MortgageDocumentType.HOA_STATEMENT: extract_hoa_questionnaire,
+    MortgageDocumentType.BANKRUPTCY_DISCHARGE: extract_bankruptcy_judgment,
+    MortgageDocumentType.JUDGMENT_DOCUMENT: extract_bankruptcy_judgment,
+    MortgageDocumentType.LANDLORD_VERIFICATION: extract_landlord_verification,
+    MortgageDocumentType.DIVORCE_DECREE: extract_support_order,
 }
 
 

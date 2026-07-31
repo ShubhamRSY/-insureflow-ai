@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 import logging
 
-from insureflow.llm.client import LLMClient
 from insureflow.models.mortgage import (
     MortgageAgentResult,
     MortgageBundle,
@@ -13,8 +12,14 @@ from insureflow.models.mortgage import (
     MortgageMemo,
     ProductLine,
 )
+from insureflow.redaction.pipeline import RedactedLLMClient
 
 logger = logging.getLogger(__name__)
+
+
+def _mortgage_llm() -> RedactedLLMClient:
+    """LLM client that redacts PII in prompts before egress."""
+    return RedactedLLMClient(model_tier="cheap")
 
 
 def _parse_llm_json_findings(raw: str, category: str) -> list[MortgageFinding]:
@@ -62,7 +67,7 @@ class MortgageIncomeAgent:
     agent_name = "IncomeAnalystAgent"
 
     def analyze(self, bundle: MortgageBundle) -> MortgageAgentResult:
-        llm = LLMClient(model_tier="cheap")
+        llm = _mortgage_llm()
         findings: list[MortgageFinding] = []
 
         doc_text = _collect_doc_text(
@@ -137,7 +142,7 @@ class MortgageCreditAgent:
     agent_name = "CreditAnalystAgent"
 
     def analyze(self, bundle: MortgageBundle) -> MortgageAgentResult:
-        llm = LLMClient(model_tier="cheap")
+        llm = _mortgage_llm()
         findings: list[MortgageFinding] = []
 
         doc_text = _collect_doc_text(
@@ -247,7 +252,7 @@ class MortgageAssetAgent:
     agent_name = "AssetAnalystAgent"
 
     def analyze(self, bundle: MortgageBundle) -> MortgageAgentResult:
-        llm = LLMClient(model_tier="cheap")
+        llm = _mortgage_llm()
         findings: list[MortgageFinding] = []
 
         doc_text = _collect_doc_text(
@@ -319,7 +324,7 @@ class MortgageCollateralAgent:
     agent_name = "CollateralAnalystAgent"
 
     def analyze(self, bundle: MortgageBundle) -> MortgageAgentResult:
-        llm = LLMClient(model_tier="cheap")
+        llm = _mortgage_llm()
         findings: list[MortgageFinding] = []
 
         doc_text = _collect_doc_text(
@@ -503,7 +508,7 @@ class MortgageFraudDetectionAgent:
             if not all_texts.strip():
                 return []
 
-            llm = LLMClient(model_tier="cheap")
+            llm = _mortgage_llm()
             system_prompt = (
                 "You are a forensic mortgage fraud analyst. "
                 "Examine the document texts for fraud indicators including: "
@@ -538,14 +543,16 @@ class MortgageDecisionAgent:
         fraud_critical = [f for f in all_findings if f.category == "fraud" and f.severity == "critical"]
         fraud_high = [f for f in all_findings if f.category == "fraud" and f.severity == "high"]
         critical_violations = [v for v in bundle.compliance_violations if v.severity == "critical"]
+        high_violations = [v for v in bundle.compliance_violations if v.severity == "high"]
 
         if critical or critical_violations or fraud_critical:
             decision = MortgageDecision.DENY
         elif high or len(bundle.reconciliation_issues) >= 2 or fraud_high:
             decision = MortgageDecision.SUSPEND
-        elif bundle.reconciliation_issues or bundle.compliance_violations:
+        elif bundle.reconciliation_issues or high_violations:
             decision = MortgageDecision.REFER
         else:
+            # Warning-level package conditions do not block an approve path
             decision = MortgageDecision.APPROVE
 
         risk_scores = [ar.risk_score for ar in agent_results]
@@ -564,6 +571,8 @@ class MortgageDecisionAgent:
         for v in bundle.compliance_violations:
             if v.severity in ("high", "critical"):
                 conditions.append(v.message)
+            else:
+                conditions.append(f"[Condition] {v.message}")
 
         return MortgageMemo(
             bundle_id=bundle.bundle_id,

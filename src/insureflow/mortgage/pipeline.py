@@ -250,6 +250,7 @@ class MortgagePipeline:
         progress.start("compliance", "Compliance", "Bank compliance rules")
         audit.log(PipelineEvent.PROVENANCE_CHECK, "Running bank compliance rules")
         self.compliance.evaluate(bundle)
+        checklist = self.compliance.package_checklist(bundle)
         progress.complete("compliance", findings=len(bundle.compliance_violations))
 
         progress.start("underwrite", "Underwrite", "Supervisor decision")
@@ -301,6 +302,12 @@ class MortgagePipeline:
                 "adjustments": rate_quote.pricing_adjustments,
             },
             "encryption_at_rest": self.encryption.enabled,
+            "package_checklist": checklist,
+            "privacy": {
+                "pii_redact_before_llm": True,
+                "stored_fields_masked": True,
+                "raw_text_redacted": True,
+            },
         }
 
         doc_analytics = DocumentAnalyticsEngine()

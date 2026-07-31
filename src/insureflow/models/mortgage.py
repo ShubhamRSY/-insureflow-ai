@@ -74,6 +74,28 @@ class MortgageDocumentType(str, Enum):
     MORTGAGE_STATEMENT = "mortgage_statement"
     RENTAL_HISTORY = "rental_history"
     RENTAL_HISTORY_LETTER = "rental_history_letter"
+    # Identity / residency
+    PASSPORT = "passport"
+    SSN_CARD = "ssn_card"
+    SSN_VERIFICATION = "ssn_verification"
+    RESIDENCY_DOCUMENT = "residency_document"
+    PERMANENT_RESIDENT_CARD = "permanent_resident_card"
+    VISA_DOCUMENT = "visa_document"
+    # Other income
+    FORM_K1 = "form_k1"
+    SSA_1099 = "ssa_1099"
+    FORM_1099_R = "form_1099_r"
+    SOCIAL_SECURITY_AWARD = "social_security_award"
+    CHILD_SUPPORT_ORDER = "child_support_order"
+    ALIMONY_DOCUMENTATION = "alimony_documentation"
+    # Assets / property extras
+    EARNEST_MONEY_RECEIPT = "earnest_money_receipt"
+    CONDO_HOA_QUESTIONNAIRE = "condo_hoa_questionnaire"
+    HOA_STATEMENT = "hoa_statement"
+    # Liabilities / housing
+    BANKRUPTCY_DISCHARGE = "bankruptcy_discharge"
+    JUDGMENT_DOCUMENT = "judgment_document"
+    LANDLORD_VERIFICATION = "landlord_verification"
     UNKNOWN = "unknown"
 
 

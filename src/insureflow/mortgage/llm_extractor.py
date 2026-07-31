@@ -6,8 +6,8 @@ import re
 from pydantic import BaseModel, Field
 
 from insureflow.config import settings
-from insureflow.llm.client import LLMClient
 from insureflow.models.mortgage import ExtractedMortgageField, MortgageDocumentType
+from insureflow.redaction.pipeline import RedactedLLMClient
 
 logger = logging.getLogger(__name__)
 
@@ -58,12 +58,15 @@ class LLMExtractionResult(BaseModel):
 
 
 class MortgageLLMExtractor:
-    """LLM-assisted extraction for messy, handwritten, or non-standard documents."""
+    """LLM-assisted extraction for messy, handwritten, or non-standard documents.
+
+    Uses RedactedLLMClient so SSN/account/ID values are masked before model egress.
+    """
 
     MIN_REGEX_FIELDS = 3
 
-    def __init__(self, llm: LLMClient | None = None) -> None:
-        self.llm = llm or LLMClient(model_tier="cheap")
+    def __init__(self, llm: RedactedLLMClient | None = None) -> None:
+        self.llm = llm or RedactedLLMClient(model_tier="cheap")
 
     @property
     def is_available(self) -> bool:
