@@ -37,7 +37,7 @@ export default function MortgagePage({ presets, jobs, onRunDemo, onOpenJob, onSu
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Mortgage Underwriting</h1>
           <p className="mt-2 text-sm text-slate-400 max-w-xl">
-            Pull a loan package from an input source, then underwrite — income, credit, property → decision + rate.
+            Income, credit, and property → decision + rate.
           </p>
         </div>
         <button type="button" onClick={loadMortgageProducts} className="btn-secondary btn-sm text-xs">
@@ -92,7 +92,7 @@ export default function MortgagePage({ presets, jobs, onRunDemo, onOpenJob, onSu
           <h3 className="font-semibold">Job Queue</h3>
         </div>
         {!jobs?.length ? (
-          <EmptyState icon={Home} title="No mortgage jobs" description="Upload a package or open Sample packages to get started" />
+          <EmptyState icon={Home} title="No mortgage jobs" description="Upload a package or run a sample above" />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
