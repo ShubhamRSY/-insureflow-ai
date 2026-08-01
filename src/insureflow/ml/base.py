@@ -40,6 +40,11 @@ class BaseMLModel(ABC):
         self.feature_names: list[str] = []
         self.metrics: dict[str, float] = {}
         self.feature_importance: dict[str, float] = {}
+        # True when the model passed the production quality gate; False when it
+        # trained on real data but failed, in which case predictions fall back
+        # to the deterministic heuristic instead of the weak model. None means
+        # no gate evaluation happened (backwards compatible → use the model).
+        self.gate_passed: bool | None = None
 
     @abstractmethod
     def _build_model(self) -> Any:
@@ -56,6 +61,14 @@ class BaseMLModel(ABC):
     @abstractmethod
     def _compute_feature_importance(self) -> dict[str, float]:
         """Compute feature importance from trained model."""
+
+    def _estimator_attributes(self) -> list[str]:
+        """Attribute names holding trained estimators in addition to ``self.model``.
+
+        These are persisted alongside the primary model so multi-estimator models
+        (loss, premium, fraud) survive a save/load cycle. Subclasses override.
+        """
+        return []
 
     def train(
         self,
@@ -77,8 +90,8 @@ class BaseMLModel(ABC):
         self.model = self._build_model()
         self._fit_model(X_train, y_train, **kwargs)
 
-        train_pred = self.model.predict(X_train)
-        val_pred = self.model.predict(X_val)
+        train_pred = self._metric_predictions(X_train)
+        val_pred = self._metric_predictions(X_val)
 
         self.metrics = self._compute_metrics(y_train, train_pred, y_val, val_pred)
         self.feature_importance = self._compute_feature_importance()
@@ -110,6 +123,16 @@ class BaseMLModel(ABC):
         if hasattr(self.model, "fit"):
             self.model.fit(X, y, **kwargs)
 
+    def _metric_predictions(self, X: np.ndarray) -> np.ndarray:
+        """Raw scores used for metric computation.
+
+        Defaults to ``self.model.predict``. Classifiers override this to return
+        predicted probabilities so ROC-AUC is computed on soft scores, and models
+        whose primary estimator is not ``self.model`` (e.g. fraud) can provide
+        the correct estimator.
+        """
+        return np.asarray(self.model.predict(X))
+
     @abstractmethod
     def _compute_metrics(
         self,
@@ -123,6 +146,8 @@ class BaseMLModel(ABC):
     def predict(self, fv: FeatureVector) -> dict[str, Any]:
         """Run prediction on a single feature vector."""
         if self.model is None or self.status not in (ModelStatus.READY, ModelStatus.CHAMPION, ModelStatus.CHALLENGER):
+            return self._fallback_prediction(fv)
+        if self.gate_passed is False:
             return self._fallback_prediction(fv)
 
         start = time.time()
@@ -179,8 +204,12 @@ class BaseMLModel(ABC):
         model_path = save_dir / f"model_v{self.version}.pkl"
         meta_path = save_dir / f"meta_v{self.version}.json"
 
+        estimators = {attr: getattr(self, attr, None) for attr in self._estimator_attributes()}
         with open(model_path, "wb") as f:
-            pickle.dump({"model": self.model, "scaler": self.scaler, "feature_names": self.feature_names}, f)
+            pickle.dump(
+                {"model": self.model, "scaler": self.scaler, "feature_names": self.feature_names, "estimators": estimators},
+                f,
+            )
 
         meta = {
             "model_type": self.model_type.value,
@@ -189,6 +218,7 @@ class BaseMLModel(ABC):
             "trained_at": self.trained_at.isoformat() if self.trained_at else None,
             "metrics": self.metrics,
             "feature_importance": self.feature_importance,
+            "gate_passed": self.gate_passed,
         }
         meta_path.write_text(json.dumps(meta, indent=2))
 
@@ -214,6 +244,13 @@ class BaseMLModel(ABC):
             self.model = artifacts["model"]
             self.scaler = artifacts.get("scaler")
             self.feature_names = artifacts.get("feature_names", [])
+            estimators = artifacts.get("estimators") or {}
+            for attr, estimator in estimators.items():
+                setattr(self, attr, estimator)
+            if not estimators:
+                for attr in self._estimator_attributes():
+                    if getattr(self, attr, None) is None:
+                        setattr(self, attr, self.model)
 
             meta = json.loads(Path(latest["meta"]).read_text())
             self.version = meta["version"]
@@ -221,6 +258,7 @@ class BaseMLModel(ABC):
             self.trained_at = datetime.fromisoformat(meta["trained_at"]) if meta.get("trained_at") else None
             self.metrics = meta.get("metrics", {})
             self.feature_importance = meta.get("feature_importance", {})
+            self.gate_passed = meta.get("gate_passed")
 
             logger.info("Loaded %s v%s from %s", self.model_type.value, self.version, load_dir)
             return True

@@ -34,6 +34,11 @@ class ChurnPredictionModel(BaseMLModel):
     def _extract_features(self, fv: FeatureVector) -> np.ndarray:
         return extract_features(fv)
 
+    def _metric_predictions(self, X: np.ndarray) -> np.ndarray:
+        if self.model is not None and hasattr(self.model, "predict_proba"):
+            return np.asarray(self.model.predict_proba(X))[:, 1]
+        return np.asarray(self.model.predict(X))
+
     def _compute_metrics(
         self,
         y_train: np.ndarray,
@@ -43,11 +48,15 @@ class ChurnPredictionModel(BaseMLModel):
     ) -> dict[str, float]:
         from sklearn.metrics import accuracy_score, f1_score, roc_auc_score
 
+        def _binary(pred: np.ndarray) -> np.ndarray:
+            return (np.asarray(pred) > 0.5).astype(int)
+
+        y_train_b, y_val_b = y_train.astype(int), y_val.astype(int)
         return {
-            "train_accuracy": float(accuracy_score(y_train.astype(int), train_pred.astype(int))),
-            "val_accuracy": float(accuracy_score(y_val.astype(int), val_pred.astype(int))),
-            "val_f1": float(f1_score(y_val.astype(int), val_pred.astype(int), zero_division=0)),
-            "val_roc_auc": float(roc_auc_score(y_val, val_pred)) if len(set(y_val.astype(int))) > 1 else 0.5,
+            "train_accuracy": float(accuracy_score(y_train_b, _binary(train_pred))),
+            "val_accuracy": float(accuracy_score(y_val_b, _binary(val_pred))),
+            "val_f1": float(f1_score(y_val_b, _binary(val_pred), zero_division=0)),
+            "val_roc_auc": float(roc_auc_score(y_val_b, val_pred)) if len(set(y_val_b)) > 1 else 0.5,
         }
 
     def _compute_feature_importance(self) -> dict[str, float]:

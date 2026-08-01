@@ -17,13 +17,13 @@ class LossPredictionModel(BaseMLModel):
 
     def __init__(self) -> None:
         super().__init__()
-        self.frequency_model: Any = None
+        self.loss_model: Any = None
         self.severity_model: Any = None
 
     def _build_model(self) -> Any:
         from sklearn.ensemble import GradientBoostingRegressor
 
-        self.frequency_model = GradientBoostingRegressor(
+        self.loss_model = GradientBoostingRegressor(
             n_estimators=200,
             max_depth=5,
             learning_rate=0.1,
@@ -37,22 +37,25 @@ class LossPredictionModel(BaseMLModel):
             min_samples_split=10,
             random_state=42,
         )
-        return self.frequency_model
+        return self.loss_model
 
     def _get_feature_names(self) -> list[str]:
         return get_feature_names()
+
+    def _estimator_attributes(self) -> list[str]:
+        return ["loss_model", "severity_model"]
 
     def _extract_features(self, fv: FeatureVector) -> np.ndarray:
         return extract_features(fv)
 
     def _fit_model(self, X: np.ndarray, y: np.ndarray, **kwargs: Any) -> None:
-        """Train both frequency and severity models."""
-        frequency_target = np.maximum(y / np.maximum(np.median(y), 1), 0)
+        """Train the expected-loss regressor and a severity model for the decomposition."""
+        loss_target = np.maximum(y, 0)
         severity_target = np.where(y > 0, y, np.median(y[y > 0]) if np.any(y > 0) else 0)
 
-        self.frequency_model.fit(X, frequency_target)
+        self.loss_model.fit(X, loss_target)
         self.severity_model.fit(X, severity_target)
-        self.model = self.frequency_model
+        self.model = self.loss_model
 
     def _compute_metrics(
         self,
@@ -74,10 +77,10 @@ class LossPredictionModel(BaseMLModel):
 
     def _compute_feature_importance(self) -> dict[str, float]:
         importance = {}
-        if self.frequency_model is not None and hasattr(self.frequency_model, "feature_importances_"):
+        if self.loss_model is not None and hasattr(self.loss_model, "feature_importances_"):
             for i, name in enumerate(self.feature_names):
-                if i < len(self.frequency_model.feature_importances_):
-                    importance[name] = round(float(self.frequency_model.feature_importances_[i]), 4)
+                if i < len(self.loss_model.feature_importances_):
+                    importance[name] = round(float(self.loss_model.feature_importances_[i]), 4)
         return dict(sorted(importance.items(), key=lambda x: x[1], reverse=True))
 
     def _fallback_prediction(self, fv: FeatureVector) -> dict[str, Any]:
@@ -108,15 +111,16 @@ class LossPredictionModel(BaseMLModel):
         ).model_dump()
 
     def _format_prediction(self, fv: FeatureVector, raw_prediction: Any) -> dict[str, Any]:
+        expected_loss = max(float(raw_prediction), 0)
         severity = float(self.severity_model.predict(self._extract_features(fv).reshape(1, -1))[0]) if self.severity_model else 0
-        frequency = float(raw_prediction)
-        expected_loss = frequency * severity
+        severity = max(severity, 1)
+        frequency = expected_loss / severity
 
         return LossPrediction(
             expected_frequency=round(frequency, 4),
-            expected_severity=round(max(severity, 0), 2),
-            expected_loss=round(max(expected_loss, 0), 2),
-            loss_range_low=round(max(expected_loss * 0.5, 0), 2),
+            expected_severity=round(severity, 2),
+            expected_loss=round(expected_loss, 2),
+            loss_range_low=round(expected_loss * 0.5, 2),
             loss_range_high=round(expected_loss * 2.0, 2),
             confidence=round(max(0.0, min(0.95, self.metrics.get("val_r2", 0.5) + 0.3)), 2),
             top_risk_factors=[],

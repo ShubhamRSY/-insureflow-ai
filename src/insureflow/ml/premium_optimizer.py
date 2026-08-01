@@ -17,13 +17,13 @@ class PremiumOptimizerModel(BaseMLModel):
 
     def __init__(self) -> None:
         super().__init__()
-        self.elasticity_model: Any = None
+        self.price_model: Any = None
         self.retention_model: Any = None
 
     def _build_model(self) -> Any:
         from sklearn.ensemble import GradientBoostingRegressor
 
-        self.elasticity_model = GradientBoostingRegressor(
+        self.price_model = GradientBoostingRegressor(
             n_estimators=200,
             max_depth=4,
             learning_rate=0.1,
@@ -35,24 +35,37 @@ class PremiumOptimizerModel(BaseMLModel):
             learning_rate=0.1,
             random_state=42,
         )
-        return self.elasticity_model
+        return self.price_model
 
     def _get_feature_names(self) -> list[str]:
         return get_feature_names()
+
+    def _estimator_attributes(self) -> list[str]:
+        return ["price_model", "retention_model"]
 
     def _extract_features(self, fv: FeatureVector) -> np.ndarray:
         return extract_features(fv)
 
     def _fit_model(self, X: np.ndarray, y: np.ndarray, **kwargs: Any) -> None:
-        n = len(X)
-        rng = np.random.RandomState(42)
-        price_ratios = np.abs(X[:, -2]) * rng.uniform(0.7, 1.3, n)
-        elasticity_target = -1.5 + rng.normal(0, 0.3, n)
-        retention_target = np.clip(1.0 + elasticity_target * (price_ratios - np.median(price_ratios)), 0, 1)
+        """Train the premium-price regressor on the labeled quoted premium target."""
+        price_target = np.maximum(y, 0)
+        loss_ratio = X[:, 7]
+        credit = X[:, 8]
+        claims = X[:, 3]
+        cancellations = X[:, 21]
+        years = X[:, 2]
+        risk_score = (
+            loss_ratio * 0.3
+            + (1 - np.clip(credit / 850, 0, 1)) * 0.2
+            + np.clip(claims / 10, 0, 1) * 0.2
+            + np.clip(cancellations / 5, 0, 1) * 0.15
+            + (1 - np.clip(years / 30, 0, 1)) * 0.15
+        )
+        retention_target = np.clip(1.0 - risk_score * 0.5, 0.05, 1.0)
 
-        self.elasticity_model.fit(X, elasticity_target)
+        self.price_model.fit(X, price_target)
         self.retention_model.fit(X, retention_target)
-        self.model = self.elasticity_model
+        self.model = self.price_model
 
     def _compute_metrics(
         self,
@@ -71,10 +84,10 @@ class PremiumOptimizerModel(BaseMLModel):
 
     def _compute_feature_importance(self) -> dict[str, float]:
         importance = {}
-        if self.elasticity_model is not None and hasattr(self.elasticity_model, "feature_importances_"):
+        if self.price_model is not None and hasattr(self.price_model, "feature_importances_"):
             for i, name in enumerate(self.feature_names):
-                if i < len(self.elasticity_model.feature_importances_):
-                    importance[name] = round(float(self.elasticity_model.feature_importances_[i]), 4)
+                if i < len(self.price_model.feature_importances_):
+                    importance[name] = round(float(self.price_model.feature_importances_[i]), 4)
         return dict(sorted(importance.items(), key=lambda x: x[1], reverse=True))
 
     def _fallback_prediction(self, fv: FeatureVector) -> dict[str, Any]:
@@ -105,21 +118,22 @@ class PremiumOptimizerModel(BaseMLModel):
 
     def _format_prediction(self, fv: FeatureVector, raw_prediction: Any) -> dict[str, Any]:
         features = self._extract_features(fv).reshape(1, -1)
-        elasticity = float(self.elasticity_model.predict(features)[0])
+        price = float(self.price_model.predict(features)[0])
         retention = float(self.retention_model.predict(features)[0])
 
         base_premium = fv.tiv * 0.005
         margin_target = 0.18
-        recommended = base_premium * (1 + margin_target) * (1 - elasticity * 0.05)
+        recommended = max(price, base_premium * 0.5)
         margin = recommended - base_premium
+        elasticity_impact = round((recommended - base_premium) / max(base_premium, 1), 4)
 
         return PremiumRecommendation(
-            recommended_premium=round(max(recommended, base_premium * 0.7), 2),
+            recommended_premium=round(recommended, 2),
             base_rate=round(base_premium, 2),
             risk_adjustment=round(recommended - base_premium, 2),
             market_adjustment=0.0,
             margin_target=margin_target,
-            elasticity_impact=round(elasticity, 4),
+            elasticity_impact=elasticity_impact,
             competitive_position="below_market" if recommended < base_premium else "above_market" if recommended > base_premium * 1.2 else "at_market",
             retention_probability=round(max(0, min(1, retention)), 2),
             margin_at_price=round(max(0, margin), 2),

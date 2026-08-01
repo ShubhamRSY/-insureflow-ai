@@ -34,8 +34,16 @@ class LendingDefaultRiskModel(BaseMLModel):
     def _get_feature_names(self) -> list[str]:
         return get_lending_feature_names()
 
+    def _estimator_attributes(self) -> list[str]:
+        return ["classifier"]
+
     def _extract_features(self, fv: FeatureVector) -> np.ndarray:
         return extract_lending_features(fv)
+
+    def _metric_predictions(self, X: np.ndarray) -> np.ndarray:
+        if self.classifier is not None and hasattr(self.classifier, "predict_proba"):
+            return np.asarray(self.classifier.predict_proba(X))[:, 1]
+        return np.asarray(self.model.predict(X))
 
     def _fit_model(self, X: np.ndarray, y: np.ndarray, **kwargs: Any) -> None:
         self.classifier.fit(X, y.astype(int))
@@ -60,7 +68,7 @@ class LendingDefaultRiskModel(BaseMLModel):
             "val_precision": float(precision_score(y_val_b, _binary(val_pred), zero_division=0)),
             "val_recall": float(recall_score(y_val_b, _binary(val_pred), zero_division=0)),
             "val_f1": float(f1_score(y_val_b, _binary(val_pred), zero_division=0)),
-            "val_roc_auc": float(roc_auc_score(y_val_b, _binary(val_pred))) if len(set(y_val_b)) > 1 else 0.5,
+            "val_roc_auc": float(roc_auc_score(y_val_b, val_pred)) if len(set(y_val_b)) > 1 else 0.5,
         }
 
     def _compute_feature_importance(self) -> dict[str, float]:

@@ -19,6 +19,7 @@ COPY examples/ examples/
 COPY simulated_documents/ simulated_documents/
 COPY cli.py .
 COPY scripts/ scripts/
+COPY ml_data/ ml_data/
 
 ARG PIP_EXTRAS=claude,pgvector,ocr,ml,pdf
 RUN pip install --no-cache-dir -U pip \
@@ -26,6 +27,8 @@ RUN pip install --no-cache-dir -U pip \
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+
+RUN python -c "from insureflow.ml.training import train_all_models; train_all_models(allow_synthetic=False)"
 
 EXPOSE 8000
 

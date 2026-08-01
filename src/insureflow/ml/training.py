@@ -9,6 +9,7 @@ from typing import Any
 
 import numpy as np
 
+from insureflow.ml.base import BaseMLModel
 from insureflow.ml.features import DEFAULT_FEATURE_NAMES, generate_synthetic_dataset, get_model_feature_names
 from insureflow.ml.models import ModelType, TrainingResult
 from insureflow.ml.registry import get_ml_registry
@@ -26,6 +27,34 @@ TRAINING_CONFIGS: dict[ModelType, dict[str, Any]] = {
 
 # Default layout: ml_data/<model_type>.csv with feature columns + target
 DEFAULT_DATA_ROOT = Path("ml_data")
+
+# Minimum production thresholds. Models trained on real data that fail these stay
+# on their deterministic fallbacks instead of serving weak predictions.
+QUALITY_GATES: dict[ModelType, dict[str, float]] = {
+    ModelType.LOSS_PREDICTION: {"val_r2": 0.0, "min_samples": 50.0},
+    ModelType.FRAUD_DETECTION: {"val_roc_auc": 0.70, "min_samples": 50.0},
+    ModelType.PREMIUM_OPTIMIZER: {"val_r2": 0.0, "min_samples": 50.0},
+    ModelType.CHURN_PREDICTION: {"val_roc_auc": 0.70, "min_samples": 50.0},
+    ModelType.MORTGAGE_DEFAULT_RISK: {"val_roc_auc": 0.70, "min_samples": 50.0},
+    ModelType.LENDING_DEFAULT_RISK: {"val_roc_auc": 0.70, "min_samples": 50.0},
+}
+
+
+def passes_quality_gate(model_type: ModelType, metrics: dict[str, float], n_samples: int) -> tuple[bool, str]:
+    """Check a trained model against production quality thresholds.
+
+    Returns (passed, reason). A model failing the gate must not serve predictions.
+    """
+    gate = QUALITY_GATES.get(model_type)
+    if gate is None:
+        return True, "no gate configured"
+    if n_samples < gate.get("min_samples", 0.0):
+        return False, f"insufficient samples ({n_samples} < {gate.get('min_samples', 0.0):.0f})"
+    if "val_roc_auc" in gate and metrics.get("val_roc_auc", 0.0) < gate["val_roc_auc"]:
+        return False, f"val_roc_auc {metrics.get('val_roc_auc', 0.0):.3f} < {gate['val_roc_auc']:.2f}"
+    if "val_r2" in gate and metrics.get("val_r2", -1.0) <= gate["val_r2"]:
+        return False, f"val_r2 {metrics.get('val_r2', -1.0):.3f} <= {gate['val_r2']:.2f}"
+    return True, "passed"
 
 
 def resolve_dataset_path(model_type: ModelType, data_root: Path | None = None) -> Path | None:
@@ -99,14 +128,26 @@ def load_dataset_for_model(
     csv_path: Path | str | None = None,
     allow_synthetic: bool = True,
 ) -> tuple[np.ndarray, np.ndarray, dict[str, Any]]:
-    """Prefer real CSV under ml_data/; fall back to synthetic only if allowed."""
+    """Prefer real CSV under ml_data/; fall back to synthetic only if allowed.
+
+    A real CSV whose target is degenerate (single class/value) is never used for
+    production training — it either falls back to synthetic (demo/tests) or raises
+    FileNotFoundError so callers skip the model gracefully.
+    """
     feature_columns = get_model_feature_names(model_type.value)
     path = Path(csv_path) if csv_path else resolve_dataset_path(model_type, data_root)
     if path is not None:
         X, y, meta = load_training_csv(path, feature_columns=feature_columns)
         meta["model_type"] = model_type.value
-        meta["synthetic"] = False
-        return X, y, meta
+        if len(np.unique(y)) < 2:
+            if not allow_synthetic:
+                raise FileNotFoundError(
+                    f"Training CSV {path} is degenerate (single class/value in target) — not usable for production training"
+                )
+            logger.warning("Dataset %s is degenerate (single target class) — falling back to synthetic", path)
+        else:
+            meta["synthetic"] = False
+            return X, y, meta
 
     if not allow_synthetic:
         raise FileNotFoundError(f"No training CSV for {model_type.value}. Place labeled data at ml_data/{model_type.value}.csv (features + target column).")
@@ -136,7 +177,13 @@ def train_all_models(
     data_root: Path | None = None,
     allow_synthetic: bool = True,
 ) -> list[TrainingResult]:
-    """Train (or retrain) all ML models — real CSV preferred over synthetic."""
+    """Train (or retrain) all ML models — real CSV preferred over synthetic.
+
+    In production (``allow_synthetic=False``) models without a labeled dataset are
+    skipped (they stay on deterministic fallbacks) and only models that pass the
+    quality gate are promoted to champion. Synthetic training keeps the legacy
+    promotion behavior so tests and demos are unchanged.
+    """
     registry = get_ml_registry()
     results: list[TrainingResult] = []
 
@@ -144,15 +191,24 @@ def train_all_models(
         model = registry.get(model_type)
         if model is None:
             continue
+        if not isinstance(model, BaseMLModel):
+            continue
         if hasattr(model, "is_trained") and model.is_trained and not force:
             logger.info("Skipping %s — already trained", model_type.value)
             continue
 
-        X, y, meta = load_dataset_for_model(
-            model_type,
-            data_root=data_root,
-            allow_synthetic=allow_synthetic,
-        )
+        try:
+            X, y, meta = load_dataset_for_model(
+                model_type,
+                data_root=data_root,
+                allow_synthetic=allow_synthetic,
+            )
+        except FileNotFoundError as exc:
+            if not allow_synthetic:
+                logger.warning("Skipping %s — no real dataset: %s", model_type.value, exc)
+                continue
+            raise
+
         logger.info(
             "Training %s from %s (%d samples)...",
             model_type.value,
@@ -160,16 +216,29 @@ def train_all_models(
             meta.get("n_samples"),
         )
         result = registry.train_model(model_type, X, y)
-        if result:
-            if hasattr(registry, "_history") and registry._history:
-                registry._history[-1]["data_source"] = meta.get("source")
-                registry._history[-1]["synthetic"] = meta.get("synthetic")
-                registry._history[-1]["dataset_path"] = meta.get("path")
-            results.append(result)
-            logger.info("  %s: %s (%s)", model_type.value, result.metrics, meta.get("source"))
+        if result is None:
+            continue
+        if hasattr(registry, "_history") and registry._history:
+            registry._history[-1]["data_source"] = meta.get("source")
+            registry._history[-1]["synthetic"] = meta.get("synthetic")
+            registry._history[-1]["dataset_path"] = meta.get("path")
+        results.append(result)
+        logger.info("  %s: %s (%s)", model_type.value, result.metrics, meta.get("source"))
 
-    for model_type in [ModelType.LOSS_PREDICTION, ModelType.FRAUD_DETECTION]:
-        registry.promote_to_champion(model_type)
+        if meta.get("synthetic"):
+            model.gate_passed = True
+            if model_type in (ModelType.LOSS_PREDICTION, ModelType.FRAUD_DETECTION):
+                registry.promote_to_champion(model_type)
+            continue
+
+        passed, reason = passes_quality_gate(model_type, result.metrics, meta.get("n_samples", 0))
+        model.gate_passed = passed
+        model.save()
+        if passed:
+            registry.promote_to_champion(model_type)
+            logger.info("  ✓ %s passed quality gate — promoted to champion", model_type.value)
+        else:
+            logger.warning("  ✗ %s failed quality gate (%s) — keeping deterministic fallback", model_type.value, reason)
 
     return results
 

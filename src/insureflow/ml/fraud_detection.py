@@ -40,8 +40,16 @@ class FraudDetectionModel(BaseMLModel):
     def _get_feature_names(self) -> list[str]:
         return get_feature_names()
 
+    def _estimator_attributes(self) -> list[str]:
+        return ["isolation_forest", "classifier"]
+
     def _extract_features(self, fv: FeatureVector) -> np.ndarray:
         return extract_features(fv)
+
+    def _metric_predictions(self, X: np.ndarray) -> np.ndarray:
+        if self.classifier is not None and hasattr(self.classifier, "predict_proba"):
+            return np.asarray(self.classifier.predict_proba(X))[:, 1]
+        return np.asarray(self.model.predict(X))
 
     def _fit_model(self, X: np.ndarray, y: np.ndarray, **kwargs: Any) -> None:
         self.isolation_forest.fit(X)
@@ -63,16 +71,18 @@ class FraudDetectionModel(BaseMLModel):
             roc_auc_score,
         )
 
-        val_binary = (val_pred > 0.5).astype(int) if hasattr(val_pred, "__len__") else [int(val_pred > 0.5)]
-        y_val_binary = y_val.astype(int)
+        train_binary = (np.asarray(train_pred) > 0.5).astype(int)
+        val_binary = (np.asarray(val_pred) > 0.5).astype(int)
+        y_train_binary = np.asarray(y_train).astype(int)
+        y_val_binary = np.asarray(y_val).astype(int)
 
         return {
-            "train_accuracy": float(accuracy_score(y_train.astype(int), (train_pred > 0.5).astype(int) if hasattr(train_pred, "__len__") else [int(train_pred > 0.5)])),
+            "train_accuracy": float(accuracy_score(y_train_binary, train_binary)),
             "val_accuracy": float(accuracy_score(y_val_binary, val_binary)),
             "val_precision": float(precision_score(y_val_binary, val_binary, zero_division=0)),
             "val_recall": float(recall_score(y_val_binary, val_binary, zero_division=0)),
             "val_f1": float(f1_score(y_val_binary, val_binary, zero_division=0)),
-            "val_roc_auc": float(roc_auc_score(y_val_binary, val_binary)) if len(set(y_val_binary)) > 1 else 0.5,
+            "val_roc_auc": float(roc_auc_score(y_val_binary, val_pred)) if len(set(y_val_binary)) > 1 else 0.5,
         }
 
     def _compute_feature_importance(self) -> dict[str, float]:
