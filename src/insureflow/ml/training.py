@@ -141,9 +141,7 @@ def load_dataset_for_model(
         meta["model_type"] = model_type.value
         if len(np.unique(y)) < 2:
             if not allow_synthetic:
-                raise FileNotFoundError(
-                    f"Training CSV {path} is degenerate (single class/value in target) — not usable for production training"
-                )
+                raise FileNotFoundError(f"Training CSV {path} is degenerate (single class/value in target) — not usable for production training")
             logger.warning("Dataset %s is degenerate (single target class) — falling back to synthetic", path)
         else:
             meta["synthetic"] = False

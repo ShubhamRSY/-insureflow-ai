@@ -54,13 +54,7 @@ class PremiumOptimizerModel(BaseMLModel):
         claims = X[:, 3]
         cancellations = X[:, 21]
         years = X[:, 2]
-        risk_score = (
-            loss_ratio * 0.3
-            + (1 - np.clip(credit / 850, 0, 1)) * 0.2
-            + np.clip(claims / 10, 0, 1) * 0.2
-            + np.clip(cancellations / 5, 0, 1) * 0.15
-            + (1 - np.clip(years / 30, 0, 1)) * 0.15
-        )
+        risk_score = loss_ratio * 0.3 + (1 - np.clip(credit / 850, 0, 1)) * 0.2 + np.clip(claims / 10, 0, 1) * 0.2 + np.clip(cancellations / 5, 0, 1) * 0.15 + (1 - np.clip(years / 30, 0, 1)) * 0.15
         retention_target = np.clip(1.0 - risk_score * 0.5, 0.05, 1.0)
 
         self.price_model.fit(X, price_target)

@@ -146,13 +146,7 @@ def _insurance_row(summary: dict[str, Any], bundle: dict[str, Any], feature_name
     claims_per_year = prior_claims_count / max(years_in_business, 1.0)
     tiv_to_revenue = tiv / max(revenue, 1.0) if revenue > 0.0 else 0.0
     premium_to_tiv = premium / max(tiv, 1.0)
-    risk_score_raw = (
-        loss_ratio * 0.3
-        + (1 - min(0.0 / 850, 1.0)) * 0.2
-        + min(prior_claims_count / 10, 1.0) * 0.2
-        + min(0.0 / 5, 1.0) * 0.15
-        + (1 - min(years_in_business / 30, 1.0)) * 0.15
-    )
+    risk_score_raw = loss_ratio * 0.3 + (1 - min(0.0 / 850, 1.0)) * 0.2 + min(prior_claims_count / 10, 1.0) * 0.2 + min(0.0 / 5, 1.0) * 0.15 + (1 - min(years_in_business / 30, 1.0)) * 0.15
 
     row = _empty_row(feature_names)
     row.update(
@@ -221,11 +215,7 @@ def _mortgage_row(record: dict[str, Any], feature_names: list[str], target: floa
     ltv_ratio = _as_float(memo.get("ltv_ratio")) or _as_float(collateral.get("ltv"))
     appraised = _as_float(collateral.get("appraised_value"))
     loan_amount = _as_float(record.get("loan_amount")) or (appraised * (ltv_ratio / 100.0) if ltv_ratio > 0.0 else 0.0)
-    annual_income = (
-        _as_float(income.get("adjusted_gross_income"))
-        or _as_float(income.get("total_income"))
-        or _as_float(income.get("annual_wages"))
-    )
+    annual_income = _as_float(income.get("adjusted_gross_income")) or _as_float(income.get("total_income")) or _as_float(income.get("annual_wages"))
     reserves = _as_float(assets.get("total_liquid_assets"))
     utilization_rate = _as_float(credit.get("utilization_rate"))
     derogatory_marks = float(len(credit.get("derogatory_flags") or [])) if isinstance(credit.get("derogatory_flags"), list) else 0.0
