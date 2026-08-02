@@ -115,6 +115,10 @@ export const endpoints = {
 
   // Core integration status
   integrationStatus: () => api('/integration/status'),
+  connectSource: (sourceId, config = {}, vertical = 'insurance') =>
+    api(`/api/connections/${sourceId}`, { method: 'POST', body: { config, vertical } }),
+  disconnectSource: (sourceId) =>
+    api(`/api/connections/${sourceId}`, { method: 'DELETE' }),
 
   // Insurance webhooks
   insuranceWebhooks: () => api('/webhooks/insurance'),

@@ -8,7 +8,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional
+from typing import Any, Optional
+
+AUTHORITY_NS = "authority"
 
 
 class AuthorityTier(str, Enum):
@@ -72,14 +74,74 @@ _MGA_DELEGATED = BindingAuthority(
 )
 
 
+def _binding_to_dict(ba: BindingAuthority) -> dict[str, Any]:
+    return {
+        "max_premium": ba.max_premium,
+        "max_tiv": ba.max_tiv,
+        "max_line_tiv": ba.max_line_tiv,
+        "requires_co_sign": ba.requires_co_sign,
+        "co_sign_threshold_premium": ba.co_sign_threshold_premium,
+        "allowed_states": ba.allowed_states,
+        "excluded_occupancies": ba.excluded_occupancies,
+        "max_aggregate_exposure": ba.max_aggregate_exposure,
+    }
+
+
+def _binding_from_dict(data: dict[str, Any]) -> BindingAuthority:
+    return BindingAuthority(
+        max_premium=data.get("max_premium", 0.0),
+        max_tiv=data.get("max_tiv", 0.0),
+        max_line_tiv=data.get("max_line_tiv", {}),
+        requires_co_sign=data.get("requires_co_sign", False),
+        co_sign_threshold_premium=data.get("co_sign_threshold_premium", 0.0),
+        allowed_states=data.get("allowed_states", []),
+        excluded_occupancies=data.get("excluded_occupancies", []),
+        max_aggregate_exposure=data.get("max_aggregate_exposure", 0.0),
+    )
+
+
+def _authority_to_dict(a: UnderwriterAuthority) -> dict[str, Any]:
+    return {
+        "username": a.username,
+        "display_name": a.display_name,
+        "tier": a.tier.value,
+        "license_number": a.license_number,
+        "license_states": a.license_states,
+        "appointed_carriers": a.appointed_carriers,
+        "binding_authority": _binding_to_dict(a.binding_authority),
+    }
+
+
+def _authority_from_dict(data: dict[str, Any]) -> UnderwriterAuthority:
+    return UnderwriterAuthority(
+        username=data["username"],
+        display_name=data["display_name"],
+        tier=AuthorityTier(data["tier"]),
+        license_number=data.get("license_number", ""),
+        license_states=data.get("license_states", []),
+        appointed_carriers=data.get("appointed_carriers", []),
+        binding_authority=_binding_from_dict(data.get("binding_authority") or {}),
+    )
+
+
 class AuthorityMatrix:
-    """Manages underwriter authority levels and binding limits."""
+    """Manages underwriter authority levels and binding limits.
+
+    Records are persisted per-org via the durable job store so admin edits
+    (add / update / delete) survive restarts. ``_authorities`` is a per-org
+    cache refreshed from the store on every read.
+    """
 
     def __init__(self) -> None:
         self._authorities: dict[str, UnderwriterAuthority] = {}
-        self._seed_defaults()
+        self._cached_org: str | None = None
 
-    def _seed_defaults(self) -> None:
+    def _store(self):
+        from insureflow.storage.job_store import get_job_store
+
+        return get_job_store()
+
+    def _seed_into(self, target: dict[str, UnderwriterAuthority]) -> None:
         defaults = [
             UnderwriterAuthority(
                 username="junderwood",
@@ -115,18 +177,59 @@ class AuthorityMatrix:
             ),
         ]
         for a in defaults:
-            self._authorities[a.username] = a
+            target[a.username] = a
 
-    def get_authority(self, username: str) -> Optional[UnderwriterAuthority]:
+    def _ensure_loaded(self, org_id: str) -> None:
+        """Refresh the in-memory cache from the durable store for this org."""
+        if self._cached_org == org_id:
+            return
+        cached: dict[str, UnderwriterAuthority] = {}
+        self._seed_into(cached)
+        raw = self._store().get(AUTHORITY_NS, "matrix", org_id=org_id)
+        if raw:
+            for rec in raw.get("authorities", []):
+                try:
+                    a = _authority_from_dict(rec)
+                except (KeyError, ValueError):
+                    continue
+                cached[a.username] = a
+        self._authorities = cached
+        self._cached_org = org_id
+
+    def _persist(self, org_id: str) -> None:
+        data = {"authorities": [_authority_to_dict(a) for a in self._authorities.values()]}
+        self._store().set(AUTHORITY_NS, "matrix", data, org_id=org_id)
+
+    def get_authority(self, username: str, org_id: str = "default") -> Optional[UnderwriterAuthority]:
+        self._ensure_loaded(org_id)
         return self._authorities.get(username)
 
-    def set_authority(self, authority: UnderwriterAuthority) -> None:
+    def set_authority(self, authority: UnderwriterAuthority, org_id: str = "default") -> None:
+        self._ensure_loaded(org_id)
         self._authorities[authority.username] = authority
 
-    def list_by_tier(self, tier: AuthorityTier) -> list[UnderwriterAuthority]:
+    def upsert(self, authority: UnderwriterAuthority, org_id: str = "default") -> UnderwriterAuthority:
+        """Add or update an authority record (admin RBAC) and persist it."""
+        self._ensure_loaded(org_id)
+        self._authorities[authority.username] = authority
+        self._persist(org_id)
+        return authority
+
+    def remove(self, username: str, org_id: str = "default") -> bool:
+        """Delete an authority record (admin RBAC) and persist it."""
+        self._ensure_loaded(org_id)
+        if username not in self._authorities:
+            return False
+        del self._authorities[username]
+        self._persist(org_id)
+        return True
+
+    def list_by_tier(self, tier: AuthorityTier, org_id: str = "default") -> list[UnderwriterAuthority]:
+        self._ensure_loaded(org_id)
         return [a for a in self._authorities.values() if a.tier == tier]
 
-    def list_all(self) -> list[UnderwriterAuthority]:
+    def list_all(self, org_id: str = "default") -> list[UnderwriterAuthority]:
+        self._ensure_loaded(org_id)
         return list(self._authorities.values())
 
     def check_binding_authority(
@@ -136,11 +239,13 @@ class AuthorityMatrix:
         tiv: float,
         state: str = "",
         occupancy: str = "",
+        org_id: str = "default",
     ) -> tuple[bool, str]:
         """Check if underwriter has authority to bind this risk.
 
         Returns (approved, reason).
         """
+        self._ensure_loaded(org_id)
         auth = self._authorities.get(username)
         if not auth:
             return False, f"No authority record for '{username}'"

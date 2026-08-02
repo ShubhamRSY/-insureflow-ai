@@ -975,6 +975,17 @@ def pull_insurance_source(
             "added": len(documents),
         }
 
+    def _register(label: str) -> None:
+        """Persist the connection so the Integrations page reflects it."""
+        from insureflow.integrations.connections import save_connection
+
+        config_fields = DEMO_CONNECTORS.get(source_id, {}).get("config_fields") or []
+        keys = [f["key"] for f in config_fields]
+        if source_id == "server-folder":
+            keys = ["path"]
+        cfg = {k: getattr(req, k, None) for k in keys if getattr(req, k, None) is not None}
+        save_connection(source_id, cfg, label, org_id=current.org_id)
+
     try:
         if source_id in INSURANCE_PACKAGES and vertical == "insurance":
             documents = load_package(EXAMPLES_DIR, source_id)
@@ -991,6 +1002,7 @@ def pull_insurance_source(
             accum = _accumulate(documents, source_id, str(meta["name"]))
             if accum:
                 result["accumulated"] = accum
+            _register(str(meta["name"]))
             return result
 
         # Vertical library packages (mortgage / lending fixtures)
@@ -1009,6 +1021,7 @@ def pull_insurance_source(
             accum = _accumulate(documents, source_id, str(meta["name"]))
             if accum:
                 result["accumulated"] = accum
+            _register(str(meta["name"]))
             return result
 
         # Real IMAP email connector — credentials from env vars (admin-configured)
@@ -1034,6 +1047,7 @@ def pull_insurance_source(
                 accum = _accumulate(pull_result["documents"], source_id, label)
                 if accum:
                     result["accumulated"] = accum
+                _register(label)
                 return result
 
             raise HTTPException(
@@ -1079,6 +1093,7 @@ def pull_insurance_source(
             accum = _accumulate(documents, source_id, label)
             if accum:
                 result["accumulated"] = accum
+            _register(label)
             return result
 
         if source_id == "server-folder":
@@ -1100,6 +1115,7 @@ def pull_insurance_source(
             accum = _accumulate(documents, source_id, label)
             if accum:
                 result["accumulated"] = accum
+            _register(label)
             return result
 
         if source_id == "s3-bucket":
@@ -1126,6 +1142,7 @@ def pull_insurance_source(
             accum = _accumulate(pull["documents"], source_id, label)
             if accum:
                 result["accumulated"] = accum
+            _register(label)
             return result
 
         raise HTTPException(status_code=404, detail=f"Unknown source: {source_id}")
@@ -2040,10 +2057,11 @@ def bind_policy(
         premium=premium,
         tiv=tiv,
         state=str(summary.get("primary_state") or ""),
+        org_id=current.org_id,
     )
     if not authorized:
         # In non-hardened / demo environments, allow bind when no matrix row exists for the user.
-        has_row = get_authority_matrix().get_authority(current.username or "") is not None
+        has_row = get_authority_matrix().get_authority(current.username or "", org_id=current.org_id) is not None
         if has_row or _posture().is_hardened:
             raise HTTPException(status_code=403, detail=authority_reason)
 
@@ -2710,9 +2728,114 @@ def list_underwriting_authorities(
                     "max_aggregate_exposure": a.binding_authority.max_aggregate_exposure,
                 },
             }
-            for a in matrix.list_all()
+            for a in matrix.list_all(org_id=current.org_id)
         ]
     }
+
+
+class AuthorityRecordRequest(BaseModel):
+    username: str
+    display_name: str
+    tier: str  # junior | senior | cuo | mga
+    license_number: str = ""
+    max_premium: float = 0.0
+    max_tiv: float = 0.0
+    max_aggregate_exposure: float = 0.0
+    requires_co_sign: bool = False
+    co_sign_threshold_premium: float = 0.0
+
+
+def _build_authority_record(req: AuthorityRecordRequest) -> Any:
+    from insureflow.underwriting.authority import (
+        AuthorityTier,
+        BindingAuthority,
+        UnderwriterAuthority,
+    )
+
+    tier_value = req.tier.strip().lower()
+    try:
+        tier = AuthorityTier(tier_value)
+    except ValueError:
+        valid = ", ".join(t.value for t in AuthorityTier)
+        raise HTTPException(status_code=400, detail=f"Invalid tier '{req.tier}'. Valid: {valid}")
+    username = req.username.strip()
+    if not username or not req.display_name.strip():
+        raise HTTPException(status_code=400, detail="Username and display name are required")
+    return UnderwriterAuthority(
+        username=username,
+        display_name=req.display_name.strip(),
+        tier=tier,
+        license_number=req.license_number.strip(),
+        binding_authority=BindingAuthority(
+            max_premium=req.max_premium,
+            max_tiv=req.max_tiv,
+            max_aggregate_exposure=req.max_aggregate_exposure,
+            requires_co_sign=req.requires_co_sign,
+            co_sign_threshold_premium=req.co_sign_threshold_premium,
+        ),
+    )
+
+
+@app.post("/underwriting/authority", status_code=201)
+def upsert_underwriting_authority(
+    req: AuthorityRecordRequest,
+    current: TokenData = Depends(require_role(Role.ADMIN)),
+) -> dict[str, Any]:
+    """Create or update an authority record (admin RBAC only)."""
+    from insureflow.underwriting.authority import get_authority_matrix
+
+    record = _build_authority_record(req)
+    get_authority_matrix().upsert(record, org_id=current.org_id)
+    return {
+        "username": record.username,
+        "tier": record.tier.value,
+        "binding_authority": {
+            "max_premium": record.binding_authority.max_premium,
+            "max_tiv": record.binding_authority.max_tiv,
+            "requires_co_sign": record.binding_authority.requires_co_sign,
+            "co_sign_threshold_premium": record.binding_authority.co_sign_threshold_premium,
+            "max_aggregate_exposure": record.binding_authority.max_aggregate_exposure,
+        },
+    }
+
+
+@app.put("/underwriting/authority/{username}")
+def update_underwriting_authority(
+    username: str,
+    req: AuthorityRecordRequest,
+    current: TokenData = Depends(require_role(Role.ADMIN)),
+) -> dict[str, Any]:
+    """Update an existing authority record (admin RBAC only)."""
+    from insureflow.underwriting.authority import get_authority_matrix
+
+    matrix = get_authority_matrix()
+    if matrix.get_authority(username, org_id=current.org_id) is None:
+        raise HTTPException(status_code=404, detail=f"No authority record for '{username}'")
+    record = _build_authority_record(req)
+    matrix.upsert(record, org_id=current.org_id)
+    return {
+        "username": record.username,
+        "tier": record.tier.value,
+        "binding_authority": {
+            "max_premium": record.binding_authority.max_premium,
+            "max_tiv": record.binding_authority.max_tiv,
+            "requires_co_sign": record.binding_authority.requires_co_sign,
+            "co_sign_threshold_premium": record.binding_authority.co_sign_threshold_premium,
+            "max_aggregate_exposure": record.binding_authority.max_aggregate_exposure,
+        },
+    }
+
+
+@app.delete("/underwriting/authority/{username}", status_code=204)
+def delete_underwriting_authority(
+    username: str,
+    current: TokenData = Depends(require_role(Role.ADMIN)),
+) -> None:
+    """Delete an authority record (admin RBAC only)."""
+    from insureflow.underwriting.authority import get_authority_matrix
+
+    if not get_authority_matrix().remove(username, org_id=current.org_id):
+        raise HTTPException(status_code=404, detail=f"No authority record for '{username}'")
 
 
 @app.post("/pipeline/renewal/{bundle_id}")
@@ -4069,14 +4192,43 @@ def portfolio_summary(
 def integration_status(
     current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
-    """Check which core systems are configured and their connectivity."""
+    """List source connectors (Connect & pull hubs) plus core system adapters.
+
+    ``adapters`` reflects the same connectors available in the insurance /
+    mortgage / lending "Connect & pull" hubs, annotated with the live
+    connected state from the persisted connections registry.
+    """
+    from insureflow.ingestion.insurance.sources import list_sources
     from insureflow.integration.britecore_adapter import BriteCoreAdapter
     from insureflow.integration.guidewire_adapter import GuidewireAdapter
+    from insureflow.integrations.connections import list_connections
+
+    conns = list_connections(current.org_id)
+    adapters: list[dict[str, Any]] = []
+    for s in list_sources(EXAMPLES_DIR):
+        if s["type"] == "library":
+            continue  # demo packages are sample data, not adapters
+        source_id = str(s["id"])
+        entry = conns.get(source_id)
+        adapters.append(
+            {
+                "id": source_id,
+                "name": s["name"],
+                "type": s["type"],
+                "category": s["category"],
+                "description": s["description"],
+                "config_fields": s.get("config_fields", []),
+                "connected": source_id in conns,
+                "connection_label": (entry or {}).get("label"),
+                "status": "connected" if source_id in conns else "ready",
+            }
+        )
 
     britecore = BriteCoreAdapter(api_key=os.getenv("BRITECORE_API_KEY", ""))
     guidewire = GuidewireAdapter(api_key=os.getenv("GUIDEWIRE_API_KEY", ""))
 
     return {
+        "adapters": adapters,
         "systems": [
             {
                 "name": britecore.get_system_name(),
@@ -4090,8 +4242,46 @@ def integration_status(
                 "mode": "simulated" if not os.getenv("GUIDEWIRE_API_KEY") else "live",
                 "healthy": True,
             },
-        ]
+        ],
     }
+
+
+class ConnectionRequest(BaseModel):
+    config: dict[str, Any] = {}
+    vertical: str = "insurance"
+
+
+@app.post("/api/connections/{source_id}")
+def connect_source(
+    source_id: str,
+    req: ConnectionRequest,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Validate a source connector config and register the connection.
+
+    Uses the same pull path as the Connect & pull hubs (without accumulating
+    into a bundle), so any connector that works there connects here too.
+    """
+    pull_req = InsuranceSourcePullRequest(**req.config)
+    result = pull_insurance_source(source_id, pull_req, current, vertical=req.vertical)
+    return {
+        "source_id": source_id,
+        "connected": True,
+        "connection_label": result.get("connection_label") or source_id,
+        "file_count": result.get("file_count", 0),
+        "simulated": result.get("simulated", False),
+    }
+
+
+@app.delete("/api/connections/{source_id}")
+def disconnect_source(
+    source_id: str,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, str]:
+    from insureflow.integrations.connections import remove_connection
+
+    remove_connection(source_id, org_id=current.org_id)
+    return {"source_id": source_id, "connected": "false"}
 
 
 # ── Pipeline Configuration (enhanced with new features) ──────────
