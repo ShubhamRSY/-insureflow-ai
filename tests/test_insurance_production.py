@@ -206,3 +206,35 @@ class TestInsuranceAPIProduction:
         resp = client.get("/pipeline/rating/products", headers=self._headers(Role.VIEWER))
         assert resp.status_code == 200
         assert len(resp.json()["lines"]) >= 4
+
+    def test_demo_presets_cover_all_verticals(self) -> None:
+        client = TestClient(app)
+        presets = client.get("/api/demo/presets").json()
+        assert {k for k in presets} == {"insurance", "mortgage", "lending"}
+        assert len(presets["insurance"]) >= 5
+        assert len(presets["mortgage"]) >= 3
+        assert len(presets["lending"]) >= 2
+        for preset in presets["mortgage"] + presets["lending"]:
+            assert "directory" in preset
+
+    def test_lending_demo_endpoint_runs_sample(self) -> None:
+        client = TestClient(app)
+        resp = client.post("/api/demo/lending/blue-harbor-bakery")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["vertical"] == "lending"
+        assert data["preset"] == "blue-harbor-bakery"
+        assert data["decision"] in ("approved", "approved_with_conditions", "declined", "referred", "suspended")
+        assert data["documents_ingested"] >= 5
+        assert data["approved_amount"] > 0
+
+    def test_lending_demo_unknown_preset_404(self) -> None:
+        client = TestClient(app)
+        assert client.post("/api/demo/lending/does-not-exist").status_code == 404
+
+    def test_mortgage_demo_new_presets(self) -> None:
+        client = TestClient(app)
+        for preset_id in ("chen-residential", "oak-street-commercial"):
+            resp = client.post(f"/api/demo/mortgage/{preset_id}")
+            assert resp.status_code == 202, resp.text
+            assert resp.json()["status"] == "processing"

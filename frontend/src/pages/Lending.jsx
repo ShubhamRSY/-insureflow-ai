@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Wallet, RefreshCw, FileUp, FolderOpen } from 'lucide-react';
+import { Wallet, RefreshCw, FileUp, FolderOpen, FlaskConical } from 'lucide-react';
 import { Badge, EmptyState } from '../components/ui';
 import { endpoints, fmtCurrency } from '../lib/api';
 import StageStrip, { stagesFromProgress } from '../components/StageStrip';
@@ -40,7 +40,7 @@ function fileToPayload(file) {
   });
 }
 
-export default function LendingPage() {
+export default function LendingPage({ presets, demoResult, onRunDemo }) {
   const [products, setProducts] = useState([]);
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -50,6 +50,18 @@ export default function LendingPage() {
   const [form, setForm] = useState(emptyForm);
   const [files, setFiles] = useState([]);
   const [mode, setMode] = useState('form'); // form | documents | directory
+
+  const sampleResult = (res) => ({
+    application_id: res.application_id,
+    decision: res.decision,
+    approved_rate: res.approved_rate,
+    approved_amount: res.approved_amount,
+    risk_score: res.risk_score,
+    human_review_required: res.human_review_required,
+    document_count: res.documents_ingested || res.document_count || 0,
+    extracted_from_docs: true,
+    timeline: res.timeline || [],
+  });
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -64,7 +76,29 @@ export default function LendingPage() {
     }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+    if (demoResult) setResults((prev) => [sampleResult(demoResult), ...prev]);
+  }, [demoResult, load]);
+
+  const runSample = async (presetId) => {
+    setSubmitting(true);
+    setError('');
+    setMessage('');
+    try {
+      const res = await endpoints.runLendingDemo(presetId);
+      setResults((prev) => [sampleResult(res), ...prev]);
+      setMessage(
+        `Sample: ${res.decision}` +
+        (res.documents_ingested ? ` · ${res.documents_ingested} doc(s) ingested` : '') +
+        (res.human_review_required ? ' · human review required' : ''),
+      );
+    } catch (err) {
+      setError(err.message || String(err));
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -160,6 +194,31 @@ export default function LendingPage() {
           </button>
         ))}
       </div>
+
+      {(presets?.lending || []).length > 0 && (
+        <div className="glass-card p-5">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <FlaskConical className="mr-1 inline h-3.5 w-3.5" /> Sample data
+          </p>
+          <div className="flex flex-col gap-2">
+            {(presets?.lending || []).map((d) => (
+              <button key={d.id} type="button" onClick={() => runSample(d.id)} disabled={submitting}
+                className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.06] bg-surface-overlay/30 px-4 py-3 text-left transition hover:border-emerald-500/35">
+                <span className="min-w-0 flex items-center gap-3">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/15">
+                    <Wallet className="h-4 w-4 text-emerald-400" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-medium text-slate-200">{d.name}</span>
+                    <span className="block truncate text-xs text-slate-500">{d.description}</span>
+                  </span>
+                </span>
+                <span className="shrink-0 rounded-md bg-white/[0.04] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-400">Run</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="glass-card p-6">

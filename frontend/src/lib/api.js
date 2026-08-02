@@ -77,6 +77,7 @@ export const endpoints = {
   mortgageJob: (id) => api(`/mortgage/pipeline/jobs/${id}`),
   runMortgage: (body) => api('/mortgage/pipeline/run', { method: 'POST', body }),
   runMortgageDemo: (preset) => api(`/api/demo/mortgage/${preset}`, { method: 'POST' }),
+  runLendingDemo: (preset) => api(`/api/demo/lending/${preset}`, { method: 'POST' }),
   pendingWorkflow: () => api('/pipeline/workflow/pending'),
   signOff: (bundleId, body) => api(`/pipeline/workflow/${bundleId}/sign-off`, { method: 'POST', body }),
   insuranceSources: () => api('/api/insurance/sources'),

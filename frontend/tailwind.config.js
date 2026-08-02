@@ -35,6 +35,7 @@ export default {
         },
         insurance: '#38bdf8',
         mortgage: '#a78bfa',
+        lending: '#34d399',
       },
       boxShadow: {
         glow: '0 0 40px rgba(91, 141, 239, 0.15)',

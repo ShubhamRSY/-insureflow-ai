@@ -14,7 +14,7 @@ export default function Overview({ overview, health, presets, onRunDemo, onOpenJ
     { name: 'Mortgage', completed: overview.mortgage?.completed || 0, processing: overview.mortgage?.processing || 0, failed: overview.mortgage?.failed || 0 },
   ] : [];
 
-  const demos = [...(presets?.insurance || []), ...(presets?.mortgage || [])];
+  const demos = [...(presets?.insurance || []), ...(presets?.mortgage || []), ...(presets?.lending || [])];
 
   const marketPhase = marketCycle?.phase || null;
   const MarketIcon = marketPhase === 'hard' ? TrendingUp : marketPhase === 'soft' ? TrendingDown : null;
@@ -109,7 +109,7 @@ export default function Overview({ overview, health, presets, onRunDemo, onOpenJ
                 name={d.name}
                 description={d.description}
                 tag={d.vertical}
-                tagColor={d.vertical === 'insurance' ? 'insurance' : 'mortgage'}
+                tagColor={d.vertical === 'insurance' ? 'insurance' : d.vertical === 'lending' ? 'lending' : 'mortgage'}
                 onClick={() => onRunDemo(d.vertical, d.id)}
               />
             ))}

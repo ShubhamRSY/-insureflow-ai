@@ -68,6 +68,7 @@ export function DemoCard({ name, description, tag, tagColor = 'brand', onClick, 
     brand: 'text-brand-light',
     insurance: 'text-insurance',
     mortgage: 'text-mortgage',
+    lending: 'text-lending',
   };
   return (
     <button

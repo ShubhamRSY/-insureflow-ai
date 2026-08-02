@@ -571,6 +571,46 @@ async def demo_presets() -> dict[str, Any]:
             "directory": str(SIM_DOCS_DIR / "home_mortgage" / "johnson_marcus_imani"),
         },
         {
+            "id": "chen-residential",
+            "name": "Chen Family (Residential)",
+            "description": "Residential package — income, assets, credit, property, UW docs",
+            "vertical": "mortgage",
+            "product_line": "residential_mortgage",
+            "directory": str(SIM_DOCS_DIR / "home_mortgage" / "chen_david_karen"),
+        },
+        {
+            "id": "patel-residential",
+            "name": "Patel Home Loan (Residential)",
+            "description": "Residential package — income, assets, credit, property, UW docs",
+            "vertical": "mortgage",
+            "product_line": "residential_mortgage",
+            "directory": str(SIM_DOCS_DIR / "home_mortgage" / "patel_lisa"),
+        },
+        {
+            "id": "thompson-residential",
+            "name": "Thompson Family (Residential)",
+            "description": "Residential package — underwriting file",
+            "vertical": "mortgage",
+            "product_line": "residential_mortgage",
+            "directory": str(SIM_DOCS_DIR / "home_mortgage" / "thompson_john_sarah"),
+        },
+        {
+            "id": "wilson-residential",
+            "name": "Wilson Home Loan (Residential)",
+            "description": "Residential package — income, credit, property, UW docs",
+            "vertical": "mortgage",
+            "product_line": "residential_mortgage",
+            "directory": str(SIM_DOCS_DIR / "home_mortgage" / "wilson_james"),
+        },
+        {
+            "id": "rodriguez-residential",
+            "name": "Rodriguez Family (Residential)",
+            "description": "Residential package — income, assets, credit, property, UW docs",
+            "vertical": "mortgage",
+            "product_line": "residential_mortgage",
+            "directory": str(SIM_DOCS_DIR / "home_mortgage" / "rodriguez_maria"),
+        },
+        {
             "id": "midwest-commercial",
             "name": "Midwest Medical Plaza (Commercial)",
             "description": "Commercial CRE package — entity financials, leases, due diligence",
@@ -578,8 +618,44 @@ async def demo_presets() -> dict[str, Any]:
             "product_line": "commercial_mortgage",
             "directory": str(SIM_DOCS_DIR / "commercial_mortgage" / "midwest_medical_plaza"),
         },
+        {
+            "id": "oak-street-commercial",
+            "name": "Oak Street Retail (Commercial)",
+            "description": "Commercial CRE package — entity financials, debt, property performance",
+            "vertical": "mortgage",
+            "product_line": "commercial_mortgage",
+            "directory": str(SIM_DOCS_DIR / "commercial_mortgage" / "oak_street_retail"),
+        },
+        {
+            "id": "riverbend-commercial",
+            "name": "Riverbend Self Storage (Commercial)",
+            "description": "Commercial CRE package — entity financials, due diligence",
+            "vertical": "mortgage",
+            "product_line": "commercial_mortgage",
+            "directory": str(SIM_DOCS_DIR / "commercial_mortgage" / "riverbend_self_storage"),
+        },
     ]
-    return {"insurance": insurance, "mortgage": mortgage}
+    lending = [
+        {
+            "id": "blue-harbor-bakery",
+            "name": "Blue Harbor Bakery LLC (SBA 7A)",
+            "description": "Food manufacturer — application, P&L, balance sheet, bank, credit, tax",
+            "vertical": "lending",
+            "product_type": "sba_7a",
+            "purpose": "working_capital",
+            "directory": str(SIM_DOCS_DIR / "lending" / "blue_harbor_bakery"),
+        },
+        {
+            "id": "keller-logistics",
+            "name": "Keller Logistics Group (Term Loan)",
+            "description": "Trucking — application, P&L, balance sheet, bank, credit, tax",
+            "vertical": "lending",
+            "product_type": "business_term_loan",
+            "purpose": "equipment",
+            "directory": str(SIM_DOCS_DIR / "lending" / "keller_logistics"),
+        },
+    ]
+    return {"insurance": insurance, "mortgage": mortgage, "lending": lending}
 
 
 @app.get("/api/dashboard/overview")
@@ -1154,8 +1230,36 @@ async def run_mortgage_demo(
             SIM_DOCS_DIR / "home_mortgage" / "johnson_marcus_imani",
             "residential_mortgage",
         ),
+        "chen-residential": (
+            SIM_DOCS_DIR / "home_mortgage" / "chen_david_karen",
+            "residential_mortgage",
+        ),
+        "patel-residential": (
+            SIM_DOCS_DIR / "home_mortgage" / "patel_lisa",
+            "residential_mortgage",
+        ),
+        "thompson-residential": (
+            SIM_DOCS_DIR / "home_mortgage" / "thompson_john_sarah",
+            "residential_mortgage",
+        ),
+        "wilson-residential": (
+            SIM_DOCS_DIR / "home_mortgage" / "wilson_james",
+            "residential_mortgage",
+        ),
+        "rodriguez-residential": (
+            SIM_DOCS_DIR / "home_mortgage" / "rodriguez_maria",
+            "residential_mortgage",
+        ),
         "midwest-commercial": (
             SIM_DOCS_DIR / "commercial_mortgage" / "midwest_medical_plaza",
+            "commercial_mortgage",
+        ),
+        "oak-street-commercial": (
+            SIM_DOCS_DIR / "commercial_mortgage" / "oak_street_retail",
+            "commercial_mortgage",
+        ),
+        "riverbend-commercial": (
+            SIM_DOCS_DIR / "commercial_mortgage" / "riverbend_self_storage",
             "commercial_mortgage",
         ),
     }
@@ -1174,6 +1278,96 @@ async def run_mortgage_demo(
     job_store.set(MORTGAGE_NS, job_id, {"status": "processing", "demo": True}, org_id=org_id)
     background_tasks.add_task(_run_mortgage_task, job_id, req, org_id)
     return {"job_id": job_id, "status": "processing", "preset": preset_id, "org_id": org_id}
+
+
+@app.post("/api/demo/lending/{preset_id}", status_code=200)
+def run_lending_demo(
+    preset_id: str,
+    current: TokenData | None = Depends(get_current_user_optional),
+) -> dict[str, Any]:
+    """One-click lending sample data — full document package to underwritten decision."""
+    org_id = current.org_id if current and current.org_id else "demo"
+    presets: dict[str, dict[str, Any]] = {
+        "blue-harbor-bakery": {
+            "directory": SIM_DOCS_DIR / "lending" / "blue_harbor_bakery",
+            "product_type": "sba_7a",
+            "purpose": "working_capital",
+            "business_name": "Blue Harbor Bakery LLC",
+            "industry": "Food Manufacturing",
+        },
+        "keller-logistics": {
+            "directory": SIM_DOCS_DIR / "lending" / "keller_logistics",
+            "product_type": "business_term_loan",
+            "purpose": "equipment",
+            "business_name": "Keller Logistics Group Inc.",
+            "industry": "Freight Trucking",
+        },
+    }
+    if preset_id not in presets:
+        raise HTTPException(status_code=404, detail=f"Unknown lending preset: {preset_id}")
+    cfg = presets[preset_id]
+    directory = cfg["directory"]
+    if not directory.is_dir():
+        raise HTTPException(status_code=503, detail=f"Fixture directory missing: {directory}")
+
+    from insureflow.ingestion.lending import (
+        application_from_documents,
+        load_lending_documents_from_directory,
+    )
+    from insureflow.lending import LendingPipeline
+    from insureflow.lending.models import LoanProductType, LoanPurpose
+
+    product_map: dict[str, LoanProductType] = {
+        "business_term_loan": LoanProductType.BUSINESS_TERM_LOAN,
+        "business_loc": LoanProductType.BUSINESS_LINE_OF_CREDIT,
+        "cre": LoanProductType.COMMERCIAL_REAL_ESTATE,
+        "construction": LoanProductType.CONSTRUCTION_LOAN,
+        "sba_7a": LoanProductType.SBA_7A,
+        "sba_504": LoanProductType.SBA_504,
+        "equipment": LoanProductType.EQUIPMENT_FINANCING,
+        "invoice": LoanProductType.INVOICE_FINANCING,
+    }
+    purpose_map: dict[str, LoanPurpose] = {
+        "working_capital": LoanPurpose.WORKING_CAPITAL,
+        "equipment": LoanPurpose.EQUIPMENT_PURCHASE,
+        "refinance": LoanPurpose.DEBT_REFINANCE,
+        "real_estate": LoanPurpose.REAL_ESTATE_PURCHASE,
+        "construction": LoanPurpose.CONSTRUCTION,
+        "expansion": LoanPurpose.BUSINESS_EXPANSION,
+        "inventory": LoanPurpose.INVENTORY_FINANCING,
+        "acquisition": LoanPurpose.ACQUISITION,
+    }
+    pt = product_map.get(cfg["product_type"], LoanProductType.BUSINESS_TERM_LOAN)
+    purpose = purpose_map.get(cfg["purpose"], LoanPurpose.OTHER)
+    is_business = pt.value.startswith(("business_", "commercial_", "construction_", "sba_", "equipment_", "invoice_"))
+
+    docs = load_lending_documents_from_directory(directory)
+    if not docs:
+        raise HTTPException(status_code=503, detail=f"No readable documents in {directory}")
+    application = application_from_documents(
+        docs,
+        product_type=pt,
+        purpose=purpose,
+        is_business=is_business,
+        overrides={
+            "business_name": cfg.get("business_name", ""),
+            "industry": cfg.get("industry", ""),
+        },
+    )
+    doc_payloads = [{"filename": d.filename, "content": d.content, "document_type": d.document_type.value} for d in docs]
+    result = LendingPipeline().run(
+        application,
+        documents=doc_payloads,
+        require_documents=True,
+        pipeline_run_id=f"demo-lend-{uuid.uuid4().hex[:12]}",
+    )
+    return {
+        **result.model_dump(mode="json"),
+        "vertical": "lending",
+        "preset": preset_id,
+        "org_id": org_id,
+        "documents_ingested": len(doc_payloads),
+    }
 
 
 @app.get("/", response_model=None)

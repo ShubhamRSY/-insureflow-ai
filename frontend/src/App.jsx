@@ -50,6 +50,7 @@ function AppRoutes() {
   const [marketCycle, setMarketCycle] = useState(null);
   const [queueStats, setQueueStats] = useState(null);
   const [authorityData, setAuthorityData] = useState(null);
+  const [lendingDemoResult, setLendingDemoResult] = useState(null);
   const [drawer, setDrawer] = useState({ vertical: null, jobId: null, job: null });
 
   const loadHealth = useCallback(async () => {
@@ -195,6 +196,12 @@ function AppRoutes() {
 
   const runDemo = async (vertical, presetId) => {
     if (!auth.isLoggedIn) { setLoginOpen(true); return; }
+    if (vertical === 'lending') {
+      const res = await endpoints.runLendingDemo(presetId);
+      setLendingDemoResult(res);
+      navigate('/lending');
+      return;
+    }
     const res = vertical === 'insurance'
       ? await endpoints.runInsuranceDemo(presetId)
       : await endpoints.runMortgageDemo(presetId);
@@ -234,7 +241,7 @@ function AppRoutes() {
           <Route path="insurance" element={<Protected onLogin={() => setLoginOpen(true)}><InsurancePage presets={presets} jobs={insuranceJobs} onRunDemo={runDemo} onOpenJob={openJob} onSubmit={submitInsurance} onRefresh={loadInsuranceJobs} /></Protected>} />
           <Route path="pilot" element={<Protected onLogin={() => setLoginOpen(true)}><PilotPage /></Protected>} />
           <Route path="mortgage" element={<Protected onLogin={() => setLoginOpen(true)}><MortgagePage presets={presets} jobs={mortgageJobs} onRunDemo={runDemo} onOpenJob={openJob} onSubmit={submitMortgage} /></Protected>} />
-          <Route path="lending" element={<Protected onLogin={() => setLoginOpen(true)}><LendingPage /></Protected>} />
+          <Route path="lending" element={<Protected onLogin={() => setLoginOpen(true)}><LendingPage presets={presets} demoResult={lendingDemoResult} onRunDemo={runDemo} /></Protected>} />
           <Route path="workflow" element={<Protected onLogin={() => setLoginOpen(true)}><WorkflowPage pending={pending} onRefresh={loadOverview} onOpenJob={openJob} authorityData={authorityData} /></Protected>} />
           <Route path="renewals" element={<Protected onLogin={() => setLoginOpen(true)}><RenewalDashboard /></Protected>} />
           <Route path="overrides" element={<Protected onLogin={() => setLoginOpen(true)}><OverrideAnalyticsPage /></Protected>} />
