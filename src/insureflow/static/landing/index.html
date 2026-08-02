@@ -567,7 +567,7 @@
         <div class="reveal">
           <p class="section-label">The agentic AI platform</p>
           <h2>Replace the legacy workbench</h2>
-          <p class="section-desc">Specialist agents handle triage, extraction, verification, scoring, and pricing in parallel — so your underwriters work the exceptions, not the stack.</p>
+          <p class="section-desc">A 3-phase funnel — Triage → Risk &amp; Price → Decision — plus a deep dive that re-runs oracles, portfolio, reinsurance, and fraud ML on demand. Your underwriters work the exceptions, not the stack.</p>
         </div>
         <div class="agent-grid reveal">
           <div class="agent-card">
@@ -599,27 +599,15 @@
           <div class="pipeline-steps" role="tablist" aria-label="Pipeline stages">
             <button class="pipeline-step active" data-step="0" role="tab" aria-selected="true">
               <div class="step-icon">01</div>
-              <div class="step-body"><strong>Intake</strong><span>Pull packages from any source</span></div>
+              <div class="step-body"><strong>Triage</strong><span>Qualify the submission fast</span></div>
             </button>
             <button class="pipeline-step" data-step="1" role="tab" aria-selected="false">
               <div class="step-icon">02</div>
-              <div class="step-body"><strong>Parse</strong><span>OCR &amp; structured extraction</span></div>
+              <div class="step-body"><strong>Risk &amp; Price</strong><span>Verify, analyze &amp; price</span></div>
             </button>
             <button class="pipeline-step" data-step="2" role="tab" aria-selected="false">
               <div class="step-icon">03</div>
-              <div class="step-body"><strong>Verify</strong><span>Reconcile &amp; oracle lookups</span></div>
-            </button>
-            <button class="pipeline-step" data-step="3" role="tab" aria-selected="false">
-              <div class="step-icon">04</div>
-              <div class="step-body"><strong>Score</strong><span>Multi-agent risk analysis</span></div>
-            </button>
-            <button class="pipeline-step" data-step="4" role="tab" aria-selected="false">
-              <div class="step-icon">05</div>
-              <div class="step-body"><strong>Price</strong><span>Premium &amp; rate build-up</span></div>
-            </button>
-            <button class="pipeline-step" data-step="5" role="tab" aria-selected="false">
-              <div class="step-icon">06</div>
-              <div class="step-body"><strong>Decide</strong><span>UW memo &amp; bind</span></div>
+              <div class="step-body"><strong>Decision</strong><span>UW memo &amp; deep dive</span></div>
             </button>
           </div>
           <div class="pipeline-panel" id="pipeline-panel" role="tabpanel"></div>
@@ -641,7 +629,7 @@
         <div class="tab-panel active reveal" id="tab-insurance" role="tabpanel">
           <div class="feature-grid">
             <div class="feature-card"><div class="icon">📄</div><h3>Document ingestion</h3><p>ACORD XML, broker slips, loss runs, SOV, inspections — auto-classified, parsed, and PII-screened for pilots.</p></div>
-            <div class="feature-card"><div class="icon">🤖</div><h3>Specialist agents</h3><p>Risk, loss run, compliance, fraud, and UW decision agents run in parallel.<ul><li>Deterministic fallbacks without LLM</li><li>CONDITIONAL_ACCEPT when docs need subjectivities</li></ul></p></div>
+            <div class="feature-card"><div class="icon">🤖</div><h3>Specialist agents</h3><p>A focused 3-phase funnel — Triage → Risk &amp; Price → Decision — with deep-dive analysis on demand.<ul><li>Deterministic fallbacks without LLM</li><li>CONDITIONAL_ACCEPT when docs need subjectivities</li></ul></p></div>
             <div class="feature-card"><div class="icon">💰</div><h3>Premium &amp; shadow bind</h3><p>ACCEPT / CONDITIONAL_ACCEPT / REFER / DECLINE with indicated premium. Shadow mode blocks live bind until PAS is ready.</p></div>
             <div class="feature-card"><div class="icon">🔍</div><h3>Submission journey</h3><p>Full pipeline panel per job — COPE, live oracles, provenance, pricing build-up, and encrypted audit trail.</p></div>
           </div>
@@ -800,12 +788,9 @@
 
   <script>
     const PIPELINE = [
-      { tag: "Stage 01", title: "Intake", desc: "Submission packages arrive from anywhere your team already works.", items: ["24 enterprise connectors: S3, SharePoint, Box, Applied Epic, Vertafore", "Email ingestion via Exchange and Gmail", "Broker platforms and local folder drops", "Org-scoped job tracking from first byte"] },
-      { tag: "Stage 02", title: "Parse", desc: "Documents are classified, OCR'd, and structured into a unified bundle.", items: ["ACORD XML, broker PDFs/JSON, loss runs, SOV, inspections", "Personal lines: HO-3 applications, MVRs, paramedical exams", "Mortgage: W-2, 1040, credit, appraisals, bank statements", "Entity extraction and cross-document field mapping", "Provenance tracking for every extracted value"] },
-      { tag: "Stage 03", title: "Verify", desc: "Cross-document reconciliation and third-party oracle verification.", items: ["Provenance hierarchy: ACORD vs inspection vs loss run", "COPE analysis for property risks", "Live CLUE / A-PLUS / NCCI / CAT when keys are set — simulated flagged when not", "Discrepancy flags before scoring begins"] },
-      { tag: "Stage 04", title: "Score", desc: "Specialist agents analyze risk dimensions in parallel.", items: ["Risk, loss run, compliance, and fraud agents", "ReAct-style reasoning with tool use", "Deterministic fallbacks — no LLM required", "Structured findings feed the UW memo"] },
-      { tag: "Stage 05", title: "Price", desc: "Premium, rate lock, or loan pricing with market-cycle awareness.", items: ["P&C premium build-up with calibrated rate curves", "Filing-grade homeowners, auto, and life rate manuals", "Mortgage rate lock and DTI analysis", "Lending spread and fee calculation", "Market cycle phase adjustments (hard/soft)"] },
-      { tag: "Stage 06", title: "Decide", desc: "Bind-ready output with human checkpoints and full audit trail.", items: ["ACCEPT / CONDITIONAL_ACCEPT / REFER / DECLINE", "Licensed UW sign-off with override notes", "Shadow mode blocks bind until PAS wiring is approved", "Encrypted audit bundle with SHA-256 manifest"] },
+      { tag: "Phase 01", title: "Triage", desc: "Every submission is qualified up front — before any deep analysis runs.", items: ["Fast intake from 24 connectors: S3, SharePoint, Box, Applied Epic, Vertafore, email", "Triage scoring & appetite filter with fast-fail on out-of-appetite risks", "Org-scoped job tracking from first byte"] },
+      { tag: "Phase 02", title: "Risk & Price", desc: "Documents are parsed, verified, and analyzed into a build-up of risk and price.", items: ["ACORD XML, broker PDFs/JSON, loss runs, SOV, inspections — OCR with provenance", "Cross-document reconciliation + COPE analysis for property risks", "Deterministic risk scoring with ML premium estimates", "P&C premium build-up with calibrated rate curves and market-cycle adjustments"] },
+      { tag: "Phase 03", title: "Decision", desc: "Bind-ready output with human checkpoints — and every deferred analysis one click away.", items: ["ACCEPT / CONDITIONAL_ACCEPT / REFER / DECLINE UW memo", "Licensed UW sign-off with override notes; shadow mode blocks bind until PAS wiring is approved", "Encrypted audit bundle with SHA-256 manifest", "Deep dive re-runs oracles, portfolio, reinsurance & fraud ML on demand — nothing lost"] },
     ];
 
     const INTEGRATIONS = [
@@ -823,7 +808,7 @@
       { q: "Who is Rytera for?", a: "Insurance carriers, MGAs, and MGA aggregators — commercial and personal lines — plus mortgage lenders (residential and commercial) and consumer/commercial lending operations. Built for underwriting teams, operations leaders, and IT teams who need transparent, auditable AI-assisted decisions." },
       { q: "Does Rytera replace Guidewire or our loan origination system?", a: "No. Rytera integrates with policy admin systems (Guidewire, BriteCore), CRM (HubSpot), and LOS workflows via webhooks. It accelerates the underwriting layer while your core systems remain the system of record." },
       { q: "What documents and data sources do you support?", a: "Insurance: ACORD XML, broker PDFs/JSON, loss runs, SOV, inspections. Personal lines: HO-3 applications, MVRs, paramedical exams. Mortgage: 30+ types including W-2, 1040, credit reports, appraisals, and rent rolls. Lending: application data, credit pulls, and bank statements. Plus 24 enterprise source connectors." },
-      { q: "How does the AI underwriting pipeline work?", a: "Submissions move through six stages: Intake → Parse → Verify → Score → Price → Decide. Specialist agents analyze in parallel. Results feed a UW memo with ACCEPT/REFER/DECLINE and optional licensed sign-off before bind." },
+      { q: "How does the AI underwriting pipeline work?", a: "Submissions run a 3-phase funnel: Triage → Risk &amp; Price → Decision. Triage qualifies the risk fast; Risk &amp; Price parses, verifies, and prices; Decision produces a bind-ready UW memo with ACCEPT/REFER/DECLINE and licensed sign-off. Oracle, portfolio, reinsurance, and fraud-ML analyses are deferred and re-run on demand via deep dive — nothing is lost." },
       { q: "Can underwriters override AI decisions?", a: "Yes. Licensed underwriters can approve, refer, or decline with notes and override reasons. Authority matrix tiers control binding limits. Checkpoint resolution lets teams pause and resume at any stage." },
       { q: "Do I need an LLM API key to run Rytera?", a: "No. All pipelines include deterministic agent fallbacks. Adding an API key enables richer reasoning, but the platform is fully functional for demos and pilots without one." },
       { q: "What integrations are live vs simulated?", a: "Each integration supports auto (live when configured, simulated otherwise), live, and simulated modes. The dashboard shows real-time health for every feed." },
