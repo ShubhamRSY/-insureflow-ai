@@ -361,7 +361,7 @@ def list_sources(
     extra_packages: list[dict[str, object]] | None = None,
     include_insurance_packages: bool = True,
 ) -> list[dict[str, object]]:
-    packages = (
+    packages: list[dict[str, object]] = (
         [
             {
                 "id": pid,
