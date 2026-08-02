@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Wallet, RefreshCw, FileUp, FolderOpen, FlaskConical } from 'lucide-react';
+import { Wallet, RefreshCw, FileUp, FolderOpen, FlaskConical, Cable } from 'lucide-react';
 import { Badge, EmptyState } from '../components/ui';
 import { endpoints, fmtCurrency } from '../lib/api';
 import StageStrip, { stagesFromProgress } from '../components/StageStrip';
+import ConnectAndPull from '../components/ConnectAndPull';
 
 const emptyForm = {
   product_type: 'business_term_loan',
@@ -158,6 +159,25 @@ export default function LendingPage({ presets, demoResult, onRunDemo }) {
 
   const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
 
+  const handleConnectResult = (res) => {
+    const result = res.result || {};
+    setResults((prev) => [{
+      application_id: res.application_id,
+      decision: result.decision,
+      approved_rate: result.approved_rate,
+      approved_amount: result.approved_amount,
+      risk_score: result.risk_score,
+      human_review_required: result.human_review_required,
+      document_count: res.documents_ingested || result.document_count || 0,
+      extracted_from_docs: res.extracted_from_docs,
+      timeline: res.timeline || [],
+    }, ...prev]);
+    setMessage(
+      `Connect & pull: ${result.decision}` +
+      (res.documents_ingested ? ` · ${res.documents_ingested} doc(s) ingested` : ''),
+    );
+  };
+
   return (
     <div className="mx-auto max-w-6xl space-y-8 animate-fade-in">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -183,13 +203,15 @@ export default function LendingPage({ presets, demoResult, onRunDemo }) {
           ['form', 'Structured form'],
           ['documents', 'Upload documents'],
           ['directory', 'Server directory'],
+          ['connect', 'Connect & pull'],
         ].map(([id, label]) => (
           <button
             key={id}
             type="button"
-            className={`btn-sm text-xs ${mode === id ? 'btn-primary' : 'btn-secondary'}`}
+            className={`btn-sm text-xs inline-flex items-center gap-1.5 ${mode === id ? 'btn-primary' : 'btn-secondary'}`}
             onClick={() => setMode(id)}
           >
+            {id === 'connect' && <Cable className="h-3.5 w-3.5" />}
             {label}
           </button>
         ))}
@@ -223,6 +245,9 @@ export default function LendingPage({ presets, demoResult, onRunDemo }) {
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="glass-card p-6">
           <h3 className="mb-4 font-semibold">New Application</h3>
+          {mode === 'connect' ? (
+            <ConnectAndPull vertical="lending" onRunResult={handleConnectResult} />
+          ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -313,6 +338,7 @@ export default function LendingPage({ presets, demoResult, onRunDemo }) {
               {submitting ? 'Underwriting…' : 'Run lending pipeline'}
             </button>
           </form>
+          )}
         </div>
 
         <div className="glass-card p-6">

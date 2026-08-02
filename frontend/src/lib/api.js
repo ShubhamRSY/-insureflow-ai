@@ -80,8 +80,9 @@ export const endpoints = {
   runLendingDemo: (preset) => api(`/api/demo/lending/${preset}`, { method: 'POST' }),
   pendingWorkflow: () => api('/pipeline/workflow/pending'),
   signOff: (bundleId, body) => api(`/pipeline/workflow/${bundleId}/sign-off`, { method: 'POST', body }),
-  insuranceSources: () => api('/api/insurance/sources'),
-  pullInsuranceSource: (sourceId, body = {}) => api(`/api/insurance/sources/${sourceId}/pull`, { method: 'POST', body }),
+  insuranceSources: (vertical = 'insurance') => api(`/api/insurance/sources?vertical=${vertical}`),
+  pullInsuranceSource: (sourceId, body = {}, vertical = 'insurance') =>
+    api(`/api/insurance/sources/${sourceId}/pull?vertical=${vertical}`, { method: 'POST', body }),
   filterEmails: (emailIds) => api('/api/insurance/sources/email-inbox/filter', { method: 'POST', body: { email_ids: emailIds } }),
 
   // Draft bundles (multi-source intake)
@@ -93,8 +94,8 @@ export const endpoints = {
   removeDocFromDraft: (bundleId, docId) =>
     api(`/pipeline/bundles/${bundleId}/documents/${docId}`, { method: 'DELETE' }),
   deleteDraftBundle: (id) => api(`/pipeline/bundles/${id}`, { method: 'DELETE' }),
-  runDraftBundle: (id, useLlm = true) =>
-    api(`/pipeline/bundles/${id}/run?use_llm=${useLlm}`, { method: 'POST' }),
+  runDraftBundle: (id, useLlm = true, vertical = 'insurance') =>
+    api(`/pipeline/bundles/${id}/run?use_llm=${useLlm}&vertical=${vertical}`, { method: 'POST' }),
 
   // New v2 pipeline
   runInsuranceV2: (body) => api('/pipeline/v2/run', { method: 'POST', body }),

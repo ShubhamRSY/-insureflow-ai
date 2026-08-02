@@ -230,6 +230,11 @@ function AppRoutes() {
     openJob('mortgage', res.job_id);
   };
 
+  const runMortgageConnect = async (jobId) => {
+    await refreshAll();
+    openJob('mortgage', jobId);
+  };
+
   return (
     <>
       <Routes>
@@ -240,7 +245,7 @@ function AppRoutes() {
           <Route path="insurance/:jobId" element={<Protected onLogin={() => setLoginOpen(true)}><InsuranceJobDetail /></Protected>} />
           <Route path="insurance" element={<Protected onLogin={() => setLoginOpen(true)}><InsurancePage presets={presets} jobs={insuranceJobs} onRunDemo={runDemo} onOpenJob={openJob} onSubmit={submitInsurance} onRefresh={loadInsuranceJobs} /></Protected>} />
           <Route path="pilot" element={<Protected onLogin={() => setLoginOpen(true)}><PilotPage /></Protected>} />
-          <Route path="mortgage" element={<Protected onLogin={() => setLoginOpen(true)}><MortgagePage presets={presets} jobs={mortgageJobs} onRunDemo={runDemo} onOpenJob={openJob} onSubmit={submitMortgage} /></Protected>} />
+          <Route path="mortgage" element={<Protected onLogin={() => setLoginOpen(true)}><MortgagePage presets={presets} jobs={mortgageJobs} onRunDemo={runDemo} onOpenJob={openJob} onRunConnect={runMortgageConnect} onSubmit={submitMortgage} /></Protected>} />
           <Route path="lending" element={<Protected onLogin={() => setLoginOpen(true)}><LendingPage presets={presets} demoResult={lendingDemoResult} onRunDemo={runDemo} /></Protected>} />
           <Route path="workflow" element={<Protected onLogin={() => setLoginOpen(true)}><WorkflowPage pending={pending} onRefresh={loadOverview} onOpenJob={openJob} authorityData={authorityData} /></Protected>} />
           <Route path="renewals" element={<Protected onLogin={() => setLoginOpen(true)}><RenewalDashboard /></Protected>} />

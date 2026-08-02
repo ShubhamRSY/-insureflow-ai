@@ -113,6 +113,99 @@ EXAMPLES_DIR = PROJECT_ROOT / "examples" / "insurance"
 SIM_DOCS_DIR = PROJECT_ROOT / "simulated_documents"
 
 
+# Demo packages for the "Connect & pull" source hub, per vertical. Mortgage and
+# lending reuse the same enterprise connectors as insurance but pull from their
+# own fixture directories instead of insurance example packages.
+_VERTICAL_PACKAGES: dict[str, dict[str, dict[str, Any]]] = {
+    "mortgage": {
+        "johnson-residential": {
+            "name": "Johnson Family (Residential)",
+            "description": "Full residential loan package — income, credit, property, UW docs",
+            "path": SIM_DOCS_DIR / "home_mortgage" / "johnson_marcus_imani",
+        },
+        "chen-residential": {
+            "name": "Chen Family (Residential)",
+            "description": "Residential package — income, assets, credit, property, UW docs",
+            "path": SIM_DOCS_DIR / "home_mortgage" / "chen_david_karen",
+        },
+        "patel-residential": {
+            "name": "Patel Home Loan (Residential)",
+            "description": "Residential package — income, assets, credit, property, UW docs",
+            "path": SIM_DOCS_DIR / "home_mortgage" / "patel_lisa",
+        },
+        "thompson-residential": {
+            "name": "Thompson Family (Residential)",
+            "description": "Residential package — underwriting file",
+            "path": SIM_DOCS_DIR / "home_mortgage" / "thompson_john_sarah",
+        },
+        "wilson-residential": {
+            "name": "Wilson Home Loan (Residential)",
+            "description": "Residential package — income, credit, property, UW docs",
+            "path": SIM_DOCS_DIR / "home_mortgage" / "wilson_james",
+        },
+        "rodriguez-residential": {
+            "name": "Rodriguez Family (Residential)",
+            "description": "Residential package — income, assets, credit, property, UW docs",
+            "path": SIM_DOCS_DIR / "home_mortgage" / "rodriguez_maria",
+        },
+        "midwest-commercial": {
+            "name": "Midwest Medical Plaza (Commercial)",
+            "description": "Commercial CRE package — entity financials, leases, due diligence",
+            "path": SIM_DOCS_DIR / "commercial_mortgage" / "midwest_medical_plaza",
+        },
+        "oak-street-commercial": {
+            "name": "Oak Street Retail (Commercial)",
+            "description": "Commercial CRE package — entity financials, debt, property performance",
+            "path": SIM_DOCS_DIR / "commercial_mortgage" / "oak_street_retail",
+        },
+        "riverbend-commercial": {
+            "name": "Riverbend Self Storage (Commercial)",
+            "description": "Commercial CRE package — entity financials, due diligence",
+            "path": SIM_DOCS_DIR / "commercial_mortgage" / "riverbend_self_storage",
+        },
+    },
+    "lending": {
+        "blue-harbor-bakery": {
+            "name": "Blue Harbor Bakery LLC (SBA 7A)",
+            "description": "Food manufacturer — application, P&L, balance sheet, bank, credit, tax",
+            "path": SIM_DOCS_DIR / "lending" / "blue_harbor_bakery",
+        },
+        "keller-logistics": {
+            "name": "Keller Logistics Group (Term Loan)",
+            "description": "Trucking — application, P&L, balance sheet, bank, credit, tax",
+            "path": SIM_DOCS_DIR / "lending" / "keller_logistics",
+        },
+    },
+}
+
+
+def _vertical_package_list(vertical: str) -> list[dict[str, object]]:
+    return [
+        {
+            "id": pid,
+            "name": meta["name"],
+            "type": "library",
+            "category": "Demo Packages",
+            "description": meta["description"],
+            "status": "ready",
+            "file_count": 6,
+        }
+        for pid, meta in _VERTICAL_PACKAGES.get(vertical, {}).items()
+    ]
+
+
+def _load_vertical_package(vertical: str, package_id: str) -> list[dict[str, str]]:
+    from insureflow.ingestion.insurance.sources import load_directory
+
+    meta = _VERTICAL_PACKAGES.get(vertical, {}).get(package_id)
+    if not meta:
+        raise FileNotFoundError(f"Unknown {vertical} package: {package_id}")
+    directory = meta["path"]
+    if not directory.is_dir():
+        raise FileNotFoundError(f"Fixture directory missing: {directory}")
+    return load_directory(directory)
+
+
 def _posture() -> SecurityPosture:
     return resolve_security_posture()
 
@@ -818,11 +911,20 @@ async def run_insurance_demo(
 
 @app.get("/api/insurance/sources")
 def list_insurance_sources(
+    vertical: str = "insurance",
     current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
     from insureflow.ingestion.insurance.sources import list_sources
 
-    return {"sources": list_sources(EXAMPLES_DIR), "hardened": _posture().is_hardened}
+    extra = _vertical_package_list(vertical) if vertical != "insurance" else None
+    return {
+        "sources": list_sources(
+            EXAMPLES_DIR,
+            extra_packages=extra,
+            include_insurance_packages=vertical == "insurance",
+        ),
+        "hardened": _posture().is_hardened,
+    }
 
 
 @app.post("/api/insurance/sources/{source_id}/pull")
@@ -830,6 +932,7 @@ def pull_insurance_source(
     source_id: str,
     req: InsuranceSourcePullRequest,
     current: TokenData = Depends(require_role(Role.VIEWER)),
+    vertical: str = "insurance",
 ) -> dict[str, Any]:
     """Pull submission documents from a connected source (library, folder, or simulated cloud).
 
@@ -873,10 +976,28 @@ def pull_insurance_source(
         }
 
     try:
-        if source_id in INSURANCE_PACKAGES:
+        if source_id in INSURANCE_PACKAGES and vertical == "insurance":
             documents = load_package(EXAMPLES_DIR, source_id)
             meta = INSURANCE_PACKAGES[source_id]
             result: dict[str, Any] = {
+                "source_id": source_id,
+                "simulated": False,
+                "connection_label": meta["name"],
+                "package_id": source_id,
+                "package_name": meta["name"],
+                "documents": documents,
+                "file_count": len(documents),
+            }
+            accum = _accumulate(documents, source_id, str(meta["name"]))
+            if accum:
+                result["accumulated"] = accum
+            return result
+
+        # Vertical library packages (mortgage / lending fixtures)
+        if vertical != "insurance" and source_id in _VERTICAL_PACKAGES.get(vertical, {}):
+            meta = _VERTICAL_PACKAGES[vertical][source_id]
+            documents = _load_vertical_package(vertical, source_id)
+            result = {
                 "source_id": source_id,
                 "simulated": False,
                 "connection_label": meta["name"],
@@ -930,9 +1051,21 @@ def pull_insurance_source(
                     status_code=400,
                     detail=f"Please configure the {connector['name']} connection fields above.",
                 )
-            package_id = req.package_id or "pacific-coast"
-            documents = load_package(EXAMPLES_DIR, package_id)
-            meta = INSURANCE_PACKAGES[package_id]
+            package_id = req.package_id
+            if vertical == "insurance":
+                package_id = package_id or "pacific-coast"
+                documents = load_package(EXAMPLES_DIR, package_id)
+                meta = INSURANCE_PACKAGES[package_id]
+            else:
+                vertical_packages = _VERTICAL_PACKAGES.get(vertical, {})
+                package_id = package_id or next(iter(vertical_packages), None)
+                if not package_id or package_id not in vertical_packages:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Please choose a {vertical} demo package to pull through this connector.",
+                    )
+                documents = _load_vertical_package(vertical, package_id)
+                meta = {"name": vertical_packages[package_id]["name"]}
             label = simulated_connection_label(source_id, req)
             result = {
                 "source_id": source_id,
@@ -1193,14 +1326,49 @@ def run_draft_bundle(
     background_tasks: BackgroundTasks,
     current: TokenData = Depends(require_role(Role.VIEWER)),
     use_llm: bool = True,
+    vertical: str = "insurance",
 ) -> dict[str, Any]:
-    """Execute the pipeline using all accumulated documents in a draft bundle."""
+    """Execute the pipeline using all accumulated documents in a draft bundle.
+
+    ``vertical`` routes the accumulated bundle into the matching pipeline:
+    insurance (async job), mortgage (async job), or lending (inline result).
+    """
     from insureflow.storage.draft_bundle_store import DRAFT_NS, get_draft_bundle_store
 
     store = get_draft_bundle_store()
     docs = store.to_pipeline_documents(bundle_id, org_id=current.org_id)
     if not docs:
         raise HTTPException(status_code=400, detail="Draft bundle has no documents")
+
+    bundle = store.get(bundle_id, org_id=current.org_id)
+
+    if vertical == "mortgage":
+        job_id = f"mort-{uuid.uuid4().hex[:12]}"
+        job_store.set(MORTGAGE_NS, job_id, {"status": "processing"}, org_id=current.org_id)
+        mortgage_req = MortgageSubmissionRequest(
+            documents=[MortgageDocumentPayload(**d) for d in docs],
+            use_llm=use_llm,
+            bundle_id=job_id,
+        )
+        background_tasks.add_task(_run_mortgage_task, job_id, mortgage_req, current.org_id)
+        if bundle:
+            bundle["status"] = "submitted"
+            bundle["submitted_job_id"] = job_id
+            store._store.set(DRAFT_NS, bundle_id, bundle, org_id=current.org_id)
+        return {"job_id": job_id, "status": "processing", "bundle_id": bundle_id, "vertical": "mortgage"}
+
+    if vertical == "lending":
+        result = run_lending_pipeline(
+            LendingSubmissionRequest(
+                documents=[InsuranceDocumentPayload(**d) for d in docs],
+                require_documents=True,
+            ),
+            current=current,
+        )
+        if bundle:
+            bundle["status"] = "submitted"
+            store._store.set(DRAFT_NS, bundle_id, bundle, org_id=current.org_id)
+        return {"bundle_id": bundle_id, "vertical": "lending", **result}
 
     job_id = f"job-{uuid.uuid4().hex[:12]}"
     job_store.set(INSURANCE_NS, job_id, {"status": "processing"}, org_id=current.org_id)
@@ -1209,7 +1377,6 @@ def run_draft_bundle(
     background_tasks.add_task(_run_pipeline_task, job_id, req, current.org_id)
 
     # Mark draft as submitted
-    bundle = store.get(bundle_id, org_id=current.org_id)
     if bundle:
         bundle["status"] = "submitted"
         bundle["submitted_job_id"] = job_id

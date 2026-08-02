@@ -5,7 +5,7 @@ import MortgageSourceHub from '../components/MortgageSourceHub';
 import StageStrip, { stagesFromProgress } from '../components/StageStrip';
 import { Home, Package, FileText, Building2 } from 'lucide-react';
 
-export default function MortgagePage({ presets, jobs, onRunDemo, onOpenJob, onSubmit }) {
+export default function MortgagePage({ presets, jobs, onRunDemo, onOpenJob, onRunConnect, onSubmit }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [mortgageProducts, setMortgageProducts] = useState(null);
@@ -88,6 +88,7 @@ export default function MortgagePage({ presets, jobs, onRunDemo, onOpenJob, onSu
               presets={presets}
               onSubmit={handleSubmit}
               onRunDemo={onRunDemo}
+              onRunConnect={onRunConnect}
               loading={loading}
             />
           </div>

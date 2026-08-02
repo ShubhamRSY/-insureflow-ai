@@ -356,19 +356,29 @@ def simulated_connection_label(source_id: str, req: Any) -> str:
     return str(meta["label"](req))
 
 
-def list_sources(examples_dir: Path) -> list[dict[str, object]]:
-    packages = [
-        {
-            "id": pid,
-            "name": meta["name"],
-            "type": "library",
-            "category": "Demo Packages",
-            "description": f"Curated demo package — {meta['broker']}",
-            "status": "ready",
-            "file_count": len(meta["files"]),
-        }
-        for pid, meta in INSURANCE_PACKAGES.items()
-    ]
+def list_sources(
+    examples_dir: Path,
+    extra_packages: list[dict[str, object]] | None = None,
+    include_insurance_packages: bool = True,
+) -> list[dict[str, object]]:
+    packages = (
+        [
+            {
+                "id": pid,
+                "name": meta["name"],
+                "type": "library",
+                "category": "Demo Packages",
+                "description": f"Curated demo package — {meta['broker']}",
+                "status": "ready",
+                "file_count": len(meta["files"]),
+            }
+            for pid, meta in INSURANCE_PACKAGES.items()
+        ]
+        if include_insurance_packages
+        else []
+    )
+    if extra_packages:
+        packages = extra_packages + packages
     enterprise = [
         {
             "id": sid,

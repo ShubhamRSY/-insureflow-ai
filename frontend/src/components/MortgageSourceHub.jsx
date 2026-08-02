@@ -1,12 +1,14 @@
 import { useRef, useState } from 'react';
 import {
-  FileUp, FolderOpen, FlaskConical, Loader2, Home, Building2, Upload, X, FileText,
+  FileUp, FolderOpen, FlaskConical, Cable, Loader2, Home, Building2, Upload, X, FileText,
 } from 'lucide-react';
 import { readFileForUpload } from '../lib/insuranceDocs';
+import ConnectAndPull from './ConnectAndPull';
 
 const TABS = [
   { id: 'upload', label: 'Upload', icon: FileUp },
   { id: 'directory', label: 'Server path', icon: FolderOpen },
+  { id: 'connect', label: 'Connect & pull', icon: Cable },
   { id: 'samples', label: 'Samples', icon: FlaskConical },
 ];
 
@@ -21,7 +23,7 @@ function formatBytes(n) {
   return `${(n / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export default function MortgageSourceHub({ presets, onSubmit, onRunDemo, loading }) {
+export default function MortgageSourceHub({ presets, onSubmit, onRunDemo, onRunConnect, loading }) {
   const [sourceId, setSourceId] = useState('upload');
   const [fileList, setFileList] = useState([]);
   const [directory, setDirectory] = useState(QUICK_PATHS[0].path);
@@ -229,6 +231,10 @@ export default function MortgageSourceHub({ presets, onSubmit, onRunDemo, loadin
           </div>
         )}
 
+        {sourceId === 'connect' && (
+          <ConnectAndPull vertical="mortgage" onRunJob={(jobId) => onRunConnect?.(jobId)} />
+        )}
+
         {sourceId === 'samples' && (
           <div className="space-y-2">
             {samples.length === 0 ? (
@@ -267,7 +273,7 @@ export default function MortgageSourceHub({ presets, onSubmit, onRunDemo, loadin
           </div>
         )}
 
-        {sourceId !== 'samples' && (
+        {sourceId !== 'samples' && sourceId !== 'connect' && (
           <div className="flex flex-wrap items-center gap-3 border-t border-white/[0.06] pt-4">
             <div className="inline-flex rounded-lg border border-white/[0.08] p-0.5">
               {[
