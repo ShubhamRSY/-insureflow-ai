@@ -11,6 +11,7 @@ class FraudDetectionAgent(ReActAgent):
     agent_type = AgentType.FRAUD_DETECTION
     agent_name = "FraudDetectionAgent"
     prompt_key = "fraud_detection"
+    defer_ml: bool = False
 
     def _analyze(self, bundle: SubmissionBundle, **kwargs: Any) -> None:
         self._check_non_disclosed_losses(bundle)
@@ -136,6 +137,8 @@ class FraudDetectionAgent(ReActAgent):
 
     def _ml_fraud_scoring(self, bundle: SubmissionBundle) -> None:
         """Run ML fraud anomaly detection on submission features."""
+        if getattr(self, "defer_ml", False):
+            return
         from insureflow.agents.tools import MLTools
 
         tiv = 0.0

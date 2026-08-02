@@ -97,6 +97,8 @@ export const endpoints = {
 
   // New v2 pipeline
   runInsuranceV2: (body) => api('/pipeline/v2/run', { method: 'POST', body }),
+  deepDive: (bundleId, include = []) =>
+    api(`/pipeline/${bundleId}/deep-dive`, { method: 'POST', body: { include } }),
 
   // Broker status
   brokerStatus: (token) => api(`/broker/status/${token}`),

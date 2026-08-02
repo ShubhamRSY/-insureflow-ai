@@ -154,6 +154,42 @@ class TestInsurancePipelineIntegration:
         assert "quote" in result
         assert result["audit_trail_entries"] >= 1
 
+    def test_funnel_deferral_and_deep_dive(self, audit_store: AuditStore) -> None:
+        acord_path = EXAMPLES / "pacific_coast_acord.xml"
+        inspection = EXAMPLES / "pacific_coast_inspection_report.md"
+        if not acord_path.exists() or not inspection.exists():
+            pytest.skip("Pacific Coast examples not present")
+
+        acord = acord_path.read_text()
+        pipe = InsurancePipeline(org_id="test", use_llm=False, audit_store=audit_store)
+
+        result = pipe.run(
+            acord_xml=acord,
+            inspection_reports=[inspection.read_text()],
+            bundle_id="funnel-test",
+            funnel=True,
+        )
+        assert result["status"] == "completed"
+        assert result.get("funnel") is True
+        # Funnel defers the expensive analyses but keeps them discoverable.
+        assert result["deep_dive_available"] == ["oracles", "portfolio", "reinsurance", "fraud_ml"]
+        stage_status = {s["id"]: s["status"] for s in result["pipeline_stages"]}
+        assert stage_status.get("verify") == "skipped"
+        assert stage_status.get("portfolio") == "skipped"
+        assert stage_status.get("reinsurance") == "skipped"
+        assert result["ai_decision"] in ("accept", "conditional_accept", "refer", "decline")
+
+        # Deep dive re-runs everything the funnel deferred — nothing is lost.
+        dd = pipe.deep_dive("funnel-test", org_id="test")
+        assert set(dd["completed"]) == {"oracles", "portfolio", "reinsurance", "fraud_ml", "premium_ml", "churn_ml"}
+        for section in ("oracles", "portfolio", "reinsurance", "fraud_ml", "premium_ml", "churn_ml"):
+            assert section in dd["findings"]
+
+    def test_funnel_deep_dive_missing_bundle_raises(self, audit_store: AuditStore) -> None:
+        pipe = InsurancePipeline(org_id="test", use_llm=False, audit_store=audit_store)
+        with pytest.raises(KeyError):
+            pipe.deep_dive("does-not-exist", org_id="test")
+
 
 class TestInsuranceAPIProduction:
     @pytest.fixture(autouse=True)

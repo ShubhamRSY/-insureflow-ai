@@ -78,6 +78,34 @@ function PipelineTimeline({ stages, processing, currentStage }) {
   );
 }
 
+// Group backend stages into three user-facing phases (funnel). Everything still
+// appears — deferred analyses are rendered as "skipped" chips inside their phase.
+const PHASE_DEFS = [
+  { label: '1 · Triage', ids: ['intake', 'triage', 'appetite'] },
+  { label: '2 · Risk & Price', ids: ['parse', 'vision', 'verify', 'reconcile', 'analyze', 'portfolio', 'reinsurance', 'price'] },
+  { label: '3 · Decision', ids: ['decision', 'integrate', 'integration'] },
+];
+
+function groupStagesByPhase(stages = []) {
+  return PHASE_DEFS.map((phase) => ({
+    label: phase.label,
+    stages: stages.filter((s) => phase.ids.includes(s.id)),
+  })).filter((phase) => phase.stages.length > 0);
+}
+
+function PhaseStrip({ phases, processing, currentStage }) {
+  return (
+    <div className="space-y-3">
+      {phases.map((phase) => (
+        <div key={phase.label}>
+          <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500">{phase.label}</p>
+          <PipelineTimeline stages={phase.stages} processing={processing} currentStage={currentStage} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function SubmissionQuality({ quality, docQuality, onRequestDocs, requesting }) {
   return (
     <div className="rounded-xl bg-surface-overlay p-4 ring-1 ring-white/[0.04]">
@@ -357,6 +385,81 @@ function PricingBreakdown({ pricing }) {
   );
 }
 
+const DEEP_DIVE_LABELS = {
+  oracles: 'External oracles (CLUE · NCCI · CAT)',
+  portfolio: 'Portfolio concentration',
+  reinsurance: 'Reinsurance treaty fit',
+  fraud_ml: 'ML fraud score',
+  premium_ml: 'ML premium estimate',
+  churn_ml: 'ML retention / churn',
+};
+
+function DeepDivePanel({ available, bundleId }) {
+  const [running, setRunning] = useState(false);
+  const [results, setResults] = useState(null);
+  const [error, setError] = useState(null);
+
+  const run = async () => {
+    if (!bundleId || running) return;
+    setRunning(true);
+    setError(null);
+    try {
+      const res = await endpoints.deepDive(bundleId, available);
+      setResults(res);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      {available.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {available.map((k) => (
+            <span key={k} className="rounded-full bg-black/20 px-2 py-0.5 text-[10px] text-slate-400 ring-1 ring-white/10">
+              {DEEP_DIVE_LABELS[k] || k}
+            </span>
+          ))}
+        </div>
+      )}
+      <button type="button" onClick={run} disabled={running || !bundleId} className="btn-secondary btn-sm text-xs">
+        {running ? <Loader2 className="h-3 w-3 animate-spin" /> : <BarChart3 className="h-3 w-3" />}
+        {running ? 'Running…' : 'Run deep dive'}
+      </button>
+      {error && <p className="text-xs text-red-400">{error}</p>}
+      {results?.findings && (
+        <div className="grid gap-2">
+          {Object.entries(results.findings).map(([key, value]) => {
+            const findings = Array.isArray(value) ? value : value?.findings || [];
+            const title = DEEP_DIVE_LABELS[key] || key;
+            return (
+              <div key={key} className="rounded-lg bg-black/20 p-2.5">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">{title}</p>
+                {findings.length === 0 ? (
+                  <p className="mt-1 text-xs text-emerald-400/90">No findings.</p>
+                ) : (
+                  <ul className="mt-1 space-y-1">
+                    {findings.slice(0, 5).map((f, i) => (
+                      <li key={f.finding_id || i} className="text-xs text-slate-400">
+                        <span className={`rounded px-1.5 py-0.5 text-[9px] uppercase ring-1 ring-inset ${SEV_CLS[(f.severity || 'moderate').toLowerCase()] || SEV_CLS.moderate}`}>
+                          {f.severity || 'info'}
+                        </span>{' '}
+                        {f.title || f.reason || JSON.stringify(f)}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function SubmissionJourney({ job }) {
   const ctx = getJourneyContext(job);
   const [cope, setCope] = useState(null);
@@ -423,6 +526,8 @@ export default function SubmissionJourney({ job }) {
     }
   };
 
+  const deepDiveAvailable = job?.results?.deep_dive_available || [];
+
   return (
     <div className="space-y-4">
       <div>
@@ -438,7 +543,7 @@ export default function SubmissionJourney({ job }) {
       />
 
       <Section title="Pipeline" icon={ClipboardCheck}>
-        <PipelineTimeline stages={ctx.stages} processing={ctx.processing} currentStage={ctx.currentStage} />
+        <PhaseStrip phases={groupStagesByPhase(ctx.stages)} processing={ctx.processing} currentStage={ctx.currentStage} />
       </Section>
 
       <Section title="Human Checkpoints" icon={Users} defaultOpen={checkpoints.length > 0}>
@@ -470,6 +575,12 @@ export default function SubmissionJourney({ job }) {
           <Section title="Pricing" icon={DollarSign}>
             <PricingBreakdown pricing={ctx.pricing} />
           </Section>
+
+          {ctx.bundleId && deepDiveAvailable.length > 0 && (
+            <Section title="Deep Dive" icon={BarChart3} defaultOpen={false}>
+              <DeepDivePanel available={deepDiveAvailable} bundleId={ctx.bundleId} />
+            </Section>
+          )}
 
           <Section title="Audit Trail" icon={FileText} defaultOpen={false}>
             <AuditTrailInline audit={audit} />

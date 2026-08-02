@@ -61,15 +61,16 @@ class SupervisorAgent(BaseAgent):
         parallel: bool = True,
         use_celery: bool = False,
         resolve_with_llm: Optional[bool] = None,
+        skip_ml_fraud: bool = False,
     ) -> UnderwritingMemo:
         start = time.time()
 
         if use_celery:
             agent_results = self._run_agents_celery(bundle)
         elif parallel:
-            agent_results = self._run_agents_threadpool(bundle)
+            agent_results = self._run_agents_threadpool(bundle, skip_ml_fraud=skip_ml_fraud)
         else:
-            agent_results = self._run_agents_sequential(bundle)
+            agent_results = self._run_agents_sequential(bundle, skip_ml_fraud=skip_ml_fraud)
 
         conflict_resolution = self._resolve_conflicts(agent_results, resolve_with_llm=resolve_with_llm)
 
@@ -87,14 +88,14 @@ class SupervisorAgent(BaseAgent):
 
         return memo
 
-    def _run_agents_threadpool(self, bundle: SubmissionBundle) -> list[AgentResult]:
+    def _run_agents_threadpool(self, bundle: SubmissionBundle, skip_ml_fraud: bool = False) -> list[AgentResult]:
         import concurrent.futures
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
             risk_future = pool.submit(self.risk_analyst.run, bundle)
             loss_future = pool.submit(self.loss_run_analyst.run, bundle)
             comp_future = pool.submit(self.compliance_agent.run, bundle)
-            fraud_future = pool.submit(self.fraud_detection.run, bundle)
+            fraud_future = pool.submit(self._run_fraud_agent, bundle, skip_ml_fraud)
             return [
                 risk_future.result(),
                 loss_future.result(),
@@ -102,13 +103,23 @@ class SupervisorAgent(BaseAgent):
                 fraud_future.result(),
             ]
 
-    def _run_agents_sequential(self, bundle: SubmissionBundle) -> list[AgentResult]:
+    def _run_agents_sequential(self, bundle: SubmissionBundle, skip_ml_fraud: bool = False) -> list[AgentResult]:
         return [
             self.risk_analyst.run(bundle),
             self.loss_run_analyst.run(bundle),
             self.compliance_agent.run(bundle),
-            self.fraud_detection.run(bundle),
+            self._run_fraud_agent(bundle, skip_ml_fraud),
         ]
+
+    def _run_fraud_agent(self, bundle: SubmissionBundle, skip_ml_fraud: bool = False) -> AgentResult:
+        """Run the fraud agent, optionally deferring its ML scoring to a deep dive."""
+        if skip_ml_fraud:
+            self.fraud_detection.defer_ml = True
+        try:
+            return self.fraud_detection.run(bundle)
+        finally:
+            if skip_ml_fraud:
+                self.fraud_detection.defer_ml = False
 
     def _run_agents_celery(self, bundle: SubmissionBundle) -> list[AgentResult]:
         try:

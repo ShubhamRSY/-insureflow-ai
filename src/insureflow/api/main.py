@@ -3750,9 +3750,11 @@ class PipelineConfigRequest(BaseModel):
     bundle_id: Optional[str] = None
     use_llm: bool = True
     use_legacy_pipeline: bool = False
+    funnel: bool = True
     skip_appetite_filter: bool = False
     skip_oracles: bool = False
     skip_portfolio: bool = False
+    skip_reinsurance: bool = False
     skip_core_integration: bool = False
     create_broker_share: bool = False
 
@@ -3769,6 +3771,7 @@ async def run_pipeline_v2(
             req.skip_appetite_filter,
             req.skip_oracles,
             req.skip_portfolio,
+            req.skip_reinsurance,
             req.skip_core_integration,
         ]
     ):
@@ -3806,9 +3809,11 @@ def _run_pipeline_v2_task(job_id: str, request: PipelineConfigRequest, org_id: s
             documents=docs,
             pdf_paths=request.pdf_paths,
             bundle_id=request.bundle_id or job_id,
+            funnel=request.funnel,
             skip_appetite_filter=request.skip_appetite_filter,
             skip_oracles=request.skip_oracles,
             skip_portfolio=request.skip_portfolio,
+            skip_reinsurance=request.skip_reinsurance,
             skip_core_integration=request.skip_core_integration,
         )
 
@@ -3827,6 +3832,31 @@ def _run_pipeline_v2_task(job_id: str, request: PipelineConfigRequest, org_id: s
     except Exception as exc:
         logger.exception("Pipeline v2 run failed")
         job_store.set(INSURANCE_NS, job_id, {"status": "failed", "error": str(exc)}, org_id=org_id)
+
+
+class DeepDiveRequest(BaseModel):
+    """Select which deferred analyses to re-run for a completed submission."""
+
+    include: list[str] = ["oracles", "portfolio", "reinsurance", "fraud_ml", "premium_ml", "churn_ml"]
+
+
+@app.post("/pipeline/{bundle_id}/deep-dive")
+def insurance_deep_dive(
+    bundle_id: str,
+    req: DeepDiveRequest | None = None,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Re-run funnel-deferred analyses (oracles, portfolio, reinsurance, ML) on a persisted submission."""
+    from insureflow.insurance.pipeline import InsurancePipeline
+
+    try:
+        pipeline = InsurancePipeline(org_id=current.org_id, use_llm=False)
+        return pipeline.deep_dive(bundle_id, org_id=current.org_id, include=(req.include if req else None))
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except Exception as exc:
+        logger.exception("Deep dive failed for %s", bundle_id)
+        raise HTTPException(status_code=500, detail=f"Deep dive failed: {exc}") from exc
 
 
 # ── Registry API (Model Versioning & Compliance Review) ────────────────

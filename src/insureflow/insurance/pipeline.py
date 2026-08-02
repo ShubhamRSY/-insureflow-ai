@@ -20,7 +20,7 @@ from insureflow.insurance.progress import PipelineProgressTracker
 from insureflow.integrations.factory import build_policy_admin_service
 from insureflow.llm.client import LLMClient
 from insureflow.models.audit import PipelineEvent
-from insureflow.models.submissions import SubmissionStatus
+from insureflow.models.submissions import SubmissionBundle, SubmissionStatus
 from insureflow.oracles.factory import build_oracle_agent
 from insureflow.outcomes.feedback import FeedbackEngine
 from insureflow.portfolio.store import get_portfolio_store
@@ -109,12 +109,18 @@ class InsurancePipeline:
         skip_portfolio: bool = False,
         skip_reinsurance: bool = False,
         skip_core_integration: bool = False,
+        funnel: bool = False,
         progress_callback: Callable[[dict[str, Any]], None] | None = None,
     ) -> dict[str, Any]:
         bid = bundle_id or f"ins-{uuid4().hex[:12]}"
         audit = InsuranceAuditLogger(self.audit_store, self.encryption, org_id=self.org_id)
         audit.start(bid)
         progress = PipelineProgressTracker(on_update=progress_callback)
+
+        # Deferred stages in funnel mode are re-run on demand via deep_dive().
+        deferred_stages: list[str] = []
+        if funnel:
+            deferred_stages = ["oracles", "portfolio", "reinsurance", "fraud_ml"]
 
         # ── 1. SUBMISSION TRIAGE (score & prioritize before any processing) ──
         progress.start("intake", "Intake", "Receiving submission package")
@@ -460,27 +466,30 @@ class InsurancePipeline:
         bundle.status = SubmissionStatus.EXTRACTED
 
         # ── 4. EXTERNAL DATA ORACLES (CLUE, NCCI, CAT) ──
-        progress.start("verify", "Verified", "Running external oracle checks")
         oracle_findings: list[Any] = []
-        if not skip_oracles:
-            bundle.status = SubmissionStatus.EXTERNAL_ORACLE_CHECK
-            oracle_result = self.oracle_agent.run(bundle, org_id=self.org_id)
-            oracle_findings = oracle_result.findings
-            audit.log(
-                PipelineEvent.VERIFICATION_COMPLETE,
-                f"Oracle queries: {len(oracle_findings)} findings from CLUE, NCCI, CAT models",
-                metadata={
-                    "oracle_success": oracle_result.success,
-                    "oracle_findings": len(oracle_findings),
-                },
-            )
+        if funnel:
+            progress.skip("verify", "Verified", "Deferred — available via Deep Dive")
+        else:
+            progress.start("verify", "Verified", "Running external oracle checks")
+            if not skip_oracles:
+                bundle.status = SubmissionStatus.EXTERNAL_ORACLE_CHECK
+                oracle_result = self.oracle_agent.run(bundle, org_id=self.org_id)
+                oracle_findings = oracle_result.findings
+                audit.log(
+                    PipelineEvent.VERIFICATION_COMPLETE,
+                    f"Oracle queries: {len(oracle_findings)} findings from CLUE, NCCI, CAT models",
+                    metadata={
+                        "oracle_success": oracle_result.success,
+                        "oracle_findings": len(oracle_findings),
+                    },
+                )
 
-        progress.complete(
-            "verify",
-            detail=f"{len(oracle_findings)} oracle finding(s)",
-            findings=len(oracle_findings),
-            status="warning" if oracle_findings else "complete",
-        )
+            progress.complete(
+                "verify",
+                detail=f"{len(oracle_findings)} oracle finding(s)",
+                findings=len(oracle_findings),
+                status="warning" if oracle_findings else "complete",
+            )
 
         # ── 5. Provenance + Reconciliation ──
         progress.start("reconcile", "Reconciled", "Reconciling cross-document fields")
@@ -540,6 +549,7 @@ class InsurancePipeline:
             parallel=True,
             use_celery=False,
             resolve_with_llm=resolve_with_llm,
+            skip_ml_fraud=funnel,
         )
 
         if provenance_failed or reconciliation_failed:
@@ -645,7 +655,9 @@ class InsurancePipeline:
 
         # ── 7. PORTFOLIO CONCENTRATION RISK ──
         portfolio_result = None
-        if not skip_portfolio:
+        if funnel:
+            progress.skip("portfolio", "Portfolio", "Deferred — available via Deep Dive")
+        elif not skip_portfolio:
             bundle.status = SubmissionStatus.PORTFOLIO_REVIEW
             portfolio_result = self.portfolio_risk.run(bundle, org_id=self.org_id)
             for f in portfolio_result.findings:
@@ -660,7 +672,10 @@ class InsurancePipeline:
             )
 
         # ── 8. REINSURANCE TREATY ANALYSIS ──
-        if not skip_reinsurance:
+        reinsurance_result = None
+        if funnel:
+            progress.skip("reinsurance", "Reinsurance", "Deferred — available via Deep Dive")
+        elif not skip_reinsurance:
             bundle.status = SubmissionStatus.REINSURANCE_REVIEW
             reinsurance_result = self.reinsurance.run(bundle, org_id=self.org_id)
             for f in reinsurance_result.findings:
@@ -837,6 +852,8 @@ class InsurancePipeline:
             "insurance_line": line_for_quote.value,
             "product_line": line_for_quote.value,
             "human_review_required": memo.human_review_required or wf.state == WorkflowState.PENDING_REVIEW,
+            "funnel": funnel,
+            "deep_dive_available": list(deferred_stages),
             "appetite_filter_passed": appetite_passed,
             "appetite_needs_uw_referral": appetite_result.needs_uw_referral if appetite_result else False,
             "appetite_reason": appetite_result.reason if appetite_result else "",
@@ -942,6 +959,116 @@ class InsurancePipeline:
             "audit_paths": audit_paths,
             "audit_trail_entries": len(audit.trail.entries) if audit.trail else 0,
         }
+
+    def deep_dive(
+        self,
+        bundle_id: str,
+        *,
+        org_id: str | None = None,
+        include: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """Re-run the analyses deferred by funnel mode on a persisted submission.
+
+        Nothing is lost by the funnel — oracles, portfolio concentration,
+        reinsurance treaty fit, and the ML fraud/premium/churn models are all
+        available here on demand.
+        """
+        allowed = ["oracles", "portfolio", "reinsurance", "fraud_ml", "premium_ml", "churn_ml"]
+        include = [i for i in (include or allowed) if i in allowed]
+        scope = org_id or self.org_id
+
+        bundle_data = self.audit_store.load_json(bundle_id, "submission_bundle.json", org_id=scope)
+        if not bundle_data:
+            raise KeyError(f"No persisted submission found for bundle {bundle_id!r} (org={scope})")
+
+        bundle = SubmissionBundle(**bundle_data)
+        results: dict[str, Any] = {"bundle_id": bundle_id, "completed": [], "findings": {}}
+
+        if "oracles" in include:
+            oracle_result = self.oracle_agent.run(bundle, org_id=scope)
+            results["completed"].append("oracles")
+            results["findings"]["oracles"] = [f.model_dump() for f in oracle_result.findings]
+
+        if "portfolio" in include:
+            portfolio_result = self.portfolio_risk.run(bundle, org_id=scope)
+            results["completed"].append("portfolio")
+            results["findings"]["portfolio"] = {
+                "risk_score": portfolio_result.risk_score,
+                "findings": [f.model_dump() for f in portfolio_result.findings],
+            }
+
+        if "reinsurance" in include:
+            reinsurance_result = self.reinsurance.run(bundle, org_id=scope)
+            results["completed"].append("reinsurance")
+            results["findings"]["reinsurance"] = {
+                "risk_score": reinsurance_result.risk_score,
+                "findings": [f.model_dump() for f in reinsurance_result.findings],
+            }
+
+        ml_inputs = self._deep_dive_ml_inputs(bundle)
+        for ml_name in ("fraud_ml", "premium_ml", "churn_ml"):
+            if ml_name not in include:
+                continue
+            results["completed"].append(ml_name)
+            results["findings"][ml_name] = self._run_ml_deep_dive(ml_name, ml_inputs)
+
+        return results
+
+    def _deep_dive_ml_inputs(self, bundle: SubmissionBundle) -> dict[str, float]:
+        """Derive ML model inputs from a persisted submission bundle."""
+        tiv = 0.0
+        prior_claims = 0
+        revenue = 0.0
+        loss_ratio = 0.5
+        if bundle.structured:
+            for loc in bundle.structured.locations:
+                tiv += (loc.building_value or 0) + (loc.contents_value or 0) + (loc.bi_value or 0)
+            if bundle.structured.risk_profile:
+                prior_claims = len(bundle.structured.risk_profile.prior_claims)
+            fin = bundle.structured.financial
+            if fin is not None:
+                revenue = float(fin.annual_revenue or 0.0)
+                if fin.loss_run and fin.loss_run.claims:
+                    incurred = sum(c.incurred_amount or 0 for c in fin.loss_run.claims)
+                    if tiv > 0:
+                        loss_ratio = min(incurred / tiv, 3.0)
+        return {
+            "tiv": float(tiv),
+            "loss_ratio": float(loss_ratio),
+            "credit_score": 700.0,
+            "prior_claims_count": float(prior_claims),
+            "revenue": float(revenue),
+        }
+
+    def _run_ml_deep_dive(self, ml_name: str, inputs: dict[str, float]) -> dict[str, Any]:
+        """Run a single ML model on bundle-derived inputs (never raises)."""
+        from insureflow.agents.tools import MLTools
+
+        try:
+            if ml_name == "fraud_ml":
+                return MLTools.predict_fraud(
+                    tiv=inputs["tiv"],
+                    loss_ratio=inputs["loss_ratio"],
+                    credit_score=inputs["credit_score"],
+                    prior_claims_count=int(inputs["prior_claims_count"]),
+                )
+            if ml_name == "premium_ml":
+                return MLTools.predict_premium(
+                    tiv=inputs["tiv"],
+                    loss_ratio=inputs["loss_ratio"],
+                    credit_score=inputs["credit_score"],
+                    prior_claims_count=int(inputs["prior_claims_count"]),
+                )
+            if ml_name == "churn_ml":
+                return MLTools.predict_churn(
+                    loss_ratio=inputs["loss_ratio"],
+                    credit_score=inputs["credit_score"],
+                    years_in_business=5.0,
+                )
+        except Exception as exc:
+            logger.warning("Deep-dive ML %s failed: %s", ml_name, exc)
+            return {"error": str(exc)}
+        return {"error": f"Unknown ML deep-dive: {ml_name}"}
 
     def _build_checkpoints(self, memo: Any, reconciliation: Any, oracle_findings: list[Any]) -> list[dict[str, Any]]:
         checkpoints: list[dict[str, Any]] = []
