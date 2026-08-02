@@ -131,6 +131,8 @@ export const endpoints = {
   marketCycle: () => api('/underwriting/market'),
   setMarketCycle: (phase) => api(`/underwriting/market/set?phase=${phase}`, { method: 'POST' }),
   authorityMatrix: () => api('/underwriting/authority'),
+  upsertAuthority: (body) => api('/underwriting/authority', { method: 'POST', body }),
+  deleteAuthority: (username) => api(`/underwriting/authority/${encodeURIComponent(username)}`, { method: 'DELETE' }),
   renewalAnalysis: (bundleId) => api(`/pipeline/renewal/${bundleId}`, { method: 'POST' }),
   missingDocuments: (bundleId) => api(`/pipeline/documents/${bundleId}/missing`),
   requestBrokerDocs: (bundleId, documents, notes = '') =>

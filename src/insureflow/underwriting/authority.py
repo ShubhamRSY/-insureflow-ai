@@ -136,7 +136,7 @@ class AuthorityMatrix:
         self._authorities: dict[str, UnderwriterAuthority] = {}
         self._cached_org: str | None = None
 
-    def _store(self):
+    def _store(self) -> Any:
         from insureflow.storage.job_store import get_job_store
 
         return get_job_store()
