@@ -4284,6 +4284,40 @@ def disconnect_source(
     return {"source_id": source_id, "connected": "false"}
 
 
+class ConnectedPullRequest(BaseModel):
+    bundle_id: Optional[str] = None
+    vertical: str = "insurance"
+
+
+@app.post("/api/connections/{source_id}/pull")
+def pull_connected_source(
+    source_id: str,
+    req: ConnectedPullRequest,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Pull from an already-connected source using its stored config.
+
+    Lets any vertical (e.g. Lending) pull from a connector the user connected
+    in Integrations without re-entering credentials. Documents accumulate into
+    ``bundle_id`` if provided.
+    """
+    from insureflow.integrations.connections import get_connection
+
+    conn = get_connection(source_id, org_id=current.org_id)
+    if not conn:
+        raise HTTPException(
+            status_code=404,
+            detail=f"'{source_id}' is not connected — connect it from the Integrations page first",
+        )
+    cfg = conn.get("config") or {}
+    allowed = set(InsuranceSourcePullRequest.model_fields)
+    pull_req = InsuranceSourcePullRequest(
+        **{k: v for k, v in cfg.items() if k in allowed and v is not None},
+        bundle_id=req.bundle_id,
+    )
+    return pull_insurance_source(source_id, pull_req, current, vertical=req.vertical)
+
+
 # ── Pipeline Configuration (enhanced with new features) ──────────
 
 

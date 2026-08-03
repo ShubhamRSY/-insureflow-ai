@@ -119,6 +119,8 @@ export const endpoints = {
     api(`/api/connections/${sourceId}`, { method: 'POST', body: { config, vertical } }),
   disconnectSource: (sourceId) =>
     api(`/api/connections/${sourceId}`, { method: 'DELETE' }),
+  pullConnectedSource: (sourceId, body) =>
+    api(`/api/connections/${sourceId}/pull`, { method: 'POST', body }),
 
   // Insurance webhooks
   insuranceWebhooks: () => api('/webhooks/insurance'),

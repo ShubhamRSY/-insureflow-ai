@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Wallet, RefreshCw, FileUp, FolderOpen, FlaskConical, Cable } from 'lucide-react';
+import { Wallet, RefreshCw, FileUp, FolderOpen, FlaskConical, Cable, Loader2 } from 'lucide-react';
 import { Badge, EmptyState } from '../components/ui';
 import { endpoints, fmtCurrency } from '../lib/api';
 import StageStrip, { stagesFromProgress } from '../components/StageStrip';
 import ConnectAndPull from '../components/ConnectAndPull';
+import ConnectorLogo from '../components/ConnectorLogo';
 
 const emptyForm = {
   product_type: 'business_term_loan',
@@ -51,6 +52,8 @@ export default function LendingPage({ presets, demoResult, onRunDemo }) {
   const [form, setForm] = useState(emptyForm);
   const [files, setFiles] = useState([]);
   const [mode, setMode] = useState('form'); // form | documents | directory
+  const [connectedSources, setConnectedSources] = useState([]);
+  const [quickPulling, setQuickPulling] = useState('');
 
   const sampleResult = (res) => ({
     application_id: res.application_id,
@@ -70,6 +73,9 @@ export default function LendingPage({ presets, demoResult, onRunDemo }) {
     try {
       const p = await endpoints.lendingProducts().catch(() => ({ products: [] }));
       setProducts(p.products || []);
+      endpoints.integrationStatus()
+        .then((d) => setConnectedSources((d.adapters || []).filter((a) => a.connected)))
+        .catch(() => {});
     } catch (e) {
       setError(e.message);
     } finally {
@@ -178,6 +184,39 @@ export default function LendingPage({ presets, demoResult, onRunDemo }) {
     );
   };
 
+  const quickPull = async (src) => {
+    setQuickPulling(src.id);
+    setError('');
+    setMessage('');
+    try {
+      const bundle = await endpoints.createDraftBundle(`Lending pull — ${src.name}`);
+      const pull = await endpoints.pullConnectedSource(src.id, { vertical: 'lending', bundle_id: bundle.bundle_id });
+      const added = pull.accumulated?.added ?? pull.file_count ?? 0;
+      if (!added) throw new Error(`No documents pulled from ${src.name}`);
+      const res = await endpoints.runDraftBundle(bundle.bundle_id, true, 'lending');
+      const result = res.result || {};
+      setResults((prev) => [{
+        application_id: res.application_id,
+        decision: result.decision,
+        approved_rate: result.approved_rate,
+        approved_amount: result.approved_amount,
+        risk_score: result.risk_score,
+        human_review_required: result.human_review_required,
+        document_count: res.documents_ingested || 0,
+        extracted_from_docs: res.extracted_from_docs,
+        timeline: res.timeline || [],
+      }, ...prev]);
+      setMessage(
+        `Pulled ${added} doc(s) from ${src.name} · Decision: ${result.decision}` +
+        (result.human_review_required ? ' · human review required' : ''),
+      );
+    } catch (err) {
+      setError(err.message || String(err));
+    } finally {
+      setQuickPulling('');
+    }
+  };
+
   return (
     <div className="mx-auto max-w-6xl space-y-8 animate-fade-in">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -216,6 +255,33 @@ export default function LendingPage({ presets, demoResult, onRunDemo }) {
           </button>
         ))}
       </div>
+
+      {connectedSources.length > 0 && (
+        <div className="glass-card overflow-hidden">
+          <div className="flex items-center justify-between border-b border-white/[0.06] px-5 py-3">
+            <h3 className="text-sm font-semibold">Connected sources</h3>
+            <span className="text-[11px] text-slate-500">Connected in Integrations — click to pull &amp; run</span>
+          </div>
+          <div className="grid gap-2 p-4 sm:grid-cols-2 lg:grid-cols-3">
+            {connectedSources.map((src) => (
+              <button key={src.id} type="button" onClick={() => quickPull(src)} disabled={!!quickPulling}
+                className="group flex items-center gap-3 rounded-xl border border-white/[0.06] bg-surface-overlay/30 px-4 py-3 text-left transition hover:border-emerald-500/35 disabled:opacity-50">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/[0.06] p-1">
+                  <ConnectorLogo sourceId={src.id} name={src.name} size={20} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-medium text-slate-200">{src.name}</span>
+                  <span className="block truncate text-[11px] text-emerald-400/80">{src.connection_label || 'Connected'}</span>
+                </span>
+                <span className="inline-flex shrink-0 items-center gap-1 rounded-md bg-white/[0.04] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-400">
+                  {quickPulling === src.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Cable className="h-3 w-3" />}
+                  {quickPulling === src.id ? 'Pulling…' : 'Pull'}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="glass-card p-6">
