@@ -201,11 +201,7 @@ def generate_report(
             },
             "model": bench_meta.get("model"),
             "demo": bool(bench_meta.get("demo")),
-            "note": (
-                "Demo seed shown when no live benchmark run exists. Run "
-                "`python -m evaluations.benchmark --output benchmark_results.json` with an LLM key "
-                "to produce measured results."
-            ),
+            "note": ("Demo seed shown when no live benchmark run exists. Run `python -m evaluations.benchmark --output benchmark_results.json` with an LLM key to produce measured results."),
         }
         report["summary"]["benchmark_cost_per_task_usd"] = bench_meta.get("cost_per_task_usd")
     except Exception as exc:

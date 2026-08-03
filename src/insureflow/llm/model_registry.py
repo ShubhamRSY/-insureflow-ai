@@ -292,14 +292,10 @@ def list_model_metadata() -> list[dict[str, Any]]:
 def registry_inventory() -> dict[str, Any]:
     """High-level inventory of models, creators, providers, endpoints, systems."""
     creators = sorted({m.creator.name for m in MODEL_REGISTRY.values()})
-    providers = sorted(
-        {e.provider for m in MODEL_REGISTRY.values() for e in m.endpoints}
-    )
+    providers = sorted({e.provider for m in MODEL_REGISTRY.values() for e in m.endpoints})
     open_models = sorted(m.model for m in MODEL_REGISTRY.values() if m.open_weights)
     serverless_models = sorted(m.model for m in MODEL_REGISTRY.values() if any(e.serverless for e in m.endpoints))
-    systems = sorted(
-        (m.system.name for m in MODEL_REGISTRY.values() if m.system is not None)
-    )
+    systems = sorted((m.system.name for m in MODEL_REGISTRY.values() if m.system is not None))
     return {
         "model_count": len(MODEL_REGISTRY),
         "models": sorted(MODEL_REGISTRY),

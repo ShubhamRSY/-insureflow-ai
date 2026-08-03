@@ -113,7 +113,7 @@ def test_benchmark_output_includes_registry() -> None:
 
     result = run_benchmark(
         model="gpt-4o",
-        client=FakeLLMClient(delay=0.0),  # type: ignore[arg-type]
+        client=FakeLLMClient(delay=0.0),
         categories=["coding"],
         output_path=None,
     )

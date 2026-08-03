@@ -106,21 +106,14 @@ REASONING_TOKENS_FALLBACK: int = 2000
 # AA's synthetic response-time target
 OUTPUT_TOKENS_TARGET: int = 100
 
-PROMPT_TEMPLATE_SYSTEM = (
-    "You are a careful, precise assistant. Answer concisely and correctly. "
-    "Do not include disclaimers. Provide the answer directly."
-)
+PROMPT_TEMPLATE_SYSTEM = "You are a careful, precise assistant. Answer concisely and correctly. Do not include disclaimers. Provide the answer directly."
 
 BENCHMARK_PROMPTS: list[BenchmarkPrompt] = [
     BenchmarkPrompt(
         prompt_id="general_001",
         category="general_knowledge",
         system_prompt=PROMPT_TEMPLATE_SYSTEM,
-        user_prompt=(
-            "What is the difference between an occurrence-based and a claims-made "
-            "insurance policy? Give a concise definition of each and one example of when "
-            "each is typically used."
-        ),
+        user_prompt=("What is the difference between an occurrence-based and a claims-made insurance policy? Give a concise definition of each and one example of when each is typically used."),
     ),
     BenchmarkPrompt(
         prompt_id="general_002",
@@ -505,9 +498,7 @@ def aggregate_timings(timings: list[PerCallTiming]) -> dict[str, Any]:
         "total_cached_tokens": sum(t.cached_tokens for t in timings),
         "total_output_tokens": sum(t.output_tokens for t in timings),
         # Synthetic combined metric: total response time for 100 output tokens
-        "total_response_time_for_100_output_tokens_s": (
-            _round(avg_ttft + OUTPUT_TOKENS_TARGET / avg_speed) if avg_ttft is not None and avg_speed else None
-        ),
+        "total_response_time_for_100_output_tokens_s": (_round(avg_ttft + OUTPUT_TOKENS_TARGET / avg_speed) if avg_ttft is not None and avg_speed else None),
     }
 
 

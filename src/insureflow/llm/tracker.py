@@ -50,9 +50,7 @@ def estimate_cost(model: str, input_tokens: int, output_tokens: int) -> float:
 def estimate_cost_full(model: str, input_tokens: int = 0, cached_tokens: int = 0, output_tokens: int = 0) -> float:
     """Cost in USD accounting for cached-input (prompt cache hits) + fresh input + output tokens."""
     pricing = get_model_pricing(model)
-    return (
-        input_tokens * pricing["input"] + cached_tokens * pricing["cached"] + output_tokens * pricing["output"]
-    ) / 1000
+    return (input_tokens * pricing["input"] + cached_tokens * pricing["cached"] + output_tokens * pricing["output"]) / 1000
 
 
 def blended_price_per_1k(model: str) -> float:
@@ -169,9 +167,7 @@ class TokenUsageTracker:
 
     def get_by_model(self) -> dict[str, dict[str, Any]]:
         with self._lock:
-            by_model: dict[str, dict[str, Any]] = defaultdict(
-                lambda: {"input_tokens": 0, "cached_tokens": 0, "output_tokens": 0, "cost": 0.0, "count": 0}
-            )
+            by_model: dict[str, dict[str, Any]] = defaultdict(lambda: {"input_tokens": 0, "cached_tokens": 0, "output_tokens": 0, "cost": 0.0, "count": 0})
             for r in self._records:
                 by_model[r.model]["input_tokens"] += r.input_tokens
                 by_model[r.model]["cached_tokens"] += r.cached_tokens
@@ -182,9 +178,7 @@ class TokenUsageTracker:
 
     def get_by_agent(self) -> dict[str, dict[str, Any]]:
         with self._lock:
-            by_agent: dict[str, dict[str, Any]] = defaultdict(
-                lambda: {"input_tokens": 0, "cached_tokens": 0, "output_tokens": 0, "cost": 0.0, "count": 0}
-            )
+            by_agent: dict[str, dict[str, Any]] = defaultdict(lambda: {"input_tokens": 0, "cached_tokens": 0, "output_tokens": 0, "cost": 0.0, "count": 0})
             for r in self._records:
                 agent = r.agent or "unknown"
                 by_agent[agent]["input_tokens"] += r.input_tokens
@@ -196,9 +190,7 @@ class TokenUsageTracker:
 
     def get_by_user(self) -> dict[str, dict[str, Any]]:
         with self._lock:
-            by_user: dict[str, dict[str, Any]] = defaultdict(
-                lambda: {"input_tokens": 0, "cached_tokens": 0, "output_tokens": 0, "cost": 0.0, "count": 0}
-            )
+            by_user: dict[str, dict[str, Any]] = defaultdict(lambda: {"input_tokens": 0, "cached_tokens": 0, "output_tokens": 0, "cost": 0.0, "count": 0})
             for r in self._records:
                 uid = r.user_id or "anonymous"
                 by_user[uid]["input_tokens"] += r.input_tokens

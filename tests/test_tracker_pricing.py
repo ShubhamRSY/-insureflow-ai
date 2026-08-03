@@ -46,17 +46,13 @@ class TestEstimateCostFull:
 
     def test_backward_compatible_with_estimate_cost(self) -> None:
         # estimate_cost_full with no cached tokens equals the old signature
-        assert estimate_cost_full("gpt-4o-mini", input_tokens=1000, output_tokens=1000) == pytest.approx(
-            (1000 * 0.00015 + 1000 * 0.0006) / 1000, abs=1e-6
-        )
+        assert estimate_cost_full("gpt-4o-mini", input_tokens=1000, output_tokens=1000) == pytest.approx((1000 * 0.00015 + 1000 * 0.0006) / 1000, abs=1e-6)
 
 
 class TestBlendedPrice:
     def test_blended_price_gpt4o(self) -> None:
         p = get_model_pricing("gpt-4o")
-        expected = (BLENDED_MIX["cached"] * p["cached"] + BLENDED_MIX["input"] * p["input"] + BLENDED_MIX["output"] * p["output"]) / sum(
-            BLENDED_MIX.values()
-        )
+        expected = (BLENDED_MIX["cached"] * p["cached"] + BLENDED_MIX["input"] * p["input"] + BLENDED_MIX["output"] * p["output"]) / sum(BLENDED_MIX.values())
         assert blended_price_per_1k("gpt-4o") == pytest.approx(expected, abs=1e-9)
 
     def test_blended_price_between_input_and_output(self) -> None:

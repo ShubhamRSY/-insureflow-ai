@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import time
 from pathlib import Path
+from typing import Iterator
 
 import pytest
 
@@ -24,16 +25,17 @@ from evaluations.benchmark import (
 from insureflow.llm.client import LLMClient, StreamChunk
 
 
-class FakeLLMClient:
+class FakeLLMClient(LLMClient):
     """Records usage but streams deterministic deltas with real timing."""
 
     def __init__(self, model: str = "gpt-4o", delay: float = 0.01, with_reasoning: bool = True) -> None:
+        super().__init__()
         self.model = model
         self.delay = delay
         self.with_reasoning = with_reasoning
         self.calls: list[tuple[str, str]] = []
 
-    def stream(self, system_prompt: str, user_prompt: str):
+    def stream(self, system_prompt: str, user_prompt: str) -> Iterator[StreamChunk]:
         self.calls.append((system_prompt, user_prompt))
         time.sleep(self.delay)
         if self.with_reasoning:
@@ -42,7 +44,7 @@ class FakeLLMClient:
             time.sleep(self.delay)
             yield StreamChunk(text=word)
 
-    def complete(self, system_prompt: str, user_prompt: str) -> str:
+    def complete(self, system_prompt: str, user_prompt: str, response_format: type | None = None) -> str:
         self.calls.append((system_prompt, user_prompt))
         return "The answer is correct."
 
@@ -91,14 +93,30 @@ def test_measure_call_error_path(prompt: BenchmarkPrompt) -> None:
 def test_aggregate_timings() -> None:
     timings = [
         PerCallTiming(
-            prompt_id="a", category="coding", ttft_s=0.5, first_answer_s=1.0,
-            output_speed_tok_s=20.0, total_response_time_100_s=5.5, e2e_s=6.0,
-            input_tokens=100, cached_tokens=0, output_tokens=50, reasoning_tokens=0,
+            prompt_id="a",
+            category="coding",
+            ttft_s=0.5,
+            first_answer_s=1.0,
+            output_speed_tok_s=20.0,
+            total_response_time_100_s=5.5,
+            e2e_s=6.0,
+            input_tokens=100,
+            cached_tokens=0,
+            output_tokens=50,
+            reasoning_tokens=0,
         ),
         PerCallTiming(
-            prompt_id="b", category="math", ttft_s=1.5, first_answer_s=2.0,
-            output_speed_tok_s=10.0, total_response_time_100_s=11.5, e2e_s=12.0,
-            input_tokens=200, cached_tokens=0, output_tokens=100, reasoning_tokens=0,
+            prompt_id="b",
+            category="math",
+            ttft_s=1.5,
+            first_answer_s=2.0,
+            output_speed_tok_s=10.0,
+            total_response_time_100_s=11.5,
+            e2e_s=12.0,
+            input_tokens=200,
+            cached_tokens=0,
+            output_tokens=100,
+            reasoning_tokens=0,
         ),
     ]
     agg = aggregate_timings(timings)
@@ -115,9 +133,17 @@ def test_aggregate_timings() -> None:
 def test_aggregate_timings_measured_reasoning() -> None:
     timings = [
         PerCallTiming(
-            prompt_id="a", category="coding", ttft_s=0.5, first_answer_s=5.0,
-            output_speed_tok_s=20.0, total_response_time_100_s=5.5, e2e_s=6.0,
-            input_tokens=100, cached_tokens=0, output_tokens=50, reasoning_tokens=1200,
+            prompt_id="a",
+            category="coding",
+            ttft_s=0.5,
+            first_answer_s=5.0,
+            output_speed_tok_s=20.0,
+            total_response_time_100_s=5.5,
+            e2e_s=6.0,
+            input_tokens=100,
+            cached_tokens=0,
+            output_tokens=50,
+            reasoning_tokens=1200,
         )
     ]
     agg = aggregate_timings(timings)
@@ -128,9 +154,16 @@ def test_aggregate_timings_measured_reasoning() -> None:
 def test_cost_per_task_weighted(prompt: BenchmarkPrompt) -> None:
     timings = [
         PerCallTiming(
-            prompt_id="a", category="coding", ttft_s=None, first_answer_s=None,
-            output_speed_tok_s=None, total_response_time_100_s=None, e2e_s=None,
-            input_tokens=1000, cached_tokens=0, output_tokens=1000,
+            prompt_id="a",
+            category="coding",
+            ttft_s=None,
+            first_answer_s=None,
+            output_speed_tok_s=None,
+            total_response_time_100_s=None,
+            e2e_s=None,
+            input_tokens=1000,
+            cached_tokens=0,
+            output_tokens=1000,
             reasoning_tokens=0,
         )
     ]
@@ -146,9 +179,16 @@ def test_cost_per_task_weighted(prompt: BenchmarkPrompt) -> None:
 def test_cost_per_task_cached_tokens() -> None:
     timings = [
         PerCallTiming(
-            prompt_id="a", category="math", ttft_s=None, first_answer_s=None,
-            output_speed_tok_s=None, total_response_time_100_s=None, e2e_s=None,
-            input_tokens=0, cached_tokens=1000, output_tokens=0,
+            prompt_id="a",
+            category="math",
+            ttft_s=None,
+            first_answer_s=None,
+            output_speed_tok_s=None,
+            total_response_time_100_s=None,
+            e2e_s=None,
+            input_tokens=0,
+            cached_tokens=1000,
+            output_tokens=0,
             reasoning_tokens=0,
         )
     ]
@@ -161,7 +201,7 @@ def test_cost_per_task_cached_tokens() -> None:
 def test_run_benchmark_with_fake_client() -> None:
     result = run_benchmark(
         model="gpt-4o",
-        client=FakeLLMClient(delay=0.0),  # type: ignore[arg-type]
+        client=FakeLLMClient(delay=0.0),
         categories=["coding", "math"],
         output_path=None,
     )
@@ -180,7 +220,7 @@ def test_run_benchmark_output_path(tmp_path: Path) -> None:
     out = tmp_path / "bench.json"
     result = run_benchmark(
         model="gpt-4o",
-        client=FakeLLMClient(delay=0.0),  # type: ignore[arg-type]
+        client=FakeLLMClient(delay=0.0),
         categories=["science"],
         output_path=str(out),
     )
