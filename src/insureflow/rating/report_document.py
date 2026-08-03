@@ -578,12 +578,7 @@ def generate_mortgage_report_html(results: dict[str, Any], job_id: str) -> str:
     rate = results.get("rate_quote") or memo.get("rate_quote") or {}
     now = datetime.now(tz=timezone.utc).strftime("%B %d, %Y at %H:%M UTC")
 
-    borrower = (
-        results.get("borrower")
-        or memo.get("borrower_name")
-        or (results.get("summary") or {}).get("borrower")
-        or "Borrower"
-    )
+    borrower = results.get("borrower") or memo.get("borrower_name") or (results.get("summary") or {}).get("borrower") or "Borrower"
     decision = (results.get("decision") or memo.get("decision") or "pending").upper()
     decision_colors = {"APPROVE": "#16a34a", "SUSPEND": "#d97706", "REFER": "#d97706", "DENY": "#dc2626"}
     decision_color = decision_colors.get(decision, "#64748b")

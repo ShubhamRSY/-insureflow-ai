@@ -1880,13 +1880,7 @@ def get_job_report(
     results = job.get("results") or {}
     if not results:
         raise HTTPException(status_code=404, detail="Pipeline results not available for this job")
-    borrower = (
-        results.get("memo", {}).get("insured_name")
-        or results.get("insured_name")
-        or results.get("borrower")
-        or (results.get("memo") or {}).get("borrower_name")
-        or job_id
-    )
+    borrower = results.get("memo", {}).get("insured_name") or results.get("insured_name") or results.get("borrower") or (results.get("memo") or {}).get("borrower_name") or job_id
     safe_name = "".join(c if c.isalnum() or c in (" ", "-", "_") else "" for c in borrower).strip().replace(" ", "_") or job_id
     try:
         from insureflow.rating.report_document import (
