@@ -3,16 +3,14 @@ import { Badge } from './ui';
 import { extractMortgage, endpoints, fmtCurrency } from '../lib/api';
 import InsuranceMemoView from './InsuranceMemoView';
 import SubmissionJourney from './SubmissionJourney';
-import { useState } from 'react';
 
 export default function JobDrawer({ job, vertical, jobId, onClose }) {
-  const [quote, setQuote] = useState(null);
   if (!jobId) return null;
 
   const processing = job?.status === 'processing';
   const failed = job?.status === 'failed';
   const isInsurance = vertical === 'insurance';
-  const wide = isInsurance;
+  const wide = isInsurance || vertical === 'mortgage' || vertical === 'lending';
 
   const bundleId = job?.results?.bundle_id;
 
@@ -39,7 +37,15 @@ export default function JobDrawer({ job, vertical, jobId, onClose }) {
         {bundleId && (
           <div className="mt-4 flex flex-wrap gap-2">
             <button type="button" onClick={async () => {
-              try { const d = await endpoints.insuranceQuote(jobId); setQuote(d); } catch (e) { alert(e.message || 'Quote not available'); }
+              try {
+                const { blob, filename } = await endpoints.insuranceQuote(jobId);
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                a.click();
+                URL.revokeObjectURL(url);
+              } catch (e) { alert(e.message || 'Quote not available'); }
             }} className="btn-secondary btn-sm text-xs"><FileCheck className="h-3.5 w-3.5" /> Quote PDF</button>
             <button type="button" onClick={async () => {
               try {
@@ -57,15 +63,6 @@ export default function JobDrawer({ job, vertical, jobId, onClose }) {
             }} className="btn-secondary btn-sm text-xs"><ExternalLink className="h-3.5 w-3.5" /> Broker Share</button>
           </div>
         )}
-        {quote && (
-          <div className="mt-4 rounded-xl bg-surface-overlay p-4 ring-1 ring-white/[0.04]">
-            <div className="mb-2 flex items-center justify-between">
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Quote Document</p>
-              <button onClick={() => setQuote(null)} className="text-xs text-slate-500 hover:text-slate-300">Close</button>
-            </div>
-            <div className="max-h-[500px] overflow-y-auto rounded-lg border border-white/[0.06]" dangerouslySetInnerHTML={{ __html: typeof quote === 'string' ? quote : '' }} />
-          </div>
-        )}
           </>
         )}
       </>
@@ -81,6 +78,10 @@ export default function JobDrawer({ job, vertical, jobId, onClose }) {
   } else {
     const s = extractMortgage(job);
     const denied = String(s.decision || '').toLowerCase() === 'deny';
+    const sevColor = (sev) =>
+      ({ critical: 'text-red-400', high: 'text-red-300', moderate: 'text-amber-400', low: 'text-emerald-400' }[String(sev || 'moderate').toLowerCase()] || 'text-slate-400');
+    const sevBar = (sev) =>
+      ({ critical: 'bg-red-500', high: 'bg-red-400', moderate: 'bg-amber-400', low: 'bg-emerald-400' }[String(sev || 'moderate').toLowerCase()] || 'bg-slate-500');
     content = (
       <>
         <div className="grid grid-cols-2 gap-3">
@@ -98,6 +99,11 @@ export default function JobDrawer({ job, vertical, jobId, onClose }) {
             </div>
           ))}
         </div>
+        {s.productLine && (
+          <p className="mt-3 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+            {s.productLine.replace(/_/g, ' ')} package
+          </p>
+        )}
         {s.ineligibilityReasons?.length > 0 && (
           <div className="mt-4 rounded-xl bg-amber-500/10 p-3 ring-1 ring-amber-500/20">
             <p className="text-[10px] font-bold uppercase tracking-wider text-amber-400">Ineligibility</p>
@@ -112,6 +118,63 @@ export default function JobDrawer({ job, vertical, jobId, onClose }) {
           <div className="mt-4 rounded-xl bg-surface-overlay p-3 ring-1 ring-white/[0.04]">
             <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Summary</p>
             <p className="mt-1 text-sm text-slate-300">{s.memo}</p>
+          </div>
+        )}
+        {s.findings?.length > 0 && (
+          <div className="mt-4">
+            <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">Key Findings</p>
+            <div className="space-y-2">
+              {s.findings.map((f, i) => {
+                const title = typeof f === 'string' ? f : (f.title || 'Finding');
+                const desc = typeof f === 'string' ? '' : (f.description || '');
+                const sev = typeof f === 'string' ? 'moderate' : f.severity;
+                return (
+                  <div key={i} className="flex gap-3 rounded-xl bg-surface-overlay p-3 ring-1 ring-white/[0.04]">
+                    <span className={`mt-0.5 h-8 w-1 shrink-0 rounded-full ${sevBar(sev)}`} />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-slate-200">{title}</p>
+                      {desc && <p className="mt-0.5 text-xs text-slate-400">{desc}</p>}
+                      <p className={`mt-1 text-[10px] font-bold uppercase tracking-wider ${sevColor(sev)}`}>{String(sev || 'moderate').toUpperCase()}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+        {s.violations?.length > 0 && (
+          <div className="mt-4 rounded-xl bg-red-500/5 p-3 ring-1 ring-red-500/20">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-red-400">Compliance Violations</p>
+            <ul className="mt-2 space-y-1 text-xs text-red-200/80">
+              {s.violations.map((v, i) => {
+                const msg = typeof v === 'string' ? v : (v.message || v.description || v.rule_id || JSON.stringify(v));
+                const sev = typeof v === 'string' ? '' : v.severity;
+                return <li key={i} className="flex items-start gap-2"><span>{msg}</span>{sev && <span className={`ml-auto shrink-0 text-[9px] font-bold uppercase ${sevColor(sev)}`}>{sev}</span>}</li>;
+              })}
+            </ul>
+          </div>
+        )}
+        {s.conditions?.length > 0 && (
+          <div className="mt-4 rounded-xl bg-surface-overlay p-3 ring-1 ring-white/[0.04]">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Conditions</p>
+            <ul className="mt-2 space-y-1 text-xs text-slate-300">
+              {s.conditions.map((c, i) => <li key={i}>{c}</li>)}
+            </ul>
+          </div>
+        )}
+        {s.bundleId && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button type="button" onClick={async () => {
+              try {
+                const { blob, filename } = await endpoints.insuranceReport(jobId);
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                a.click();
+                URL.revokeObjectURL(url);
+              } catch (e) { alert(e.message || 'Report not available'); }
+            }} className="btn-secondary btn-sm text-xs"><FileText className="h-3.5 w-3.5" /> Full Report</button>
           </div>
         )}
       </>

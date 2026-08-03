@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+from concurrent.futures import ThreadPoolExecutor
 
 from insureflow.models.mortgage import (
     MortgageAgentResult,
@@ -604,11 +605,17 @@ class MortgageSupervisorAgent:
         self.decision = MortgageDecisionAgent()
 
     def analyze(self, bundle: MortgageBundle) -> MortgageMemo:
-        results = [
-            self.income.analyze(bundle),
-            self.credit.analyze(bundle),
-            self.assets.analyze(bundle),
-            self.collateral.analyze(bundle),
-            self.fraud.analyze(bundle),
+        # Run the five specialist agents in parallel; each makes at most one
+        # LLM call, so wall-clock time drops from ~5x to ~1x the slowest agent.
+        analyses = [
+            self.income.analyze,
+            self.credit.analyze,
+            self.assets.analyze,
+            self.collateral.analyze,
+            self.fraud.analyze,
         ]
+        results: list[MortgageAgentResult] = []
+        with ThreadPoolExecutor(max_workers=len(analyses)) as pool:
+            for ar in pool.map(lambda fn: fn(bundle), analyses):
+                results.append(ar)
         return self.decision.decide(bundle, results)

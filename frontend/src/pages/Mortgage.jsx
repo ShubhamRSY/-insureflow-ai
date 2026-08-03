@@ -160,7 +160,12 @@ export default function MortgagePage({ presets, jobs, onRunDemo, onOpenJob, onRu
                       <span className="block text-xs text-slate-500 truncate">{d.description}</span>
                     </span>
                   </span>
-                  <span className="shrink-0 rounded-md bg-white/[0.04] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-mortgage">Run</span>
+                  <span className="flex shrink-0 items-center gap-2">
+                    <span className="rounded-md bg-white/[0.04] px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-mortgage/80">
+                      {isCommercial ? 'Commercial' : 'Residential'}
+                    </span>
+                    <span className="rounded-md bg-white/[0.04] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-mortgage">Run</span>
+                  </span>
                 </button>
               );
             })}

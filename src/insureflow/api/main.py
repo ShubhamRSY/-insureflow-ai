@@ -1820,25 +1820,22 @@ def bulk_delete_jobs(
         job_store.delete(INSURANCE_NS, jid, org_id=current.org_id)
 
 
+def _resolve_job_any_vertical(job_id: str, org_id: str) -> tuple[dict[str, Any] | None, str]:
+    """Find a job across insurance / mortgage / lending namespaces.
+
+    Returns ``(job, vertical)``; ``vertical`` is the namespace it lived in.
+    """
+    for ns in (INSURANCE_NS, MORTGAGE_NS, LENDING_NS):
+        job = job_store.get(ns, job_id, org_id=org_id)
+        if not job:
+            job = job_store.get(ns, job_id)
+        if job:
+            return job, ns
+    return None, ""
+
+
 @app.get("/pipeline/jobs/{job_id}/quote")
 def get_job_quote(
-    job_id: str,
-    current: TokenData = Depends(get_current_user_optional),
-) -> HTMLResponse:
-    org_id = current.org_id if current else "demo"
-    job = job_store.get(INSURANCE_NS, job_id, org_id=org_id)
-    if not job:
-        job = job_store.get(INSURANCE_NS, job_id)
-    if not job:
-        raise HTTPException(status_code=404, detail="Job not found")
-    html = (job.get("results") or {}).get("quote_html", "")
-    if not html:
-        raise HTTPException(status_code=404, detail="Quote document not available")
-    return HTMLResponse(content=html, status_code=200)
-
-
-@app.get("/pipeline/jobs/{job_id}/report")
-def get_job_report(
     job_id: str,
     current: TokenData = Depends(get_current_user_optional),
 ) -> StreamingResponse:
@@ -1848,15 +1845,63 @@ def get_job_report(
         job = job_store.get(INSURANCE_NS, job_id)
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
+    html = (job.get("results") or {}).get("quote_html", "")
+    if not html:
+        raise HTTPException(status_code=404, detail="Quote document not available")
     results = job.get("results") or {}
-    if not results:
-        raise HTTPException(status_code=404, detail="Pipeline results not available for this job")
     insured = results.get("memo", {}).get("insured_name") or results.get("insured_name") or job_id
     safe_name = "".join(c if c.isalnum() or c in (" ", "-", "_") else "" for c in insured).strip().replace(" ", "_") or job_id
     try:
-        from insureflow.rating.report_document import generate_report_html, html_to_pdf
+        from insureflow.rating.report_document import html_to_pdf
 
-        html = generate_report_html(results, job_id)
+        pdf_bytes = html_to_pdf(html)
+        is_pdf = pdf_bytes[:4] == b"%PDF"
+        media_type = "application/pdf" if is_pdf else "text/html"
+        ext = "pdf" if is_pdf else "html"
+    except Exception as exc:
+        logger.error("Quote PDF generation failed: %s", exc)
+        raise HTTPException(status_code=500, detail=f"Quote PDF generation failed: {exc}")
+    return StreamingResponse(
+        iter([pdf_bytes]),
+        media_type=media_type,
+        headers={"Content-Disposition": f'attachment; filename="Rytera_Quote_{safe_name}.{ext}"'},
+    )
+
+
+@app.get("/pipeline/jobs/{job_id}/report")
+def get_job_report(
+    job_id: str,
+    current: TokenData = Depends(get_current_user_optional),
+) -> StreamingResponse:
+    org_id = current.org_id if current else "demo"
+    job, vertical = _resolve_job_any_vertical(job_id, org_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    results = job.get("results") or {}
+    if not results:
+        raise HTTPException(status_code=404, detail="Pipeline results not available for this job")
+    borrower = (
+        results.get("memo", {}).get("insured_name")
+        or results.get("insured_name")
+        or results.get("borrower")
+        or (results.get("memo") or {}).get("borrower_name")
+        or job_id
+    )
+    safe_name = "".join(c if c.isalnum() or c in (" ", "-", "_") else "" for c in borrower).strip().replace(" ", "_") or job_id
+    try:
+        from insureflow.rating.report_document import (
+            generate_lending_report_html,
+            generate_mortgage_report_html,
+            generate_report_html,
+            html_to_pdf,
+        )
+
+        if vertical == "mortgage":
+            html = generate_mortgage_report_html(results, job_id)
+        elif vertical == "lending":
+            html = generate_lending_report_html(results, job_id)
+        else:
+            html = generate_report_html(results, job_id)
         pdf_bytes = html_to_pdf(html)
         is_pdf = pdf_bytes[:4] == b"%PDF"
         media_type = "application/pdf" if is_pdf else "text/html"

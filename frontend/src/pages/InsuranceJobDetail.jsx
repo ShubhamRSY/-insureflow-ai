@@ -11,7 +11,6 @@ export default function InsuranceJobDetail() {
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [quote, setQuote] = useState(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [notes, setNotes] = useState([]);
   const [noteText, setNoteText] = useState('');
@@ -80,8 +79,13 @@ export default function InsuranceJobDetail() {
   const handleQuote = async () => {
     setQuoteLoading(true);
     try {
-      const d = await endpoints.insuranceQuote(jobId);
-      setQuote(d);
+      const { blob, filename } = await endpoints.insuranceQuote(jobId);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
     } catch (e) {
       alert(e.message || 'Quote not available');
     } finally {
@@ -269,16 +273,6 @@ export default function InsuranceJobDetail() {
         {!processing && (
           <div className="mt-6">
             <InsuranceMemoView job={job} />
-          </div>
-        )}
-
-        {quote && (
-          <div className="mt-6 rounded-xl bg-surface-overlay p-5 ring-1 ring-white/[0.04]">
-            <div className="mb-3 flex items-center justify-between">
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Quote Document</p>
-              <button onClick={() => setQuote(null)} className="text-xs text-slate-500 hover:text-slate-300">Close</button>
-            </div>
-            <div className="max-h-[600px] overflow-y-auto rounded-lg border border-white/[0.06]" dangerouslySetInnerHTML={{ __html: typeof quote === 'string' ? quote : '' }} />
           </div>
         )}
       </div>

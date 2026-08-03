@@ -184,7 +184,24 @@ export const endpoints = {
   auditPackage: (bundleId) => api(`/pipeline/audit/${bundleId}/package`),
   workflowDetail: (bundleId) => api(`/pipeline/workflow/${bundleId}`),
   bindPolicy: (bundleId) => api(`/pipeline/workflow/${bundleId}/bind`, { method: 'POST' }),
-  insuranceQuote: (jobId) => api(`/pipeline/jobs/${jobId}/quote`),
+  insuranceQuote: async (jobId) => {
+    const headers = {};
+    if (auth.token) headers.Authorization = `Bearer ${auth.token}`;
+    const res = await fetch(`/pipeline/jobs/${jobId}/quote`, { headers });
+    if (!res.ok) {
+      let msg = `HTTP ${res.status}`;
+      const ct = res.headers.get('content-type') || '';
+      if (ct.includes('application/json')) {
+        try { const d = await res.json(); msg = d?.detail || msg; } catch { /* ignore */ }
+      }
+      throw new Error(msg);
+    }
+    const blob = await res.blob();
+    const cd = res.headers.get('content-disposition') || '';
+    const ext = cd.includes('.pdf') ? 'pdf' : 'html';
+    const name = (cd.match(/filename="?(.+?)"?$/) || [])[1] || `Rytera_Quote.${ext}`;
+    return { blob, filename: name };
+  },
   insuranceReport: async (jobId) => {
     const headers = {};
     if (auth.token) headers.Authorization = `Bearer ${auth.token}`;
@@ -284,8 +301,13 @@ export function extractMortgage(job) {
     ltv: s?.ltv_ratio ?? memo.ltv_ratio,
     eligible: rate?.eligible,
     ineligibilityReasons: rate?.ineligibility_reasons || [],
-    violations: s?.compliance_violations || r.compliance_violations || [],
-    memo: memo.executive_summary || memo.underwriting_summary || s?.underwriting_summary || s?.narrative || '',
+    violations: s?.compliance_violations || r.compliance_violations || memo.compliance_violations || [],
+    memo: memo.executive_summary || memo.underwriting_summary || s?.underwriting_summary || s?.narrative || memo.summary || '',
     borrower: s?.borrower || memo.borrower_name,
+    findings: memo.key_findings || r.key_findings || [],
+    conditions: memo.conditions || r.conditions || [],
+    reconIssues: r.reconciliation_issues || s.reconciliation_issues || [],
+    productLine: s?.product_line || memo.product_line || '',
+    bundleId: r.bundle_id,
   };
 }

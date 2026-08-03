@@ -259,6 +259,9 @@ export default function MortgageSourceHub({ presets, onSubmit, onRunDemo, onRunC
                       <p className="text-sm font-medium text-slate-200 truncate">{d.name}</p>
                       <p className="text-xs text-slate-500 truncate">{d.description}</p>
                     </div>
+                    <span className="shrink-0 rounded-md bg-white/[0.04] px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-mortgage/80">
+                      {isCommercial ? 'Commercial' : 'Residential'}
+                    </span>
                     {running ? (
                       <Loader2 className="h-4 w-4 shrink-0 animate-spin text-mortgage" />
                     ) : (
