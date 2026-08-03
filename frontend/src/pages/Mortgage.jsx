@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Badge, EmptyState } from '../components/ui';
 import { extractMortgage, endpoints, fmtCurrency } from '../lib/api';
-import MortgageSourceHub from '../components/MortgageSourceHub';
+import PackageSourceHub from '../components/PackageSourceHub';
 import StageStrip, { stagesFromProgress } from '../components/StageStrip';
 import { Home, Package, FileText, Building2 } from 'lucide-react';
 
@@ -84,8 +84,20 @@ export default function MortgagePage({ presets, jobs, onRunDemo, onOpenJob, onRu
         {/* Left rail — loan package input */}
         <div className="lg:col-span-4">
           <div className="lg:sticky lg:top-20">
-            <MortgageSourceHub
-              presets={presets}
+            <PackageSourceHub
+              vertical="mortgage"
+              samples={presets?.mortgage || []}
+              productOptions={[
+                { id: 'residential_mortgage', label: 'Residential' },
+                { id: 'commercial_mortgage', label: 'Commercial' },
+              ]}
+              productDefault="residential_mortgage"
+              quickPaths={[
+                { label: 'Johnson (residential)', path: 'simulated_documents/home_mortgage/johnson_marcus_imani' },
+                { label: 'Checklist coverage', path: 'simulated_documents/home_mortgage/checklist_coverage' },
+              ]}
+              perBorrower
+              dropHint="Drop W-2, 1003, credit, appraisal…"
               onSubmit={handleSubmit}
               onRunDemo={onRunDemo}
               onRunConnect={onRunConnect}

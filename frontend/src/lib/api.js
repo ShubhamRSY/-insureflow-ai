@@ -55,6 +55,14 @@ export async function api(path, opts = {}) {
   return data;
 }
 
+const qs = (params) => {
+  const s = new URLSearchParams(
+    Object.entries(params || {}).filter(([, v]) => v != null && v !== ''),
+  );
+  const str = s.toString();
+  return str ? `?${str}` : '';
+};
+
 export const endpoints = {
   diagnostics: () => api('/system/diagnostics'),
   presets: () => api('/api/demo/presets'),
@@ -241,7 +249,7 @@ export const endpoints = {
   // Registry
   registryVersions: () => api('/registry/versions'),
   registryVersion: (entryId) => api(`/registry/versions/${entryId}`),
-  createRegistryEntry: (body) => api('/registry/versions', { method: 'POST', body }),
+  createRegistryEntry: (params) => api(`/registry/versions${qs(params)}`, { method: 'POST' }),
   submitRegistryEntry: (entryId) => api(`/registry/versions/${entryId}/submit`, { method: 'POST' }),
   approveRegistryEntry: (entryId) => api(`/registry/versions/${entryId}/approve`, { method: 'POST' }),
   rejectRegistryEntry: (entryId) => api(`/registry/versions/${entryId}/reject`, { method: 'POST' }),
