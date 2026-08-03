@@ -241,15 +241,20 @@ jobs:
     needs: [deploy]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     env:
-      APP_URL: ${{ vars.APP_URL || 'https://app.ryterainc.com' }}
+      APP_URL: ${{ vars.APP_URL }}
     steps:
+      - name: Require APP_URL variable
+        if: env.APP_URL == ''
+        run: |
+          echo "::error::Smoke tests need the production URL. Set it as the 'APP_URL' repository variable (Settings > Secrets and variables > Actions > Variables), e.g. https://my-service.up.railway.app"
+          exit 1
       - name: Wait for deployment and smoke-test live app
         run: |
           base_url="${APP_URL%/}"
           ok=0
           for i in $(seq 1 24); do
             code=$(curl -sS -o /tmp/health.json -w '%{http_code}' --max-time 15 "$base_url/health" || true)
-            echo "attempt $i: GET /health -> $code"
+            echo "attempt $i: GET $base_url/health -> $code"
             if [ "$code" = "200" ]; then
               ok=1
               break
@@ -257,7 +262,7 @@ jobs:
             sleep 15
           done
           if [ "$ok" != "1" ]; then
-            echo "::error::Live app did not become healthy"
+            echo "::error::App at $base_url did not become healthy (got $code)"
             exit 1
           fi
           cat /tmp/health.json
@@ -311,9 +316,10 @@ jobs:
     steps:
       - name: Publish deployment notes
         run: |
-          CODECOV_STATE=${{ secrets.CODECOV_TOKEN != '' && 'enabled' || 'token not set' }}
-          RAILWAY_STATE=${{ secrets.RAILWAY_TOKEN != '' && 'enabled' || 'token not set' }}
-          export CODECOV_STATE RAILWAY_STATE
+          CODECOV_STATE="${{ secrets.CODECOV_TOKEN != '' && 'enabled' || 'token not set' }}"
+          RAILWAY_STATE="${{ secrets.RAILWAY_TOKEN != '' && 'enabled' || 'token not set' }}"
+          APP_URL_STATE="${{ vars.APP_URL != '' && 'set' || 'NOT SET — smoke tests disabled' }}"
+          export CODECOV_STATE RAILWAY_STATE APP_URL_STATE
           { cat <<EOF
           ## Rytera CI/CD
 
@@ -321,7 +327,7 @@ jobs:
           - **Security**: Bandit SAST · Trivy (fs + image) · GitGuardian secrets · Snyk SCA
           - **Coverage**: pytest-cov → Codecov ($CODECOV_STATE)
           - **CD**: multi-arch image (amd64+arm64) → \`ghcr.io/${{ env.IMAGE_NAME }}\` (tags: sha, branch, vX.Y.Z, latest)
-          - **Smoke tests**: live \`/health\` + \`/system/diagnostics\` after deploy
+          - **Smoke tests**: live \`/health\` + \`/system/diagnostics\` after deploy → \`APP_URL\` ($APP_URL_STATE)
           - **Deploy**: Railway ($RAILWAY_STATE)
           - **Notifications**: Slack / Discord webhook on success or failure
           - **Secrets**: injected via GitHub Secrets only (never in codebase)
