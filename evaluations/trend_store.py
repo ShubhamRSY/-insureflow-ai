@@ -49,6 +49,10 @@ class EvalTrendStore:
             if val is None:
                 continue
             try:
+                if isinstance(val, dict):
+                    val = val.get("avg")
+                if val is None:
+                    continue
                 out.append({"ts": row["ts"], "suite": row.get("suite"), "value": float(val)})
             except (TypeError, ValueError):
                 continue
@@ -66,6 +70,11 @@ class EvalTrendStore:
             "hitl_case_pass_rate",
             "avg_agent_error_rate",
             "avg_agent_latency_ms",
+            "time_to_first_token_s",
+            "output_speed_tokens_per_s",
+            "e2e_response_time_s",
+            "average_reasoning_tokens",
+            "total_response_time_100_tokens_s",
         ]
         series = {m: self.series(m, limit=90) for m in chart_metrics}
         latest = rows[-1] if rows else None

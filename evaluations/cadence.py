@@ -55,6 +55,14 @@ EVAL_CADENCE: list[CadencePolicy] = [
         sla="New high-severity issues reviewed within 5 business days",
     ),
     CadencePolicy(
+        name="perf_price_benchmark",
+        frequency="nightly",
+        trigger="Scheduled eval workflow (requires LLM key); python -m evaluations.benchmark",
+        owner="ml_ops",
+        scope="AA-style TTFT / first answer token / output speed / E2E / reasoning tokens + cost per task + blended price",
+        sla="Alert if p95 TTFT degrades >20% vs 7-day baseline, or output speed drops >20%",
+    ),
+    CadencePolicy(
         name="full_eval_report",
         frequency="weekly",
         trigger="Monday nightly after scorer + Ragas + Giskard",

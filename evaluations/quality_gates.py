@@ -118,6 +118,30 @@ QUALITY_GATES: list[MetricThreshold] = [
         severity=GateSeverity.FLAG,
         category="safety",
     ),
+    MetricThreshold(
+        metric="benchmark_ttft_p95_s",
+        description="P95 time-to-first-token (seconds) from perf benchmark",
+        direction="max",
+        threshold=5.0,
+        severity=GateSeverity.FLAG,
+        category="performance",
+    ),
+    MetricThreshold(
+        metric="benchmark_output_speed_tokens_per_s",
+        description="Output speed (tokens/sec) from perf benchmark",
+        direction="min",
+        threshold=10.0,
+        severity=GateSeverity.FLAG,
+        category="performance",
+    ),
+    MetricThreshold(
+        metric="benchmark_cost_per_task_usd",
+        description="Weighted cost per Intelligence Index task (USD)",
+        direction="max",
+        threshold=0.50,
+        severity=GateSeverity.FLAG,
+        category="price",
+    ),
 ]
 
 

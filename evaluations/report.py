@@ -171,6 +171,50 @@ def generate_report(
     elif cloud.get("local_path"):
         logger.info("LangSmith offline — metrics cached at %s", cloud.get("local_path"))
 
+    # 6. Performance / price benchmark (Artificial Analysis-style)
+    from evaluations.benchmark import seed_demo_benchmark
+    from evaluations.trend_store import EvalTrendStore
+
+    try:
+        store = EvalTrendStore()
+        rows = store.list_rows(suite="perf_benchmark", limit=3)
+        if not rows:
+            seed_demo_benchmark(store)
+            rows = store.list_rows(suite="perf_benchmark", limit=3)
+        latest_bench = rows[-1] if rows else {}
+        bench_metrics = latest_bench.get("metrics", {})
+        bench_meta = latest_bench.get("metadata", {})
+        report["sections"]["performance_price_benchmark"] = {
+            "description": (
+                "Artificial Analysis-style performance + price benchmarking: TTFT, time to first "
+                "answer token, output speed (tok/s), total response time for 100 output tokens, "
+                "end-to-end response time, average reasoning tokens, and cost per task weighted by "
+                "Intelligence Index weights. See evaluations/benchmark.py."
+            ),
+            "metrics": {
+                "time_to_first_token_s": bench_metrics.get("time_to_first_token_s"),
+                "output_speed_tokens_per_s": bench_metrics.get("output_speed_tokens_per_s"),
+                "e2e_response_time_s": bench_metrics.get("e2e_response_time_s"),
+                "average_reasoning_tokens": bench_metrics.get("average_reasoning_tokens"),
+                "total_response_time_100_tokens_s": bench_metrics.get("total_response_time_100_tokens_s"),
+                "cost_per_task_usd": bench_meta.get("cost_per_task_usd"),
+            },
+            "model": bench_meta.get("model"),
+            "demo": bool(bench_meta.get("demo")),
+            "note": (
+                "Demo seed shown when no live benchmark run exists. Run "
+                "`python -m evaluations.benchmark --output benchmark_results.json` with an LLM key "
+                "to produce measured results."
+            ),
+        }
+        report["summary"]["benchmark_cost_per_task_usd"] = bench_meta.get("cost_per_task_usd")
+    except Exception as exc:
+        logger.warning("Performance benchmark section failed: %s", exc)
+        report["sections"]["performance_price_benchmark"] = {
+            "description": "Artificial Analysis-style performance + price benchmarking",
+            "error": str(exc),
+        }
+
     from evaluations.quality_gates import gates_from_report_summary
 
     rag_section = report["sections"].get("rag_quality", {}).get("metrics", {})

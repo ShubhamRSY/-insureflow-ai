@@ -2498,6 +2498,9 @@ def get_eval_trends(
 
     store = EvalTrendStore()
     seed_demo_trends(store)
+    from evaluations.benchmark import seed_demo_benchmark
+
+    seed_demo_benchmark(store)
     payload = store.dashboard_payload()
 
     perf = analyze_audit_directory()

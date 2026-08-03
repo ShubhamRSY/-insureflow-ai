@@ -848,9 +848,11 @@ src/insureflow/
 │   ├── pricing.py           # Loan pricing engine (risk-based)
 │   └── risk.py              # Credit risk scoring & analysis
 ├── llm/                     # LLM client & configuration
-│   ├── client.py            # Multi-provider LLM client (OpenAI, Anthropic)
+│   ├── client.py            # Multi-provider LLM client (OpenAI, Anthropic, streaming)
+│   ├── model_registry.py    # AA vocabulary registry (creators, endpoints, systems, pricing)
 │   ├── main.py              # Legacy entry point
-│   └── prompts.py           # LLM prompt configuration
+│   ├── prompts.py           # LLM prompt configuration
+│   └── tracker.py           # Per-token usage tracking & blended pricing (7:2:1)
 ├── mcp/                     # MCP server for Claude Desktop / Cursor
 │   ├── server.py            # MCP protocol server (SSE on :8010)
 │   └── __main__.py          # Entry point
@@ -947,7 +949,7 @@ scripts/
 examples/                    # 5 carrier insurance submissions (Pacific Coast, Northwind, Sample, Sunrise, Veririsk)
 simulated_documents/           # 80+ mortgage files across 10 borrower scenarios
 tests/                         # pytest suite (20 test files)
-evaluations/                   # Ragas + Giskard MLOps evaluation
+evaluations/                   # Ragas + Giskard MLOps eval + performance/price benchmark
 docs/architecture/architecture.md           # Detailed system design
 ```
 
@@ -1020,6 +1022,35 @@ Ragas (faithfulness, relevancy) + Giskard (bias, robustness) on golden dataset.
 **Cloud tracking (LangSmith):** set `LANGSMITH_API_KEY` (see `.env.example`). Eval scores upload to project `insureflow-evals` at [smith.langchain.com](https://smith.langchain.com). Without a key, metrics are cached under `evaluation_cloud_cache/` and pytest stays offline-friendly. Pipeline API runs also trace to LangSmith when the key is set.
 
 **Log explorers + agent performance:** structured JSON agent/pipeline logs are analyzed by `insureflow.analytics.agent_perf` (latency, error rate, findings). Explorers: **Amazon CloudWatch Logs Insights** (infra + structured logs; query templates on `GET /observability/log-explorers`) and **LangSmith** (LLM/agent traces). Nightly CI runs the analyzer and appends metrics to `evaluation_trends/`. Dashboard: **/dashboard/eval-trends** (Recharts precision/recall/hallucination/RAG/agent latency trends) via `GET /evaluations/trends` and `GET /analytics/agent-performance`.
+
+### Performance & Price Benchmarking (Artificial Analysis)
+
+Continuous LLM performance/price benchmarking following the **Artificial Analysis** methodology — 14 prompts across 6 categories, weighted by the Intelligence Index. All metrics are produced live via streaming from the configured model (`evaluations/benchmark.py`):
+
+| Metric | Definition |
+|--------|-----------|
+| TTFT (p50/p95) | Time to first **reasoning** token |
+| Time to first answer | First non-reasoning token |
+| Output speed (tok/s) | `(out_tokens-1) / (e2e − ttft)` |
+| E2E response time | Full streaming response time |
+| Total response time (100 tokens) | `ttft + 100 / output_speed` |
+| Average reasoning tokens | Measured from `reasoning_content`, or 2000-token fallback |
+| Cost per task (USD) | Weighted by Intelligence Index weights, per model pricing |
+| Price blended / 1k | OpenAI-style 7:2:1 (input:cached:output) blend, plus native per-token rates |
+
+**Model pricing registry:** `insureflow.llm.tracker.MODEL_PRICING` holds input/output/**cached-token** rates and `blended_price_per_1k()` (7:2:1 `BLENDED_MIX`); `estimate_cost_full()` accounts for cached prompt tokens. Usage tracking records cached tokens per call (`TokenUsageTracker.record(..., cached_tokens=...)`).
+
+**Model registry (AA vocabulary):** `insureflow.llm.model_registry` models the full Artificial Analysis glossary — **Model**, **Model Creator**, **Endpoint** (provider, serverless, region), **System** (compute/max-seq), **Provider**, **Serverless**, **Open Weights**, **Token**, **OpenAI Tokens**, **Native Tokens**, **Price** (input/output/blended). `MODEL_REGISTRY` ships 10 models (OpenAI, Anthropic, plus open-weight Llama/Mistral examples), `get_model_metadata()` / `list_model_metadata()` / `registry_inventory()`.
+
+**Run it:**
+
+```bash
+python -m evaluations.benchmark [out.json]        # live run against settings.llm_model
+```
+
+Output JSON includes `metrics` (all AA timings), `cost_per_task`, `blended_price_per_1k_usd`, `pricing_per_1k`, `model_metadata` (creator/endpoints/system), `registry_inventory`, and `per_call` timings. Without an LLM key, `seed_demo_benchmark()` writes a `perf_benchmark` row to `EvalTrendStore` so the **/dashboard/eval-trends** page renders the benchmark charts (TTFT, output speed, E2E, reasoning tokens, cost).
+
+**Quality gates (FLAG):** `benchmark_ttft_p95_s` ≤ 5.0s, `benchmark_output_speed_tokens_per_s` ≥ 10.0, `benchmark_cost_per_task_usd` ≤ $0.50 — wired into `evaluations/quality_gates.py` and the `perf_price_benchmark` cadence policy (`evaluations/cadence.py`). Benchmark metrics surface in reports under `sections.performance_price_benchmark`.
 
 ---
 
@@ -1114,6 +1145,9 @@ python -m pytest tests/test_ingestion_parsers.py tests/test_acord_parser.py -v
 | `test_document_analytics.py` | Document analytics engine |
 | `test_pipeline.py` | Pipeline integration tests |
 | `test_e2e.py` | End-to-end pipeline scenarios |
+| `test_benchmark.py` | AA performance/price benchmark harness (streaming, timings, cost) |
+| `test_tracker_pricing.py` | Token pricing, cached tokens, blended 7:2:1 rates |
+| `test_model_registry.py` | AA model registry vocabulary & inventory |
 
 ### End-to-end tests (42 scenarios)
 

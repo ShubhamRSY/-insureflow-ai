@@ -68,6 +68,28 @@ export default function EvalTrendsPage() {
     }));
   }, [data]);
 
+  const toSeries = useCallback(
+    (key, valueKey = 'value') => (data?.series?.[key] || []).map((r) => ({ day: fmtDay(r.ts), [valueKey]: r.value })),
+    [data],
+  );
+
+  const benchmarkTtft = useMemo(() => toSeries('time_to_first_token_s', 'ttft'), [toSeries]);
+  const benchmarkE2e = useMemo(() => toSeries('e2e_response_time_s', 'e2e'), [toSeries]);
+  const benchmarkSpeed = useMemo(() => toSeries('output_speed_tokens_per_s', 'speed'), [toSeries]);
+  const benchmarkReasoning = useMemo(() => toSeries('average_reasoning_tokens', 'reasoning'), [toSeries]);
+
+  const latestBench = useMemo(() => {
+    const last = (arr) => arr[arr.length - 1];
+    return {
+      ttft: last(benchmarkTtft)?.ttft,
+      e2e: last(benchmarkE2e)?.e2e,
+      speed: last(benchmarkSpeed)?.speed,
+      reasoning: last(benchmarkReasoning)?.reasoning,
+    };
+  }, [benchmarkTtft, benchmarkE2e, benchmarkSpeed, benchmarkReasoning]);
+
+  const hasBenchmark = benchmarkTtft.length > 0 || benchmarkE2e.length > 0;
+
   return (
     <div className="mx-auto max-w-6xl space-y-8 animate-fade-in">
       <div className="flex items-center justify-between">
@@ -173,6 +195,73 @@ export default function EvalTrendsPage() {
               </ResponsiveContainer>
             </div>
           </div>
+
+          {hasBenchmark && (
+            <>
+              <div className="glass-card p-5">
+                <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-slate-400">
+                  Performance &amp; price benchmark (Artificial Analysis)
+                </h3>
+                <div className="grid gap-4 sm:grid-cols-4">
+                  <div className="rounded-xl bg-surface-overlay p-4">
+                    <p className="text-xs uppercase tracking-wider text-slate-500">TTFT (avg, s)</p>
+                    <p className="mt-1 text-2xl font-semibold text-slate-100">
+                      {latestBench.ttft != null ? `${latestBench.ttft.toFixed(2)}` : '—'}
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-surface-overlay p-4">
+                    <p className="text-xs uppercase tracking-wider text-slate-500">E2E response (avg, s)</p>
+                    <p className="mt-1 text-2xl font-semibold text-slate-100">
+                      {latestBench.e2e != null ? `${latestBench.e2e.toFixed(2)}` : '—'}
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-surface-overlay p-4">
+                    <p className="text-xs uppercase tracking-wider text-slate-500">Output speed (tok/s)</p>
+                    <p className="mt-1 text-2xl font-semibold text-slate-100">
+                      {latestBench.speed != null ? `${latestBench.speed.toFixed(1)}` : '—'}
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-surface-overlay p-4">
+                    <p className="text-xs uppercase tracking-wider text-slate-500">Reasoning tokens (avg)</p>
+                    <p className="mt-1 text-2xl font-semibold text-slate-100">
+                      {latestBench.reasoning != null ? latestBench.reasoning.toLocaleString() : '—'}
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-4 grid gap-4 lg:grid-cols-2">
+                  <div className="h-56">
+                    <p className="mb-2 text-xs text-slate-400">TTFT vs E2E response time (s)</p>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={benchmarkTtft.map((r, i) => ({ ...r, e2e: benchmarkE2e[i]?.e2e }))}>
+                        <CartesianGrid stroke="rgba(255,255,255,0.06)" />
+                        <XAxis dataKey="day" tick={{ fill: '#94a3b8', fontSize: 11 }} />
+                        <YAxis tick={{ fill: '#94a3b8', fontSize: 11 }} />
+                        <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid #334155' }} />
+                        <Legend />
+                        <Line type="monotone" dataKey="ttft" stroke="#34d399" strokeWidth={2} dot={false} />
+                        <Line type="monotone" dataKey="e2e" stroke="#fbbf24" strokeWidth={2} dot={false} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="h-56">
+                    <p className="mb-2 text-xs text-slate-400">Output speed (tok/s) vs reasoning tokens</p>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={benchmarkSpeed.map((r, i) => ({ ...r, reasoning: benchmarkReasoning[i]?.reasoning }))}>
+                        <CartesianGrid stroke="rgba(255,255,255,0.06)" />
+                        <XAxis dataKey="day" tick={{ fill: '#94a3b8', fontSize: 11 }} />
+                        <YAxis yAxisId="left" tick={{ fill: '#94a3b8', fontSize: 11 }} />
+                        <YAxis yAxisId="right" orientation="right" tick={{ fill: '#94a3b8', fontSize: 11 }} />
+                        <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid #334155' }} />
+                        <Legend />
+                        <Line yAxisId="left" type="monotone" dataKey="speed" stroke="#60a5fa" strokeWidth={2} dot={false} />
+                        <Line yAxisId="right" type="monotone" dataKey="reasoning" stroke="#a78bfa" strokeWidth={2} dot={false} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </>
       )}
 

@@ -1,11 +1,26 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional, cast
+from dataclasses import dataclass
+from typing import Any, Iterator, Optional, cast
 
 from insureflow.config import settings
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class StreamChunk:
+    """One streamed token/delta from an LLM response.
+
+    text: answer-token text (non-reasoning).
+    reasoning: reasoning/tokenizer-hidden token text, when the provider exposes it.
+    usage: provider usage object populated on the final chunk (may be None).
+    """
+
+    text: str = ""
+    reasoning: str = ""
+    usage: Any = None
 
 
 class LLMClient:
@@ -67,20 +82,25 @@ class LLMClient:
         if tracker is None:
             return
         input_tokens = 0
+        cached_tokens = 0
         output_tokens = 0
         try:
             usage = getattr(response, "usage", None)
             if usage is not None:
                 input_tokens = getattr(usage, "prompt_tokens", 0) or 0
                 output_tokens = getattr(usage, "completion_tokens", 0) or 0
+                details = getattr(usage, "prompt_tokens_details", None)
+                if details is not None:
+                    cached_tokens = getattr(details, "cached_tokens", 0) or 0
         except Exception:
             logger.warning("Failed to extract usage from LLM response", exc_info=True)
             pass
-        if input_tokens > 0 or output_tokens > 0:
+        if input_tokens > 0 or cached_tokens > 0 or output_tokens > 0:
             tracker.record(
                 model=self.model,
                 tier=self.model_tier,
                 input_tokens=input_tokens,
+                cached_tokens=cached_tokens,
                 output_tokens=output_tokens,
                 agent=self.agent,
             )
@@ -173,6 +193,55 @@ class LLMClient:
         else:
             msg = f"Unsupported LLM provider: {provider}"
             raise ValueError(msg)
+
+    def stream(self, system_prompt: str, user_prompt: str) -> Iterator[StreamChunk]:
+        """Stream a completion token-by-token, yielding StreamChunk deltas.
+
+        Supports openai/vllm (chat.completions streaming) and anthropic
+        (messages streaming). The final chunk carries provider usage.
+        """
+        client = self._get_client()
+        provider = self.provider
+
+        if provider == "openai" or provider == "vllm":
+            kwargs: dict[str, Any] = {
+                "model": self.model,
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                "temperature": self.temperature,
+                "max_tokens": self.max_tokens,
+                "stream": True,
+                "stream_options": {"include_usage": True},
+            }
+            for chunk in client.chat.completions.create(**kwargs):
+                if not getattr(chunk, "choices", None):
+                    usage = getattr(chunk, "usage", None)
+                    if usage is not None:
+                        yield StreamChunk(usage=usage)
+                    continue
+                delta = chunk.choices[0].delta
+                text = getattr(delta, "content", None) or ""
+                reasoning = getattr(delta, "reasoning_content", None) or ""
+                yield StreamChunk(text=text, reasoning=reasoning)
+            return
+
+        if provider == "anthropic" or provider == "claude":
+            kwargs = {
+                "model": self.model,
+                "system": system_prompt,
+                "messages": [{"role": "user", "content": user_prompt}],
+                "temperature": self.temperature,
+                "max_tokens": self.max_tokens,
+            }
+            with client.messages.stream(**kwargs) as stream:
+                for text in stream.text_stream:
+                    yield StreamChunk(text=text)
+            return
+
+        msg = f"Unsupported LLM provider: {provider}"
+        raise ValueError(msg)
 
     def extract_structured(
         self,
