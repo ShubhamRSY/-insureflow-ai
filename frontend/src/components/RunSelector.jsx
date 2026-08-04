@@ -16,15 +16,31 @@ const fmtSize = (bytes) => {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
 
-export default function RunSelector({ presets, onRunDemo, onSubmit }) {
+export default function RunSelector({
+  presets,
+  vertical = 'insurance',
+  samples,
+  onRunDemo,
+  onSubmit,
+  onRunJob,
+  onRunResult,
+  productField = 'product_line',
+  productOptions = [],
+  productDefault = '',
+  includePurpose = false,
+  purposeOptions = [],
+  purposeDefault = '',
+}) {
   const [tab, setTab] = useState('files');
   const [files, setFiles] = useState([]);
   const [dataId, setDataId] = useState('');
   const [useLlm, setUseLlm] = useState(true);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState('');
+  const [product, setProduct] = useState(productDefault);
+  const [purpose, setPurpose] = useState(purposeDefault);
 
-  const samples = presets?.insurance || [];
+  const sampleList = samples || presets?.insurance || [];
 
   const addFiles = async (list) => {
     const arr = Array.from(list || []);
@@ -53,7 +69,11 @@ export default function RunSelector({ presets, onRunDemo, onSubmit }) {
     }
     setRunning(true);
     try {
-      await onSubmit?.(buildSubmissionPayload(files, useLlm));
+      const body = buildSubmissionPayload(files, useLlm);
+      if (productOptions.length > 0) body[productField] = product;
+      if (includePurpose) body.purpose = purpose;
+      body.require_documents = true;
+      await onSubmit?.(body);
     } catch (e) {
       setError(e.message);
     } finally {
@@ -67,7 +87,7 @@ export default function RunSelector({ presets, onRunDemo, onSubmit }) {
       setError('Pick a sample data set first');
       return;
     }
-    await onRunDemo?.('insurance', dataId);
+    await onRunDemo?.(vertical, dataId);
   };
 
   return (
@@ -114,6 +134,26 @@ export default function RunSelector({ presets, onRunDemo, onSubmit }) {
             </div>
           )}
 
+          {productOptions.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="inline-flex flex-wrap rounded-lg border border-white/[0.08] p-0.5">
+                {productOptions.map((opt) => (
+                  <button key={opt.id} type="button" onClick={() => setProduct(opt.id)}
+                    className={`rounded-md px-2.5 py-1 text-[11px] font-medium transition ${
+                      product === opt.id ? 'bg-white/10 text-slate-100' : 'text-slate-500 hover:text-slate-300'
+                    }`}>
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+              {includePurpose && purposeOptions.length > 0 && (
+                <select value={purpose} onChange={(e) => setPurpose(e.target.value)} className="input-field w-auto text-xs" aria-label="Loan purpose">
+                  {purposeOptions.map((opt) => <option key={opt.id} value={opt.id}>{opt.label}</option>)}
+                </select>
+              )}
+            </div>
+          )}
+
           <div className="flex flex-wrap items-center gap-2">
             <label className="flex items-center gap-1.5 text-[10px] text-slate-500">
               <input type="checkbox" checked={useLlm} onChange={(e) => setUseLlm(e.target.checked)} className="rounded" />
@@ -134,20 +174,24 @@ export default function RunSelector({ presets, onRunDemo, onSubmit }) {
       )}
 
       {tab === 'connect' && (
-        <ConnectAndPull vertical="insurance" onRunJob={(jobId) => onSubmit?.({ _jobId: jobId })} />
+        onRunJob
+          ? <ConnectAndPull vertical={vertical} onRunJob={onRunJob} />
+          : onSubmit
+            ? <ConnectAndPull vertical={vertical} onRunJob={(jobId) => onSubmit?.({ _jobId: jobId })} onRunResult={onRunResult} />
+            : <ConnectAndPull vertical={vertical} onRunResult={onRunResult} />
       )}
 
       {tab === 'sample' && (
         <div className="space-y-3">
           <select value={dataId} onChange={(e) => setDataId(e.target.value)} className="input-field w-full text-xs">
             <option value="">Choose a sample data set…</option>
-            {samples.map((s) => (
+            {sampleList.map((s) => (
               <option key={s.id} value={s.id}>
-                {s.name} — {(s.insurance_line || 'commercial').replace(/_/g, ' ')}
+                {s.name} — {(s.insurance_line || s.product_line || s.product_type || 'commercial').replace(/_/g, ' ')}
               </option>
             ))}
           </select>
-          {dataId && <p className="text-[11px] text-slate-500">{samples.find((s) => s.id === dataId)?.description}</p>}
+          {dataId && <p className="text-[11px] text-slate-500">{sampleList.find((s) => s.id === dataId)?.description}</p>}
           <div className="flex justify-end">
             <button type="button" onClick={runSample} disabled={running || !dataId}
               className="btn-primary btn-sm text-xs disabled:opacity-40">

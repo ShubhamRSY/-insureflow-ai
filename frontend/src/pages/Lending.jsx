@@ -3,7 +3,7 @@ import { Wallet, RefreshCw, Package } from 'lucide-react';
 import { Badge, EmptyState } from '../components/ui';
 import { endpoints, fmtCurrency } from '../lib/api';
 import StageStrip, { stagesFromProgress } from '../components/StageStrip';
-import PackageSourceHub from '../components/PackageSourceHub';
+import RunSelector from '../components/RunSelector';
 
 function sampleResult(res) {
   return {
@@ -137,7 +137,7 @@ export default function LendingPage({ presets, demoResult, onRunDemo }) {
         {/* Left rail — loan package input */}
         <div className="lg:col-span-4">
           <div className="lg:sticky lg:top-20">
-            <PackageSourceHub
+            <RunSelector
               vertical="lending"
               samples={presets?.lending || []}
               productField="product_type"
@@ -158,15 +158,9 @@ export default function LendingPage({ presets, demoResult, onRunDemo }) {
                 { id: 'other', label: 'Other' },
               ]}
               purposeDefault="working_capital"
-              quickPaths={[
-                { label: 'Blue Harbor Bakery', path: 'simulated_documents/lending/blue_harbor_bakery' },
-                { label: 'Keller Logistics', path: 'simulated_documents/lending/keller_logistics' },
-              ]}
-              dropHint="Drop application, P&L, balance sheet, bank, credit, tax…"
               onSubmit={handleSubmit}
               onRunDemo={onRunDemo}
               onRunResult={handleConnectResult}
-              loading={submitting}
             />
           </div>
         </div>
