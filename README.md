@@ -110,7 +110,7 @@ Category-filtered connector hub with brand logos and pull-to-submit workflow —
 
 | Suite | Scope | Count |
 |-------|-------|-------|
-| **Unit tests** (`pytest`) | Parsers, agents, rating, workflow, underwriting, mortgage, lending, oracles, provenance, reconciliation, gateway, production integrations, security, SSO | **705** |
+| **Unit tests** (`pytest`) | Parsers, agents, rating, workflow, underwriting, mortgage, lending, oracles, provenance, reconciliation, gateway, production integrations, registry, ML, ZTA, security, SSO | **~1,000** |
 | **Skipped** | Pre-existing E2E timeout test (needs live LLM) | **1** |
 
 ```bash
@@ -276,59 +276,52 @@ docker compose up --build
 
 ## Architecture
 
+> Full end-to-end design (layers, flows, ZTA, ML, registry, data model, API map):
+> [`docs/architecture/architecture.md`](docs/architecture/architecture.md) · ZTA:
+> [`docs/ZERO_TOKEN_ARCHITECTURE.md`](docs/ZERO_TOKEN_ARCHITECTURE.md)
+
 ```
-┌──────────────────────────────────────────────────────────────────────┐
-│                         FastAPI Gateway                             │
-│  JWT Auth · RBAC (viewer→cuo) · Org-scoped Jobs · Dashboard (10pg) │
-└──────┬───────────────┬──────────────────┬───────────────┬───────────┘
-       │               │                  │               │
- ┌─────▼──────┐  ┌─────▼──────┐   ┌──────▼─────┐  ┌─────▼─────────┐
- │ INSURANCE  │  │ MORTGAGE   │   │  LENDING   │  │   REGISTRY    │
- │ Insurance  │  │ Mortgage   │   │ Lending    │  │ Model Version │
- │ Pipeline   │  │ Pipeline   │   │ Pipeline   │  │ Compliance RW │
- └─────┬──────┘  └─────┬──────┘   └──────┬─────┘  └───────┬───────┘
-       │               │                  │                │
-       └───────────────┴──────────────────┴────────────────┘
-                       │
-         ┌─────────────▼─────────────────────────────┐
-         │           INGESTION + OCR + REDACTION       │
-         │  ACORD · JSON · PDF · W-2 · Credit · App   │
-         │  PII Redaction · Entity Resolution          │
-         └─────────────┬─────────────────────────────┘
-                       │
-         ┌─────────────▼─────────────────────────────┐
-         │  Provenance Hierarchy → Reconciliation     │
-         │  (source-of-truth · cross-doc matching)    │
-         └─────────────┬─────────────────────────────┘
-                       │
-         ┌─────────────▼─────────────────────────────┐
-         │  Specialist Agents (ReAct + fallback)      │
-         │  Insurance: Risk · Loss Run · Compliance   │
-         │            Fraud · Triage · Reinsurance    │
-         │            Portfolio Risk · Oracle · RAG   │
-         │  Mortgage: Income · Credit · Asset         │
-         │            Collateral · Decision           │
-         │  Lending:  Credit Risk · Compliance        │
-         │            · Pricing                       │
-         └─────────────┬─────────────────────────────┘
-                       │
-         ┌─────────────▼─────────────────────────────┐
-         │  Decision + Rating                         │
-         │  Insurance: UW Memo → P&C Rating → Bind   │
-         │  Mortgage:  Memo → Loan Pricing → Rate Lock│
-         │  Lending:   Decision → Pricing → Adverse   │
-         │             Action Notice                  │
-         └─────────────┬─────────────────────────────┘
-                       │
-         ┌─────────────▼─────────────────────────────┐
-         │     Production Layer                       │
-         │  Licensed UW Sign-off · Bind/Loss Feedback │
-         │  Premium Audits · Material Adjustments     │
-         │  Fernet Encryption · Regulatory Audit ZIP  │
-         │  Broker Status Shares · Webhooks (both)    │
-         │  Celery Async Workers · Document Analytics │
-         └───────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────┐
+│  CLIENTS: SPA (/dashboard) · Landing (/) · CLI · MCP (SSE) · curl │
+└──────────────────────────────┬─────────────────────────────────────┘
+                               │ HTTPS · JWT Bearer · Gateway key
+┌──────────────────────────────▼─────────────────────────────────────┐
+│                    API GATEWAY (FastAPI)                            │
+│  JWT Auth · RBAC (viewer→cuo) · Org Scope · CORS/CSRF · Rate limit │
+├─────────────────────────────────────────────────────────────────────┤
+│  INTAKE & CONNECTIONS          VERTICAL PIPELINES                    │
+│  24 connectors (vertical-aware)  /pipeline/*   Insurance             │
+│  Connect & pull · email picker   /mortgage/*   Mortgage              │
+│  Draft bundles · Files/Samples   /lending/*    Lending               │
+└──────────────────────────────┬─────────────────────────────────────┘
+                               │
+┌──────────────────────────────▼─────────────────────────────────────┐
+│  SHARED INTELLIGENCE — ZTA router FIRST, then deterministic,       │
+│  then trained ML, then LLM (budgeted)                              │
+│  Parsers · Provenance · Reconcile · COPE/Rating · Rules · Agents   │
+│  RAG (pgvector) · ML models (8) · Vision · Knowledge               │
+└──────────────────────────────┬─────────────────────────────────────┘
+                               │
+┌──────────────────────────────▼─────────────────────────────────────┐
+│  WORKFLOW · AUDIT · GOVERNANCE                                      │
+│  Sign-off → Bind · Loss feedback · Renewal · Premium audit         │
+│  Fernet audit bundles · Regulatory ZIP · Broker shares · Webhooks  │
+│  Model & guideline REGISTRY (versioned, diffed, approved)          │
+└──────────────────────────────┬─────────────────────────────────────┘
+                               │
+┌──────────────────────────────▼─────────────────────────────────────┐
+│  INFRASTRUCTURE & EXTERNAL SYSTEMS                                  │
+│  Redis (jobs/broker) · PostgreSQL+pgvector (RAG) · Celery workers  │
+│  Registry store · Fernet keys · Docker/Compose · Railway           │
+│  Gateway → Oracles (CLUE/NCCI/A-PLUS/CAT/ISO) · Policy admin       │
+│           · CRM · Enterprise ops (loss control, claims, actuarial) │
+└────────────────────────────────────────────────────────────────────┘
 ```
+
+**Flow:** unified intake (Files / Connect & pull / Sample data → draft bundle) →
+vertical pipeline → ZTA-gated analysis (deterministic → ML → LLM) → decision
+memo + quote → workflow sign-off → bind → loss feedback / renewal → encrypted
+audit. Each pipeline result embeds a `zta_report` with token accounting.
 
 ---
 
