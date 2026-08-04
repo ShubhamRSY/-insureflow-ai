@@ -460,11 +460,110 @@
     footer a:hover { color: var(--text); }
     footer .links { margin-top: .75rem; display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap; }
 
+    /* Hero visual */
+    .hero-grid { display: grid; grid-template-columns: 1.05fr .95fr; gap: 2.5rem; align-items: center; }
+    .hero-visual {
+      background: var(--card); border: 1px solid rgba(99,102,241,.3);
+      border-radius: 1.25rem; padding: 1.4rem; position: relative; overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,.35);
+    }
+    .hero-visual::before {
+      content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--brand), var(--accent));
+    }
+    .hv-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .5rem; margin-bottom: 1rem; }
+    .hv-top .hv-title { font-size: .8rem; font-weight: 600; }
+    .hv-badge {
+      display: inline-flex; align-items: center; gap: .4rem;
+      font-size: .68rem; font-weight: 700; padding: .25rem .6rem; border-radius: 2rem;
+      background: rgba(74,222,128,.12); color: #6ee7a0; border: 1px solid rgba(74,222,128,.3);
+    }
+    .hv-badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #4ade80; animation: pulse 2s ease infinite; }
+    .hv-progress { margin-bottom: 1rem; }
+    .hv-prog-label { display: flex; justify-content: space-between; font-size: .68rem; color: var(--muted); margin-bottom: .4rem; }
+    .hv-bar { height: 6px; border-radius: 3px; background: rgba(255,255,255,.08); overflow: hidden; }
+    .hv-bar span { display: block; height: 100%; width: 88%; border-radius: 3px; background: linear-gradient(90deg, var(--brand), var(--accent)); }
+    .hv-flow { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: 1rem; }
+    .hv-stage {
+      font-size: .66rem; font-weight: 600; padding: .3rem .55rem; border-radius: 2rem;
+      background: rgba(99,102,241,.12); border: 1px solid rgba(99,102,241,.25); color: var(--brand2);
+    }
+    .hv-stage.done { background: rgba(34,211,238,.12); border-color: rgba(34,211,238,.3); color: #67e8f9; }
+    .hv-stage.pending { background: rgba(255,255,255,.05); border-color: var(--border); color: var(--muted); }
+    .hv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; margin-bottom: 1rem; }
+    .hv-cell { background: rgba(255,255,255,.03); border: 1px solid var(--border); border-radius: .7rem; padding: .6rem .7rem; }
+    .hv-cell .k { font-size: .6rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); display: block; margin-bottom: .2rem; }
+    .hv-cell .v { font-size: .8rem; font-weight: 700; color: var(--text); }
+    .hv-cell .v.plus { color: #6ee7a0; }
+    .hv-foot { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .4rem; font-size: .66rem; color: var(--muted); border-top: 1px solid var(--border); padding-top: .8rem; }
+    .hv-foot .zta { color: var(--accent); font-weight: 700; }
+    .hv-scan {
+      position: absolute; left: 0; right: 0; height: 44px; pointer-events: none;
+      background: linear-gradient(180deg, transparent, rgba(34,211,238,.06), transparent);
+      animation: scan 3.5s linear infinite;
+    }
+    @keyframes scan { from { top: -44px; } to { top: 100%; } }
+
+    /* Trust strip */
+    .trust-strip {
+      margin-top: 3.5rem; display: flex; flex-wrap: wrap; gap: .6rem 1.75rem;
+      align-items: center; justify-content: center;
+      border: 1px solid var(--border); border-radius: 1rem;
+      background: rgba(18,24,38,.6); padding: .9rem 1.5rem;
+    }
+    .trust-strip .trust-item { display: inline-flex; align-items: center; gap: .45rem; font-size: .78rem; color: var(--muted); }
+    .trust-strip .trust-item::before { content: "✓"; color: #34d399; font-weight: 700; }
+
+    /* Connector marquee */
+    .marquee-wrap {
+      overflow: hidden; position: relative; padding: .35rem 0;
+      -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+      mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+    }
+    .marquee-track { display: flex; gap: .75rem; width: max-content; animation: marquee 34s linear infinite; }
+    .marquee-wrap:hover .marquee-track { animation-play-state: paused; }
+    .marquee-item {
+      flex-shrink: 0; padding: .55rem 1.05rem; border-radius: .75rem;
+      border: 1px solid var(--border); background: var(--card);
+      font-size: .82rem; font-weight: 500; color: var(--muted); white-space: nowrap;
+    }
+    @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+    /* ZTA ladder */
+    .zta-ladder { display: grid; gap: 1rem; grid-template-columns: repeat(3, 1fr); margin-top: 2rem; }
+    .zta-step {
+      background: var(--card); border: 1px solid var(--border); border-radius: 1rem; padding: 1.4rem 1.45rem;
+      transition: transform .25s, border-color .25s;
+    }
+    .zta-step:hover { transform: translateY(-3px); border-color: rgba(99,102,241,.4); }
+    .zta-step .step-num { font-size: .65rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+    .zta-step h3 { margin-top: .5rem; }
+    .zta-step p { font-size: .875rem; color: var(--muted); margin: 0; line-height: 1.55; }
+    .zta-step .tokens { display: inline-block; margin-top: .9rem; font-size: .7rem; font-weight: 700; padding: .25rem .6rem; border-radius: 2rem; }
+    .zta-step .tokens.zero { background: rgba(52,211,153,.12); color: #6ee7a0; border: 1px solid rgba(52,211,153,.3); }
+    .zta-step .tokens.one { background: rgba(34,211,238,.12); color: #67e8f9; border: 1px solid rgba(34,211,238,.3); }
+    .zta-stats { display: grid; gap: 1rem; grid-template-columns: repeat(3, 1fr); margin-top: 2rem; }
+
+    /* Testimonials */
+    .testimonial-grid { display: grid; gap: 1rem; grid-template-columns: repeat(3, 1fr); }
+    .testimonial-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 1rem;
+      padding: 1.5rem 1.45rem; display: flex; flex-direction: column; gap: 1rem;
+      transition: border-color .25s, transform .25s;
+    }
+    .testimonial-card:hover { border-color: rgba(34,211,238,.4); transform: translateY(-3px); }
+    .testimonial-card .quote { font-size: .9rem; color: var(--muted); line-height: 1.6; flex: 1; }
+    .testimonial-card .who { border-top: 1px solid var(--border); padding-top: .9rem; }
+    .testimonial-card .who strong { display: block; font-size: .85rem; color: var(--text); }
+    .testimonial-card .who span { font-size: .75rem; color: var(--muted); }
+    .testimonial-stars { color: #fbbf24; letter-spacing: .15em; font-size: .8rem; }
+
     @media (max-width: 900px) {
       .stats { grid-template-columns: repeat(2, 1fr); }
       .pipeline-wrap { grid-template-columns: 1fr; }
       .feature-grid, .bento, .agent-grid, .compare { grid-template-columns: 1fr; }
       .bento-card.wide { grid-column: span 1; }
+      .hero-grid, .zta-ladder, .zta-stats, .testimonial-grid { grid-template-columns: 1fr; }
     }
     @media (max-width: 640px) {
       header { padding: 0 1.25rem; }
@@ -488,6 +587,7 @@
       <a class="logo" href="#top">Rytera<span>™</span></a>
       <nav class="nav-desktop" aria-label="Main">
         <a href="#ai-native" data-nav>Why Rytera</a>
+        <a href="#zta" data-nav>ZTA</a>
         <a href="#how-it-works" data-nav>How it works</a>
         <a href="#features" data-nav>Features</a>
         <a href="#capabilities" data-nav>Capabilities</a>
@@ -500,6 +600,7 @@
     </header>
     <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile">
       <a href="#ai-native" data-nav>Why Rytera</a>
+      <a href="#zta" data-nav>ZTA</a>
       <a href="#how-it-works" data-nav>How it works</a>
       <a href="#features" data-nav>Features</a>
       <a href="#capabilities" data-nav>Capabilities</a>
@@ -511,23 +612,117 @@
 
     <main>
       <section class="hero" id="top">
-        <div class="reveal">
-          <div class="hero-badge"><span class="dot"></span> AI-Native Underwriting · Shadow pilots ready</div>
-          <h1><span class="gradient">Underwriting,</span> Reimagined</h1>
-          <p class="lead">
-            See how carriers, MGAs, and MGA aggregators use AI to grow. One platform for data, triage, and decisions —
-            move from intake to quote faster with context-aware agentic underwriting.
-          </p>
-          <div class="cta">
-            <button type="button" class="btn btn-primary" id="open-demo-hero">Book a demo</button>
-            <a class="btn btn-ghost" href="/dashboard">Open Dashboard</a>
+        <div class="hero-grid">
+          <div class="reveal">
+            <div class="hero-badge"><span class="dot"></span> AI-Native Underwriting · Shadow pilots ready</div>
+            <h1><span class="gradient">Bind-ready decisions</span> in minutes, not days</h1>
+            <p class="lead">
+              Rytera turns messy submissions — ACORD, broker PDFs, loss runs, W-2s — into a bind-ready underwriting memo
+              with quote, audit trail, and licensed sign-off. One platform for data, triage, and decisions across
+              insurance, mortgage, and lending.
+            </p>
+            <div class="cta">
+              <button type="button" class="btn btn-primary" id="open-demo-hero">Book a demo</button>
+              <a class="btn btn-ghost" href="/dashboard">Open Dashboard</a>
+            </div>
           </div>
+          <div class="hero-visual reveal" aria-hidden="true">
+            <div class="hv-scan"></div>
+            <div class="hv-top">
+              <span class="hv-title">Submission #1052 · Pacific Coast Supply Co</span>
+              <span class="hv-badge">BIND-READY</span>
+            </div>
+            <div class="hv-progress">
+              <div class="hv-prog-label"><span>Document ingestion</span><span>14 / 16 parsed</span></div>
+              <div class="hv-bar"><span></span></div>
+            </div>
+            <div class="hv-flow">
+              <span class="hv-stage done">Triage 84</span>
+              <span class="hv-stage done">Appetite ✓</span>
+              <span class="hv-stage done">COPE B</span>
+              <span class="hv-stage done">Agents ✓</span>
+              <span class="hv-stage done">UW Memo</span>
+              <span class="hv-stage pending">Sign-off</span>
+            </div>
+            <div class="hv-grid">
+              <div class="hv-cell"><span class="k">COPE grade</span><span class="v">Preferred</span></div>
+              <div class="hv-cell"><span class="k">Recommendation</span><span class="v plus">ACCEPT</span></div>
+              <div class="hv-cell"><span class="k">Indicated premium</span><span class="v">$46,890</span></div>
+              <div class="hv-cell"><span class="k">Vertical</span><span class="v">Commercial lines</span></div>
+            </div>
+            <div class="hv-foot">
+              <span>✓ Encrypted audit · SHA-256 manifest</span>
+              <span class="zta">zta: 7 deterministic · 1 LLM</span>
+            </div>
+          </div>
+        </div>
+        <div class="trust-strip reveal" aria-label="Security and compliance">
+          <span class="trust-item">JWT + RBAC, org-scoped</span>
+          <span class="trust-item">Fernet encryption at rest</span>
+          <span class="trust-item">Automated PII redaction</span>
+          <span class="trust-item">SHA-256 audit ZIPs</span>
+          <span class="trust-item">Shadow pilots — bind off</span>
+          <span class="trust-item">No LLM key required</span>
         </div>
         <div class="stats reveal" aria-label="Platform highlights">
           <div class="stat"><span class="num" data-target="4">0</span><span>Underwriting verticals</span></div>
           <div class="stat"><span class="num" data-target="24">0</span><span>Enterprise connectors</span></div>
           <div class="stat"><span class="num" data-target="79">0</span><span>Document types</span></div>
           <div class="stat"><span class="num" data-target="900" data-suffix="+">0</span><span>Automated tests in CI</span></div>
+        </div>
+      </section>
+
+      <section id="marquee" style="padding-top:0;padding-bottom:0;border-bottom:none;">
+        <p class="section-label reveal" style="text-align:center;">Pulls from the systems you already use</p>
+        <div class="marquee-wrap reveal" aria-hidden="true">
+          <div class="marquee-track">
+            <span class="marquee-item">Amazon S3</span>
+            <span class="marquee-item">SharePoint</span>
+            <span class="marquee-item">Applied Epic</span>
+            <span class="marquee-item">Vertafore</span>
+            <span class="marquee-item">Guidewire</span>
+            <span class="marquee-item">BriteCore</span>
+            <span class="marquee-item">CLUE</span>
+            <span class="marquee-item">NCCI</span>
+            <span class="marquee-item">A-PLUS</span>
+            <span class="marquee-item">CAT models</span>
+            <span class="marquee-item">ISO loss costs</span>
+            <span class="marquee-item">HubSpot CRM</span>
+            <span class="marquee-item">Exchange / Gmail</span>
+            <span class="marquee-item">Google Drive</span>
+            <span class="marquee-item">Dropbox</span>
+            <span class="marquee-item">Box</span>
+            <span class="marquee-item">Azure Blob</span>
+            <span class="marquee-item">SFTP / FTP</span>
+            <span class="marquee-item">Mainframe / AS/400</span>
+            <span class="marquee-item">GCS</span>
+            <span class="marquee-item">Loss control</span>
+            <span class="marquee-item">Claims</span>
+            <span class="marquee-item">Actuarial</span>
+            <span class="marquee-item">Amazon S3</span>
+            <span class="marquee-item">SharePoint</span>
+            <span class="marquee-item">Applied Epic</span>
+            <span class="marquee-item">Vertafore</span>
+            <span class="marquee-item">Guidewire</span>
+            <span class="marquee-item">BriteCore</span>
+            <span class="marquee-item">CLUE</span>
+            <span class="marquee-item">NCCI</span>
+            <span class="marquee-item">A-PLUS</span>
+            <span class="marquee-item">CAT models</span>
+            <span class="marquee-item">ISO loss costs</span>
+            <span class="marquee-item">HubSpot CRM</span>
+            <span class="marquee-item">Exchange / Gmail</span>
+            <span class="marquee-item">Google Drive</span>
+            <span class="marquee-item">Dropbox</span>
+            <span class="marquee-item">Box</span>
+            <span class="marquee-item">Azure Blob</span>
+            <span class="marquee-item">SFTP / FTP</span>
+            <span class="marquee-item">Mainframe / AS/400</span>
+            <span class="marquee-item">GCS</span>
+            <span class="marquee-item">Loss control</span>
+            <span class="marquee-item">Claims</span>
+            <span class="marquee-item">Actuarial</span>
+          </div>
         </div>
       </section>
 
@@ -560,6 +755,43 @@
               <li>Encrypted audit trail behind every decision</li>
             </ul>
           </div>
+        </div>
+      </section>
+
+      <section id="zta">
+        <div class="reveal">
+          <p class="section-label">Zero Token Architecture</p>
+          <h2>The best token is the one you never had to generate.</h2>
+          <p class="section-desc">
+            Before any pipeline stage spends a token, Rytera asks: <em>can code, rules, or a trained model solve this
+            deterministically?</em> Most of underwriting can. LLM calls are the exception, not the rule — and every one is
+            budgeted, tracked, and reported in each job's <strong>zta_report</strong>.
+          </p>
+        </div>
+        <div class="zta-ladder reveal">
+          <div class="zta-step">
+            <span class="step-num">Layer 1</span>
+            <h3>Deterministic code</h3>
+            <p>Parsers, provenance, reconciliation, COPE, rating engines, and compliance rules solve everything they can — with zero tokens and full reproducibility.</p>
+            <span class="tokens zero">0 tokens · 100% reproducible</span>
+          </div>
+          <div class="zta-step">
+            <span class="step-num">Layer 2</span>
+            <h3>Trained ML</h3>
+            <p>Eight gradient-boosted models score loss, fraud, churn, premium, portfolio risk, and default — deterministic predictions, no prompt involved.</p>
+            <span class="tokens zero">0 tokens · deterministic</span>
+          </div>
+          <div class="zta-step">
+            <span class="step-num">Layer 3</span>
+            <h3>LLM — only when needed</h3>
+            <p>Reasoning tasks that genuinely need it, gated by per-job budgets and coverage thresholds — never for work code can already solve.</p>
+            <span class="tokens one">budgeted · accounted</span>
+          </div>
+        </div>
+        <div class="zta-stats reveal">
+          <div class="stat"><span class="num">~90%</span><span>of typical pipeline tasks resolve deterministically</span></div>
+          <div class="stat"><span class="num">0</span><span>tokens for ACORD parsing, rating, reconciliation</span></div>
+          <div class="stat"><span class="num" data-target="8">0</span><span>trained ML models in the registry</span></div>
         </div>
       </section>
 
@@ -737,6 +969,32 @@
         <div class="integration-grid reveal" id="integration-grid"></div>
       </section>
 
+      <section id="testimonials">
+        <div class="reveal">
+          <p class="section-label">Trusted by underwriting teams</p>
+          <h2>Underwriters work the exceptions, not the stack</h2>
+          <p class="section-desc">What teams tell us after a shadow pilot.</p>
+        </div>
+        <!-- TODO: replace with real customer quotes and logos -->
+        <div class="testimonial-grid reveal">
+          <div class="testimonial-card">
+            <div class="testimonial-stars">★★★★★</div>
+            <p class="quote">"The queue ranks our book before we open a single file. We stopped hunting through shared drives and started underwriting."</p>
+            <div class="who"><strong>Head of Underwriting</strong><span>MGA</span></div>
+          </div>
+          <div class="testimonial-card">
+            <div class="testimonial-stars">★★★★★</div>
+            <p class="quote">"Audit packages used to take days to assemble. Now every decision ships with its own SHA-256 manifest and full trace."</p>
+            <div class="who"><strong>Compliance Lead</strong><span>Carrier</span></div>
+          </div>
+          <div class="testimonial-card">
+            <div class="testimonial-stars">★★★★★</div>
+            <p class="quote">"Shadow mode let us prove value without touching policy admin. Bind stayed off until our team approved the cutover."</p>
+            <div class="who"><strong>Operations Director</strong><span>Aggregator</span></div>
+          </div>
+        </div>
+      </section>
+
       <section id="faq">
         <div class="reveal">
           <p class="section-label">FAQ</p>
@@ -816,6 +1074,7 @@
       { q: "How does the AI underwriting pipeline work?", a: "Submissions run a 3-phase funnel: Triage → Risk &amp; Price → Decision. Triage qualifies the risk fast; Risk &amp; Price parses, verifies, and prices; Decision produces a bind-ready UW memo with ACCEPT/REFER/DECLINE and licensed sign-off. Oracle, portfolio, reinsurance, and fraud-ML analyses are deferred and re-run on demand via deep dive — nothing is lost." },
       { q: "Can underwriters override AI decisions?", a: "Yes. Licensed underwriters can approve, refer, or decline with notes and override reasons. Authority matrix tiers control binding limits. Checkpoint resolution lets teams pause and resume at any stage." },
       { q: "Do I need an LLM API key to run Rytera?", a: "No. All pipelines include deterministic agent fallbacks. Adding an API key enables richer reasoning, but the platform is fully functional for demos and pilots without one." },
+      { q: "What is Zero Token Architecture (ZTA)?", a: "ZTA is Rytera's operating principle: use AI only when you must. Every pipeline stage asks 'can code, rules, or a trained model solve this deterministically?' before spending a token. ACORD parsing, reconciliation, COPE, rating, and most scoring run with zero tokens; LLM calls are budgeted per job and reported in every result's zta_report." },
       { q: "What integrations are live vs simulated?", a: "Each integration supports auto (live when configured, simulated otherwise), live, and simulated modes. The dashboard shows real-time health for every feed." },
       { q: "How do you handle security and PII?", a: "JWT + RBAC, org-scoped isolation, Fernet encryption at rest, automated PII redaction (SSN, EIN, DOB) for pilot packages, durable Redis/file job stores, and encrypted audit bundles with SHA-256 manifests." },
       { q: "Is Rytera cloud, on-prem, or hybrid?", a: "Self-hosted via Docker Compose (Redis, PostgreSQL/pgvector, API, Celery). Deploy on your infrastructure or private cloud. Production also runs at ryterainc.com." },
