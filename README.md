@@ -42,8 +42,8 @@ Modern SPA served at `/dashboard` (vanilla JS, modular CSS). Marketing landing p
 | **Overview** | Optional | Pipeline metrics, quick demos, recent activity, lending job counts |
 | **System Health** | No | Live 10-component diagnostics with LLM mode indicator |
 | **Insurance** | Yes | One-click demos, custom submission form, job queue, 9-stage pipeline visualization |
-| **Mortgage** | Yes | Loan package demos, custom submission, rate/DTI display, pipeline stages |
-| **Lending** | Yes | Consumer/commercial lending products and application results |
+| **Mortgage** | Yes | Insurance-style intake (Files / Connect & pull / Sample data), job queue, rate/DTI display, pipeline stages |
+| **Lending** | Yes | Insurance-style intake (Files / Connect & pull / Sample data), loan products, application results |
 | **Portfolio** | Yes | Concentration buckets, top lines of business, total exposure |
 | **Evaluations** | Yes | Quality gates, HITL review scores, drift detection, performance trends |
 | **UW Sign-off** | Yes | Licensed review queue — approve, refer, decline |
@@ -75,9 +75,9 @@ Bundled **integration gateway** at `/integrations` on the API server (deploy sam
 | `POST /pipeline/ecosystem/{bundle_id}/loss-control/dispatch` | Loss control dispatch |
 | `POST /pipeline/checkpoints/{bundle_id}/resolve` | Human checkpoint resolution |
 
-### Insurance Source Connectors
+### Source Connectors (shared across verticals)
 
-24 simulated enterprise integrations (all production-ready status in UI):
+24 simulated enterprise integrations (all production-ready status in UI). The same vertical-aware endpoints (`?vertical=insurance|mortgage|lending`) power a unified **Connect & pull** intake hub on the Insurance, Mortgage, and Lending pages — connector grid with brand logos, email picker, and draft-bundle accumulation:
 
 - Cloud storage (S3, Azure Blob, GCS)
 - Document management (SharePoint, Box, Dropbox, Google Drive)
@@ -86,7 +86,7 @@ Bundled **integration gateway** at `/integrations` on the API server (deploy sam
 - Legacy systems (Mainframe FTP, AS/400, SFTP)
 - Local folder and packaged examples (Pacific Coast, Northwind, Sample)
 
-Category-filtered connector hub with brand logos and pull-to-submit workflow.
+Category-filtered connector hub with brand logos and pull-to-submit workflow — rendered as the **Connect & pull** tab inside the shared **Files / Connect & pull / Sample data** intake widget used by every vertical page.
 
 ### Infrastructure & Operations
 
@@ -469,8 +469,18 @@ All agents have a **deterministic fallback** when no LLM key is configured. The 
 | `/api/demo/presets` | GET | None | Available demo presets (Pacific Coast, Johnson, Midwest) |
 | `/api/demo/insurance/{preset_id}` | POST | underwriter | Run insurance demo from preset |
 | `/api/demo/mortgage/{preset_id}` | POST | underwriter | Run mortgage demo from preset |
-| `/api/insurance/sources` | GET | None | List 24 insurance source connectors |
-| `/api/insurance/sources/{source_id}/pull` | POST | underwriter | Pull documents from a connector |
+| `/api/insurance/sources` | GET | None | List 24 source connectors (`?vertical=insurance\|mortgage\|lending`) |
+| `/api/insurance/sources/{source_id}/pull` | POST | underwriter | Pull documents from a connector (vertical-aware) |
+
+**Draft bundles** (multi-source intake, used by the Connect & pull hub):
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/pipeline/bundles` | GET/POST | List / create draft bundles |
+| `/pipeline/bundles/{bundle_id}` | GET | Draft bundle detail + documents |
+| `/pipeline/bundles/{bundle_id}/documents` | POST | Add pulled documents to a draft |
+| `/pipeline/bundles/{bundle_id}/documents/{doc_id}` | DELETE | Remove a document from a draft |
+| `/pipeline/bundles/{bundle_id}/run` | POST | Run the draft through `?vertical=insurance\|mortgage\|lending` (insurance/mortgage → job, lending → inline result) |
 
 **Submit with PDF upload:**
 
@@ -667,8 +677,8 @@ Open **http://localhost:8002/dashboard** after starting the API. Production: **h
 | **Overview** | Optional | Dashboard metrics, quick demos, recent activity |
 | **System Health** | No | Live 10-component status with LLM mode indicator |
 | **Insurance** | Yes | Pacific Coast demo, custom submission, 9-stage pipeline visualization, COPE scores |
-| **Mortgage** | Yes | Johnson / Midwest demos, job submission, pipeline stages |
-| **Lending** | Yes | Consumer/commercial lending products and results |
+| **Mortgage** | Yes | Insurance-style intake, Johnson / Midwest demos, pipeline stages |
+| **Lending** | Yes | Insurance-style intake, consumer/commercial products and results |
 | **Portfolio** | Yes | Concentration buckets, top lines, total exposure |
 | **Evaluations** | Yes | Quality gates, HITL reviews, drift detection, performance trends |
 | **UW Sign-off** | Yes | Licensed review queue — approve, refer, decline |
