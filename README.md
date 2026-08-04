@@ -281,41 +281,64 @@ docker compose up --build
 > [`docs/ZERO_TOKEN_ARCHITECTURE.md`](docs/ZERO_TOKEN_ARCHITECTURE.md)
 
 ```
-┌────────────────────────────────────────────────────────────────────┐
-│  CLIENTS: SPA (/dashboard) · Landing (/) · CLI · MCP (SSE) · curl │
-└──────────────────────────────┬─────────────────────────────────────┘
-                               │ HTTPS · JWT Bearer · Gateway key
-┌──────────────────────────────▼─────────────────────────────────────┐
-│                    API GATEWAY (FastAPI)                            │
-│  JWT Auth · RBAC (viewer→cuo) · Org Scope · CORS/CSRF · Rate limit │
-├─────────────────────────────────────────────────────────────────────┤
-│  INTAKE & CONNECTIONS          VERTICAL PIPELINES                    │
-│  24 connectors (vertical-aware)  /pipeline/*   Insurance             │
-│  Connect & pull · email picker   /mortgage/*   Mortgage              │
-│  Draft bundles · Files/Samples   /lending/*    Lending               │
-└──────────────────────────────┬─────────────────────────────────────┘
-                               │
-┌──────────────────────────────▼─────────────────────────────────────┐
-│  SHARED INTELLIGENCE — ZTA router FIRST, then deterministic,       │
-│  then trained ML, then LLM (budgeted)                              │
-│  Parsers · Provenance · Reconcile · COPE/Rating · Rules · Agents   │
-│  RAG (pgvector) · ML models (8) · Vision · Knowledge               │
-└──────────────────────────────┬─────────────────────────────────────┘
-                               │
-┌──────────────────────────────▼─────────────────────────────────────┐
-│  WORKFLOW · AUDIT · GOVERNANCE                                      │
-│  Sign-off → Bind · Loss feedback · Renewal · Premium audit         │
-│  Fernet audit bundles · Regulatory ZIP · Broker shares · Webhooks  │
-│  Model & guideline REGISTRY (versioned, diffed, approved)          │
-└──────────────────────────────┬─────────────────────────────────────┘
-                               │
-┌──────────────────────────────▼─────────────────────────────────────┐
-│  INFRASTRUCTURE & EXTERNAL SYSTEMS                                  │
-│  Redis (jobs/broker) · PostgreSQL+pgvector (RAG) · Celery workers  │
-│  Registry store · Fernet keys · Docker/Compose · Railway           │
-│  Gateway → Oracles (CLUE/NCCI/A-PLUS/CAT/ISO) · Policy admin       │
-│           · CRM · Enterprise ops (loss control, claims, actuarial) │
-└────────────────────────────────────────────────────────────────────┘
+                     ┌─────────────────────────────────────────────┐
+                     │               CLIENTS                       │
+                     │  SPA (/dashboard) · Landing (/) · CLI ·     │
+                     │  MCP (SSE) · curl                           │
+                     └─────────────────────┬───────────────────────┘
+                                           │ HTTPS · JWT · Gateway key
+                                           ▼
+                     ┌─────────────────────────────────────────────┐
+                     │            API GATEWAY (FastAPI)            │
+                     │  JWT Auth · RBAC · Org Scope · CORS/CSRF   │
+                     │  Rate limiting · Static files /dashboard   │
+                     └─────────────────────┬───────────────────────┘
+                                           │
+                         ┌─────────────────┴─────────────────┐
+                         ▼                                   ▼
+         ┌────────────────────────────┐      ┌────────────────────────────┐
+         │    INTAKE & CONNECTIONS    │      │    VERTICAL PIPELINES       │
+         │                            │      │                            │
+         │  • 24 connectors           │      │  /pipeline/*   Insurance   │
+         │  • Connect & pull hub      │      │  /mortgage/*   Mortgage    │
+         │  • Email picker            │      │  /lending/*    Lending     │
+         │  • Draft bundles           │      │  /api/demo/*   Demos       │
+         │  • Files / Sample data     │      │                            │
+         └───────────────┬────────────┘      └──────────────┬────────────┘
+                         │                                   │
+                         └───────────────┬───────────────────┘
+                                         ▼
+                     ┌─────────────────────────────────────────────┐
+                     │          SHARED INTELLIGENCE                │
+                     │  ZTA router FIRST — deterministic, then     │
+                     │  trained ML, then LLM (budgeted)            │
+                     │                                             │
+                     │  Parsers · Provenance · Reconciliation      │
+                     │  COPE / Rating engines · Compliance rules   │
+                     │  Specialist agents · RAG (pgvector)         │
+                     │  ML models (8) · Vision · Knowledge         │
+                     └─────────────────────┬───────────────────────┘
+                                           ▼
+                     ┌─────────────────────────────────────────────┐
+                     │        WORKFLOW · AUDIT · GOVERNANCE        │
+                     │                                             │
+                     │  UW sign-off → Bind → Loss feedback         │
+                     │  Renewal · Premium audits · Broker shares   │
+                     │  Webhooks (HMAC) · Fernet audit bundles     │
+                     │  Regulatory ZIP (SHA-256)                   │
+                     │  Model & guideline REGISTRY                 │
+                     └─────────────────────┬───────────────────────┘
+                                           ▼
+                     ┌─────────────────────────────────────────────┐
+                     │    INFRASTRUCTURE & EXTERNAL SYSTEMS        │
+                     │                                             │
+                     │  Redis (jobs/broker) · PostgreSQL+pgvector  │
+                     │  Celery workers · Registry store · Fernet   │
+                     │  Docker/Compose · Railway deployment        │
+                     │                                             │
+                     │  Gateway → Oracles (CLUE/NCCI/A-PLUS/CAT)   │
+                     │          → Policy admin · CRM · Ops feeds   │
+                     └─────────────────────────────────────────────┘
 ```
 
 **Flow:** unified intake (Files / Connect & pull / Sample data → draft bundle) →
