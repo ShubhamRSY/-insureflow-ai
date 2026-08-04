@@ -561,6 +561,12 @@ class TestJWTAdversarial:
 class TestAuthStoreAdversarial:
     """Breaking auth user store with adversarial conditions."""
 
+    @pytest.fixture(autouse=True)
+    def _file_only_store(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Force file-only behaviour so a local Redis from .env never leaks in."""
+        monkeypatch.delenv("REDIS_URL", raising=False)
+        monkeypatch.delenv("CELERY_BROKER_URL", raising=False)
+
     def test_corrupt_json_file_recovery(self, tmp_path: Path) -> None:
         from insureflow.auth.store import UserStore
 

@@ -609,6 +609,12 @@ class TestParserAdversarial:
 class TestAuthStoreAdversarial:
     """Try to corrupt the user store."""
 
+    @pytest.fixture(autouse=True)
+    def _file_only_store(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Force file-only behaviour so a local Redis from .env never leaks in."""
+        monkeypatch.delenv("REDIS_URL", raising=False)
+        monkeypatch.delenv("CELERY_BROKER_URL", raising=False)
+
     def test_corrupt_json_file_resets_gracefully(self, tmp_path: Any) -> None:
         from insureflow.auth.store import UserStore
 
