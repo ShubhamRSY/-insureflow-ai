@@ -80,28 +80,21 @@ export default function MortgagePage({ presets, jobs, onRunDemo, onOpenJob, onRu
         </div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-12">
-        {/* Left rail — loan package input */}
-        <div className="lg:col-span-4">
-          <div className="lg:sticky lg:top-20">
-            <RunSelector
-              vertical="mortgage"
-              samples={presets?.mortgage || []}
-              productOptions={[
-                { id: 'residential_mortgage', label: 'Residential' },
-                { id: 'commercial_mortgage', label: 'Commercial' },
-              ]}
-              productDefault="residential_mortgage"
-              onSubmit={handleSubmit}
-              onRunDemo={onRunDemo}
-              onRunJob={onRunConnect}
-            />
-          </div>
-        </div>
+      <div className="space-y-6">
+        <RunSelector
+          vertical="mortgage"
+          samples={presets?.mortgage || []}
+          productOptions={[
+            { id: 'residential_mortgage', label: 'Residential' },
+            { id: 'commercial_mortgage', label: 'Commercial' },
+          ]}
+          productDefault="residential_mortgage"
+          onSubmit={handleSubmit}
+          onRunDemo={onRunDemo}
+          onRunJob={onRunConnect}
+        />
 
-        {/* Right column — recent runs + samples */}
-        <div className="lg:col-span-8 space-y-6">
-          <div className="glass-card overflow-hidden">
+        <div className="glass-card overflow-hidden">
         <div className="border-b border-white/[0.06] px-6 py-4">
           <h3 className="font-semibold">Job Queue</h3>
         </div>
@@ -177,7 +170,6 @@ export default function MortgagePage({ presets, jobs, onRunDemo, onOpenJob, onRu
           </div>
         </div>
       )}
-      </div>
     </div>
     </div>
   );

@@ -133,41 +133,34 @@ export default function LendingPage({ presets, demoResult, onRunDemo }) {
         </div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-12">
-        {/* Left rail — loan package input */}
-        <div className="lg:col-span-4">
-          <div className="lg:sticky lg:top-20">
-            <RunSelector
-              vertical="lending"
-              samples={presets?.lending || []}
-              productField="product_type"
-              productOptions={[
-                { id: 'business_term_loan', label: 'Business term' },
-                { id: 'sba_7a', label: 'SBA 7A' },
-                { id: 'cre', label: 'Commercial RE' },
-                { id: 'personal_term', label: 'Personal' },
-                { id: 'auto', label: 'Auto' },
-              ]}
-              productDefault="business_term_loan"
-              includePurpose
-              purposeOptions={[
-                { id: 'working_capital', label: 'Working capital' },
-                { id: 'equipment', label: 'Equipment' },
-                { id: 'real_estate', label: 'Real estate' },
-                { id: 'debt_consolidation', label: 'Debt consolidation' },
-                { id: 'other', label: 'Other' },
-              ]}
-              purposeDefault="working_capital"
-              onSubmit={handleSubmit}
-              onRunDemo={onRunDemo}
-              onRunResult={handleConnectResult}
-            />
-          </div>
-        </div>
+      <div className="space-y-6">
+        <RunSelector
+          vertical="lending"
+          samples={presets?.lending || []}
+          productField="product_type"
+          productOptions={[
+            { id: 'business_term_loan', label: 'Business term' },
+            { id: 'sba_7a', label: 'SBA 7A' },
+            { id: 'cre', label: 'Commercial RE' },
+            { id: 'personal_term', label: 'Personal' },
+            { id: 'auto', label: 'Auto' },
+          ]}
+          productDefault="business_term_loan"
+          includePurpose
+          purposeOptions={[
+            { id: 'working_capital', label: 'Working capital' },
+            { id: 'equipment', label: 'Equipment' },
+            { id: 'real_estate', label: 'Real estate' },
+            { id: 'debt_consolidation', label: 'Debt consolidation' },
+            { id: 'other', label: 'Other' },
+          ]}
+          purposeDefault="working_capital"
+          onSubmit={handleSubmit}
+          onRunDemo={onRunDemo}
+          onRunResult={handleConnectResult}
+        />
 
-        {/* Right column — recent decisions + samples */}
-        <div className="lg:col-span-8 space-y-6">
-          {results.length > 0 ? (
+        {results.length > 0 ? (
             <div className="glass-card overflow-hidden">
               <div className="border-b border-white/[0.06] px-5 py-3">
                 <h3 className="text-sm font-semibold">Recent Decisions</h3>
@@ -234,7 +227,6 @@ export default function LendingPage({ presets, demoResult, onRunDemo }) {
               </div>
             </div>
           )}
-        </div>
       </div>
     </div>
   );
