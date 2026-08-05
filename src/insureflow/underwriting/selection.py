@@ -12,6 +12,14 @@ Selection expense matters on both sides: strict selection (APS, paramedical
 exams, deep loss-run review) costs money per risk, so a thin book or small
 premium can be overwhelmed by underwriting cost; broad selection cheapens
 acquisition but admits risk that a small book cannot absorb.
+
+The model is closed with an experience-rating feedback loop: each class's
+realized loss ratio (incurred losses vs earned premium, blended toward the
+expected loss ratio by limited-fluctuation credibility) is compared with what
+rating assumed. Worse-than-expected experience tightens selection thresholds
+and scales substandard loadings upward; better-than-expected experience relaxes
+them. The loop trusts a class only as its volume converges on the law of large
+numbers, so a thin book's volatile loss ratio cannot swing standards.
 """
 
 from __future__ import annotations
@@ -67,6 +75,17 @@ class SelectionStandardsConfig(BaseModel):
     min_substandard_loading: float = 15.0
     max_substandard_loading: float = 50.0
     max_intra_class_cv: float = 0.15
+    # Experience-rating feedback loop
+    expected_loss_ratio_by_class: dict[str, float] = Field(
+        default_factory=lambda: {
+            RiskClass.PREFERRED.value: 0.45,
+            RiskClass.STANDARD.value: 0.60,
+            RiskClass.SUBSTANDARD.value: 0.70,
+        }
+    )
+    credibility_full_policies: float = 30.0  # N policies → full credibility (Z = sqrt(N/30))
+    min_observed_policies_for_feedback: int = 5
+    experience_threshold_sensitivity: float = 0.5  # penalty 1.0±0.2 → ±0.10 threshold shift
 
     def expense_per_risk(self, tier: SelectionTier) -> float:
         return {
@@ -74,6 +93,38 @@ class SelectionStandardsConfig(BaseModel):
             SelectionTier.BALANCED: self.balanced_expense_per_risk,
             SelectionTier.BROAD: self.broad_expense_per_risk,
         }[tier]
+
+
+class ClassExperience(BaseModel):
+    """Realized vs expected loss experience for a single underwriting class."""
+
+    class_name: str
+    policy_count: int = 0
+    earned_premium: float = 0.0
+    incurred_loss: float = 0.0
+    loss_ratio: float = 0.0
+    expected_loss_ratio: float = 0.0
+    credibility: float = 0.0  # 0 = too few risks to trust, 1 = fully credible
+    penalty_factor: float = 1.0  # > 1 = worse than rating assumed
+
+
+class BookExperience(BaseModel):
+    """Book-wide realized vs expected loss experience (the feedback loop).
+
+    ``penalty_factor`` is the premium-weighted blend of the per-class penalty
+    factors (each already credibility-scaled), so a thin class's noisy loss
+    ratio cannot distort the book posture.
+    """
+
+    policy_count: int = 0
+    earned_premium: float = 0.0
+    incurred_loss: float = 0.0
+    loss_ratio: float = 0.0
+    expected_loss_ratio: float = 0.0
+    credibility: float = 0.0
+    penalty_factor: float = 1.0
+    status: str = "unknown"  # unknown | better | expected | worse
+    classes: dict[str, ClassExperience] = Field(default_factory=dict)
 
 
 class SelectionCandidate(BaseModel):
@@ -114,6 +165,7 @@ class SelectionAssessment(BaseModel):
     selection_expense_ratio: float = 0.0
     candidate_expense_usd: float = 0.0
     substandard_loading_pct: float = 0.0  # premium loading when substandard is admitted
+    experience: BookExperience | None = None  # realized-vs-expected feedback in effect
     rationale: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
 
@@ -167,6 +219,128 @@ def _class_dispersion(risk_scores: Sequence[float]) -> tuple[float, dict[str, fl
     return round(max_cv, 4), per_class
 
 
+def _credibility(policy_count: float, config: SelectionStandardsConfig) -> float:
+    """Limited-fluctuation credibility: full at ``credibility_full_policies`` risks."""
+    if policy_count <= 0:
+        return 0.0
+    return min(1.0, math.sqrt(policy_count / config.credibility_full_policies))
+
+
+def _penalty(credibility: float, loss_ratio: float, expected_loss_ratio: float) -> float:
+    """Penalty factor blending realized experience toward expectation by credibility."""
+    if credibility <= 0 or expected_loss_ratio <= 0:
+        return 1.0
+    return min(max(1.0 + credibility * (loss_ratio / expected_loss_ratio - 1.0), 0.6), 1.6)
+
+
+def compute_book_experience(
+    premiums: Sequence[float],
+    incurred_losses: Sequence[float],
+    risk_scores: Sequence[float],
+    config: SelectionStandardsConfig | None = None,
+) -> BookExperience:
+    """Compare realized loss experience against rating's expectation per class.
+
+    Only policies whose losses have actually been reported belong in this call
+    (``PortfolioPolicy.loss_data_available``); an empty or sub-threshold book
+    returns an ``unknown`` experience with credibility 0 and penalty 1.0 so the
+    loop is inert until there is data to trust.
+    """
+    cfg = config or SelectionStandardsConfig()
+
+    buckets: dict[str, list[float]] = {}
+    for premium, loss, score in zip(premiums, incurred_losses, risk_scores):
+        class_name = class_for_score(score).value
+        bucket = buckets.setdefault(class_name, [0.0, 0.0, 0.0])
+        bucket[0] += float(premium)
+        bucket[1] += float(loss)
+        bucket[2] += 1.0
+
+    if not buckets:
+        return BookExperience(policy_count=0, status="unknown")
+
+    classes: dict[str, ClassExperience] = {}
+    credible_penalties: list[tuple[float, float]] = []  # (penalty_factor, premium)
+    observed_premium = 0.0
+    observed_loss = 0.0
+    observed_count = 0
+    expected_premium = 0.0
+
+    for class_name, (premium, loss, count) in sorted(buckets.items()):
+        expected = cfg.expected_loss_ratio_by_class.get(class_name, 0.6)
+        loss_ratio = loss / premium if premium > 0 else 0.0
+        cred = _credibility(count, cfg) if count >= cfg.min_observed_policies_for_feedback else 0.0
+        penalty = _penalty(cred, loss_ratio, expected)
+        classes[class_name] = ClassExperience(
+            class_name=class_name,
+            policy_count=int(count),
+            earned_premium=round(premium, 2),
+            incurred_loss=round(loss, 2),
+            loss_ratio=round(loss_ratio, 4),
+            expected_loss_ratio=expected,
+            credibility=round(cred, 4),
+            penalty_factor=round(penalty, 4),
+        )
+        observed_premium += premium
+        observed_loss += loss
+        observed_count += int(count)
+        expected_premium += expected * premium
+        if cred > 0:
+            credible_penalties.append((penalty, premium))
+
+    book_penalty = 1.0
+    if credible_penalties:
+        total_weight = sum(w for _, w in credible_penalties)
+        book_penalty = sum(p * w for p, w in credible_penalties) / total_weight if total_weight else 1.0
+
+    book_credibility = _credibility(observed_count, cfg)
+    if book_credibility <= 0 or book_penalty == 1.0:
+        status = "unknown"
+    elif book_penalty >= 1.05:
+        status = "worse"
+    elif book_penalty <= 0.95:
+        status = "better"
+    else:
+        status = "expected"
+
+    return BookExperience(
+        policy_count=observed_count,
+        earned_premium=round(observed_premium, 2),
+        incurred_loss=round(observed_loss, 2),
+        loss_ratio=round(observed_loss / observed_premium, 4) if observed_premium else 0.0,
+        expected_loss_ratio=round(expected_premium / observed_premium, 4) if observed_premium else 0.0,
+        credibility=round(book_credibility, 4),
+        penalty_factor=round(book_penalty, 4),
+        status=status,
+        classes=classes,
+    )
+
+
+def apply_experience_to_config(
+    config: SelectionStandardsConfig,
+    experience: BookExperience,
+) -> SelectionStandardsConfig:
+    """Return an adjusted config reflecting realized book loss experience.
+
+    Worse-than-expected experience (penalty > 1) tightens selection by raising
+    the predictability thresholds needed to reach the relaxed tiers; better
+    experience lowers them. The shift is credibility-scaled inside
+    ``compute_book_experience`` and capped so tier ordering is preserved. With
+    no trustworthy data the config is returned unchanged.
+    """
+    if experience.credibility <= 0 or experience.penalty_factor == 1.0:
+        return config
+    shift = (experience.penalty_factor - 1.0) * config.experience_threshold_sensitivity
+    strict_threshold = min(max(config.strict_threshold + shift, 0.05), config.balanced_threshold - 0.05)
+    balanced_threshold = min(max(config.balanced_threshold + shift, config.strict_threshold + 0.05), 0.95)
+    return config.model_copy(
+        update={
+            "strict_threshold": round(strict_threshold, 4),
+            "balanced_threshold": round(balanced_threshold, 4),
+        }
+    )
+
+
 def build_book_snapshot(
     policy_count: int,
     total_tiv: float,
@@ -212,6 +386,7 @@ def assess_selection(
     candidate: SelectionCandidate,
     book: BookSnapshot,
     config: SelectionStandardsConfig | None = None,
+    experience: BookExperience | None = None,
 ) -> SelectionAssessment:
     """Gate a candidate risk against the current book posture.
 
@@ -220,6 +395,11 @@ def assess_selection(
     declined. A large homogeneous book relaxes the gate and lets substandard
     risks in on loading. Selection expense is also priced: strict evidence
     gathering must not eat a disproportionate share of the written premium.
+
+    When realized loss experience is supplied (the feedback loop), the
+    candidate's class penalty factor scales its substandard loading: a class
+    that has actually lost more than rating assumed is admitted only on a
+    heavier loading, and a worse-than-expected class is flagged for tightening.
     """
     cfg = config or SelectionStandardsConfig()
     tier = book.tier
@@ -264,9 +444,28 @@ def assess_selection(
         rationale.append(f"Candidate {candidate.risk_class.value} fits {tier.value} selection standards (book predictability {book.predictability:.0%}).")
 
     substandard_loading_pct = 0.0
+    class_experience = None
+    if experience is not None:
+        class_experience = experience.classes.get(candidate.risk_class.value)
     if candidate.risk_class == RiskClass.SUBSTANDARD and action in (UWDecision.ACCEPT, UWDecision.CONDITIONAL_ACCEPT):
         loading = (candidate.risk_score - 0.5) * 100.0
+        if class_experience is not None and class_experience.penalty_factor != 1.0:
+            loading *= class_experience.penalty_factor
+            rationale.append(
+                f"Class {class_experience.class_name} realized loss ratio {class_experience.loss_ratio:.0%} "
+                f"vs expected {class_experience.expected_loss_ratio:.0%} (credibility "
+                f"{class_experience.credibility:.0%}) scales the base loading by "
+                f"{class_experience.penalty_factor:.2f}."
+            )
         substandard_loading_pct = round(min(max(loading, cfg.min_substandard_loading), cfg.max_substandard_loading), 1)
+
+    if class_experience is not None and class_experience.penalty_factor > 1.0:
+        warnings.append(
+            f"Class {class_experience.class_name} is running {class_experience.loss_ratio:.0%} loss ratio "
+            f"vs expected {class_experience.expected_loss_ratio:.0%} (penalty "
+            f"{class_experience.penalty_factor:.2f}) — realized experience is worse than rating assumed; "
+            "tighten selection and reprice the class."
+        )
 
     if candidate.risk_class == RiskClass.SUBSTANDARD and action != UWDecision.DECLINE:
         if substandard_loading_pct > 0:
@@ -288,6 +487,7 @@ def assess_selection(
         selection_expense_ratio=round(expense_ratio, 4),
         candidate_expense_usd=round(candidate_expense, 2),
         substandard_loading_pct=substandard_loading_pct,
+        experience=experience,
         rationale=rationale,
         warnings=warnings,
     )

@@ -74,6 +74,45 @@ dispersion exceeds the guideline (0.15) the agent flags **class purity eroded**
 — weaker risks are riding on the class average rate and should be re-rated or
 reclassified.
 
+## Experience-rating feedback loop
+
+The doctrine closes with the Underwriter's Goal: *the insurer must compare the
+actual losses of each hypothetical pool with the expected losses it priced* and
+let that experience steer selection. This is implemented as a per-class
+feedback loop:
+
+- Every `PortfolioPolicy` records its realized loss experience
+  (`incurred_loss`, `experience_periods`) and is flagged
+  `loss_data_available` once losses are reported (via
+  `PortfolioStore.record_loss_development`). Policies with no reported
+  experience do not enter the loop.
+- `compute_book_experience` buckets the observed policies by class
+  (preferred / standard / substandard), computes the realized loss ratio
+  (incurred ÷ earned premium) against the class's **expected** loss ratio
+  from `SelectionStandardsConfig.expected_loss_ratio_by_class`, and blends the
+  deviation toward expectation by **limited-fluctuation credibility**
+  `Z = sqrt(N / credibility_full_policies)` (default: full credibility at
+  30 policies). Below `min_observed_policies_for_feedback` (5), a class is not
+  trusted and cannot move the book.
+- The credibility-scaled **penalty factor**
+  `P = 1 + Z * (actual/expected − 1)` (clamped to 0.6–1.6) drives two levers:
+
+  | Experience | Penalty | Effect |
+  |-----------|---------|--------|
+  | worse than expected | P > 1 | selection thresholds **raised** (`apply_experience_to_config` tightens `strict_threshold`/`balanced_threshold`, so a broad book can demote to balanced or strict) and the candidate's substandard loading is **scaled up** by the class penalty |
+  | better than expected | P < 1 | thresholds **lowered** (a book can promote toward broad) and substandard loadings scale down toward the base |
+  | no / too little data | P = 1 | loop inert — config unchanged |
+
+- The penalty is premium-weighted across credible classes for the book posture,
+  so one thin class's volatile loss ratio cannot swing the whole book.
+- The agent surfaces the feedback as an `Experience feedback:` finding
+  (worse = HIGH, better = LOW, too-little-data = LOW) and the pipeline summary
+  exposes the full `BookExperience` under `selection_experience`.
+
+Combined with the substandard loading section above, this is the full circle:
+selection admits or rejects, pricing loads what is admitted, and realized
+losses feed back to tighten or relax the gate for the next submission.
+
 ## Pipeline integration
 
 - The `SelectionStandardsAgent` runs in the portfolio stage (stage 7) of
@@ -93,7 +132,11 @@ All thresholds live in `SelectionStandardsConfig`:
 `reference_size`, `cv_cap`, `strict_threshold`, `balanced_threshold`,
 per-tier `*_expense_per_risk`, `max_selection_expense_ratio`,
 `max_candidate_expense_ratio`, `min_volume_for_law_of_averages`, `target_size`,
-`min_substandard_loading`, `max_substandard_loading`, `max_intra_class_cv`.
+`min_substandard_loading`, `max_substandard_loading`, `max_intra_class_cv`,
+plus the experience-loop knobs `expected_loss_ratio_by_class`,
+`credibility_full_policies`, `min_observed_policies_for_feedback`, and
+`experience_threshold_sensitivity`.
 Tests in `tests/test_selection_standards.py` document the expected behavior at
-each tier, for the expense flags, for the substandard loading, and for
-intra-class dispersion.
+each tier, for the expense flags, for the substandard loading, for intra-class
+dispersion, and for the experience-rating feedback loop (credibility scaling,
+tier tightening/relaxation, and loading scaling by class penalty).

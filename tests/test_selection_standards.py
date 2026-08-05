@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import math
 from typing import Any
+
+import pytest
 
 from insureflow.agents.selection_standards_agent import SelectionStandardsAgent
 from insureflow.models.agents import UWDecision
@@ -18,9 +21,11 @@ from insureflow.underwriting.selection import (
     SelectionCandidate,
     SelectionStandardsConfig,
     SelectionTier,
+    apply_experience_to_config,
     assess_selection,
     build_book_snapshot,
     coefficient_of_variation,
+    compute_book_experience,
 )
 
 
@@ -139,6 +144,91 @@ class TestSelectionEngine:
         assert any("Intra-class" in w for w in result.warnings)
 
 
+class TestBookExperience:
+    def test_experience_unknown_without_data(self) -> None:
+        exp = compute_book_experience([], [], [])
+        assert exp.status == "unknown"
+        assert exp.credibility == 0.0
+        assert exp.penalty_factor == 1.0
+
+    def test_experience_better_when_clean(self) -> None:
+        exp = compute_book_experience([10_000] * 30, [4_000] * 30, [0.5] * 30)
+        assert exp.credibility == 1.0
+        assert exp.status == "better"
+        assert exp.penalty_factor < 1.0
+        assert exp.loss_ratio == pytest.approx(0.4)
+        assert exp.expected_loss_ratio == pytest.approx(0.6)
+        assert exp.classes["standard"].loss_ratio == pytest.approx(0.4)
+
+    def test_experience_worse_when_lossy(self) -> None:
+        exp = compute_book_experience([10_000] * 30, [9_000] * 30, [0.5] * 30)
+        assert exp.status == "worse"
+        assert exp.penalty_factor > 1.0
+        # 1 + credibility * (0.9 / 0.6 - 1) = 1.5
+        assert exp.penalty_factor == pytest.approx(1.5)
+
+    def test_experience_credibility_scales_thin_book(self) -> None:
+        exp = compute_book_experience([10_000] * 6, [10_000] * 6, [0.5] * 6)
+        assert exp.credibility == pytest.approx(math.sqrt(6 / 30), abs=1e-3)
+        assert exp.penalty_factor > 1.0
+        assert exp.penalty_factor < 1.5
+
+    def test_experience_ignores_subthreshold_classes(self) -> None:
+        exp = compute_book_experience([10_000] * 3, [10_000] * 3, [0.5] * 3)
+        assert exp.classes["standard"].credibility == 0.0
+        assert exp.classes["standard"].penalty_factor == 1.0
+        assert exp.penalty_factor == 1.0
+        assert exp.status == "unknown"
+
+    def test_experience_groups_by_class(self) -> None:
+        premiums = [10_000] * 40
+        losses = [8_000] * 40
+        scores = ([0.35] * 20) + ([0.75] * 20)  # preferred + substandard, no standard
+        exp = compute_book_experience(premiums, losses, scores)
+        assert set(exp.classes) == {"preferred", "substandard"}
+        assert exp.classes["preferred"].expected_loss_ratio == pytest.approx(0.45)
+        assert exp.classes["substandard"].expected_loss_ratio == pytest.approx(0.70)
+
+    def test_apply_experience_tightens_on_worse(self) -> None:
+        cfg = SelectionStandardsConfig()
+        exp = compute_book_experience([10_000] * 30, [9_000] * 30, [0.5] * 30)
+        adjusted = apply_experience_to_config(cfg, exp)
+        assert adjusted.strict_threshold > cfg.strict_threshold
+        assert adjusted.balanced_threshold > cfg.balanced_threshold
+        assert adjusted.strict_threshold < adjusted.balanced_threshold
+
+    def test_apply_experience_relaxes_on_better(self) -> None:
+        cfg = SelectionStandardsConfig()
+        exp = compute_book_experience([10_000] * 30, [3_000] * 30, [0.5] * 30)
+        adjusted = apply_experience_to_config(cfg, exp)
+        assert adjusted.strict_threshold < cfg.strict_threshold
+        assert adjusted.balanced_threshold < cfg.balanced_threshold
+
+    def test_apply_experience_noop_without_data(self) -> None:
+        cfg = SelectionStandardsConfig()
+        exp = compute_book_experience([], [], [])
+        assert apply_experience_to_config(cfg, exp) is cfg
+
+    def test_substandard_loading_scaled_by_class_experience(self) -> None:
+        _, premiums, tivs = _book(80)
+        book = build_book_snapshot(80, sum(tivs), sum(premiums), premiums, tivs)
+        assert book.tier == SelectionTier.BROAD
+        exp = compute_book_experience([10_000] * 80, [9_000] * 80, [0.75] * 80)
+        candidate = SelectionCandidate(tiv=1_000_000, premium=40_000, risk_class=RiskClass.SUBSTANDARD, risk_score=0.7)
+        result = assess_selection(candidate, book, experience=exp)
+        # base loading 20% scaled up by the lossy substandard class penalty
+        assert result.substandard_loading_pct > 20.0
+        assert result.experience is exp
+
+    def test_worse_class_experience_warns(self) -> None:
+        _, premiums, tivs = _book(80)
+        book = build_book_snapshot(80, sum(tivs), sum(premiums), premiums, tivs)
+        exp = compute_book_experience([10_000] * 80, [9_000] * 80, [0.75] * 80)
+        candidate = SelectionCandidate(tiv=1_000_000, premium=40_000, risk_class=RiskClass.SUBSTANDARD, risk_score=0.7)
+        result = assess_selection(candidate, book, experience=exp)
+        assert any("worse than rating assumed" in w for w in result.warnings)
+
+
 class TestSelectionStandardsAgent:
     def test_agent_accepts_clean_standard_candidate(self) -> None:
         agent = SelectionStandardsAgent(portfolio=_FakePortfolio(), config=SelectionStandardsConfig())
@@ -186,29 +276,94 @@ class TestSelectionStandardsAgent:
         gate = [f for f in result.findings if f.title.startswith("Selection gate")]
         assert gate and gate[0].source_value == UWDecision.DECLINE.value
 
+    def test_agent_loop_inactive_without_loss_data(self) -> None:
+        agent = SelectionStandardsAgent(portfolio=_FakePortfolio(count=30), config=SelectionStandardsConfig())
+        bundle = _make_bundle(premium=50_000, tiv=1_500_000, naics="452210")
+        result = agent.run(bundle, org_id="default", candidate_risk_score=0.7)
+        exp = agent.last_experience
+        assert exp is not None and exp.status == "unknown" and exp.policy_count == 0
+        assert result.recommendation is not None
+        assert result.recommendation.suggested_premium_modification == 20.0
+
+    def test_agent_tightens_tier_on_worse_experience(self) -> None:
+        agent = SelectionStandardsAgent(
+            portfolio=_FakePortfolio(count=80, observed_count=80, loss_ratio=1.0, risk_score=0.75),
+            config=SelectionStandardsConfig(),
+        )
+        bundle = _make_bundle(premium=50_000, tiv=1_500_000, naics="452210")
+        result = agent.run(bundle, org_id="default", candidate_risk_score=0.8)
+        exp = agent.last_experience
+        assert exp is not None and exp.status == "worse"
+        assert agent.last_assessment is not None
+        # 80-policy homogeneous book would be BROAD; worse experience demotes it.
+        assert agent.last_assessment.book.tier == SelectionTier.BALANCED
+        gate = [f for f in result.findings if f.title.startswith("Selection gate")]
+        assert gate and gate[0].source_value == UWDecision.CONDITIONAL_ACCEPT.value
+        assert any(f.title.startswith("Experience feedback: book losing more") for f in result.findings)
+
+    def test_agent_loading_scaled_by_worse_class_experience(self) -> None:
+        agent = SelectionStandardsAgent(
+            portfolio=_FakePortfolio(count=80, observed_count=80, loss_ratio=1.0, risk_score=0.75),
+            config=SelectionStandardsConfig(),
+        )
+        bundle = _make_bundle(premium=50_000, tiv=1_500_000, naics="452210")
+        result = agent.run(bundle, org_id="default", candidate_risk_score=0.7)
+        assert result.recommendation is not None
+        mod = result.recommendation.suggested_premium_modification
+        assert mod is not None
+        # base 20% scaled by the substandard class penalty (>1) → above the base
+        assert mod > 20.0
+
+    def test_agent_records_better_experience(self) -> None:
+        agent = SelectionStandardsAgent(
+            portfolio=_FakePortfolio(count=40, observed_count=40, loss_ratio=0.2),
+            config=SelectionStandardsConfig(),
+        )
+        bundle = _make_bundle(premium=50_000, tiv=1_500_000, naics="452210")
+        result = agent.run(bundle, org_id="default", candidate_risk_score=0.7)
+        exp = agent.last_experience
+        assert exp is not None and exp.status == "better"
+        assert any(f.title.startswith("Experience feedback: book performing better") for f in result.findings)
+
 
 class _FakePortfolio:
-    """Read-only stub matching PortfolioStore.list_policies, avoiding disk I/O."""
+    """Read-only stub matching PolicySource.list_policies, avoiding disk I/O."""
 
-    def __init__(self, count: int = 4) -> None:
+    def __init__(
+        self,
+        count: int = 4,
+        observed_count: int = 0,
+        loss_ratio: float = 0.0,
+        risk_score: float = 0.5,
+    ) -> None:
         self._count = count
+        self._observed_count = observed_count
+        self._loss_ratio = loss_ratio
+        self._risk_score = risk_score
 
     def list_policies(self, org_id: str = "default") -> list[Any]:
         from insureflow.portfolio.store import PortfolioPolicy
 
-        return [
-            PortfolioPolicy(
-                policy_id=f"pol-{i}",
-                bundle_id="book",
-                org_id=org_id,
-                naics_code="452210",
-                state="FL",
-                tiv=2_000_000 * (i + 1),
-                premium=10_000 * (i + 1),
-                is_active=True,
+        policies = []
+        for i in range(self._count):
+            observed = i < self._observed_count
+            premium = 10_000 * (i + 1)
+            policies.append(
+                PortfolioPolicy(
+                    policy_id=f"pol-{i}",
+                    bundle_id="book",
+                    org_id=org_id,
+                    naics_code="452210",
+                    state="FL",
+                    tiv=2_000_000 * (i + 1),
+                    premium=premium,
+                    risk_score=self._risk_score,
+                    incurred_loss=premium * self._loss_ratio if observed else 0.0,
+                    loss_data_available=observed,
+                    is_active=True,
+                )
             )
-            for i in range(self._count)
-        ]
+        return policies
 
 
 def _make_bundle(

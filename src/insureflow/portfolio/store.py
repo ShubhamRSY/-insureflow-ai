@@ -4,11 +4,22 @@ import json
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any, Protocol
 from uuid import uuid4
 
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
+
+
+class PolicySource(Protocol):
+    """Structural interface for anything that can return the written book.
+
+    ``PortfolioStore`` satisfies it; tests substitute a lightweight stub so the
+    selection agent can be exercised without disk I/O.
+    """
+
+    def list_policies(self, org_id: str = "default") -> list[Any]: ...
 
 
 class PortfolioPolicy(BaseModel):
@@ -28,6 +39,12 @@ class PortfolioPolicy(BaseModel):
     construction_type: str = ""
     written_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
     is_active: bool = True
+    # Realized loss experience feeding the experience-rating feedback loop.
+    # loss_data_available distinguishes "no losses have occurred yet" from
+    # "losses have not been reported / policy is too new to have experience".
+    incurred_loss: float = 0.0
+    experience_periods: float = 1.0
+    loss_data_available: bool = False
 
     @property
     def geographic_region(self) -> str:
@@ -219,6 +236,22 @@ class PortfolioStore:
     def add_policy(self, policy: PortfolioPolicy) -> None:
         self._policies[policy.policy_id] = policy
         self._persist()
+
+    def record_loss_development(self, policy_id: str, incurred_loss: float, experience_periods: float = 1.0) -> PortfolioPolicy | None:
+        """Feed realized losses back so the experience loop can re-rate the class.
+
+        Marks the policy as having reported experience (``loss_data_available``)
+        so ``compute_book_experience`` can compare actual vs expected loss ratios
+        per underwriting class.
+        """
+        policy = self._policies.get(policy_id)
+        if policy is None:
+            return None
+        policy.incurred_loss = incurred_loss
+        policy.experience_periods = experience_periods
+        policy.loss_data_available = True
+        self._persist()
+        return policy
 
     def list_policies(self, org_id: str = "default") -> list[PortfolioPolicy]:
         return [p for p in self._policies.values() if p.org_id == org_id and p.is_active]

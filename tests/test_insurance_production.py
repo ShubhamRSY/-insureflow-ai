@@ -196,6 +196,9 @@ class TestInsurancePipelineIntegration:
         selection = result.get("selection_standards") or {}
         assert selection.get("agent_type") == "selection_standards"
         assert selection.get("findings")
+        # Experience-rating feedback loop surfaces in the summary even when the
+        # store has no reported losses yet (inert, status "unknown").
+        assert result.get("selection_experience", {}).get("status") in ("unknown", "better", "expected", "worse")
 
     def test_funnel_deferral_and_deep_dive(self, audit_store: AuditStore) -> None:
         acord_path = EXAMPLES / "pacific_coast_acord.xml"

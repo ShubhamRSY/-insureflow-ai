@@ -59,6 +59,37 @@ def test_portfolio_store_persists(tmp_path: Path) -> None:
     assert any(p.policy_id == "p1" for p in store2.list_policies())
 
 
+def test_portfolio_record_loss_development_feeds_feedback_loop(tmp_path: Path) -> None:
+    from insureflow.portfolio.store import PortfolioPolicy, PortfolioStore
+
+    path = tmp_path / "policies.json"
+    store = PortfolioStore(path=path)
+    store.add_policy(
+        PortfolioPolicy(
+            policy_id="p1",
+            bundle_id="b1",
+            insured_name="Acme",
+            state="TX",
+            naics_code="531120",
+            tiv=1_000_000,
+            premium=10_000,
+            risk_score=0.75,
+        )
+    )
+
+    recorded = store.record_loss_development("p1", incurred_loss=9_000, experience_periods=1.0)
+    assert recorded is not None
+    assert recorded.incurred_loss == 9_000
+    assert recorded.loss_data_available is True
+
+    reloaded = PortfolioStore(path=path)
+    policy = next(p for p in reloaded.list_policies() if p.policy_id == "p1")
+    assert policy.incurred_loss == 9_000
+    assert policy.loss_data_available is True
+
+    assert store.record_loss_development("missing", incurred_loss=1.0) is None
+
+
 def test_ml_load_training_csv(tmp_path: Path) -> None:
     from insureflow.ml.features import DEFAULT_FEATURE_NAMES
     from insureflow.ml.training import load_training_csv

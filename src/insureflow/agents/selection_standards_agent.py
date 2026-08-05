@@ -6,6 +6,12 @@ keeps selection standards strict (substandard risks referred or declined); a
 large homogeneous book can relax the gate and admit substandard risks on a
 loaded rate. Selection expense is also surfaced so evidence-gathering cost does
 not quietly erode margin.
+
+The agent closes the doctrine's experience-rating feedback loop: realized loss
+experience per class (from ``PortfolioPolicy.loss_data_available`` policies) is
+compared with rating's expectation and credibility-blended. Worse-than-expected
+experience tightens the selection thresholds and scales substandard loadings;
+better-than-expected experience relaxes them.
 """
 
 from __future__ import annotations
@@ -15,14 +21,17 @@ from typing import Any
 from insureflow.agents.base import BaseAgent
 from insureflow.models.agents import AgentType, Finding, Recommendation, RiskSeverity, UWDecision
 from insureflow.models.submissions import SubmissionBundle
-from insureflow.portfolio.store import PortfolioStore, get_portfolio_store
+from insureflow.portfolio.store import PolicySource, get_portfolio_store
 from insureflow.underwriting.selection import (
+    BookExperience,
     RiskClass,
     SelectionAssessment,
     SelectionCandidate,
     SelectionStandardsConfig,
+    apply_experience_to_config,
     assess_selection,
     build_book_snapshot,
+    compute_book_experience,
 )
 
 _HAZARD_NAICS_PREFIXES = (
@@ -50,36 +59,55 @@ class SelectionStandardsAgent(BaseAgent):
 
     def __init__(
         self,
-        portfolio: PortfolioStore | None = None,
+        portfolio: PolicySource | None = None,
         config: SelectionStandardsConfig | None = None,
     ) -> None:
         super().__init__()
         self._portfolio = portfolio or get_portfolio_store()
         self._config = config or SelectionStandardsConfig()
         self._last_assessment: SelectionAssessment | None = None
+        self._last_experience: BookExperience | None = None
 
     def _analyze(self, bundle: SubmissionBundle, **kwargs: Any) -> None:
         org_id = kwargs.get("org_id", "default")
         candidate = self._candidate_from_bundle(bundle, kwargs.get("candidate_risk_score"))
 
         policies = self._portfolio.list_policies(org_id)
+        risk_scores = [getattr(p, "risk_score", 0.5) for p in policies]
+
+        # Experience feedback loop: only policies whose losses have actually been
+        # reported enter the realized-vs-expected comparison.
+        observed = [p for p in policies if getattr(p, "loss_data_available", False) or getattr(p, "incurred_loss", 0.0) > 0]
+        experience = compute_book_experience(
+            premiums=[p.premium for p in observed],
+            incurred_losses=[getattr(p, "incurred_loss", 0.0) for p in observed],
+            risk_scores=[getattr(p, "risk_score", 0.5) for p in observed],
+            config=self._config,
+        )
+        self._last_experience = experience
+        cfg = apply_experience_to_config(self._config, experience)
+
         book = build_book_snapshot(
             policy_count=len(policies),
             total_tiv=sum(p.tiv for p in policies),
             total_premium=sum(p.premium for p in policies),
             premiums=[p.premium for p in policies],
             tivs=[p.tiv for p in policies],
-            config=self._config,
-            risk_scores=[getattr(p, "risk_score", 0.5) for p in policies],
+            config=cfg,
+            risk_scores=risk_scores,
         )
 
-        assessment = assess_selection(candidate, book, self._config)
+        assessment = assess_selection(candidate, book, cfg, experience)
         self._last_assessment = assessment
         self._record_findings(assessment)
 
     @property
     def last_assessment(self) -> SelectionAssessment | None:
         return self._last_assessment
+
+    @property
+    def last_experience(self) -> BookExperience | None:
+        return self._last_experience
 
     def _build_recommendation(self) -> Recommendation | None:
         """Carry the substandard loading into pricing when the risk is admitted."""
@@ -183,6 +211,53 @@ class SelectionStandardsAgent(BaseAgent):
                     category="selection_standards",
                 )
             )
+
+        exp = assessment.experience
+        if exp is not None and exp.policy_count > 0:
+            if exp.status == "worse":
+                self._add_finding(
+                    Finding(
+                        title="Experience feedback: book losing more than rating assumed",
+                        description=(
+                            f"Realized loss ratio {exp.loss_ratio:.0%} vs expected "
+                            f"{exp.expected_loss_ratio:.0%} (penalty {exp.penalty_factor:.2f}, credibility "
+                            f"{exp.credibility:.0%}) — selection thresholds tightened and substandard "
+                            "loadings scaled up until experience converges back to expectation."
+                        ),
+                        severity=RiskSeverity.HIGH,
+                        category="selection_standards",
+                        source_value=exp.penalty_factor,
+                        evidence=[f"{k}: {v.policy_count} policies, {v.loss_ratio:.0%} vs {v.expected_loss_ratio:.0%} expected" for k, v in exp.classes.items()],
+                    )
+                )
+            elif exp.status == "better":
+                self._add_finding(
+                    Finding(
+                        title="Experience feedback: book performing better than expected",
+                        description=(
+                            f"Realized loss ratio {exp.loss_ratio:.0%} vs expected "
+                            f"{exp.expected_loss_ratio:.0%} (penalty {exp.penalty_factor:.2f}, credibility "
+                            f"{exp.credibility:.0%}) — selection thresholds relaxed; continue monitoring."
+                        ),
+                        severity=RiskSeverity.LOW,
+                        category="selection_standards",
+                        source_value=exp.penalty_factor,
+                        evidence=[f"{k}: {v.policy_count} policies, {v.loss_ratio:.0%} vs {v.expected_loss_ratio:.0%} expected" for k, v in exp.classes.items()],
+                    )
+                )
+            elif exp.policy_count < self._config.min_observed_policies_for_feedback:
+                self._add_finding(
+                    Finding(
+                        title="Experience feedback: too little loss data to trust",
+                        description=(
+                            f"Only {exp.policy_count} reported policy-years of loss experience — below the "
+                            f"{self._config.min_observed_policies_for_feedback} minimum, so the feedback loop "
+                            "is inert until volume accumulates."
+                        ),
+                        severity=RiskSeverity.LOW,
+                        category="selection_standards",
+                    )
+                )
 
         if assessment.selection_expense_ratio > self._config.max_selection_expense_ratio:
             self._add_finding(

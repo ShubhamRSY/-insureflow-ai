@@ -1009,6 +1009,9 @@ class InsurancePipeline:
             sel_rec = selection_result.recommendation
             if sel_rec and sel_rec.suggested_premium_modification:
                 summary["selection_loading_pct"] = sel_rec.suggested_premium_modification
+            exp = self.selection_standards.last_experience
+            if exp is not None:
+                summary["selection_experience"] = exp.model_dump()
 
         # Add visual analysis data if available
         if visual_profile:
