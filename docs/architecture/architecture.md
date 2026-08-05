@@ -651,10 +651,68 @@ CI gates (`.github/workflows/ci.yml`): `ruff check .` · `ruff format --check .`
 | **Registry-gated model changes** | Every model/guideline promotion is versioned, diffed, and approved |
 | **Redis-backed auth** | Survives container redeploys; JSON fallback when Redis is absent |
 | **Single intake widget** | One Files / Connect & pull / Sample data UX across every vertical |
+| **Celery-first async dispatch** | Heavy pipeline swarms run on worker processes, never an API event loop; falls back to in-process when the broker is down |
+| **Locked atomic file stores** | Cross-process `flock` + temp-file rename so multi-worker file fallbacks never corrupt or drop records |
 
 ---
 
-## 20. Related Documentation
+## 20. Scaling & Operations
+
+### 20.1 Multi-worker web
+
+The API runs multiple uvicorn workers (`WEB_CONCURRENCY`, default CPU count capped
+at 4) so one event loop is never a single point of failure. `entrypoint.sh`
+picks up `PORT`/`WEB_CONCURRENCY`; `railway.json` pins the same entrypoint and a
+`/health` healthcheck with ON_FAILURE restart.
+
+### 20.2 Async dispatch
+
+Pipeline runs default to Celery when a broker (`REDIS_URL` / `CELERY_BROKER_URL`)
+is configured and reachable, so the 13-agent swarm never blocks the API. When the
+broker is down the request degrades gracefully to in-process background tasks.
+
+- `INSURANCE_USE_CELERY=1|0` — force the mode (compose already sets `=1`).
+- `INSURANCE_IN_PROCESS=1` — force in-process (local debugging, tiny deploys).
+- Dispatch logic: `src/insureflow/tasks/dispatch.py`; celery tasks under
+  `src/insureflow/tasks/` on the `agents`, `pipeline`, and `mortgage` queues.
+
+The Celery worker is a separate service (compose `worker`,
+`celery -A insureflow.tasks.celery_app worker -Q agents,pipeline,mortgage`) —
+scale it independently of the API.
+
+### 20.3 Durable stores under concurrency
+
+- **Job store** — Redis (`JOB_STORE_BACKEND=redis`), falling back to a locked
+  file store; production refuses in-memory stores.
+- **User store** — Redis-first, JSON fallback; both paths now write under a
+  cross-process `flock` with atomic temp-file rename
+  (`src/insureflow/storage/lock.py`).
+- **Registry / audit / metrics** — JSON/JSONL writes go through the same atomic
+  primitives; the concurrency tests assert **zero** dropped records.
+
+### 20.4 Metrics across replicas
+
+Business metrics (fill rate, override rate, cycle time) default to JSONL. Set
+`METRICS_BACKEND=redis` (compose/Railway already do) so every worker aggregates
+the shared append log in Redis and each `get_*` read refreshes from it — no
+per-worker partial dashboards.
+
+### 20.5 Load testing
+
+`python scripts/ops/load_test.py --base http://localhost:8000 --requests 500 --concurrency 20`
+reports p50/p95/p99 latency, throughput, and error rate against `/health`,
+`/`, and `/auth/status`. Run it after scaling changes; exit code is non-zero
+when the error rate exceeds the budget.
+
+### 20.6 Redis
+
+Redis is the shared state for the broker and job store. In production use a
+managed, persistent Redis (Railway Redis, ElastiCache, Upstash) — not the
+ephemeral in-memory default — so job status survives restarts.
+
+---
+
+## 21. Related Documentation
 
 - [`docs/ZERO_TOKEN_ARCHITECTURE.md`](../ZERO_TOKEN_ARCHITECTURE.md) — ZTA specification
 - [`docs/README.md`](../README.md) — platform guide (README)

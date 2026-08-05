@@ -298,3 +298,75 @@ class TestPipelineMetrics:
             assert "cycle_time" in result
             assert result["fill_rate"]["filled"] == 1
             assert result["override_rate"]["overrides"] == 1
+
+
+# ---------------------------------------------------------------------------
+# Redis-backed aggregation (multi-replica metrics)
+# ---------------------------------------------------------------------------
+
+
+class _FakeRedis:
+    def __init__(self) -> None:
+        self._lists: dict[str, list[str]] = {}
+
+    def ping(self) -> bool:
+        return True
+
+    def rpush(self, key: str, value: str) -> int:
+        self._lists.setdefault(key, []).append(value)
+        return len(self._lists[key])
+
+    def lrange(self, key: str, start: int, end: int) -> list[str]:
+        return list(self._lists.get(key, []))
+
+
+class TestRedisBackedMetrics:
+    """Two tracker instances sharing one Redis see the same aggregated records."""
+
+    @staticmethod
+    def _enable_redis(monkeypatch: Any) -> _FakeRedis:
+        fake = _FakeRedis()
+        monkeypatch.setenv("METRICS_BACKEND", "redis")
+        import insureflow.analytics.metrics as metrics_mod
+
+        monkeypatch.setattr(metrics_mod, "_redis_client", lambda: fake)
+        return fake
+
+    def test_fill_rate_shared_across_replicas(self, monkeypatch: Any, tmp_path: Any) -> None:
+        self._enable_redis(monkeypatch)
+        path = Path(tmp_path) / "fill_rate.jsonl"
+        a = FillRateTracker(persist_path=path)
+        b = FillRateTracker(persist_path=path)
+
+        a.record_field("naics_code", filled=True, bundle_id="b-1")
+        a.record_field("state", filled=False, bundle_id="b-2")
+
+        assert b.get_fill_rate()["total"] == 2
+        assert b.get_fill_rate("state")["fill_rate"] == 0.0
+        assert a.get_fill_rate("naics_code")["fill_rate"] == 1.0
+
+    def test_override_rate_shared_across_replicas(self, monkeypatch: Any, tmp_path: Any) -> None:
+        self._enable_redis(monkeypatch)
+        path = Path(tmp_path) / "override_rate.jsonl"
+        a = OverrideRateTracker(persist_path=path)
+        b = OverrideRateTracker(persist_path=path)
+
+        a.record_sign_off("b-1", "approve", "approve", signed_by="uw1")
+        a.record_sign_off("b-2", "approve", "decline", signed_by="uw1")
+
+        assert b.get_override_rate()["total"] == 2
+        assert b.get_override_rate()["override_rate"] == 0.5
+
+    def test_cycle_time_shared_across_replicas(self, monkeypatch: Any, tmp_path: Any) -> None:
+        self._enable_redis(monkeypatch)
+        path = Path(tmp_path) / "cycle_time.jsonl"
+        a = CycleTimeTracker(persist_path=path)
+        b = CycleTimeTracker(persist_path=path)
+
+        a.start_pipeline("b-1")
+        a.start_stage("b-1", "ingest")
+        time.sleep(0.005)
+        a.finish_pipeline("b-1")
+
+        assert b.get_stats()["total_runs"] == 1
+        assert "ingest" in b.get_stats()["avg_stage_durations"]

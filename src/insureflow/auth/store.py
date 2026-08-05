@@ -3,11 +3,13 @@ from __future__ import annotations
 import json
 import logging
 import os
+import threading
 from collections.abc import ItemsView
 from pathlib import Path
 from typing import Any
 
 from insureflow.auth.models import User
+from insureflow.storage.lock import FileLock, atomic_write
 
 logger = logging.getLogger(__name__)
 
@@ -36,11 +38,16 @@ class UserStore:
 
     def __init__(self, path: Path | None = None) -> None:
         self._users: dict[str, User] = {}
+        self._lock = threading.RLock()
         self._redis = _get_redis_client()
         self._path = path or _DEFAULT_PATH
         self.load()
 
     def load(self) -> None:
+        with self._lock:
+            self._load_locked()
+
+    def _load_locked(self) -> None:
         if self._redis:
             try:
                 raw = self._redis.get(_REDIS_KEY)
@@ -54,14 +61,19 @@ class UserStore:
 
         if self._path.exists():
             try:
-                raw = json.loads(self._path.read_text(encoding="utf-8"))
-                self._users = {k: User.model_validate(v) for k, v in raw.items()}
+                with FileLock(str(self._path) + ".lock"):
+                    raw = self._path.read_text(encoding="utf-8")
+                self._users = {k: User.model_validate(v) for k, v in json.loads(raw).items()}
             except (json.JSONDecodeError, OSError, ValueError):
                 self._users = {}
         else:
             self._users = {}
 
     def save(self) -> None:
+        with self._lock:
+            self._save_locked()
+
+    def _save_locked(self) -> None:
         payload = {k: v.model_dump(mode="json") for k, v in self._users.items()}
         data = json.dumps(payload, indent=2)
 
@@ -72,8 +84,8 @@ class UserStore:
                 logger.warning("Redis save failed: %s", exc)
 
         try:
-            self._path.parent.mkdir(parents=True, exist_ok=True)
-            self._path.write_text(data, encoding="utf-8")
+            with FileLock(str(self._path) + ".lock"):
+                atomic_write(self._path, data)
         except OSError:
             pass
 
@@ -93,23 +105,25 @@ class UserStore:
         return self._users.items()
 
     def __setitem__(self, username: str, user: User) -> None:
-        self._users[username] = user
-        self.save()
+        with self._lock:
+            self._users[username] = user
+            self._save_locked()
 
     def clear(self) -> int:
-        count = len(self._users)
-        self._users.clear()
-        if self._redis:
-            try:
-                self._redis.delete(_REDIS_KEY)
-            except Exception:
-                pass
-        if self._path.exists():
-            try:
-                self._path.unlink()
-            except OSError:
-                pass
-        return count
+        with self._lock:
+            count = len(self._users)
+            self._users.clear()
+            if self._redis:
+                try:
+                    self._redis.delete(_REDIS_KEY)
+                except Exception:
+                    pass
+            if self._path.exists():
+                try:
+                    self._path.unlink()
+                except OSError:
+                    pass
+            return count
 
 
 _user_store = UserStore()

@@ -808,8 +808,19 @@ class TestMLEndpoints:
         from fastapi.testclient import TestClient
 
         from insureflow.api import app
+        from insureflow.auth import Role
+        from insureflow.auth.jwt import create_access_token
+        from insureflow.auth.models import User
+        from insureflow.auth.store import clear_user_store, get_user_store
 
-        self.client = TestClient(app, raise_server_exceptions=False)
+        clear_user_store()
+        get_user_store()["ml-test"] = User(username="ml-test", hashed_password="x", role=Role.ADMIN, org_id="acme")
+        token = create_access_token({"sub": "ml-test", "role": Role.ADMIN.value, "org_id": "acme"})
+        self.client = TestClient(
+            app,
+            headers={"Authorization": f"Bearer {token}"},
+            raise_server_exceptions=False,
+        )
 
     def test_ml_status(self) -> None:
         resp = self.client.get("/ml/status")

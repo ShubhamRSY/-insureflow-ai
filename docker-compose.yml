@@ -24,6 +24,9 @@ x-api-env: &api-env
   AWS_REGION: ${AWS_REGION:-us-east-1}
   AWS_SECRETS_ARN: ${AWS_SECRETS_ARN:-}
   PYTHONPATH: /app
+  WEB_CONCURRENCY: ${WEB_CONCURRENCY:-2}
+  METRICS_BACKEND: ${METRICS_BACKEND:-redis}
+  INSURANCE_USE_CELERY: ${INSURANCE_USE_CELERY:-1}
 
 services:
   api:
@@ -39,9 +42,9 @@ services:
         condition: service_started
     restart: unless-stopped
 
-  mortgage-worker:
+  worker:
     build: .
-    command: celery -A insureflow.tasks.celery_app worker -Q mortgage -l info --concurrency=2
+    command: celery -A insureflow.tasks.celery_app worker -Q agents,pipeline,mortgage -l info --concurrency=2
     environment:
       <<: *api-env
     depends_on:

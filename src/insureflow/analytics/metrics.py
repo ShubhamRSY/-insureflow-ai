@@ -9,16 +9,71 @@ import logging
 import os
 import threading
 import time
+import uuid
 from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, TypeVar
 
 from pydantic import BaseModel, Field
 
 from insureflow.decisions import decision_rank
+from insureflow.storage.lock import atomic_append
 
 logger = logging.getLogger(__name__)
+
+_ModelT = TypeVar("_ModelT", bound=BaseModel)
+
+
+def _metrics_backend() -> str:
+    """``METRICS_BACKEND=redis`` opt-in for multi-replica deployments."""
+    return os.getenv("METRICS_BACKEND", "file").strip().lower()
+
+
+def _redis_client() -> Any:
+    if _metrics_backend() != "redis":
+        return None
+    url = os.getenv("REDIS_URL") or os.getenv("CELERY_BROKER_URL", "")
+    if not url or not url.startswith("redis"):
+        return None
+    try:
+        import redis as _redis
+
+        client = _redis.from_url(url, decode_responses=True, socket_connect_timeout=3, socket_timeout=3)
+        client.ping()
+        return client
+    except Exception as exc:
+        logger.warning("Metrics Redis unavailable, falling back to file backend: %s", exc)
+        return None
+
+
+def _append_to_redis(client: Any, key: str, entry: BaseModel) -> None:
+    try:
+        client.rpush(key, entry.model_dump_json())
+    except Exception as exc:
+        logger.debug("Metrics Redis append failed: %s", exc)
+
+
+def _read_redis_records(client: Any, key: str, model_cls: type[_ModelT]) -> list[_ModelT]:
+    try:
+        raw = client.lrange(key, 0, -1)
+    except Exception as exc:
+        logger.debug("Metrics Redis read failed: %s", exc)
+        return []
+    records: list[_ModelT] = []
+    seen: set[str] = set()
+    for line in raw:
+        try:
+            rec = model_cls.model_validate_json(line)
+        except Exception:
+            continue
+        rid = getattr(rec, "record_id", None)
+        if rid:
+            if rid in seen:
+                continue
+            seen.add(rid)
+        records.append(rec)
+    return records
 
 
 # ---------------------------------------------------------------------------
@@ -36,6 +91,7 @@ class FieldFillRecord(BaseModel):
     bundle_id: str = ""
     agent: str = ""
     timestamp: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
+    record_id: str = Field(default_factory=lambda: uuid.uuid4().hex)
 
 
 class OverrideRecord(BaseModel):
@@ -50,6 +106,7 @@ class OverrideRecord(BaseModel):
     override_reason: str = ""
     org_id: str = "default"
     timestamp: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
+    record_id: str = Field(default_factory=lambda: uuid.uuid4().hex)
 
 
 class CycleTimeRecord(BaseModel):
@@ -62,6 +119,7 @@ class CycleTimeRecord(BaseModel):
     stage_durations: dict[str, float] = Field(default_factory=dict)
     org_id: str = "default"
     status: str = "completed"
+    record_id: str = Field(default_factory=lambda: uuid.uuid4().hex)
 
 
 # ---------------------------------------------------------------------------
@@ -96,6 +154,13 @@ class FillRateTracker:
         self._lock = threading.Lock()
         self._records: list[FieldFillRecord] = []
         self._persist_path = persist_path or Path(os.getenv("FILL_RATE_PATH", "./audit_logs/metrics/fill_rate.jsonl"))
+        self._redis = _redis_client()
+        self._redis_key = "rytera:metrics:fill_rate"
+
+    def _refresh(self) -> None:
+        if not self._redis:
+            return
+        self._records = _read_redis_records(self._redis, self._redis_key, FieldFillRecord)
 
     def record_field(
         self,
@@ -136,6 +201,7 @@ class FillRateTracker:
 
     def get_fill_rate(self, field_name: Optional[str] = None) -> dict[str, Any]:
         with self._lock:
+            self._refresh()
             records = list(self._records)
 
         if field_name:
@@ -155,6 +221,7 @@ class FillRateTracker:
 
     def get_fill_rates_by_field(self) -> dict[str, dict[str, Any]]:
         with self._lock:
+            self._refresh()
             records = list(self._records)
 
         by_field: dict[str, list[FieldFillRecord]] = defaultdict(list)
@@ -174,6 +241,7 @@ class FillRateTracker:
 
     def get_fill_rates_by_agent(self) -> dict[str, dict[str, Any]]:
         with self._lock:
+            self._refresh()
             records = list(self._records)
 
         by_agent: dict[str, list[FieldFillRecord]] = defaultdict(list)
@@ -194,6 +262,7 @@ class FillRateTracker:
 
     def get_empty_critical_fields(self) -> list[dict[str, Any]]:
         with self._lock:
+            self._refresh()
             records = list(self._records)
 
         empty: dict[str, int] = defaultdict(int)
@@ -210,10 +279,10 @@ class FillRateTracker:
         ]
 
     def _persist(self, entry: FieldFillRecord) -> None:
+        if self._redis:
+            _append_to_redis(self._redis, self._redis_key, entry)
         try:
-            self._persist_path.parent.mkdir(parents=True, exist_ok=True)
-            with open(self._persist_path, "a", encoding="utf-8") as f:
-                f.write(entry.model_dump_json() + "\n")
+            atomic_append(self._persist_path, entry.model_dump_json())
         except OSError:
             logger.debug("Failed to persist fill rate record", exc_info=True)
 
@@ -233,6 +302,13 @@ class OverrideRateTracker:
         self._lock = threading.Lock()
         self._records: list[OverrideRecord] = []
         self._persist_path = persist_path or Path(os.getenv("OVERRIDE_RATE_PATH", "./audit_logs/metrics/override_rate.jsonl"))
+        self._redis = _redis_client()
+        self._redis_key = "rytera:metrics:override_rate"
+
+    def _refresh(self) -> None:
+        if not self._redis:
+            return
+        self._records = _read_redis_records(self._redis, self._redis_key, OverrideRecord)
 
     def record_sign_off(
         self,
@@ -272,6 +348,7 @@ class OverrideRateTracker:
 
     def get_override_rate(self) -> dict[str, Any]:
         with self._lock:
+            self._refresh()
             records = list(self._records)
 
         if not records:
@@ -292,6 +369,7 @@ class OverrideRateTracker:
 
     def get_override_rate_by_agent(self) -> dict[str, dict[str, Any]]:
         with self._lock:
+            self._refresh()
             records = list(self._records)
 
         by_signer: dict[str, list[OverrideRecord]] = defaultdict(list)
@@ -311,6 +389,7 @@ class OverrideRateTracker:
 
     def get_common_override_reasons(self) -> list[dict[str, Any]]:
         with self._lock:
+            self._refresh()
             records = list(self._records)
 
         reasons: dict[str, int] = defaultdict(int)
@@ -321,10 +400,10 @@ class OverrideRateTracker:
         return [{"reason": reason, "count": count} for reason, count in sorted(reasons.items(), key=lambda x: -x[1])]
 
     def _persist(self, entry: OverrideRecord) -> None:
+        if self._redis:
+            _append_to_redis(self._redis, self._redis_key, entry)
         try:
-            self._persist_path.parent.mkdir(parents=True, exist_ok=True)
-            with open(self._persist_path, "a", encoding="utf-8") as f:
-                f.write(entry.model_dump_json() + "\n")
+            atomic_append(self._persist_path, entry.model_dump_json())
         except OSError:
             logger.debug("Failed to persist override rate record", exc_info=True)
 
@@ -358,6 +437,13 @@ class CycleTimeTracker:
         self._active: dict[str, dict[str, Any]] = {}
         self._records: list[CycleTimeRecord] = []
         self._persist_path = persist_path or Path(os.getenv("CYCLE_TIME_PATH", "./audit_logs/metrics/cycle_time.jsonl"))
+        self._redis = _redis_client()
+        self._redis_key = "rytera:metrics:cycle_time"
+
+    def _refresh(self) -> None:
+        if not self._redis:
+            return
+        self._records = _read_redis_records(self._redis, self._redis_key, CycleTimeRecord)
 
     def start_pipeline(self, bundle_id: str, org_id: str = "default") -> None:
         with self._lock:
@@ -426,6 +512,7 @@ class CycleTimeTracker:
 
     def get_stats(self) -> dict[str, Any]:
         with self._lock:
+            self._refresh()
             records = list(self._records)
 
         if not records:
@@ -458,13 +545,14 @@ class CycleTimeTracker:
 
     def get_recent(self, limit: int = 20) -> list[dict[str, Any]]:
         with self._lock:
+            self._refresh()
             return [r.model_dump() for r in self._records[-limit:]]
 
     def _persist(self, entry: CycleTimeRecord) -> None:
+        if self._redis:
+            _append_to_redis(self._redis, self._redis_key, entry)
         try:
-            self._persist_path.parent.mkdir(parents=True, exist_ok=True)
-            with open(self._persist_path, "a", encoding="utf-8") as f:
-                f.write(entry.model_dump_json() + "\n")
+            atomic_append(self._persist_path, entry.model_dump_json())
         except OSError:
             logger.debug("Failed to persist cycle time record", exc_info=True)
 

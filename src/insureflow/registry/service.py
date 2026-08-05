@@ -18,6 +18,7 @@ from insureflow.registry.models import (
     RegistrySnapshot,
     ReviewComment,
 )
+from insureflow.storage.lock import FileLock, atomic_write
 
 
 class RegistryService:
@@ -81,15 +82,17 @@ class RegistryService:
     def _snapshot_path(base: Path, snapshot_id: str) -> Path:
         return base / "snapshots" / f"{snapshot_id}.json"
 
+    @staticmethod
+    def _write_json(path: Path, data: dict[str, Any]) -> None:
+        with FileLock(str(path) + ".lock"):
+            atomic_write(path, json.dumps(data, indent=2, default=str, ensure_ascii=False))
+
     # ── CRUD ────────────────────────────────────────────────────────────
 
     def create(self, entry: RegistryEntry) -> RegistryEntry:
         entry.checksum = self._compute_checksum(entry.model_dump())
         entry.updated_at = datetime.now(tz=timezone.utc)
-        self._entry_path(entry).write_text(
-            json.dumps(entry.model_dump(), indent=2, default=str, ensure_ascii=False),
-            encoding="utf-8",
-        )
+        self._write_json(self._entry_path(entry), entry.model_dump())
         return entry
 
     def get(
@@ -123,10 +126,7 @@ class RegistryService:
     def update(self, entry: RegistryEntry) -> RegistryEntry:
         entry.checksum = self._compute_checksum(entry.model_dump())
         entry.updated_at = datetime.now(tz=timezone.utc)
-        self._entry_path(entry).write_text(
-            json.dumps(entry.model_dump(), indent=2, default=str, ensure_ascii=False),
-            encoding="utf-8",
-        )
+        self._write_json(self._entry_path(entry), entry.model_dump())
         return entry
 
     def list_versions(self, component_type: ComponentType) -> list[RegistryEntry]:
@@ -253,10 +253,7 @@ class RegistryService:
                 AgentLogicVersion,
             ):
                 snapshot.agent_logic[agent.agent_type] = agent.entry_id
-        self._snapshot_path(self.base_path, snapshot.snapshot_id).write_text(
-            json.dumps(snapshot.model_dump(), indent=2, default=str, ensure_ascii=False),
-            encoding="utf-8",
-        )
+        self._write_json(self._snapshot_path(self.base_path, snapshot.snapshot_id), snapshot.model_dump())
         return snapshot
 
     def get_snapshot(self, snapshot_id: str) -> RegistrySnapshot | None:
@@ -288,10 +285,7 @@ class RegistryService:
 
     def _save_change_request(self, cr: ChangeRequest) -> None:
         path = self.base_path / "change_requests" / f"{cr.request_id}.json"
-        path.write_text(
-            json.dumps(cr.model_dump(), indent=2, default=str, ensure_ascii=False),
-            encoding="utf-8",
-        )
+        self._write_json(path, cr.model_dump())
 
     def approve_change_request(
         self,

@@ -623,7 +623,8 @@ class TestAuthStoreAdversarial:
             t.start()
         for t in threads:
             t.join()
-        assert len(errors) <= 1, f"Too many concurrency errors: {errors}"
+        assert len(errors) == 0, f"Concurrency errors: {errors}"
+        assert len(store) == 100, "Atomic locked writes must not drop user records"
 
 
 # ===========================================================================

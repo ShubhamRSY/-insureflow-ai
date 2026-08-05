@@ -187,10 +187,17 @@ Application → Credit Pull → Risk Score → Compliance (Reg B/ECOA/HMDA)
 ### Production (Railway)
 
 The platform is deployed at **[ryterainc.com](https://ryterainc.com)** on Railway with:
-- Redis (persistent job store)
+- Redis (persistent job store + Celery broker)
 - PostgreSQL + pgvector (production RAG)
 - Fernet encryption (audit bundles at rest)
 - LLM-enhanced mode (OpenAI gpt-4o-mini + gpt-4o)
+
+Scaling: the API runs multiple uvicorn workers (`WEB_CONCURRENCY`), pipeline
+jobs default to Celery (`INSURANCE_USE_CELERY=1`) on a dedicated worker service,
+and `METRICS_BACKEND=redis` keeps dashboards consistent across replicas. See
+`docs/architecture/architecture.md` §20 and run
+`python scripts/ops/load_test.py --base http://localhost:8000` to smoke-test
+throughput.
 
 ### Local Development
 

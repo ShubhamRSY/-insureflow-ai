@@ -43,7 +43,6 @@ from insureflow.models.mortgage import ProductLine
 from insureflow.pipeline import UnderwritingPipeline
 from insureflow.security.posture import SecurityPosture, resolve_security_posture
 from insureflow.storage.job_store import JobStore, get_job_store
-from insureflow.tasks.celery_app import celery_app
 from insureflow.underwriting.renewal import PremiumAuditEngine
 
 try:
@@ -913,6 +912,25 @@ async def run_insurance_demo(
     job_id = f"demo-{uuid.uuid4().hex[:12]}"
     req = loader()
     job_store.set(INSURANCE_NS, job_id, {"status": "processing", "demo": True}, org_id=org_id)
+
+    from insureflow.tasks.dispatch import send_pipeline_task, should_use_celery
+
+    celery_task_id: str | None = None
+    if should_use_celery(False):
+        try:
+            celery_task_id = send_pipeline_task(job_id, req.model_dump(), org_id)
+        except Exception as exc:
+            logger.warning("Celery demo dispatch failed for job %s, falling back to in-process: %s", job_id, exc)
+            celery_task_id = None
+    if celery_task_id:
+        job_store.set(
+            INSURANCE_NS,
+            job_id,
+            {"status": "processing", "demo": True, "backend": "celery", "celery_task_id": celery_task_id},
+            org_id=org_id,
+        )
+        return {"job_id": job_id, "status": "processing", "preset": preset_id, "org_id": org_id, "use_celery": True}
+
     background_tasks.add_task(_run_pipeline_task, job_id, req, org_id)
     return {"job_id": job_id, "status": "processing", "preset": preset_id, "org_id": org_id}
 
@@ -1828,6 +1846,25 @@ async def retry_job(
     req = _load_pacific_coast_submission()
     new_id = f"retry-{uuid.uuid4().hex[:12]}"
     job_store.set(INSURANCE_NS, new_id, {"status": "processing", "retry_of": job_id}, org_id=org_id)
+
+    from insureflow.tasks.dispatch import send_pipeline_task, should_use_celery
+
+    celery_task_id: str | None = None
+    if should_use_celery(False):
+        try:
+            celery_task_id = send_pipeline_task(new_id, req.model_dump(), org_id)
+        except Exception as exc:
+            logger.warning("Celery retry dispatch failed for job %s, falling back to in-process: %s", job_id, exc)
+            celery_task_id = None
+    if celery_task_id:
+        job_store.set(
+            INSURANCE_NS,
+            new_id,
+            {"status": "processing", "retry_of": job_id, "backend": "celery", "celery_task_id": celery_task_id},
+            org_id=org_id,
+        )
+        return {"job_id": new_id, "status": "processing", "retry_of": job_id, "use_celery": True}
+
     background_tasks.add_task(_run_pipeline_task, new_id, req, org_id)
     return {"job_id": new_id, "status": "processing", "retry_of": job_id}
 
@@ -3940,7 +3977,10 @@ async def run_mortgage_pipeline(
     job_id = req.bundle_id or f"mortgage-job-{uuid.uuid4().hex[:12]}"
     job_store.set(MORTGAGE_NS, job_id, {"status": "processing"}, org_id=current.org_id)
 
-    if req.use_celery:
+    from insureflow.tasks.dispatch import should_use_celery
+
+    use_celery = should_use_celery(req.use_celery)
+    if use_celery:
         background_tasks.add_task(_dispatch_mortgage_celery, job_id, req, current.org_id)
     else:
         background_tasks.add_task(_run_mortgage_task, job_id, req, current.org_id)
@@ -3951,7 +3991,7 @@ async def run_mortgage_pipeline(
         "org_id": current.org_id,
         "per_borrower": req.per_borrower,
         "use_llm": req.use_llm,
-        "use_celery": req.use_celery,
+        "use_celery": use_celery,
     }
 
 
@@ -5185,11 +5225,25 @@ async def run_pipeline_row_level(
     """Pipeline run with enforced org isolation — jobs always scoped to caller's org."""
     job_id = f"job-{uuid.uuid4().hex[:12]}"
     job_store.set(INSURANCE_NS, job_id, {"status": "processing"}, org_id=current.org_id)
-    celery_app.send_task(
-        "insureflow.tasks.pipeline_tasks.run_pipeline",
-        args=[job_id, req.model_dump(), current.org_id],
-        queue="pipeline",
-    )
+    from insureflow.tasks.dispatch import send_pipeline_task, should_use_celery
+
+    if should_use_celery(False):
+        try:
+            celery_task_id = send_pipeline_task(job_id, req.model_dump(), current.org_id)
+        except Exception as exc:
+            logger.warning("Celery dispatch failed for job %s, falling back to in-process: %s", job_id, exc)
+            celery_task_id = None
+    else:
+        celery_task_id = None
+    if celery_task_id:
+        job_store.set(
+            INSURANCE_NS,
+            job_id,
+            {"status": "processing", "backend": "celery", "celery_task_id": celery_task_id},
+            org_id=current.org_id,
+        )
+    else:
+        background_tasks.add_task(_run_pipeline_task, job_id, req, current.org_id)
     _notify_job_subscribers(job_id, {"type": "status", "status": "processing", "job_id": job_id})
     return {"job_id": job_id, "status": "processing", "org_id": current.org_id}
 
