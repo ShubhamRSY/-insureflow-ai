@@ -62,7 +62,9 @@ class ISORatingAdapter(RatingAdapter):
             mods.append(RateComponent("uw_schedule_mod", delta, "memo", request.schedule_mod_pct))
 
         ineligible: list[str] = []
-        if memo.decision.value == "decline":
+        from insureflow.decisions import is_decline
+
+        if is_decline(memo.decision):
             ineligible.append("UW decision is DECLINE")
         if request.tiv <= 0:
             ineligible.append("TIV could not be determined")

@@ -1108,7 +1108,9 @@ def lending_underwrite(
         console.print_json(json.dumps(result.model_dump(mode="json"), indent=2))
         return
 
-    decision_color = "green" if result.decision.value in ("approved", "approved_with_conditions") else "red"
+    from insureflow.decisions import is_accept_family
+
+    decision_color = "green" if is_accept_family(result.decision) else "red"
     console.print(f"\n[bold]Lending Underwriting Result[/] — {app.application_id}")
     console.print(f"  Product:      [bold]{result.product_type.value}[/]")
     console.print(f"  Decision:     [{decision_color}]{result.decision.value.upper()}[/]")

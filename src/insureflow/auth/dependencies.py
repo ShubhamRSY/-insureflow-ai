@@ -26,6 +26,18 @@ async def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token",
         )
+    # Re-check the live user store so disabled / deleted users lose access immediately.
+    store = get_user_store()
+    user = store.get(token_data.username) if token_data.username else None
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User no longer exists")
+    if getattr(user, "disabled", False) or getattr(user, "is_active", True) is False:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User account disabled")
+    # Prefer live role/org over stale JWT claims
+    if getattr(user, "role", None) is not None:
+        token_data.role = user.role
+    if getattr(user, "org_id", None):
+        token_data.org_id = user.org_id
     return token_data
 
 

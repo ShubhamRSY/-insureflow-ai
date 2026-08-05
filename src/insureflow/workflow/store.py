@@ -36,6 +36,6 @@ class WorkflowStore:
         pending: list[str] = []
         for path in org_dir.glob("*.json"):
             rec = WorkflowRecord.model_validate_json(path.read_text(encoding="utf-8"))
-            if rec.state == WorkflowState.PENDING_REVIEW:
+            if rec.state in (WorkflowState.PENDING_REVIEW, WorkflowState.PENDING_CO_SIGN):
                 pending.append(rec.bundle_id)
         return sorted(pending)

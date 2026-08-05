@@ -1,0 +1,6 @@
+action_taken,loan_amount,income,loan_to_value_ratio,debt_to_income_ratio,applicant_credit_score
+1,350000,95000,80,36,720
+3,280000,55000,95,48,610
+1,420000,120000,75,32,750
+3,200000,45000,97,52,580
+2,300000,80000,85,40,680

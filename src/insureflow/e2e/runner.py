@@ -423,7 +423,9 @@ class E2ERunner:
             return
 
         decision = getattr(self, "_insurance_decision", "")
-        if decision == "decline":
+        from insureflow.decisions import is_decline
+
+        if is_decline(decision):
             self._record("Insurance production (skipped)", True, "decision=decline, no workflow to sign off")
             return
 

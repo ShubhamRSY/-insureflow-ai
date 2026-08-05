@@ -220,7 +220,10 @@ class FillRateTracker:
 # Override Rate Tracker
 # ---------------------------------------------------------------------------
 
-_DECISION_RANK = {"decline": 0, "refer": 1, "approve": 2}
+from insureflow.decisions import decision_rank
+
+# Kept for backward-compatible imports; prefer decision_rank().
+_DECISION_RANK = {"decline": 0, "refer": 1, "approve": 2, "accept": 2}
 
 
 class OverrideRateTracker:
@@ -243,8 +246,8 @@ class OverrideRateTracker:
         is_override = ai_decision.lower() != human_decision.lower()
         override_type = "none"
         if is_override:
-            ai_rank = _DECISION_RANK.get(ai_decision.lower(), 1)
-            human_rank = _DECISION_RANK.get(human_decision.lower(), 1)
+            ai_rank = decision_rank(ai_decision)
+            human_rank = decision_rank(human_decision)
             if human_rank > ai_rank:
                 override_type = "upgrade"
             elif human_rank < ai_rank:

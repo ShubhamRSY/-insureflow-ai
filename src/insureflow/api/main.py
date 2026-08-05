@@ -347,16 +347,22 @@ def create_user(
     store = get_user_store()
     if new_user.username in store:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="User already exists")
-    # Admins can only create users in their own org unless super-admin pattern
-    org_id = new_user.org_id if new_user.org_id != "default" else current.org_id
+    # Admins can only create users in their own org
+    org_id = current.org_id
+    if new_user.role in (Role.ADMIN, Role.CUO) and new_user.role != current.role and current.role != Role.CUO:
+        raise HTTPException(status_code=403, detail="Cannot create users with a higher role than your own")
+    # Cap role: non-CUO admins cannot create CUO
+    role = new_user.role
+    if current.role != Role.CUO and role == Role.CUO:
+        raise HTTPException(status_code=403, detail="Only CUO can create CUO users")
     store[new_user.username] = User(
         username=new_user.username,
         hashed_password=hash_password(new_user.password),
-        role=new_user.role,
+        role=role,
         full_name=new_user.full_name or new_user.username,
         org_id=org_id,
     )
-    return {"message": f"User '{new_user.username}' created with role '{new_user.role.value}' in org '{org_id}'"}
+    return {"message": f"User '{new_user.username}' created with role '{role.value}' in org '{org_id}'"}
 
 
 @app.get("/auth/me")
@@ -387,15 +393,16 @@ def register_user(req: UserCreateRequest, request: Request) -> dict[str, str]:
             status_code=400,
             detail=f"Password must be at least {posture.min_password_length} characters",
         )
-    role = req.role if req.role in (Role.VIEWER, Role.UNDERWRITER) else Role.VIEWER
+    role = Role.VIEWER  # self-registration is always VIEWER; admin promotes later
     if username in store:
         raise HTTPException(status_code=409, detail="Username already exists")
+    # Never trust client-supplied org_id — pin to default until an admin assigns.
     store[username] = User(
         username=username,
         hashed_password=hash_password(req.password),
         role=role,
         full_name=req.full_name or username,
-        org_id=req.org_id or "default",
+        org_id="default",
     )
     return {"message": f"User '{username}' created with role '{role.value}'"}
 
@@ -440,7 +447,8 @@ def auth_sso_callback(payload: dict[str, Any]) -> dict[str, Any]:
     email = claims["email"]
     username = claims.get("sub", email.split("@")[0])
     name = claims.get("name", username)
-    org_id = str(payload.get("org_id") or "default")
+    # Never trust client-supplied org_id from the SSO callback body.
+    org_id = "default"
 
     store = get_user_store()
     user = store.get(username)
@@ -455,7 +463,7 @@ def auth_sso_callback(payload: dict[str, Any]) -> dict[str, Any]:
             org_id=org_id,
         )
         store[username] = user
-
+    # Existing users keep their assigned org — do not overwrite from client.
     token = create_access_token({"sub": username, "role": user.role.value, "org_id": user.org_id, "email": email})
     return {
         "claims": claims,
@@ -1056,6 +1064,11 @@ def pull_insurance_source(
             )
 
         if source_id in DEMO_CONNECTORS:
+            if _posture().is_hardened:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Demo connectors are disabled in BANK_MODE/production",
+                )
             # Require at least one config field to be filled
             connector = DEMO_CONNECTORS[source_id]
             config_keys = [f["key"] for f in (connector.get("config_fields") or [])]
@@ -1098,10 +1111,15 @@ def pull_insurance_source(
 
         if source_id == "server-folder":
             raw = req.path or "examples"
+            root = PROJECT_ROOT.resolve()
             directory = Path(raw)
             if not directory.is_absolute():
-                directory = (PROJECT_ROOT / raw).resolve()
-            if not str(directory).startswith(str(PROJECT_ROOT.resolve())):
+                directory = (root / raw)
+            try:
+                directory = directory.resolve()
+            except OSError as exc:
+                raise HTTPException(status_code=400, detail=f"Invalid path: {exc}") from exc
+            if not directory.is_relative_to(root):
                 raise HTTPException(status_code=400, detail="Path must be under project root")
             documents = load_directory(directory)
             label = str(directory)
@@ -1408,6 +1426,8 @@ async def run_mortgage_demo(
     background_tasks: BackgroundTasks,
     current: TokenData | None = Depends(get_current_user_optional),
 ) -> dict[str, Any]:
+    if _posture().is_hardened:
+        raise HTTPException(status_code=403, detail="Demo presets are disabled in BANK_MODE/production")
     org_id = current.org_id if current and current.org_id else "demo"
     presets = {
         "johnson-residential": (
@@ -1470,6 +1490,8 @@ def run_lending_demo(
     current: TokenData | None = Depends(get_current_user_optional),
 ) -> dict[str, Any]:
     """One-click lending sample data — full document package to underwritten decision."""
+    if _posture().is_hardened:
+        raise HTTPException(status_code=403, detail="Demo presets are disabled in BANK_MODE/production")
     org_id = current.org_id if current and current.org_id else "demo"
     presets: dict[str, dict[str, Any]] = {
         "blue-harbor-bakery": {
@@ -1765,29 +1787,26 @@ def get_job_status(
 
 @app.get("/pipeline/jobs")
 def list_jobs(
-    current: TokenData | None = Depends(get_current_user_optional),
+    current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, list[str]]:
-    org_id = current.org_id if current and current.org_id else "demo"
-    return {"jobs": job_store.list_ids(INSURANCE_NS, org_id=org_id)}
+    return {"jobs": job_store.list_ids(INSURANCE_NS, org_id=current.org_id)}
 
 
 @app.delete("/pipeline/jobs/{job_id}", status_code=204)
 def delete_job(
     job_id: str,
-    current: TokenData | None = Depends(get_current_user_optional),
+    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
 ) -> None:
-    org_id = current.org_id if current and current.org_id else "demo"
-    if not job_store.delete(INSURANCE_NS, job_id, org_id=org_id):
+    if not job_store.delete(INSURANCE_NS, job_id, org_id=current.org_id):
         raise HTTPException(status_code=404, detail="Job not found")
 
 
 @app.get("/pipeline/jobs/{job_id}/download")
 def download_job(
     job_id: str,
-    current: TokenData | None = Depends(get_current_user_optional),
+    current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
-    org_id = current.org_id if current and current.org_id else "demo"
-    job = job_store.get(INSURANCE_NS, job_id, org_id=org_id)
+    job = job_store.get(INSURANCE_NS, job_id, org_id=current.org_id)
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
     return {"job_id": job_id, "status": job.get("status"), "results": job.get("results", {}), "error": job.get("error")}
@@ -1797,10 +1816,10 @@ def download_job(
 async def retry_job(
     job_id: str,
     background_tasks: BackgroundTasks,
-    current: TokenData | None = Depends(get_current_user_optional),
+    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
 ) -> dict[str, Any]:
     """Re-run a failed or completed insurance pipeline job."""
-    org_id = current.org_id if current and current.org_id else "demo"
+    org_id = current.org_id
     old_job = job_store.get(INSURANCE_NS, job_id, org_id=org_id)
     if not old_job:
         raise HTTPException(status_code=404, detail="Job not found")
@@ -1821,14 +1840,12 @@ def bulk_delete_jobs(
 
 
 def _resolve_job_any_vertical(job_id: str, org_id: str) -> tuple[dict[str, Any] | None, str]:
-    """Find a job across insurance / mortgage / lending namespaces.
+    """Find a job across insurance / mortgage / lending namespaces for the caller's org only.
 
     Returns ``(job, vertical)``; ``vertical`` is the namespace it lived in.
     """
     for ns in (INSURANCE_NS, MORTGAGE_NS, LENDING_NS):
         job = job_store.get(ns, job_id, org_id=org_id)
-        if not job:
-            job = job_store.get(ns, job_id)
         if job:
             return job, ns
     return None, ""
@@ -1837,12 +1854,10 @@ def _resolve_job_any_vertical(job_id: str, org_id: str) -> tuple[dict[str, Any] 
 @app.get("/pipeline/jobs/{job_id}/quote")
 def get_job_quote(
     job_id: str,
-    current: TokenData = Depends(get_current_user_optional),
+    current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> StreamingResponse:
-    org_id = current.org_id if current else "demo"
+    org_id = current.org_id
     job = job_store.get(INSURANCE_NS, job_id, org_id=org_id)
-    if not job:
-        job = job_store.get(INSURANCE_NS, job_id)
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
     html = (job.get("results") or {}).get("quote_html", "")
@@ -1871,9 +1886,9 @@ def get_job_quote(
 @app.get("/pipeline/jobs/{job_id}/report")
 def get_job_report(
     job_id: str,
-    current: TokenData = Depends(get_current_user_optional),
+    current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> StreamingResponse:
-    org_id = current.org_id if current else "demo"
+    org_id = current.org_id
     job, vertical = _resolve_job_any_vertical(job_id, org_id)
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
@@ -1987,15 +2002,18 @@ def licensed_uw_sign_off(
         raise HTTPException(status_code=400, detail=f"Invalid action: {req.action}")
 
     svc = WorkflowService()
-    record = svc.sign_off(
-        bundle_id,
-        current.org_id,
-        action,
-        signed_by=current.username or "",
-        license_number=req.license_number,
-        notes=req.notes,
-        override_reason=req.override_reason,
-    )
+    try:
+        record = svc.sign_off(
+            bundle_id,
+            current.org_id,
+            action,
+            signed_by=current.username or "",
+            license_number=req.license_number,
+            notes=req.notes,
+            override_reason=req.override_reason,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     # Capture structured override analytics when UW decision differs from AI
     if req.override_reason and record.ai_decision and record.final_decision:
@@ -2089,20 +2107,50 @@ def bind_policy(
             detail={"message": "Cannot bind with outstanding subjectivities/conditions", "open_conditions": open_conditions},
         )
 
-    premium = float(req.bound_premium or quote.get("adjusted_premium") or 0.0)
+    # Authority premium must come from the system quote — never trust client under-reporting.
+    quote_premium = float(quote.get("adjusted_premium") or quote.get("base_premium") or 0.0)
+    if req.bound_premium is not None and quote_premium > 0 and float(req.bound_premium) + 1.0 < quote_premium * 0.9:
+        raise HTTPException(
+            status_code=400,
+            detail="bound_premium cannot be materially below the quoted premium",
+        )
+    premium = max(float(req.bound_premium or 0.0), quote_premium)
     tiv = float(summary.get("tiv") or quote.get("tiv") or 0.0)
-    authorized, authority_reason = get_authority_matrix().check_binding_authority(
+
+    from insureflow.underwriting.authority import AuthorityVerdict
+    from insureflow.underwriting.cosign import cosign_allows_bind
+
+    verdict, authority_reason = get_authority_matrix().evaluate_binding_authority(
         username=current.username or "",
         premium=premium,
         tiv=tiv,
         state=str(summary.get("primary_state") or ""),
         org_id=current.org_id,
     )
-    if not authorized:
-        # In non-hardened / demo environments, allow bind when no matrix row exists for the user.
-        has_row = get_authority_matrix().get_authority(current.username or "", org_id=current.org_id) is not None
-        if has_row or _posture().is_hardened:
-            raise HTTPException(status_code=403, detail=authority_reason)
+    if verdict == AuthorityVerdict.DENIED:
+        raise HTTPException(status_code=403, detail=authority_reason)
+
+    if verdict == AuthorityVerdict.NEEDS_CO_SIGN:
+        ok, cosign_reason = cosign_allows_bind(record.metadata, current.username or "")
+        if not ok:
+            # Create / refresh pending co-sign and block bind
+            record = wf.request_cosign(
+                bundle_id,
+                current.org_id,
+                requested_by=current.username or "",
+                premium=premium,
+                tiv=tiv,
+                reason=authority_reason,
+            )
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "message": authority_reason,
+                    "co_sign_required": True,
+                    "co_sign": record.metadata.get("co_sign"),
+                    "hint": cosign_reason,
+                },
+            )
 
     rating = InsuranceRatingEngine()
     bind_result = rating.bind(bundle_id, quote_ref, current.username or "")
@@ -2115,7 +2163,10 @@ def bind_policy(
     policy_number = req.policy_number or bind_result.get("policy_number", "")
     bound_premium = req.bound_premium or quote.get("adjusted_premium", 0.0)
 
-    wf.mark_bound(bundle_id, current.org_id, policy_number)
+    try:
+        wf.mark_bound(bundle_id, current.org_id, policy_number, binder_username=current.username or "")
+    except ValueError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
 
     # Record in portfolio only after successful bind
     try:
@@ -2149,6 +2200,49 @@ def bind_policy(
     record = wf.store.get(bundle_id, current.org_id) or record
 
     return {"bind": bind_result, "workflow": record.model_dump(), "outcome": outcome.model_dump()}
+
+
+class CoSignResolveRequest(BaseModel):
+    approve: bool = True
+    notes: str = ""
+
+
+@app.post("/pipeline/workflow/{bundle_id}/co-sign")
+@limiter.limit("20/minute")
+def resolve_workflow_cosign(
+    bundle_id: str,
+    req: CoSignResolveRequest,
+    request: Request,
+    current: TokenData = Depends(require_role(Role.LICENSED_UW)),
+) -> dict[str, Any]:
+    """Approve or reject a pending co-sign request (must be higher tier than requester)."""
+    from insureflow.workflow.service import WorkflowService
+
+    wf = WorkflowService()
+    try:
+        record = wf.resolve_cosign_request(
+            bundle_id,
+            current.org_id,
+            signer_username=current.username or "",
+            approve=req.approve,
+            notes=req.notes,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {"workflow": record.model_dump(mode="json"), "co_sign": record.metadata.get("co_sign")}
+
+
+@app.get("/pipeline/workflow/{bundle_id}/co-sign")
+def get_workflow_cosign(
+    bundle_id: str,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    from insureflow.workflow.service import WorkflowService
+
+    record = WorkflowService().store.get(bundle_id, current.org_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="Workflow not found")
+    return {"bundle_id": bundle_id, "state": record.state.value, "co_sign": record.metadata.get("co_sign")}
 
 
 @app.post("/pipeline/outcomes/loss-experience", status_code=201)
@@ -3543,7 +3637,7 @@ def resolve_checkpoint(
     bundle_id: str,
     checkpoint_id: str,
     body: dict[str, Any],
-    current: TokenData = Depends(require_role(Role.VIEWER)),
+    current: TokenData = Depends(require_role(Role.LICENSED_UW)),
 ) -> dict[str, Any]:
     from insureflow.enterprise.ecosystem import get_ecosystem_service
 
@@ -4377,7 +4471,7 @@ class PipelineConfigRequest(BaseModel):
     bundle_id: Optional[str] = None
     use_llm: bool = True
     use_legacy_pipeline: bool = False
-    funnel: bool = True
+    funnel: bool = False
     skip_appetite_filter: bool = False
     skip_oracles: bool = False
     skip_portfolio: bool = False
@@ -5145,15 +5239,18 @@ def sign_off_v2(
         raise HTTPException(status_code=404, detail="Workflow not found")
     _check_row_access(record.org_id, current.org_id)
     action = SignOffAction(req.get("action", "approve"))
-    result = svc.sign_off(
-        bundle_id=bundle_id,
-        org_id=current.org_id,
-        action=action,
-        signed_by=current.username or "",
-        license_number=req.get("license_number", ""),
-        notes=req.get("notes", ""),
-        override_reason=req.get("override_reason", ""),
-    )
+    try:
+        result = svc.sign_off(
+            bundle_id=bundle_id,
+            org_id=current.org_id,
+            action=action,
+            signed_by=current.username or "",
+            license_number=req.get("license_number", ""),
+            notes=req.get("notes", ""),
+            override_reason=req.get("override_reason", ""),
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     _notify_job_subscribers(bundle_id, {"type": "workflow_update", "state": result.state.value})
     return result.model_dump(mode="json")
 
@@ -5162,7 +5259,7 @@ def sign_off_v2(
 
 
 @app.get("/ml/status")
-def ml_status() -> dict[str, Any]:
+def ml_status(current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
     """ML module status — all models, versions, and metrics."""
     from insureflow.ml.training import get_training_status
 
@@ -5170,10 +5267,16 @@ def ml_status() -> dict[str, Any]:
 
 
 @app.post("/ml/train")
-def ml_train_all(allow_synthetic: bool = True) -> dict[str, Any]:
-    """Train or retrain all ML models — prefers ml_data/*.csv over synthetic."""
+def ml_train_all(
+    allow_synthetic: bool = False,
+    current: TokenData = Depends(require_role(Role.ADMIN)),
+) -> dict[str, Any]:
+    """Train or retrain all ML models from ml_data/*.csv (synthetic off by default)."""
+    from insureflow.ml.seed_datasets import ensure_training_csvs
     from insureflow.ml.training import get_training_status, train_all_models
 
+    if not allow_synthetic:
+        ensure_training_csvs()
     results = train_all_models(force=True, allow_synthetic=allow_synthetic)
     status = get_training_status()
     return {
@@ -5181,13 +5284,14 @@ def ml_train_all(allow_synthetic: bool = True) -> dict[str, Any]:
         "results": [r.model_dump() for r in results],
         "datasets": status.get("datasets"),
         "history_tail": (status.get("history") or [])[-len(results) :],
+        "allow_synthetic": allow_synthetic,
     }
 
 
 @app.post("/ml/export-training")
 def ml_export_training(
     model_type: str = "loss_prediction",
-    current: TokenData = Depends(require_role(Role.VIEWER)),
+    current: TokenData = Depends(require_role(Role.ADMIN)),
 ) -> dict[str, Any]:
     """Build ml_data/*.csv from persisted insurance/lending audit outcomes."""
     from insureflow.ml.export_training import export_from_audit_logs
@@ -5196,9 +5300,14 @@ def ml_export_training(
 
 
 @app.post("/ml/train/{model_type}")
-def ml_train_single(model_type: str, allow_synthetic: bool = True) -> dict[str, Any]:
-    """Retrain a single ML model from CSV when present."""
+def ml_train_single(
+    model_type: str,
+    allow_synthetic: bool = False,
+    current: TokenData = Depends(require_role(Role.ADMIN)),
+) -> dict[str, Any]:
+    """Retrain a single ML model from CSV when present (synthetic off by default)."""
     from insureflow.ml.models import ModelType as ModelTypeEnum
+    from insureflow.ml.seed_datasets import ensure_training_csvs
     from insureflow.ml.training import retrain_model
 
     try:
@@ -5206,6 +5315,8 @@ def ml_train_single(model_type: str, allow_synthetic: bool = True) -> dict[str, 
     except ValueError:
         raise HTTPException(status_code=400, detail=f"Invalid model type: {model_type}. Valid: {[e.value for e in ModelTypeEnum]}")
 
+    if not allow_synthetic:
+        ensure_training_csvs()
     try:
         result = retrain_model(mt, allow_synthetic=allow_synthetic)
     except FileNotFoundError as exc:
@@ -5216,7 +5327,7 @@ def ml_train_single(model_type: str, allow_synthetic: bool = True) -> dict[str, 
 
 
 @app.post("/ml/predict/loss")
-def ml_predict_loss(features: dict[str, Any]) -> dict[str, Any]:
+def ml_predict_loss(features: dict[str, Any], current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
     """Loss prediction — expected claim frequency, severity, and total loss."""
     from insureflow.ml.base import BaseMLModel
     from insureflow.ml.features import FeatureVector
@@ -5232,7 +5343,7 @@ def ml_predict_loss(features: dict[str, Any]) -> dict[str, Any]:
 
 
 @app.post("/ml/predict/fraud")
-def ml_predict_fraud(features: dict[str, Any]) -> dict[str, Any]:
+def ml_predict_fraud(features: dict[str, Any], current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
     """Fraud anomaly detection — probability, risk level, flagged patterns."""
     from insureflow.ml.base import BaseMLModel
     from insureflow.ml.features import FeatureVector
@@ -5248,7 +5359,7 @@ def ml_predict_fraud(features: dict[str, Any]) -> dict[str, Any]:
 
 
 @app.post("/ml/predict/premium")
-def ml_predict_premium(features: dict[str, Any]) -> dict[str, Any]:
+def ml_predict_premium(features: dict[str, Any], current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
     """Premium optimization — recommended price, elasticity, retention probability."""
     from insureflow.ml.base import BaseMLModel
     from insureflow.ml.features import FeatureVector
@@ -5264,7 +5375,7 @@ def ml_predict_premium(features: dict[str, Any]) -> dict[str, Any]:
 
 
 @app.post("/ml/predict/churn")
-def ml_predict_churn(features: dict[str, Any]) -> dict[str, Any]:
+def ml_predict_churn(features: dict[str, Any], current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
     """Churn prediction — non-renewal probability, LTV, retention actions."""
     from insureflow.ml.base import BaseMLModel
     from insureflow.ml.features import FeatureVector
@@ -5280,7 +5391,7 @@ def ml_predict_churn(features: dict[str, Any]) -> dict[str, Any]:
 
 
 @app.post("/ml/predict/mortgage-default")
-def ml_predict_mortgage_default(features: dict[str, Any]) -> dict[str, Any]:
+def ml_predict_mortgage_default(features: dict[str, Any], current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
     """Mortgage default risk — probability, delinquency band, risk factors."""
     from insureflow.ml.base import BaseMLModel
     from insureflow.ml.features import FeatureVector
@@ -5296,7 +5407,7 @@ def ml_predict_mortgage_default(features: dict[str, Any]) -> dict[str, Any]:
 
 
 @app.post("/ml/predict/lending-default")
-def ml_predict_lending_default(features: dict[str, Any]) -> dict[str, Any]:
+def ml_predict_lending_default(features: dict[str, Any], current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
     """Lending default risk — probability, risk level, recommended structure."""
     from insureflow.ml.base import BaseMLModel
     from insureflow.ml.features import FeatureVector
@@ -5312,7 +5423,7 @@ def ml_predict_lending_default(features: dict[str, Any]) -> dict[str, Any]:
 
 
 @app.post("/ml/predict/portfolio-risk")
-def ml_portfolio_risk(portfolio: dict[str, Any]) -> dict[str, Any]:
+def ml_portfolio_risk(portfolio: dict[str, Any], current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
     """Portfolio risk modeling — VaR, tail risk, Monte Carlo simulation."""
     from insureflow.ml.portfolio_risk import PortfolioRiskModel
 
@@ -5328,7 +5439,7 @@ def ml_portfolio_risk(portfolio: dict[str, Any]) -> dict[str, Any]:
 
 
 @app.post("/ml/predict/portfolio-stress")
-def ml_portfolio_stress(portfolio: dict[str, Any]) -> dict[str, Any]:
+def ml_portfolio_stress(portfolio: dict[str, Any], current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
     """Portfolio stress testing across multiple scenarios."""
     from insureflow.ml.portfolio_risk import PortfolioRiskModel
 
@@ -5343,7 +5454,7 @@ def ml_portfolio_stress(portfolio: dict[str, Any]) -> dict[str, Any]:
 
 
 @app.post("/ml/score/broker")
-def ml_score_broker(broker_data: dict[str, Any]) -> dict[str, Any]:
+def ml_score_broker(broker_data: dict[str, Any], current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
     """Behavioral scoring — broker quality, consistency, accuracy."""
     from insureflow.ml.behavioral import BehavioralScoringModel
 
@@ -5361,7 +5472,7 @@ def ml_score_broker(broker_data: dict[str, Any]) -> dict[str, Any]:
 
 
 @app.post("/ml/score/submission")
-def ml_score_submission(submission_data: dict[str, Any]) -> dict[str, Any]:
+def ml_score_submission(submission_data: dict[str, Any], current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
     """Behavioral scoring — submission data quality."""
     from insureflow.ml.behavioral import BehavioralScoringModel
 
@@ -5378,7 +5489,7 @@ def ml_score_submission(submission_data: dict[str, Any]) -> dict[str, Any]:
 
 
 @app.get("/ml/models")
-def ml_list_models() -> dict[str, Any]:
+def ml_list_models(current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
     """List all registered ML models with status and metrics."""
     from insureflow.ml.registry import get_ml_registry
 
@@ -5386,7 +5497,7 @@ def ml_list_models() -> dict[str, Any]:
 
 
 @app.post("/ml/explain/{model_type}")
-def ml_explain(model_type: str, features: dict[str, Any]) -> dict[str, Any]:
+def ml_explain(model_type: str, features: dict[str, Any], current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
     """Get feature importance explanation for a prediction."""
     from insureflow.ml.features import FeatureVector
     from insureflow.ml.models import ModelType

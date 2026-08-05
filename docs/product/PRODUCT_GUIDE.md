@@ -104,11 +104,15 @@ Prioritized queue with fit / triage scores and journey strips so UW attention hi
 
 ## Decisions you’ll see
 
-| Vertical | Outcomes |
-|----------|----------|
-| Insurance | `ACCEPT` · `CONDITIONAL_ACCEPT` · `REFER` · `DECLINE` |
-| Mortgage | Approve / Refer / Suspend / Deny + rate |
-| Lending | Approved / conditions / referred / declined / suspended |
+Canonical outcome (analytics / ML / gates): `accept` · `conditional_accept` · `refer` · `suspend` · `decline`
+
+| Vertical | Native labels (same ranks) |
+|----------|----------------------------|
+| Insurance | `accept` · `conditional_accept` · `refer` · `decline` |
+| Mortgage | `approve` · `approve_with_conditions` · `refer` · `suspend` · `deny` |
+| Lending | `approved` · `approved_with_conditions` · `referred` · `suspended` · `declined` |
+
+**Bind / clean quote** requires a clean accept (not conditional). Premiums above an underwriter’s co-sign threshold need a higher-tier co-sign before bind (`PENDING_CO_SIGN` → approve via `/pipeline/workflow/{id}/co-sign`).
 
 Shadow pilot: full analysis + sign-off. **Live bind stays blocked** until you wire PAS and turn it on.
 

@@ -50,7 +50,9 @@ def rate_life(bundle: SubmissionBundle) -> QuoteResult:
     adjusted = max(adjusted, float(manual.get("minimum_premium", 250.0)))
     adjusted = round(adjusted, 2)
 
-    eligible = medical.decision.value != "decline"
+    from insureflow.decisions import DecisionOutcome, is_decline, normalize_decision
+
+    eligible = not is_decline(medical.decision)
     reasons = list(medical.reasons) if not eligible else list(medical.reasons)
 
     components = [
@@ -75,13 +77,14 @@ def rate_life(bundle: SubmissionBundle) -> QuoteResult:
         "insurance_line": InsuranceLine.LIFE.value,
         "personal_lines": True,
         "uw_decision_hint": medical.decision.value,
+        "outcome": normalize_decision(medical.decision).value,
         "conditions": [],
     }
     if medical.require_aps:
         meta["conditions"].append("APS (attending physician statement) required before bind")
     if medical.require_paramed:
         meta["conditions"].append("Paramedical exam required")
-    if medical.decision == medical.decision.CONDITIONAL_ACCEPT or medical.require_aps:
+    if normalize_decision(medical.decision) == DecisionOutcome.CONDITIONAL_ACCEPT or medical.require_aps:
         pass
 
     return QuoteResult(

@@ -394,15 +394,15 @@ def _generate_mortgage_synthetic_dataset(n_samples: int, seed: int) -> tuple[np.
     )
 
     default_prob = (
-        0.03
-        + np.where(credit_score < 620, 0.25, np.where(credit_score < 680, 0.10, 0.0))
-        + np.where(dti > 43, 0.15, 0.0)
-        + np.where(ltv > 80, 0.10, 0.0)
-        + np.where(reserves < 10000, 0.08, 0.0)
-        + 0.08 * bankruptcies
-        + 0.08 * foreclosures
-        + 0.02 * np.minimum(derogatory_marks, 4)
-        + rng.normal(0, 0.05, n_samples)
+        0.02
+        + np.where(credit_score < 600, 0.45, np.where(credit_score < 640, 0.25, np.where(credit_score < 680, 0.10, 0.0)))
+        + np.where(dti > 45, 0.20, np.where(dti > 40, 0.08, 0.0))
+        + np.where(ltv > 95, 0.18, np.where(ltv > 85, 0.08, 0.0))
+        + np.where(reserves < 5000, 0.12, 0.0)
+        + 0.15 * bankruptcies
+        + 0.12 * foreclosures
+        + 0.03 * np.minimum(derogatory_marks, 4)
+        + rng.normal(0, 0.02, n_samples)
     )
     default_prob = np.clip(default_prob, 0.01, 0.95)
     y = (rng.random(n_samples) < default_prob).astype(float)
@@ -460,16 +460,16 @@ def _generate_lending_synthetic_dataset(n_samples: int, seed: int) -> tuple[np.n
     )
 
     default_prob = (
-        0.04
-        + np.where(credit_score < 620, 0.22, np.where(credit_score < 680, 0.08, 0.0))
-        + np.where(dti > 43, 0.10, 0.0)
-        + np.where(seg == 1, np.where(dscr < 1.15, 0.12, 0.0), 0.0)
-        + np.where(seg == 1, np.where(leverage_ratio > 4.0, 0.08, 0.0), 0.0)
-        + np.where(seg == 1, np.where(current_ratio < 1.0, 0.05, 0.0), 0.0)
-        + np.where(seg == 1, np.where(years_in_business < 2, 0.06, 0.0), 0.0)
-        + 0.07 * bankruptcies
-        + 0.07 * foreclosures
-        + rng.normal(0, 0.05, n_samples)
+        0.03
+        + np.where(credit_score < 600, 0.42, np.where(credit_score < 640, 0.22, np.where(credit_score < 680, 0.08, 0.0)))
+        + np.where(dti > 45, 0.15, np.where(dti > 40, 0.06, 0.0))
+        + np.where(seg == 1, np.where(dscr < 1.1, 0.20, np.where(dscr < 1.25, 0.08, 0.0)), 0.0)
+        + np.where(seg == 1, np.where(leverage_ratio > 4.5, 0.12, 0.0), 0.0)
+        + np.where(seg == 1, np.where(current_ratio < 0.9, 0.08, 0.0), 0.0)
+        + np.where(seg == 1, np.where(years_in_business < 2, 0.08, 0.0), 0.0)
+        + 0.12 * bankruptcies
+        + 0.10 * foreclosures
+        + rng.normal(0, 0.02, n_samples)
     )
     default_prob = np.clip(default_prob, 0.01, 0.95)
     y = (rng.random(n_samples) < default_prob).astype(float)

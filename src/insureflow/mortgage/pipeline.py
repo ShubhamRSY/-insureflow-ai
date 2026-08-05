@@ -6,6 +6,7 @@ from uuid import uuid4
 from insureflow.agents.mortgage.supervisor import MortgageSupervisorAgent
 from insureflow.analytics.documents import DocumentAnalyticsEngine
 from insureflow.audit.store import AuditStore
+from insureflow.decisions import normalize_decision
 from insureflow.ingestion.mortgage.loader import MortgageSubmissionLoader
 from insureflow.models.audit import PipelineEvent
 from insureflow.models.mortgage import (
@@ -288,6 +289,7 @@ class MortgagePipeline:
             "ocr_documents": ocr_doc_count,
             "borrower": memo.borrower_name,
             "decision": memo.decision.value,
+            "outcome": normalize_decision(memo.decision).value,
             "risk_score": memo.risk_score,
             "dti_ratio": dti_ratio,
             "ltv_ratio": memo.ltv_ratio,
@@ -414,11 +416,12 @@ class MortgagePipeline:
         except Exception:  # noqa: BLE001
             from insureflow.ml.models import MortgageDefaultScore
 
+            # Fail closed — never report zero default risk on error.
             return MortgageDefaultScore(
-                default_probability=0.0,
-                risk_level="unknown",
+                default_probability=1.0,
+                risk_level="high",
                 delinquency_band="unknown",
-                top_risk_factors=[],
-                recommended_action="standard_processing",
+                top_risk_factors=[{"factor": "model_error", "impact": 1.0}],
+                recommended_action="manual_review",
                 model_version="error",
             ).model_dump()

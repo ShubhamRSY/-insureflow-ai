@@ -147,7 +147,8 @@ class BaseMLModel(ABC):
         """Run prediction on a single feature vector."""
         if self.model is None or self.status not in (ModelStatus.READY, ModelStatus.CHAMPION, ModelStatus.CHALLENGER):
             return self._fallback_prediction(fv)
-        if self.gate_passed is False:
+        # Fail closed: only serve when the production gate explicitly passed.
+        if self.gate_passed is not True:
             return self._fallback_prediction(fv)
 
         start = time.time()

@@ -227,7 +227,8 @@ def check_human_review(state: MortgagePipelineState) -> str:
 
 
 def human_review(state: MortgagePipelineState) -> dict[str, Any]:
-    return {"human_review_approved": True}
+    # Never auto-approve — leave pending for a licensed UW via checkpoint API.
+    return {"human_review_approved": False, "human_review_pending": True}
 
 
 def audit(state: MortgagePipelineState) -> dict[str, Any]:

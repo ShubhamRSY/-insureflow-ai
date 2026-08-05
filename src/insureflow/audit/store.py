@@ -72,10 +72,14 @@ class AuditStore:
             path.write_text(json.dumps(data, indent=2, default=str, ensure_ascii=False), encoding="utf-8")
         except OSError as e:
             raise StorageError(f"Failed to write JSON to {path}: {e}")
-        # Dual-write index to Redis when available so audits survive multi-instance restarts
+        # Skip plaintext Redis dual-write when encryption is enabled — avoids leaking audits.
         try:
             import os
 
+            from insureflow.storage.encryption import EnvelopeEncryption
+
+            if EnvelopeEncryption().enabled:
+                return
             redis_url = os.getenv("REDIS_URL") or os.getenv("CELERY_BROKER_URL") or ""
             if redis_url.startswith("redis"):
                 import redis
@@ -89,8 +93,10 @@ class AuditStore:
     def load_json(self, bundle_id: str, filename: str, org_id: str | None = None) -> Optional[dict[str, Any]]:
         candidates = []
         if org_id:
+            # Org-scoped reads must not fall back to unscoped paths (IDOR).
             candidates.append(self.base_path / org_id / bundle_id / filename)
-        candidates.append(self.base_path / bundle_id / filename)
+        else:
+            candidates.append(self.base_path / bundle_id / filename)
 
         for path in candidates:
             if path.exists():

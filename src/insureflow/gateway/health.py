@@ -14,7 +14,9 @@ def bundled_gateway_health(base_url: str, api_key: str) -> dict[str, Any] | None
     if _BUNDLED_PREFIX not in path:
         return None
     expected = (settings.integration_gateway_api_key or "").strip()
-    if expected and api_key.strip() != expected:
+    if not expected:
+        return {"reachable": False, "mode": "misconfigured", "error": "INTEGRATION_GATEWAY_API_KEY not set"}
+    if api_key.strip() != expected:
         return {"reachable": False, "mode": "misconfigured", "error": "invalid gateway API key"}
     service = path.split(_BUNDLED_PREFIX, 1)[-1].split("/")[0:3]
     return {

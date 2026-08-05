@@ -91,6 +91,7 @@ class MLModelRegistry:
             }
             if isinstance(model, BaseMLModel):
                 info["metrics"] = model.metrics
+                info["gate_passed"] = model.gate_passed
             statuses.append(info)
         return statuses
 

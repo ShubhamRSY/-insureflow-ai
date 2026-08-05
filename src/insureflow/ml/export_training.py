@@ -26,16 +26,11 @@ from insureflow.ml.features import CONSTRUCTION_MAP, OCCUPANCY_MAP, encode_categ
 logger = logging.getLogger(__name__)
 
 
-def _target_from_decision(decision: str) -> float:
-    d = (decision or "").lower()
-    if d in {"decline", "declined", "reject", "deny", "denied"}:
-        return 1.0
-    if d in {"refer", "referral", "conditional_accept", "suspended", "suspend"}:
-        return 0.5
-    if d in {"accept", "approve", "approved", "bind", "bound"}:
-        return 0.0
-    return 0.5
+from insureflow.decisions import ml_binary_target
 
+
+def _target_from_decision(decision: str) -> float:
+    return ml_binary_target(decision)
 
 def _empty_row(feature_names: list[str]) -> dict[str, Any]:
     return {name: 0.0 for name in feature_names}
@@ -187,17 +182,33 @@ def _insurance_target(summary: dict[str, Any], model_type: str, bundle: dict[str
             target = sum(_as_float(c.get("premium")) for c in structured.get("coverages") or [] if isinstance(c, dict))
         return target if target > 0.0 else None
 
-    # loss_prediction — expected loss from loss-run history or loss-ratio * TIV
+    # loss_prediction — prefer per-submission expected loss proxies over a single
+    # copied loss-run total (demo audits often stamp the same incurred on every file).
     structured = bundle.get("structured") or {}
     financial = structured.get("financial") or {}
     loss_run = financial.get("loss_run") or {}
-    tiv = _as_float(summary.get("tiv")) or _as_float((summary.get("quote") or {}).get("tiv"))
-    incurred = _as_float(loss_run.get("total_incurred")) or _as_float(loss_run.get("total_paid"))
-    if incurred > 0.0:
-        return incurred
+    quote = summary.get("quote") or {}
+    tiv = (
+        _as_float(summary.get("tiv"))
+        or _as_float(quote.get("tiv"))
+        or _as_float((structured.get("schedule_of_values") or [{}])[0].get("total_value") if structured.get("schedule_of_values") else 0)
+    )
     ratio = _latest_loss_ratio(financial)
+    premium = _as_float(quote.get("adjusted_premium")) or _as_float(quote.get("base_premium"))
+    incurred = _as_float(loss_run.get("total_incurred")) or _as_float(loss_run.get("total_paid"))
+    claims = _as_float(loss_run.get("total_claims"))
+
+    # Expected loss ≈ LR * TIV when we have both; else premium * LR; else incurred / years
     if ratio > 0.0 and tiv > 0.0:
         return ratio * tiv
+    if ratio > 0.0 and premium > 0.0:
+        return premium * max(ratio, 0.5)
+    if incurred > 0.0 and claims > 1.0:
+        return incurred / claims  # severity proxy — more diverse than raw incurred
+    if incurred > 0.0:
+        return incurred
+    if premium > 0.0:
+        return premium * 0.65  # technical loss proxy from priced premium
     return None
 
 
@@ -241,15 +252,42 @@ def _mortgage_row(record: dict[str, Any], feature_names: list[str], target: floa
     return row
 
 
-def _mortgage_target(memo: dict[str, Any]) -> float:
-    decision = (memo.get("decision") or "").lower()
-    if decision in {"decline", "declined", "deny", "denied"}:
-        return 1.0
-    if decision in {"accept", "approve", "approved", "bind", "bound"}:
-        return 0.0
+def _mortgage_target(memo: dict[str, Any], bundle: dict[str, Any] | None = None) -> float:
+    """Label mortgage default risk from decision, else from credit risk factors.
+
+    Demo audits often stamp every file ``refer`` with the same risk_score — in that
+    case derive a binary label from DTI / LTV / credit so exported CSVs are not
+    single-class degenerate.
+    """
+    from insureflow.decisions import DecisionOutcome, ml_binary_target, normalize_decision
+
+    outcome = normalize_decision(memo.get("decision"))
+    if outcome in {DecisionOutcome.DECLINE, DecisionOutcome.ACCEPT, DecisionOutcome.CONDITIONAL_ACCEPT}:
+        return ml_binary_target(outcome)
+
     risk_score = _as_float(memo.get("risk_score"))
+    if risk_score >= 0.5:
+        return 1.0
+
+    credit = (bundle or {}).get("credit") or {}
+    credit_score = _as_float(credit.get("credit_score"))
+    dti = _as_float(memo.get("dti_ratio"))
+    ltv = _as_float(memo.get("ltv_ratio"))
+    score = 0.0
+    if credit_score and credit_score < 620:
+        score += 0.35
+    elif credit_score and credit_score < 680:
+        score += 0.15
+    if dti > 43:
+        score += 0.25
+    if ltv > 90:
+        score += 0.20
+    elif ltv > 80:
+        score += 0.10
+    if score >= 0.35:
+        return 1.0
     if risk_score > 0.0:
-        return 1.0 if risk_score >= 0.5 else 0.0
+        return 0.0
     return 0.5
 
 
@@ -350,22 +388,37 @@ def export_from_audit_logs(
             record = _iter_mortgage_dir(path)
             if record is None:
                 continue
-            row = _mortgage_row(record, feature_names, _mortgage_target(record["memo"]))
+            row = _mortgage_row(record, feature_names, _mortgage_target(record["memo"], record.get("bundle")))
             rows.append(row)
     elif model_type == "lending_default_risk":
+        candidates: list[Path] = []
         lending_dir = root / "lending"
         if lending_dir.exists():
-            for path in lending_dir.glob("*.json"):
-                try:
-                    payload = json.loads(path.read_text(encoding="utf-8"))
-                except (json.JSONDecodeError, OSError):
+            candidates.extend(sorted(lending_dir.glob("*.json")))
+        # Also pick up demo/lp lending pipeline payloads under org folders
+        for path in sorted(root.rglob("*.json")):
+            name = path.name.lower()
+            parent = path.parent.name.lower()
+            if "lend" in name or parent.startswith("demo-lend") or parent.startswith("lp-lend"):
+                if path not in candidates:
+                    candidates.append(path)
+        for path in candidates:
+            try:
+                raw = path.read_text(encoding="utf-8")
+                if not raw.strip() or raw.startswith("ENC:v1:"):
                     continue
-                if not isinstance(payload, dict):
-                    continue
-                decision = (payload.get("result") or {}).get("decision") or ""
-                row = _lending_row(payload, feature_names)
-                row["target"] = _target_from_decision(decision)
-                rows.append(row)
+                payload = json.loads(raw)
+            except (json.JSONDecodeError, OSError):
+                continue
+            if not isinstance(payload, dict):
+                continue
+            # Skip analytics-only stubs with no application/financials
+            if not (payload.get("application") or payload.get("result") or payload.get("financials")):
+                continue
+            decision = (payload.get("result") or {}).get("decision") or payload.get("decision") or ""
+            row = _lending_row(payload, feature_names)
+            row["target"] = _target_from_decision(decision)
+            rows.append(row)
     else:
         # loss_prediction / premium_optimizer
         for path in sorted(root.rglob("pipeline_summary.json")):

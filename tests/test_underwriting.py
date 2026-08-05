@@ -156,12 +156,45 @@ class TestAuthorityModule:
 
     def test_co_sign_required_above_threshold(self) -> None:
         matrix = AuthorityMatrix()
+        # Solo-bind check returns False when co-sign is required
         authorized, reason = matrix.check_binding_authority(
             "sfields",
             premium=200_000,
             tiv=8_000_000,
         )
-        assert authorized is True
+        assert authorized is False
+        assert "co-sign" in reason.lower()
+
+        verdict, vreason = matrix.evaluate_binding_authority(
+            username="sfields",
+            premium=200_000,
+            tiv=8_000_000,
+        )
+        from insureflow.underwriting.authority import AuthorityVerdict
+
+        assert verdict == AuthorityVerdict.NEEDS_CO_SIGN
+        assert "co-sign" in vreason.lower()
+
+    def test_cuo_solo_bind_above_senior_threshold(self) -> None:
+        matrix = AuthorityMatrix()
+        # CUO has no co-sign threshold — solo bind allowed
+        verdict, _ = matrix.evaluate_binding_authority(
+            username="mchen",
+            premium=200_000,
+            tiv=8_000_000,
+        )
+        from insureflow.underwriting.authority import AuthorityVerdict
+
+        # Default CUO username may differ — skip if not in matrix
+        if matrix.get_authority("mchen") is None:
+            cuos = matrix.list_by_tier(AuthorityTier.CUO)
+            assert cuos, "expected at least one CUO in default matrix"
+            verdict, _ = matrix.evaluate_binding_authority(
+                username=cuos[0].username,
+                premium=200_000,
+                tiv=8_000_000,
+            )
+        assert verdict == AuthorityVerdict.APPROVED
 
     def test_list_by_tier(self) -> None:
         matrix = AuthorityMatrix()

@@ -111,6 +111,7 @@ class MortgageBundleStatus(str, Enum):
 
 class MortgageDecision(str, Enum):
     APPROVE = "approve"
+    APPROVE_WITH_CONDITIONS = "approve_with_conditions"
     SUSPEND = "suspend"
     REFER = "refer"
     DENY = "deny"

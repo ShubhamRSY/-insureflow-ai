@@ -11,6 +11,7 @@ class WorkflowState(str, Enum):
     RECEIVED = "received"
     ANALYZING = "analyzing"
     PENDING_REVIEW = "pending_review"
+    PENDING_CO_SIGN = "pending_co_sign"
     APPROVED = "approved"
     DECLINED = "declined"
     BOUND = "bound"

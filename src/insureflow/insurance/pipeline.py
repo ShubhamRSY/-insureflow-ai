@@ -749,7 +749,9 @@ class InsurancePipeline:
         # ── 10. CORE SYSTEM INTEGRATION (push to BriteCore/Guidewire) ──
         # Skip provisional core push for referrals/declines — avoid fake "submitted" status.
         core_results: list[dict[str, Any]] = []
-        skip_core_for_decision = memo.decision.value in {"decline", "refer"}
+        from insureflow.decisions import DecisionOutcome, normalize_decision, skips_core_push
+
+        skip_core_for_decision = skips_core_push(memo.decision)
         appetite_referral = bool(appetite_result and appetite_result.needs_uw_referral and not appetite_passed)
         if not skip_core_integration and not skip_core_for_decision and not appetite_referral:
             core_results = self.policy_admin.submit_to_core_systems(bundle, memo, quote, self.org_id)
@@ -827,7 +829,7 @@ class InsurancePipeline:
             ),
         )
         zta_report = self.zta_reporter.report()
-        if memo.decision.value == "conditional_accept" and open_conditions:
+        if normalize_decision(memo.decision) == DecisionOutcome.CONDITIONAL_ACCEPT and open_conditions:
             human_checkpoints.append(
                 {
                     "id": "subjectivities",
@@ -848,6 +850,7 @@ class InsurancePipeline:
             "triage_priority": triage_result.priority.value,
             "triage_score": triage_result.score,
             "ai_decision": memo.decision.value,
+            "outcome": normalize_decision(memo.decision).value,
             "workflow_state": wf.state.value,
             "insurance_line": line_for_quote.value,
             "product_line": line_for_quote.value,
@@ -1020,11 +1023,13 @@ class InsurancePipeline:
         prior_claims = 0
         revenue = 0.0
         loss_ratio = 0.5
+        credit_score = 0.0
         if bundle.structured:
-            for loc in bundle.structured.locations:
+            for loc in bundle.structured.locations or []:
                 tiv += (loc.building_value or 0) + (loc.contents_value or 0) + (loc.bi_value or 0)
             if bundle.structured.risk_profile:
                 prior_claims = len(bundle.structured.risk_profile.prior_claims)
+                credit_score = float(getattr(bundle.structured.risk_profile, "credit_score", 0) or 0)
             fin = bundle.structured.financial
             if fin is not None:
                 revenue = float(fin.annual_revenue or 0.0)
@@ -1032,10 +1037,14 @@ class InsurancePipeline:
                     incurred = sum(c.incurred_amount or 0 for c in fin.loss_run.claims)
                     if tiv > 0:
                         loss_ratio = min(incurred / tiv, 3.0)
+                credit_score = float(getattr(fin, "credit_score", 0) or credit_score or 0)
+            applicant = bundle.structured.applicant or {}
+            if credit_score <= 0 and isinstance(applicant, dict):
+                credit_score = float(applicant.get("credit_score") or 0)
         return {
             "tiv": float(tiv),
             "loss_ratio": float(loss_ratio),
-            "credit_score": 700.0,
+            "credit_score": float(credit_score) if credit_score > 0 else 0.0,
             "prior_claims_count": float(prior_claims),
             "revenue": float(revenue),
         }

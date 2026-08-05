@@ -39,7 +39,11 @@ mlruns/
 ml_models/
 data/*
 !data/rate_curves.json
-# Keep schema docs for real training datasets
-!ml_data/
+# Keep schema docs for real training datasets (CSVs are regenerated locally)
+ml_data/**
 !ml_data/README.md
 # Railway redeploy trigger Thu Jul 23 20:27:06 EDT 2026
+
+# Downloaded public datasets (large)
+external_data/**
+!external_data/README.md

@@ -553,8 +553,15 @@ class MortgageDecisionAgent:
         elif bundle.reconciliation_issues or high_violations:
             decision = MortgageDecision.REFER
         else:
-            # Warning-level package conditions do not block an approve path
-            decision = MortgageDecision.APPROVE
+            # Soft package conditions → conditional approve; clean package → approve
+            soft_conditions = [
+                v for v in bundle.compliance_violations if v.severity not in ("high", "critical")
+            ]
+            decision = (
+                MortgageDecision.APPROVE_WITH_CONDITIONS
+                if soft_conditions
+                else MortgageDecision.APPROVE
+            )
 
         risk_scores = [ar.risk_score for ar in agent_results]
         overall_risk = sum(risk_scores) / len(risk_scores) if risk_scores else 0.5
@@ -591,7 +598,13 @@ class MortgageDecisionAgent:
             reconciliation_issues=bundle.reconciliation_issues,
             compliance_violations=bundle.compliance_violations,
             conditions=conditions,
-            human_review_required=decision in (MortgageDecision.REFER, MortgageDecision.SUSPEND, MortgageDecision.DENY),
+            human_review_required=decision
+            in (
+                MortgageDecision.REFER,
+                MortgageDecision.SUSPEND,
+                MortgageDecision.DENY,
+                MortgageDecision.APPROVE_WITH_CONDITIONS,
+            ),
         )
 
 

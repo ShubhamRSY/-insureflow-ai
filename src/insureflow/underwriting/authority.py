@@ -124,6 +124,12 @@ def _authority_from_dict(data: dict[str, Any]) -> UnderwriterAuthority:
     )
 
 
+class AuthorityVerdict(str, Enum):
+    APPROVED = "approved"
+    NEEDS_CO_SIGN = "needs_co_sign"
+    DENIED = "denied"
+
+
 class AuthorityMatrix:
     """Manages underwriter authority levels and binding limits.
 
@@ -232,6 +238,59 @@ class AuthorityMatrix:
         self._ensure_loaded(org_id)
         return list(self._authorities.values())
 
+    def evaluate_binding_authority(
+        self,
+        username: str,
+        premium: float,
+        tiv: float,
+        state: str = "",
+        occupancy: str = "",
+        org_id: str = "default",
+    ) -> tuple[AuthorityVerdict, str]:
+        """Evaluate bind authority including co-sign threshold.
+
+        Returns (verdict, reason) where verdict is approved | needs_co_sign | denied.
+        """
+        self._ensure_loaded(org_id)
+        auth = self._authorities.get(username)
+        if not auth:
+            return AuthorityVerdict.DENIED, f"No authority record for '{username}'"
+
+        ba = auth.binding_authority
+
+        if premium < 0:
+            return AuthorityVerdict.DENIED, f"Premium must be non-negative, got ${premium:,.0f}"
+        if tiv < 0:
+            return AuthorityVerdict.DENIED, f"TIV must be non-negative, got ${tiv:,.0f}"
+
+        if premium > ba.max_premium:
+            return AuthorityVerdict.DENIED, (
+                f"Premium ${premium:,.0f} exceeds ${ba.max_premium:,.0f} {auth.tier.value} binding limit "
+                f"for {auth.display_name} — escalate to a higher tier"
+            )
+
+        if tiv > ba.max_tiv:
+            return AuthorityVerdict.DENIED, (
+                f"TIV ${tiv:,.0f} exceeds ${ba.max_tiv:,.0f} {auth.tier.value} binding limit"
+            )
+
+        if ba.allowed_states and state and state not in ba.allowed_states:
+            return AuthorityVerdict.DENIED, f"State '{state}' not in {auth.display_name}'s licensed states"
+
+        if occupancy and occupancy in ba.excluded_occupancies:
+            return AuthorityVerdict.DENIED, f"Occupancy '{occupancy}' excluded from authority"
+
+        needs_cosign = ba.requires_co_sign or (
+            ba.co_sign_threshold_premium > 0 and premium >= ba.co_sign_threshold_premium
+        )
+        if needs_cosign:
+            return AuthorityVerdict.NEEDS_CO_SIGN, (
+                f"Premium ${premium:,.0f} requires co-sign "
+                f"(threshold ${ba.co_sign_threshold_premium:,.0f}) for {auth.tier.value} {auth.display_name}"
+            )
+
+        return AuthorityVerdict.APPROVED, f"Within {auth.tier.value} authority — approved"
+
     def check_binding_authority(
         self,
         username: str,
@@ -241,37 +300,16 @@ class AuthorityMatrix:
         occupancy: str = "",
         org_id: str = "default",
     ) -> tuple[bool, str]:
-        """Check if underwriter has authority to bind this risk.
-
-        Returns (approved, reason).
-        """
-        self._ensure_loaded(org_id)
-        auth = self._authorities.get(username)
-        if not auth:
-            return False, f"No authority record for '{username}'"
-
-        ba = auth.binding_authority
-
-        if premium < 0:
-            return False, f"Premium must be non-negative, got ${premium:,.0f}"
-        if tiv < 0:
-            return False, f"TIV must be non-negative, got ${tiv:,.0f}"
-
-        if premium > ba.max_premium:
-            if ba.requires_co_sign or premium > ba.co_sign_threshold_premium:
-                return False, (f"Premium ${premium:,.0f} exceeds ${ba.max_premium:,.0f} {auth.tier.value} limit for {auth.display_name} — requires co-sign from senior UW/CUO")
-            return False, (f"Premium ${premium:,.0f} exceeds ${ba.max_premium:,.0f} {auth.tier.value} binding limit")
-
-        if tiv > ba.max_tiv:
-            return False, (f"TIV ${tiv:,.0f} exceeds ${ba.max_tiv:,.0f} {auth.tier.value} binding limit")
-
-        if ba.allowed_states and state and state not in ba.allowed_states:
-            return False, f"State '{state}' not in {auth.display_name}'s licensed states"
-
-        if occupancy in ba.excluded_occupancies:
-            return False, f"Occupancy '{occupancy}' excluded from authority"
-
-        return True, f"Within {auth.tier.value} authority — approved"
+        """Backward-compatible check — True only when solo-bind is approved (no co-sign needed)."""
+        verdict, reason = self.evaluate_binding_authority(
+            username=username,
+            premium=premium,
+            tiv=tiv,
+            state=state,
+            occupancy=occupancy,
+            org_id=org_id,
+        )
+        return verdict == AuthorityVerdict.APPROVED, reason
 
 
 _authority_matrix: AuthorityMatrix | None = None

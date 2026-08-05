@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
 
+from insureflow.decisions import is_bind_eligible
 from insureflow.models.mortgage import MortgageBundle, MortgageMemo
 
 
@@ -182,7 +183,7 @@ class LoanPricingEngine:
             monthly_pi=round(monthly_pi, 2),
             pmi_required=pmi,
             pricing_adjustments=adjustments,
-            eligible=len(ineligible) == 0 and memo.decision.value in ("approve", "refer"),
+            eligible=len(ineligible) == 0 and is_bind_eligible(memo.decision),
             ineligibility_reasons=ineligible,
         )
 

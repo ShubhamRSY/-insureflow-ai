@@ -2,6 +2,15 @@ from __future__ import annotations
 
 from uuid import uuid4
 
+from insureflow.decisions import DecisionOutcome, is_decline, normalize_decision, to_vertical
+from insureflow.underwriting.cosign import (
+    CoSignRecord,
+    CoSignStatus,
+    active_cosign,
+    cosign_allows_bind,
+    create_cosign_request,
+    resolve_cosign,
+)
 from insureflow.workflow.models import SignOffAction, SignOffRecord, WorkflowRecord, WorkflowState
 from insureflow.workflow.store import WorkflowStore
 
@@ -61,8 +70,18 @@ class WorkflowService:
         if not record:
             raise ValueError(f"No workflow found for bundle {bundle_id}")
 
-        if record.state not in (WorkflowState.PENDING_REVIEW,):
-            raise ValueError(f"Cannot sign off — workflow state is {record.state.value}. Must be PENDING_REVIEW.")
+        if record.state not in (WorkflowState.PENDING_REVIEW, WorkflowState.PENDING_CO_SIGN):
+            raise ValueError(
+                f"Cannot sign off — workflow state is {record.state.value}. "
+                "Must be PENDING_REVIEW (or PENDING_CO_SIGN to cancel back to review)."
+            )
+
+        prior_ai = ai_decision or record.ai_decision
+        if action == SignOffAction.APPROVE and is_decline(prior_ai):
+            if not (override_reason or "").strip():
+                raise ValueError(
+                    "override_reason is required when approving a submission the AI declined"
+                )
 
         sign_off = SignOffRecord(
             sign_off_id=f"so-{uuid4().hex[:10]}",
@@ -88,19 +107,21 @@ class WorkflowService:
 
         if action == SignOffAction.APPROVE:
             record.state = WorkflowState.APPROVED
-            record.final_decision = "approve"
+            record.final_decision = to_vertical(DecisionOutcome.ACCEPT, "insurance")
+            record.metadata["outcome"] = DecisionOutcome.ACCEPT.value
         elif action == SignOffAction.DECLINE:
             record.state = WorkflowState.DECLINED
-            record.final_decision = "decline"
+            record.final_decision = to_vertical(DecisionOutcome.DECLINE, "insurance")
+            record.metadata["outcome"] = DecisionOutcome.DECLINE.value
         elif action == SignOffAction.REQUEST_INFO:
             record.state = WorkflowState.PENDING_REVIEW
             record.final_decision = "request_info"
+            record.metadata["outcome"] = DecisionOutcome.REFER.value
             try:
                 from insureflow.insurance.collaboration import get_collaboration_store
 
                 docs: list[str] = []
                 if notes:
-                    # Prefer explicit "docs: a, b" lines; else use notes as freeform ask
                     lowered = notes.lower()
                     if "docs:" in lowered:
                         part = notes.split(":", 1)[1]
@@ -122,16 +143,81 @@ class WorkflowService:
         else:
             record.state = WorkflowState.PENDING_REVIEW
             record.final_decision = action.value
+            record.metadata["outcome"] = normalize_decision(action.value).value
 
         self.store.save(record)
         return record
 
-    def mark_bound(self, bundle_id: str, org_id: str, policy_number: str) -> WorkflowRecord:
+    def request_cosign(
+        self,
+        bundle_id: str,
+        org_id: str,
+        requested_by: str,
+        premium: float,
+        tiv: float,
+        reason: str = "",
+    ) -> WorkflowRecord:
         record = self.store.get(bundle_id, org_id)
         if not record:
             raise ValueError(f"No workflow found for bundle {bundle_id}")
-        if record.state != WorkflowState.APPROVED:
-            raise ValueError("Policy can only be bound after UW approval")
+        if record.state not in (WorkflowState.APPROVED, WorkflowState.PENDING_CO_SIGN):
+            raise ValueError("Co-sign can only be requested after UW approval")
+        existing = active_cosign(record.metadata)
+        if existing and existing.status == CoSignStatus.APPROVED:
+            return record
+        req = create_cosign_request(
+            bundle_id=bundle_id,
+            org_id=org_id,
+            requested_by=requested_by,
+            premium=premium,
+            tiv=tiv,
+            reason=reason,
+        )
+        record.metadata["co_sign"] = req.model_dump(mode="json")
+        record.state = WorkflowState.PENDING_CO_SIGN
+        self.store.save(record)
+        return record
+
+    def resolve_cosign_request(
+        self,
+        bundle_id: str,
+        org_id: str,
+        signer_username: str,
+        approve: bool,
+        notes: str = "",
+    ) -> WorkflowRecord:
+        record = self.store.get(bundle_id, org_id)
+        if not record:
+            raise ValueError(f"No workflow found for bundle {bundle_id}")
+        pending = active_cosign(record.metadata)
+        if not pending or pending.status != CoSignStatus.PENDING:
+            raise ValueError("No pending co-sign request for this bundle")
+        updated = resolve_cosign(
+            pending,
+            signer_username=signer_username,
+            approve=approve,
+            notes=notes,
+            org_id=org_id,
+        )
+        record.metadata["co_sign"] = updated.model_dump(mode="json")
+        if approve:
+            record.state = WorkflowState.APPROVED
+        else:
+            record.state = WorkflowState.APPROVED  # UW approval stands; bind still blocked until new co-sign
+            # Keep rejected record so binder sees rejection; they must re-request
+        self.store.save(record)
+        return record
+
+    def mark_bound(self, bundle_id: str, org_id: str, policy_number: str, binder_username: str = "") -> WorkflowRecord:
+        record = self.store.get(bundle_id, org_id)
+        if not record:
+            raise ValueError(f"No workflow found for bundle {bundle_id}")
+        if record.state not in (WorkflowState.APPROVED,):
+            raise ValueError("Policy can only be bound after UW approval (and co-sign if required)")
+        if binder_username:
+            ok, reason = cosign_allows_bind(record.metadata, binder_username)
+            if not ok:
+                raise ValueError(reason)
         record.state = WorkflowState.BOUND
         record.metadata["policy_number"] = policy_number
         self.store.save(record)

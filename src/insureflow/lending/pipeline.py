@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from insureflow.analytics.documents import DocumentAnalyticsEngine
+from insureflow.decisions import normalize_decision
 from insureflow.lending.compliance import LendingComplianceEngine
 from insureflow.lending.models import (
     BusinessFinancialData,
@@ -284,11 +285,12 @@ class LendingPipeline:
             logger.warning("Lending ML default-risk prediction failed", exc_info=True)
             from insureflow.ml.models import LendingDefaultScore
 
+            # Fail closed — never report zero default risk on error.
             return LendingDefaultScore(
-                default_probability=0.0,
-                risk_level="unknown",
-                top_factors=[],
-                recommended_structure="standard_terms",
+                default_probability=1.0,
+                risk_level="high",
+                top_factors=[{"factor": "model_error", "impact": 1.0}],
+                recommended_structure="refer_manual_review",
                 model_version="error",
             ).model_dump()
 
@@ -358,6 +360,7 @@ class LendingPipeline:
             "application_type": ("business" if isinstance(application, BusinessLoanApplication) else "consumer"),
             "application": application.model_dump(),
             "result": result.model_dump(mode="json"),
+            "outcome": normalize_decision(result.decision).value,
             "timeline": timeline,
             "documents": [{k: v for k, v in d.items() if k != "content"} | {"content_chars": len(str(d.get("content") or ""))} for d in (documents or [])],
             "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -370,11 +373,12 @@ class LendingPipeline:
         try:
             from insureflow.storage.job_store import get_job_store
 
+            org_id = getattr(application, "org_id", None) or "default"
             get_job_store().set(
                 "lending",
                 application.application_id,
                 {"status": "completed", "audit": audit, "result": result.model_dump(mode="json")},
-                org_id="default",
+                org_id=org_id,
             )
         except Exception:  # noqa: BLE001
             logger.warning("Could not persist lending result to job store", exc_info=True)

@@ -22,20 +22,21 @@ working during pilots — but real models require real rows.
 ## Quick start
 
 ```bash
-# 1. (optional) auto-build CSVs from persisted audit outcomes
-PYTHONPATH=src python scripts/train_ml.py --export
+# 1. Build labeled CSVs from Wisconsin claims + audits (+ UW-rule seeds for mortgage/lending)
+PYTHONPATH=src python scripts/build_ml_training_data.py
+# or: PYTHONPATH=src python scripts/train_ml.py --build-data
 
 # 2. see what's trained and which CSVs are detected
 PYTHONPATH=src python scripts/train_ml.py --status
 
-# 3. train everything — real CSV wins, synthetic only as fallback
+# 3. train everything from real CSVs (synthetic OFF by default)
 PYTHONPATH=src python scripts/train_ml.py
 
-# 4. or train one model from an explicit real CSV (fail on synthetic)
-PYTHONPATH=src python scripts/train_ml.py --only loss_prediction --csv ml_data/loss_prediction.csv --no-synthetic
+# 4. or train one model from an explicit real CSV
+PYTHONPATH=src python scripts/train_ml.py --only loss_prediction --csv ml_data/loss_prediction.csv
 
-# same via the API
-curl -X POST "https://ryterainc.com/ml/train/loss_prediction?allow_synthetic=true"
+# same via the API (synthetic off by default)
+curl -X POST "https://ryterainc.com/ml/train/loss_prediction"
 ```
 
 Drop a header row + rows into `ml_data/loss_prediction.csv` and it is picked up
@@ -91,11 +92,24 @@ leave credit fields at `0`; consumer rows leave DSCR/leverage fields at `0`.
 
 ## Where the real data comes from
 
-1. **`scripts/train_ml.py --export`** scans `audit_logs/` (insurance
-   `pipeline_summary.json`, lending `lending/*.json`, mortgage `mortgage*.jsonl`)
-   and derives a `target` from each file's decision.
-2. **Post-pilot feedback loop**: human-underwriter decisions/overrides on
+1. **`scripts/build_ml_training_data.py`** (recommended) builds every `ml_data/*.csv` from:
+   - Wisconsin municipal claims (`examples/insurance/real_claims_wisconsin.csv`) for
+     insurance loss / fraud / premium / churn
+   - Deduped `audit_logs/` outcomes for insurance + mortgage + lending when labels
+     are class-diverse
+   - UW-rule labeled seed portfolios for mortgage/lending when audit outcomes are
+     still single-class (replace these with production defaults as they arrive)
+2. **`scripts/train_ml.py --export`** scans `audit_logs/` only (insurance
+   `pipeline_summary.json`, lending payloads, mortgage `mortgage*.json`) and derives
+   a `target` from each file's decision / loss proxies.
+3. **Post-pilot feedback loop**: human-underwriter decisions/overrides on
    production submissions are the highest-quality labels — feed them into the
    matching CSV and retrain.
-3. **Vendor data** (LexisNexis CLUE, Verisk A-PLUS) adds loss-history features
+4. **Vendor data** (LexisNexis CLUE, Verisk A-PLUS) adds loss-history features
    to the insurance CSVs as pilot contracts come online.
+5. **Mortgage gold standard** — drop Fannie Mae Acquisition+Performance,
+   Freddie Mac SFLLD, or HMDA LAR under `external_data/mortgage/` (see
+   `external_data/README.md` and `insureflow.ml.gse_mortgage`). Ingest prefers
+   GSE loan-performance labels over ISLR/AER credit proxies.
+
+Training defaults to **real CSVs only**. Pass `--allow-synthetic` only for demos.

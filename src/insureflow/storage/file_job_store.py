@@ -22,16 +22,25 @@ class FileJobStore(JobStore):
         self.root.mkdir(parents=True, exist_ok=True)
         self._lock = threading.RLock()
 
+    @staticmethod
+    def _safe_id(value: str) -> str:
+        # Prevent path traversal via job_id / org_id / namespace
+        cleaned = value.replace("..", "").replace("/", "_").replace("\\", "_").strip()
+        if not cleaned or cleaned in {".", ".."}:
+            raise ValueError(f"Invalid path segment: {value!r}")
+        return cleaned
+
     def _path(self, namespace: str, job_id: str, org_id: str) -> Path:
-        safe_ns = namespace.replace("/", "_")
-        safe_org = org_id.replace("/", "_")
+        safe_ns = self._safe_id(namespace)
+        safe_org = self._safe_id(org_id)
+        safe_job = self._safe_id(job_id)
         d = self.root / safe_org / safe_ns
         d.mkdir(parents=True, exist_ok=True)
-        return d / f"{job_id}.json"
+        return d / f"{safe_job}.json"
 
     def _index_path(self, namespace: str, org_id: str) -> Path:
-        safe_ns = namespace.replace("/", "_")
-        safe_org = org_id.replace("/", "_")
+        safe_ns = self._safe_id(namespace)
+        safe_org = self._safe_id(org_id)
         d = self.root / safe_org / safe_ns
         d.mkdir(parents=True, exist_ok=True)
         return d / "_index.json"

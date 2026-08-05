@@ -69,14 +69,17 @@ class AppetiteFilterAgent(BaseAgent):
             line = detect_insurance_line("\n".join(blob_parts))
 
         if line == InsuranceLine.LIFE:
+            from insureflow.decisions import DecisionOutcome, normalize_decision
+
             medical = underwrite_life(bundle)
-            if medical.decision.value == "decline":
+            outcome = normalize_decision(medical.decision)
+            if outcome == DecisionOutcome.DECLINE:
                 return AppetiteFilterResult(
                     passed=False,
                     findings=medical.findings,
                     reason="; ".join(medical.reasons) or "Life medical decline",
                 )
-            if medical.decision.value == "refer":
+            if outcome in {DecisionOutcome.REFER, DecisionOutcome.SUSPEND}:
                 return AppetiteFilterResult(
                     passed=False,
                     findings=medical.findings,

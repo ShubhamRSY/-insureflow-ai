@@ -31,12 +31,12 @@ DEFAULT_DATA_ROOT = Path("ml_data")
 # Minimum production thresholds. Models trained on real data that fail these stay
 # on their deterministic fallbacks instead of serving weak predictions.
 QUALITY_GATES: dict[ModelType, dict[str, float]] = {
-    ModelType.LOSS_PREDICTION: {"val_r2": 0.0, "min_samples": 50.0},
-    ModelType.FRAUD_DETECTION: {"val_roc_auc": 0.70, "min_samples": 50.0},
-    ModelType.PREMIUM_OPTIMIZER: {"val_r2": 0.0, "min_samples": 50.0},
-    ModelType.CHURN_PREDICTION: {"val_roc_auc": 0.70, "min_samples": 50.0},
-    ModelType.MORTGAGE_DEFAULT_RISK: {"val_roc_auc": 0.70, "min_samples": 50.0},
-    ModelType.LENDING_DEFAULT_RISK: {"val_roc_auc": 0.70, "min_samples": 50.0},
+    ModelType.LOSS_PREDICTION: {"val_r2": 0.10, "min_samples": 50.0},
+    ModelType.FRAUD_DETECTION: {"val_roc_auc": 0.70, "max_roc_auc": 0.995, "min_samples": 50.0},
+    ModelType.PREMIUM_OPTIMIZER: {"val_r2": 0.10, "min_samples": 50.0},
+    ModelType.CHURN_PREDICTION: {"val_roc_auc": 0.70, "max_roc_auc": 0.995, "min_samples": 50.0},
+    ModelType.MORTGAGE_DEFAULT_RISK: {"val_roc_auc": 0.70, "max_roc_auc": 0.995, "min_samples": 50.0},
+    ModelType.LENDING_DEFAULT_RISK: {"val_roc_auc": 0.70, "max_roc_auc": 0.995, "min_samples": 50.0},
 }
 
 
@@ -52,6 +52,8 @@ def passes_quality_gate(model_type: ModelType, metrics: dict[str, float], n_samp
         return False, f"insufficient samples ({n_samples} < {gate.get('min_samples', 0.0):.0f})"
     if "val_roc_auc" in gate and metrics.get("val_roc_auc", 0.0) < gate["val_roc_auc"]:
         return False, f"val_roc_auc {metrics.get('val_roc_auc', 0.0):.3f} < {gate['val_roc_auc']:.2f}"
+    if "max_roc_auc" in gate and metrics.get("val_roc_auc", 0.0) > gate["max_roc_auc"]:
+        return False, f"val_roc_auc {metrics.get('val_roc_auc', 0.0):.3f} > {gate['max_roc_auc']:.3f} (possible label leakage)"
     if "val_r2" in gate and metrics.get("val_r2", -1.0) <= gate["val_r2"]:
         return False, f"val_r2 {metrics.get('val_r2', -1.0):.3f} <= {gate['val_r2']:.2f}"
     return True, "passed"
@@ -224,9 +226,13 @@ def train_all_models(
         logger.info("  %s: %s (%s)", model_type.value, result.metrics, meta.get("source"))
 
         if meta.get("synthetic"):
-            model.gate_passed = True
-            if model_type in (ModelType.LOSS_PREDICTION, ModelType.FRAUD_DETECTION):
-                registry.promote_to_champion(model_type)
+            # Synthetic models must never be promoted or served as production.
+            model.gate_passed = False
+            model.save()
+            logger.warning(
+                "  ✗ %s trained on synthetic data — gate_passed=False (deterministic fallback)",
+                model_type.value,
+            )
             continue
 
         passed, reason = passes_quality_gate(model_type, result.metrics, meta.get("n_samples", 0))
@@ -265,11 +271,30 @@ def retrain_model(
             model_type=model_type.value,
             seed=seed or np.random.randint(0, 10000),
         )
-        meta = {"source": "synthetic", "synthetic": True}
+        meta = {"source": "synthetic", "synthetic": True, "n_samples": len(y)}
     result = registry.train_model(model_type, X, y)
     if result and hasattr(registry, "_history") and registry._history:
         registry._history[-1]["data_source"] = meta.get("source")
         registry._history[-1]["synthetic"] = meta.get("synthetic")
+
+    model = registry.get(model_type)
+    if result is None or model is None or not isinstance(model, BaseMLModel):
+        return result
+
+    if meta.get("synthetic"):
+        model.gate_passed = False
+        model.save()
+        logger.warning("  ✗ %s synthetic train — gate_passed=False", model_type.value)
+        return result
+
+    passed, reason = passes_quality_gate(model_type, result.metrics, meta.get("n_samples", len(y)))
+    model.gate_passed = passed
+    model.save()
+    if passed:
+        registry.promote_to_champion(model_type)
+        logger.info("  ✓ %s passed quality gate — promoted to champion", model_type.value)
+    else:
+        logger.warning("  ✗ %s failed quality gate (%s) — keeping deterministic fallback", model_type.value, reason)
     return result
 
 
