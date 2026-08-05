@@ -1036,9 +1036,17 @@ class InsurancePipeline:
         revenue = 0.0
         loss_ratio = 0.5
         credit_score = 0.0
+        requested_premium = 0.0
+        year_built = 0
+        square_footage = 0.0
         if bundle.structured:
             for loc in bundle.structured.locations or []:
                 tiv += (loc.building_value or 0) + (loc.contents_value or 0) + (loc.bi_value or 0)
+                if not year_built and loc.year_built:
+                    year_built = int(loc.year_built)
+                if not square_footage and loc.square_footage:
+                    square_footage = float(loc.square_footage)
+            requested_premium = sum(c.premium or 0 for c in (bundle.structured.coverages or []))
             if bundle.structured.risk_profile:
                 prior_claims = len(bundle.structured.risk_profile.prior_claims)
                 credit_score = float(getattr(bundle.structured.risk_profile, "credit_score", 0) or 0)
@@ -1058,6 +1066,9 @@ class InsurancePipeline:
             "credit_score": float(credit_score) if credit_score > 0 else 0.0,
             "prior_claims_count": float(prior_claims),
             "revenue": float(revenue),
+            "requested_premium": float(requested_premium),
+            "year_built": float(year_built),
+            "square_footage": float(square_footage),
         }
 
     def _run_ml_deep_dive(self, ml_name: str, inputs: dict[str, float]) -> dict[str, Any]:
@@ -1071,6 +1082,9 @@ class InsurancePipeline:
                     loss_ratio=inputs["loss_ratio"],
                     credit_score=inputs["credit_score"],
                     prior_claims_count=int(inputs["prior_claims_count"]),
+                    requested_premium=inputs.get("requested_premium", 0.0),
+                    year_built=int(inputs.get("year_built", 0)),
+                    square_footage=inputs.get("square_footage", 0.0),
                 )
             if ml_name == "premium_ml":
                 return MLTools.predict_premium(

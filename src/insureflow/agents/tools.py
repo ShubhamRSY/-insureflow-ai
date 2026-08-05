@@ -180,7 +180,20 @@ class MLTools:
         return model.predict(fv)
 
     @staticmethod
-    def predict_fraud(tiv: float, loss_ratio: float, credit_score: float = 700, prior_claims_count: int = 0, prior_cancellations: int = 0) -> dict[str, Any]:
+    def predict_fraud(
+        tiv: float,
+        loss_ratio: float,
+        credit_score: float = 700,
+        prior_claims_count: int = 0,
+        prior_cancellations: int = 0,
+        revenue: float = 0.0,
+        employees: int = 0,
+        years_in_business: float = 0.0,
+        prior_claims_total: float = 0.0,
+        requested_premium: float = 0.0,
+        year_built: int = 0,
+        square_footage: float = 0.0,
+    ) -> dict[str, Any]:
         from insureflow.ml.base import BaseMLModel
         from insureflow.ml.features import FeatureVector
         from insureflow.ml.models import ModelType
@@ -190,7 +203,20 @@ class MLTools:
         model = registry.get(ModelType.FRAUD_DETECTION)
         if model is None or not isinstance(model, BaseMLModel):
             return {"error": "Model not available"}
-        fv = FeatureVector(tiv=tiv, loss_ratio=loss_ratio, credit_score=credit_score, prior_claims_count=prior_claims_count, prior_cancellations=prior_cancellations)
+        fv = FeatureVector(
+            tiv=tiv,
+            loss_ratio=loss_ratio,
+            credit_score=credit_score,
+            prior_claims_count=prior_claims_count,
+            prior_cancellations=prior_cancellations,
+            revenue=revenue,
+            employees=employees,
+            years_in_business=years_in_business,
+            prior_claims_total=prior_claims_total,
+            requested_premium=requested_premium,
+            year_built=year_built,
+            square_footage=square_footage,
+        )
         return model.predict(fv)
 
     @staticmethod

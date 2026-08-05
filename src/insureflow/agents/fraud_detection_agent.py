@@ -143,12 +143,20 @@ class FraudDetectionAgent(ReActAgent):
 
         tiv = 0.0
         prior_claims = 0
+        requested_premium = 0.0
+        year_built = 0
+        square_footage = 0.0
 
         if bundle.structured:
             for loc in bundle.structured.locations:
                 tiv += (loc.building_value or 0) + (loc.contents_value or 0) + (loc.bi_value or 0)
+                if not year_built and loc.year_built:
+                    year_built = int(loc.year_built)
+                if not square_footage and loc.square_footage:
+                    square_footage = float(loc.square_footage)
             if bundle.structured.risk_profile:
                 prior_claims = len(bundle.structured.risk_profile.prior_claims)
+            requested_premium = sum(c.premium or 0 for c in bundle.structured.coverages)
 
         if tiv == 0:
             return
@@ -158,6 +166,9 @@ class FraudDetectionAgent(ReActAgent):
                 tiv=tiv,
                 loss_ratio=0.5,
                 prior_claims_count=prior_claims,
+                requested_premium=requested_premium,
+                year_built=year_built,
+                square_footage=square_footage,
             )
         except Exception as exc:
             import logging as _log
