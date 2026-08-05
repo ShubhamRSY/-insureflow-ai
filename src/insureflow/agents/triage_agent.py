@@ -95,18 +95,27 @@ class DocumentChecklist:
         pkg = package_checklist(types, lob=lob)
         present = list(pkg.get("present") or [])
         missing = list(pkg.get("missing") or [])
+        type_set = {t.lower() for t in types}
+        has_photos = (
+            "property_photos" in type_set
+            or any("photo" in p.lower() for p in present)
+            or bool(bundle.visual_analysis and (bundle.visual_analysis.get("analyzed_photos") or 0) > 0)
+        )
         return cls(
             lob=lob,
             present=present,
             _missing=missing,
-            acord_form=any("acord" in p.lower() for p in present),
-            loss_run=any("loss" in p.lower() or "claims" in p.lower() for p in present),
-            financials=any("financial" in p.lower() for p in present),
-            photos=any("photo" in p.lower() for p in present),
-            inspection_report=any("inspection" in p.lower() for p in present),
-            schedule_of_values=any("schedule of values" in p.lower() for p in present),
-            supplemental=any("supplement" in p.lower() or "broker" in p.lower() for p in present),
-            signed_application=any("application" in p.lower() or "signed" in p.lower() for p in present) or bool(bundle.structured and bundle.structured.named_insured),
+            acord_form=any("acord" in p.lower() for p in present) or "acord_xml" in type_set,
+            loss_run=any("loss" in p.lower() or "claims" in p.lower() for p in present) or "loss_run" in type_set,
+            financials=any("financial" in p.lower() for p in present) or "financial_statement" in type_set,
+            photos=has_photos,
+            inspection_report=any("inspection" in p.lower() for p in present) or "inspection_report" in type_set,
+            schedule_of_values=any("schedule of values" in p.lower() for p in present)
+            or "schedule_of_values" in type_set,
+            supplemental=any("supplement" in p.lower() or "broker" in p.lower() for p in present)
+            or "supplemental" in type_set,
+            signed_application=any("application" in p.lower() or "signed" in p.lower() for p in present)
+            or bool(bundle.structured and bundle.structured.named_insured),
         )
 
     @property
