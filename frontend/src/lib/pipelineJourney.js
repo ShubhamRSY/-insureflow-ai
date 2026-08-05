@@ -198,8 +198,33 @@ export function buildMiniStripStages(job) {
   return pick.map((id) => byId[id] || { id, label: id, status: 'pending', detail: '', findings: 0, duration: null });
 }
 
+const PROPERTY_FINDING_MARKERS = [
+  'schedule of values', 'acord application', 'protection class', 'roof age',
+  'year built', 'reinsurance treaty', 'tiv $', 'ncci', 'experience mod',
+  'catastrophe', 'wildfire', 'flood zone', 'locations, coverages',
+  'risk profile, locations', 'named insured, risk profile',
+];
+
+function isPropertyOnlyFinding(f) {
+  const blob = `${f?.title || ''} ${f?.description || ''}`.toLowerCase();
+  return PROPERTY_FINDING_MARKERS.some((m) => blob.includes(m));
+}
+
+function dedupeFindings(findings) {
+  const seen = new Set();
+  return (findings || []).filter((f) => {
+    const key = `${(f.title || '').toLowerCase()}|${(f.severity || '').toLowerCase()}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 export function buildAgentFindings(job) {
   const memo = job?.results?.memo || {};
+  const line = (job?.results?.insurance_line || job?.results?.product_line || '').toLowerCase();
+  const isLife = line === 'life';
+  const keep = (f) => f.category !== 'external_oracle' && !(isLife && isPropertyOnlyFinding(f));
   const sections = [
     ['risk_analyst_findings', 'Risk Analyst'],
     ['loss_run_findings', 'Loss Run'],
@@ -210,7 +235,7 @@ export function buildAgentFindings(job) {
     .map(([key, label]) => ({
       key,
       label,
-      findings: (memo[key] || []).filter((f) => f.category !== 'external_oracle'),
+      findings: dedupeFindings((memo[key] || []).filter(keep)),
     }))
     .filter((s) => s.findings.length > 0);
   // Only surface key_findings when agent buckets are empty (avoid duplicates).
@@ -218,7 +243,7 @@ export function buildAgentFindings(job) {
     return [{
       key: 'key_findings',
       label: 'Key Findings',
-      findings: (memo.key_findings || []).filter((f) => f.category !== 'external_oracle'),
+      findings: dedupeFindings((memo.key_findings || []).filter(keep)),
     }];
   }
   return built;
@@ -229,6 +254,7 @@ export function buildProvenanceView(job) {
   const prov = r.provenance || {};
   const summary = r.provenance_summary || {};
   const nodes = prov.nodes || {};
+  const line = (r.insurance_line || r.product_line || '').toLowerCase();
   const fields = Object.entries(nodes).slice(0, 8).map(([field, nodeList]) => {
     const node = (nodeList || [])[0] || {};
     const source = node.source || {};
@@ -246,6 +272,7 @@ export function buildProvenanceView(job) {
     verifiedFields: summary.verified_fields ?? 0,
     contradictedFields: summary.contradicted_fields ?? 0,
     fields,
+    isLife: line === 'life',
   };
 }
 
@@ -268,6 +295,9 @@ export function buildSubmissionQuality(job) {
   const discrepancies = recon.discrepancies || [];
   const criticalDisc = discrepancies.filter((d) => (d.severity || '').toLowerCase() === 'critical');
   const memo = r.memo || {};
+  const line = (r.insurance_line || r.product_line || '').toLowerCase();
+  const isLife = line === 'life';
+  const checklist = r.document_checklist || {};
 
   let score = 100;
   const issues = [];
@@ -280,6 +310,16 @@ export function buildSubmissionQuality(job) {
     issues.push('Thin submission — only one document');
   }
 
+  const completeness = checklist.completeness_pct;
+  // document_checklist uses 0–1; package-checklist API uses 0–100
+  const completenessFrac = completeness == null ? null : (completeness > 1 ? completeness / 100 : completeness);
+  if (completenessFrac != null && completenessFrac < 0.5) {
+    score -= 12;
+    const miss = (checklist.missing_documents || checklist.missing || []).slice(0, 2).join(', ');
+    const lobLabel = checklist.lob || line || 'package';
+    issues.push(miss ? `Incomplete ${lobLabel} package: ${miss}` : `Incomplete ${lobLabel} package`);
+  }
+
   if (r.appetite_needs_uw_referral) {
     score -= 10;
     issues.push('Appetite referral required');
@@ -288,7 +328,8 @@ export function buildSubmissionQuality(job) {
     issues.push('Outside appetite');
   }
 
-  if (recon.match_rate != null && recon.match_rate < 0.8) {
+  // Life packages rarely have ACORD field match — don't thrash the grade for that.
+  if (!isLife && recon.match_rate != null && recon.match_rate < 0.8) {
     score -= Math.round((0.8 - recon.match_rate) * 40);
     issues.push(`Low field match rate (${Math.round(recon.match_rate * 100)}%)`);
   }
@@ -296,7 +337,7 @@ export function buildSubmissionQuality(job) {
   if (criticalDisc.length) {
     score -= criticalDisc.length * 12;
     issues.push(`${criticalDisc.length} critical reconciliation conflict(s)`);
-  } else if (discrepancies.length) {
+  } else if (discrepancies.length && !isLife) {
     score -= Math.min(discrepancies.length * 4, 16);
     issues.push(`${discrepancies.length} field conflict(s) to review`);
   }
@@ -320,7 +361,7 @@ export function buildSubmissionQuality(job) {
   if (score < 60) { grade = 'D'; gradeColor = 'text-orange-400'; }
   if (score < 45) { grade = 'F'; gradeColor = 'text-red-400'; }
 
-  return { score, grade, gradeColor, issues };
+  return { score, grade, gradeColor, issues, lob: checklist.lob || line || null };
 }
 
 export function buildVerificationSummary(job) {
@@ -328,18 +369,26 @@ export function buildVerificationSummary(job) {
   const memo = r.memo || {};
   const quoteFull = r.quote_full || {};
   const meta = quoteFull.metadata || {};
+  const line = (r.insurance_line || r.product_line || '').toLowerCase();
+  const isLife = line === 'life';
   const oracleFindings = (memo.key_findings || []).filter((f) => f.category === 'external_oracle');
+  const medical = meta.medical || {};
 
   return {
-    oracleCount: r.oracle_findings_count ?? oracleFindings.length,
-    oracleFindings: oracleFindings.slice(0, 4),
-    copeGrade: meta.cope_grade || null,
-    copeModPct: meta.cope_mod_pct ?? null,
-    copeScore: meta.cope_score ?? null,
+    oracleCount: isLife ? 0 : (r.oracle_findings_count ?? oracleFindings.length),
+    oracleFindings: isLife ? [] : oracleFindings.slice(0, 4),
+    copeGrade: isLife ? null : (meta.cope_grade || null),
+    copeModPct: isLife ? null : (meta.cope_mod_pct ?? null),
+    copeScore: isLife ? null : (meta.cope_score ?? null),
     marketPhase: meta.market_phase || null,
     marketModPct: meta.market_mod_pct ?? null,
     matchRate: r.reconciliation?.match_rate ?? null,
     reconStatus: r.reconciliation?.overall_status || null,
+    isLife,
+    lifeClass: medical.underwriting_class || null,
+    tobacco: medical.tobacco ?? null,
+    faceAmount: meta.face_amount || meta.tiv || null,
+    filingId: meta.filing_id || null,
   };
 }
 

@@ -4,9 +4,6 @@ In a real small carrier, 100 applications arrive per day. 25 are duds
 (wrong industry, state, size). Only 30 are solid fits. The triage agent
 scores each submission and surfaces the best-fit ones first, so the UW
 team doesn't waste time on applications they'd never accept.
-
-This matches the real-world bottleneck: teams only review 30-40% of
-applications, and sorting them manually costs hours per day.
 """
 
 from __future__ import annotations
@@ -15,6 +12,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Optional
 
+from insureflow.insurance.package_checklist import detect_lob, package_checklist
 from insureflow.models.submissions import SubmissionBundle
 
 
@@ -25,8 +23,62 @@ class SubmissionPriority(str, Enum):
     NO_FIT = "no_fit"  # Don't bother — score < 25
 
 
+def _line_to_lob(insurance_line: str | None) -> str:
+    raw = (insurance_line or "").strip().lower()
+    mapping = {
+        "life": "life",
+        "personal_auto": "auto",
+        "auto": "auto",
+        "personal_homeowners": "homeowners",
+        "homeowners": "homeowners",
+        "directors_and_officers": "do",
+        "d&o": "do",
+        "do": "do",
+        "commercial_property": "property",
+        "property": "property",
+    }
+    if raw in mapping:
+        return mapping[raw]
+    return detect_lob(raw, raw)
+
+
+def _collect_doc_types(bundle: SubmissionBundle) -> list[str]:
+    types: list[str] = []
+    if bundle.structured is not None:
+        types.append("acord_xml")
+        if bundle.structured.named_insured:
+            types.append("signed_application")
+        if bundle.structured.financial:
+            types.append("financial_statement")
+            if bundle.structured.financial.loss_run:
+                types.append("loss_run")
+        if bundle.structured.schedule_of_values:
+            types.append("schedule_of_values")
+    for doc in bundle.unstructured or []:
+        t = getattr(doc, "document_type", None)
+        if t is None:
+            continue
+        types.append(t.value if hasattr(t, "value") else str(t))
+    if bundle.visual_analysis and bundle.visual_analysis.get("analyzed_photos", 0) > 0:
+        types.append("property_photos")
+    if bundle.supplemental:
+        types.append("supplemental")
+    return types
+
+
 @dataclass
 class DocumentChecklist:
+    """LOB-aware package completeness.
+
+    Prefer ``present`` / ``missing`` lists driven by the LOB catalog. Legacy
+    boolean fields remain for property-line callers and older tests.
+    """
+
+    lob: str = "property"
+    present: list[str] = field(default_factory=list)
+    _missing: list[str] = field(default_factory=list)
+
+    # Legacy property flags (kept for backward compatibility)
     acord_form: bool = False
     loss_run: bool = False
     financials: bool = False
@@ -36,25 +88,48 @@ class DocumentChecklist:
     supplemental: bool = False
     signed_application: bool = False
 
+    @classmethod
+    def from_bundle(cls, bundle: SubmissionBundle, *, insurance_line: str | None = None) -> DocumentChecklist:
+        lob = _line_to_lob(insurance_line)
+        types = _collect_doc_types(bundle)
+        pkg = package_checklist(types, lob=lob)
+        present = list(pkg.get("present") or [])
+        missing = list(pkg.get("missing") or [])
+        return cls(
+            lob=lob,
+            present=present,
+            _missing=missing,
+            acord_form=any("acord" in p.lower() for p in present),
+            loss_run=any("loss" in p.lower() or "claims" in p.lower() for p in present),
+            financials=any("financial" in p.lower() for p in present),
+            photos=any("photo" in p.lower() for p in present),
+            inspection_report=any("inspection" in p.lower() for p in present),
+            schedule_of_values=any("schedule of values" in p.lower() for p in present),
+            supplemental=any("supplement" in p.lower() or "broker" in p.lower() for p in present),
+            signed_application=any("application" in p.lower() or "signed" in p.lower() for p in present) or bool(bundle.structured and bundle.structured.named_insured),
+        )
+
     @property
     def completeness_pct(self) -> float:
-        total = 8
-        present = sum(
-            [
-                self.acord_form,
-                self.loss_run,
-                self.financials,
-                self.photos,
-                self.inspection_report,
-                self.schedule_of_values,
-                self.supplemental,
-                self.signed_application,
-            ]
-        )
-        return present / total
+        total = len(self.present) + len(self._missing)
+        if total > 0:
+            return len(self.present) / total
+        flags = [
+            self.acord_form,
+            self.loss_run,
+            self.financials,
+            self.photos,
+            self.inspection_report,
+            self.schedule_of_values,
+            self.supplemental,
+            self.signed_application,
+        ]
+        return sum(1 for f in flags if f) / len(flags)
 
     @property
     def missing(self) -> list[str]:
+        if self._missing or self.present:
+            return list(self._missing)
         items: list[str] = []
         if not self.acord_form:
             items.append("ACORD application form")
@@ -73,6 +148,24 @@ class DocumentChecklist:
         if not self.signed_application:
             items.append("Signed application")
         return items
+
+    def to_summary_dict(self) -> dict[str, Any]:
+        return {
+            "lob": self.lob,
+            "completeness_pct": self.completeness_pct,
+            "missing_documents": list(self.missing),
+            "present_documents": list(self.present),
+        }
+
+
+# Hard-required docs that become CRITICAL validation findings (subset of catalog)
+REQUIRED_CRITICAL_BY_LOB: dict[str, list[str]] = {
+    "life": ["Life application"],
+    "auto": ["Auto application"],
+    "homeowners": ["Homeowners application"],
+    "do": ["D&O application"],
+    "property": ["ACORD application", "Loss run", "Schedule of values"],
+}
 
 
 @dataclass
@@ -111,17 +204,17 @@ class TriageAgent:
     def __init__(self) -> None:
         self._queue: list[TriageResult] = []
 
-    def score_submission(self, bundle: SubmissionBundle) -> TriageResult:
+    def score_submission(
+        self,
+        bundle: SubmissionBundle,
+        *,
+        insurance_line: str | None = None,
+    ) -> TriageResult:
         """Score a single submission and return a triage result."""
         naics = ""
         state = ""
         tiv = 0.0
         premium = 0.0
-        has_loss_run = False
-        has_sov = False
-        has_financials = False
-        has_inspection = False
-        has_supplemental = False
 
         if bundle.structured:
             if bundle.structured.risk_profile:
@@ -132,86 +225,57 @@ class TriageAgent:
                     tiv += (loc.building_value or 0) + (loc.contents_value or 0) + (loc.bi_value or 0)
             for cov in bundle.structured.coverages:
                 premium += cov.premium
-            if bundle.structured.financial:
-                has_financials = True
-                if bundle.structured.financial.loss_run:
-                    has_loss_run = True
 
-        # Check unstructured docs for missing info
-        for doc in bundle.unstructured:
-            if doc.document_type == "loss_run":
-                has_loss_run = True
-            elif doc.document_type == "schedule_of_values":
-                has_sov = True
-            elif doc.document_type == "inspection_report":
-                has_inspection = True
-            elif doc.document_type not in ("loss_run", "schedule_of_values"):
-                has_supplemental = True
+        checklist = DocumentChecklist.from_bundle(bundle, insurance_line=insurance_line)
+        lob = checklist.lob
 
-        if bundle.supplemental:
-            has_supplemental = True
-
-        has_photos = bool(bundle.visual_analysis and bundle.visual_analysis.get("analyzed_photos", 0) > 0)
-
-        # NAICS fit
-        naics_fit = 0.0
-        if naics:
-            if naics[:2] in self.PREFERRED_NAICS_PREFIXES:
-                naics_fit = 100.0
-            elif any(naics.startswith(p) for p in ("7211", "1133", "2131", "4821", "4911", "9211")):
-                naics_fit = 0.0  # Excluded
+        # NAICS / geography / size are commercial-property oriented — soften for personal lines
+        if lob in {"life", "auto", "homeowners"}:
+            naics_fit = 70.0 if not naics else (100.0 if naics[:2] in self.PREFERRED_NAICS_PREFIXES else 50.0)
+            geography_fit = 80.0 if not state else (100.0 if state in self.PREFERRED_STATES else 40.0)
+            size_fit = 85.0
+            coverage_fit = 80.0 if checklist.present else 50.0
+        else:
+            naics_fit = 0.0
+            if naics:
+                if naics[:2] in self.PREFERRED_NAICS_PREFIXES:
+                    naics_fit = 100.0
+                elif any(naics.startswith(p) for p in ("7211", "1133", "2131", "4821", "4911", "9211")):
+                    naics_fit = 0.0
+                else:
+                    naics_fit = 40.0
             else:
-                naics_fit = 40.0
-        else:
-            naics_fit = 30.0  # Unknown — query needed
+                naics_fit = 30.0
 
-        # Geography fit
-        geography_fit = 0.0
-        if state in self.PREFERRED_STATES:
-            geography_fit = 100.0 if state in ("TX", "OK") else 70.0
-        elif state:
-            geography_fit = 20.0  # Non-preferred state
-        else:
-            geography_fit = 50.0  # Unknown
+            geography_fit = 0.0
+            if state in self.PREFERRED_STATES:
+                geography_fit = 100.0 if state in ("TX", "OK") else 70.0
+            elif state:
+                geography_fit = 20.0
+            else:
+                geography_fit = 50.0
 
-        # Size fit (based on TIV)
-        size_fit = 100.0
-        if tiv > 0:
-            if tiv < 50_000:
-                size_fit = 20.0  # Too small
-            elif tiv > 25_000_000:
-                size_fit = 30.0  # Too large, facultative needed
-            elif tiv > 10_000_000:
-                size_fit = 60.0  # Large but possible
-        elif premium > 0:
-            if premium < 2_500:
-                size_fit = 20.0
-            elif premium > 250_000:
-                size_fit = 30.0
-        # else unknown → moderate
+            size_fit = 100.0
+            if tiv > 0:
+                if tiv < 50_000:
+                    size_fit = 20.0
+                elif tiv > 25_000_000:
+                    size_fit = 30.0
+                elif tiv > 10_000_000:
+                    size_fit = 60.0
+            elif premium > 0:
+                if premium < 2_500:
+                    size_fit = 20.0
+                elif premium > 250_000:
+                    size_fit = 30.0
 
-        # Coverage fit (do we write this type?)
-        coverage_fit = 70.0  # Default — unknown
-        if bundle.structured and bundle.structured.coverages:
-            coverage_fit = 85.0  # Has coverages
+            coverage_fit = 70.0
+            if bundle.structured and bundle.structured.coverages:
+                coverage_fit = 85.0
 
-        # Document completeness
-        checklist = DocumentChecklist(
-            acord_form=bundle.structured is not None,
-            loss_run=has_loss_run,
-            financials=has_financials,
-            schedule_of_values=has_sov,
-            inspection_report=has_inspection,
-            supplemental=has_supplemental,
-            photos=has_photos,
-            signed_application=bool(bundle.structured and bundle.structured.named_insured),
-        )
-
-        # Weighted total score
         score = naics_fit * 0.30 + geography_fit * 0.25 + size_fit * 0.20 + coverage_fit * 0.15 + (checklist.completeness_pct * 100.0) * 0.10
         score = max(0.0, min(100.0, score))
 
-        # Priority
         if score >= 80:
             priority = SubmissionPriority.HOT
         elif score >= 50:
@@ -221,7 +285,6 @@ class TriageAgent:
         else:
             priority = SubmissionPriority.NO_FIT
 
-        # Assign to correct UW level and estimate effort
         review_by = "triage_desk"
         est_minutes = 30
         if priority == SubmissionPriority.HOT:
@@ -247,7 +310,7 @@ class TriageAgent:
             size_fit=size_fit,
             coverage_fit=coverage_fit,
             document_checklist=checklist,
-            missing_documents=checklist.missing,
+            missing_documents=list(checklist.missing),
             review_by=review_by,
             estimated_review_minutes=est_minutes,
         )
@@ -278,15 +341,5 @@ class TriageAgent:
             "hot_need_review": counts.get("hot", 0),
             "warm_could_proceed": counts.get("warm", 0),
             "cold_minimal_effort": counts.get("cold", 0),
-            "no_fit_discard": counts.get("no_fit", 0),
+            "no_fit": counts.get("no_fit", 0),
         }
-
-
-_triage: TriageAgent | None = None
-
-
-def get_triage_agent() -> TriageAgent:
-    global _triage
-    if _triage is None:
-        _triage = TriageAgent()
-    return _triage

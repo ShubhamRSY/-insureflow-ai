@@ -3157,9 +3157,10 @@ def get_missing_documents(
     """Get list of missing documents for a submission."""
     org_id = current.org_id if current and current.org_id else "demo"
 
-    from insureflow.agents.triage_agent import DocumentChecklist
+    from insureflow.agents.triage_agent import DocumentChecklist, TriageAgent
 
     checklist: DocumentChecklist | None = None
+    line_hint = ""
 
     from insureflow.audit.store import AuditStore
 
@@ -3169,24 +3170,31 @@ def get_missing_documents(
     if not bundle_data:
         bundle_data = store.load_json(bundle_id, "submission_bundle.json")
 
+    job_data = job_store.get(INSURANCE_NS, bundle_id, org_id=org_id) or job_store.get(INSURANCE_NS, bundle_id) or {}
+    results = (job_data or {}).get("results") or {}
+    line_hint = str(results.get("insurance_line") or results.get("product_line") or "")
+    cached = results.get("document_checklist")
+    if isinstance(cached, dict) and (cached.get("missing_documents") is not None or cached.get("lob")):
+        return {
+            "bundle_id": bundle_id,
+            "lob": cached.get("lob") or line_hint or "property",
+            "completeness_pct": cached.get("completeness_pct", 0),
+            "missing_documents": cached.get("missing_documents") or [],
+            "present_documents": cached.get("present_documents") or [],
+            "can_request_from_broker": bool(cached.get("missing_documents")),
+        }
+
     if bundle_data:
         from insureflow.models.submissions import SubmissionBundle
 
         try:
             bundle = SubmissionBundle(**bundle_data)
-            from insureflow.agents.triage_agent import get_triage_agent
-
-            result = get_triage_agent().score_submission(bundle)
+            result = TriageAgent().score_submission(bundle, insurance_line=line_hint or None)
             checklist = result.document_checklist
         except Exception:
             logger.warning("Triage agent scoring failed for bundle %s, falling back to job data", bundle_id, exc_info=True)
-            pass
 
     if checklist is None:
-        job_data = job_store.get(INSURANCE_NS, bundle_id, org_id=org_id)
-        if not job_data:
-            job_data = job_store.get(INSURANCE_NS, bundle_id)
-        results = (job_data or {}).get("results") or {}
         doc_count = results.get("document_count", 0)
         if doc_count:
             checklist = DocumentChecklist(
@@ -3199,12 +3207,20 @@ def get_missing_documents(
         else:
             checklist = DocumentChecklist()
 
+    summary = (
+        checklist.to_summary_dict()
+        if hasattr(checklist, "to_summary_dict")
+        else {
+            "completeness_pct": checklist.completeness_pct,
+            "missing_documents": checklist.missing,
+            "present_documents": list(getattr(checklist, "present", []) or []),
+            "lob": getattr(checklist, "lob", "property"),
+        }
+    )
     return {
         "bundle_id": bundle_id,
-        "completeness_pct": checklist.completeness_pct,
-        "missing_documents": checklist.missing,
-        "present_documents": getattr(checklist, "present", []),
-        "can_request_from_broker": len(checklist.missing) > 0,
+        **summary,
+        "can_request_from_broker": len(summary.get("missing_documents") or []) > 0,
     }
 
 
@@ -3295,8 +3311,26 @@ def insurance_package_checklist(
         types.extend(list(type_counts.keys()))
     line_hint = str(results.get("insurance_line") or results.get("product_line") or summary.get("product_line") or (results.get("quote_full") or {}).get("line") or "")
     text_blob = " ".join(types) + " " + line_hint
-    # Prefer explicit query param only when it is a known catalog key; otherwise detect.
-    resolved = lob if lob in ("property", "do", "homeowners", "auto", "life") else detect_lob(text_blob, line_hint)
+    # Prefer job LOB / explicit query; map personal_* aliases to catalog keys.
+    from insureflow.agents.triage_agent import _line_to_lob
+
+    if lob in ("property", "do", "homeowners", "auto", "life"):
+        resolved = lob
+    elif lob:
+        resolved = _line_to_lob(lob)
+    else:
+        resolved = _line_to_lob(line_hint) if line_hint else detect_lob(text_blob, line_hint)
+    # Prefer cached pipeline checklist when LOB matches (0–1 completeness from triage)
+    cached = results.get("document_checklist")
+    if isinstance(cached, dict) and cached.get("lob") == resolved:
+        return {
+            "bundle_id": bundle_id,
+            "lob": resolved,
+            "present": cached.get("present_documents") or cached.get("present") or [],
+            "missing": cached.get("missing_documents") or cached.get("missing") or [],
+            "completeness_pct": round(float(cached.get("completeness_pct") or 0) * 100, 1) if float(cached.get("completeness_pct") or 0) <= 1 else float(cached.get("completeness_pct") or 0),
+            "can_request_from_broker": bool(cached.get("missing_documents") or cached.get("missing")),
+        }
     checklist = package_checklist(types, lob=resolved)
     return {"bundle_id": bundle_id, **checklist}
 

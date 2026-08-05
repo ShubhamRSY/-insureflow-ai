@@ -8,7 +8,7 @@ import { Shield, ArrowRight, Download, Trash2, RotateCcw, FileText } from 'lucid
 const FLOW_STEPS = [
   { label: 'Intake', desc: 'Connect & pull broker package' },
   { label: 'Parse', desc: 'OCR, classify, extract fields' },
-  { label: 'Verify', desc: 'Oracles, COPE, reconciliation' },
+  { label: 'Verify', desc: 'Oracles / medical UW' },
   { label: 'Score', desc: 'Multi-agent risk analysis' },
   { label: 'Price', desc: 'Indicated premium build-up' },
   { label: 'Decide', desc: 'UW memo & workflow' },
@@ -104,7 +104,7 @@ export default function InsurancePage({ presets, jobs, onRunDemo, onOpenJob, onS
                 </div>
               ))}
             </div>
-            <p className="mt-2.5 text-xs text-slate-500">Open any job to see the full submission journey — COPE, provenance, checkpoints, and pricing breakdown.</p>
+            <p className="mt-2.5 text-xs text-slate-500">Open any job to see the full submission journey — LOB checklist, medical or COPE UW, provenance, and pricing.</p>
           </div>
 
           <RunSelector presets={presets} onRunDemo={onRunDemo} onSubmit={onSubmit} />

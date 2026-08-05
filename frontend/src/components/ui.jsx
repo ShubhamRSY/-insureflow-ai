@@ -91,7 +91,7 @@ export function DemoCard({ name, description, tag, tagColor = 'brand', onClick, 
 const PIPELINE_STEPS = [
   { label: 'Intake', desc: 'Connect sources & pull package' },
   { label: 'Parse', desc: 'OCR, classify, extract' },
-  { label: 'Verify', desc: 'Oracles, COPE, reconciliation' },
+  { label: 'Verify', desc: 'Oracles / medical UW' },
   { label: 'Score', desc: 'Multi-agent risk analysis' },
   { label: 'Price', desc: 'Indicated premium / rate' },
   { label: 'Decide', desc: 'UW memo & workflow' },

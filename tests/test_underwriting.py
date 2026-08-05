@@ -554,7 +554,7 @@ class TestTriageModule:
         assert "hot_need_review" in stats
         assert "warm_could_proceed" in stats
         assert "cold_minimal_effort" in stats
-        assert "no_fit_discard" in stats
+        assert "no_fit" in stats
         assert "by_priority" in stats
 
     def test_document_checklist_tracks_all_types(self) -> None:

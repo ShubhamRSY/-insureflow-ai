@@ -126,13 +126,29 @@ class InsurancePipeline:
         progress.start("intake", "Intake", "Receiving submission package")
         progress.complete("intake", detail="Submission received")
         progress.start("triage", "Triage", "Scoring submission priority")
+        from insureflow.underwriting.personal_lines import detect_insurance_line, parse_insurance_line
+
+        resolved_line = parse_insurance_line(insurance_line)
+        if resolved_line is None:
+            pre_blob = " ".join(
+                [
+                    acord_xml or "",
+                    json_payload or "",
+                    loss_run or "",
+                    " ".join(inspection_reports or []),
+                    " ".join(d.get("filename", "") + " " + d.get("content", "")[:2000] for d in (documents or [])),
+                ]
+            )
+            resolved_line = detect_insurance_line(pre_blob, insurance_line or "")
+
         triage_result = self.triage.score_submission(
             self._build_preliminary_bundle(
                 acord_xml=acord_xml,
                 json_payload=json_payload,
                 loss_run=loss_run,
                 bundle_id=bid,
-            )
+            ),
+            insurance_line=resolved_line.value if resolved_line else insurance_line,
         )
         progress.complete(
             "triage",
@@ -141,9 +157,6 @@ class InsurancePipeline:
 
         # ── 2. FAST-FAIL APPETITE FILTER (before expensive ingestion) ──
         progress.start("appetite", "Appetite", "Checking carrier appetite")
-        from insureflow.underwriting.personal_lines import detect_insurance_line, parse_insurance_line
-
-        resolved_line = parse_insurance_line(insurance_line)
         appetite_passed = True
         appetite_result = None
         if not skip_appetite_filter:
@@ -153,17 +166,6 @@ class InsurancePipeline:
                 loss_run=loss_run,
                 bundle_id=bid,
             )
-            if resolved_line is None:
-                pre_blob = " ".join(
-                    [
-                        acord_xml or "",
-                        json_payload or "",
-                        loss_run or "",
-                        " ".join(inspection_reports or []),
-                        " ".join(d.get("filename", "") + " " + d.get("content", "")[:2000] for d in (documents or [])),
-                    ]
-                )
-                resolved_line = detect_insurance_line(pre_blob, insurance_line or "")
             appetite_result = self.appetite_filter.check_appetite(
                 pre_bundle,
                 insurance_line=resolved_line.value if resolved_line else None,
@@ -236,106 +238,106 @@ class InsurancePipeline:
         )
 
         # ── 2b. RE-SCORE DOCUMENT CHECKLIST on fully-ingested bundle ──
-        triage_result = self.triage.score_submission(bundle)
+        line_hint = resolved_line.value if resolved_line else insurance_line
+        triage_result = self.triage.score_submission(bundle, insurance_line=line_hint)
+        checklist_lob = triage_result.document_checklist.lob
 
-        # ── 2c. REQUIRED DATA VALIDATION (hard gate against silent missing-data failures) ──
+        # ── 2c. REQUIRED DATA VALIDATION (LOB-aware hard gates) ──
         validation_findings: list[Any] = []
-        missing_docs = triage_result.document_checklist.missing
-        required_docs = {
-            "Loss run (5 year claims history)": "loss_run",
-            "ACORD application form": "acord",
-            "Schedule of values": "sov",
-        }
-        for label in required_docs:
-            if label in missing_docs:
-                from insureflow.models.agents import Finding, RiskSeverity
+        from insureflow.agents.triage_agent import REQUIRED_CRITICAL_BY_LOB
+        from insureflow.models.agents import Finding, RiskSeverity
 
+        missing_docs = set(triage_result.document_checklist.missing)
+        required_labels = REQUIRED_CRITICAL_BY_LOB.get(checklist_lob, REQUIRED_CRITICAL_BY_LOB["property"])
+        for label in required_labels:
+            if label in missing_docs:
                 validation_findings.append(
                     Finding(
                         title=f"Missing required document: {label}",
-                        description=f"{label} was not provided or could not be parsed. Pricing without this data risks underestimating exposure.",
+                        description=(f"{label} was not provided or could not be parsed. Cannot complete {checklist_lob} underwriting without it."),
                         severity=RiskSeverity.CRITICAL,
                         category="data_quality",
-                        field_path=required_docs[label],
+                        field_path=label.lower().replace(" ", "_").replace("/", "_"),
                     )
                 )
 
-        loss_run_raw = loss_run or ""
-        loss_run_expected = "Loss run (5 year claims history)" not in missing_docs
-        if bundle.structured:
-            fin = bundle.structured.financial
-            has_claims = fin and fin.loss_run and len(fin.loss_run.claims) > 0
-            if not has_claims and (loss_run_raw.strip() or loss_run_expected):
-                from insureflow.models.agents import Finding, RiskSeverity
+        if checklist_lob == "property":
+            loss_run_raw = loss_run or ""
+            loss_run_expected = any("loss" in m.lower() for m in triage_result.document_checklist.present)
+            if bundle.structured:
+                fin = bundle.structured.financial
+                has_claims = fin and fin.loss_run and len(fin.loss_run.claims) > 0
+                if not has_claims and (loss_run_raw.strip() or loss_run_expected):
+                    validation_findings.append(
+                        Finding(
+                            title="Loss run provided but empty — no claims extracted",
+                            description="Loss run attached but zero claims parsed (password-protected, corrupted, or unrecognized format). This is NOT a clean history — data is missing.",
+                            severity=RiskSeverity.CRITICAL,
+                            category="data_quality",
+                            field_path="financial.loss_run.claims",
+                        )
+                    )
 
+            if bundle.structured is None:
                 validation_findings.append(
                     Finding(
-                        title="Loss run provided but empty — no claims extracted",
-                        description="Loss run attached but zero claims parsed (password-protected, corrupted, or unrecognized format). This is NOT a clean history — data is missing.",
+                        title="No structured submission data",
+                        description="No ACORD XML, JSON payload, or broker API data was received. Coverage limits, named insured, and policy terms are unknown.",
                         severity=RiskSeverity.CRITICAL,
                         category="data_quality",
-                        field_path="financial.loss_run.claims",
+                        field_path="structured",
                     )
                 )
+            else:
+                has_coverage_limits = bool(bundle.structured.coverages and any(c.limit_amount and c.limit_amount > 0 for c in bundle.structured.coverages))
+                if not has_coverage_limits:
+                    validation_findings.append(
+                        Finding(
+                            title="No coverage limits available",
+                            description="No coverage limits were extracted from any source. Premium cannot be accurately rated without limit data.",
+                            severity=RiskSeverity.CRITICAL,
+                            category="data_quality",
+                            field_path="coverages[].limit",
+                        )
+                    )
 
-        if bundle.structured is None:
-            from insureflow.models.agents import Finding, RiskSeverity
-
+            # ── 2d. NON-CRITICAL (GUIDELINE) DATA GAPS — property only ──
+            if bundle.structured and bundle.structured.locations:
+                for li, loc in enumerate(bundle.structured.locations):
+                    if loc.year_built is None or loc.year_built == 0:
+                        validation_findings.append(
+                            Finding(
+                                title="Roof age or year built not provided",
+                                description=f"Location {li}: year built is unknown. Age of roof is required per underwriting guidelines for hail-prone regions.",
+                                severity=RiskSeverity.MODERATE,
+                                category="data_quality",
+                                field_path=f"locations[{li}].year_built",
+                                confidence=0.95,
+                            )
+                        )
+                    if loc.protection_class is None or loc.protection_class == 0:
+                        validation_findings.append(
+                            Finding(
+                                title="Protection class not provided",
+                                description=f"Location {li}: ISO protection class is unknown. May affect fire rating.",
+                                severity=RiskSeverity.MODERATE,
+                                category="data_quality",
+                                field_path=f"locations[{li}].protection_class",
+                                confidence=0.95,
+                            )
+                        )
+        elif checklist_lob == "life" and not triage_result.document_checklist.present:
             validation_findings.append(
                 Finding(
-                    title="No structured submission data",
-                    description="No ACORD XML, JSON payload, or broker API data was received. Coverage limits, named insured, and policy terms are unknown.",
-                    severity=RiskSeverity.CRITICAL,
+                    title="Incomplete life underwriting package",
+                    description="Life application / medical evidence was not identified. Paramedical exam and APS may be required before bind.",
+                    severity=RiskSeverity.HIGH,
                     category="data_quality",
-                    field_path="structured",
+                    field_path="life_package",
                 )
             )
-        else:
-            has_coverage_limits = bool(bundle.structured.coverages and any(c.limit_amount and c.limit_amount > 0 for c in bundle.structured.coverages))
-            if not has_coverage_limits:
-                from insureflow.models.agents import Finding, RiskSeverity
 
-                validation_findings.append(
-                    Finding(
-                        title="No coverage limits available",
-                        description="No coverage limits were extracted from any source. Premium cannot be accurately rated without limit data.",
-                        severity=RiskSeverity.CRITICAL,
-                        category="data_quality",
-                        field_path="coverages[].limit",
-                    )
-                )
-
-        # ── 2d. NON-CRITICAL (GUIDELINE) DATA GAPS — triggers conditional_accept, not hard refer ──
-        if bundle.structured and bundle.structured.locations:
-            for li, loc in enumerate(bundle.structured.locations):
-                if loc.year_built is None or loc.year_built == 0:
-                    from insureflow.models.agents import Finding, RiskSeverity
-
-                    validation_findings.append(
-                        Finding(
-                            title="Roof age or year built not provided",
-                            description=f"Location {li}: year built is unknown. Age of roof is required per underwriting guidelines for hail-prone regions.",
-                            severity=RiskSeverity.MODERATE,
-                            category="data_quality",
-                            field_path=f"locations[{li}].year_built",
-                            confidence=0.95,
-                        )
-                    )
-                if loc.protection_class is None or loc.protection_class == 0:
-                    from insureflow.models.agents import Finding, RiskSeverity
-
-                    validation_findings.append(
-                        Finding(
-                            title="Protection class not provided",
-                            description=f"Location {li}: ISO protection class is unknown. May affect fire rating.",
-                            severity=RiskSeverity.MODERATE,
-                            category="data_quality",
-                            field_path=f"locations[{li}].protection_class",
-                            confidence=0.95,
-                        )
-                    )
-
-        # ── 2e. NON-STANDARD / MANUSCRIPT DOCUMENT DETECTION ──
+        # ── 2e. NON-STANDARD / MANUSCRIPT DOCUMENT DETECTION (commercial property) ──
         manuscript_keywords = (
             "endorsement",
             "manuscript",
@@ -349,7 +351,9 @@ class InsurancePipeline:
             "modification",
         )
         scrutinized: list[str] = []
-        for doc in bundle.unstructured:
+        if checklist_lob != "property":
+            pass  # life/auto/home use LOB catalogs — skip P&C manuscript heuristics
+        for doc in bundle.unstructured if checklist_lob == "property" else []:
             if doc.document_type in ("loss_run", "schedule_of_values", "inspection_report"):
                 continue
             text = (doc.raw_text or "").lower()
@@ -369,7 +373,7 @@ class InsurancePipeline:
                 )
             )
             scrutinized.append(doc.document_type)
-        for doc in bundle.supplemental:
+        for doc in bundle.supplemental if checklist_lob == "property" else []:
             text = (doc.raw_text or "").lower()
             matches = [kw for kw in manuscript_keywords if kw in text]
             if not matches:
@@ -465,10 +469,14 @@ class InsurancePipeline:
             bundle = self.extraction.process_bundle(bundle)
         bundle.status = SubmissionStatus.EXTRACTED
 
-        # ── 4. EXTERNAL DATA ORACLES (CLUE, NCCI, CAT) ──
+        # ── 4. EXTERNAL DATA ORACLES (CLUE, NCCI, CAT) — skip property oracles on life ──
         oracle_findings: list[Any] = []
+        is_life_line = (resolved_line is not None and resolved_line.value == "life") or checklist_lob == "life"
         if funnel:
             progress.skip("verify", "Verified", "Deferred — available via Deep Dive")
+        elif is_life_line:
+            progress.start("verify", "Verified", "Life medical UW (P&C oracles skipped)")
+            progress.complete("verify", detail="Life — medical underwriting path", findings=0)
         else:
             progress.start("verify", "Verified", "Running external oracle checks")
             if not skip_oracles:
@@ -653,10 +661,47 @@ class InsurancePipeline:
             status="warning" if memo.human_review_required else "complete",
         )
 
+        # Drop P&C-only findings on life so the memo/report stay coherent
+        if is_life_line:
+            from insureflow.underwriting.memo_sync import dedupe_findings, resync_memo_narrative
+
+            def _property_only(f: Any) -> bool:
+                blob = f"{getattr(f, 'title', '')} {getattr(f, 'description', '')}".lower()
+                markers = (
+                    "schedule of values",
+                    "acord application",
+                    "protection class",
+                    "roof age",
+                    "year built",
+                    "reinsurance treaty",
+                    "tiv $",
+                    "ncci",
+                    "experience mod",
+                    "catastrophe",
+                    "wildfire",
+                    "flood zone",
+                    "locations, coverages",
+                    "risk profile, locations",
+                    "named insured, risk profile, locations",
+                    "clue report",
+                    "property photos",
+                    "iso protection",
+                    "hail-prone",
+                    "building occupancy",
+                )
+                return any(m in blob for m in markers)
+
+            memo.key_findings = dedupe_findings([f for f in memo.key_findings if not _property_only(f)])
+            memo.compliance_findings = [f for f in (memo.compliance_findings or []) if not _property_only(f)]
+            memo.risk_analyst_findings = [f for f in (memo.risk_analyst_findings or []) if not _property_only(f)]
+            resync_memo_narrative(memo)
+
         # ── 7. PORTFOLIO CONCENTRATION RISK ──
         portfolio_result = None
         if funnel:
             progress.skip("portfolio", "Portfolio", "Deferred — available via Deep Dive")
+        elif is_life_line:
+            progress.skip("portfolio", "Portfolio", "Not applicable for life")
         elif not skip_portfolio:
             bundle.status = SubmissionStatus.PORTFOLIO_REVIEW
             portfolio_result = self.portfolio_risk.run(bundle, org_id=self.org_id)
@@ -675,6 +720,8 @@ class InsurancePipeline:
         reinsurance_result = None
         if funnel:
             progress.skip("reinsurance", "Reinsurance", "Deferred — available via Deep Dive")
+        elif is_life_line:
+            progress.skip("reinsurance", "Reinsurance", "Not applicable for life")
         elif not skip_reinsurance:
             bundle.status = SubmissionStatus.REINSURANCE_REVIEW
             reinsurance_result = self.reinsurance.run(bundle, org_id=self.org_id)
@@ -868,31 +915,14 @@ class InsurancePipeline:
             "product_line": line_for_quote.value,
             "human_review_required": memo.human_review_required or wf.state == WorkflowState.PENDING_REVIEW,
             "funnel": funnel,
-            "deep_dive_available": list(deferred_stages),
+            "deep_dive_available": ([s for s in deferred_stages if s not in ("oracles", "portfolio", "reinsurance")] if is_life_line else list(deferred_stages)),
             "appetite_filter_passed": appetite_passed,
             "appetite_needs_uw_referral": appetite_result.needs_uw_referral if appetite_result else False,
             "appetite_reason": appetite_result.reason if appetite_result else "",
             "oracle_findings_count": len(oracle_findings),
             "ocr_documents": ocr_count,
             "document_count": len(bundle.unstructured) + (1 if bundle.structured else 0),
-            "document_checklist": {
-                "completeness_pct": triage_result.document_checklist.completeness_pct,
-                "missing_documents": triage_result.document_checklist.missing,
-                "present_documents": [
-                    k
-                    for k, v in {
-                        "acord_form": triage_result.document_checklist.acord_form,
-                        "loss_run": triage_result.document_checklist.loss_run,
-                        "financials": triage_result.document_checklist.financials,
-                        "property_photos": triage_result.document_checklist.photos,
-                        "inspection_report": triage_result.document_checklist.inspection_report,
-                        "schedule_of_values": triage_result.document_checklist.schedule_of_values,
-                        "supplemental_forms": triage_result.document_checklist.supplemental,
-                        "signed_application": triage_result.document_checklist.signed_application,
-                    }.items()
-                    if v
-                ],
-            },
+            "document_checklist": triage_result.document_checklist.to_summary_dict(),
             "reconciliation_discrepancies": len(reconciliation.discrepancies),
             "pipeline_stages": progress.stages,
             "provenance_summary": {
@@ -1165,24 +1195,15 @@ class InsurancePipeline:
         checklist: dict[str, Any] = {}
         if triage_result and hasattr(triage_result, "document_checklist"):
             cl = triage_result.document_checklist
-            checklist = {
-                "completeness_pct": cl.completeness_pct,
-                "missing_documents": cl.missing,
-                "present_documents": [
-                    k
-                    for k, v in {
-                        "acord_form": cl.acord_form,
-                        "loss_run": cl.loss_run,
-                        "financials": cl.financials,
-                        "property_photos": cl.photos,
-                        "inspection_report": cl.inspection_report,
-                        "schedule_of_values": cl.schedule_of_values,
-                        "supplemental_forms": cl.supplemental,
-                        "signed_application": cl.signed_application,
-                    }.items()
-                    if v
-                ],
-            }
+            checklist = (
+                cl.to_summary_dict()
+                if hasattr(cl, "to_summary_dict")
+                else {
+                    "completeness_pct": cl.completeness_pct,
+                    "missing_documents": cl.missing,
+                    "present_documents": [],
+                }
+            )
         result = {
             "status": "completed",
             "bundle_id": bundle_id,
@@ -1195,6 +1216,8 @@ class InsurancePipeline:
             "ocr_documents": 0,
             "document_count": 0,
             "document_checklist": checklist or None,
+            "insurance_line": (checklist or {}).get("lob") if checklist else None,
+            "product_line": (checklist or {}).get("lob") if checklist else None,
             "reconciliation_discrepancies": 0,
             "quote": {},
             "encryption_at_rest": self.encryption.enabled,

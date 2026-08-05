@@ -106,13 +106,25 @@ function PhaseStrip({ phases, processing, currentStage }) {
   );
 }
 
+function completenessDisplayPct(raw) {
+  if (raw == null || Number.isNaN(Number(raw))) return null;
+  const n = Number(raw);
+  return n > 1 ? Math.round(n) : Math.round(n * 100);
+}
+
 function SubmissionQuality({ quality, docQuality, onRequestDocs, requesting }) {
+  const missing = docQuality?.missing_documents || docQuality?.missing || [];
+  const present = docQuality?.present_documents || docQuality?.present || [];
+  const pct = completenessDisplayPct(docQuality?.completeness_pct);
+  const lob = docQuality?.lob || quality?.lob;
   return (
     <div className="rounded-xl bg-surface-overlay p-4 ring-1 ring-white/[0.04]">
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Submission Quality</p>
-          <p className="mt-1 text-sm text-slate-300">Completeness, appetite fit, and data trust</p>
+          <p className="mt-1 text-sm text-slate-300">
+            {lob ? `${String(lob).replace(/_/g, ' ')} package · ` : ''}Completeness, appetite fit, and data trust
+          </p>
         </div>
         <div className="text-right">
           <p className={`text-3xl font-bold ${quality.gradeColor}`}>{quality.grade}</p>
@@ -122,20 +134,27 @@ function SubmissionQuality({ quality, docQuality, onRequestDocs, requesting }) {
       {docQuality && (
         <div className="mt-3 border-t border-white/[0.04] pt-3">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-slate-400">Document completeness</span>
-            <span className="text-slate-300">{(docQuality.completeness_pct * 100).toFixed(0)}%</span>
+            <span className="text-slate-400">{lob ? `${String(lob).replace(/_/g, ' ')} checklist` : 'Document completeness'}</span>
+            <span className="text-slate-300">{pct != null ? `${pct}%` : '—'}</span>
           </div>
           <div className="mt-2 h-1.5 rounded-full bg-black/30">
-            <div className="h-1.5 rounded-full bg-brand" style={{ width: `${docQuality.completeness_pct * 100}%` }} />
+            <div className="h-1.5 rounded-full bg-brand" style={{ width: `${pct ?? 0}%` }} />
           </div>
-          {docQuality.missing_documents?.length > 0 && (
+          {present.length > 0 && (
             <ul className="mt-2 space-y-1">
-              {docQuality.missing_documents.map((d) => (
-                <li key={d} className="text-xs text-red-400/90">Missing: {d}</li>
+              {present.map((d) => (
+                <li key={`p-${d}`} className="text-xs text-emerald-400/90">Present: {d}</li>
               ))}
             </ul>
           )}
-          {docQuality.missing_documents?.length > 0 && onRequestDocs && (
+          {missing.length > 0 && (
+            <ul className="mt-2 space-y-1">
+              {missing.map((d) => (
+                <li key={`m-${d}`} className="text-xs text-red-400/90">Missing: {d}</li>
+              ))}
+            </ul>
+          )}
+          {missing.length > 0 && onRequestDocs && (
             <button type="button" onClick={onRequestDocs} disabled={requesting} className="btn-secondary btn-sm mt-3 text-xs">
               <Send className="h-3 w-3" /> {requesting ? 'Sending…' : 'Request from broker'}
             </button>
@@ -189,9 +208,12 @@ function CopeDeepDive({ cope }) {
 
 function LifeMedicalPanel({ job }) {
   const quote = job?.results?.quote_full || job?.results?.quote || {};
-  const meta = quote.metadata || {};
-  const medical = meta.medical || {};
-  const face = meta.face_amount || meta.tiv || 0;
+  const meta = quote.metadata || quote || {};
+  const medical = meta.medical || quote.medical || {};
+  const memo = job?.results?.memo || {};
+  const face = meta.face_amount || meta.tiv || quote.tiv || 0;
+  const decision = (job?.results?.ai_decision || memo.decision || '').toString().replace(/_/g, ' ');
+  const conditions = meta.conditions || memo.conditions || [];
   return (
     <div className="grid gap-3 sm:grid-cols-2">
       <div className="rounded-lg bg-black/20 p-3">
@@ -200,19 +222,32 @@ function LifeMedicalPanel({ job }) {
       </div>
       <div className="rounded-lg bg-black/20 p-3">
         <p className="text-[10px] uppercase text-slate-500">Tobacco</p>
-        <p className="mt-1 text-sm font-medium text-slate-200">{medical.tobacco ? 'Yes' : 'No'}</p>
+        <p className="mt-1 text-sm font-medium text-slate-200">{medical.tobacco ? 'Yes' : medical.tobacco === false ? 'No' : '—'}</p>
       </div>
       <div className="rounded-lg bg-black/20 p-3">
         <p className="text-[10px] uppercase text-slate-500">Face Amount</p>
-        <p className="mt-1 text-sm font-medium text-slate-200">${Number(face).toLocaleString()}</p>
+        <p className="mt-1 text-sm font-medium text-slate-200">{face ? `$${Number(face).toLocaleString()}` : '—'}</p>
+      </div>
+      <div className="rounded-lg bg-black/20 p-3">
+        <p className="text-[10px] uppercase text-slate-500">Decision</p>
+        <p className="mt-1 text-sm font-medium uppercase text-slate-200">{decision || '—'}</p>
       </div>
       <div className="rounded-lg bg-black/20 p-3">
         <p className="text-[10px] uppercase text-slate-500">Rate Filing</p>
-        <p className="mt-1 text-sm font-medium text-slate-200">{meta.filing_id || '—'}</p>
+        <p className="mt-1 text-sm font-medium text-slate-200">{meta.filing_id || quote.filing_id || '—'}</p>
       </div>
-      {(meta.conditions || []).length > 0 && (
+      <div className="rounded-lg bg-black/20 p-3">
+        <p className="text-[10px] uppercase text-slate-500">Indicated Premium</p>
+        <p className="mt-1 text-sm font-medium text-slate-200">{fmtCurrency(quote.adjusted_premium ?? meta.adjusted_premium)}</p>
+      </div>
+      {memo.executive_summary && (
+        <div className="sm:col-span-2 rounded-lg bg-brand/10 px-3 py-2 text-xs text-slate-300">
+          {memo.executive_summary}
+        </div>
+      )}
+      {conditions.length > 0 && (
         <div className="sm:col-span-2 rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
-          {(meta.conditions || []).map((c) => <div key={c}>• {c}</div>)}
+          {conditions.map((c) => <div key={c}>• {c}</div>)}
         </div>
       )}
     </div>
@@ -247,7 +282,15 @@ function AgentFindingsPanel({ sections }) {
 }
 
 function ProvenancePanel({ provenance }) {
-  if (!provenance.totalFields) return <p className="text-xs text-slate-500">Provenance map available after parse.</p>;
+  if (!provenance.totalFields) {
+    return (
+      <p className="text-xs text-slate-500">
+        {provenance.isLife
+          ? 'Life packages often lack ACORD field provenance — medical UW class and application fields appear after extract.'
+          : 'No cross-document fields were reconciled yet (common when structured ACORD data is missing).'}
+      </p>
+    );
+  }
   return (
     <div>
       <div className="mb-3 flex gap-4 text-xs text-slate-400">
@@ -356,8 +399,18 @@ function EnterpriseOpsPanel({ ecosystem, onDispatchLC }) {
 }
 
 function VerificationCard({ verification }) {
-  const hasData = verification.oracleCount != null || verification.copeGrade || verification.matchRate != null;
+  const hasData = verification.oracleCount != null || verification.copeGrade || verification.matchRate != null || verification.isLife || verification.lifeClass;
   if (!hasData) return <p className="text-xs text-slate-500">Verification checks run after document parse completes.</p>;
+  if (verification.isLife) {
+    return (
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div><p className="text-[10px] uppercase text-slate-500">Path</p><p className="mt-1 text-sm font-semibold">Life medical</p></div>
+        <div><p className="text-[10px] uppercase text-slate-500">UW Class</p><p className="mt-1 text-sm font-semibold capitalize">{verification.lifeClass || '—'}</p></div>
+        <div><p className="text-[10px] uppercase text-slate-500">Tobacco</p><p className="mt-1 text-sm font-semibold">{verification.tobacco ? 'Yes' : 'No'}</p></div>
+        <div><p className="text-[10px] uppercase text-slate-500">Filing</p><p className="mt-1 text-sm font-semibold">{verification.filingId || '—'}</p></div>
+      </div>
+    );
+  }
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       <div><p className="text-[10px] uppercase text-slate-500">Oracles</p><p className="mt-1 text-sm font-semibold">{verification.oracleCount ?? 0}</p></div>
@@ -533,10 +586,11 @@ export default function SubmissionJourney({ job }) {
   const isLifeLine = (job?.results?.insurance_line || job?.results?.product_line || '').toLowerCase() === 'life';
 
   const handleRequestDocs = async () => {
-    if (!ctx.bundleId || !docQuality?.missing_documents?.length) return;
+    const missingList = docQuality?.missing_documents || docQuality?.missing || [];
+    if (!ctx.bundleId || !missingList.length) return;
     setRequesting(true);
     try {
-      await endpoints.requestBrokerDocs(ctx.bundleId, docQuality.missing_documents);
+      await endpoints.requestBrokerDocs(ctx.bundleId, missingList);
       alert('Document request sent to broker');
     } catch (e) {
       alert(e.message);
@@ -563,12 +617,16 @@ export default function SubmissionJourney({ job }) {
     }
   };
 
-  const deepDiveAvailable = job?.results?.deep_dive_available || [];
+  const deepDiveAvailable = (job?.results?.deep_dive_available || []).filter(
+    (k) => !isLifeLine || !['oracles', 'portfolio', 'reinsurance'].includes(k),
+  );
 
   return (
     <div className="space-y-4">
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-brand-light/80">Submission Journey</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-brand-light/80">
+          {isLifeLine ? 'Life Submission Journey' : 'Submission Journey'}
+        </p>
         {ctx.insuredName && <p className="mt-0.5 text-sm text-slate-400">{ctx.insuredName}</p>}
       </div>
 
@@ -589,7 +647,7 @@ export default function SubmissionJourney({ job }) {
 
       {!ctx.processing && (
         <>
-          <Section title="Verification & Oracles" icon={Shield}>
+          <Section title={isLifeLine ? 'Life Verification' : 'Verification & Oracles'} icon={Shield}>
             <VerificationCard verification={ctx.verification} />
           </Section>
 
@@ -611,9 +669,11 @@ export default function SubmissionJourney({ job }) {
             <ProvenancePanel provenance={ctx.provenance} />
           </Section>
 
-          <Section title="Reconciliation" icon={GitCompare}>
-            <ReconciliationPanel reconciliation={ctx.reconciliation} />
-          </Section>
+          {!isLifeLine && (
+            <Section title="Reconciliation" icon={GitCompare}>
+              <ReconciliationPanel reconciliation={ctx.reconciliation} />
+            </Section>
+          )}
 
           <Section title="Pricing" icon={DollarSign}>
             <PricingBreakdown pricing={ctx.pricing} />
@@ -629,9 +689,11 @@ export default function SubmissionJourney({ job }) {
             <AuditTrailInline audit={audit} />
           </Section>
 
-          <Section title="Enterprise Ecosystem" icon={Building2} defaultOpen={false}>
-            <EnterpriseOpsPanel ecosystem={ecosystem} onDispatchLC={ctx.bundleId ? handleDispatchLC : null} />
-          </Section>
+          {!isLifeLine && (
+            <Section title="Enterprise Ecosystem" icon={Building2} defaultOpen={false}>
+              <EnterpriseOpsPanel ecosystem={ecosystem} onDispatchLC={ctx.bundleId ? handleDispatchLC : null} />
+            </Section>
+          )}
         </>
       )}
     </div>
