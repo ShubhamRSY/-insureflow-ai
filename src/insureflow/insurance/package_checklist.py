@@ -11,6 +11,7 @@ PROPERTY_CATALOG: list[tuple[str, tuple[InsuranceDocumentType, ...]]] = [
     ("Loss run", (InsuranceDocumentType.LOSS_RUN,)),
     ("Schedule of values", (InsuranceDocumentType.SCHEDULE_OF_VALUES,)),
     ("Inspection report", (InsuranceDocumentType.INSPECTION_REPORT,)),
+    ("Property photos", (InsuranceDocumentType.PROPERTY_PHOTOS,)),
     ("Broker slip / submission", (InsuranceDocumentType.BROKER_SLIP,)),
     ("Financial statement", (InsuranceDocumentType.FINANCIAL_STATEMENT,)),
 ]

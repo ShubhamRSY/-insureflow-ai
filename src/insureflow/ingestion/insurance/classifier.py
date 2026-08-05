@@ -13,6 +13,7 @@ class InsuranceDocumentType(str, Enum):
     INSPECTION_REPORT = "inspection_report"
     FINANCIAL_STATEMENT = "financial_statement"
     SUPPLEMENTAL = "supplemental"
+    PROPERTY_PHOTOS = "property_photos"
     # Directors & Officers / management liability package
     DO_APPLICATION = "do_application"
     DO_QUESTIONNAIRE = "do_questionnaire"
