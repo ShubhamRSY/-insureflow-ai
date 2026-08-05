@@ -4,8 +4,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['"Inter"', 'system-ui', 'sans-serif'],
-        display: ['"Cal Sans"', '"Inter"', 'system-ui', 'sans-serif'],
+        sans: ['"DM Sans"', 'system-ui', 'sans-serif'],
+        display: ['"Syne"', '"DM Sans"', 'system-ui', 'sans-serif'],
       },
       colors: {
         // Brighter muted greys — default slate-400/500 washed out on dark surfaces
@@ -42,17 +42,20 @@ export default {
         card: '0 1px 0 rgba(255,255,255,0.04) inset, 0 8px 32px rgba(0,0,0,0.4)',
       },
       backgroundImage: {
-        mesh: 'radial-gradient(at 20% 20%, rgba(91,141,239,0.18) 0, transparent 50%), radial-gradient(at 80% 0%, rgba(167,139,250,0.12) 0, transparent 45%), radial-gradient(at 50% 100%, rgba(56,189,248,0.08) 0, transparent 50%)',
+        mesh: 'radial-gradient(at 20% 20%, rgba(91,141,239,0.18) 0, transparent 50%), radial-gradient(at 80% 0%, rgba(56,189,248,0.10) 0, transparent 45%), radial-gradient(at 50% 100%, rgba(52,211,153,0.06) 0, transparent 50%)',
+        'hero-glow': 'radial-gradient(ellipse 80% 60% at 50% -10%, rgba(91,141,239,0.28), transparent 55%), radial-gradient(ellipse 50% 40% at 90% 20%, rgba(56,189,248,0.12), transparent 50%), linear-gradient(180deg, #12182a 0%, #10141f 100%)',
       },
       animation: {
-        'fade-in': 'fadeIn 0.4s ease-out',
-        'slide-up': 'slideUp 0.4s ease-out',
-        'pulse-soft': 'pulseSoft 2s ease-in-out infinite',
+        'fade-in': 'fadeIn 0.5s ease-out both',
+        'slide-up': 'slideUp 0.55s ease-out both',
+        'pulse-soft': 'pulseSoft 2.4s ease-in-out infinite',
+        float: 'floatY 4.5s ease-in-out infinite',
       },
       keyframes: {
         fadeIn: { from: { opacity: 0 }, to: { opacity: 1 } },
-        slideUp: { from: { opacity: 0, transform: 'translateY(12px)' }, to: { opacity: 1, transform: 'translateY(0)' } },
-        pulseSoft: { '0%, 100%': { opacity: 1 }, '50%': { opacity: 0.5 } },
+        slideUp: { from: { opacity: 0, transform: 'translateY(14px)' }, to: { opacity: 1, transform: 'translateY(0)' } },
+        pulseSoft: { '0%, 100%': { opacity: 1 }, '50%': { opacity: 0.55 } },
+        floatY: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-6px)' } },
       },
     },
   },

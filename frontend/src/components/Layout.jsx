@@ -60,7 +60,7 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
                 <Shield className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h1 className="text-base font-bold tracking-tight">Rytera</h1>
+                <h1 className="font-display text-base font-bold tracking-tight">Rytera</h1>
                 <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">AI Underwriting</p>
               </div>
             </>
