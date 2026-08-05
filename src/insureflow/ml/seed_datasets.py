@@ -155,13 +155,7 @@ def _insurance_row_from_claim(
     protection = float(np.clip(claim["fire"], 0, 6))
     occupancy = _occupancy_from_entity(claim["entity"])
     claims_per_year = prior_count / max(years_in_business, 1.0)
-    risk = (
-        loss_ratio * 0.3
-        + (1 - min(credit / 850.0, 1.0)) * 0.2
-        + min(prior_count / 10.0, 1.0) * 0.2
-        + min(property_age / 80.0, 1.0) * 0.15
-        + (1 - min(years_in_business / 30.0, 1.0)) * 0.15
-    )
+    risk = loss_ratio * 0.3 + (1 - min(credit / 850.0, 1.0)) * 0.2 + min(prior_count / 10.0, 1.0) * 0.2 + min(property_age / 80.0, 1.0) * 0.15 + (1 - min(years_in_business / 30.0, 1.0)) * 0.15
     row = {name: 0.0 for name in DEFAULT_FEATURE_NAMES}
     row.update(
         {

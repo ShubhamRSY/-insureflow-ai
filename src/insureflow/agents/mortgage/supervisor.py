@@ -554,14 +554,8 @@ class MortgageDecisionAgent:
             decision = MortgageDecision.REFER
         else:
             # Soft package conditions → conditional approve; clean package → approve
-            soft_conditions = [
-                v for v in bundle.compliance_violations if v.severity not in ("high", "critical")
-            ]
-            decision = (
-                MortgageDecision.APPROVE_WITH_CONDITIONS
-                if soft_conditions
-                else MortgageDecision.APPROVE
-            )
+            soft_conditions = [v for v in bundle.compliance_violations if v.severity not in ("high", "critical")]
+            decision = MortgageDecision.APPROVE_WITH_CONDITIONS if soft_conditions else MortgageDecision.APPROVE
 
         risk_scores = [ar.risk_score for ar in agent_results]
         overall_risk = sum(risk_scores) / len(risk_scores) if risk_scores else 0.5

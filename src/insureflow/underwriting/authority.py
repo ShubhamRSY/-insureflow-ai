@@ -264,15 +264,10 @@ class AuthorityMatrix:
             return AuthorityVerdict.DENIED, f"TIV must be non-negative, got ${tiv:,.0f}"
 
         if premium > ba.max_premium:
-            return AuthorityVerdict.DENIED, (
-                f"Premium ${premium:,.0f} exceeds ${ba.max_premium:,.0f} {auth.tier.value} binding limit "
-                f"for {auth.display_name} — escalate to a higher tier"
-            )
+            return AuthorityVerdict.DENIED, (f"Premium ${premium:,.0f} exceeds ${ba.max_premium:,.0f} {auth.tier.value} binding limit for {auth.display_name} — escalate to a higher tier")
 
         if tiv > ba.max_tiv:
-            return AuthorityVerdict.DENIED, (
-                f"TIV ${tiv:,.0f} exceeds ${ba.max_tiv:,.0f} {auth.tier.value} binding limit"
-            )
+            return AuthorityVerdict.DENIED, (f"TIV ${tiv:,.0f} exceeds ${ba.max_tiv:,.0f} {auth.tier.value} binding limit")
 
         if ba.allowed_states and state and state not in ba.allowed_states:
             return AuthorityVerdict.DENIED, f"State '{state}' not in {auth.display_name}'s licensed states"
@@ -280,14 +275,9 @@ class AuthorityMatrix:
         if occupancy and occupancy in ba.excluded_occupancies:
             return AuthorityVerdict.DENIED, f"Occupancy '{occupancy}' excluded from authority"
 
-        needs_cosign = ba.requires_co_sign or (
-            ba.co_sign_threshold_premium > 0 and premium >= ba.co_sign_threshold_premium
-        )
+        needs_cosign = ba.requires_co_sign or (ba.co_sign_threshold_premium > 0 and premium >= ba.co_sign_threshold_premium)
         if needs_cosign:
-            return AuthorityVerdict.NEEDS_CO_SIGN, (
-                f"Premium ${premium:,.0f} requires co-sign "
-                f"(threshold ${ba.co_sign_threshold_premium:,.0f}) for {auth.tier.value} {auth.display_name}"
-            )
+            return AuthorityVerdict.NEEDS_CO_SIGN, (f"Premium ${premium:,.0f} requires co-sign (threshold ${ba.co_sign_threshold_premium:,.0f}) for {auth.tier.value} {auth.display_name}")
 
         return AuthorityVerdict.APPROVED, f"Within {auth.tier.value} authority — approved"
 

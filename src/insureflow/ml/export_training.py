@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 def _target_from_decision(decision: str) -> float:
     return ml_binary_target(decision)
 
+
 def _empty_row(feature_names: list[str]) -> dict[str, Any]:
     return {name: 0.0 for name in feature_names}
 
@@ -186,11 +187,7 @@ def _insurance_target(summary: dict[str, Any], model_type: str, bundle: dict[str
     financial = structured.get("financial") or {}
     loss_run = financial.get("loss_run") or {}
     quote = summary.get("quote") or {}
-    tiv = (
-        _as_float(summary.get("tiv"))
-        or _as_float(quote.get("tiv"))
-        or _as_float((structured.get("schedule_of_values") or [{}])[0].get("total_value") if structured.get("schedule_of_values") else 0)
-    )
+    tiv = _as_float(summary.get("tiv")) or _as_float(quote.get("tiv")) or _as_float((structured.get("schedule_of_values") or [{}])[0].get("total_value") if structured.get("schedule_of_values") else 0)
     ratio = _latest_loss_ratio(financial)
     premium = _as_float(quote.get("adjusted_premium")) or _as_float(quote.get("base_premium"))
     incurred = _as_float(loss_run.get("total_incurred")) or _as_float(loss_run.get("total_paid"))

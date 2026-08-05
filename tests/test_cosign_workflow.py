@@ -32,9 +32,7 @@ def _seed_approved(wf: WorkflowService, bundle_id: str = "b-cosign-1") -> str:
 class TestCoSignWorkflow:
     def test_request_moves_to_pending_co_sign(self, wf: WorkflowService) -> None:
         bid = _seed_approved(wf)
-        record = wf.request_cosign(
-            bid, "default", requested_by="sfields", premium=200_000, tiv=8_000_000, reason="over threshold"
-        )
+        record = wf.request_cosign(bid, "default", requested_by="sfields", premium=200_000, tiv=8_000_000, reason="over threshold")
         assert record.state == WorkflowState.PENDING_CO_SIGN
         assert record.metadata["co_sign"]["status"] == "pending"
         assert record.metadata["co_sign"]["required_tier"] == "cuo"
@@ -46,18 +44,14 @@ class TestCoSignWorkflow:
             # Another senior cannot clear a senior's co-sign (needs CUO)
             juniors = AuthorityMatrix().list_by_tier(AuthorityTier.JUNIOR)
             assert juniors
-            wf.resolve_cosign_request(
-                bid, "default", signer_username=juniors[0].username, approve=True
-            )
+            wf.resolve_cosign_request(bid, "default", signer_username=juniors[0].username, approve=True)
 
     def test_cuo_approve_then_bind(self, wf: WorkflowService) -> None:
         bid = _seed_approved(wf)
         wf.request_cosign(bid, "default", requested_by="sfields", premium=200_000, tiv=8_000_000)
         cuos = AuthorityMatrix().list_by_tier(AuthorityTier.CUO)
         assert cuos
-        record = wf.resolve_cosign_request(
-            bid, "default", signer_username=cuos[0].username, approve=True, notes="ok"
-        )
+        record = wf.resolve_cosign_request(bid, "default", signer_username=cuos[0].username, approve=True, notes="ok")
         assert record.state == WorkflowState.APPROVED
         assert record.metadata["co_sign"]["status"] == "approved"
         ok, reason = cosign_allows_bind(record.metadata, binder_username="sfields")

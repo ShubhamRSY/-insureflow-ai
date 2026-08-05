@@ -70,17 +70,12 @@ class WorkflowService:
             raise ValueError(f"No workflow found for bundle {bundle_id}")
 
         if record.state not in (WorkflowState.PENDING_REVIEW, WorkflowState.PENDING_CO_SIGN):
-            raise ValueError(
-                f"Cannot sign off — workflow state is {record.state.value}. "
-                "Must be PENDING_REVIEW (or PENDING_CO_SIGN to cancel back to review)."
-            )
+            raise ValueError(f"Cannot sign off — workflow state is {record.state.value}. Must be PENDING_REVIEW (or PENDING_CO_SIGN to cancel back to review).")
 
         prior_ai = ai_decision or record.ai_decision
         if action == SignOffAction.APPROVE and is_decline(prior_ai):
             if not (override_reason or "").strip():
-                raise ValueError(
-                    "override_reason is required when approving a submission the AI declined"
-                )
+                raise ValueError("override_reason is required when approving a submission the AI declined")
 
         sign_off = SignOffRecord(
             sign_off_id=f"so-{uuid4().hex[:10]}",

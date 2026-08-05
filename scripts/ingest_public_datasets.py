@@ -61,10 +61,7 @@ def main() -> int:
             metric = f"AUC={((r.metrics or {}).get('val_roc_auc') or 0):.3f}"
         else:
             metric = f"R2={((r.metrics or {}).get('val_r2') or 0):.3f}"
-        print(
-            f"  {service[mt.value]:<10} {mt.value:<22} {metric:<12} "
-            f"gate={'PASS' if passed else 'FAIL'} stored={m.gate_passed if m else None} :: {reason}"
-        )
+        print(f"  {service[mt.value]:<10} {mt.value:<22} {metric:<12} gate={'PASS' if passed else 'FAIL'} stored={m.gate_passed if m else None} :: {reason}")
         all_pass = all_pass and passed
     print(f"\n  trained={len(results)} all_gates_pass={all_pass}")
     return 0 if all_pass else 1

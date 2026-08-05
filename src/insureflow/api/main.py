@@ -1114,7 +1114,7 @@ def pull_insurance_source(
             root = PROJECT_ROOT.resolve()
             directory = Path(raw)
             if not directory.is_absolute():
-                directory = (root / raw)
+                directory = root / raw
             try:
                 directory = directory.resolve()
             except OSError as exc:
@@ -1737,28 +1737,30 @@ async def run_pipeline(
     current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
     job_id = f"job-{uuid.uuid4().hex[:12]}"
-    use_celery = req.use_celery or os.getenv("INSURANCE_USE_CELERY", "").lower() in {"1", "true", "yes"}
+    from insureflow.tasks.dispatch import send_pipeline_task, should_use_celery
+
+    use_celery = should_use_celery(req.use_celery)
     job_store.set(
         INSURANCE_NS,
         job_id,
         {"status": "processing", "backend": "celery" if use_celery else "background"},
         org_id=current.org_id,
     )
+    celery_task_id: str | None = None
     if use_celery:
-        from insureflow.tasks.celery_app import celery_app
-
-        async_result = celery_app.send_task(
-            "insureflow.tasks.pipeline_tasks.run_pipeline",
-            args=[job_id, req.model_dump(), current.org_id],
-            queue="pipeline",
-        )
+        try:
+            celery_task_id = send_pipeline_task(job_id, req.model_dump(), current.org_id)
+        except Exception as exc:
+            logger.warning("Celery dispatch failed for job %s, falling back to in-process: %s", job_id, exc)
+            celery_task_id = None
+    if celery_task_id:
         job_store.set(
             INSURANCE_NS,
             job_id,
             {
                 "status": "processing",
                 "backend": "celery",
-                "celery_task_id": async_result.id,
+                "celery_task_id": celery_task_id,
             },
             org_id=current.org_id,
         )
@@ -1767,7 +1769,7 @@ async def run_pipeline(
             "status": "processing",
             "org_id": current.org_id,
             "use_celery": True,
-            "celery_task_id": async_result.id,
+            "celery_task_id": celery_task_id,
         }
 
     background_tasks.add_task(_run_pipeline_task, job_id, req, current.org_id)
