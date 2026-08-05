@@ -96,11 +96,7 @@ class DocumentChecklist:
         present = list(pkg.get("present") or [])
         missing = list(pkg.get("missing") or [])
         type_set = {t.lower() for t in types}
-        has_photos = (
-            "property_photos" in type_set
-            or any("photo" in p.lower() for p in present)
-            or bool(bundle.visual_analysis and (bundle.visual_analysis.get("analyzed_photos") or 0) > 0)
-        )
+        has_photos = "property_photos" in type_set or any("photo" in p.lower() for p in present) or bool(bundle.visual_analysis and (bundle.visual_analysis.get("analyzed_photos") or 0) > 0)
         return cls(
             lob=lob,
             present=present,
@@ -110,12 +106,9 @@ class DocumentChecklist:
             financials=any("financial" in p.lower() for p in present) or "financial_statement" in type_set,
             photos=has_photos,
             inspection_report=any("inspection" in p.lower() for p in present) or "inspection_report" in type_set,
-            schedule_of_values=any("schedule of values" in p.lower() for p in present)
-            or "schedule_of_values" in type_set,
-            supplemental=any("supplement" in p.lower() or "broker" in p.lower() for p in present)
-            or "supplemental" in type_set,
-            signed_application=any("application" in p.lower() or "signed" in p.lower() for p in present)
-            or bool(bundle.structured and bundle.structured.named_insured),
+            schedule_of_values=any("schedule of values" in p.lower() for p in present) or "schedule_of_values" in type_set,
+            supplemental=any("supplement" in p.lower() or "broker" in p.lower() for p in present) or "supplemental" in type_set,
+            signed_application=any("application" in p.lower() or "signed" in p.lower() for p in present) or bool(bundle.structured and bundle.structured.named_insured),
         )
 
     @property
