@@ -4638,7 +4638,7 @@ def _run_pipeline_v2_task(job_id: str, request: PipelineConfigRequest, org_id: s
 class DeepDiveRequest(BaseModel):
     """Select which deferred analyses to re-run for a completed submission."""
 
-    include: list[str] = ["oracles", "portfolio", "reinsurance", "fraud_ml", "premium_ml", "churn_ml"]
+    include: list[str] = ["oracles", "portfolio", "selection_standards", "reinsurance", "fraud_ml", "premium_ml", "churn_ml"]
 
 
 @app.post("/pipeline/{bundle_id}/deep-dive")

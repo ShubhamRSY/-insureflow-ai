@@ -23,6 +23,7 @@ class PortfolioPolicy(BaseModel):
     zip_code: str = ""
     tiv: float = 0.0
     premium: float = 0.0
+    risk_score: float = 0.5  # 0.0 = clean, 1.0 = hazardous (for intra-class dispersion)
     occupancy_type: str = ""
     construction_type: str = ""
     written_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))

@@ -19,7 +19,7 @@ from insureflow.ingestion.insurance.classifier import (
 )
 from insureflow.ingestion.insurance.extractors import extract_broker_slip
 from insureflow.insurance.pipeline import InsurancePipeline
-from insureflow.models.agents import UnderwritingMemo, UWDecision
+from insureflow.models.agents import Recommendation, UnderwritingMemo, UWDecision
 from insureflow.models.submissions import SubmissionBundle
 from insureflow.outcomes.feedback import FeedbackEngine
 from insureflow.rating.engine import InsuranceRatingEngine
@@ -78,6 +78,45 @@ class TestInsuranceRating:
         assert quote.adjusted_premium == 0
         assert quote.eligible is False
         assert "TIV could not be determined" in quote.ineligibility_reasons
+
+    def test_substandard_loading_raises_premium(self) -> None:
+        from insureflow.models.submissions import CoverageDetail, LocationData, NamedInsured, StructuredSubmission
+
+        bundle = SubmissionBundle(
+            bundle_id="rate-loading-test",
+            structured=StructuredSubmission(
+                submission_id="rate-loading-test",
+                named_insured=NamedInsured(legal_name="Test Co"),
+                locations=[
+                    LocationData(
+                        address="1 Main",
+                        city="Austin",
+                        state="TX",
+                        zip_code="78701",
+                        building_value=2_500_000,
+                        contents_value=500_000,
+                    )
+                ],
+                coverages=[CoverageDetail(coverage_type="Property", limit_amount=3_000_000, deductible=10_000, premium=0)],
+            ),
+        )
+        engine = InsuranceRatingEngine()
+        base_memo = UnderwritingMemo(bundle_id="rate-loading-test", decision=UWDecision.ACCEPT, insured_name="Test Co")
+        base = engine.quote(bundle, base_memo)
+        loaded_memo = UnderwritingMemo(
+            bundle_id="rate-loading-test",
+            decision=UWDecision.CONDITIONAL_ACCEPT,
+            insured_name="Test Co",
+            recommendation=Recommendation(
+                action="conditional_accept",
+                rationale="Substandard class rate loading",
+                suggested_premium_modification=25.0,
+            ),
+        )
+        loaded = engine.quote(bundle, loaded_memo)
+        assert loaded.adjusted_premium > base.adjusted_premium
+        assert loaded.adjusted_premium / base.adjusted_premium > 1.20
+        assert any(c.name == "uw_schedule_modification" and c.modifier_pct == 25.0 for c in loaded.schedule_modifications)
 
 
 class TestWorkflowSignOff:
@@ -153,6 +192,10 @@ class TestInsurancePipelineIntegration:
         assert result["workflow_state"] == "pending_review"
         assert "quote" in result
         assert result["audit_trail_entries"] >= 1
+        # Selection standards / book-balance runs on commercial lines.
+        selection = result.get("selection_standards") or {}
+        assert selection.get("agent_type") == "selection_standards"
+        assert selection.get("findings")
 
     def test_funnel_deferral_and_deep_dive(self, audit_store: AuditStore) -> None:
         acord_path = EXAMPLES / "pacific_coast_acord.xml"
@@ -172,7 +215,7 @@ class TestInsurancePipelineIntegration:
         assert result["status"] == "completed"
         assert result.get("funnel") is True
         # Funnel defers the expensive analyses but keeps them discoverable.
-        assert result["deep_dive_available"] == ["oracles", "portfolio", "reinsurance", "fraud_ml"]
+        assert result["deep_dive_available"] == ["oracles", "portfolio", "selection_standards", "reinsurance", "fraud_ml"]
         stage_status = {s["id"]: s["status"] for s in result["pipeline_stages"]}
         assert stage_status.get("verify") == "skipped"
         assert stage_status.get("portfolio") == "skipped"
@@ -181,8 +224,8 @@ class TestInsurancePipelineIntegration:
 
         # Deep dive re-runs everything the funnel deferred — nothing is lost.
         dd = pipe.deep_dive("funnel-test", org_id="test")
-        assert set(dd["completed"]) == {"oracles", "portfolio", "reinsurance", "fraud_ml", "premium_ml", "churn_ml"}
-        for section in ("oracles", "portfolio", "reinsurance", "fraud_ml", "premium_ml", "churn_ml"):
+        assert set(dd["completed"]) == {"oracles", "portfolio", "selection_standards", "reinsurance", "fraud_ml", "premium_ml", "churn_ml"}
+        for section in ("oracles", "portfolio", "selection_standards", "reinsurance", "fraud_ml", "premium_ml", "churn_ml"):
             assert section in dd["findings"]
 
     def test_funnel_deep_dive_missing_bundle_raises(self, audit_store: AuditStore) -> None:

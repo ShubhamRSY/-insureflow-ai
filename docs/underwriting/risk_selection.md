@@ -1,0 +1,99 @@
+# Risk Selection Doctrine: Book Balance & Selection Standards
+
+This document records how InsureFlow operationalizes the classical
+underwriting principles of **risk selection**, **homogeneity vs. volume**, and
+**selection expense**. The implementation lives in
+`src/insureflow/underwriting/selection.py` and is applied per submission by
+`src/insureflow/agents/selection_standards_agent.py`.
+
+## The doctrine
+
+1. **Selection is the heart of underwriting.** Every submission must be
+   classified and accepted, referred, or declined against the carrier's
+   current appetite *and* its current book posture.
+2. **Balance volume against homogeneity.** An insurer prices against the law
+   of large numbers: a loss ratio is only predictable once enough *similar*
+   risks are pooled. A few risks — even good ones — cannot be priced to a
+   predictable outcome. Conversely, volume bought by abandoning homogeneity
+   destroys predictability just as surely as a thin book does.
+3. **Classify every risk.** Standard, preferred, and substandard classes carry
+   different rates (see the life manual's `underwriting_class_factors` for the
+   pricing side). Substandard risks are admitted *only* when their higher
+   premium loadings are expected to offset their higher loss ratio — and only
+   when the book is large enough to absorb them.
+4. **Selection expense is real.** Strict selection (APS, paramedical exams,
+   deep loss-run review) costs money per risk. For a thin book or a small
+   premium, evidence cost can exceed the margin it protects.
+
+## How the model works
+
+The engine derives three quantities from the written book:
+
+- **Size score** `1 - exp(-N / reference_size)` — how many policies support the
+  law of averages.
+- **Homogeneity** `1 - avg(premium_CV, TIV_CV) / cv_cap` — how uniform the book
+  is. High coefficient of variation means a mixed, unpredictable book.
+- **Predictability** `size * (0.5 + 0.5 * homogeneity)` — predictability is
+  *bounded by volume*: homogeneity can scale the size-driven ceiling but cannot
+  create predictability from nothing.
+
+The predictability score selects the **selection standards tier**:
+
+| Tier | Predictability | Candidate gate |
+|------|----------------|----------------|
+| `strict` | < 0.30 | preferred/standard only; substandard → refer or decline |
+| `balanced` | 0.30–0.60 | substandard admitted **conditionally** (loading + evidence) |
+| `broad` | > 0.60 | substandard admitted on the filed rate |
+
+Selection expense is priced as `cost_per_risk(tier) * policy_count` against
+book premium, and per-candidate against candidate premium. When the ratio
+exceeds the guideline (5% of book premium, or 30% of the candidate's premium),
+the agent flags that evidence requirements are eroding margin.
+
+## Substandard loading is wired into pricing
+
+The doctrine's "a policy covering them would have a higher premium rate" is not
+left as advice. When the selection gate admits a **substandard** candidate
+(`ACCEPT` or `CONDITIONAL_ACCEPT`), it computes a rate loading
+`clamp((risk_score - 0.5) * 100, min 15%, max 50%)` — e.g. a risk score of 0.70
+gets a 20% loading. The agent surfaces it as `suggested_premium_modification`,
+and the pipeline merges it into `memo.recommendation` before the rating stage,
+so the commercial quote carries a `uw_schedule_modification` component and the
+summary exposes `selection_loading_pct`. Referred/declined risks are never
+loaded. "Too great or too unpredictable" (score ≥ 0.85, or substandard on a
+strict book) is rejected rather than priced.
+
+## Intra-class dispersion
+
+The text notes that "in each class there are good risks and poor risks relative
+to the rest of the class." Every written policy now records its `risk_score`,
+and the book snapshot buckets policies by class (preferred < 0.40,
+standard < 0.65, else substandard) and computes the coefficient of variation of
+risk scores within each band (`intra_class_cv`, `class_dispersion`). When
+dispersion exceeds the guideline (0.15) the agent flags **class purity eroded**
+— weaker risks are riding on the class average rate and should be re-rated or
+reclassified.
+
+## Pipeline integration
+
+- The `SelectionStandardsAgent` runs in the portfolio stage (stage 7) of
+  `InsurancePipeline.run()` for commercial lines, alongside concentration
+  analysis, using `memo.overall_risk_score` as the candidate risk score.
+- Findings are appended to the memo; critical/high findings trigger human
+  review.
+- In funnel mode the stage is deferred and re-runs on demand via
+  `POST /pipeline/{bundle_id}/deep-dive` (`include=["selection_standards", ...]`),
+  the same as oracles/portfolio/reinsurance.
+- Results surface in the pipeline summary under `selection_standards`
+  (book snapshot, tier, gate action, rationale, warnings).
+
+## Tuning
+
+All thresholds live in `SelectionStandardsConfig`:
+`reference_size`, `cv_cap`, `strict_threshold`, `balanced_threshold`,
+per-tier `*_expense_per_risk`, `max_selection_expense_ratio`,
+`max_candidate_expense_ratio`, `min_volume_for_law_of_averages`, `target_size`,
+`min_substandard_loading`, `max_substandard_loading`, `max_intra_class_cv`.
+Tests in `tests/test_selection_standards.py` document the expected behavior at
+each tier, for the expense flags, for the substandard loading, and for
+intra-class dispersion.

@@ -18,6 +18,7 @@ class AgentType(str, Enum):
     ORACLE_AGENT = "oracle_agent"
     PORTFOLIO_RISK = "portfolio_risk"
     REINSURANCE = "reinsurance"
+    SELECTION_STANDARDS = "selection_standards"
 
 
 class RiskSeverity(str, Enum):
