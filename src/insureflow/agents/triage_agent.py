@@ -343,3 +343,13 @@ class TriageAgent:
             "cold_minimal_effort": counts.get("cold", 0),
             "no_fit": counts.get("no_fit", 0),
         }
+
+
+_triage: TriageAgent | None = None
+
+
+def get_triage_agent() -> TriageAgent:
+    global _triage
+    if _triage is None:
+        _triage = TriageAgent()
+    return _triage

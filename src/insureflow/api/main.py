@@ -3217,10 +3217,12 @@ def get_missing_documents(
             "lob": getattr(checklist, "lob", "property"),
         }
     )
+    missing = summary.get("missing_documents")
+    missing_list: list[Any] = missing if isinstance(missing, list) else []
     return {
         "bundle_id": bundle_id,
         **summary,
-        "can_request_from_broker": len(summary.get("missing_documents") or []) > 0,
+        "can_request_from_broker": len(missing_list) > 0,
     }
 
 

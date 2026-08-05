@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from insureflow.agents.triage_agent import DocumentChecklist, REQUIRED_CRITICAL_BY_LOB, TriageAgent
+from insureflow.agents.triage_agent import REQUIRED_CRITICAL_BY_LOB, DocumentChecklist, TriageAgent
 from insureflow.models.submissions import SubmissionBundle, UnstructuredSubmission
 
 
