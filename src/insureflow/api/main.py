@@ -3293,13 +3293,7 @@ def insurance_package_checklist(
     type_counts = results.get("document_types") or {}
     if isinstance(type_counts, dict):
         types.extend(list(type_counts.keys()))
-    line_hint = str(
-        results.get("insurance_line")
-        or results.get("product_line")
-        or summary.get("product_line")
-        or (results.get("quote_full") or {}).get("line")
-        or ""
-    )
+    line_hint = str(results.get("insurance_line") or results.get("product_line") or summary.get("product_line") or (results.get("quote_full") or {}).get("line") or "")
     text_blob = " ".join(types) + " " + line_hint
     # Prefer explicit query param only when it is a known catalog key; otherwise detect.
     resolved = lob if lob in ("property", "do", "homeowners", "auto", "life") else detect_lob(text_blob, line_hint)

@@ -714,9 +714,7 @@ class InsurancePipeline:
             agent_decision = memo.decision
             memo.decision = worst_decision(agent_decision, medical.decision)
             if medical.decision != memo.decision and medical.reasons:
-                memo.human_review_reasons.extend(
-                    [f"Life medical suggested {medical.decision.value}: {r}" for r in medical.reasons]
-                )
+                memo.human_review_reasons.extend([f"Life medical suggested {medical.decision.value}: {r}" for r in medical.reasons])
             memo.human_review_reasons.extend(medical.reasons)
             memo.conditions.extend((quote.metadata or {}).get("conditions") or [])
             resync_memo_narrative(
