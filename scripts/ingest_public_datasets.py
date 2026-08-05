@@ -36,8 +36,8 @@ def main() -> int:
         return 0 if report.get("ok") else 1
 
     from insureflow.ml.models import ModelType
-    from insureflow.ml.training import QUALITY_GATES, passes_quality_gate, train_all_models
     from insureflow.ml.registry import get_ml_registry
+    from insureflow.ml.training import QUALITY_GATES, passes_quality_gate, train_all_models
 
     results = train_all_models(force=True, allow_synthetic=False, data_root=Path(args.out))
     reg = get_ml_registry()

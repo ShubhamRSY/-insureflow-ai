@@ -21,12 +21,10 @@ import logging
 from pathlib import Path
 from typing import Any
 
+from insureflow.decisions import ml_binary_target
 from insureflow.ml.features import CONSTRUCTION_MAP, OCCUPANCY_MAP, encode_categorical, get_model_feature_names
 
 logger = logging.getLogger(__name__)
-
-
-from insureflow.decisions import ml_binary_target
 
 
 def _target_from_decision(decision: str) -> float:

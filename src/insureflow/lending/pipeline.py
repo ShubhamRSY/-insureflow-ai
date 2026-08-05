@@ -289,7 +289,7 @@ class LendingPipeline:
             return LendingDefaultScore(
                 default_probability=1.0,
                 risk_level="high",
-                top_factors=[{"factor": "model_error", "impact": 1.0}],
+                top_factors=["model_error"],
                 recommended_structure="refer_manual_review",
                 model_version="error",
             ).model_dump()

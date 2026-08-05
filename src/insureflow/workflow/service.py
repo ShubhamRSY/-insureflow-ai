@@ -4,7 +4,6 @@ from uuid import uuid4
 
 from insureflow.decisions import DecisionOutcome, is_decline, normalize_decision, to_vertical
 from insureflow.underwriting.cosign import (
-    CoSignRecord,
     CoSignStatus,
     active_cosign,
     cosign_allows_bind,

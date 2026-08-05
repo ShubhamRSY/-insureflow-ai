@@ -1038,9 +1038,8 @@ class InsurancePipeline:
                     if tiv > 0:
                         loss_ratio = min(incurred / tiv, 3.0)
                 credit_score = float(getattr(fin, "credit_score", 0) or credit_score or 0)
-            applicant = bundle.structured.applicant or {}
-            if credit_score <= 0 and isinstance(applicant, dict):
-                credit_score = float(applicant.get("credit_score") or 0)
+            if credit_score <= 0 and bundle.structured.risk_profile is not None:
+                credit_score = float(getattr(bundle.structured.risk_profile, "credit_score", 0) or 0)
         return {
             "tiv": float(tiv),
             "loss_ratio": float(loss_ratio),

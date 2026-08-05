@@ -421,7 +421,7 @@ class MortgagePipeline:
                 default_probability=1.0,
                 risk_level="high",
                 delinquency_band="unknown",
-                top_risk_factors=[{"factor": "model_error", "impact": 1.0}],
+                top_risk_factors=["model_error"],
                 recommended_action="manual_review",
                 model_version="error",
             ).model_dump()

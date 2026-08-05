@@ -16,6 +16,8 @@ from typing import Any, Optional
 
 from pydantic import BaseModel, Field
 
+from insureflow.decisions import decision_rank
+
 logger = logging.getLogger(__name__)
 
 
@@ -219,8 +221,6 @@ class FillRateTracker:
 # ---------------------------------------------------------------------------
 # Override Rate Tracker
 # ---------------------------------------------------------------------------
-
-from insureflow.decisions import decision_rank
 
 # Kept for backward-compatible imports; prefer decision_rank().
 _DECISION_RANK = {"decline": 0, "refer": 1, "approve": 2, "accept": 2}

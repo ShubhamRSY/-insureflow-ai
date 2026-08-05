@@ -80,7 +80,9 @@ def _target_diversity_ok(rows: list[dict[str, Any]], *, classification: bool) ->
     if len(uniq) < 8:
         return False
     arr = np.asarray(targets, dtype=np.float64)
-    return float(np.std(arr)) > 0.0 and float(np.std(arr) / max(np.mean(arr), 1.0)) > 0.05
+    mean = float(np.mean(arr))
+    std = float(np.std(arr))
+    return std > 0.0 and (std / max(mean, 1.0)) > 0.05
 
 
 def _load_wisconsin_policy_claims(claims_csv: Path) -> dict[str, list[dict[str, Any]]]:

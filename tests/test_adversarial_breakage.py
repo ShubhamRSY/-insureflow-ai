@@ -868,18 +868,26 @@ class TestGatewayAuthAdversarial:
     """Breaking gateway auth with timing attacks and invalid keys."""
 
     @patch("insureflow.gateway.auth.settings")
-    def test_no_key_config_returns_none(self, mock_settings: MagicMock) -> None:
+    def test_no_key_config_fails_closed(self, mock_settings: MagicMock) -> None:
+        from fastapi import HTTPException
+
         from insureflow.gateway.auth import verify_gateway_key
 
         mock_settings.integration_gateway_api_key = ""
-        verify_gateway_key(authorization=None)
+        with pytest.raises(HTTPException) as exc_info:
+            verify_gateway_key(authorization=None)
+        assert exc_info.value.status_code == 503
 
     @patch("insureflow.gateway.auth.settings")
-    def test_empty_string_returns_none(self, mock_settings: MagicMock) -> None:
+    def test_empty_string_fails_closed(self, mock_settings: MagicMock) -> None:
+        from fastapi import HTTPException
+
         from insureflow.gateway.auth import verify_gateway_key
 
         mock_settings.integration_gateway_api_key = ""
-        verify_gateway_key(authorization="")
+        with pytest.raises(HTTPException) as exc_info:
+            verify_gateway_key(authorization="")
+        assert exc_info.value.status_code == 503
 
     @patch("insureflow.gateway.auth.settings")
     def test_missing_bearer_raises_401(self, mock_settings: MagicMock) -> None:

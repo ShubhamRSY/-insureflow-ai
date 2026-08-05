@@ -68,7 +68,6 @@ def map_insurance_claims(path: Path, *, max_rows: int = 5000) -> dict[str, list[
             claim = _num(raw.get("total_claim_amount"))
             prem = _num(raw.get("policy_annual_premium"))
             months = _num(raw.get("months_as_customer"))
-            age = _num(raw.get("age"), 40)
             deduct = _num(raw.get("policy_deductable"), 500)
             umbrella = _num(raw.get("umbrella_limit"))
             vehicles = _num(raw.get("number_of_vehicles_involved"), 1)
@@ -405,12 +404,13 @@ def build_from_public_downloads(
     sba = root / "lending" / "sba_7a_fy2020_sample.csv"
     german = root / "lending" / "german_credit" / "german.data"
     ccd = root / "lending" / "credit_card_default.csv"
-    for path, mapper, label in (
+    lending_sources: list[tuple[Path, Any, str]] = [
         (sba, map_sba_7a, "SBA_FOIA_7a"),
         (german, map_german_credit, "UCI_German_Credit"),
         (ccd, map_credit_card_default, "UCI_CreditCardDefault"),
-    ):
-        part = mapper(path) if path.exists() else []
+    ]
+    for path, mapper, label in lending_sources:
+        part: list[dict[str, Any]] = list(mapper(path)) if path.exists() else []
         if part:
             lend_rows.extend(part)
             report["sources_used"].append(f"{label}:{path}")
