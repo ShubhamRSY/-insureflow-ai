@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 
 from insureflow.models.agents import UnderwritingMemo
 from insureflow.models.submissions import SubmissionBundle
-from insureflow.rating.models import QuoteResult
+from insureflow.rating.models import InsuranceLine, QuoteResult
 
 
 def generate_quote_html(
@@ -12,9 +12,14 @@ def generate_quote_html(
     memo: UnderwritingMemo,
     quote: QuoteResult,
 ) -> str:
-    insured = bundle.structured.named_insured.legal_name if bundle.structured and bundle.structured.named_insured else "Named Insured"
+    insured = bundle.structured.named_insured.legal_name if bundle.structured and bundle.structured.named_insured else (memo.insured_name or "Named Insured")
     today = datetime.now(tz=timezone.utc).strftime("%B %d, %Y")
     valid_until = quote.quote_valid_until or "30 days from issuance"
+    meta = quote.metadata or {}
+    is_life = quote.line == InsuranceLine.LIFE or str(meta.get("insurance_line") or "").lower() == "life"
+    line_label = quote.line.value.replace("_", " ").title()
+    subtitle = f"{'Life' if is_life else 'Commercial'} Insurance Quote — Issued {today}"
+    decision = (memo.decision.value if hasattr(memo.decision, "value") else str(memo.decision or "")).upper()
 
     # Coverages
     coverages_html = ""
@@ -34,37 +39,102 @@ def generate_quote_html(
               <div class="section-title">Endorsements</div>
               <ul class="list">{endorsements}</ul>
             </div>"""
+    elif is_life:
+        face = meta.get("face_amount") or meta.get("tiv") or 0
+        medical = meta.get("medical") or {}
+        coverages_html = f"""
+            <div class="card">
+              <div class="card-header">Term / Life Coverage</div>
+              <table>
+                <tr><td>Face amount</td><td class='text-right'>${float(face):,.0f}</td></tr>
+                <tr><td>UW class</td><td class='text-right'>{medical.get("underwriting_class") or meta.get("uw_decision_hint") or "—"}</td></tr>
+                <tr><td>Tobacco</td><td class='text-right'>{"Yes" if medical.get("tobacco") else "No"}</td></tr>
+              </table>
+            </div>"""
     else:
         coverages_html = '<p class="text-slate-400">Coverage details not available — see quote breakdown below.</p>'
 
-    # Exclusions from memo conditions + compliance findings
     exclusions: list[str] = []
     if memo.recommendation and memo.recommendation.conditions:
         exclusions.extend(memo.recommendation.conditions)
+    exclusions.extend(memo.conditions or [])
     for f in memo.key_findings:
         if f.category in ("compliance", "coverage") and "exclusion" in (f.title + f.description).lower():
             exclusions.append(f"{f.title}: {f.description}")
-    if not exclusions:
-        exclusions.append("Standard policy exclusions apply. See policy form for full details.")
-    exclusions_html = "".join(f"<li>{e}</li>" for e in exclusions)
+    # Dedupe while preserving order
+    seen: set[str] = set()
+    uniq_excl: list[str] = []
+    for e in exclusions:
+        if e not in seen:
+            seen.add(e)
+            uniq_excl.append(e)
+    if not uniq_excl:
+        uniq_excl.append("Standard policy exclusions apply. See policy form for full details.")
+    exclusions_html = "".join(f"<li>{e}</li>" for e in uniq_excl)
 
-    # Premium breakdown
     components_html = ""
     for rc in quote.schedule_modifications:
         pct = rc.modifier_pct
         label = rc.name.replace("_", " ").title()
-        if pct > 0:
+        amount = getattr(rc, "amount", None)
+        if is_life and amount is not None and pct == 0:
+            components_html += f"<tr><td>{label}</td><td class='text-right'>{amount}</td></tr>"
+        elif pct > 0:
             components_html += f"<tr><td>{label}</td><td class='text-right text-red-400'>+{pct:.1f}%</td></tr>"
         elif pct < 0:
             components_html += f"<tr><td>{label}</td><td class='text-right text-green-400'>{pct:.1f}%</td></tr>"
         else:
             components_html += f"<tr><td>{label}</td><td class='text-right text-slate-400'>{pct:.1f}%</td></tr>"
 
-    # Metadata
-    meta = quote.metadata or {}
-    cope_grade = meta.get("cope_grade", "N/A")
-    market_phase = meta.get("market_phase", "N/A")
-    tiv = sum((loc.building_value or 0) + (loc.contents_value or 0) + (loc.bi_value or 0) for loc in (bundle.structured.locations if bundle.structured else [])) or quote.metadata.get("tiv", 0)
+    if is_life:
+        face = float(meta.get("face_amount") or meta.get("tiv") or 0)
+        medical = meta.get("medical") or {}
+        header_rows = f"""
+  <div class="row"><span class="label">Line of Business</span><span>{line_label}</span></div>
+  <div class="row"><span class="label">Face Amount</span><span>${face:,.0f}</span></div>
+  <div class="row"><span class="label">UW Class</span><span>{(medical.get("underwriting_class") or "—").replace("_", " ").title()}</span></div>
+  <div class="row"><span class="label">Tobacco</span><span>{"Yes" if medical.get("tobacco") else "No"}</span></div>
+  <div class="row"><span class="label">Decision</span><span>{decision}</span></div>
+  <div class="row"><span class="label">Policy Admin Ref</span><span>{quote.policy_admin_reference or "N/A"}</span></div>"""
+        modifiers_block = f"""
+  <h2>Life Rating Factors</h2>
+  <div class="card">
+    <div class="row"><span class="label">Filing</span><span>{meta.get("filing_id") or "—"}</span></div>
+    <div class="row"><span class="label">Product</span><span>{meta.get("product") or "—"}</span></div>
+    <div class="row"><span class="label">UW hint</span><span>{meta.get("uw_decision_hint") or decision.lower()}</span></div>
+  </div>"""
+    else:
+        cope_grade = str(meta.get("cope_grade", "N/A"))
+        market_phase = str(meta.get("market_phase", "N/A"))
+        tiv = sum((loc.building_value or 0) + (loc.contents_value or 0) + (loc.bi_value or 0) for loc in (bundle.structured.locations if bundle.structured else [])) or meta.get("tiv", 0)
+        header_rows = f"""
+  <div class="row"><span class="label">Line of Business</span><span>{line_label}</span></div>
+  <div class="row"><span class="label">Total Insured Value</span><span>${float(tiv):,.0f}</span></div>
+  <div class="row"><span class="label">COPE Risk Grade</span><span>{cope_grade.replace("_", " ").title()}</span></div>
+  <div class="row"><span class="label">Market Phase</span><span>{market_phase.replace("_", " ").title()}</span></div>
+  <div class="row"><span class="label">Decision</span><span>{decision}</span></div>
+  <div class="row"><span class="label">Policy Admin Ref</span><span>{quote.policy_admin_reference or "N/A"}</span></div>"""
+        modifiers_block = f"""
+  <h2>Rate Components</h2>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">Base Rate</div>
+      <div class="row"><span class="label">ISO Loss Cost</span><span>${meta.get("loss_cost", 0):.4f}/$100</span></div>
+      <div class="row"><span class="label">Rate per $100 TIV</span><span>${quote.rate_per_100_tiv:.4f}</span></div>
+    </div>
+    <div class="card">
+      <div class="card-header">Modifiers</div>
+      <div class="row"><span class="label">COPE</span><span>{meta.get("cope_mod_pct", 0):+.1f}%</span></div>
+      <div class="row"><span class="label">Market</span><span>{meta.get("market_mod_pct", 0):+.1f}%</span></div>
+      <div class="row"><span class="label">Deductible</span><span>{meta.get("deductible_credit", 0):+.1f}%</span></div>
+      <div class="row"><span class="label">Loss Exp</span><span>{meta.get("loss_experience_mod_pct", 0):+.1f}%</span></div>
+      <div class="row"><span class="label">Tenure</span><span>{meta.get("years_in_business_mod_pct", 0):+.1f}%</span></div>
+    </div>
+  </div>"""
+
+    summary_note = ""
+    if memo.summary:
+        summary_note = f'<div class="card" style="margin-top:12px;"><div class="card-header">Underwriting Summary</div><p style="color:#cbd5e1;font-size:12px;">{memo.summary}</p></div>'
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -101,7 +171,7 @@ def generate_quote_html(
   <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:4px;">
     <div>
       <h1>{insured}</h1>
-      <p class="subtitle">Commercial Insurance Quote &mdash; Issued {today}</p>
+      <p class="subtitle">{subtitle}</p>
     </div>
     <div style="text-align:right;">
       <div class="badge">Quote #{quote.policy_admin_reference or "N/A"}</div>
@@ -109,11 +179,8 @@ def generate_quote_html(
     </div>
   </div>
 
-  <div class="row"><span class="label">Line of Business</span><span>{quote.line.value.replace("_", " ").title()}</span></div>
-  <div class="row"><span class="label">Total Insured Value</span><span>${tiv:,.0f}</span></div>
-  <div class="row"><span class="label">COPE Risk Grade</span><span>{cope_grade.replace("_", " ").title()}</span></div>
-  <div class="row"><span class="label">Market Phase</span><span>{market_phase.replace("_", " ").title()}</span></div>
-  <div class="row"><span class="label">Policy Admin Ref</span><span>{quote.policy_admin_reference or "N/A"}</span></div>
+  {header_rows}
+  {summary_note}
 
   <h2>Coverages</h2>
   {coverages_html}
@@ -128,26 +195,11 @@ def generate_quote_html(
     <div class="total">${quote.adjusted_premium:,.2f}</div>
   </div>
 
-  <h2>Rate Components</h2>
-  <div class="grid-2">
-    <div class="card">
-      <div class="card-header">Base Rate</div>
-      <div class="row"><span class="label">ISO Loss Cost</span><span>${meta.get("loss_cost", 0):.4f}/$100</span></div>
-      <div class="row"><span class="label">Rate per $100 TIV</span><span>${quote.rate_per_100_tiv:.4f}</span></div>
-    </div>
-    <div class="card">
-      <div class="card-header">Modifiers</div>
-      <div class="row"><span class="label">COPE</span><span>{meta.get("cope_mod_pct", 0):+.1f}%</span></div>
-      <div class="row"><span class="label">Market</span><span>{meta.get("market_mod_pct", 0):+.1f}%</span></div>
-      <div class="row"><span class="label">Deductible</span><span>{meta.get("deductible_credit", 0):+.1f}%</span></div>
-      <div class="row"><span class="label">Loss Exp</span><span>{meta.get("loss_experience_mod_pct", 0):+.1f}%</span></div>
-      <div class="row"><span class="label">Tenure</span><span>{meta.get("years_in_business_mod_pct", 0):+.1f}%</span></div>
-    </div>
-  </div>
+  {modifiers_block}
 
   <div class="footer">
     <p>This quote is for informational purposes only and does not constitute a binder of insurance.</p>
-    <p style="margin-top:4px;">InsureFlow AI &bull; Generated {today}</p>
+    <p style="margin-top:4px;">Rytera &bull; Generated {today}</p>
   </div>
 </div>
 </body>

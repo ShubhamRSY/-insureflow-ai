@@ -196,18 +196,9 @@ class UWDecisionAgent(ReActAgent):
         )
 
     def _build_memo_summary(self, decision: UWDecision, score: float, findings: list[Finding]) -> str:
-        sev_counts: dict[str, int] = {}
-        for f in findings:
-            sev_counts[f.severity.value] = sev_counts.get(f.severity.value, 0) + 1
-        critical = sev_counts.get("critical", 0)
-        high = sev_counts.get("high", 0)
-        total = len(findings)
-        action = decision.value.upper()
-        pct = int(round(score * 100))
-        narrative = f"Underwriting recommendation is {action} based on {total} findings across risk, loss history, compliance, and fraud analysis. Aggregate risk score is {pct}/100."
-        if critical or high:
-            narrative += f" {critical + high} finding(s) require elevated attention."
-        return narrative
+        from insureflow.underwriting.memo_sync import build_memo_summary
+
+        return build_memo_summary(decision, score, findings)
 
     def _agent_findings(self, results: list[AgentResult], name: str) -> list[Finding]:
         for r in results:

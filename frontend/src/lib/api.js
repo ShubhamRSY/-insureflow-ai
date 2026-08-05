@@ -151,8 +151,8 @@ export const endpoints = {
   relationshipNotes: (bundleId) => api(`/pipeline/jobs/${bundleId}/relationship-notes`),
   addRelationshipNote: (bundleId, body) =>
     api(`/pipeline/jobs/${bundleId}/relationship-notes`, { method: 'POST', body }),
-  packageChecklist: (bundleId, lob = 'auto') =>
-    api(`/pipeline/jobs/${bundleId}/package-checklist?lob=${lob}`),
+  packageChecklist: (bundleId, lob = '') =>
+    api(`/pipeline/jobs/${bundleId}/package-checklist${lob ? `?lob=${encodeURIComponent(lob)}` : ''}`),
   brokerRespond: (token, body) => api(`/broker/status/${token}/respond`, { method: 'POST', body }),
   ecosystemStatus: () => api('/pipeline/ecosystem/status'),
   ecosystemBundle: (bundleId) => api(`/pipeline/ecosystem/${bundleId}`),

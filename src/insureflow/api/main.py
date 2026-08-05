@@ -3272,10 +3272,10 @@ def add_relationship_note(
 @app.get("/pipeline/jobs/{bundle_id}/package-checklist")
 def insurance_package_checklist(
     bundle_id: str,
-    lob: str = "auto",
+    lob: str = "",
     current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
-    """Property or D&O completeness checklist for the submission package."""
+    """LOB-aware completeness checklist for the submission package."""
     from insureflow.audit.store import AuditStore
     from insureflow.insurance.package_checklist import detect_lob, package_checklist
 
@@ -3293,8 +3293,16 @@ def insurance_package_checklist(
     type_counts = results.get("document_types") or {}
     if isinstance(type_counts, dict):
         types.extend(list(type_counts.keys()))
-    text_blob = " ".join(types) + " " + str(summary.get("product_line") or results.get("product_line") or results.get("insurance_line") or "")
-    resolved = lob if lob in ("property", "do", "homeowners", "auto", "life") else detect_lob(text_blob)
+    line_hint = str(
+        results.get("insurance_line")
+        or results.get("product_line")
+        or summary.get("product_line")
+        or (results.get("quote_full") or {}).get("line")
+        or ""
+    )
+    text_blob = " ".join(types) + " " + line_hint
+    # Prefer explicit query param only when it is a known catalog key; otherwise detect.
+    resolved = lob if lob in ("property", "do", "homeowners", "auto", "life") else detect_lob(text_blob, line_hint)
     checklist = package_checklist(types, lob=resolved)
     return {"bundle_id": bundle_id, **checklist}
 

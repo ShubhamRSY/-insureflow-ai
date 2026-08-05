@@ -31,7 +31,7 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
     decision = (r.get("ai_decision") or memo.get("decision") or "pending").upper()
     risk_score = memo.get("overall_risk_score")
     risk_pct = round(risk_score * 100) if risk_score is not None else None
-    severity = memo.get("severity") or "—"
+    severity = memo.get("overall_risk_severity") or memo.get("severity") or "—"
     triage_score = r.get("triage_score")
     document_checklist = r.get("document_checklist") or {}
     base_premium = quote.get("base_premium") or quote_full.get("base_premium") or 0
@@ -39,13 +39,33 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
     policy_ref = quote.get("policy_admin_reference") or quote_full.get("policy_admin_reference") or "—"
     valid_until = quote.get("quote_valid_until") or quote_full.get("quote_valid_until") or "30 days"
     meta = quote_full.get("metadata") or {}
+    insurance_line = str(r.get("insurance_line") or r.get("product_line") or meta.get("insurance_line") or "").lower()
+    is_life = insurance_line == "life" or bool(meta.get("personal_lines") and "life" in str(meta.get("product") or "").lower())
     key_findings = memo.get("key_findings") or []
+    # Dedupe findings by title+description prefix
+    _seen_f: set[tuple[str, str]] = set()
+    deduped_findings: list[dict[str, Any]] = []
+    for f in key_findings:
+        if not isinstance(f, dict):
+            continue
+        key = (str(f.get("title") or "").strip().lower(), str(f.get("description") or "")[:120].strip().lower())
+        if key in _seen_f:
+            continue
+        _seen_f.add(key)
+        deduped_findings.append(f)
+    key_findings = deduped_findings
     recommendation = memo.get("recommendation") or {}
     oracle_findings_count = r.get("oracle_findings_count") or 0
     premiums_mods = quote_full.get("schedule_modifications") or []
+    executive_summary = memo.get("summary") or memo.get("executive_summary") or ""
 
     # ── Colors ──
-    decision_colors = {"ACCEPT": "#16a34a", "REFER": "#d97706", "DECLINE": "#dc2626"}
+    decision_colors = {
+        "ACCEPT": "#16a34a",
+        "CONDITIONAL_ACCEPT": "#d97706",
+        "REFER": "#d97706",
+        "DECLINE": "#dc2626",
+    }
     decision_color = decision_colors.get(decision, "#64748b")
 
     if risk_pct is not None:
@@ -135,9 +155,55 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
     match_pct = round(match_rate * 100) if match_rate is not None else None
     recon_status = (recon.get("overall_status") or "—").upper()
 
-    # ── Recommendation ──
-    rec_action = (recommendation.get("action") or "—").upper()
-    rec_conditions = recommendation.get("conditions") or []
+    # ── Recommendation — always align action with the persisted decision badge ──
+    rec_action = decision
+    rec_from_memo = (recommendation.get("action") or "").upper()
+    if rec_from_memo and rec_from_memo != decision and rec_from_memo != "—":
+        # Prefer the pipeline decision; note divergence was a historical bug
+        rec_action = decision
+    rec_conditions = recommendation.get("conditions") or memo.get("conditions") or []
+
+    # Life vs commercial modifier cards
+    if is_life:
+        medical = meta.get("medical") or {}
+        modifiers_html = f"""
+  <div class="card">
+    <div class="findings-category" style="margin-top:0;">Life Rating</div>
+    <div class="kv-row"><span class="kv-label">Filing</span><span class="kv-value">{meta.get("filing_id") or "—"}</span></div>
+    <div class="kv-row"><span class="kv-label">UW Class</span><span class="kv-value">{(medical.get("underwriting_class") or "—")}</span></div>
+    <div class="kv-row"><span class="kv-label">Tobacco</span><span class="kv-value">{"Yes" if medical.get("tobacco") else "No"}</span></div>
+    <div class="kv-row"><span class="kv-label">Face Amount</span><span class="kv-value">${float(meta.get("face_amount") or meta.get("tiv") or 0):,.0f}</span></div>
+  </div>"""
+        base_rate_html = f"""
+  <div class="card">
+    <div class="findings-category" style="margin-top:0;">Premium</div>
+    <div class="kv-row"><span class="kv-label">Base</span><span class="kv-value">${base_premium:,.2f}</span></div>
+    <div class="kv-row"><span class="kv-label">Indicated</span><span class="kv-value" style="font-weight:700;">${adjusted_premium:,.2f}</span></div>
+    <div class="kv-row"><span class="kv-label">Line</span><span class="kv-value">Life</span></div>
+  </div>"""
+    else:
+        modifiers_html = f"""
+  <div class="card">
+    <div class="findings-category" style="margin-top:0;">Modifiers</div>
+    <div class="kv-row"><span class="kv-label">COPE Schedule</span><span class="kv-value">{meta.get("cope_mod_pct", 0):+.1f}%</span></div>
+    <div class="kv-row"><span class="kv-label">Market Cycle</span><span class="kv-value">{meta.get("market_mod_pct", 0):+.1f}%</span></div>
+    <div class="kv-row"><span class="kv-label">Deductible</span><span class="kv-value">{meta.get("deductible_credit", 0):+.1f}%</span></div>
+    <div class="kv-row"><span class="kv-label">Loss Experience</span><span class="kv-value">{meta.get("loss_experience_mod_pct", 0):+.1f}%</span></div>
+    <div class="kv-row"><span class="kv-label">Years in Business</span><span class="kv-value">{meta.get("years_in_business_mod_pct", 0):+.1f}%</span></div>
+  </div>"""
+        base_rate_html = f"""
+  <div class="card">
+    <div class="findings-category" style="margin-top:0;">Base Rate</div>
+    <div class="kv-row"><span class="kv-label">ISO Loss Cost</span><span class="kv-value">${meta.get("loss_cost", 0):.4f}/$100</span></div>
+    <div class="kv-row"><span class="kv-label">Rate per $100 TIV</span><span class="kv-value">{quote_full.get("rate_per_100_tiv") or meta.get("rate_per_100_tiv") or "—"}</span></div>
+  </div>"""
+
+    summary_block = ""
+    if executive_summary:
+        summary_block = f"""
+<div class="section-title">Executive Summary</div>
+<div class="card"><p style="font-size:13px;color:#334155;line-height:1.55;">{executive_summary}</p></div>
+"""
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -390,19 +456,8 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
 </div>
 
 <div class="grid-2 mt-8">
-  <div class="card">
-    <div class="findings-category" style="margin-top:0;">Base Rate</div>
-    <div class="kv-row"><span class="kv-label">ISO Loss Cost</span><span class="kv-value">${meta.get("loss_cost", 0):.4f}/$100</span></div>
-    <div class="kv-row"><span class="kv-label">Rate per $100 TIV</span><span class="kv-value">{quote_full.get("rate_per_100_tiv") or meta.get("rate_per_100_tiv") or "—"}</span></div>
-  </div>
-  <div class="card">
-    <div class="findings-category" style="margin-top:0;">Modifiers</div>
-    <div class="kv-row"><span class="kv-label">COPE Schedule</span><span class="kv-value">{meta.get("cope_mod_pct", 0):+.1f}%</span></div>
-    <div class="kv-row"><span class="kv-label">Market Cycle</span><span class="kv-value">{meta.get("market_mod_pct", 0):+.1f}%</span></div>
-    <div class="kv-row"><span class="kv-label">Deductible</span><span class="kv-value">{meta.get("deductible_credit", 0):+.1f}%</span></div>
-    <div class="kv-row"><span class="kv-label">Loss Experience</span><span class="kv-value">{meta.get("loss_experience_mod_pct", 0):+.1f}%</span></div>
-    <div class="kv-row"><span class="kv-label">Years in Business</span><span class="kv-value">{meta.get("years_in_business_mod_pct", 0):+.1f}%</span></div>
-  </div>
+  {base_rate_html}
+  {modifiers_html}
 </div>
 
 <!-- ═══════════════════════════════════════════ RECONCILIATION ═══════════════════════════════════════════ -->
@@ -417,12 +472,14 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
   <div class="kv-row"><span class="kv-label">Field Match Rate</span><span class="kv-value">{match_pct or 0}%</span></div>
 </div>
 
+{summary_block}
+
 <!-- ═══════════════════════════════════════════ RECOMMENDATION ═══════════════════════════════════════════ -->
 <div class="section-title">Underwriting Recommendation</div>
 <div class="card">
   <div class="kv-row">
     <span class="kv-label">Action</span>
-    <span class="kv-value" style="font-weight:700;">{rec_action}</span>
+    <span class="kv-value" style="font-weight:700;color:{decision_color};">{rec_action}</span>
   </div>
   {_render_conditions(rec_conditions)}
 </div>

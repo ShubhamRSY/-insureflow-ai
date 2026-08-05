@@ -64,12 +64,20 @@ def detect_lob(text_blob: str = "", product_hint: str = "") -> str:
     blob = f"{product_hint}\n{text_blob}".lower()
     if any(k in blob for k in ("d&o", "d and o", "directors and officers", "directors & officers", "management liability")):
         return "do"
-    if any(k in blob for k in ("life insurance", "term life", "face amount", "beneficiary", "paramedical")):
+    # Exact / short LOB tokens first (from pipeline insurance_line)
+    hint = (product_hint or "").strip().lower()
+    if hint in {"life", "auto", "homeowners", "property", "do"}:
+        return hint if hint != "do" else "do"
+    if any(k in blob for k in ("life insurance", "term life", "face amount", "beneficiary", "paramedical", " life")):
+        return "life"
+    if hint == "life" or blob.strip() == "life" or "insurance_line=life" in blob:
         return "life"
     if any(k in blob for k in ("personal auto", "mvr", "motor vehicle", "vin:", "rideshare", "drivers license")):
         return "auto"
     if any(k in blob for k in ("homeowners", "dwelling coverage", "ho-3", "personal homeowners", "clue report")):
         return "homeowners"
+    if "life" in blob.split() or blob.startswith("life") or "/life" in blob:
+        return "life"
     return "property"
 
 

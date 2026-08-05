@@ -70,6 +70,15 @@ export default function InsuranceMemoView({ job }) {
     ['fraud_findings', 'Fraud Detection'],
   ].filter(([key]) => (memo[key] || []).length > 0);
 
+  // Prefer key_findings for the main list; skip agent sections that only repeat the same titles.
+  const keyTitles = new Set((allFindings || []).map((f) => (f.title || '').toLowerCase()));
+  const uniqueAgentSections = agentSections
+    .map(([key, label]) => {
+      const unique = (memo[key] || []).filter((f) => !keyTitles.has((f.title || '').toLowerCase()));
+      return [key, label, unique];
+    })
+    .filter(([, , findings]) => findings.length > 0);
+
   return (
     <div className="space-y-6">
       {/* Decision hero */}
@@ -132,12 +141,12 @@ export default function InsuranceMemoView({ job }) {
         </div>
       )}
 
-      {/* Agent sections (sorted high→low) */}
-      {agentSections.map(([key, label]) => (
+      {/* Agent sections — only findings not already shown under Key Findings */}
+      {uniqueAgentSections.map(([key, label, findings]) => (
         <div key={key}>
           <h4 className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">{label}</h4>
           <div className="space-y-2">
-            {sortFindings(memo[key]).slice(0, 3).map((f, i) => (
+            {sortFindings(findings).slice(0, 3).map((f, i) => (
               <FindingRow key={i} finding={f} />
             ))}
           </div>

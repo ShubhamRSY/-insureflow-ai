@@ -205,15 +205,23 @@ export function buildAgentFindings(job) {
     ['loss_run_findings', 'Loss Run'],
     ['compliance_findings', 'Compliance'],
     ['fraud_findings', 'Fraud Detection'],
-    ['key_findings', 'Key Findings'],
   ];
-  return sections
+  const built = sections
     .map(([key, label]) => ({
       key,
       label,
       findings: (memo[key] || []).filter((f) => f.category !== 'external_oracle'),
     }))
     .filter((s) => s.findings.length > 0);
+  // Only surface key_findings when agent buckets are empty (avoid duplicates).
+  if (built.length === 0 && (memo.key_findings || []).length > 0) {
+    return [{
+      key: 'key_findings',
+      label: 'Key Findings',
+      findings: (memo.key_findings || []).filter((f) => f.category !== 'external_oracle'),
+    }];
+  }
+  return built;
 }
 
 export function buildProvenanceView(job) {

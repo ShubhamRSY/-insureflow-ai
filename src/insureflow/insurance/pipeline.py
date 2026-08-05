@@ -704,19 +704,28 @@ class InsurancePipeline:
         quote = self.rating.quote(bundle, memo, line=line_for_quote)
         # Apply life medical / personal filing decision hints onto the memo
         if line_for_quote == InsuranceLine.LIFE:
-            from insureflow.models.agents import UWDecision
             from insureflow.underwriting.life_medical import underwrite_life
+            from insureflow.underwriting.memo_sync import resync_memo_narrative, worst_decision
 
             medical = underwrite_life(bundle)
             for f in medical.findings:
                 memo.key_findings.append(f)
-            memo.decision = medical.decision
-            if medical.decision in (UWDecision.DECLINE, UWDecision.REFER, UWDecision.CONDITIONAL_ACCEPT):
-                memo.human_review_required = True
-                memo.human_review_reasons.extend(medical.reasons)
+            # Never let medical ACCEPT override agent critical/decline — take worst of both.
+            agent_decision = memo.decision
+            memo.decision = worst_decision(agent_decision, medical.decision)
+            if medical.decision != memo.decision and medical.reasons:
+                memo.human_review_reasons.extend(
+                    [f"Life medical suggested {medical.decision.value}: {r}" for r in medical.reasons]
+                )
+            memo.human_review_reasons.extend(medical.reasons)
             memo.conditions.extend((quote.metadata or {}).get("conditions") or [])
-            memo.summary = (memo.summary or "") + f" Life class={medical.underwriting_class}; tobacco={medical.tobacco}."
+            resync_memo_narrative(
+                memo,
+                extra_summary=f"Life class={medical.underwriting_class}; tobacco={medical.tobacco}.",
+            )
         elif line_for_quote in (InsuranceLine.PERSONAL_HOMEOWNERS, InsuranceLine.PERSONAL_AUTO):
+            from insureflow.underwriting.memo_sync import resync_memo_narrative
+
             for flag in (quote.metadata or {}).get("referral_flags") or []:
                 memo.human_review_reasons.append(str(flag))
                 memo.human_review_required = True
@@ -726,6 +735,11 @@ class InsurancePipeline:
                 memo.decision = UWDecision.DECLINE
                 memo.human_review_required = True
                 memo.human_review_reasons.extend(quote.ineligibility_reasons or [])
+                resync_memo_narrative(memo)
+        else:
+            from insureflow.underwriting.memo_sync import dedupe_findings
+
+            memo.key_findings = dedupe_findings(list(memo.key_findings or []))
 
         progress.complete(
             "price",

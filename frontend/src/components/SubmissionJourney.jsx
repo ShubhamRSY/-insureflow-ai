@@ -187,6 +187,38 @@ function CopeDeepDive({ cope }) {
   );
 }
 
+function LifeMedicalPanel({ job }) {
+  const quote = job?.results?.quote_full || job?.results?.quote || {};
+  const meta = quote.metadata || {};
+  const medical = meta.medical || {};
+  const face = meta.face_amount || meta.tiv || 0;
+  return (
+    <div className="grid gap-3 sm:grid-cols-2">
+      <div className="rounded-lg bg-black/20 p-3">
+        <p className="text-[10px] uppercase text-slate-500">UW Class</p>
+        <p className="mt-1 text-sm font-medium capitalize text-slate-200">{medical.underwriting_class || '—'}</p>
+      </div>
+      <div className="rounded-lg bg-black/20 p-3">
+        <p className="text-[10px] uppercase text-slate-500">Tobacco</p>
+        <p className="mt-1 text-sm font-medium text-slate-200">{medical.tobacco ? 'Yes' : 'No'}</p>
+      </div>
+      <div className="rounded-lg bg-black/20 p-3">
+        <p className="text-[10px] uppercase text-slate-500">Face Amount</p>
+        <p className="mt-1 text-sm font-medium text-slate-200">${Number(face).toLocaleString()}</p>
+      </div>
+      <div className="rounded-lg bg-black/20 p-3">
+        <p className="text-[10px] uppercase text-slate-500">Rate Filing</p>
+        <p className="mt-1 text-sm font-medium text-slate-200">{meta.filing_id || '—'}</p>
+      </div>
+      {(meta.conditions || []).length > 0 && (
+        <div className="sm:col-span-2 rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
+          {(meta.conditions || []).map((c) => <div key={c}>• {c}</div>)}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function AgentFindingsPanel({ sections }) {
   if (!sections.length) return <p className="text-xs text-slate-500">No agent findings yet.</p>;
   return (
@@ -480,20 +512,25 @@ export default function SubmissionJourney({ job }) {
     if (fromResults && !cancelled) {
       setDocQuality(fromResults);
     }
+    const isLife = (job?.results?.insurance_line || job?.results?.product_line || '').toLowerCase() === 'life';
     const load = async () => {
       const tasks = [
-        endpoints.copeAnalysis(ctx.bundleId).then((d) => { if (!cancelled) setCope(d); }).catch(() => {}),
         endpoints.missingDocuments(ctx.bundleId).then((d) => { if (!cancelled && d) setDocQuality(d); }).catch(() => {}),
         endpoints.auditTrail(ctx.bundleId).then((d) => { if (!cancelled) setAudit(d); }).catch(() => {}),
         endpoints.ecosystemBundle(ctx.bundleId).then((d) => { if (!cancelled) setEcosystem(d); }).catch(() => {}),
       ];
+      if (!isLife) {
+        tasks.push(endpoints.copeAnalysis(ctx.bundleId).then((d) => { if (!cancelled) setCope(d); }).catch(() => {}));
+      }
       await Promise.all(tasks);
     };
     load();
     return () => { cancelled = true; };
-  }, [ctx.bundleId]);
+  }, [ctx.bundleId, job?.results?.insurance_line, job?.results?.product_line]);
 
   if (ctx.failed) return null;
+
+  const isLifeLine = (job?.results?.insurance_line || job?.results?.product_line || '').toLowerCase() === 'life';
 
   const handleRequestDocs = async () => {
     if (!ctx.bundleId || !docQuality?.missing_documents?.length) return;
@@ -556,9 +593,15 @@ export default function SubmissionJourney({ job }) {
             <VerificationCard verification={ctx.verification} />
           </Section>
 
-          <Section title="COPE Deep Dive" icon={BarChart3}>
-            <CopeDeepDive cope={cope} />
-          </Section>
+          {isLifeLine ? (
+            <Section title="Life Medical UW" icon={BarChart3}>
+              <LifeMedicalPanel job={job} />
+            </Section>
+          ) : (
+            <Section title="COPE Deep Dive" icon={BarChart3}>
+              <CopeDeepDive cope={cope} />
+            </Section>
+          )}
 
           <Section title="Agent Findings" icon={Users}>
             <AgentFindingsPanel sections={ctx.agentSections} />

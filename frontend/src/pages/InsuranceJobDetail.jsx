@@ -46,10 +46,11 @@ export default function InsuranceJobDetail() {
 
   useEffect(() => {
     if (!bundleId) return;
+    const lob = job?.results?.insurance_line || job?.results?.product_line || '';
     endpoints.relationshipNotes(bundleId).then((r) => setNotes(r.notes || [])).catch(() => {});
-    endpoints.packageChecklist(bundleId).then(setChecklist).catch(() => {});
+    endpoints.packageChecklist(bundleId, lob).then(setChecklist).catch(() => {});
     endpoints.infoRequests(bundleId).then((r) => setInfoRequests(r.requests || [])).catch(() => {});
-  }, [bundleId]);
+  }, [bundleId, job?.results?.insurance_line, job?.results?.product_line]);
 
   const handleAddNote = async () => {
     if (!bundleId || !noteText.trim()) return;
