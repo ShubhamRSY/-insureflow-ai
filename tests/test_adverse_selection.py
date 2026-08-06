@@ -11,6 +11,7 @@ from insureflow.models.submissions import (
     ClaimRecord,
     ClaimStatus,
     CoverageDetail,
+    FinancialData,
     LocationData,
     LossRunData,
     NamedInsured,
@@ -71,7 +72,13 @@ def _bundle(
         risk_profile = risk_profile.model_copy(update={"prior_claims": prior_claims})
     financial = None
     if loss_run_claims:
-        financial = LossRunData(total_claims=len(loss_run_claims), total_incurred=sum(c.incurred_amount for c in loss_run_claims), claims=loss_run_claims)
+        financial = FinancialData(
+            loss_run=LossRunData(
+                total_claims=len(loss_run_claims),
+                total_incurred=sum(c.incurred_amount for c in loss_run_claims),
+                claims=loss_run_claims,
+            )
+        )
     period = None
     if effective_date:
         period = PolicyPeriod(effective_date=effective_date, expiration_date=date(2027, 1, 1))
@@ -200,7 +207,7 @@ def test_agent_flags_high_for_flood_plain_demand() -> None:
     finding = result.findings[0]
     assert finding.severity == RiskSeverity.HIGH
     assert "disproportionately motivated" in finding.title
-    assert finding.source_value >= 0.6
+    assert finding.source_value is not None and finding.source_value >= 0.6
 
 
 def test_agent_clean_applicant_is_low() -> None:
