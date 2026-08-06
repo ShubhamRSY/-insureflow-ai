@@ -36,9 +36,7 @@ class MarketResearchNote:
     summary: str
     recommendation: str = ""
     author: str = ""
-    created_at: str = field(
-        default_factory=lambda: datetime.now(tz=timezone.utc).isoformat()
-    )
+    created_at: str = field(default_factory=lambda: datetime.now(tz=timezone.utc).isoformat())
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -52,9 +50,7 @@ class CoverageDevelopmentItem:
     description: str
     status: str = "proposed"  # proposed | in_review | approved | filed
     author: str = ""
-    created_at: str = field(
-        default_factory=lambda: datetime.now(tz=timezone.utc).isoformat()
-    )
+    created_at: str = field(default_factory=lambda: datetime.now(tz=timezone.utc).isoformat())
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -71,9 +67,7 @@ class RatingPlanReview:
     profit_load_pct: float = 0.0
     action: str = "monitor"  # monitor | revise | file
     author: str = ""
-    created_at: str = field(
-        default_factory=lambda: datetime.now(tz=timezone.utc).isoformat()
-    )
+    created_at: str = field(default_factory=lambda: datetime.now(tz=timezone.utc).isoformat())
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -88,12 +82,8 @@ class UnderwritingGuideEntry:
     status: GuideStatus = GuideStatus.DRAFT
     version: str = "1.0"
     author: str = ""
-    created_at: str = field(
-        default_factory=lambda: datetime.now(tz=timezone.utc).isoformat()
-    )
-    updated_at: str = field(
-        default_factory=lambda: datetime.now(tz=timezone.utc).isoformat()
-    )
+    created_at: str = field(default_factory=lambda: datetime.now(tz=timezone.utc).isoformat())
+    updated_at: str = field(default_factory=lambda: datetime.now(tz=timezone.utc).isoformat())
 
     def to_dict(self) -> dict[str, Any]:
         d = asdict(self)
@@ -138,9 +128,7 @@ class UnderwritingAudit:
     findings: list[UnderwritingAuditFinding] = field(default_factory=list)
     files_reviewed: int = 0
     compliant_pct: float = 0.0
-    created_at: str = field(
-        default_factory=lambda: datetime.now(tz=timezone.utc).isoformat()
-    )
+    created_at: str = field(default_factory=lambda: datetime.now(tz=timezone.utc).isoformat())
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -163,9 +151,7 @@ class TrainingModule:
     audience: str  # line_uw | producers | all
     outline: str
     author: str = ""
-    created_at: str = field(
-        default_factory=lambda: datetime.now(tz=timezone.utc).isoformat()
-    )
+    created_at: str = field(default_factory=lambda: datetime.now(tz=timezone.utc).isoformat())
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -185,22 +171,13 @@ def evaluate_experience(
     delta = loss_ratio - industry_loss_ratio
     if delta > 0.10:
         strategy = "tighten"
-        narrative = (
-            "Book loss ratio is materially worse than industry. Tighten selection, "
-            "review class/territory appetite, and communicate via underwriting bulletin."
-        )
+        narrative = "Book loss ratio is materially worse than industry. Tighten selection, review class/territory appetite, and communicate via underwriting bulletin."
     elif delta < -0.08:
         strategy = "grow"
-        narrative = (
-            "Book outperforms industry on this slice. Consider controlled growth "
-            "within guide — update product-mix goals if capacity allows."
-        )
+        narrative = "Book outperforms industry on this slice. Consider controlled growth within guide — update product-mix goals if capacity allows."
     else:
         strategy = "maintain"
-        narrative = (
-            "Experience is in line with industry. Maintain current marketing and "
-            "underwriting strategy; monitor quarterly."
-        )
+        narrative = "Experience is in line with industry. Maintain current marketing and underwriting strategy; monitor quarterly."
     return {
         "line_of_business": line_of_business,
         "class_of_business": class_of_business,
@@ -262,10 +239,7 @@ class StaffUnderwritingDesk:
                     "note_id": "mkt-seed-1",
                     "title": "Optimal product mix — GL vs WC",
                     "topic": "product_mix",
-                    "summary": (
-                        "Evaluate premium mix: general liability vs workers compensation "
-                        "as capacity and loss trends shift."
-                    ),
+                    "summary": ("Evaluate premium mix: general liability vs workers compensation as capacity and loss trends shift."),
                     "recommendation": "Hold GL growth; selective WC expansion in preferred classes.",
                     "author": "staff",
                     "created_at": now,
@@ -327,10 +301,7 @@ class StaffUnderwritingDesk:
                 {
                     "policy_id": "pol-seed-1",
                     "title": "Large / unusual account referral",
-                    "body": (
-                        "Accounts above senior authority or outside guide classes require "
-                        "staff underwriter or top management review for fit with overall UW goals."
-                    ),
+                    "body": ("Accounts above senior authority or outside guide classes require staff underwriter or top management review for fit with overall UW goals."),
                     "author": "staff",
                     "created_at": now,
                 }
@@ -531,11 +502,7 @@ class StaffUnderwritingDesk:
                     file_ref=str(f.get("file_ref", "")),
                 )
             )
-        majors = sum(
-            1
-            for f in parsed
-            if f.severity in (AuditFindingSeverity.MAJOR, AuditFindingSeverity.CRITICAL)
-        )
+        majors = sum(1 for f in parsed if f.severity in (AuditFindingSeverity.MAJOR, AuditFindingSeverity.CRITICAL))
         compliant = 100.0
         if files_reviewed > 0:
             compliant = max(0.0, round(100.0 * (1.0 - majors / max(files_reviewed, 1)), 1))

@@ -56,9 +56,7 @@ class CoverageAssistResult:
     occupancy: str
     recommendations: list[CoverageRecommendation]
     summary: str
-    generated_at: str = field(
-        default_factory=lambda: datetime.now(tz=timezone.utc).isoformat()
-    )
+    generated_at: str = field(default_factory=lambda: datetime.now(tz=timezone.utc).isoformat())
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -93,12 +91,8 @@ class ServiceTicket:
     policy_number: str = ""
     submission_id: str = ""
     created_by: str = ""
-    created_at: str = field(
-        default_factory=lambda: datetime.now(tz=timezone.utc).isoformat()
-    )
-    updated_at: str = field(
-        default_factory=lambda: datetime.now(tz=timezone.utc).isoformat()
-    )
+    created_at: str = field(default_factory=lambda: datetime.now(tz=timezone.utc).isoformat())
+    updated_at: str = field(default_factory=lambda: datetime.now(tz=timezone.utc).isoformat())
     resolution_notes: str = ""
 
     def to_dict(self) -> dict[str, Any]:
@@ -133,10 +127,7 @@ _EXPOSURE_RULES: list[dict[str, Any]] = [
         "exposure": "property_in_transit",
         "action": CoverageAction.BROADEN,
         "title": "Add inland marine for property in transit",
-        "rationale": (
-            "Operations suggest goods moving between locations. Standard property forms "
-            "often leave transit inadequately covered — offer an inland marine policy."
-        ),
+        "rationale": ("Operations suggest goods moving between locations. Standard property forms often leave transit inadequately covered — offer an inland marine policy."),
         "form": "Inland Marine — Motor Truck Cargo / Transit",
         "endorsements": ["Cargo named perils or all-risk transit endorsement"],
         "priority": "high",
@@ -176,10 +167,7 @@ _EXPOSURE_RULES: list[dict[str, Any]] = [
         "exposure": "flood_wind",
         "action": CoverageAction.NARROW,
         "title": "Higher wind/hail deductible or flood exclusion",
-        "rationale": (
-            "Rather than decline, offer limited terms: higher deductibles or fewer causes "
-            "of loss so the producer can place reduced coverage the applicant may accept."
-        ),
+        "rationale": ("Rather than decline, offer limited terms: higher deductibles or fewer causes of loss so the producer can place reduced coverage the applicant may accept."),
         "form": "Property — limited causes of loss",
         "endorsements": ["Percentage wind/hail deductible", "Flood exclusion"],
         "priority": "medium",
@@ -224,10 +212,7 @@ def assist_coverage(
             CoverageRecommendation(
                 action=CoverageAction.VERIFY,
                 title="Verify forms and endorsements on routine package",
-                rationale=(
-                    "For simple or routine submissions, confirm the policy issues with the "
-                    f"appropriate forms for: {', '.join(requested_coverages or [])}."
-                ),
+                rationale=(f"For simple or routine submissions, confirm the policy issues with the appropriate forms for: {', '.join(requested_coverages or [])}."),
                 suggested_form="Package / BOP / monoline as quoted",
                 suggested_endorsements=[],
                 priority="low",
@@ -239,10 +224,7 @@ def assist_coverage(
             CoverageRecommendation(
                 action=CoverageAction.MANUSCRIPT,
                 title="Consider manuscript endorsement language",
-                rationale=(
-                    "Complex or unique submissions may need manuscript policies or "
-                    "endorsements drafted to the characteristics of this account."
-                ),
+                rationale=("Complex or unique submissions may need manuscript policies or endorsements drafted to the characteristics of this account."),
                 suggested_form="Manuscript endorsement",
                 priority="medium",
             )
@@ -253,21 +235,14 @@ def assist_coverage(
             CoverageRecommendation(
                 action=CoverageAction.VERIFY,
                 title="Standard forms appear adequate",
-                rationale=(
-                    "No obvious uncovered exposures from the occupancy narrative. "
-                    "Verify classification, limits, and deductibles against the underwriting guide."
-                ),
+                rationale=("No obvious uncovered exposures from the occupancy narrative. Verify classification, limits, and deductibles against the underwriting guide."),
                 priority="low",
             )
         )
 
     broaden = sum(1 for r in recs if r.action == CoverageAction.BROADEN)
     narrow = sum(1 for r in recs if r.action == CoverageAction.NARROW)
-    summary = (
-        f"{len(recs)} coverage action(s) for {applicant or 'applicant'}: "
-        f"{broaden} broaden, {narrow} narrow, "
-        f"{len(recs) - broaden - narrow} verify/manuscript."
-    )
+    summary = f"{len(recs)} coverage action(s) for {applicant or 'applicant'}: {broaden} broaden, {narrow} narrow, {len(recs) - broaden - narrow} verify/manuscript."
     return CoverageAssistResult(
         applicant=applicant or "Unknown applicant",
         occupancy=occupancy or "unspecified",

@@ -3509,10 +3509,7 @@ def staff_list_section(
     except KeyError:
         raise HTTPException(
             status_code=404,
-            detail=(
-                "Unknown section. Use: market_research, coverage_development, "
-                "rating_reviews, guides, audits, training, policy_statements"
-            ),
+            detail=("Unknown section. Use: market_research, coverage_development, rating_reviews, guides, audits, training, policy_statements"),
         ) from None
     return {"section": section, "items": items, "count": len(items)}
 
