@@ -62,9 +62,7 @@ class TestProducerNotificationStore:
 
 class TestProducerNotificationService:
     def test_notify_decision_approve(self, tmp_path) -> None:
-        svc = ProducerNotificationService(
-            store=ProducerNotificationStore(audit_store=AuditStore(base_path=tmp_path / "audit"))
-        )
+        svc = ProducerNotificationService(store=ProducerNotificationStore(audit_store=AuditStore(base_path=tmp_path / "audit")))
         n = svc.notify_decision(
             "ins-1",
             "default",
@@ -78,9 +76,7 @@ class TestProducerNotificationService:
         assert "sfields" in n["message"]
 
     def test_notify_decision_decline_carries_reason(self, tmp_path) -> None:
-        svc = ProducerNotificationService(
-            store=ProducerNotificationStore(audit_store=AuditStore(base_path=tmp_path / "audit"))
-        )
+        svc = ProducerNotificationService(store=ProducerNotificationStore(audit_store=AuditStore(base_path=tmp_path / "audit")))
         n = svc.notify_decision(
             "ins-1",
             "default",
@@ -94,9 +90,7 @@ class TestProducerNotificationService:
         assert "Claim frequency 12/yr exceeds threshold" in n["message"]
 
     def test_notify_bound_includes_policy_number(self, tmp_path) -> None:
-        svc = ProducerNotificationService(
-            store=ProducerNotificationStore(audit_store=AuditStore(base_path=tmp_path / "audit"))
-        )
+        svc = ProducerNotificationService(store=ProducerNotificationStore(audit_store=AuditStore(base_path=tmp_path / "audit")))
         n = svc.notify_bound(
             "ins-1",
             "default",

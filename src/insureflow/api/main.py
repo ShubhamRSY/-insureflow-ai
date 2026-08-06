@@ -2368,6 +2368,7 @@ def get_workflow_cosign(
 
 # ── Issuance: binder / policy worksheet / certificate of insurance (Step 5b) ──
 
+
 @app.get("/pipeline/issuance")
 def list_all_issuance(
     current: TokenData = Depends(require_role(Role.VIEWER)),
@@ -2424,6 +2425,7 @@ def download_issuance_document(
 
 # ── Producer decision notifications (Step 5a) ──
 
+
 @app.get("/pipeline/notifications")
 def list_all_producer_notifications(
     current: TokenData = Depends(require_role(Role.VIEWER)),
@@ -2462,15 +2464,14 @@ def acknowledge_producer_notification(
     from insureflow.insurance.notifications import ProducerNotificationStore
 
     try:
-        notification = ProducerNotificationStore().mark_acknowledged(
-            bundle_id, current.org_id, notification_id, acknowledged_by=req.acknowledged_by
-        )
+        notification = ProducerNotificationStore().mark_acknowledged(bundle_id, current.org_id, notification_id, acknowledged_by=req.acknowledged_by)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     return notification
 
 
 # ── Ongoing policy monitoring (Step 6) ──
+
 
 class AddMonitoringItemRequest(BaseModel):
     title: str

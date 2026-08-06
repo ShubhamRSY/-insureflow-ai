@@ -138,8 +138,9 @@ class TestIssuanceService:
             bound_by="sfields",
             premium=22_500.0,
         )
-        doc, record = svc.get_document_html("ins-issuance-1", "default", "certificate")
-        assert doc is not None
+        result = svc.get_document_html("ins-issuance-1", "default", "certificate")
+        assert result is not None
+        doc, record = result
         assert doc.doc_type == IssuedDocumentType.CERTIFICATE
         assert record.certificate is doc
 

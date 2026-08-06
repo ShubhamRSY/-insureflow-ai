@@ -212,10 +212,7 @@ class MonitoringEngine:
                     org_id=org_id,
                     severity=MonitoringSeverity.HIGH,
                     title="Loss ratio deteriorating",
-                    message=(
-                        f"Policy {record.policy_number or policy_id} loss ratio is {loss_ratio:.0%} "
-                        f"(watch threshold {self.LOSS_RATIO_WATCH:.0%}). Monitor account activity closely."
-                    ),
+                    message=(f"Policy {record.policy_number or policy_id} loss ratio is {loss_ratio:.0%} (watch threshold {self.LOSS_RATIO_WATCH:.0%}). Monitor account activity closely."),
                 )
             )
         elif loss_ratio > 0.0 and record.status == PolicyStatus.WATCH:

@@ -62,7 +62,7 @@ def _shell(title: str, badge: str, content_html: str, footer_html: str, doc_id: 
     <div class="brand">
       <p>Rytera</p>
       <span>AI Underwriting</span>
-      {f'<div class="doc-id">{doc_id}</div>' if doc_id else ''}
+      {f'<div class="doc-id">{doc_id}</div>' if doc_id else ""}
     </div>
   </div>
   {content_html}
@@ -77,17 +77,14 @@ def _coverages_html(coverages: list[dict[str, Any]]) -> str:
         return '<div class="box"><div class="box-title">Coverages</div><p class="muted">Coverage schedule not available — see policy form.</p></div>'
     rows = ""
     for c in coverages:
-        sublimits = "".join(
-            f"<tr><td class='muted'>&nbsp;&nbsp;&nbsp;{k}</td><td style='text-align:right;'>${float(v):,.0f}</td></tr>"
-            for k, v in (c.get("sublimits") or {}).items()
-        )
+        sublimits = "".join(f"<tr><td class='muted'>&nbsp;&nbsp;&nbsp;{k}</td><td style='text-align:right;'>${float(v):,.0f}</td></tr>" for k, v in (c.get("sublimits") or {}).items())
         deductible = c.get("deductible")
         ded_text = f"${float(deductible):,.0f}" if deductible else "—"
         rows += f"""<tr>
-      <td><strong>{c.get('coverage_type') or 'Coverage'}</strong></td>
-      <td style='text-align:right;'>${float(c.get('limit_amount') or 0):,.0f}</td>
+      <td><strong>{c.get("coverage_type") or "Coverage"}</strong></td>
+      <td style='text-align:right;'>${float(c.get("limit_amount") or 0):,.0f}</td>
       <td style='text-align:right;'>{ded_text}</td>
-      <td style='text-align:right;'>${float(c.get('premium') or 0):,.0f}</td>
+      <td style='text-align:right;'>${float(c.get("premium") or 0):,.0f}</td>
     </tr>{sublimits}"""
     return f"""<table>
     <tr><th>Coverage</th><th style='text-align:right;'>Limit</th><th style='text-align:right;'>Deductible</th><th style='text-align:right;'>Premium</th></tr>
@@ -120,7 +117,7 @@ def generate_binder_html(ctx: dict[str, Any]) -> str:
     <div class="box-title">Binder of Insurance &mdash; Temporary Coverage</div>
     <div class="grid-2">
       <div><div class="row"><span class="label">Named Insured</span><span>{insured}</span></div>
-      <div class="row"><span class="label">Producer / Broker</span><span>{ctx.get('broker_name') or '—'}</span></div>
+      <div class="row"><span class="label">Producer / Broker</span><span>{ctx.get("broker_name") or "—"}</span></div>
       <div class="row"><span class="label">Line of Business</span><span>{line}</span></div>
       <div class="row"><span class="label">Policy Number</span><span>{policy_number}</span></div></div>
       <div><div class="row"><span class="label">Effective Date</span><span>{effective}</span></div>
@@ -134,10 +131,10 @@ def generate_binder_html(ctx: dict[str, Any]) -> str:
   {header}
 
   <h2>Coverages Under Binder</h2>
-  {_coverages_html(ctx.get('coverages') or [])}
+  {_coverages_html(ctx.get("coverages") or [])}
 
   <h2>Binder Conditions</h2>
-  <ul>{_conditions_html(ctx.get('conditions') or [])}</ul>
+  <ul>{_conditions_html(ctx.get("conditions") or [])}</ul>
 
   <h2>Effective Terms</h2>
   <div class="box">
@@ -148,8 +145,8 @@ def generate_binder_html(ctx: dict[str, Any]) -> str:
   </div>
 
   <div class="signature">
-    <div><div class="line">Licensed Underwriter / Binder Signatory — {bound_by or ''}</div></div>
-    <div><div class="line">Date — {bound_at or ''}</div></div>
+    <div><div class="line">Licensed Underwriter / Binder Signatory — {bound_by or ""}</div></div>
+    <div><div class="line">Date — {bound_at or ""}</div></div>
   </div>"""
 
     return _shell(
@@ -194,7 +191,7 @@ def generate_policy_worksheet_html(ctx: dict[str, Any]) -> str:
   </table>
 
   <h2>Coverage Schedule</h2>
-  {_coverages_html(ctx.get('coverages') or [])}
+  {_coverages_html(ctx.get("coverages") or [])}
 
   <h2>Accounting &amp; Statistical Coding Notes</h2>
   <div class="box">
@@ -204,7 +201,7 @@ def generate_policy_worksheet_html(ctx: dict[str, Any]) -> str:
   </div>
 
   <h2>Underwriting Conditions Carried Into the Policy</h2>
-  <ul>{_conditions_html(ctx.get('conditions') or [])}</ul>
+  <ul>{_conditions_html(ctx.get("conditions") or [])}</ul>
   """
 
     return _shell(
@@ -225,11 +222,11 @@ def generate_certificate_html(ctx: dict[str, Any]) -> str:
     tiv = float(ctx.get("tiv") or 0)
 
     rows = ""
-    for c in (ctx.get("coverages") or []):
+    for c in ctx.get("coverages") or []:
         rows += f"""<tr>
-      <td>{c.get('coverage_type') or 'Coverage'}</td>
-      <td>${float(c.get('limit_amount') or 0):,.0f}</td>
-      <td>{c.get('deductible') and f"${float(c.get('deductible')):,.0f}" or '—'}</td>
+      <td>{c.get("coverage_type") or "Coverage"}</td>
+      <td>${float(c.get("limit_amount") or 0):,.0f}</td>
+      <td>{c.get("deductible") and f"${float(c.get('deductible')):,.0f}" or "—"}</td>
     </tr>"""
     if not rows:
         rows = '<tr><td class="muted" colspan="3">Coverage schedule not available.</td></tr>'
@@ -239,7 +236,7 @@ def generate_certificate_html(ctx: dict[str, Any]) -> str:
     <div class="box-title">Certificate of Insurance</div>
     <div class="grid-2">
       <div><div class="row"><span class="label">Named Insured</span><span>{insured}</span></div>
-      <div class="row"><span class="label">Certificate Holder</span><span>{ctx.get('certificate_holder') or 'As Requested'}</span></div></div>
+      <div class="row"><span class="label">Certificate Holder</span><span>{ctx.get("certificate_holder") or "As Requested"}</span></div></div>
       <div><div class="row"><span class="label">Policy Number</span><span>{policy_number}</span></div>
       <div class="row"><span class="label">Policy Period</span><span>{effective} to {expiry}</span></div></div>
     </div>
