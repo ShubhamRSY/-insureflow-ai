@@ -456,10 +456,21 @@ class StaffUnderwritingDesk:
         if guide_id:
             for i, g in enumerate(data["guides"]):
                 if g.get("guide_id") == guide_id:
-                    entry = UnderwritingGuideEntry.from_dict({**g, "title": title, "line_of_business": line_of_business, "body": body, "status": gstatus.value, "version": version, "author": author or g.get("author", ""), "updated_at": now})
-                    data["guides"][i] = entry.to_dict()
+                    merged: dict[str, Any] = {
+                        **g,
+                        "title": title,
+                        "line_of_business": line_of_business,
+                        "body": body,
+                        "status": gstatus.value,
+                        "version": version,
+                        "author": author or g.get("author", ""),
+                        "updated_at": now,
+                    }
+                    entry = UnderwritingGuideEntry.from_dict(merged)
+                    updated = entry.to_dict()
+                    data["guides"][i] = updated
                     self._persist(org_id)
-                    return data["guides"][i]
+                    return updated
         entry = UnderwritingGuideEntry(
             guide_id=guide_id or f"guide-{uuid.uuid4().hex[:8]}",
             title=title,
@@ -469,9 +480,10 @@ class StaffUnderwritingDesk:
             version=version,
             author=author,
         )
-        data["guides"].append(entry.to_dict())
+        created = entry.to_dict()
+        data["guides"].append(created)
         self._persist(org_id)
-        return entry.to_dict()
+        return created
 
     def add_policy_statement(
         self,
