@@ -2,6 +2,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Shield, Home, Activity, ClipboardCheck, Settings, LogOut, RefreshCw, Menu, X,
   FileText, Users, BarChart3, BookOpen, Wallet, Layers, Link2, LineChart, Search, Database, FlaskConical,
+  FileCheck, MessagesSquare, Radar,
 } from 'lucide-react';
 import { useState } from 'react';
 import { auth, endpoints } from '../lib/api';
@@ -16,6 +17,10 @@ const nav = [
   { to: '/lending', icon: Wallet, label: 'Lending', color: 'text-emerald-400' },
   { to: '/workflow', icon: ClipboardCheck, label: 'UW Sign-off', badge: true },
   { to: '/queue', icon: Search, label: 'Queue' },
+  { section: 'Post-Decision' },
+  { to: '/issuance', icon: FileCheck, label: 'Issuance', color: 'text-emerald-400' },
+  { to: '/monitoring', icon: Radar, label: 'Policy Monitoring', color: 'text-violet-400' },
+  { to: '/producer-comms', icon: MessagesSquare, label: 'Producer Comms', color: 'text-sky-400' },
   { section: 'Analytics' },
   { to: '/renewals', icon: FileText, label: 'Renewals' },
   { to: '/overrides', icon: LineChart, label: 'Override Analytics' },

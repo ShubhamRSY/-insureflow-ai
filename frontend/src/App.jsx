@@ -23,6 +23,9 @@ import IntegrationsPage from './pages/Integrations';
 import WebhooksPage from './pages/Webhooks';
 import InsuranceJobDetail from './pages/InsuranceJobDetail';
 import PilotPage from './pages/Pilot';
+import IssuancePage from './pages/Issuance';
+import MonitoringPage from './pages/Monitoring';
+import ProducerCommsPage from './pages/ProducerComms';
 import { auth, endpoints, AuthError } from './lib/api';
 
 function Protected({ children, onLogin }) {
@@ -248,6 +251,9 @@ function AppRoutes() {
           <Route path="mortgage" element={<Protected onLogin={() => setLoginOpen(true)}><MortgagePage presets={presets} jobs={mortgageJobs} onRunDemo={runDemo} onOpenJob={openJob} onRunConnect={runMortgageConnect} onSubmit={submitMortgage} /></Protected>} />
           <Route path="lending" element={<Protected onLogin={() => setLoginOpen(true)}><LendingPage presets={presets} demoResult={lendingDemoResult} onRunDemo={runDemo} /></Protected>} />
           <Route path="workflow" element={<Protected onLogin={() => setLoginOpen(true)}><WorkflowPage pending={pending} onRefresh={loadOverview} onOpenJob={openJob} authorityData={authorityData} /></Protected>} />
+          <Route path="issuance" element={<Protected onLogin={() => setLoginOpen(true)}><IssuancePage /></Protected>} />
+          <Route path="producer-comms" element={<Protected onLogin={() => setLoginOpen(true)}><ProducerCommsPage /></Protected>} />
+          <Route path="monitoring" element={<Protected onLogin={() => setLoginOpen(true)}><MonitoringPage /></Protected>} />
           <Route path="renewals" element={<Protected onLogin={() => setLoginOpen(true)}><RenewalDashboard /></Protected>} />
           <Route path="overrides" element={<Protected onLogin={() => setLoginOpen(true)}><OverrideAnalyticsPage /></Protected>} />
           <Route path="eval-trends" element={<Protected onLogin={() => setLoginOpen(true)}><EvalTrendsPage /></Protected>} />

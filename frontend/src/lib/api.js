@@ -226,6 +226,49 @@ export const endpoints = {
   lossExperience: (body) => api('/pipeline/outcomes/loss-experience', { method: 'POST', body }),
   calibration: () => api('/pipeline/outcomes/calibration'),
 
+  // Issuance — binder / policy worksheet / certificate (Step 5b)
+  issuanceRecords: () => api('/pipeline/issuance'),
+  issuanceRecord: (bundleId) => api(`/pipeline/issuance/${bundleId}`),
+  issuanceDownload: async (bundleId, docType) => {
+    const headers = {};
+    if (auth.token) headers.Authorization = `Bearer ${auth.token}`;
+    const res = await fetch(`/pipeline/issuance/${bundleId}/${docType}`, { headers });
+    if (!res.ok) {
+      let msg = `HTTP ${res.status}`;
+      const ct = res.headers.get('content-type') || '';
+      if (ct.includes('application/json')) {
+        try { const d = await res.json(); msg = d?.detail || msg; } catch { /* ignore */ }
+      }
+      throw new Error(msg);
+    }
+    const blob = await res.blob();
+    const cd = res.headers.get('content-disposition') || '';
+    const ext = cd.includes('.pdf') ? 'pdf' : 'html';
+    const name = (cd.match(/filename="?(.+?)"?$/) || [])[1] || `IssuedDocument.${ext}`;
+    return { blob, filename: name };
+  },
+
+  // Producer decision notifications (Step 5a)
+  producerNotifications: () => api('/pipeline/notifications'),
+  producerNotificationsFor: (bundleId) => api(`/pipeline/notifications/${bundleId}`),
+  acknowledgeNotification: (bundleId, notificationId, acknowledgedBy = 'broker') =>
+    api(`/pipeline/notifications/${bundleId}/acknowledge?notification_id=${encodeURIComponent(notificationId)}`, {
+      method: 'POST',
+      body: { acknowledged_by: acknowledgedBy },
+    }),
+
+  // Ongoing policy monitoring (Step 6)
+  monitoringPolicies: () => api('/monitoring/policies'),
+  monitoringAlerts: () => api('/monitoring/alerts'),
+  monitoringEvaluate: () => api('/monitoring/evaluate', { method: 'POST' }),
+  monitoringPolicy: (policyId) => api(`/monitoring/policies/${policyId}`),
+  addMonitoringItem: (policyId, body) => api(`/monitoring/policies/${policyId}/items`, { method: 'POST', body }),
+  resolveMonitoringItem: (policyId, itemId, body) =>
+    api(`/monitoring/policies/${policyId}/items/${encodeURIComponent(itemId)}/resolve`, { method: 'POST', body }),
+  recordLossDevelopment: (policyId, body) =>
+    api(`/monitoring/policies/${policyId}/loss-development`, { method: 'POST', body }),
+
+
   // Override analytics
   overrideAnalytics: () => api('/analytics/overrides'),
   overridePatterns: () => api('/analytics/overrides/patterns'),

@@ -570,6 +570,9 @@ class SignOffRequest(BaseModel):
 class BindRequest(BaseModel):
     policy_number: str = ""
     bound_premium: float = 0.0
+    effective_date: str = ""  # coverage effective date (defaults to today)
+    expiry_date: str = ""  # coverage expiry date (defaults to +1 year)
+    certificate_holder: str = ""  # party named on the certificate of insurance
 
 
 class LossExperienceRequest(BaseModel):
@@ -2089,6 +2092,24 @@ def licensed_uw_sign_off(
         )
         get_analytics_engine().record_override(detail)
 
+    # ── Step 5a: communicate the decision to the producer (good or bad) ──
+    try:
+        from insureflow.audit.store import AuditStore
+        from insureflow.insurance.notifications import ProducerNotificationService
+
+        summary = AuditStore().load_json(bundle_id, "pipeline_summary.json", org_id=current.org_id) or {}
+        ProducerNotificationService().notify_decision(
+            bundle_id,
+            current.org_id,
+            decision=record.final_decision or record.ai_decision,
+            action=action.value,
+            signed_by=current.username or "",
+            reason=req.notes or req.override_reason or "",
+            producer_name=str(summary.get("broker_name") or ""),
+        )
+    except Exception as exc:
+        logger.warning("Producer decision notification failed for %s: %s", bundle_id, exc)
+
     return record.model_dump()
 
 
@@ -2239,7 +2260,67 @@ def bind_policy(
 
     record = wf.store.get(bundle_id, current.org_id) or record
 
-    return {"bind": bind_result, "workflow": record.model_dump(), "outcome": outcome.model_dump()}
+    # ── Step 5b: issue binder / policy worksheet / certificate of insurance ──
+    try:
+        from insureflow.issuance.service import IssuanceService
+
+        issuance = IssuanceService().issue(
+            bundle_id,
+            current.org_id,
+            policy_number=policy_number,
+            bound_by=current.username or "",
+            premium=float(bound_premium or 0),
+            effective_date=req.effective_date,
+            expiry_date=req.expiry_date,
+            certificate_holder=req.certificate_holder,
+            policy_admin_reference=quote_ref,
+        )
+    except Exception as exc:
+        logger.warning("Issuance package generation failed for %s: %s", bundle_id, exc)
+        issuance = None
+
+    # ── Step 6: begin ongoing policy monitoring on the in-force policy ──
+    try:
+        from insureflow.monitoring.engine import MonitoringEngine
+
+        policy_id = f"pol-{policy_number or bundle_id}"
+        MonitoringEngine().seed_from_issuance(
+            bundle_id,
+            current.org_id,
+            policy_id=policy_id,
+            policy_number=policy_number,
+            insured_name=str(summary.get("insured_name") or ""),
+            line_of_business=str(summary.get("insurance_line") or ""),
+            premium=float(bound_premium or 0),
+            tiv=tiv,
+            effective_date=issuance.effective_date if issuance else (req.effective_date or ""),
+            expiry_date=issuance.expiry_date if issuance else (req.expiry_date or ""),
+        )
+    except Exception as exc:
+        logger.warning("Policy monitoring seeding failed for %s: %s", bundle_id, exc)
+
+    # ── Step 5a: notify the producer that coverage is in force ──
+    try:
+        from insureflow.insurance.notifications import ProducerNotificationService
+
+        ProducerNotificationService().notify_bound(
+            bundle_id,
+            current.org_id,
+            policy_number=policy_number,
+            bound_by=current.username or "",
+            premium=float(bound_premium or 0),
+            producer_name=str(summary.get("broker_name") or ""),
+        )
+    except Exception as exc:
+        logger.warning("Producer bind notification failed for %s: %s", bundle_id, exc)
+
+    return {
+        "bind": bind_result,
+        "workflow": record.model_dump(),
+        "outcome": outcome.model_dump(),
+        "issuance": issuance.model_dump(mode="json") if issuance else None,
+        "monitoring_policy_id": f"pol-{policy_number or bundle_id}",
+    }
 
 
 class CoSignResolveRequest(BaseModel):
@@ -2283,6 +2364,254 @@ def get_workflow_cosign(
     if not record:
         raise HTTPException(status_code=404, detail="Workflow not found")
     return {"bundle_id": bundle_id, "state": record.state.value, "co_sign": record.metadata.get("co_sign")}
+
+
+# ── Issuance: binder / policy worksheet / certificate of insurance (Step 5b) ──
+
+@app.get("/pipeline/issuance")
+def list_all_issuance(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """List every issued coverage package for the current org."""
+    from insureflow.issuance.service import IssuanceService
+
+    return {"records": [r.model_dump(mode="json") for r in IssuanceService().list_records(current.org_id)]}
+
+
+@app.get("/pipeline/issuance/{bundle_id}")
+def list_issuance_documents(
+    bundle_id: str,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """List issued coverage documents for a bound policy."""
+    from insureflow.issuance.service import IssuanceService
+
+    svc = IssuanceService()
+    record = svc.load_record(bundle_id, current.org_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="No issuance package for this bundle — has it been bound?")
+    return record.model_dump(mode="json")
+
+
+@app.get("/pipeline/issuance/{bundle_id}/{doc_type}")
+def download_issuance_document(
+    bundle_id: str,
+    doc_type: str,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> StreamingResponse:
+    """Download an issued document (binder | policy_worksheet | certificate) as PDF/HTML."""
+    from insureflow.issuance.service import IssuanceService
+
+    result = IssuanceService().get_document_html(bundle_id, current.org_id, doc_type)
+    if not result:
+        raise HTTPException(status_code=404, detail=f"No issued {doc_type!r} document available")
+    doc, _ = result
+    try:
+        from insureflow.rating.report_document import html_to_pdf
+
+        pdf_bytes = html_to_pdf(doc.html)
+        is_pdf = pdf_bytes[:4] == b"%PDF"
+        media_type = "application/pdf" if is_pdf else "text/html"
+        ext = "pdf" if is_pdf else "html"
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Issuance document rendering failed: {exc}") from exc
+    return StreamingResponse(
+        iter([pdf_bytes]),
+        media_type=media_type,
+        headers={"Content-Disposition": f'attachment; filename="{doc.filename.rsplit(".", 1)[0]}.{ext}"'},
+    )
+
+
+# ── Producer decision notifications (Step 5a) ──
+
+@app.get("/pipeline/notifications")
+def list_all_producer_notifications(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Every UW→producer decision communication logged for the current org."""
+    from insureflow.insurance.notifications import ProducerNotificationStore
+
+    return {"notifications": ProducerNotificationStore().list_all(current.org_id)}
+
+
+@app.get("/pipeline/notifications/{bundle_id}")
+def list_producer_notifications(
+    bundle_id: str,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    from insureflow.insurance.notifications import ProducerNotificationStore
+
+    return {
+        "bundle_id": bundle_id,
+        "notifications": ProducerNotificationStore().list_notifications(bundle_id, current.org_id),
+    }
+
+
+class AcknowledgeNotificationRequest(BaseModel):
+    acknowledged_by: str = "broker"
+
+
+@app.post("/pipeline/notifications/{bundle_id}/acknowledge", status_code=200)
+def acknowledge_producer_notification(
+    bundle_id: str,
+    notification_id: str,
+    req: AcknowledgeNotificationRequest,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Record broker acknowledgement of a communicated underwriting decision."""
+    from insureflow.insurance.notifications import ProducerNotificationStore
+
+    try:
+        notification = ProducerNotificationStore().mark_acknowledged(
+            bundle_id, current.org_id, notification_id, acknowledged_by=req.acknowledged_by
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return notification
+
+
+# ── Ongoing policy monitoring (Step 6) ──
+
+class AddMonitoringItemRequest(BaseModel):
+    title: str
+    description: str = ""
+    severity: str = "moderate"  # low | moderate | high | critical
+    source: str = "manual"  # uw_memo | loss_development | expiry | renewal | manual
+    due_by: str = ""
+    bundle_id: str = ""
+
+
+class ResolveMonitoringItemRequest(BaseModel):
+    status: str = "cleared"  # cleared | waived
+    resolved_by: str = ""
+    note: str = ""
+
+
+class RecordLossDevelopmentRequest(BaseModel):
+    policy_year: int = 0
+    earned_premium: float = 0.0
+    incurred_losses: float = 0.0
+    paid_losses: float = 0.0
+    claim_count: int = 0
+    recorded_by: str = "system"
+
+
+@app.get("/monitoring/policies")
+def list_monitoring_policies(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    from insureflow.monitoring.engine import MonitoringEngine
+
+    return {"policies": MonitoringEngine().list_monitoring(current.org_id)}
+
+
+@app.get("/monitoring/alerts")
+def list_monitoring_alerts(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    from insureflow.monitoring.engine import MonitoringEngine
+
+    return {"alerts": MonitoringEngine().list_open_alerts(current.org_id)}
+
+
+@app.post("/monitoring/evaluate")
+def evaluate_monitoring(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Re-evaluate all monitored policies for overdue items / renewal windows."""
+    from insureflow.monitoring.engine import MonitoringEngine
+
+    engine = MonitoringEngine()
+    records = engine.evaluate_all(current.org_id)
+    return {"policies": [r.to_summary_dict() for r in records], "alerts": engine.list_open_alerts(current.org_id)}
+
+
+@app.get("/monitoring/policies/{policy_id}")
+def get_monitoring_policy(
+    policy_id: str,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    from insureflow.monitoring.engine import MonitoringEngine
+
+    try:
+        record = MonitoringEngine().store.get(policy_id, current.org_id)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    if not record:
+        raise HTTPException(status_code=404, detail=f"No monitoring record for policy {policy_id}")
+    return record.model_dump(mode="json")
+
+
+@app.post("/monitoring/policies/{policy_id}/items", status_code=201)
+def add_monitoring_item(
+    policy_id: str,
+    req: AddMonitoringItemRequest,
+    current: TokenData = Depends(require_role(Role.LICENSED_UW)),
+) -> dict[str, Any]:
+    from insureflow.monitoring.engine import MonitoringEngine
+
+    try:
+        record = MonitoringEngine().add_item(
+            policy_id,
+            current.org_id,
+            title=req.title,
+            description=req.description,
+            severity=req.severity,
+            source=req.source,
+            due_by=req.due_by,
+            bundle_id=req.bundle_id,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return record.model_dump(mode="json")
+
+
+@app.post("/monitoring/policies/{policy_id}/items/{item_id}/resolve", status_code=200)
+def resolve_monitoring_item(
+    policy_id: str,
+    item_id: str,
+    req: ResolveMonitoringItemRequest,
+    current: TokenData = Depends(require_role(Role.LICENSED_UW)),
+) -> dict[str, Any]:
+    from insureflow.monitoring.engine import MonitoringEngine
+
+    try:
+        record = MonitoringEngine().resolve_item(
+            policy_id,
+            current.org_id,
+            item_id,
+            status=req.status,
+            resolved_by=req.resolved_by or current.username or "",
+            note=req.note,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return record.model_dump(mode="json")
+
+
+@app.post("/monitoring/policies/{policy_id}/loss-development", status_code=201)
+def record_monitoring_loss_development(
+    policy_id: str,
+    req: RecordLossDevelopmentRequest,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Record realized loss experience and re-flag the monitored policy."""
+    from insureflow.monitoring.engine import MonitoringEngine
+
+    try:
+        record = MonitoringEngine().record_loss_development(
+            policy_id,
+            current.org_id,
+            policy_year=req.policy_year,
+            earned_premium=req.earned_premium,
+            incurred_losses=req.incurred_losses,
+            paid_losses=req.paid_losses,
+            claim_count=req.claim_count,
+            recorded_by=req.recorded_by,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return record.model_dump(mode="json")
 
 
 @app.post("/pipeline/outcomes/loss-experience", status_code=201)
