@@ -127,6 +127,28 @@ class BookExperience(BaseModel):
     classes: dict[str, ClassExperience] = Field(default_factory=dict)
 
 
+class ProducerExperience(BaseModel):
+    """Realized vs expected loss experience for one producing agent/broker.
+
+    The doctrine's financial function notes the producer is judged on volume
+    while the underwriter is judged on quality, so the insurer monitors each
+    producer's book: a producer whose submissions consistently run
+    above-average claims is a relationship risk. ``penalty_factor`` is the
+    credibility-blended deviation of the producer's realized loss ratio from the
+    premium-weighted expectation of the classes they submitted.
+    """
+
+    producer_name: str
+    policy_count: int = 0
+    earned_premium: float = 0.0
+    incurred_loss: float = 0.0
+    loss_ratio: float = 0.0
+    expected_loss_ratio: float = 0.0
+    credibility: float = 0.0
+    penalty_factor: float = 1.0
+    status: str = "unknown"  # unknown | better | expected | worse
+
+
 class SelectionCandidate(BaseModel):
     """The risk being underwritten against the current book posture."""
 
@@ -294,7 +316,7 @@ def compute_book_experience(
         book_penalty = sum(p * w for p, w in credible_penalties) / total_weight if total_weight else 1.0
 
     book_credibility = _credibility(observed_count, cfg)
-    if book_credibility <= 0 or book_penalty == 1.0:
+    if not credible_penalties:
         status = "unknown"
     elif book_penalty >= 1.05:
         status = "worse"
@@ -314,6 +336,62 @@ def compute_book_experience(
         status=status,
         classes=classes,
     )
+
+
+def compute_producer_experience(
+    producers: Sequence[str],
+    premiums: Sequence[float],
+    incurred_losses: Sequence[float],
+    risk_scores: Sequence[float],
+    config: SelectionStandardsConfig | None = None,
+) -> dict[str, ProducerExperience]:
+    """Realized vs expected loss experience per producing agent/broker.
+
+    Each policy's expectation is the expected loss ratio of the class it was
+    underwritten into (``expected_loss_ratio_by_class``), premium-weighted across
+    the producer's book. Only policies whose losses have actually been reported
+    belong here; a producer with no reported experience is absent from the
+    result, and one below ``min_observed_policies_for_feedback`` is not trusted.
+    """
+    cfg = config or SelectionStandardsConfig()
+
+    buckets: dict[str, list[float]] = {}
+    for producer, premium, loss, score in zip(producers, premiums, incurred_losses, risk_scores):
+        if not producer:
+            continue
+        bucket = buckets.setdefault(producer, [0.0, 0.0, 0.0, 0.0])
+        expected = cfg.expected_loss_ratio_by_class.get(class_for_score(score).value, 0.6)
+        bucket[0] += float(premium)
+        bucket[1] += float(loss)
+        bucket[2] += 1.0
+        bucket[3] += expected * float(premium)
+
+    experiences: dict[str, ProducerExperience] = {}
+    for producer, (premium, loss, count, expected_premium) in sorted(buckets.items()):
+        expected = expected_premium / premium if premium > 0 else 0.0
+        loss_ratio = loss / premium if premium > 0 else 0.0
+        cred = _credibility(count, cfg) if count >= cfg.min_observed_policies_for_feedback else 0.0
+        penalty = _penalty(cred, loss_ratio, expected)
+        if cred <= 0:
+            status = "unknown"
+        elif penalty >= 1.05:
+            status = "worse"
+        elif penalty <= 0.95:
+            status = "better"
+        else:
+            status = "expected"
+        experiences[producer] = ProducerExperience(
+            producer_name=producer,
+            policy_count=int(count),
+            earned_premium=round(premium, 2),
+            incurred_loss=round(loss, 2),
+            loss_ratio=round(loss_ratio, 4),
+            expected_loss_ratio=round(expected, 4),
+            credibility=round(cred, 4),
+            penalty_factor=round(penalty, 4),
+            status=status,
+        )
+    return experiences
 
 
 def apply_experience_to_config(

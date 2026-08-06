@@ -26,6 +26,7 @@ from insureflow.underwriting.selection import (
     build_book_snapshot,
     coefficient_of_variation,
     compute_book_experience,
+    compute_producer_experience,
 )
 
 
@@ -227,6 +228,56 @@ class TestBookExperience:
         candidate = SelectionCandidate(tiv=1_000_000, premium=40_000, risk_class=RiskClass.SUBSTANDARD, risk_score=0.7)
         result = assess_selection(candidate, book, experience=exp)
         assert any("worse than rating assumed" in w for w in result.warnings)
+
+
+class TestProducerExperience:
+    def test_producer_experience_groups_by_producer(self) -> None:
+        exp = compute_producer_experience(
+            ["Acme Brokerage"] * 30,
+            [10_000] * 30,
+            [4_000] * 30,
+            [0.5] * 30,
+        )
+        assert set(exp) == {"Acme Brokerage"}
+        pe = exp["Acme Brokerage"]
+        assert pe.status == "better"
+        assert pe.policy_count == 30
+        assert pe.loss_ratio == pytest.approx(0.4)
+        assert pe.expected_loss_ratio == pytest.approx(0.6)
+
+    def test_producer_experience_worse(self) -> None:
+        exp = compute_producer_experience(
+            ["Acme Brokerage"] * 30,
+            [10_000] * 30,
+            [9_000] * 30,
+            [0.5] * 30,
+        )
+        pe = exp["Acme Brokerage"]
+        assert pe.status == "worse"
+        assert pe.penalty_factor == pytest.approx(1.5)
+
+    def test_producer_experience_expectation_blends_classes(self) -> None:
+        # Half preferred (expected 0.45) + half substandard (expected 0.70).
+        exp = compute_producer_experience(
+            ["Acme Brokerage"] * 40,
+            [10_000] * 40,
+            [5_750] * 40,
+            ([0.35] * 20) + ([0.75] * 20),
+        )
+        pe = exp["Acme Brokerage"]
+        assert pe.expected_loss_ratio == pytest.approx(0.575)
+        assert pe.status == "expected"
+
+    def test_producer_experience_ignores_unknown_producer(self) -> None:
+        exp = compute_producer_experience(["", ""], [10_000, 10_000], [5_000, 5_000], [0.5, 0.5])
+        assert exp == {}
+
+    def test_producer_experience_too_little_data(self) -> None:
+        exp = compute_producer_experience(["Acme Brokerage"] * 3, [10_000] * 3, [10_000] * 3, [0.5] * 3)
+        pe = exp["Acme Brokerage"]
+        assert pe.credibility == 0.0
+        assert pe.penalty_factor == 1.0
+        assert pe.status == "unknown"
 
 
 class TestSelectionStandardsAgent:

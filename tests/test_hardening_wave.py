@@ -59,6 +59,26 @@ def test_portfolio_store_persists(tmp_path: Path) -> None:
     assert any(p.policy_id == "p1" for p in store2.list_policies())
 
 
+def test_portfolio_records_producer_name(tmp_path: Path) -> None:
+    from insureflow.portfolio.store import PortfolioPolicy, PortfolioStore
+
+    path = tmp_path / "policies.json"
+    store = PortfolioStore(path=path)
+    store.add_policy(
+        PortfolioPolicy(
+            policy_id="p1",
+            bundle_id="b1",
+            insured_name="Acme",
+            producer_name="Acme Brokerage",
+            state="TX",
+            naics_code="531120",
+            tiv=1_000_000,
+        )
+    )
+    policy = next(p for p in store.list_policies() if p.policy_id == "p1")
+    assert policy.producer_name == "Acme Brokerage"
+
+
 def test_portfolio_record_loss_development_feeds_feedback_loop(tmp_path: Path) -> None:
     from insureflow.portfolio.store import PortfolioPolicy, PortfolioStore
 

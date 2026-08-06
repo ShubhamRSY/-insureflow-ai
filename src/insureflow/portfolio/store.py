@@ -29,6 +29,7 @@ class PortfolioPolicy(BaseModel):
     bundle_id: str
     org_id: str = "default"
     insured_name: str = ""
+    producer_name: str = ""  # producing agent/broker for distribution experience
     naics_code: str = ""
     state: str = ""
     zip_code: str = ""

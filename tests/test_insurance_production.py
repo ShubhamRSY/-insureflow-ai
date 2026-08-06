@@ -199,6 +199,9 @@ class TestInsurancePipelineIntegration:
         # Experience-rating feedback loop surfaces in the summary even when the
         # store has no reported losses yet (inert, status "unknown").
         assert result.get("selection_experience", {}).get("status") in ("unknown", "better", "expected", "worse")
+        # Producer-experience (financial function) runs alongside selection.
+        producer = result.get("producer_experience") or {}
+        assert producer.get("agent_type") == "producer_experience"
 
     def test_funnel_deferral_and_deep_dive(self, audit_store: AuditStore) -> None:
         acord_path = EXAMPLES / "pacific_coast_acord.xml"
@@ -218,7 +221,7 @@ class TestInsurancePipelineIntegration:
         assert result["status"] == "completed"
         assert result.get("funnel") is True
         # Funnel defers the expensive analyses but keeps them discoverable.
-        assert result["deep_dive_available"] == ["oracles", "portfolio", "selection_standards", "reinsurance", "fraud_ml"]
+        assert result["deep_dive_available"] == ["oracles", "portfolio", "selection_standards", "producer_experience", "reinsurance", "fraud_ml"]
         stage_status = {s["id"]: s["status"] for s in result["pipeline_stages"]}
         assert stage_status.get("verify") == "skipped"
         assert stage_status.get("portfolio") == "skipped"
@@ -227,8 +230,8 @@ class TestInsurancePipelineIntegration:
 
         # Deep dive re-runs everything the funnel deferred — nothing is lost.
         dd = pipe.deep_dive("funnel-test", org_id="test")
-        assert set(dd["completed"]) == {"oracles", "portfolio", "selection_standards", "reinsurance", "fraud_ml", "premium_ml", "churn_ml"}
-        for section in ("oracles", "portfolio", "selection_standards", "reinsurance", "fraud_ml", "premium_ml", "churn_ml"):
+        assert set(dd["completed"]) == {"oracles", "portfolio", "selection_standards", "producer_experience", "reinsurance", "fraud_ml", "premium_ml", "churn_ml"}
+        for section in ("oracles", "portfolio", "selection_standards", "producer_experience", "reinsurance", "fraud_ml", "premium_ml", "churn_ml"):
             assert section in dd["findings"]
 
     def test_funnel_deep_dive_missing_bundle_raises(self, audit_store: AuditStore) -> None:

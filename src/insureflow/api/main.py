@@ -2217,6 +2217,7 @@ def bind_policy(
                 bundle_id=bundle_id,
                 org_id=current.org_id,
                 insured_name=str(summary.get("insured_name") or ""),
+                producer_name=str(summary.get("broker_name") or ""),
                 premium=float(bound_premium or 0.0),
                 tiv=tiv,
                 state=str(summary.get("primary_state") or ""),
@@ -4638,7 +4639,7 @@ def _run_pipeline_v2_task(job_id: str, request: PipelineConfigRequest, org_id: s
 class DeepDiveRequest(BaseModel):
     """Select which deferred analyses to re-run for a completed submission."""
 
-    include: list[str] = ["oracles", "portfolio", "selection_standards", "reinsurance", "fraud_ml", "premium_ml", "churn_ml"]
+    include: list[str] = ["oracles", "portfolio", "selection_standards", "producer_experience", "reinsurance", "fraud_ml", "premium_ml", "churn_ml"]
 
 
 @app.post("/pipeline/{bundle_id}/deep-dive")

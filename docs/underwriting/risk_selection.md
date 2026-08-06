@@ -113,11 +113,44 @@ Combined with the substandard loading section above, this is the full circle:
 selection admits or rejects, pricing loads what is admitted, and realized
 losses feed back to tighten or relax the gate for the next submission.
 
+## Financial function: producer experience
+
+The doctrine's financial function acknowledges the underwriter/agent tension: the
+underwriter is judged on the **quality** of production, the agent on **quantity**,
+and a producer whose submissions consistently produce above-average claims may
+lose the relationship. `ProducerExperienceAgent` operationalizes this:
+
+- Every `PortfolioPolicy` carries its `producer_name` (the producing
+  broker/agent from `SubmissionBundle.structured.broker.broker_name`, recorded at
+  bind).
+- `compute_producer_experience` groups reported-loss policies by producer and
+  compares each producer's realized loss ratio to the **premium-weighted
+  expectation of the classes they submitted** (the same
+  `expected_loss_ratio_by_class` used by the book loop), blended by the same
+  limited-fluctuation credibility.
+- A producer running worse than expected (`penalty > 1.05`, credible) triggers a
+  **HIGH** finding: *"submissions running above-average claims — relationship at
+  risk"* — with coaching to **pre-screen against carrier appetite** before
+  submitting. Better-than-expected producers get a LOW acknowledgment; producers
+  with too little reported experience get a LOW "cannot rate yet" note.
+- An aggregate **"Producer book quality"** finding (MODERATE) lists every
+  credible at-risk producer in the book, the portfolio-level termination-risk
+  signal.
+- The agent runs in the portfolio stage (stage 7) alongside concentration and
+  selection standards, defers in funnel mode, re-runs via
+  `deep_dive(include=["producer_experience", ...])`, and surfaces in the summary
+  under `producer_experience`.
+
+The pre-screening half of the doctrine ("the agent knows a company will not
+accept a certain class and should not submit it") is enforced at the front door
+by `AppetiteFilterAgent` and coached into producers flagged by this agent.
+
 ## Pipeline integration
 
-- The `SelectionStandardsAgent` runs in the portfolio stage (stage 7) of
-  `InsurancePipeline.run()` for commercial lines, alongside concentration
-  analysis, using `memo.overall_risk_score` as the candidate risk score.
+- The `SelectionStandardsAgent` and `ProducerExperienceAgent` run in the
+  portfolio stage (stage 7) of `InsurancePipeline.run()` for commercial lines,
+  alongside concentration analysis, using `memo.overall_risk_score` as the
+  candidate risk score.
 - Findings are appended to the memo; critical/high findings trigger human
   review.
 - In funnel mode the stage is deferred and re-runs on demand via
@@ -140,3 +173,5 @@ Tests in `tests/test_selection_standards.py` document the expected behavior at
 each tier, for the expense flags, for the substandard loading, for intra-class
 dispersion, and for the experience-rating feedback loop (credibility scaling,
 tier tightening/relaxation, and loading scaling by class penalty).
+`tests/test_producer_experience.py` covers the financial function — producer
+grouping, expectation blending across classes, and the at-risk findings.

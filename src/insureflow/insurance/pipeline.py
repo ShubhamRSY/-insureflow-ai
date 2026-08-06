@@ -8,6 +8,7 @@ from uuid import uuid4
 from insureflow.agents.appetite_filter import AppetiteFilterAgent
 from insureflow.agents.extraction_agent import ExtractionAgent
 from insureflow.agents.portfolio_risk_agent import PortfolioRiskAgent
+from insureflow.agents.producer_experience_agent import ProducerExperienceAgent
 from insureflow.agents.reinsurance_agent import ReinsuranceAgent
 from insureflow.agents.selection_standards_agent import SelectionStandardsAgent
 from insureflow.agents.supervisor import SupervisorAgent
@@ -90,6 +91,7 @@ class InsurancePipeline:
         self.portfolio_risk = PortfolioRiskAgent()
         self.reinsurance = ReinsuranceAgent()
         self.selection_standards = SelectionStandardsAgent()
+        self.producer_experience = ProducerExperienceAgent()
         self.triage = get_triage_agent()
         self.policy_admin = build_policy_admin_service()
         self.portfolio_store = get_portfolio_store()
@@ -123,7 +125,7 @@ class InsurancePipeline:
         # Deferred stages in funnel mode are re-run on demand via deep_dive().
         deferred_stages: list[str] = []
         if funnel:
-            deferred_stages = ["oracles", "portfolio", "selection_standards", "reinsurance", "fraud_ml"]
+            deferred_stages = ["oracles", "portfolio", "selection_standards", "producer_experience", "reinsurance", "fraud_ml"]
 
         # ── 1. SUBMISSION TRIAGE (score & prioritize before any processing) ──
         progress.start("intake", "Intake", "Receiving submission package")
@@ -702,6 +704,7 @@ class InsurancePipeline:
         # ── 7. PORTFOLIO CONCENTRATION RISK ──
         portfolio_result = None
         selection_result = None
+        producer_result = None
         if funnel:
             progress.skip("portfolio", "Portfolio", "Deferred — available via Deep Dive")
         elif is_life_line:
@@ -734,6 +737,18 @@ class InsurancePipeline:
                 PipelineEvent.SYNTHESIS_COMPLETE,
                 f"Selection standards: {len(selection_result.findings)} findings",
                 metadata={"selection_score": selection_result.risk_score},
+            )
+
+            producer_result = self.producer_experience.run(bundle, org_id=self.org_id)
+            for f in producer_result.findings:
+                memo.key_findings.append(f)
+                if f.severity.value in ("critical", "high"):
+                    memo.human_review_reasons.append(f.title)
+                    memo.human_review_required = True
+            audit.log(
+                PipelineEvent.SYNTHESIS_COMPLETE,
+                f"Producer experience: {len(producer_result.findings)} findings",
+                metadata={"producer_score": producer_result.risk_score},
             )
 
             # Substandard candidates admitted by the selection gate carry a rate
@@ -950,7 +965,9 @@ class InsurancePipeline:
             "product_line": line_for_quote.value,
             "human_review_required": memo.human_review_required or wf.state == WorkflowState.PENDING_REVIEW,
             "funnel": funnel,
-            "deep_dive_available": ([s for s in deferred_stages if s not in ("oracles", "portfolio", "selection_standards", "reinsurance")] if is_life_line else list(deferred_stages)),
+            "deep_dive_available": (
+                [s for s in deferred_stages if s not in ("oracles", "portfolio", "selection_standards", "producer_experience", "reinsurance")] if is_life_line else list(deferred_stages)
+            ),
             "appetite_filter_passed": appetite_passed,
             "appetite_needs_uw_referral": appetite_result.needs_uw_referral if appetite_result else False,
             "appetite_reason": appetite_result.reason if appetite_result else "",
@@ -1013,6 +1030,10 @@ class InsurancePipeline:
             if exp is not None:
                 summary["selection_experience"] = exp.model_dump()
 
+        # Add producer experience / distribution quality data if available
+        if producer_result:
+            summary["producer_experience"] = producer_result.model_dump()
+
         # Add visual analysis data if available
         if visual_profile:
             summary["visual_analysis"] = visual_profile.to_dict()
@@ -1060,10 +1081,10 @@ class InsurancePipeline:
         """Re-run the analyses deferred by funnel mode on a persisted submission.
 
         Nothing is lost by the funnel — oracles, portfolio concentration,
-        selection standards, reinsurance treaty fit, and the ML fraud/premium/churn
-        models are all available here on demand.
+        selection standards, producer experience, reinsurance treaty fit, and the
+        ML fraud/premium/churn models are all available here on demand.
         """
-        allowed = ["oracles", "portfolio", "selection_standards", "reinsurance", "fraud_ml", "premium_ml", "churn_ml"]
+        allowed = ["oracles", "portfolio", "selection_standards", "producer_experience", "reinsurance", "fraud_ml", "premium_ml", "churn_ml"]
         include = [i for i in (include or allowed) if i in allowed]
         scope = org_id or self.org_id
 
@@ -1091,6 +1112,11 @@ class InsurancePipeline:
             selection_result = self.selection_standards.run(bundle, org_id=scope)
             results["completed"].append("selection_standards")
             results["findings"]["selection_standards"] = selection_result.model_dump()
+
+        if "producer_experience" in include:
+            producer_result = self.producer_experience.run(bundle, org_id=scope)
+            results["completed"].append("producer_experience")
+            results["findings"]["producer_experience"] = producer_result.model_dump()
 
         if "reinsurance" in include:
             reinsurance_result = self.reinsurance.run(bundle, org_id=scope)
@@ -1294,6 +1320,7 @@ class InsurancePipeline:
             naics = ""
             tiv = 0.0
             occupancy = ""
+            producer = ""
             if bundle.structured:
                 if bundle.structured.locations:
                     loc = bundle.structured.locations[0]
@@ -1302,12 +1329,15 @@ class InsurancePipeline:
                     occupancy = loc.building_occupancy or ""
                 if bundle.structured.risk_profile:
                     naics = bundle.structured.risk_profile.naics_code or ""
+                if bundle.structured.broker:
+                    producer = bundle.structured.broker.broker_name or ""
 
             policy = PortfolioPolicy(
                 policy_id=f"pol-{uuid4().hex[:8]}",
                 bundle_id=bundle.bundle_id,
                 org_id=self.org_id,
                 insured_name=memo.insured_name,
+                producer_name=producer,
                 naics_code=naics,
                 state=state,
                 tiv=tiv,
