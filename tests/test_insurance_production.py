@@ -19,7 +19,15 @@ from insureflow.ingestion.insurance.classifier import (
 )
 from insureflow.ingestion.insurance.extractors import extract_broker_slip
 from insureflow.insurance.pipeline import InsurancePipeline
-from insureflow.models.agents import Recommendation, UnderwritingMemo, UWDecision
+from insureflow.models.agents import (
+    AgentResult,
+    AgentType,
+    Finding,
+    Recommendation,
+    RiskSeverity,
+    UnderwritingMemo,
+    UWDecision,
+)
 from insureflow.models.submissions import SubmissionBundle
 from insureflow.outcomes.feedback import FeedbackEngine
 from insureflow.rating.engine import InsuranceRatingEngine
@@ -205,6 +213,42 @@ class TestInsurancePipelineIntegration:
         # Adverse-selection (purpose of underwriting) screen runs alongside selection.
         adverse = result.get("adverse_selection") or {}
         assert adverse.get("agent_type") == "adverse_selection"
+        # Moral-hazard / character screen (judge of people doctrine) runs on every line.
+        moral = result.get("moral_hazard") or {}
+        assert moral.get("agent_type") == "moral_hazard"
+
+    def test_critical_moral_hazard_forces_decline(self, audit_store: AuditStore, monkeypatch: pytest.MonkeyPatch) -> None:
+        """If the applicant's morals are open to question, decline regardless of everything else."""
+        acord_path = EXAMPLES / "pacific_coast_acord.xml"
+        inspection = EXAMPLES / "pacific_coast_inspection_report.md"
+        if not acord_path.exists() or not inspection.exists():
+            pytest.skip("Pacific Coast examples not present")
+
+        pipe = InsurancePipeline(org_id="test", use_llm=False, audit_store=audit_store)
+        critical = AgentResult(
+            agent_type=AgentType.MORAL_HAZARD,
+            agent_name="MoralHazardAgent",
+            risk_score=1.0,
+            risk_severity=RiskSeverity.CRITICAL,
+            findings=[
+                Finding(
+                    title="Moral hazard: applicant's character is open to question — declination indicated",
+                    description="intentional non-disclosure detected",
+                    severity=RiskSeverity.CRITICAL,
+                    category="moral_hazard",
+                )
+            ],
+        )
+        monkeypatch.setattr(pipe.moral_hazard, "run", lambda bundle, **kw: critical)
+
+        result = pipe.run(
+            acord_xml=acord_path.read_text(),
+            inspection_reports=[inspection.read_text()],
+            bundle_id="moral-decline-test",
+        )
+        assert result["status"] == "completed"
+        assert result["ai_decision"] == "decline"
+        assert result["moral_hazard"]["findings"][0]["severity"] == "critical"
 
     def test_funnel_deferral_and_deep_dive(self, audit_store: AuditStore) -> None:
         acord_path = EXAMPLES / "pacific_coast_acord.xml"
@@ -224,7 +268,7 @@ class TestInsurancePipelineIntegration:
         assert result["status"] == "completed"
         assert result.get("funnel") is True
         # Funnel defers the expensive analyses but keeps them discoverable.
-        assert result["deep_dive_available"] == ["oracles", "portfolio", "selection_standards", "producer_experience", "adverse_selection", "reinsurance", "fraud_ml"]
+        assert result["deep_dive_available"] == ["oracles", "portfolio", "selection_standards", "producer_experience", "adverse_selection", "moral_hazard", "reinsurance", "fraud_ml"]
         stage_status = {s["id"]: s["status"] for s in result["pipeline_stages"]}
         assert stage_status.get("verify") == "skipped"
         assert stage_status.get("portfolio") == "skipped"
@@ -233,8 +277,8 @@ class TestInsurancePipelineIntegration:
 
         # Deep dive re-runs everything the funnel deferred — nothing is lost.
         dd = pipe.deep_dive("funnel-test", org_id="test")
-        assert set(dd["completed"]) == {"oracles", "portfolio", "selection_standards", "producer_experience", "adverse_selection", "reinsurance", "fraud_ml", "premium_ml", "churn_ml"}
-        for section in ("oracles", "portfolio", "selection_standards", "producer_experience", "adverse_selection", "reinsurance", "fraud_ml", "premium_ml", "churn_ml"):
+        assert set(dd["completed"]) == {"oracles", "portfolio", "selection_standards", "producer_experience", "adverse_selection", "moral_hazard", "reinsurance", "fraud_ml", "premium_ml", "churn_ml"}
+        for section in ("oracles", "portfolio", "selection_standards", "producer_experience", "adverse_selection", "moral_hazard", "reinsurance", "fraud_ml", "premium_ml", "churn_ml"):
             assert section in dd["findings"]
 
     def test_funnel_deep_dive_missing_bundle_raises(self, audit_store: AuditStore) -> None:

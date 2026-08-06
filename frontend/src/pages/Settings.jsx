@@ -5,6 +5,7 @@ import { auth, endpoints } from '../lib/api';
 const ROLE_BADGE = {
   viewer: 'bg-slate-500/15 text-slate-300',
   underwriter: 'bg-blue-500/15 text-blue-300',
+  staff_uw: 'bg-violet-500/15 text-violet-300',
   licensed_uw: 'bg-purple-500/15 text-purple-300',
   admin: 'bg-amber-500/15 text-amber-300',
   cuo: 'bg-red-500/15 text-red-300',

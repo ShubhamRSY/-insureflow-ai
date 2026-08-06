@@ -41,6 +41,7 @@ class UnderwriterAuthority:
     license_number: str = ""
     license_states: list[str] = field(default_factory=list)
     appointed_carriers: list[str] = field(default_factory=list)
+    desk: str = "line"  # line | staff | both — classical insurer role model
 
 
 # Default binding limits per tier (realistic for small carrier)
@@ -105,6 +106,7 @@ def _authority_to_dict(a: UnderwriterAuthority) -> dict[str, Any]:
         "username": a.username,
         "display_name": a.display_name,
         "tier": a.tier.value,
+        "desk": getattr(a, "desk", "line") or "line",
         "license_number": a.license_number,
         "license_states": a.license_states,
         "appointed_carriers": a.appointed_carriers,
@@ -121,6 +123,7 @@ def _authority_from_dict(data: dict[str, Any]) -> UnderwriterAuthority:
         license_states=data.get("license_states", []),
         appointed_carriers=data.get("appointed_carriers", []),
         binding_authority=_binding_from_dict(data.get("binding_authority") or {}),
+        desk=data.get("desk", "line") or "line",
     )
 
 
@@ -156,6 +159,7 @@ class AuthorityMatrix:
                 binding_authority=_JUNIOR_BASIC,
                 license_number="P&C-48291-TX",
                 license_states=["TX", "OK"],
+                desk="line",
             ),
             UnderwriterAuthority(
                 username="sfields",
@@ -164,6 +168,7 @@ class AuthorityMatrix:
                 binding_authority=_SENIOR_STANDARD,
                 license_number="P&C-77124-TX",
                 license_states=["TX", "OK", "LA", "AR"],
+                desk="line",
             ),
             UnderwriterAuthority(
                 username="mchen",
@@ -172,6 +177,7 @@ class AuthorityMatrix:
                 binding_authority=_CUO_UNLIMITED,
                 license_number="P&C-33901-TX",
                 license_states=["TX", "OK", "LA", "AR", "FL", "CA", "NY"],
+                desk="both",
             ),
             UnderwriterAuthority(
                 username="tbroker",
@@ -180,6 +186,16 @@ class AuthorityMatrix:
                 binding_authority=_MGA_DELEGATED,
                 license_number="MGA-55129-TX",
                 license_states=["TX"],
+                desk="line",
+            ),
+            UnderwriterAuthority(
+                username="aparker",
+                display_name="Alex Parker",
+                tier=AuthorityTier.SENIOR,
+                binding_authority=_SENIOR_STANDARD,
+                license_number="P&C-99012-TX",
+                license_states=["TX", "OK", "LA"],
+                desk="staff",
             ),
         ]
         for a in defaults:

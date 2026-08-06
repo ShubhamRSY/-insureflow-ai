@@ -29,6 +29,7 @@ const EMPTY_FORM = {
   username: '',
   display_name: '',
   tier: 'junior',
+  desk: 'line',
   license_number: '',
   max_premium: '',
   max_tiv: '',
@@ -78,6 +79,7 @@ export default function AuthorityMatrix() {
       username: a.username,
       display_name: a.display_name,
       tier: a.tier,
+      desk: a.desk || 'line',
       license_number: a.license_number || '',
       max_premium: ba.max_premium ?? '',
       max_tiv: ba.max_tiv ?? '',
@@ -110,6 +112,7 @@ export default function AuthorityMatrix() {
         username: form.username.trim(),
         display_name: form.display_name.trim(),
         tier: form.tier,
+        desk: form.desk || 'line',
         license_number: form.license_number.trim(),
         max_premium: Number(form.max_premium) || 0,
         max_tiv: Number(form.max_tiv) || 0,
@@ -222,6 +225,7 @@ export default function AuthorityMatrix() {
                     <th className="px-5 py-3 text-left">Name</th>
                     <th className="px-5 py-3 text-left">Username</th>
                     <th className="px-5 py-3 text-left">Tier</th>
+                    <th className="px-5 py-3 text-left">Desk</th>
                     <th className="px-5 py-3 text-right">Max Premium</th>
                     <th className="px-5 py-3 text-right">Max TIV</th>
                     <th className="px-5 py-3 text-right">Aggregate Cap</th>
@@ -242,6 +246,9 @@ export default function AuthorityMatrix() {
                           <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset capitalize ${cfg.color} ${cfg.bg} ${cfg.ring}`}>
                             {a.tier}
                           </span>
+                        </td>
+                        <td className="px-5 py-3">
+                          <span className="text-xs capitalize text-slate-400">{a.desk || 'line'}</span>
                         </td>
                         <td className="px-5 py-3 text-right font-mono">{fmtCurrency(ba.max_premium)}</td>
                         <td className="px-5 py-3 text-right font-mono">{fmtCurrency(ba.max_tiv)}</td>
@@ -319,7 +326,7 @@ export default function AuthorityMatrix() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="mb-1 block text-xs font-medium text-slate-400">Tier</label>
                   <select
@@ -332,6 +339,18 @@ export default function AuthorityMatrix() {
                   <p className="mt-1 text-[10px] text-slate-500">
                     {TIERS.find((t) => t.value === form.tier)?.desc}
                   </p>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-slate-400">Desk</label>
+                  <select
+                    className="input-field"
+                    value={form.desk || 'line'}
+                    onChange={(e) => setForm({ ...form, desk: e.target.value })}
+                  >
+                    <option value="line">Line UW</option>
+                    <option value="staff">Staff UW</option>
+                    <option value="both">Line + Staff</option>
+                  </select>
                 </div>
                 <div>
                   <label className="mb-1 block text-xs font-medium text-slate-400">License number</label>

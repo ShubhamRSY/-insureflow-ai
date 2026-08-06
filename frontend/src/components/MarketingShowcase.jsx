@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowRight, FileSearch, HeartPulse, Building2, Home, Wallet,
-  ScrollText, ShieldCheck, Layers, Gauge, Sparkles, FileText,
+  ScrollText, ShieldCheck, Layers, Gauge, Sparkles, FileText, Briefcase,
 } from 'lucide-react';
 
 const SOLUTIONS = [
@@ -113,6 +113,22 @@ const AUTOMATIONS = [
     vertical: 'insurance',
     path: '/system',
   },
+  {
+    id: 'line-uw',
+    title: 'Line UW Desk',
+    desc: 'Coverage assist, producer & policyholder service — branch underwriting process.',
+    icon: Briefcase,
+    vertical: 'insurance',
+    path: '/line-uw',
+  },
+  {
+    id: 'staff-uw',
+    title: 'Staff UW Desk',
+    desc: 'Guides, rating plans, market research, UW audits, and line UW training.',
+    icon: Building2,
+    vertical: 'insurance',
+    path: '/staff-uw',
+  },
 ];
 
 const VERT_COLOR = {
@@ -172,7 +188,7 @@ export function HeroSection({ user, onLogin, onRunDemo, presets }) {
         Automate document-heavy underwriting with AI
       </h2>
       <p className="mt-4 max-w-xl text-base leading-relaxed text-slate-400 animate-slide-up" style={{ animationDelay: '0.08s' }}>
-        Turn insurance, mortgage, and lending packages into verified decisions — accurate, auditable, and under your control.
+        Turn insurance, mortgage, and lending packages into verified decisions — for line underwriters on the branch desk and staff underwriters at the home office.
       </p>
 
       <div className="mt-8 flex flex-wrap items-center gap-3 animate-slide-up" style={{ animationDelay: '0.16s' }}>
@@ -183,9 +199,16 @@ export function HeroSection({ user, onLogin, onRunDemo, presets }) {
         <button type="button" onClick={() => navigate('/insurance')} className="btn-secondary px-5 py-3 text-sm">
           Explore insurance
         </button>
+        <button type="button" onClick={() => navigate('/line-uw')} className="btn-secondary px-5 py-3 text-sm">
+          Line UW desk
+        </button>
+        <button type="button" onClick={() => navigate('/staff-uw')} className="btn-secondary px-5 py-3 text-sm">
+          Staff UW desk
+        </button>
       </div>
 
       <div className="mt-8 flex flex-wrap gap-4 text-[11px] font-semibold uppercase tracking-widest text-slate-500 animate-fade-in" style={{ animationDelay: '0.24s' }}>
+        <span className="ring-1 ring-white/10 rounded-md px-2.5 py-1">Line + staff UW</span>
         <span className="ring-1 ring-white/10 rounded-md px-2.5 py-1">SOC-ready audit</span>
         <span className="ring-1 ring-white/10 rounded-md px-2.5 py-1">Encrypted at rest</span>
         <span className="ring-1 ring-white/10 rounded-md px-2.5 py-1">Human checkpoints</span>

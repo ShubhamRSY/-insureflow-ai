@@ -21,6 +21,7 @@ class AgentType(str, Enum):
     SELECTION_STANDARDS = "selection_standards"
     PRODUCER_EXPERIENCE = "producer_experience"
     ADVERSE_SELECTION = "adverse_selection"
+    MORAL_HAZARD = "moral_hazard"
 
 
 class RiskSeverity(str, Enum):
@@ -97,6 +98,7 @@ class UnderwritingMemo(BaseModel):
     loss_run_findings: list[Finding] = Field(default_factory=list)
     compliance_findings: list[Finding] = Field(default_factory=list)
     fraud_findings: list[Finding] = Field(default_factory=list)
+    moral_hazard_findings: list[Finding] = Field(default_factory=list)
 
     recommendation: Optional[Recommendation] = None
     conditions: list[str] = Field(default_factory=list)

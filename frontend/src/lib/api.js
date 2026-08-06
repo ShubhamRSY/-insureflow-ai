@@ -143,6 +143,23 @@ export const endpoints = {
   authorityMatrix: () => api('/underwriting/authority'),
   upsertAuthority: (body) => api('/underwriting/authority', { method: 'POST', body }),
   deleteAuthority: (username) => api(`/underwriting/authority/${encodeURIComponent(username)}`, { method: 'DELETE' }),
+  underwritingDesks: () => api('/underwriting/desks'),
+  lineCoverageAssist: (body) => api('/underwriting/line/coverage-assist', { method: 'POST', body }),
+  lineServiceTickets: (status = '', requester = '') =>
+    api(`/underwriting/line/service?status_filter=${encodeURIComponent(status)}&requester=${encodeURIComponent(requester)}`),
+  createLineServiceTicket: (body) => api('/underwriting/line/service', { method: 'POST', body }),
+  updateLineServiceTicket: (ticketId, body) =>
+    api(`/underwriting/line/service/${encodeURIComponent(ticketId)}`, { method: 'PATCH', body }),
+  staffOverview: () => api('/underwriting/staff'),
+  staffSection: (section) => api(`/underwriting/staff/${encodeURIComponent(section)}`),
+  staffMarketResearch: (body) => api('/underwriting/staff/market-research', { method: 'POST', body }),
+  staffCoverageDev: (body) => api('/underwriting/staff/coverage-development', { method: 'POST', body }),
+  staffExperience: (body) => api('/underwriting/staff/experience', { method: 'POST', body }),
+  staffRatingPlans: (body) => api('/underwriting/staff/rating-plans', { method: 'POST', body }),
+  staffGuides: (body) => api('/underwriting/staff/guides', { method: 'POST', body }),
+  staffPolicy: (body) => api('/underwriting/staff/policy', { method: 'POST', body }),
+  staffAudits: (body) => api('/underwriting/staff/audits', { method: 'POST', body }),
+  staffTraining: (body) => api('/underwriting/staff/training', { method: 'POST', body }),
   renewalAnalysis: (bundleId) => api(`/pipeline/renewal/${bundleId}`, { method: 'POST' }),
   missingDocuments: (bundleId) => api(`/pipeline/documents/${bundleId}/missing`),
   requestBrokerDocs: (bundleId, documents, notes = '') =>

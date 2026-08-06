@@ -92,7 +92,9 @@ Prioritized queue with fit / triage scores and journey strips so UW attention hi
 | Override Analytics | UW vs AI — pilot KPI (target override &lt; 25% by day 30) |
 | Eval Trends | Quality / release-gate trends over time |
 | Portfolio | Book / concentration context |
-| Authority Matrix | Who can bind; co-sign thresholds |
+| Authority Matrix | Who can bind; co-sign thresholds; line vs staff desk |
+| Line UW Desk | Coverage assist + producer/policyholder service tickets |
+| Staff UW Desk | Market research, guides, rating plans, UW audits, training |
 | Market Cycle | Hard / soft phase → appetite and premium modifiers |
 | Model Registry | Agent / experiment governance |
 | Integrations | Oracle & PAS modes: live / simulated / auto |
@@ -120,7 +122,8 @@ Shadow pilot: full analysis + sign-off. **Live bind stays blocked** until you wi
 
 ## Trust built into the product
 
-- JWT roles: admin / underwriter / viewer  
+- JWT roles: viewer / underwriter (line) / staff_uw / licensed_uw / admin / cuo  
+- Line + staff underwriting desks (branch process vs home-office policy)  
 - Org-scoped jobs  
 - PII detection and redaction for pilots  
 - Encrypted audit bundles + SHA-256 regulatory ZIP exports  

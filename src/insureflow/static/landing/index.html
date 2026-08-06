@@ -589,6 +589,7 @@
         <a href="#ai-native" data-nav>Why Rytera</a>
         <a href="#zta" data-nav>ZTA</a>
         <a href="#how-it-works" data-nav>How it works</a>
+        <a href="#uw-desks" data-nav>Line &amp; Staff UW</a>
         <a href="#features" data-nav>Features</a>
         <a href="#capabilities" data-nav>Capabilities</a>
         <a href="#integrations" data-nav>Integrations</a>
@@ -602,6 +603,7 @@
       <a href="#ai-native" data-nav>Why Rytera</a>
       <a href="#zta" data-nav>ZTA</a>
       <a href="#how-it-works" data-nav>How it works</a>
+      <a href="#uw-desks" data-nav>Line &amp; Staff UW</a>
       <a href="#features" data-nav>Features</a>
       <a href="#capabilities" data-nav>Capabilities</a>
       <a href="#integrations" data-nav>Integrations</a>
@@ -618,8 +620,8 @@
             <h1><span class="gradient">Bind-ready decisions</span> in minutes, not days</h1>
             <p class="lead">
               Rytera turns messy submissions — ACORD, broker PDFs, loss runs, W-2s — into a bind-ready underwriting memo
-              with quote, audit trail, and licensed sign-off. One platform for data, triage, and decisions across
-              insurance, mortgage, and lending.
+              with quote, audit trail, and licensed sign-off. One platform for <strong>line and staff underwriters</strong>
+              across insurance, mortgage, and lending — from branch coverage decisions to home-office guides and audits.
             </p>
             <div class="cta">
               <button type="button" class="btn btn-primary" id="open-demo-hero">Book a demo</button>
@@ -658,6 +660,7 @@
         </div>
         <div class="trust-strip reveal" aria-label="Security and compliance">
           <span class="trust-item">JWT + RBAC, org-scoped</span>
+          <span class="trust-item">Line + staff UW desks</span>
           <span class="trust-item">Fernet encryption at rest</span>
           <span class="trust-item">Automated PII redaction</span>
           <span class="trust-item">SHA-256 audit ZIPs</span>
@@ -843,6 +846,39 @@
             </button>
           </div>
           <div class="pipeline-panel" id="pipeline-panel" role="tabpanel"></div>
+        </div>
+      </section>
+
+      <section id="uw-desks">
+        <div class="reveal">
+          <p class="section-label">Underwriting desks</p>
+          <h2>Built for line and staff underwriters</h2>
+          <p class="section-desc">
+            Carriers distinguish branch line underwriters who run the process from home-office staff
+            underwriters who set policy. Rytera covers both desks — and the overlap on large or unusual accounts.
+          </p>
+        </div>
+        <div class="feature-grid reveal" style="margin-top:1.5rem;">
+          <div class="feature-card">
+            <div class="icon">🏢</div>
+            <h3>Line underwriter desk</h3>
+            <p>Regional and branch underwriters implement the underwriting process.</p>
+            <ul>
+              <li>Coverage assist — broaden gaps or narrow terms instead of declining</li>
+              <li>Producer &amp; policyholder service — quotes, endorsements, certificates, renewals</li>
+              <li>Submission journey through triage, rating, memo, and licensed sign-off</li>
+            </ul>
+          </div>
+          <div class="feature-card">
+            <div class="icon">🏛️</div>
+            <h3>Staff underwriter desk</h3>
+            <p>Home-office underwriters make and implement underwriting policy.</p>
+            <ul>
+              <li>Market research, coverage development, and rating-plan reviews (ISO / AAIS / NCCI)</li>
+              <li>UW guides, policy statements, and branch file audits</li>
+              <li>Experience evaluation and technical training for line underwriters</li>
+            </ul>
+          </div>
         </div>
       </section>
 
@@ -1072,6 +1108,7 @@
       { q: "Does Rytera replace Guidewire or our loan origination system?", a: "No. Rytera integrates with policy admin systems (Guidewire, BriteCore), CRM (HubSpot), and LOS workflows via webhooks. It accelerates the underwriting layer while your core systems remain the system of record." },
       { q: "What documents and data sources do you support?", a: "Insurance: ACORD XML, broker PDFs/JSON, loss runs, SOV, inspections. Personal lines: HO-3 applications, MVRs, paramedical exams. Mortgage: 30+ types including W-2, 1040, credit reports, appraisals, and rent rolls. Lending: application data, credit pulls, and bank statements. Plus 24 enterprise source connectors." },
       { q: "How does the AI underwriting pipeline work?", a: "Submissions run a 3-phase funnel: Triage → Risk &amp; Price → Decision. Triage qualifies the risk fast; Risk &amp; Price parses, verifies, and prices; Decision produces a bind-ready UW memo with ACCEPT/REFER/DECLINE and licensed sign-off. Oracle, portfolio, reinsurance, and fraud-ML analyses are deferred and re-run on demand via deep dive — nothing is lost." },
+      { q: "Does Rytera support both line and staff underwriters?", a: "Yes. Line underwriters use the branch desk for the underwriting process, coverage assist, and producer/policyholder service. Staff underwriters use the home-office desk for market research, coverage development, rating-plan reviews, UW guides, audits, experience evaluation, and training. Large or unusual accounts can involve both desks." },
       { q: "Can underwriters override AI decisions?", a: "Yes. Licensed underwriters can approve, refer, or decline with notes and override reasons. Authority matrix tiers control binding limits. Checkpoint resolution lets teams pause and resume at any stage." },
       { q: "Do I need an LLM API key to run Rytera?", a: "No. All pipelines include deterministic agent fallbacks. Adding an API key enables richer reasoning, but the platform is fully functional for demos and pilots without one." },
       { q: "What is Zero Token Architecture (ZTA)?", a: "ZTA is Rytera's operating principle: use AI only when you must. Every pipeline stage asks 'can code, rules, or a trained model solve this deterministically?' before spending a token. ACORD parsing, reconciliation, COPE, rating, and most scoring run with zero tokens; LLM calls are budgeted per job and reported in every result's zta_report." },

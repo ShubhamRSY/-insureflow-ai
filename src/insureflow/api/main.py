@@ -35,6 +35,7 @@ from insureflow.auth.dependencies import (
     get_current_user_optional,
     get_user_store,
     require_role,
+    require_staff_desk,
 )
 from insureflow.auth.jwt import create_access_token, hash_password, verify_password
 from insureflow.auth.models import LoginRequest, Token, TokenData, User, UserCreateRequest
@@ -485,22 +486,32 @@ def get_role_hierarchy() -> dict[str, Any]:
             {
                 "role": "underwriter",
                 "level": 2,
-                "description": "Run pipelines, create audits, pull data sources",
+                "description": "Line underwriter — implement UW process, coverage assist, producer/policyholder service",
+                "desk": "line",
+            },
+            {
+                "role": "staff_uw",
+                "level": 2,
+                "description": "Staff underwriter — market research, guides, rating plans, UW audits, training",
+                "desk": "staff",
             },
             {
                 "role": "licensed_uw",
                 "level": 3,
-                "description": "Sign off decisions and bind policies",
+                "description": "Licensed line UW — sign off decisions and bind; may join staff on large/unusual accounts",
+                "desk": "line",
             },
             {
                 "role": "admin",
                 "level": 4,
-                "description": "Manage users, delete jobs, configure webhooks",
+                "description": "Manage users, delete jobs, configure webhooks — line + staff desks",
+                "desk": "both",
             },
             {
                 "role": "cuo",
                 "level": 5,
-                "description": "Set market cycles and system-wide parameters",
+                "description": "Chief underwriting officer — market cycles, policy, and system-wide parameters",
+                "desk": "staff",
             },
         ]
     }
@@ -3225,6 +3236,7 @@ def list_underwriting_authorities(
                 "username": a.username,
                 "display_name": a.display_name,
                 "tier": a.tier.value,
+                "desk": getattr(a, "desk", "line") or "line",
                 "license_number": a.license_number,
                 "binding_authority": {
                     "max_premium": a.binding_authority.max_premium,
@@ -3243,6 +3255,7 @@ class AuthorityRecordRequest(BaseModel):
     username: str
     display_name: str
     tier: str  # junior | senior | cuo | mga
+    desk: str = "line"  # line | staff | both
     license_number: str = ""
     max_premium: float = 0.0
     max_tiv: float = 0.0
@@ -3264,6 +3277,9 @@ def _build_authority_record(req: AuthorityRecordRequest) -> Any:
     except ValueError:
         valid = ", ".join(t.value for t in AuthorityTier)
         raise HTTPException(status_code=400, detail=f"Invalid tier '{req.tier}'. Valid: {valid}")
+    desk = (req.desk or "line").strip().lower()
+    if desk not in ("line", "staff", "both"):
+        raise HTTPException(status_code=400, detail="desk must be line, staff, or both")
     username = req.username.strip()
     if not username or not req.display_name.strip():
         raise HTTPException(status_code=400, detail="Username and display name are required")
@@ -3271,6 +3287,7 @@ def _build_authority_record(req: AuthorityRecordRequest) -> Any:
         username=username,
         display_name=req.display_name.strip(),
         tier=tier,
+        desk=desk,
         license_number=req.license_number.strip(),
         binding_authority=BindingAuthority(
             max_premium=req.max_premium,
@@ -3342,6 +3359,360 @@ def delete_underwriting_authority(
 
     if not get_authority_matrix().remove(username, org_id=current.org_id):
         raise HTTPException(status_code=404, detail=f"No authority record for '{username}'")
+
+
+# ── Line & Staff underwriter desks ───────────────────────────────
+
+
+@app.get("/underwriting/desks")
+def get_underwriting_desks(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Describe line vs staff underwriter desks and map the caller's role."""
+    from insureflow.underwriting.roles import capabilities_overview, desk_for_role
+
+    overview = capabilities_overview()
+    desk = desk_for_role(current.role)
+    return {
+        **overview,
+        "current_user": {
+            "username": current.username,
+            "role": current.role.value if current.role else None,
+            "desk": desk.value,
+        },
+    }
+
+
+class CoverageAssistRequest(BaseModel):
+    applicant: str = ""
+    occupancy: str = ""
+    operations_description: str = ""
+    requested_coverages: list[str] = []
+    complex_submission: bool = False
+
+
+@app.post("/underwriting/line/coverage-assist")
+def line_coverage_assist(
+    req: CoverageAssistRequest,
+    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+) -> dict[str, Any]:
+    """Line UW: recommend broaden / narrow / manuscript coverage actions."""
+    from insureflow.underwriting.line_desk import assist_coverage
+
+    return assist_coverage(
+        applicant=req.applicant,
+        occupancy=req.occupancy,
+        operations_description=req.operations_description,
+        requested_coverages=req.requested_coverages,
+        complex_submission=req.complex_submission,
+    ).to_dict()
+
+
+class ServiceTicketRequest(BaseModel):
+    request_type: str
+    subject: str
+    detail: str = ""
+    requester: str = "producer"  # producer | policyholder | internal
+    requester_name: str = ""
+    policy_number: str = ""
+    submission_id: str = ""
+
+
+@app.get("/underwriting/line/service")
+def list_line_service_tickets(
+    status_filter: str = "",
+    requester: str = "",
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Line UW: list producer / policyholder service tickets."""
+    from insureflow.underwriting.line_desk import get_line_service_desk
+
+    tickets = get_line_service_desk().list_tickets(
+        org_id=current.org_id,
+        status=status_filter or None,
+        requester=requester or None,
+    )
+    return {"tickets": tickets, "count": len(tickets)}
+
+
+@app.post("/underwriting/line/service", status_code=201)
+def create_line_service_ticket(
+    req: ServiceTicketRequest,
+    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+) -> dict[str, Any]:
+    """Line UW: open a producer or policyholder service ticket."""
+    from insureflow.underwriting.line_desk import get_line_service_desk
+
+    try:
+        return get_line_service_desk().create_ticket(
+            request_type=req.request_type,
+            subject=req.subject,
+            detail=req.detail,
+            requester=req.requester,
+            requester_name=req.requester_name,
+            policy_number=req.policy_number,
+            submission_id=req.submission_id,
+            created_by=current.username or "",
+            org_id=current.org_id,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+class ServiceTicketUpdateRequest(BaseModel):
+    status: str = ""
+    resolution_notes: str = ""
+
+
+@app.patch("/underwriting/line/service/{ticket_id}")
+def update_line_service_ticket(
+    ticket_id: str,
+    req: ServiceTicketUpdateRequest,
+    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+) -> dict[str, Any]:
+    """Line UW: update service ticket status / resolution."""
+    from insureflow.underwriting.line_desk import get_line_service_desk
+
+    try:
+        return get_line_service_desk().update_ticket(
+            ticket_id,
+            status=req.status or None,
+            resolution_notes=req.resolution_notes if req.resolution_notes else None,
+            org_id=current.org_id,
+        )
+    except KeyError:
+        raise HTTPException(status_code=404, detail=f"Ticket '{ticket_id}' not found") from None
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.get("/underwriting/staff")
+def staff_underwriting_overview(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Staff UW home-office workspace overview."""
+    from insureflow.underwriting.staff_desk import get_staff_desk
+
+    return get_staff_desk().overview(org_id=current.org_id)
+
+
+@app.get("/underwriting/staff/{section}")
+def staff_list_section(
+    section: str,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """List a staff UW section (market_research, guides, audits, …)."""
+    from insureflow.underwriting.staff_desk import get_staff_desk
+
+    try:
+        items = get_staff_desk().list_section(section, org_id=current.org_id)
+    except KeyError:
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                "Unknown section. Use: market_research, coverage_development, "
+                "rating_reviews, guides, audits, training, policy_statements"
+            ),
+        ) from None
+    return {"section": section, "items": items, "count": len(items)}
+
+
+class MarketResearchRequest(BaseModel):
+    title: str
+    topic: str = "other"
+    summary: str
+    recommendation: str = ""
+
+
+@app.post("/underwriting/staff/market-research", status_code=201)
+def staff_add_market_research(
+    req: MarketResearchRequest,
+    current: TokenData = Depends(require_staff_desk()),
+) -> dict[str, Any]:
+    from insureflow.underwriting.staff_desk import get_staff_desk
+
+    return get_staff_desk().add_market_research(
+        title=req.title,
+        topic=req.topic,
+        summary=req.summary,
+        recommendation=req.recommendation,
+        author=current.username or "",
+        org_id=current.org_id,
+    )
+
+
+class CoverageDevelopmentRequest(BaseModel):
+    title: str
+    change_type: str = "form_mod"
+    description: str
+
+
+@app.post("/underwriting/staff/coverage-development", status_code=201)
+def staff_add_coverage_development(
+    req: CoverageDevelopmentRequest,
+    current: TokenData = Depends(require_staff_desk()),
+) -> dict[str, Any]:
+    from insureflow.underwriting.staff_desk import get_staff_desk
+
+    return get_staff_desk().add_coverage_development(
+        title=req.title,
+        change_type=req.change_type,
+        description=req.description,
+        author=current.username or "",
+        org_id=current.org_id,
+    )
+
+
+class ExperienceEvalRequest(BaseModel):
+    line_of_business: str = "commercial_property"
+    class_of_business: str = ""
+    territory: str = ""
+    earned_premium: float = 0.0
+    incurred_losses: float = 0.0
+    industry_loss_ratio: float = 0.65
+
+
+@app.post("/underwriting/staff/experience")
+def staff_evaluate_experience(
+    req: ExperienceEvalRequest,
+    current: TokenData = Depends(require_staff_desk()),
+) -> dict[str, Any]:
+    from insureflow.underwriting.staff_desk import evaluate_experience
+
+    return evaluate_experience(
+        line_of_business=req.line_of_business,
+        class_of_business=req.class_of_business,
+        territory=req.territory,
+        earned_premium=req.earned_premium,
+        incurred_losses=req.incurred_losses,
+        industry_loss_ratio=req.industry_loss_ratio,
+    )
+
+
+class RatingReviewRequest(BaseModel):
+    line_of_business: str
+    advisory_org: str = "ISO"
+    summary: str
+    loss_cost_change_pct: float = 0.0
+    expense_load_pct: float = 0.0
+    profit_load_pct: float = 0.0
+    action: str = "monitor"
+
+
+@app.post("/underwriting/staff/rating-plans", status_code=201)
+def staff_add_rating_review(
+    req: RatingReviewRequest,
+    current: TokenData = Depends(require_staff_desk()),
+) -> dict[str, Any]:
+    from insureflow.underwriting.staff_desk import get_staff_desk
+
+    return get_staff_desk().add_rating_review(
+        line_of_business=req.line_of_business,
+        advisory_org=req.advisory_org,
+        summary=req.summary,
+        loss_cost_change_pct=req.loss_cost_change_pct,
+        expense_load_pct=req.expense_load_pct,
+        profit_load_pct=req.profit_load_pct,
+        action=req.action,
+        author=current.username or "",
+        org_id=current.org_id,
+    )
+
+
+class GuideRequest(BaseModel):
+    title: str
+    line_of_business: str
+    body: str
+    status: str = "draft"
+    version: str = "1.0"
+    guide_id: str = ""
+
+
+@app.post("/underwriting/staff/guides", status_code=201)
+def staff_upsert_guide(
+    req: GuideRequest,
+    current: TokenData = Depends(require_staff_desk()),
+) -> dict[str, Any]:
+    from insureflow.underwriting.staff_desk import get_staff_desk
+
+    return get_staff_desk().upsert_guide(
+        title=req.title,
+        line_of_business=req.line_of_business,
+        body=req.body,
+        status=req.status,
+        version=req.version,
+        author=current.username or "",
+        guide_id=req.guide_id or None,
+        org_id=current.org_id,
+    )
+
+
+class PolicyStatementRequest(BaseModel):
+    title: str
+    body: str
+
+
+@app.post("/underwriting/staff/policy", status_code=201)
+def staff_add_policy(
+    req: PolicyStatementRequest,
+    current: TokenData = Depends(require_staff_desk()),
+) -> dict[str, Any]:
+    from insureflow.underwriting.staff_desk import get_staff_desk
+
+    return get_staff_desk().add_policy_statement(
+        title=req.title,
+        body=req.body,
+        author=current.username or "",
+        org_id=current.org_id,
+    )
+
+
+class StaffAuditRequest(BaseModel):
+    office: str
+    scope: str = ""
+    files_reviewed: int = 0
+    findings: list[dict[str, Any]] = []
+
+
+@app.post("/underwriting/staff/audits", status_code=201)
+def staff_conduct_audit(
+    req: StaffAuditRequest,
+    current: TokenData = Depends(require_staff_desk()),
+) -> dict[str, Any]:
+    from insureflow.underwriting.staff_desk import get_staff_desk
+
+    return get_staff_desk().conduct_audit(
+        office=req.office,
+        auditor=current.username or "staff",
+        scope=req.scope,
+        files_reviewed=req.files_reviewed,
+        findings=req.findings,
+        org_id=current.org_id,
+    )
+
+
+class TrainingRequest(BaseModel):
+    title: str
+    topic: str = "technical_insurance"
+    audience: str = "line_uw"
+    outline: str
+
+
+@app.post("/underwriting/staff/training", status_code=201)
+def staff_add_training(
+    req: TrainingRequest,
+    current: TokenData = Depends(require_staff_desk()),
+) -> dict[str, Any]:
+    from insureflow.underwriting.staff_desk import get_staff_desk
+
+    return get_staff_desk().add_training(
+        title=req.title,
+        topic=req.topic,
+        audience=req.audience,
+        outline=req.outline,
+        author=current.username or "",
+        org_id=current.org_id,
+    )
 
 
 @app.post("/pipeline/renewal/{bundle_id}")

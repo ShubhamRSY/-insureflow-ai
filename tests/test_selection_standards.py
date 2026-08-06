@@ -10,6 +10,7 @@ import pytest
 from insureflow.agents.selection_standards_agent import SelectionStandardsAgent
 from insureflow.models.agents import UWDecision
 from insureflow.models.submissions import (
+    BrokerInfo,
     CoverageDetail,
     LocationData,
     RiskProfile,
@@ -280,6 +281,92 @@ class TestProducerExperience:
         assert pe.status == "unknown"
 
 
+def _better_producer() -> Any:
+    return compute_producer_experience(["Acme Brokerage"] * 30, [10_000] * 30, [4_000] * 30, [0.5] * 30)["Acme Brokerage"]
+
+
+def _worse_producer() -> Any:
+    return compute_producer_experience(["Acme Brokerage"] * 30, [10_000] * 30, [9_000] * 30, [0.5] * 30)["Acme Brokerage"]
+
+
+class TestProducerSelectionTip:
+    """The doctrine: an agent's past performance may determine acceptance of a marginal exposure."""
+
+    def test_better_producer_tips_strict_refer_to_admission(self) -> None:
+        _, premiums, tivs = _book(4)
+        book = build_book_snapshot(4, sum(tivs), sum(premiums), premiums, tivs)
+        assert book.tier == SelectionTier.STRICT
+        candidate = SelectionCandidate(tiv=1_000_000, premium=40_000, risk_class=RiskClass.SUBSTANDARD, risk_score=0.6)
+        result = assess_selection(candidate, book, producer_experience=_better_producer())
+        assert result.action == UWDecision.CONDITIONAL_ACCEPT
+        assert result.producer_tipped
+        assert result.producer_experience is not None
+        assert result.substandard_loading_pct == 15.0
+        assert any("tips this marginally acceptable exposure" in r for r in result.rationale)
+
+    def test_worse_producer_tips_admission_to_refer(self) -> None:
+        _, premiums, tivs = _book(30, premium_cv=0.2)
+        book = build_book_snapshot(30, sum(tivs), sum(premiums), premiums, tivs)
+        assert book.tier == SelectionTier.BALANCED
+        candidate = SelectionCandidate(tiv=1_000_000, premium=40_000, risk_class=RiskClass.SUBSTANDARD, risk_score=0.7)
+        result = assess_selection(candidate, book, producer_experience=_worse_producer())
+        assert result.action == UWDecision.REFER
+        assert result.producer_tipped
+        assert result.substandard_loading_pct == 0.0
+
+    def test_worse_producer_tips_broad_accept_to_refer(self) -> None:
+        _, premiums, tivs = _book(80)
+        book = build_book_snapshot(80, sum(tivs), sum(premiums), premiums, tivs)
+        assert book.tier == SelectionTier.BROAD
+        candidate = SelectionCandidate(tiv=1_000_000, premium=40_000, risk_class=RiskClass.SUBSTANDARD, risk_score=0.7)
+        assert assess_selection(candidate, book).action == UWDecision.ACCEPT
+        result = assess_selection(candidate, book, producer_experience=_worse_producer())
+        assert result.action == UWDecision.REFER
+        assert result.producer_tipped
+
+    def test_better_producer_credits_loading_when_already_admitted(self) -> None:
+        _, premiums, tivs = _book(80)
+        book = build_book_snapshot(80, sum(tivs), sum(premiums), premiums, tivs)
+        candidate = SelectionCandidate(tiv=1_000_000, premium=40_000, risk_class=RiskClass.SUBSTANDARD, risk_score=0.8)
+        base = assess_selection(candidate, book)
+        assert base.action == UWDecision.ACCEPT
+        result = assess_selection(candidate, book, producer_experience=_better_producer())
+        assert result.action == UWDecision.ACCEPT
+        assert result.producer_tipped
+        # base loading 30% scaled by the 0.67 better-producer penalty factor
+        assert result.substandard_loading_pct < base.substandard_loading_pct
+
+    def test_no_tip_without_producer_credibility(self) -> None:
+        _, premiums, tivs = _book(4)
+        book = build_book_snapshot(4, sum(tivs), sum(premiums), premiums, tivs)
+        pe = compute_producer_experience(["Acme Brokerage"] * 5, [10_000] * 5, [4_000] * 5, [0.5] * 5)["Acme Brokerage"]
+        assert pe.status == "better"
+        assert pe.credibility < 0.5
+        candidate = SelectionCandidate(tiv=1_000_000, premium=40_000, risk_class=RiskClass.SUBSTANDARD, risk_score=0.6)
+        result = assess_selection(candidate, book, producer_experience=pe)
+        assert result.action == UWDecision.REFER
+        assert not result.producer_tipped
+
+    def test_no_tip_for_standard_risk(self) -> None:
+        _, premiums, tivs = _book(4)
+        book = build_book_snapshot(4, sum(tivs), sum(premiums), premiums, tivs)
+        candidate = SelectionCandidate(tiv=1_000_000, premium=40_000, risk_class=RiskClass.STANDARD, risk_score=0.5)
+        result = assess_selection(candidate, book, producer_experience=_worse_producer())
+        assert result.action == UWDecision.ACCEPT
+        assert not result.producer_tipped
+
+    def test_no_tip_above_accept_upgrade_cap(self) -> None:
+        _, premiums, tivs = _book(80)
+        book = build_book_snapshot(80, sum(tivs), sum(premiums), premiums, tivs)
+        assert book.tier == SelectionTier.BROAD
+        candidate = SelectionCandidate(tiv=1_000_000, premium=40_000, risk_class=RiskClass.SUBSTANDARD, risk_score=0.9)
+        assert assess_selection(candidate, book).action == UWDecision.REFER
+        result = assess_selection(candidate, book, producer_experience=_better_producer())
+        # score 0.9 is beyond even a good producer's admission band
+        assert result.action == UWDecision.REFER
+        assert not result.producer_tipped
+
+
 class TestSelectionStandardsAgent:
     def test_agent_accepts_clean_standard_candidate(self) -> None:
         agent = SelectionStandardsAgent(portfolio=_FakePortfolio(), config=SelectionStandardsConfig())
@@ -376,6 +463,42 @@ class TestSelectionStandardsAgent:
         assert exp is not None and exp.status == "better"
         assert any(f.title.startswith("Experience feedback: book performing better") for f in result.findings)
 
+    def test_agent_better_producer_tips_refer_to_admission(self) -> None:
+        agent = SelectionStandardsAgent(portfolio=_FakePortfolio(), config=SelectionStandardsConfig())
+        bundle = _make_bundle(premium=50_000, tiv=1_500_000, naics="452210", broker="Acme Brokerage")
+        result = agent.run(
+            bundle,
+            org_id="default",
+            candidate_risk_score=0.68,
+            producer_experiences={"Acme Brokerage": _better_producer()},
+        )
+        assert agent.last_producer_tip is not None and agent.last_producer_tip.status == "better"
+        gate = [f for f in result.findings if f.title.startswith("Selection gate")]
+        assert gate and gate[0].source_value == UWDecision.CONDITIONAL_ACCEPT.value
+        assert any(f.title.startswith("Producer track record:") for f in result.findings)
+        assert result.recommendation is not None
+        assert result.recommendation.suggested_premium_modification == 15.0
+
+    def test_agent_worse_producer_tips_admission_to_refer(self) -> None:
+        agent = SelectionStandardsAgent(portfolio=_FakePortfolio(count=30), config=SelectionStandardsConfig())
+        bundle = _make_bundle(premium=50_000, tiv=1_500_000, naics="452210", broker="Acme Brokerage")
+        result = agent.run(
+            bundle,
+            org_id="default",
+            candidate_risk_score=0.7,
+            producer_experiences={"Acme Brokerage": _worse_producer()},
+        )
+        gate = [f for f in result.findings if f.title.startswith("Selection gate")]
+        assert gate and gate[0].source_value == UWDecision.REFER.value
+        assert result.recommendation is None
+
+    def test_agent_no_producer_tip_without_experiences(self) -> None:
+        agent = SelectionStandardsAgent(portfolio=_FakePortfolio(count=30), config=SelectionStandardsConfig())
+        bundle = _make_bundle(premium=50_000, tiv=1_500_000, naics="452210", broker="Acme Brokerage")
+        result = agent.run(bundle, org_id="default", candidate_risk_score=0.7)
+        assert agent.last_producer_tip is None
+        assert not any(f.title.startswith("Producer track record:") for f in result.findings)
+
 
 class _FakePortfolio:
     """Read-only stub matching PolicySource.list_policies, avoiding disk I/O."""
@@ -423,11 +546,13 @@ def _make_bundle(
     naics: str,
     claims: int = 0,
     candidate_risk_score: float | None = None,
+    broker: str | None = None,
 ) -> SubmissionBundle:
     return SubmissionBundle(
         bundle_id="sel-test-bundle",
         structured=StructuredSubmission(
             submission_id="sel-test-sub",
+            broker=BrokerInfo(broker_name=broker) if broker else None,
             coverages=[CoverageDetail(coverage_type="general_liability", limit_amount=tiv, premium=premium, deductible=0.0)],
             locations=[LocationData(address="1 Main St", city="Anywhere", state="FL", zip_code="33101", building_value=tiv)],
             risk_profile=RiskProfile(naics_code=naics, occupancy_type="retail"),

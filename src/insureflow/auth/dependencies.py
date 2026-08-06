@@ -14,7 +14,15 @@ security = HTTPBearer(auto_error=False)
 security_required = HTTPBearer()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
-__all__ = ["get_user_store", "clear_user_store", "get_current_user", "get_current_user_optional", "require_role", "security"]
+__all__ = [
+    "get_user_store",
+    "clear_user_store",
+    "get_current_user",
+    "get_current_user_optional",
+    "require_role",
+    "require_staff_desk",
+    "security",
+]
 
 
 async def get_current_user(
@@ -67,3 +75,19 @@ def require_role(min_role: Role) -> Callable[..., Awaitable[TokenData]]:
         return current_user
 
     return _check_role
+
+
+def require_staff_desk() -> Callable[..., Awaitable[TokenData]]:
+    """Staff underwriting desk: staff_uw, licensed_uw (large accounts), admin, or cuo."""
+
+    async def _check(current_user: TokenData = Depends(get_current_user)) -> TokenData:
+        from insureflow.underwriting.roles import role_supports_staff_desk
+
+        if not role_supports_staff_desk(current_user.role):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Staff underwriting desk requires staff_uw, licensed_uw, admin, or cuo",
+            )
+        return current_user
+
+    return _check

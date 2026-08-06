@@ -16,6 +16,12 @@ __all__ = [
     "PremiumAuditEngine",
     "RenewalEngine",
     "RenewalRecommendation",
+    "UnderwriterDesk",
+    "assist_coverage",
+    "get_line_service_desk",
+    "get_staff_desk",
+    "evaluate_experience",
+    "capabilities_overview",
 ]
 
 from insureflow.underwriting.authority import (
@@ -38,6 +44,12 @@ from insureflow.underwriting.cope import (
 )
 from insureflow.underwriting.cope import (
     COPEScore as COPEScore,
+)
+from insureflow.underwriting.line_desk import (
+    assist_coverage as assist_coverage,
+)
+from insureflow.underwriting.line_desk import (
+    get_line_service_desk as get_line_service_desk,
 )
 from insureflow.underwriting.market import (
     MarketCycle as MarketCycle,
@@ -68,4 +80,16 @@ from insureflow.underwriting.renewal import (
 )
 from insureflow.underwriting.renewal import (
     RenewalRecommendation as RenewalRecommendation,
+)
+from insureflow.underwriting.roles import (
+    UnderwriterDesk as UnderwriterDesk,
+)
+from insureflow.underwriting.roles import (
+    capabilities_overview as capabilities_overview,
+)
+from insureflow.underwriting.staff_desk import (
+    evaluate_experience as evaluate_experience,
+)
+from insureflow.underwriting.staff_desk import (
+    get_staff_desk as get_staff_desk,
 )

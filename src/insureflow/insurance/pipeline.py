@@ -8,6 +8,7 @@ from uuid import uuid4
 from insureflow.agents.adverse_selection_agent import AdverseSelectionAgent
 from insureflow.agents.appetite_filter import AppetiteFilterAgent
 from insureflow.agents.extraction_agent import ExtractionAgent
+from insureflow.agents.moral_hazard_agent import MoralHazardAgent
 from insureflow.agents.portfolio_risk_agent import PortfolioRiskAgent
 from insureflow.agents.producer_experience_agent import ProducerExperienceAgent
 from insureflow.agents.reinsurance_agent import ReinsuranceAgent
@@ -94,6 +95,7 @@ class InsurancePipeline:
         self.selection_standards = SelectionStandardsAgent()
         self.producer_experience = ProducerExperienceAgent()
         self.adverse_selection = AdverseSelectionAgent()
+        self.moral_hazard = MoralHazardAgent()
         self.triage = get_triage_agent()
         self.policy_admin = build_policy_admin_service()
         self.portfolio_store = get_portfolio_store()
@@ -127,7 +129,7 @@ class InsurancePipeline:
         # Deferred stages in funnel mode are re-run on demand via deep_dive().
         deferred_stages: list[str] = []
         if funnel:
-            deferred_stages = ["oracles", "portfolio", "selection_standards", "producer_experience", "adverse_selection", "reinsurance", "fraud_ml"]
+            deferred_stages = ["oracles", "portfolio", "selection_standards", "producer_experience", "adverse_selection", "moral_hazard", "reinsurance", "fraud_ml"]
 
         # ── 1. SUBMISSION TRIAGE (score & prioritize before any processing) ──
         progress.start("intake", "Intake", "Receiving submission package")
@@ -726,22 +728,6 @@ class InsurancePipeline:
                 metadata={"portfolio_score": portfolio_result.risk_score},
             )
 
-            selection_result = self.selection_standards.run(
-                bundle,
-                org_id=self.org_id,
-                candidate_risk_score=memo.overall_risk_score,
-            )
-            for f in selection_result.findings:
-                memo.key_findings.append(f)
-                if f.severity.value in ("critical", "high"):
-                    memo.human_review_reasons.append(f.title)
-                    memo.human_review_required = True
-            audit.log(
-                PipelineEvent.SYNTHESIS_COMPLETE,
-                f"Selection standards: {len(selection_result.findings)} findings",
-                metadata={"selection_score": selection_result.risk_score},
-            )
-
             producer_result = self.producer_experience.run(bundle, org_id=self.org_id)
             for f in producer_result.findings:
                 memo.key_findings.append(f)
@@ -752,6 +738,27 @@ class InsurancePipeline:
                 PipelineEvent.SYNTHESIS_COMPLETE,
                 f"Producer experience: {len(producer_result.findings)} findings",
                 metadata={"producer_score": producer_result.risk_score},
+            )
+
+            # The producer's realized-vs-expected book is fed into the selection
+            # gate so that a producer's past performance can tip the acceptance of
+            # a marginally acceptable exposure (the financial function's
+            # underwriter/agent balance).
+            selection_result = self.selection_standards.run(
+                bundle,
+                org_id=self.org_id,
+                candidate_risk_score=memo.overall_risk_score,
+                producer_experiences=self.producer_experience.last_experiences,
+            )
+            for f in selection_result.findings:
+                memo.key_findings.append(f)
+                if f.severity.value in ("critical", "high"):
+                    memo.human_review_reasons.append(f.title)
+                    memo.human_review_required = True
+            audit.log(
+                PipelineEvent.SYNTHESIS_COMPLETE,
+                f"Selection standards: {len(selection_result.findings)} findings",
+                metadata={"selection_score": selection_result.risk_score},
             )
 
             adverse_result = self.adverse_selection.run(bundle, org_id=self.org_id)
@@ -780,6 +787,46 @@ class InsurancePipeline:
                 else:
                     memo.recommendation.suggested_premium_modification = (memo.recommendation.suggested_premium_modification or 0.0) + sel_rec.suggested_premium_modification
                 memo.conditions = list(memo.conditions or []) + [f"SUBJECT TO substandard loading: {sel_rec.suggested_premium_modification:.0f}%"]
+
+        # ── 7a. MORAL HAZARD / CHARACTER SCREEN ──
+        # The doctrine: the underwriter must be a skillful judge of people. If
+        # the applicant's morals are open to question the policy is declined no
+        # matter how sound the property or how healthy the life — so this check
+        # runs on every line and a critical finding overrides any acceptance.
+        moral_result = None
+        if funnel:
+            progress.skip("moral_hazard", "Character", "Deferred — available via Deep Dive")
+        else:
+            progress.start("moral_hazard", "Character", "Judging applicant character")
+            from insureflow.models.agents import UWDecision
+
+            moral_result = self.moral_hazard.run(bundle, org_id=self.org_id)
+            memo.moral_hazard_findings = list(moral_result.findings)
+            for f in moral_result.findings:
+                memo.key_findings.append(f)
+                if f.severity.value in ("critical", "high"):
+                    memo.human_review_reasons.append(f.title)
+                    memo.human_review_required = True
+            critical_moral = [f for f in moral_result.findings if f.severity.value == "critical"]
+            if critical_moral:
+                memo.decision = UWDecision.DECLINE
+                memo.human_review_required = True
+                memo.human_review_reasons.extend(f.title for f in critical_moral)
+                memo.conditions = list(memo.conditions or []) + [f"DECLINED — {f.title}" for f in critical_moral]
+            audit.log(
+                PipelineEvent.SYNTHESIS_COMPLETE,
+                f"Moral hazard: {len(moral_result.findings)} findings",
+                metadata={
+                    "moral_hazard_score": moral_result.risk_score,
+                    "status": moral_result.risk_severity.value,
+                    "declined": bool(critical_moral),
+                },
+            )
+            progress.complete(
+                "moral_hazard",
+                detail=f"Score {moral_result.risk_score:.0%}" if moral_result.risk_score else "No character red flags",
+                status="warning" if critical_moral else "complete",
+            )
 
         # ── 8. REINSURANCE TREATY ANALYSIS ──
         reinsurance_result = None
@@ -1055,6 +1102,10 @@ class InsurancePipeline:
         if adverse_result:
             summary["adverse_selection"] = adverse_result.model_dump()
 
+        # Add moral-hazard / character screen data if available
+        if moral_result:
+            summary["moral_hazard"] = moral_result.model_dump()
+
         # Add visual analysis data if available
         if visual_profile:
             summary["visual_analysis"] = visual_profile.to_dict()
@@ -1106,7 +1157,7 @@ class InsurancePipeline:
         reinsurance treaty fit, and the ML fraud/premium/churn models are all
         available here on demand.
         """
-        allowed = ["oracles", "portfolio", "selection_standards", "producer_experience", "adverse_selection", "reinsurance", "fraud_ml", "premium_ml", "churn_ml"]
+        allowed = ["oracles", "portfolio", "selection_standards", "producer_experience", "adverse_selection", "moral_hazard", "reinsurance", "fraud_ml", "premium_ml", "churn_ml"]
         include = [i for i in (include or allowed) if i in allowed]
         scope = org_id or self.org_id
 
@@ -1130,20 +1181,30 @@ class InsurancePipeline:
                 "findings": [f.model_dump() for f in portfolio_result.findings],
             }
 
-        if "selection_standards" in include:
-            selection_result = self.selection_standards.run(bundle, org_id=scope)
-            results["completed"].append("selection_standards")
-            results["findings"]["selection_standards"] = selection_result.model_dump()
-
         if "producer_experience" in include:
             producer_result = self.producer_experience.run(bundle, org_id=scope)
             results["completed"].append("producer_experience")
             results["findings"]["producer_experience"] = producer_result.model_dump()
 
+        if "selection_standards" in include:
+            producer_experiences = self.producer_experience.last_experiences if "producer_experience" in include else None
+            selection_result = self.selection_standards.run(
+                bundle,
+                org_id=scope,
+                producer_experiences=producer_experiences,
+            )
+            results["completed"].append("selection_standards")
+            results["findings"]["selection_standards"] = selection_result.model_dump()
+
         if "adverse_selection" in include:
             adverse_result = self.adverse_selection.run(bundle, org_id=scope)
             results["completed"].append("adverse_selection")
             results["findings"]["adverse_selection"] = adverse_result.model_dump()
+
+        if "moral_hazard" in include:
+            moral_result = self.moral_hazard.run(bundle, org_id=scope)
+            results["completed"].append("moral_hazard")
+            results["findings"]["moral_hazard"] = moral_result.model_dump()
 
         if "reinsurance" in include:
             reinsurance_result = self.reinsurance.run(bundle, org_id=scope)

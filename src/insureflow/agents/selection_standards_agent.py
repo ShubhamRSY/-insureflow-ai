@@ -24,6 +24,7 @@ from insureflow.models.submissions import SubmissionBundle
 from insureflow.portfolio.store import PolicySource, get_portfolio_store
 from insureflow.underwriting.selection import (
     BookExperience,
+    ProducerExperience,
     RiskClass,
     SelectionAssessment,
     SelectionCandidate,
@@ -67,6 +68,7 @@ class SelectionStandardsAgent(BaseAgent):
         self._config = config or SelectionStandardsConfig()
         self._last_assessment: SelectionAssessment | None = None
         self._last_experience: BookExperience | None = None
+        self._last_producer_tip: ProducerExperience | None = None
 
     def _analyze(self, bundle: SubmissionBundle, **kwargs: Any) -> None:
         org_id = kwargs.get("org_id", "default")
@@ -97,7 +99,13 @@ class SelectionStandardsAgent(BaseAgent):
             risk_scores=risk_scores,
         )
 
-        assessment = assess_selection(candidate, book, cfg, experience)
+        producer = ""
+        if bundle.structured and bundle.structured.broker:
+            producer = bundle.structured.broker.broker_name or ""
+        producer_exp = (kwargs.get("producer_experiences") or {}).get(producer) if producer else None
+        self._last_producer_tip = producer_exp
+
+        assessment = assess_selection(candidate, book, cfg, experience, producer_exp)
         self._last_assessment = assessment
         self._record_findings(assessment)
 
@@ -108,6 +116,10 @@ class SelectionStandardsAgent(BaseAgent):
     @property
     def last_experience(self) -> BookExperience | None:
         return self._last_experience
+
+    @property
+    def last_producer_tip(self) -> ProducerExperience | None:
+        return self._last_producer_tip
 
     def _build_recommendation(self) -> Recommendation | None:
         """Carry the substandard loading into pricing when the risk is admitted."""
@@ -287,6 +299,28 @@ class SelectionStandardsAgent(BaseAgent):
                     severity=RiskSeverity.MODERATE,
                     category="selection_standards",
                     source_value=book.intra_class_cv,
+                )
+            )
+
+        if assessment.producer_tipped and assessment.producer_experience is not None:
+            pe = assessment.producer_experience
+            self._add_finding(
+                Finding(
+                    title=f"Producer track record: {pe.status} tips the selection decision",
+                    description=(
+                        f"{pe.producer_name}'s book is losing {pe.loss_ratio:.0%} against an expected "
+                        f"{pe.expected_loss_ratio:.0%} (credibility {pe.credibility:.0%}, {pe.policy_count} "
+                        f"policies) — the producing agent's historical performance determines this "
+                        "marginally acceptable exposure's acceptance, per the financial function's "
+                        "underwriter/agent balance."
+                    ),
+                    severity=RiskSeverity.LOW if pe.status == "better" else RiskSeverity.MODERATE,
+                    category="selection_standards",
+                    source_value=pe.penalty_factor,
+                    evidence=[
+                        f"Realized loss ratio: {pe.loss_ratio:.1%} vs expected {pe.expected_loss_ratio:.1%}",
+                        f"Penalty factor: {pe.penalty_factor:.2f}",
+                    ],
                 )
             )
 

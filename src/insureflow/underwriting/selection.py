@@ -86,6 +86,8 @@ class SelectionStandardsConfig(BaseModel):
     credibility_full_policies: float = 30.0  # N policies → full credibility (Z = sqrt(N/30))
     min_observed_policies_for_feedback: int = 5
     experience_threshold_sensitivity: float = 0.5  # penalty 1.0±0.2 → ±0.10 threshold shift
+    min_producer_credibility_for_tip: float = 0.5  # producer book must be ≥ this credible to tip a marginal exposure
+    producer_accept_upgrade_max_score: float = 0.85  # better-producer admission cap for a referred substandard risk
 
     def expense_per_risk(self, tier: SelectionTier) -> float:
         return {
@@ -188,6 +190,8 @@ class SelectionAssessment(BaseModel):
     candidate_expense_usd: float = 0.0
     substandard_loading_pct: float = 0.0  # premium loading when substandard is admitted
     experience: BookExperience | None = None  # realized-vs-expected feedback in effect
+    producer_experience: ProducerExperience | None = None  # the submitting agent's realized-vs-expected book
+    producer_tipped: bool = False  # producer track record changed the decision or the loading
     rationale: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
 
@@ -465,6 +469,7 @@ def assess_selection(
     book: BookSnapshot,
     config: SelectionStandardsConfig | None = None,
     experience: BookExperience | None = None,
+    producer_experience: ProducerExperience | None = None,
 ) -> SelectionAssessment:
     """Gate a candidate risk against the current book posture.
 
@@ -478,6 +483,15 @@ def assess_selection(
     candidate's class penalty factor scales its substandard loading: a class
     that has actually lost more than rating assumed is admitted only on a
     heavier loading, and a worse-than-expected class is flagged for tightening.
+
+    When the submitting producer's realized-vs-expected loss experience is
+    supplied, it closes the financial function's underwriter/agent balance: a
+    credible producer with a better-than-expected book can tip a referred
+    substandard exposure to conditional admission (and credits its loading); a
+    producer whose book runs worse than expected tips an otherwise-admitted
+    substandard exposure back to referral. This is the doctrine's rule that an
+    agent's past performance may determine the acceptance of a marginally
+    acceptable exposure.
     """
     cfg = config or SelectionStandardsConfig()
     tier = book.tier
@@ -521,6 +535,44 @@ def assess_selection(
         action = UWDecision.ACCEPT
         rationale.append(f"Candidate {candidate.risk_class.value} fits {tier.value} selection standards (book predictability {book.predictability:.0%}).")
 
+    # The financial function: an underwriter is judged on quality while the
+    # producing agent is paid on volume, and doctrine says the agent's past
+    # performance may determine the acceptance of a marginally acceptable
+    # (substandard) exposure. A credible producer with a better-than-expected
+    # book can tip a referral to admission; one running worse than expected tips
+    # an admitted substandard risk back to referral. The producer penalty is
+    # already credibility-blended, so the tip only fires once enough of the
+    # producer's book has been reported to trust.
+    producer = producer_experience
+    producer_tipped = False
+    is_substandard = candidate.risk_class == RiskClass.SUBSTANDARD
+    if producer is not None and is_substandard and producer.status in ("better", "worse") and producer.credibility >= cfg.min_producer_credibility_for_tip:
+        if producer.status == "better":
+            if action == UWDecision.REFER and candidate.risk_score < cfg.producer_accept_upgrade_max_score:
+                action = UWDecision.CONDITIONAL_ACCEPT
+                rationale.append(
+                    f"Producer {producer.producer_name}'s book is losing {producer.loss_ratio:.0%} "
+                    f"vs expected {producer.expected_loss_ratio:.0%} (credibility {producer.credibility:.0%}, "
+                    f"{producer.policy_count} policies) — the producing agent's past performance tips this "
+                    "marginally acceptable exposure to conditional admission."
+                )
+                producer_tipped = True
+                if tier == SelectionTier.STRICT:
+                    warnings.append(
+                        "Producer track record overrode the strict-tier referral: this small book cannot yet "
+                        "rely on the law of averages, and the substandard risk is being admitted on the "
+                        "producing agent's experience rather than on book predictability — monitor closely."
+                    )
+        elif action in (UWDecision.ACCEPT, UWDecision.CONDITIONAL_ACCEPT):
+            action = UWDecision.REFER
+            rationale.append(
+                f"Producer {producer.producer_name}'s book is losing {producer.loss_ratio:.0%} "
+                f"vs expected {producer.expected_loss_ratio:.0%} (credibility {producer.credibility:.0%}, "
+                f"{producer.policy_count} policies) — the producing agent's above-average claims tip this "
+                "marginally acceptable exposure to referral rather than admission."
+            )
+            producer_tipped = True
+
     substandard_loading_pct = 0.0
     class_experience = None
     if experience is not None:
@@ -535,6 +587,14 @@ def assess_selection(
                 f"{class_experience.credibility:.0%}) scales the base loading by "
                 f"{class_experience.penalty_factor:.2f}."
             )
+        if producer is not None and producer.status == "better" and producer.credibility >= cfg.min_producer_credibility_for_tip and producer.penalty_factor != 1.0:
+            loading *= producer.penalty_factor
+            rationale.append(
+                f"Producer {producer.producer_name}'s better-than-expected book (loss ratio "
+                f"{producer.loss_ratio:.0%} vs expected {producer.expected_loss_ratio:.0%}) credits the "
+                f"loading by {producer.penalty_factor:.2f}."
+            )
+            producer_tipped = True
         substandard_loading_pct = round(min(max(loading, cfg.min_substandard_loading), cfg.max_substandard_loading), 1)
 
     if class_experience is not None and class_experience.penalty_factor > 1.0:
@@ -566,6 +626,8 @@ def assess_selection(
         candidate_expense_usd=round(candidate_expense, 2),
         substandard_loading_pct=substandard_loading_pct,
         experience=experience,
+        producer_experience=producer,
+        producer_tipped=producer_tipped,
         rationale=rationale,
         warnings=warnings,
     )

@@ -6,7 +6,12 @@
 
 Rytera ingests multi-format submission packages — ACORD XML, broker PDFs, loss runs, W-2s, credit reports, appraisals — and produces an underwriting memo with a recommendation, premium or rate quote, encrypted audit trail, and optional licensed underwriter sign-off.
 
-All three verticals share a unified API, JWT authentication, org-scoped job store, Redis-backed persistence, Fernet encryption, PostgreSQL/pgvector RAG, and vanilla JS dashboard. Pipelines operate **with or without an LLM API key** via deterministic agent fallbacks.
+All three verticals share a unified API, JWT authentication, org-scoped job store, Redis-backed persistence, Fernet encryption, PostgreSQL/pgvector RAG, and a React dashboard. Pipelines operate **with or without an LLM API key** via deterministic agent fallbacks.
+
+Rytera covers **both classical underwriting desks**:
+
+- **Line underwriters** (branch / regional) — implement the underwriting process, determine coverage, and service producers and policyholders
+- **Staff underwriters** (home office) — market research, coverage development, experience evaluation, rating plans, UW policy/guides, audits, and training
 
 ---
 
@@ -33,21 +38,34 @@ End-to-end bind-ready workflow for carrier-grade operations:
 - **Loss feedback loop** — record actual loss experience; portfolio calibration by loss ratio
 - **Regulatory audit package** — SHA-256 manifest ZIP with encrypted artifacts for examiner review
 
-### Web Dashboard (Vanilla JS SPA)
+### Line & Staff Underwriter Desks
 
-Modern SPA served at `/dashboard` (vanilla JS, modular CSS). Marketing landing page at `/` (HTML).
+Insurers distinguish line underwriters (process) from staff underwriters (policy). Rytera implements both:
+
+| Desk | Location | Role | Dashboard | Key APIs |
+|------|----------|------|-----------|----------|
+| **Line UW** | Branch / regional | `underwriter`, `licensed_uw` | `/dashboard/line-uw` | Coverage assist, producer/policyholder service tickets |
+| **Staff UW** | Home office | `staff_uw`, `cuo`, `admin` | `/dashboard/staff-uw` | Market research, guides, rating plans, UW audits, training, experience eval |
+
+Authority matrix records include a `desk` field (`line` | `staff` | `both`). Large or unusual accounts can involve staff UW overlap with line decisions.
+
+### Web Dashboard (React SPA)
+
+React + Vite SPA served at `/dashboard` (built assets under `static/ui`). Marketing landing page at `/` (HTML).
 
 | Page | Auth | Purpose |
 |------|------|---------|
-| **Overview** | Optional | Pipeline metrics, quick demos, recent activity, lending job counts |
-| **System Health** | No | Live 10-component diagnostics with LLM mode indicator |
-| **Insurance** | Yes | One-click demos, custom submission form, job queue, 9-stage pipeline visualization |
-| **Mortgage** | Yes | Insurance-style intake (Files / Connect & pull / Sample data), job queue, rate/DTI display, pipeline stages |
-| **Lending** | Yes | Insurance-style intake (Files / Connect & pull / Sample data), loan products, application results |
-| **Portfolio** | Yes | Concentration buckets, top lines of business, total exposure |
-| **Evaluations** | Yes | Quality gates, HITL review scores, drift detection, performance trends |
+| **Overview** | Optional | Marketing showcase, pipeline metrics, quick demos, recent activity |
+| **System Health** | No | Live diagnostics with LLM mode indicator |
+| **Insurance** | Yes | Demos, custom submission, job queue, submission journey |
+| **Line UW Desk** | Yes | Coverage assist (broaden/narrow/manuscript) + producer/policyholder service |
+| **Staff UW Desk** | Yes | Market research, coverage development, rating plans, guides, audits, training |
+| **Mortgage** | Yes | Files / Connect & pull / Sample data, job queue, rate/DTI, pipeline stages |
+| **Lending** | Yes | Files / Connect & pull / Sample data, loan products, application results |
 | **UW Sign-off** | Yes | Licensed review queue — approve, refer, decline |
-| **Settings** | Optional | Account info, sign out, credential reset |
+| **Issuance / Monitoring / Producer Comms** | Yes | Post-decision binder, policy monitoring, broker notifications |
+| **Portfolio / Authority / Market** | Yes | Concentration, binding limits + desk, hard/soft cycle |
+| **Settings** | Optional | Account info, RBAC role hierarchy, sign out |
 
 **Job Detail Drawer:** click any job to open a full pipeline panel — 9-stage progress bar, COPE risk scores with per-field bars, quote breakdown (base/adjusted/binding premiums, carrier, validity), provenance tracking (verified/unverified fields), reconciliation summary (fields checked, verified, discrepancies), compliance violations with severity levels, and raw JSON toggle.
 
@@ -90,7 +108,8 @@ Category-filtered connector hub with brand logos and pull-to-submit workflow —
 
 ### Infrastructure & Operations
 
-- **JWT auth + RBAC** — viewer → underwriter → licensed_uw → admin → cuo; org-scoped data isolation, self-registration for viewer/underwriter
+- **JWT auth + RBAC** — viewer → underwriter (line) → staff_uw → licensed_uw → admin → cuo; org-scoped data isolation, self-registration for viewer/underwriter
+- **Line + staff UW desks** — branch process tooling and home-office policy/guides/audits/training
 - **Persistent auth store** — file-backed user registry survives server reloads
 - **Redis job store** — org-scoped async job tracking for insurance, mortgage, and lending pipelines (persistent via Railway Redis)
 - **Celery workers** — async mortgage processing with job-store completion sync
