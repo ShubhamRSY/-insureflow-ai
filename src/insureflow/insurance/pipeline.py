@@ -5,6 +5,7 @@ import logging
 from typing import Any, Callable
 from uuid import uuid4
 
+from insureflow.agents.adverse_selection_agent import AdverseSelectionAgent
 from insureflow.agents.appetite_filter import AppetiteFilterAgent
 from insureflow.agents.extraction_agent import ExtractionAgent
 from insureflow.agents.portfolio_risk_agent import PortfolioRiskAgent
@@ -92,6 +93,7 @@ class InsurancePipeline:
         self.reinsurance = ReinsuranceAgent()
         self.selection_standards = SelectionStandardsAgent()
         self.producer_experience = ProducerExperienceAgent()
+        self.adverse_selection = AdverseSelectionAgent()
         self.triage = get_triage_agent()
         self.policy_admin = build_policy_admin_service()
         self.portfolio_store = get_portfolio_store()
@@ -125,7 +127,7 @@ class InsurancePipeline:
         # Deferred stages in funnel mode are re-run on demand via deep_dive().
         deferred_stages: list[str] = []
         if funnel:
-            deferred_stages = ["oracles", "portfolio", "selection_standards", "producer_experience", "reinsurance", "fraud_ml"]
+            deferred_stages = ["oracles", "portfolio", "selection_standards", "producer_experience", "adverse_selection", "reinsurance", "fraud_ml"]
 
         # ── 1. SUBMISSION TRIAGE (score & prioritize before any processing) ──
         progress.start("intake", "Intake", "Receiving submission package")
@@ -705,6 +707,7 @@ class InsurancePipeline:
         portfolio_result = None
         selection_result = None
         producer_result = None
+        adverse_result = None
         if funnel:
             progress.skip("portfolio", "Portfolio", "Deferred — available via Deep Dive")
         elif is_life_line:
@@ -749,6 +752,18 @@ class InsurancePipeline:
                 PipelineEvent.SYNTHESIS_COMPLETE,
                 f"Producer experience: {len(producer_result.findings)} findings",
                 metadata={"producer_score": producer_result.risk_score},
+            )
+
+            adverse_result = self.adverse_selection.run(bundle, org_id=self.org_id)
+            for f in adverse_result.findings:
+                memo.key_findings.append(f)
+                if f.severity.value in ("critical", "high"):
+                    memo.human_review_reasons.append(f.title)
+                    memo.human_review_required = True
+            audit.log(
+                PipelineEvent.SYNTHESIS_COMPLETE,
+                f"Adverse selection: {len(adverse_result.findings)} findings",
+                metadata={"adverse_selection_score": adverse_result.risk_score},
             )
 
             # Substandard candidates admitted by the selection gate carry a rate
@@ -966,7 +981,9 @@ class InsurancePipeline:
             "human_review_required": memo.human_review_required or wf.state == WorkflowState.PENDING_REVIEW,
             "funnel": funnel,
             "deep_dive_available": (
-                [s for s in deferred_stages if s not in ("oracles", "portfolio", "selection_standards", "producer_experience", "reinsurance")] if is_life_line else list(deferred_stages)
+                [s for s in deferred_stages if s not in ("oracles", "portfolio", "selection_standards", "producer_experience", "adverse_selection", "reinsurance")]
+                if is_life_line
+                else list(deferred_stages)
             ),
             "appetite_filter_passed": appetite_passed,
             "appetite_needs_uw_referral": appetite_result.needs_uw_referral if appetite_result else False,
@@ -1034,6 +1051,10 @@ class InsurancePipeline:
         if producer_result:
             summary["producer_experience"] = producer_result.model_dump()
 
+        # Add adverse-selection screen data if available
+        if adverse_result:
+            summary["adverse_selection"] = adverse_result.model_dump()
+
         # Add visual analysis data if available
         if visual_profile:
             summary["visual_analysis"] = visual_profile.to_dict()
@@ -1081,10 +1102,11 @@ class InsurancePipeline:
         """Re-run the analyses deferred by funnel mode on a persisted submission.
 
         Nothing is lost by the funnel — oracles, portfolio concentration,
-        selection standards, producer experience, reinsurance treaty fit, and the
-        ML fraud/premium/churn models are all available here on demand.
+        selection standards, producer experience, adverse selection,
+        reinsurance treaty fit, and the ML fraud/premium/churn models are all
+        available here on demand.
         """
-        allowed = ["oracles", "portfolio", "selection_standards", "producer_experience", "reinsurance", "fraud_ml", "premium_ml", "churn_ml"]
+        allowed = ["oracles", "portfolio", "selection_standards", "producer_experience", "adverse_selection", "reinsurance", "fraud_ml", "premium_ml", "churn_ml"]
         include = [i for i in (include or allowed) if i in allowed]
         scope = org_id or self.org_id
 
@@ -1117,6 +1139,11 @@ class InsurancePipeline:
             producer_result = self.producer_experience.run(bundle, org_id=scope)
             results["completed"].append("producer_experience")
             results["findings"]["producer_experience"] = producer_result.model_dump()
+
+        if "adverse_selection" in include:
+            adverse_result = self.adverse_selection.run(bundle, org_id=scope)
+            results["completed"].append("adverse_selection")
+            results["findings"]["adverse_selection"] = adverse_result.model_dump()
 
         if "reinsurance" in include:
             reinsurance_result = self.reinsurance.run(bundle, org_id=scope)

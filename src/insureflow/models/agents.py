@@ -20,6 +20,7 @@ class AgentType(str, Enum):
     REINSURANCE = "reinsurance"
     SELECTION_STANDARDS = "selection_standards"
     PRODUCER_EXPERIENCE = "producer_experience"
+    ADVERSE_SELECTION = "adverse_selection"
 
 
 class RiskSeverity(str, Enum):

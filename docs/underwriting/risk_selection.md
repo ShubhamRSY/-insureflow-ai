@@ -145,12 +145,53 @@ The pre-screening half of the doctrine ("the agent knows a company will not
 accept a certain class and should not submit it") is enforced at the front door
 by `AppetiteFilterAgent` and coached into producers flagged by this agent.
 
+## Purpose of underwriting: the adverse-selection screen
+
+The doctrine's purpose of underwriting is to develop a profitable book by
+**minimizing adverse selection** — the structural fact that the individuals and
+businesses with the greatest probability of loss are the ones most likely to
+purchase insurance (flood-plain owners buy flood cover). The insurer is not
+interested in selling to applicants who expect frequent, severe losses, so the
+underwriter selects applicants carefully. `AdverseSelectionAgent` operationalizes
+the applicant-side of that selection:
+
+- **Hazard-zone demand** — the exposure sits in a named hazard zone (flood
+  plain, wildfire zone, coast, from the CAT model) *and* the applicant requests
+  the exact cover that zone threatens. This is the doctrine's flood-plain
+  example. (Score 0.60 — HIGH on its own.)
+- **Excluded-zone demand** — the hazard is in a zone the carrier's appetite has
+  already declined (coastal FL 32000-34999, coastal TX 77500-78500, HI, CA
+  wildfire; guideline APT-003), so the demand escalates from "verify and rate"
+  to "decline or refer". (Score 0.40.)
+- **Loss-motivated seeking** — the applicant applies for a new policy with a
+  prior claim history (`risk_profile.prior_claims`, the loss-run, or
+  `financial.prior_losses`); a claim dated within 730 days of the coverage
+  effective date is called out as evidence. (Score 0.50.)
+- **Bare catastrophe cover** — the applicant requests *only* the high-loss,
+  high-variance perils (flood/earthquake/wind/wildfire) rather than a broad
+  program — buying the cover they expect to use. (Score 0.30.)
+
+Scores are additive (capped at 1.0), so the posture rises with how many
+loss-seeking patterns coincide. Status is **low** (no signals → LOW
+acknowledgment), **flagged** (any signal below the 0.60 high threshold →
+MODERATE finding), or **high** (score ≥ 0.60 → HIGH finding that triggers human
+review). Each finding's evidence lists the specific signals so the reviewing UW
+sees exactly which behavior the screen is responding to.
+
+The screen models each submitted location through the same CAT client the
+oracle stage uses (`CatastropheModelClient.model_submission`), but the pure
+screen (`assess_adverse_selection` in `underwriting/adverse_selection.py`)
+accepts exposures as an argument so it is fully testable without the client. It
+runs in the portfolio stage (stage 7) alongside concentration and selection
+standards, defers in funnel mode, re-runs via `deep_dive(include=["adverse_selection", ...])`,
+and surfaces in the summary under `adverse_selection`.
+
 ## Pipeline integration
 
-- The `SelectionStandardsAgent` and `ProducerExperienceAgent` run in the
-  portfolio stage (stage 7) of `InsurancePipeline.run()` for commercial lines,
-  alongside concentration analysis, using `memo.overall_risk_score` as the
-  candidate risk score.
+- The `SelectionStandardsAgent`, `ProducerExperienceAgent`, and
+  `AdverseSelectionAgent` run in the portfolio stage (stage 7) of
+  `InsurancePipeline.run()` for commercial lines, alongside concentration
+  analysis, using `memo.overall_risk_score` as the candidate risk score.
 - Findings are appended to the memo; critical/high findings trigger human
   review.
 - In funnel mode the stage is deferred and re-runs on demand via
