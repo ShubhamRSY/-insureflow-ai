@@ -7,22 +7,98 @@ from insureflow.models.agents import Finding, Recommendation, RiskSeverity, Unde
 
 
 def build_memo_summary(decision: UWDecision | str, score: float, findings: list[Finding], *, extra: str = "") -> str:
-    """Build the executive-summary narrative from the *current* decision."""
-    sev_counts: dict[str, int] = {}
-    for f in findings:
-        key = f.severity.value if hasattr(f.severity, "value") else str(f.severity or "moderate")
-        sev_counts[key] = sev_counts.get(key, 0) + 1
-    critical = sev_counts.get("critical", 0)
-    high = sev_counts.get("high", 0)
-    total = len(findings)
-    action = normalize_decision(decision).value.upper()
+    """Build a UW-facing executive summary: decision, drivers, next actions."""
+    action = normalize_decision(decision).value.upper().replace("_", " ")
     pct = int(round(float(score or 0.0) * 100))
-    narrative = f"Underwriting recommendation is {action} based on {total} findings across risk, loss history, compliance, and fraud analysis. Aggregate risk score is {pct}/100."
-    if critical or high:
-        narrative += f" {critical + high} finding(s) require elevated attention."
-    if extra:
-        narrative = f"{narrative} {extra.strip()}"
-    return narrative
+
+    ranked = sorted(
+        findings or [],
+        key=lambda f: {"critical": 0, "high": 1, "moderate": 2, "low": 3}.get(
+            (f.severity.value if hasattr(f.severity, "value") else str(f.severity or "moderate")).lower(),
+            2,
+        ),
+    )
+    critical = [f for f in ranked if (f.severity.value if hasattr(f.severity, "value") else str(f.severity)).lower() == "critical"]
+    high = [f for f in ranked if (f.severity.value if hasattr(f.severity, "value") else str(f.severity)).lower() == "high"]
+    drivers = (critical + high)[:5] or ranked[:3]
+
+    next_steps: list[str] = []
+    decision_norm = normalize_decision(decision)
+    if decision_norm == DecisionOutcome.DECLINE:
+        headline = f"DECISION: {action} — do not bind; issue declination / broker notice."
+        next_steps = [
+            "Document decline rationale for the producer",
+            "Confirm no outstanding quote authority remains open",
+        ]
+    elif decision_norm == DecisionOutcome.REFER:
+        headline = f"DECISION: {action} — licensed UW review required before bind."
+        next_steps = [
+            "Clear critical / high findings below before releasing terms",
+            "Request any missing package items from the broker if listed",
+        ]
+    elif decision_norm == DecisionOutcome.CONDITIONAL_ACCEPT:
+        headline = f"DECISION: {action} — bind only after stated conditions are met."
+        next_steps = [
+            "Publish conditions to the broker and track fulfillment",
+            "Re-check residual risk after conditions clear",
+        ]
+    else:
+        headline = f"DECISION: {action} — within appetite; proceed to quote / bind workflow."
+        next_steps = [
+            "Confirm final premium and forms with producer",
+            "Complete any remaining checklist items before bind",
+        ]
+
+    # Proactive steps derived from top findings
+    for f in drivers[:4]:
+        title = (f.title or "").strip()
+        title_l = title.lower()
+        if not title:
+            continue
+        if "loss run" in title_l or "claims" in title_l:
+            step = "Obtain a usable 5-year loss run (not empty / unparsed)"
+        elif "missing" in title_l or "document" in title_l or "incomplete" in title_l:
+            step = f"Collect outstanding package item: {title}"
+        elif "limit" in title_l or "coverage" in title_l:
+            step = f"Resolve coverage / limit issue: {title}"
+        elif "oracle" in title_l or "clue" in title_l or "a-plus" in title_l or "verification" in title_l:
+            step = f"Verify external data or document synthetic/unavailable check: {title}"
+        elif "decline" in title_l:
+            step = f"Address hard stop: {title}"
+        else:
+            step = f"Review: {title}"
+        if step not in next_steps:
+            next_steps.append(step)
+
+    lines = [
+        headline,
+        "",
+        f"Risk score: {pct}/100 · {len(findings)} findings ({len(critical)} critical, {len(high)} high).",
+        "",
+        "Why this decision",
+    ]
+    if drivers:
+        for f in drivers:
+            sev = (f.severity.value if hasattr(f.severity, "value") else str(f.severity or "moderate")).upper()
+            title = (f.title or "Finding").strip()
+            detail = (f.description or "").strip()
+            if detail and len(detail) > 140:
+                detail = detail[:137].rstrip() + "…"
+            bullet = f"• [{sev}] {title}"
+            if detail:
+                bullet += f" — {detail}"
+            lines.append(bullet)
+    else:
+        lines.append("• No elevated findings recorded.")
+
+    lines.extend(["", "What to do next"])
+    for i, step in enumerate(next_steps[:6], 1):
+        lines.append(f"{i}. {step}")
+
+    if extra and extra.strip():
+        lines.extend(["", extra.strip()])
+
+    return "\n".join(lines)
 
 
 def _to_uw_decision(value: UWDecision | str | None) -> UWDecision | None:

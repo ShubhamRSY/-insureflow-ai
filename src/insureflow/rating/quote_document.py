@@ -200,7 +200,7 @@ def generate_quote_html(
   .total {{ font-size: 20px; font-weight: 700; color: #4ade80; text-align: right; margin-top: 12px; padding-top: 12px; border-top: 2px solid rgba(255,255,255,0.08); }}
   .card {{ background: rgba(255,255,255,0.04); border-radius: 8px; padding: 16px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.06); }}
   .card-header {{ font-weight: 600; font-size: 14px; margin-bottom: 8px; color: #f1f5f9; }}
-  .summary-text {{ color: #e2e8f0; font-size: 13px; line-height: 1.6; }}
+    .summary-text {{ color: #e2e8f0; font-size: 13px; line-height: 1.6; white-space: pre-wrap; }}
   table {{ width: 100%; border-collapse: collapse; color: #e2e8f0; }}
   td {{ padding: 4px 0; color: #e2e8f0; }}
   .section-title {{ font-size: 11px; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.05em; margin-top: 12px; margin-bottom: 4px; }}

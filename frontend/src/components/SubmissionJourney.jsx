@@ -112,12 +112,16 @@ function completenessDisplayPct(raw) {
   return n > 1 ? Math.round(n) : Math.round(n * 100);
 }
 
-function SubmissionQuality({ quality, docQuality, onRequestDocs, requesting }) {
+function SubmissionQuality({ quality, docQuality, onRequestDocs, requesting, brokerRequest, brokerEmail, setBrokerEmail }) {
   const missing = docQuality?.missing_documents || docQuality?.missing || [];
   const present = docQuality?.present_documents || docQuality?.present || [];
   const pct = completenessDisplayPct(docQuality?.completeness_pct);
   const lob = docQuality?.lob || quality?.lob;
   const pending = quality?.pending || quality?.score == null;
+  const shareLink = brokerRequest?.broker_status_url
+    || (brokerRequest?.broker_share_token
+      ? `${typeof window !== 'undefined' ? window.location.origin : ''}/dashboard/broker/status/${brokerRequest.broker_share_token}`
+      : '');
   return (
     <div className="rounded-xl bg-surface-overlay p-4 ring-1 ring-white/[0.04]">
       <div className="flex items-center justify-between gap-4">
@@ -167,9 +171,53 @@ function SubmissionQuality({ quality, docQuality, onRequestDocs, requesting }) {
             </ul>
           )}
           {missing.length > 0 && onRequestDocs && (
-            <button type="button" onClick={onRequestDocs} disabled={requesting} className="btn-secondary btn-sm mt-3 text-sm">
-              <Send className="h-3.5 w-3.5" /> {requesting ? 'Sending…' : 'Request from broker'}
-            </button>
+            <div className="mt-3 space-y-2 rounded-lg bg-black/20 p-3 ring-1 ring-white/[0.06]">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Request from broker</p>
+              <p className="text-sm text-slate-400">
+                Creates a status link the broker can open (no login). Optionally enter their email to send / draft the request.
+              </p>
+              <input
+                type="email"
+                className="input-field w-full text-sm"
+                placeholder="Broker email (optional)"
+                value={brokerEmail || ''}
+                onChange={(e) => setBrokerEmail?.(e.target.value)}
+              />
+              <button type="button" onClick={onRequestDocs} disabled={requesting} className="btn-secondary btn-sm text-sm">
+                <Send className="h-3.5 w-3.5" /> {requesting ? 'Sending…' : 'Send document request'}
+              </button>
+            </div>
+          )}
+          {brokerRequest && (
+            <div className="mt-3 space-y-2 rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3 text-sm text-slate-300">
+              <p className="font-medium text-emerald-300">{brokerRequest.message || 'Document request created'}</p>
+              {(brokerRequest.requested_documents || []).length > 0 && (
+                <p className="text-slate-400">Asked for: {(brokerRequest.requested_documents || []).join(', ')}</p>
+              )}
+              {shareLink && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <a href={shareLink} target="_blank" rel="noreferrer" className="text-brand-light underline break-all">{shareLink}</a>
+                  <button
+                    type="button"
+                    className="btn-secondary btn-sm text-xs"
+                    onClick={() => navigator.clipboard?.writeText(shareLink)}
+                  >
+                    Copy link
+                  </button>
+                </div>
+              )}
+              {brokerRequest.email?.mailto && (
+                <a href={brokerRequest.email.mailto} className="inline-flex text-sky-300 underline">
+                  Open in email client (mailto)
+                </a>
+              )}
+              {brokerRequest.email?.sent === false && brokerRequest.email?.reason && (
+                <p className="text-xs text-amber-200/90">{brokerRequest.email.reason}</p>
+              )}
+              {brokerRequest.email?.sent === true && (
+                <p className="text-xs text-emerald-300">Email delivered via SMTP to {brokerRequest.email.to}</p>
+              )}
+            </div>
           )}
         </div>
       )}
@@ -564,6 +612,8 @@ export default function SubmissionJourney({ job }) {
   const [audit, setAudit] = useState(null);
   const [ecosystem, setEcosystem] = useState(null);
   const [requesting, setRequesting] = useState(false);
+  const [brokerEmail, setBrokerEmail] = useState('');
+  const [brokerRequest, setBrokerRequest] = useState(null);
   const [checkpoints, setCheckpoints] = useState(ctx.checkpoints);
 
   useEffect(() => {
@@ -602,8 +652,10 @@ export default function SubmissionJourney({ job }) {
     if (!ctx.bundleId || !missingList.length) return;
     setRequesting(true);
     try {
-      await endpoints.requestBrokerDocs(ctx.bundleId, missingList);
-      alert('Document request sent to broker');
+      const res = await endpoints.requestBrokerDocs(ctx.bundleId, missingList, '', {
+        broker_email: brokerEmail.trim(),
+      });
+      setBrokerRequest(res);
     } catch (e) {
       alert(e.message);
     } finally {
@@ -647,6 +699,9 @@ export default function SubmissionJourney({ job }) {
         docQuality={docQuality}
         onRequestDocs={ctx.bundleId ? handleRequestDocs : null}
         requesting={requesting}
+        brokerRequest={brokerRequest}
+        brokerEmail={brokerEmail}
+        setBrokerEmail={setBrokerEmail}
       />
 
       <Section title="Pipeline" icon={ClipboardCheck}>

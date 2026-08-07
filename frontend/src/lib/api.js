@@ -184,8 +184,17 @@ export const endpoints = {
   staffTraining: (body) => api('/underwriting/staff/training', { method: 'POST', body }),
   renewalAnalysis: (bundleId) => api(`/pipeline/renewal/${bundleId}`, { method: 'POST' }),
   missingDocuments: (bundleId) => api(`/pipeline/documents/${bundleId}/missing`),
-  requestBrokerDocs: (bundleId, documents, notes = '') =>
-    api(`/pipeline/documents/${bundleId}/request`, { method: 'POST', body: { documents, notes } }),
+  requestBrokerDocs: (bundleId, documents, notes = '', extras = {}) =>
+    api(`/pipeline/documents/${bundleId}/request`, {
+      method: 'POST',
+      body: {
+        documents,
+        notes,
+        broker_email: extras.broker_email || '',
+        broker_name: extras.broker_name || '',
+        public_base_url: extras.public_base_url || (typeof window !== 'undefined' ? window.location.origin : ''),
+      },
+    }),
   infoRequests: (bundleId) => api(`/pipeline/jobs/${bundleId}/info-requests`),
   relationshipNotes: (bundleId) => api(`/pipeline/jobs/${bundleId}/relationship-notes`),
   addRelationshipNote: (bundleId, body) =>

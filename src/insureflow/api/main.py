@@ -3958,17 +3958,36 @@ def get_missing_documents(
 def request_broker_documents(
     bundle_id: str,
     body: dict[str, Any],
+    request: Request,
     current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
-    """Request missing documents from broker (persisted pending → broker respond loop)."""
+    """Request missing documents from broker (email + share link + pending respond loop)."""
+    import os
+
     from insureflow.enterprise.ecosystem import get_ecosystem_service
 
     docs = body.get("documents") or body.get("missing_documents") or []
     notes = str(body.get("notes") or "")
+    broker_email = str(body.get("broker_email") or body.get("email") or "").strip()
+    broker_name = str(body.get("broker_name") or "").strip()
     if not docs:
         missing = get_missing_documents(bundle_id, current)
         docs = missing.get("missing_documents", [])
-    result = get_ecosystem_service().request_broker_documents(bundle_id, current.org_id, docs, notes=notes)
+    public_base = (
+        str(body.get("public_base_url") or "").rstrip("/")
+        or os.getenv("PUBLIC_APP_BASE_URL", "").rstrip("/")
+        or str(request.base_url).rstrip("/")
+    )
+    result = get_ecosystem_service().request_broker_documents(
+        bundle_id,
+        current.org_id,
+        docs,
+        notes=notes,
+        broker_email=broker_email,
+        broker_name=broker_name,
+        public_base_url=public_base,
+        requested_by=getattr(current, "username", None) or "underwriter",
+    )
     return result
 
 

@@ -125,7 +125,7 @@ export default function InsuranceMemoView({ job }) {
       {s.memo && (
         <div>
           <h4 className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">Executive Summary</h4>
-          <p className="rounded-xl bg-surface/80 p-4 text-sm leading-relaxed text-slate-300">{s.memo}</p>
+          <pre className="whitespace-pre-wrap rounded-xl bg-surface/80 p-4 font-sans text-sm leading-relaxed text-slate-300">{s.memo}</pre>
         </div>
       )}
 

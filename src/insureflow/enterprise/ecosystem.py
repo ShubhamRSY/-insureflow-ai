@@ -138,56 +138,121 @@ class EnterpriseEcosystemService:
         org_id: str,
         documents: list[str],
         notes: str = "",
+        *,
+        broker_email: str = "",
+        broker_name: str = "",
+        public_base_url: str = "",
+        requested_by: str = "underwriter",
     ) -> dict[str, Any]:
         from insureflow.insurance.collaboration import get_collaboration_store
+        from insureflow.notifications.broker_notify import notify_broker_document_request
+        from insureflow.webhooks.dispatcher import webhook_dispatcher
 
+        docs = [str(d).strip() for d in documents if str(d).strip()]
         persisted = get_collaboration_store().add_info_request(
             bundle_id,
             org_id,
-            list(documents),
+            docs,
             notes=notes,
-            requested_by="underwriter",
+            requested_by=requested_by or "underwriter",
             source="document_request",
         )
 
+        # Resolve broker contact from submission if not provided
+        insured_name = ""
+        if not broker_email or not broker_name or not insured_name:
+            try:
+                bundle = AuditStore().load_json(bundle_id, "submission_bundle.json", org_id=org_id) or {}
+                structured = bundle.get("structured") or {}
+                broker = structured.get("broker") or {}
+                named = structured.get("named_insured") or {}
+                broker_email = broker_email or str(broker.get("contact_email") or broker.get("email") or "")
+                broker_name = broker_name or str(broker.get("broker_name") or broker.get("agency_name") or "")
+                insured_name = str(named.get("legal_name") or named.get("name") or "")
+            except Exception:
+                pass
+
+        # Always mint a broker status share so the email / UI has a real link
+        token = webhook_dispatcher.create_broker_share(
+            bundle_id=bundle_id,
+            org_id=org_id,
+            broker_name=broker_name,
+            broker_email=broker_email,
+        )
+        base = (public_base_url or "").rstrip("/")
+        share_path = f"/dashboard/broker/status/{token}"
+        share_url = f"{base}{share_path}" if base else share_path
+
+        notify = notify_broker_document_request(
+            to_email=broker_email,
+            insured_name=insured_name or bundle_id,
+            bundle_id=bundle_id,
+            documents=docs,
+            notes=notes,
+            share_url=share_url if base else "",
+            broker_name=broker_name,
+            requested_by=requested_by or "Underwriting",
+        )
+        # If we only have a relative path, still expose it for the UW UI to absolutize
+        if not notify.get("share_url"):
+            notify["share_url"] = share_url
+
+        portal: dict[str, Any] = {"mode": "simulated", "broker_notified": False}
         client = build_broker_portal_client()
         if resolve_integration_mode(settings.broker_portal_mode, client) == "live":
             try:
                 resp = client.post(
                     "/document-requests",
-                    {"bundle_id": bundle_id, "org_id": org_id, "documents": documents},
+                    {
+                        "bundle_id": bundle_id,
+                        "org_id": org_id,
+                        "documents": docs,
+                        "share_token": token,
+                        "broker_email": broker_email,
+                    },
                 )
                 if resp.ok:
                     data = resp.json_dict()
-                    return {
-                        "request_id": persisted["request_id"],
-                        "external_request_id": data.get("request_id", ""),
-                        "bundle_id": bundle_id,
-                        "status": "pending",
-                        "requested_documents": documents,
-                        "broker_notified": True,
+                    portal = {
                         "mode": "live",
-                        "info_request": persisted,
+                        "broker_notified": True,
+                        "external_request_id": data.get("request_id", ""),
                     }
             except IntegrationHTTPError as exc:
-                return {
-                    "request_id": persisted["request_id"],
-                    "bundle_id": bundle_id,
-                    "status": "pending",
-                    "error": str(exc),
-                    "mode": "live",
-                    "info_request": persisted,
-                }
+                portal = {"mode": "live", "broker_notified": False, "error": str(exc)}
+
+        email_sent = bool(notify.get("sent"))
         return {
             "request_id": persisted["request_id"],
             "bundle_id": bundle_id,
             "org_id": org_id,
             "status": "pending",
-            "requested_documents": documents,
-            "broker_notified": True,
-            "message": "Info request logged — pending broker response on share link",
-            "mode": "simulated",
+            "requested_documents": docs,
+            "broker_name": broker_name,
+            "broker_email": broker_email,
+            "broker_share_token": token,
+            "broker_status_url": share_url,
+            "broker_status_path": share_path,
+            "email": notify,
+            "broker_notified": email_sent or portal.get("broker_notified") or bool(broker_email) or bool(token),
+            "notification_channels": {
+                "status_link": True,
+                "email_sent": email_sent,
+                "email_draft": True,
+                "broker_portal": portal.get("mode") == "live" and portal.get("broker_notified"),
+            },
+            "message": (
+                f"Email sent to {broker_email}"
+                if email_sent
+                else (
+                    "Share link ready — email draft saved (configure SMTP_HOST to send automatically, or use mailto)"
+                    if broker_email
+                    else "Share link ready — add a broker email to send the request, or copy the link"
+                )
+            ),
+            "mode": portal.get("mode") or notify.get("mode") or "outbox",
             "info_request": persisted,
+            "portal": portal,
         }
 
     def resolve_checkpoint(

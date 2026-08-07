@@ -213,7 +213,7 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
     if executive_summary:
         summary_block = f"""
 <div class="section-title">Underwriting Summary</div>
-<div class="card"><p style="font-size:13px;color:#0f172a;line-height:1.6;">{executive_summary}</p></div>
+<div class="card"><p style="font-size:13px;color:#0f172a;line-height:1.6;white-space:pre-wrap;">{executive_summary}</p></div>
 """
 
     review_reasons = memo.get("human_review_reasons") or []
