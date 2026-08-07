@@ -274,10 +274,7 @@ def assess_frequency_severity(claims: list[ClaimRecord], years: Optional[int] = 
     freq_component = min(1.0, (profile.frequency_per_year or 0) / 10.0)
     severity_component = 1.0 if (profile.average_severity or float("inf")) <= _SMALL_CLAIM_SEVERITY else 0.4
     profile.reliability = round(min(1.0, freq_component * 0.6 + severity_component * 0.4), 4)
-    profile.detail = (
-        f"{profile.claim_count} claims, {profile.frequency_per_year}/yr, "
-        f"avg ${profile.average_severity:,.0f}, small-claim ratio {profile.small_claim_ratio:.0%}"
-    )
+    profile.detail = f"{profile.claim_count} claims, {profile.frequency_per_year}/yr, avg ${profile.average_severity:,.0f}, small-claim ratio {profile.small_claim_ratio:.0%}"
     return profile
 
 
@@ -454,7 +451,7 @@ def run_reserve_study(
         range_low=round(low, 2),
         range_high=round(high, 2),
         recommended=round((low + high) / 2, 2),
-        detail=f"Two-method reserve range ${low:,.0f}–${high:,.0f}, recommended midpoint ${(low+high)/2:,.0f}",
+        detail=f"Two-method reserve range ${low:,.0f}–${high:,.0f}, recommended midpoint ${(low + high) / 2:,.0f}",
     )
 
 

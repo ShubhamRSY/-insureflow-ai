@@ -277,10 +277,7 @@ class RiskAnalystAgent(BaseAgent):
             self._add_finding(
                 Finding(
                     title="Loss ratio inconsistent with expected",
-                    description=(
-                        f"Loss ratio {review.reasonableness.loss_ratio:.2f} vs expected "
-                        f"{review.reasonableness.expected_loss_ratio:.2f} — reserve estimate may be unreliable"
-                    ),
+                    description=(f"Loss ratio {review.reasonableness.loss_ratio:.2f} vs expected {review.reasonableness.expected_loss_ratio:.2f} — reserve estimate may be unreliable"),
                     severity=RiskSeverity.HIGH,
                     category="reserving",
                     field_path="structured.financial.loss_run",

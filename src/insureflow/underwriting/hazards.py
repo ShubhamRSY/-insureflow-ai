@@ -182,11 +182,7 @@ def assess_moral_hazard_hazard(bundle: SubmissionBundle) -> HazardAssessment:
         category=HazardCategory.MORAL,
         signals=signals,
         status=assessment.status,
-        summary=(
-            f"Moral-hazard screen {assessment.status} (score {assessment.moral_hazard_score:.2f})"
-            if signals
-            else "No moral-hazard signals detected"
-        ),
+        summary=(f"Moral-hazard screen {assessment.status} (score {assessment.moral_hazard_score:.2f})" if signals else "No moral-hazard signals detected"),
     )
 
 
@@ -211,11 +207,7 @@ def assess_morale_hazard(bundle: SubmissionBundle) -> HazardAssessment:
         category=HazardCategory.MORALE,
         signals=signals,
         status=status,
-        summary=(
-            f"{len(hits)} carelessness/indifference marker(s) found"
-            if hits
-            else "No morale-hazard (carelessness/indifference) markers found"
-        ),
+        summary=(f"{len(hits)} carelessness/indifference marker(s) found" if hits else "No morale-hazard (carelessness/indifference) markers found"),
     )
 
 
@@ -238,11 +230,7 @@ def assess_legal_hazard(bundle: SubmissionBundle) -> HazardAssessment:
         category=HazardCategory.LEGAL,
         signals=signals,
         status=status,
-        summary=(
-            f"{len(hits)} legal-hazard marker(s) found"
-            if hits
-            else "No legal-hazard (litigiousness / legal environment) markers found"
-        ),
+        summary=(f"{len(hits)} legal-hazard marker(s) found" if hits else "No legal-hazard (litigiousness / legal environment) markers found"),
     )
 
 

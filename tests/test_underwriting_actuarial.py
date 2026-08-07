@@ -89,6 +89,7 @@ def _claims() -> list[ClaimRecord]:
 
 # ── 1. Data organization (accident / report / valuation dates) ────────────
 
+
 def test_data_organization_adequate():
     org = assess_data_organization(_claims())
     assert org.claims_with_accident_date == 4
@@ -103,6 +104,7 @@ def test_data_organization_insufficient():
 
 
 # ── 2. Emergence patterns ──────────────────────────────────────────────────
+
 
 def test_emergence_average_lag():
     pattern = assess_emergence(_claims())
@@ -121,6 +123,7 @@ def test_emergence_slow_lag_is_high_severity():
 
 # ── 3. Settlement patterns ─────────────────────────────────────────────────
 
+
 def test_settlement_average_duration():
     pattern = assess_settlement(_claims())
     assert pattern.average_settlement_days is not None
@@ -129,6 +132,7 @@ def test_settlement_average_duration():
 
 
 # ── 4. Development consistency ─────────────────────────────────────────────
+
 
 def test_development_consistency():
     result = assess_development_consistency(_claims())
@@ -145,6 +149,7 @@ def test_development_reserve_adequacy_detects_inconsistency():
 
 
 # ── 5. Frequency and severity ──────────────────────────────────────────────
+
 
 def test_frequency_severity_reliability():
     profile = assess_frequency_severity(_claims())
@@ -163,6 +168,7 @@ def test_frequency_severity_empty():
 
 # ── 6. Reopened claims potential ───────────────────────────────────────────
 
+
 def test_reopened_potential_detects_reopens():
     today = date(2024, 1, 1)
     claims = [
@@ -175,6 +181,7 @@ def test_reopened_potential_detects_reopens():
 
 
 # ── 7. Operational change detection ────────────────────────────────────────
+
 
 def test_operational_change_detection():
     bundle = _bundle([])
@@ -195,6 +202,7 @@ def test_operational_change_detection():
 
 # ── 8. Reasonableness check ────────────────────────────────────────────────
 
+
 def test_reasonableness_ratio():
     claims = _claims()
     result = check_reasonableness(claims, premium=100_000, expected_loss_ratio=0.65)
@@ -210,6 +218,7 @@ def test_reasonableness_out_of_band():
 
 
 # ── 9. Multi-method reserve study ──────────────────────────────────────────
+
 
 def test_reserve_study_two_methods():
     claims = _claims()
@@ -230,6 +239,7 @@ def test_reserve_study_bf_bounded_below():
 
 # ── 10. Full standards review ──────────────────────────────────────────────
 
+
 def test_full_review_summary():
     bundle = _bundle(_claims())
     review = run_reserving_standards_review(bundle, premium=100_000)
@@ -246,6 +256,7 @@ def test_full_review_summary():
 
 
 # ── 11. ASOP 12 — classification review ────────────────────────────────────
+
 
 def _clean_characteristics() -> list[RiskCharacteristic]:
     return [
@@ -310,6 +321,7 @@ def test_asop12_no_data_fails_credibility():
 
 
 # ── 12. Risk analyst reserving hook ────────────────────────────────────────
+
 
 def test_risk_analyst_flags_slow_emergence_and_operational_changes():
     from insureflow.agents.risk_analyst import RiskAnalystAgent

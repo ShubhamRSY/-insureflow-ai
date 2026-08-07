@@ -34,7 +34,6 @@ class LossRunParser(BaseParser):
     STATUS_RE = re.compile(r"(?i)\*{0,2}status\*{0,2}\s*:\s*\*{0,2}\s*(open|closed|pending|litigation|subrogation)")
     REOPENED_RE = re.compile(r"(?i)(?:reopened|re-?opened)")
 
-
     SECTION_HEADINGS = re.compile(
         r"(?i)^(#{1,3}\s*)?(?:claim\s+detail|loss\s+run|claims?\s+summary|"
         r"claim\s+detail|loss\s+history)\s*$",

@@ -573,11 +573,5 @@ def run_preliminary_check(
 
     holds = [k for k, v in result.checks.items() if v == PreliminaryStepStatus.HOLD]
     flags = [k for k, v in result.checks.items() if v == PreliminaryStepStatus.FLAG]
-    result.status = (
-        PreliminaryStepStatus.HOLD
-        if holds
-        else PreliminaryStepStatus.FLAG
-        if flags
-        else PreliminaryStepStatus.PASS
-    )
+    result.status = PreliminaryStepStatus.HOLD if holds else PreliminaryStepStatus.FLAG if flags else PreliminaryStepStatus.PASS
     return result

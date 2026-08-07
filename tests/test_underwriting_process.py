@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import date
+from typing import Any
 
 from insureflow.models.agents import RiskSeverity
 from insureflow.models.submissions import (
@@ -66,8 +67,8 @@ from insureflow.underwriting.preliminary import (
 )
 
 
-def _bundle(insured: str = "Acme Manufacturing Co.", **overrides) -> SubmissionBundle:
-    data = dict(
+def _bundle(insured: str = "Acme Manufacturing Co.", **overrides: Any) -> SubmissionBundle:
+    data: dict[str, Any] = dict(
         bundle_id="bundle-ch4",
         structured=StructuredSubmission(
             submission_id="sub-ch4",
@@ -82,10 +83,12 @@ def _bundle(insured: str = "Acme Manufacturing Co.", **overrides) -> SubmissionB
 
 # ── 1. Producer / agent license verification ──────────────────────────────
 
+
 def test_verify_verified_agent():
     reset_producer_registry()
     bundle = _bundle()
-    result = verify_producer(bundle.structured.broker, line="commercial_property", state="TX")
+    broker = bundle.structured.broker if bundle.structured else None
+    result = verify_producer(broker, line="commercial_property", state="TX")
     assert result.status == ProducerVerificationStatus.VERIFIED
     assert result.severity == RiskSeverity.LOW
 
@@ -139,13 +142,16 @@ def test_producer_registry_upsert_roundtrip():
         appointed_carriers=["insureflow"],
     )
     registry.upsert(prod, org_id=org)
-    assert registry.lookup("pr-004", org_id=org).name == "New Agency"
+    found = registry.lookup("pr-004", org_id=org)
+    assert found is not None
+    assert found.name == "New Agency"
     registry.remove("pr-004", org_id=org)
     reset_producer_registry()
     assert get_producer_registry().lookup("pr-004", org_id=org) is None
 
 
 # ── 2. Existing-records search ─────────────────────────────────────────────
+
 
 def test_search_no_records():
     bundle = _bundle(insured="Unique No-Record Co.")
@@ -183,7 +189,7 @@ def test_search_folds_in_loss_run():
             named_insured=NamedInsured(legal_name="Loss Run Co."),
             broker=BrokerInfo(broker_name="Acme Insurance Agency", broker_id="pr-001"),
             risk_profile=RiskProfile(prior_claims=[claim]),
-        )
+        ),
     )
     result = search_existing_records(bundle)
     assert result.records
@@ -191,6 +197,7 @@ def test_search_folds_in_loss_run():
 
 
 # ── 3. Preliminary processing gate ─────────────────────────────────────────
+
 
 def test_preliminary_check_holds_on_missing_documents():
     bundle = _bundle(insured="Prelim Hold Co.")
@@ -217,6 +224,7 @@ def test_preliminary_check_passes_clean_case():
 
 
 # ── 4. Case assignment systems ─────────────────────────────────────────────
+
 
 def test_assign_by_face_amount_bands():
     assert assign_by_face_amount(100_000).assigned_desk == "junior_desk"
@@ -263,6 +271,7 @@ def test_engine_application_type():
 
 
 # ── 5. Four-hazard aggregate ───────────────────────────────────────────────
+
 
 def _prop_bundle() -> SubmissionBundle:
     return _bundle(
@@ -340,6 +349,7 @@ def test_legal_hazard_detects_litigation():
 
 # ── 6. Financial condition analysis ────────────────────────────────────────
 
+
 def test_financial_strong_ratios():
     financial = FinancialData(total_asset_value=1_000_000, annual_revenue=500_000, credit_rating="AA")
     bundle = _bundle(structured=StructuredSubmission(submission_id="s", financial=financial))
@@ -387,6 +397,7 @@ def test_financial_insufficient_data():
 
 
 # ── 7. Claim-file review ───────────────────────────────────────────────────
+
 
 def _claim_bundle() -> SubmissionBundle:
     claims = [
@@ -440,6 +451,7 @@ def test_claim_file_review_clean():
 
 
 # ── 8. MIB report handling ─────────────────────────────────────────────────
+
 
 def test_mib_report_no_hit():
     bundle = _bundle(structured=StructuredSubmission(submission_id="s"))

@@ -34,6 +34,7 @@ from insureflow.underwriting.authority import AuthorityTier
 
 # ── 1. Underwriting worksheet on the memo ─────────────────────────────────
 
+
 def test_memo_communications_log():
     memo = UnderwritingMemo(bundle_id="b1")
     entry = memo.add_communication(
@@ -74,6 +75,7 @@ def test_memo_worksheet_defaults_empty():
 
 
 # ── 2. Versioned / effective-dated guidelines ──────────────────────────────
+
 
 def _guideline(
     gid: str,
@@ -151,6 +153,7 @@ def test_guideline_is_active_on_window():
 
 # ── 3. Pricing-linked surcharge rules + additive cap ───────────────────────
 
+
 def test_additive_cap_clamps_to_max_pct():
     rules = builtin_commercial_auto_surcharges()
     liability = [r for r in rules if r.basis == SurchargeBasis.LIABILITY]
@@ -216,6 +219,7 @@ def test_rules_for_guideline_linkage():
 
 
 # ── 4. Class acceptability + authority tables ──────────────────────────────
+
 
 def _reset() -> None:
     reset_acceptability_matrix()

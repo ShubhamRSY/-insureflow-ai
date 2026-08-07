@@ -99,7 +99,9 @@ class AcceptabilityMatrix:
             ClassAcceptability("54", "general_liability", AcceptabilityCode.PREFERRED, AuthorityTier.JUNIOR, guideline_id="APT-001", notes="Professional services"),
             ClassAcceptability("53", "commercial_property", AcceptabilityCode.STANDARD, AuthorityTier.JUNIOR, guideline_id="APT-001", notes="Real estate"),
             ClassAcceptability("62", "general_liability", AcceptabilityCode.STANDARD, AuthorityTier.SENIOR, guideline_id="APT-001", notes="Healthcare — senior review"),
-            ClassAcceptability("72", "general_liability", AcceptabilityCode.CONDITIONAL, AuthorityTier.SENIOR, guideline_id="APT-001", notes="Accommodation/food excluding casinos; conditions on occupancy"),  # noqa: E501
+            ClassAcceptability(
+                "72", "general_liability", AcceptabilityCode.CONDITIONAL, AuthorityTier.SENIOR, guideline_id="APT-001", notes="Accommodation/food excluding casinos; conditions on occupancy"
+            ),  # noqa: E501
             ClassAcceptability("7211", "commercial_property", AcceptabilityCode.DECLINE, AuthorityTier.CUO, guideline_id="APT-001", notes="Casinos — excluded"),
             ClassAcceptability("1133", "general_liability", AcceptabilityCode.DECLINE, AuthorityTier.CUO, guideline_id="APT-001", notes="Logging — excluded"),
             ClassAcceptability("2131", "general_liability", AcceptabilityCode.DECLINE, AuthorityTier.CUO, guideline_id="APT-001", notes="Mining support — excluded"),
