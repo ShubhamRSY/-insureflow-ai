@@ -15,6 +15,11 @@ class InsuranceLine(str, Enum):
     WORKERS_COMP = "workers_comp"
     BOP = "business_owners_policy"
     UMBRELLA = "umbrella"
+    # Commercial specialty (non-COPE / non-TIV property math)
+    DIRECTORS_AND_OFFICERS = "directors_and_officers"
+    TRADE_CREDIT = "trade_credit"
+    ERRORS_AND_OMISSIONS = "errors_and_omissions"
+    KEY_PERSON = "key_person"
     # Personal lines
     PERSONAL_HOMEOWNERS = "personal_homeowners"
     PERSONAL_AUTO = "personal_auto"
@@ -26,6 +31,16 @@ PERSONAL_LINES = frozenset(
         InsuranceLine.PERSONAL_HOMEOWNERS,
         InsuranceLine.PERSONAL_AUTO,
         InsuranceLine.LIFE,
+    }
+)
+
+# Limit / receivable / face-amount rated — not building TIV + COPE
+COMMERCIAL_SPECIALTY_LINES = frozenset(
+    {
+        InsuranceLine.DIRECTORS_AND_OFFICERS,
+        InsuranceLine.TRADE_CREDIT,
+        InsuranceLine.ERRORS_AND_OMISSIONS,
+        InsuranceLine.KEY_PERSON,
     }
 )
 

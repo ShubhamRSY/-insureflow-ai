@@ -16,7 +16,7 @@ def test_do_classifier_types() -> None:
 
 def test_package_checklist_do_vs_property() -> None:
     prop = package_checklist(["acord_xml", "loss_run"], lob="property")
-    assert "ACORD application" in prop["present"]
+    assert "ACORD application (125 / 140)" in prop["present"]
     assert prop["completeness_pct"] < 100
     do = package_checklist(["do_application", "do_questionnaire", "do_bylaws_charter"], lob="do")
     assert do["lob"] == "do"

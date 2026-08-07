@@ -905,6 +905,7 @@ class InsurancePipeline:
         if not isinstance(line_for_quote, InsuranceLine):
             line_for_quote = InsuranceLine.COMMERCIAL_PROPERTY
         quote = self.rating.quote(bundle, memo, line=line_for_quote)
+        specialty_retrieval: dict[str, Any] | None = None
         # Apply life medical / personal filing decision hints onto the memo
         if line_for_quote == InsuranceLine.LIFE:
             from insureflow.underwriting.life_medical import underwrite_life
@@ -923,6 +924,46 @@ class InsurancePipeline:
             resync_memo_narrative(
                 memo,
                 extra_summary=f"Life class={medical.underwriting_class}; tobacco={medical.tobacco}.",
+            )
+        elif line_for_quote in (
+            InsuranceLine.DIRECTORS_AND_OFFICERS,
+            InsuranceLine.TRADE_CREDIT,
+            InsuranceLine.ERRORS_AND_OMISSIONS,
+            InsuranceLine.KEY_PERSON,
+        ):
+            from insureflow.rag.rag_agent import RAGAgent as HybridRAG
+            from insureflow.rating.commercial_specialty import underwrite_specialty
+            from insureflow.underwriting.memo_sync import dedupe_findings, resync_memo_narrative, worst_decision
+
+            specialty = underwrite_specialty(bundle, line_for_quote)
+            for f in specialty.findings:
+                memo.key_findings.append(f)
+            memo.decision = worst_decision(memo.decision, specialty.decision)
+            memo.human_review_reasons.extend(specialty.referral_flags)
+            if specialty.referral_flags:
+                memo.human_review_required = True
+            if (quote.metadata or {}).get("used_default_exposure"):
+                memo.human_review_reasons.append(
+                    f"Rated on default exposure ({(quote.metadata or {}).get('exposure_basis')}) — confirm limit/AR/face amount"
+                )
+                memo.human_review_required = True
+            # Line-aware guideline retrieval (measured in specialty_retrieval)
+            try:
+                specialty_retrieval = HybridRAG(use_knowledge_graph=True).retrieve_contexts(
+                    f"{line_for_quote.value} underwriting risk assessment {quote_blob[:1200]}",
+                    top_k=5,
+                    line_of_business=line_for_quote.value,
+                )
+                ids = specialty_retrieval.get("guideline_ids") or []
+                if ids:
+                    memo.human_review_reasons.append(f"Guidelines cited: {', '.join(ids[:5])}")
+            except Exception as exc:
+                logger.debug("Specialty RAG retrieval failed: %s", exc)
+                specialty_retrieval = {"error": str(exc), "guideline_ids": []}
+            memo.key_findings = dedupe_findings(list(memo.key_findings or []))
+            resync_memo_narrative(
+                memo,
+                extra_summary=f"Specialty line={line_for_quote.value}; exposure_basis={(quote.metadata or {}).get('exposure_basis')}.",
             )
         elif line_for_quote in (InsuranceLine.PERSONAL_HOMEOWNERS, InsuranceLine.PERSONAL_AUTO):
             from insureflow.underwriting.memo_sync import resync_memo_narrative
@@ -1140,6 +1181,8 @@ class InsurancePipeline:
                 "rating_engine": (quote.metadata or {}).get("rating_engine"),
                 "serff_tracking": (quote.metadata or {}).get("serff_tracking"),
                 "insurance_line": line_for_quote.value,
+                "specialty": bool((quote.metadata or {}).get("specialty")),
+                "exposure_basis": (quote.metadata or {}).get("exposure_basis"),
                 "medical": (quote.metadata or {}).get("medical"),
                 "components": [
                     {
@@ -1151,6 +1194,14 @@ class InsurancePipeline:
                     for c in (quote.schedule_modifications or [])
                 ],
             },
+            "specialty_retrieval": {
+                "guideline_ids": (specialty_retrieval or {}).get("guideline_ids") or [],
+                "mode": (specialty_retrieval or {}).get("mode"),
+                "line_of_business": (specialty_retrieval or {}).get("line_of_business"),
+                "no_context": bool((specialty_retrieval or {}).get("no_context")),
+            }
+            if specialty_retrieval is not None
+            else None,
             "core_integration": core_results,
             "encryption_at_rest": self.encryption.enabled,
             "prediction_id": prediction.prediction_id,

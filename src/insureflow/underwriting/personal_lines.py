@@ -65,6 +65,33 @@ def _detect_line_from_content(blob: str) -> InsuranceLine:
     """Content-only LOB inference (blob already lowercased)."""
     commercial = _has_strong_commercial_signals(blob)
 
+    property_heavy = any(
+        k in blob
+        for k in (
+            "schedule of values",
+            "commercial property",
+            "building value",
+            "warehouse",
+            "total insurable value",
+            "protection class",
+            "acord 140",
+        )
+    )
+
+    # Key person before life — "face amount" appears on both
+    if any(
+        k in blob
+        for k in (
+            "key person",
+            "key-person",
+            "keyman insurance",
+            "key man insurance",
+            "insurance_line: key_person",
+            "insurance_line=key_person",
+        )
+    ) and not property_heavy:
+        return InsuranceLine.KEY_PERSON
+
     if (
         any(
             k in blob
@@ -146,24 +173,42 @@ def _detect_line_from_content(blob: str) -> InsuranceLine:
             "management liability",
             "d and o liability",
             "d and o application",
+            "insurance_line: directors_and_officers",
+            "insurance_line=directors_and_officers",
         )
-    ):
-        return InsuranceLine.COMMERCIAL_PROPERTY
+    ) and not property_heavy:
+        return InsuranceLine.DIRECTORS_AND_OFFICERS
+
+    if any(
+        k in blob
+        for k in (
+            "trade credit",
+            "accounts receivable aging",
+            "buyer credit",
+            "credit insurance",
+            "insurance_line: trade_credit",
+            "insurance_line=trade_credit",
+        )
+    ) and not property_heavy:
+        return InsuranceLine.TRADE_CREDIT
+
+    if any(
+        k in blob
+        for k in (
+            "errors and omissions",
+            "errors & omissions",
+            "e&o application",
+            "professional liability",
+            "acord 126",
+            "insurance_line: errors_and_omissions",
+            "insurance_line=errors_and_omissions",
+        )
+    ) and not property_heavy:
+        return InsuranceLine.ERRORS_AND_OMISSIONS
 
     if commercial:
         # Multi-line commercial packages often mention WC in passing — prefer
         # property/SOV/CGL as the primary rating line when those dominate.
-        property_heavy = any(
-            k in blob
-            for k in (
-                "schedule of values",
-                "commercial property",
-                "building value",
-                "warehouse",
-                "total insurable value",
-                "protection class",
-            )
-        )
         gl_heavy = "general liability" in blob or "commercial general liability" in blob
         wc_only = ("workers comp" in blob or "workers' compensation" in blob or "workers compensation" in blob) and not property_heavy and not gl_heavy
         if wc_only:
@@ -184,6 +229,8 @@ def detect_insurance_line(text_blob: str = "", product_hint: str = "") -> Insura
     with VIN / vehicle schedules are never priced as personal_auto — for every
     submission (uploads and demos), not Pacific Coast only.
     """
+    from insureflow.rating.models import COMMERCIAL_SPECIALTY_LINES
+
     hint = (product_hint or "").strip().lower().replace("-", "_").replace(" ", "_")
     hinted = parse_insurance_line(hint) if hint else None
     # Detect from document text only so the hint cannot seed false keywords
@@ -199,6 +246,23 @@ def detect_insurance_line(text_blob: str = "", product_hint: str = "") -> Insura
         return content
     if content in PERSONAL_LINES and hinted not in PERSONAL_LINES:
         return content
+
+    # Specialty hub tags (Trade Credit, E&O, D&O, Key Person) win unless the
+    # package is clearly a property/SOV submission.
+    if hinted in COMMERCIAL_SPECIALTY_LINES:
+        property_heavy = any(
+            k in blob
+            for k in (
+                "schedule of values",
+                "commercial property",
+                "building value",
+                "total insurable value",
+                "acord 140",
+            )
+        )
+        if property_heavy and content == InsuranceLine.COMMERCIAL_PROPERTY:
+            return content
+        return hinted
 
     return hinted
 
@@ -217,6 +281,24 @@ def parse_insurance_line(value: str | None) -> InsuranceLine | None:
         "car": InsuranceLine.PERSONAL_AUTO,
         "life": InsuranceLine.LIFE,
         "term_life": InsuranceLine.LIFE,
+        # Commercial specialty hub aliases
+        "do": InsuranceLine.DIRECTORS_AND_OFFICERS,
+        "d&o": InsuranceLine.DIRECTORS_AND_OFFICERS,
+        "d_and_o": InsuranceLine.DIRECTORS_AND_OFFICERS,
+        "directors_officers": InsuranceLine.DIRECTORS_AND_OFFICERS,
+        "management_liability": InsuranceLine.DIRECTORS_AND_OFFICERS,
+        "eo": InsuranceLine.ERRORS_AND_OMISSIONS,
+        "e&o": InsuranceLine.ERRORS_AND_OMISSIONS,
+        "e_and_o": InsuranceLine.ERRORS_AND_OMISSIONS,
+        "professional_liability": InsuranceLine.ERRORS_AND_OMISSIONS,
+        "errors_omissions": InsuranceLine.ERRORS_AND_OMISSIONS,
+        "keyman": InsuranceLine.KEY_PERSON,
+        "key_man": InsuranceLine.KEY_PERSON,
+        "workerscompensation": InsuranceLine.WORKERS_COMP,
+        "workers_compensation": InsuranceLine.WORKERS_COMP,
+        "property": InsuranceLine.COMMERCIAL_PROPERTY,
+        "property_bi": InsuranceLine.COMMERCIAL_PROPERTY,
+        "commercial": InsuranceLine.COMMERCIAL_PROPERTY,
     }
     if normalized in aliases:
         return aliases[normalized]

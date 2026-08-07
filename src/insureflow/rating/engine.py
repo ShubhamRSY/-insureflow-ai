@@ -6,7 +6,7 @@ from typing import Any
 from insureflow.models.agents import UnderwritingMemo
 from insureflow.models.submissions import SubmissionBundle
 from insureflow.rating.calibration import calibrated_lcm, calibrated_loss_costs, calibrated_territory, load_rate_curves
-from insureflow.rating.models import PERSONAL_LINES, InsuranceLine, QuoteRequest, QuoteResult, RateComponent, RatingAdapter
+from insureflow.rating.models import COMMERCIAL_SPECIALTY_LINES, PERSONAL_LINES, InsuranceLine, QuoteRequest, QuoteResult, RateComponent, RatingAdapter
 from insureflow.underwriting.cope import COPERatingEngine
 from insureflow.underwriting.market import get_market_cycle
 
@@ -18,6 +18,10 @@ ISO_LOSS_COSTS: dict[InsuranceLine, float] = {
     InsuranceLine.WORKERS_COMP: 0.05,
     InsuranceLine.BOP: 0.32,
     InsuranceLine.UMBRELLA: 0.03,
+    InsuranceLine.DIRECTORS_AND_OFFICERS: 0.45,
+    InsuranceLine.TRADE_CREDIT: 0.22,
+    InsuranceLine.ERRORS_AND_OMISSIONS: 0.55,
+    InsuranceLine.KEY_PERSON: 0.12,
     # Personal lines — representative synthetic rates (per $100 exposure)
     InsuranceLine.PERSONAL_HOMEOWNERS: 0.35,
     InsuranceLine.PERSONAL_AUTO: 1.20,
@@ -32,6 +36,10 @@ LCM: dict[InsuranceLine, float] = {
     InsuranceLine.WORKERS_COMP: 2.40,
     InsuranceLine.BOP: 2.00,
     InsuranceLine.UMBRELLA: 2.50,
+    InsuranceLine.DIRECTORS_AND_OFFICERS: 2.35,
+    InsuranceLine.TRADE_CREDIT: 2.15,
+    InsuranceLine.ERRORS_AND_OMISSIONS: 2.40,
+    InsuranceLine.KEY_PERSON: 1.70,
     InsuranceLine.PERSONAL_HOMEOWNERS: 1.85,
     InsuranceLine.PERSONAL_AUTO: 1.95,
     InsuranceLine.LIFE: 1.60,
@@ -97,6 +105,10 @@ MINIMUM_PREMIUMS: dict[InsuranceLine, float] = {
     InsuranceLine.WORKERS_COMP: 1_000.0,
     InsuranceLine.BOP: 1_500.0,
     InsuranceLine.UMBRELLA: 1_000.0,
+    InsuranceLine.DIRECTORS_AND_OFFICERS: 2_500.0,
+    InsuranceLine.TRADE_CREDIT: 1_500.0,
+    InsuranceLine.ERRORS_AND_OMISSIONS: 2_000.0,
+    InsuranceLine.KEY_PERSON: 500.0,
     InsuranceLine.PERSONAL_HOMEOWNERS: 450.0,
     InsuranceLine.PERSONAL_AUTO: 650.0,
     InsuranceLine.LIFE: 250.0,
@@ -221,6 +233,45 @@ class InsuranceRatingEngine:
             meta = dict(result.metadata or {})
             meta["market_phase"] = self._market.current.phase.value
             meta["market_mod_pct"] = self._get_market_mod(line)
+            adapted.metadata = meta
+            return adapted
+
+        if line in COMMERCIAL_SPECIALTY_LINES:
+            from insureflow.rating.commercial_specialty import rate_specialty_line
+
+            state = self._primary_state(bundle)
+            schedule_mod = memo.recommendation.suggested_premium_modification if memo.recommendation else 0.0
+            schedule_mod = schedule_mod or 0.0
+            market_mod = self._get_market_mod(line)
+            result = rate_specialty_line(
+                bundle,
+                line,
+                state=state,
+                schedule_mod_pct=float(schedule_mod),
+                market_mod_pct=market_mod,
+            )
+            adapted = self.adapter.submit_quote(
+                QuoteRequest(
+                    bundle_id=bundle.bundle_id,
+                    line=line,
+                    tiv=float((result.metadata or {}).get("exposure") or 0),
+                    state=state,
+                    naics_code=self._naics(bundle),
+                    loss_ratio=self._loss_ratio(bundle),
+                    schedule_mod_pct=float(schedule_mod),
+                ),
+                memo,
+                bundle,
+            )
+            adapted.base_premium = result.base_premium
+            adapted.adjusted_premium = result.adjusted_premium
+            adapted.schedule_modifications = result.schedule_modifications
+            adapted.rate_per_100_tiv = result.rate_per_100_tiv
+            adapted.eligible = result.eligible
+            adapted.ineligibility_reasons = list(result.ineligibility_reasons or [])
+            meta = dict(result.metadata or {})
+            meta["market_phase"] = self._market.current.phase.value
+            meta["market_mod_pct"] = market_mod
             adapted.metadata = meta
             return adapted
 
@@ -420,6 +471,14 @@ class InsuranceRatingEngine:
             return (cycle.workers_comp_rate_mod - 1.0) * 100.0
         elif line == InsuranceLine.UMBRELLA:
             return (cycle.liability_rate_mod - 1.0) * 100.0
+        elif line in (
+            InsuranceLine.DIRECTORS_AND_OFFICERS,
+            InsuranceLine.ERRORS_AND_OMISSIONS,
+            InsuranceLine.TRADE_CREDIT,
+        ):
+            return (cycle.liability_rate_mod - 1.0) * 100.0
+        elif line == InsuranceLine.KEY_PERSON:
+            return 0.0
         elif line == InsuranceLine.PERSONAL_HOMEOWNERS:
             return (cycle.property_rate_mod - 1.0) * 100.0
         elif line == InsuranceLine.PERSONAL_AUTO:

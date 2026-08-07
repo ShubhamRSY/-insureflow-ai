@@ -14,6 +14,7 @@ export default defineConfig({
       '/api': 'http://127.0.0.1:8002',
       '/auth': 'http://127.0.0.1:8002',
       '/pipeline': 'http://127.0.0.1:8002',
+      '/insurance': 'http://127.0.0.1:8002',
       '/broker': 'http://127.0.0.1:8002',
       '/mortgage': 'http://127.0.0.1:8002',
       '/system': 'http://127.0.0.1:8002',

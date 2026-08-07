@@ -96,34 +96,79 @@ class RAGAgent:
         guidelines = self.search_scored(query, top_k=top_k)["guidelines"]
         return list(guidelines)
 
-    def retrieve_contexts(self, query: str, top_k: int = 5, kg_depth: int | None = None) -> dict[str, Any]:
+    def retrieve_contexts(
+        self,
+        query: str,
+        top_k: int = 5,
+        kg_depth: int | None = None,
+        line_of_business: str | None = None,
+    ) -> dict[str, Any]:
         """Return structured retrieved contexts used by Ragas / synthesis.
 
         Fallback ladder when vector is empty / weak:
         1. Keyword overlap over the guideline corpus
         2. Knowledge-graph neighborhood facts
         3. Explicit ``no_context`` marker (agents should not hallucinate guidelines)
+
+        When ``line_of_business`` is set, line-specific guidelines
+        (``applies_to_lines``) are preferred and injected if vector miss would
+        otherwise return only property/COPE rules.
         """
         self.ensure_indexed()
         cfg = self.config
         depth = kg_depth if kg_depth is not None else cfg.kg_depth
-        scored = self.search_scored(query, top_k=top_k)
-        guidelines: list[Guideline] = scored["guidelines"]
+        line = (line_of_business or "").strip().lower()
+        # Seed query with line tokens so specialty keywords match
+        enriched_query = query
+        if line:
+            enriched_query = f"{line.replace('_', ' ')} {query}"
+
+        scored = self.search_scored(enriched_query, top_k=top_k)
+        guidelines: list[Guideline] = list(scored["guidelines"])
+        scores: list[float] = list(scored["scores"])
+        fallbacks = list(scored["fallbacks_used"])
+
+        if line:
+            line_guides = [
+                g
+                for g in self._all_guidelines()
+                if g.applies_to_lines and line in {x.lower() for x in g.applies_to_lines}
+            ]
+            have_ids = {g.id for g in guidelines}
+            # Prefer / inject line-specific guides at the front
+            injected: list[tuple[Guideline, float]] = []
+            for g in line_guides:
+                if g.id not in have_ids:
+                    injected.append((g, 0.99))
+                    have_ids.add(g.id)
+            if injected:
+                fallbacks.append("line_specific_inject")
+            merged = injected + list(zip(guidelines, scores))
+            # Drop guides that explicitly target a *different* specialty line
+            filtered: list[tuple[Guideline, float]] = []
+            for g, s in merged:
+                targets = {x.lower() for x in (g.applies_to_lines or [])}
+                if targets and line not in targets:
+                    continue
+                filtered.append((g, s))
+            if not filtered and merged:
+                filtered = merged[:top_k]
+            guidelines = [g for g, _ in filtered[:top_k]]
+            scores = [s for _, s in filtered[:top_k]]
+            scored = {**scored, "guidelines": guidelines, "scores": scores, "top_k": top_k}
 
         vector_chunks: list[str] = []
-        for g, score in zip(guidelines, scored["scores"]):
+        for g, score in zip(guidelines, scores):
             vector_chunks.append(f"[{g.id}] score={score:.3f} ({g.category.value.upper()}, {g.source.value}) {g.title}\nImpact: {g.risk_impact}\n{g.content}")
 
         kg_facts: list[str] = []
         kg_block = ""
-        fallbacks = list(scored["fallbacks_used"])
 
         need_kg = self.use_knowledge_graph and cfg.enable_kg_fallback and (not vector_chunks or "vector_miss" in fallbacks or "keyword" in fallbacks)
-        # Always augment with KG in hybrid mode when enabled (not only on miss)
         if self.use_knowledge_graph:
             kg = get_knowledge_graph()
-            kg_facts = kg.retrieve_context(query, depth=depth, max_facts=cfg.kg_max_facts)
-            kg_block = kg.format_context_block(query, depth=depth)
+            kg_facts = kg.retrieve_context(enriched_query, depth=depth, max_facts=cfg.kg_max_facts)
+            kg_block = kg.format_context_block(enriched_query, depth=depth)
             if need_kg and kg_facts:
                 fallbacks.append("knowledge_graph")
             elif kg_facts and "knowledge_graph_augment" not in fallbacks:
@@ -146,10 +191,14 @@ class RAGAgent:
             mode = "fallback_no_context"
         elif "keyword" in fallbacks and not any(s.startswith("vector") for s in [scored["source"]]):
             mode = "keyword_kg_fallback"
+        if line and "line_specific_inject" in fallbacks:
+            mode = "line_aware_rag"
 
         return {
             "mode": mode,
             "retrieval_source": scored["source"],
+            "line_of_business": line or None,
+            "guideline_ids": [g.id for g in guidelines],
             "top_k": scored["top_k"],
             "fetch_k": scored["fetch_k"],
             "rerank_enabled": scored["rerank_enabled"],
@@ -159,7 +208,7 @@ class RAGAgent:
             "vector_guideline_chunks": vector_chunks,
             "knowledge_graph_facts": kg_facts,
             "retrieved_contexts": combined,
-            "formatted": self.format_context(query, top_k=top_k),
+            "formatted": self.format_context(enriched_query, top_k=top_k),
             "kg_block": kg_block,
             "kg_stats": get_knowledge_graph().stats() if self.use_knowledge_graph else {},
             "config": {

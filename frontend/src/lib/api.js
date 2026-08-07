@@ -110,6 +110,8 @@ export const endpoints = {
   runLendingDemo: (preset) => api(`/api/demo/lending/${preset}`, { method: 'POST' }),
   pendingWorkflow: () => api('/pipeline/workflow/pending'),
   signOff: (bundleId, body) => api(`/pipeline/workflow/${bundleId}/sign-off`, { method: 'POST', body }),
+  commercialInsuranceHub: () => api('/insurance/commercial'),
+  commercialInsuranceLine: (lineId) => api(`/insurance/commercial/lines/${encodeURIComponent(lineId)}`),
   insuranceSources: (vertical = 'insurance') => api(`/api/insurance/sources?vertical=${vertical}`),
   pullInsuranceSource: (sourceId, body = {}, vertical = 'insurance') =>
     api(`/api/insurance/sources/${sourceId}/pull?vertical=${vertical}`, { method: 'POST', body }),

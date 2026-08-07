@@ -36,6 +36,16 @@ class InsuranceDocumentType(str, Enum):
     MEDICAL_EXAM = "medical_exam"
     APS_RECORDS = "aps_records"
     BENEFICIARY_FORM = "beneficiary_form"
+    # Trade credit
+    TRADE_CREDIT_APPLICATION = "trade_credit_application"
+    AR_AGING_REPORT = "ar_aging_report"
+    BUYER_EXPOSURE_LIST = "buyer_exposure_list"
+    # Errors & Omissions
+    EO_APPLICATION = "eo_application"
+    ENGAGEMENT_LETTER = "engagement_letter"
+    # Key person
+    KEY_PERSON_APPLICATION = "key_person_application"
+    CORPORATE_RESOLUTION = "corporate_resolution"
 
 
 class InsuranceDocumentClassifier:
@@ -88,6 +98,22 @@ class InsuranceDocumentClassifier:
             return InsuranceDocumentType.DO_APPLICATION
         if any(k in combined for k in ("d&o claims", "securities claim", "employment practices claim history")) and "loss run" not in combined:
             return InsuranceDocumentType.DO_CLAIMS_HISTORY
+
+        # Trade credit / E&O / key person
+        if any(k in name or k in combined for k in ("trade credit application", "trade_credit_application", "credit insurance application")):
+            return InsuranceDocumentType.TRADE_CREDIT_APPLICATION
+        if any(k in name or k in combined for k in ("ar aging", "a/r aging", "accounts receivable aging", "receivables aging")):
+            return InsuranceDocumentType.AR_AGING_REPORT
+        if any(k in name or k in combined for k in ("buyer list", "customer exposure", "buyer exposure", "credit limit schedule")):
+            return InsuranceDocumentType.BUYER_EXPOSURE_LIST
+        if any(k in name or k in combined for k in ("e&o application", "eo_application", "errors and omissions application", "professional liability application", "acord 126")):
+            return InsuranceDocumentType.EO_APPLICATION
+        if any(k in name or k in combined for k in ("engagement letter", "sample contract", "client agreement template")):
+            return InsuranceDocumentType.ENGAGEMENT_LETTER
+        if any(k in name or k in combined for k in ("key person application", "key_person_application", "keyman application", "key person medical")):
+            return InsuranceDocumentType.KEY_PERSON_APPLICATION
+        if any(k in name or k in combined for k in ("corporate resolution", "board resolution authorizing", "resolution authorizing policy")):
+            return InsuranceDocumentType.CORPORATE_RESOLUTION
 
         if any(k in combined for k in ("declaration page", "dec page", "policy declarations", "policy number:")):
             return InsuranceDocumentType.DEC_PAGE

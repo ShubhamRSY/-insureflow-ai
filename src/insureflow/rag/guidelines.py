@@ -51,6 +51,8 @@ class Guideline(BaseModel):
     keywords: list[str] = Field(default_factory=list)
     risk_impact: str = "medium"
     applies_to_naics: list[str] = Field(default_factory=list)
+    # Empty = all lines; otherwise filter to these InsuranceLine.value strings
+    applies_to_lines: list[str] = Field(default_factory=list)
 
     # Versioning / filing metadata (Chapter 2 "periodically update the guides",
     # Chapter 1.2 state-filed rates, rules, and forms).
@@ -96,6 +98,15 @@ class UnderwritingGuidelines(BaseModel):
         """Active guidelines that apply to any of ``states`` (empty states = all)."""
         active = set(g.id for g in self.active_as_of(as_of))
         return [g for g in self.guidelines if g.id in active and (not g.states or bool(set(g.states) & set(states)))]
+
+    def for_line(self, line: str, as_of: Optional[datetime] = None) -> list[Guideline]:
+        """Active guidelines for a rating line (empty applies_to_lines = universal)."""
+        key = (line or "").strip().lower()
+        return [
+            g
+            for g in self.active_as_of(as_of)
+            if not g.applies_to_lines or key in {x.lower() for x in g.applies_to_lines}
+        ]
 
     def resolve_supersession(self) -> dict[str, str]:
         """Map each active guideline id to the version that supersedes it (if any)."""
@@ -382,6 +393,57 @@ def builtin_guidelines() -> UnderwritingGuidelines:
                 content="Preferred risks: minimum deductible of $1,000, standard $2,500. Standard risks: $2,500 minimum, standard $5,000. Non-preferred risks: $5,000 minimum, standard $10,000. Deductible buy-down programs available for qualified accounts with 3+ years loss-free.",
                 keywords=["deductible", "preferred", "standard", "non-preferred", "buy-down"],
                 risk_impact="low",
+            ),
+            # ── Commercial specialty lines ──
+            Guideline(
+                id="DO-001",
+                category=GuidelineCategory.COVERAGE,
+                source=GuidelineSource.COMPANY,
+                title="D&O Pending Litigation Referral",
+                content="Directors & Officers submissions disclosing pending securities litigation, SEC/DOJ investigations, or material employment practices class actions require staff UW referral. Do not bind claims-made D&O without prior-acts warranty or continuity date confirmation.",
+                keywords=["d&o", "directors", "officers", "management liability", "securities", "litigation", "prior acts"],
+                risk_impact="high",
+                applies_to_lines=["directors_and_officers"],
+            ),
+            Guideline(
+                id="DO-002",
+                category=GuidelineCategory.LOSS_HISTORY,
+                source=GuidelineSource.COMPANY,
+                title="D&O Financial Stability Gate",
+                content="Private-company D&O requires reviewed or audited financials for the last 2–3 years. Going-concern opinions, covenant breaches, or insolvency language are decline or CUO referral. Public companies: review 10-K risk factors and recent 8-Ks for M&A or restatements.",
+                keywords=["d&o", "financials", "10-k", "going concern", "cap table", "board"],
+                risk_impact="high",
+                applies_to_lines=["directors_and_officers"],
+            ),
+            Guideline(
+                id="TC-001",
+                category=GuidelineCategory.COVERAGE,
+                source=GuidelineSource.COMPANY,
+                title="Trade Credit Concentration Limits",
+                content="Trade credit: top-buyer concentration at or above 40% of insured receivables requires credit-committee referral. Require current AR aging, buyer list with limits, and credit-management policy. Elevated bad-debt / write-off trends over 3–5 years warrant higher retention or decline of weak buyers.",
+                keywords=["trade credit", "receivables", "concentration", "ar aging", "bad debt", "buyer credit"],
+                risk_impact="high",
+                applies_to_lines=["trade_credit"],
+            ),
+            Guideline(
+                id="EO-001",
+                category=GuidelineCategory.COVERAGE,
+                source=GuidelineSource.COMPANY,
+                title="E&O Services and Contract Quality",
+                content="Errors & Omissions: require clear scope of professional services, revenue by service line, and sample engagement letters. Contracts guaranteeing results or accepting consequential damages without limitation are referral. Prior E&O / malpractice claims in 5 years require experience rating.",
+                keywords=["e&o", "errors and omissions", "professional liability", "engagement letter", "malpractice"],
+                risk_impact="high",
+                applies_to_lines=["errors_and_omissions"],
+            ),
+            Guideline(
+                id="KP-001",
+                category=GuidelineCategory.COVERAGE,
+                source=GuidelineSource.COMPANY,
+                title="Key Person Amount Justification",
+                content="Key person: face amount must be justified by attributable revenue/profit or buy-sell funding need. Require corporate resolution and beneficiary (usually the company). Material medical history (cancer, cardiac, stroke) triggers medical underwriting referral similar to life.",
+                keywords=["key person", "key-person", "keyman", "face amount", "buy-sell", "beneficiary"],
+                risk_impact="high",
+                applies_to_lines=["key_person"],
             ),
             Guideline(
                 id="GEN-001",

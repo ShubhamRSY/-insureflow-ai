@@ -1,199 +1,160 @@
-import { useState, useEffect } from 'react';
-import { Badge, DecisionBadge, EmptyState } from '../components/ui';
-import { fmtCurrency, extractInsurance, endpoints } from '../lib/api';
-import JourneyMiniStrip from '../components/JourneyMiniStrip';
-import RunSelector from '../components/RunSelector';
-import { Shield, ArrowRight, Download, Trash2, RotateCcw, FileText } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import {
+  Shield, Building2, ArrowRight, FileText, Briefcase, Users,
+  HardHat, CreditCard, Scale, HeartPulse, Layers,
+} from 'lucide-react';
+import { endpoints } from '../lib/api';
 
-const FLOW_STEPS = [
-  { label: 'Intake', desc: 'Connect & pull broker package' },
-  { label: 'Parse', desc: 'OCR, classify, extract fields' },
-  { label: 'Verify', desc: 'Oracles / medical UW' },
-  { label: 'Score', desc: 'Multi-agent risk analysis' },
-  { label: 'Price', desc: 'Indicated premium build-up' },
-  { label: 'Decide', desc: 'UW memo & workflow' },
-];
+const LOB_ICONS = {
+  property_bi: Building2,
+  directors_officers: Users,
+  workers_comp: HardHat,
+  trade_credit: CreditCard,
+  errors_omissions: Scale,
+  key_person: HeartPulse,
+};
 
-export default function InsurancePage({ presets, jobs, onRunDemo, onOpenJob, onSubmit, onRefresh }) {
-  const [retryingId, setRetryingId] = useState(null);
+export default function InsurancePage({ jobs, onRefresh }) {
+  const navigate = useNavigate();
+  const [hub, setHub] = useState(null);
+  const [error, setError] = useState('');
+  const recent = (jobs || []).slice(0, 6);
 
-  const handleDownload = async (e, id) => {
-    e.stopPropagation();
-    try {
-      const data = await endpoints.downloadJob(id);
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${id}-results.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      alert(err.message);
-    }
-  };
-
-  const handleDelete = async (e, id) => {
-    e.stopPropagation();
-    try {
-      await endpoints.deleteJob(id);
-      if (onRefresh) onRefresh();
-    } catch (err) {
-      alert(err.message);
-    }
-  };
-
-  const handleRetry = async (e, id) => {
-    e.stopPropagation();
-    setRetryingId(id);
-    try {
-      const r = await endpoints.retryJob(id);
-      if (onRefresh) onRefresh();
-    } catch (err) {
-      alert(err.message);
-    } finally {
-      setRetryingId(null);
-    }
-  };
-
-  const handleClearAll = async () => {
-    if (!confirm('Clear all insurance jobs?')) return;
-    const ids = (jobs || []).map((j) => j.id);
-    for (const id of ids) {
-      await endpoints.deleteJob(id).catch(() => {});
-    }
-    if (onRefresh) onRefresh();
-  };
-
-  const handleReport = async (e, id) => {
-    e.stopPropagation();
-    try {
-      const { blob, filename } = await endpoints.insuranceReport(id);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      alert(err.message);
-    }
-  };
+  useEffect(() => {
+    let cancelled = false;
+    endpoints.commercialInsuranceHub()
+      .then((d) => { if (!cancelled) setHub(d); })
+      .catch((e) => { if (!cancelled) setError(e.message || 'Failed to load commercial hub'); });
+    return () => { cancelled = true; };
+  }, []);
 
   return (
-    <div className="mx-auto max-w-7xl space-y-8 animate-fade-in">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Insurance Underwriting</h1>
-        <p className="mt-2 text-sm text-slate-400">
-          Commercial P&amp;C plus personal homeowners, auto, and life — parse, verify, score, price, decide.
-        </p>
-      </div>
-
-      <div className="space-y-6">
-          {/* Pipeline flow narrative */}
-          <div className="glass-card p-5">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Underwriting pipeline</p>
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {FLOW_STEPS.map((step, i) => (
-                <div key={step.label} className="flex shrink-0 items-center gap-1.5">
-                  <div className="whitespace-nowrap rounded-lg bg-surface-overlay px-2.5 py-1.5 ring-1 ring-white/[0.04]">
-                    <span className="text-xs font-semibold text-slate-200">{step.label}</span>
-                    <span className="ml-1.5 text-[10px] text-slate-500">{step.desc}</span>
-                  </div>
-                  {i < FLOW_STEPS.length - 1 && <ArrowRight className="h-3 w-3 shrink-0 text-slate-600" />}
-                </div>
-              ))}
-            </div>
-            <p className="mt-2.5 text-xs text-slate-500">Open any job to see the full submission journey — LOB checklist, medical or COPE UW, provenance, and pricing.</p>
+    <div className="mx-auto max-w-6xl space-y-8 animate-fade-in pb-12">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex items-start gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-insurance/15 text-insurance">
+            <Shield className="h-6 w-6" />
           </div>
-
-          <RunSelector presets={presets} onRunDemo={onRunDemo} onSubmit={onSubmit} />
-
-          <div className="glass-card overflow-hidden">
-        <div className="border-b border-white/[0.06] px-5 py-3 flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-semibold">Recent jobs</h3>
-            <p className="text-xs text-slate-500">Click row for full detail</p>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-100">Insurance</h1>
+            <p className="mt-1 max-w-2xl text-sm text-slate-400">
+              Separate underwriting workspaces by segment. Start with Business / Commercial —
+              line-specific document packs, risk evaluation, pricing, terms, and decisions.
+            </p>
           </div>
-          {jobs?.length > 0 && (
-            <button type="button" onClick={handleClearAll} className="text-xs text-red-400/70 hover:text-red-400 flex items-center gap-1">
-              <Trash2 className="h-3 w-3" /> Clear all
-            </button>
-          )}
         </div>
-        {!jobs?.length ? (
-          <EmptyState icon={Shield} title="No insurance jobs" description="Upload a broker package or run a demo" />
-        ) : (
-          <div className="max-h-[28rem] overflow-auto">
-            <table className="w-full text-sm">
-              <thead className="sticky top-0 z-10">
-                <tr className="border-b border-white/[0.06] bg-surface-overlay text-left text-xs uppercase tracking-wider text-slate-500">
-                  <th className="px-6 py-3">Job</th>
-                  <th className="px-6 py-3">Insured</th>
-                  <th className="px-6 py-3">Journey</th>
-                  <th className="px-6 py-3">Status</th>
-                  <th className="px-6 py-3">Decision</th>
-                  <th className="px-6 py-3">Premium</th>
-                  <th className="px-6 py-3">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/[0.04]">
-                {[...jobs].reverse().map(({ id, job }) => {
-                  const s = extractInsurance(job);
-                  return (
-                    <tr key={id} onClick={() => onOpenJob('insurance', id)} className="cursor-pointer transition hover:bg-white/[0.02]">
-                      <td className="px-6 py-3.5 font-mono text-xs text-slate-400">{id}</td>
-                      <td className="px-6 py-3.5 text-slate-300">{s.insuredName || '—'}</td>
-                      <td className="px-6 py-3.5"><JourneyMiniStrip job={job} /></td>
-                      <td className="px-6 py-3.5"><Badge status={job?.status} pulse={job?.status === 'processing'} /></td>
-                      <td className="px-6 py-3.5"><DecisionBadge decision={s.decision} jobStatus={job?.status} /></td>
-                      <td className="px-6 py-3.5 font-medium">{fmtCurrency(s.premium)}</td>
-                      <td className="px-6 py-3.5">
-                        <div className="flex items-center gap-2">
-                          <button type="button" onClick={(e) => handleRetry(e, id)} disabled={retryingId === id} className="text-slate-500 hover:text-amber-400 transition disabled:opacity-40" title={retryingId === id ? 'Retrying…' : 'Retry pipeline'}>
-                            <RotateCcw className={`h-4 w-4 ${retryingId === id ? 'animate-spin' : ''}`} />
-                          </button>
-                          <button type="button" onClick={(e) => handleReport(e, id)} className="text-slate-500 hover:text-emerald-400 transition" title="Download full report (PDF)">
-                            <FileText className="h-4 w-4" />
-                          </button>
-                          <button type="button" onClick={(e) => handleDownload(e, id)} className="text-slate-500 hover:text-brand-light transition" title="Download results">
-                            <Download className="h-4 w-4" />
-                          </button>
-                          <button type="button" onClick={(e) => handleDelete(e, id)} className="text-slate-500 hover:text-red-400 transition" title="Delete job">
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <button type="button" onClick={() => onRefresh?.()} className="btn-secondary btn-sm text-sm">
+          Refresh jobs
+        </button>
       </div>
 
-      {/* Quick samples */}
-      {(presets?.insurance || []).length > 0 && (
-        <div className="glass-card p-5">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Quick samples</p>
-          <div className="flex flex-col gap-2">
-            {(presets?.insurance || []).map((d) => (
-              <button key={d.id} type="button" onClick={() => onRunDemo('insurance', d.id)}
-                className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.06] bg-surface-overlay/30 px-4 py-3 text-left transition hover:border-brand/30">
-                <span className="min-w-0">
-                  <span className="block text-sm font-medium text-slate-200">{d.name}</span>
-                  <span className="block text-xs text-slate-500 truncate">{d.description}</span>
-                </span>
-                <span className="shrink-0 rounded-md bg-white/[0.04] px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-400">
-                  {(d.insurance_line || 'commercial').replace(/_/g, ' ')}
-                </span>
+      {/* Segment cards */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <Link
+          to="/insurance/commercial"
+          className="group glass-card block p-6 transition hover:ring-1 hover:ring-brand/40"
+        >
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand/15 text-brand">
+              <Briefcase className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-brand">Active</p>
+              <h2 className="text-xl font-semibold text-slate-100">Business / Commercial Insurance</h2>
+            </div>
+          </div>
+          <p className="mt-3 text-sm leading-relaxed text-slate-400">
+            Property & BI, D&O, Workers&apos; Comp, Trade Credit, E&O, and Key Person — with full
+            submission checklists and commercial UW workflow.
+          </p>
+          <p className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-brand group-hover:gap-2">
+            Open commercial hub <ArrowRight className="h-4 w-4" />
+          </p>
+        </Link>
+
+        <div className="glass-card p-6 opacity-60">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-500/15 text-slate-400">
+              <Layers className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Next</p>
+              <h2 className="text-xl font-semibold text-slate-300">Personal Lines</h2>
+            </div>
+          </div>
+          <p className="mt-3 text-sm text-slate-500">
+            Homeowners, personal auto, and life — coming after commercial is complete.
+          </p>
+        </div>
+      </div>
+
+      {error && <p className="text-sm text-red-400">{error}</p>}
+
+      {/* Commercial preview */}
+      {hub && (
+        <section className="space-y-4">
+          <div className="flex items-end justify-between gap-3">
+            <div>
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">Commercial lines</h3>
+              <p className="mt-1 text-sm text-slate-400">{hub.summary}</p>
+            </div>
+            <Link to="/insurance/commercial" className="text-sm text-brand hover:underline">View all</Link>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {(hub.lines || []).map((line) => {
+              const Icon = LOB_ICONS[line.id] || FileText;
+              return (
+                <button
+                  key={line.id}
+                  type="button"
+                  onClick={() => navigate(`/insurance/commercial/${line.slug}`)}
+                  className="rounded-xl bg-surface-overlay p-4 text-left ring-1 ring-white/[0.04] transition hover:ring-brand/30"
+                >
+                  <div className="flex items-center gap-2">
+                    <Icon className="h-4 w-4 text-brand-light" />
+                    <p className="font-medium text-slate-200">{line.short_name}</p>
+                  </div>
+                  <p className="mt-2 line-clamp-2 text-xs text-slate-500">{line.description}</p>
+                  <p className="mt-3 text-[11px] uppercase tracking-wide text-slate-600">
+                    {line.document_count} documents in pack
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* Recent jobs */}
+      <section className="glass-card overflow-hidden">
+        <div className="flex items-center justify-between border-b border-white/[0.06] px-5 py-4">
+          <h3 className="text-sm font-semibold text-slate-200">Recent insurance jobs</h3>
+          <Link to="/insurance/commercial" className="text-xs text-brand hover:underline">
+            Start commercial submission →
+          </Link>
+        </div>
+        {!recent.length ? (
+          <p className="px-5 py-8 text-sm text-slate-500">No jobs yet. Open a commercial line and run a package.</p>
+        ) : (
+          <div className="divide-y divide-white/[0.04]">
+            {recent.map((j) => (
+              <button
+                key={j.id}
+                type="button"
+                onClick={() => navigate(`/insurance/${j.id}`)}
+                className="flex w-full items-center justify-between gap-3 px-5 py-3 text-left hover:bg-white/[0.02]"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-slate-200">{j.name || j.insured_name || j.id}</p>
+                  <p className="text-xs text-slate-500">{(j.insurance_line || j.product_line || 'commercial').replace(/_/g, ' ')}</p>
+                </div>
+                <span className="shrink-0 text-xs capitalize text-slate-400">{j.status || '—'}</span>
               </button>
             ))}
           </div>
-        </div>
-      )}
-      </div>
+        )}
+      </section>
     </div>
   );
 }

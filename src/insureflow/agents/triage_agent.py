@@ -35,11 +35,20 @@ def _line_to_lob(insurance_line: str | None) -> str:
         "d&o": "do",
         "do": "do",
         "commercial_property": "property",
+        "property_bi": "property",
+        "property": "property",
         "general_liability": "property",
-        "workers_comp": "property",
+        "workers_comp": "workers_comp",
+        "workers-comp": "workers_comp",
         "bop": "property",
         "umbrella": "property",
-        "property": "property",
+        "trade_credit": "trade_credit",
+        "trade-credit": "trade_credit",
+        "errors_and_omissions": "eo",
+        "eo": "eo",
+        "e&o": "eo",
+        "key_person": "key_person",
+        "key-person": "key_person",
     }
     if raw in mapping:
         return mapping[raw]

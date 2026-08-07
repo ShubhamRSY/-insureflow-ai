@@ -675,6 +675,34 @@ async def demo_presets() -> dict[str, Any]:
             "vertical": "insurance",
             "insurance_line": "life",
         },
+        {
+            "id": "meridian-do",
+            "name": "Meridian Analytics (D&O)",
+            "description": "Directors & Officers — application, financials, bylaws, loss run, litigation disclosure",
+            "vertical": "insurance",
+            "insurance_line": "directors_and_officers",
+        },
+        {
+            "id": "harbor-trade-credit",
+            "name": "Harbor Goods (Trade Credit)",
+            "description": "Trade credit — application, AR aging, buyer list, financials, credit policy",
+            "vertical": "insurance",
+            "insurance_line": "trade_credit",
+        },
+        {
+            "id": "brightpath-eo",
+            "name": "BrightPath Consulting (E&O)",
+            "description": "Errors & Omissions — application, services scope, engagement letter, loss run",
+            "vertical": "insurance",
+            "insurance_line": "errors_and_omissions",
+        },
+        {
+            "id": "cascade-key-person",
+            "name": "Cascade Robotics (Key Person)",
+            "description": "Key person — application, job justification, financials, corporate resolution",
+            "vertical": "insurance",
+            "insurance_line": "key_person",
+        },
     ]
     mortgage = [
         {
@@ -873,6 +901,38 @@ def _load_priya_life_submission() -> SubmissionRequest:
     )
 
 
+def _load_meridian_do_submission() -> SubmissionRequest:
+    return SubmissionRequest(
+        documents=_load_docs_from_dir("directors_and_officers"),
+        insurance_line="directors_and_officers",
+        use_llm=True,
+    )
+
+
+def _load_harbor_trade_credit_submission() -> SubmissionRequest:
+    return SubmissionRequest(
+        documents=_load_docs_from_dir("trade_credit"),
+        insurance_line="trade_credit",
+        use_llm=True,
+    )
+
+
+def _load_brightpath_eo_submission() -> SubmissionRequest:
+    return SubmissionRequest(
+        documents=_load_docs_from_dir("errors_and_omissions"),
+        insurance_line="errors_and_omissions",
+        use_llm=True,
+    )
+
+
+def _load_cascade_key_person_submission() -> SubmissionRequest:
+    return SubmissionRequest(
+        documents=_load_docs_from_dir("key_person"),
+        insurance_line="key_person",
+        use_llm=True,
+    )
+
+
 def _load_pacific_coast_submission() -> SubmissionRequest:
     acord = (EXAMPLES_DIR / "pacific_coast_acord.xml").read_text(encoding="utf-8")
     loss_run = (EXAMPLES_DIR / "pacific_coast_loss_run.md").read_text(encoding="utf-8")
@@ -919,6 +979,10 @@ async def run_insurance_demo(
         "maya-homeowners": ("personal_homeowners/homeowners_application.md", _load_maya_homeowners_submission),
         "jordan-auto": ("personal_auto/auto_application.md", _load_jordan_auto_submission),
         "priya-life": ("life/life_application.md", _load_priya_life_submission),
+        "meridian-do": ("directors_and_officers/do_application.md", _load_meridian_do_submission),
+        "harbor-trade-credit": ("trade_credit/trade_credit_application.md", _load_harbor_trade_credit_submission),
+        "brightpath-eo": ("errors_and_omissions/eo_application.md", _load_brightpath_eo_submission),
+        "cascade-key-person": ("key_person/key_person_application.md", _load_cascade_key_person_submission),
     }
     if preset_id not in preset_map:
         raise HTTPException(status_code=404, detail=f"Unknown insurance preset: {preset_id}")
@@ -4028,6 +4092,33 @@ def add_relationship_note(
         role=str(body.get("role") or "uw"),
     )
     return note
+
+
+@app.get("/insurance/commercial")
+def commercial_insurance_hub(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Business / Commercial Insurance hub — lines, base packet, UW workflow."""
+    from insureflow.insurance.commercial_lobs import commercial_hub_payload
+
+    return commercial_hub_payload()
+
+
+@app.get("/insurance/commercial/lines/{line_id}")
+def commercial_insurance_line(
+    line_id: str,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Single commercial LOB: full document pack + UW responsibilities."""
+    from insureflow.insurance.commercial_lobs import get_commercial_line
+    from insureflow.insurance.package_checklist import package_checklist
+
+    line = get_commercial_line(line_id)
+    if not line:
+        raise HTTPException(status_code=404, detail=f"Unknown commercial line: {line_id}")
+    # Empty package checklist template for this LOB (what a complete submission needs)
+    template = package_checklist([], lob=str(line.get("checklist_lob") or "property"))
+    return {**line, "checklist_template": template}
 
 
 @app.get("/pipeline/jobs/{bundle_id}/package-checklist")
