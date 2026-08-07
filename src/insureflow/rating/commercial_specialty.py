@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from typing import Any
 
 from insureflow.models.agents import Finding, RiskSeverity, UWDecision
 from insureflow.models.submissions import SubmissionBundle
@@ -69,11 +68,15 @@ def estimate_specialty_exposure(bundle: SubmissionBundle, line: InsuranceLine) -
             if (cov.limit_amount or 0) > 0:
                 return float(cov.limit_amount), "coverage_limit", False
         fin = bundle.structured.financial
-        if fin and (fin.annual_revenue or 0) > 0 and line == InsuranceLine.TRADE_CREDIT:
-            # Proxy AR book as a fraction of revenue when no AR aging is present
-            return float(fin.annual_revenue) * 0.15, "revenue_proxy_ar", False
-        if fin and (fin.total_asset_value or 0) > 0 and line == InsuranceLine.DIRECTORS_AND_OFFICERS:
-            return min(float(fin.total_asset_value) * 0.1, 5_000_000.0), "asset_proxy_limit", False
+        if fin and line == InsuranceLine.TRADE_CREDIT:
+            revenue = fin.annual_revenue
+            if revenue is not None and revenue > 0:
+                # Proxy AR book as a fraction of revenue when no AR aging is present
+                return float(revenue) * 0.15, "revenue_proxy_ar", False
+        if fin and line == InsuranceLine.DIRECTORS_AND_OFFICERS:
+            assets = fin.total_asset_value
+            if assets is not None and assets > 0:
+                return min(float(assets) * 0.1, 5_000_000.0), "asset_proxy_limit", False
 
     if line == InsuranceLine.DIRECTORS_AND_OFFICERS:
         v = _money_from_blob(blob, "aggregate limit", "policy limit", "d&o limit", "limit of liability")

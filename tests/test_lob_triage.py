@@ -29,8 +29,8 @@ def test_property_still_requires_acord() -> None:
     bundle = SubmissionBundle(bundle_id="prop-1", unstructured=[])
     cl = DocumentChecklist.from_bundle(bundle, insurance_line="commercial_property")
     assert cl.lob == "property"
-    assert "ACORD application" in cl.missing
-    assert "Loss run" in REQUIRED_CRITICAL_BY_LOB["property"]
+    assert any("ACORD application" in m for m in cl.missing)
+    assert any("Loss run" in r for r in REQUIRED_CRITICAL_BY_LOB["property"])
 
 
 def test_triage_score_accepts_insurance_line() -> None:

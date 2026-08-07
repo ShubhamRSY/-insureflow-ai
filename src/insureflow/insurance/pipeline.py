@@ -282,14 +282,18 @@ class InsurancePipeline:
         missing_docs = set(triage_result.document_checklist.missing)
         required_labels = REQUIRED_CRITICAL_BY_LOB.get(checklist_lob, REQUIRED_CRITICAL_BY_LOB["property"])
         for label in required_labels:
-            if label in missing_docs:
+            # Exact match, or catalog label that starts with / contains the required token
+            matched_missing = label in missing_docs or any(
+                m == label or m.startswith(label) or label in m for m in missing_docs
+            )
+            if matched_missing:
                 validation_findings.append(
                     Finding(
                         title=f"Missing required document: {label}",
                         description=(f"{label} was not provided or could not be parsed. Cannot complete {checklist_lob} underwriting without it."),
                         severity=RiskSeverity.CRITICAL,
                         category="data_quality",
-                        field_path=label.lower().replace(" ", "_").replace("/", "_"),
+                        field_path=label.lower().replace(" ", "_").replace("/", "_").replace("(", "").replace(")", "").replace("–", "-"),
                     )
                 )
 

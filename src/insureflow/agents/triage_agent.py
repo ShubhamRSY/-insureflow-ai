@@ -173,13 +173,18 @@ class DocumentChecklist:
         }
 
 
-# Hard-required docs that become CRITICAL validation findings (subset of catalog)
+# Hard-required docs that become CRITICAL validation findings (subset of catalog).
+# Labels must match package_checklist catalog entries (exact or prefix — see pipeline).
 REQUIRED_CRITICAL_BY_LOB: dict[str, list[str]] = {
     "life": ["Life application"],
     "auto": ["Auto application"],
     "homeowners": ["Homeowners application"],
     "do": ["D&O application"],
-    "property": ["ACORD application", "Loss run", "Schedule of values"],
+    "property": ["ACORD application (125 / 140)", "Loss run (3–5 years)", "Schedule of values / COPE"],
+    "workers_comp": ["ACORD 130 application", "Loss run (3–5 years)"],
+    "trade_credit": ["Trade credit application", "AR aging report"],
+    "eo": ["E&O application (ACORD 126 / carrier)"],
+    "key_person": ["Application + medical questionnaire"],
 }
 
 
