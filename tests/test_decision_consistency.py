@@ -62,3 +62,31 @@ def test_high_score_without_critical_is_refer_not_accept() -> None:
     out = enforce_decision_consistency(memo)
     assert out.decision == UWDecision.REFER
     assert "REFER" in out.summary
+
+
+def test_critical_without_decline_language_is_refer() -> None:
+    """Data-quality criticals need UW eyes — not an automatic DECLINE."""
+    memo = UnderwritingMemo(
+        bundle_id="t3",
+        insured_name="Clean Retail",
+        decision=UWDecision.ACCEPT,
+        overall_risk_score=0.60,
+        overall_risk_severity=RiskSeverity.CRITICAL,
+        key_findings=[
+            Finding(
+                title="Loss run provided but empty — no claims extracted",
+                description="Unrecognized format",
+                severity=RiskSeverity.CRITICAL,
+                category="data_quality",
+            ),
+            Finding(
+                title="HIGH portfolio concentration risk",
+                description="score 70%",
+                severity=RiskSeverity.CRITICAL,
+                category="portfolio_risk",
+            ),
+        ],
+        recommendation=Recommendation(action="accept", rationale="stale"),
+    )
+    out = enforce_decision_consistency(memo)
+    assert out.decision == UWDecision.REFER

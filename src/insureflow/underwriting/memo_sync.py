@@ -66,6 +66,10 @@ def enforce_decision_consistency(memo: UnderwritingMemo) -> UnderwritingMemo:
 
     Fixes the credibility failure mode: ACCEPT with critical "decline recommended"
     findings, high severity, or elevated risk score.
+
+    Critical findings without explicit decline language escalate to REFER, not
+    automatic DECLINE — data-quality / portfolio concentration criticals still
+    need human review but must not fail clean accept-path scenarios.
     """
     from insureflow.models.agents import RiskSeverity, UWDecision
 
@@ -74,29 +78,33 @@ def enforce_decision_consistency(memo: UnderwritingMemo) -> UnderwritingMemo:
         decisions.append(memo.recommendation.action)
 
     critical_titles: list[str] = []
+    explicit_decline = False
     for f in memo.key_findings or []:
         sev = f.severity.value if hasattr(f.severity, "value") else str(f.severity or "")
         title = (f.title or "").strip()
         title_l = title.lower()
+        src = str(f.source_value or "").strip().lower()
         # Selection / agent gates that publish an explicit action on the finding
-        if f.category == "selection_standards" and f.source_value:
-            decisions.append(str(f.source_value))
+        if f.category == "selection_standards" and src:
+            decisions.append(src)
+            if src in {"decline", "declined"}:
+                explicit_decline = True
         if sev == "critical":
             critical_titles.append(title or "critical finding")
-            # "refer to licensed UW" criticals stay refer; decline language → decline
-            if "decline" in title_l or "declined" in title_l or "declination" in title_l:
+            # Only decline when the finding itself recommends decline
+            if "decline" in title_l or "declined" in title_l or "declination" in title_l or src in {"decline", "declined"}:
                 decisions.append(UWDecision.DECLINE)
-            elif "refer" in title_l:
-                decisions.append(UWDecision.REFER)
+                explicit_decline = True
             else:
-                decisions.append(UWDecision.DECLINE)
+                decisions.append(UWDecision.REFER)
 
     score = float(memo.overall_risk_score or 0.0)
     sev = memo.overall_risk_severity
     sev_val = sev.value if hasattr(sev, "value") else str(sev or "")
-    if sev_val == "critical" or score >= 0.85:
+    # Extreme score → decline; elevated severity / score → refer (unless already declining)
+    if score >= 0.85 or (sev_val == "critical" and explicit_decline):
         decisions.append(UWDecision.DECLINE)
-    elif sev_val == "high" or score >= 0.70:
+    elif sev_val in {"critical", "high"} or score >= 0.70:
         decisions.append(UWDecision.REFER)
 
     # Missing required docs / open human checkpoints → never clean ACCEPT
