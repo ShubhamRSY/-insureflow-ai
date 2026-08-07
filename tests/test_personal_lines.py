@@ -29,6 +29,44 @@ def test_detect_personal_lines() -> None:
     assert detect_insurance_line("term life application face amount beneficiary") == InsuranceLine.LIFE
 
 
+def test_commercial_fleet_not_personal_auto() -> None:
+    """Pacific Coast-style commercial package has VINs but must stay commercial."""
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1] / "examples" / "insurance"
+    blob = "\n".join(
+        (root / name).read_text(encoding="utf-8")
+        for name in (
+            "pacific_coast_acord.xml",
+            "pacific_coast_loss_run.md",
+            "pacific_coast_sov.md",
+            "pacific_coast_inspection_report.md",
+            "pacific_coast_broker_api.json",
+        )
+        if (root / name).exists()
+    )
+    assert "vin:" in blob.lower()
+    line = detect_insurance_line(blob)
+    assert line == InsuranceLine.COMMERCIAL_PROPERTY
+    # Wrong UI / API personal hints must not win on commercial packages
+    assert detect_insurance_line(blob, "personal_auto") == InsuranceLine.COMMERCIAL_PROPERTY
+    assert detect_insurance_line(blob, "auto") == InsuranceLine.COMMERCIAL_PROPERTY
+    assert detect_lob(blob) == "property"
+    assert detect_lob(blob, "auto") == "property"
+    # Personal packages keep personal line even if hint is commercial
+    assert (
+        detect_insurance_line("personal auto application VIN: 1HGCM82633A004352 MVR report", "commercial_property")
+        == InsuranceLine.PERSONAL_AUTO
+    )
+    # False D&O from "and observed" must not fire
+    assert detect_lob("verified field values measured and observed by the surveyor") == "property"
+    assert detect_lob("Directors & Officers liability") == "do"
+
+
+def test_vin_alone_is_not_personal_auto() -> None:
+    assert detect_insurance_line("Fleet unit VIN: 1HGCM82633A004352 delivery truck") == InsuranceLine.COMMERCIAL_PROPERTY
+
+
 def test_classifier_personal_doc_types() -> None:
     assert InsuranceDocumentClassifier.classify("Homeowners Application HO-3", "homeowners_application.md") == InsuranceDocumentType.HOMEOWNERS_APPLICATION
     assert InsuranceDocumentClassifier.classify("Motor Vehicle Report", "mvr_report.md") == InsuranceDocumentType.MVR_REPORT

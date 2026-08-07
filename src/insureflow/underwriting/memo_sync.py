@@ -61,6 +61,72 @@ def dedupe_findings(findings: list[Finding]) -> list[Finding]:
     return out
 
 
+def enforce_decision_consistency(memo: UnderwritingMemo) -> UnderwritingMemo:
+    """Hard gates so the headline decision never contradicts findings.
+
+    Fixes the credibility failure mode: ACCEPT with critical "decline recommended"
+    findings, high severity, or elevated risk score.
+    """
+    from insureflow.models.agents import RiskSeverity, UWDecision
+
+    decisions: list[UWDecision | str | None] = [memo.decision]
+    if memo.recommendation and memo.recommendation.action:
+        decisions.append(memo.recommendation.action)
+
+    critical_titles: list[str] = []
+    for f in memo.key_findings or []:
+        sev = f.severity.value if hasattr(f.severity, "value") else str(f.severity or "")
+        title = (f.title or "").strip()
+        title_l = title.lower()
+        # Selection / agent gates that publish an explicit action on the finding
+        if f.category == "selection_standards" and f.source_value:
+            decisions.append(str(f.source_value))
+        if sev == "critical":
+            critical_titles.append(title or "critical finding")
+            # "refer to licensed UW" criticals stay refer; decline language → decline
+            if "decline" in title_l or "declined" in title_l or "declination" in title_l:
+                decisions.append(UWDecision.DECLINE)
+            elif "refer" in title_l:
+                decisions.append(UWDecision.REFER)
+            else:
+                decisions.append(UWDecision.DECLINE)
+
+    score = float(memo.overall_risk_score or 0.0)
+    sev = memo.overall_risk_severity
+    sev_val = sev.value if hasattr(sev, "value") else str(sev or "")
+    if sev_val == "critical" or score >= 0.85:
+        decisions.append(UWDecision.DECLINE)
+    elif sev_val == "high" or score >= 0.70:
+        decisions.append(UWDecision.REFER)
+
+    # Missing required docs / open human checkpoints → never clean ACCEPT
+    if memo.human_review_required and normalize_decision(memo.decision) == DecisionOutcome.ACCEPT:
+        decisions.append(UWDecision.REFER)
+
+    prior = normalize_decision(memo.decision)
+    memo.decision = worst_decision(*decisions)
+    after = normalize_decision(memo.decision)
+
+    if after != prior and critical_titles:
+        memo.human_review_reasons = list(memo.human_review_reasons or [])
+        for t in critical_titles[:5]:
+            if t not in memo.human_review_reasons:
+                memo.human_review_reasons.append(t)
+
+    # Refresh severity from findings so UI matches the gate
+    if memo.key_findings:
+        rank = {"low": 1, "moderate": 2, "high": 3, "critical": 4}
+        worst = max(
+            (rank.get(f.severity.value if hasattr(f.severity, "value") else str(f.severity), 0) for f in memo.key_findings),
+            default=0,
+        )
+        inv = {1: RiskSeverity.LOW, 2: RiskSeverity.MODERATE, 3: RiskSeverity.HIGH, 4: RiskSeverity.CRITICAL}
+        if worst:
+            memo.overall_risk_severity = inv[worst]
+
+    return resync_memo_narrative(memo)
+
+
 def resync_memo_narrative(memo: UnderwritingMemo, *, extra_summary: str = "") -> UnderwritingMemo:
     """Rebuild summary + recommendation.action to match ``memo.decision`` after overrides."""
     memo.key_findings = dedupe_findings(list(memo.key_findings or []))

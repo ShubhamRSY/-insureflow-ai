@@ -29,6 +29,7 @@ import ProducerCommsPage from './pages/ProducerComms';
 import LineUnderwriting from './pages/LineUnderwriting';
 import StaffUnderwriting from './pages/StaffUnderwriting';
 import RatemakingPage from './pages/Ratemaking';
+import BusinessKPIsPage from './pages/BusinessKPIs';
 import { auth, endpoints, AuthError } from './lib/api';
 
 function Protected({ children, onLogin }) {
@@ -261,6 +262,7 @@ function AppRoutes() {
           <Route path="monitoring" element={<Protected onLogin={() => setLoginOpen(true)}><MonitoringPage /></Protected>} />
           <Route path="renewals" element={<Protected onLogin={() => setLoginOpen(true)}><RenewalDashboard /></Protected>} />
           <Route path="overrides" element={<Protected onLogin={() => setLoginOpen(true)}><OverrideAnalyticsPage /></Protected>} />
+          <Route path="business-kpis" element={<Protected onLogin={() => setLoginOpen(true)}><BusinessKPIsPage /></Protected>} />
           <Route path="eval-trends" element={<Protected onLogin={() => setLoginOpen(true)}><EvalTrendsPage /></Protected>} />
           <Route path="portfolio" element={<Protected onLogin={() => setLoginOpen(true)}><PortfolioPage /></Protected>} />
           <Route path="ratemaking" element={<Protected onLogin={() => setLoginOpen(true)}><RatemakingPage /></Protected>} />

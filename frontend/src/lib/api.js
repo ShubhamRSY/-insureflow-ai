@@ -244,6 +244,8 @@ export const endpoints = {
   ratemakingRun: (body) => api('/pipeline/rating/ratemaking/run', { method: 'POST', body }),
   lossExperience: (body) => api('/pipeline/outcomes/loss-experience', { method: 'POST', body }),
   calibration: () => api('/pipeline/outcomes/calibration'),
+  businessKpis: () => api('/analytics/business-kpis'),
+  bootstrapBusinessKpis: () => api('/analytics/business-kpis/bootstrap', { method: 'POST' }),
 
   // Issuance — binder / policy worksheet / certificate (Step 5b)
   issuanceRecords: () => api('/pipeline/issuance'),

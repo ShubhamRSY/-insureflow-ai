@@ -24,57 +24,187 @@ def _blob(bundle: SubmissionBundle) -> str:
     return "\n".join(parts).lower()
 
 
-def detect_insurance_line(text_blob: str = "", product_hint: str = "") -> InsuranceLine:
-    blob = f"{product_hint}\n{text_blob}".lower()
-    if any(
-        k in blob
-        for k in (
-            "life insurance application",
-            "term life",
-            "whole life",
-            "face amount",
-            "mortality",
-            "beneficiary designation",
-            "paramedical exam",
-            "insurance_line: life",
-            "line: life",
+def _has_strong_commercial_signals(blob: str) -> bool:
+    """True when the package is clearly a commercial (not personal) submission."""
+    commercial_markers = (
+        "commercial lines",
+        "commercial property",
+        "commercial general liability",
+        "general liability",
+        "workers compensation",
+        "workers' compensation",
+        "schedule of values",
+        "schedule of value",
+        "named insured",
+        "grossvehicleweight",
+        "gross vehicle weight",
+        "commercial auto",
+        "businessowners",
+        "bop ",
+        "naics",
+        "fein",
+        "tax id",
+        "warehouse",
+        "total insurable value",
+        "acord commercial",
+        "certificate of insurance",
+        "loss run",
+        "inc.",
+        "llc",
+        "corp.",
+        "corporation",
+    )
+    hits = sum(1 for k in commercial_markers if k in blob)
+    # Fleet / heavy equipment also screams commercial even with VINs present
+    fleet_markers = ("kenworth", "peterbilt", "freightliner", "reefer", "tractor", "trailer", "fleet count", "vehicle schedule")
+    fleet_hits = sum(1 for k in fleet_markers if k in blob)
+    return hits >= 2 or fleet_hits >= 2 or ("commercial" in blob and hits >= 1)
+
+
+def _detect_line_from_content(blob: str) -> InsuranceLine:
+    """Content-only LOB inference (blob already lowercased)."""
+    commercial = _has_strong_commercial_signals(blob)
+
+    if (
+        any(
+            k in blob
+            for k in (
+                "life insurance application",
+                "term life",
+                "whole life",
+                "face amount",
+                "mortality",
+                "beneficiary designation",
+                "paramedical exam",
+                "insurance_line: life",
+                "line: life",
+                "insurance_line=life",
+            )
         )
+        and not commercial
     ):
         return InsuranceLine.LIFE
-    if any(
+
+    # Personal auto: require explicit personal-auto language — never VIN alone
+    personal_auto_explicit = any(
         k in blob
         for k in (
             "personal auto",
+            "personal_auto",
             "auto application",
-            "drivers license",
-            "mvr",
-            "motor vehicle report",
-            "vin:",
-            "vehicle year",
-            "rideshare",
             "insurance_line: personal_auto",
             "line: personal_auto",
+            "insurance_line=personal_auto",
+            "pleasure use",
+            "commute to work",
         )
-    ):
+    )
+    personal_auto_soft = any(
+        k in blob
+        for k in (
+            "drivers license",
+            "driver's license",
+            "motor vehicle report",
+            "mvr /",
+            "mvr report",
+            "rideshare",
+            "vehicle year",
+        )
+    )
+    if personal_auto_explicit and not commercial:
         return InsuranceLine.PERSONAL_AUTO
+    if personal_auto_soft and not commercial and ("vin:" in blob or "vin " in blob):
+        return InsuranceLine.PERSONAL_AUTO
+
+    if (
+        any(
+            k in blob
+            for k in (
+                "homeowners application",
+                "homeowners policy",
+                "dwelling coverage",
+                "ho-3",
+                "ho3",
+                "residential dwelling",
+                "personal homeowners",
+                "insurance_line: personal_homeowners",
+                "line: personal_homeowners",
+                "insurance_line=personal_homeowners",
+            )
+        )
+        and not commercial
+    ):
+        return InsuranceLine.PERSONAL_HOMEOWNERS
+
+    # True D&O — avoid matching "and observed" via naive "d and o"
     if any(
         k in blob
         for k in (
-            "homeowners application",
-            "homeowners policy",
-            "dwelling coverage",
-            "ho-3",
-            "ho3",
-            "residential dwelling",
-            "personal homeowners",
-            "insurance_line: personal_homeowners",
-            "line: personal_homeowners",
+            "d&o",
+            "directors and officers",
+            "directors & officers",
+            "management liability",
+            "d and o liability",
+            "d and o application",
         )
     ):
-        return InsuranceLine.PERSONAL_HOMEOWNERS
-    if any(k in blob for k in ("d&o", "directors and officers", "management liability")):
-        return InsuranceLine.COMMERCIAL_PROPERTY  # D&O priced via commercial path + checklist
+        return InsuranceLine.COMMERCIAL_PROPERTY
+
+    if commercial:
+        # Multi-line commercial packages often mention WC in passing — prefer
+        # property/SOV/CGL as the primary rating line when those dominate.
+        property_heavy = any(
+            k in blob
+            for k in (
+                "schedule of values",
+                "commercial property",
+                "building value",
+                "warehouse",
+                "total insurable value",
+                "protection class",
+            )
+        )
+        gl_heavy = "general liability" in blob or "commercial general liability" in blob
+        wc_only = (
+            ("workers comp" in blob or "workers' compensation" in blob or "workers compensation" in blob)
+            and not property_heavy
+            and not gl_heavy
+        )
+        if wc_only:
+            return InsuranceLine.WORKERS_COMP
+        if "businessowners" in blob or " bop " in blob or "bop policy" in blob:
+            return InsuranceLine.BOP
+        if gl_heavy and not property_heavy:
+            return InsuranceLine.GENERAL_LIABILITY
+        return InsuranceLine.COMMERCIAL_PROPERTY
+
     return InsuranceLine.COMMERCIAL_PROPERTY
+
+
+def detect_insurance_line(text_blob: str = "", product_hint: str = "") -> InsuranceLine:
+    """Infer LOB from package text.
+
+    Package content wins over a conflicting product hint. Commercial fleets
+    with VIN / vehicle schedules are never priced as personal_auto — for every
+    submission (uploads and demos), not Pacific Coast only.
+    """
+    hint = (product_hint or "").strip().lower().replace("-", "_").replace(" ", "_")
+    hinted = parse_insurance_line(hint) if hint else None
+    # Detect from document text only so the hint cannot seed false keywords
+    blob = (text_blob or "").lower()
+    content = _detect_line_from_content(blob)
+    commercial = _has_strong_commercial_signals(blob)
+
+    if hinted is None:
+        return content
+
+    # Conflicting hint: trust the package
+    if commercial and hinted in PERSONAL_LINES:
+        return content
+    if content in PERSONAL_LINES and hinted not in PERSONAL_LINES:
+        return content
+
+    return hinted
 
 
 def parse_insurance_line(value: str | None) -> InsuranceLine | None:

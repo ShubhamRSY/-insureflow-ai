@@ -26,6 +26,7 @@ const nav = [
   { section: 'Analytics' },
   { to: '/renewals', icon: FileText, label: 'Renewals' },
   { to: '/overrides', icon: LineChart, label: 'Override Analytics' },
+  { to: '/business-kpis', icon: BarChart3, label: 'Business KPIs', color: 'text-brand' },
   { to: '/eval-trends', icon: Activity, label: 'Eval Trends' },
   { to: '/portfolio', icon: Layers, label: 'Portfolio' },
   { to: '/ratemaking', icon: Calculator, label: 'Ratemaking & Pricing', color: 'text-brand' },

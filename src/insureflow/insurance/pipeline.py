@@ -125,6 +125,12 @@ class InsurancePipeline:
         audit = InsuranceAuditLogger(self.audit_store, self.encryption, org_id=self.org_id)
         audit.start(bid)
         progress = PipelineProgressTracker(on_update=progress_callback)
+        try:
+            from insureflow.analytics.metrics import get_pipeline_metrics
+
+            get_pipeline_metrics().cycle_time.start_pipeline(bid, org_id=self.org_id)
+        except Exception:
+            pass
 
         # Deferred stages in funnel mode are re-run on demand via deep_dive().
         deferred_stages: list[str] = []
@@ -135,20 +141,22 @@ class InsurancePipeline:
         progress.start("intake", "Intake", "Receiving submission package")
         progress.complete("intake", detail="Submission received")
         progress.start("triage", "Triage", "Scoring submission priority")
-        from insureflow.underwriting.personal_lines import detect_insurance_line, parse_insurance_line
+        from insureflow.underwriting.personal_lines import detect_insurance_line
 
-        resolved_line = parse_insurance_line(insurance_line)
-        if resolved_line is None:
-            pre_blob = " ".join(
-                [
-                    acord_xml or "",
-                    json_payload or "",
-                    loss_run or "",
-                    " ".join(inspection_reports or []),
-                    " ".join(d.get("filename", "") + " " + d.get("content", "")[:2000] for d in (documents or [])),
-                ]
-            )
-            resolved_line = detect_insurance_line(pre_blob, insurance_line or "")
+        # Always infer from the full package. Wrong UI hints (e.g. personal_auto)
+        # must not short-circuit detection for commercial submissions.
+        pre_blob = " ".join(
+            [
+                acord_xml or "",
+                json_payload or "",
+                loss_run or "",
+                schedule_of_values or "",
+                " ".join(supplemental_docs or []),
+                " ".join(inspection_reports or []),
+                " ".join(d.get("filename", "") + " " + d.get("content", "")[:2000] for d in (documents or [])),
+            ]
+        )
+        resolved_line = detect_insurance_line(pre_blob, insurance_line or "")
 
         triage_result = self.triage.score_submission(
             self._build_preliminary_bundle(
@@ -209,6 +217,21 @@ class InsurancePipeline:
                         triage_result=triage_result,
                     )
                     decline["pipeline_stages"] = progress.finish()
+                    try:
+                        from insureflow.analytics.business_kpis import get_business_kpi_service
+                        from insureflow.analytics.metrics import get_pipeline_metrics
+
+                        cycle_rec = get_pipeline_metrics().cycle_time.finish_pipeline(bid, status="completed")
+                        get_business_kpi_service().record_pipeline_result(
+                            bundle_id=bid,
+                            decision="decline",
+                            org_id=self.org_id,
+                            human_review_required=False,
+                            cycle_ms=cycle_rec.total_ms if cycle_rec else None,
+                            source="pipeline",
+                        )
+                    except Exception:
+                        pass
                     return decline
 
         progress.complete(
@@ -755,10 +778,17 @@ class InsurancePipeline:
                 if f.severity.value in ("critical", "high"):
                     memo.human_review_reasons.append(f.title)
                     memo.human_review_required = True
+            # Selection gate must move the headline decision (never leave ACCEPT + decline finding)
+            from insureflow.underwriting.memo_sync import enforce_decision_consistency, worst_decision
+
+            sel_action = getattr(selection_result.recommendation, "action", None) if selection_result.recommendation else None
+            if sel_action:
+                memo.decision = worst_decision(memo.decision, sel_action)
+            enforce_decision_consistency(memo)
             audit.log(
                 PipelineEvent.SYNTHESIS_COMPLETE,
                 f"Selection standards: {len(selection_result.findings)} findings",
-                metadata={"selection_score": selection_result.risk_score},
+                metadata={"selection_score": selection_result.risk_score, "decision_after_selection": memo.decision.value},
             )
 
             adverse_result = self.adverse_selection.run(bundle, org_id=self.org_id)
@@ -852,12 +882,26 @@ class InsurancePipeline:
         # ── 9. Rating / policy admin quote ──
         progress.start("price", "Priced", "Calculating indicated premium")
         from insureflow.rating.models import InsuranceLine
-        from insureflow.underwriting.personal_lines import detect_insurance_line, parse_insurance_line
+        from insureflow.underwriting.personal_lines import _blob as _package_blob
+        from insureflow.underwriting.personal_lines import detect_insurance_line
 
-        line_for_quote = parse_insurance_line(insurance_line) or resolved_line
-        if line_for_quote is None:
-            doc_blob = " ".join((getattr(d, "filename", "") or "") + " " + (getattr(d, "raw_text", "") or "")[:3000] for d in (bundle.unstructured or []))
-            line_for_quote = detect_insurance_line(doc_blob, insurance_line or "")
+        # Re-resolve from the ingested package so every uploaded file counts —
+        # not just the intake hint / demo preset.
+        quote_blob = " ".join(
+            [
+                _package_blob(bundle),
+                schedule_of_values or "",
+                loss_run or "",
+                acord_xml or "",
+                json_payload or "",
+                " ".join(inspection_reports or []),
+                " ".join(supplemental_docs or []),
+            ]
+        )
+        line_for_quote = detect_insurance_line(
+            quote_blob,
+            (resolved_line.value if resolved_line else "") or (insurance_line or ""),
+        )
         if not isinstance(line_for_quote, InsuranceLine):
             line_for_quote = InsuranceLine.COMMERCIAL_PROPERTY
         quote = self.rating.quote(bundle, memo, line=line_for_quote)
@@ -955,6 +999,30 @@ class InsurancePipeline:
         )
         progress.finish()
 
+        # Production KPI capture (cycle time + routing + catch signals)
+        try:
+            from insureflow.analytics.business_kpis import get_business_kpi_service
+            from insureflow.analytics.metrics import get_pipeline_metrics
+
+            cycle_rec = get_pipeline_metrics().cycle_time.finish_pipeline(bid, status="completed")
+            recon_conflicts = 0
+            try:
+                recon_conflicts = len(getattr(reconciliation, "discrepancies", None) or [])
+            except Exception:
+                recon_conflicts = 0
+            get_business_kpi_service().record_pipeline_result(
+                bundle_id=bid,
+                decision=memo.decision.value,
+                org_id=self.org_id,
+                human_review_required=bool(memo.human_review_required),
+                missing_docs=list(missing_docs) if missing_docs else False,
+                conflict_detected=recon_conflicts > 0,
+                cycle_ms=cycle_rec.total_ms if cycle_rec else None,
+                source="pipeline",
+            )
+        except Exception as exc:
+            logger.debug("Business KPI capture failed: %s", exc)
+
         # ── 14. Dispatch status webhooks for broker visibility ──
         webhook_dispatcher.dispatch(
             "insurance.completed",
@@ -1009,6 +1077,18 @@ class InsurancePipeline:
                     "reason": "; ".join(open_conditions[:3]),
                 }
             )
+
+        # Final consistency gate: never emit ACCEPT with critical decline findings / high severity
+        from insureflow.underwriting.memo_sync import enforce_decision_consistency
+
+        enforce_decision_consistency(memo)
+        # Keep workflow AI decision aligned with the gated memo
+        if wf.ai_decision != memo.decision.value:
+            wf.ai_decision = memo.decision.value
+            try:
+                self.workflow.store.save(wf)
+            except Exception:
+                pass
 
         summary = {
             "status": "completed",

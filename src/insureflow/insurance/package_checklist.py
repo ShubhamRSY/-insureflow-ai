@@ -63,22 +63,83 @@ def _has_any(present: set[str], types: Iterable[InsuranceDocumentType]) -> bool:
 
 def detect_lob(text_blob: str = "", product_hint: str = "") -> str:
     blob = f"{product_hint}\n{text_blob}".lower()
-    if any(k in blob for k in ("d&o", "d and o", "directors and officers", "directors & officers", "management liability")):
-        return "do"
-    # Exact / short LOB tokens first (from pipeline insurance_line)
     hint = (product_hint or "").strip().lower()
+
+    # Commercial packages (warehouse / SOV / CGL / fleet) → property checklist
+    from insureflow.underwriting.personal_lines import _has_strong_commercial_signals
+
+    commercial = _has_strong_commercial_signals(blob)
+
+    # Exact / short LOB tokens — but never trust personal checklist hints
+    # on a commercial package (wrong UI default / stale job metadata).
     if hint in {"life", "auto", "homeowners", "property", "do"}:
-        return hint if hint != "do" else "do"
-    if any(k in blob for k in ("life insurance", "term life", "face amount", "beneficiary", "paramedical", " life")):
+        if commercial and hint in {"life", "auto", "homeowners"}:
+            return "property"
+        return hint
+
+    # True D&O only — do NOT match "and observed" via "d and o"
+    if any(
+        k in blob
+        for k in (
+            "d&o",
+            "directors and officers",
+            "directors & officers",
+            "management liability",
+            "d and o liability",
+            "d and o application",
+        )
+    ):
+        return "do"
+
+    if (
+        any(
+            k in blob
+            for k in (
+                "life insurance",
+                "term life",
+                "face amount",
+                "beneficiary designation",
+                "paramedical",
+                "insurance_line: life",
+                "insurance_line=life",
+            )
+        )
+        and not commercial
+    ):
         return "life"
-    if hint == "life" or blob.strip() == "life" or "insurance_line=life" in blob:
-        return "life"
-    if any(k in blob for k in ("personal auto", "mvr", "motor vehicle", "vin:", "rideshare", "drivers license")):
+
+    personal_auto = any(
+        k in blob
+        for k in (
+            "personal auto",
+            "auto application",
+            "insurance_line: personal_auto",
+            "insurance_line=personal_auto",
+            "drivers license",
+            "driver's license",
+            "motor vehicle report",
+            "mvr report",
+            "rideshare",
+        )
+    )
+    if personal_auto and not commercial:
         return "auto"
-    if any(k in blob for k in ("homeowners", "dwelling coverage", "ho-3", "personal homeowners", "clue report")):
+
+    if (
+        any(
+            k in blob
+            for k in (
+                "homeowners",
+                "dwelling coverage",
+                "ho-3",
+                "personal homeowners",
+                "clue report",
+            )
+        )
+        and not commercial
+    ):
         return "homeowners"
-    if "life" in blob.split() or blob.startswith("life") or "/life" in blob:
-        return "life"
+
     return "property"
 
 

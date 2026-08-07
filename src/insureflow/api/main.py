@@ -884,6 +884,7 @@ def _load_pacific_coast_submission() -> SubmissionRequest:
         schedule_of_values=sov,
         inspection_reports=[inspection],
         json_payload=broker,
+        insurance_line="commercial_property",
         use_llm=True,
     )
 
@@ -2658,6 +2659,28 @@ def get_calibration_summary(
     from insureflow.outcomes.feedback import FeedbackEngine
 
     return FeedbackEngine().calibration_summary(current.org_id)
+
+
+@app.get("/analytics/business-kpis")
+def get_business_kpis(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Production business KPIs: cycle time, override, bind, LR, STP, catch rate."""
+    from insureflow.analytics.business_kpis import get_business_kpi_service
+
+    return get_business_kpi_service().compute(org_id=current.org_id)
+
+
+@app.post("/analytics/business-kpis/bootstrap")
+@limiter.limit("5/minute")
+def bootstrap_business_kpis_endpoint(
+    request: Request,
+    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+) -> dict[str, Any]:
+    """Run labeled scenarios and refresh KPI measurements (lab → measurable numbers)."""
+    from insureflow.analytics.business_kpis import bootstrap_business_kpis
+
+    return bootstrap_business_kpis(org_id=current.org_id or "kpi-lab")
 
 
 @app.get("/analytics/overrides")

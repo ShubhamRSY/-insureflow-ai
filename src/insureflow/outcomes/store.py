@@ -38,8 +38,9 @@ class OutcomeStore:
     def list_experiences(self, org_id: str = "default") -> list[LossExperience]:
         org_dir = self._org_dir(org_id)
         results: list[LossExperience] = []
-        for path in org_dir.glob("*_*.json"):
-            if "_outcome" in path.name:
+        for path in org_dir.glob("*.json"):
+            name = path.name
+            if name.endswith("_outcome.json") or name.endswith("_prediction.json"):
                 continue
             try:
                 results.append(LossExperience.model_validate_json(path.read_text(encoding="utf-8")))
@@ -56,3 +57,23 @@ class OutcomeStore:
         if not path.exists():
             return None
         return PredictionRecord.model_validate_json(path.read_text(encoding="utf-8"))
+
+    def list_outcomes(self, org_id: str = "default") -> list[BindOutcome]:
+        org_dir = self._org_dir(org_id)
+        results: list[BindOutcome] = []
+        for path in org_dir.glob("*_outcome.json"):
+            try:
+                results.append(BindOutcome.model_validate_json(path.read_text(encoding="utf-8")))
+            except Exception as exc:
+                logger.warning("Skipping corrupt outcome file %s: %s", path.name, exc)
+        return results
+
+    def list_predictions(self, org_id: str = "default") -> list[PredictionRecord]:
+        org_dir = self._org_dir(org_id)
+        results: list[PredictionRecord] = []
+        for path in org_dir.glob("*_prediction.json"):
+            try:
+                results.append(PredictionRecord.model_validate_json(path.read_text(encoding="utf-8")))
+            except Exception as exc:
+                logger.warning("Skipping corrupt prediction file %s: %s", path.name, exc)
+        return results
