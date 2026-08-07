@@ -90,7 +90,7 @@ class LocationData(BaseModel):
 
 class ClaimRecord(BaseModel):
     claim_id: str
-    date_of_loss: date
+    date_of_loss: date  # accident date — the loss occurrence date (CAS data organization)
     line_of_business: str
     cause: str
     description: str = ""
@@ -100,6 +100,11 @@ class ClaimRecord(BaseModel):
     claim_status: ClaimStatus = ClaimStatus.OPEN
     location: Optional[str] = None
     notes: str = ""
+    # CAS reserving-standard timing fields (see docs/underwriting standards):
+    date_reported: Optional[date] = None  # report date — first reported to the insurer
+    date_closed: Optional[date] = None  # date the claim was settled/closed
+    valuation_date: Optional[date] = None  # date through which transactions are valued
+    reopened: bool = False  # closed claim reopened (reopened-claims potential)
 
 
 class LossRunData(BaseModel):

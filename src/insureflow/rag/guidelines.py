@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+from datetime import datetime
 from enum import Enum
+from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -26,6 +28,20 @@ class GuidelineSource(str, Enum):
     INDUSTRY_STANDARD = "industry_standard"
 
 
+class GuidelineStatus(str, Enum):
+    """Lifecycle of a guideline so staff underwriters can version and expire rules.
+
+    Staff underwriters periodically update the guides; an updated rule is written
+    as a new ``version`` whose ``supersedes`` points at the rule it replaces, and
+    the replaced rule is marked ``superseded`` so retrieval stops returning it.
+    """
+
+    DRAFT = "draft"
+    ACTIVE = "active"
+    SUPERSEDED = "superseded"
+    ARCHIVED = "archived"
+
+
 class Guideline(BaseModel):
     id: str
     category: GuidelineCategory
@@ -36,6 +52,32 @@ class Guideline(BaseModel):
     risk_impact: str = "medium"
     applies_to_naics: list[str] = Field(default_factory=list)
 
+    # Versioning / filing metadata (Chapter 2 "periodically update the guides",
+    # Chapter 1.2 state-filed rates, rules, and forms).
+    version: str = "1.0"
+    status: GuidelineStatus = GuidelineStatus.ACTIVE
+    effective_date: Optional[datetime] = None
+    expiration_date: Optional[datetime] = None
+    supersedes: str = ""  # id of the guideline this version replaces
+    states: list[str] = Field(default_factory=list)  # empty = applies in all states
+
+    # Pricing linkage (see rating/surcharges.py) — codes of rules the guide rule drives.
+    pricing_rule_codes: list[str] = Field(default_factory=list)
+
+    def is_active_on(self, as_of: Optional[datetime] = None) -> bool:
+        """True when this guideline is in force at ``as_of`` (default: now)."""
+        when = as_of or datetime.now()
+        if self.status != GuidelineStatus.ACTIVE:
+            return False
+        if self.effective_date is not None and when < self.effective_date:
+            return False
+        if self.expiration_date is not None and when > self.expiration_date:
+            return False
+        return True
+
+    def applies_to_state(self, state: str) -> bool:
+        return not self.states or state in self.states
+
 
 class UnderwritingGuidelines(BaseModel):
     guidelines: list[Guideline] = Field(default_factory=list)
@@ -45,6 +87,23 @@ class UnderwritingGuidelines(BaseModel):
 
     def search_keywords(self, terms: list[str]) -> list[Guideline]:
         return [g for g in self.guidelines if any(t.lower() in " ".join(g.keywords).lower() for t in terms)]
+
+    def active_as_of(self, as_of: Optional[datetime] = None) -> list[Guideline]:
+        """Guidelines in force at ``as_of`` — the ones retrieval may cite."""
+        return [g for g in self.guidelines if g.is_active_on(as_of)]
+
+    def for_states(self, states: list[str], as_of: Optional[datetime] = None) -> list[Guideline]:
+        """Active guidelines that apply to any of ``states`` (empty states = all)."""
+        active = set(g.id for g in self.active_as_of(as_of))
+        return [g for g in self.guidelines if g.id in active and (not g.states or bool(set(g.states) & set(states)))]
+
+    def resolve_supersession(self) -> dict[str, str]:
+        """Map each active guideline id to the version that supersedes it (if any)."""
+        superseded_by: dict[str, str] = {}
+        for g in self.guidelines:
+            if g.status == GuidelineStatus.ACTIVE and g.supersedes:
+                superseded_by[g.supersedes] = g.id
+        return superseded_by
 
 
 def builtin_carrier_appetite_rules() -> UnderwritingGuidelines:

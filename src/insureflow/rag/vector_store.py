@@ -108,9 +108,26 @@ class PgVectorStore(VectorStore):
                     source TEXT NOT NULL,
                     keywords TEXT[] NOT NULL,
                     risk_impact TEXT NOT NULL,
+                    version TEXT NOT NULL DEFAULT '1.0',
+                    status TEXT NOT NULL DEFAULT 'active',
+                    effective_date TIMESTAMPTZ,
+                    expiration_date TIMESTAMPTZ,
+                    supersedes TEXT NOT NULL DEFAULT '',
+                    states TEXT[] NOT NULL DEFAULT '{{}}',
+                    pricing_rule_codes TEXT[] NOT NULL DEFAULT '{{}}',
                     embedding vector(1536)
                 )
             """)
+            for col, ddl in (
+                ("version", "TEXT NOT NULL DEFAULT '1.0'"),
+                ("status", "TEXT NOT NULL DEFAULT 'active'"),
+                ("effective_date", "TIMESTAMPTZ"),
+                ("expiration_date", "TIMESTAMPTZ"),
+                ("supersedes", "TEXT NOT NULL DEFAULT ''"),
+                ("states", "TEXT[] NOT NULL DEFAULT '{}'"),
+                ("pricing_rule_codes", "TEXT[] NOT NULL DEFAULT '{}'"),
+            ):
+                cur.execute(f"ALTER TABLE {self._collection} ADD COLUMN IF NOT EXISTS {col} {ddl}")
             self._conn.commit()
             cur.close()
         except Exception as exc:
@@ -124,11 +141,22 @@ class PgVectorStore(VectorStore):
             emb = self._get_embedding(f"{g.title} {g.content}")
             cur.execute(
                 f"""
-                INSERT INTO {self._collection} (id, title, content, category, source, keywords, risk_impact, embedding)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO {self._collection} (
+                    id, title, content, category, source, keywords, risk_impact,
+                    version, status, effective_date, expiration_date, supersedes,
+                    states, pricing_rule_codes, embedding
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 ON CONFLICT (id) DO UPDATE SET
                     title = EXCLUDED.title,
                     content = EXCLUDED.content,
+                    version = EXCLUDED.version,
+                    status = EXCLUDED.status,
+                    effective_date = EXCLUDED.effective_date,
+                    expiration_date = EXCLUDED.expiration_date,
+                    supersedes = EXCLUDED.supersedes,
+                    states = EXCLUDED.states,
+                    pricing_rule_codes = EXCLUDED.pricing_rule_codes,
                     embedding = EXCLUDED.embedding
             """,
                 (
@@ -139,6 +167,13 @@ class PgVectorStore(VectorStore):
                     g.source.value,
                     g.keywords,
                     g.risk_impact,
+                    g.version,
+                    g.status.value,
+                    g.effective_date,
+                    g.expiration_date,
+                    g.supersedes,
+                    g.states,
+                    g.pricing_rule_codes,
                     emb,
                 ),
             )
@@ -152,6 +187,8 @@ class PgVectorStore(VectorStore):
         cur.execute(
             f"""
             SELECT id, title, content, category, source, keywords, risk_impact,
+                   version, status, effective_date, expiration_date, supersedes,
+                   states, pricing_rule_codes,
                    1 - (embedding <=> %s::vector) AS similarity
             FROM {self._collection}
             ORDER BY embedding <=> %s::vector
@@ -169,8 +206,15 @@ class PgVectorStore(VectorStore):
                 source=row[4],
                 keywords=list(row[5]),
                 risk_impact=row[6],
+                version=row[7],
+                status=row[8],
+                effective_date=row[9],
+                expiration_date=row[10],
+                supersedes=row[11],
+                states=list(row[12] or []),
+                pricing_rule_codes=list(row[13] or []),
             )
-            results.append((g, float(row[7])))
+            results.append((g, float(row[14])))
         cur.close()
         return results
 

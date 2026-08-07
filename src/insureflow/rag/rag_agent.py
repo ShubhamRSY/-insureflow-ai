@@ -31,10 +31,11 @@ class RAGAgent:
     def ensure_indexed(self) -> None:
         if not self._initialized:
             guidelines = builtin_guidelines()
-            self.store.index_guidelines(guidelines.guidelines)
-            self._guidelines_cache = list(guidelines.guidelines)
+            active = guidelines.active_as_of()
+            self.store.index_guidelines(active)
+            self._guidelines_cache = list(active)
             self._initialized = True
-            logger.info("Indexed %d underwriting guidelines", len(guidelines.guidelines))
+            logger.info("Indexed %d underwriting guidelines", len(active))
 
     def _all_guidelines(self) -> list[Guideline]:
         self.ensure_indexed()

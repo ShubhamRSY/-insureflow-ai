@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from datetime import date
 
 from insureflow.ingestion.acord_parser import ACORDParser
 from insureflow.ingestion.classifier import DocumentClassifier
@@ -239,6 +240,37 @@ class TestLossRunParser:
         data = parser.parse_structured("Nothing here")
         assert data.total_claims == 0
         assert data.claims == []
+
+    def test_parse_reserving_dates(self) -> None:
+        text = """# CLAIM DETAIL
+### Claim CL-1001
+**Date of loss:** 2023-10-12
+**Date reported:** 2023-11-01
+**Date closed:** 2024-03-15
+**Line:** General Liability
+**Incurred:** $50,000  **Paid:** $50,000  **Status:** Closed
+
+### Claim CL-1002
+**Date of loss:** 2024-02-10
+**Date reported:** 2024-02-20
+**Line:** General Liability
+**Cause:** Claim was reopened for additional medical.
+**Incurred:** $20,000  **Paid:** $5,000  **Open reserve:** $15,000  **Status:** Open
+"""
+        parser = LossRunParser()
+        data = parser.parse_structured(text)
+        claims = {c.claim_id: c for c in data.claims}
+        closed = claims["CL-1001"]
+        assert closed.date_of_loss == date(2023, 10, 12)
+        assert closed.date_reported == date(2023, 11, 1)
+        assert closed.date_closed == date(2024, 3, 15)
+        assert closed.valuation_date == date(2024, 3, 15)
+        assert closed.reopened is False
+        reopened = claims["CL-1002"]
+        assert reopened.date_reported == date(2024, 2, 20)
+        assert reopened.date_closed is None
+        assert reopened.valuation_date == date(2024, 2, 20)
+        assert reopened.reopened is True
 
 
 class TestSOVParser:

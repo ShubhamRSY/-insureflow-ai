@@ -6,6 +6,12 @@ underwriting principles of **risk selection**, **homogeneity vs. volume**, and
 `src/insureflow/underwriting/selection.py` and is applied per submission by
 `src/insureflow/agents/selection_standards_agent.py`.
 
+> Related: [`underwriting_fundamentals.md`](underwriting_fundamentals.md) covers
+> the full foundational syllabus an automated underwriting system must encode —
+> underwriting policy, reinsurance, risk classification & rating, individual
+> risk assessment, decision logic, regulatory compliance, loss control,
+> operational workflow, and monitoring/feedback.
+
 ## The doctrine
 
 1. **Selection is the heart of underwriting.** Every submission must be

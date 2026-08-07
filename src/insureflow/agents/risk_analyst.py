@@ -6,7 +6,7 @@ from typing import Any
 from insureflow.agents.base import BaseAgent
 from insureflow.agents.tools import UnderwritingTools
 from insureflow.models.agents import AgentResult, AgentType, Finding, RiskSeverity
-from insureflow.models.submissions import LocationData, SubmissionBundle
+from insureflow.models.submissions import ClaimRecord, LocationData, SubmissionBundle
 
 
 class RiskAnalystAgent(BaseAgent):
@@ -56,6 +56,7 @@ class RiskAnalystAgent(BaseAgent):
             self._assess_sov_adequacy(sovs, locations)
 
         self._assess_credit_rating(bundle)
+        self._assess_reserving(bundle, **kwargs)
         self._ml_loss_prediction(bundle)
 
     def _assess_construction(self, profile: Any) -> None:
@@ -252,6 +253,59 @@ class RiskAnalystAgent(BaseAgent):
             return int(float(cleaned))
         except (ValueError, TypeError):
             return None
+
+    def _assess_reserving(self, bundle: SubmissionBundle, **kwargs: Any) -> None:
+        """Run CAS loss reserving standards review over the submission's loss history."""
+        from insureflow.underwriting.reserving import run_reserving_standards_review
+
+        claims: list[ClaimRecord] = []
+        if bundle.structured:
+            if bundle.structured.risk_profile:
+                claims.extend(bundle.structured.risk_profile.prior_claims or [])
+            if bundle.structured.financial and bundle.structured.financial.loss_run:
+                claims.extend(bundle.structured.financial.loss_run.claims or [])
+        if not claims:
+            return
+
+        premium = kwargs.get("premium", 0.0)
+        if not premium and bundle.structured:
+            premium = sum(c.premium for c in bundle.structured.coverages)
+
+        review = run_reserving_standards_review(bundle, premium=premium)
+
+        if review.reasonableness is not None and not review.reasonableness.is_reasonable:
+            self._add_finding(
+                Finding(
+                    title="Loss ratio inconsistent with expected",
+                    description=(
+                        f"Loss ratio {review.reasonableness.loss_ratio:.2f} vs expected "
+                        f"{review.reasonableness.expected_loss_ratio:.2f} — reserve estimate may be unreliable"
+                    ),
+                    severity=RiskSeverity.HIGH,
+                    category="reserving",
+                    field_path="structured.financial.loss_run",
+                )
+            )
+        if review.operational_changes:
+            self._add_finding(
+                Finding(
+                    title="Operational changes distort loss history",
+                    description="; ".join(c.marker for c in review.operational_changes[:5]),
+                    severity=RiskSeverity.HIGH,
+                    category="reserving",
+                    field_path="unstructured",
+                )
+            )
+        if review.worst_severity in (RiskSeverity.HIGH, RiskSeverity.CRITICAL):
+            self._add_finding(
+                Finding(
+                    title="Loss reserving standards concern",
+                    description=review.summary,
+                    severity=review.worst_severity,
+                    category="reserving",
+                    field_path="structured.risk_profile.prior_claims",
+                )
+            )
 
     def _ml_loss_prediction(self, bundle: SubmissionBundle) -> None:
         """Run ML loss prediction model on submission."""

@@ -31,6 +31,9 @@ class PipelineEvent(str, Enum):
     PIPELINE_COMPLETE = "pipeline_complete"
     PIPELINE_FAILED = "pipeline_failed"
     HUMAN_REVIEW_REQUIRED = "human_review_required"
+    COMMUNICATION_LOGGED = "communication_logged"
+    REINSURANCE_REQUESTED = "reinsurance_requested"
+    REINSURANCE_DISPOSITION = "reinsurance_disposition"
 
 
 class DiscrepancyRecord(BaseModel):

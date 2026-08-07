@@ -1003,6 +1003,7 @@ simulated_documents/           # 80+ mortgage files across 10 borrower scenarios
 tests/                         # pytest suite (20 test files)
 evaluations/                   # Ragas + Giskard MLOps eval + performance/price benchmark
 docs/architecture/architecture.md           # Detailed system design
+docs/underwriting/underwriting_fundamentals.md  # Foundational underwriting syllabus (policy, reinsurance, classification & rating, decision logic, compliance, workflow, monitoring)
 ```
 
 ---

@@ -32,6 +32,8 @@ class LossRunParser(BaseParser):
         r"\*{0,2}\s*:\s*\*{0,2}\s*\$?([\d,]+(?:\.\d{2})?)"
     )
     STATUS_RE = re.compile(r"(?i)\*{0,2}status\*{0,2}\s*:\s*\*{0,2}\s*(open|closed|pending|litigation|subrogation)")
+    REOPENED_RE = re.compile(r"(?i)(?:reopened|re-?opened)")
+
 
     SECTION_HEADINGS = re.compile(
         r"(?i)^(#{1,3}\s*)?(?:claim\s+detail|loss\s+run|claims?\s+summary|"
@@ -161,12 +163,22 @@ class LossRunParser(BaseParser):
 
         dates = self.DATE_RE.findall(block)
         date_of_loss = date.today()
-        if dates:
+        date_reported: Optional[date] = None
+        date_closed: Optional[date] = None
+        parsed_dates: list[date] = []
+        for raw in dates:
             try:
-                dt = datetime.strptime(dates[0].replace("/", "-"), "%Y-%m-%d")
-                date_of_loss = dt.date()
+                parsed_dates.append(datetime.strptime(raw.replace("/", "-"), "%Y-%m-%d").date())
             except ValueError:
-                pass
+                continue
+        if parsed_dates:
+            date_of_loss = parsed_dates[0]
+        if len(parsed_dates) >= 2:
+            date_reported = parsed_dates[1]
+        if len(parsed_dates) >= 3:
+            date_closed = parsed_dates[2]
+        # Valuation point = the most recent date in the block (the report "as of").
+        valuation_date = max(parsed_dates) if parsed_dates else date.today()
 
         line_match = self.LINE_RE.search(block)
         line_of_business = line_match.group(1).strip() if line_match else "Unknown"
@@ -218,6 +230,10 @@ class LossRunParser(BaseParser):
         return ClaimRecord(
             claim_id=claim_id,
             date_of_loss=date_of_loss,
+            date_reported=date_reported,
+            date_closed=date_closed,
+            valuation_date=valuation_date,
+            reopened=bool(self.REOPENED_RE.search(block)),
             line_of_business=line_of_business,
             cause=cause or description[:100],
             description=description,
