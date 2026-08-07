@@ -165,11 +165,7 @@ def _detect_line_from_content(blob: str) -> InsuranceLine:
             )
         )
         gl_heavy = "general liability" in blob or "commercial general liability" in blob
-        wc_only = (
-            ("workers comp" in blob or "workers' compensation" in blob or "workers compensation" in blob)
-            and not property_heavy
-            and not gl_heavy
-        )
+        wc_only = ("workers comp" in blob or "workers' compensation" in blob or "workers compensation" in blob) and not property_heavy and not gl_heavy
         if wc_only:
             return InsuranceLine.WORKERS_COMP
         if "businessowners" in blob or " bop " in blob or "bop policy" in blob:

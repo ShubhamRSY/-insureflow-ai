@@ -54,10 +54,7 @@ def test_commercial_fleet_not_personal_auto() -> None:
     assert detect_lob(blob) == "property"
     assert detect_lob(blob, "auto") == "property"
     # Personal packages keep personal line even if hint is commercial
-    assert (
-        detect_insurance_line("personal auto application VIN: 1HGCM82633A004352 MVR report", "commercial_property")
-        == InsuranceLine.PERSONAL_AUTO
-    )
+    assert detect_insurance_line("personal auto application VIN: 1HGCM82633A004352 MVR report", "commercial_property") == InsuranceLine.PERSONAL_AUTO
     # False D&O from "and observed" must not fire
     assert detect_lob("verified field values measured and observed by the surveyor") == "property"
     assert detect_lob("Directors & Officers liability") == "do"
