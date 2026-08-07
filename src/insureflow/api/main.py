@@ -3973,11 +3973,7 @@ def request_broker_documents(
     if not docs:
         missing = get_missing_documents(bundle_id, current)
         docs = missing.get("missing_documents", [])
-    public_base = (
-        str(body.get("public_base_url") or "").rstrip("/")
-        or os.getenv("PUBLIC_APP_BASE_URL", "").rstrip("/")
-        or str(request.base_url).rstrip("/")
-    )
+    public_base = str(body.get("public_base_url") or "").rstrip("/") or os.getenv("PUBLIC_APP_BASE_URL", "").rstrip("/") or str(request.base_url).rstrip("/")
     result = get_ecosystem_service().request_broker_documents(
         bundle_id,
         current.org_id,
