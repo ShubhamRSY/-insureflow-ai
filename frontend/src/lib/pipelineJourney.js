@@ -291,6 +291,7 @@ function formatCompact(n) {
 
 export function buildSubmissionQuality(job) {
   const r = job?.results || {};
+  const status = (job?.status || '').toLowerCase();
   const recon = r.reconciliation || {};
   const discrepancies = recon.discrepancies || [];
   const criticalDisc = discrepancies.filter((d) => (d.severity || '').toLowerCase() === 'critical');
@@ -298,6 +299,27 @@ export function buildSubmissionQuality(job) {
   const line = (r.insurance_line || r.product_line || '').toLowerCase();
   const isLife = line === 'life';
   const checklist = r.document_checklist || {};
+
+  // Don't flash a fake B/75 while the pipeline is still ingesting — wait until
+  // triage/checklist/decision signals exist (or the job has finished).
+  const hasSignals = Boolean(
+    r.ai_decision
+    || r.document_checklist
+    || r.triage_score != null
+    || r.appetite_filter_passed != null
+    || (r.document_count != null && r.document_count > 0),
+  );
+  const stillRunning = status === 'processing' || status === 'pending' || status === 'queued';
+  if (!hasSignals && (stillRunning || !status)) {
+    return {
+      score: null,
+      grade: '—',
+      gradeColor: 'text-slate-500',
+      issues: ['Scoring after intake completes'],
+      pending: true,
+      lob: checklist.lob || line || null,
+    };
+  }
 
   let score = 100;
   const issues = [];
@@ -361,7 +383,7 @@ export function buildSubmissionQuality(job) {
   if (score < 60) { grade = 'D'; gradeColor = 'text-orange-400'; }
   if (score < 45) { grade = 'F'; gradeColor = 'text-red-400'; }
 
-  return { score, grade, gradeColor, issues, lob: checklist.lob || line || null };
+  return { score, grade, gradeColor, issues, pending: false, lob: checklist.lob || line || null };
 }
 
 export function buildVerificationSummary(job) {

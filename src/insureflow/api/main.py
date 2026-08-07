@@ -13,6 +13,7 @@ from typing import Any, Callable, Optional
 from fastapi import (
     APIRouter,
     BackgroundTasks,
+    Body,
     Depends,
     FastAPI,
     HTTPException,
@@ -5058,8 +5059,8 @@ class BrokerShareRequest(BaseModel):
 @app.post("/pipeline/jobs/{bundle_id}/broker-share")
 def create_broker_share(
     bundle_id: str,
-    req: BrokerShareRequest,
     current: TokenData = Depends(require_role(Role.VIEWER)),
+    req: BrokerShareRequest = Body(default_factory=BrokerShareRequest),
 ) -> dict[str, str]:
     """Generate a shareable broker status link for this bundle."""
     from insureflow.webhooks.dispatcher import webhook_dispatcher

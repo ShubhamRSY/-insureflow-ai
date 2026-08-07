@@ -1,10 +1,15 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from html import escape
 
 from insureflow.models.agents import UnderwritingMemo
 from insureflow.models.submissions import SubmissionBundle
 from insureflow.rating.models import InsuranceLine, QuoteResult
+
+
+def _esc(value: object) -> str:
+    return escape(str(value if value is not None else ""))
 
 
 def generate_quote_html(
@@ -20,16 +25,26 @@ def generate_quote_html(
     line_label = quote.line.value.replace("_", " ").title()
     subtitle = f"{'Life' if is_life else 'Commercial'} Insurance Quote — Issued {today}"
     decision = (memo.decision.value if hasattr(memo.decision, "value") else str(memo.decision or "")).upper()
+    decision_colors = {
+        "ACCEPT": "#15803d",
+        "CONDITIONAL_ACCEPT": "#b45309",
+        "REFER": "#b45309",
+        "DECLINE": "#b91c1c",
+    }
+    decision_color = decision_colors.get(decision, "#334155")
+    risk = memo.overall_risk_score
+    risk_pct = round(float(risk) * 100) if risk is not None else None
+    severity = (memo.overall_risk_severity.value if hasattr(memo.overall_risk_severity, "value") else str(memo.overall_risk_severity or "—")).upper()
 
     # Coverages
     coverages_html = ""
     if bundle.structured and bundle.structured.coverages:
         for c in bundle.structured.coverages:
-            sublimits = "".join(f"<tr><td class='pl-8'>{k}</td><td class='text-right'>${v:,.0f}</td></tr>" for k, v in c.sublimits.items())
-            endorsements = "".join(f"<li>{e}</li>" for e in c.endorsements) if c.endorsements else "<li class='text-slate-400'>None</li>"
+            sublimits = "".join(f"<tr><td class='pl-8'>{_esc(k)}</td><td class='text-right'>${v:,.0f}</td></tr>" for k, v in c.sublimits.items())
+            endorsements = "".join(f"<li>{_esc(e)}</li>" for e in c.endorsements) if c.endorsements else "<li class='muted'>None</li>"
             coverages_html += f"""
             <div class="card">
-              <div class="card-header">{c.coverage_type}</div>
+              <div class="card-header">{_esc(c.coverage_type)}</div>
               <table>
                 <tr><td>Limit</td><td class='text-right'>${c.limit_amount:,.0f}</td></tr>
                 <tr><td>Deductible</td><td class='text-right'>${c.deductible:,.0f}</td></tr>
@@ -47,12 +62,12 @@ def generate_quote_html(
               <div class="card-header">Term / Life Coverage</div>
               <table>
                 <tr><td>Face amount</td><td class='text-right'>${float(face):,.0f}</td></tr>
-                <tr><td>UW class</td><td class='text-right'>{medical.get("underwriting_class") or meta.get("uw_decision_hint") or "—"}</td></tr>
+                <tr><td>UW class</td><td class='text-right'>{_esc(medical.get("underwriting_class") or meta.get("uw_decision_hint") or "—")}</td></tr>
                 <tr><td>Tobacco</td><td class='text-right'>{"Yes" if medical.get("tobacco") else "No"}</td></tr>
               </table>
             </div>"""
     else:
-        coverages_html = '<p class="text-slate-400">Coverage details not available — see quote breakdown below.</p>'
+        coverages_html = '<p class="muted">Coverage details not available — see quote breakdown below.</p>'
 
     exclusions: list[str] = []
     if memo.recommendation and memo.recommendation.conditions:
@@ -61,7 +76,6 @@ def generate_quote_html(
     for f in memo.key_findings:
         if f.category in ("compliance", "coverage") and "exclusion" in (f.title + f.description).lower():
             exclusions.append(f"{f.title}: {f.description}")
-    # Dedupe while preserving order
     seen: set[str] = set()
     uniq_excl: list[str] = []
     for e in exclusions:
@@ -70,7 +84,7 @@ def generate_quote_html(
             uniq_excl.append(e)
     if not uniq_excl:
         uniq_excl.append("Standard policy exclusions apply. See policy form for full details.")
-    exclusions_html = "".join(f"<li>{e}</li>" for e in uniq_excl)
+    exclusions_html = "".join(f"<li>{_esc(e)}</li>" for e in uniq_excl)
 
     components_html = ""
     for rc in quote.schedule_modifications:
@@ -78,42 +92,69 @@ def generate_quote_html(
         label = rc.name.replace("_", " ").title()
         amount = getattr(rc, "amount", None)
         if is_life and amount is not None and pct == 0:
-            components_html += f"<tr><td>{label}</td><td class='text-right'>{amount}</td></tr>"
+            components_html += f"<tr><td>{_esc(label)}</td><td class='text-right'>{_esc(amount)}</td></tr>"
         elif pct > 0:
-            components_html += f"<tr><td>{label}</td><td class='text-right text-red-400'>+{pct:.1f}%</td></tr>"
+            components_html += f"<tr><td>{_esc(label)}</td><td class='text-right text-up'>+{pct:.1f}%</td></tr>"
         elif pct < 0:
-            components_html += f"<tr><td>{label}</td><td class='text-right text-green-400'>{pct:.1f}%</td></tr>"
+            components_html += f"<tr><td>{_esc(label)}</td><td class='text-right text-down'>{pct:.1f}%</td></tr>"
         else:
-            components_html += f"<tr><td>{label}</td><td class='text-right text-slate-400'>{pct:.1f}%</td></tr>"
+            components_html += f"<tr><td>{_esc(label)}</td><td class='text-right muted'>{pct:.1f}%</td></tr>"
+
+    # Detailed findings for the quote package
+    findings = list(memo.key_findings or [])
+    findings_html = ""
+    if findings:
+        for f in findings[:25]:
+            sev = (f.severity.value if hasattr(f.severity, "value") else str(f.severity or "moderate")).lower()
+            findings_html += f"""
+            <div class="finding">
+              <div class="finding-top">
+                <span class="sev sev-{_esc(sev)}">{_esc(sev.upper())}</span>
+                <strong>{_esc(f.title)}</strong>
+                <span class="muted"> · {_esc((f.category or "general").replace("_", " "))}</span>
+              </div>
+              <p class="finding-desc">{_esc(f.description or "")}</p>
+            </div>"""
+    else:
+        findings_html = '<p class="muted">No underwriting findings recorded for this quote.</p>'
+
+    review_reasons = list(memo.human_review_reasons or [])
+    review_html = ""
+    if review_reasons:
+        items = "".join(f"<li>{_esc(r)}</li>" for r in review_reasons[:12])
+        review_html = f"""
+  <h2>Human Review Reasons</h2>
+  <ul class="list">{items}</ul>"""
 
     if is_life:
         face = float(meta.get("face_amount") or meta.get("tiv") or 0)
         medical = meta.get("medical") or {}
         header_rows = f"""
-  <div class="row"><span class="label">Line of Business</span><span>{line_label}</span></div>
+  <div class="row"><span class="label">Line of Business</span><span>{_esc(line_label)}</span></div>
   <div class="row"><span class="label">Face Amount</span><span>${face:,.0f}</span></div>
-  <div class="row"><span class="label">UW Class</span><span>{(medical.get("underwriting_class") or "—").replace("_", " ").title()}</span></div>
+  <div class="row"><span class="label">UW Class</span><span>{_esc((medical.get("underwriting_class") or "—").replace("_", " ").title())}</span></div>
   <div class="row"><span class="label">Tobacco</span><span>{"Yes" if medical.get("tobacco") else "No"}</span></div>
-  <div class="row"><span class="label">Decision</span><span>{decision}</span></div>
-  <div class="row"><span class="label">Policy Admin Ref</span><span>{quote.policy_admin_reference or "N/A"}</span></div>"""
+  <div class="row"><span class="label">Decision</span><span style="color:{decision_color};font-weight:700;">{_esc(decision)}</span></div>
+  <div class="row"><span class="label">Policy Admin Ref</span><span>{_esc(quote.policy_admin_reference or "N/A")}</span></div>"""
         modifiers_block = f"""
   <h2>Life Rating Factors</h2>
   <div class="card">
-    <div class="row"><span class="label">Filing</span><span>{meta.get("filing_id") or "—"}</span></div>
-    <div class="row"><span class="label">Product</span><span>{meta.get("product") or "—"}</span></div>
-    <div class="row"><span class="label">UW hint</span><span>{meta.get("uw_decision_hint") or decision.lower()}</span></div>
+    <div class="row"><span class="label">Filing</span><span>{_esc(meta.get("filing_id") or "—")}</span></div>
+    <div class="row"><span class="label">Product</span><span>{_esc(meta.get("product") or "—")}</span></div>
+    <div class="row"><span class="label">UW hint</span><span>{_esc(meta.get("uw_decision_hint") or decision.lower())}</span></div>
   </div>"""
     else:
         cope_grade = str(meta.get("cope_grade", "N/A"))
         market_phase = str(meta.get("market_phase", "N/A"))
         tiv = sum((loc.building_value or 0) + (loc.contents_value or 0) + (loc.bi_value or 0) for loc in (bundle.structured.locations if bundle.structured else [])) or meta.get("tiv", 0)
         header_rows = f"""
-  <div class="row"><span class="label">Line of Business</span><span>{line_label}</span></div>
+  <div class="row"><span class="label">Line of Business</span><span>{_esc(line_label)}</span></div>
   <div class="row"><span class="label">Total Insured Value</span><span>${float(tiv):,.0f}</span></div>
-  <div class="row"><span class="label">COPE Risk Grade</span><span>{cope_grade.replace("_", " ").title()}</span></div>
-  <div class="row"><span class="label">Market Phase</span><span>{market_phase.replace("_", " ").title()}</span></div>
-  <div class="row"><span class="label">Decision</span><span>{decision}</span></div>
-  <div class="row"><span class="label">Policy Admin Ref</span><span>{quote.policy_admin_reference or "N/A"}</span></div>"""
+  <div class="row"><span class="label">COPE Risk Grade</span><span>{_esc(cope_grade.replace("_", " ").title())}</span></div>
+  <div class="row"><span class="label">Market Phase</span><span>{_esc(market_phase.replace("_", " ").title())}</span></div>
+  <div class="row"><span class="label">Risk Score</span><span>{risk_pct if risk_pct is not None else "—"}/100 · {_esc(severity)}</span></div>
+  <div class="row"><span class="label">Decision</span><span style="color:{decision_color};font-weight:700;">{_esc(decision)}</span></div>
+  <div class="row"><span class="label">Policy Admin Ref</span><span>{_esc(quote.policy_admin_reference or "N/A")}</span></div>"""
         modifiers_block = f"""
   <h2>Rate Components</h2>
   <div class="grid-2">
@@ -134,48 +175,76 @@ def generate_quote_html(
 
     summary_note = ""
     if memo.summary:
-        summary_note = f'<div class="card" style="margin-top:12px;"><div class="card-header">Underwriting Summary</div><p style="color:#cbd5e1;font-size:12px;">{memo.summary}</p></div>'
+        summary_note = f"""
+  <div class="card summary-card">
+    <div class="card-header">Underwriting Summary</div>
+    <p class="summary-text">{_esc(memo.summary)}</p>
+  </div>"""
 
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Insurance Quote — {insured}</title>
+<title>Insurance Quote — {_esc(insured)}</title>
 <style>
   *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
-  body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0a0f; color: #e2e8f0; padding: 40px 20px; font-size: 13px; line-height: 1.5; }}
-  .container {{ max-width: 800px; margin: 0 auto; background: #14141f; border-radius: 12px; padding: 32px; box-shadow: 0 4px 24px rgba(0,0,0,0.4); }}
-  h1 {{ font-size: 22px; font-weight: 700; margin-bottom: 4px; }}
+  body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0a0f; color: #e2e8f0; padding: 40px 20px; font-size: 13px; line-height: 1.55; }}
+  .container {{ max-width: 860px; margin: 0 auto; background: #14141f; border-radius: 12px; padding: 32px; box-shadow: 0 4px 24px rgba(0,0,0,0.4); }}
+  h1 {{ font-size: 22px; font-weight: 700; margin-bottom: 4px; color: #f8fafc; }}
   h2 {{ font-size: 15px; font-weight: 600; margin: 24px 0 8px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }}
-  .subtitle {{ color: #64748b; font-size: 13px; margin-bottom: 20px; }}
-  .row {{ display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }}
+  .subtitle {{ color: #94a3b8; font-size: 13px; margin-bottom: 20px; }}
+  .row {{ display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.06); color: #e2e8f0; }}
   .label {{ color: #94a3b8; }}
+  .muted {{ color: #94a3b8; }}
   .total {{ font-size: 20px; font-weight: 700; color: #4ade80; text-align: right; margin-top: 12px; padding-top: 12px; border-top: 2px solid rgba(255,255,255,0.08); }}
-  .card {{ background: rgba(255,255,255,0.03); border-radius: 8px; padding: 16px; margin-bottom: 12px; }}
+  .card {{ background: rgba(255,255,255,0.04); border-radius: 8px; padding: 16px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.06); }}
   .card-header {{ font-weight: 600; font-size: 14px; margin-bottom: 8px; color: #f1f5f9; }}
-  table {{ width: 100%; border-collapse: collapse; }}
-  td {{ padding: 4px 0; }}
-  .section-title {{ font-size: 11px; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em; margin-top: 12px; margin-bottom: 4px; }}
+  .summary-text {{ color: #e2e8f0; font-size: 13px; line-height: 1.6; }}
+  table {{ width: 100%; border-collapse: collapse; color: #e2e8f0; }}
+  td {{ padding: 4px 0; color: #e2e8f0; }}
+  .section-title {{ font-size: 11px; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.05em; margin-top: 12px; margin-bottom: 4px; }}
   .list {{ list-style: none; padding: 0; }}
-  .list li {{ padding: 3px 0; color: #cbd5e1; font-size: 12px; }}
-  .list li::before {{ content: "— "; color: #64748b; }}
-  .footer {{ margin-top: 24px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.06); font-size: 11px; color: #64748b; text-align: center; }}
+  .list li {{ padding: 3px 0; color: #e2e8f0; font-size: 12px; }}
+  .list li::before {{ content: "— "; color: #94a3b8; }}
+  .footer {{ margin-top: 24px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.06); font-size: 11px; color: #94a3b8; text-align: center; }}
   .badge {{ display: inline-block; background: rgba(74,222,128,0.12); color: #4ade80; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }}
   .grid-2 {{ display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }}
-  @media print {{ body {{ background: white; color: #1e293b; }} .container {{ box-shadow: none; background: white; }} .card {{ background: #f8fafc; }} .label {{ color: #64748b; }} .subtitle {{ color: #64748b; }} h2 {{ color: #475569; }} .total {{ color: #16a34a; }} .list li {{ color: #334155; }} .footer {{ color: #94a3b8; }} td {{ color: #1e293b; }} }}
+  .text-up {{ color: #f87171; }}
+  .text-down {{ color: #4ade80; }}
+  .finding {{ border-left: 3px solid #64748b; padding: 8px 10px; margin-bottom: 8px; background: rgba(255,255,255,0.03); border-radius: 0 6px 6px 0; }}
+  .finding-top {{ font-size: 12px; color: #f1f5f9; }}
+  .finding-desc {{ margin-top: 4px; font-size: 12px; color: #cbd5e1; line-height: 1.5; }}
+  .sev {{ display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 0.04em; margin-right: 6px; }}
+  .sev-critical, .sev-high {{ color: #f87171; }}
+  .sev-moderate {{ color: #fbbf24; }}
+  .sev-low, .sev-info {{ color: #4ade80; }}
+  @media print {{
+    body {{ background: white !important; color: #0f172a !important; }}
+    .container {{ box-shadow: none; background: white !important; }}
+    h1, .card-header, .finding-top, td, .row, .list li, .summary-text {{ color: #0f172a !important; }}
+    h2, .label, .muted, .subtitle, .section-title, .footer, .finding-desc {{ color: #334155 !important; }}
+    .card, .finding {{ background: #f8fafc !important; border-color: #e2e8f0 !important; }}
+    .total {{ color: #15803d !important; }}
+    .text-up {{ color: #b91c1c !important; }}
+    .text-down {{ color: #15803d !important; }}
+    .sev-critical, .sev-high {{ color: #b91c1c !important; }}
+    .sev-moderate {{ color: #b45309 !important; }}
+    .sev-low, .sev-info {{ color: #15803d !important; }}
+    .badge {{ background: #dcfce7 !important; color: #166534 !important; }}
+  }}
 </style>
 </head>
 <body>
 <div class="container">
   <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:4px;">
     <div>
-      <h1>{insured}</h1>
-      <p class="subtitle">{subtitle}</p>
+      <h1>{_esc(insured)}</h1>
+      <p class="subtitle">{_esc(subtitle)}</p>
     </div>
     <div style="text-align:right;">
-      <div class="badge">Quote #{quote.policy_admin_reference or "N/A"}</div>
-      <p style="color:#f59e0b;font-size:12px;margin-top:4px;">Expires {valid_until}</p>
+      <div class="badge">Quote #{_esc(quote.policy_admin_reference or "N/A")}</div>
+      <p class="muted" style="font-size:12px;margin-top:4px;">Expires {_esc(valid_until)}</p>
     </div>
   </div>
 
@@ -197,9 +266,13 @@ def generate_quote_html(
 
   {modifiers_block}
 
+  <h2>Key Underwriting Findings</h2>
+  {findings_html}
+  {review_html}
+
   <div class="footer">
     <p>This quote is for informational purposes only and does not constitute a binder of insurance.</p>
-    <p style="margin-top:4px;">Rytera &bull; Generated {today}</p>
+    <p style="margin-top:4px;">Rytera &bull; Generated {_esc(today)}</p>
   </div>
 </div>
 </body>

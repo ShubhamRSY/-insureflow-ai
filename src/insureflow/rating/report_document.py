@@ -91,6 +91,17 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
         "coverage": "Coverage",
         "fraud": "Fraud Detection",
         "external_oracle": "External Data",
+        "data_quality": "Data Quality",
+        "selection_standards": "Selection Standards",
+        "portfolio_risk": "Portfolio Risk",
+        "limit_adequacy": "Limit Adequacy",
+        "coverage_gaps": "Coverage Gaps",
+        "reinsurance": "Reinsurance",
+        "adverse_selection": "Adverse Selection",
+        "moral_hazard": "Moral Hazard",
+        "ml_fraud": "ML Fraud",
+        "ml_loss": "ML Loss",
+        "uw_decision": "Underwriting Decision",
     }
 
     # ── Document checklist ──
@@ -201,8 +212,33 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
     summary_block = ""
     if executive_summary:
         summary_block = f"""
-<div class="section-title">Executive Summary</div>
-<div class="card"><p style="font-size:13px;color:#334155;line-height:1.55;">{executive_summary}</p></div>
+<div class="section-title">Underwriting Summary</div>
+<div class="card"><p style="font-size:13px;color:#0f172a;line-height:1.6;">{executive_summary}</p></div>
+"""
+
+    review_reasons = memo.get("human_review_reasons") or []
+    review_block = ""
+    if review_reasons:
+        items = "".join(f"<li style='padding:3px 0;color:#0f172a;font-size:12px;'>&mdash; {r}</li>" for r in review_reasons[:15])
+        review_block = f"""
+<div class="section-title">Human Review Reasons</div>
+<div class="card"><ul style="list-style:none;padding:0;margin:0;">{items}</ul></div>
+"""
+
+    line_block = ""
+    if insurance_line:
+        line_block = f"""
+<div class="kv-row"><span class="kv-label">Line of Business</span><span class="kv-value">{insurance_line.replace("_", " ").title()}</span></div>
+"""
+    appetite_block = ""
+    appetite_passed = r.get("appetite_filter_passed")
+    if appetite_passed is not None:
+        appetite_block = f"""
+<div class="kv-row"><span class="kv-label">Appetite</span><span class="kv-value">{"Passed" if appetite_passed else "Failed / Referral"}</span></div>
+"""
+        if r.get("appetite_reason"):
+            appetite_block += f"""
+<div class="kv-row"><span class="kv-label">Appetite note</span><span class="kv-value">{r.get("appetite_reason")}</span></div>
 """
 
     return f"""<!DOCTYPE html>
@@ -227,7 +263,7 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
   body {{
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     color: #1e293b;
-    font-size: 11px;
+    font-size: 12px;
     line-height: 1.55;
     background: white;
     -webkit-font-smoothing: antialiased;
@@ -347,17 +383,17 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
   }}
   .finding-title {{
     font-weight: 600;
-    font-size: 11px;
-    color: #1e293b;
+    font-size: 12px;
+    color: #0f172a;
   }}
   .finding-desc {{
-    font-size: 10px;
-    color: #64748b;
+    font-size: 11px;
+    color: #334155;
     margin-top: 2px;
-    line-height: 1.4;
+    line-height: 1.45;
   }}
   .finding-severity {{
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 700;
     letter-spacing: 0.04em;
     margin-top: 2px;
@@ -424,6 +460,8 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
 <div class="grid-2">
   <div class="card">
     <div class="kv-row"><span class="kv-label">Decision</span><span class="kv-value" style="color:{decision_color};font-weight:700;">{decision}</span></div>
+    {line_block}
+    {appetite_block}
     <div class="kv-row"><span class="kv-label">Severity</span><span class="kv-value">{severity.title()}</span></div>
     <div class="kv-row"><span class="kv-label">Triage Score</span><span class="kv-value">{triage_score if triage_score is not None else "—"}</span></div>
     <div class="kv-row"><span class="kv-label">Risk Score</span><span class="kv-value" style="color:{risk_color};">{risk_pct}%</span></div>
@@ -473,6 +511,7 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
 </div>
 
 {summary_block}
+{review_block}
 
 <!-- ═══════════════════════════════════════════ RECOMMENDATION ═══════════════════════════════════════════ -->
 <div class="section-title">Underwriting Recommendation</div>

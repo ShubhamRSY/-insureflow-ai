@@ -112,7 +112,7 @@ export const endpoints = {
 
   // Broker status
   brokerStatus: (token) => api(`/broker/status/${token}`),
-  createBrokerShare: (bundleId) => api(`/pipeline/jobs/${bundleId}/broker-share`, { method: 'POST' }),
+  createBrokerShare: (bundleId, body = {}) => api(`/pipeline/jobs/${bundleId}/broker-share`, { method: 'POST', body }),
 
   // Vision / photo analysis
   analyzePhotos: (body) => api('/pipeline/vision/analyze', { method: 'POST', body }),

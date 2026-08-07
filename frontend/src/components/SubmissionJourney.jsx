@@ -34,13 +34,13 @@ function Section({ title, icon: Icon, children, defaultOpen = true }) {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="flex w-full items-center justify-between px-4 py-3 text-left"
+        className="flex w-full items-center justify-between px-4 py-3.5 text-left"
       >
-        <h4 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
-          {Icon && <Icon className="h-3.5 w-3.5" />}
+        <h4 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-slate-400">
+          {Icon && <Icon className="h-4 w-4" />}
           {title}
         </h4>
-        {open ? <ChevronDown className="h-4 w-4 text-slate-600" /> : <ChevronRight className="h-4 w-4 text-slate-600" />}
+        {open ? <ChevronDown className="h-4 w-4 text-slate-500" /> : <ChevronRight className="h-4 w-4 text-slate-500" />}
       </button>
       {open && <div className="border-t border-white/[0.04] px-4 pb-4 pt-3">{children}</div>}
     </section>
@@ -59,8 +59,8 @@ function PipelineTimeline({ stages, processing, currentStage }) {
             <div key={stage.id} className="flex items-stretch gap-0">
               <div className={`flex flex-col items-center gap-1.5 rounded-lg border px-3 py-2 min-w-[110px] ${activeCls}`}>
                 <Icon className={`h-4 w-4 ${cls}`} />
-                <span className="text-xs font-semibold text-slate-200 text-center leading-tight">{stage.label}</span>
-                <span className="text-[9px] text-slate-500 text-center leading-tight">{stage.detail}</span>
+                <span className="text-sm font-semibold text-slate-200 text-center leading-tight">{stage.label}</span>
+                <span className="text-[11px] text-slate-400 text-center leading-tight">{stage.detail}</span>
               </div>
               {i < stages.length - 1 && (
                 <div className="flex items-center px-0.5">
@@ -72,7 +72,7 @@ function PipelineTimeline({ stages, processing, currentStage }) {
         })}
       </div>
       {processing && (
-        <p className="mt-2 text-xs text-brand-light/80">Live — {currentStage ? `Running ${currentStage}` : 'pipeline in progress'}</p>
+        <p className="mt-2 text-sm text-brand-light/80">Live — {currentStage ? `Running ${currentStage}` : 'pipeline in progress'}</p>
       )}
     </div>
   );
@@ -98,7 +98,7 @@ function PhaseStrip({ phases, processing, currentStage }) {
     <div className="space-y-3">
       {phases.map((phase) => (
         <div key={phase.label}>
-          <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500">{phase.label}</p>
+          <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-slate-400">{phase.label}</p>
           <PipelineTimeline stages={phase.stages} processing={processing} currentStage={currentStage} />
         </div>
       ))}
@@ -117,23 +117,35 @@ function SubmissionQuality({ quality, docQuality, onRequestDocs, requesting }) {
   const present = docQuality?.present_documents || docQuality?.present || [];
   const pct = completenessDisplayPct(docQuality?.completeness_pct);
   const lob = docQuality?.lob || quality?.lob;
+  const pending = quality?.pending || quality?.score == null;
   return (
     <div className="rounded-xl bg-surface-overlay p-4 ring-1 ring-white/[0.04]">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Submission Quality</p>
-          <p className="mt-1 text-sm text-slate-300">
-            {lob ? `${String(lob).replace(/_/g, ' ')} package · ` : ''}Completeness, appetite fit, and data trust
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Submission Quality</p>
+          <p className="mt-1 text-base text-slate-300">
+            {pending
+              ? 'Waiting for intake & triage before scoring'
+              : `${lob ? `${String(lob).replace(/_/g, ' ')} package · ` : ''}Completeness, appetite fit, and data trust`}
           </p>
         </div>
         <div className="text-right">
-          <p className={`text-3xl font-bold ${quality.gradeColor}`}>{quality.grade}</p>
-          <p className="text-xs text-slate-500">{quality.score}/100</p>
+          {pending ? (
+            <>
+              <p className="text-3xl font-bold text-slate-500">—</p>
+              <p className="text-sm text-slate-500">Scoring…</p>
+            </>
+          ) : (
+            <>
+              <p className={`text-3xl font-bold ${quality.gradeColor}`}>{quality.grade}</p>
+              <p className="text-sm text-slate-400">{quality.score}/100</p>
+            </>
+          )}
         </div>
       </div>
-      {docQuality && (
+      {!pending && docQuality && (
         <div className="mt-3 border-t border-white/[0.04] pt-3">
-          <div className="flex items-center justify-between text-xs">
+          <div className="flex items-center justify-between text-sm">
             <span className="text-slate-400">{lob ? `${String(lob).replace(/_/g, ' ')} checklist` : 'Document completeness'}</span>
             <span className="text-slate-300">{pct != null ? `${pct}%` : '—'}</span>
           </div>
@@ -143,29 +155,29 @@ function SubmissionQuality({ quality, docQuality, onRequestDocs, requesting }) {
           {present.length > 0 && (
             <ul className="mt-2 space-y-1">
               {present.map((d) => (
-                <li key={`p-${d}`} className="text-xs text-emerald-400/90">Present: {d}</li>
+                <li key={`p-${d}`} className="text-sm text-emerald-400/90">Present: {d}</li>
               ))}
             </ul>
           )}
           {missing.length > 0 && (
             <ul className="mt-2 space-y-1">
               {missing.map((d) => (
-                <li key={`m-${d}`} className="text-xs text-red-400/90">Missing: {d}</li>
+                <li key={`m-${d}`} className="text-sm text-red-400/90">Missing: {d}</li>
               ))}
             </ul>
           )}
           {missing.length > 0 && onRequestDocs && (
-            <button type="button" onClick={onRequestDocs} disabled={requesting} className="btn-secondary btn-sm mt-3 text-xs">
-              <Send className="h-3 w-3" /> {requesting ? 'Sending…' : 'Request from broker'}
+            <button type="button" onClick={onRequestDocs} disabled={requesting} className="btn-secondary btn-sm mt-3 text-sm">
+              <Send className="h-3.5 w-3.5" /> {requesting ? 'Sending…' : 'Request from broker'}
             </button>
           )}
         </div>
       )}
-      {quality.issues.length > 0 && (
+      {!pending && quality.issues.length > 0 && (
         <ul className="mt-3 space-y-1 border-t border-white/[0.04] pt-3">
           {quality.issues.map((issue) => (
-            <li key={issue} className="flex items-start gap-2 text-xs text-slate-400">
-              <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0 text-amber-500/80" />
+            <li key={issue} className="flex items-start gap-2 text-sm text-slate-400">
+              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500/80" />
               {issue}
             </li>
           ))}
@@ -176,7 +188,7 @@ function SubmissionQuality({ quality, docQuality, onRequestDocs, requesting }) {
 }
 
 function CopeDeepDive({ cope }) {
-  if (!cope) return <p className="text-xs text-slate-500">COPE analysis loads after property data is parsed.</p>;
+  if (!cope) return <p className="text-sm text-slate-400">COPE analysis loads after property data is parsed.</p>;
   return (
     <div className="grid gap-3 sm:grid-cols-2">
       {[
@@ -186,7 +198,7 @@ function CopeDeepDive({ cope }) {
         ['Exposure', cope.exposure],
       ].map(([label, data]) => (
         <div key={label} className="rounded-lg bg-black/20 p-3">
-          <p className="text-[10px] uppercase text-slate-500">{label}</p>
+          <p className="text-xs uppercase text-slate-400">{label}</p>
           <p className="mt-1 text-sm font-medium capitalize text-slate-200">
             {data?.class || data?.types?.join(', ') || data?.raw || '—'}
           </p>
@@ -197,7 +209,7 @@ function CopeDeepDive({ cope }) {
           )}
         </div>
       ))}
-      <div className="sm:col-span-2 rounded-lg bg-brand/10 px-3 py-2 text-xs text-slate-300">
+      <div className="sm:col-span-2 rounded-lg bg-brand/10 px-3 py-2 text-sm text-slate-300">
         Grade: <strong className="uppercase">{cope.cope_score?.risk_grade || '—'}</strong>
         {' · '}Schedule mod: {cope.cope_score?.schedule_mod_pct > 0 ? '+' : ''}{cope.cope_score?.schedule_mod_pct ?? 0}%
         {' · '}Score: {cope.cope_score?.total_score?.toFixed(3) ?? '—'}
@@ -217,36 +229,36 @@ function LifeMedicalPanel({ job }) {
   return (
     <div className="grid gap-3 sm:grid-cols-2">
       <div className="rounded-lg bg-black/20 p-3">
-        <p className="text-[10px] uppercase text-slate-500">UW Class</p>
+        <p className="text-xs uppercase text-slate-400">UW Class</p>
         <p className="mt-1 text-sm font-medium capitalize text-slate-200">{medical.underwriting_class || '—'}</p>
       </div>
       <div className="rounded-lg bg-black/20 p-3">
-        <p className="text-[10px] uppercase text-slate-500">Tobacco</p>
+        <p className="text-xs uppercase text-slate-400">Tobacco</p>
         <p className="mt-1 text-sm font-medium text-slate-200">{medical.tobacco ? 'Yes' : medical.tobacco === false ? 'No' : '—'}</p>
       </div>
       <div className="rounded-lg bg-black/20 p-3">
-        <p className="text-[10px] uppercase text-slate-500">Face Amount</p>
+        <p className="text-xs uppercase text-slate-400">Face Amount</p>
         <p className="mt-1 text-sm font-medium text-slate-200">{face ? `$${Number(face).toLocaleString()}` : '—'}</p>
       </div>
       <div className="rounded-lg bg-black/20 p-3">
-        <p className="text-[10px] uppercase text-slate-500">Decision</p>
+        <p className="text-xs uppercase text-slate-400">Decision</p>
         <p className="mt-1 text-sm font-medium uppercase text-slate-200">{decision || '—'}</p>
       </div>
       <div className="rounded-lg bg-black/20 p-3">
-        <p className="text-[10px] uppercase text-slate-500">Rate Filing</p>
+        <p className="text-xs uppercase text-slate-400">Rate Filing</p>
         <p className="mt-1 text-sm font-medium text-slate-200">{meta.filing_id || quote.filing_id || '—'}</p>
       </div>
       <div className="rounded-lg bg-black/20 p-3">
-        <p className="text-[10px] uppercase text-slate-500">Indicated Premium</p>
+        <p className="text-xs uppercase text-slate-400">Indicated Premium</p>
         <p className="mt-1 text-sm font-medium text-slate-200">{fmtCurrency(quote.adjusted_premium ?? meta.adjusted_premium)}</p>
       </div>
       {memo.executive_summary && (
-        <div className="sm:col-span-2 rounded-lg bg-brand/10 px-3 py-2 text-xs text-slate-300">
+        <div className="sm:col-span-2 rounded-lg bg-brand/10 px-3 py-2 text-sm text-slate-300">
           {memo.executive_summary}
         </div>
       )}
       {conditions.length > 0 && (
-        <div className="sm:col-span-2 rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
+        <div className="sm:col-span-2 rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
           {conditions.map((c) => <div key={c}>• {c}</div>)}
         </div>
       )}
@@ -255,19 +267,19 @@ function LifeMedicalPanel({ job }) {
 }
 
 function AgentFindingsPanel({ sections }) {
-  if (!sections.length) return <p className="text-xs text-slate-500">No agent findings yet.</p>;
+  if (!sections.length) return <p className="text-sm text-slate-400">No agent findings yet.</p>;
   return (
     <div className="space-y-3">
       {sections.map((section) => (
         <div key={section.key}>
-          <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500">{section.label}</p>
+          <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-slate-400">{section.label}</p>
           <div className="space-y-1.5">
             {section.findings.slice(0, 3).map((f, i) => {
               const sev = (f.severity || 'moderate').toLowerCase();
               return (
-                <div key={f.finding_id || i} className="rounded-lg bg-black/20 p-2.5 text-xs">
+                <div key={f.finding_id || i} className="rounded-lg bg-black/20 p-2.5 text-sm">
                   <div className="flex items-center gap-2">
-                    <span className={`rounded px-1.5 py-0.5 text-[10px] uppercase ring-1 ring-inset ${SEV_CLS[sev] || SEV_CLS.moderate}`}>{sev}</span>
+                    <span className={`rounded px-1.5 py-0.5 text-[11px] uppercase ring-1 ring-inset ${SEV_CLS[sev] || SEV_CLS.moderate}`}>{sev}</span>
                     <span className="font-medium text-slate-300">{f.title}</span>
                   </div>
                   {f.description && <p className="mt-1 text-slate-500">{f.description}</p>}
@@ -284,7 +296,7 @@ function AgentFindingsPanel({ sections }) {
 function ProvenancePanel({ provenance }) {
   if (!provenance.totalFields) {
     return (
-      <p className="text-xs text-slate-500">
+      <p className="text-sm text-slate-400">
         {provenance.isLife
           ? 'Life packages often lack ACORD field provenance — medical UW class and application fields appear after extract.'
           : 'No cross-document fields were reconciled yet (common when structured ACORD data is missing).'}
@@ -293,7 +305,7 @@ function ProvenancePanel({ provenance }) {
   }
   return (
     <div>
-      <div className="mb-3 flex gap-4 text-xs text-slate-400">
+      <div className="mb-3 flex gap-4 text-sm text-slate-400">
         <span>{provenance.totalFields} fields tracked</span>
         <span className="text-emerald-400">{provenance.verifiedFields} verified</span>
         {provenance.contradictedFields > 0 && (
@@ -302,7 +314,7 @@ function ProvenancePanel({ provenance }) {
       </div>
       <div className="space-y-1.5">
         {provenance.fields.map((f) => (
-          <div key={f.field} className="grid grid-cols-4 gap-2 rounded-lg bg-black/20 p-2 text-[11px]">
+          <div key={f.field} className="grid grid-cols-4 gap-2 rounded-lg bg-black/20 p-2 text-sm">
             <span className="font-medium text-slate-300">{f.field}</span>
             <span className="truncate font-mono text-slate-400">{String(f.value ?? '—')}</span>
             <span className="truncate text-slate-500">{f.source}</span>
@@ -315,16 +327,16 @@ function ProvenancePanel({ provenance }) {
 }
 
 function HumanCheckpoints({ checkpoints, bundleId, onResolve }) {
-  if (!checkpoints.length) return <p className="text-xs text-emerald-400/90">No pending human checkpoints.</p>;
+  if (!checkpoints.length) return <p className="text-sm text-emerald-400/90">No pending human checkpoints.</p>;
   return (
     <div className="space-y-2">
       {checkpoints.map((cp) => (
         <div key={cp.id} className="rounded-lg bg-amber-500/10 p-3 ring-1 ring-amber-500/20">
           <p className="text-sm font-medium text-amber-200">{cp.label}</p>
-          <p className="mt-1 text-xs text-amber-200/70">{cp.reason}</p>
+          <p className="mt-1 text-sm text-amber-200/70">{cp.reason}</p>
           {cp.status === 'pending' && onResolve && (
             <div className="mt-2 flex gap-2">
-              <button type="button" onClick={() => onResolve(cp.id, 'approve')} className="btn-secondary btn-sm text-xs">Approve</button>
+              <button type="button" onClick={() => onResolve(cp.id, 'approve')} className="btn-secondary btn-sm text-sm">Approve</button>
               <button type="button" onClick={() => onResolve(cp.id, 'reject')} className="btn-secondary btn-sm text-xs text-red-300">Reject</button>
             </div>
           )}
@@ -336,11 +348,11 @@ function HumanCheckpoints({ checkpoints, bundleId, onResolve }) {
 
 function AuditTrailInline({ audit }) {
   const entries = audit?.audit_trail?.entries || [];
-  if (!entries.length) return <p className="text-xs text-slate-500">Audit trail populates as the pipeline runs.</p>;
+  if (!entries.length) return <p className="text-sm text-slate-400">Audit trail populates as the pipeline runs.</p>;
   return (
     <div className="max-h-48 space-y-1 overflow-y-auto">
       {entries.slice(-8).reverse().map((e, i) => (
-        <div key={e.entry_id || i} className="flex gap-2 rounded-lg bg-black/20 p-2 text-xs">
+        <div key={e.entry_id || i} className="flex gap-2 rounded-lg bg-black/20 p-2 text-sm">
           <FileText className="mt-0.5 h-3 w-3 shrink-0 text-slate-500" />
           <div>
             <p className="font-medium text-slate-300">{e.event?.replace(/_/g, ' ')}</p>
@@ -356,7 +368,7 @@ function EnterpriseOpsPanel({ ecosystem, onDispatchLC }) {
   if (!ecosystem) return null;
       const feeds = ecosystem.oracle_feeds?.feeds || ecosystem.oracle_feeds || [];
   return (
-    <div className="space-y-3 text-xs">
+    <div className="space-y-3 text-sm">
       <div>
         <p className="mb-1 font-semibold uppercase tracking-wider text-slate-500">External data feeds</p>
         <div className="flex flex-wrap gap-2">
@@ -373,24 +385,24 @@ function EnterpriseOpsPanel({ ecosystem, onDispatchLC }) {
       </div>
       <div className="grid gap-2 sm:grid-cols-2">
         <div className="rounded-lg bg-black/20 p-2">
-          <p className="text-[10px] uppercase text-slate-500">Claims ops</p>
+          <p className="text-xs uppercase text-slate-400">Claims ops</p>
           <p className="text-slate-300">{ecosystem.claims?.closed_claims ?? 0} closed · ${(ecosystem.claims?.total_incurred ?? 0).toLocaleString()} incurred</p>
         </div>
         <div className="rounded-lg bg-black/20 p-2">
-          <p className="text-[10px] uppercase text-slate-500">Actuarial filing</p>
+          <p className="text-xs uppercase text-slate-400">Actuarial filing</p>
           <p className="text-slate-300">{ecosystem.actuarial?.filing_status?.replace(/_/g, ' ')}</p>
         </div>
         <div className="rounded-lg bg-black/20 p-2">
-          <p className="text-[10px] uppercase text-slate-500">Agency / CRM</p>
+          <p className="text-xs uppercase text-slate-400">Agency / CRM</p>
           <p className="text-slate-300">{ecosystem.agency?.agency_name || 'Broker portal link'}</p>
         </div>
         <div className="rounded-lg bg-black/20 p-2">
-          <p className="text-[10px] uppercase text-slate-500">Actuarial loop</p>
+          <p className="text-xs uppercase text-slate-400">Actuarial loop</p>
           <p className="text-slate-300">{ecosystem.actuarial_loop?.recommended_action}</p>
         </div>
       </div>
       {onDispatchLC && (
-        <button type="button" onClick={onDispatchLC} className="btn-secondary btn-sm text-xs">
+        <button type="button" onClick={onDispatchLC} className="btn-secondary btn-sm text-sm">
           <Truck className="h-3 w-3" /> Dispatch loss control inspection
         </button>
       )}
@@ -400,23 +412,23 @@ function EnterpriseOpsPanel({ ecosystem, onDispatchLC }) {
 
 function VerificationCard({ verification }) {
   const hasData = verification.oracleCount != null || verification.copeGrade || verification.matchRate != null || verification.isLife || verification.lifeClass;
-  if (!hasData) return <p className="text-xs text-slate-500">Verification checks run after document parse completes.</p>;
+  if (!hasData) return <p className="text-sm text-slate-400">Verification checks run after document parse completes.</p>;
   if (verification.isLife) {
     return (
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <div><p className="text-[10px] uppercase text-slate-500">Path</p><p className="mt-1 text-sm font-semibold">Life medical</p></div>
-        <div><p className="text-[10px] uppercase text-slate-500">UW Class</p><p className="mt-1 text-sm font-semibold capitalize">{verification.lifeClass || '—'}</p></div>
-        <div><p className="text-[10px] uppercase text-slate-500">Tobacco</p><p className="mt-1 text-sm font-semibold">{verification.tobacco ? 'Yes' : 'No'}</p></div>
-        <div><p className="text-[10px] uppercase text-slate-500">Filing</p><p className="mt-1 text-sm font-semibold">{verification.filingId || '—'}</p></div>
+        <div><p className="text-xs uppercase text-slate-400">Path</p><p className="mt-1 text-sm font-semibold">Life medical</p></div>
+        <div><p className="text-xs uppercase text-slate-400">UW Class</p><p className="mt-1 text-sm font-semibold capitalize">{verification.lifeClass || '—'}</p></div>
+        <div><p className="text-xs uppercase text-slate-400">Tobacco</p><p className="mt-1 text-sm font-semibold">{verification.tobacco ? 'Yes' : 'No'}</p></div>
+        <div><p className="text-xs uppercase text-slate-400">Filing</p><p className="mt-1 text-sm font-semibold">{verification.filingId || '—'}</p></div>
       </div>
     );
   }
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-      <div><p className="text-[10px] uppercase text-slate-500">Oracles</p><p className="mt-1 text-sm font-semibold">{verification.oracleCount ?? 0}</p></div>
-      <div><p className="text-[10px] uppercase text-slate-500">COPE</p><p className="mt-1 text-sm font-semibold capitalize">{verification.copeGrade?.replace(/_/g, ' ') || '—'}</p></div>
-      <div><p className="text-[10px] uppercase text-slate-500">Reconciliation</p><p className="mt-1 text-sm font-semibold capitalize">{verification.reconStatus || '—'}</p></div>
-      <div><p className="text-[10px] uppercase text-slate-500">Market</p><p className="mt-1 text-sm font-semibold capitalize">{verification.marketPhase?.replace(/_/g, ' ') || '—'}</p></div>
+      <div><p className="text-xs uppercase text-slate-400">Oracles</p><p className="mt-1 text-sm font-semibold">{verification.oracleCount ?? 0}</p></div>
+      <div><p className="text-xs uppercase text-slate-400">COPE</p><p className="mt-1 text-sm font-semibold capitalize">{verification.copeGrade?.replace(/_/g, ' ') || '—'}</p></div>
+      <div><p className="text-xs uppercase text-slate-400">Reconciliation</p><p className="mt-1 text-sm font-semibold capitalize">{verification.reconStatus || '—'}</p></div>
+      <div><p className="text-xs uppercase text-slate-400">Market</p><p className="mt-1 text-sm font-semibold capitalize">{verification.marketPhase?.replace(/_/g, ' ') || '—'}</p></div>
     </div>
   );
 }
@@ -424,25 +436,25 @@ function VerificationCard({ verification }) {
 function ReconciliationPanel({ reconciliation }) {
   const { discrepancies, matchRate, matchedFields, totalFields, overallStatus } = reconciliation;
   if (!discrepancies.length && matchRate == null) {
-    return <p className="text-xs text-slate-500">Reconciliation data not available.</p>;
+    return <p className="text-sm text-slate-400">Reconciliation data not available.</p>;
   }
   return (
     <div>
-      <div className="mb-2 flex gap-3 text-[10px] text-slate-500">
+      <div className="mb-2 flex gap-3 text-xs text-slate-400">
         {matchRate != null && <span>{Math.round(matchRate * 100)}% match</span>}
         {totalFields > 0 && <span>{matchedFields}/{totalFields} fields</span>}
         <span className="capitalize">{overallStatus}</span>
       </div>
       {discrepancies.length === 0 ? (
-        <p className="text-xs text-emerald-400/90">No cross-document conflicts.</p>
+        <p className="text-sm text-emerald-400/90">No cross-document conflicts.</p>
       ) : (
         <div className="space-y-2">
           {discrepancies.slice(0, 6).map((d) => (
             <div key={`${d.field_path}-${d.source_a}`} className="rounded-lg bg-black/20 p-3">
-              <p className="text-xs font-medium text-slate-300">{d.field_path}</p>
-              <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
-                <div><p className="text-[10px] text-slate-500">{d.source_a || 'Source A'}</p><p className="font-mono">{String(d.structured_value ?? '—')}</p></div>
-                <div><p className="text-[10px] text-slate-500">{d.source_b || 'Source B'}</p><p className="font-mono">{String(d.unstructured_value ?? '—')}</p></div>
+              <p className="text-sm font-medium text-slate-300">{d.field_path}</p>
+              <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
+                <div><p className="text-xs text-slate-400">{d.source_a || 'Source A'}</p><p className="font-mono">{String(d.structured_value ?? '—')}</p></div>
+                <div><p className="text-xs text-slate-400">{d.source_b || 'Source B'}</p><p className="font-mono">{String(d.unstructured_value ?? '—')}</p></div>
               </div>
             </div>
           ))}
@@ -454,13 +466,13 @@ function ReconciliationPanel({ reconciliation }) {
 
 function PricingBreakdown({ pricing }) {
   if (pricing.base == null && pricing.adjusted == null) {
-    return <p className="text-xs text-slate-500">Premium calculated after risk scoring.</p>;
+    return <p className="text-sm text-slate-400">Premium calculated after risk scoring.</p>;
   }
   return (
     <div className="divide-y divide-white/[0.04] rounded-lg ring-1 ring-white/[0.04]">
       <div className="flex justify-between px-3 py-2 text-sm"><span className="text-slate-400">Base</span><span>{fmtCurrency(pricing.base)}</span></div>
       {pricing.premiumMods.map((mod) => (
-        <div key={mod.key} className="flex justify-between px-3 py-1.5 text-xs">
+        <div key={mod.key} className="flex justify-between px-3 py-1.5 text-sm">
           <span className="text-slate-500">{mod.label}</span>
           <span>{mod.pct > 0 ? '+' : ''}{mod.pct}%</span>
         </div>
@@ -503,17 +515,17 @@ function DeepDivePanel({ available, bundleId }) {
       {available.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {available.map((k) => (
-            <span key={k} className="rounded-full bg-black/20 px-2 py-0.5 text-[10px] text-slate-400 ring-1 ring-white/10">
+            <span key={k} className="rounded-full bg-black/20 px-2 py-0.5 text-xs text-slate-400 ring-1 ring-white/10">
               {DEEP_DIVE_LABELS[k] || k}
             </span>
           ))}
         </div>
       )}
-      <button type="button" onClick={run} disabled={running || !bundleId} className="btn-secondary btn-sm text-xs">
+      <button type="button" onClick={run} disabled={running || !bundleId} className="btn-secondary btn-sm text-sm">
         {running ? <Loader2 className="h-3 w-3 animate-spin" /> : <BarChart3 className="h-3 w-3" />}
         {running ? 'Running…' : 'Run deep dive'}
       </button>
-      {error && <p className="text-xs text-red-400">{error}</p>}
+      {error && <p className="text-sm text-red-400">{error}</p>}
       {results?.findings && (
         <div className="grid gap-2">
           {Object.entries(results.findings).map(([key, value]) => {
@@ -521,14 +533,14 @@ function DeepDivePanel({ available, bundleId }) {
             const title = DEEP_DIVE_LABELS[key] || key;
             return (
               <div key={key} className="rounded-lg bg-black/20 p-2.5">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">{title}</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">{title}</p>
                 {findings.length === 0 ? (
                   <p className="mt-1 text-xs text-emerald-400/90">No findings.</p>
                 ) : (
                   <ul className="mt-1 space-y-1">
                     {findings.slice(0, 5).map((f, i) => (
                       <li key={f.finding_id || i} className="text-xs text-slate-400">
-                        <span className={`rounded px-1.5 py-0.5 text-[9px] uppercase ring-1 ring-inset ${SEV_CLS[(f.severity || 'moderate').toLowerCase()] || SEV_CLS.moderate}`}>
+                        <span className={`rounded px-1.5 py-0.5 text-[11px] uppercase ring-1 ring-inset ${SEV_CLS[(f.severity || 'moderate').toLowerCase()] || SEV_CLS.moderate}`}>
                           {f.severity || 'info'}
                         </span>{' '}
                         {f.title || f.reason || JSON.stringify(f)}
@@ -624,10 +636,10 @@ export default function SubmissionJourney({ job }) {
   return (
     <div className="space-y-4">
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-brand-light/80">
+        <p className="text-xs font-bold uppercase tracking-widest text-brand-light/80">
           {isLifeLine ? 'Life Submission Journey' : 'Submission Journey'}
         </p>
-        {ctx.insuredName && <p className="mt-0.5 text-sm text-slate-400">{ctx.insuredName}</p>}
+        {ctx.insuredName && <p className="mt-0.5 text-base text-slate-300">{ctx.insuredName}</p>}
       </div>
 
       <SubmissionQuality
