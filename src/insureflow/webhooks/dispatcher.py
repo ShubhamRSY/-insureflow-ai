@@ -4,12 +4,15 @@ import hashlib
 import hmac
 import json
 import logging
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from typing import Any
 from uuid import uuid4
 
 logger = logging.getLogger(__name__)
+
+BROKER_SHARE_NS = "broker_shares"
+BROKER_SHARE_ORG = "_public"
 
 
 @dataclass
@@ -35,6 +38,37 @@ class BrokerStatusShare:
     created_at: str = field(default_factory=lambda: datetime.now(tz=timezone.utc).isoformat())
     expires_at: str = ""
     active: bool = True
+
+    def to_store(self) -> dict[str, Any]:
+        return asdict(self)
+
+    @classmethod
+    def from_store(cls, data: dict[str, Any] | None) -> BrokerStatusShare | None:
+        if not data or not data.get("token"):
+            return None
+        try:
+            return cls(
+                token=str(data["token"]),
+                bundle_id=str(data.get("bundle_id") or ""),
+                org_id=str(data.get("org_id") or ""),
+                broker_name=str(data.get("broker_name") or ""),
+                broker_email=str(data.get("broker_email") or ""),
+                created_at=str(data.get("created_at") or ""),
+                expires_at=str(data.get("expires_at") or ""),
+                active=bool(data.get("active", True)),
+            )
+        except (TypeError, KeyError, ValueError):
+            return None
+
+
+def _share_store():
+    try:
+        from insureflow.storage.job_store import get_job_store
+
+        return get_job_store()
+    except Exception:
+        logger.debug("Broker share store unavailable", exc_info=True)
+        return None
 
 
 class WebhookDispatcher:
@@ -156,10 +190,29 @@ class WebhookDispatcher:
             expires_at=(now + timedelta(hours=ttl_hours)).isoformat(),
         )
         self._broker_shares[token] = share
+        store = _share_store()
+        if store is not None:
+            try:
+                # Nest under "share" — FileJobStore overwrites top-level org_id with the store scope
+                store.set(BROKER_SHARE_NS, token, {"share": share.to_store()}, org_id=BROKER_SHARE_ORG)
+            except Exception:
+                logger.warning("Failed to persist broker share %s", token, exc_info=True)
         return token
 
     def get_broker_share(self, token: str) -> BrokerStatusShare | None:
         share = self._broker_shares.get(token)
+        if share is None:
+            store = _share_store()
+            if store is not None:
+                try:
+                    raw = store.get(BROKER_SHARE_NS, token, org_id=BROKER_SHARE_ORG) or {}
+                    payload = raw.get("share") if isinstance(raw.get("share"), dict) else raw
+                    share = BrokerStatusShare.from_store(payload)
+                    if share is not None:
+                        self._broker_shares[token] = share
+                except Exception:
+                    logger.debug("Broker share lookup failed for %s", token, exc_info=True)
+                    share = None
         if not share or not share.active:
             return None
         if share.expires_at:
@@ -172,14 +225,34 @@ class WebhookDispatcher:
         return share
 
     def revoke_broker_share(self, token: str) -> bool:
-        share = self._broker_shares.get(token)
-        if share:
-            share.active = False
-            return True
-        return False
+        share = self.get_broker_share(token)
+        if not share:
+            return False
+        share.active = False
+        self._broker_shares[token] = share
+        store = _share_store()
+        if store is not None:
+            try:
+                store.set(BROKER_SHARE_NS, token, {"share": share.to_store()}, org_id=BROKER_SHARE_ORG)
+            except Exception:
+                logger.debug("Failed to persist revoked broker share", exc_info=True)
+        return True
 
     def list_broker_shares(self, org_id: str) -> list[BrokerStatusShare]:
-        return [s for s in self._broker_shares.values() if s.org_id == org_id and s.active]
+        found = {s.token: s for s in self._broker_shares.values() if s.org_id == org_id and s.active}
+        store = _share_store()
+        if store is not None:
+            try:
+                for token in store.list_ids(BROKER_SHARE_NS, org_id=BROKER_SHARE_ORG):
+                    raw = store.get(BROKER_SHARE_NS, token, org_id=BROKER_SHARE_ORG) or {}
+                    payload = raw.get("share") if isinstance(raw.get("share"), dict) else raw
+                    share = BrokerStatusShare.from_store(payload)
+                    if share and share.org_id == org_id and share.active:
+                        found[share.token] = share
+                        self._broker_shares[share.token] = share
+            except Exception:
+                logger.debug("list_broker_shares store scan failed", exc_info=True)
+        return list(found.values())
 
 
 # Module-level singleton (replaces old mortgage-only dispatcher)

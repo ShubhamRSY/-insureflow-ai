@@ -59,7 +59,12 @@ export default function JobDrawer({ job, vertical, jobId, onClose }) {
               } catch (e) { alert(e.message || 'Report not available'); }
             }} className="btn-secondary btn-sm text-xs"><FileText className="h-3.5 w-3.5" /> Full Report</button>
             <button type="button" onClick={async () => {
-              try { const r = await endpoints.createBrokerShare(bundleId); navigator.clipboard?.writeText(`${window.location.origin}/dashboard/broker/status/${r.token}`); alert('Share link copied!'); } catch (e) { alert(e.message); }
+              try {
+                const r = await endpoints.createBrokerShare(bundleId);
+                const link = `${window.location.origin}/dashboard/broker/status/${r.token}`;
+                await navigator.clipboard?.writeText(link);
+                alert(`Share link copied!\n${link}`);
+              } catch (e) { alert(e.message); }
             }} className="btn-secondary btn-sm text-xs"><ExternalLink className="h-3.5 w-3.5" /> Broker Share</button>
           </div>
         )}

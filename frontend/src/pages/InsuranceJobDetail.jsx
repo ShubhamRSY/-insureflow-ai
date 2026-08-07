@@ -97,8 +97,9 @@ export default function InsuranceJobDetail() {
   const handleBrokerShare = async () => {
     try {
       const r = await endpoints.createBrokerShare(bundleId);
-      navigator.clipboard?.writeText(`${window.location.origin}/dashboard/broker/status/${r.token}`);
-      alert('Share link copied!');
+      const link = `${window.location.origin}/dashboard/broker/status/${r.token}`;
+      await navigator.clipboard?.writeText(link);
+      alert(`Share link copied!\n${link}`);
     } catch (e) {
       alert(e.message);
     }

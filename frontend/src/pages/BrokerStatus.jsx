@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Shield, Clock, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
-import { api } from '../lib/api';
+import { publicApi } from '../lib/api';
 
 const STATUS_META = {
   processing: { icon: Clock, color: 'text-amber-400', bg: 'bg-amber-500/10', label: 'Processing' },
@@ -29,7 +29,7 @@ export default function BrokerStatus() {
 
   const fetchStatus = useCallback(async () => {
     try {
-      const res = await api(`/broker/status/${token}`);
+      const res = await publicApi(`/broker/status/${token}`);
       setData(res);
       if (res.status !== 'processing' && !res.awaiting_broker_info) setPolling(false);
     } catch (e) {
@@ -49,7 +49,7 @@ export default function BrokerStatus() {
     setResponding(true);
     setRespondMsg('');
     try {
-      await api(`/broker/status/${token}/respond`, {
+      await publicApi(`/broker/status/${token}/respond`, {
         method: 'POST',
         body: {
           request_id: requestId || '',

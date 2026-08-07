@@ -55,6 +55,28 @@ export async function api(path, opts = {}) {
   return data;
 }
 
+/** Public endpoints (broker status links) — never attach/clear UW session tokens. */
+export async function publicApi(path, opts = {}) {
+  const headers = { ...(opts.headers || {}) };
+  if (opts.body && !(opts.body instanceof FormData)) {
+    headers['Content-Type'] = 'application/json';
+    opts.body = JSON.stringify(opts.body);
+  }
+  const res = await fetch(path, { ...opts, headers });
+  let data = null;
+  const ct = res.headers.get('content-type') || '';
+  if (ct.includes('application/json')) {
+    try { data = await res.json(); } catch { /* empty */ }
+  }
+  if (!res.ok) {
+    const msg = data?.detail
+      ? (typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail))
+      : `HTTP ${res.status}`;
+    throw new Error(msg);
+  }
+  return data;
+}
+
 const qs = (params) => {
   const s = new URLSearchParams(
     Object.entries(params || {}).filter(([, v]) => v != null && v !== ''),
@@ -111,7 +133,7 @@ export const endpoints = {
     api(`/pipeline/${bundleId}/deep-dive`, { method: 'POST', body: { include } }),
 
   // Broker status
-  brokerStatus: (token) => api(`/broker/status/${token}`),
+  brokerStatus: (token) => publicApi(`/broker/status/${token}`),
   createBrokerShare: (bundleId, body = {}) => api(`/pipeline/jobs/${bundleId}/broker-share`, { method: 'POST', body }),
 
   // Vision / photo analysis
@@ -170,7 +192,7 @@ export const endpoints = {
     api(`/pipeline/jobs/${bundleId}/relationship-notes`, { method: 'POST', body }),
   packageChecklist: (bundleId, lob = '') =>
     api(`/pipeline/jobs/${bundleId}/package-checklist${lob ? `?lob=${encodeURIComponent(lob)}` : ''}`),
-  brokerRespond: (token, body) => api(`/broker/status/${token}/respond`, { method: 'POST', body }),
+  brokerRespond: (token, body) => publicApi(`/broker/status/${token}/respond`, { method: 'POST', body }),
   ecosystemStatus: () => api('/pipeline/ecosystem/status'),
   ecosystemBundle: (bundleId) => api(`/pipeline/ecosystem/${bundleId}`),
   dispatchLossControl: (bundleId, notes = '') => api(`/pipeline/ecosystem/${bundleId}/loss-control/dispatch`, { method: 'POST', body: { notes } }),
