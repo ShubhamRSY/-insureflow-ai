@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Calculator, RefreshCw, Layers, Scale, TrendingUp, Gavel } from 'lucide-react';
+import { Calculator, RefreshCw, Layers, Scale, TrendingUp, Gavel, Landmark, Clock, AlertTriangle } from 'lucide-react';
 import { StatCard, EmptyState, Badge } from '../components/ui';
 import { endpoints, fmtCurrency } from '../lib/api';
 
@@ -223,6 +223,89 @@ export default function RatemakingPage() {
                 {(overview?.advisory_organizations || []).map((org) => (
                   <span key={org} className="rounded-full bg-surface-overlay px-3 py-1 text-xs text-slate-300 ring-1 ring-inset ring-slate-500/20">{org}</span>
                 ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="glass-card p-5">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-slate-400">
+                <Landmark className="h-4 w-4" /> Loss reserve estimation
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                <span className="rounded-full bg-surface-overlay px-3 py-1 text-xs text-slate-300 ring-1 ring-inset ring-slate-500/20">
+                  redundancy {overview?.reserve_analysis?.payout_pattern?.reserve_redundancy_pct ?? 0}%
+                </span>
+                <span className="rounded-full bg-surface-overlay px-3 py-1 text-xs text-slate-300 ring-1 ring-inset ring-slate-500/20">
+                  rate lag ~{overview?.reserve_analysis?.filing_schedule?.total_lag_years ?? 0} yrs
+                </span>
+              </div>
+            </div>
+
+            <div className="grid gap-4 lg:grid-cols-2">
+              <div>
+                <h4 className="mb-2 text-xs uppercase tracking-wider text-slate-400">Accident-year development (paid · reported · IBNR)</h4>
+                <div className="overflow-x-auto rounded-lg ring-1 ring-inset ring-slate-500/20">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="bg-surface-overlay text-left text-slate-400">
+                        <th className="px-3 py-2 font-medium">Valuation</th>
+                        <th className="px-3 py-2 text-right font-medium">Paid to date</th>
+                        <th className="px-3 py-2 text-right font-medium">Reported unpaid</th>
+                        <th className="px-3 py-2 text-right font-medium">IBNR</th>
+                        <th className="px-3 py-2 text-right font-medium">Incurred est.</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(overview?.reserve_analysis?.payout_pattern?.valuations || []).map((v) => (
+                        <tr key={v.valuation_year} className="border-t border-slate-500/10 text-slate-200">
+                          <td className="px-3 py-1.5 text-slate-400">Year {v.valuation_year}</td>
+                          <td className="px-3 py-1.5 text-right tabular-nums">{fmtCurrency(v.paid_to_date)}</td>
+                          <td className="px-3 py-1.5 text-right tabular-nums">{fmtCurrency(v.reported_but_unpaid)}</td>
+                          <td className="px-3 py-1.5 text-right tabular-nums">{fmtCurrency(v.ibnr)}</td>
+                          <td className="px-3 py-1.5 text-right font-semibold tabular-nums">{fmtCurrency(v.incurred_estimate)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {(overview?.reserve_analysis?.payout_pattern?.reserve_redundancy_pct ?? 0) > 0 && (
+                  <div className="mt-3 flex items-start gap-2 rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
+                    <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                    <span>
+                      Estimated incurred at first valuation exceeded the matured estimate by ~
+                      {overview.reserve_analysis.payout_pattern.reserve_redundancy_pct}% — rates based on the early
+                      estimate would have been too high by about the same amount.
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <h4 className="mb-2 flex items-center gap-1 text-xs uppercase tracking-wider text-slate-400">
+                  <Clock className="h-3.5 w-3.5" /> Rate filing schedule
+                </h4>
+                <ol className="relative ml-2 space-y-2 border-l border-slate-500/20 pl-4">
+                  {(overview?.reserve_analysis?.filing_schedule?.stages || []).map((s, i) => (
+                    <li key={i} className="relative">
+                      <span className="absolute -left-[21px] top-1 h-2 w-2 rounded-full bg-brand/60" />
+                      <p className="text-xs font-medium text-slate-200">{s.stage}</p>
+                      <p className="text-[11px] text-slate-400">{s.date} — {s.description}</p>
+                    </li>
+                  ))}
+                </ol>
+                <h4 className="mb-2 mt-5 text-xs uppercase tracking-wider text-slate-400">Delays reducing rate responsiveness</h4>
+                <ul className="space-y-1.5">
+                  {(overview?.reserve_analysis?.data_delays || []).map((d, i) => (
+                    <li key={i} className="flex items-start justify-between gap-3 rounded-lg bg-surface-overlay px-3 py-2 text-xs">
+                      <div>
+                        <p className="text-slate-200">{d.source}</p>
+                        <p className="text-slate-400">{d.detail}</p>
+                      </div>
+                      <Badge status={d.severity === 'high' ? 'fail' : d.severity === 'moderate' ? 'flag' : 'pass'} />
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
           </div>

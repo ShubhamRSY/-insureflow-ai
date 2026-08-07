@@ -4508,6 +4508,7 @@ def ratemaking_overview(_: TokenData = Depends(require_role(Role.VIEWER))) -> di
         ratemaking_factors,
         regulatory_review,
     )
+    from insureflow.rating.reserve_estimation import run_reserve_analysis
 
     build_ups = line_rate_build_ups()
     return {
@@ -4517,6 +4518,7 @@ def ratemaking_overview(_: TokenData = Depends(require_role(Role.VIEWER))) -> di
         "factors": [f.model_dump() for f in ratemaking_factors()],
         "advisory_organizations": ["ISO", "AAIS", "NCCI", "Surety Association of America"],
         "methods": ["pure_premium", "loss_ratio", "judgment"],
+        "reserve_analysis": run_reserve_analysis().model_dump(),
     }
 
 
