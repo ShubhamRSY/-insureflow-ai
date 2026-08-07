@@ -6,8 +6,11 @@ import json
 import logging
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import uuid4
+
+if TYPE_CHECKING:
+    from insureflow.storage.job_store import JobStore
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +64,7 @@ class BrokerStatusShare:
             return None
 
 
-def _share_store():
+def _share_store() -> JobStore | None:
     try:
         from insureflow.storage.job_store import get_job_store
 
