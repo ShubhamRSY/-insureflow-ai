@@ -209,7 +209,11 @@ class RateFactorAssessment(BaseModel):
 _FACTOR_DEFAULTS: list[tuple[str, RiskSeverity, str]] = [
     ("Loss reserve estimation", RiskSeverity.LOW, "Case reserves must be kept current; reserve adequacy is reviewed separately"),
     ("Delays in data collection and use", RiskSeverity.MODERATE, "Past statistics can only show what has happened; trend and loss development must project to the future"),
-    ("Investment income", RiskSeverity.LOW, "Investment earnings may offset some of the cost of funds"),
+    ("Investment income", RiskSeverity.LOW, "Investment earnings on loss reserves and unearned premium reserves offset some of the cost of funds"),
+    ("Economic inflation / deflation", RiskSeverity.MODERATE, "Inflation or deflation during the data delay changes the average cost of a loss (severity)"),
+    ("Legislative / regulatory changes", RiskSeverity.MODERATE, "Changes in claim-settlement rules can alter the number of losses (frequency)"),
+    ("Projected expenses", RiskSeverity.LOW, "Expenses change over time; projected or judgment/budgeted expenses may be more relevant than past expenses"),
+    ("Expense allocation among lines", RiskSeverity.LOW, "General administrative expenses must be allocated properly so no line subsidizes another"),
     ("Policy limits", RiskSeverity.LOW, "Higher limits concentrate exposure and require higher rates per exposure unit"),
     ("Deductible level", RiskSeverity.LOW, "Higher deductibles remove small claims from the loss cost"),
     ("Vehicle type / driving record", RiskSeverity.MODERATE, "Personal auto relativities vary by symbol, use, territory, and record"),

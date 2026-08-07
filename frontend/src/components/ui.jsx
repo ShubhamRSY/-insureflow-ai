@@ -1,4 +1,4 @@
-export function Badge({ status, pulse = false }) {
+export function Badge({ status, pulse = false, label }) {
   if (!status) return null;
   const s = String(status).toLowerCase();
   const colors = {
@@ -42,7 +42,7 @@ export function Badge({ status, pulse = false }) {
   return (
     <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset capitalize ${cls}`}>
       {(pulse || s === 'processing') && <span className="h-1.5 w-1.5 animate-pulse-soft rounded-full bg-current" />}
-      {status}
+      {label ?? status}
     </span>
   );
 }

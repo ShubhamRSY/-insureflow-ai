@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Calculator, RefreshCw, Layers, Scale, TrendingUp, Gavel, Landmark, Clock, AlertTriangle } from 'lucide-react';
+import { Calculator, RefreshCw, Layers, Scale, TrendingUp, Gavel, Landmark, Clock, AlertTriangle, PiggyBank, Receipt, ListChecks } from 'lucide-react';
 import { StatCard, EmptyState, Badge } from '../components/ui';
 import { endpoints, fmtCurrency } from '../lib/api';
 
@@ -307,6 +307,96 @@ export default function RatemakingPage() {
                   ))}
                 </ul>
               </div>
+            </div>
+          </div>
+
+          <div className="glass-card p-5">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-slate-400">
+                <PiggyBank className="h-4 w-4" /> Investment income &amp; expense allocation
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                <span className="rounded-full bg-surface-overlay px-3 py-1 text-xs text-slate-300 ring-1 ring-inset ring-slate-500/20">
+                  {overview?.states_requiring_explicit_investment_income?.length || 0} states require explicit consideration
+                </span>
+              </div>
+            </div>
+
+            <div className="grid gap-4 lg:grid-cols-2">
+              <div>
+                <h4 className="mb-2 text-xs uppercase tracking-wider text-slate-400">Investment income by line (reserve funding × yield)</h4>
+                <div className="overflow-x-auto rounded-lg ring-1 ring-inset ring-slate-500/20">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="bg-surface-overlay text-left text-slate-400">
+                        <th className="px-3 py-2 font-medium">Line</th>
+                        <th className="px-3 py-2 font-medium">Tail</th>
+                        <th className="px-3 py-2 text-right font-medium">Reserve funding</th>
+                        <th className="px-3 py-2 text-right font-medium">Income % prem</th>
+                        <th className="px-3 py-2 text-right font-medium">Rate offset</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(overview?.investment_income || []).map((a, i) => (
+                        <tr key={i} className="border-t border-slate-500/10 text-slate-200">
+                          <td className="px-3 py-1.5">{a.line}</td>
+                          <td className="px-3 py-1.5 text-slate-400">{a.tail}</td>
+                          <td className="px-3 py-1.5 text-right tabular-nums">{((a.loss_reserve_funding + a.unearned_premium_reserve_funding) * 100).toFixed(0)}%</td>
+                          <td className="px-3 py-1.5 text-right tabular-nums">{a.investment_income_pct_of_premium}%</td>
+                          <td className="px-3 py-1.5 text-right font-semibold tabular-nums">{a.rate_offset_pct}%</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <p className="mt-3 text-xs text-slate-400">
+                  Liability lines hold far more reserve funding than property lines, so investment income offsets more of the
+                  required rate. States requiring explicit consideration: {overview?.states_requiring_explicit_investment_income?.join(', ') || '—'}.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="mb-2 flex items-center gap-1 text-xs uppercase tracking-wider text-slate-400">
+                  <Receipt className="h-3.5 w-3.5" /> Projected expenses
+                </h4>
+                <div className="space-y-1.5">
+                  {(overview?.expense_analysis?.projections || []).map((p, i) => (
+                    <div key={i} className="flex items-center justify-between gap-3 rounded-lg bg-surface-overlay px-3 py-2 text-xs">
+                      <div>
+                        <p className="text-slate-200 capitalize">{p.expense.replace(/_/g, ' ')}</p>
+                        <p className="text-slate-400">{fmtCurrency(p.historical)} → {fmtCurrency(p.projected)} ({p.change_pct >= 0 ? '+' : ''}{p.change_pct}%)</p>
+                      </div>
+                      <Badge status={p.basis === 'budgeted' ? 'flag' : p.basis === 'judgment' ? 'flag' : 'pass'} label={p.basis.replace(/_/g, ' ')} />
+                    </div>
+                  ))}
+                </div>
+                <h4 className="mb-2 mt-5 text-xs uppercase tracking-wider text-slate-400">General admin allocation across lines</h4>
+                <div className="space-y-1.5">
+                  {(overview?.expense_analysis?.allocations || []).map((a, i) => (
+                    <div key={i} className="flex items-center justify-between gap-3 rounded-lg bg-surface-overlay px-3 py-1.5 text-xs">
+                      <span className="text-slate-300">{a.line}</span>
+                      <span className="text-slate-400 tabular-nums">{(a.premium_share * 100).toFixed(1)}% · {fmtCurrency(a.allocated_general_admin)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="glass-card p-5">
+            <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-slate-400">
+              <ListChecks className="h-4 w-4" /> Ratemaking factors
+            </h3>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {(overview?.factors || []).map((f, i) => (
+                <div key={i} className="flex items-center justify-between gap-3 rounded-lg bg-surface-overlay px-3 py-2">
+                  <div>
+                    <p className="text-xs text-slate-200">{f.factor}</p>
+                    <p className="text-[11px] text-slate-400">{f.detail}</p>
+                  </div>
+                  <Badge status={f.severity === 'high' ? 'fail' : f.severity === 'moderate' ? 'flag' : 'pass'} />
+                </div>
+              ))}
             </div>
           </div>
         </>

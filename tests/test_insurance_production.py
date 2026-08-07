@@ -314,6 +314,10 @@ class TestInsuranceAPIProduction:
         assert {"ISO", "AAIS", "NCCI"}.issubset(set(data["advisory_organizations"]))
         assert len(data["regulatory"]) == 3
         assert len(data["characteristics"]) == 5
+        assert len(data["investment_income"]) == len(list(InsuranceLine))
+        assert data["states_requiring_explicit_investment_income"]
+        assert "projections" in data["expense_analysis"]
+        assert "allocations" in data["expense_analysis"]
 
         run = client.post(
             "/pipeline/rating/ratemaking/run",

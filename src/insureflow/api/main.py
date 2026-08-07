@@ -4502,6 +4502,8 @@ class RatemakingRunRequest(BaseModel):
 @app.get("/pipeline/rating/ratemaking")
 def ratemaking_overview(_: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
     """Ratemaking study across lines: base-rate build-up, methods, goals, characteristics."""
+    from insureflow.rating.expenses import allocate_general_admin_across_all_lines, project_expenses
+    from insureflow.rating.investment_income import investment_income_across_lines, states_requiring_explicit_investment_income
     from insureflow.rating.ratemaking import (
         line_rate_build_ups,
         rate_characteristics_review,
@@ -4519,6 +4521,18 @@ def ratemaking_overview(_: TokenData = Depends(require_role(Role.VIEWER))) -> di
         "advisory_organizations": ["ISO", "AAIS", "NCCI", "Surety Association of America"],
         "methods": ["pure_premium", "loss_ratio", "judgment"],
         "reserve_analysis": run_reserve_analysis().model_dump(),
+        "investment_income": [a.model_dump() for a in investment_income_across_lines(state="NY")],
+        "states_requiring_explicit_investment_income": states_requiring_explicit_investment_income(),
+        "expense_analysis": {
+            "projections": [
+                p.model_dump()
+                for p in project_expenses(
+                    {"acquisition": 1_500_000, "general_admin": 800_000, "premium_taxes": 200_000},
+                    budgeted={"acquisition": 1_800_000, "general_admin": 750_000},
+                )
+            ],
+            "allocations": [a.model_dump() for a in allocate_general_admin_across_all_lines()],
+        },
     }
 
 
