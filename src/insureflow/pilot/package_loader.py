@@ -95,7 +95,7 @@ def run_pilot_package(
     use_llm: bool = False,
 ) -> dict[str, Any]:
     from insureflow.insurance.pipeline import InsurancePipeline
-    from insureflow.pilot.sandbox_readiness import is_shadow_mode
+    from insureflow.pilot.sandbox_readiness import bind_is_allowed, is_shadow_mode, operating_mode
 
     if not package.acord_xml:
         raise ValueError(f"Pilot package missing ACORD/XML: {package.path}")
@@ -116,12 +116,20 @@ def run_pilot_package(
         "partner": package.partner,
         "submission_id": package.submission_id,
         "path": str(package.path),
+        "operating_mode": "shadow" if shadow_mode else operating_mode(),
         "shadow_mode": shadow_mode,
-        "bind_allowed": not shadow_mode,
+        "bind_allowed": (not shadow_mode) and (bind_is_allowed() if shadow is None else True),
         "meta": package.meta,
     }
     if shadow_mode:
-        result["pilot_note"] = "Shadow mode: AI recommendation + UW review only. Policy bind is disabled until live PAS credentials are configured and PILOT_SHADOW_MODE=false."
+        result["pilot_note"] = (
+            "Shadow mode: AI recommendation + UW review only. "
+            "Set OPERATING_MODE=ready and PILOT_SHADOW_MODE=false with Guidewire credentials to enable bind."
+        )
+    else:
+        result["pilot_note"] = (
+            "Ready mode: PAS submit enabled. Bind requires Guidewire/BriteCore credentials and UW approval."
+        )
     expected = package.meta.get("expected_decision")
     if expected:
         actual = str(result.get("ai_decision") or "").lower()

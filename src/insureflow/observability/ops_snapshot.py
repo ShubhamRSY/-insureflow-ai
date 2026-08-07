@@ -12,7 +12,13 @@ _STARTED_AT = time.time()
 
 def collect_ops_snapshot(job_store: Any | None = None) -> dict[str, Any]:
     """Lightweight health + job latency signals (no external deps required)."""
-    from insureflow.pilot.sandbox_readiness import assess_sandbox_readiness, is_shadow_mode
+    from insureflow.pilot.sandbox_readiness import (
+        assess_sandbox_readiness,
+        bind_is_allowed,
+        is_ready_mode,
+        is_shadow_mode,
+        operating_mode,
+    )
     from insureflow.storage.job_store import get_job_store
 
     store = job_store or get_job_store()
@@ -46,7 +52,17 @@ def collect_ops_snapshot(job_store: Any | None = None) -> dict[str, Any]:
     if readiness.get("overall") == "not_ready":
         alerts.append({"severity": "warning", "code": "sandbox_not_ready", "message": "Sandbox overall=not_ready"})
     if is_shadow_mode():
-        alerts.append({"severity": "info", "code": "shadow_mode", "message": "PILOT_SHADOW_MODE active — bind disabled"})
+        alerts.append({"severity": "info", "code": "shadow_mode", "message": "Shadow mode active — bind disabled"})
+    elif is_ready_mode() and not bind_is_allowed():
+        alerts.append(
+            {
+                "severity": "warning",
+                "code": "ready_pas_missing",
+                "message": "Ready mode on but Guidewire/BriteCore credentials missing — bind blocked",
+            }
+        )
+    elif is_ready_mode():
+        alerts.append({"severity": "info", "code": "ready_mode", "message": "Ready mode — bind enabled when UW-approved"})
 
     return {
         "ok": True,
@@ -54,7 +70,10 @@ def collect_ops_snapshot(job_store: Any | None = None) -> dict[str, Any]:
         "uptime_seconds": uptime_s,
         "environment": os.getenv("ENVIRONMENT", "development"),
         "bank_mode": os.getenv("BANK_MODE", "false").lower() in {"1", "true", "yes"},
+        "operating_mode": operating_mode(),
         "shadow_mode": is_shadow_mode(),
+        "ready_mode": is_ready_mode(),
+        "bind_allowed": bind_is_allowed(),
         "job_store": type(store).__name__,
         "sandbox_overall": readiness.get("overall"),
         "required_feeds": f"{readiness.get('required_ready')}/{readiness.get('required_total')}",

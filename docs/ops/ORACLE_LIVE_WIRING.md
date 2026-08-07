@@ -18,7 +18,8 @@ Exit code `2` = required keys still missing. Exit `0` = CLUE + A-PLUS configured
 
 ```bash
 ORACLE_MODE=auto
-PILOT_SHADOW_MODE=true
+OPERATING_MODE=ready
+PILOT_SHADOW_MODE=false
 
 CLUE_API_KEY=...
 CLUE_API_URL=https://vendor-sandbox/.../clue/...
@@ -54,7 +55,7 @@ REQUIRE_LIVE_ORACLES=true
 BANK_MODE=true
 ```
 
-Until vendor sandboxes are issued, keep `PILOT_SHADOW_MODE=true`.
+Until vendor sandboxes are issued, you can still run ready mode against the bundled `/integrations` gateway with non-dev keys, or set `OPERATING_MODE=shadow` to keep bind off.
 
 ## 4. Where to get keys
 

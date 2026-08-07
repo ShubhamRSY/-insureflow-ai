@@ -917,7 +917,7 @@
           <div class="feature-grid">
             <div class="feature-card"><div class="icon">📄</div><h3>Document ingestion</h3><p>ACORD XML, broker slips, loss runs, SOV, inspections — auto-classified, parsed, and PII-screened for pilots.</p></div>
             <div class="feature-card"><div class="icon">🤖</div><h3>Specialist agents</h3><p>A focused 3-phase funnel — Triage → Risk &amp; Price → Decision — with deep-dive analysis on demand.<ul><li>Deterministic fallbacks without LLM</li><li>CONDITIONAL_ACCEPT when docs need subjectivities</li></ul></p></div>
-            <div class="feature-card"><div class="icon">💰</div><h3>Premium &amp; shadow bind</h3><p>ACCEPT / CONDITIONAL_ACCEPT / REFER / DECLINE with indicated premium. Shadow mode blocks live bind until PAS is ready.</p></div>
+            <div class="feature-card"><div class="icon">💰</div><h3>Premium &amp; ready bind</h3><p>ACCEPT / CONDITIONAL_ACCEPT / REFER / DECLINE with indicated premium. Ready mode enables PAS bind after licensed UW sign-off when Guidewire is configured.</p></div>
             <div class="feature-card"><div class="icon">🔍</div><h3>Submission journey</h3><p>Full pipeline panel per job — COPE, live oracles, provenance, pricing build-up, and encrypted audit trail.</p></div>
           </div>
         </div>
@@ -1108,7 +1108,7 @@
     const PIPELINE = [
       { tag: "Phase 01", title: "Triage", desc: "Every submission is qualified up front — before any deep analysis runs.", items: ["Fast intake from 24 connectors: S3, SharePoint, Box, Applied Epic, Vertafore, email", "Triage scoring & appetite filter with fast-fail on out-of-appetite risks", "Org-scoped job tracking from first byte"] },
       { tag: "Phase 02", title: "Risk & Price", desc: "Documents are parsed, verified, and analyzed into a build-up of risk and price.", items: ["ACORD XML, broker PDFs/JSON, loss runs, SOV, inspections — OCR with provenance", "Cross-document reconciliation + COPE analysis for property risks", "Deterministic risk scoring with ML premium estimates", "P&C premium build-up with calibrated rate curves and market-cycle adjustments"] },
-      { tag: "Phase 03", title: "Decision", desc: "Bind-ready output with human checkpoints — and every deferred analysis one click away.", items: ["ACCEPT / CONDITIONAL_ACCEPT / REFER / DECLINE UW memo", "Licensed UW sign-off with override notes; shadow mode blocks bind until PAS wiring is approved", "Encrypted audit bundle with SHA-256 manifest", "Deep dive re-runs oracles, portfolio, reinsurance & fraud ML on demand — nothing lost"] },
+      { tag: "Phase 03", title: "Decision", desc: "Bind-ready output with human checkpoints — and every deferred analysis one click away.", items: ["ACCEPT / CONDITIONAL_ACCEPT / REFER / DECLINE UW memo", "Licensed UW sign-off with override notes; ready mode binds through Guidewire when credentials are live", "Encrypted audit bundle with SHA-256 manifest", "Deep dive re-runs oracles, portfolio, reinsurance & fraud ML on demand — nothing lost"] },
     ];
 
     const INTEGRATIONS = [
@@ -1135,7 +1135,8 @@
       { q: "How do you handle security and PII?", a: "JWT + RBAC, org-scoped isolation, Fernet encryption at rest, automated PII redaction (SSN, EIN, DOB) for pilot packages, durable Redis/file job stores, and encrypted audit bundles with SHA-256 manifests." },
       { q: "Is Rytera cloud, on-prem, or hybrid?", a: "Self-hosted via Docker Compose (Redis, PostgreSQL/pgvector, API, Celery). Deploy on your infrastructure or private cloud. Production also runs at ryterainc.com." },
       { q: "How long does a pilot take?", a: "We recommend a 30-day shadow program: 20–50 redacted packages, one UW for 2–4 hrs/week, bind disabled. Success gates include override rate under 25%, no silent ACCEPT on missing docs, and UW time-to-review under 15 minutes." },
-      { q: "What is shadow mode?", a: "PILOT_SHADOW_MODE runs full analysis and UW sign-off while blocking live policy bind. Use it until Guidewire/PAS UAT and oracle sandboxes are wired — so pilots never invent a bind." },
+      { q: "What is ready mode?", a: "OPERATING_MODE=ready (PILOT_SHADOW_MODE=false) enables policy bind after UW approval when Guidewire/BriteCore credentials are configured. Shadow mode is the optional bind-blocked posture for early pilots." },
+      { q: "What is shadow mode?", a: "OPERATING_MODE=shadow (or PILOT_SHADOW_MODE=true) runs full analysis and UW sign-off while blocking live policy bind — use it only when you intentionally want bind off." },
       { q: "How is pricing structured?", a: "Pilots typically start per-submission. Committed accounts can move to platform SaaS by volume. Enterprise plans include dedicated support, custom connectors, and SLA options." },
     ];
 

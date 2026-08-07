@@ -22,7 +22,8 @@ Expected early state: `overall=pilot_shadow_ready` once local infra is set (orac
 | `ENCRYPTION_KEY` | Fernet key from EnvelopeEncryption.generate_key() |
 | `REDIS_URL` | Reachable Redis |
 | `INTEGRATION_GATEWAY_API_KEY` | Not the `rytera-dev-…` placeholder |
-| `PILOT_SHADOW_MODE` | `true` for shadow UW (recommended until PAS live) |
+| `OPERATING_MODE` | `ready` (bind on) or `shadow` (bind off) |
+| `PILOT_SHADOW_MODE` | `false` for ready mode; `true` only to force bind-block |
 
 ## 2. Oracle sandboxes
 
@@ -48,17 +49,17 @@ curl -H "Authorization: Bearer $TOKEN" http://127.0.0.1:8002/pilot/sandbox-statu
 | Guidewire | `GUIDEWIRE_API_KEY`, `GUIDEWIRE_API_URL`, `GUIDEWIRE_MODE=auto` |
 | BriteCore | `BRITECORE_*` |
 
-Until these are live:
+Until these are live, set `OPERATING_MODE=shadow` (or `PILOT_SHADOW_MODE=true`):
 
-- Keep `PILOT_SHADOW_MODE=true`
 - `/pipeline/workflow/{id}/bind` returns **403**
 - Core PAS submit is skipped on pilot package runs
 
 When ready:
 
 ```bash
-# unset or false
+OPERATING_MODE=ready
 PILOT_SHADOW_MODE=false
+# GUIDEWIRE_API_KEY / URL must be non-dev placeholders
 ALLOW_SIMULATED_BIND=false
 ```
 
@@ -81,6 +82,7 @@ PYTHONPATH=src python scripts/pilot/smoke_pilot_deploy.py
 |---------|---------|
 | `not_ready` | Missing Redis/encryption/gateway or all oracles simulated |
 | `pilot_shadow_ready` | Safe to run partner packages; bind off |
-| `pilot_live_ready` | Required oracles + Guidewire configured |
+| `pilot_ready` | Ready mode + PAS + infra; bind enabled |
+| `pilot_live_ready` | Required oracles + Guidewire + infra all configured |
 
 Partner outreach template: [`PILOT_PARTNER_BRIEF.md`](./PILOT_PARTNER_BRIEF.md)

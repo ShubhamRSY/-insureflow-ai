@@ -139,7 +139,9 @@ export default function PilotPage() {
           </div>
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Pilot Lab</h1>
-            <p className="mt-1 text-slate-400">Sandbox readiness, redacted packages, shadow underwriting</p>
+            <p className="mt-1 text-slate-400">
+              {readiness?.ready_mode ? 'Ready mode — bind enabled when PAS is configured' : 'Sandbox readiness, packages, and underwriting calibration'}
+            </p>
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -162,7 +164,12 @@ export default function PilotPage() {
       {message && <div className="rounded-xl bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">{message}</div>}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Readiness" value={overall.replace(/_/g, ' ')} sub={readiness?.shadow_mode ? 'Shadow mode ON' : 'Shadow mode OFF'} accent="insurance" />
+        <StatCard
+          label="Readiness"
+          value={overall.replace(/_/g, ' ')}
+          sub={readiness?.ready_mode ? (readiness?.bind_allowed ? 'Ready · bind ON' : 'Ready · PAS credentials needed') : 'Shadow mode ON'}
+          accent="insurance"
+        />
         <StatCard label="Required feeds" value={`${readiness?.required_ready ?? 0}/${readiness?.required_total ?? 0}`} sub="CLUE / A-PLUS / Guidewire / Redis" />
         <StatCard label="Packages" value={String(packages.length)} sub="Under pilot_packages/" />
         <StatCard label="Match rate" value={matchPct} sub={`n=${calibration?.labeled_sample_size ?? 0} labeled`} accent="success" />
@@ -171,7 +178,27 @@ export default function PilotPage() {
       {readiness?.shadow_mode && (
         <div className="flex items-start gap-3 rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
           <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
-          <p>Bind is disabled while shadow mode is on. Configure live Guidewire and set <code className="text-amber-200">PILOT_SHADOW_MODE=false</code> to enable production bind.</p>
+          <p>
+            Bind is disabled while shadow mode is on. Set <code className="text-amber-200">OPERATING_MODE=ready</code> and{' '}
+            <code className="text-amber-200">PILOT_SHADOW_MODE=false</code> with Guidewire credentials to enable bind.
+          </p>
+        </div>
+      )}
+
+      {readiness?.ready_mode && !readiness?.bind_allowed && (
+        <div className="flex items-start gap-3 rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+          <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+          <p>
+            Ready mode is on but bind is blocked until <code className="text-amber-200">GUIDEWIRE_API_KEY</code> +{' '}
+            <code className="text-amber-200">GUIDEWIRE_API_URL</code> are set to non-dev values (or BriteCore equivalents).
+          </p>
+        </div>
+      )}
+
+      {readiness?.ready_mode && readiness?.bind_allowed && (
+        <div className="flex items-start gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
+          <p>Ready mode active — UW-approved submissions can bind through the configured policy-admin system.</p>
         </div>
       )}
 

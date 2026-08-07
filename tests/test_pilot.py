@@ -12,25 +12,35 @@ from insureflow.pilot.package_loader import (
     load_pilot_package,
     run_pilot_package,
 )
-from insureflow.pilot.sandbox_readiness import assess_sandbox_readiness, is_shadow_mode
+from insureflow.pilot.sandbox_readiness import (
+    assess_sandbox_readiness,
+    bind_is_allowed,
+    is_ready_mode,
+    is_shadow_mode,
+    operating_mode,
+)
 
 
 def test_sandbox_readiness_report_structure(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.delenv("CLUE_API_KEY", raising=False)
     monkeypatch.delenv("GUIDEWIRE_API_KEY", raising=False)
+    monkeypatch.setenv("OPERATING_MODE", "shadow")
     monkeypatch.setenv("PILOT_SHADOW_MODE", "true")
     report = assess_sandbox_readiness(ping=False)
-    assert report["overall"] in {"not_ready", "pilot_shadow_ready", "pilot_live_ready"}
+    assert report["overall"] in {"not_ready", "pilot_shadow_ready", "pilot_ready", "pilot_live_ready"}
     assert "feeds" in report and len(report["feeds"]) >= 5
     assert "checklist" in report
     assert "partner_ask" in report
     assert report["shadow_mode"] is True
+    assert report["ready_mode"] is False
+    assert report["operating_mode"] == "shadow"
 
 
 def test_infra_ready_marks_shadow_ready(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.chdir(tmp_path)
     (tmp_path / "pilot_packages" / "demo" / "x").mkdir(parents=True)
     (tmp_path / "pilot_packages" / "demo" / "x" / "acord.xml").write_text("<ACORD/>", encoding="utf-8")
+    monkeypatch.setenv("OPERATING_MODE", "shadow")
     monkeypatch.setenv("PILOT_SHADOW_MODE", "true")
     monkeypatch.setenv("REDIS_URL", "redis://localhost:6379/0")
     monkeypatch.setenv("ENCRYPTION_KEY", "test-encryption-key-not-for-prod")
@@ -43,14 +53,44 @@ def test_infra_ready_marks_shadow_ready(monkeypatch: MonkeyPatch, tmp_path: Path
     assert report["shadow_mode"] is True
 
 
-def test_shadow_mode_defaults_on_without_guidewire(monkeypatch: MonkeyPatch) -> None:
+def test_ready_mode_defaults_and_bind_gate(monkeypatch: MonkeyPatch) -> None:
+    monkeypatch.delenv("OPERATING_MODE", raising=False)
     monkeypatch.delenv("PILOT_SHADOW_MODE", raising=False)
     monkeypatch.delenv("GUIDEWIRE_API_KEY", raising=False)
-    assert is_shadow_mode() is True
-    monkeypatch.setenv("PILOT_SHADOW_MODE", "false")
+    monkeypatch.delenv("GUIDEWIRE_API_URL", raising=False)
+    monkeypatch.delenv("BRITECORE_API_KEY", raising=False)
+    monkeypatch.delenv("BRITECORE_API_URL", raising=False)
+    assert operating_mode() == "ready"
+    assert is_ready_mode() is True
+    assert is_shadow_mode() is False
+    assert bind_is_allowed() is False
+
     monkeypatch.setenv("GUIDEWIRE_API_KEY", "live-key-not-dev-placeholder-xxxxxx")
     monkeypatch.setenv("GUIDEWIRE_API_URL", "https://example.com/gw")
-    assert is_shadow_mode() is False
+    assert bind_is_allowed() is True
+
+    monkeypatch.setenv("OPERATING_MODE", "shadow")
+    assert is_shadow_mode() is True
+    assert bind_is_allowed() is False
+
+
+def test_infra_ready_marks_ready_when_pas_configured(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "pilot_packages" / "demo" / "x").mkdir(parents=True)
+    (tmp_path / "pilot_packages" / "demo" / "x" / "acord.xml").write_text("<ACORD/>", encoding="utf-8")
+    monkeypatch.setenv("OPERATING_MODE", "ready")
+    monkeypatch.setenv("PILOT_SHADOW_MODE", "false")
+    monkeypatch.setenv("REDIS_URL", "redis://localhost:6379/0")
+    monkeypatch.setenv("ENCRYPTION_KEY", "test-encryption-key-not-for-prod")
+    monkeypatch.setenv("INTEGRATION_GATEWAY_API_KEY", "pilot-gateway-key-not-dev-placeholder")
+    monkeypatch.setenv("GUIDEWIRE_API_KEY", "live-gw-key-not-dev-placeholder")
+    monkeypatch.setenv("GUIDEWIRE_API_URL", "https://example.com/gw")
+    monkeypatch.delenv("CLUE_API_KEY", raising=False)
+    monkeypatch.delenv("APLUS_API_KEY", raising=False)
+    report = assess_sandbox_readiness(ping=False)
+    assert report["overall"] == "pilot_ready"
+    assert report["ready_mode"] is True
+    assert report["bind_allowed"] is True
 
 
 def test_export_and_run_pilot_package(tmp_path: Path) -> None:

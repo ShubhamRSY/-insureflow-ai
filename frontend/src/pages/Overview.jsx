@@ -90,7 +90,7 @@ export default function Overview({ overview, health, presets, onRunDemo, onOpenJ
               <FlaskConical className="h-5 w-5 text-amber-400" />
               <div>
                 <p className="font-semibold text-amber-100">Pilot Lab</p>
-                <p className="text-sm text-slate-400">Sandbox readiness · redacted packages · shadow UW · calibration</p>
+                <p className="text-sm text-slate-400">Sandbox readiness · packages · ready-mode bind · calibration</p>
               </div>
             </div>
             <ArrowRight className="h-4 w-4 text-amber-400 transition group-hover:translate-x-0.5" />

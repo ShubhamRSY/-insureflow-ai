@@ -7,14 +7,23 @@ from insureflow.pilot.package_loader import (
     load_pilot_package,
     run_pilot_package,
 )
-from insureflow.pilot.sandbox_readiness import assess_sandbox_readiness, is_shadow_mode
+from insureflow.pilot.sandbox_readiness import (
+    assess_sandbox_readiness,
+    bind_is_allowed,
+    is_ready_mode,
+    is_shadow_mode,
+    operating_mode,
+)
 
 __all__ = [
     "PilotPackage",
     "assess_sandbox_readiness",
+    "bind_is_allowed",
     "discover_pilot_packages",
     "export_scenario_as_pilot_package",
+    "is_ready_mode",
     "is_shadow_mode",
     "load_pilot_package",
+    "operating_mode",
     "run_pilot_package",
 ]

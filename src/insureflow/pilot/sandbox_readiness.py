@@ -31,6 +31,53 @@ def _mode(name: str, default: str = "auto") -> str:
     return (os.getenv(name) or default).strip().lower()
 
 
+def _pas_configured() -> bool:
+    """True when Guidewire (or BriteCore) has a non-dev key and URL for bind."""
+    gw = _key_ok("GUIDEWIRE_API_KEY") and bool((os.getenv("GUIDEWIRE_API_URL") or "").strip())
+    bc = _key_ok("BRITECORE_API_KEY") and bool((os.getenv("BRITECORE_API_URL") or "").strip())
+    return gw or bc
+
+
+def operating_mode() -> str:
+    """Product posture: ``ready`` (bind allowed) or ``shadow`` (bind blocked).
+
+    Resolution order:
+    1. ``OPERATING_MODE`` = ready|live|production → ready; shadow|pilot → shadow
+    2. Explicit ``PILOT_SHADOW_MODE`` true/false
+    3. Default **ready** (bind enabled when PAS credentials are present)
+    """
+    raw = (os.getenv("OPERATING_MODE") or "").strip().lower()
+    if raw in {"ready", "live", "production"}:
+        return "ready"
+    if raw in {"shadow", "pilot"}:
+        return "shadow"
+
+    explicit = os.getenv("PILOT_SHADOW_MODE", "").strip().lower()
+    if explicit in {"1", "true", "yes"}:
+        return "shadow"
+    if explicit in {"0", "false", "no"}:
+        return "ready"
+
+    return "ready"
+
+
+def is_shadow_mode() -> bool:
+    """Shadow: analyze + UW sign-off allowed; live bind blocked."""
+    return operating_mode() == "shadow"
+
+
+def is_ready_mode() -> bool:
+    """Ready: bind path enabled when PAS credentials are configured."""
+    return operating_mode() == "ready"
+
+
+def bind_is_allowed() -> bool:
+    """Whether policy bind may proceed (ready mode + PAS configured)."""
+    if is_shadow_mode():
+        return False
+    return _pas_configured()
+
+
 def assess_sandbox_readiness(*, ping: bool = True) -> dict[str, Any]:
     """Return a pilot-ready report of what is live vs still simulated."""
     from insureflow.integrations.health import IntegrationHealthService, effective_mode
@@ -142,7 +189,11 @@ def assess_sandbox_readiness(*, ping: bool = True) -> dict[str, Any]:
             configured=enc_ok,
             reachable=None,
             status="ready" if enc_ok else "missing",
-            next_action=('Generate ENCRYPTION_KEY: python -c "from insureflow.storage.encryption import EnvelopeEncryption; print(EnvelopeEncryption.generate_key())"' if not enc_ok else "OK"),
+            next_action=(
+                'Generate ENCRYPTION_KEY: python -c "from insureflow.storage.encryption import EnvelopeEncryption; print(EnvelopeEncryption.generate_key())"'
+                if not enc_ok
+                else "OK"
+            ),
             env_keys=["ENCRYPTION_KEY"],
         )
     )
@@ -165,34 +216,49 @@ def assess_sandbox_readiness(*, ping: bool = True) -> dict[str, Any]:
 
     posture = resolve_security_posture()
     shadow = is_shadow_mode()
+    ready = is_ready_mode()
+    pas_ok = _pas_configured()
 
     required_feeds = [f for f in feeds if f.required_for_pilot]
     ready_required = [f for f in required_feeds if f.status in {"ready", "sandbox_ready"}]
     blocked = [f for f in required_feeds if f.status in {"missing", "degraded", "simulated"}]
     infra_required = [f for f in required_feeds if f.category == "infra"]
     infra_ready = all(f.status in {"ready", "sandbox_ready"} for f in infra_required)
-    oracle_live = any(f.status in {"ready", "sandbox_ready"} for f in feeds if f.category == "oracle" and f.required_for_pilot)
+    oracle_live = any(
+        f.status in {"ready", "sandbox_ready"} for f in feeds if f.category == "oracle" and f.required_for_pilot
+    )
     packages_ok = _pilot_packages_present()
 
-    # Shadow-ready = durable local infra + packages; oracles may still be simulated (fail-closed).
-    # Live-ready = every required feed (oracles + PAS + infra) configured.
-    if len(ready_required) == len(required_feeds):
+    # Live-ready = every required feed configured.
+    # Ready = bind enabled + PAS + infra (oracles may still be sandbox).
+    # Shadow-ready = durable local infra + packages; bind off.
+    if len(ready_required) == len(required_feeds) and ready:
+        overall = "pilot_live_ready"
+    elif ready and pas_ok and infra_ready:
+        overall = "pilot_ready"
+    elif len(ready_required) == len(required_feeds):
         overall = "pilot_live_ready"
     elif infra_ready and packages_ok and shadow:
         overall = "pilot_shadow_ready"
-    elif oracle_live and packages_ok:
+    elif oracle_live and packages_ok and shadow:
         overall = "pilot_shadow_ready"
+    elif ready and packages_ok and infra_ready:
+        overall = "pilot_ready"
     else:
         overall = "not_ready"
 
     checklist = [
         {"step": 1, "title": "Copy production env template", "done": gateway_ok, "cmd": "cp .env.production.example .env"},
         {"step": 2, "title": "Set ENCRYPTION_KEY + REDIS_URL", "done": enc_ok and redis_ok},
-        {"step": 3, "title": "Request LexisNexis CLUE sandbox credentials", "done": _key_ok("CLUE_API_KEY")},
-        {"step": 4, "title": "Request Verisk A-PLUS sandbox credentials", "done": _key_ok("APLUS_API_KEY")},
-        {"step": 5, "title": "Request Guidewire / PAS UAT endpoint", "done": _key_ok("GUIDEWIRE_API_KEY")},
-        {"step": 6, "title": "Drop redacted packages into pilot_packages/", "done": packages_ok},
-        {"step": 7, "title": "Run shadow pilot (bind disabled)", "done": shadow},
+        {"step": 3, "title": "Configure LexisNexis CLUE credentials", "done": _key_ok("CLUE_API_KEY")},
+        {"step": 4, "title": "Configure Verisk A-PLUS credentials", "done": _key_ok("APLUS_API_KEY")},
+        {"step": 5, "title": "Configure Guidewire / PAS endpoint", "done": pas_ok},
+        {"step": 6, "title": "Drop packages into pilot_packages/", "done": packages_ok},
+        {
+            "step": 7,
+            "title": "Ready mode (bind enabled)" if ready else "Shadow mode (bind disabled)",
+            "done": ready and pas_ok if ready else shadow,
+        },
         {
             "step": 8,
             "title": "Verify feeds",
@@ -201,7 +267,6 @@ def assess_sandbox_readiness(*, ping: bool = True) -> dict[str, Any]:
         },
     ]
 
-    # Optional: merge ecosystem ping summary when available
     ecosystem: dict[str, Any] = {}
     if ping:
         try:
@@ -211,7 +276,11 @@ def assess_sandbox_readiness(*, ping: bool = True) -> dict[str, Any]:
 
     return {
         "overall": overall,
+        "operating_mode": operating_mode(),
         "shadow_mode": shadow,
+        "ready_mode": ready,
+        "bind_allowed": bind_is_allowed(),
+        "pas_configured": pas_ok,
         "bank_mode": posture.is_hardened,
         "required_ready": len(ready_required),
         "required_total": len(required_feeds),
@@ -221,8 +290,8 @@ def assess_sandbox_readiness(*, ping: bool = True) -> dict[str, Any]:
         "ecosystem": ecosystem,
         "partner_ask": [
             "20–50 redacted commercial submissions (ACORD XML/PDF, loss runs, SOV, inspection)",
-            "Sandbox credentials for CLUE and A-PLUS (or carrier-proxied feeds)",
-            "UAT Guidewire/BriteCore/Duck Creek endpoint OR shadow-mode only (UW signs off in their PAS)",
+            "Sandbox or production credentials for CLUE and A-PLUS (or carrier-proxied feeds)",
+            "UAT/production Guidewire/BriteCore/Duck Creek endpoint for ready-mode bind",
             "Licensed UW contact for HITL calibration (2–4 hrs/week for 30 days)",
             "Success metrics: override rate < 25%, no silent ACCEPT on missing docs, bind only after UW approve",
         ],
@@ -256,14 +325,3 @@ def _pilot_packages_present() -> bool:
     if not root.exists():
         return False
     return any(p.is_dir() and p.name != "_template" for p in root.iterdir())
-
-
-def is_shadow_mode() -> bool:
-    """Pilot shadow mode: analyze + UW sign-off allowed; live bind blocked."""
-    explicit = os.getenv("PILOT_SHADOW_MODE", "").strip().lower()
-    if explicit in {"1", "true", "yes"}:
-        return True
-    if explicit in {"0", "false", "no"}:
-        return False
-    # Default: shadow when Guidewire is not truly live-ready
-    return not (_key_ok("GUIDEWIRE_API_KEY") and bool(os.getenv("GUIDEWIRE_API_URL")))

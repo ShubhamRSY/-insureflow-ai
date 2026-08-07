@@ -2143,12 +2143,23 @@ def bind_policy(
     if not record or record.state.value != "approved":
         raise HTTPException(status_code=400, detail="Policy must be UW-approved before bind")
 
-    from insureflow.pilot.sandbox_readiness import is_shadow_mode
+    from insureflow.pilot.sandbox_readiness import bind_is_allowed, is_shadow_mode
 
     if is_shadow_mode():
         raise HTTPException(
             status_code=403,
-            detail=("Pilot shadow mode is active — bind is disabled. Configure live Guidewire credentials and set PILOT_SHADOW_MODE=false to enable bind."),
+            detail=(
+                "Shadow mode is active — bind is disabled. "
+                "Set OPERATING_MODE=ready and PILOT_SHADOW_MODE=false, then configure Guidewire/BriteCore credentials."
+            ),
+        )
+    if not bind_is_allowed():
+        raise HTTPException(
+            status_code=403,
+            detail=(
+                "Ready mode is on but PAS is not configured for bind. "
+                "Set GUIDEWIRE_API_KEY + GUIDEWIRE_API_URL (non-dev placeholder) or BriteCore equivalents."
+            ),
         )
 
     store = AuditStore()
@@ -4373,13 +4384,16 @@ def ecosystem_status(
     current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
     from insureflow.integrations.health import IntegrationHealthService
-    from insureflow.pilot.sandbox_readiness import assess_sandbox_readiness, is_shadow_mode
+    from insureflow.pilot.sandbox_readiness import assess_sandbox_readiness, bind_is_allowed, is_ready_mode, is_shadow_mode, operating_mode
 
     status = IntegrationHealthService().check_all(current.org_id)
     readiness = assess_sandbox_readiness(ping=False)
     status["pilot"] = {
         "overall": readiness["overall"],
+        "operating_mode": operating_mode(),
         "shadow_mode": is_shadow_mode(),
+        "ready_mode": is_ready_mode(),
+        "bind_allowed": bind_is_allowed(),
         "required_ready": readiness["required_ready"],
         "required_total": readiness["required_total"],
     }

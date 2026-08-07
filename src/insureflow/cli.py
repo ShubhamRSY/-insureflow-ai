@@ -600,10 +600,19 @@ def sandbox_status(
         return
 
     overall = report["overall"]
-    color = {"pilot_live_ready": "green bold", "pilot_shadow_ready": "yellow bold", "not_ready": "red bold"}.get(overall, "white")
+    color = {
+        "pilot_live_ready": "green bold",
+        "pilot_ready": "green",
+        "pilot_shadow_ready": "yellow bold",
+        "not_ready": "red bold",
+    }.get(overall, "white")
     console.print("\n[bold]Rytera Sandbox Readiness[/]")
     console.print(f"Overall: [{color}]{overall}[/]")
-    console.print(f"Shadow mode: [bold]{report['shadow_mode']}[/]  ·  Bank mode: {report['bank_mode']}")
+    console.print(
+        f"Operating mode: [bold]{report.get('operating_mode', 'ready')}[/]  ·  "
+        f"Ready: {report.get('ready_mode')}  ·  Shadow: {report['shadow_mode']}  ·  "
+        f"Bind allowed: {report.get('bind_allowed')}  ·  Bank: {report['bank_mode']}"
+    )
     console.print(f"Required feeds ready: {report['required_ready']}/{report['required_total']}\n")
 
     table = Table(show_header=True, header_style="bold")
@@ -749,8 +758,16 @@ def pilot_prepare(
         console.print(f"Calibration: ran={report['ran']} blocked_pii={report['blocked_pii']} match={summary.get('match_rate')}")
 
     status = assess_sandbox_readiness(ping=False)
-    color = {"pilot_live_ready": "green bold", "pilot_shadow_ready": "yellow bold", "not_ready": "red bold"}.get(status["overall"], "white")
-    console.print(f"\nSandbox: [{color}]{status['overall']}[/]  shadow={status['shadow_mode']}")
+    color = {
+        "pilot_live_ready": "green bold",
+        "pilot_ready": "green",
+        "pilot_shadow_ready": "yellow bold",
+        "not_ready": "red bold",
+    }.get(status["overall"], "white")
+    console.print(
+        f"\nSandbox: [{color}]{status['overall']}[/]  "
+        f"mode={status.get('operating_mode')}  bind={status.get('bind_allowed')}"
+    )
     console.print(f"Required infra/feeds: {status['required_ready']}/{status['required_total']}")
     if status["overall"] == "not_ready":
         console.print("[yellow]Still need ENCRYPTION_KEY, REDIS_URL, non-dev gateway key — see sandbox-status[/]")
