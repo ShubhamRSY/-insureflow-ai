@@ -764,10 +764,7 @@ def pilot_prepare(
         "pilot_shadow_ready": "yellow bold",
         "not_ready": "red bold",
     }.get(status["overall"], "white")
-    console.print(
-        f"\nSandbox: [{color}]{status['overall']}[/]  "
-        f"mode={status.get('operating_mode')}  bind={status.get('bind_allowed')}"
-    )
+    console.print(f"\nSandbox: [{color}]{status['overall']}[/]  mode={status.get('operating_mode')}  bind={status.get('bind_allowed')}")
     console.print(f"Required infra/feeds: {status['required_ready']}/{status['required_total']}")
     if status["overall"] == "not_ready":
         console.print("[yellow]Still need ENCRYPTION_KEY, REDIS_URL, non-dev gateway key — see sandbox-status[/]")

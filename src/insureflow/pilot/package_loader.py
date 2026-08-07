@@ -122,14 +122,9 @@ def run_pilot_package(
         "meta": package.meta,
     }
     if shadow_mode:
-        result["pilot_note"] = (
-            "Shadow mode: AI recommendation + UW review only. "
-            "Set OPERATING_MODE=ready and PILOT_SHADOW_MODE=false with Guidewire credentials to enable bind."
-        )
+        result["pilot_note"] = "Shadow mode: AI recommendation + UW review only. Set OPERATING_MODE=ready and PILOT_SHADOW_MODE=false with Guidewire credentials to enable bind."
     else:
-        result["pilot_note"] = (
-            "Ready mode: PAS submit enabled. Bind requires Guidewire/BriteCore credentials and UW approval."
-        )
+        result["pilot_note"] = "Ready mode: PAS submit enabled. Bind requires Guidewire/BriteCore credentials and UW approval."
     expected = package.meta.get("expected_decision")
     if expected:
         actual = str(result.get("ai_decision") or "").lower()

@@ -189,11 +189,7 @@ def assess_sandbox_readiness(*, ping: bool = True) -> dict[str, Any]:
             configured=enc_ok,
             reachable=None,
             status="ready" if enc_ok else "missing",
-            next_action=(
-                'Generate ENCRYPTION_KEY: python -c "from insureflow.storage.encryption import EnvelopeEncryption; print(EnvelopeEncryption.generate_key())"'
-                if not enc_ok
-                else "OK"
-            ),
+            next_action=('Generate ENCRYPTION_KEY: python -c "from insureflow.storage.encryption import EnvelopeEncryption; print(EnvelopeEncryption.generate_key())"' if not enc_ok else "OK"),
             env_keys=["ENCRYPTION_KEY"],
         )
     )
@@ -224,9 +220,7 @@ def assess_sandbox_readiness(*, ping: bool = True) -> dict[str, Any]:
     blocked = [f for f in required_feeds if f.status in {"missing", "degraded", "simulated"}]
     infra_required = [f for f in required_feeds if f.category == "infra"]
     infra_ready = all(f.status in {"ready", "sandbox_ready"} for f in infra_required)
-    oracle_live = any(
-        f.status in {"ready", "sandbox_ready"} for f in feeds if f.category == "oracle" and f.required_for_pilot
-    )
+    oracle_live = any(f.status in {"ready", "sandbox_ready"} for f in feeds if f.category == "oracle" and f.required_for_pilot)
     packages_ok = _pilot_packages_present()
 
     # Live-ready = every required feed configured.

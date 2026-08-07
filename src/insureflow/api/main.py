@@ -2148,18 +2148,12 @@ def bind_policy(
     if is_shadow_mode():
         raise HTTPException(
             status_code=403,
-            detail=(
-                "Shadow mode is active — bind is disabled. "
-                "Set OPERATING_MODE=ready and PILOT_SHADOW_MODE=false, then configure Guidewire/BriteCore credentials."
-            ),
+            detail=("Shadow mode is active — bind is disabled. Set OPERATING_MODE=ready and PILOT_SHADOW_MODE=false, then configure Guidewire/BriteCore credentials."),
         )
     if not bind_is_allowed():
         raise HTTPException(
             status_code=403,
-            detail=(
-                "Ready mode is on but PAS is not configured for bind. "
-                "Set GUIDEWIRE_API_KEY + GUIDEWIRE_API_URL (non-dev placeholder) or BriteCore equivalents."
-            ),
+            detail=("Ready mode is on but PAS is not configured for bind. Set GUIDEWIRE_API_KEY + GUIDEWIRE_API_URL (non-dev placeholder) or BriteCore equivalents."),
         )
 
     store = AuditStore()
