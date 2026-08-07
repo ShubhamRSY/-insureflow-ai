@@ -4482,6 +4482,73 @@ def list_insurance_products(_: TokenData = Depends(require_role(Role.VIEWER))) -
     }
 
 
+class RatemakingRunRequest(BaseModel):
+    line: str = "commercial_property"
+    incurred_losses: float = 10_000_000.0
+    exposure_units: float = 100_000.0
+    lae: float = 0.0
+    acquisition: float = 0.0
+    general_admin: float = 0.0
+    premium_taxes: float = 0.0
+    contingency_pct: float = 5.0
+    profit_pct: float = 5.0
+    current_rate: float = 0.0
+    actual_loss_ratio: float = 0.60
+    permissible_loss_ratio: float = 0.65
+    trend_factor: float = 1.03
+    loss_development_factor: float = 1.05
+
+
+@app.get("/pipeline/rating/ratemaking")
+def ratemaking_overview(_: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
+    """Ratemaking study across lines: base-rate build-up, methods, goals, characteristics."""
+    from insureflow.rating.ratemaking import (
+        line_rate_build_ups,
+        rate_characteristics_review,
+        ratemaking_factors,
+        regulatory_review,
+    )
+
+    build_ups = line_rate_build_ups()
+    return {
+        "line_build_ups": [b.model_dump() for b in build_ups],
+        "regulatory": [r.model_dump() for r in regulatory_review(build_ups[0])],
+        "characteristics": [c.model_dump() for c in rate_characteristics_review(build_ups[0])],
+        "factors": [f.model_dump() for f in ratemaking_factors()],
+        "advisory_organizations": ["ISO", "AAIS", "NCCI", "Surety Association of America"],
+        "methods": ["pure_premium", "loss_ratio", "judgment"],
+    }
+
+
+@app.post("/pipeline/rating/ratemaking/run")
+def run_ratemaking(body: RatemakingRunRequest, _: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
+    """Run the three ratemaking methods over explicit inputs (dashboard build-a-rate)."""
+    from insureflow.rating.models import InsuranceLine
+    from insureflow.rating.ratemaking import run_ratemaking_study
+
+    try:
+        line = InsuranceLine(body.line)
+    except ValueError:
+        line = InsuranceLine.COMMERCIAL_PROPERTY
+    study = run_ratemaking_study(
+        line=line,
+        incurred_losses=body.incurred_losses,
+        exposure_units=body.exposure_units,
+        lae=body.lae,
+        acquisition=body.acquisition,
+        general_admin=body.general_admin,
+        premium_taxes=body.premium_taxes,
+        contingency_pct=body.contingency_pct,
+        profit_pct=body.profit_pct,
+        current_rate=body.current_rate,
+        actual_loss_ratio=body.actual_loss_ratio,
+        permissible_loss_ratio=body.permissible_loss_ratio,
+        trend_factor=body.trend_factor,
+        loss_development_factor=body.loss_development_factor,
+    )
+    return study.model_dump()
+
+
 # ── Mortgage Pipeline ───────────────────────────────────────────
 
 

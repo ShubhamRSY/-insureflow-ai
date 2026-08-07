@@ -2,7 +2,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Shield, Home, Activity, ClipboardCheck, Settings, LogOut, RefreshCw, Menu, X,
   FileText, Users, BarChart3, BookOpen, Wallet, Layers, Link2, LineChart, Search, Database, FlaskConical,
-  FileCheck, MessagesSquare, Radar, Briefcase, Building2,
+  FileCheck, MessagesSquare, Radar, Briefcase, Building2, Calculator,
 } from 'lucide-react';
 import { useState } from 'react';
 import { auth, endpoints } from '../lib/api';
@@ -28,6 +28,7 @@ const nav = [
   { to: '/overrides', icon: LineChart, label: 'Override Analytics' },
   { to: '/eval-trends', icon: Activity, label: 'Eval Trends' },
   { to: '/portfolio', icon: Layers, label: 'Portfolio' },
+  { to: '/ratemaking', icon: Calculator, label: 'Ratemaking & Pricing', color: 'text-brand' },
   { to: '/authority', icon: Users, label: 'Authority Matrix' },
   { to: '/market', icon: BarChart3, label: 'Market Cycle' },
   { section: 'Governance' },

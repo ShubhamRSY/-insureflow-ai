@@ -28,6 +28,7 @@ import MonitoringPage from './pages/Monitoring';
 import ProducerCommsPage from './pages/ProducerComms';
 import LineUnderwriting from './pages/LineUnderwriting';
 import StaffUnderwriting from './pages/StaffUnderwriting';
+import RatemakingPage from './pages/Ratemaking';
 import { auth, endpoints, AuthError } from './lib/api';
 
 function Protected({ children, onLogin }) {
@@ -262,6 +263,7 @@ function AppRoutes() {
           <Route path="overrides" element={<Protected onLogin={() => setLoginOpen(true)}><OverrideAnalyticsPage /></Protected>} />
           <Route path="eval-trends" element={<Protected onLogin={() => setLoginOpen(true)}><EvalTrendsPage /></Protected>} />
           <Route path="portfolio" element={<Protected onLogin={() => setLoginOpen(true)}><PortfolioPage /></Protected>} />
+          <Route path="ratemaking" element={<Protected onLogin={() => setLoginOpen(true)}><RatemakingPage /></Protected>} />
           <Route path="queue" element={<Protected onLogin={() => setLoginOpen(true)}><QueuePage queueStats={queueStats} insuranceJobs={insuranceJobs} onOpenJob={openJob} onRefresh={loadQueueStats} /></Protected>} />
           <Route path="registry" element={<Protected onLogin={() => setLoginOpen(true)}><RegistryPage /></Protected>} />
           <Route path="integrations" element={<Protected onLogin={() => setLoginOpen(true)}><IntegrationsPage /></Protected>} />

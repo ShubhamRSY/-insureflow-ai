@@ -33,6 +33,9 @@ export function Badge({ status, pulse = false }) {
     decline: 'bg-red-500/15 text-red-400 ring-red-500/20',
     denied: 'bg-red-500/15 text-red-400 ring-red-500/20',
     closed: 'bg-slate-500/15 text-slate-400 ring-slate-500/20',
+    pass: 'bg-emerald-500/15 text-emerald-400 ring-emerald-500/20',
+    flag: 'bg-amber-500/15 text-amber-400 ring-amber-500/20',
+    fail: 'bg-red-500/15 text-red-400 ring-red-500/20',
     waived: 'bg-slate-500/15 text-slate-400 ring-slate-500/20',
   };
   const cls = colors[s] || 'bg-slate-500/15 text-slate-400 ring-slate-500/20';

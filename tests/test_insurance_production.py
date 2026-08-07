@@ -31,6 +31,7 @@ from insureflow.models.agents import (
 from insureflow.models.submissions import SubmissionBundle
 from insureflow.outcomes.feedback import FeedbackEngine
 from insureflow.rating.engine import InsuranceRatingEngine
+from insureflow.rating.models import InsuranceLine
 from insureflow.storage.encryption import EnvelopeEncryption
 from insureflow.workflow.models import SignOffAction, WorkflowState
 from insureflow.workflow.service import WorkflowService
@@ -302,6 +303,28 @@ class TestInsuranceAPIProduction:
         resp = client.get("/pipeline/rating/products", headers=self._headers(Role.VIEWER))
         assert resp.status_code == 200
         assert len(resp.json()["lines"]) >= 4
+
+    def test_ratemaking_endpoints(self) -> None:
+        client = TestClient(app)
+        headers = self._headers(Role.VIEWER)
+        overview = client.get("/pipeline/rating/ratemaking", headers=headers)
+        assert overview.status_code == 200
+        data = overview.json()
+        assert len(data["line_build_ups"]) == len(list(InsuranceLine))
+        assert {"ISO", "AAIS", "NCCI"}.issubset(set(data["advisory_organizations"]))
+        assert len(data["regulatory"]) == 3
+        assert len(data["characteristics"]) == 5
+
+        run = client.post(
+            "/pipeline/rating/ratemaking/run",
+            headers=headers,
+            json={"line": "workers_comp", "incurred_losses": 10_000_000, "exposure_units": 100_000},
+        )
+        assert run.status_code == 200
+        study = run.json()
+        assert study["pure_premium_result"]["base_rate"] == 100.0
+        assert study["loss_ratio_result"]["rate_change_pct"] == round((0.60 * 1.03 * 1.05 / 0.65 - 1.0) * 100, 2)
+        assert "NCCI" in study["advisory_orgs"]
 
     def test_demo_presets_cover_all_verticals(self) -> None:
         client = TestClient(app)

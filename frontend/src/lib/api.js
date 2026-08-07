@@ -240,6 +240,8 @@ export const endpoints = {
   },
   // Insurance products & outcomes
   insuranceProducts: () => api('/pipeline/rating/products'),
+  ratemaking: () => api('/pipeline/rating/ratemaking'),
+  ratemakingRun: (body) => api('/pipeline/rating/ratemaking/run', { method: 'POST', body }),
   lossExperience: (body) => api('/pipeline/outcomes/loss-experience', { method: 'POST', body }),
   calibration: () => api('/pipeline/outcomes/calibration'),
 
