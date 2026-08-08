@@ -8,6 +8,7 @@ import {
   SolutionsSection,
   AutomationsCatalog,
   PlatformStrip,
+  UnderwriterPlaybook,
 } from '../components/MarketingShowcase';
 
 export default function Overview({ overview, health, presets, onRunDemo, onOpenJob, onLogin, marketCycle, queueStats, insuranceJobs }) {
@@ -31,6 +32,7 @@ export default function Overview({ overview, health, presets, onRunDemo, onOpenJ
       <div className="-mx-6 -mt-6 overflow-hidden lg:-mx-8 lg:-mt-8">
         <HeroSection user={user} onLogin={onLogin} onRunDemo={onRunDemo} presets={presets} />
         <SolutionsSection />
+        <UnderwriterPlaybook />
         <AutomationsCatalog />
         <PlatformStrip />
       </div>

@@ -1,9 +1,20 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowRight, FileSearch, HeartPulse, Building2, Home, Wallet,
   ScrollText, ShieldCheck, Layers, Gauge, Sparkles, FileText, Briefcase,
+  ClipboardCheck, BadgeCheck, FolderOpen, Route, Repeat, TrendingUp, HandCoins,
 } from 'lucide-react';
+import { endpoints } from '../lib/api';
+
+const UW_RESPONSIBILITY_ICONS = {
+  risk_assessment: Gauge,
+  pricing: HandCoins,
+  terms: ClipboardCheck,
+  decision: BadgeCheck,
+  portfolio: Layers,
+  monitoring: Repeat,
+};
 
 const SOLUTIONS = [
   {
@@ -281,6 +292,105 @@ export function SolutionsSection() {
             ))}
           </ol>
         </div>
+      </div>
+    </section>
+  );
+}
+
+export function UnderwriterPlaybook() {
+  const navigate = useNavigate();
+  const [hub, setHub] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    endpoints.commercialInsuranceHub()
+      .then((d) => { if (!cancelled) setHub(d); })
+      .catch(() => { /* non-critical marketing content */ });
+    return () => { cancelled = true; };
+  }, []);
+
+  const LOB_ICONS = {
+    property_bi: Building2,
+    directors_officers: Briefcase,
+    workers_comp: HeartPulse,
+    trade_credit: FileSearch,
+    errors_omissions: ScrollText,
+    key_person: BadgeCheck,
+  };
+
+  return (
+    <section className="border-t border-white/[0.06] px-6 py-14 lg:px-12">
+      <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-brand-light">Business &amp; Commercial</p>
+      <h3 className="mt-2 font-display text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+        What the commercial underwriter does
+      </h3>
+      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
+        {hub?.summary || 'Decide whether to offer coverage, on what terms, and at what price — the risk evaluator between the applicant and the carrier\u2019s balance sheet.'}
+      </p>
+
+      {(hub?.uw_responsibilities || []).length > 0 && (
+        <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {hub.uw_responsibilities.map((r) => {
+            const Icon = UW_RESPONSIBILITY_ICONS[r.id] || Gauge;
+            return (
+              <div key={r.id} className="rounded-2xl bg-surface/60 p-5 ring-1 ring-white/[0.06]">
+                <Icon className="h-5 w-5 text-brand-light" />
+                <h4 className="mt-3 font-display text-base font-semibold text-white">{r.title}</h4>
+                <p className="mt-1.5 text-sm leading-relaxed text-slate-400">{r.summary}</p>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {(hub?.base_packet || []).length > 0 && (
+        <div className="mt-8 rounded-2xl bg-surface-overlay/60 p-6 ring-1 ring-white/[0.06]">
+          <p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+            <FolderOpen className="h-3.5 w-3.5" /> Base packet (almost every line)
+          </p>
+          <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+            {hub.base_packet.map((item) => (
+              <li key={item} className="flex gap-2 text-sm text-slate-300">
+                <span className="text-brand-light">•</span>
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {(hub?.lines || []).length > 0 && (
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {hub.lines.map((line) => {
+            const Icon = LOB_ICONS[line.id] || FileText;
+            return (
+              <div key={line.id} className="rounded-2xl bg-surface/60 p-5 ring-1 ring-white/[0.06]">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand/10 text-brand-light">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-display text-base font-semibold text-white">{line.name}</h4>
+                    <p className="text-xs text-slate-500">{line.document_count} required documents</p>
+                  </div>
+                </div>
+                <p className="mt-3 text-sm leading-relaxed text-slate-400">{line.description}</p>
+                {(line.acord_forms || []).length > 0 && (
+                  <p className="mt-3 text-xs text-slate-500">{line.acord_forms.join(' · ')}</p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <div className="mt-8 flex flex-wrap items-center gap-3">
+        <button type="button" onClick={() => navigate('/insurance/commercial')} className="btn-primary text-sm">
+          Run a commercial submission <ArrowRight className="h-4 w-4" />
+        </button>
+        <button type="button" onClick={() => navigate('/insurance')} className="btn-secondary text-sm">
+          Insurance overview
+        </button>
       </div>
     </section>
   );

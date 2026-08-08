@@ -1,22 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import {
-  ArrowRight, Building2, Users, HardHat, CreditCard, Scale, HeartPulse,
-  FileText, ClipboardCheck, Shield,
-} from 'lucide-react';
+import { ArrowRight, FileText, Shield } from 'lucide-react';
 import { endpoints } from '../lib/api';
+import { insuranceLineLabel } from '../lib/insuranceLines';
 import RunSelector from '../components/RunSelector';
 
-const LOB_ICONS = {
-  property_bi: Building2,
-  directors_officers: Users,
-  workers_comp: HardHat,
-  trade_credit: CreditCard,
-  errors_omissions: Scale,
-  key_person: HeartPulse,
-};
-
-export default function CommercialInsuranceHub({ presets, onRunDemo, onSubmit }) {
+export default function CommercialInsuranceHub({ presets, onRunDemo, onSubmit, jobs }) {
   const navigate = useNavigate();
   const [hub, setHub] = useState(null);
   const [error, setError] = useState('');
@@ -39,6 +28,8 @@ export default function CommercialInsuranceHub({ presets, onRunDemo, onSubmit })
       </div>
     );
   }
+
+  const runs = (jobs || []).slice(0, 8);
 
   return (
     <div className="mx-auto max-w-6xl space-y-8 animate-fade-in pb-12">
@@ -80,73 +71,60 @@ export default function CommercialInsuranceHub({ presets, onRunDemo, onSubmit })
         onSubmit={onSubmit}
       />
 
-      {/* UW framing */}
-      <section className="glass-card p-6">
-        <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-slate-400">
-          <ClipboardCheck className="h-4 w-4" /> What the commercial underwriter does
-        </h2>
-        <p className="mt-3 text-sm leading-relaxed text-slate-300">
-          Decide whether to offer coverage, on what terms, and at what price — the risk evaluator
-          between the applicant and the carrier&apos;s balance sheet.
-        </p>
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {(hub.uw_responsibilities || []).map((r) => (
-            <div key={r.id} className="rounded-xl bg-black/20 p-4 ring-1 ring-white/[0.04]">
-              <p className="text-sm font-medium text-slate-200">{r.title}</p>
-              <p className="mt-1.5 text-xs leading-relaxed text-slate-500">{r.summary}</p>
-            </div>
+      {/* Jump to a line */}
+      {(hub.lines || []).length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Jump to a line</span>
+          {(hub.lines || []).map((line) => (
+            <button
+              key={line.id}
+              type="button"
+              onClick={() => navigate(`/insurance/commercial/${line.slug}`)}
+              className="rounded-lg border border-white/[0.08] bg-surface-overlay px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:border-brand/35 hover:text-slate-100"
+            >
+              {line.name}
+            </button>
           ))}
         </div>
-      </section>
+      )}
 
-      {/* Base packet */}
-      <section className="glass-card p-6">
-        <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-slate-400">
-          <FileText className="h-4 w-4" /> Base packet (almost every line)
-        </h2>
-        <ul className="mt-4 grid gap-2 sm:grid-cols-2">
-          {(hub.base_packet || []).map((item) => (
-            <li key={item} className="flex gap-2 text-sm text-slate-300">
-              <span className="text-brand-light">•</span>
-              {item}
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      {/* Lines */}
-      <section className="space-y-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400">Lines of business</h2>
-        <div className="grid gap-4 md:grid-cols-2">
-          {(hub.lines || []).map((line) => {
-            const Icon = LOB_ICONS[line.id] || FileText;
-            return (
+      {/* Runs & reports */}
+      <section className="glass-card overflow-hidden">
+        <div className="flex items-center justify-between border-b border-white/[0.06] px-5 py-4">
+          <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-slate-400">
+            <FileText className="h-4 w-4" /> Runs & reports
+          </h2>
+          <Link to="/insurance" className="text-xs text-brand hover:underline">All insurance jobs →</Link>
+        </div>
+        {!runs.length ? (
+          <p className="px-5 py-8 text-sm text-slate-500">
+            No submissions yet. Pick a line above, add files or a sample, and run — the memo, quote, and report land here.
+          </p>
+        ) : (
+          <div className="divide-y divide-white/[0.04]">
+            {runs.map(({ id, job }) => (
               <button
-                key={line.id}
+                key={id}
                 type="button"
-                onClick={() => navigate(`/insurance/commercial/${line.slug}`)}
-                className="group rounded-2xl bg-surface-overlay p-5 text-left ring-1 ring-white/[0.04] transition hover:ring-brand/35"
+                onClick={() => navigate(`/insurance/${id}`)}
+                className="flex w-full items-center justify-between gap-3 px-5 py-3 text-left hover:bg-white/[0.02]"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand/10 text-brand-light">
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-slate-100">{line.name}</h3>
-                      <p className="text-xs text-slate-500">{line.document_count} required documents</p>
-                    </div>
-                  </div>
-                  <ArrowRight className="mt-1 h-4 w-4 text-slate-600 transition group-hover:text-brand" />
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-slate-200">
+                    {job?.name || job?.results?.insured_name || id}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {insuranceLineLabel(job?.results?.insurance_line || job?.results?.product_line || '') || 'Commercial'}
+                  </p>
                 </div>
-                <p className="mt-3 text-sm leading-relaxed text-slate-400">{line.description}</p>
-                {(line.acord_forms || []).length > 0 && (
-                  <p className="mt-3 text-xs text-slate-500">{line.acord_forms.join(' · ')}</p>
-                )}
+                <div className="flex items-center gap-3">
+                  <span className="text-xs capitalize text-slate-400">{job?.status || '—'}</span>
+                  <ArrowRight className="h-3.5 w-3.5 text-slate-600" />
+                </div>
               </button>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );
