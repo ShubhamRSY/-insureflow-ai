@@ -11,6 +11,7 @@ import CommercialLinePage from './pages/CommercialLine';
 import MortgagePage from './pages/Mortgage';
 import LendingPage from './pages/Lending';
 import WorkflowPage from './pages/Workflow';
+import UWWorkbench from './pages/UWWorkbench';
 import SettingsPage from './pages/Settings';
 import BrokerStatusPage from './pages/BrokerStatus';
 import AuthorityMatrix from './pages/AuthorityMatrix';
@@ -261,6 +262,7 @@ function AppRoutes() {
           <Route path="mortgage" element={<Protected onLogin={() => setLoginOpen(true)}><MortgagePage presets={presets} jobs={mortgageJobs} onRunDemo={runDemo} onOpenJob={openJob} onRunConnect={runMortgageConnect} onSubmit={submitMortgage} /></Protected>} />
           <Route path="lending" element={<Protected onLogin={() => setLoginOpen(true)}><LendingPage presets={presets} demoResult={lendingDemoResult} onRunDemo={runDemo} /></Protected>} />
           <Route path="workflow" element={<Protected onLogin={() => setLoginOpen(true)}><WorkflowPage pending={pending} onRefresh={loadOverview} onOpenJob={openJob} authorityData={authorityData} /></Protected>} />
+          <Route path="uw-workbench" element={<Protected onLogin={() => setLoginOpen(true)}><UWWorkbench onOpenJob={openJob} authorityData={authorityData} onRefresh={refreshAll} /></Protected>} />
           <Route path="issuance" element={<Protected onLogin={() => setLoginOpen(true)}><IssuancePage /></Protected>} />
           <Route path="producer-comms" element={<Protected onLogin={() => setLoginOpen(true)}><ProducerCommsPage /></Protected>} />
           <Route path="monitoring" element={<Protected onLogin={() => setLoginOpen(true)}><MonitoringPage /></Protected>} />

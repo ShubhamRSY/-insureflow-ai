@@ -89,6 +89,7 @@ export const endpoints = {
   diagnostics: () => api('/system/diagnostics'),
   presets: () => api('/api/demo/presets'),
   overview: () => api('/api/dashboard/overview'),
+  uwWorkbench: () => api('/api/uw/workbench'),
   login: (username, password) => api('/auth/login', { method: 'POST', body: { username, password } }),
   authStatus: () => api('/auth/status'),
   authReset: () => api('/auth/reset', { method: 'POST' }).then((r) => { auth.wipeSession(); return r; }),
@@ -241,7 +242,9 @@ export const endpoints = {
   auditTrail: (bundleId) => api(`/pipeline/audit/${bundleId}`),
   auditPackage: (bundleId) => api(`/pipeline/audit/${bundleId}/package`),
   workflowDetail: (bundleId) => api(`/pipeline/workflow/${bundleId}`),
-  bindPolicy: (bundleId) => api(`/pipeline/workflow/${bundleId}/bind`, { method: 'POST' }),
+  bindPolicy: (bundleId) => api(`/pipeline/workflow/${bundleId}/bind`, { method: 'POST', body: {} }),
+  resolveCheckpoint: (bundleId, checkpointId, action = 'approve') =>
+    api(`/pipeline/checkpoints/${bundleId}/${checkpointId}`, { method: 'POST', body: { action } }),
   insuranceQuote: async (jobId) => {
     const headers = {};
     if (auth.token) headers.Authorization = `Bearer ${auth.token}`;

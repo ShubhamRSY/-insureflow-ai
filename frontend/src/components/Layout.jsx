@@ -3,6 +3,7 @@ import {
   LayoutDashboard, Shield, Home, Activity, ClipboardCheck, Settings, LogOut, RefreshCw, Menu, X,
   FileText, Users, BarChart3, BookOpen, Wallet, Layers, Link2, LineChart, Search, Database, FlaskConical,
   FileCheck, MessagesSquare, Radar, Briefcase, Building2, Calculator, ChevronDown, ChevronRight, Plus,
+  ShieldCheck,
 } from 'lucide-react';
 import { useState } from 'react';
 import { auth } from '../lib/api';
@@ -27,6 +28,7 @@ const nav = [
   { to: '/line-uw', icon: Briefcase, label: 'Line UW Desk', color: 'text-sky-400' },
   { to: '/staff-uw', icon: Building2, label: 'Staff UW Desk', color: 'text-violet-400' },
   { to: '/workflow', icon: ClipboardCheck, label: 'UW Sign-off', badge: true },
+  { to: '/uw-workbench', icon: ShieldCheck, label: 'UW Workbench', color: 'text-teal-400' },
   { to: '/queue', icon: Search, label: 'Queue' },
   { section: 'Post-Decision' },
   { to: '/issuance', icon: FileCheck, label: 'Issuance', color: 'text-emerald-400' },

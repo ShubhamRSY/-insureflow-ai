@@ -39,3 +39,16 @@ class WorkflowStore:
             if rec.state in (WorkflowState.PENDING_REVIEW, WorkflowState.PENDING_CO_SIGN):
                 pending.append(rec.bundle_id)
         return sorted(pending)
+
+    def list_records(self, org_id: str = "default") -> list[WorkflowRecord]:
+        """Return every workflow record for an org, newest first (workbench inbox)."""
+        org_dir = self.base_path / org_id
+        if not org_dir.exists():
+            return []
+        records: list[WorkflowRecord] = []
+        for path in org_dir.glob("*.json"):
+            try:
+                records.append(WorkflowRecord.model_validate_json(path.read_text(encoding="utf-8")))
+            except Exception:
+                continue
+        return sorted(records, key=lambda r: r.updated_at, reverse=True)

@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timezone
 from typing import Any
 from uuid import uuid4
+
+logger = logging.getLogger(__name__)
 
 from insureflow.audit.store import AuditStore
 from insureflow.config import settings
@@ -283,6 +286,21 @@ class EnterpriseEcosystemService:
                 }
             ]
         store.save_json(bundle_id, "checkpoints.json", updated, org_id=org_id)
+        # Keep pipeline_summary.json in sync so bind's open-checkpoint gate passes.
+        try:
+            summary = store.load_json(bundle_id, "pipeline_summary.json", org_id=org_id) or {}
+            resolved = "approved" if action == "approve" else "rejected"
+            synced = False
+            for cp in summary.get("human_checkpoints") or []:
+                if cp.get("id") == checkpoint_id:
+                    cp["status"] = resolved
+                    cp["reviewed_by"] = reviewer or "underwriter"
+                    cp["reviewed_at"] = datetime.now(tz=timezone.utc).isoformat()
+                    synced = True
+            if synced:
+                store.save_json(bundle_id, "pipeline_summary.json", summary, org_id=org_id)
+        except Exception as exc:
+            logger.warning("Checkpoint summary sync failed for %s: %s", bundle_id, exc)
         return {
             "bundle_id": bundle_id,
             "checkpoint_id": checkpoint_id,

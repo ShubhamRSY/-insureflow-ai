@@ -862,6 +862,73 @@ def dashboard_overview(
     }
 
 
+@app.get("/api/uw/workbench")
+def uw_workbench(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """UW workbench inbox — pending/approved/decided cases enriched with job results."""
+    from insureflow.workflow.service import WorkflowService
+
+    org_id = current.org_id
+    records = WorkflowService().store.list_records(org_id)
+
+    def _enrich(rec: Any) -> dict[str, Any]:
+        job = job_store.get(INSURANCE_NS, rec.bundle_id, org_id=org_id) or {}
+        results = job.get("results") or {}
+        memo = results.get("memo") or {}
+        quote = results.get("quote") or {}
+        return {
+            "bundle_id": rec.bundle_id,
+            "state": rec.state.value,
+            "ai_decision": rec.ai_decision
+            or results.get("ai_decision")
+            or (memo.get("decision") if isinstance(memo, dict) else ""),
+            "final_decision": rec.final_decision,
+            "assigned_to": rec.assigned_to,
+            "updated_at": rec.updated_at.isoformat(),
+            "job_status": job.get("status"),
+            "insured_name": results.get("insured_name")
+            or (memo.get("insured_name") if isinstance(memo, dict) else None),
+            "insurance_line": results.get("insurance_line")
+            or results.get("product_line")
+            or (quote or {}).get("insurance_line")
+            or "",
+            "risk_score": (memo.get("overall_risk_score") if isinstance(memo, dict) else None),
+            "severity": (memo.get("overall_risk_severity") if isinstance(memo, dict) else None),
+            "premium": (quote or {}).get("adjusted_premium"),
+            "broker_name": results.get("broker_name")
+            or (memo.get("broker_name") if isinstance(memo, dict) else None),
+            "human_review_required": bool(
+                results.get("human_review_required")
+                or (memo.get("human_review_required") if isinstance(memo, dict) else False)
+            ),
+            "human_review_reasons": (
+                (memo.get("human_review_reasons") if isinstance(memo, dict) else None) or []
+            ),
+            "conditions": results.get("open_conditions")
+            or (memo.get("conditions") if isinstance(memo, dict) else None)
+            or [],
+            "checkpoints": results.get("human_checkpoints") or [],
+            "sign_offs": [so.model_dump() for so in rec.sign_offs],
+        }
+
+    pending = [_enrich(r) for r in records if r.state.value in ("pending_review", "pending_co_sign")]
+    approved = [_enrich(r) for r in records if r.state.value == "approved"]
+    done = [_enrich(r) for r in records if r.state.value in ("declined", "bound", "expired")][:12]
+    return {
+        "org_id": org_id,
+        "pending": pending,
+        "approved": approved,
+        "done": done,
+        "totals": {
+            "pending": len(pending),
+            "approved": len(approved),
+            "done": len(done),
+            "co_sign": sum(1 for r in records if r.state.value == "pending_co_sign"),
+        },
+    }
+
+
 def _load_docs_from_dir(subdir: str) -> list[InsuranceDocumentPayload]:
     root = EXAMPLES_DIR / subdir
     docs: list[InsuranceDocumentPayload] = []
