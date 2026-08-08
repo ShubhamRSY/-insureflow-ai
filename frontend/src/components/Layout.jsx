@@ -16,7 +16,6 @@ const nav = [
     icon: Shield,
     label: 'Insurance',
     color: 'text-insurance',
-    block: 'Block 1',
     defaultOpen: true,
     children: [
       { to: '/insurance/commercial', label: 'Business & Commercial', tag: 'Live' },
@@ -142,11 +141,6 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
             >
               <Icon className={`h-[18px] w-[18px] ${item.color || ''}`} />
               <span className="flex-1">{item.label}</span>
-              {item.block && (
-                <span className="rounded-full bg-brand/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-brand-light">
-                  {item.block}
-                </span>
-              )}
             </NavLink>
             <button
               type="button"
@@ -253,7 +247,7 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
           {!sidebarCollapsed && (
             <div className="mx-3 mt-1 flex items-center gap-2 rounded-xl border border-dashed border-white/[0.08] px-3 py-2 text-xs text-slate-600">
               <Plus className="h-3.5 w-3.5" />
-              Next underwriting block
+              More underwriting lines
               <span className="ml-auto rounded-full bg-slate-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-slate-500">
                 Soon
               </span>

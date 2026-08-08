@@ -44,15 +44,9 @@ export default function InsurancePage({ jobs, onRefresh }) {
               <Shield className="h-6 w-6" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-3xl font-bold tracking-tight text-slate-100">Insurance</h1>
-                <span className="rounded-full bg-brand/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-light">
-                  Block 1
-                </span>
-              </div>
+              <h1 className="text-3xl font-bold tracking-tight text-slate-100">Insurance</h1>
               <p className="mt-1 max-w-2xl text-sm text-slate-400">
-                First underwriting block. Segments ship one at a time — Business / Commercial is
-                live, more follow.
+                Business / Commercial is live — more segments ship one at a time.
               </p>
             </div>
           </div>
@@ -62,7 +56,7 @@ export default function InsurancePage({ jobs, onRefresh }) {
         </div>
       </div>
 
-      {/* Segment blocks */}
+      {/* Segment cards */}
       <section>
         <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400">Segments</h2>
         <div className="mt-4 grid gap-4 md:grid-cols-3">
