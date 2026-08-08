@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { fmtCurrency, endpoints } from '../lib/api';
 import { getJourneyContext } from '../lib/pipelineJourney';
+import { insuranceLineLabel } from '../lib/insuranceLines';
 
 const STATUS_ICON = {
   complete: { Icon: CheckCircle2, cls: 'text-emerald-400' },
@@ -130,7 +131,7 @@ function SubmissionQuality({ quality, docQuality, onRequestDocs, requesting, bro
           <p className="mt-1 text-base text-slate-300">
             {pending
               ? 'Waiting for intake & triage before scoring'
-              : `${lob ? `${String(lob).replace(/_/g, ' ')} package · ` : ''}Completeness, appetite fit, and data trust`}
+              : `${lob ? `${insuranceLineLabel(lob)} package · ` : ''}Completeness, appetite fit, and data trust`}
           </p>
         </div>
         <div className="text-right">
@@ -150,7 +151,7 @@ function SubmissionQuality({ quality, docQuality, onRequestDocs, requesting, bro
       {!pending && docQuality && (
         <div className="mt-3 border-t border-white/[0.04] pt-3">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-slate-400">{lob ? `${String(lob).replace(/_/g, ' ')} checklist` : 'Document completeness'}</span>
+            <span className="text-slate-400">{lob ? `${insuranceLineLabel(lob)} checklist` : 'Document completeness'}</span>
             <span className="text-slate-300">{pct != null ? `${pct}%` : '—'}</span>
           </div>
           <div className="mt-2 h-1.5 rounded-full bg-black/30">

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Loader2, Upload, FileText, X, Play, Database, Cable } from 'lucide-react';
 import { readFileForUpload, buildSubmissionPayload } from '../lib/insuranceDocs';
+import { insuranceLineLabel } from '../lib/insuranceLines';
 import ConnectAndPull from './ConnectAndPull';
 
 const TABS = [
@@ -135,17 +136,20 @@ export default function RunSelector({
           )}
 
           {productOptions.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="inline-flex flex-wrap rounded-lg border border-white/[0.08] p-0.5">
-                {productOptions.map((opt) => (
-                  <button key={opt.id} type="button" onClick={() => setProduct(opt.id)}
-                    className={`rounded-md px-2.5 py-1 text-[11px] font-medium transition ${
-                      product === opt.id ? 'bg-white/10 text-slate-100' : 'text-slate-500 hover:text-slate-300'
-                    }`}>
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <label className="flex min-w-[240px] flex-1 items-center gap-2">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Line of business</span>
+                <select
+                  value={product}
+                  onChange={(e) => setProduct(e.target.value)}
+                  className="input-field flex-1 text-xs"
+                  aria-label="Line of business"
+                >
+                  {productOptions.map((opt) => (
+                    <option key={opt.id} value={opt.id}>{opt.label}</option>
+                  ))}
+                </select>
+              </label>
               {includePurpose && purposeOptions.length > 0 && (
                 <select value={purpose} onChange={(e) => setPurpose(e.target.value)} className="input-field w-auto text-xs" aria-label="Loan purpose">
                   {purposeOptions.map((opt) => <option key={opt.id} value={opt.id}>{opt.label}</option>)}
@@ -187,7 +191,7 @@ export default function RunSelector({
             <option value="">Choose a sample data set…</option>
             {sampleList.map((s) => (
               <option key={s.id} value={s.id}>
-                {s.name} — {(s.insurance_line || s.product_line || s.product_type || 'commercial').replace(/_/g, ' ')}
+                {s.name} — {insuranceLineLabel(s.insurance_line || s.product_line || s.product_type || 'commercial')}
               </option>
             ))}
           </select>

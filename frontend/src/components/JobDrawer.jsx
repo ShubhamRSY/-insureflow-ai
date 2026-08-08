@@ -1,6 +1,7 @@
 import { X, FileCheck, ExternalLink, FileText } from 'lucide-react';
 import { Badge } from './ui';
 import { extractMortgage, endpoints, fmtCurrency } from '../lib/api';
+import { insuranceLineLabel } from '../lib/insuranceLines';
 import InsuranceMemoView from './InsuranceMemoView';
 import SubmissionJourney from './SubmissionJourney';
 
@@ -106,7 +107,7 @@ export default function JobDrawer({ job, vertical, jobId, onClose }) {
         </div>
         {s.productLine && (
           <p className="mt-3 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-            {s.productLine.replace(/_/g, ' ')} package
+            {insuranceLineLabel(s.productLine)} package
           </p>
         )}
         {s.ineligibilityReasons?.length > 0 && (

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, FileCheck, ExternalLink, FileText, RefreshCw, Camera, AlertTriangle, MessageSquare } from 'lucide-react';
 import { endpoints } from '../lib/api';
+import { insuranceLineLabel } from '../lib/insuranceLines';
 import SubmissionJourney from '../components/SubmissionJourney';
 import InsuranceMemoView from '../components/InsuranceMemoView';
 
@@ -197,7 +198,7 @@ export default function InsuranceJobDetail() {
 
             <div className="rounded-xl bg-surface-overlay p-5 ring-1 ring-white/[0.04]">
               <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Package checklist {checklist?.lob ? `(${checklist.lob})` : ''}
+                Package checklist {checklist?.lob ? `(${insuranceLineLabel(checklist.lob)})` : ''}
               </p>
               {checklist ? (
                 <>

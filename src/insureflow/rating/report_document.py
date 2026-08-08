@@ -5,6 +5,8 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 
+from insureflow.rating.models import line_display_name
+
 
 def _render_conditions(conditions: list[str]) -> str:
     """Render conditions list as HTML."""
@@ -40,6 +42,7 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
     valid_until = quote.get("quote_valid_until") or quote_full.get("quote_valid_until") or "30 days"
     meta = quote_full.get("metadata") or {}
     insurance_line = str(r.get("insurance_line") or r.get("product_line") or meta.get("insurance_line") or "").lower()
+    insurance_line_display = line_display_name(insurance_line)
     is_life = insurance_line == "life" or bool(meta.get("personal_lines") and "life" in str(meta.get("product") or "").lower())
     key_findings = memo.get("key_findings") or []
     # Dedupe findings by title+description prefix
@@ -228,7 +231,7 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
     line_block = ""
     if insurance_line:
         line_block = f"""
-<div class="kv-row"><span class="kv-label">Line of Business</span><span class="kv-value">{insurance_line.replace("_", " ").title()}</span></div>
+<div class="kv-row"><span class="kv-label">Line of Business</span><span class="kv-value">{insurance_line_display}</span></div>
 """
     appetite_block = ""
     appetite_passed = r.get("appetite_filter_passed")

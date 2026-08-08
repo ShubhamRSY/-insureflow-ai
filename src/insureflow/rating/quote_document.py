@@ -5,7 +5,7 @@ from html import escape
 
 from insureflow.models.agents import UnderwritingMemo
 from insureflow.models.submissions import SubmissionBundle
-from insureflow.rating.models import InsuranceLine, QuoteResult
+from insureflow.rating.models import InsuranceLine, QuoteResult, line_display_name
 
 
 def _esc(value: object) -> str:
@@ -22,7 +22,7 @@ def generate_quote_html(
     valid_until = quote.quote_valid_until or "30 days from issuance"
     meta = quote.metadata or {}
     is_life = quote.line == InsuranceLine.LIFE or str(meta.get("insurance_line") or "").lower() == "life"
-    line_label = quote.line.value.replace("_", " ").title()
+    line_label = line_display_name(quote.line.value)
     subtitle = f"{'Life' if is_life else 'Commercial'} Insurance Quote — Issued {today}"
     decision = (memo.decision.value if hasattr(memo.decision, "value") else str(memo.decision or "")).upper()
     decision_colors = {

@@ -74,7 +74,7 @@ export default function CommercialInsuranceHub({ presets, onRunDemo, onSubmit })
         presets={presets}
         vertical="insurance"
         productField="insurance_line"
-        productOptions={(hub.lines || []).map((l) => ({ id: l.insurance_line, label: l.short_name }))}
+        productOptions={(hub.lines || []).map((l) => ({ id: l.insurance_line, label: l.name }))}
         productDefault={(hub.lines || [])[0]?.insurance_line || ''}
         onRunDemo={onRunDemo}
         onSubmit={onSubmit}

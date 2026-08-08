@@ -5,6 +5,7 @@ import {
   HardHat, CreditCard, Scale, HeartPulse, Layers, Plus,
 } from 'lucide-react';
 import { endpoints } from '../lib/api';
+import { insuranceLineLabel } from '../lib/insuranceLines';
 
 const LOB_ICONS = {
   property_bi: Building2,
@@ -168,7 +169,7 @@ export default function InsurancePage({ jobs, onRefresh }) {
               >
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-slate-200">{j.name || j.insured_name || j.id}</p>
-                  <p className="text-xs text-slate-500">{(j.insurance_line || j.product_line || 'commercial').replace(/_/g, ' ')}</p>
+                  <p className="text-xs text-slate-500">{insuranceLineLabel(j.insurance_line || j.product_line || 'commercial')}</p>
                 </div>
                 <span className="shrink-0 text-xs capitalize text-slate-400">{j.status || '—'}</span>
               </button>
