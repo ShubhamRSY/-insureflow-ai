@@ -129,11 +129,7 @@ class RAGAgent:
         fallbacks = list(scored["fallbacks_used"])
 
         if line:
-            line_guides = [
-                g
-                for g in self._all_guidelines()
-                if g.applies_to_lines and line in {x.lower() for x in g.applies_to_lines}
-            ]
+            line_guides = [g for g in self._all_guidelines() if g.applies_to_lines and line in {x.lower() for x in g.applies_to_lines}]
             have_ids = {g.id for g in guidelines}
             # Prefer / inject line-specific guides at the front
             injected: list[tuple[Guideline, float]] = []

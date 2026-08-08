@@ -85,10 +85,7 @@ def test_trade_credit_rates_on_stated_ar() -> None:
 
 
 def test_do_decision_refers_on_litigation() -> None:
-    text = (
-        "Directors and Officers application. Pending litigation: securities class action. "
-        "Financial statements attached. Balance sheet included."
-    )
+    text = "Directors and Officers application. Pending litigation: securities class action. Financial statements attached. Balance sheet included."
     result = underwrite_specialty(_bundle(text), InsuranceLine.DIRECTORS_AND_OFFICERS)
     assert result.decision == UWDecision.REFER
     assert any("litigation" in r.lower() for r in result.reasons)
@@ -132,10 +129,7 @@ def test_classifier_specialty_types() -> None:
 
 def test_intake_rate_decide_smoke_do() -> None:
     """Mini golden: tagged D&O package → detect → rate → specialty decide."""
-    text = (
-        "Directors & Officers application. Aggregate limit: $1,000,000. "
-        "Financial statements and balance sheet for last 3 years. No pending litigation."
-    )
+    text = "Directors & Officers application. Aggregate limit: $1,000,000. Financial statements and balance sheet for last 3 years. No pending litigation."
     line = detect_insurance_line(text, "directors_and_officers")
     assert line == InsuranceLine.DIRECTORS_AND_OFFICERS
     quote = InsuranceRatingEngine().quote(_bundle(text), _memo(), line=line)

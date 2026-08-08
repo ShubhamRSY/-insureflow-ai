@@ -102,11 +102,7 @@ class UnderwritingGuidelines(BaseModel):
     def for_line(self, line: str, as_of: Optional[datetime] = None) -> list[Guideline]:
         """Active guidelines for a rating line (empty applies_to_lines = universal)."""
         key = (line or "").strip().lower()
-        return [
-            g
-            for g in self.active_as_of(as_of)
-            if not g.applies_to_lines or key in {x.lower() for x in g.applies_to_lines}
-        ]
+        return [g for g in self.active_as_of(as_of) if not g.applies_to_lines or key in {x.lower() for x in g.applies_to_lines}]
 
     def resolve_supersession(self) -> dict[str, str]:
         """Map each active guideline id to the version that supersedes it (if any)."""

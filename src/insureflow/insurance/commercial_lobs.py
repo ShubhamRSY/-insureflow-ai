@@ -59,10 +59,7 @@ COMMERCIAL_LINES: list[dict[str, Any]] = [
         "checklist_lob": "property",
         "insurance_line": "commercial_property",
         "description": "Building, contents, and business interruption coverage for commercial locations.",
-        "uw_focus": (
-            "Evaluate construction, fire protection, location hazards (flood/earthquake), "
-            "valuation adequacy, and BI worksheet realism (COPE + SOV)."
-        ),
+        "uw_focus": ("Evaluate construction, fire protection, location hazards (flood/earthquake), valuation adequacy, and BI worksheet realism (COPE + SOV)."),
         "acord_forms": ["ACORD 125 — Commercial Applicant Info", "ACORD 140 — Property Section"],
         "documents": [
             "Application form (ACORD 125; ACORD 140 Property Section)",
@@ -87,10 +84,7 @@ COMMERCIAL_LINES: list[dict[str, Any]] = [
         "checklist_lob": "do",
         "insurance_line": "directors_and_officers",
         "description": "Management liability for directors and officers — private or public company.",
-        "uw_focus": (
-            "Assess governance quality, litigation exposure, financial stability, board composition, "
-            "and pending/past regulatory or M&A activity."
-        ),
+        "uw_focus": ("Assess governance quality, litigation exposure, financial stability, board composition, and pending/past regulatory or M&A activity."),
         "acord_forms": ["ACORD or carrier-specific D&O application"],
         "documents": [
             "Application form (ACORD or carrier-specific D&O application)",
@@ -116,10 +110,7 @@ COMMERCIAL_LINES: list[dict[str, Any]] = [
         "checklist_lob": "workers_comp",
         "insurance_line": "workers_comp",
         "description": "Employee injury coverage with payroll class codes, e-mod, and safety programs.",
-        "uw_focus": (
-            "Review safety programs, injury history, industry hazard class, payroll by NCCI class, "
-            "and experience modification."
-        ),
+        "uw_focus": ("Review safety programs, injury history, industry hazard class, payroll by NCCI class, and experience modification."),
         "acord_forms": ["ACORD 130 — Workers Compensation Application"],
         "documents": [
             "Application form (ACORD 130)",
@@ -142,10 +133,7 @@ COMMERCIAL_LINES: list[dict[str, Any]] = [
         "checklist_lob": "trade_credit",
         "insurance_line": "trade_credit",
         "description": "Protects receivables against buyer default — domestic and export exposures.",
-        "uw_focus": (
-            "Analyze buyer creditworthiness, customer concentration, AR aging, credit policy, "
-            "and historical bad-debt experience."
-        ),
+        "uw_focus": ("Analyze buyer creditworthiness, customer concentration, AR aging, credit policy, and historical bad-debt experience."),
         "acord_forms": ["Carrier-specific trade credit application"],
         "documents": [
             "Application form (carrier-specific)",
@@ -168,10 +156,7 @@ COMMERCIAL_LINES: list[dict[str, Any]] = [
         "checklist_lob": "eo",
         "insurance_line": "errors_and_omissions",
         "description": "Professional liability for services and advice — profession-specific applications.",
-        "uw_focus": (
-            "Scrutinize nature of services, past claims, contract quality, revenue mix by service line, "
-            "and risk-management procedures."
-        ),
+        "uw_focus": ("Scrutinize nature of services, past claims, contract quality, revenue mix by service line, and risk-management procedures."),
         "acord_forms": ["ACORD 126 or carrier E&O application (profession-specific)"],
         "documents": [
             "Application form (profession-specific — e.g. ACORD 126 or carrier E&O app)",
@@ -194,10 +179,7 @@ COMMERCIAL_LINES: list[dict[str, Any]] = [
         "checklist_lob": "key_person",
         "insurance_line": "key_person",
         "description": "Life / disability on a critical individual whose loss would financially hurt the business.",
-        "uw_focus": (
-            "Evaluate the individual's health, financial impact on the business, coverage justification, "
-            "and corporate authorization / buy-sell structure."
-        ),
+        "uw_focus": ("Evaluate the individual's health, financial impact on the business, coverage justification, and corporate authorization / buy-sell structure."),
         "acord_forms": ["Application + medical questionnaire for the insured individual"],
         "documents": [
             "Application form + medical questionnaire for the insured individual",
@@ -251,10 +233,7 @@ def get_commercial_line(line_id_or_slug: str) -> dict[str, Any] | None:
                 **line,
                 "base_packet": list(BASE_PACKET),
                 "uw_responsibilities": list(UW_CORE_RESPONSIBILITIES),
-                "uw_question": (
-                    "If I take on this risk, what's the probability and cost of it going wrong, "
-                    "and what price makes that bet worthwhile for the insurer?"
-                ),
+                "uw_question": ("If I take on this risk, what's the probability and cost of it going wrong, and what price makes that bet worthwhile for the insurer?"),
             }
     return None
 
@@ -263,10 +242,7 @@ def commercial_hub_payload() -> dict[str, Any]:
     return {
         "segment": "business_commercial",
         "title": "Business / Commercial Insurance",
-        "summary": (
-            "Commercial underwriting for property & BI, D&O, workers' compensation, "
-            "trade credit, E&O, and key person — with line-specific document packs and UW workflow."
-        ),
+        "summary": ("Commercial underwriting for property & BI, D&O, workers' compensation, trade credit, E&O, and key person — with line-specific document packs and UW workflow."),
         "base_packet": list(BASE_PACKET),
         "uw_responsibilities": list(UW_CORE_RESPONSIBILITIES),
         "lines": list_commercial_lines(),

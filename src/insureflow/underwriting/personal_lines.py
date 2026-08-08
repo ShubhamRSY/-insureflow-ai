@@ -79,17 +79,20 @@ def _detect_line_from_content(blob: str) -> InsuranceLine:
     )
 
     # Key person before life — "face amount" appears on both
-    if any(
-        k in blob
-        for k in (
-            "key person",
-            "key-person",
-            "keyman insurance",
-            "key man insurance",
-            "insurance_line: key_person",
-            "insurance_line=key_person",
+    if (
+        any(
+            k in blob
+            for k in (
+                "key person",
+                "key-person",
+                "keyman insurance",
+                "key man insurance",
+                "insurance_line: key_person",
+                "insurance_line=key_person",
+            )
         )
-    ) and not property_heavy:
+        and not property_heavy
+    ):
         return InsuranceLine.KEY_PERSON
 
     if (
@@ -164,46 +167,55 @@ def _detect_line_from_content(blob: str) -> InsuranceLine:
         return InsuranceLine.PERSONAL_HOMEOWNERS
 
     # True D&O — avoid matching "and observed" via naive "d and o"
-    if any(
-        k in blob
-        for k in (
-            "d&o",
-            "directors and officers",
-            "directors & officers",
-            "management liability",
-            "d and o liability",
-            "d and o application",
-            "insurance_line: directors_and_officers",
-            "insurance_line=directors_and_officers",
+    if (
+        any(
+            k in blob
+            for k in (
+                "d&o",
+                "directors and officers",
+                "directors & officers",
+                "management liability",
+                "d and o liability",
+                "d and o application",
+                "insurance_line: directors_and_officers",
+                "insurance_line=directors_and_officers",
+            )
         )
-    ) and not property_heavy:
+        and not property_heavy
+    ):
         return InsuranceLine.DIRECTORS_AND_OFFICERS
 
-    if any(
-        k in blob
-        for k in (
-            "trade credit",
-            "accounts receivable aging",
-            "buyer credit",
-            "credit insurance",
-            "insurance_line: trade_credit",
-            "insurance_line=trade_credit",
+    if (
+        any(
+            k in blob
+            for k in (
+                "trade credit",
+                "accounts receivable aging",
+                "buyer credit",
+                "credit insurance",
+                "insurance_line: trade_credit",
+                "insurance_line=trade_credit",
+            )
         )
-    ) and not property_heavy:
+        and not property_heavy
+    ):
         return InsuranceLine.TRADE_CREDIT
 
-    if any(
-        k in blob
-        for k in (
-            "errors and omissions",
-            "errors & omissions",
-            "e&o application",
-            "professional liability",
-            "acord 126",
-            "insurance_line: errors_and_omissions",
-            "insurance_line=errors_and_omissions",
+    if (
+        any(
+            k in blob
+            for k in (
+                "errors and omissions",
+                "errors & omissions",
+                "e&o application",
+                "professional liability",
+                "acord 126",
+                "insurance_line: errors_and_omissions",
+                "insurance_line=errors_and_omissions",
+            )
         )
-    ) and not property_heavy:
+        and not property_heavy
+    ):
         return InsuranceLine.ERRORS_AND_OMISSIONS
 
     if commercial:

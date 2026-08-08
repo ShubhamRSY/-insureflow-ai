@@ -283,9 +283,7 @@ class InsurancePipeline:
         required_labels = REQUIRED_CRITICAL_BY_LOB.get(checklist_lob, REQUIRED_CRITICAL_BY_LOB["property"])
         for label in required_labels:
             # Exact match, or catalog label that starts with / contains the required token
-            matched_missing = label in missing_docs or any(
-                m == label or m.startswith(label) or label in m for m in missing_docs
-            )
+            matched_missing = label in missing_docs or any(m == label or m.startswith(label) or label in m for m in missing_docs)
             if matched_missing:
                 validation_findings.append(
                     Finding(
@@ -947,9 +945,7 @@ class InsurancePipeline:
             if specialty.referral_flags:
                 memo.human_review_required = True
             if (quote.metadata or {}).get("used_default_exposure"):
-                memo.human_review_reasons.append(
-                    f"Rated on default exposure ({(quote.metadata or {}).get('exposure_basis')}) — confirm limit/AR/face amount"
-                )
+                memo.human_review_reasons.append(f"Rated on default exposure ({(quote.metadata or {}).get('exposure_basis')}) — confirm limit/AR/face amount")
                 memo.human_review_required = True
             # Line-aware guideline retrieval (measured in specialty_retrieval)
             try:
