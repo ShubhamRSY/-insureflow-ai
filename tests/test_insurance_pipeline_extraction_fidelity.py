@@ -191,9 +191,7 @@ class TestStructuredFidelity:
             document_type="schedule_of_values",
             raw_text="Building: $4,000,000",
         )
-        sov.extracted_fields["building_value"] = [
-            ExtractedField(field_name="building_value", value="4,000,000", confidence=0.95, context="sov")
-        ]
+        sov.extracted_fields["building_value"] = [ExtractedField(field_name="building_value", value="4,000,000", confidence=0.95, context="sov")]
         bundle = SubmissionBundle(bundle_id="b-sov", unstructured=[sov])
         prov = ProvenanceEngine(deduplicate=False).build_provenance(bundle)
         # An SOV building value is an insurable VALUE, not the policy limit.

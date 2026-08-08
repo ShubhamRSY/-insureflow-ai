@@ -223,9 +223,7 @@ class LossRunParser(BaseParser):
                 if not row_cells:
                     break  # tables are contiguous; a non-delimited line ends the table
                 # Skip markdown separator rows like |---|---|
-                if self._SEPARATOR_RE.match("".join(row_cells)) or all(
-                    self._SEPARATOR_RE.match(c) for c in row_cells if c
-                ):
+                if self._SEPARATOR_RE.match("".join(row_cells)) or all(self._SEPARATOR_RE.match(c) for c in row_cells if c):
                     continue
                 if all(not c for c in row_cells):
                     continue

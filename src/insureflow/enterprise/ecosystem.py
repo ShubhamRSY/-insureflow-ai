@@ -5,8 +5,6 @@ from datetime import datetime, timezone
 from typing import Any
 from uuid import uuid4
 
-logger = logging.getLogger(__name__)
-
 from insureflow.audit.store import AuditStore
 from insureflow.config import settings
 from insureflow.integrations.factory import (
@@ -20,6 +18,8 @@ from insureflow.integrations.health import IntegrationHealthService, effective_m
 from insureflow.integrations.http_client import IntegrationHTTPError
 from insureflow.oracles._live import resolve_integration_mode
 from insureflow.outcomes.feedback import FeedbackEngine
+
+logger = logging.getLogger(__name__)
 
 
 class EnterpriseEcosystemService:

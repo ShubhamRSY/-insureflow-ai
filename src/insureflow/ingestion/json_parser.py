@@ -148,9 +148,7 @@ class JSONBrokerParser(BaseParser):
                 conf["named_insured.legal_name"] = 0.98
 
         policy = data.get("policy") or data.get("policyPeriod") or data
-        if self._first_match(policy, ["effectiveDate", "effective_date", "inceptionDate"]) and self._first_match(
-            policy, ["expirationDate", "expiration_date", "expiryDate"]
-        ):
+        if self._first_match(policy, ["effectiveDate", "effective_date", "inceptionDate"]) and self._first_match(policy, ["expirationDate", "expiration_date", "expiryDate"]):
             conf["policy_period.effective_date"] = 0.98
             conf["policy_period.expiration_date"] = 0.98
 

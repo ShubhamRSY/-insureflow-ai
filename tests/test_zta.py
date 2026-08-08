@@ -181,9 +181,7 @@ class TestExtractionEnhance:
 
         agent = ExtractionAgent(llm_client=None)
         sub = UnstructuredSubmission(submission_id="doc-1", raw_text="")
-        sub.extracted_fields["construction_type"] = [
-            ExtractedField(field_name="construction_type", value="Masonry", confidence=0.95, context="regex")
-        ]
+        sub.extracted_fields["construction_type"] = [ExtractedField(field_name="construction_type", value="Masonry", confidence=0.95, context="regex")]
         agent._merge_llm_results(
             sub,
             {"construction_type": "Masonry", "year_built": 2004, "occupancy_type": "warehouse"},
@@ -213,9 +211,7 @@ class TestExtractionEnhance:
 
         agent = ExtractionAgent(llm_client=None)
         sub = UnstructuredSubmission(submission_id="doc-3", raw_text="")
-        sub.extracted_fields["sprinklered"] = [
-            ExtractedField(field_name="sprinklered", value="True", confidence=0.95, context="regex")
-        ]
+        sub.extracted_fields["sprinklered"] = [ExtractedField(field_name="sprinklered", value="True", confidence=0.95, context="regex")]
         agent._merge_llm_results(sub, {"sprinklered": False})
         assert len(sub.extracted_fields["sprinklered"]) == 1
         assert sub.extracted_fields["sprinklered"][0].value == "True"

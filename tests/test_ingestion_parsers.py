@@ -503,11 +503,11 @@ class TestExcelParser:
         assert "Building Schedule" in versions[0].value
 
     def test_non_sov_sheet_does_not_misparse(self) -> None:
-        from insureflow.ingestion.excel_parser import ExcelParser
-
         import io
 
         import openpyxl
+
+        from insureflow.ingestion.excel_parser import ExcelParser
 
         wb = openpyxl.Workbook()
         ws = wb.active

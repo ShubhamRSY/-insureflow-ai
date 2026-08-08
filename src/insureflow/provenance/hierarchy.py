@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import re
 from datetime import datetime, timezone
 from typing import Any
 from uuid import uuid4
@@ -111,9 +110,7 @@ class ProvenanceEngine:
             fields,
             source,
             confidence=0.95,
-            per_field_confidence={
-                path: conf for path, conf in field_conf.items() if path in fields
-            },
+            per_field_confidence={path: conf for path, conf in field_conf.items() if path in fields},
         )
 
     def _index_unstructured_fields(

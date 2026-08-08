@@ -205,41 +205,56 @@ class SubmissionLoader:
         if src.coverages:
             dst_by_type = {c.coverage_type.lower(): c for c in dst.coverages}
             for cov in src.coverages:
-                match = dst_by_type.get(cov.coverage_type.lower())
-                if match is None:
+                cov_match = dst_by_type.get(cov.coverage_type.lower())
+                if cov_match is None:
                     dst.coverages.append(cov.model_copy(deep=True))
                     continue
                 for field_name in ("limit_amount", "deductible", "premium"):
-                    if getattr(match, field_name) in (None, 0.0):
-                        setattr(match, field_name, getattr(cov, field_name))
-                if not match.sublimits and cov.sublimits:
-                    match.sublimits.update(cov.sublimits)
-                if not match.endorsements and cov.endorsements:
-                    match.endorsements = list(cov.endorsements)
+                    if getattr(cov_match, field_name) in (None, 0.0):
+                        setattr(cov_match, field_name, getattr(cov, field_name))
+                if not cov_match.sublimits and cov.sublimits:
+                    cov_match.sublimits.update(cov.sublimits)
+                if not cov_match.endorsements and cov.endorsements:
+                    cov_match.endorsements = list(cov.endorsements)
 
         if src.locations:
-            dst_by_addr = {l.address.lower(): l for l in dst.locations if l.address}
+            dst_by_addr = {loc.address.lower(): loc for loc in dst.locations if loc.address}
             for loc in src.locations:
-                match = dst_by_addr.get(loc.address.lower())
-                if match is None:
+                loc_match = dst_by_addr.get(loc.address.lower())
+                if loc_match is None:
                     dst.locations.append(loc.model_copy(deep=True))
                     continue
                 for field_name in (
-                    "city", "state", "zip_code", "building_occupancy", "year_built",
-                    "square_footage", "construction_type", "protection_class",
-                    "building_value", "contents_value", "bi_value",
+                    "city",
+                    "state",
+                    "zip_code",
+                    "building_occupancy",
+                    "year_built",
+                    "square_footage",
+                    "construction_type",
+                    "protection_class",
+                    "building_value",
+                    "contents_value",
+                    "bi_value",
                 ):
-                    if getattr(match, field_name) in (None, "", 0, 0.0):
-                        setattr(match, field_name, getattr(loc, field_name))
+                    if getattr(loc_match, field_name) in (None, "", 0, 0.0):
+                        setattr(loc_match, field_name, getattr(loc, field_name))
 
         if src.risk_profile:
             if dst.risk_profile is None:
                 dst.risk_profile = src.risk_profile.model_copy(deep=True)
             else:
                 for field_name in (
-                    "naics_code", "sic_code", "ncci_class_code", "business_description",
-                    "occupancy_type", "construction_type", "protection_class",
-                    "sprinklered", "number_of_stories", "total_square_footage",
+                    "naics_code",
+                    "sic_code",
+                    "ncci_class_code",
+                    "business_description",
+                    "occupancy_type",
+                    "construction_type",
+                    "protection_class",
+                    "sprinklered",
+                    "number_of_stories",
+                    "total_square_footage",
                 ):
                     if getattr(dst.risk_profile, field_name) in (None, ""):
                         setattr(dst.risk_profile, field_name, getattr(src.risk_profile, field_name))
