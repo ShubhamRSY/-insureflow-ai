@@ -16,6 +16,7 @@ from insureflow.ingestion.sov_parser import SOVParser
 from insureflow.models.submissions import (
     DocumentType,
     ExtractedChunk,
+    StructuredSubmission,
     SubmissionBundle,
     SubmissionStatus,
     UnstructuredSubmission,
@@ -61,7 +62,13 @@ class SubmissionLoader:
             bundle.status = SubmissionStatus.PARSED
 
         if json_payload:
-            bundle.structured = self.json_parser.parse(json_payload, bundle.bundle_id)
+            parsed_json = self.json_parser.parse(json_payload, bundle.bundle_id)
+            if bundle.structured:
+                # Multiple structured sources (ACORD + broker API): merge with
+                # fill-missing semantics so no source's fields are dropped.
+                self._merge_structured(bundle.structured, parsed_json)
+            else:
+                bundle.structured = parsed_json
             bundle.status = SubmissionStatus.PARSED
 
         if inspection_reports:
@@ -164,6 +171,99 @@ class SubmissionLoader:
                 bundle.supplemental.append(sup)
 
         return bundle
+
+    def _merge_structured(self, dst: StructuredSubmission, src: StructuredSubmission) -> None:
+        """Merge a second structured source into the first with fill-missing
+        semantics: dst values win, src only fills gaps (None / empty). Matched
+        list items (coverages, locations) merge field-by-field; unmatched items
+        are appended. This keeps every source's extracted data without
+        double-claiming fields it did not provide."""
+        if src.named_insured:
+            if dst.named_insured is None:
+                dst.named_insured = src.named_insured.model_copy(deep=True)
+            else:
+                for field_name in ("legal_name", "dba", "tax_id", "entity_type", "address"):
+                    if getattr(dst.named_insured, field_name) in (None, ""):
+                        setattr(dst.named_insured, field_name, getattr(src.named_insured, field_name))
+
+        if src.broker:
+            if dst.broker is None:
+                dst.broker = src.broker.model_copy(deep=True)
+            else:
+                for field_name in ("broker_name", "broker_id", "contact_name", "contact_email", "agency"):
+                    if getattr(dst.broker, field_name) in (None, ""):
+                        setattr(dst.broker, field_name, getattr(src.broker, field_name))
+
+        if src.policy_period:
+            if dst.policy_period is None:
+                dst.policy_period = src.policy_period.model_copy(deep=True)
+            else:
+                for field_name in ("effective_date", "expiration_date", "is_bound"):
+                    if getattr(dst.policy_period, field_name) in (None, False):
+                        setattr(dst.policy_period, field_name, getattr(src.policy_period, field_name))
+
+        if src.coverages:
+            dst_by_type = {c.coverage_type.lower(): c for c in dst.coverages}
+            for cov in src.coverages:
+                match = dst_by_type.get(cov.coverage_type.lower())
+                if match is None:
+                    dst.coverages.append(cov.model_copy(deep=True))
+                    continue
+                for field_name in ("limit_amount", "deductible", "premium"):
+                    if getattr(match, field_name) in (None, 0.0):
+                        setattr(match, field_name, getattr(cov, field_name))
+                if not match.sublimits and cov.sublimits:
+                    match.sublimits.update(cov.sublimits)
+                if not match.endorsements and cov.endorsements:
+                    match.endorsements = list(cov.endorsements)
+
+        if src.locations:
+            dst_by_addr = {l.address.lower(): l for l in dst.locations if l.address}
+            for loc in src.locations:
+                match = dst_by_addr.get(loc.address.lower())
+                if match is None:
+                    dst.locations.append(loc.model_copy(deep=True))
+                    continue
+                for field_name in (
+                    "city", "state", "zip_code", "building_occupancy", "year_built",
+                    "square_footage", "construction_type", "protection_class",
+                    "building_value", "contents_value", "bi_value",
+                ):
+                    if getattr(match, field_name) in (None, "", 0, 0.0):
+                        setattr(match, field_name, getattr(loc, field_name))
+
+        if src.risk_profile:
+            if dst.risk_profile is None:
+                dst.risk_profile = src.risk_profile.model_copy(deep=True)
+            else:
+                for field_name in (
+                    "naics_code", "sic_code", "ncci_class_code", "business_description",
+                    "occupancy_type", "construction_type", "protection_class",
+                    "sprinklered", "number_of_stories", "total_square_footage",
+                ):
+                    if getattr(dst.risk_profile, field_name) in (None, ""):
+                        setattr(dst.risk_profile, field_name, getattr(src.risk_profile, field_name))
+                if not dst.risk_profile.prior_claims and src.risk_profile.prior_claims:
+                    dst.risk_profile.prior_claims = list(src.risk_profile.prior_claims)
+                if not dst.risk_profile.safety_certifications and src.risk_profile.safety_certifications:
+                    dst.risk_profile.safety_certifications = list(src.risk_profile.safety_certifications)
+
+        if src.financial:
+            if dst.financial is None:
+                dst.financial = src.financial.model_copy(deep=True)
+            else:
+                for field_name in ("total_asset_value", "annual_revenue", "payroll", "credit_rating"):
+                    if getattr(dst.financial, field_name) in (None, ""):
+                        setattr(dst.financial, field_name, getattr(src.financial, field_name))
+                if not dst.financial.prior_losses and src.financial.prior_losses:
+                    dst.financial.prior_losses = list(src.financial.prior_losses)
+                if dst.financial.loss_run is None and src.financial.loss_run:
+                    dst.financial.loss_run = src.financial.loss_run.model_copy(deep=True)
+
+        for path, conf in (src.field_confidence or {}).items():
+            dst.field_confidence.setdefault(path, conf)
+        for path, note in (src.field_notes or {}).items():
+            dst.field_notes.setdefault(path, note)
 
     def _load_auto_classified(self, raw_docs: list[str], bundle: SubmissionBundle) -> SubmissionBundle:
         acord_docs: list[str] = []

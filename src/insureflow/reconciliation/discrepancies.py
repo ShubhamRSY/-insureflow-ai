@@ -21,6 +21,7 @@ class DiscrepancyDetector:
     HIGH_FIELDS = {
         "risk_profile.construction_type",
         "risk_profile.occupancy_type",
+        "risk_profile.sprinklered",
         "location.0.year_built",
         "location.0.square_footage",
         "risk_profile.number_of_stories",

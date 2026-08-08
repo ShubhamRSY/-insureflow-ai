@@ -231,7 +231,7 @@ class TestLossRunParser:
         claims = {c.claim_id: c for c in data.claims}
         assert "ZUR-2025-001233" in claims
         c = claims["ZUR-2025-001233"]
-        assert c.claim_status.value == "open"
+        assert c.claim_status.value == "pending_litigation"
         assert c.paid_amount == 0
         assert "litigation" in c.cause.lower()
 

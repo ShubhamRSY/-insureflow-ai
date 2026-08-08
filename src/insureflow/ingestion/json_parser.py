@@ -129,7 +129,55 @@ class JSONBrokerParser(BaseParser):
         submission.risk_profile = self._parse_risk_profile(data)
         submission.schedule_of_values = []
 
+        submission.field_confidence, submission.field_notes = self._build_field_confidence(data)
+
         return submission
+
+    def _build_field_confidence(self, data: dict[str, Any]) -> tuple[dict[str, float], dict[str, str]]:
+        conf: dict[str, float] = {}
+        notes: dict[str, str] = {}
+
+        def add(path: str, present: bool, note: str = "") -> None:
+            conf[path] = 0.98 if present else 0.2
+            if not present:
+                notes[path] = note or "source key missing — value defaulted"
+
+        insured = data.get("insured") or data.get("applicant") or data.get("namedInsured") or data
+        if isinstance(insured, dict):
+            if self._first_match(insured, ["legalName", "legal_name", "name", "companyName", "businessName", "submissionName"]):
+                conf["named_insured.legal_name"] = 0.98
+
+        policy = data.get("policy") or data.get("policyPeriod") or data
+        if self._first_match(policy, ["effectiveDate", "effective_date", "inceptionDate"]) and self._first_match(
+            policy, ["expirationDate", "expiration_date", "expiryDate"]
+        ):
+            conf["policy_period.effective_date"] = 0.98
+            conf["policy_period.expiration_date"] = 0.98
+
+        raw = data.get("coverages") or data.get("coverage") or data.get("lines") or data.get("policyLines") or []
+        if isinstance(raw, dict):
+            raw = [raw]
+        for i, cov in enumerate(raw):
+            if not isinstance(cov, dict):
+                continue
+            add(f"coverage.{i}.limit", self._first_match(cov, ["limit", "limitAmount", "liabilityLimit", "coverageLimit"]) is not None, "coverage limit missing — defaulted to 0")
+            add(f"coverage.{i}.deductible", self._first_match(cov, ["deductible", "deductibleAmount", "selfInsuredRetention"]) is not None, "deductible missing — defaulted to 0")
+            add(f"coverage.{i}.premium", self._first_match(cov, ["premium", "annualPremium", "totalPremium"]) is not None, "premium missing — defaulted to 0")
+
+        risk = data.get("risk") or data.get("riskProfile") or data.get("classification") or data
+        if isinstance(risk, dict):
+            if self._first_match(risk, ["naicsCode", "naics", "naics_code"]):
+                conf["risk_profile.naics_code"] = 0.98
+            for attr, keys in (
+                ("construction_type", ["constructionType", "construction"]),
+                ("occupancy_type", ["occupancy", "occupancyType"]),
+                ("protection_class", ["protectionClass", "pc", "isoClass"]),
+                ("number_of_stories", ["numberOfStories", "stories", "floors"]),
+                ("total_square_footage", ["totalSquareFootage", "totalSqft", "buildingArea"]),
+            ):
+                add(f"risk_profile.{attr}", self._first_match(risk, keys) is not None, f"{attr} key missing")
+
+        return conf, notes
 
     @staticmethod
     def _get_nested(data: dict[str, Any], *keys: str, default: Any = None) -> Any:

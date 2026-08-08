@@ -103,7 +103,18 @@ class ProvenanceEngine:
             fields[f"location.{i}.year_built"] = location.year_built
             fields[f"location.{i}.square_footage"] = location.square_footage
 
-        self._add_nodes(record, fields, source, confidence=0.95)
+        # Per-field extraction confidence (0.0 = value defaulted/missing) is
+        # honored when present; otherwise the structured default of 0.95 applies.
+        field_conf = getattr(structured, "field_confidence", None) or {}
+        self._add_nodes(
+            record,
+            fields,
+            source,
+            confidence=0.95,
+            per_field_confidence={
+                path: conf for path, conf in field_conf.items() if path in fields
+            },
+        )
 
     def _index_unstructured_fields(
         self,
@@ -144,25 +155,40 @@ class ProvenanceEngine:
                 )
 
         if not is_supplemental:
+            per_field_confidence: dict[str, float] = {}
             for field_name, extracted_list in unstructured.extracted_fields.items():
                 if field_name == "ocr_engine":
                     continue
                 for ef in extracted_list:
                     mapped_key = self._map_extracted_to_structured(field_name)
                     fields[mapped_key] = ef.value
+                    # Prefer the extracted field's own computed confidence over
+                    # the document-level base confidence.
+                    per_field_confidence[mapped_key] = ef.confidence
 
-        self._add_nodes(record, fields, source, confidence=base_confidence)
+        self._add_nodes(
+            record,
+            fields,
+            source,
+            confidence=base_confidence,
+            per_field_confidence=per_field_confidence if not is_supplemental else None,
+        )
 
     def _map_extracted_to_structured(self, field_name: str) -> str:
         mapped = settings.field_mapping.get(field_name)
         if mapped:
             return mapped
-        sov_total = re.match(r"sov\.(\d+)\.total", field_name)
-        if sov_total:
-            return f"coverage.{sov_total.group(1)}.limit"
-        sov_type = re.match(r"sov\.(\d+)\.type", field_name)
-        if sov_type:
-            return f"coverage.{sov_type.group(1)}.type"
+        # Surveyor-measured values (inspection reports) target the same canonical
+        # path as the application value so reconciliation detects contradictions.
+        if field_name.startswith("surveyor."):
+            base = field_name.split(".", 1)[1]
+            mapped = settings.field_mapping.get(base)
+            if mapped:
+                return mapped
+        # SOV schedule totals are insurable VALUES (building/contents/BI), which
+        # are distinct from policy coverage LIMITS; they stay on their own path
+        # rather than being conflated with coverage limits (which would flag
+        # every SOV-vs-limit mismatch as a critical coverage conflict).
         return f"extracted.{field_name}"
 
     def _add_nodes(
@@ -171,14 +197,16 @@ class ProvenanceEngine:
         fields: dict[str, Any],
         source: DataSource,
         confidence: float = 0.0,
+        per_field_confidence: dict[str, float] | None = None,
     ) -> None:
+        per_field_confidence = per_field_confidence or {}
         for field_path, value in fields.items():
             node = ProvenanceNode(
                 node_id=f"node-{uuid4().hex[:8]}",
                 field_path=field_path,
                 value=value,
                 source=source,
-                confidence=confidence,
+                confidence=per_field_confidence.get(field_path, confidence),
                 extracted_at=datetime.now(timezone.utc),
             )
             if field_path not in record.nodes:

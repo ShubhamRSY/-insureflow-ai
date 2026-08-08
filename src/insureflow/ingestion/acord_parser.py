@@ -40,7 +40,63 @@ class ACORDParser(BaseParser):
         submission.financial = self._parse_financial(root)
         submission.risk_profile = self._parse_risk_profile(root)
 
+        submission.field_confidence, submission.field_notes = self._build_field_confidence(root)
+
         return submission
+
+    def _build_field_confidence(self, root: ET.Element) -> tuple[dict[str, float], dict[str, str]]:
+        """Compute per-field extraction confidence: 0.98 for an explicitly typed
+        element, 0.2 for a coerced default (missing element), 0.9 for a field
+        present in the document but only indirectly derived."""
+        conf: dict[str, float] = {}
+        notes: dict[str, str] = {}
+
+        def add(path: str, present: bool, note: str = "") -> None:
+            conf[path] = 0.98 if present else 0.2
+            if not present:
+                notes[path] = note or "source element missing — value defaulted"
+
+        if self._find_text(root, ".//acord:NamedInsured/acord:GeneralPartyInfo/acord:NameInfo/acord:CommercialName/acord:Name"):
+            conf["named_insured.legal_name"] = 0.98
+
+        if self._find_date(root, ".//acord:PolicyPeriod/acord:EffectiveDate") and self._find_date(root, ".//acord:PolicyPeriod/acord:ExpirationDate"):
+            conf["policy_period.effective_date"] = 0.98
+            conf["policy_period.expiration_date"] = 0.98
+
+        covs = root.findall(".//acord:Coverage", self.NAMESPACES)
+        for i, cov in enumerate(covs):
+            limit_present = self._find_float(cov, ".//acord:Limit") is not None
+            deduct_present = self._find_float(cov, ".//acord:Deductible") is not None
+            premium_present = self._find_float(cov, ".//acord:Premium") is not None
+            add(f"coverage.{i}.limit", limit_present, "coverage limit missing — defaulted to 0")
+            add(f"coverage.{i}.deductible", deduct_present, "deductible missing — defaulted to 0")
+            add(f"coverage.{i}.premium", premium_present, "premium missing — defaulted to 0")
+            add(f"coverage.{i}.type", bool(self._find_text(cov, ".//acord:CoverageType")))
+
+        for i, loc in enumerate(root.findall(".//acord:Location", self.NAMESPACES)):
+            for attr, xpath in (
+                ("year_built", ".//acord:YearBuilt"),
+                ("square_footage", ".//acord:SquareFootage"),
+                ("construction_type", ".//acord:ConstructionType"),
+                ("protection_class", ".//acord:ProtectionClass"),
+            ):
+                present = self._find_text(loc, xpath) is not None
+                add(f"location.{i}.{attr}", present, f"{attr} element missing at location {i + 1}")
+
+        if self._find_text(root, ".//acord:Risk/acord:NAICSCode"):
+            for attr, xpath in (
+                ("naics_code", ".//acord:Risk/acord:NAICSCode"),
+                ("construction_type", ".//acord:Risk/acord:ConstructionType"),
+                ("occupancy_type", ".//acord:Risk/acord:Occupancy"),
+                ("protection_class", ".//acord:Risk/acord:ProtectionClass"),
+                ("number_of_stories", ".//acord:Risk/acord:NumberOfStories"),
+                ("total_square_footage", ".//acord:Risk/acord:TotalSquareFootage"),
+                ("sprinklered", ".//acord:Risk/acord:Sprinklered"),
+            ):
+                present = self._find_text(root, xpath) is not None
+                add(f"risk_profile.{attr}", present, f"{attr} element missing")
+
+        return conf, notes
 
     def _find_text(self, root: ET.Element, xpath: str) -> Optional[str]:
         try:

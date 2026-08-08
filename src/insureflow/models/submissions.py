@@ -105,6 +105,10 @@ class ClaimRecord(BaseModel):
     date_closed: Optional[date] = None  # date the claim was settled/closed
     valuation_date: Optional[date] = None  # date through which transactions are valued
     reopened: bool = False  # closed claim reopened (reopened-claims potential)
+    # Confidence that this claim was extracted faithfully from the source document
+    # (0.0 = unknown/untrusted, 1.0 = fully verified). Computed by the parser from
+    # extraction signals (table completeness, cross-source agreement, format).
+    extraction_confidence: float = 0.0
 
 
 class LossRunData(BaseModel):
@@ -174,6 +178,16 @@ class StructuredSubmission(BaseModel):
     raw_xml: Optional[str] = None
     raw_json: Optional[str] = None
     parsed_at: Optional[datetime] = None
+
+    # Per-field extraction confidence keyed by the same dotted paths emitted by
+    # provenance (e.g. "named_insured.legal_name", "coverage.0.limit"). Values
+    # are computed from extraction signals (typed element present, coercion
+    # success, cross-field agreement) and consulted when provenance builds
+    # field nodes and when reconciliation resolves conflicts.
+    field_confidence: dict[str, float] = Field(default_factory=dict)
+    # Human-readable notes about extraction quality per field path (e.g. a
+    # defaulted value because the source element was missing).
+    field_notes: dict[str, str] = Field(default_factory=dict)
 
 
 class UnstructuredSubmission(BaseModel):
