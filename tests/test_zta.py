@@ -175,6 +175,51 @@ class TestExtractionEnhance:
         assert result.submission_id == "b-1"
         assert result.raw_text == text
 
+    def test_merge_llm_does_not_duplicate_regex_fields(self) -> None:
+        from insureflow.agents.extraction_agent import LLM_MERGE_CONFIDENCE
+        from insureflow.models.submissions import ExtractedField, UnstructuredSubmission
+
+        agent = ExtractionAgent(llm_client=None)
+        sub = UnstructuredSubmission(submission_id="doc-1", raw_text="")
+        sub.extracted_fields["construction_type"] = [
+            ExtractedField(field_name="construction_type", value="Masonry", confidence=0.95, context="regex")
+        ]
+        agent._merge_llm_results(
+            sub,
+            {"construction_type": "Masonry", "year_built": 2004, "occupancy_type": "warehouse"},
+        )
+        # Regex value is authoritative; the LLM overlap is not duplicated.
+        assert len(sub.extracted_fields["construction_type"]) == 1
+        assert sub.extracted_fields["construction_type"][0].context == "regex"
+        # Genuinely new fields are added with the merge confidence.
+        new = {ef.field_name: ef for ef in sub.extracted_fields["year_built"]}
+        assert new["year_built"].value == "2004"
+        assert new["year_built"].confidence == LLM_MERGE_CONFIDENCE
+        assert new["year_built"].context == "llm_extraction"
+
+    def test_merge_llm_rejects_nullish_and_aliases_keys(self) -> None:
+        agent = ExtractionAgent(llm_client=None)
+        from insureflow.models.submissions import UnstructuredSubmission
+
+        sub = UnstructuredSubmission(submission_id="doc-2", raw_text="")
+        agent._merge_llm_results(sub, {"construction_type": None, "stories": 2, "sqft": ""})
+        assert "construction_type" not in sub.extracted_fields
+        assert "sqft" not in sub.extracted_fields
+        # "stories" is aliased to the canonical number_of_stories key.
+        assert sub.extracted_fields["number_of_stories"][0].value == "2"
+
+    def test_merge_llm_conflict_keeps_regex_value(self) -> None:
+        from insureflow.models.submissions import ExtractedField, UnstructuredSubmission
+
+        agent = ExtractionAgent(llm_client=None)
+        sub = UnstructuredSubmission(submission_id="doc-3", raw_text="")
+        sub.extracted_fields["sprinklered"] = [
+            ExtractedField(field_name="sprinklered", value="True", confidence=0.95, context="regex")
+        ]
+        agent._merge_llm_results(sub, {"sprinklered": False})
+        assert len(sub.extracted_fields["sprinklered"]) == 1
+        assert sub.extracted_fields["sprinklered"][0].value == "True"
+
 
 class TestSupervisorResolveWithLlm:
     def test_resolve_with_llm_false_avoids_llm(self) -> None:

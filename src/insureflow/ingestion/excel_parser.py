@@ -27,11 +27,15 @@ class ExcelParser(BaseParser):
             import openpyxl
 
             wb = openpyxl.load_workbook(io.BytesIO(raw_data.encode("latin-1")), data_only=True)
+            sheet_names: list[str] = []
+            unparsed_sheets: list[str] = []
+            sov_versions: dict[str, str] = {}
             for sheet_name in wb.sheetnames:
                 ws = wb[sheet_name]
                 table = self._unmerge_and_extract(ws)
                 text = self._table_to_markdown(table, sheet_name)
                 submission.raw_text += f"\n\n--- Sheet: {sheet_name} ---\n{text}"
+                sheet_names.append(sheet_name)
                 extracted = self._extract_fields_from_table(table, sheet_name)
                 for key, val in extracted.items():
                     submission.extracted_fields.setdefault(key, []).append(
@@ -42,6 +46,41 @@ class ExcelParser(BaseParser):
                             context=f"excel:{sheet_name}",
                         )
                     )
+                # Surface template shape so silent reparse or template drift is
+                # visible instead of dropping sheets without any SOV signal.
+                sov = self._build_sov_from_table(table, sheet_name)
+                if sov.items:
+                    sov_versions[sheet_name] = sov.template_version
+                else:
+                    unparsed_sheets.append(sheet_name)
+
+            if sheet_names:
+                submission.extracted_fields["excel.sheets"] = [
+                    ExtractedField(
+                        field_name="excel.sheets",
+                        value=", ".join(sheet_names),
+                        confidence=1.0,
+                        context="excel",
+                    )
+                ]
+            if unparsed_sheets:
+                submission.extracted_fields["excel.unparsed_sheets"] = [
+                    ExtractedField(
+                        field_name="excel.unparsed_sheets",
+                        value=", ".join(unparsed_sheets),
+                        confidence=0.6,
+                        context="excel",
+                    )
+                ]
+            if sov_versions:
+                submission.extracted_fields["excel.sov_versions"] = [
+                    ExtractedField(
+                        field_name="excel.sov_versions",
+                        value=", ".join(f"{k}={v}" for k, v in sov_versions.items()),
+                        confidence=1.0,
+                        context="excel",
+                    )
+                ]
         except Exception:
             submission.raw_text = raw_data
 
@@ -223,11 +262,20 @@ class ExcelParser(BaseParser):
                 coverage_type = cov
                 break
 
+        # Without description/value columns the sheet is not an SOV template;
+        # parsing with -1 indices would silently read trailing cells.
+        if col_desc < 0 or col_val < 0:
+            return ScheduleOfValues(
+                schedule_type=f"Excel SOV ({sheet_name})",
+                coverage_type=coverage_type,
+                template_version="",
+            )
+
         for row in table[1:]:
             if not row or not any(c is not None for c in row):
                 continue
-            desc = str(row[col_desc]).strip() if col_desc >= 0 and row[col_desc] else ""
-            raw_val = str(row[col_val]).strip() if col_val >= 0 and row[col_val] else ""
+            desc = str(row[col_desc]).strip() if row[col_desc] else ""
+            raw_val = str(row[col_val]).strip() if row[col_val] else ""
             raw_lim = str(row[col_limit]).strip() if col_limit >= 0 and row[col_limit] else ""
 
             if not desc or not raw_val:
@@ -251,7 +299,17 @@ class ExcelParser(BaseParser):
             coverage_type=coverage_type,
             items=items,
             total_value=total,
+            template_version=self._template_version(header),
         )
+
+    @staticmethod
+    def _template_version(header: list[str]) -> str:
+        import hashlib
+
+        signature = "|".join(h for h in header if h)
+        if not signature:
+            return ""
+        return hashlib.sha1(signature.encode("utf-8")).hexdigest()[:8]
 
     @staticmethod
     def _parse_currency(s: str) -> float:

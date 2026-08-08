@@ -453,3 +453,68 @@ class TestLoaderNewInputTypes:
         )
         sov_subs = [u for u in bundle.unstructured if u.document_type == "schedule_of_values"]
         assert len(sov_subs) == 1
+
+
+class TestExcelParser:
+    @staticmethod
+    def _workbook_bytes() -> bytes:
+        import io
+
+        import openpyxl
+
+        wb = openpyxl.Workbook()
+        building = wb.active
+        building.title = "Building Schedule"
+        building.append(["Description", "Value", "Limit"])
+        building.append(["Cooler #1", 45000, 50000])
+        building.append(["Cooler #2", 75000, 80000])
+        notes = wb.create_sheet("Notes")
+        notes.append(["Signed by: J. Rivera", "Verified: yes"])
+        notes.append(["No additional commentary"])
+        buf = io.BytesIO()
+        wb.save(buf)
+        return buf.getvalue()
+
+    def test_sov_extraction_and_template_version(self) -> None:
+        from insureflow.ingestion.excel_parser import ExcelParser
+
+        raw = self._workbook_bytes().decode("latin-1")
+        sovs = ExcelParser().parse_structured(raw, "excel-1")
+        assert len(sovs) == 1
+        sov = sovs[0]
+        assert sov.coverage_type == "Property"
+        assert len(sov.items) == 2
+        assert abs(sov.total_value - 120_000) < 1
+        # Template version fingerprints the header layout for drift detection.
+        assert sov.template_version and len(sov.template_version) == 8
+
+    def test_unknown_sheet_surfaced_not_silently_dropped(self) -> None:
+        from insureflow.ingestion.excel_parser import ExcelParser
+
+        raw = self._workbook_bytes().decode("latin-1")
+        sub = ExcelParser().parse(raw, "excel-2")
+        sheets = ",".join(ef.value for ef in sub.extracted_fields.get("excel.sheets", []))
+        assert "Building Schedule" in sheets
+        assert "Notes" in sheets
+        unparsed = {ef.value for ef in sub.extracted_fields.get("excel.unparsed_sheets", [])}
+        assert unparsed == {"Notes"}
+        versions = sub.extracted_fields.get("excel.sov_versions", [])
+        assert len(versions) == 1
+        assert "Building Schedule" in versions[0].value
+
+    def test_non_sov_sheet_does_not_misparse(self) -> None:
+        from insureflow.ingestion.excel_parser import ExcelParser
+
+        import io
+
+        import openpyxl
+
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Contacts"
+        ws.append(["Name", "Email"])
+        ws.append(["Dana", "dana@example.com"])
+        buf = io.BytesIO()
+        wb.save(buf)
+        sovs = ExcelParser().parse_structured(buf.getvalue().decode("latin-1"), "excel-3")
+        assert sovs == []

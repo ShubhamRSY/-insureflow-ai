@@ -135,6 +135,7 @@ class ScheduleOfValues(BaseModel):
     coverage_type: str = ""
     items: list[ScheduleItem] = Field(default_factory=list)
     total_value: float = 0.0
+    template_version: str = ""
 
 
 class FinancialData(BaseModel):

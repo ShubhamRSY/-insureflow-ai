@@ -14,6 +14,24 @@ from insureflow.models.submissions import (
 from insureflow.redaction.pipeline import RedactedLLMClient
 from insureflow.redaction.redactor import PIIRedactor
 
+# The LLM prompt requests canonical snake_case keys, but keep a small alias map
+# for the common variants a model may drift toward.
+LLM_FIELD_ALIASES: dict[str, str] = {
+    "stories": "number_of_stories",
+    "construction": "construction_type",
+    "sqft": "square_footage",
+    "square_feet": "square_footage",
+    "protection": "protection_class",
+    "occupancy": "occupancy_type",
+    "sprinkler": "sprinklered",
+    "year_built_in": "year_built",
+    "total_premium": "premium",
+}
+
+# Deterministic regex extraction is authoritative over the LLM's guess, which
+# runs on truncated, redacted text and is inherently non-deterministic.
+LLM_MERGE_CONFIDENCE = 0.85
+
 
 class ExtractionAgent:
     def __init__(
@@ -83,19 +101,31 @@ class ExtractionAgent:
     def _merge_llm_results(self, submission: UnstructuredSubmission, llm_fields: dict[str, Any]) -> None:
         from insureflow.models.submissions import ExtractedField
 
-        for key, value in llm_fields.items():
-            if value is not None:
-                str_val = str(value)
-                if key not in submission.extracted_fields:
-                    submission.extracted_fields[key] = []
-                submission.extracted_fields[key].append(
-                    ExtractedField(
-                        field_name=key,
-                        value=str_val,
-                        confidence=0.85,
-                        context="llm_extraction",
-                    )
+        for raw_key, value in llm_fields.items():
+            if value is None:
+                continue
+            key = LLM_FIELD_ALIASES.get(raw_key, raw_key)
+            str_val = str(value).strip()
+            if not str_val or str_val.lower() in {"null", "none", "unknown", "n/a"}:
+                continue
+
+            existing = submission.extracted_fields.get(key, [])
+            if existing:
+                # Deterministic regex extraction already covered this field.
+                # Never duplicate it or let the lower-confidence LLM guess
+                # override the regex value: a second node on the same canonical
+                # path would surface a false reconciliation conflict.
+                continue
+
+            submission.extracted_fields[key] = existing
+            submission.extracted_fields[key].append(
+                ExtractedField(
+                    field_name=key,
+                    value=str_val,
+                    confidence=LLM_MERGE_CONFIDENCE,
+                    context="llm_extraction",
                 )
+            )
 
     def process_bundle(self, bundle: SubmissionBundle) -> SubmissionBundle:
         self.redact_bundle(bundle)
