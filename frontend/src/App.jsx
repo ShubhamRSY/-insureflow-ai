@@ -252,7 +252,7 @@ function AppRoutes() {
           <Route index element={<Overview overview={overview} health={health} presets={presets} onRunDemo={runDemo} onOpenJob={openJob} onLogin={() => setLoginOpen(true)} marketCycle={marketCycle} queueStats={queueStats} insuranceJobs={insuranceJobs} />} />
           <Route path="system" element={<SystemPage health={health} />} />
           <Route path="insurance/commercial/:lobSlug" element={<Protected onLogin={() => setLoginOpen(true)}><CommercialLinePage presets={presets} onRunDemo={runDemo} onSubmit={submitInsurance} /></Protected>} />
-          <Route path="insurance/commercial" element={<Protected onLogin={() => setLoginOpen(true)}><CommercialInsuranceHub /></Protected>} />
+          <Route path="insurance/commercial" element={<Protected onLogin={() => setLoginOpen(true)}><CommercialInsuranceHub presets={presets} onRunDemo={runDemo} onSubmit={submitInsurance} /></Protected>} />
           <Route path="insurance/:jobId" element={<Protected onLogin={() => setLoginOpen(true)}><InsuranceJobDetail /></Protected>} />
           <Route path="insurance" element={<Protected onLogin={() => setLoginOpen(true)}><InsurancePage presets={presets} jobs={insuranceJobs} onRunDemo={runDemo} onOpenJob={openJob} onSubmit={submitInsurance} onRefresh={loadInsuranceJobs} /></Protected>} />
           <Route path="line-uw" element={<Protected onLogin={() => setLoginOpen(true)}><LineUnderwriting /></Protected>} />

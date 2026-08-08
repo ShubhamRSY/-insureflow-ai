@@ -5,6 +5,7 @@ import {
   FileText, ClipboardCheck, Shield,
 } from 'lucide-react';
 import { endpoints } from '../lib/api';
+import RunSelector from '../components/RunSelector';
 
 const LOB_ICONS = {
   property_bi: Building2,
@@ -15,7 +16,7 @@ const LOB_ICONS = {
   key_person: HeartPulse,
 };
 
-export default function CommercialInsuranceHub() {
+export default function CommercialInsuranceHub({ presets, onRunDemo, onSubmit }) {
   const navigate = useNavigate();
   const [hub, setHub] = useState(null);
   const [error, setError] = useState('');
@@ -67,6 +68,17 @@ export default function CommercialInsuranceHub() {
           </div>
         </div>
       </div>
+
+      {/* Run / pull / connect */}
+      <RunSelector
+        presets={presets}
+        vertical="insurance"
+        productField="insurance_line"
+        productOptions={(hub.lines || []).map((l) => ({ id: l.insurance_line, label: l.short_name }))}
+        productDefault={(hub.lines || [])[0]?.insurance_line || ''}
+        onRunDemo={onRunDemo}
+        onSubmit={onSubmit}
+      />
 
       {/* UW framing */}
       <section className="glass-card p-6">
