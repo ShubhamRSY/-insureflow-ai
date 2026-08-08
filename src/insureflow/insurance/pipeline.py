@@ -908,6 +908,7 @@ class InsurancePipeline:
             line_for_quote = InsuranceLine.COMMERCIAL_PROPERTY
         quote = self.rating.quote(bundle, memo, line=line_for_quote)
         specialty_retrieval: dict[str, Any] | None = None
+        commercial_uw_summary: dict[str, Any] | None = None
         # Apply life medical / personal filing decision hints onto the memo
         if line_for_quote == InsuranceLine.LIFE:
             from insureflow.underwriting.life_medical import underwrite_life
@@ -928,42 +929,106 @@ class InsurancePipeline:
                 extra_summary=f"Life class={medical.underwriting_class}; tobacco={medical.tobacco}.",
             )
         elif line_for_quote in (
+            InsuranceLine.COMMERCIAL_PROPERTY,
+            InsuranceLine.BOP,
+            InsuranceLine.WORKERS_COMP,
             InsuranceLine.DIRECTORS_AND_OFFICERS,
             InsuranceLine.TRADE_CREDIT,
             InsuranceLine.ERRORS_AND_OMISSIONS,
             InsuranceLine.KEY_PERSON,
         ):
-            from insureflow.rag.rag_agent import RAGAgent as HybridRAG
-            from insureflow.rating.commercial_specialty import underwrite_specialty
             from insureflow.underwriting.memo_sync import dedupe_findings, resync_memo_narrative, worst_decision
 
-            specialty = underwrite_specialty(bundle, line_for_quote)
-            for f in specialty.findings:
-                memo.key_findings.append(f)
-            memo.decision = worst_decision(memo.decision, specialty.decision)
-            memo.human_review_reasons.extend(specialty.referral_flags)
-            if specialty.referral_flags:
-                memo.human_review_required = True
-            if (quote.metadata or {}).get("used_default_exposure"):
-                memo.human_review_reasons.append(f"Rated on default exposure ({(quote.metadata or {}).get('exposure_basis')}) — confirm limit/AR/face amount")
-                memo.human_review_required = True
-            # Line-aware guideline retrieval (measured in specialty_retrieval)
-            try:
-                specialty_retrieval = HybridRAG(use_knowledge_graph=True).retrieve_contexts(
-                    f"{line_for_quote.value} underwriting risk assessment {quote_blob[:1200]}",
-                    top_k=5,
-                    line_of_business=line_for_quote.value,
-                )
-                ids = specialty_retrieval.get("guideline_ids") or []
-                if ids:
-                    memo.human_review_reasons.append(f"Guidelines cited: {', '.join(ids[:5])}")
-            except Exception as exc:
-                logger.debug("Specialty RAG retrieval failed: %s", exc)
-                specialty_retrieval = {"error": str(exc), "guideline_ids": []}
+            is_specialty = line_for_quote in (
+                InsuranceLine.DIRECTORS_AND_OFFICERS,
+                InsuranceLine.TRADE_CREDIT,
+                InsuranceLine.ERRORS_AND_OMISSIONS,
+                InsuranceLine.KEY_PERSON,
+            )
+            if is_specialty:
+                from insureflow.rag.rag_agent import RAGAgent as HybridRAG
+                from insureflow.rating.commercial_specialty import underwrite_specialty
+
+                specialty = underwrite_specialty(bundle, line_for_quote)
+                commercial_uw_summary = specialty.checklist_summary or {
+                    "line": line_for_quote.value,
+                    "decision": specialty.decision.value,
+                    "premium_mod_pct": specialty.premium_mod_pct,
+                    "scenario_codes": specialty.scenario_codes,
+                    "story": specialty.story,
+                }
+                for f in specialty.findings:
+                    memo.key_findings.append(f)
+                memo.decision = worst_decision(memo.decision, specialty.decision)
+                memo.human_review_reasons.extend(specialty.referral_flags)
+                if specialty.story and specialty.story not in memo.human_review_reasons:
+                    memo.human_review_reasons.append(specialty.story)
+                if specialty.referral_flags or specialty.scenario_codes:
+                    memo.human_review_required = True
+                for detail in specialty.referral_flags:
+                    if detail and detail not in memo.conditions and not detail.startswith(("PROP_", "DO_", "WC_", "TC_", "EO_", "KP_")):
+                        # Action detail strings become open conditions
+                        if any(k in detail.lower() for k in ("require", "cap", "exclusion", "deductible", "quarterly", "safety", "medical")):
+                            memo.conditions.append(detail)
+                premium_mod = specialty.premium_mod_pct
+                if (quote.metadata or {}).get("used_default_exposure"):
+                    memo.human_review_reasons.append(f"Rated on default exposure ({(quote.metadata or {}).get('exposure_basis')}) — confirm limit/AR/face amount")
+                    memo.human_review_required = True
+                try:
+                    specialty_retrieval = HybridRAG(use_knowledge_graph=True).retrieve_contexts(
+                        f"{line_for_quote.value} underwriting risk assessment {quote_blob[:1200]}",
+                        top_k=5,
+                        line_of_business=line_for_quote.value,
+                    )
+                    ids = specialty_retrieval.get("guideline_ids") or []
+                    if ids:
+                        memo.human_review_reasons.append(f"Guidelines cited: {', '.join(ids[:5])}")
+                except Exception as exc:
+                    logger.debug("Specialty RAG retrieval failed: %s", exc)
+                    specialty_retrieval = {"error": str(exc), "guideline_ids": []}
+            else:
+                from insureflow.underwriting.commercial_checklists import evaluate_commercial_checklist
+
+                checklist = evaluate_commercial_checklist(bundle, line_for_quote)
+                commercial_uw_summary = checklist.to_summary_dict()
+                for f in checklist.findings:
+                    memo.key_findings.append(f)
+                memo.decision = worst_decision(memo.decision, checklist.decision)
+                if checklist.story:
+                    memo.human_review_reasons.append(checklist.story)
+                for action in checklist.actions:
+                    if action.detail:
+                        memo.human_review_reasons.append(action.detail)
+                        if action.detail not in memo.conditions:
+                            memo.conditions.append(action.detail)
+                    if action.action_type.value in {
+                        "refer",
+                        "require_mitigation",
+                        "require_doc",
+                        "add_exclusion",
+                        "cap_coverage",
+                        "enhanced_review",
+                        "higher_deductible",
+                    }:
+                        memo.human_review_required = True
+                premium_mod = checklist.premium_mod_pct
+
+            if premium_mod and quote.metadata is not None:
+                quote.metadata["commercial_checklist_mod_pct"] = premium_mod
+                if premium_mod != 0:
+                    quote.adjusted_premium = round(
+                        float(quote.adjusted_premium) * (1.0 + premium_mod / 100.0),
+                        2,
+                    )
+
             memo.key_findings = dedupe_findings(list(memo.key_findings or []))
             resync_memo_narrative(
                 memo,
-                extra_summary=f"Specialty line={line_for_quote.value}; exposure_basis={(quote.metadata or {}).get('exposure_basis')}.",
+                extra_summary=(
+                    f"Commercial checklist line={line_for_quote.value}; "
+                    f"scenarios={','.join((commercial_uw_summary or {}).get('scenario_codes') or []) or 'none'}; "
+                    f"premium_mod={(commercial_uw_summary or {}).get('premium_mod_pct', 0)}%."
+                ),
             )
         elif line_for_quote in (InsuranceLine.PERSONAL_HOMEOWNERS, InsuranceLine.PERSONAL_AUTO):
             from insureflow.underwriting.memo_sync import resync_memo_narrative
@@ -1202,6 +1267,7 @@ class InsurancePipeline:
             }
             if specialty_retrieval is not None
             else None,
+            "commercial_uw": commercial_uw_summary,
             "core_integration": core_results,
             "encryption_at_rest": self.encryption.enabled,
             "prediction_id": prediction.prediction_id,

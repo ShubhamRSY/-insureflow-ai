@@ -163,75 +163,76 @@ class SpecialtyUnderwriteResult:
     findings: list[Finding] = field(default_factory=list)
     reasons: list[str] = field(default_factory=list)
     referral_flags: list[str] = field(default_factory=list)
+    story: str = ""
+    premium_mod_pct: float = 0.0
+    scenario_codes: list[str] = field(default_factory=list)
+    checklist_summary: dict = field(default_factory=dict)
 
 
 def underwrite_specialty(bundle: SubmissionBundle, line: InsuranceLine) -> SpecialtyUnderwriteResult:
-    """Line-specific heuristics — complements agents, does not replace them."""
+    """Delegate specialty UW to the commercial checklist + scenario engine."""
+    from insureflow.underwriting.commercial_checklists import UWActionType, evaluate_commercial_checklist
+    from insureflow.underwriting.memo_sync import worst_decision
+
+    checklist = evaluate_commercial_checklist(bundle, line)
     blob = _blob(bundle).lower()
-    findings: list[Finding] = []
-    reasons: list[str] = []
-    flags: list[str] = []
-    decision = UWDecision.ACCEPT
+    findings = list(checklist.findings)
+    reasons = [f.title for f in findings]
+    flags: list[str] = [s.code for s in checklist.scenarios]
+    decision = checklist.decision
 
-    def _find(title: str, detail: str, severity: RiskSeverity, *, refer: bool = False, decline: bool = False) -> None:
-        nonlocal decision
-        findings.append(
-            Finding(
-                title=title,
-                description=detail,
-                severity=severity,
-                category="specialty_uw",
-            )
-        )
-        reasons.append(title)
-        if decline:
-            decision = UWDecision.DECLINE
-            flags.append(title)
-        elif refer and decision != UWDecision.DECLINE:
-            decision = UWDecision.REFER
-            flags.append(title)
-
+    # Legacy hard gates that remain useful alongside the checklist
     if line == InsuranceLine.DIRECTORS_AND_OFFICERS:
-        if any(k in blob for k in ("pending litigation", "securities class action", "sec investigation", "doj investigation")):
-            _find("Material litigation / regulatory exposure", "Pending litigation or regulatory investigation disclosed — staff UW referral required.", RiskSeverity.CRITICAL, refer=True)
         if any(k in blob for k in ("bankruptcy", "going concern", "insolvent")):
-            _find("Financial distress", "Going-concern / insolvency language — decline or refer to CUO.", RiskSeverity.CRITICAL, decline=True)
-        if "prior acts" not in blob and "continuity date" not in blob and "claims made" in blob:
-            _find("Prior acts / continuity unclear", "Claims-made D&O without clear prior-acts warranty — refer.", RiskSeverity.HIGH, refer=True)
-        if not any(k in blob for k in ("financial statement", "10-k", "balance sheet", "p&l", "income statement")):
-            _find("Financials missing", "D&O requires recent financials — request from broker.", RiskSeverity.HIGH, refer=True)
-
-    elif line == InsuranceLine.TRADE_CREDIT:
-        conc = re.search(r"top\s*(?:buyer|customer)\s*(?:concentration|share)?\s*[:=]?\s*(\d{1,3})\s*%", blob)
-        if conc and int(conc.group(1)) >= 40:
-            _find(
-                "Buyer concentration risk",
-                f"Top buyer/customer concentration {conc.group(1)}% — refer for credit committee.",
-                RiskSeverity.HIGH,
-                refer=True,
+            findings.append(
+                Finding(
+                    title="Financial distress",
+                    description="Going-concern / insolvency language — decline or refer to CUO.",
+                    severity=RiskSeverity.CRITICAL,
+                    category="specialty_uw",
+                )
             )
-        if any(k in blob for k in ("bad debt", "write-off", "write off")) and any(k in blob for k in ("high", "elevated", "deteriorat")):
-            _find("Elevated bad-debt history", "Write-off / bad-debt language suggests credit stress — refer.", RiskSeverity.HIGH, refer=True)
-        if "aging" not in blob and "accounts receivable" not in blob and "a/r" not in blob:
-            _find("AR aging missing", "Trade credit requires current AR aging — request from broker.", RiskSeverity.HIGH, refer=True)
+            reasons.append("Financial distress")
+            flags.append("Financial distress")
+            decision = UWDecision.DECLINE
+        elif "prior acts" not in blob and "continuity date" not in blob and "claims made" in blob:
+            findings.append(
+                Finding(
+                    title="Prior acts / continuity unclear",
+                    description="Claims-made D&O without clear prior-acts warranty — refer.",
+                    severity=RiskSeverity.HIGH,
+                    category="specialty_uw",
+                )
+            )
+            reasons.append("Prior acts / continuity unclear")
+            flags.append("Prior acts / continuity unclear")
+            decision = worst_decision(decision, UWDecision.REFER)
 
-    elif line == InsuranceLine.ERRORS_AND_OMISSIONS:
-        if any(k in blob for k in ("guarantee of results", "guaranteed outcome", "indemnify for consequential")):
-            _find("Aggressive contract wording", "Client contracts appear to guarantee results / consequential damages — refer.", RiskSeverity.HIGH, refer=True)
-        if any(k in blob for k in ("prior claim", "malpractice claim", "professional liability claim", "e&o claim")):
-            _find("Prior E&O claims", "Prior professional liability claims disclosed — experience rating / refer.", RiskSeverity.HIGH, refer=True)
-        if not any(k in blob for k in ("scope of services", "engagement letter", "professional services", "description of services")):
-            _find("Services scope unclear", "E&O needs clear services description — request from broker.", RiskSeverity.MODERATE, refer=True)
+    for action in checklist.actions:
+        if action.action_type == UWActionType.REFER and action.detail:
+            flags.append(action.detail)
+        elif action.action_type == UWActionType.REQUIRE_MITIGATION and action.detail:
+            flags.append(action.detail)
+        elif action.action_type == UWActionType.ADD_EXCLUSION and action.detail:
+            flags.append(action.detail)
+        elif action.action_type == UWActionType.CAP_COVERAGE and action.detail:
+            flags.append(action.detail)
+        elif action.action_type == UWActionType.REQUIRE_DOC and action.detail:
+            flags.append(action.detail)
 
-    elif line == InsuranceLine.KEY_PERSON:
-        if any(k in blob for k in ("tobacco", "smoker", "nicotine")):
-            _find("Tobacco use", "Tobacco indicated — rating class impact; confirm with medical.", RiskSeverity.MODERATE)
-        if any(k in blob for k in ("cancer", "heart attack", "stroke", "diabetes", "coronary")):
-            _find("Material medical history", "Serious medical history — medical underwriting referral.", RiskSeverity.CRITICAL, refer=True)
-        if not any(k in blob for k in ("face amount", "coverage amount", "job description", "key person", "key-person")):
-            _find("Coverage justification thin", "Need face amount justification / role description.", RiskSeverity.MODERATE, refer=True)
+    if checklist.story:
+        reasons.append(checklist.story)
 
-    return SpecialtyUnderwriteResult(decision=decision, findings=findings, reasons=reasons, referral_flags=flags)
+    return SpecialtyUnderwriteResult(
+        decision=decision,
+        findings=findings,
+        reasons=reasons,
+        referral_flags=flags,
+        story=checklist.story,
+        premium_mod_pct=checklist.premium_mod_pct,
+        scenario_codes=[s.code for s in checklist.scenarios],
+        checklist_summary=checklist.to_summary_dict(),
+    )
 
 
 def specialty_guideline_keywords(line: InsuranceLine) -> list[str]:
