@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
+from typing import Any
 
 from insureflow.models.agents import Finding, RiskSeverity, UWDecision
 from insureflow.models.submissions import SubmissionBundle
@@ -166,7 +167,7 @@ class SpecialtyUnderwriteResult:
     story: str = ""
     premium_mod_pct: float = 0.0
     scenario_codes: list[str] = field(default_factory=list)
-    checklist_summary: dict = field(default_factory=dict)
+    checklist_summary: dict[str, Any] = field(default_factory=dict)
 
 
 def underwrite_specialty(bundle: SubmissionBundle, line: InsuranceLine) -> SpecialtyUnderwriteResult:
