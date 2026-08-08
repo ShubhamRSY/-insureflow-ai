@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Shield, Building2, ArrowRight, FileText, Briefcase, Users,
-  HardHat, CreditCard, Scale, HeartPulse, Layers,
+  HardHat, CreditCard, Scale, HeartPulse, Layers, Plus,
 } from 'lucide-react';
 import { endpoints } from '../lib/api';
 
@@ -31,63 +31,84 @@ export default function InsurancePage({ jobs, onRefresh }) {
 
   return (
     <div className="mx-auto max-w-6xl space-y-8 animate-fade-in pb-12">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-insurance/15 text-insurance">
-            <Shield className="h-6 w-6" />
+      <div>
+        <nav className="flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
+          <span className="text-slate-600">Underwriting</span>
+          <span className="text-slate-700">/</span>
+          <span className="font-semibold text-slate-200">Insurance</span>
+        </nav>
+        <div className="mt-3 flex flex-wrap items-start justify-between gap-4">
+          <div className="flex items-start gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-insurance/15 text-insurance">
+              <Shield className="h-6 w-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-3xl font-bold tracking-tight text-slate-100">Insurance</h1>
+                <span className="rounded-full bg-brand/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-light">
+                  Block 1
+                </span>
+              </div>
+              <p className="mt-1 max-w-2xl text-sm text-slate-400">
+                First underwriting block. Segments ship one at a time — Business / Commercial is
+                live, more follow.
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-100">Insurance</h1>
-            <p className="mt-1 max-w-2xl text-sm text-slate-400">
-              Separate underwriting workspaces by segment. Start with Business / Commercial —
-              line-specific document packs, risk evaluation, pricing, terms, and decisions.
+          <button type="button" onClick={() => onRefresh?.()} className="btn-secondary btn-sm text-sm">
+            Refresh jobs
+          </button>
+        </div>
+      </div>
+
+      {/* Segment blocks */}
+      <section>
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400">Segments</h2>
+        <div className="mt-4 grid gap-4 md:grid-cols-3">
+          <Link
+            to="/insurance/commercial"
+            className="group glass-card block p-6 transition hover:ring-1 hover:ring-brand/40"
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand/15 text-brand">
+                <Briefcase className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-emerald-400">Live</p>
+                <h2 className="text-xl font-semibold text-slate-100">Business / Commercial</h2>
+              </div>
+            </div>
+            <p className="mt-3 text-sm leading-relaxed text-slate-400">
+              Property & BI, D&O, Workers&apos; Comp, Trade Credit, E&O, and Key Person — with full
+              submission checklists and commercial UW workflow.
+            </p>
+            <p className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-brand group-hover:gap-2">
+              Open commercial hub <ArrowRight className="h-4 w-4" />
+            </p>
+          </Link>
+
+          <div className="glass-card p-6 opacity-70">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-500/15 text-slate-400">
+                <Layers className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Next</p>
+                <h2 className="text-xl font-semibold text-slate-300">Personal Lines</h2>
+              </div>
+            </div>
+            <p className="mt-3 text-sm text-slate-500">
+              Homeowners, personal auto, and life — coming after commercial is complete.
             </p>
           </div>
-        </div>
-        <button type="button" onClick={() => onRefresh?.()} className="btn-secondary btn-sm text-sm">
-          Refresh jobs
-        </button>
-      </div>
 
-      {/* Segment cards */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <Link
-          to="/insurance/commercial"
-          className="group glass-card block p-6 transition hover:ring-1 hover:ring-brand/40"
-        >
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand/15 text-brand">
-              <Briefcase className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-brand">Active</p>
-              <h2 className="text-xl font-semibold text-slate-100">Business / Commercial Insurance</h2>
-            </div>
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/[0.1] p-6 text-center opacity-70">
+            <Plus className="h-6 w-6 text-slate-600" />
+            <p className="mt-2 text-sm font-medium text-slate-400">Next segment</p>
+            <p className="mt-1 text-xs text-slate-500">More insurance segments arrive one at a time.</p>
           </div>
-          <p className="mt-3 text-sm leading-relaxed text-slate-400">
-            Property & BI, D&O, Workers&apos; Comp, Trade Credit, E&O, and Key Person — with full
-            submission checklists and commercial UW workflow.
-          </p>
-          <p className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-brand group-hover:gap-2">
-            Open commercial hub <ArrowRight className="h-4 w-4" />
-          </p>
-        </Link>
-
-        <div className="glass-card p-6 opacity-60">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-500/15 text-slate-400">
-              <Layers className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Next</p>
-              <h2 className="text-xl font-semibold text-slate-300">Personal Lines</h2>
-            </div>
-          </div>
-          <p className="mt-3 text-sm text-slate-500">
-            Homeowners, personal auto, and life — coming after commercial is complete.
-          </p>
         </div>
-      </div>
+      </section>
 
       {error && <p className="text-sm text-red-400">{error}</p>}
 

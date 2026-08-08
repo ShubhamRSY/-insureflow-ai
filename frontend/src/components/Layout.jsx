@@ -1,22 +1,32 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Shield, Home, Activity, ClipboardCheck, Settings, LogOut, RefreshCw, Menu, X,
   FileText, Users, BarChart3, BookOpen, Wallet, Layers, Link2, LineChart, Search, Database, FlaskConical,
-  FileCheck, MessagesSquare, Radar, Briefcase, Building2, Calculator,
+  FileCheck, MessagesSquare, Radar, Briefcase, Building2, Calculator, ChevronDown, ChevronRight, Plus,
 } from 'lucide-react';
 import { useState } from 'react';
-import { auth, endpoints } from '../lib/api';
-import { Badge } from './ui';
+import { auth } from '../lib/api';
 
 const nav = [
   { to: '/', icon: LayoutDashboard, label: 'Overview' },
   { to: '/system', icon: Activity, label: 'System Health' },
   { section: 'Underwriting' },
-  { to: '/insurance', icon: Shield, label: 'Insurance', color: 'text-insurance' },
+  {
+    to: '/insurance',
+    icon: Shield,
+    label: 'Insurance',
+    color: 'text-insurance',
+    block: 'Block 1',
+    defaultOpen: true,
+    children: [
+      { to: '/insurance/commercial', label: 'Business & Commercial', tag: 'Live' },
+      { soon: true, label: 'Personal Lines' },
+    ],
+  },
+  { to: '/mortgage', icon: Home, label: 'Mortgage', color: 'text-mortgage' },
+  { to: '/lending', icon: Wallet, label: 'Lending', color: 'text-lending' },
   { to: '/line-uw', icon: Briefcase, label: 'Line UW Desk', color: 'text-sky-400' },
   { to: '/staff-uw', icon: Building2, label: 'Staff UW Desk', color: 'text-violet-400' },
-  { to: '/mortgage', icon: Home, label: 'Mortgage', color: 'text-mortgage' },
-  { to: '/lending', icon: Wallet, label: 'Lending', color: 'text-emerald-400' },
   { to: '/workflow', icon: ClipboardCheck, label: 'UW Sign-off', badge: true },
   { to: '/queue', icon: Search, label: 'Queue' },
   { section: 'Post-Decision' },
@@ -41,15 +51,171 @@ const nav = [
   { to: '/settings', icon: Settings, label: 'Settings' },
 ];
 
+const CRUMBS = [
+  { prefix: '/insurance/commercial', labels: ['Underwriting', 'Insurance', 'Business & Commercial'] },
+  { prefix: '/insurance/', labels: ['Underwriting', 'Insurance'] },
+  { prefix: '/insurance', labels: ['Underwriting', 'Insurance'] },
+  { prefix: '/line-uw', labels: ['Underwriting', 'Line UW Desk'] },
+  { prefix: '/staff-uw', labels: ['Underwriting', 'Staff UW Desk'] },
+  { prefix: '/mortgage', labels: ['Underwriting', 'Mortgage'] },
+  { prefix: '/lending', labels: ['Underwriting', 'Lending'] },
+  { prefix: '/workflow', labels: ['Underwriting', 'UW Sign-off'] },
+  { prefix: '/queue', labels: ['Underwriting', 'Submission Queue'] },
+  { prefix: '/issuance', labels: ['Post-Decision', 'Issuance'] },
+  { prefix: '/monitoring', labels: ['Post-Decision', 'Policy Monitoring'] },
+  { prefix: '/producer-comms', labels: ['Post-Decision', 'Producer Comms'] },
+  { prefix: '/renewals', labels: ['Analytics', 'Renewals'] },
+  { prefix: '/overrides', labels: ['Analytics', 'Override Analytics'] },
+  { prefix: '/business-kpis', labels: ['Analytics', 'Business KPIs'] },
+  { prefix: '/eval-trends', labels: ['Analytics', 'Eval Trends'] },
+  { prefix: '/portfolio', labels: ['Analytics', 'Portfolio'] },
+  { prefix: '/ratemaking', labels: ['Analytics', 'Ratemaking & Pricing'] },
+  { prefix: '/authority', labels: ['Analytics', 'Authority Matrix'] },
+  { prefix: '/market', labels: ['Analytics', 'Market Cycle'] },
+  { prefix: '/pilot', labels: ['Governance', 'Pilot Lab'] },
+  { prefix: '/registry', labels: ['Governance', 'Model Registry'] },
+  { prefix: '/integrations', labels: ['Governance', 'Integrations'] },
+  { prefix: '/webhooks', labels: ['Governance', 'Webhooks'] },
+  { prefix: '/settings', labels: ['Account', 'Settings'] },
+  { prefix: '/system', labels: ['System Health'] },
+  { prefix: '/', labels: ['Overview'] },
+];
+
+function crumbsFor(pathname) {
+  for (const c of CRUMBS) {
+    if (c.prefix === '/' ? pathname === '/' : pathname.startsWith(c.prefix)) return c.labels;
+  }
+  return [];
+}
+
 export default function Layout({ health, pendingCount, onRefresh, onLogin, user, setUser }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [openGroups, setOpenGroups] = useState(() => {
+    const init = {};
+    nav.forEach((item) => { if (item.children && item.defaultOpen) init[item.to] = true; });
+    return init;
+  });
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const crumbs = crumbsFor(pathname);
 
   const logout = () => {
     auth.clear();
     setUser(null);
     navigate('/system');
+  };
+
+  const toggleGroup = (to) => setOpenGroups((g) => ({ ...g, [to]: !g[to] }));
+
+  const renderNavItem = (item, i) => {
+    if (item.section) {
+      if (sidebarCollapsed) return null;
+      return (
+        <p key={i} className="px-3 pb-1 pt-4 text-[10px] font-bold uppercase tracking-widest text-slate-600">
+          {item.section}
+        </p>
+      );
+    }
+
+    if (item.children) {
+      const Icon = item.icon;
+      const isOpen = !!openGroups[item.to];
+      if (sidebarCollapsed) {
+        return (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            title={item.label}
+            className={({ isActive }) => `nav-link ${isActive ? 'nav-link-active' : ''}`}
+          >
+            <Icon className={`h-[18px] w-[18px] mx-auto ${item.color || ''}`} />
+          </NavLink>
+        );
+      }
+      return (
+        <div key={item.to}>
+          <div className="flex items-center gap-0">
+            <NavLink
+              to={item.to}
+              className={({ isActive }) => `nav-link flex-1 ${isActive ? 'nav-link-active' : ''}`}
+            >
+              <Icon className={`h-[18px] w-[18px] ${item.color || ''}`} />
+              <span className="flex-1">{item.label}</span>
+              {item.block && (
+                <span className="rounded-full bg-brand/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-brand-light">
+                  {item.block}
+                </span>
+              )}
+            </NavLink>
+            <button
+              type="button"
+              onClick={() => toggleGroup(item.to)}
+              className="mr-1 rounded-lg p-2 text-slate-500 transition hover:bg-white/[0.05] hover:text-slate-300"
+              title={isOpen ? 'Collapse' : 'Expand'}
+            >
+              {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+            </button>
+          </div>
+          {isOpen && (
+            <div className="ml-4 mt-0.5 border-l border-white/[0.07] pl-2">
+              {item.children.map((child) => {
+                if (child.soon) {
+                  return (
+                    <div
+                      key={child.label}
+                      className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-slate-600"
+                      title="Coming soon"
+                    >
+                      <Plus className="h-3.5 w-3.5 shrink-0 text-slate-600" />
+                      <span className="flex-1">{child.label}</span>
+                      <span className="rounded-full bg-slate-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-slate-500">
+                        Soon
+                      </span>
+                    </div>
+                  );
+                }
+                return (
+                  <NavLink
+                    key={child.to}
+                    to={child.to}
+                    className={({ isActive }) => `nav-link ${isActive ? 'nav-link-active' : ''}`}
+                  >
+                    <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${pathname.startsWith(child.to) ? 'bg-brand' : 'bg-slate-600'}`} />
+                    <span className="flex-1">{child.label}</span>
+                    {child.tag && (
+                      <span className="rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-400">
+                        {child.tag}
+                      </span>
+                    )}
+                  </NavLink>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    const Icon = item.icon;
+    return (
+      <NavLink
+        key={item.to}
+        to={item.to}
+        end={item.to === '/'}
+        onClick={() => setMobileOpen(false)}
+        className={({ isActive }) => `nav-link ${isActive ? 'nav-link-active' : ''}`}
+        title={sidebarCollapsed ? item.label : undefined}
+      >
+        <Icon className={`h-[18px] w-[18px] ${sidebarCollapsed ? 'mx-auto' : ''} ${item.color || ''}`} />
+        {!sidebarCollapsed && <span className="flex-1">{item.label}</span>}
+        {!sidebarCollapsed && item.badge && pendingCount > 0 && (
+          <span className="rounded-full bg-red-500/20 px-2 py-0.5 text-[10px] font-bold text-red-400">
+            {pendingCount}
+          </span>
+        )}
+      </NavLink>
+    );
   };
 
   return (
@@ -82,35 +248,17 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
         </div>
 
         <nav className="flex-1 space-y-0.5 overflow-y-auto p-3">
-          {nav.map((item, i) => {
-            if (item.section) {
-              if (sidebarCollapsed) return null;
-              return (
-                <p key={i} className="px-3 pb-1 pt-4 text-[10px] font-bold uppercase tracking-widest text-slate-600">
-                  {item.section}
-                </p>
-              );
-            }
-            const Icon = item.icon;
-            return (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.to === '/'}
-                onClick={() => setMobileOpen(false)}
-                className={({ isActive }) => `nav-link ${isActive ? 'nav-link-active' : ''}`}
-                title={sidebarCollapsed ? item.label : undefined}
-              >
-                <Icon className={`h-[18px] w-[18px] ${item.color || ''}`} />
-                {!sidebarCollapsed && <span className="flex-1">{item.label}</span>}
-                {!sidebarCollapsed && item.badge && pendingCount > 0 && (
-                  <span className="rounded-full bg-red-500/20 px-2 py-0.5 text-[10px] font-bold text-red-400">
-                    {pendingCount}
-                  </span>
-                )}
-              </NavLink>
-            );
-          })}
+          {nav.map(renderNavItem)}
+
+          {!sidebarCollapsed && (
+            <div className="mx-3 mt-1 flex items-center gap-2 rounded-xl border border-dashed border-white/[0.08] px-3 py-2 text-xs text-slate-600">
+              <Plus className="h-3.5 w-3.5" />
+              Next underwriting block
+              <span className="ml-auto rounded-full bg-slate-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-slate-500">
+                Soon
+              </span>
+            </div>
+          )}
         </nav>
 
         {!sidebarCollapsed && (
@@ -145,8 +293,8 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
 
       {/* Main */}
       <div className={`flex min-w-0 flex-1 flex-col transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-[64px]' : 'lg:ml-[272px]'}`}>
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-white/[0.06] bg-surface/80 px-6 backdrop-blur-xl">
-          <div className="flex items-center gap-3">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-3 border-b border-white/[0.06] bg-surface/80 px-6 backdrop-blur-xl">
+          <div className="flex min-w-0 items-center gap-3">
             <button type="button" className="rounded-lg p-2 lg:hidden" onClick={() => setMobileOpen(true)}>
               <Menu className="h-5 w-5" />
             </button>
@@ -158,8 +306,16 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
             >
               <Menu className="h-5 w-5" />
             </button>
+            <nav className="hidden min-w-0 items-center gap-1.5 text-xs text-slate-500 md:flex" aria-label="Breadcrumb">
+              {crumbs.map((c, i) => (
+                <span key={`${c}-${i}`} className="flex items-center gap-1.5 whitespace-nowrap">
+                  {i > 0 && <span className="text-slate-700">/</span>}
+                  <span className={i === crumbs.length - 1 ? 'font-semibold text-slate-200' : ''}>{c}</span>
+                </span>
+              ))}
+            </nav>
           </div>
-          <button type="button" onClick={onRefresh} className="btn-secondary btn-sm text-xs">
+          <button type="button" onClick={onRefresh} className="btn-secondary btn-sm shrink-0 text-xs">
             <RefreshCw className="h-3.5 w-3.5" /> Refresh
           </button>
         </header>

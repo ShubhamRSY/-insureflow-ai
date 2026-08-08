@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
-  ArrowLeft, Building2, Users, HardHat, CreditCard, Scale, HeartPulse,
+  Building2, Users, HardHat, CreditCard, Scale, HeartPulse,
   FileText, ClipboardCheck, Shield, AlertCircle,
 } from 'lucide-react';
 import { endpoints } from '../lib/api';
@@ -57,12 +57,15 @@ export default function CommercialLinePage({ presets, onRunDemo, onSubmit }) {
   return (
     <div className="mx-auto max-w-6xl space-y-8 animate-fade-in pb-12">
       <div>
-        <Link
-          to="/insurance/commercial"
-          className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-300"
-        >
-          <ArrowLeft className="h-4 w-4" /> Commercial Insurance
-        </Link>
+        <nav className="flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
+          <Link to="/insurance" className="text-slate-600 transition hover:text-slate-300">Underwriting</Link>
+          <span className="text-slate-700">/</span>
+          <Link to="/insurance" className="text-slate-600 transition hover:text-slate-300">Insurance</Link>
+          <span className="text-slate-700">/</span>
+          <Link to="/insurance/commercial" className="text-slate-600 transition hover:text-slate-300">Business & Commercial</Link>
+          <span className="text-slate-700">/</span>
+          <span className="font-semibold text-slate-200">{line.name}</span>
+        </nav>
         <div className="mt-3 flex items-start gap-4">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand/15 text-brand">
             <Icon className="h-6 w-6" />
