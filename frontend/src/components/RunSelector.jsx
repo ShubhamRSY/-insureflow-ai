@@ -41,7 +41,20 @@ export default function RunSelector({
   const [product, setProduct] = useState(productDefault);
   const [purpose, setPurpose] = useState(purposeDefault);
 
-  const sampleList = samples || presets?.insurance || [];
+  const allSamples = samples || presets?.insurance || [];
+  const sampleList = productOptions.length > 0 && vertical === 'insurance'
+    ? allSamples.filter((s) => (s.insurance_line || s.product_line || s.product_type) === product)
+    : allSamples;
+
+  const pickProduct = (id) => {
+    setProduct(id);
+    if (vertical === 'insurance' && productOptions.length > 0) {
+      setDataId((prev) => {
+        const match = allSamples.find((s) => s.id === prev && (s.insurance_line || s.product_line || s.product_type) === id);
+        return match ? prev : '';
+      });
+    }
+  };
 
   const addFiles = async (list) => {
     const arr = Array.from(list || []);
@@ -141,7 +154,7 @@ export default function RunSelector({
                 <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Line of business</span>
                 <select
                   value={product}
-                  onChange={(e) => setProduct(e.target.value)}
+                  onChange={(e) => pickProduct(e.target.value)}
                   className="input-field flex-1 text-xs"
                   aria-label="Line of business"
                 >
@@ -187,22 +200,33 @@ export default function RunSelector({
 
       {tab === 'sample' && (
         <div className="space-y-3">
-          <select value={dataId} onChange={(e) => setDataId(e.target.value)} className="input-field w-full text-xs">
-            <option value="">Choose a sample data set…</option>
-            {sampleList.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name} — {insuranceLineLabel(s.insurance_line || s.product_line || s.product_type || 'commercial')}
-              </option>
-            ))}
-          </select>
-          {dataId && <p className="text-[11px] text-slate-500">{sampleList.find((s) => s.id === dataId)?.description}</p>}
-          <div className="flex justify-end">
-            <button type="button" onClick={runSample} disabled={running || !dataId}
-              className="btn-primary btn-sm text-xs disabled:opacity-40">
-              {running ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3 w-3" />}
-              Run sample
-            </button>
-          </div>
+          {sampleList.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-white/[0.12] bg-surface/30 px-4 py-5 text-center">
+              <p className="text-xs font-medium text-slate-400">
+                {vertical === 'insurance' ? `No demo case for ${insuranceLineLabel(product)} yet — coming soon.` : 'No sample data sets available.'}
+              </p>
+              <p className="mt-1 text-[10px] text-slate-600">Upload files in the Files tab or connect a source above.</p>
+            </div>
+          ) : (
+            <>
+              <select value={dataId} onChange={(e) => setDataId(e.target.value)} className="input-field w-full text-xs">
+                <option value="">Choose a sample data set…</option>
+                {sampleList.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name} — {insuranceLineLabel(s.insurance_line || s.product_line || s.product_type || 'commercial')}
+                  </option>
+                ))}
+              </select>
+              {dataId && <p className="text-[11px] text-slate-500">{sampleList.find((s) => s.id === dataId)?.description}</p>}
+              <div className="flex justify-end">
+                <button type="button" onClick={runSample} disabled={running || !dataId}
+                  className="btn-primary btn-sm text-xs disabled:opacity-40">
+                  {running ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3 w-3" />}
+                  Run sample
+                </button>
+              </div>
+            </>
+          )}
         </div>
       )}
 

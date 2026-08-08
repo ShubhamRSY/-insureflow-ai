@@ -71,22 +71,53 @@ export default function CommercialInsuranceHub({ presets, onRunDemo, onSubmit, j
         onSubmit={onSubmit}
       />
 
-      {/* Jump to a line */}
-      {(hub.lines || []).length > 0 && (
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Jump to a line</span>
-          {(hub.lines || []).map((line) => (
-            <button
-              key={line.id}
-              type="button"
-              onClick={() => navigate(`/insurance/commercial/${line.slug}`)}
-              className="rounded-lg border border-white/[0.08] bg-surface-overlay px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:border-brand/35 hover:text-slate-100"
-            >
-              {line.name}
-            </button>
-          ))}
+      {/* Demo cases per line */}
+      <section className="space-y-3">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400">Demo cases</h2>
+        <div className="grid gap-4 md:grid-cols-2">
+          {(hub.lines || []).map((line) => {
+            const demos = (presets?.insurance || []).filter((p) => p.insurance_line === line.insurance_line);
+            return (
+              <div key={line.id} className="rounded-2xl bg-surface-overlay p-4 ring-1 ring-white/[0.04]">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-slate-200">{line.name}</p>
+                    <p className="text-xs text-slate-500">{line.document_count} required documents</p>
+                  </div>
+                  {demos.length > 0 && (
+                    <span className="shrink-0 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-400">
+                      {demos.length} demo{demos.length > 1 ? 's' : ''}
+                    </span>
+                  )}
+                </div>
+                {demos.length > 0 ? (
+                  <div className="mt-3 space-y-2">
+                    {demos.map((d) => (
+                      <div key={d.id} className="flex items-center justify-between gap-3 rounded-xl bg-black/20 px-3 py-2 ring-1 ring-white/[0.04]">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm text-slate-200">{d.name}</p>
+                          <p className="truncate text-[11px] text-slate-500">{d.description}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => onRunDemo('insurance', d.id)}
+                          className="btn-primary btn-sm shrink-0 text-xs"
+                        >
+                          Run
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="mt-3 rounded-xl border border-dashed border-white/[0.08] px-3 py-2.5 text-center text-xs text-slate-500">
+                    Demo case coming soon
+                  </p>
+                )}
+              </div>
+            );
+          })}
         </div>
-      )}
+      </section>
 
       {/* Runs & reports */}
       <section className="glass-card overflow-hidden">
