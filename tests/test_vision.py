@@ -253,8 +253,8 @@ class TestBundleVisualAnalysis:
     def test_pipeline_populates_bundle_visual_analysis(self, tmp_path, monkeypatch):
 
         from insureflow.insurance.pipeline import InsurancePipeline
+        from insureflow.zta.models import RouteDecision, RouteResult, ZtaTask
         from insureflow.zta.report import ZtaReporter
-        from insureflow.zta.router import RouteDecision, RouteResult, ZtaTask
 
         audit_store = AuditStore(base_path=tmp_path / "audit")
 
