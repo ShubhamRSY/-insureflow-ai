@@ -1892,11 +1892,7 @@ def _run_pipeline_task(job_id: str, request: SubmissionRequest, org_id: str) -> 
                 bundle_id=request.bundle_id or job_id,
             )
         else:
-            docs = (
-                [{"filename": d.filename, "content": d.content, "encoding": getattr(d, "encoding", None) or "utf-8"} for d in request.documents]
-                if request.documents
-                else None
-            )
+            docs = [{"filename": d.filename, "content": d.content, "encoding": getattr(d, "encoding", None) or "utf-8"} for d in request.documents] if request.documents else None
             pipeline = InsurancePipeline(org_id=org_id, use_llm=request.use_llm)
 
             def on_progress(data: dict[str, Any]) -> None:
