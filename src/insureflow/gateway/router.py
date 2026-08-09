@@ -67,6 +67,38 @@ def cat_model(body: dict[str, Any]) -> dict[str, Any]:
     return payloads.cat_query(body)
 
 
+bureau = _service_router("/oracles/bureau/v2", "bureau")
+
+
+@bureau.post("/queries")
+def bureau_queries(body: dict[str, Any]) -> dict[str, Any]:
+    return payloads.bureau_query(body)
+
+
+public_records = _service_router("/oracles/public-records/v2", "public_records")
+
+
+@public_records.post("/queries")
+def public_records_queries(body: dict[str, Any]) -> dict[str, Any]:
+    return payloads.public_records_query(body)
+
+
+osha = _service_router("/oracles/osha/v1", "osha")
+
+
+@osha.post("/searches")
+def osha_searches(body: dict[str, Any]) -> dict[str, Any]:
+    return payloads.osha_query(body)
+
+
+rating_agency = _service_router("/oracles/rating-agency/v2", "rating_agency")
+
+
+@rating_agency.post("/entities")
+def rating_agency_entities(body: dict[str, Any]) -> dict[str, Any]:
+    return payloads.rating_agency_query(body)
+
+
 iso = _service_router("/oracles/iso/v1", "iso")
 
 
@@ -161,6 +193,10 @@ router.include_router(clue)
 router.include_router(ncci)
 router.include_router(aplus)
 router.include_router(cat)
+router.include_router(bureau)
+router.include_router(public_records)
+router.include_router(osha)
+router.include_router(rating_agency)
 router.include_router(iso)
 router.include_router(guidewire)
 router.include_router(britecore)

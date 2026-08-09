@@ -56,12 +56,78 @@ def test_bundled_gateway_health_when_configured() -> None:
     assert health.get("bundled") is True
 
 
+def test_gateway_bureau_query() -> None:
+    resp = client.post(
+        "/integrations/oracles/bureau/v2/queries",
+        headers=AUTH,
+        json={"tax_id": "12-3456789", "legal_name": "Veririsk Construction"},
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["paydex_score"] == 35
+    assert data["has_bankruptcy_indicator"] is True
+
+
+def test_gateway_public_records_query() -> None:
+    resp = client.post(
+        "/integrations/oracles/public-records/v2/queries",
+        headers=AUTH,
+        json={"legal_name": "Veririsk Construction"},
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["has_bankruptcy"] is True
+    assert data["total_judgment_amount"] == 125000
+
+
+def test_gateway_osha_search() -> None:
+    resp = client.post(
+        "/integrations/oracles/osha/v1/searches",
+        headers=AUTH,
+        json={"legal_name": "Veririsk Construction"},
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["safety_rating"] == "critical"
+    assert data["has_willful_violation"] is True
+
+
+def test_gateway_rating_agency_query() -> None:
+    resp = client.post(
+        "/integrations/oracles/rating-agency/v2/entities",
+        headers=AUTH,
+        json={"legal_name": "Veririsk Construction"},
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["issuer_rating"] == "B"
+    assert data["outlook"] == "negative"
+
+
+def test_gateway_new_feeds_health_ok() -> None:
+    expected = {
+        "/integrations/oracles/bureau/v2/health": "bureau",
+        "/integrations/oracles/public-records/v2/health": "public_records",
+        "/integrations/oracles/osha/v1/health": "osha",
+        "/integrations/oracles/rating-agency/v2/health": "rating_agency",
+    }
+    for path, service in expected.items():
+        resp = client.get(path, headers=AUTH)
+        assert resp.status_code == 200
+        assert resp.json()["status"] == "ok"
+        assert resp.json()["service"] == service
+
+
 def test_integration_health_service_feed_shape() -> None:
     from insureflow.integrations.health import IntegrationHealthService
 
     feeds = IntegrationHealthService().check_all()["feeds"]
     names = {f["name"] for f in feeds}
     assert "CLUE" in names
+    assert "Credit Bureau" in names
+    assert "Public Records" in names
+    assert "OSHA" in names
+    assert "Rating Agency" in names
     assert all("mode" in f and "reachable" in f for f in feeds)
 
 

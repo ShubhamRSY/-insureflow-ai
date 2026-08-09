@@ -14,9 +14,13 @@ from insureflow.integrations.factory import (
 from insureflow.integrations.http_client import IntegrationHTTPClient, build_http_client
 from insureflow.oracles.factory import (
     build_aplus_client,
+    build_bureau_client,
     build_cat_client,
     build_clue_client,
     build_ncci_client,
+    build_osha_client,
+    build_public_records_client,
+    build_rating_agency_client,
 )
 
 
@@ -42,6 +46,10 @@ class IntegrationHealthService:
             self._oracle_feed("NCCI", build_ncci_client().http, settings.oracle_mode),
             self._oracle_feed("A-PLUS", build_aplus_client().http, settings.oracle_mode),
             self._oracle_feed("CAT", build_cat_client().http, settings.oracle_mode),
+            self._oracle_feed("Credit Bureau", build_bureau_client().http, settings.oracle_mode),
+            self._oracle_feed("Public Records", build_public_records_client().http, settings.oracle_mode),
+            self._oracle_feed("OSHA", build_osha_client().http, settings.oracle_mode),
+            self._oracle_feed("Rating Agency", build_rating_agency_client().http, settings.oracle_mode),
             self._service_feed("ISO Loss Costs", build_iso_rating_client(), settings.iso_rating_mode),
             self._service_feed("Loss Control", build_loss_control_client(), settings.loss_control_mode),
             self._service_feed("Claims", build_claims_client(), settings.claims_mode),

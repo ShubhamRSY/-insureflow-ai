@@ -89,6 +89,162 @@ def cat_query(body: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def bureau_query(body: dict[str, Any]) -> dict[str, Any]:
+    name = str(body.get("legal_name", ""))
+    if "veririsk" in name.lower() or "construction" in name.lower():
+        return {
+            "paydex_score": 35,
+            "financial_strength_rating": "2A",
+            "failure_risk_score": 0.46,
+            "delinquency_score": 0.52,
+            "records": [
+                {
+                    "trade_id": "TR-GW-1",
+                    "creditor": "Heavy Equipment Leasing",
+                    "credit_limit": 420000,
+                    "highest_credit": 400000,
+                    "current_balance": 310000,
+                    "past_due_days": 120,
+                    "payment_status": "derogatory",
+                    "opened_at": "2022-03-01",
+                }
+            ],
+            "total_credit_limit": 420000,
+            "total_current_balance": 310000,
+            "number_of_derogatory_trades": 1,
+            "has_bankruptcy_indicator": True,
+            "has_lien_indicator": True,
+            "has_judgment_indicator": True,
+            "synthetic": True,
+            "mode": "gateway_synthetic",
+        }
+    return {
+        "paydex_score": 82,
+        "financial_strength_rating": "3A",
+        "failure_risk_score": 0.09,
+        "delinquency_score": 0.07,
+        "records": [],
+        "total_credit_limit": 0,
+        "total_current_balance": 0,
+        "number_of_derogatory_trades": 0,
+        "has_bankruptcy_indicator": False,
+        "has_lien_indicator": False,
+        "has_judgment_indicator": False,
+        "synthetic": True,
+        "mode": "gateway_synthetic",
+    }
+
+
+def public_records_query(body: dict[str, Any]) -> dict[str, Any]:
+    name = str(body.get("legal_name", ""))
+    if "veririsk" in name.lower() or "construction" in name.lower():
+        return {
+            "records": [
+                {
+                    "record_id": "JUD-GW-1",
+                    "record_type": "judgment",
+                    "jurisdiction": "CA Superior Court, Alameda",
+                    "amount": 125000,
+                    "filed_at": "2025-02-01",
+                    "status": "open",
+                    "plaintiff": "Subcontractor Trust",
+                    "description": "Unpaid subcontractor judgment",
+                },
+                {
+                    "record_id": "LIE-GW-1",
+                    "record_type": "lien",
+                    "jurisdiction": "Internal Revenue Service",
+                    "amount": 88000,
+                    "filed_at": "2025-05-01",
+                    "status": "open",
+                    "description": "Federal tax lien",
+                },
+            ],
+            "total_records_found": 2,
+            "total_judgment_amount": 125000,
+            "has_bankruptcy": True,
+            "has_active_judgment": True,
+            "has_ucc_filing": False,
+            "has_active_lien": True,
+            "synthetic": True,
+            "mode": "gateway_synthetic",
+        }
+    return {
+        "records": [],
+        "total_records_found": 0,
+        "total_judgment_amount": 0,
+        "has_bankruptcy": False,
+        "has_active_judgment": False,
+        "has_ucc_filing": False,
+        "has_active_lien": False,
+        "synthetic": True,
+        "mode": "gateway_synthetic",
+    }
+
+
+def osha_query(body: dict[str, Any]) -> dict[str, Any]:
+    name = str(body.get("legal_name", ""))
+    if "veririsk" in name.lower() or "construction" in name.lower():
+        return {
+            "violations": [
+                {
+                    "violation_id": "VIO-GW-1",
+                    "inspection_number": "INSP-GW-1",
+                    "inspection_type": "accident",
+                    "violation_type": "willful",
+                    "description": "Failure to provide fall protection on elevated work platform",
+                    "penalty": 72000,
+                    "inspected_at": "2025-01-10",
+                    "closed": False,
+                    "items": 3,
+                    "serious": True,
+                }
+            ],
+            "total_violations": 1,
+            "total_penalty": 72000,
+            "has_willful_violation": True,
+            "has_repeat_violation": False,
+            "has_open_inspection": True,
+            "safety_rating": "critical",
+            "synthetic": True,
+            "mode": "gateway_synthetic",
+        }
+    return {
+        "violations": [],
+        "total_violations": 0,
+        "total_penalty": 0,
+        "has_willful_violation": False,
+        "has_repeat_violation": False,
+        "has_open_inspection": False,
+        "safety_rating": "low",
+        "synthetic": True,
+        "mode": "gateway_synthetic",
+    }
+
+
+def rating_agency_query(body: dict[str, Any]) -> dict[str, Any]:
+    name = str(body.get("legal_name", ""))
+    if "veririsk" in name.lower() or "construction" in name.lower():
+        return {
+            "issuer_rating": "B",
+            "outlook": "negative",
+            "watch": "on-watch",
+            "agency": "S&P Global",
+            "not_rated": False,
+            "synthetic": True,
+            "mode": "gateway_synthetic",
+        }
+    return {
+        "issuer_rating": "",
+        "outlook": "stable",
+        "watch": "",
+        "agency": "S&P Global",
+        "not_rated": True,
+        "synthetic": True,
+        "mode": "gateway_synthetic",
+    }
+
+
 def iso_health() -> dict[str, Any]:
     return {"status": "ok", "service": "iso_loss_costs", "version": "1.0"}
 

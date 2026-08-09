@@ -122,6 +122,23 @@ class Settings:
     cat_api_url: str = os.getenv("CAT_API_URL", "https://integrations.rytera.ai/oracles/cat/v1")
     cat_query_path: str = os.getenv("CAT_QUERY_PATH", "/model")
 
+    bureau_api_key: str = os.getenv("BUREAU_API_KEY", "")
+    bureau_api_url: str = os.getenv("BUREAU_API_URL", "https://integrations.rytera.ai/oracles/bureau/v2")
+    bureau_query_path: str = os.getenv("BUREAU_QUERY_PATH", "/queries")
+
+    public_records_api_key: str = os.getenv("PUBLIC_RECORDS_API_KEY", "")
+    public_records_api_url: str = os.getenv("PUBLIC_RECORDS_API_URL", "https://integrations.rytera.ai/oracles/public-records/v2")
+    public_records_query_path: str = os.getenv("PUBLIC_RECORDS_QUERY_PATH", "/queries")
+
+    osha_api_key: str = os.getenv("OSHA_API_KEY", "")
+    osha_api_url: str = os.getenv("OSHA_API_URL", "https://integrations.rytera.ai/oracles/osha/v1")
+    osha_query_path: str = os.getenv("OSHA_QUERY_PATH", "/searches")
+
+    rating_agency_api_key: str = os.getenv("RATING_AGENCY_API_KEY", "")
+    rating_agency_api_url: str = os.getenv("RATING_AGENCY_API_URL", "https://integrations.rytera.ai/oracles/rating-agency/v2")
+    rating_agency_query_path: str = os.getenv("RATING_AGENCY_QUERY_PATH", "/entities")
+
+
     iso_rating_api_key: str = os.getenv("ISO_RATING_API_KEY", "")
     iso_rating_api_url: str = os.getenv("ISO_RATING_API_URL", "https://integrations.rytera.ai/oracles/iso/v1")
     iso_rating_mode: str = os.getenv("ISO_RATING_MODE", "auto")

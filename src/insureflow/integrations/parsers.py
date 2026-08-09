@@ -70,3 +70,56 @@ def parse_cat_response(payload: dict[str, Any]) -> dict[str, Any]:
         "portfolio_aggregate_pml_100yr": float(payload.get("portfolio_aggregate_pml_100yr", 0) or 0),
         "portfolio_aggregate_pml_250yr": float(payload.get("portfolio_aggregate_pml_250yr", 0) or 0),
     }
+
+
+def parse_bureau_response(payload: dict[str, Any]) -> dict[str, Any]:
+    records = _records_list(payload)
+    return {
+        "records": records,
+        "paydex_score": int(payload.get("paydex_score", payload.get("paydex", 0)) or 0),
+        "financial_strength_rating": str(payload.get("financial_strength_rating", "")),
+        "failure_risk_score": float(payload.get("failure_risk_score", 0) or 0),
+        "delinquency_score": float(payload.get("delinquency_score", 0) or 0),
+        "total_credit_limit": float(payload.get("total_credit_limit", sum(float(r.get("credit_limit", 0) or 0) for r in records))),
+        "total_current_balance": float(payload.get("total_current_balance", sum(float(r.get("current_balance", 0) or 0) for r in records))),
+        "number_of_derogatory_trades": int(payload.get("number_of_derogatory_trades", 0) or 0),
+        "has_bankruptcy_indicator": bool(payload.get("has_bankruptcy_indicator")),
+        "has_lien_indicator": bool(payload.get("has_lien_indicator")),
+        "has_judgment_indicator": bool(payload.get("has_judgment_indicator")),
+    }
+
+
+def parse_public_records_response(payload: dict[str, Any]) -> dict[str, Any]:
+    records = _records_list(payload)
+    return {
+        "records": records,
+        "total_records_found": payload.get("total_records_found", len(records)),
+        "total_judgment_amount": float(payload.get("total_judgment_amount", 0) or 0),
+        "has_bankruptcy": bool(payload.get("has_bankruptcy")),
+        "has_active_judgment": bool(payload.get("has_active_judgment")),
+        "has_ucc_filing": bool(payload.get("has_ucc_filing")),
+        "has_active_lien": bool(payload.get("has_active_lien")),
+    }
+
+
+def parse_osha_response(payload: dict[str, Any]) -> dict[str, Any]:
+    violations = payload.get("violations") or _records_list(payload)
+    return {
+        "violations": violations,
+        "total_violations": payload.get("total_violations", len(violations)),
+        "total_penalty": float(payload.get("total_penalty", 0) or 0),
+        "has_willful_violation": bool(payload.get("has_willful_violation")),
+        "has_repeat_violation": bool(payload.get("has_repeat_violation")),
+        "has_open_inspection": bool(payload.get("has_open_inspection")),
+        "safety_rating": str(payload.get("safety_rating", "not_scored")),
+    }
+
+
+def parse_rating_agency_response(payload: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "issuer_rating": str(payload.get("issuer_rating", "")),
+        "outlook": str(payload.get("outlook", "stable")),
+        "watch": str(payload.get("watch", "")),
+        "agency": str(payload.get("agency", "rating_agency")),
+        "not_rated": bool(payload.get("not_rated", False)),
+    }
