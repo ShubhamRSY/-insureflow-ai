@@ -220,6 +220,10 @@ class StructuredSubmission(BaseModel):
     risk_profile: Optional[RiskProfile] = None
     schedule_of_values: list[ScheduleOfValues] = Field(default_factory=list)
     floor_plan: Optional[FloorPlanData] = None
+    # Detected ACORD form numbers for the submission (e.g. "125", "126",
+    # "130", "140"), sourced from <FormNumber> elements, "ACORD <n>" mentions,
+    # or coverage-derived inference.
+    acord_forms: list[str] = Field(default_factory=list)
 
     raw_xml: Optional[str] = None
     raw_json: Optional[str] = None

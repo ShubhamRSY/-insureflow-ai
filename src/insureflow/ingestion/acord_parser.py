@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import xml.etree.ElementTree as ET
 from datetime import date, datetime, timezone
 from typing import Optional
@@ -23,6 +24,19 @@ class ACORDParser(BaseParser):
         "xsd": "http://www.w3.org/2001/XMLSchema",
     }
 
+    FORM_NUMBER_MAP = {
+        "125": "commercial_insurance_application",
+        "126": "commercial_general_liability_section",
+        "130": "commercial_property_section",
+        "140": "commercial_umbrella_section",
+    }
+    FORM_NUMBER_RE = re.compile(r"\bACORD\s*[-–]?\s*(125|126|130|140)\b", re.IGNORECASE)
+    COVERAGE_TO_FORM = (
+        ("umbrella", "140"),
+        ("general liability", "126"),
+        ("property", "130"),
+    )
+
     def parse(self, raw_xml: str, submission_id: str) -> StructuredSubmission:
         root = ET.fromstring(raw_xml)
         submission = StructuredSubmission(
@@ -39,10 +53,52 @@ class ACORDParser(BaseParser):
         submission.locations = self._parse_locations(root)
         submission.financial = self._parse_financial(root)
         submission.risk_profile = self._parse_risk_profile(root)
+        submission.acord_forms = self._detect_forms(root)
 
         submission.field_confidence, submission.field_notes = self._build_field_confidence(root)
 
         return submission
+
+    def _detect_forms(self, root: ET.Element) -> list[str]:
+        """Detect which ACORD forms the submission comprises. Authoritative
+        signals are <FormNumber> elements and explicit "ACORD <n>" mentions;
+        when neither is present we fall back to coverage-derived inference
+        (e.g. a General Liability coverage implies section form 126). Section
+        forms (126/130/140) imply the base application form 125."""
+        forms: list[str] = []
+
+        def add(number: str) -> None:
+            if number in self.FORM_NUMBER_MAP and number not in forms:
+                forms.append(number)
+
+        for elem in root.iter():
+            tag = elem.tag.rsplit("}", 1)[-1]
+            if tag not in ("FormNumber", "Form"):
+                continue
+            text = (elem.text or "").strip()
+            if text.isdigit():
+                add(text)
+            else:
+                m = self.FORM_NUMBER_RE.search(text)
+                if m:
+                    add(m.group(1))
+
+        if not forms:
+            raw = ET.tostring(root, encoding="unicode")
+            for m in self.FORM_NUMBER_RE.finditer(raw):
+                add(m.group(1))
+
+        if not forms:
+            for cov_elem in root.findall(".//acord:Coverage", self.NAMESPACES):
+                cov_type = (self._find_text(cov_elem, ".//acord:CoverageType") or "").lower()
+                for keyword, number in self.COVERAGE_TO_FORM:
+                    if keyword in cov_type:
+                        add(number)
+
+        if any(number in forms for number in ("126", "130", "140")):
+            add("125")
+
+        return forms
 
     def _build_field_confidence(self, root: ET.Element) -> tuple[dict[str, float], dict[str, str]]:
         """Compute per-field extraction confidence: 0.98 for an explicitly typed

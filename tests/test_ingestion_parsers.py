@@ -113,6 +113,11 @@ class TestDocumentClassifier:
         result = DocumentClassifier.classify('<?xml version="1.0"?><ACORD xmlns="http://www.acord.org/standards/PC_Surety/ACORD"><Submission/></ACORD>')
         assert result == DocumentType.ACORD_XML
 
+    def test_classify_acord_form_number(self) -> None:
+        for form in ("125", "126", "130", "140"):
+            result = DocumentClassifier.classify(f"ACORD {form} — Commercial Insurance Application")
+            assert result == DocumentType.ACORD_XML
+
     def test_classify_json_broker(self) -> None:
         result = DocumentClassifier.classify(SAMPLE_JSON)
         assert result == DocumentType.BROKER_API_JSON

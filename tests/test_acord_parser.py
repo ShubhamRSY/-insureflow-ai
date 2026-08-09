@@ -57,3 +57,66 @@ def test_parse_empty_xml() -> None:
     submission = parser.parse("<ACORD></ACORD>", "test-empty")
     assert submission.named_insured is None
     assert submission.coverages == []
+
+
+def test_detect_forms_from_form_number_elements() -> None:
+    xml = """<ACORD xmlns="http://www.acord.org/standards/PC_Surety/ACORD">
+      <Submission>
+        <FormNumber>125</FormNumber>
+        <FormNumber>130</FormNumber>
+        <FormNumber>140</FormNumber>
+      </Submission>
+    </ACORD>"""
+    submission = ACORDParser().parse(xml, "forms-001")
+    assert submission.acord_forms == ["125", "130", "140"]
+
+
+def test_detect_forms_from_acord_mention() -> None:
+    xml = """<ACORD xmlns="http://www.acord.org/standards/PC_Surety/ACORD">
+      <Submission>
+        <Notes>Completed as ACORD 126 for the primary GL placement.</Notes>
+      </Submission>
+    </ACORD>"""
+    submission = ACORDParser().parse(xml, "forms-002")
+    assert "126" in submission.acord_forms
+    assert "125" in submission.acord_forms
+
+
+def test_detect_forms_infers_sections_from_coverages() -> None:
+    xml = """<ACORD xmlns="http://www.acord.org/standards/PC_Surety/ACORD">
+      <Submission>
+        <Coverage>
+          <CoverageType>General Liability</CoverageType>
+          <Limit>2000000</Limit>
+        </Coverage>
+        <Coverage>
+          <CoverageType>Commercial Property</CoverageType>
+          <Limit>5000000</Limit>
+        </Coverage>
+        <Coverage>
+          <CoverageType>Commercial Umbrella</CoverageType>
+          <Limit>5000000</Limit>
+        </Coverage>
+      </Submission>
+    </ACORD>"""
+    submission = ACORDParser().parse(xml, "forms-003")
+    assert submission.acord_forms == ["126", "130", "140", "125"]
+
+
+def test_detect_forms_ignores_limits_that_look_like_numbers() -> None:
+    xml = """<ACORD xmlns="http://www.acord.org/standards/PC_Surety/ACORD">
+      <Submission>
+        <Coverage>
+          <CoverageType>General Liability</CoverageType>
+          <Limit>1250000</Limit>
+          <Deductible>12600</Deductible>
+        </Coverage>
+      </Submission>
+    </ACORD>"""
+    submission = ACORDParser().parse(xml, "forms-004")
+    assert submission.acord_forms == ["126", "125"]
+
+
+def test_detect_forms_none_for_empty() -> None:
+    submission = ACORDParser().parse("<ACORD></ACORD>", "forms-empty")
+    assert submission.acord_forms == []

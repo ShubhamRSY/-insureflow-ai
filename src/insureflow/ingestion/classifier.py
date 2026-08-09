@@ -10,6 +10,7 @@ class DocumentClassifier:
     XML_DECL_RE = re.compile(r"<\?xml\s+version")
     ACORD_NS_RE = re.compile(r"xmlns=.*acord", re.IGNORECASE)
     ACORD_ROOT_RE = re.compile(r"<ACORD[>\s]")
+    ACORD_FORM_RE = re.compile(r"\bACORD\s*[-–]?\s*(125|126|130|140)\b", re.IGNORECASE)
     JSON_OBJECT_RE = re.compile(r"^\s*\{")
     JSON_ARRAY_RE = re.compile(r"^\s*\[")
 
@@ -66,6 +67,9 @@ class DocumentClassifier:
                         return DocumentType.BROKER_API_JSON
             except (json.JSONDecodeError, ValueError):
                 pass
+
+        if cls.ACORD_FORM_RE.search(content_stripped[:2000]):
+            return DocumentType.ACORD_XML
 
         loss_score = len(cls.LOSS_RUN_KEYWORDS.findall(content_stripped[:2000]))
         sov_score = len(cls.SOV_KEYWORDS.findall(content_stripped[:2000]))
