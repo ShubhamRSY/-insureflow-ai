@@ -1,4 +1,8 @@
-"""LOB-aware insurance package completeness (commercial property, D&O, personal lines)."""
+"""LOB-aware insurance package completeness (commercial + personal lines).
+
+Commercial catalogs are generated from `commercial_lobs` (product + coverage docs)
+to avoid drift. Personal lines keep explicit catalog entries.
+"""
 
 from __future__ import annotations
 
@@ -6,84 +10,9 @@ from typing import Any, Iterable
 
 from insureflow.ingestion.insurance.classifier import InsuranceDocumentType
 
-PROPERTY_CATALOG: list[tuple[str, tuple[InsuranceDocumentType, ...]]] = [
-    ("ACORD application (125 / 140)", (InsuranceDocumentType.ACORD_XML,)),
-    ("Loss run (3–5 years)", (InsuranceDocumentType.LOSS_RUN,)),
-    ("Schedule of values / COPE", (InsuranceDocumentType.SCHEDULE_OF_VALUES,)),
-    ("Inspection / valuation report", (InsuranceDocumentType.INSPECTION_REPORT,)),
-    ("Property photos", (InsuranceDocumentType.PROPERTY_PHOTOS,)),
-    ("Broker slip / submission", (InsuranceDocumentType.BROKER_SLIP,)),
-    ("Financial statements (2–3 years)", (InsuranceDocumentType.FINANCIAL_STATEMENT,)),
-    ("Business interruption worksheet", ()),
-    ("Equipment / machinery schedule", ()),
-    ("Lease or title deed", ()),
-    ("Flood / quake exposure cert", ()),
-    ("Business continuity / DR plan", ()),
-]
-
-DO_CATALOG: list[tuple[str, tuple[InsuranceDocumentType, ...]]] = [
-    ("D&O application", (InsuranceDocumentType.DO_APPLICATION, InsuranceDocumentType.ACORD_XML)),
-    ("D&O questionnaire", (InsuranceDocumentType.DO_QUESTIONNAIRE,)),
-    ("Financial statements / 10-K", (InsuranceDocumentType.FINANCIAL_STATEMENT, InsuranceDocumentType.DO_FINANCIALS_10K)),
-    ("Bylaws / charter / operating agreement", (InsuranceDocumentType.DO_BYLAWS_CHARTER,)),
-    ("Board / officer roster & bios", (InsuranceDocumentType.DO_BOARD_ROSTER,)),
-    ("Org chart / cap table", (InsuranceDocumentType.DO_OWNERSHIP_CHART,)),
-    ("Claims history / loss runs (D&O)", (InsuranceDocumentType.DO_CLAIMS_HISTORY, InsuranceDocumentType.LOSS_RUN)),
-    ("Prior acts / prior policy dec page", (InsuranceDocumentType.DO_PRIOR_ACTS_WARRANTY, InsuranceDocumentType.DEC_PAGE)),
-    ("Litigation / regulatory disclosures", ()),
-    ("M&A / funding disclosures", ()),
-]
-
-WORKERS_COMP_CATALOG: list[tuple[str, tuple[InsuranceDocumentType, ...]]] = [
-    ("ACORD 130 application", (InsuranceDocumentType.ACORD_XML,)),
-    ("Loss run (3–5 years)", (InsuranceDocumentType.LOSS_RUN,)),
-    ("Financial statements", (InsuranceDocumentType.FINANCIAL_STATEMENT,)),
-    ("Payroll by NCCI class code", ()),
-    ("Employee census (titles / states)", ()),
-    ("Experience mod (e-mod) worksheet", ()),
-    ("OSHA 300 / 300A logs", ()),
-    ("Safety manual / written program", ()),
-    ("Prior policy declarations", (InsuranceDocumentType.DEC_PAGE,)),
-    ("Subcontractor usage + COIs", ()),
-    ("Return-to-work program", ()),
-]
-
-TRADE_CREDIT_CATALOG: list[tuple[str, tuple[InsuranceDocumentType, ...]]] = [
-    ("Trade credit application", (InsuranceDocumentType.TRADE_CREDIT_APPLICATION, InsuranceDocumentType.ACORD_XML)),
-    ("AR aging report", (InsuranceDocumentType.AR_AGING_REPORT,)),
-    ("Buyer / customer exposure list", (InsuranceDocumentType.BUYER_EXPOSURE_LIST,)),
-    ("Bad debt / write-off history (3–5 years)", (InsuranceDocumentType.LOSS_RUN,)),
-    ("Audited financial statements", (InsuranceDocumentType.FINANCIAL_STATEMENT,)),
-    ("Credit management policy", ()),
-    ("Domestic vs export sales split", ()),
-    ("Top customer concentration report", ()),
-    ("Prior credit policy + claims", (InsuranceDocumentType.DEC_PAGE,)),
-    ("Terms of sale / payment terms", ()),
-]
-
-EO_CATALOG: list[tuple[str, tuple[InsuranceDocumentType, ...]]] = [
-    ("E&O application (ACORD 126 / carrier)", (InsuranceDocumentType.EO_APPLICATION, InsuranceDocumentType.ACORD_XML)),
-    ("Services / scope of operations", (InsuranceDocumentType.BROKER_SLIP,)),
-    ("Revenue by service line", (InsuranceDocumentType.FINANCIAL_STATEMENT,)),
-    ("Sample contracts / engagement letters", (InsuranceDocumentType.ENGAGEMENT_LETTER,)),
-    ("Loss runs (3–5 years)", (InsuranceDocumentType.LOSS_RUN,)),
-    ("Professional licenses / certifications", ()),
-    ("QC / risk management procedures", ()),
-    ("Subcontractor / vendor agreements", ()),
-    ("Complaint / grievance history", ()),
-    ("Prior E&O declarations", (InsuranceDocumentType.DEC_PAGE,)),
-]
-
-KEY_PERSON_CATALOG: list[tuple[str, tuple[InsuranceDocumentType, ...]]] = [
-    ("Application + medical questionnaire", (InsuranceDocumentType.KEY_PERSON_APPLICATION, InsuranceDocumentType.LIFE_APPLICATION, InsuranceDocumentType.ACORD_XML)),
-    ("Paramedical exam / medical records", (InsuranceDocumentType.MEDICAL_EXAM, InsuranceDocumentType.APS_RECORDS)),
-    ("Financials attributable to key person", (InsuranceDocumentType.FINANCIAL_STATEMENT,)),
-    ("Job description / coverage justification", ()),
-    ("Corporate resolution authorizing purchase", (InsuranceDocumentType.CORPORATE_RESOLUTION,)),
-    ("Buy-sell agreement (if applicable)", ()),
-    ("Loan / collateral documents (if any)", ()),
-    ("Beneficiary designation (usually company)", (InsuranceDocumentType.BENEFICIARY_FORM,)),
-]
+# ---------------------------------------------------------------------------
+# Personal lines catalogs (explicit — not derived from commercial_lobs)
+# ---------------------------------------------------------------------------
 
 HOME_CATALOG: list[tuple[str, tuple[InsuranceDocumentType, ...]]] = [
     ("Homeowners application", (InsuranceDocumentType.HOMEOWNERS_APPLICATION, InsuranceDocumentType.ACORD_XML)),
@@ -106,16 +35,156 @@ LIFE_CATALOG: list[tuple[str, tuple[InsuranceDocumentType, ...]]] = [
     ("Beneficiary designation", (InsuranceDocumentType.BENEFICIARY_FORM,)),
 ]
 
-CATALOGS: dict[str, list[tuple[str, tuple[InsuranceDocumentType, ...]]]] = {
-    "property": PROPERTY_CATALOG,
-    "do": DO_CATALOG,
-    "workers_comp": WORKERS_COMP_CATALOG,
-    "trade_credit": TRADE_CREDIT_CATALOG,
-    "eo": EO_CATALOG,
-    "key_person": KEY_PERSON_CATALOG,
+PERSONAL_CATALOGS: dict[str, list[tuple[str, tuple[InsuranceDocumentType, ...]]]] = {
     "homeowners": HOME_CATALOG,
     "auto": AUTO_CATALOG,
     "life": LIFE_CATALOG,
+}
+
+
+def _types_for_label(label: str) -> tuple[InsuranceDocumentType, ...]:
+    """Heuristic InsuranceDocumentType matching from document label keywords."""
+    text = (label or "").lower()
+    types: list[InsuranceDocumentType] = []
+
+    def add(t: InsuranceDocumentType) -> None:
+        if t not in types:
+            types.append(t)
+
+    if "loss run" in text or "loss history" in text or "claims history" in text or "claims experience" in text:
+        add(InsuranceDocumentType.LOSS_RUN)
+    if "acord" in text or ("application" in text and "medical" not in text):
+        add(InsuranceDocumentType.ACORD_XML)
+    if (
+        "statement of values" in text
+        or "sov" in text
+        or "schedule of values" in text
+        or "equipment schedule" in text
+        or "vehicle schedule" in text
+        or "location schedule" in text
+    ):
+        add(InsuranceDocumentType.SCHEDULE_OF_VALUES)
+    if "financial" in text or "p&l" in text or "balance sheet" in text or "tax return" in text:
+        add(InsuranceDocumentType.FINANCIAL_STATEMENT)
+    if "photo" in text:
+        add(InsuranceDocumentType.PROPERTY_PHOTOS)
+    if "inspection" in text or "survey" in text or "appraisal" in text or "engineering report" in text:
+        add(InsuranceDocumentType.INSPECTION_REPORT)
+    if "mvr" in text or "driving record" in text:
+        add(InsuranceDocumentType.MVR_REPORT)
+    if "dec page" in text or "declarations" in text or "prior policy" in text:
+        add(InsuranceDocumentType.DEC_PAGE)
+    if "broker slip" in text or "description of operations" in text or "description of business" in text:
+        add(InsuranceDocumentType.BROKER_SLIP)
+    if "10-k" in text or "def 14a" in text or "8-k" in text or "sec filing" in text:
+        add(InsuranceDocumentType.DO_FINANCIALS_10K)
+        add(InsuranceDocumentType.FINANCIAL_STATEMENT)
+    if "bylaw" in text or "articles of incorporation" in text or "certificate of formation" in text:
+        add(InsuranceDocumentType.DO_BYLAWS_CHARTER)
+    if "board" in text and ("bio" in text or "roster" in text or "officer" in text or "resume" in text):
+        add(InsuranceDocumentType.DO_BOARD_ROSTER)
+    if "cap table" in text or "ownership" in text or "org chart" in text or "organizational chart" in text:
+        add(InsuranceDocumentType.DO_OWNERSHIP_CHART)
+    if "d&o" in text or "directors & officers" in text or "directors and officers" in text:
+        if "application" in text or "questionnaire" in text:
+            add(InsuranceDocumentType.DO_APPLICATION)
+            add(InsuranceDocumentType.DO_QUESTIONNAIRE)
+    if "engagement letter" in text or "client contract" in text:
+        add(InsuranceDocumentType.ENGAGEMENT_LETTER)
+    if "e&o" in text or "errors and omissions" in text or "professional liability" in text:
+        if "application" in text:
+            add(InsuranceDocumentType.EO_APPLICATION)
+    if "ar aging" in text or "accounts receivable" in text:
+        add(InsuranceDocumentType.AR_AGING_REPORT)
+    if "buyer" in text and ("list" in text or "exposure" in text or "customer" in text):
+        add(InsuranceDocumentType.BUYER_EXPOSURE_LIST)
+    if "trade credit" in text and "application" in text:
+        add(InsuranceDocumentType.TRADE_CREDIT_APPLICATION)
+    if "key person" in text or "key-person" in text:
+        if "application" in text:
+            add(InsuranceDocumentType.KEY_PERSON_APPLICATION)
+    if "corporate resolution" in text:
+        add(InsuranceDocumentType.CORPORATE_RESOLUTION)
+    if "beneficiary" in text:
+        add(InsuranceDocumentType.BENEFICIARY_FORM)
+    if "paramedical" in text or "medical exam" in text or "medical questionnaire" in text:
+        add(InsuranceDocumentType.MEDICAL_EXAM)
+    if "medical records" in text or "aps" in text:
+        add(InsuranceDocumentType.APS_RECORDS)
+    if "vehicle declaration" in text:
+        add(InsuranceDocumentType.VEHICLE_DECLARATIONS)
+
+    return tuple(types)
+
+
+def _catalog_from_documents(documents: list[str]) -> list[tuple[str, tuple[InsuranceDocumentType, ...]]]:
+    return [(doc, _types_for_label(doc)) for doc in documents if str(doc).strip()]
+
+
+def _commercial_catalogs() -> dict[str, list[tuple[str, tuple[InsuranceDocumentType, ...]]]]:
+    from insureflow.insurance.commercial_lobs import COMMERCIAL_LINES, flatten_line_documents
+
+    catalogs: dict[str, list[tuple[str, tuple[InsuranceDocumentType, ...]]]] = {}
+    for line in COMMERCIAL_LINES:
+        key = str(line.get("checklist_lob") or "").strip()
+        if not key:
+            continue
+        docs = flatten_line_documents(line)
+        # Prefer first product that owns this checklist_lob (stable mapping)
+        if key not in catalogs:
+            catalogs[key] = _catalog_from_documents(docs)
+    return catalogs
+
+
+def _build_catalogs() -> dict[str, list[tuple[str, tuple[InsuranceDocumentType, ...]]]]:
+    catalogs = dict(PERSONAL_CATALOGS)
+    catalogs.update(_commercial_catalogs())
+    return catalogs
+
+
+# Lazily-built + refreshable so imports stay light and tests can rebuild if needed
+CATALOGS: dict[str, list[tuple[str, tuple[InsuranceDocumentType, ...]]]] = {}
+
+
+def refresh_catalogs() -> dict[str, list[tuple[str, tuple[InsuranceDocumentType, ...]]]]:
+    global CATALOGS
+    CATALOGS = _build_catalogs()
+    return CATALOGS
+
+
+refresh_catalogs()
+
+# Thin wrappers kept for callers that imported specific catalog constants
+PROPERTY_CATALOG = CATALOGS.get("property", [])
+DO_CATALOG = CATALOGS.get("do", [])
+WORKERS_COMP_CATALOG = CATALOGS.get("workers_comp", [])
+TRADE_CREDIT_CATALOG = CATALOGS.get("trade_credit", [])
+EO_CATALOG = CATALOGS.get("eo", [])
+KEY_PERSON_CATALOG = CATALOGS.get("key_person", [])
+
+# Aliases → canonical checklist keys
+CHECKLIST_ALIASES: dict[str, str] = {
+    "property_bi": "property",
+    "commercial_property": "property",
+    "errors_and_omissions": "eo",
+    "directors_and_officers": "do",
+    "directors_officers": "do",
+    "workers-comp": "workers_comp",
+    "trade-credit": "trade_credit",
+    "key-person": "key_person",
+    "business_owners_policy": "bop",
+    "commercial_package": "cpp",
+    "cyber_liability": "cyber",
+    "pollution_liability": "pollution",
+    "liquor_liability": "liquor",
+    "media_liability": "media",
+    "fiduciary_liability": "fiduciary",
+    "garage_liability": "garage",
+    "surety_bonds": "surety",
+    "event_insurance": "event",
+    "flood_commercial": "flood",
+    "earthquake_commercial": "earthquake",
+    "business_overhead_expense": "business_overhead",
 }
 
 
@@ -125,45 +194,39 @@ def _has_any(present: set[str], types: Iterable[InsuranceDocumentType]) -> bool:
     return any(t.value in present for t in types)
 
 
+def normalize_checklist_lob(lob: str) -> str:
+    if not CATALOGS:
+        refresh_catalogs()
+    raw = (lob or "").strip().lower().replace("-", "_").replace(" ", "_")
+    if not raw:
+        return "property"
+    if raw in CATALOGS:
+        return raw
+    aliased = CHECKLIST_ALIASES.get(raw)
+    if aliased:
+        return aliased
+    try:
+        from insureflow.insurance.commercial_lobs import resolve_checklist_lob
+
+        return resolve_checklist_lob(raw, default="property")
+    except Exception:
+        return "property"
+
+
 def detect_lob(text_blob: str = "", product_hint: str = "") -> str:
     blob = f"{product_hint}\n{text_blob}".lower()
     hint = (product_hint or "").strip().lower()
 
-    # Commercial packages (warehouse / SOV / CGL / fleet) → property checklist
     from insureflow.underwriting.personal_lines import _has_strong_commercial_signals
 
     commercial = _has_strong_commercial_signals(blob)
 
-    # Exact / short LOB tokens — but never trust personal checklist hints
-    # on a commercial package (wrong UI default / stale job metadata).
-    if hint in {
-        "life",
-        "auto",
-        "homeowners",
-        "property",
-        "do",
-        "workers_comp",
-        "trade_credit",
-        "eo",
-        "key_person",
-        "property_bi",
-        "errors_and_omissions",
-        "directors_and_officers",
-        "workers-comp",
-        "trade-credit",
-        "key-person",
-    }:
-        normalized = {
-            "property_bi": "property",
-            "errors_and_omissions": "eo",
-            "directors_and_officers": "do",
-            "workers-comp": "workers_comp",
-            "trade-credit": "trade_credit",
-            "key-person": "key_person",
-        }.get(hint, hint)
-        if commercial and normalized in {"life", "auto", "homeowners"}:
+    if hint:
+        normalized_hint = normalize_checklist_lob(hint)
+        if commercial and normalized_hint in {"life", "auto", "homeowners"}:
             return "property"
-        return normalized
+        if normalized_hint in CATALOGS:
+            return normalized_hint
 
     # True D&O only — do NOT match "and observed" via "d and o"
     if any(
@@ -241,16 +304,59 @@ def detect_lob(text_blob: str = "", product_hint: str = "") -> str:
         )
     )
 
-    # Specialty checklist LOBs — never override a property/SOV package
+    # Keyword → checklist lob (order matters; more specific first)
+    keyword_rules: list[tuple[tuple[str, ...], str]] = [
+        (("cyber liability", "ransomware", "data breach response", "security questionnaire"), "cyber"),
+        (("employment practices", "epli", "wrongful termination", "eeoc charge"), "epli"),
+        (("fiduciary liability", "form 5500", "erisa fiduciary"), "fiduciary"),
+        (("builders risk", "builder's risk", "course of construction"), "builders_risk"),
+        (("inland marine", "contractors equipment floater", "installation floater"), "inland_marine"),
+        (("ocean marine", "hull insurance", "protection & indemnity", "p&i"), "ocean_marine"),
+        (("equipment breakdown", "boiler and machinery", "boiler & machinery"), "equipment_breakdown"),
+        (("flood insurance", "elevation certificate", "nfip"), "flood"),
+        (("earthquake insurance", "seismic pml"), "earthquake"),
+        (("crime insurance", "employee dishonesty", "fidelity coverage", "funds transfer fraud"), "crime"),
+        (("product liability", "products liability"), "product_liability"),
+        (("liquor liability", "dram shop"), "liquor"),
+        (("pollution liability", "contractor's pollution", "site pollution", "ust liability"), "pollution"),
+        (("media liability", "defamation coverage"), "media"),
+        (("umbrella", "excess liability", "acord 131"), "umbrella"),
+        (("commercial general liability", "cgl", "acord 126", "premises/operations"), "general_liability"),
+        (("motor truck cargo", "cargo insurance"), "motor_truck_cargo"),
+        (("hired and non-owned", "hired & non-owned", "hnoa"), "hnoa"),
+        (("garage liability", "garagekeepers"), "garage"),
+        (("fleet insurance", "fleet schedule", "telematics fleet"), "fleet"),
+        (("commercial auto", "business auto", "acord 127"), "commercial_auto"),
+        (("surety bond", "performance bond", "payment bond", "bid bond"), "surety"),
+        (("political risk", "expropriation", "inconvertibility"), "political_risk"),
+        (("kidnap", "ransom", "k&r"), "kidnap_ransom"),
+        (("product recall", "contamination insurance"), "product_recall"),
+        (("business interruption", "business income worksheet", "extra expense coverage", "contingent business interruption"), "business_interruption"),
+        (("supply chain insurance", "non-damage supply chain"), "supply_chain"),
+        (("business owners policy", "bop application"), "bop"),
+        (("commercial package", "cpp "), "cpp"),
+        (("technology e&o", "tech e&o", "saas professional liability"), "tech_eo_cyber"),
+        (("wrap-up", "ocip", "ccip", "contractor's insurance"), "construction"),
+        (("aviation insurance", "aircraft hull"), "aviation"),
+        (("event cancellation", "event liability"), "event"),
+        (("intellectual property insurance", "patent infringement insurance"), "intellectual_property"),
+        (("terrorism insurance", "tripra"), "terrorism"),
+        (("group health", "self-funded plan", "stop-loss"), "group_health"),
+        (("group life", "group term life"), "group_life"),
+        (("short-term disability", "long-term disability", "group disability"), "group_disability"),
+        (("business overhead expense", "boe insurance"), "business_overhead"),
+        (("voluntary benefits", "critical illness", "group dental"), "voluntary_benefits"),
+        (("employer's liability", "employers liability"), "employers_liability"),
+        (("workers compensation", "workers' compensation", "workers_comp", "acord 130", "experience mod", "ncci"), "workers_comp"),
+        (("trade credit", "accounts receivable aging", "buyer credit", "credit insurance"), "trade_credit"),
+        (("errors and omissions", "errors & omissions", "e&o application", "professional liability", "acord 126"), "eo"),
+        (("key person", "key-person", "keyman insurance", "key man insurance"), "key_person"),
+    ]
+
     if not property_heavy:
-        if any(k in blob for k in ("workers compensation", "workers' compensation", "workers_comp", "acord 130", "experience mod", "ncci")):
-            return "workers_comp"
-        if any(k in blob for k in ("trade credit", "accounts receivable aging", "buyer credit", "credit insurance")):
-            return "trade_credit"
-        if any(k in blob for k in ("errors and omissions", "errors & omissions", "e&o application", "professional liability", "acord 126")):
-            return "eo"
-        if any(k in blob for k in ("key person", "key-person", "keyman insurance", "key man insurance")):
-            return "key_person"
+        for keys, lob in keyword_rules:
+            if any(k in blob for k in keys):
+                return lob
 
     return "property"
 
@@ -260,8 +366,11 @@ def package_checklist(
     *,
     lob: str = "property",
 ) -> dict[str, Any]:
+    if not CATALOGS:
+        refresh_catalogs()
     present_types = {str(t).lower() for t in document_types}
-    catalog = CATALOGS.get(lob, PROPERTY_CATALOG)
+    resolved = normalize_checklist_lob(lob)
+    catalog = CATALOGS.get(resolved) or CATALOGS.get("property") or PROPERTY_CATALOG
     present: list[str] = []
     missing: list[str] = []
     for label, types in catalog:
@@ -271,7 +380,7 @@ def package_checklist(
             missing.append(label)
     total = len(catalog) or 1
     return {
-        "lob": lob,
+        "lob": resolved,
         "present": present,
         "missing": missing,
         "completeness_pct": round(100.0 * len(present) / total, 1),

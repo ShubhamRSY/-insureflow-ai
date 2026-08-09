@@ -45,24 +45,41 @@ COMMERCIAL_SPECIALTY_LINES = frozenset(
 )
 
 # Human-friendly line labels for reports / quotes / UI.
+# Extended commercial taxonomy labels are merged from commercial_lobs at first use.
 LINE_DISPLAY_NAMES: dict[str, str] = {
-    "commercial_property": "Property & Business Interruption",
-    "general_liability": "General Liability",
-    "business_owners_policy": "Business Owners Policy (BOP)",
-    "umbrella": "Commercial Umbrella",
-    "workers_comp": "Workers' Compensation",
-    "directors_and_officers": "Directors & Officers (D&O)",
+    "commercial_property": "Commercial Property Insurance",
+    "general_liability": "General Liability (CGL)",
+    "business_owners_policy": "Business Owner's Policy (BOP)",
+    "umbrella": "Umbrella / Excess Liability Insurance",
+    "workers_comp": "Workers' Compensation Insurance",
+    "directors_and_officers": "Directors & Officers (D&O) Liability",
     "trade_credit": "Trade Credit Insurance",
-    "errors_and_omissions": "Errors & Omissions (E&O)",
+    "errors_and_omissions": "Professional Liability / E&O",
     "key_person": "Key Person Insurance",
     "personal_homeowners": "Personal Homeowners",
     "personal_auto": "Personal Auto",
     "life": "Life Insurance",
 }
 
+_LINE_DISPLAY_MERGED = False
+
+
+def _ensure_commercial_display_names() -> None:
+    global _LINE_DISPLAY_MERGED
+    if _LINE_DISPLAY_MERGED:
+        return
+    try:
+        from insureflow.insurance.commercial_lobs import insurance_line_labels
+
+        LINE_DISPLAY_NAMES.update(insurance_line_labels())
+    except Exception:
+        pass
+    _LINE_DISPLAY_MERGED = True
+
 
 def line_display_name(value: str) -> str:
     """Friendly display label for a line-of-business key (falls back to title case)."""
+    _ensure_commercial_display_names()
     return LINE_DISPLAY_NAMES.get(str(value or "").lower(), str(value or "").replace("_", " ").title())
 
 

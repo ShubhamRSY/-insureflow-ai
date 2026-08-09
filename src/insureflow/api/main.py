@@ -4151,10 +4151,31 @@ def add_relationship_note(
 def commercial_insurance_hub(
     current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
-    """Business / Commercial Insurance hub — lines, base packet, UW workflow."""
+    """Business / Commercial Insurance hub — taxonomy, lines, base packet, UW workflow."""
     from insureflow.insurance.commercial_lobs import commercial_hub_payload
 
     return commercial_hub_payload()
+
+
+@app.get("/insurance/commercial/taxonomy")
+def commercial_insurance_taxonomy(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Nested commercial taxonomy: categories → products → coverages."""
+    from insureflow.insurance.commercial_lobs import (
+        commercial_hub_payload,
+        commercial_taxonomy_tree,
+        list_commercial_categories,
+    )
+
+    hub = commercial_hub_payload()
+    return {
+        "segment": hub["segment"],
+        "title": hub["title"],
+        "stats": hub["stats"],
+        "categories": list_commercial_categories(),
+        "taxonomy": commercial_taxonomy_tree(),
+    }
 
 
 @app.get("/insurance/commercial/lines/{line_id}")

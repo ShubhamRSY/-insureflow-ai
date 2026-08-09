@@ -112,6 +112,7 @@ export const endpoints = {
   pendingWorkflow: () => api('/pipeline/workflow/pending'),
   signOff: (bundleId, body) => api(`/pipeline/workflow/${bundleId}/sign-off`, { method: 'POST', body }),
   commercialInsuranceHub: () => api('/insurance/commercial'),
+  commercialInsuranceTaxonomy: () => api('/insurance/commercial/taxonomy'),
   commercialInsuranceLine: (lineId) => api(`/insurance/commercial/lines/${encodeURIComponent(lineId)}`),
   insuranceSources: (vertical = 'insurance') => api(`/api/insurance/sources?vertical=${vertical}`),
   pullInsuranceSource: (sourceId, body = {}, vertical = 'insurance') =>
