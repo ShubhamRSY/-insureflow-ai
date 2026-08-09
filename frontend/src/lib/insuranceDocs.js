@@ -92,8 +92,63 @@ export function buildSubmissionPayload(files, useLlm = true) {
   return { documents, use_llm: useLlm };
 }
 
+/** Client-side relevance heuristics (mirrors server relevance.py loosely). */
+const RELEVANT_HINTS = [
+  'acord', 'loss run', 'schedule of values', 'sov', 'inspection', 'policy',
+  'insured', 'premium', 'coverage', 'underwriting', 'mortgage', 'loan',
+  'financial', 'claims', 'declaration', 'application', 'naics', 'tiv',
+];
+const IRRELEVANT_HINTS = [
+  'restaurant menu', 'curriculum vitae', 'wedding invitation', 'spotify playlist',
+  'homework assignment', 'recipe for',
+];
+
+export function scoreFileRelevance(file) {
+  const name = String(file?.filename || '').toLowerCase();
+  const text = String(file?.encoding === 'base64' ? '' : (file?.content || '')).slice(0, 4000).toLowerCase();
+  const combined = `${name}\n${text}`;
+  for (const bad of IRRELEVANT_HINTS) {
+    if (combined.includes(bad)) {
+      return { relevant: false, reason: `Looks unrelated (“${bad}”)`, doc_type: 'irrelevant' };
+    }
+  }
+  const typed = detectDocType(file?.filename || '', text);
+  if (typed !== 'supplemental') {
+    return { relevant: true, reason: `Looks like ${typed.replace(/_/g, ' ')}`, doc_type: typed };
+  }
+  if (file?.encoding === 'base64') {
+    return { relevant: true, reason: 'Binary upload — OCR on ingest', doc_type: 'supplemental' };
+  }
+  const hits = RELEVANT_HINTS.filter((h) => combined.includes(h));
+  if (hits.length) {
+    return { relevant: true, reason: 'Insurance / package signals found', doc_type: 'supplemental' };
+  }
+  return {
+    relevant: false,
+    reason: 'No underwriting signals found — file may be irrelevant',
+    doc_type: 'irrelevant',
+  };
+}
+
+export function validatePackageRelevance(files) {
+  const scored = (files || []).map((f) => ({ ...scoreFileRelevance(f), filename: f.filename }));
+  const irrelevant = scored.filter((s) => !s.relevant);
+  const relevant = scored.filter((s) => s.relevant);
+  return {
+    can_run: relevant.length > 0,
+    irrelevant,
+    relevant,
+    warnings: irrelevant.length
+      ? [`${irrelevant.length} file(s) look irrelevant: ${irrelevant.map((i) => i.filename).join(', ')}`]
+      : [],
+    message: relevant.length
+      ? (irrelevant.length ? 'Some files look irrelevant — remove them or continue with relevant ones' : null)
+      : 'All files look irrelevant — add ACORD, loss runs, SOV, or other underwriting docs',
+  };
+}
+
 export function validatePackage(files) {
-  const hasAcord = files.some((f) => f.slot === 'acord_xml');
+  const hasAcord = files.some((f) => f.slot === 'acord_xml' || detectDocType(f.filename, f.content || '') === 'acord_xml');
   if (!hasAcord) {
     return 'Upload an ACORD XML application (required). Other documents are optional but improve the quote.';
   }

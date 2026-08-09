@@ -161,7 +161,7 @@ export default function CommercialLinePage({ presets, onRunDemo, onSubmit }) {
           presets={presets}
           vertical="insurance"
           productField="insurance_line"
-          productOptions={[{ value: line.insurance_line, label: line.name }]}
+          productOptions={[{ id: line.insurance_line, label: line.name }]}
           productDefault={line.insurance_line}
           onRunDemo={onRunDemo}
           onSubmit={async (body) => {

@@ -128,8 +128,17 @@ export const endpoints = {
   removeDocFromDraft: (bundleId, docId) =>
     api(`/pipeline/bundles/${bundleId}/documents/${docId}`, { method: 'DELETE' }),
   deleteDraftBundle: (id) => api(`/pipeline/bundles/${id}`, { method: 'DELETE' }),
-  runDraftBundle: (id, useLlm = true, vertical = 'insurance') =>
-    api(`/pipeline/bundles/${id}/run?use_llm=${useLlm}&vertical=${vertical}`, { method: 'POST' }),
+  runDraftBundle: (id, useLlm = true, vertical = 'insurance', opts = {}) => {
+    const params = new URLSearchParams({
+      use_llm: String(useLlm),
+      vertical,
+    });
+    if (opts.insurance_line) params.set('insurance_line', opts.insurance_line);
+    if (opts.strict_relevance) params.set('strict_relevance', 'true');
+    return api(`/pipeline/bundles/${id}/run?${params}`, { method: 'POST' });
+  },
+  validateDocuments: (documents, vertical = 'insurance', strict = false) =>
+    api('/pipeline/validate-documents', { method: 'POST', body: { documents, vertical, strict } }),
 
   // New v2 pipeline
   runInsuranceV2: (body) => api('/pipeline/v2/run', { method: 'POST', body }),

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Cable, Check, CheckCircle2, FileText, Loader2, Play, X } from 'lucide-react';
+import { Cable, Check, CheckCircle2, FileText, Loader2, Play, X, AlertTriangle } from 'lucide-react';
 import { endpoints } from '../lib/api';
 import ConnectorLogo from './ConnectorLogo';
 import { groupSourcesByCategory } from '../lib/connectorBrands';
@@ -13,7 +13,13 @@ import { groupSourcesByCategory } from '../lib/connectorBrands';
  * onRunJob — async verticals (insurance, mortgage) that return a job_id
  * onRunResult — inline verticals (lending) that return the result directly
  */
-export default function ConnectAndPull({ vertical = 'insurance', onRunJob, onRunResult }) {
+export default function ConnectAndPull({
+  vertical = 'insurance',
+  onRunJob,
+  onRunResult,
+  insuranceLine = '',
+  strictRelevance = true,
+}) {
   const [sources, setSources] = useState([]);
   const [sections, setSections] = useState([]);
   const [categoryId, setCategoryId] = useState('Document Storage');
@@ -25,9 +31,11 @@ export default function ConnectAndPull({ vertical = 'insurance', onRunJob, onRun
   const [pulling, setPulling] = useState(false);
   const [bundleId, setBundleId] = useState(null);
   const [bundleDocs, setBundleDocs] = useState([]);
+  const [relevanceByName, setRelevanceByName] = useState({});
   const [useLlm, setUseLlm] = useState(true);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState('');
+  const [warning, setWarning] = useState('');
 
   useEffect(() => {
     endpoints.insuranceSources(vertical)
@@ -41,6 +49,7 @@ export default function ConnectAndPull({ vertical = 'insurance', onRunJob, onRun
 
   const activeSection = sections.find((s) => s.id === categoryId) || sections[0];
   const isEmailSource = activeSource?.id === 'email-inbox';
+  const needsConfig = (activeSource?.config_fields?.length || 0) > 0;
 
   const ensureBundle = async () => {
     if (bundleId) return bundleId;
@@ -58,11 +67,29 @@ export default function ConnectAndPull({ vertical = 'insurance', onRunJob, onRun
     if (!bid) return;
     try {
       const detail = await endpoints.getDraftBundle(bid);
-      setBundleDocs(detail.documents || []);
+      const docs = detail.documents || [];
+      setBundleDocs(docs);
+      if (docs.length) {
+        const payload = docs.map((d) => ({
+          filename: d.filename,
+          content: d.content || '',
+          encoding: d.encoding || 'utf-8',
+        }));
+        const rel = await endpoints.validateDocuments(payload, vertical, false).catch(() => null);
+        if (rel?.documents) {
+          const map = {};
+          rel.documents.forEach((row) => { map[row.filename] = row; });
+          setRelevanceByName(map);
+          setWarning(rel.irrelevant_count ? (rel.warnings?.[0] || rel.message || '') : '');
+        }
+      } else {
+        setRelevanceByName({});
+        setWarning('');
+      }
     } catch { /* noop */ }
   };
 
-  const pullSource = async (sourceId, cfg) => {
+  const pullSource = async (sourceId, cfg = {}) => {
     setPulling(true);
     setError('');
     try {
@@ -77,6 +104,37 @@ export default function ConnectAndPull({ vertical = 'insurance', onRunJob, onRun
       await refreshBundle(bid);
     } catch (e) {
       setError(e.message);
+    } finally {
+      setPulling(false);
+    }
+  };
+
+  const pullAllInCategory = async () => {
+    const list = activeSection?.sources || [];
+    if (!list.length) return;
+    setPulling(true);
+    setError('');
+    setWarning('');
+    try {
+      const bid = await ensureBundle();
+      if (!bid) return;
+      let pulled = 0;
+      const failures = [];
+      for (const src of list) {
+        // Skip sources that need credentials the user hasn't filled
+        if ((src.config_fields || []).length > 0) continue;
+        try {
+          await endpoints.pullInsuranceSource(src.id, { bundle_id: bid }, vertical);
+          pulled += 1;
+        } catch (e) {
+          failures.push(`${src.name}: ${e.message}`);
+        }
+      }
+      await refreshBundle(bid);
+      if (!pulled && failures.length) setError(failures[0]);
+      else if (failures.length) setWarning(`Pulled ${pulled} source(s); ${failures.length} skipped/failed`);
+      else if (!pulled) setWarning('No zero-config sources in this category — open a source and pull, or fill connection fields');
+      else setConnected({ accumulated: { added: pulled, document_count: pulled }, connection_label: `${pulled} sources` });
     } finally {
       setPulling(false);
     }
@@ -116,37 +174,72 @@ export default function ConnectAndPull({ vertical = 'insurance', onRunJob, onRun
     }
   };
 
+  const removeIrrelevant = async () => {
+    if (!bundleId) return;
+    const bad = bundleDocs.filter((d) => relevanceByName[d.filename] && relevanceByName[d.filename].relevant === false);
+    for (const doc of bad) {
+      await endpoints.removeDocFromDraft(bundleId, doc.doc_id).catch(() => {});
+    }
+    await refreshBundle(bundleId);
+  };
+
   const runBundle = async () => {
     setError('');
+    setWarning('');
     if (!bundleId || !bundleDocs.length) {
       setError('Pull at least one document first');
       return;
     }
+    const irrelevant = bundleDocs.filter((d) => relevanceByName[d.filename]?.relevant === false);
+    if (strictRelevance && irrelevant.length && irrelevant.length === bundleDocs.length) {
+      setError('All pulled files look irrelevant — remove them and pull underwriting documents');
+      return;
+    }
     setRunning(true);
     try {
-      const result = await endpoints.runDraftBundle(bundleId, useLlm, vertical);
+      const result = await endpoints.runDraftBundle(bundleId, useLlm, vertical, {
+        insurance_line: insuranceLine,
+        strict_relevance: strictRelevance,
+      });
+      if (result.relevance?.irrelevant_count) {
+        setWarning(result.relevance.warnings?.[0] || result.relevance.message || '');
+      }
       if (result.job_id) {
         await onRunJob?.(result.job_id, vertical);
       } else {
         await onRunResult?.(result, vertical);
       }
     } catch (e) {
-      setError(e.message);
+      const detail = e?.data?.detail;
+      const msg = typeof detail === 'object' ? (detail.message || JSON.stringify(detail)) : (e.message || String(e));
+      setError(msg);
     } finally {
       setRunning(false);
     }
   };
 
+  // Auto-select first section when loaded
+  useEffect(() => {
+    if (sections.length && !sections.find((s) => s.id === categoryId)) {
+      setCategoryId(sections[0].id);
+    }
+  }, [sections, categoryId]);
+
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <select value={categoryId}
           onChange={(e) => { setCategoryId(e.target.value); setActiveSource(null); setConnected(null); setEmails([]); setSelectedEmailIds(new Set()); setConfig({}); setError(''); }}
-          className="input-field w-full text-xs" aria-label="Source category">
+          className="input-field min-w-0 flex-1 text-xs" aria-label="Source category">
           {sections.map((s) => (
             <option key={s.id} value={s.id}>{s.title}</option>
           ))}
         </select>
+        <button type="button" onClick={pullAllInCategory} disabled={pulling}
+          className="btn-secondary btn-sm shrink-0 text-[10px] disabled:opacity-40" title="Pull every zero-config source in this category">
+          {pulling ? <Loader2 className="h-3 w-3 animate-spin" /> : <Cable className="h-3 w-3" />}
+          Pull all
+        </button>
         {bundleDocs.length > 0 && (
           <span className="shrink-0 rounded-full bg-brand/15 px-2 py-0.5 text-[10px] font-semibold text-brand">{bundleDocs.length}</span>
         )}
@@ -173,7 +266,7 @@ export default function ConnectAndPull({ vertical = 'insurance', onRunJob, onRun
         })}
       </div>
 
-      {activeSource && activeSource.config_fields?.length > 0 && !connected && (
+      {activeSource && needsConfig && !connected && (
         <div className="space-y-2 rounded-lg border border-white/[0.06] bg-surface/40 p-3">
           {activeSource.config_fields.map((f) => (
             <div key={f.key}>
@@ -189,6 +282,14 @@ export default function ConnectAndPull({ vertical = 'insurance', onRunJob, onRun
             Pull from {activeSource.name}
           </button>
         </div>
+      )}
+
+      {activeSource && !needsConfig && !connected && (
+        <button type="button" onClick={() => pullSource(activeSource.id, {})} disabled={pulling}
+          className="btn-primary btn-sm w-full text-xs disabled:opacity-40">
+          {pulling ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Cable className="h-3 w-3" />}
+          Pull from {activeSource.name}
+        </button>
       )}
 
       {connected && (
@@ -233,19 +334,32 @@ export default function ConnectAndPull({ vertical = 'insurance', onRunJob, onRun
 
       {bundleDocs.length > 0 && (
         <div className="rounded-lg border border-white/[0.06] bg-surface/40 p-2">
-          <p className="mb-1 px-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500">Pulled documents</p>
-          <div className="max-h-32 space-y-0.5 overflow-y-auto">
-            {bundleDocs.map((doc) => (
-              <div key={doc.doc_id} className="group flex items-center gap-2 rounded-md px-2 py-1">
-                <FileText className="h-3 w-3 shrink-0 text-insurance" />
-                <span className="min-w-0 flex-1 truncate text-[11px] text-slate-300">{doc.filename}</span>
-                <span className="shrink-0 text-[9px] text-slate-600">{doc.source_id}</span>
-                <button type="button" onClick={() => handleRemoveDoc(bundleId, doc.doc_id)}
-                  className="shrink-0 text-slate-600 transition hover:text-red-400">
-                  <X className="h-3 w-3" />
-                </button>
-              </div>
-            ))}
+          <div className="mb-1 flex items-center justify-between px-1">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Pulled documents</p>
+            {bundleDocs.some((d) => relevanceByName[d.filename]?.relevant === false) && (
+              <button type="button" onClick={removeIrrelevant} className="text-[10px] text-amber-400 hover:text-amber-300">
+                Remove irrelevant
+              </button>
+            )}
+          </div>
+          <div className="max-h-36 space-y-0.5 overflow-y-auto">
+            {bundleDocs.map((doc) => {
+              const rel = relevanceByName[doc.filename];
+              const bad = rel && rel.relevant === false;
+              return (
+                <div key={doc.doc_id} className={`group flex items-center gap-2 rounded-md px-2 py-1 ${bad ? 'bg-amber-500/10' : ''}`}>
+                  {bad ? <AlertTriangle className="h-3 w-3 shrink-0 text-amber-400" /> : <FileText className="h-3 w-3 shrink-0 text-insurance" />}
+                  <span className="min-w-0 flex-1 truncate text-[11px] text-slate-300" title={rel?.reason || ''}>{doc.filename}</span>
+                  <span className={`shrink-0 text-[9px] ${bad ? 'text-amber-400' : 'text-slate-600'}`}>
+                    {bad ? 'irrelevant' : (rel?.doc_type || doc.source_id)}
+                  </span>
+                  <button type="button" onClick={() => handleRemoveDoc(bundleId, doc.doc_id)}
+                    className="shrink-0 text-slate-600 transition hover:text-red-400">
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              );
+            })}
           </div>
           <div className="mt-2 flex items-center justify-between">
             <label className="flex items-center gap-1.5 text-[10px] text-slate-500">
@@ -261,6 +375,7 @@ export default function ConnectAndPull({ vertical = 'insurance', onRunJob, onRun
         </div>
       )}
 
+      {warning && <p className="rounded-lg bg-amber-500/10 px-3 py-1.5 text-xs text-amber-200">{warning}</p>}
       {error && <p className="rounded-lg bg-red-500/10 px-3 py-1.5 text-xs text-red-300">{error}</p>}
     </div>
   );

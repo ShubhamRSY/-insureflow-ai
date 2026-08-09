@@ -13,6 +13,7 @@ class InsuranceDocumentType(str, Enum):
     INSPECTION_REPORT = "inspection_report"
     FINANCIAL_STATEMENT = "financial_statement"
     SUPPLEMENTAL = "supplemental"
+    IRRELEVANT = "irrelevant"
     PROPERTY_PHOTOS = "property_photos"
     # Directors & Officers / management liability package
     DO_APPLICATION = "do_application"
@@ -141,5 +142,19 @@ class InsuranceDocumentClassifier:
 
         if any(k in combined for k in ("balance sheet", "income statement", "financial statement", "annual revenue")):
             return InsuranceDocumentType.FINANCIAL_STATEMENT
+
+        # Demote obvious non-UW junk before defaulting to supplemental
+        if any(
+            k in combined
+            for k in (
+                "restaurant menu",
+                "curriculum vitae",
+                "wedding invitation",
+                "spotify playlist",
+                "homework assignment",
+                "recipe for",
+            )
+        ):
+            return InsuranceDocumentType.IRRELEVANT
 
         return InsuranceDocumentType.SUPPLEMENTAL

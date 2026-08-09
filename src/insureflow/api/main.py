@@ -1454,10 +1454,12 @@ def add_documents_to_draft(
     req: DraftBundleAddDocsRequest,
     current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
+    from insureflow.insurance.relevance import validate_documents_relevance
     from insureflow.storage.draft_bundle_store import get_draft_bundle_store
 
     store = get_draft_bundle_store()
     docs = [{"filename": d.filename, "content": d.content, "encoding": d.encoding} for d in req.documents]
+    relevance = validate_documents_relevance(docs, vertical="insurance", strict=False)
     bundle = store.add_documents(
         bundle_id,
         docs,
@@ -1471,7 +1473,24 @@ def add_documents_to_draft(
         "bundle_id": bundle["bundle_id"],
         "document_count": len(bundle.get("documents", [])),
         "added": len(docs),
+        "relevance": relevance,
     }
+
+
+@app.post("/pipeline/validate-documents")
+def validate_pipeline_documents(
+    body: dict[str, Any],
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Pre-run relevance check for multi-file packages (Files tab or Connect & pull)."""
+    from insureflow.insurance.relevance import validate_documents_relevance
+
+    docs = body.get("documents") or []
+    if not isinstance(docs, list):
+        raise HTTPException(status_code=400, detail="documents must be a list")
+    vertical = str(body.get("vertical") or "insurance")
+    strict = bool(body.get("strict", False))
+    return validate_documents_relevance(docs, vertical=vertical, strict=strict)
 
 
 @app.delete("/pipeline/bundles/{bundle_id}/documents/{doc_id}")
@@ -1513,18 +1532,38 @@ def run_draft_bundle(
     current: TokenData = Depends(require_role(Role.VIEWER)),
     use_llm: bool = True,
     vertical: str = "insurance",
+    insurance_line: str = "",
+    strict_relevance: bool = False,
 ) -> dict[str, Any]:
     """Execute the pipeline using all accumulated documents in a draft bundle.
 
     ``vertical`` routes the accumulated bundle into the matching pipeline:
     insurance (async job), mortgage (async job), or lending (inline result).
     """
+    from insureflow.insurance.relevance import validate_documents_relevance
     from insureflow.storage.draft_bundle_store import DRAFT_NS, get_draft_bundle_store
 
     store = get_draft_bundle_store()
     docs = store.to_pipeline_documents(bundle_id, org_id=current.org_id)
     if not docs:
         raise HTTPException(status_code=400, detail="Draft bundle has no documents")
+
+    relevance = validate_documents_relevance(docs, vertical=vertical or "insurance", strict=strict_relevance)
+    if not relevance.get("can_run"):
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "message": relevance.get("message") or "No relevant documents to run",
+                "relevance": relevance,
+            },
+        )
+
+    # Drop irrelevant files when strict; otherwise keep but pipeline will flag them
+    if strict_relevance:
+        keep = {d["filename"] for d in relevance.get("documents") or [] if d.get("relevant")}
+        docs = [d for d in docs if d.get("filename") in keep]
+        if not docs:
+            raise HTTPException(status_code=400, detail="All documents were flagged irrelevant")
 
     bundle = store.get(bundle_id, org_id=current.org_id)
 
@@ -1541,7 +1580,7 @@ def run_draft_bundle(
             bundle["status"] = "submitted"
             bundle["submitted_job_id"] = job_id
             store._store.set(DRAFT_NS, bundle_id, bundle, org_id=current.org_id)
-        return {"job_id": job_id, "status": "processing", "bundle_id": bundle_id, "vertical": "mortgage"}
+        return {"job_id": job_id, "status": "processing", "bundle_id": bundle_id, "vertical": "mortgage", "relevance": relevance}
 
     if vertical == "lending":
         result = run_lending_pipeline(
@@ -1554,12 +1593,16 @@ def run_draft_bundle(
         if bundle:
             bundle["status"] = "submitted"
             store._store.set(DRAFT_NS, bundle_id, bundle, org_id=current.org_id)
-        return {"bundle_id": bundle_id, "vertical": "lending", **result}
+        return {"bundle_id": bundle_id, "vertical": "lending", "relevance": relevance, **result}
 
     job_id = f"job-{uuid.uuid4().hex[:12]}"
     job_store.set(INSURANCE_NS, job_id, {"status": "processing"}, org_id=current.org_id)
 
-    req = SubmissionRequest(documents=[InsuranceDocumentPayload(**d) for d in docs], use_llm=use_llm)
+    req = SubmissionRequest(
+        documents=[InsuranceDocumentPayload(**d) for d in docs],
+        use_llm=use_llm,
+        insurance_line=insurance_line or None,
+    )
     background_tasks.add_task(_run_pipeline_task, job_id, req, current.org_id)
 
     # Mark draft as submitted
@@ -1568,7 +1611,7 @@ def run_draft_bundle(
         bundle["submitted_job_id"] = job_id
         store._store.set(DRAFT_NS, bundle_id, bundle, org_id=current.org_id)
 
-    return {"job_id": job_id, "status": "processing", "bundle_id": bundle_id}
+    return {"job_id": job_id, "status": "processing", "bundle_id": bundle_id, "relevance": relevance}
 
 
 @app.post("/api/demo/mortgage/{preset_id}", status_code=202)
@@ -1849,7 +1892,11 @@ def _run_pipeline_task(job_id: str, request: SubmissionRequest, org_id: str) -> 
                 bundle_id=request.bundle_id or job_id,
             )
         else:
-            docs = [{"filename": d.filename, "content": d.content} for d in request.documents] if request.documents else None
+            docs = (
+                [{"filename": d.filename, "content": d.content, "encoding": getattr(d, "encoding", None) or "utf-8"} for d in request.documents]
+                if request.documents
+                else None
+            )
             pipeline = InsurancePipeline(org_id=org_id, use_llm=request.use_llm)
 
             def on_progress(data: dict[str, Any]) -> None:

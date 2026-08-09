@@ -371,6 +371,52 @@ class InsurancePipeline:
                 )
             )
 
+        # ── 2d2. IRRELEVANT FILE FLAGS ──
+        from insureflow.insurance.relevance import score_document_relevance
+
+        irrelevant_hits = 0
+        for doc in bundle.unstructured or []:
+            dtype = str(getattr(doc, "document_type", "") or "").lower()
+            if dtype == "irrelevant":
+                irrelevant_hits += 1
+                validation_findings.append(
+                    Finding(
+                        title=f"Irrelevant document: {getattr(doc, 'filename', None) or doc.submission_id}",
+                        description="File does not look related to this underwriting package and should be removed or replaced.",
+                        severity=RiskSeverity.HIGH,
+                        category="data_quality",
+                        field_path="irrelevant_document",
+                    )
+                )
+                continue
+            # Catch supplemental junk that slipped through with a generic type
+            scored = score_document_relevance(
+                filename=str(getattr(doc, "filename", "") or doc.submission_id or "document"),
+                content=str(getattr(doc, "raw_text", "") or "")[:6000],
+                encoding="utf-8",
+            )
+            if not scored.relevant and dtype in {"supplemental", "irrelevant", ""}:
+                irrelevant_hits += 1
+                validation_findings.append(
+                    Finding(
+                        title=f"Possibly irrelevant document: {scored.filename}",
+                        description=scored.reason,
+                        severity=RiskSeverity.MODERATE,
+                        category="data_quality",
+                        field_path="irrelevant_document",
+                    )
+                )
+        if irrelevant_hits and irrelevant_hits >= max(1, len(bundle.unstructured or [])):
+            validation_findings.append(
+                Finding(
+                    title="Package appears to contain only irrelevant files",
+                    description="No underwriting-relevant documents were identified. Add ACORD, loss runs, SOV, or other package docs.",
+                    severity=RiskSeverity.CRITICAL,
+                    category="data_quality",
+                    field_path="package_relevance",
+                )
+            )
+
         # ── 2e. NON-STANDARD / MANUSCRIPT DOCUMENT DETECTION (commercial property) ──
         manuscript_keywords = (
             "endorsement",
