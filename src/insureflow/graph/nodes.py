@@ -72,6 +72,7 @@ def ingest_docs(state: PipelineState) -> dict[str, Any]:
         loss_run=state.get("loss_run"),
         schedule_of_values=state.get("schedule_of_values"),
         financial_statements=state.get("financial_statements"),
+        floor_plans=state.get("floor_plans"),
         raw_docs=state.get("raw_docs"),
         auto_classify=state.get("auto_classify", False),
         bundle_id=bundle_id,
@@ -103,6 +104,7 @@ def classify_docs(state: PipelineState) -> dict[str, Any]:
         "loss_run": "parse_loss_run",
         "schedule_of_values": "parse_sov",
         "financial_statements": "parse_financial_statement",
+        "floor_plans": "parse_floor_plan",
     }
     for field, route in input_routes.items():
         if state.get(field) and route not in routes:
@@ -147,6 +149,7 @@ def _doc_type_to_route(doc_type: DocumentType) -> str:
         DocumentType.SCHEDULE_OF_VALUES: "parse_sov",
         DocumentType.INSPECTION_REPORT: "parse_inspection",
         DocumentType.FINANCIAL_STATEMENT: "parse_financial_statement",
+        DocumentType.FLOOR_PLAN: "parse_floor_plan",
         DocumentType.SUPPLEMENTAL: "",
     }
     return mapping.get(doc_type, "")
@@ -416,6 +419,77 @@ def parse_financial_statement(state: PipelineState) -> dict[str, Any]:
         )
 
     return {"bundle": bundle, "parsed_financial_statement": True}
+
+
+def parse_floor_plan(state: PipelineState) -> dict[str, Any]:
+    _log_state("parse_floor_plan", state)
+    bundle: SubmissionBundle = state["bundle"]
+    bundle_id = state["bundle_id"]
+    plan_text: list[str] = list(state.get("floor_plans") or [])
+
+    if not plan_text:
+        for doc in bundle.unstructured or []:
+            if "floor_plan" in doc.document_type.lower() or "schematic" in doc.source.lower():
+                plan_text.append(doc.raw_text)
+
+    if not plan_text:
+        _log_event(
+            bundle_id,
+            PipelineEvent.STRUCTURED_PARSE_START,
+            "parse_floor_plan",
+            "No floor-plan data, skipping",
+        )
+        return {"parsed_floor_plan": True}
+
+    from insureflow.ingestion.schematic_parser import SchematicParser
+    from insureflow.models.submissions import RiskProfile, StructuredSubmission
+
+    try:
+        if not bundle.structured:
+            bundle.structured = StructuredSubmission(
+                submission_id=f"{bundle_id}-merged",
+                source="supplemental",
+            )
+
+        parser = SchematicParser()
+        for plan in plan_text:
+            plan_data = parser.parse_structured(plan)
+            if bundle.structured.risk_profile is None:
+                bundle.structured.risk_profile = RiskProfile()
+            if plan_data.floor_area_sqft is not None and bundle.structured.risk_profile.total_square_footage is None:
+                bundle.structured.risk_profile.total_square_footage = plan_data.floor_area_sqft
+            if plan_data.number_of_stories is not None and bundle.structured.risk_profile.number_of_stories is None:
+                bundle.structured.risk_profile.number_of_stories = plan_data.number_of_stories
+            if plan_data.sprinklered in ("yes", "no", "partial"):
+                bundle.structured.risk_profile.sprinklered = plan_data.sprinklered == "yes"
+            if bundle.structured.floor_plan is None:
+                bundle.structured.floor_plan = plan_data
+            else:
+                existing = bundle.structured.floor_plan
+                merged = existing.model_dump(exclude_unset=True)
+                for key, value in plan_data.model_dump(exclude_unset=True).items():
+                    if value not in (None, "", []) and merged.get(key) in (None, "", []):
+                        merged[key] = value
+                from insureflow.models.submissions import FloorPlanData
+
+                bundle.structured.floor_plan = FloorPlanData(**merged)
+        _log_event(
+            bundle_id,
+            PipelineEvent.STRUCTURED_PARSE_COMPLETE,
+            "parse_floor_plan",
+            f"Floor plan(s) parsed: {len(plan_text)}",
+        )
+    except Exception as exc:
+        logger.error("Floor-plan parse failed: %s", exc)
+        _log_event(
+            bundle_id,
+            PipelineEvent.STRUCTURED_PARSE_COMPLETE,
+            "parse_floor_plan",
+            f"Floor-plan parse failed: {exc}",
+            severity=EventSeverity.ERROR,
+        )
+
+    return {"bundle": bundle, "parsed_floor_plan": True}
 
 
 def parse_inspection(state: PipelineState) -> dict[str, Any]:

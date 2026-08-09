@@ -33,6 +33,7 @@ class DocumentType(str, Enum):
     LOSS_RUN = "loss_run"
     SCHEDULE_OF_VALUES = "schedule_of_values"
     FINANCIAL_STATEMENT = "financial_statement"
+    FLOOR_PLAN = "floor_plan"
     SUPPLEMENTAL = "supplemental"
 
 
@@ -173,6 +174,23 @@ class FinancialData(BaseModel):
     ebitda: Optional[float] = None
 
 
+class FloorPlanData(BaseModel):
+    """Schematic / floor-plan features extracted from a plan, drawing, or survey."""
+
+    floor_area_sqft: Optional[float] = None
+    floor_area_m2: Optional[float] = None
+    number_of_stories: Optional[int] = None
+    fire_compartments: Optional[int] = None
+    compartmentalization: Optional[str] = None  # open | compartmented | mixed | unknown
+    number_of_exits: Optional[int] = None
+    exit_types: list[str] = Field(default_factory=list)
+    stairwells: Optional[int] = None
+    fire_alarm: Optional[str] = None  # yes | no | unknown
+    sprinklered: Optional[str] = None  # yes | no | partial | unknown
+    notes: str = ""
+    source: str = ""
+
+
 class RiskProfile(BaseModel):
     naics_code: Optional[str] = None
     sic_code: Optional[str] = None
@@ -201,6 +219,7 @@ class StructuredSubmission(BaseModel):
     financial: Optional[FinancialData] = None
     risk_profile: Optional[RiskProfile] = None
     schedule_of_values: list[ScheduleOfValues] = Field(default_factory=list)
+    floor_plan: Optional[FloorPlanData] = None
 
     raw_xml: Optional[str] = None
     raw_json: Optional[str] = None

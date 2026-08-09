@@ -468,6 +468,7 @@ class InsurancePipeline:
                         address=addr,
                         bundle_id=bid,
                     )
+                    bundle.visual_analysis = visual_profile.to_dict()
                     audit.log(
                         PipelineEvent.STRUCTURED_PARSE_COMPLETE,
                         f"Vision analysis: {visual_profile.analyzed_photos} photos, risk={visual_profile.overall_visual_risk.value}",

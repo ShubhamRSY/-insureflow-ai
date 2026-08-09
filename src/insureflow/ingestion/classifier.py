@@ -33,6 +33,12 @@ class DocumentClassifier:
         r"annual\s+revenue|total\s+assets|shareholders?\s+equity|"
         r"financial\s+statement|corporate\s+tax\s+return|form\s+1120)"
     )
+    FLOOR_PLAN_KEYWORDS = re.compile(
+        r"(?i)(floor\s+plan|floor\s+layout|schematic|blueprint|"
+        r"floor\s+area\s+summary|fire\s+compartment|fire\s+zone\s+plan|"
+        r"exit\s+route\s+plan|means\s+of\s+egress\s+plan|"
+        r"architectural\s+drawing|structural\s+drawing)"
+    )
     EXCEL_KEYWORDS = re.compile(
         r"(?i)(sheet\s*\d|schedule\s+of\s+values|"
         r"coverage\s+summary|exposure\s+summary|"
@@ -65,6 +71,7 @@ class DocumentClassifier:
         sov_score = len(cls.SOV_KEYWORDS.findall(content_stripped[:2000]))
         insp_score = len(cls.INSPECTION_KEYWORDS.findall(content_stripped[:2000]))
         fin_score = len(cls.FINANCIAL_KEYWORDS.findall(content_stripped[:2000]))
+        floor_score = len(cls.FLOOR_PLAN_KEYWORDS.findall(content_stripped[:2000]))
 
         if loss_score > sov_score and loss_score > insp_score and loss_score > fin_score and loss_score >= 2:
             return DocumentType.LOSS_RUN
@@ -77,6 +84,9 @@ class DocumentClassifier:
 
         if fin_score >= 2:
             return DocumentType.FINANCIAL_STATEMENT
+
+        if floor_score >= 2:
+            return DocumentType.FLOOR_PLAN
 
         if loss_score >= 1:
             return DocumentType.LOSS_RUN

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
+from insureflow.audit.store import AuditStore
 from insureflow.ml.vision.damage_detector import DamageAssessment, DamageDetector, DamageSeverity, DamageType
 from insureflow.ml.vision.models import (
     PhotoAnalysis,
@@ -243,6 +244,42 @@ class TestPropertyPhotoAnalyzer:
         assert profile.total_photos == 1
         assert profile.analyzed_photos == 1
         assert profile.processing_notes != ""
+
+
+# ─── Bundle Visual-Analysis Population ───
+
+
+class TestBundleVisualAnalysis:
+    def test_pipeline_populates_bundle_visual_analysis(self, tmp_path, monkeypatch):
+
+        from insureflow.insurance.pipeline import InsurancePipeline
+        from insureflow.zta.report import ZtaReporter
+        from insureflow.zta.router import RouteDecision, RouteResult, ZtaTask
+
+        audit_store = AuditStore(base_path=tmp_path / "audit")
+
+        original_route = ZtaReporter.route
+
+        def forced_vision_route(self, task, ctx=None):
+            if task == ZtaTask.VISION:
+                return RouteResult(task, RouteDecision.LLM, "forced for test", tokens_used_est=10)
+            return original_route(self, task, ctx)
+
+        monkeypatch.setattr(ZtaReporter, "route", forced_vision_route)
+
+        documents = [
+            {"filename": "exterior.jpg", "content": "\x89PNG\r\n\x1a\n"},
+            {"filename": "roof.png", "content": "\x89PNG\r\n\x1a\n"},
+        ]
+        result = InsurancePipeline(org_id="va-test", use_llm=False, audit_store=audit_store).run(
+            documents=documents,
+            bundle_id="va-bundle-1",
+        )
+        visual = result.get("visual_analysis") or {}
+        assert visual.get("bundle_id") == "va-bundle-1"
+        assert visual.get("total_photos") == 2
+        assert "analyzed_photos" in visual
+        assert "overall_visual_risk" in visual
 
 
 # ─── Triage Agent Photo Detection Tests ───

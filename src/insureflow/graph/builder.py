@@ -18,6 +18,7 @@ from insureflow.graph.nodes import (
     merge_structured,
     parse_acord,
     parse_financial_statement,
+    parse_floor_plan,
     parse_inspection,
     parse_json,
     parse_loss_run,
@@ -50,6 +51,7 @@ class PipelineGraph:
         graph.add_node("parse_loss_run", parse_loss_run)
         graph.add_node("parse_sov", parse_sov)
         graph.add_node("parse_financial_statement", parse_financial_statement)
+        graph.add_node("parse_floor_plan", parse_floor_plan)
         graph.add_node("parse_inspection", parse_inspection)
         graph.add_node("parse_supplemental", parse_supplemental)
         graph.add_node("merge_structured", merge_structured)
@@ -74,6 +76,7 @@ class PipelineGraph:
                 "parse_loss_run": "parse_loss_run",
                 "parse_sov": "parse_sov",
                 "parse_financial_statement": "parse_financial_statement",
+                "parse_floor_plan": "parse_floor_plan",
                 "parse_inspection": "parse_inspection",
                 "parse_supplemental": "parse_supplemental",
                 "merge_structured": "merge_structured",
@@ -86,6 +89,7 @@ class PipelineGraph:
             "parse_loss_run",
             "parse_sov",
             "parse_financial_statement",
+            "parse_floor_plan",
             "parse_inspection",
         ]
         for node in parse_nodes:
@@ -98,6 +102,7 @@ class PipelineGraph:
                     "parse_loss_run": "parse_loss_run",
                     "parse_sov": "parse_sov",
                     "parse_financial_statement": "parse_financial_statement",
+                    "parse_floor_plan": "parse_floor_plan",
                     "parse_inspection": "parse_inspection",
                     "parse_supplemental": "parse_supplemental",
                     "merge_structured": "merge_structured",
@@ -164,6 +169,7 @@ def _parse_next_router(state: dict[str, Any]) -> str:
         "parse_loss_run": state.get("parsed_loss_run", False),
         "parse_sov": state.get("parsed_sov", False),
         "parse_financial_statement": state.get("parsed_financial_statement", False),
+        "parse_floor_plan": state.get("parsed_floor_plan", False),
         "parse_inspection": state.get("parsed_inspection", False),
     }
 

@@ -146,6 +146,67 @@ def _physical_grade(grade: RiskGrade) -> str:
     }.get(grade, "low")
 
 
+def _floor_plan_signals(bundle: SubmissionBundle) -> list[HazardSignal]:
+    """Physical-hazard signals from schematic/floor-plan features."""
+    signals: list[HazardSignal] = []
+    structured = bundle.structured
+    if structured is None or structured.floor_plan is None:
+        return signals
+
+    fp = structured.floor_plan
+
+    if fp.number_of_exits is not None and fp.number_of_exits < 2:
+        signals.append(
+            HazardSignal(
+                category=HazardCategory.PHYSICAL,
+                detail=f"Floor plan shows only {fp.number_of_exits} exit(s) — inadequate means of egress",
+                severity=RiskSeverity.HIGH,
+                source="floor_plan",
+            )
+        )
+    elif fp.number_of_exits == 2 and (fp.number_of_stories or 1) >= 2:
+        signals.append(
+            HazardSignal(
+                category=HazardCategory.PHYSICAL,
+                detail=f"Multi-story occupancy with only {fp.number_of_exits} exits relies on a single stair core",
+                severity=RiskSeverity.MODERATE,
+                source="floor_plan",
+            )
+        )
+
+    if fp.fire_alarm == "no" and fp.sprinklered != "yes":
+        signals.append(
+            HazardSignal(
+                category=HazardCategory.PHYSICAL,
+                detail="Floor plan shows no fire alarm and no sprinkler protection",
+                severity=RiskSeverity.MODERATE,
+                source="floor_plan",
+            )
+        )
+
+    if fp.compartmentalization in ("open", None) and fp.floor_area_sqft is not None and fp.floor_area_sqft >= 25000:
+        signals.append(
+            HazardSignal(
+                category=HazardCategory.PHYSICAL,
+                detail=f"Open-plan floor layout across {int(fp.floor_area_sqft):,} sq ft — limited compartmentalization of fire risk",
+                severity=RiskSeverity.MODERATE,
+                source="floor_plan",
+            )
+        )
+
+    if fp.fire_compartments is not None and fp.fire_compartments >= 5:
+        signals.append(
+            HazardSignal(
+                category=HazardCategory.PHYSICAL,
+                detail=f"Floor plan contains {fp.fire_compartments} fire compartments — compartmentalized risk",
+                severity=RiskSeverity.LOW,
+                source="floor_plan",
+            )
+        )
+
+    return signals
+
+
 def assess_physical_hazard(bundle: SubmissionBundle) -> HazardAssessment:
     engine = COPERatingEngine()
     cope = engine.analyze(bundle)
@@ -158,7 +219,10 @@ def assess_physical_hazard(bundle: SubmissionBundle) -> HazardAssessment:
     ):
         if detail:
             signals.append(HazardSignal(category=HazardCategory.PHYSICAL, detail=detail, severity=sev, source=label))
+    signals.extend(_floor_plan_signals(bundle))
     status = _physical_grade(cope.score.risk_grade)
+    if signals and status == "low":
+        status = "flagged"
     return HazardAssessment(
         category=HazardCategory.PHYSICAL,
         signals=signals,

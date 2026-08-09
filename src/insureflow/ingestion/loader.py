@@ -13,11 +13,14 @@ from insureflow.ingestion.json_parser import JSONBrokerParser
 from insureflow.ingestion.loss_run_parser import LossRunParser
 from insureflow.ingestion.ocr import OCRProcessor
 from insureflow.ingestion.report_extractor import InspectionReportExtractor
+from insureflow.ingestion.schematic_parser import SchematicParser
 from insureflow.ingestion.sov_parser import SOVParser
 from insureflow.models.submissions import (
     DocumentType,
     ExtractedChunk,
     FinancialData,
+    FloorPlanData,
+    RiskProfile,
     StructuredSubmission,
     SubmissionBundle,
     SubmissionStatus,
@@ -33,6 +36,7 @@ class SubmissionLoader:
         self.loss_run_parser = LossRunParser()
         self.sov_parser = SOVParser()
         self.financial_parser = FinancialStatementParser()
+        self.schematic_parser = SchematicParser()
         self.excel_parser = ExcelParser()
         self.ocr_processor = OCRProcessor()
         self.classifier = DocumentClassifier()
@@ -47,6 +51,7 @@ class SubmissionLoader:
         loss_run: Optional[str] = None,
         schedule_of_values: Optional[str] = None,
         financial_statements: Optional[list[str]] = None,
+        floor_plans: Optional[list[str]] = None,
         excel_data: Optional[list[str]] = None,
         pdf_paths: Optional[list[str]] = None,
         bundle_id: Optional[str] = None,
@@ -143,6 +148,17 @@ class SubmissionLoader:
                     bundle.structured.financial = FinancialData(**merged)
                 else:
                     bundle.structured.financial = fin_data
+
+        if floor_plans:
+            if not bundle.structured:
+                bundle.structured = StructuredSubmission(
+                    submission_id=f"{bundle.bundle_id}-merged",
+                    source="supplemental",
+                )
+            for i, plan in enumerate(floor_plans):
+                sub_id = f"{bundle.bundle_id}-floor-plan-{i}"
+                bundle.unstructured.append(self.schematic_parser.parse(plan, sub_id))
+                self._merge_floor_plan(bundle, self.schematic_parser.parse_structured(plan))
 
         if excel_data:
             for i, data in enumerate(excel_data):
@@ -303,6 +319,28 @@ class SubmissionLoader:
         for path, note in (src.field_notes or {}).items():
             dst.field_notes.setdefault(path, note)
 
+    def _merge_floor_plan(self, bundle: SubmissionBundle, plan: FloorPlanData) -> None:
+        """Merge a parsed floor plan into structured (risk_profile + floor_plan)."""
+        if not bundle.structured:
+            return
+        if bundle.structured.risk_profile is None:
+            bundle.structured.risk_profile = RiskProfile()
+        if plan.floor_area_sqft is not None and bundle.structured.risk_profile.total_square_footage is None:
+            bundle.structured.risk_profile.total_square_footage = plan.floor_area_sqft
+        if plan.number_of_stories is not None and bundle.structured.risk_profile.number_of_stories is None:
+            bundle.structured.risk_profile.number_of_stories = plan.number_of_stories
+        if plan.sprinklered in ("yes", "no", "partial"):
+            bundle.structured.risk_profile.sprinklered = plan.sprinklered == "yes"
+        if bundle.structured.floor_plan is None:
+            bundle.structured.floor_plan = plan
+        else:
+            existing = bundle.structured.floor_plan
+            merged = existing.model_dump(exclude_unset=True)
+            for key, value in plan.model_dump(exclude_unset=True).items():
+                if value not in (None, "", []) and merged.get(key) in (None, "", []):
+                    merged[key] = value
+            bundle.structured.floor_plan = FloorPlanData(**merged)
+
     def _load_auto_classified(self, raw_docs: list[str], bundle: SubmissionBundle) -> SubmissionBundle:
         acord_docs: list[str] = []
         json_docs: list[str] = []
@@ -310,6 +348,7 @@ class SubmissionLoader:
         loss_run_docs: list[str] = []
         sov_docs: list[str] = []
         financial_docs: list[str] = []
+        floor_plan_docs: list[str] = []
         supplemental_docs: list[str] = []
 
         for doc in raw_docs:
@@ -326,6 +365,8 @@ class SubmissionLoader:
                 sov_docs.append(doc)
             elif doc_type == DocumentType.FINANCIAL_STATEMENT:
                 financial_docs.append(doc)
+            elif doc_type == DocumentType.FLOOR_PLAN:
+                floor_plan_docs.append(doc)
             else:
                 supplemental_docs.append(doc)
 
@@ -385,6 +426,16 @@ class SubmissionLoader:
                 bundle.structured.financial = FinancialData(**merged)
             else:
                 bundle.structured.financial = fin_data
+
+        for i, doc in enumerate(floor_plan_docs):
+            sub_id = f"{bundle.bundle_id}-floor-plan-{i}"
+            bundle.unstructured.append(self.schematic_parser.parse(doc, sub_id))
+            if not bundle.structured:
+                bundle.structured = StructuredSubmission(
+                    submission_id=f"{bundle.bundle_id}-merged",
+                    source="supplemental",
+                )
+            self._merge_floor_plan(bundle, self.schematic_parser.parse_structured(doc))
 
         for i, doc in enumerate(supplemental_docs):
             sub_id = f"{bundle.bundle_id}-supplemental-{i}"
