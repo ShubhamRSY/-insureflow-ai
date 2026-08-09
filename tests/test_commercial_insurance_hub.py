@@ -17,8 +17,8 @@ from insureflow.insurance.package_checklist import CATALOGS, detect_lob, package
 
 
 def test_full_commercial_taxonomy_shape():
-    assert len(COMMERCIAL_CATEGORIES) == 7
-    assert len(COMMERCIAL_LINES) >= 40
+    assert len(COMMERCIAL_CATEGORIES) == 8
+    assert len(COMMERCIAL_LINES) >= 55
     cats = {c["id"] for c in COMMERCIAL_CATEGORIES}
     assert cats == {
         "property",
@@ -27,6 +27,7 @@ def test_full_commercial_taxonomy_shape():
         "auto",
         "financial",
         "specialty",
+        "alternative",
         "package",
     }
     for line in COMMERCIAL_LINES:
@@ -64,11 +65,11 @@ def test_hub_payload_has_taxonomy_and_stats():
     assert len(hub["base_packet"]) == len(BASE_PACKET)
     assert BASE_PACKET[0].startswith("Completed ACORD")
     assert len(hub["uw_responsibilities"]) == 6
-    assert hub["stats"]["category_count"] == 7
+    assert hub["stats"]["category_count"] == 8
     assert hub["stats"]["product_count"] == len(COMMERCIAL_LINES)
-    assert len(hub["taxonomy"]) == 7
+    assert len(hub["taxonomy"]) == 8
     assert len(hub["lines"]) == len(COMMERCIAL_LINES)
-    assert len(hub["categories"]) == 7
+    assert len(hub["categories"]) == 8
     sample = hub["lines"][0]
     assert "all_documents" in sample
     assert isinstance(sample["coverages"], list)
@@ -152,6 +153,37 @@ def test_detect_lob_commercial_keywords():
     assert detect_lob("employment practices epli wrongful termination", "") == "epli"
     assert detect_lob("surety bond performance bond", "") == "surety"
     assert detect_lob("", "cyber_liability") == "cyber"
+    assert detect_lob("architects and engineers design professional liability", "") == "architects_engineers"
+    assert detect_lob("representations and warranties r&w insurance purchase agreement", "") == "representations_warranties"
+    assert detect_lob("bobtail non-trucking liability lease agreement", "") == "non_trucking_liability"
+    assert detect_lob("captive feasibility actuarial study", "") == "captive_insurance"
+
+
+def test_missing_sublines_present():
+    ids = {ln["id"] for ln in COMMERCIAL_LINES}
+    required = {
+        "architects_engineers",
+        "miscellaneous_professional",
+        "representations_warranties",
+        "legal_expense",
+        "ordinance_or_law",
+        "rent_loss_of_rents",
+        "dic_excess_flood",
+        "non_trucking_liability",
+        "crop_insurance",
+        "livestock_bloodstock",
+        "captive_insurance",
+        "sir_fronting",
+    }
+    assert required <= ids
+    alt = list_commercial_lines(category_id="alternative")
+    assert {l["id"] for l in alt} >= {"captive_insurance", "sir_fronting"}
+    rw = get_commercial_line("representations_warranties")
+    assert rw is not None
+    assert any("due diligence" in d.lower() for d in rw["documents"])
+    ae = get_commercial_line("architects_engineers")
+    assert ae is not None
+    assert any(c["id"] == "peer_review" for c in ae["coverages"])
 
 
 def test_package_checklist_empty_template():

@@ -64,7 +64,7 @@ export default function CommercialInsuranceHub({ presets, onRunDemo, onSubmit, j
                 Live
               </span>
               <span className="text-[11px] text-slate-500">
-                {stats.product_count || 0} products · {stats.live_count || 0} live UW paths · {stats.category_count || 7} categories
+                {stats.product_count || 0} products · {stats.live_count || 0} live UW paths · {stats.category_count || 8} categories
               </span>
             </div>
             <h1 className="mt-1 text-3xl font-bold tracking-tight text-slate-100">{hub.title}</h1>

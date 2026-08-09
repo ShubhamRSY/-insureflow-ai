@@ -10,11 +10,16 @@ export const INSURANCE_LINE_NAMES = {
   flood_commercial: 'Flood Insurance (Commercial)',
   earthquake_commercial: 'Earthquake Insurance (Commercial)',
   crime: 'Crime Insurance',
+  ordinance_or_law: 'Ordinance or Law Coverage',
+  rent_loss_of_rents: 'Rent / Loss of Rents Insurance',
+  dic_excess_flood: 'Difference in Conditions (DIC) / Excess Flood',
   // Liability
   general_liability: 'General Liability (CGL)',
   product_liability: 'Product Liability Insurance',
   errors_and_omissions: 'Professional Liability / E&O',
   eo: 'Professional Liability / E&O',
+  architects_engineers: 'Architects & Engineers (A&E) Professional Liability',
+  miscellaneous_professional: 'Miscellaneous Professional Liability (MPL)',
   directors_and_officers: 'Directors & Officers (D&O) Liability',
   do: 'Directors & Officers (D&O) Liability',
   epli: 'Employment Practices Liability (EPLI)',
@@ -39,10 +44,13 @@ export const INSURANCE_LINE_NAMES = {
   hnoa: 'Hired & Non-Owned Auto (HNOA)',
   motor_truck_cargo: 'Motor Truck Cargo Insurance',
   garage_liability: 'Garage Liability Insurance',
+  non_trucking_liability: 'Non-Trucking Liability ("Bobtail") Insurance',
   // Financial
   trade_credit: 'Trade Credit Insurance',
   surety_bonds: 'Surety Bonds',
   political_risk: 'Political Risk Insurance',
+  representations_warranties: 'Representations & Warranties Insurance (R&W)',
+  legal_expense: 'Legal Expense / Litigation Insurance',
   // Specialty
   tech_eo_cyber: 'Technology E&O / Cyber (Industry-Specific)',
   construction: "Construction / Contractor's Insurance",
@@ -53,6 +61,11 @@ export const INSURANCE_LINE_NAMES = {
   terrorism: 'Terrorism Insurance',
   product_recall: 'Product Recall Insurance',
   supply_chain: 'Supply Chain Insurance',
+  crop_insurance: 'Crop Insurance',
+  livestock_bloodstock: 'Livestock / Bloodstock Insurance',
+  // Alternative risk
+  captive_insurance: 'Captive Insurance Programs',
+  sir_fronting: 'Self-Insured Retention (SIR) / Fronting Arrangements',
   // Package
   business_owners_policy: "Business Owner's Policy (BOP)",
   commercial_package: 'Commercial Package Policy (CPP)',
