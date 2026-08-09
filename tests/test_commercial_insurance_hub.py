@@ -125,7 +125,7 @@ def test_get_line_by_slug_and_id():
 def test_category_filters():
     auto_lines = list_commercial_lines(category_id="auto")
     assert len(auto_lines) >= 5
-    assert all(l["category_id"] == "auto" for l in auto_lines)
+    assert all(line["category_id"] == "auto" for line in auto_lines)
     cats = list_commercial_categories()
     auto_cat = next(c for c in cats if c["id"] == "auto")
     assert auto_cat["product_count"] == len(auto_lines)
@@ -177,7 +177,7 @@ def test_missing_sublines_present():
     }
     assert required <= ids
     alt = list_commercial_lines(category_id="alternative")
-    assert {l["id"] for l in alt} >= {"captive_insurance", "sir_fronting"}
+    assert {line["id"] for line in alt} >= {"captive_insurance", "sir_fronting"}
     rw = get_commercial_line("representations_warranties")
     assert rw is not None
     assert any("due diligence" in d.lower() for d in rw["documents"])
