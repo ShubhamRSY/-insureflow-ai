@@ -48,9 +48,9 @@ export default function CommercialInsuranceHub({ presets, onRunDemo, onSubmit, j
     <div className="mx-auto max-w-6xl space-y-8 animate-fade-in pb-12">
       <div>
         <nav className="flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
-          <Link to="/insurance" className="text-slate-600 transition hover:text-slate-300">Underwriting</Link>
-          <span className="text-slate-700">/</span>
           <Link to="/insurance" className="text-slate-600 transition hover:text-slate-300">Insurance</Link>
+          <span className="text-slate-700">/</span>
+          <Link to="/insurance" className="text-slate-600 transition hover:text-slate-300">Commercial Hub</Link>
           <span className="text-slate-700">/</span>
           <span className="font-semibold text-slate-200">Business & Commercial</span>
         </nav>

@@ -34,9 +34,9 @@ export default function InsurancePage({ jobs, onRefresh }) {
     <div className="mx-auto max-w-6xl space-y-8 animate-fade-in pb-12">
       <div>
         <nav className="flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
-          <span className="text-slate-600">Underwriting</span>
+          <span className="text-slate-600">Insurance</span>
           <span className="text-slate-700">/</span>
-          <span className="font-semibold text-slate-200">Insurance</span>
+          <span className="font-semibold text-slate-200">Commercial Hub</span>
         </nav>
         <div className="mt-3 flex flex-wrap items-start justify-between gap-4">
           <div className="flex items-start gap-4">
