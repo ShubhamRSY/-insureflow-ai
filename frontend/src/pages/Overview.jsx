@@ -37,7 +37,7 @@ export default function Overview({ overview, health, presets, onRunDemo, onOpenJ
         <PlatformStrip />
       </div>
 
-      <div className="mx-auto mt-4 max-w-6xl space-y-8 px-0 pb-4">
+      <div className="mx-auto mt-4 max-w-7xl space-y-8 px-6 pb-4 lg:px-8">
         {(marketCycle || queueStats) && (
           <div className="flex flex-wrap gap-3">
             {marketCycle && (

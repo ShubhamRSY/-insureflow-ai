@@ -39,6 +39,7 @@ mlruns/
 ml_models/
 data/*
 !data/rate_curves.json
+frontend/data/
 # Keep schema docs for real training datasets (CSVs are regenerated locally)
 ml_data/**
 !ml_data/README.md

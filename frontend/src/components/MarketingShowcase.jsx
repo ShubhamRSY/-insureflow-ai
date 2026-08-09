@@ -22,7 +22,7 @@ const SOLUTIONS = [
     label: 'Insurance',
     blurb: 'Commercial P&C and personal lines — from broker package to bind-ready memo.',
     path: '/insurance',
-    points: ['Loss run & SOV intake', 'COPE / life medical UW', 'Indicated premium & decision'],
+    points: ['Loss run & SOV intake', 'Financials & floor-plan review', 'COPE / life medical UW', 'Indicated premium & decision'],
   },
   {
     id: 'mortgage',
@@ -71,8 +71,32 @@ const AUTOMATIONS = [
   {
     id: 'acord',
     title: 'AI ACORD Extraction',
-    desc: 'Classify and extract ACORD / broker packages with provenance and reconciliation.',
+    desc: 'Classify ACORD 125/126/130/140 packages and extract every field with provenance.',
     icon: ScrollText,
+    vertical: 'insurance',
+    path: '/insurance',
+  },
+  {
+    id: 'financial',
+    title: 'AI Financial Statement Review',
+    desc: 'Parse balance sheets, income statements, and tax returns into a 16-line financial-condition read.',
+    icon: Wallet,
+    vertical: 'insurance',
+    path: '/insurance',
+  },
+  {
+    id: 'floor-plan',
+    title: 'AI Floor Plan & Schematic Review',
+    desc: 'Extract area, stories, fire compartments, exits, and sprinkler protection from drawings.',
+    icon: Building2,
+    vertical: 'insurance',
+    path: '/insurance',
+  },
+  {
+    id: 'oracles',
+    title: 'AI Oracle Verification',
+    desc: 'Cross-check CLUE, NCCI, credit bureau, OSHA, and public-record feeds before you bind.',
+    icon: Gauge,
     vertical: 'insurance',
     path: '/insurance',
   },
@@ -148,6 +172,10 @@ const VERT_COLOR = {
   lending: 'text-lending',
 };
 
+function Container({ className = '', children }) {
+  return <div className={`mx-auto w-full max-w-7xl px-6 lg:px-8 ${className}`}>{children}</div>;
+}
+
 function PipelineViz() {
   const steps = ['Ingest', 'Extract', 'Verify', 'Score', 'Price', 'Decide'];
   return (
@@ -188,44 +216,46 @@ export function HeroSection({ user, onLogin, onRunDemo, presets }) {
   };
 
   return (
-    <section className="relative overflow-hidden rounded-none border-b border-white/[0.06] bg-hero-glow px-6 pb-16 pt-10 lg:px-12 lg:pb-20 lg:pt-14">
+    <section className="relative overflow-hidden rounded-none border-b border-white/[0.06] bg-hero-glow pb-16 pt-10 lg:pb-20 lg:pt-14">
       <div className="pointer-events-none absolute -right-24 top-0 h-[420px] w-[420px] rounded-full bg-insurance/10 blur-3xl animate-pulse-soft" />
       <div className="pointer-events-none absolute -left-16 bottom-0 h-[280px] w-[280px] rounded-full bg-brand/15 blur-3xl" />
 
-      <p className="font-display text-5xl font-bold tracking-tight text-white sm:text-6xl lg:text-7xl animate-fade-in">
-        Rytera
-      </p>
-      <h2 className="mt-4 max-w-2xl font-display text-2xl font-semibold leading-snug tracking-tight text-slate-100 sm:text-3xl animate-slide-up">
-        Automate document-heavy underwriting with AI
-      </h2>
-      <p className="mt-4 max-w-xl text-base leading-relaxed text-slate-400 animate-slide-up" style={{ animationDelay: '0.08s' }}>
-        Turn insurance, mortgage, and lending packages into verified decisions — for line underwriters on the branch desk and staff underwriters at the home office.
-      </p>
+      <Container>
+        <p className="font-display text-5xl font-bold tracking-tight text-white sm:text-6xl lg:text-7xl animate-fade-in">
+          Rytera
+        </p>
+        <h2 className="mt-4 max-w-2xl font-display text-2xl font-semibold leading-snug tracking-tight text-slate-100 sm:text-3xl animate-slide-up">
+          Automate document-heavy underwriting with AI
+        </h2>
+        <p className="mt-4 max-w-xl text-base leading-relaxed text-slate-400 animate-slide-up" style={{ animationDelay: '0.08s' }}>
+          Turn insurance, mortgage, and lending packages into verified decisions — for line underwriters on the branch desk and staff underwriters at the home office.
+        </p>
 
-      <div className="mt-8 flex flex-wrap items-center gap-3 animate-slide-up" style={{ animationDelay: '0.16s' }}>
-        <button type="button" onClick={primary} className="btn-primary px-5 py-3 text-sm">
-          {user ? 'Run a live demo' : 'Sign in to try it'}
-          <ArrowRight className="h-4 w-4" />
-        </button>
-        <button type="button" onClick={() => navigate('/insurance')} className="btn-secondary px-5 py-3 text-sm">
-          Explore insurance
-        </button>
-        <button type="button" onClick={() => navigate('/line-uw')} className="btn-secondary px-5 py-3 text-sm">
-          Line UW desk
-        </button>
-        <button type="button" onClick={() => navigate('/staff-uw')} className="btn-secondary px-5 py-3 text-sm">
-          Staff UW desk
-        </button>
-      </div>
+        <div className="mt-8 flex flex-wrap items-center gap-3 animate-slide-up" style={{ animationDelay: '0.16s' }}>
+          <button type="button" onClick={primary} className="btn-primary px-5 py-3 text-sm">
+            {user ? 'Run a live demo' : 'Sign in to try it'}
+            <ArrowRight className="h-4 w-4" />
+          </button>
+          <button type="button" onClick={() => navigate('/insurance')} className="btn-secondary px-5 py-3 text-sm">
+            Explore insurance
+          </button>
+          <button type="button" onClick={() => navigate('/line-uw')} className="btn-secondary px-5 py-3 text-sm">
+            Line UW desk
+          </button>
+          <button type="button" onClick={() => navigate('/staff-uw')} className="btn-secondary px-5 py-3 text-sm">
+            Staff UW desk
+          </button>
+        </div>
 
-      <div className="mt-8 flex flex-wrap gap-4 text-[11px] font-semibold uppercase tracking-widest text-slate-500 animate-fade-in" style={{ animationDelay: '0.24s' }}>
-        <span className="ring-1 ring-white/10 rounded-md px-2.5 py-1">Line + staff UW</span>
-        <span className="ring-1 ring-white/10 rounded-md px-2.5 py-1">SOC-ready audit</span>
-        <span className="ring-1 ring-white/10 rounded-md px-2.5 py-1">Encrypted at rest</span>
-        <span className="ring-1 ring-white/10 rounded-md px-2.5 py-1">Human checkpoints</span>
-      </div>
+        <div className="mt-8 flex flex-wrap gap-4 text-[11px] font-semibold uppercase tracking-widest text-slate-500 animate-fade-in" style={{ animationDelay: '0.24s' }}>
+          <span className="ring-1 ring-white/10 rounded-md px-2.5 py-1">Line + staff UW</span>
+          <span className="ring-1 ring-white/10 rounded-md px-2.5 py-1">SOC-ready audit</span>
+          <span className="ring-1 ring-white/10 rounded-md px-2.5 py-1">Encrypted at rest</span>
+          <span className="ring-1 ring-white/10 rounded-md px-2.5 py-1">Human checkpoints</span>
+        </div>
 
-      <PipelineViz />
+        <PipelineViz />
+      </Container>
     </section>
   );
 }
@@ -236,63 +266,65 @@ export function SolutionsSection() {
   const sol = SOLUTIONS.find((s) => s.id === active) || SOLUTIONS[0];
 
   return (
-    <section className="px-6 py-14 lg:px-12">
-      <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-brand-light">Solutions</p>
-      <h3 className="mt-2 font-display text-2xl font-semibold tracking-tight text-white sm:text-3xl">
-        Tailored for your workflows
-      </h3>
-      <p className="mt-2 max-w-2xl text-sm text-slate-400">
-        Specialized agents for every vertical — same platform, same audit trail.
-      </p>
+    <section className="py-14 lg:py-20">
+      <Container>
+        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-brand-light">Solutions</p>
+        <h3 className="mt-2 font-display text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+          Tailored for your workflows
+        </h3>
+        <p className="mt-2 max-w-2xl text-sm text-slate-400">
+          Specialized agents for every vertical — same platform, same audit trail.
+        </p>
 
-      <div className="mt-8 flex flex-wrap gap-2">
-        {SOLUTIONS.map((s) => (
-          <button
-            key={s.id}
-            type="button"
-            onClick={() => setActive(s.id)}
-            className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
-              active === s.id
-                ? 'bg-brand/20 text-brand-light ring-1 ring-brand/40'
-                : 'bg-surface-overlay text-slate-400 ring-1 ring-white/[0.06] hover:text-slate-200'
-            }`}
-          >
-            {s.label}
-          </button>
-        ))}
-      </div>
+        <div className="mt-8 flex flex-wrap gap-2">
+          {SOLUTIONS.map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              onClick={() => setActive(s.id)}
+              className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
+                active === s.id
+                  ? 'bg-brand/20 text-brand-light ring-1 ring-brand/40'
+                  : 'bg-surface-overlay text-slate-400 ring-1 ring-white/[0.06] hover:text-slate-200'
+              }`}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
 
-      <div className="mt-6 grid gap-8 lg:grid-cols-[1.2fr_1fr] lg:items-end">
-        <div>
-          <h4 className={`font-display text-xl font-semibold ${VERT_COLOR[sol.id] || 'text-white'}`}>{sol.label}</h4>
-          <p className="mt-2 text-sm leading-relaxed text-slate-400">{sol.blurb}</p>
-          <ul className="mt-4 space-y-2">
-            {sol.points.map((p) => (
-              <li key={p} className="flex items-start gap-2 text-sm text-slate-300">
-                <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-brand-light" />
-                {p}
-              </li>
-            ))}
-          </ul>
-          <button type="button" onClick={() => navigate(sol.path)} className="btn-primary mt-6 text-sm">
-            Open {sol.label} <ArrowRight className="h-4 w-4" />
-          </button>
+        <div className="mt-8 grid gap-8 lg:grid-cols-[1.2fr_1fr] lg:items-center">
+          <div>
+            <h4 className={`font-display text-xl font-semibold ${VERT_COLOR[sol.id] || 'text-white'}`}>{sol.label}</h4>
+            <p className="mt-2 text-sm leading-relaxed text-slate-400">{sol.blurb}</p>
+            <ul className="mt-4 space-y-2">
+              {sol.points.map((p) => (
+                <li key={p} className="flex items-start gap-2 text-sm text-slate-300">
+                  <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-brand-light" />
+                  {p}
+                </li>
+              ))}
+            </ul>
+            <button type="button" onClick={() => navigate(sol.path)} className="btn-primary mt-6 text-sm">
+              Open {sol.label} <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="relative overflow-hidden rounded-2xl bg-surface-overlay/80 p-6 ring-1 ring-white/[0.06]">
+            <div className="absolute inset-0 bg-gradient-to-br from-brand/10 via-transparent to-insurance/10" />
+            <p className="relative text-[10px] font-bold uppercase tracking-widest text-slate-500">Workflow snapshot</p>
+            <ol className="relative mt-4 space-y-3">
+              {['Pull package from broker / LOS', 'Extract & reconcile fields', 'Apply appetite + rating logic', 'Emit memo, quote, or decision'].map((step, i) => (
+                <li key={step} className="flex items-center gap-3 text-sm text-slate-300">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-surface-raised font-mono text-[10px] text-brand-light ring-1 ring-white/10">
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  {step}
+                </li>
+              ))}
+            </ol>
+          </div>
         </div>
-        <div className="relative overflow-hidden rounded-2xl bg-surface-overlay/80 p-6 ring-1 ring-white/[0.06]">
-          <div className="absolute inset-0 bg-gradient-to-br from-brand/10 via-transparent to-insurance/10" />
-          <p className="relative text-[10px] font-bold uppercase tracking-widest text-slate-500">Workflow snapshot</p>
-          <ol className="relative mt-4 space-y-3">
-            {['Pull package from broker / LOS', 'Extract & reconcile fields', 'Apply appetite + rating logic', 'Emit memo, quote, or decision'].map((step, i) => (
-              <li key={step} className="flex items-center gap-3 text-sm text-slate-300">
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-surface-raised font-mono text-[10px] text-brand-light ring-1 ring-white/10">
-                  {String(i + 1).padStart(2, '0')}
-                </span>
-                {step}
-              </li>
-            ))}
-          </ol>
-        </div>
-      </div>
+      </Container>
     </section>
   );
 }
@@ -319,79 +351,81 @@ export function UnderwriterPlaybook() {
   };
 
   return (
-    <section className="border-t border-white/[0.06] px-6 py-14 lg:px-12">
-      <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-brand-light">Business &amp; Commercial</p>
-      <h3 className="mt-2 font-display text-2xl font-semibold tracking-tight text-white sm:text-3xl">
-        What the commercial underwriter does
-      </h3>
-      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
-        {hub?.summary || 'Decide whether to offer coverage, on what terms, and at what price — the risk evaluator between the applicant and the carrier\u2019s balance sheet.'}
-      </p>
+    <section className="border-t border-white/[0.06] py-14 lg:py-20">
+      <Container>
+        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-brand-light">Business &amp; Commercial</p>
+        <h3 className="mt-2 font-display text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+          What the commercial underwriter does
+        </h3>
+        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
+          {hub?.summary || 'Decide whether to offer coverage, on what terms, and at what price — the risk evaluator between the applicant and the carrier\u2019s balance sheet.'}
+        </p>
 
-      {(hub?.uw_responsibilities || []).length > 0 && (
-        <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {hub.uw_responsibilities.map((r) => {
-            const Icon = UW_RESPONSIBILITY_ICONS[r.id] || Gauge;
-            return (
-              <div key={r.id} className="rounded-2xl bg-surface/60 p-5 ring-1 ring-white/[0.06]">
-                <Icon className="h-5 w-5 text-brand-light" />
-                <h4 className="mt-3 font-display text-base font-semibold text-white">{r.title}</h4>
-                <p className="mt-1.5 text-sm leading-relaxed text-slate-400">{r.summary}</p>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {(hub?.base_packet || []).length > 0 && (
-        <div className="mt-8 rounded-2xl bg-surface-overlay/60 p-6 ring-1 ring-white/[0.06]">
-          <p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-500">
-            <FolderOpen className="h-3.5 w-3.5" /> Base packet (almost every line)
-          </p>
-          <ul className="mt-4 grid gap-2 sm:grid-cols-2">
-            {hub.base_packet.map((item) => (
-              <li key={item} className="flex gap-2 text-sm text-slate-300">
-                <span className="text-brand-light">•</span>
-                {item}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {(hub?.lines || []).length > 0 && (
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {hub.lines.map((line) => {
-            const Icon = LOB_ICONS[line.id] || FileText;
-            return (
-              <div key={line.id} className="rounded-2xl bg-surface/60 p-5 ring-1 ring-white/[0.06]">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand/10 text-brand-light">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h4 className="font-display text-base font-semibold text-white">{line.name}</h4>
-                    <p className="text-xs text-slate-500">{line.document_count} required documents</p>
-                  </div>
+        {(hub?.uw_responsibilities || []).length > 0 && (
+          <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {hub.uw_responsibilities.map((r) => {
+              const Icon = UW_RESPONSIBILITY_ICONS[r.id] || Gauge;
+              return (
+                <div key={r.id} className="rounded-2xl bg-surface/60 p-5 ring-1 ring-white/[0.06]">
+                  <Icon className="h-5 w-5 text-brand-light" />
+                  <h4 className="mt-3 font-display text-base font-semibold text-white">{r.title}</h4>
+                  <p className="mt-1.5 text-sm leading-relaxed text-slate-400">{r.summary}</p>
                 </div>
-                <p className="mt-3 text-sm leading-relaxed text-slate-400">{line.description}</p>
-                {(line.acord_forms || []).length > 0 && (
-                  <p className="mt-3 text-xs text-slate-500">{line.acord_forms.join(' · ')}</p>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
+              );
+            })}
+          </div>
+        )}
 
-      <div className="mt-8 flex flex-wrap items-center gap-3">
-        <button type="button" onClick={() => navigate('/insurance/commercial')} className="btn-primary text-sm">
-          Run a commercial submission <ArrowRight className="h-4 w-4" />
-        </button>
-        <button type="button" onClick={() => navigate('/insurance')} className="btn-secondary text-sm">
-          Insurance overview
-        </button>
-      </div>
+        {(hub?.base_packet || []).length > 0 && (
+          <div className="mt-8 rounded-2xl bg-surface-overlay/60 p-6 ring-1 ring-white/[0.06]">
+            <p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+              <FolderOpen className="h-3.5 w-3.5" /> Base packet (almost every line)
+            </p>
+            <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+              {hub.base_packet.map((item) => (
+                <li key={item} className="flex gap-2 text-sm text-slate-300">
+                  <span className="text-brand-light">•</span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {(hub?.lines || []).length > 0 && (
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {hub.lines.map((line) => {
+              const Icon = LOB_ICONS[line.id] || FileText;
+              return (
+                <div key={line.id} className="rounded-2xl bg-surface/60 p-5 ring-1 ring-white/[0.06]">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand/10 text-brand-light">
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h4 className="font-display text-base font-semibold text-white">{line.name}</h4>
+                      <p className="text-xs text-slate-500">{line.document_count} required documents</p>
+                    </div>
+                  </div>
+                  <p className="mt-3 text-sm leading-relaxed text-slate-400">{line.description}</p>
+                  {(line.acord_forms || []).length > 0 && (
+                    <p className="mt-3 text-xs text-slate-500">{line.acord_forms.join(' · ')}</p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        <div className="mt-8 flex flex-wrap items-center gap-3">
+          <button type="button" onClick={() => navigate('/insurance/commercial')} className="btn-primary text-sm">
+            Run a commercial submission <ArrowRight className="h-4 w-4" />
+          </button>
+          <button type="button" onClick={() => navigate('/insurance')} className="btn-secondary text-sm">
+            Insurance overview
+          </button>
+        </div>
+      </Container>
     </section>
   );
 }
@@ -411,75 +445,77 @@ export function AutomationsCatalog({ filterVertical }) {
   }, [query, tab]);
 
   return (
-    <section className="border-t border-white/[0.06] bg-surface-raised/40 px-6 py-14 lg:px-12">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-brand-light">Free AI automations</p>
-          <h3 className="mt-2 font-display text-2xl font-semibold tracking-tight text-white sm:text-3xl">
-            Ready-to-run underwriting agents
-          </h3>
-          <p className="mt-2 max-w-xl text-sm text-slate-400">
-            Pick an automation, point it at your package, and watch the full journey — no black box.
-          </p>
+    <section className="border-t border-white/[0.06] bg-surface-raised/40 py-14 lg:py-20">
+      <Container>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-brand-light">Free AI automations</p>
+            <h3 className="mt-2 font-display text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+              Ready-to-run underwriting agents
+            </h3>
+            <p className="mt-2 max-w-xl text-sm text-slate-400">
+              Pick an automation, point it at your package, and watch the full journey — no black box.
+            </p>
+          </div>
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search: loss run, floor plan, financials…"
+            className="input-field max-w-xs text-sm"
+            aria-label="Search automations"
+          />
         </div>
-        <input
-          type="search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search: loss run, life, mortgage…"
-          className="input-field max-w-xs text-sm"
-          aria-label="Search automations"
-        />
-      </div>
 
-      <div className="mt-6 flex flex-wrap gap-2">
-        {['all', 'insurance', 'mortgage', 'lending'].map((t) => (
-          <button
-            key={t}
-            type="button"
-            onClick={() => setTab(t)}
-            className={`rounded-lg px-3 py-1.5 text-xs font-semibold capitalize transition ${
-              tab === t ? 'bg-white/10 text-white' : 'text-slate-500 hover:text-slate-300'
-            }`}
-          >
-            {t === 'all' ? 'All' : t}
-          </button>
-        ))}
-      </div>
-
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {items.map((a, i) => {
-          const Icon = a.icon;
-          return (
+        <div className="mt-6 flex flex-wrap gap-2">
+          {['all', 'insurance', 'mortgage', 'lending'].map((t) => (
             <button
-              key={a.id}
+              key={t}
               type="button"
-              onClick={() => navigate(a.path)}
-              className="group relative overflow-hidden rounded-2xl bg-surface/60 p-5 text-left ring-1 ring-white/[0.06] transition hover:ring-brand/35 hover:shadow-glow animate-slide-up"
-              style={{ animationDelay: `${Math.min(i, 8) * 0.04}s` }}
+              onClick={() => setTab(t)}
+              className={`rounded-lg px-3 py-1.5 text-xs font-semibold capitalize transition ${
+                tab === t ? 'bg-white/10 text-white' : 'text-slate-500 hover:text-slate-300'
+              }`}
             >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand/10 ring-1 ring-brand/20">
-                  <Icon className="h-5 w-5 text-brand-light" />
-                </div>
-                <span className={`text-[10px] font-bold uppercase tracking-wider ${VERT_COLOR[a.vertical]}`}>
-                  {a.vertical}
-                </span>
-              </div>
-              <h4 className="mt-4 font-display text-base font-semibold text-white group-hover:text-brand-light transition">
-                {a.title}
-              </h4>
-              <p className="mt-2 text-sm leading-relaxed text-slate-400">{a.desc}</p>
-              <span className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-brand-light opacity-0 transition group-hover:opacity-100">
-                Launch <ArrowRight className="h-3 w-3" />
-              </span>
+              {t === 'all' ? 'All' : t}
             </button>
-          );
-        })}
-        {!items.length && (
-          <p className="col-span-full text-sm text-slate-500">No automations match that search.</p>
-        )}
-      </div>
+          ))}
+        </div>
+
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {items.map((a, i) => {
+            const Icon = a.icon;
+            return (
+              <button
+                key={a.id}
+                type="button"
+                onClick={() => navigate(a.path)}
+                className="group relative flex flex-col overflow-hidden rounded-2xl bg-surface/60 p-5 text-left ring-1 ring-white/[0.06] transition hover:ring-brand/35 hover:shadow-glow animate-slide-up"
+                style={{ animationDelay: `${Math.min(i, 8) * 0.04}s` }}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand/10 ring-1 ring-brand/20">
+                    <Icon className="h-5 w-5 text-brand-light" />
+                  </div>
+                  <span className={`text-[10px] font-bold uppercase tracking-wider ${VERT_COLOR[a.vertical]}`}>
+                    {a.vertical}
+                  </span>
+                </div>
+                <h4 className="mt-4 font-display text-base font-semibold text-white group-hover:text-brand-light transition">
+                  {a.title}
+                </h4>
+                <p className="mt-2 text-sm leading-relaxed text-slate-400">{a.desc}</p>
+                <span className="mt-auto inline-flex items-center gap-1 pt-4 text-xs font-semibold text-brand-light opacity-0 transition group-hover:opacity-100">
+                  Launch <ArrowRight className="h-3 w-3" />
+                </span>
+              </button>
+            );
+          })}
+          {!items.length && (
+            <p className="col-span-full text-sm text-slate-500">No automations match that search.</p>
+          )}
+        </div>
+      </Container>
     </section>
   );
 }
@@ -491,15 +527,17 @@ export function PlatformStrip() {
     { title: 'LOB-native', body: 'Life medical, COPE property, mortgage packages — not one generic checklist.' },
   ];
   return (
-    <section className="px-6 py-12 lg:px-12">
-      <div className="grid gap-8 md:grid-cols-3">
-        {pillars.map((p) => (
-          <div key={p.title}>
-            <h4 className="font-display text-lg font-semibold text-white">{p.title}</h4>
-            <p className="mt-2 text-sm leading-relaxed text-slate-400">{p.body}</p>
-          </div>
-        ))}
-      </div>
+    <section className="py-14 lg:py-20">
+      <Container>
+        <div className="grid gap-8 md:grid-cols-3">
+          {pillars.map((p) => (
+            <div key={p.title}>
+              <h4 className="font-display text-lg font-semibold text-white">{p.title}</h4>
+              <p className="mt-2 text-sm leading-relaxed text-slate-400">{p.body}</p>
+            </div>
+          ))}
+        </div>
+      </Container>
     </section>
   );
 }
