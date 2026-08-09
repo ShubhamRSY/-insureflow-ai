@@ -138,7 +138,6 @@ class Settings:
     rating_agency_api_url: str = os.getenv("RATING_AGENCY_API_URL", "https://integrations.rytera.ai/oracles/rating-agency/v2")
     rating_agency_query_path: str = os.getenv("RATING_AGENCY_QUERY_PATH", "/entities")
 
-
     iso_rating_api_key: str = os.getenv("ISO_RATING_API_KEY", "")
     iso_rating_api_url: str = os.getenv("ISO_RATING_API_URL", "https://integrations.rytera.ai/oracles/iso/v1")
     iso_rating_mode: str = os.getenv("ISO_RATING_MODE", "auto")

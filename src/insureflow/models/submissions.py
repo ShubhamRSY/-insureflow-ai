@@ -32,6 +32,7 @@ class DocumentType(str, Enum):
     INSPECTION_REPORT = "inspection_report"
     LOSS_RUN = "loss_run"
     SCHEDULE_OF_VALUES = "schedule_of_values"
+    FINANCIAL_STATEMENT = "financial_statement"
     SUPPLEMENTAL = "supplemental"
 
 
@@ -145,6 +146,31 @@ class FinancialData(BaseModel):
     prior_losses: list[dict[str, Any]] = Field(default_factory=list)
     loss_run: Optional[LossRunData] = None
     credit_rating: Optional[str] = None
+
+    # ── Financial-statement line items (FinancialStatementParser) ──
+    statement_type: Optional[str] = None  # balance_sheet | income_statement | cash_flow | tax_return | combined
+    as_of_date: Optional[str] = None  # "2025-12-31" — statement period end
+    fiscal_year: Optional[str] = None  # e.g. "2025"
+    audit_type: Optional[str] = None  # audited | reviewed | compiled | internal
+    is_audited: Optional[bool] = None
+
+    # Balance sheet
+    current_assets: Optional[float] = None
+    total_assets: Optional[float] = None
+    cash_and_equivalents: Optional[float] = None
+    accounts_receivable: Optional[float] = None
+    inventory: Optional[float] = None
+    current_liabilities: Optional[float] = None
+    total_liabilities: Optional[float] = None
+    long_term_debt: Optional[float] = None
+    shareholder_equity: Optional[float] = None
+    total_equity: Optional[float] = None
+
+    # Income statement
+    net_income: Optional[float] = None
+    gross_profit: Optional[float] = None
+    operating_income: Optional[float] = None
+    ebitda: Optional[float] = None
 
 
 class RiskProfile(BaseModel):

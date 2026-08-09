@@ -8,6 +8,7 @@ from insureflow.ingestion.acord_parser import ACORDParser
 from insureflow.ingestion.chunker import DocumentChunker
 from insureflow.ingestion.classifier import DocumentClassifier
 from insureflow.ingestion.excel_parser import ExcelParser
+from insureflow.ingestion.financial_parser import FinancialStatementParser
 from insureflow.ingestion.json_parser import JSONBrokerParser
 from insureflow.ingestion.loss_run_parser import LossRunParser
 from insureflow.ingestion.ocr import OCRProcessor
@@ -16,6 +17,7 @@ from insureflow.ingestion.sov_parser import SOVParser
 from insureflow.models.submissions import (
     DocumentType,
     ExtractedChunk,
+    FinancialData,
     StructuredSubmission,
     SubmissionBundle,
     SubmissionStatus,
@@ -30,6 +32,7 @@ class SubmissionLoader:
         self.report_extractor = InspectionReportExtractor()
         self.loss_run_parser = LossRunParser()
         self.sov_parser = SOVParser()
+        self.financial_parser = FinancialStatementParser()
         self.excel_parser = ExcelParser()
         self.ocr_processor = OCRProcessor()
         self.classifier = DocumentClassifier()
@@ -43,6 +46,7 @@ class SubmissionLoader:
         json_payload: Optional[str] = None,
         loss_run: Optional[str] = None,
         schedule_of_values: Optional[str] = None,
+        financial_statements: Optional[list[str]] = None,
         excel_data: Optional[list[str]] = None,
         pdf_paths: Optional[list[str]] = None,
         bundle_id: Optional[str] = None,
@@ -96,8 +100,6 @@ class SubmissionLoader:
                     for c in loss_data.claims
                 ]
             elif bundle.structured:
-                from insureflow.models.submissions import FinancialData
-
                 bundle.structured.financial = FinancialData(
                     loss_run=loss_data,
                     prior_losses=[
@@ -120,6 +122,27 @@ class SubmissionLoader:
             sows = self.sov_parser.parse_structured(schedule_of_values)
             if bundle.structured:
                 bundle.structured.schedule_of_values = sows
+
+        if financial_statements:
+            if not bundle.structured:
+                bundle.structured = StructuredSubmission(
+                    submission_id=f"{bundle.bundle_id}-merged",
+                    source="supplemental",
+                )
+            for i, statement in enumerate(financial_statements):
+                sub_id = f"{bundle.bundle_id}-financial-{i}"
+                parsed = self.financial_parser.parse(statement, sub_id)
+                bundle.unstructured.append(parsed)
+
+                fin_data = self.financial_parser.parse_structured(statement)
+                if bundle.structured.financial:
+                    merged = bundle.structured.financial.model_dump(exclude_unset=True)
+                    for key, value in fin_data.model_dump(exclude_unset=True).items():
+                        if value is not None and merged.get(key) is None:
+                            merged[key] = value
+                    bundle.structured.financial = FinancialData(**merged)
+                else:
+                    bundle.structured.financial = fin_data
 
         if excel_data:
             for i, data in enumerate(excel_data):
@@ -286,6 +309,7 @@ class SubmissionLoader:
         inspection_docs: list[str] = []
         loss_run_docs: list[str] = []
         sov_docs: list[str] = []
+        financial_docs: list[str] = []
         supplemental_docs: list[str] = []
 
         for doc in raw_docs:
@@ -300,6 +324,8 @@ class SubmissionLoader:
                 loss_run_docs.append(doc)
             elif doc_type == DocumentType.SCHEDULE_OF_VALUES:
                 sov_docs.append(doc)
+            elif doc_type == DocumentType.FINANCIAL_STATEMENT:
+                financial_docs.append(doc)
             else:
                 supplemental_docs.append(doc)
 
@@ -323,8 +349,6 @@ class SubmissionLoader:
                 if bundle.structured.financial:
                     bundle.structured.financial.loss_run = loss_data
                 else:
-                    from insureflow.models.submissions import FinancialData
-
                     bundle.structured.financial = FinancialData(loss_run=loss_data)
                 bundle.structured.financial.prior_losses = [
                     {
@@ -343,6 +367,24 @@ class SubmissionLoader:
             sows = self.sov_parser.parse_structured(doc)
             if bundle.structured:
                 bundle.structured.schedule_of_values.extend(sows)
+
+        for i, doc in enumerate(financial_docs):
+            sub_id = f"{bundle.bundle_id}-financial-{i}"
+            bundle.unstructured.append(self.financial_parser.parse(doc, sub_id))
+            fin_data = self.financial_parser.parse_structured(doc)
+            if not bundle.structured:
+                bundle.structured = StructuredSubmission(
+                    submission_id=f"{bundle.bundle_id}-merged",
+                    source="supplemental",
+                )
+            if bundle.structured.financial:
+                merged = bundle.structured.financial.model_dump(exclude_unset=True)
+                for key, value in fin_data.model_dump(exclude_unset=True).items():
+                    if value is not None and merged.get(key) is None:
+                        merged[key] = value
+                bundle.structured.financial = FinancialData(**merged)
+            else:
+                bundle.structured.financial = fin_data
 
         for i, doc in enumerate(supplemental_docs):
             sub_id = f"{bundle.bundle_id}-supplemental-{i}"

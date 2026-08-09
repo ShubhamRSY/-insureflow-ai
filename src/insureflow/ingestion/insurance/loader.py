@@ -10,6 +10,7 @@ from uuid import uuid4
 from insureflow.ingestion.acord_parser import ACORDParser
 from insureflow.ingestion.chunker import DocumentChunker
 from insureflow.ingestion.classifier import DocumentClassifier
+from insureflow.ingestion.financial_parser import FinancialStatementParser
 from insureflow.ingestion.insurance.classifier import (
     InsuranceDocumentClassifier,
     InsuranceDocumentType,
@@ -55,6 +56,7 @@ class InsuranceDocumentLoader:
         self.report_extractor = InspectionReportExtractor()
         self.loss_run_parser = LossRunParser()
         self.sov_parser = SOVParser()
+        self.financial_parser = FinancialStatementParser()
         self.chunker = DocumentChunker()
 
     def load_from_documents(
@@ -172,6 +174,8 @@ class InsuranceDocumentLoader:
             return self.loss_run_parser.parse(raw_text, sub_id)
         if doc_type == InsuranceDocumentType.SCHEDULE_OF_VALUES:
             return self.sov_parser.parse(raw_text, sub_id)
+        if doc_type == InsuranceDocumentType.FINANCIAL_STATEMENT:
+            return self.financial_parser.parse(raw_text, sub_id)
 
         extracted = extract_fields(dtype, raw_text)
         if ocr_engine:

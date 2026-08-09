@@ -71,6 +71,7 @@ def ingest_docs(state: PipelineState) -> dict[str, Any]:
         json_payload=state.get("json_payload"),
         loss_run=state.get("loss_run"),
         schedule_of_values=state.get("schedule_of_values"),
+        financial_statements=state.get("financial_statements"),
         raw_docs=state.get("raw_docs"),
         auto_classify=state.get("auto_classify", False),
         bundle_id=bundle_id,
@@ -101,6 +102,7 @@ def classify_docs(state: PipelineState) -> dict[str, Any]:
     input_routes = {
         "loss_run": "parse_loss_run",
         "schedule_of_values": "parse_sov",
+        "financial_statements": "parse_financial_statement",
     }
     for field, route in input_routes.items():
         if state.get(field) and route not in routes:
@@ -144,6 +146,7 @@ def _doc_type_to_route(doc_type: DocumentType) -> str:
         DocumentType.LOSS_RUN: "parse_loss_run",
         DocumentType.SCHEDULE_OF_VALUES: "parse_sov",
         DocumentType.INSPECTION_REPORT: "parse_inspection",
+        DocumentType.FINANCIAL_STATEMENT: "parse_financial_statement",
         DocumentType.SUPPLEMENTAL: "",
     }
     return mapping.get(doc_type, "")
@@ -353,6 +356,66 @@ def parse_sov(state: PipelineState) -> dict[str, Any]:
         )
 
     return {"bundle": bundle, "parsed_sov": True}
+
+
+def parse_financial_statement(state: PipelineState) -> dict[str, Any]:
+    _log_state("parse_financial_statement", state)
+    bundle: SubmissionBundle = state["bundle"]
+    bundle_id = state["bundle_id"]
+    financial_text: list[str] = list(state.get("financial_statements") or [])
+
+    if not financial_text:
+        for doc in bundle.unstructured or []:
+            if "financial_statement" in doc.document_type.lower() or "financial" in doc.source.lower():
+                financial_text.append(doc.raw_text)
+
+    if not financial_text:
+        _log_event(
+            bundle_id,
+            PipelineEvent.STRUCTURED_PARSE_START,
+            "parse_financial_statement",
+            "No financial statement data, skipping",
+        )
+        return {"parsed_financial_statement": True}
+
+    from insureflow.ingestion.financial_parser import FinancialStatementParser
+    from insureflow.models.submissions import FinancialData, StructuredSubmission
+
+    try:
+        if not bundle.structured:
+            bundle.structured = StructuredSubmission(
+                submission_id=f"{bundle_id}-merged",
+                source="supplemental",
+            )
+
+        parser = FinancialStatementParser()
+        for statement in financial_text:
+            fin_data = parser.parse_structured(statement)
+            if bundle.structured.financial:
+                merged = bundle.structured.financial.model_dump(exclude_unset=True)
+                for key, value in fin_data.model_dump(exclude_unset=True).items():
+                    if value is not None and merged.get(key) is None:
+                        merged[key] = value
+                bundle.structured.financial = FinancialData(**merged)
+            else:
+                bundle.structured.financial = fin_data
+        _log_event(
+            bundle_id,
+            PipelineEvent.STRUCTURED_PARSE_COMPLETE,
+            "parse_financial_statement",
+            f"Financial statement(s) parsed: {len(financial_text)}",
+        )
+    except Exception as exc:
+        logger.error("Financial statement parse failed: %s", exc)
+        _log_event(
+            bundle_id,
+            PipelineEvent.STRUCTURED_PARSE_COMPLETE,
+            "parse_financial_statement",
+            f"Financial statement parse failed: {exc}",
+            severity=EventSeverity.ERROR,
+        )
+
+    return {"bundle": bundle, "parsed_financial_statement": True}
 
 
 def parse_inspection(state: PipelineState) -> dict[str, Any]:

@@ -27,6 +27,12 @@ class DocumentClassifier:
         r"survey\s+data\s+summary|engineer(?:ing)?\s+report|"
         r"physical\s+inspection|site\s+survey)"
     )
+    FINANCIAL_KEYWORDS = re.compile(
+        r"(?i)(balance\s+sheet|income\s+statement|profit\s+and\s+loss|"
+        r"statement\s+of\s+operations|statement\s+of\s+cash\s+flows|"
+        r"annual\s+revenue|total\s+assets|shareholders?\s+equity|"
+        r"financial\s+statement|corporate\s+tax\s+return|form\s+1120)"
+    )
     EXCEL_KEYWORDS = re.compile(
         r"(?i)(sheet\s*\d|schedule\s+of\s+values|"
         r"coverage\s+summary|exposure\s+summary|"
@@ -58,8 +64,9 @@ class DocumentClassifier:
         loss_score = len(cls.LOSS_RUN_KEYWORDS.findall(content_stripped[:2000]))
         sov_score = len(cls.SOV_KEYWORDS.findall(content_stripped[:2000]))
         insp_score = len(cls.INSPECTION_KEYWORDS.findall(content_stripped[:2000]))
+        fin_score = len(cls.FINANCIAL_KEYWORDS.findall(content_stripped[:2000]))
 
-        if loss_score > sov_score and loss_score > insp_score and loss_score >= 2:
+        if loss_score > sov_score and loss_score > insp_score and loss_score > fin_score and loss_score >= 2:
             return DocumentType.LOSS_RUN
 
         if sov_score >= 2:
@@ -67,6 +74,9 @@ class DocumentClassifier:
 
         if insp_score >= 1:
             return DocumentType.INSPECTION_REPORT
+
+        if fin_score >= 2:
+            return DocumentType.FINANCIAL_STATEMENT
 
         if loss_score >= 1:
             return DocumentType.LOSS_RUN

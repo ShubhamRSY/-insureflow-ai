@@ -17,6 +17,7 @@ class PipelineState(TypedDict, total=False):
     json_payload: str
     loss_run: str
     schedule_of_values: str
+    financial_statements: list[str]
     raw_docs: list[str]
 
     bundle: SubmissionBundle
@@ -36,6 +37,7 @@ class PipelineState(TypedDict, total=False):
     parsed_loss_run: bool
     parsed_sov: bool
     parsed_inspection: bool
+    parsed_financial_statement: bool
     audit_entries: list[dict[str, Any]]
     rag_context: str
 
@@ -50,6 +52,7 @@ def default_state(**overrides: Any) -> dict[str, Any]:
         "json_payload": "",
         "loss_run": "",
         "schedule_of_values": "",
+        "financial_statements": None,
         "raw_docs": None,
         "bundle": None,
         "provenance": None,
@@ -67,6 +70,7 @@ def default_state(**overrides: Any) -> dict[str, Any]:
         "parsed_loss_run": False,
         "parsed_sov": False,
         "parsed_inspection": False,
+        "parsed_financial_statement": False,
         "audit_entries": [],
         "rag_context": "",
         **overrides,
