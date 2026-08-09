@@ -55,14 +55,7 @@ def _types_for_label(label: str) -> tuple[InsuranceDocumentType, ...]:
         add(InsuranceDocumentType.LOSS_RUN)
     if "acord" in text or ("application" in text and "medical" not in text):
         add(InsuranceDocumentType.ACORD_XML)
-    if (
-        "statement of values" in text
-        or "sov" in text
-        or "schedule of values" in text
-        or "equipment schedule" in text
-        or "vehicle schedule" in text
-        or "location schedule" in text
-    ):
+    if "statement of values" in text or "sov" in text or "schedule of values" in text or "equipment schedule" in text or "vehicle schedule" in text or "location schedule" in text:
         add(InsuranceDocumentType.SCHEDULE_OF_VALUES)
     if "financial" in text or "p&l" in text or "balance sheet" in text or "tax return" in text:
         add(InsuranceDocumentType.FINANCIAL_STATEMENT)

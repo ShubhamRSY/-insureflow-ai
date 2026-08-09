@@ -2160,10 +2160,7 @@ def get_commercial_line(line_id_or_slug: str) -> dict[str, Any] | None:
                 "all_documents": flatten_line_documents({**line, "coverages": coverages}),
                 "base_packet": list(BASE_PACKET),
                 "uw_responsibilities": list(UW_CORE_RESPONSIBILITIES),
-                "uw_question": (
-                    "If I take on this risk, what's the probability and cost of it going wrong, "
-                    "and what price makes that bet worthwhile for the insurer?"
-                ),
+                "uw_question": ("If I take on this risk, what's the probability and cost of it going wrong, and what price makes that bet worthwhile for the insurer?"),
             }
     return None
 
@@ -2194,10 +2191,7 @@ def commercial_hub_payload() -> dict[str, Any]:
     return {
         "segment": "business_commercial",
         "title": "Business / Commercial Insurance",
-        "summary": (
-            "Full commercial underwriting taxonomy across property, liability, workforce, auto, "
-            "financial, specialty, and package lines — with line-specific document packs and UW workflow."
-        ),
+        "summary": ("Full commercial underwriting taxonomy across property, liability, workforce, auto, financial, specialty, and package lines — with line-specific document packs and UW workflow."),
         "base_packet": list(BASE_PACKET),
         "uw_responsibilities": list(UW_CORE_RESPONSIBILITIES),
         "categories": list_commercial_categories(),
