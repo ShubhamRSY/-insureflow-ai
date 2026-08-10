@@ -1117,7 +1117,7 @@ class InsurancePipeline:
         # ── 10. CORE SYSTEM INTEGRATION (push to BriteCore/Guidewire) ──
         # Skip provisional core push for referrals/declines — avoid fake "submitted" status.
         core_results: list[dict[str, Any]] = []
-        from insureflow.decisions import DecisionOutcome, normalize_decision, skips_core_push
+        from insureflow.decisions import normalize_decision, skips_core_push
 
         skip_core_for_decision = skips_core_push(memo.decision)
         appetite_referral = bool(appetite_result and appetite_result.needs_uw_referral and not appetite_passed)
@@ -1221,7 +1221,7 @@ class InsurancePipeline:
             ),
         )
         zta_report = self.zta_reporter.report()
-        if normalize_decision(memo.decision) == DecisionOutcome.CONDITIONAL_ACCEPT and open_conditions:
+        if open_conditions and all(c.get("id") != "subjectivities" for c in human_checkpoints):
             human_checkpoints.append(
                 {
                     "id": "subjectivities",

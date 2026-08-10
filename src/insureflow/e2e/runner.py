@@ -149,7 +149,7 @@ class E2ERunner:
         auth: bool = False,
         expected: int | tuple[int, ...] = 200,
     ) -> Any:
-        headers = {}
+        headers = {"Accept": "application/json"}
         if auth:
             headers["Authorization"] = f"Bearer {self._token}"
         if method == "GET":
@@ -437,6 +437,27 @@ class E2ERunner:
                 raise AssertionError(f"Expected pending queue entries, bundle={bundle_id}")
             return f"{len(ids)} pending"
 
+        def seed_authority() -> str:
+            rec = self._request(
+                "POST",
+                "/underwriting/authority",
+                json_body={
+                    "username": self.username,
+                    "display_name": "E2E Licensed UW",
+                    "tier": "mga",
+                    "desk": "both",
+                    "license_number": "UW-CA-E2E-001",
+                    "max_premium": 1_000_000.0,
+                    "max_tiv": 50_000_000.0,
+                    "max_aggregate_exposure": 100_000_000.0,
+                    "requires_co_sign": False,
+                    "co_sign_threshold_premium": 0.0,
+                },
+                auth=True,
+                expected=201,
+            )
+            return f"tier={rec.get('tier')}"
+
         def sign_off() -> str:
             wf = self._request(
                 "POST",
@@ -451,11 +472,33 @@ class E2ERunner:
             assert wf.get("state") == "approved", f"unexpected state: {wf.get('state')}"
             return f"state={wf['state']} final={wf.get('final_decision')}"
 
+        def resolve_checkpoints() -> str:
+            audit = self._request("GET", f"/pipeline/audit/{bundle_id}", auth=True)
+            summary = audit.get("summary") or {}
+            checkpoints = summary.get("human_checkpoints") or []
+            open_cps = [c for c in checkpoints if str(c.get("status", "pending")).lower() not in {"approved", "cleared", "waived"}]
+            if not open_cps:
+                return "no open checkpoints"
+            resolved = []
+            for cp in open_cps:
+                self._request(
+                    "POST",
+                    f"/pipeline/checkpoints/{bundle_id}/{cp['id']}",
+                    json_body={"action": "approve", "notes": "E2E checkpoint review"},
+                    auth=True,
+                )
+                resolved.append(cp["id"])
+            return f"resolved {len(resolved)} checkpoint(s): {', '.join(resolved)}"
+
         def bind_policy() -> str:
+            audit = self._request("GET", f"/pipeline/audit/{bundle_id}", auth=True)
+            summary = audit.get("summary") or {}
+            quote = summary.get("quote") or {}
+            quote_premium = float(quote.get("adjusted_premium") or quote.get("base_premium") or 0.0)
             resp = self._request(
                 "POST",
                 f"/pipeline/workflow/{bundle_id}/bind",
-                json_body={"policy_number": "", "bound_premium": 0.0},
+                json_body={"policy_number": "", "bound_premium": quote_premium},
                 auth=True,
             )
             bind = resp.get("bind") or {}
@@ -498,8 +541,10 @@ class E2ERunner:
             assert cal.get("sample_size", 0) >= 1, "expected loss experience in calibration"
             return f"sample_size={cal['sample_size']} avg_lr={cal.get('avg_loss_ratio')}"
 
+        self._step("POST /underwriting/authority (seed)", seed_authority)
         self._step("GET /pipeline/workflow/pending", pending_queue)
         self._step("POST /pipeline/workflow/{bundle}/sign-off", sign_off)
+        self._step("POST /pipeline/checkpoints/{bundle}/resolve", resolve_checkpoints)
         self._step("POST /pipeline/workflow/{bundle}/bind", bind_policy)
         self._step("GET /pipeline/audit/{bundle}/package", audit_package)
         self._step("POST /pipeline/outcomes/loss-experience", loss_experience)

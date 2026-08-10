@@ -62,6 +62,8 @@ def test_coverage_assist_narrows_coastal():
 
 
 def test_line_service_tickets(tmp_path, monkeypatch):
+    monkeypatch.setenv("JOB_STORE_BACKEND", "file")
+    monkeypatch.setenv("JOB_STORE_PATH", str(tmp_path / "job_store"))
     reset_line_service_desk()
     desk = get_line_service_desk()
     ticket = desk.create_ticket(

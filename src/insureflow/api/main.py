@@ -2339,7 +2339,10 @@ def bind_policy(
         )
 
     open_conditions = list(summary.get("open_conditions") or [])
-    if open_conditions:
+    # Subjectivities are cleared by approving the "subjectivities" checkpoint; that
+    # approval satisfies the outstanding-conditions gate for bind.
+    subjectivities_cleared = any(str(c.get("id")) == "subjectivities" and str(c.get("status", "")).lower() in {"approved", "cleared", "waived"} for c in (summary.get("human_checkpoints") or []))
+    if open_conditions and not subjectivities_cleared:
         raise HTTPException(
             status_code=400,
             detail={"message": "Cannot bind with outstanding subjectivities/conditions", "open_conditions": open_conditions},
