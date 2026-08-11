@@ -15,16 +15,7 @@ from typing import Any
 from uuid import uuid4
 
 from insureflow.audit.store import AuditStore
-from insureflow.monitoring.models import (
-    LossDevelopmentEntry,
-    MonitoringAlert,
-    MonitoringItem,
-    MonitoringItemStatus,
-    MonitoringSeverity,
-    MonitoringSource,
-    PolicyMonitoringRecord,
-    PolicyStatus,
-)
+from insureflow.monitoring.models import LossDevelopmentEntry, MonitoringAlert, MonitoringItem, MonitoringItemStatus, MonitoringSeverity, MonitoringSource, PolicyMonitoringRecord, PolicyStatus
 from insureflow.monitoring.store import MonitoringStore
 
 

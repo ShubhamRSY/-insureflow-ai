@@ -21,10 +21,7 @@ from insureflow.models.submissions import (
     SubmissionBundle,
 )
 from insureflow.oracles.cat_model_client import CATExposureResult, CATModelResult
-from insureflow.underwriting.adverse_selection import (
-    AdverseSelectionSignalType,
-    assess_adverse_selection,
-)
+from insureflow.underwriting.adverse_selection import AdverseSelectionSignalType, assess_adverse_selection
 
 
 def _exposure(

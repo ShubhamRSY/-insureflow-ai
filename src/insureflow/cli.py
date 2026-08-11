@@ -1019,15 +1019,7 @@ def lending_underwrite(
 ) -> None:
     """Run the lending underwriting pipeline for business or consumer loan applications."""
     from insureflow.lending import LendingPipeline
-    from insureflow.lending.models import (
-        BusinessFinancialData,
-        BusinessLoanApplication,
-        Collateral,
-        ConsumerFinancialData,
-        ConsumerLoanApplication,
-        LoanProductType,
-        LoanPurpose,
-    )
+    from insureflow.lending.models import BusinessFinancialData, BusinessLoanApplication, Collateral, ConsumerFinancialData, ConsumerLoanApplication, LoanProductType, LoanPurpose
 
     product_map: dict[str, LoanProductType] = {
         "business_term_loan": LoanProductType.BUSINESS_TERM_LOAN,
@@ -1278,12 +1270,7 @@ def registry_show(
     console.print(f"[bold]Created:[/] {entry.created_by or 'unknown'} @ {entry.created_at}")
     console.print(f"[bold]Updated:[/] {entry.updated_at}")
 
-    from insureflow.registry.models import (
-        AgentLogicVersion,
-        ComplianceRuleVersion,
-        LLMConfigVersion,
-        PromptVersion,
-    )
+    from insureflow.registry.models import AgentLogicVersion, ComplianceRuleVersion, LLMConfigVersion, PromptVersion
 
     if isinstance(entry, PromptVersion) and entry.prompt_key:
         console.print(f"[bold]Prompt Key:[/] {entry.prompt_key}")
@@ -1313,12 +1300,7 @@ def registry_create(
     creator: str = typer.Option("cli", "--creator", "-c", help="Created by"),
 ) -> None:
     from insureflow.registry import ComponentType, RegistryService
-    from insureflow.registry.models import (
-        AgentLogicVersion,
-        ComplianceRuleVersion,
-        LLMConfigVersion,
-        PromptVersion,
-    )
+    from insureflow.registry.models import AgentLogicVersion, ComplianceRuleVersion, LLMConfigVersion, PromptVersion
 
     reg = RegistryService()
     ct = ComponentType(component)

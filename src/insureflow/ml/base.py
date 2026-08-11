@@ -13,12 +13,7 @@ from typing import Any
 
 import numpy as np
 
-from insureflow.ml.models import (
-    FeatureVector,
-    ModelStatus,
-    ModelType,
-    TrainingResult,
-)
+from insureflow.ml.models import FeatureVector, ModelStatus, ModelType, TrainingResult
 
 logger = logging.getLogger(__name__)
 

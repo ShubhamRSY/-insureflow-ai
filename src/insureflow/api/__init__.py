@@ -5,8 +5,8 @@ Import surface stays stable:
   uvicorn insureflow.api:app
 """
 
-from insureflow.api.main import (  # noqa: F401
-    SubmissionRequest,
+from insureflow.api.main import (
+    SubmissionRequest,  # noqa: F401
     _check_row_access,
     app,
 )

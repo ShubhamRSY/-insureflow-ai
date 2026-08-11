@@ -13,19 +13,7 @@ from datetime import date, datetime, timezone
 from typing import Any, Optional
 from uuid import uuid4
 
-from insureflow.models.submissions import (
-    BrokerInfo,
-    ClaimRecord,
-    ClaimStatus,
-    CoverageDetail,
-    FinancialData,
-    LocationData,
-    LossRunData,
-    NamedInsured,
-    PolicyPeriod,
-    RiskProfile,
-    StructuredSubmission,
-)
+from insureflow.models.submissions import BrokerInfo, ClaimRecord, ClaimStatus, CoverageDetail, FinancialData, LocationData, LossRunData, NamedInsured, PolicyPeriod, RiskProfile, StructuredSubmission
 
 
 def _parse_date(value: Any) -> Optional[date]:

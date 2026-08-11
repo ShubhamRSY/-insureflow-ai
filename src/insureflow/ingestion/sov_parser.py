@@ -5,13 +5,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from insureflow.ingestion.base import BaseParser
-from insureflow.models.submissions import (
-    ExtractedChunk,
-    ExtractedField,
-    ScheduleItem,
-    ScheduleOfValues,
-    UnstructuredSubmission,
-)
+from insureflow.models.submissions import ExtractedChunk, ExtractedField, ScheduleItem, ScheduleOfValues, UnstructuredSubmission
 
 
 class SOVParser(BaseParser):

@@ -5,12 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from insureflow.ml.features import MORTGAGE_FEATURE_NAMES
-from insureflow.ml.gse_mortgage import (
-    discover_gse_files,
-    load_gold_standard_mortgage,
-    map_fannie_loan_performance,
-    map_hmda_lar,
-)
+from insureflow.ml.gse_mortgage import discover_gse_files, load_gold_standard_mortgage, map_fannie_loan_performance, map_hmda_lar
 from insureflow.ml.public_datasets import build_from_public_downloads
 
 SAMPLE = Path(__file__).resolve().parents[1] / "examples" / "mortgage" / "gse_sample"

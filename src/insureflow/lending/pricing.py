@@ -1,9 +1,6 @@
 from dataclasses import dataclass
 
-from insureflow.lending.models import (
-    CreditAnalysis,
-    LoanProductType,
-)
+from insureflow.lending.models import CreditAnalysis, LoanProductType
 
 
 @dataclass

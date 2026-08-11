@@ -1,10 +1,4 @@
-from insureflow.rag.guidelines import (
-    Guideline,
-    GuidelineCategory,
-    GuidelineSource,
-    UnderwritingGuidelines,
-    builtin_guidelines,
-)
+from insureflow.rag.guidelines import Guideline, GuidelineCategory, GuidelineSource, UnderwritingGuidelines, builtin_guidelines
 from insureflow.rag.knowledge_graph import UnderwritingKnowledgeGraph, get_knowledge_graph
 from insureflow.rag.rag_agent import RAGAgent, retrieval_policy_payload
 from insureflow.rag.retrieval_config import RetrievalConfig

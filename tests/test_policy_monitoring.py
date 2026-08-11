@@ -8,12 +8,7 @@ import pytest
 
 from insureflow.audit.store import AuditStore
 from insureflow.monitoring.engine import MonitoringEngine
-from insureflow.monitoring.models import (
-    MonitoringItemStatus,
-    MonitoringSeverity,
-    MonitoringSource,
-    PolicyStatus,
-)
+from insureflow.monitoring.models import MonitoringItemStatus, MonitoringSeverity, MonitoringSource, PolicyStatus
 from insureflow.monitoring.store import MonitoringStore
 
 

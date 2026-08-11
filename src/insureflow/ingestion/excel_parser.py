@@ -6,12 +6,7 @@ import re
 from typing import Any, Optional
 
 from insureflow.ingestion.base import BaseParser
-from insureflow.models.submissions import (
-    ExtractedField,
-    ScheduleItem,
-    ScheduleOfValues,
-    UnstructuredSubmission,
-)
+from insureflow.models.submissions import ExtractedField, ScheduleItem, ScheduleOfValues, UnstructuredSubmission
 
 
 class ExcelParser(BaseParser):

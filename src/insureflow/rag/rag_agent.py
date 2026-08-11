@@ -5,11 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Optional
 
-from insureflow.rag.guidelines import (
-    Guideline,
-    builtin_carrier_appetite_rules,
-    builtin_guidelines,
-)
+from insureflow.rag.guidelines import Guideline, builtin_carrier_appetite_rules, builtin_guidelines
 from insureflow.rag.knowledge_graph import get_knowledge_graph
 from insureflow.rag.rerank import keyword_overlap_score, rerank
 from insureflow.rag.retrieval_config import DEFAULT_RETRIEVAL, RetrievalConfig

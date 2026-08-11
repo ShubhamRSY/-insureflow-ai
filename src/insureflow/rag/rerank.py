@@ -66,10 +66,7 @@ def _corpus_idf() -> dict[str, float]:
     document containing them outranks one that merely shares generic words
     (``standard``, ``carrier``, ``appetite``).
     """
-    from insureflow.rag.guidelines import (
-        builtin_carrier_appetite_rules,
-        builtin_guidelines,
-    )
+    from insureflow.rag.guidelines import builtin_carrier_appetite_rules, builtin_guidelines
 
     docs = [tokenize(f"{g.title} {g.content} {' '.join(g.keywords)}") for g in (builtin_guidelines().active_as_of() + builtin_carrier_appetite_rules().active_as_of())]
     df: Counter[str] = Counter()

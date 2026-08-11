@@ -11,10 +11,7 @@ from insureflow.ingestion.acord_parser import ACORDParser
 from insureflow.ingestion.chunker import DocumentChunker
 from insureflow.ingestion.classifier import DocumentClassifier
 from insureflow.ingestion.financial_parser import FinancialStatementParser
-from insureflow.ingestion.insurance.classifier import (
-    InsuranceDocumentClassifier,
-    InsuranceDocumentType,
-)
+from insureflow.ingestion.insurance.classifier import InsuranceDocumentClassifier, InsuranceDocumentType
 from insureflow.ingestion.insurance.extractors import extract_fields
 from insureflow.ingestion.insurance.normalizers import get_normalizer
 from insureflow.ingestion.json_parser import JSONBrokerParser
@@ -22,13 +19,7 @@ from insureflow.ingestion.loss_run_parser import LossRunParser
 from insureflow.ingestion.ocr import OCRProcessor
 from insureflow.ingestion.report_extractor import InspectionReportExtractor
 from insureflow.ingestion.sov_parser import SOVParser
-from insureflow.models.submissions import (
-    ExtractedChunk,
-    ExtractedField,
-    SubmissionBundle,
-    SubmissionStatus,
-    UnstructuredSubmission,
-)
+from insureflow.models.submissions import ExtractedChunk, ExtractedField, SubmissionBundle, SubmissionStatus, UnstructuredSubmission
 
 SUPPORTED_EXTENSIONS = {
     ".txt",

@@ -15,13 +15,7 @@ from typing import Any
 from insureflow.ml.vision.analyzer import VisionLLMAnalyzer
 from insureflow.ml.vision.damage_detector import DamageDetector
 from insureflow.ml.vision.local_analyzer import enrich_with_local_analysis
-from insureflow.ml.vision.models import (
-    PhotoAnalysis,
-    PhotoQuality,
-    PropertyVisualProfile,
-    VisualFinding,
-    VisualRisk,
-)
+from insureflow.ml.vision.models import PhotoAnalysis, PhotoQuality, PropertyVisualProfile, VisualFinding, VisualRisk
 from insureflow.ml.vision.photo_scorer import score_photo_quality
 from insureflow.ml.vision.satellite import SatelliteImageryProvider
 

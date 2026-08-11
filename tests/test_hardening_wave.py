@@ -125,10 +125,7 @@ def test_ml_load_training_csv(tmp_path: Path) -> None:
 
 
 def test_lending_document_ingest_builds_application(tmp_path: Path) -> None:
-    from insureflow.ingestion.lending import (
-        application_from_documents,
-        load_lending_documents_from_directory,
-    )
+    from insureflow.ingestion.lending import application_from_documents, load_lending_documents_from_directory
     from insureflow.lending import LendingPipeline
     from insureflow.lending.models import LoanDecision
 

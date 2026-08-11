@@ -4,12 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from insureflow.analytics.business_kpis import (
-    BusinessKPIService,
-    CatchRateTracker,
-    DecisionRoutingTracker,
-    bootstrap_business_kpis,
-)
+from insureflow.analytics.business_kpis import BusinessKPIService, CatchRateTracker, DecisionRoutingTracker, bootstrap_business_kpis
 
 
 def test_decision_routing_and_catch_stats(tmp_path: Path) -> None:

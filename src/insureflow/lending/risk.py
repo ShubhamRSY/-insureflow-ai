@@ -1,9 +1,4 @@
-from insureflow.lending.models import (
-    BusinessFinancialData,
-    BusinessLoanApplication,
-    ConsumerLoanApplication,
-    CreditAnalysis,
-)
+from insureflow.lending.models import BusinessFinancialData, BusinessLoanApplication, ConsumerLoanApplication, CreditAnalysis
 
 
 class LendingRiskEngine:

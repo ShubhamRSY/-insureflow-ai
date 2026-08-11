@@ -82,12 +82,7 @@ def assess_sandbox_readiness(*, ping: bool = True) -> dict[str, Any]:
     """Return a pilot-ready report of what is live vs still simulated."""
     from insureflow.integrations.health import IntegrationHealthService, effective_mode
     from insureflow.integrations.http_client import build_http_client
-    from insureflow.oracles.factory import (
-        build_aplus_client,
-        build_cat_client,
-        build_clue_client,
-        build_ncci_client,
-    )
+    from insureflow.oracles.factory import build_aplus_client, build_cat_client, build_clue_client, build_ncci_client
     from insureflow.security.posture import resolve_security_posture
 
     feeds: list[FeedReadiness] = []

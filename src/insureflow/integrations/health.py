@@ -3,14 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from insureflow.config import settings
-from insureflow.integrations.factory import (
-    build_actuarial_client,
-    build_broker_portal_client,
-    build_claims_client,
-    build_iso_rating_client,
-    build_loss_control_client,
-    build_policy_admin_service,
-)
+from insureflow.integrations.factory import build_actuarial_client, build_broker_portal_client, build_claims_client, build_iso_rating_client, build_loss_control_client, build_policy_admin_service
 from insureflow.integrations.http_client import IntegrationHTTPClient, build_http_client
 from insureflow.oracles.factory import (
     build_aplus_client,

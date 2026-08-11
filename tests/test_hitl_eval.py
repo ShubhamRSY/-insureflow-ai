@@ -6,14 +6,7 @@ from pathlib import Path
 
 from pytest import MonkeyPatch
 
-from evaluations.hitl_rubrics import (
-    RUBRIC_DEFINITIONS,
-    AgreeLabel,
-    HITLEvalStore,
-    HumanEvalReview,
-    export_rubric_card,
-    seed_demo_reviews,
-)
+from evaluations.hitl_rubrics import RUBRIC_DEFINITIONS, AgreeLabel, HITLEvalStore, HumanEvalReview, export_rubric_card, seed_demo_reviews
 
 
 def test_rubric_definitions_complete() -> None:

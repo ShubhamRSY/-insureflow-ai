@@ -5,22 +5,9 @@ from __future__ import annotations
 from datetime import date, timedelta
 
 from insureflow.models.agents import RiskSeverity
-from insureflow.models.submissions import (
-    ClaimRecord,
-    ClaimStatus,
-    NamedInsured,
-    RiskProfile,
-    StructuredSubmission,
-    SubmissionBundle,
-    UnstructuredSubmission,
-)
+from insureflow.models.submissions import ClaimRecord, ClaimStatus, NamedInsured, RiskProfile, StructuredSubmission, SubmissionBundle, UnstructuredSubmission
 from insureflow.underwriting.acceptability import AcceptabilityCode, ClassAcceptability
-from insureflow.underwriting.asop12 import (
-    ClassificationStatus,
-    RiskCharacteristic,
-    check_surrogate,
-    review_classification,
-)
+from insureflow.underwriting.asop12 import ClassificationStatus, RiskCharacteristic, check_surrogate, review_classification
 from insureflow.underwriting.reserving import (
     ReservingMethod,
     assess_data_organization,

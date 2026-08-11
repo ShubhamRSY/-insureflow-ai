@@ -6,11 +6,7 @@ from insureflow.ingestion.acord_parser import ACORDParser
 from insureflow.ingestion.report_extractor import InspectionReportExtractor
 from insureflow.llm.client import LLMClient
 from insureflow.llm.prompts import EXTRACTION_PROMPT
-from insureflow.models.submissions import (
-    StructuredSubmission,
-    SubmissionBundle,
-    UnstructuredSubmission,
-)
+from insureflow.models.submissions import StructuredSubmission, SubmissionBundle, UnstructuredSubmission
 from insureflow.redaction.pipeline import RedactedLLMClient
 from insureflow.redaction.redactor import PIIRedactor
 

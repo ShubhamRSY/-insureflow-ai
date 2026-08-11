@@ -11,13 +11,7 @@ import json
 
 from evaluations.frameworks._common import cases_for_task, execute_case, offline_metric_score, run_task_cases
 from evaluations.frameworks.promptfoo_suite import build_config
-from evaluations.matrix import (
-    FRAMEWORKS,
-    TASKS,
-    apply_sla_gate,
-    matrix_inventory,
-    task_index,
-)
+from evaluations.matrix import FRAMEWORKS, TASKS, apply_sla_gate, matrix_inventory, task_index
 
 OFFLINE_TASKS = [t.task_id for t in TASKS if t.offline]
 

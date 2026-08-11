@@ -3,13 +3,7 @@ from __future__ import annotations
 from uuid import uuid4
 
 from insureflow.decisions import DecisionOutcome, is_decline, normalize_decision, to_vertical
-from insureflow.underwriting.cosign import (
-    CoSignStatus,
-    active_cosign,
-    cosign_allows_bind,
-    create_cosign_request,
-    resolve_cosign,
-)
+from insureflow.underwriting.cosign import CoSignStatus, active_cosign, cosign_allows_bind, create_cosign_request, resolve_cosign
 from insureflow.workflow.models import SignOffAction, SignOffRecord, WorkflowRecord, WorkflowState
 from insureflow.workflow.store import WorkflowStore
 

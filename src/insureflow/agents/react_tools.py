@@ -4,10 +4,7 @@ from dataclasses import dataclass, field
 from typing import Any, Callable
 
 from insureflow.agents.tools import UnderwritingTools
-from insureflow.models.submissions import (
-    ClaimRecord,
-    SubmissionBundle,
-)
+from insureflow.models.submissions import ClaimRecord, SubmissionBundle
 
 
 @dataclass

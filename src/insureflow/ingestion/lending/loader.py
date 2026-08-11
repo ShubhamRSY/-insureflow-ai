@@ -8,15 +8,7 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
-from insureflow.lending.models import (
-    BusinessFinancialData,
-    BusinessLoanApplication,
-    ConsumerFinancialData,
-    ConsumerLoanApplication,
-    LendingDocumentType,
-    LoanProductType,
-    LoanPurpose,
-)
+from insureflow.lending.models import BusinessFinancialData, BusinessLoanApplication, ConsumerFinancialData, ConsumerLoanApplication, LendingDocumentType, LoanProductType, LoanPurpose
 
 TEXT_SUFFIXES = {".md", ".txt", ".json", ".csv", ".xml", ".html"}
 BINARY_SUFFIXES = {".pdf", ".png", ".jpg", ".jpeg", ".tiff", ".bmp", ".tif"}

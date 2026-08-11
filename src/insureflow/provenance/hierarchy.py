@@ -5,20 +5,8 @@ from typing import Any
 from uuid import uuid4
 
 from insureflow.config import settings
-from insureflow.models.provenance import (
-    DataSource,
-    ProvenanceHierarchy,
-    ProvenanceNode,
-    ProvenanceRecord,
-    SourceType,
-    TrustLevel,
-    VerificationStatus,
-)
-from insureflow.models.submissions import (
-    StructuredSubmission,
-    SubmissionBundle,
-    UnstructuredSubmission,
-)
+from insureflow.models.provenance import DataSource, ProvenanceHierarchy, ProvenanceNode, ProvenanceRecord, SourceType, TrustLevel, VerificationStatus
+from insureflow.models.submissions import StructuredSubmission, SubmissionBundle, UnstructuredSubmission
 
 
 class ProvenanceEngine:

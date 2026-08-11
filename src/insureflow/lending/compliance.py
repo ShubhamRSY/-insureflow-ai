@@ -3,11 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Callable
 
-from insureflow.lending.models import (
-    BusinessLoanApplication,
-    ConsumerLoanApplication,
-    LoanProductType,
-)
+from insureflow.lending.models import BusinessLoanApplication, ConsumerLoanApplication, LoanProductType
 
 
 @dataclass(frozen=True)

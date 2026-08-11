@@ -8,23 +8,10 @@ from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, StateGraph
 
-from insureflow.agents.mortgage.supervisor import (
-    MortgageAssetAgent,
-    MortgageCollateralAgent,
-    MortgageCreditAgent,
-    MortgageDecisionAgent,
-    MortgageFraudDetectionAgent,
-    MortgageIncomeAgent,
-)
+from insureflow.agents.mortgage.supervisor import MortgageAssetAgent, MortgageCollateralAgent, MortgageCreditAgent, MortgageDecisionAgent, MortgageFraudDetectionAgent, MortgageIncomeAgent
 from insureflow.audit.store import AuditStore
 from insureflow.ingestion.mortgage.loader import MortgageSubmissionLoader
-from insureflow.models.mortgage import (
-    MortgageAgentResult,
-    MortgageBundle,
-    MortgageBundleStatus,
-    MortgageMemo,
-    ProductLine,
-)
+from insureflow.models.mortgage import MortgageAgentResult, MortgageBundle, MortgageBundleStatus, MortgageMemo, ProductLine
 from insureflow.mortgage.audit import MortgageAuditLogger
 from insureflow.mortgage.compliance import MortgageComplianceEngine
 from insureflow.mortgage.reconciliation import MortgageReconciliationEngine

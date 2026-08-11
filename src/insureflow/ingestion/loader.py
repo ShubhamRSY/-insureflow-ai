@@ -15,17 +15,7 @@ from insureflow.ingestion.ocr import OCRProcessor
 from insureflow.ingestion.report_extractor import InspectionReportExtractor
 from insureflow.ingestion.schematic_parser import SchematicParser
 from insureflow.ingestion.sov_parser import SOVParser
-from insureflow.models.submissions import (
-    DocumentType,
-    ExtractedChunk,
-    FinancialData,
-    FloorPlanData,
-    RiskProfile,
-    StructuredSubmission,
-    SubmissionBundle,
-    SubmissionStatus,
-    UnstructuredSubmission,
-)
+from insureflow.models.submissions import DocumentType, ExtractedChunk, FinancialData, FloorPlanData, RiskProfile, StructuredSubmission, SubmissionBundle, SubmissionStatus, UnstructuredSubmission
 
 
 class SubmissionLoader:

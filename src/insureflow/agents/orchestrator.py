@@ -11,12 +11,7 @@ from insureflow.audit.store import AuditStore
 from insureflow.audit.trail import ProvenanceTrailBuilder
 from insureflow.ingestion.loader import SubmissionLoader
 from insureflow.llm.client import LLMClient
-from insureflow.models.audit import (
-    EventSeverity,
-    PipelineEvent,
-    ReconciliationResult,
-    SynthesisOutput,
-)
+from insureflow.models.audit import EventSeverity, PipelineEvent, ReconciliationResult, SynthesisOutput
 from insureflow.models.provenance import ProvenanceRecord
 from insureflow.models.submissions import SubmissionBundle, SubmissionStatus
 from insureflow.provenance.hierarchy import ProvenanceEngine

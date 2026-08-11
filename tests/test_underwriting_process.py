@@ -12,43 +12,12 @@ from datetime import date
 from typing import Any
 
 from insureflow.models.agents import RiskSeverity
-from insureflow.models.submissions import (
-    BrokerInfo,
-    ClaimRecord,
-    ClaimStatus,
-    FinancialData,
-    LocationData,
-    NamedInsured,
-    RiskProfile,
-    StructuredSubmission,
-    SubmissionBundle,
-)
-from insureflow.underwriting.case_assignment import (
-    AssignmentMethod,
-    CaseAssignmentEngine,
-    CaseType,
-    assign_by_face_amount,
-    assign_by_geography,
-    assign_by_last_name,
-    assign_by_rotation,
-)
-from insureflow.underwriting.claim_file import (
-    ClaimFileSignalType,
-    review_claim_files,
-)
+from insureflow.models.submissions import BrokerInfo, ClaimRecord, ClaimStatus, FinancialData, LocationData, NamedInsured, RiskProfile, StructuredSubmission, SubmissionBundle
+from insureflow.underwriting.case_assignment import AssignmentMethod, CaseAssignmentEngine, CaseType, assign_by_face_amount, assign_by_geography, assign_by_last_name, assign_by_rotation
+from insureflow.underwriting.claim_file import ClaimFileSignalType, review_claim_files
 from insureflow.underwriting.financial import FinancialGrade, assess_financial_condition
-from insureflow.underwriting.hazards import (
-    HazardCategory,
-    assess_hazards,
-    assess_legal_hazard,
-    assess_morale_hazard,
-)
-from insureflow.underwriting.mib import (
-    MibCode,
-    MibCodeType,
-    process_mib_codes,
-    request_mib_report,
-)
+from insureflow.underwriting.hazards import HazardCategory, assess_hazards, assess_legal_hazard, assess_morale_hazard
+from insureflow.underwriting.mib import MibCode, MibCodeType, process_mib_codes, request_mib_report
 from insureflow.underwriting.preliminary import (
     ExistingRecord,
     ExistingRecordKind,

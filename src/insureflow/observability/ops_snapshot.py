@@ -12,13 +12,7 @@ _STARTED_AT = time.time()
 
 def collect_ops_snapshot(job_store: Any | None = None) -> dict[str, Any]:
     """Lightweight health + job latency signals (no external deps required)."""
-    from insureflow.pilot.sandbox_readiness import (
-        assess_sandbox_readiness,
-        bind_is_allowed,
-        is_ready_mode,
-        is_shadow_mode,
-        operating_mode,
-    )
+    from insureflow.pilot.sandbox_readiness import assess_sandbox_readiness, bind_is_allowed, is_ready_mode, is_shadow_mode, operating_mode
     from insureflow.storage.job_store import get_job_store
 
     store = job_store or get_job_store()

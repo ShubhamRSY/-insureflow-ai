@@ -7,13 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from insureflow.llm.tracker import (
-    BLENDED_MIX,
-    TokenUsageTracker,
-    blended_price_per_1k,
-    estimate_cost_full,
-    get_model_pricing,
-)
+from insureflow.llm.tracker import BLENDED_MIX, TokenUsageTracker, blended_price_per_1k, estimate_cost_full, get_model_pricing
 
 
 class TestGetModelPricing:

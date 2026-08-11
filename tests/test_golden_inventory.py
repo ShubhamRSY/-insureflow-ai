@@ -3,11 +3,7 @@
 from __future__ import annotations
 
 from evaluations.golden_dataset import golden_dataset
-from evaluations.qa_ground_truth import (
-    all_ground_truth_questions,
-    field_questions_from_case,
-    ground_truth_inventory,
-)
+from evaluations.qa_ground_truth import all_ground_truth_questions, field_questions_from_case, ground_truth_inventory
 
 
 def test_golden_dataset_has_thirteen_cases() -> None:

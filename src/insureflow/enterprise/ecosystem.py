@@ -7,13 +7,7 @@ from uuid import uuid4
 
 from insureflow.audit.store import AuditStore
 from insureflow.config import settings
-from insureflow.integrations.factory import (
-    build_actuarial_client,
-    build_broker_portal_client,
-    build_claims_client,
-    build_hubspot_adapter,
-    build_loss_control_client,
-)
+from insureflow.integrations.factory import build_actuarial_client, build_broker_portal_client, build_claims_client, build_hubspot_adapter, build_loss_control_client
 from insureflow.integrations.health import IntegrationHealthService, effective_mode
 from insureflow.integrations.http_client import IntegrationHTTPError
 from insureflow.oracles._live import resolve_integration_mode

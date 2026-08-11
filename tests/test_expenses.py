@@ -2,13 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from insureflow.rating.expenses import (
-    ExpenseBasis,
-    allocate_general_admin,
-    allocate_general_admin_across_all_lines,
-    line_premium_default,
-    project_expenses,
-)
+from insureflow.rating.expenses import ExpenseBasis, allocate_general_admin, allocate_general_admin_across_all_lines, line_premium_default, project_expenses
 from insureflow.rating.models import InsuranceLine
 
 

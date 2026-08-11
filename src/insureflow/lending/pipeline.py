@@ -9,14 +9,7 @@ from typing import Any
 from insureflow.analytics.documents import DocumentAnalyticsEngine
 from insureflow.decisions import normalize_decision
 from insureflow.lending.compliance import LendingComplianceEngine
-from insureflow.lending.models import (
-    BusinessFinancialData,
-    BusinessLoanApplication,
-    ConsumerLoanApplication,
-    CreditAnalysis,
-    LendingPipelineResult,
-    LoanDecision,
-)
+from insureflow.lending.models import BusinessFinancialData, BusinessLoanApplication, ConsumerLoanApplication, CreditAnalysis, LendingPipelineResult, LoanDecision
 from insureflow.lending.pricing import LendingPricingEngine
 from insureflow.lending.risk import LendingRiskEngine
 

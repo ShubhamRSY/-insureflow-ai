@@ -21,13 +21,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from insureflow.models.submissions import (
-    CoverageDetail,
-    FinancialData,
-    PolicyPeriod,
-    RiskProfile,
-    StructuredSubmission,
-)
+from insureflow.models.submissions import CoverageDetail, FinancialData, PolicyPeriod, RiskProfile, StructuredSubmission
 
 # ===========================================================================
 # 1. INGESTION — ACORD XML Parser

@@ -1,10 +1,6 @@
 from __future__ import annotations
 
-from insureflow.models.provenance import (
-    ProvenanceHierarchy,
-    TrustLevel,
-    VerificationStatus,
-)
+from insureflow.models.provenance import ProvenanceHierarchy, TrustLevel, VerificationStatus
 from insureflow.models.submissions import SubmissionBundle
 from insureflow.provenance.hierarchy import ProvenanceEngine
 from insureflow.provenance.rules import VerificationRule, VerificationRuleSet

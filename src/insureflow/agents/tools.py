@@ -3,15 +3,7 @@ from __future__ import annotations
 from typing import Any, Optional
 
 from insureflow.models.agents import Finding, RiskSeverity
-from insureflow.models.submissions import (
-    ClaimRecord,
-    CoverageDetail,
-    LocationData,
-    LossRunData,
-    RiskProfile,
-    ScheduleOfValues,
-    SubmissionBundle,
-)
+from insureflow.models.submissions import ClaimRecord, CoverageDetail, LocationData, LossRunData, RiskProfile, ScheduleOfValues, SubmissionBundle
 
 
 class UnderwritingTools:

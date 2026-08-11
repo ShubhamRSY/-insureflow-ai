@@ -11,11 +11,7 @@ from insureflow.agents.loss_run_analyst import LossRunAnalystAgent
 from insureflow.agents.risk_analyst import RiskAnalystAgent
 from insureflow.agents.uw_decision_agent import UWDecisionAgent
 from insureflow.llm.client import LLMClient
-from insureflow.models.agents import (
-    AgentResult,
-    AgentType,
-    UnderwritingMemo,
-)
+from insureflow.models.agents import AgentResult, AgentType, UnderwritingMemo
 from insureflow.models.submissions import SubmissionBundle
 
 CONFLICT_RESOLUTION_PROMPT = """\

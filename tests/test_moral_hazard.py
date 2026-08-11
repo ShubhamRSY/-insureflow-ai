@@ -21,10 +21,7 @@ from insureflow.models.submissions import (
     SubmissionBundle,
     UnstructuredSubmission,
 )
-from insureflow.underwriting.moral_hazard import (
-    MoralHazardSignalType,
-    assess_moral_hazard,
-)
+from insureflow.underwriting.moral_hazard import MoralHazardSignalType, assess_moral_hazard
 
 
 def _claim(

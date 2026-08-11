@@ -5,10 +5,7 @@ from __future__ import annotations
 import pytest
 
 from insureflow.audit.store import AuditStore
-from insureflow.insurance.notifications import (
-    ProducerNotificationService,
-    ProducerNotificationStore,
-)
+from insureflow.insurance.notifications import ProducerNotificationService, ProducerNotificationStore
 
 
 @pytest.fixture()

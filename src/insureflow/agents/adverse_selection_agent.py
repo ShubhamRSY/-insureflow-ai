@@ -26,11 +26,7 @@ from insureflow.models.agents import AgentType, Finding, RiskSeverity
 from insureflow.models.submissions import SubmissionBundle
 from insureflow.oracles.cat_model_client import CatastropheModelClient
 from insureflow.oracles.factory import build_cat_client
-from insureflow.underwriting.adverse_selection import (
-    AdverseSelectionAssessment,
-    AdverseSelectionConfig,
-    assess_adverse_selection,
-)
+from insureflow.underwriting.adverse_selection import AdverseSelectionAssessment, AdverseSelectionConfig, assess_adverse_selection
 
 
 class AdverseSelectionAgent(BaseAgent):

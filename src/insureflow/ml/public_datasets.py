@@ -20,19 +20,8 @@ from typing import Any
 
 import numpy as np
 
-from insureflow.ml.features import (
-    DEFAULT_FEATURE_NAMES,
-    LENDING_FEATURE_NAMES,
-    MORTGAGE_FEATURE_NAMES,
-)
-from insureflow.ml.seed_datasets import (
-    DEFAULT_OUT_DIR,
-    _target_diversity_ok,
-    _write_csv,
-    build_insurance_from_wisconsin,
-    build_lending_seed,
-    build_mortgage_seed,
-)
+from insureflow.ml.features import DEFAULT_FEATURE_NAMES, LENDING_FEATURE_NAMES, MORTGAGE_FEATURE_NAMES
+from insureflow.ml.seed_datasets import DEFAULT_OUT_DIR, _target_diversity_ok, _write_csv, build_insurance_from_wisconsin, build_lending_seed, build_mortgage_seed
 
 logger = logging.getLogger(__name__)
 

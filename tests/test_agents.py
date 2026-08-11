@@ -10,13 +10,7 @@ from insureflow.agents.risk_analyst import RiskAnalystAgent
 from insureflow.agents.supervisor import SupervisorAgent
 from insureflow.agents.tools import UnderwritingTools
 from insureflow.agents.uw_decision_agent import UWDecisionAgent
-from insureflow.models.agents import (
-    AgentResult,
-    AgentType,
-    Finding,
-    RiskSeverity,
-    UWDecision,
-)
+from insureflow.models.agents import AgentResult, AgentType, Finding, RiskSeverity, UWDecision
 from insureflow.models.submissions import (
     ClaimRecord,
     ClaimStatus,
@@ -601,10 +595,7 @@ class TestFraudDetectionAgent:
 
     def test_entity_inconsistency(self) -> None:
         bundle = _make_bundle(insured_name="Test Corp")
-        from insureflow.models.submissions import (
-            ExtractedField,
-            UnstructuredSubmission,
-        )
+        from insureflow.models.submissions import ExtractedField, UnstructuredSubmission
 
         bundle.unstructured = [
             UnstructuredSubmission(

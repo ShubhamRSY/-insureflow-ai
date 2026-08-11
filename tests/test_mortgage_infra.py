@@ -65,12 +65,7 @@ class TestJobStore:
 
 class TestLoanPricing:
     def test_quote_returns_rate_lock(self) -> None:
-        from insureflow.models.mortgage import (
-            MortgageBundle,
-            MortgageDecision,
-            MortgageMemo,
-            ProductLine,
-        )
+        from insureflow.models.mortgage import MortgageBundle, MortgageDecision, MortgageMemo, ProductLine
 
         engine = LoanPricingEngine()
         bundle = MortgageBundle(bundle_id="test", product_line=ProductLine.RESIDENTIAL_MORTGAGE)

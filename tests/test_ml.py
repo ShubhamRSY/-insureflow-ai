@@ -48,12 +48,7 @@ from insureflow.ml.mortgage_default import MortgageDefaultRiskModel
 from insureflow.ml.portfolio_risk import PortfolioRiskModel
 from insureflow.ml.premium_optimizer import PremiumOptimizerModel
 from insureflow.ml.registry import get_ml_registry
-from insureflow.ml.training import (
-    TRAINING_CONFIGS,
-    get_training_status,
-    retrain_model,
-    train_all_models,
-)
+from insureflow.ml.training import TRAINING_CONFIGS, get_training_status, retrain_model, train_all_models
 
 # ===========================================================================
 # 1. MODELS — Pydantic schema validation

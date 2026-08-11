@@ -21,12 +21,7 @@ from datetime import date, datetime, timezone
 from typing import Any, Optional
 
 from insureflow.ingestion.base import BaseParser
-from insureflow.models.submissions import (
-    ExtractedChunk,
-    ExtractedField,
-    FinancialData,
-    UnstructuredSubmission,
-)
+from insureflow.models.submissions import ExtractedChunk, ExtractedField, FinancialData, UnstructuredSubmission
 
 # Normalized field key → (display label regex alternatives). Order matters:
 # longer/more-specific labels first so "total assets" wins over "assets".

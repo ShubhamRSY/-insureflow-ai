@@ -5,11 +5,7 @@ from datetime import datetime, timezone
 from typing import Any
 from uuid import uuid4
 
-from insureflow.integration.base_adapter import (
-    BasePolicyAdminAdapter,
-    IntegrationResult,
-    PolicySubmissionPayload,
-)
+from insureflow.integration.base_adapter import BasePolicyAdminAdapter, IntegrationResult, PolicySubmissionPayload
 from insureflow.integrations.http_client import IntegrationHTTPError, build_http_client
 from insureflow.oracles._live import resolve_integration_mode
 

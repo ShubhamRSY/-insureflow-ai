@@ -5,14 +5,7 @@ from datetime import date, datetime, timezone
 from typing import Optional
 
 from insureflow.ingestion.base import BaseParser
-from insureflow.models.submissions import (
-    ClaimRecord,
-    ClaimStatus,
-    ExtractedChunk,
-    ExtractedField,
-    LossRunData,
-    UnstructuredSubmission,
-)
+from insureflow.models.submissions import ClaimRecord, ClaimStatus, ExtractedChunk, ExtractedField, LossRunData, UnstructuredSubmission
 
 
 class LossRunParser(BaseParser):

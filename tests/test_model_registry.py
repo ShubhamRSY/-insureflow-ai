@@ -2,15 +2,7 @@
 
 from __future__ import annotations
 
-from insureflow.llm.model_registry import (
-    MODEL_REGISTRY,
-    PRICED_MODELS,
-    Endpoint,
-    System,
-    get_model_metadata,
-    list_model_metadata,
-    registry_inventory,
-)
+from insureflow.llm.model_registry import MODEL_REGISTRY, PRICED_MODELS, Endpoint, System, get_model_metadata, list_model_metadata, registry_inventory
 
 
 def test_registry_contains_priced_models() -> None:

@@ -3,22 +3,9 @@
 from __future__ import annotations
 
 from insureflow.auth import Role
-from insureflow.underwriting.line_desk import (
-    assist_coverage,
-    get_line_service_desk,
-    reset_line_service_desk,
-)
-from insureflow.underwriting.roles import (
-    UnderwriterDesk,
-    capabilities_overview,
-    desk_for_role,
-    role_supports_staff_desk,
-)
-from insureflow.underwriting.staff_desk import (
-    evaluate_experience,
-    get_staff_desk,
-    reset_staff_desk,
-)
+from insureflow.underwriting.line_desk import assist_coverage, get_line_service_desk, reset_line_service_desk
+from insureflow.underwriting.roles import UnderwriterDesk, capabilities_overview, desk_for_role, role_supports_staff_desk
+from insureflow.underwriting.staff_desk import evaluate_experience, get_staff_desk, reset_staff_desk
 
 
 def test_desk_for_role_mapping():

@@ -3,10 +3,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from insureflow.integration.base_adapter import (
-    BasePolicyAdminAdapter,
-    PolicySubmissionPayload,
-)
+from insureflow.integration.base_adapter import BasePolicyAdminAdapter, PolicySubmissionPayload
 from insureflow.integration.britecore_adapter import BriteCoreAdapter
 from insureflow.integration.guidewire_adapter import GuidewireAdapter
 from insureflow.models.agents import UnderwritingMemo

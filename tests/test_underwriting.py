@@ -4,45 +4,12 @@ from __future__ import annotations
 
 from datetime import date, timedelta
 
-from insureflow.agents.triage_agent import (
-    DocumentChecklist,
-    SubmissionPriority,
-    TriageAgent,
-)
-from insureflow.models.submissions import (
-    BrokerInfo,
-    CoverageDetail,
-    FinancialData,
-    LocationData,
-    NamedInsured,
-    PolicyPeriod,
-    RiskProfile,
-    StructuredSubmission,
-    SubmissionBundle,
-)
-from insureflow.underwriting.authority import (
-    AuthorityMatrix,
-    AuthorityTier,
-)
-from insureflow.underwriting.cope import (
-    COPERatingEngine,
-    RiskGrade,
-    analyze_cope,
-)
-from insureflow.underwriting.market import (
-    MarketCycle,
-    MarketCycleAwareness,
-    MarketPhase,
-)
-from insureflow.underwriting.renewal import (
-    AuditAdjustmentType,
-    AuditStatus,
-    PolicyLapse,
-    PremiumAuditEngine,
-    RenewalAction,
-    RenewalEngine,
-    RetentionRisk,
-)
+from insureflow.agents.triage_agent import DocumentChecklist, SubmissionPriority, TriageAgent
+from insureflow.models.submissions import BrokerInfo, CoverageDetail, FinancialData, LocationData, NamedInsured, PolicyPeriod, RiskProfile, StructuredSubmission, SubmissionBundle
+from insureflow.underwriting.authority import AuthorityMatrix, AuthorityTier
+from insureflow.underwriting.cope import COPERatingEngine, RiskGrade, analyze_cope
+from insureflow.underwriting.market import MarketCycle, MarketCycleAwareness, MarketPhase
+from insureflow.underwriting.renewal import AuditAdjustmentType, AuditStatus, PolicyLapse, PremiumAuditEngine, RenewalAction, RenewalEngine, RetentionRisk
 
 # ── COPE Tests ────────────────────────────────────────────────
 

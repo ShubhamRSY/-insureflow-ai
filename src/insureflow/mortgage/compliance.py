@@ -3,12 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Callable, Iterable
 
-from insureflow.models.mortgage import (
-    ComplianceViolation,
-    MortgageBundle,
-    MortgageDocumentType,
-    ProductLine,
-)
+from insureflow.models.mortgage import ComplianceViolation, MortgageBundle, MortgageDocumentType, ProductLine
 
 
 @dataclass(frozen=True)

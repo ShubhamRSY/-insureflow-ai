@@ -20,12 +20,7 @@ from datetime import datetime, timezone
 from typing import Any, Optional
 
 from insureflow.ingestion.base import BaseParser
-from insureflow.models.submissions import (
-    ExtractedChunk,
-    ExtractedField,
-    FloorPlanData,
-    UnstructuredSubmission,
-)
+from insureflow.models.submissions import ExtractedChunk, ExtractedField, FloorPlanData, UnstructuredSubmission
 
 _FLOOR_AREA_RE = re.compile(
     r"(?i)(?:total\s+)?(?:floor|gross|building|net|usable)?\s*area"

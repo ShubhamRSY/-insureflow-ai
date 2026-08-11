@@ -13,21 +13,10 @@ from insureflow.auth import Role
 from insureflow.auth.jwt import create_access_token
 from insureflow.auth.models import User
 from insureflow.auth.store import clear_user_store, get_user_store
-from insureflow.ingestion.insurance.classifier import (
-    InsuranceDocumentClassifier,
-    InsuranceDocumentType,
-)
+from insureflow.ingestion.insurance.classifier import InsuranceDocumentClassifier, InsuranceDocumentType
 from insureflow.ingestion.insurance.extractors import extract_broker_slip
 from insureflow.insurance.pipeline import InsurancePipeline
-from insureflow.models.agents import (
-    AgentResult,
-    AgentType,
-    Finding,
-    Recommendation,
-    RiskSeverity,
-    UnderwritingMemo,
-    UWDecision,
-)
+from insureflow.models.agents import AgentResult, AgentType, Finding, Recommendation, RiskSeverity, UnderwritingMemo, UWDecision
 from insureflow.models.submissions import SubmissionBundle
 from insureflow.outcomes.feedback import FeedbackEngine
 from insureflow.rating.engine import InsuranceRatingEngine

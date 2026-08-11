@@ -12,12 +12,7 @@ import math
 from typing import Any, Union
 
 from insureflow.zta.config import ZtaConfig
-from insureflow.zta.models import (
-    RouteContext,
-    RouteDecision,
-    RouteResult,
-    ZtaTask,
-)
+from insureflow.zta.models import RouteContext, RouteDecision, RouteResult, ZtaTask
 
 # Expected field counts per document type — used to judge extraction coverage.
 DEFAULT_EXPECTED_FIELDS: dict[str, int] = {

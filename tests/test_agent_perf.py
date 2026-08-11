@@ -5,12 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from insureflow.analytics.agent_perf import (
-    LOG_EXPLORER_QUERIES,
-    analyze_audit_directory,
-    analyze_jsonl_logs,
-    seed_demo_agent_perf,
-)
+from insureflow.analytics.agent_perf import LOG_EXPLORER_QUERIES, analyze_audit_directory, analyze_jsonl_logs, seed_demo_agent_perf
 
 
 def test_analyze_jsonl_logs(tmp_path: Path) -> None:

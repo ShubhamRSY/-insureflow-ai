@@ -4,11 +4,7 @@ import logging
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from insureflow.integration.base_adapter import (
-    BasePolicyAdminAdapter,
-    IntegrationResult,
-    PolicySubmissionPayload,
-)
+from insureflow.integration.base_adapter import BasePolicyAdminAdapter, IntegrationResult, PolicySubmissionPayload
 
 logger = logging.getLogger(__name__)
 

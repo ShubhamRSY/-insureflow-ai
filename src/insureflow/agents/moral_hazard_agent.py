@@ -18,11 +18,7 @@ from typing import Any
 from insureflow.agents.base import BaseAgent
 from insureflow.models.agents import AgentType, Finding, RiskSeverity
 from insureflow.models.submissions import SubmissionBundle
-from insureflow.underwriting.moral_hazard import (
-    MoralHazardAssessment,
-    MoralHazardConfig,
-    assess_moral_hazard,
-)
+from insureflow.underwriting.moral_hazard import MoralHazardAssessment, MoralHazardConfig, assess_moral_hazard
 
 
 class MoralHazardAgent(BaseAgent):

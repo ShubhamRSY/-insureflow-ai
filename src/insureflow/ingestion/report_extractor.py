@@ -5,11 +5,7 @@ from datetime import datetime, timezone
 
 from insureflow.config import settings
 from insureflow.ingestion.base import BaseParser
-from insureflow.models.submissions import (
-    ExtractedChunk,
-    ExtractedField,
-    UnstructuredSubmission,
-)
+from insureflow.models.submissions import ExtractedChunk, ExtractedField, UnstructuredSubmission
 
 
 class InspectionReportExtractor(BaseParser):

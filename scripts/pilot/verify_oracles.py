@@ -38,12 +38,7 @@ def main() -> int:
 
     import os
 
-    from insureflow.oracles.factory import (
-        build_aplus_client,
-        build_cat_client,
-        build_clue_client,
-        build_ncci_client,
-    )
+    from insureflow.oracles.factory import build_aplus_client, build_cat_client, build_clue_client, build_ncci_client
     from insureflow.pilot.sandbox_readiness import assess_sandbox_readiness
 
     specs = [

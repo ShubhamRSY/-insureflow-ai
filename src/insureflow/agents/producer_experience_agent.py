@@ -16,11 +16,7 @@ from insureflow.agents.base import BaseAgent
 from insureflow.models.agents import AgentType, Finding, RiskSeverity
 from insureflow.models.submissions import SubmissionBundle
 from insureflow.portfolio.store import PolicySource, get_portfolio_store
-from insureflow.underwriting.selection import (
-    ProducerExperience,
-    SelectionStandardsConfig,
-    compute_producer_experience,
-)
+from insureflow.underwriting.selection import ProducerExperience, SelectionStandardsConfig, compute_producer_experience
 
 
 class ProducerExperienceAgent(BaseAgent):

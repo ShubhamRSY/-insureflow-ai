@@ -6,14 +6,7 @@ from typing import Any
 
 from insureflow.agents.producer_experience_agent import ProducerExperienceAgent
 from insureflow.models.agents import RiskSeverity
-from insureflow.models.submissions import (
-    BrokerInfo,
-    CoverageDetail,
-    LocationData,
-    RiskProfile,
-    StructuredSubmission,
-    SubmissionBundle,
-)
+from insureflow.models.submissions import BrokerInfo, CoverageDetail, LocationData, RiskProfile, StructuredSubmission, SubmissionBundle
 from insureflow.underwriting.selection import SelectionStandardsConfig
 
 

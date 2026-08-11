@@ -179,11 +179,7 @@ class TestStructuredFidelity:
         assert node.confidence > 0.9
 
     def test_sov_value_never_maps_to_coverage_limit(self) -> None:
-        from insureflow.models.submissions import (
-            ExtractedField,
-            SubmissionBundle,
-            UnstructuredSubmission,
-        )
+        from insureflow.models.submissions import ExtractedField, SubmissionBundle, UnstructuredSubmission
 
         sov = UnstructuredSubmission(
             submission_id="sov-x",

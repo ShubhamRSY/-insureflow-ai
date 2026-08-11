@@ -6,13 +6,7 @@ from uuid import uuid4
 
 from insureflow.audit.store import AuditStore
 from insureflow.models.agents import UnderwritingMemo
-from insureflow.models.audit import (
-    AuditEntry,
-    AuditTrail,
-    EventSeverity,
-    PipelineEvent,
-    ReconciliationResult,
-)
+from insureflow.models.audit import AuditEntry, AuditTrail, EventSeverity, PipelineEvent, ReconciliationResult
 from insureflow.models.provenance import ProvenanceRecord
 from insureflow.models.submissions import SubmissionBundle
 from insureflow.storage.encryption import EnvelopeEncryption

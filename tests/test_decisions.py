@@ -4,17 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from insureflow.decisions import (
-    DecisionOutcome,
-    decision_rank,
-    is_accept_family,
-    is_bind_eligible,
-    is_decline,
-    ml_binary_target,
-    normalize_decision,
-    skips_core_push,
-    to_vertical,
-)
+from insureflow.decisions import DecisionOutcome, decision_rank, is_accept_family, is_bind_eligible, is_decline, ml_binary_target, normalize_decision, skips_core_push, to_vertical
 from insureflow.lending.models import LoanDecision
 from insureflow.models.agents import UWDecision
 from insureflow.models.mortgage import MortgageDecision

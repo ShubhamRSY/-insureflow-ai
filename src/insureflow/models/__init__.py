@@ -1,21 +1,5 @@
-from insureflow.models.audit import (
-    AuditEntry,
-    AuditTrail,
-    DiscrepancyRecord,
-    EventSeverity,
-    PipelineEvent,
-    ReconciliationResult,
-    SynthesisOutput,
-)
-from insureflow.models.provenance import (
-    DataSource,
-    ProvenanceHierarchy,
-    ProvenanceNode,
-    ProvenanceRecord,
-    SourceType,
-    TrustLevel,
-    VerificationStatus,
-)
+from insureflow.models.audit import AuditEntry, AuditTrail, DiscrepancyRecord, EventSeverity, PipelineEvent, ReconciliationResult, SynthesisOutput
+from insureflow.models.provenance import DataSource, ProvenanceHierarchy, ProvenanceNode, ProvenanceRecord, SourceType, TrustLevel, VerificationStatus
 from insureflow.models.submissions import (
     BrokerInfo,
     CoverageDetail,

@@ -10,18 +10,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any, Callable, Optional
 
-from fastapi import (
-    APIRouter,
-    BackgroundTasks,
-    Body,
-    Depends,
-    FastAPI,
-    HTTPException,
-    Request,
-    WebSocket,
-    WebSocketDisconnect,
-    status,
-)
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect, status
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -30,14 +19,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
 from insureflow.auth import Role
-from insureflow.auth.dependencies import (
-    clear_user_store,
-    get_current_user,
-    get_current_user_optional,
-    get_user_store,
-    require_role,
-    require_staff_desk,
-)
+from insureflow.auth.dependencies import clear_user_store, get_current_user, get_current_user_optional, get_user_store, require_role, require_staff_desk
 from insureflow.auth.jwt import create_access_token, hash_password, verify_password
 from insureflow.auth.models import LoginRequest, Token, TokenData, User, UserCreateRequest
 from insureflow.insurance.pipeline import InsurancePipeline
@@ -1100,13 +1082,7 @@ def pull_insurance_source(
     multi-source intake: pull from email → accumulate → pull from S3 → accumulate
     → run the pipeline with everything.
     """
-    from insureflow.ingestion.insurance.sources import (
-        DEMO_CONNECTORS,
-        INSURANCE_PACKAGES,
-        load_directory,
-        load_package,
-        simulated_connection_label,
-    )
+    from insureflow.ingestion.insurance.sources import DEMO_CONNECTORS, INSURANCE_PACKAGES, load_directory, load_package, simulated_connection_label
 
     def _accumulate(
         documents: list[dict[str, str]],
@@ -1185,10 +1161,7 @@ def pull_insurance_source(
 
         # Real IMAP email connector — credentials from env vars (admin-configured)
         if source_id == "email-inbox":
-            from insureflow.ingestion.insurance.email_connector import (
-                ImapConnection,
-                pull_email_submissions,
-            )
+            from insureflow.ingestion.insurance.email_connector import ImapConnection, pull_email_submissions
 
             conn = ImapConnection()
             if conn.is_configured:
@@ -1333,10 +1306,7 @@ def filter_email_documents(
     The frontend stores the full email list after pull, then calls this
     endpoint with the IDs the user selected to get only those documents.
     """
-    from insureflow.ingestion.insurance.email_connector import (
-        ImapConnection,
-        pull_email_submissions,
-    )
+    from insureflow.ingestion.insurance.email_connector import ImapConnection, pull_email_submissions
 
     imap_conn = ImapConnection()
     if not imap_conn.is_configured:
@@ -1710,10 +1680,7 @@ def run_lending_demo(
     if not directory.is_dir():
         raise HTTPException(status_code=503, detail=f"Fixture directory missing: {directory}")
 
-    from insureflow.ingestion.lending import (
-        application_from_documents,
-        load_lending_documents_from_directory,
-    )
+    from insureflow.ingestion.lending import application_from_documents, load_lending_documents_from_directory
     from insureflow.lending import LendingPipeline
     from insureflow.lending.models import LoanProductType, LoanPurpose
 
@@ -2113,12 +2080,7 @@ def get_job_report(
     borrower = results.get("memo", {}).get("insured_name") or results.get("insured_name") or results.get("borrower") or (results.get("memo") or {}).get("borrower_name") or job_id
     safe_name = "".join(c if c.isalnum() or c in (" ", "-", "_") else "" for c in borrower).strip().replace(" ", "_") or job_id
     try:
-        from insureflow.rating.report_document import (
-            generate_lending_report_html,
-            generate_mortgage_report_html,
-            generate_report_html,
-            html_to_pdf,
-        )
+        from insureflow.rating.report_document import generate_lending_report_html, generate_mortgage_report_html, generate_report_html, html_to_pdf
 
         if vertical == "mortgage":
             html = generate_mortgage_report_html(results, job_id)
@@ -2235,10 +2197,7 @@ def licensed_uw_sign_off(
         from uuid import uuid4
 
         from insureflow.outcomes.analytics import get_analytics_engine
-        from insureflow.outcomes.override import (
-            OverrideDetail,
-            OverrideReasonCategory,
-        )
+        from insureflow.outcomes.override import OverrideDetail, OverrideReasonCategory
 
         try:
             category = OverrideReasonCategory(req.override_reason_category.lower())
@@ -3457,11 +3416,7 @@ class AuthorityRecordRequest(BaseModel):
 
 
 def _build_authority_record(req: AuthorityRecordRequest) -> Any:
-    from insureflow.underwriting.authority import (
-        AuthorityTier,
-        BindingAuthority,
-        UnderwriterAuthority,
-    )
+    from insureflow.underwriting.authority import AuthorityTier, BindingAuthority, UnderwriterAuthority
 
     tier_value = req.tier.strip().lower()
     try:
@@ -4208,11 +4163,7 @@ def commercial_insurance_taxonomy(
     current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
     """Nested commercial taxonomy: categories → products → coverages."""
-    from insureflow.insurance.commercial_lobs import (
-        commercial_hub_payload,
-        commercial_taxonomy_tree,
-        list_commercial_categories,
-    )
+    from insureflow.insurance.commercial_lobs import commercial_hub_payload, commercial_taxonomy_tree, list_commercial_categories
 
     hub = commercial_hub_payload()
     return {
@@ -4762,12 +4713,7 @@ def ratemaking_overview(_: TokenData = Depends(require_role(Role.VIEWER))) -> di
     """Ratemaking study across lines: base-rate build-up, methods, goals, characteristics."""
     from insureflow.rating.expenses import allocate_general_admin_across_all_lines, project_expenses
     from insureflow.rating.investment_income import investment_income_across_lines, states_requiring_explicit_investment_income
-    from insureflow.rating.ratemaking import (
-        line_rate_build_ups,
-        rate_characteristics_review,
-        ratemaking_factors,
-        regulatory_review,
-    )
+    from insureflow.rating.ratemaking import line_rate_build_ups, rate_characteristics_review, ratemaking_factors, regulatory_review
     from insureflow.rating.reserve_estimation import run_reserve_analysis
 
     build_ups = line_rate_build_ups()
@@ -4998,11 +4944,7 @@ def _finalize_celery_mortgage_job(job_id: str, org_id: str, job: dict[str, Any])
 
 
 def _dispatch_mortgage_celery(job_id: str, request: MortgageSubmissionRequest, org_id: str) -> None:
-    from insureflow.tasks.mortgage_tasks import (
-        run_mortgage_directory,
-        run_mortgage_per_borrower,
-        run_mortgage_pipeline,
-    )
+    from insureflow.tasks.mortgage_tasks import run_mortgage_directory, run_mortgage_per_borrower, run_mortgage_pipeline
 
     job_store.set(MORTGAGE_NS, job_id, {"status": "processing", "backend": "celery"}, org_id=org_id)
 
@@ -5753,12 +5695,7 @@ def create_registry_version(
     current: TokenData = Depends(require_role(Role.ADMIN)),
 ) -> dict[str, Any]:
     from insureflow.registry import ComponentType, RegistryService
-    from insureflow.registry.models import (
-        AgentLogicVersion,
-        ComplianceRuleVersion,
-        LLMConfigVersion,
-        PromptVersion,
-    )
+    from insureflow.registry.models import AgentLogicVersion, ComplianceRuleVersion, LLMConfigVersion, PromptVersion
 
     reg = RegistryService()
     ct = ComponentType(component)
@@ -5968,14 +5905,7 @@ def run_lending_pipeline(
     Accepts structured fields and/or raw documents / a directory of applications.
     """
     from insureflow.lending import LendingPipeline
-    from insureflow.lending.models import (
-        BusinessFinancialData,
-        BusinessLoanApplication,
-        ConsumerFinancialData,
-        ConsumerLoanApplication,
-        LoanProductType,
-        LoanPurpose,
-    )
+    from insureflow.lending.models import BusinessFinancialData, BusinessLoanApplication, ConsumerFinancialData, ConsumerLoanApplication, LoanProductType, LoanPurpose
 
     product_map: dict[str, LoanProductType] = {
         "business_term_loan": LoanProductType.BUSINESS_TERM_LOAN,
@@ -6024,10 +5954,7 @@ def run_lending_pipeline(
     app: Any
     try:
         if req.directory:
-            from insureflow.ingestion.lending import (
-                application_from_documents,
-                load_lending_documents_from_directory,
-            )
+            from insureflow.ingestion.lending import application_from_documents, load_lending_documents_from_directory
 
             loaded_docs = load_lending_documents_from_directory(req.directory)
             if not loaded_docs:
@@ -6055,10 +5982,7 @@ def run_lending_pipeline(
                 overrides=overrides,
             )
         elif req.documents:
-            from insureflow.ingestion.lending import (
-                application_from_documents,
-                load_lending_documents_from_payloads,
-            )
+            from insureflow.ingestion.lending import application_from_documents, load_lending_documents_from_payloads
 
             payloads = [{"filename": d.filename, "content": d.content} for d in req.documents]
             loaded_docs = load_lending_documents_from_payloads(payloads)

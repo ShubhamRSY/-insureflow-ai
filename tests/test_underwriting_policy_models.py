@@ -10,26 +10,9 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 
 from insureflow.models.agents import UnderwritingMemo
-from insureflow.rag.guidelines import (
-    Guideline,
-    GuidelineCategory,
-    GuidelineSource,
-    GuidelineStatus,
-    UnderwritingGuidelines,
-)
-from insureflow.rating.surcharges import (
-    SurchargeBasis,
-    SurchargeRule,
-    builtin_commercial_auto_surcharges,
-    evaluate_surcharges,
-    rules_for_guideline,
-)
-from insureflow.underwriting.acceptability import (
-    AcceptabilityCode,
-    ClassAcceptability,
-    get_acceptability_matrix,
-    reset_acceptability_matrix,
-)
+from insureflow.rag.guidelines import Guideline, GuidelineCategory, GuidelineSource, GuidelineStatus, UnderwritingGuidelines
+from insureflow.rating.surcharges import SurchargeBasis, SurchargeRule, builtin_commercial_auto_surcharges, evaluate_surcharges, rules_for_guideline
+from insureflow.underwriting.acceptability import AcceptabilityCode, ClassAcceptability, get_acceptability_matrix, reset_acceptability_matrix
 from insureflow.underwriting.authority import AuthorityTier
 
 # ── 1. Underwriting worksheet on the memo ─────────────────────────────────

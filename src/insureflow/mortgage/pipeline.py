@@ -9,11 +9,7 @@ from insureflow.audit.store import AuditStore
 from insureflow.decisions import normalize_decision
 from insureflow.ingestion.mortgage.loader import MortgageSubmissionLoader
 from insureflow.models.audit import PipelineEvent
-from insureflow.models.mortgage import (
-    MortgageBundle,
-    MortgageBundleStatus,
-    ProductLine,
-)
+from insureflow.models.mortgage import MortgageBundle, MortgageBundleStatus, ProductLine
 from insureflow.mortgage.audit import MortgageAuditLogger
 from insureflow.mortgage.bundler import discover_borrower_packages
 from insureflow.mortgage.compliance import MortgageComplianceEngine

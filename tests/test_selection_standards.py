@@ -9,14 +9,7 @@ import pytest
 
 from insureflow.agents.selection_standards_agent import SelectionStandardsAgent
 from insureflow.models.agents import UWDecision
-from insureflow.models.submissions import (
-    BrokerInfo,
-    CoverageDetail,
-    LocationData,
-    RiskProfile,
-    StructuredSubmission,
-    SubmissionBundle,
-)
+from insureflow.models.submissions import BrokerInfo, CoverageDetail, LocationData, RiskProfile, StructuredSubmission, SubmissionBundle
 from insureflow.underwriting.selection import (
     RiskClass,
     SelectionCandidate,

@@ -7,12 +7,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from insureflow.analytics.metrics import (
-    CycleTimeTracker,
-    FillRateTracker,
-    OverrideRateTracker,
-    PipelineMetrics,
-)
+from insureflow.analytics.metrics import CycleTimeTracker, FillRateTracker, OverrideRateTracker, PipelineMetrics
 
 # ---------------------------------------------------------------------------
 # Fill Rate Tracker

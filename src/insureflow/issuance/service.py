@@ -12,12 +12,7 @@ from typing import Any
 from uuid import uuid4
 
 from insureflow.audit.store import AuditStore
-from insureflow.issuance.documents import (
-    build_issuance_context,
-    generate_binder_html,
-    generate_certificate_html,
-    generate_policy_worksheet_html,
-)
+from insureflow.issuance.documents import build_issuance_context, generate_binder_html, generate_certificate_html, generate_policy_worksheet_html
 from insureflow.issuance.models import IssuanceRecord, IssuedDocument, IssuedDocumentType
 from insureflow.workflow.store import WorkflowStore
 

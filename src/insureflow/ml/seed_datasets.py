@@ -18,11 +18,7 @@ from typing import Any
 import numpy as np
 
 from insureflow.ml.export_training import export_from_audit_logs
-from insureflow.ml.features import (
-    DEFAULT_FEATURE_NAMES,
-    LENDING_FEATURE_NAMES,
-    MORTGAGE_FEATURE_NAMES,
-)
+from insureflow.ml.features import DEFAULT_FEATURE_NAMES, LENDING_FEATURE_NAMES, MORTGAGE_FEATURE_NAMES
 
 logger = logging.getLogger(__name__)
 

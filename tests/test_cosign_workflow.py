@@ -5,12 +5,7 @@ from __future__ import annotations
 import pytest
 
 from insureflow.underwriting.authority import AuthorityMatrix, AuthorityTier, AuthorityVerdict
-from insureflow.underwriting.cosign import (
-    CoSignStatus,
-    cosign_allows_bind,
-    create_cosign_request,
-    resolve_cosign,
-)
+from insureflow.underwriting.cosign import CoSignStatus, cosign_allows_bind, create_cosign_request, resolve_cosign
 from insureflow.workflow.models import SignOffAction, WorkflowState
 from insureflow.workflow.service import WorkflowService
 from insureflow.workflow.store import WorkflowStore

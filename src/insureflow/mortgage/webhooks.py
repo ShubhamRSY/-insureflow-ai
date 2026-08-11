@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from insureflow.webhooks.dispatcher import (  # noqa: F401
-    BrokerStatusShare,
+from insureflow.webhooks.dispatcher import (
+    BrokerStatusShare,  # noqa: F401
     WebhookDispatcher,
     WebhookSubscription,
     webhook_dispatcher,

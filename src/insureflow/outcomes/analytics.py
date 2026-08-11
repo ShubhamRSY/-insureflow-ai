@@ -4,14 +4,7 @@ from collections import defaultdict
 from typing import Any, Optional
 from uuid import uuid4
 
-from insureflow.outcomes.override import (
-    OverrideAnalyticsQuery,
-    OverrideAnalyticsSummary,
-    OverrideDetail,
-    OverridePattern,
-    OverrideReasonCategory,
-    PremiumDelta,
-)
+from insureflow.outcomes.override import OverrideAnalyticsQuery, OverrideAnalyticsSummary, OverrideDetail, OverridePattern, OverrideReasonCategory, PremiumDelta
 
 
 class OverrideAnalyticsEngine:

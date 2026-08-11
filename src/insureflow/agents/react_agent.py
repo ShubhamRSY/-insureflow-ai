@@ -8,12 +8,7 @@ from insureflow.agents.base import BaseAgent
 from insureflow.agents.prompts import SYSTEM_PROMPTS
 from insureflow.agents.react_tools import ToolRegistry
 from insureflow.llm.client import LLMClient
-from insureflow.models.agents import (
-    AgentResult,
-    AgentType,
-    Finding,
-    RiskSeverity,
-)
+from insureflow.models.agents import AgentResult, AgentType, Finding, RiskSeverity
 from insureflow.models.submissions import SubmissionBundle
 
 

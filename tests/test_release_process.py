@@ -4,14 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from evaluations.release_process import (
-    ExperimentClass,
-    ExperimentStage,
-    ExperimentStore,
-    checklist_payload,
-    release_walkthrough,
-    seed_demo_experiments,
-)
+from evaluations.release_process import ExperimentClass, ExperimentStage, ExperimentStore, checklist_payload, release_walkthrough, seed_demo_experiments
 
 
 def test_checklist_has_eleven_steps() -> None:

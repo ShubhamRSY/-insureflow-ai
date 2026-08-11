@@ -5,11 +5,7 @@ import math
 import re
 from typing import Any
 
-from insureflow.models.provenance import (
-    ProvenanceNode,
-    ProvenanceRecord,
-    VerificationStatus,
-)
+from insureflow.models.provenance import ProvenanceNode, ProvenanceRecord, VerificationStatus
 
 logger = logging.getLogger(__name__)
 

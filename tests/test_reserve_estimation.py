@@ -8,14 +8,7 @@ from fastapi.testclient import TestClient
 from insureflow.api import app
 from insureflow.models.agents import RiskSeverity
 from insureflow.models.submissions import ClaimRecord, ClaimStatus
-from insureflow.rating.reserve_estimation import (
-    assess_data_delays,
-    build_payout_pattern,
-    estimate_ibnr,
-    rate_filing_schedule,
-    run_reserve_analysis,
-    vehicle_liability_payout_pattern,
-)
+from insureflow.rating.reserve_estimation import assess_data_delays, build_payout_pattern, estimate_ibnr, rate_filing_schedule, run_reserve_analysis, vehicle_liability_payout_pattern
 
 
 def _claim(

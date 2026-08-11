@@ -63,13 +63,7 @@ class FraudDetectionModel(BaseMLModel):
         y_val: np.ndarray,
         val_pred: np.ndarray,
     ) -> dict[str, float]:
-        from sklearn.metrics import (
-            accuracy_score,
-            f1_score,
-            precision_score,
-            recall_score,
-            roc_auc_score,
-        )
+        from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, roc_auc_score
 
         train_binary = (np.asarray(train_pred) > 0.5).astype(int)
         val_binary = (np.asarray(val_pred) > 0.5).astype(int)

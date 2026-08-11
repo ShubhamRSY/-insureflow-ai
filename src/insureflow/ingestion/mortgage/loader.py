@@ -9,12 +9,7 @@ from insureflow.ingestion.base import BaseParser
 from insureflow.ingestion.mortgage.classifier import MortgageDocumentClassifier
 from insureflow.ingestion.mortgage.extractors import extract_fields
 from insureflow.ingestion.ocr import OCRProcessor
-from insureflow.models.mortgage import (
-    ExtractedMortgageField,
-    MortgageDocument,
-    MortgageDocumentType,
-    ProductLine,
-)
+from insureflow.models.mortgage import ExtractedMortgageField, MortgageDocument, MortgageDocumentType, ProductLine
 from insureflow.mortgage.llm_extractor import MortgageLLMExtractor
 from insureflow.mortgage.privacy import sanitize_document
 

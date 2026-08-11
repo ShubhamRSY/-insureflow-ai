@@ -4,11 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from insureflow.analytics.documents import (
-    DocumentAnalyticsEngine,
-    DocumentAnalyticsStore,
-    DocumentRecord,
-)
+from insureflow.analytics.documents import DocumentAnalyticsEngine, DocumentAnalyticsStore, DocumentRecord
 
 
 @pytest.fixture

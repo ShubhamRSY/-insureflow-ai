@@ -1,13 +1,7 @@
 from __future__ import annotations
 
 from insureflow.models.agents import RiskSeverity
-from insureflow.rating.investment_income import (
-    LossTail,
-    assess_investment_income,
-    investment_income_across_lines,
-    investment_income_severity,
-    states_requiring_explicit_investment_income,
-)
+from insureflow.rating.investment_income import LossTail, assess_investment_income, investment_income_across_lines, investment_income_severity, states_requiring_explicit_investment_income
 from insureflow.rating.models import InsuranceLine
 
 

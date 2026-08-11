@@ -4,15 +4,7 @@ import json
 import logging
 from concurrent.futures import ThreadPoolExecutor
 
-from insureflow.models.mortgage import (
-    MortgageAgentResult,
-    MortgageBundle,
-    MortgageDecision,
-    MortgageDocumentType,
-    MortgageFinding,
-    MortgageMemo,
-    ProductLine,
-)
+from insureflow.models.mortgage import MortgageAgentResult, MortgageBundle, MortgageDecision, MortgageDocumentType, MortgageFinding, MortgageMemo, ProductLine
 from insureflow.redaction.pipeline import RedactedLLMClient
 
 logger = logging.getLogger(__name__)

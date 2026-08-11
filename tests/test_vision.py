@@ -6,14 +6,7 @@ from unittest.mock import patch
 
 from insureflow.audit.store import AuditStore
 from insureflow.ml.vision.damage_detector import DamageAssessment, DamageDetector, DamageSeverity, DamageType
-from insureflow.ml.vision.models import (
-    PhotoAnalysis,
-    PhotoQuality,
-    PropertyVisualProfile,
-    SatelliteAnalysis,
-    VisualFinding,
-    VisualRisk,
-)
+from insureflow.ml.vision.models import PhotoAnalysis, PhotoQuality, PropertyVisualProfile, SatelliteAnalysis, VisualFinding, VisualRisk
 from insureflow.ml.vision.photo_scorer import score_photo_quality
 
 # ─── Data Model Tests ───

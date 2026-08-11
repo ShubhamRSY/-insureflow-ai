@@ -4,11 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from insureflow.testing.realworld_scenarios import (
-    build_all_scenarios,
-    evaluate_result,
-    run_scenario,
-)
+from insureflow.testing.realworld_scenarios import build_all_scenarios, evaluate_result, run_scenario
 
 
 @pytest.mark.parametrize("scenario", build_all_scenarios(), ids=lambda s: s.id)

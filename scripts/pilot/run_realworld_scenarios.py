@@ -17,7 +17,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
 
-from insureflow.testing.realworld_scenarios import build_all_scenarios, run_all_scenarios  # noqa: E402
+from insureflow.testing.realworld_scenarios import (  # noqa: E402
+    build_all_scenarios,
+    run_all_scenarios,
+)
 
 
 def main() -> int:

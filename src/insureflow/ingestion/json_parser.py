@@ -5,16 +5,7 @@ from datetime import date, datetime, timezone
 from typing import Any, Optional
 
 from insureflow.ingestion.base import BaseParser
-from insureflow.models.submissions import (
-    BrokerInfo,
-    CoverageDetail,
-    FinancialData,
-    LocationData,
-    NamedInsured,
-    PolicyPeriod,
-    RiskProfile,
-    StructuredSubmission,
-)
+from insureflow.models.submissions import BrokerInfo, CoverageDetail, FinancialData, LocationData, NamedInsured, PolicyPeriod, RiskProfile, StructuredSubmission
 
 
 class JSONBrokerParser(BaseParser):

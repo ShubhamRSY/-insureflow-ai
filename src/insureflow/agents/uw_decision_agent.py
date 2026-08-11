@@ -3,15 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from insureflow.agents.react_agent import ReActAgent
-from insureflow.models.agents import (
-    AgentResult,
-    AgentType,
-    Finding,
-    Recommendation,
-    RiskSeverity,
-    UnderwritingMemo,
-    UWDecision,
-)
+from insureflow.models.agents import AgentResult, AgentType, Finding, Recommendation, RiskSeverity, UnderwritingMemo, UWDecision
 from insureflow.models.submissions import SubmissionBundle
 
 

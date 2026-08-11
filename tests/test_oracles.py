@@ -1,21 +1,11 @@
 from __future__ import annotations
 
-from insureflow.integrations.parsers import (
-    parse_bureau_response,
-    parse_osha_response,
-    parse_public_records_response,
-    parse_rating_agency_response,
-)
+from insureflow.integrations.parsers import parse_bureau_response, parse_osha_response, parse_public_records_response, parse_rating_agency_response
 from insureflow.oracles.aplus_client import APlusClient, PropertyClaimType
 from insureflow.oracles.bureau_client import CreditBureauClient
 from insureflow.oracles.clue_client import CLUEClient
 from insureflow.oracles.ncci_client import NCCIClient
-from insureflow.oracles.ncci_codes import (
-    NCCI_CLASS_CODES,
-    get_ncci_description,
-    get_ncci_risk_level,
-    is_high_risk_ncci_class,
-)
+from insureflow.oracles.ncci_codes import NCCI_CLASS_CODES, get_ncci_description, get_ncci_risk_level, is_high_risk_ncci_class
 from insureflow.oracles.osha_client import OSHAClient
 from insureflow.oracles.public_records_client import PublicRecordsClient
 from insureflow.oracles.rating_agency_client import CreditRatingAgencyClient
