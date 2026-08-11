@@ -109,6 +109,15 @@ testpaths = ["tests"]
 strict = true
 python_version = "3.12"
 ignore_missing_imports = true
+# Top-level scripts/ has runpy shims that collide with scripts/ops and
+# scripts/pilot (same basename → duplicate module). CI type-checks src/ tests/.
+exclude = [
+    "(^|/)scripts/",
+    "(^|/)external_data/",
+    "(^|/)frontend/",
+    "(^|/)\\.venv",
+    "(^|/)venv/",
+]
 
 [[tool.mypy.overrides]]
 module = ["tests.*"]
