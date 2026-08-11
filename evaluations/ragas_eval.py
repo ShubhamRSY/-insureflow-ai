@@ -28,19 +28,10 @@ _MOD.ChatVertexAI = _DummyChatVertexAI
 
 _sys.modules["langchain_community.chat_models.vertexai"] = _MOD
 
-# Now safe to import ragas
+# Now safe to import ragas (must follow the vertexai patch above)
 from ragas import evaluate as ragas_evaluate  # noqa: E402
-from ragas.dataset_schema import (
-    EvaluationDataset,  # noqa: E402
-    EvaluationResult,
-    SingleTurnSample,
-)
-from ragas.metrics import (
-    answer_relevancy,
-    context_precision,  # noqa: E402
-    context_recall,
-    faithfulness,
-)
+from ragas.dataset_schema import EvaluationDataset, EvaluationResult, SingleTurnSample  # noqa: E402
+from ragas.metrics import answer_relevancy, context_precision, context_recall, faithfulness  # noqa: E402
 
 from evaluations.golden_dataset import golden_dataset  # noqa: E402
 from evaluations.runner import extract_field  # noqa: E402
