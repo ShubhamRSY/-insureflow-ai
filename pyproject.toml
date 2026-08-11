@@ -130,3 +130,10 @@ ignore_errors = true
 [[tool.mypy.overrides]]
 module = ["insureflow.ml.*"]
 ignore_errors = true
+
+# Optional third-party eval SDK adapters: deepeval is only installed on eval
+# environments, so mypy resolves it to Any (ignore_missing_imports) and flags the
+# SDK-specific ignores as unused. Keep them so they bite when the SDK is present.
+[[tool.mypy.overrides]]
+module = ["evaluations.frameworks.deepeval_suite"]
+warn_unused_ignores = false
