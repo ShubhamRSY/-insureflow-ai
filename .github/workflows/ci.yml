@@ -1,5 +1,9 @@
 name: CI/CD
 
+# Gate every push/PR to main: lint, types, full test suite (including the
+# in-process E2E flow), frontend build + committed-bundle drift check, security
+# scans. On main only, build & push the multi-arch image, deploy to Railway,
+# smoke-test the live app, then notify.
 on:
   push:
     branches: [main]
@@ -17,8 +21,44 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository_owner }}/insureflow-ai
 
+concurrency:
+  # One run per ref; supersede in-flight runs so stale pushes never deploy.
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      infra: ${{ steps.filter.outputs.infra }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'src/**'
+              - 'tests/**'
+              - 'evaluations/**'
+              - 'pyproject.toml'
+              - 'Dockerfile'
+              - 'entrypoint.sh'
+              - 'cli.py'
+              - 'ml_data/**'
+              - 'scripts/**'
+            frontend:
+              - 'frontend/**'
+            infra:
+              - '.github/**'
+              - 'docker-compose*.yml'
+              - 'railway.json'
+
   lint:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.infra == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -31,6 +71,8 @@ jobs:
       - run: ruff format --check .
 
   typecheck:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.infra == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -42,7 +84,19 @@ jobs:
       - run: mypy src/ tests/
 
   test:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.infra == 'true'
     runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -50,13 +104,16 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: pip install -e ".[dev]"
-      - name: Unit + eval suite (with coverage)
+      - name: Full suite + in-process E2E (with coverage)
         run: |
-          pytest tests/ -v --ignore=tests/test_e2e.py \
+          pytest tests/ -v \
             -W ignore::pytest.PytestUnknownMarkWarning \
-            --cov=insureflow --cov-report=term-missing --cov-report=xml
+            --cov=insureflow --cov-report=term-missing --cov-report=xml \
+            --cov-fail-under=70
         env:
           PYTHONPATH: ${{ github.workspace }}/src
+          REDIS_URL: redis://localhost:6379/0
+          JOB_STORE_BACKEND: auto
           LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
           LANGSMITH_PROJECT: insureflow-evals-ci
           LANGSMITH_TRACING: "false"
@@ -87,6 +144,8 @@ jobs:
           fail_ci_if_error: false
 
   frontend:
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true' || needs.changes.outputs.infra == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -100,8 +159,20 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
       - run: npm run build
+      - name: Verify committed bundle is not stale
+        run: |
+          cd "$GITHUB_WORKSPACE"
+          if [ -n "$(git status --porcelain src/insureflow/static/ui)" ]; then
+            echo "::error::Frontend source changed but the committed bundle (src/insureflow/static/ui) is stale. Run 'cd frontend && npm run build' and commit the output."
+            echo "--- affected files ---"
+            git status --porcelain src/insureflow/static/ui
+            exit 1
+          fi
+          echo "committed bundle is up to date"
 
   security:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.infra == 'true'
     runs-on: ubuntu-latest
     env:
       GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
@@ -151,7 +222,11 @@ jobs:
 
   docker:
     runs-on: ubuntu-latest
-    needs: [lint, typecheck, test, frontend]
+    needs: [changes, lint, typecheck, test, frontend, security]
+    if: >
+      needs.changes.outputs.backend == 'true' ||
+      needs.changes.outputs.frontend == 'true' ||
+      needs.changes.outputs.infra == 'true'
     permissions:
       contents: read
       packages: write
@@ -265,10 +340,19 @@ jobs:
             echo "::error::App at $base_url did not become healthy (got $code)"
             exit 1
           fi
-          cat /tmp/health.json
-          echo ""
+          echo "health: $(cat /tmp/health.json)"
           echo "--- /system/diagnostics ---"
           curl -fsS --max-time 20 "$base_url/system/diagnostics"
+          echo ""
+          echo "--- /dashboard (SPA shell) ---"
+          html="$(curl -fsS --max-time 20 "$base_url/dashboard")"
+          case "$html" in
+            *Rytera*|*InsureFlow*) echo "dashboard shell OK" ;;
+            *) echo "::error::/dashboard did not return the SPA shell"; exit 1 ;;
+          esac
+          echo "--- /api/demo/presets ---"
+          curl -fsS --max-time 20 "$base_url/api/demo/presets"
+          echo ""
 
   notify:
     runs-on: ubuntu-latest
@@ -323,11 +407,11 @@ jobs:
           { cat <<EOF
           ## Rytera CI/CD
 
-          - **CI**: lint · mypy · pytest (+ coverage) · frontend build · Docker build
+          - **CI**: lint · mypy · full pytest (+ in-process E2E, coverage gate ≥70%) · frontend build + bundle-drift check · Docker build
           - **Security**: Bandit SAST · Trivy (fs + image) · GitGuardian secrets · Snyk SCA
           - **Coverage**: pytest-cov → Codecov ($CODECOV_STATE)
           - **CD**: multi-arch image (amd64+arm64) → \`ghcr.io/${{ env.IMAGE_NAME }}\` (tags: sha, branch, vX.Y.Z, latest)
-          - **Smoke tests**: live \`/health\` + \`/system/diagnostics\` after deploy → \`APP_URL\` ($APP_URL_STATE)
+          - **Smoke tests**: live \`/health\`, \`/dashboard\`, \`/system/diagnostics\`, \`/api/demo/presets\` after deploy → \`APP_URL\` ($APP_URL_STATE)
           - **Deploy**: Railway ($RAILWAY_STATE)
           - **Notifications**: Slack / Discord webhook on success or failure
           - **Secrets**: injected via GitHub Secrets only (never in codebase)
