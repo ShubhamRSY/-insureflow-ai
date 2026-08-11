@@ -90,6 +90,8 @@ class DocumentChecklist:
     lob: str = "property"
     present: list[str] = field(default_factory=list)
     _missing: list[str] = field(default_factory=list)
+    _present_ids: list[str] = field(default_factory=list)
+    _missing_ids: list[str] = field(default_factory=list)
 
     # Legacy property flags (kept for backward compatibility)
     acord_form: bool = False
@@ -108,12 +110,16 @@ class DocumentChecklist:
         pkg = package_checklist(types, lob=lob)
         present = list(pkg.get("present") or [])
         missing = list(pkg.get("missing") or [])
+        present_ids = list(pkg.get("present_ids") or [])
+        missing_ids = list(pkg.get("missing_ids") or [])
         type_set = {t.lower() for t in types}
         has_photos = "property_photos" in type_set or any("photo" in p.lower() for p in present) or bool(bundle.visual_analysis and (bundle.visual_analysis.get("analyzed_photos") or 0) > 0)
         return cls(
             lob=lob,
             present=present,
             _missing=missing,
+            _present_ids=present_ids,
+            _missing_ids=missing_ids,
             acord_form=any("acord" in p.lower() for p in present) or "acord_xml" in type_set,
             loss_run=any("loss" in p.lower() or "claims" in p.lower() for p in present) or "loss_run" in type_set,
             financials=any("financial" in p.lower() for p in present) or "financial_statement" in type_set,
@@ -163,6 +169,34 @@ class DocumentChecklist:
         if not self.signed_application:
             items.append("Signed application")
         return items
+
+    @property
+    def missing_ids(self) -> list[str]:
+        """Machine-readable ids (InsuranceDocumentType values) of missing docs."""
+        if self._missing_ids or self._missing or self.present:
+            return list(self._missing_ids)
+        items: list[str] = []
+        if not self.acord_form:
+            items.append("acord_form")
+        if not self.loss_run:
+            items.append("loss_run")
+        if not self.financials:
+            items.append("financials")
+        if not self.photos:
+            items.append("photos")
+        if not self.inspection_report:
+            items.append("inspection_report")
+        if not self.schedule_of_values:
+            items.append("schedule_of_values")
+        if not self.supplemental:
+            items.append("supplemental")
+        if not self.signed_application:
+            items.append("signed_application")
+        return items
+
+    @property
+    def present_ids(self) -> list[str]:
+        return list(self._present_ids)
 
     def to_summary_dict(self) -> dict[str, Any]:
         return {

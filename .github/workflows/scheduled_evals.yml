@@ -68,6 +68,31 @@ jobs:
               "ground_truth": ground_truth_inventory()["totals"],
           }, indent=2))
           PY
+      - name: Four-framework matrix gate (ragas / deepeval / promptfoo / Phoenix)
+        env:
+          PYTHONPATH: ${{ github.workspace }}/src
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          LLM_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python -m evaluations.frameworks.suite_runner --fast || true
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          p = Path("evaluation_frameworks.json")
+          if p.exists():
+              data = json.loads(p.read_text())
+              gate = data.get("sla_gate", {})
+              print("mode:", data.get("mode"))
+              print("frameworks:", json.dumps(gate.get("frameworks", {}), indent=2))
+              print("overall_pass:", gate.get("overall_pass"))
+              print("violations:", len(gate.get("violations", [])))
+              for v in gate.get("violations", []):
+                  print(" ", v)
+          else:
+              print("framework suite produced no report (check install)")
+              raise SystemExit(1)
+          PY
       - name: Agent log analysis → trends
         env:
           PYTHONPATH: ${{ github.workspace }}/src
@@ -100,6 +125,7 @@ jobs:
           name: nightly-eval-scores
           path: |
             evaluation_scores.json
+            evaluation_frameworks.json
             evaluation_trends/
           if-no-files-found: ignore
 

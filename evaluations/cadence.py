@@ -70,6 +70,38 @@ EVAL_CADENCE: list[CadencePolicy] = [
         scope="evaluations.report → LangSmith insureflow-evals project",
         sla="Report published every Monday; CUO reads summary weekly",
     ),
+    CadencePolicy(
+        name="deepeval_judge",
+        frequency="nightly",
+        trigger="Scheduled eval workflow (requires LLM key); python -m evaluations.frameworks.deepeval_suite",
+        owner="ml_ops",
+        scope="LLM-as-judge: answer correctness, faithfulness, G-Eval (decision/memo/triage), bias across the eval matrix",
+        sla="Alert if any deepeval metric < its matrix target",
+    ),
+    CadencePolicy(
+        name="promptfoo_regression",
+        frequency="nightly",
+        trigger="Scheduled eval workflow (requires LLM key + promptfoo CLI); python -m evaluations.frameworks.promptfoo_suite",
+        owner="ml_ops",
+        scope="Declarative prompt/output regression configs (evaluations/promptfoo/configs/*.yaml) with contains/rubric/python asserts",
+        sla="Alert if any assertion suite pass-rate < its matrix target",
+    ),
+    CadencePolicy(
+        name="arize_phoenix_evals",
+        frequency="nightly",
+        trigger="Scheduled eval workflow (requires LLM key); python -m evaluations.frameworks.phoenix_suite --export-dataset",
+        owner="ml_ops + observability",
+        scope="phoenix.evals LLM classifiers (hallucination, RAG relevancy, leak, decision) + OpenInference tracing to PHOENIX_COLLECTOR_ENDPOINT",
+        sla="Alert if hallucination / leak metrics exceed matrix targets",
+    ),
+    CadencePolicy(
+        name="framework_matrix_gate",
+        frequency="nightly",
+        trigger="python -m evaluations.frameworks.suite_runner --fast; SLA gate from evaluations/matrix.py",
+        owner="ml_ops",
+        scope="Combined ragas + deepeval + promptfoo + Phoenix scores checked against the task->metric SLA matrix",
+        sla="Gate fails if any scored metric < its matrix target or framework coverage < minimum",
+    ),
 ]
 
 HITL_CADENCE: list[CadencePolicy] = [
@@ -128,6 +160,8 @@ def cadence_inventory() -> dict[str, Any]:
         "summary": {
             "unit_tests": "every PR / push to main",
             "golden_and_ragas": "nightly (06:00 UTC)",
+            "deepeval_promptfoo_phoenix": "nightly (frameworks suite)",
+            "framework_matrix_gate": "nightly (SLA gate on ragas + deepeval + promptfoo + Phoenix)",
             "giskard_and_full_report": "weekly (Mondays)",
             "production_hitl": "every submission before bind",
             "eval_hitl_rubrics": "weekly (≥5 scored cases)",
@@ -136,7 +170,8 @@ def cadence_inventory() -> dict[str, Any]:
         },
         "interview_summary": (
             "Automated evals: unit tests on every PR; golden precision/recall + Ragas nightly; "
-            "Giskard + full report weekly. "
+            "deepeval LLM-judges, promptfoo prompt regressions, and Arize Phoenix evals nightly via "
+            "the framework matrix gate; Giskard + full report weekly. "
             "HITL: licensed UW sign-off on every bind-eligible submission; "
             "weekly rubric spot-checks (≥5 cases); biweekly override-pattern review; "
             "monthly loss/premium calibration."

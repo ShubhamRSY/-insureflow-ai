@@ -23,6 +23,9 @@ ragas_scores.json
 giskard_scan.json
 evaluation_results.json
 evaluation_scores.json
+evaluation_frameworks.json
+evaluation_promptfoo_*/
+evaluations/promptfoo/configs/
 evaluation_cloud_cache/
 evaluation_hitl/
 evaluation_trends/

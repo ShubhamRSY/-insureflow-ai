@@ -49,43 +49,47 @@ GUIDELINE_QA: list[dict[str, str]] = [
     {
         "question_id": "gl-pc-001",
         "question": "What protection class threshold typically requires sprinkler or monitoring upgrades?",
-        "expected_answer": "Protection class 5–6 and worse; PC 7–10 have stricter TIV limits",
+        "expected_answer": "Protection Class 5 or 6: automatic sprinklers required for ALL buildings. Remote monitoring (central station alarm) required.",
         "category": "guideline_rag",
     },
     {
         "question_id": "gl-mfg-001",
         "question": "When are automatic sprinklers required for manufacturing occupancy?",
-        "expected_answer": "Buildings over 10,000 sq ft require automatic sprinklers",
+        "expected_answer": "automatic sprinklers required for buildings over 10,000 sq ft",
         "category": "guideline_rag",
     },
     {
         "question_id": "gl-masonry-001",
         "question": "What is the maximum per-building TIV for masonry construction under guidelines?",
-        "expected_answer": "$10,000,000 per building; no more than 6 stories without engineered fire suppression review",
+        "expected_answer": "Masonry (Class 2) and masonry-joist (Class 3) construction: maximum per-building TIV of $10,000,000. No more than 6 stories without engineered fire suppression review.",
         "category": "guideline_rag",
     },
     {
         "question_id": "gl-docs-001",
         "question": "What documents are required for new business when TIV exceeds $2,000,000?",
-        "expected_answer": "ACORD, 5-year loss runs, 3-year financials, SOV, and inspection report",
+        "expected_answer": "completed ACORD application (all schedules), 5-year loss runs, financial statements (3 years), SOV with building valuations, inspection report if TIV exceeds $2,000,000",
         "category": "guideline_rag",
     },
     {
         "question_id": "gl-cancel-001",
         "question": "How does prior carrier cancellation within 3 years affect appetite?",
-        "expected_answer": "Cancelled or non-renewed within 3 years is ineligible for standard appetite",
+        "expected_answer": "cancelled or non-renewed by a prior carrier within the last 3 years is ineligible for standard appetite",
         "category": "guideline_rag",
     },
     {
         "question_id": "gl-hotwork-001",
         "question": "What additional controls apply to welding or combustible dust manufacturing?",
-        "expected_answer": "Hot-work limits, dust collection safeguards, increased protection standards",
+        "expected_answer": (
+            "Welding, grinding, or hot-work operations require separate occupancy limits. "
+            "Combustible dust operations (woodworking, grain, metal grinding) require additional "
+            "dust collection safeguards and increased protection class standards."
+        ),
         "category": "guideline_rag",
     },
     {
         "question_id": "gl-nonprofit-001",
         "question": "Are large non-profits eligible for standard appetite?",
-        "expected_answer": "Non-profits with revenue exceeding $10M require specialized underwriting; not standard appetite",
+        "expected_answer": "non-profit organizations with annual revenue exceeding $10M, and religious institutions require specialized underwriting and are not eligible for standard appetite",
         "category": "guideline_rag",
     },
 ]

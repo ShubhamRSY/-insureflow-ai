@@ -13,7 +13,10 @@ Optional: if ``sentence_transformers`` is installed and
 from __future__ import annotations
 
 import logging
+import math
 import os
+from collections import Counter
+from functools import lru_cache
 from typing import TYPE_CHECKING
 
 from insureflow.rag.retrieval_config import RetrievalConfig, tokenize
@@ -23,16 +26,80 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+_STOPWORDS = frozenset(
+    {
+        "a",
+        "an",
+        "and",
+        "are",
+        "at",
+        "do",
+        "does",
+        "for",
+        "from",
+        "in",
+        "is",
+        "of",
+        "on",
+        "or",
+        "the",
+        "to",
+        "was",
+        "were",
+        "what",
+        "when",
+        "which",
+        "who",
+        "with",
+        "that",
+        "this",
+        "these",
+    }
+)
+
+
+@lru_cache(maxsize=1)
+def _corpus_idf() -> dict[str, float]:
+    """IDF weights over the full active guideline corpus (builtin + carrier appetite).
+
+    Rare, discriminating tokens (e.g. ``naics``, ``excluded``) get high weight so a
+    document containing them outranks one that merely shares generic words
+    (``standard``, ``carrier``, ``appetite``).
+    """
+    from insureflow.rag.guidelines import (
+        builtin_carrier_appetite_rules,
+        builtin_guidelines,
+    )
+
+    docs = [tokenize(f"{g.title} {g.content} {' '.join(g.keywords)}") for g in (builtin_guidelines().active_as_of() + builtin_carrier_appetite_rules().active_as_of())]
+    df: Counter[str] = Counter()
+    for doc in docs:
+        df.update(doc)
+    n = len(docs)
+    weights = {t: math.log((1 + n) / (1 + c)) + 1.0 for t, c in df.items()}
+    if weights:
+        weights["\0__oov__\0"] = max(weights.values())
+    return weights
+
+
+def _token_idf(token: str, idf: dict[str, float]) -> float:
+    if token in idf:
+        return idf[token]
+    return idf.get("\0__oov__\0", 1.0)
+
 
 def keyword_overlap_score(query: str, guideline: Guideline) -> float:
-    q = tokenize(query)
+    q = tokenize(query) - _STOPWORDS
     if not q:
         return 0.0
+    idf = _corpus_idf()
     blob = f"{guideline.title} {guideline.content} {' '.join(guideline.keywords)}"
     doc = tokenize(blob)
     if not doc:
         return 0.0
-    return len(q & doc) / len(q)
+    num = sum(_token_idf(t, idf) for t in q if t in doc)
+    den = sum(_token_idf(t, idf) for t in q)
+    return num / den if den else 0.0
 
 
 def fuse_scores(

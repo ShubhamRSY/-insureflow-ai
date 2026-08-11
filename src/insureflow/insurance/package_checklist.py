@@ -399,16 +399,24 @@ def package_checklist(
     catalog = CATALOGS.get(resolved) or CATALOGS.get("property") or PROPERTY_CATALOG
     present: list[str] = []
     missing: list[str] = []
+    present_ids: list[str] = []
+    missing_ids: list[str] = []
     for label, types in catalog:
         if _has_any(present_types, types):
             present.append(label)
+            if types:
+                present_ids.append(types[0].value)
         else:
             missing.append(label)
+            if types:
+                missing_ids.append(types[0].value)
     total = len(catalog) or 1
     return {
         "lob": resolved,
         "present": present,
         "missing": missing,
+        "present_ids": present_ids,
+        "missing_ids": missing_ids,
         "completeness_pct": round(100.0 * len(present) / total, 1),
         "can_request_from_broker": len(missing) > 0,
     }
