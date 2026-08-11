@@ -440,8 +440,6 @@ class InsurancePipeline:
             matches = [kw for kw in manuscript_keywords if kw in text]
             if not matches:
                 continue
-            from insureflow.models.agents import Finding, RiskSeverity
-
             validation_findings.append(
                 Finding(
                     title=f"Non-standard document with legal terms: {doc.document_type}",
@@ -458,8 +456,6 @@ class InsurancePipeline:
             matches = [kw for kw in manuscript_keywords if kw in text]
             if not matches:
                 continue
-            from insureflow.models.agents import Finding, RiskSeverity
-
             validation_findings.append(
                 Finding(
                     title=f"Supplemental document with legal terms: {doc.document_type}",

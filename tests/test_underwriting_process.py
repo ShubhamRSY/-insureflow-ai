@@ -57,7 +57,6 @@ from insureflow.underwriting.preliminary import (
     ProducerLicenseType,
     ProducerRecord,
     ProducerVerificationStatus,
-    _insured_key,  # noqa: F401
     get_producer_registry,
     record_prior_application,
     reset_producer_registry,

@@ -1,0 +1,32 @@
+[flake8]
+# Align with [tool.ruff] (line-length 200). E203/W503 conflict with ruff format;
+# E704 is not implemented by ruff (one-line stub defs).
+max-line-length = 200
+extend-ignore = E203, E704, W503
+exclude =
+    .git,
+    __pycache__,
+    .venv,
+    venv,
+    .venv_data,
+    node_modules,
+    frontend,
+    external_data,
+    dist,
+    build,
+    .ruff_cache,
+    .mypy_cache,
+    .pytest_cache,
+    htmlcov,
+    mlruns,
+    ml_models,
+    ml_data,
+    data,
+    .insureflow,
+    evaluation_promptfoo_*,
+    evaluations/promptfoo
+per-file-ignores =
+    src/insureflow/rag/guidelines.py:E501
+    src/insureflow/rating/quote_document.py:E501,E231
+    src/insureflow/rating/report_document.py:E501,E231
+    tests/test_ml.py:E402
