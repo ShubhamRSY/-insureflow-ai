@@ -742,11 +742,14 @@ def scenario_by_id(scenario_id: str) -> RealWorldScenario:
     raise KeyError(f"Unknown scenario: {scenario_id}")
 
 
-def run_scenario(scenario: RealWorldScenario, *, org_id: str = "realworld-test") -> dict[str, Any]:
+def run_scenario(scenario: RealWorldScenario, *, org_id: str | None = None) -> dict[str, Any]:
     """Execute InsurancePipeline for one scenario (deterministic, no LLM required)."""
     from insureflow.insurance.pipeline import InsurancePipeline
 
-    pipeline = InsurancePipeline(org_id=org_id, use_llm=False)
+    # Isolate portfolio / selection book state per scenario so matrix order cannot
+    # tip borderline preferred risks into decline via shared singleton stores.
+    oid = org_id or f"pytest-realworld-{scenario.id}"
+    pipeline = InsurancePipeline(org_id=oid, use_llm=False)
     result = pipeline.run(
         acord_xml=scenario.acord_xml,
         loss_run=scenario.loss_run,
@@ -817,7 +820,7 @@ def run_all_scenarios(
     for scenario in build_all_scenarios():
         if filter_fn and not filter_fn(scenario):
             continue
-        result = run_scenario(scenario, org_id=org_id)
+        result = run_scenario(scenario, org_id=f"{org_id}-{scenario.id}")
         failures = evaluate_result(scenario, result)
         rows.append(
             {

@@ -136,7 +136,12 @@ def _pct(blob: str, *labels: str) -> float | None:
 
 
 def _has(blob: str, *terms: str) -> bool:
-    return any(term in blob for term in terms)
+    """Substring match with common negations stripped (e.g. non-combustible ≠ combustible)."""
+    import re
+
+    cleaned = re.sub(r"\bnon[-\s]?combustible\b", " ", blob)
+    cleaned = re.sub(r"\bnon[-\s]?flammable\b", " ", cleaned)
+    return any(term in cleaned for term in terms)
 
 
 def _add_flag(

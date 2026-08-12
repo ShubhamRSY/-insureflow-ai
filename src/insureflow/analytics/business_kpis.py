@@ -497,7 +497,7 @@ def bootstrap_business_kpis(*, org_id: str = "kpi-lab") -> dict[str, Any]:
         metrics.cycle_time.start_pipeline(bid, org_id=org_id)
         t0 = time.perf_counter()
         try:
-            result = run_scenario(scenario, org_id=org_id)
+            result = run_scenario(scenario, org_id=f"{org_id}-{scenario.id}")
             failures = evaluate_result(scenario, result)
             passed = len(failures) == 0
         except Exception as exc:

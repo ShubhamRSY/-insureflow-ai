@@ -9,7 +9,7 @@ from insureflow.testing.realworld_scenarios import build_all_scenarios, evaluate
 
 @pytest.mark.parametrize("scenario", build_all_scenarios(), ids=lambda s: s.id)
 def test_realworld_scenario(scenario) -> None:
-    result = run_scenario(scenario, org_id="pytest-realworld")
+    result = run_scenario(scenario)
     failures = evaluate_result(scenario, result)
     assert not failures, f"{scenario.id} ({scenario.title}): decision={result.get('ai_decision')} appetite={result.get('appetite_filter_passed')} failures={failures}"
 

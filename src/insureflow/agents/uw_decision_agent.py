@@ -44,7 +44,7 @@ class UWDecisionAgent(ReActAgent):
         if any(f.severity == RiskSeverity.CRITICAL for f in high_crit):
             self._add_finding(
                 Finding(
-                    title="Critical findings require declination",
+                    title="Critical findings require UW review",
                     description=f"{sum(1 for f in high_crit if f.severity == RiskSeverity.CRITICAL)} critical finding(s)",
                     severity=RiskSeverity.CRITICAL,
                     category="uw_decision",
@@ -106,10 +106,12 @@ class UWDecisionAgent(ReActAgent):
             )
 
         if has_critical:
+            # Critical findings need licensed UW eyes — hard declines belong to
+            # appetite / moral-hazard / selection gates, not every data-quality flag.
             return Recommendation(
-                action="decline",
-                rationale=f"Critical findings present. Aggregate risk score: {score:.2f}",
-                conditions=[],
+                action="refer",
+                rationale=f"Critical findings present — refer to licensed UW. Aggregate risk score: {score:.2f}",
+                conditions=[f.title for f in self._findings if f.severity == RiskSeverity.CRITICAL],
             )
 
         if has_high or score >= 0.7:
