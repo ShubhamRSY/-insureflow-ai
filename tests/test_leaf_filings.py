@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from insureflow.insurance.commercial_lobs import COMMERCIAL_LINES
-from insureflow.models.agents import Recommendation, UnderwritingMemo, UWDecision
+from insureflow.models.agents import Recommendation, UnderwritingMemo
 from insureflow.models.submissions import (
     FinancialData,
     LocationData,

@@ -6,7 +6,7 @@ from typing import Any
 
 from insureflow.ml.lob_profiles import lob_profile
 from insureflow.models.agents import UnderwritingMemo
-from insureflow.models.submissions import SubmissionBundle
+from insureflow.models.submissions import ClaimRecord, SubmissionBundle
 from insureflow.rating.models import InsuranceLine, QuoteResult, RateComponent
 
 # Coverage-level premium allocation factors (property product)
@@ -40,8 +40,9 @@ def _estimate_payroll(bundle: SubmissionBundle) -> float:
     rev = 0.0
     employees = 10
     if bundle.structured and bundle.structured.financial:
-        rev = float(bundle.structured.financial.annual_revenue or 0)
-        employees = int(bundle.structured.financial.employee_count or employees)
+        fin = bundle.structured.financial
+        rev = float(fin.annual_revenue or 0)
+        employees = int(getattr(fin, "employee_count", None) or employees)
     if rev <= 0 and bundle.structured and bundle.structured.risk_profile:
         rev = float(getattr(bundle.structured.risk_profile, "annual_revenue", 0) or 0)
     if rev <= 0:
@@ -71,15 +72,23 @@ def _estimate_tiv(bundle: SubmissionBundle) -> float:
 
 def _loss_ratio(bundle: SubmissionBundle) -> float:
     if bundle.structured and bundle.structured.financial:
-        lr = bundle.structured.financial.loss_ratio
-        if lr is not None and lr > 0:
+        fin = bundle.structured.financial
+        lr = getattr(fin, "loss_ratio", None)
+        if lr is None and fin.loss_run and fin.loss_run.loss_ratios:
+            try:
+                lr = max(float(v) for v in fin.loss_run.loss_ratios.values())
+                if lr > 3.0:  # percentages stored as 55 vs 0.55
+                    lr = lr / 100.0
+            except (TypeError, ValueError):
+                lr = None
+        if lr is not None and float(lr) > 0:
             return float(lr)
-    claims = []
+    claims: list[ClaimRecord] = []
     if bundle.structured and bundle.structured.risk_profile:
-        claims = bundle.structured.risk_profile.prior_claims or []
+        claims = list(bundle.structured.risk_profile.prior_claims or [])
     if not claims:
         return 0.45
-    incurred = sum(float(c.incurred_amount or 0) for c in claims)
+    incurred = float(sum(float(c.incurred_amount or 0) for c in claims))
     tiv = max(_estimate_tiv(bundle), 1.0)
     return min(incurred / (tiv * 0.04), 2.5)
 
@@ -166,9 +175,7 @@ def apply_lob_rating(
         meta["exposure_basis"] = "gross_sales"
         meta["sales"] = sales
         meta["rating_engine"] = "iso_gl_sales"
-        components.append(
-            RateComponent(name="gl_sales_rate", amount=GL_RATE_PER_1K_SALES, basis="per_1k_sales", modifier_pct=0.0)
-        )
+        components.append(RateComponent(name="gl_sales_rate", amount=GL_RATE_PER_1K_SALES, basis="per_1k_sales", modifier_pct=0.0))
     elif commercial_coverage_id and cov_factor != 1.0:
         adjusted = round(adjusted * cov_factor, 2)
         meta["coverage_premium_factor"] = cov_factor
@@ -232,7 +239,7 @@ def build_uw_worksheet(
 
     limit = tiv if tiv > 0 else float(memo.recommendation.suggested_limit or 0) if memo.recommendation else 0
     if limit <= 0 and bundle.structured and bundle.structured.coverages:
-        limit = max(float(c.limit or 0) for c in bundle.structured.coverages)
+        limit = max(float(c.limit_amount or 0) for c in bundle.structured.coverages)
 
     deductible = 0.0
     if bundle.structured and bundle.structured.coverages:

@@ -11,7 +11,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
-from insureflow.ml.export_training import export_from_audit_logs, _insurance_row, _insurance_target, _iter_insurance_dir
+from insureflow.ml.export_training import _insurance_row, _insurance_target, _iter_insurance_dir, export_from_audit_logs
 from insureflow.ml.features import DEFAULT_FEATURE_NAMES, get_model_feature_names
 from insureflow.ml.lob_training import (
     DEFAULT_LOB_DATA_ROOT,
@@ -177,9 +177,7 @@ def build_lob_training_from_book(
             need = max(samples_per_model - len(rows), 0)
             if need:
                 global_csv = DEFAULT_OUT_DIR / f"{mt}.csv"
-                rows.extend(
-                    _rows_from_global_base(global_csv, insurance_line, mt, n_target=need)
-                )
+                rows.extend(_rows_from_global_base(global_csv, insurance_line, mt, n_target=need))
             path = _lob_csv_path(root, insurance_line, mt)
             _write_lob_csv(path, rows[:samples_per_model])
             blended_lines += 1

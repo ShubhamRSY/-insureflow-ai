@@ -12,7 +12,7 @@ import json
 import logging
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from insureflow.insurance.commercial_lobs import COMMERCIAL_LINES, get_commercial_line
 from insureflow.models.agents import UnderwritingMemo
@@ -49,8 +49,10 @@ def load_carrier_book(path: str | None = None) -> dict[str, Any]:
         return {"filings": {}, "book_id": "missing", "path": str(book_path)}
     with book_path.open(encoding="utf-8") as fh:
         data = json.load(fh)
+    if not isinstance(data, dict):
+        return {"filings": {}, "book_id": "invalid", "path": str(book_path)}
     data["_loaded_from"] = str(book_path)
-    return data
+    return cast(dict[str, Any], data)
 
 
 def clear_carrier_book_cache() -> None:
@@ -80,7 +82,7 @@ def list_leaf_filings() -> list[dict[str, Any]]:
 def carrier_book_status() -> dict[str, Any]:
     book = load_carrier_book()
     filings = book.get("filings") or {}
-    catalog_ids = {str(l["id"]) for l in COMMERCIAL_LINES}
+    catalog_ids = {str(line["id"]) for line in COMMERCIAL_LINES}
     covered = catalog_ids & set(filings.keys())
     return {
         "book_id": book.get("book_id"),

@@ -87,7 +87,7 @@ def clear_subjectivity(
     job = _get_job(bundle_id, org_id)
     results = dict(job.get("results") or {})
     items = list(results.get("subjectivities") or [])
-    found = None
+    found: dict[str, Any] | None = None
     for item in items:
         if item.get("id") == subjectivity_id:
             item["status"] = "cleared"
@@ -96,7 +96,7 @@ def clear_subjectivity(
             item["notes"] = notes
             found = item
             break
-    if not found:
+    if found is None:
         raise KeyError(subjectivity_id)
     results["subjectivities"] = items
     results["bind_readiness"] = compute_bind_readiness(results)
@@ -204,7 +204,8 @@ def ensure_bind_readiness(bundle_id: str, org_id: str) -> dict[str, Any]:
     results = dict(job.get("results") or {})
     if not results.get("subjectivities"):
         results["subjectivities"] = seed_subjectivities_from_conditions(results)
-    results["bind_readiness"] = compute_bind_readiness(results)
+    bind = compute_bind_readiness(results)
+    results["bind_readiness"] = bind
     job["results"] = results
     _save_job(bundle_id, job, org_id)
-    return results["bind_readiness"]
+    return bind

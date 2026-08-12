@@ -1,9 +1,13 @@
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 from insureflow.models.agents import Finding, RiskSeverity
 from insureflow.models.submissions import ClaimRecord, CoverageDetail, LocationData, LossRunData, RiskProfile, ScheduleOfValues, SubmissionBundle
+
+if TYPE_CHECKING:
+    from insureflow.ml.base import BaseMLModel
+    from insureflow.ml.models import ModelType
 
 
 class UnderwritingTools:
@@ -158,7 +162,7 @@ class MLTools:
     """ML prediction tools callable by any agent — LOB-scoped when insurance_line is set."""
 
     @staticmethod
-    def _get_model(model_type: "ModelType", insurance_line: str | None = None) -> "BaseMLModel | None":
+    def _get_model(model_type: ModelType, insurance_line: str | None = None) -> BaseMLModel | None:
         from insureflow.ml.base import BaseMLModel
         from insureflow.ml.lob_registry import get_insurance_model
 

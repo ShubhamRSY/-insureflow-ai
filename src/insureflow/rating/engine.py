@@ -313,23 +313,17 @@ class InsuranceRatingEngine:
         market_mod = self._get_market_mod(line)
 
         if line == InsuranceLine.WORKERS_COMP:
-            result = rate_workers_comp_ncci(
-                bundle, memo, state=state, schedule_mod_pct=schedule_mod, market_mod_pct=market_mod
-            )
+            result = rate_workers_comp_ncci(bundle, memo, state=state, schedule_mod_pct=schedule_mod, market_mod_pct=market_mod)
             return self._adapt_actuarial_result(result, memo, bundle, schedule_mod)
 
         if is_package_line(line) or line in PACKAGE_LINES:
-            result = rate_package_policy(
-                bundle, memo, line, state=state, schedule_mod_pct=schedule_mod, market_mod_pct=market_mod
-            )
+            result = rate_package_policy(bundle, memo, line, state=state, schedule_mod_pct=schedule_mod, market_mod_pct=market_mod)
             return self._adapt_actuarial_result(result, memo, bundle, schedule_mod)
 
         if is_extended_commercial(line):
-            result = rate_extended_commercial(
-                bundle, memo, line, state=state, schedule_mod_pct=schedule_mod, market_mod_pct=market_mod
-            )
-            if result is not None:
-                return self._adapt_actuarial_result(result, memo, bundle, schedule_mod)
+            extended = rate_extended_commercial(bundle, memo, line, state=state, schedule_mod_pct=schedule_mod, market_mod_pct=market_mod)
+            if extended is not None:
+                return self._adapt_actuarial_result(extended, memo, bundle, schedule_mod)
 
         # Per-product carrier leaf filings (unique math for each of 59 catalog products)
         from insureflow.rating.leaf_filings import rate_leaf_filing, should_use_leaf_filing

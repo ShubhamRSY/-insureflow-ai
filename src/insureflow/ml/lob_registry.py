@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from insureflow.insurance.commercial_lobs import list_production_insurance_lines
-from insureflow.ml.base import BaseMLModel, MODEL_DIR
+from insureflow.ml.base import MODEL_DIR, BaseMLModel
 from insureflow.ml.churn import ChurnPredictionModel
 from insureflow.ml.fraud_detection import FraudDetectionModel
 from insureflow.ml.lob_profiles import INSURANCE_LOB_MODEL_TYPES
