@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Users, Shield, RefreshCw, Plus, Pencil, Trash2, X, Loader2, ShieldCheck } from 'lucide-react';
-import { Badge, EmptyState } from '../components/ui';
+import { Badge, EmptyState, HintCheckbox } from '../components/ui';
 import { endpoints, fmtCurrency } from '../lib/api';
+import { UI_HINTS } from '../lib/uiHints';
 import { useOutletContext } from 'react-router-dom';
 
 const TIERS = [
@@ -412,15 +413,14 @@ export default function AuthorityMatrix() {
                   />
                 </div>
                 <div className="flex items-end pb-1">
-                  <label className="flex cursor-pointer items-center gap-2 text-xs font-medium text-slate-400">
-                    <input
-                      type="checkbox"
-                      className="h-4 w-4 accent-brand"
-                      checked={form.requires_co_sign}
-                      onChange={(e) => setForm({ ...form, requires_co_sign: e.target.checked })}
-                    />
-                    Always requires co-sign
-                  </label>
+                  <HintCheckbox
+                    hint={UI_HINTS.requiresCoSign}
+                    label="Always requires co-sign"
+                    labelClassName="flex cursor-pointer items-center gap-2 text-xs font-medium text-slate-400"
+                    inputClassName="h-4 w-4 accent-brand"
+                    checked={form.requires_co_sign}
+                    onChange={(e) => setForm({ ...form, requires_co_sign: e.target.checked })}
+                  />
                 </div>
               </div>
 

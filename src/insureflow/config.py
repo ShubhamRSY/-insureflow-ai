@@ -105,6 +105,7 @@ class Settings:
 
     # Oracle clients: simulated | live | auto
     oracle_mode: str = os.getenv("ORACLE_MODE", "auto")
+    carrier_book_path: str = os.getenv("CARRIER_BOOK_PATH", "")
     clue_api_key: str = os.getenv("CLUE_API_KEY", "")
     clue_api_url: str = os.getenv("CLUE_API_URL", "https://integrations.rytera.ai/oracles/clue/v2")
     clue_query_path: str = os.getenv("CLUE_QUERY_PATH", "/queries")

@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Shield, Home, Activity, ClipboardCheck, Settings, LogOut, RefreshCw, Menu, X,
   FileText, Users, BarChart3, BookOpen, Wallet, Layers, Link2, LineChart, Search, Database, FlaskConical,
   FileCheck, MessagesSquare, Radar, Briefcase, Building2, Calculator, ChevronDown, ChevronRight, Plus,
-  ShieldCheck,
+  ShieldCheck, Library,
 } from 'lucide-react';
 import { useState } from 'react';
 import { auth } from '../lib/api';
@@ -21,6 +21,17 @@ const nav = [
     children: [
       { to: '/insurance/commercial', label: 'Business & Commercial', tag: 'Live' },
       { soon: true, label: 'Personal Lines' },
+    ],
+  },
+  { section: 'Reference' },
+  {
+    to: '/reference',
+    icon: Library,
+    label: 'Reference notebooks',
+    color: 'text-slate-300',
+    defaultOpen: true,
+    children: [
+      { to: '/reference/commercial', label: 'Commercial insurance' },
     ],
   },
   { section: 'Mortgage & Lending' },
@@ -55,6 +66,8 @@ const nav = [
 ];
 
 const CRUMBS = [
+  { prefix: '/reference/commercial', labels: ['Reference', 'Commercial insurance'] },
+  { prefix: '/reference', labels: ['Reference', 'Notebooks'] },
   { prefix: '/insurance/commercial', labels: ['Insurance', 'Commercial Hub', 'Business & Commercial'] },
   { prefix: '/insurance/', labels: ['Insurance', 'Commercial Hub'] },
   { prefix: '/insurance', labels: ['Insurance', 'Commercial Hub'] },

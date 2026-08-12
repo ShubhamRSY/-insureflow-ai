@@ -7,6 +7,7 @@ import Overview from './pages/Overview';
 import SystemPage from './pages/System';
 import InsurancePage from './pages/Insurance';
 import CommercialInsuranceHub from './pages/CommercialInsurance';
+import CommercialReference from './pages/CommercialReference';
 import CommercialLinePage from './pages/CommercialLine';
 import MortgagePage from './pages/Mortgage';
 import LendingPage from './pages/Lending';
@@ -252,6 +253,9 @@ function AppRoutes() {
         <Route element={<Layout health={health} pendingCount={pending.length} onRefresh={refreshAll} onLogin={() => setLoginOpen(true)} user={user} setUser={setUser} />}>
           <Route index element={<Overview overview={overview} health={health} presets={presets} onRunDemo={runDemo} onOpenJob={openJob} onLogin={() => setLoginOpen(true)} marketCycle={marketCycle} queueStats={queueStats} insuranceJobs={insuranceJobs} />} />
           <Route path="system" element={<SystemPage health={health} />} />
+          <Route path="reference/commercial" element={<Protected onLogin={() => setLoginOpen(true)}><CommercialReference /></Protected>} />
+          <Route path="reference" element={<Navigate to="/reference/commercial" replace />} />
+          <Route path="insurance/commercial/guides" element={<Navigate to="/reference/commercial" replace />} />
           <Route path="insurance/commercial/:lobSlug" element={<Protected onLogin={() => setLoginOpen(true)}><CommercialLinePage presets={presets} onRunDemo={runDemo} onSubmit={submitInsurance} /></Protected>} />
           <Route path="insurance/commercial" element={<Protected onLogin={() => setLoginOpen(true)}><CommercialInsuranceHub presets={presets} onRunDemo={runDemo} onSubmit={submitInsurance} jobs={insuranceJobs} /></Protected>} />
           <Route path="insurance/:jobId" element={<Protected onLogin={() => setLoginOpen(true)}><InsuranceJobDetail /></Protected>} />

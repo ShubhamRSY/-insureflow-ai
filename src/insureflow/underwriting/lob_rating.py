@@ -1,0 +1,277 @@
+"""Per-LOB underwriting rating — exposure bases, credibility, coverage modifiers, UW worksheet."""
+
+from __future__ import annotations
+
+from typing import Any
+
+from insureflow.ml.lob_profiles import lob_profile
+from insureflow.models.agents import UnderwritingMemo
+from insureflow.models.submissions import SubmissionBundle
+from insureflow.rating.models import InsuranceLine, QuoteResult, RateComponent
+
+# Coverage-level premium allocation factors (property product)
+COVERAGE_FACTORS: dict[str, float] = {
+    "building_structure": 1.00,
+    "building": 1.00,
+    "bpp": 0.72,
+    "business_personal_property": 0.72,
+    "tenant_improvements": 0.65,
+    "replacement_cost_acv": 0.08,
+    "named_perils_all_risk": 0.05,
+    "bi_gross_earnings": 0.85,
+    "bi_extra_expense": 0.45,
+    "contingent_bi": 0.55,
+    "civil_authority": 0.25,
+    "employee_dishonesty": 0.35,
+    "forgery_alteration": 0.20,
+    "burglary_robbery": 0.40,
+    "computer_fraud": 0.30,
+}
+
+# NCCI-style manual rates per $100 payroll (representative class blends)
+WC_CLASS_RATE = 3.25  # blended manual rate
+WC_EXP_MOD_BASE = 1.0
+
+# GL exposure: per $1,000 sales
+GL_RATE_PER_1K_SALES = 0.42
+
+
+def _estimate_payroll(bundle: SubmissionBundle) -> float:
+    rev = 0.0
+    employees = 10
+    if bundle.structured and bundle.structured.financial:
+        rev = float(bundle.structured.financial.annual_revenue or 0)
+        employees = int(bundle.structured.financial.employee_count or employees)
+    if rev <= 0 and bundle.structured and bundle.structured.risk_profile:
+        rev = float(getattr(bundle.structured.risk_profile, "annual_revenue", 0) or 0)
+    if rev <= 0:
+        tiv = _estimate_tiv(bundle)
+        rev = max(tiv * 0.35, 250_000.0)
+    return max(rev / max(employees, 1) * employees * 0.42, 50_000.0)
+
+
+def _estimate_sales(bundle: SubmissionBundle) -> float:
+    if bundle.structured and bundle.structured.financial:
+        rev = float(bundle.structured.financial.annual_revenue or 0)
+        if rev > 0:
+            return rev
+    return max(_estimate_tiv(bundle) * 0.35, 500_000.0)
+
+
+def _estimate_tiv(bundle: SubmissionBundle) -> float:
+    total = 0.0
+    if bundle.structured:
+        for loc in bundle.structured.locations:
+            total += float(loc.building_value or 0) + float(loc.contents_value or 0) + float(loc.bi_value or 0)
+        for sov in bundle.structured.schedule_of_values or []:
+            for item in sov.items or []:
+                total += float(item.value or 0)
+    return max(total, 0.0)
+
+
+def _loss_ratio(bundle: SubmissionBundle) -> float:
+    if bundle.structured and bundle.structured.financial:
+        lr = bundle.structured.financial.loss_ratio
+        if lr is not None and lr > 0:
+            return float(lr)
+    claims = []
+    if bundle.structured and bundle.structured.risk_profile:
+        claims = bundle.structured.risk_profile.prior_claims or []
+    if not claims:
+        return 0.45
+    incurred = sum(float(c.incurred_amount or 0) for c in claims)
+    tiv = max(_estimate_tiv(bundle), 1.0)
+    return min(incurred / (tiv * 0.04), 2.5)
+
+
+def _credibility_mod(prior_claims: int, raw_mod: float, *, k: float = 8.0) -> tuple[float, float]:
+    """Bühlmann-style credibility: Z = n / (n + k)."""
+    n = max(prior_claims, 0)
+    z = n / (n + k) if (n + k) > 0 else 0.0
+    blended = (1.0 - z) * 1.0 + z * raw_mod
+    return round(blended, 4), round(z, 4)
+
+
+def _coverage_factor(coverage_id: str | None) -> float:
+    if not coverage_id:
+        return 1.0
+    key = coverage_id.strip().lower()
+    if key in COVERAGE_FACTORS:
+        return COVERAGE_FACTORS[key]
+    for pattern, factor in COVERAGE_FACTORS.items():
+        if pattern in key or key in pattern:
+            return factor
+    return 1.0
+
+
+def apply_lob_rating(
+    quote: QuoteResult,
+    bundle: SubmissionBundle,
+    memo: UnderwritingMemo,
+    *,
+    line: InsuranceLine,
+    insurance_line: str | None = None,
+    commercial_coverage_id: str | None = None,
+    commercial_product_id: str | None = None,
+) -> QuoteResult:
+    """Adjust indicated premium using LOB-appropriate exposure bases and coverage context."""
+    meta = dict(quote.metadata or {})
+    # Dedicated actuarial manuals already applied in InsuranceRatingEngine — do not overwrite.
+    engine = str(meta.get("rating_engine") or "")
+    if engine in {
+        "ncci_class_emod",
+        "package_section_rating",
+        "cyber_manual",
+        "commercial_auto_manual",
+        "inland_marine_manual",
+        "crime_fidelity_manual",
+        "builders_risk_manual",
+        "surety_rate_manual",
+        "carrier_leaf_filing",
+        "iso_gl_sales",
+    }:
+        if commercial_coverage_id:
+            cov_factor = _coverage_factor(commercial_coverage_id)
+            if cov_factor != 1.0 and line == InsuranceLine.COMMERCIAL_PROPERTY:
+                quote.adjusted_premium = round(float(quote.adjusted_premium) * cov_factor, 2)
+                meta["coverage_premium_factor"] = cov_factor
+                quote.metadata = meta
+        return quote
+
+    prof = lob_profile(insurance_line or line.value)
+    prior_claims = 0
+    if bundle.structured and bundle.structured.risk_profile:
+        prior_claims = len(bundle.structured.risk_profile.prior_claims or [])
+
+    lr = _loss_ratio(bundle)
+    raw_exp_mod = 1.0 + min(max((lr - 0.55) * 0.35, -0.25), 0.45)
+    exp_mod, credibility_z = _credibility_mod(prior_claims, raw_exp_mod)
+
+    cov_factor = _coverage_factor(commercial_coverage_id)
+    meta["lob_profile"] = {
+        "insurance_line": insurance_line or line.value,
+        "category_id": prof.get("category_id"),
+        "coverage_id": commercial_coverage_id,
+        "coverage_factor": cov_factor,
+    }
+
+    base = float(quote.base_premium or 0)
+    adjusted = float(quote.adjusted_premium or 0)
+    components = list(quote.schedule_modifications or [])
+
+    if line == InsuranceLine.GENERAL_LIABILITY and engine != "iso_gl_sales":
+        sales = _estimate_sales(bundle)
+        base = round((sales / 1000.0) * GL_RATE_PER_1K_SALES, 2)
+        adjusted = round(base * exp_mod * float(prof.get("premium_load", 1.0)), 2)
+        meta["exposure_basis"] = "gross_sales"
+        meta["sales"] = sales
+        meta["rating_engine"] = "iso_gl_sales"
+        components.append(
+            RateComponent(name="gl_sales_rate", amount=GL_RATE_PER_1K_SALES, basis="per_1k_sales", modifier_pct=0.0)
+        )
+    elif commercial_coverage_id and cov_factor != 1.0:
+        adjusted = round(adjusted * cov_factor, 2)
+        meta["coverage_premium_factor"] = cov_factor
+        components.append(
+            RateComponent(
+                name=f"coverage_{commercial_coverage_id}",
+                amount=cov_factor,
+                basis="coverage_allocation",
+                modifier_pct=(cov_factor - 1.0) * 100,
+            )
+        )
+
+    min_prem = float(meta.get("minimum_premium") or 500.0)
+    adjusted = max(adjusted, min_prem)
+
+    quote.base_premium = base if base > 0 else quote.base_premium
+    quote.adjusted_premium = adjusted
+    quote.schedule_modifications = components
+    meta["credibility_z"] = credibility_z
+    meta["loss_ratio_input"] = lr
+    meta["experience_mod_blended"] = exp_mod
+    quote.metadata = meta
+    return quote
+
+
+def build_uw_worksheet(
+    quote: QuoteResult,
+    bundle: SubmissionBundle,
+    memo: UnderwritingMemo,
+    *,
+    line: InsuranceLine,
+    insurance_line: str | None = None,
+    commercial_product_name: str | None = None,
+    commercial_coverage_name: str | None = None,
+    commercial_coverage_id: str | None = None,
+) -> dict[str, Any]:
+    """UW-facing rate worksheet — formulas and indicated terms, no internal eval scores."""
+    tiv = _estimate_tiv(bundle)
+    payroll = _estimate_payroll(bundle)
+    sales = _estimate_sales(bundle)
+    lr = _loss_ratio(bundle)
+    prof = lob_profile(insurance_line or line.value)
+    meta = quote.metadata or {}
+
+    exposure_label = meta.get("exposure_basis") or "tiv"
+    exposure_value = {
+        "payroll": payroll,
+        "gross_sales": sales,
+        "tiv": tiv,
+    }.get(exposure_label, tiv)
+
+    components = [
+        {
+            "step": c.name.replace("_", " ").title(),
+            "basis": c.basis,
+            "factor": c.amount,
+            "modifier_pct": c.modifier_pct,
+        }
+        for c in (quote.schedule_modifications or [])
+    ]
+
+    limit = tiv if tiv > 0 else float(memo.recommendation.suggested_limit or 0) if memo.recommendation else 0
+    if limit <= 0 and bundle.structured and bundle.structured.coverages:
+        limit = max(float(c.limit or 0) for c in bundle.structured.coverages)
+
+    deductible = 0.0
+    if bundle.structured and bundle.structured.coverages:
+        deds = [float(c.deductible or 0) for c in bundle.structured.coverages if c.deductible]
+        deductible = max(deds) if deds else 2500.0
+    if deductible <= 0:
+        deductible = 2500.0 if line in (InsuranceLine.COMMERCIAL_PROPERTY, InsuranceLine.BOP) else 5000.0
+
+    indicated = float(quote.adjusted_premium or 0)
+    rate_per_100 = round(indicated / (exposure_value / 100.0), 4) if exposure_value > 0 else 0.0
+
+    return {
+        "product": commercial_product_name or prof.get("name") or line.value.replace("_", " ").title(),
+        "coverage": commercial_coverage_name or "",
+        "coverage_id": commercial_coverage_id,
+        "insurance_line": insurance_line or line.value,
+        "exposure": {
+            "label": exposure_label.replace("_", " ").upper(),
+            "value": round(exposure_value, 2),
+            "tiv": round(tiv, 2),
+            "payroll": round(payroll, 2),
+            "sales": round(sales, 2),
+        },
+        "loss_experience": {
+            "loss_ratio": round(lr, 4),
+            "credibility_z": meta.get("credibility_z"),
+            "experience_mod": meta.get("experience_mod_blended"),
+        },
+        "indicated_terms": {
+            "premium": indicated,
+            "base_premium": float(quote.base_premium or 0),
+            "limit": round(limit, 2),
+            "deductible": round(deductible, 2),
+            "rate_per_100_exposure": rate_per_100,
+        },
+        "premium_buildup": components,
+        "uw_focus": prof.get("uw_focus", ""),
+        "decision": memo.decision.value if hasattr(memo.decision, "value") else str(memo.decision),
+        "conditions": list(memo.conditions or [])[:12],
+        "rating_method": meta.get("rating_engine") or "iso_loss_cost_lcm",
+        "eligible": quote.eligible,
+    }

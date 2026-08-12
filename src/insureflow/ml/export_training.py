@@ -315,20 +315,43 @@ def _lending_row(payload: dict[str, Any], feature_names: list[str]) -> dict[str,
 
 
 def _iter_insurance_dir(path: Path) -> dict[str, Any] | None:
-    """Load (summary, bundle) for an insurance audit dir, or None if unreadable."""
+    """Load (summary, bundle) for an insurance audit dir, or None if unreadable.
+
+    Decrypts ENC:v1 payloads via AuditStore when present so book training can use
+    the live underwriting desk outcomes.
+    """
     summary_path = path / "pipeline_summary.json"
     bundle_path = path / "submission_bundle.json"
     if not summary_path.exists() or not bundle_path.exists():
         return None
-    try:
-        raw = summary_path.read_text(encoding="utf-8")
-        if raw.startswith("ENC:v1:"):
+
+    def _load(file_path: Path) -> dict[str, Any] | None:
+        try:
+            raw = file_path.read_text(encoding="utf-8")
+        except OSError:
             return None
-        summary = json.loads(raw)
-        bundle = json.loads(bundle_path.read_text(encoding="utf-8"))
-    except (json.JSONDecodeError, OSError):
-        return None
-    if not isinstance(summary, dict) or not isinstance(bundle, dict):
+        if not raw.strip():
+            return None
+        if raw.startswith("ENC:v1:"):
+            try:
+                from insureflow.audit.store import AuditStore
+
+                # path: audit_logs/<org>/<bundle_id>/<file>
+                bundle_id = file_path.parent.name
+                org_id = file_path.parent.parent.name
+                data = AuditStore().load_json(bundle_id, file_path.name, org_id=org_id)
+                return data if isinstance(data, dict) else None
+            except Exception:
+                return None
+        try:
+            data = json.loads(raw)
+        except json.JSONDecodeError:
+            return None
+        return data if isinstance(data, dict) else None
+
+    summary = _load(summary_path)
+    bundle = _load(bundle_path)
+    if not summary or not bundle:
         return None
     return {"summary": summary, "bundle": bundle}
 

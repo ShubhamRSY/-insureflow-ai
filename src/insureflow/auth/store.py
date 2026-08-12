@@ -92,6 +92,22 @@ class UserStore:
     def get(self, username: str) -> User | None:
         return self._users.get(username)
 
+    def resolve_user(self, identifier: str) -> User | None:
+        """Match by username key, then case-insensitive username/email lookup."""
+        key = identifier.strip()
+        if not key:
+            return None
+        user = self._users.get(key)
+        if user:
+            return user
+        lower = key.lower()
+        for candidate in self._users.values():
+            if candidate.username.lower() == lower:
+                return candidate
+            if candidate.email and candidate.email.lower() == lower:
+                return candidate
+        return None
+
     def __contains__(self, username: str) -> bool:
         return username in self._users
 

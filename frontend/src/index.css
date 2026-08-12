@@ -36,12 +36,48 @@
     @apply w-full rounded-xl border border-white/15 bg-surface px-3.5 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30;
   }
 
+  /* Keep browser autofill readable on dark inputs (otherwise text can look invisible). */
+  .input-field:-webkit-autofill,
+  .input-field:-webkit-autofill:hover,
+  .input-field:-webkit-autofill:focus {
+    -webkit-text-fill-color: #f1f5f9;
+    caret-color: #f1f5f9;
+    -webkit-box-shadow: 0 0 0 1000px #10141f inset;
+    box-shadow: 0 0 0 1000px #10141f inset;
+    transition: background-color 99999s ease-out 0s;
+  }
+
   .nav-link {
     @apply flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-300 transition hover:bg-white/[0.05] hover:text-slate-50;
   }
 
   .nav-link-active {
     @apply bg-gradient-to-r from-brand/15 to-transparent text-brand-light border-l-2 border-brand;
+  }
+
+  .hint-anchor {
+    @apply relative inline-flex max-w-full;
+  }
+
+  .hint-label {
+    @apply border-b border-dotted border-slate-600/80;
+  }
+
+  .hint-bubble {
+    @apply pointer-events-none absolute left-1/2 z-[200] w-max max-w-[260px] -translate-x-1/2 rounded-lg border border-white/10 bg-surface-overlay px-2.5 py-1.5 text-[10px] font-normal normal-case leading-snug tracking-normal text-slate-200 opacity-0 shadow-lg transition-opacity duration-150;
+  }
+
+  .hint-anchor:hover .hint-bubble,
+  .hint-anchor:focus-within .hint-bubble {
+    @apply opacity-100;
+  }
+
+  .hint-bubble-top {
+    @apply bottom-full mb-2;
+  }
+
+  .hint-bubble-bottom {
+    @apply top-full mt-2;
   }
 }
 

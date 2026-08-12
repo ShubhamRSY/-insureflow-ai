@@ -58,15 +58,16 @@ class SupervisorAgent(BaseAgent):
         use_celery: bool = False,
         resolve_with_llm: Optional[bool] = None,
         skip_ml_fraud: bool = False,
+        insurance_line: str | None = None,
     ) -> UnderwritingMemo:
         start = time.time()
 
         if use_celery:
             agent_results = self._run_agents_celery(bundle)
         elif parallel:
-            agent_results = self._run_agents_threadpool(bundle, skip_ml_fraud=skip_ml_fraud)
+            agent_results = self._run_agents_threadpool(bundle, skip_ml_fraud=skip_ml_fraud, insurance_line=insurance_line)
         else:
-            agent_results = self._run_agents_sequential(bundle, skip_ml_fraud=skip_ml_fraud)
+            agent_results = self._run_agents_sequential(bundle, skip_ml_fraud=skip_ml_fraud, insurance_line=insurance_line)
 
         conflict_resolution = self._resolve_conflicts(agent_results, resolve_with_llm=resolve_with_llm)
 
@@ -84,14 +85,14 @@ class SupervisorAgent(BaseAgent):
 
         return memo
 
-    def _run_agents_threadpool(self, bundle: SubmissionBundle, skip_ml_fraud: bool = False) -> list[AgentResult]:
+    def _run_agents_threadpool(self, bundle: SubmissionBundle, skip_ml_fraud: bool = False, insurance_line: str | None = None) -> list[AgentResult]:
         import concurrent.futures
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
-            risk_future = pool.submit(self.risk_analyst.run, bundle)
+            risk_future = pool.submit(self.risk_analyst.run, bundle, insurance_line=insurance_line)
             loss_future = pool.submit(self.loss_run_analyst.run, bundle)
             comp_future = pool.submit(self.compliance_agent.run, bundle)
-            fraud_future = pool.submit(self._run_fraud_agent, bundle, skip_ml_fraud)
+            fraud_future = pool.submit(self._run_fraud_agent, bundle, skip_ml_fraud, insurance_line)
             return [
                 risk_future.result(),
                 loss_future.result(),
@@ -99,20 +100,20 @@ class SupervisorAgent(BaseAgent):
                 fraud_future.result(),
             ]
 
-    def _run_agents_sequential(self, bundle: SubmissionBundle, skip_ml_fraud: bool = False) -> list[AgentResult]:
+    def _run_agents_sequential(self, bundle: SubmissionBundle, skip_ml_fraud: bool = False, insurance_line: str | None = None) -> list[AgentResult]:
         return [
-            self.risk_analyst.run(bundle),
+            self.risk_analyst.run(bundle, insurance_line=insurance_line),
             self.loss_run_analyst.run(bundle),
             self.compliance_agent.run(bundle),
-            self._run_fraud_agent(bundle, skip_ml_fraud),
+            self._run_fraud_agent(bundle, skip_ml_fraud, insurance_line),
         ]
 
-    def _run_fraud_agent(self, bundle: SubmissionBundle, skip_ml_fraud: bool = False) -> AgentResult:
+    def _run_fraud_agent(self, bundle: SubmissionBundle, skip_ml_fraud: bool = False, insurance_line: str | None = None) -> AgentResult:
         """Run the fraud agent, optionally deferring its ML scoring to a deep dive."""
         if skip_ml_fraud:
             self.fraud_detection.defer_ml = True
         try:
-            return self.fraud_detection.run(bundle)
+            return self.fraud_detection.run(bundle, insurance_line=insurance_line)
         finally:
             if skip_ml_fraud:
                 self.fraud_detection.defer_ml = False

@@ -7,7 +7,9 @@ import {
 import { endpoints } from '../lib/api';
 import { detectDocType } from '../lib/insuranceDocs';
 import { groupSourcesByCategory } from '../lib/connectorBrands';
+import { UI_HINTS } from '../lib/uiHints';
 import ConnectorLogo from './ConnectorLogo';
+import { HintCheckbox } from './ui';
 
 const SECTION_ICONS = {
   package: Package, cloud: Cloud, inbox: Inbox, exchange: ArrowLeftRight,
@@ -285,10 +287,12 @@ export default function InsuranceSourceHub({ onSubmit, loading }) {
               <span className="rounded-full bg-brand/15 px-1.5 py-0.5 text-[9px] font-semibold text-brand">Multi-source</span>
             </div>
             <div className="flex items-center gap-2">
-              <label className="flex items-center gap-1.5 text-[10px] text-slate-500">
-                <input type="checkbox" checked={useLlm} onChange={(e) => setUseLlm(e.target.checked)} className="rounded" />
-                LLM
-              </label>
+              <HintCheckbox
+                hint={UI_HINTS.llmExtraction}
+                label="LLM"
+                checked={useLlm}
+                onChange={(e) => setUseLlm(e.target.checked)}
+              />
               <button type="button" onClick={() => handleClearAll(bundleId)}
                 className="text-[10px] text-red-400/70 hover:text-red-400">Clear</button>
             </div>

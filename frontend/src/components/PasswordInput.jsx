@@ -1,11 +1,18 @@
 import { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 
-export default function PasswordInput({ name = 'password', placeholder = 'Password', required = true, autoComplete = 'current-password' }) {
+export default function PasswordInput({
+  id,
+  name = 'password',
+  placeholder = 'Password',
+  required = true,
+  autoComplete = 'current-password',
+}) {
   const [show, setShow] = useState(false);
   return (
     <div className="relative">
       <input
+        id={id}
         name={name}
         type={show ? 'text' : 'password'}
         required={required}

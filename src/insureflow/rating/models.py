@@ -14,12 +14,20 @@ class InsuranceLine(str, Enum):
     GENERAL_LIABILITY = "general_liability"
     WORKERS_COMP = "workers_comp"
     BOP = "business_owners_policy"
+    COMMERCIAL_PACKAGE = "commercial_package"
     UMBRELLA = "umbrella"
     # Commercial specialty (non-COPE / non-TIV property math)
     DIRECTORS_AND_OFFICERS = "directors_and_officers"
     TRADE_CREDIT = "trade_credit"
     ERRORS_AND_OMISSIONS = "errors_and_omissions"
     KEY_PERSON = "key_person"
+    # Extended commercial manuals (actuarial depth)
+    CYBER = "cyber_liability"
+    COMMERCIAL_AUTO = "commercial_auto"
+    INLAND_MARINE = "inland_marine"
+    CRIME = "crime"
+    BUILDERS_RISK = "builders_risk"
+    SURETY = "surety_bonds"
     # Personal lines
     PERSONAL_HOMEOWNERS = "personal_homeowners"
     PERSONAL_AUTO = "personal_auto"
@@ -44,18 +52,44 @@ COMMERCIAL_SPECIALTY_LINES = frozenset(
     }
 )
 
+# Dedicated actuarial manuals (cyber, auto, marine, crime, builders, surety)
+EXTENDED_ACTUARIAL_LINES = frozenset(
+    {
+        InsuranceLine.CYBER,
+        InsuranceLine.COMMERCIAL_AUTO,
+        InsuranceLine.INLAND_MARINE,
+        InsuranceLine.CRIME,
+        InsuranceLine.BUILDERS_RISK,
+        InsuranceLine.SURETY,
+    }
+)
+
+PACKAGE_LINES = frozenset(
+    {
+        InsuranceLine.BOP,
+        InsuranceLine.COMMERCIAL_PACKAGE,
+    }
+)
+
 # Human-friendly line labels for reports / quotes / UI.
 # Extended commercial taxonomy labels are merged from commercial_lobs at first use.
 LINE_DISPLAY_NAMES: dict[str, str] = {
     "commercial_property": "Commercial Property Insurance",
     "general_liability": "General Liability (CGL)",
     "business_owners_policy": "Business Owner's Policy (BOP)",
+    "commercial_package": "Commercial Package Policy (CPP)",
     "umbrella": "Umbrella / Excess Liability Insurance",
     "workers_comp": "Workers' Compensation Insurance",
     "directors_and_officers": "Directors & Officers (D&O) Liability",
     "trade_credit": "Trade Credit Insurance",
     "errors_and_omissions": "Professional Liability / E&O",
     "key_person": "Key Person Insurance",
+    "cyber_liability": "Cyber Liability Insurance",
+    "commercial_auto": "Commercial Auto Insurance",
+    "inland_marine": "Inland Marine Insurance",
+    "crime": "Crime Insurance",
+    "builders_risk": "Builder's Risk Insurance",
+    "surety_bonds": "Surety Bonds",
     "personal_homeowners": "Personal Homeowners",
     "personal_auto": "Personal Auto",
     "life": "Life Insurance",

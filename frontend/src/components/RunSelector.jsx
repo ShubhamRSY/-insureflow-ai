@@ -1,14 +1,18 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Loader2, Upload, FileText, X, Play, Database, Cable, AlertTriangle } from 'lucide-react';
 import { readFileForUpload, buildSubmissionPayload, scoreFileRelevance, validatePackageRelevance } from '../lib/insuranceDocs';
 import { insuranceLineLabel } from '../lib/insuranceLines';
+import { UI_HINTS } from '../lib/uiHints';
 import { endpoints } from '../lib/api';
 import ConnectAndPull from './ConnectAndPull';
+import CommercialLinePicker from './CommercialLinePicker';
+import { Hint, HintCheckbox } from './ui';
+import { isCommercialSelectionComplete } from '../lib/commercialTaxonomy';
 
 const TABS = [
-  { id: 'files', label: 'Files', icon: Upload },
-  { id: 'connect', label: 'Connect & pull', icon: Cable },
-  { id: 'sample', label: 'Sample data', icon: Database },
+  { id: 'files', label: 'Files', icon: Upload, hint: UI_HINTS.tabFiles },
+  { id: 'connect', label: 'Connect & pull', icon: Cable, hint: UI_HINTS.tabConnect },
+  { id: 'sample', label: 'Sample data', icon: Database, hint: UI_HINTS.tabSample },
 ];
 
 const fmtSize = (bytes) => {
@@ -29,6 +33,11 @@ export default function RunSelector({
   productField = 'product_line',
   productOptions = [],
   productDefault = '',
+  productValue,
+  onProductChange,
+  commercialTaxonomy = null,
+  commercialSelection,
+  onCommercialSelectionChange,
   includePurpose = false,
   purposeOptions = [],
   purposeDefault = '',
@@ -44,6 +53,8 @@ export default function RunSelector({
   const [purpose, setPurpose] = useState(purposeDefault);
   const [strictRelevance, setStrictRelevance] = useState(true);
 
+  const useCommercialPicker = Array.isArray(commercialTaxonomy) && commercialTaxonomy.length > 0;
+
   const normalizedOptions = useMemo(
     () => (productOptions || []).map((opt) => ({
       id: opt.id || opt.value,
@@ -52,10 +63,41 @@ export default function RunSelector({
     [productOptions],
   );
 
+  const activeProduct = useCommercialPicker
+    ? (commercialSelection?.insurance_line || '')
+    : (productValue !== undefined ? productValue : product);
+
+  const applyLineFields = (body) => {
+    if (useCommercialPicker && commercialSelection) {
+      if (!isCommercialSelectionComplete(commercialSelection)) {
+        throw new Error('Select category, product, and coverage before running');
+      }
+      body[productField] = commercialSelection.insurance_line;
+      body.commercial_product_id = commercialSelection.productId;
+      body.commercial_coverage_id = commercialSelection.coverageId || undefined;
+      body.commercial_product_name = commercialSelection.productName;
+      body.commercial_coverage_name = commercialSelection.coverageName;
+      body.commercial_category_id = commercialSelection.categoryId;
+      return body;
+    }
+    if (normalizedOptions.length > 0) body[productField] = activeProduct;
+    return body;
+  };
+
+  useEffect(() => {
+    if (productValue !== undefined) return;
+    if (productDefault) setProduct(productDefault);
+  }, [productDefault, productValue]);
+
   const allSamples = samples || presets?.insurance || [];
   const sampleList = normalizedOptions.length > 0 && vertical === 'insurance'
-    ? allSamples.filter((s) => (s.insurance_line || s.product_line || s.product_type) === product)
+    ? allSamples.filter((s) => (s.insurance_line || s.product_line || s.product_type) === activeProduct)
     : allSamples;
+
+  const setActiveProduct = (id) => {
+    if (onProductChange) onProductChange(id);
+    else setProduct(id);
+  };
 
   const fileScores = useMemo(
     () => files.map((f) => ({ ...scoreFileRelevance(f), filename: f.filename })),
@@ -63,7 +105,7 @@ export default function RunSelector({
   );
 
   const pickProduct = (id) => {
-    setProduct(id);
+    setActiveProduct(id);
     if (vertical === 'insurance' && normalizedOptions.length > 0) {
       setDataId((prev) => {
         const match = allSamples.find((s) => s.id === prev && (s.insurance_line || s.product_line || s.product_type) === id);
@@ -139,8 +181,7 @@ export default function RunSelector({
         // continue with kept
         setRunning(true);
         try {
-          const body = buildSubmissionPayload(kept, useLlm);
-          if (normalizedOptions.length > 0) body[productField] = product;
+          const body = applyLineFields(buildSubmissionPayload(kept, useLlm));
           if (includePurpose) body.purpose = purpose;
           body.require_documents = true;
           await onSubmit?.(body);
@@ -155,8 +196,7 @@ export default function RunSelector({
 
     setRunning(true);
     try {
-      const body = buildSubmissionPayload(files, useLlm);
-      if (normalizedOptions.length > 0) body[productField] = product;
+      const body = applyLineFields(buildSubmissionPayload(files, useLlm));
       if (includePurpose) body.purpose = purpose;
       body.require_documents = true;
       await onSubmit?.(body);
@@ -182,12 +222,14 @@ export default function RunSelector({
         <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Select files or data to run</p>
         <div className="flex rounded-lg bg-surface/60 p-0.5">
           {TABS.map((t) => (
-            <button key={t.id} type="button" onClick={() => { setTab(t.id); setError(''); setWarning(''); }}
-              className={`rounded-md px-3 py-1 text-[11px] font-medium transition ${
-                tab === t.id ? 'bg-brand/15 text-brand ring-1 ring-brand/25' : 'text-slate-500 hover:text-slate-300'
-              }`}>
-              <span className="inline-flex items-center gap-1"><t.icon className="h-3 w-3" /> {t.label}</span>
-            </button>
+            <Hint key={t.id} text={t.hint}>
+              <button type="button" onClick={() => { setTab(t.id); setError(''); setWarning(''); }}
+                className={`rounded-md px-3 py-1 text-[11px] font-medium transition ${
+                  tab === t.id ? 'bg-brand/15 text-brand ring-1 ring-brand/25' : 'text-slate-500 hover:text-slate-300'
+                }`}>
+                <span className="inline-flex items-center gap-1"><t.icon className="h-3 w-3" /> {t.label}</span>
+              </button>
+            </Hint>
           ))}
         </div>
       </div>
@@ -227,12 +269,21 @@ export default function RunSelector({
             </div>
           )}
 
-          {normalizedOptions.length > 0 && (
+          {useCommercialPicker ? (
+            <CommercialLinePicker
+              taxonomy={commercialTaxonomy}
+              value={commercialSelection}
+              onChange={onCommercialSelectionChange}
+              disabled={running}
+            />
+          ) : normalizedOptions.length > 0 && (
             <div className="flex flex-wrap items-center gap-3">
               <label className="flex min-w-[240px] flex-1 items-center gap-2">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Line of business</span>
+                <Hint text={UI_HINTS.lineOfBusiness}>
+                  <span className="hint-label cursor-help text-[11px] font-semibold uppercase tracking-wider text-slate-500">Line of business</span>
+                </Hint>
                 <select
-                  value={product}
+                  value={activeProduct}
                   onChange={(e) => pickProduct(e.target.value)}
                   className="input-field flex-1 text-xs"
                   aria-label="Line of business"
@@ -251,28 +302,38 @@ export default function RunSelector({
           )}
 
           <div className="flex flex-wrap items-center gap-3">
-            <label className="flex items-center gap-1.5 text-[10px] text-slate-500">
-              <input type="checkbox" checked={useLlm} onChange={(e) => setUseLlm(e.target.checked)} className="rounded" />
-              LLM extraction
-            </label>
-            <label className="flex items-center gap-1.5 text-[10px] text-slate-500">
-              <input type="checkbox" checked={strictRelevance} onChange={(e) => setStrictRelevance(e.target.checked)} className="rounded" />
-              Block irrelevant files
-            </label>
+            <HintCheckbox
+              hint={UI_HINTS.llmExtraction}
+              label="LLM extraction"
+              checked={useLlm}
+              onChange={(e) => setUseLlm(e.target.checked)}
+            />
+            <HintCheckbox
+              hint={UI_HINTS.blockIrrelevant}
+              label="Block irrelevant files"
+              checked={strictRelevance}
+              onChange={(e) => setStrictRelevance(e.target.checked)}
+            />
             <div className="ml-auto flex items-center gap-2">
               {fileScores.some((s) => !s.relevant) && (
-                <button type="button" onClick={removeIrrelevantFiles} className="text-[10px] text-amber-400/90 transition hover:text-amber-300">
-                  Remove irrelevant
-                </button>
+                <Hint text={UI_HINTS.removeIrrelevant}>
+                  <button type="button" onClick={removeIrrelevantFiles} className="hint-label cursor-help text-[10px] text-amber-400/90 transition hover:text-amber-300">
+                    Remove irrelevant
+                  </button>
+                </Hint>
               )}
               {files.length > 0 && (
-                <button type="button" onClick={() => { setFiles([]); setWarning(''); }} className="text-[10px] text-red-400/70 transition hover:text-red-400">Clear</button>
+                <Hint text={UI_HINTS.clearFiles}>
+                  <button type="button" onClick={() => { setFiles([]); setWarning(''); }} className="hint-label cursor-help text-[10px] text-red-400/70 transition hover:text-red-400">Clear</button>
+                </Hint>
               )}
-              <button type="button" onClick={runFiles} disabled={running}
-                className="btn-primary btn-sm text-xs disabled:opacity-40">
-                {running ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3 w-3" />}
-                Run pipeline{files.length ? ` (${files.length})` : ''}
-              </button>
+              <Hint text={UI_HINTS.runPipeline}>
+                <button type="button" onClick={runFiles} disabled={running}
+                  className="btn-primary btn-sm text-xs disabled:opacity-40">
+                  {running ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3 w-3" />}
+                  Run pipeline{files.length ? ` (${files.length})` : ''}
+                </button>
+              </Hint>
             </div>
           </div>
         </div>
@@ -281,7 +342,7 @@ export default function RunSelector({
       {tab === 'connect' && (
         <ConnectAndPull
           vertical={vertical}
-          insuranceLine={product || ''}
+          insuranceLine={activeProduct || ''}
           strictRelevance={strictRelevance}
           onRunJob={onRunJob || (onSubmit ? (jobId) => onSubmit?.({ _jobId: jobId }) : undefined)}
           onRunResult={onRunResult}
@@ -293,7 +354,7 @@ export default function RunSelector({
           {sampleList.length === 0 ? (
             <div className="rounded-xl border border-dashed border-white/[0.12] bg-surface/30 px-4 py-5 text-center">
               <p className="text-xs font-medium text-slate-400">
-                {vertical === 'insurance' ? `No demo case for ${insuranceLineLabel(product)} yet — coming soon.` : 'No sample data sets available.'}
+                {vertical === 'insurance' ? `No demo case for ${insuranceLineLabel(activeProduct)} yet — coming soon.` : 'No sample data sets available.'}
               </p>
               <p className="mt-1 text-[10px] text-slate-600">Upload files in the Files tab or connect a source above.</p>
             </div>
@@ -309,11 +370,13 @@ export default function RunSelector({
               </select>
               {dataId && <p className="text-[11px] text-slate-500">{sampleList.find((s) => s.id === dataId)?.description}</p>}
               <div className="flex justify-end">
-                <button type="button" onClick={runSample} disabled={running || !dataId}
-                  className="btn-primary btn-sm text-xs disabled:opacity-40">
-                  {running ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3 w-3" />}
-                  Run sample
-                </button>
+                <Hint text={UI_HINTS.runSample}>
+                  <button type="button" onClick={runSample} disabled={running || !dataId}
+                    className="btn-primary btn-sm text-xs disabled:opacity-40">
+                    {running ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3 w-3" />}
+                    Run sample
+                  </button>
+                </Hint>
               </div>
             </>
           )}

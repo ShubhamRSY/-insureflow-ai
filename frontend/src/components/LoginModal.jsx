@@ -152,12 +152,20 @@ export default function LoginModal({ open, onClose, onSuccess }) {
 
             <form onSubmit={handleLogin} className="mt-6 space-y-4">
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-slate-400">Username</label>
-                <input name="username" required className="input-field" autoComplete="username" />
+                <label htmlFor="login-username" className="mb-1.5 block text-xs font-medium text-slate-400">Username or email</label>
+                <input
+                  id="login-username"
+                  name="username"
+                  type="text"
+                  required
+                  placeholder="Username or email"
+                  className="input-field"
+                  autoComplete="username"
+                />
               </div>
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-slate-400">Password</label>
-                <PasswordInput autoComplete="current-password" />
+                <label htmlFor="login-password" className="mb-1.5 block text-xs font-medium text-slate-400">Password</label>
+                <PasswordInput id="login-password" autoComplete="current-password" placeholder="" />
               </div>
               <button type="submit" disabled={loading} className="btn-primary w-full">{loading ? 'Signing in…' : 'Sign In'}</button>
             </form>

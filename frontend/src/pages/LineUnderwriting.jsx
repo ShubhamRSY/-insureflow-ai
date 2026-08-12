@@ -3,8 +3,9 @@ import { Link } from 'react-router-dom';
 import {
   Briefcase, FilePlus2, LifeBuoy, RefreshCw, Shield, Sparkles, ArrowRight,
 } from 'lucide-react';
-import { Badge, EmptyState } from '../components/ui';
+import { Badge, EmptyState, HintCheckbox } from '../components/ui';
 import { endpoints } from '../lib/api';
+import { UI_HINTS } from '../lib/uiHints';
 
 const REQUEST_TYPES = [
   'quote', 'endorsement', 'certificate', 'cancellation', 'renewal', 'correspondence', 'policyholder_inquiry',
@@ -143,10 +144,13 @@ export default function LineUnderwriting() {
             <input className="input w-full" placeholder="Applicant" value={form.applicant} onChange={(e) => setForm({ ...form, applicant: e.target.value })} />
             <input className="input w-full" placeholder="Occupancy" value={form.occupancy} onChange={(e) => setForm({ ...form, occupancy: e.target.value })} />
             <textarea className="input min-h-[88px] w-full" placeholder="Operations / inspection narrative" value={form.operations_description} onChange={(e) => setForm({ ...form, operations_description: e.target.value })} />
-            <label className="flex items-center gap-2 text-xs text-slate-400">
-              <input type="checkbox" checked={form.complex_submission} onChange={(e) => setForm({ ...form, complex_submission: e.target.checked })} />
-              Complex / unique submission (manuscript)
-            </label>
+            <HintCheckbox
+              hint={UI_HINTS.complexSubmission}
+              label="Complex / unique submission (manuscript)"
+              labelClassName="flex items-center gap-2 text-xs text-slate-400"
+              checked={form.complex_submission}
+              onChange={(e) => setForm({ ...form, complex_submission: e.target.checked })}
+            />
             <button type="submit" disabled={saving} className="btn-primary text-sm">{saving ? 'Working…' : 'Recommend coverage'}</button>
           </form>
           {assist && (

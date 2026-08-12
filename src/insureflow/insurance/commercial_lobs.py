@@ -161,7 +161,7 @@ def _line(
     documents: list[str],
     acord_forms: list[str] | None = None,
     coverages: list[dict[str, Any]] | None = None,
-    status: str = "catalog",
+    status: str = "live",
     rating_line: str | None = None,
 ) -> dict[str, Any]:
     covs = _normalize_coverages(coverages)
@@ -179,7 +179,7 @@ def _line(
         "acord_forms": list(acord_forms or []),
         "documents": list(documents),
         "coverages": covs,
-        "status": status,  # live = demo/UW path wired; catalog = taxonomy ready for UW
+        "status": status,  # live = full UW + LOB-scoped ML path; catalog retained only for legacy rows
     }
 
 
@@ -298,7 +298,7 @@ COMMERCIAL_LINES: list[dict[str, Any]] = [
         category_id="property",
         checklist_lob="builders_risk",
         insurance_line="builders_risk",
-        rating_line="commercial_property",
+        rating_line="builders_risk",
         description="Covers buildings and materials during construction or renovation.",
         uw_focus="Assess construction type, project duration, site security, hot-work controls, and soft-cost exposure.",
         acord_forms=["ACORD 125", "ACORD 140", "Builder's risk supplemental"],
@@ -322,7 +322,7 @@ COMMERCIAL_LINES: list[dict[str, Any]] = [
         category_id="property",
         checklist_lob="inland_marine",
         insurance_line="inland_marine",
-        rating_line="commercial_property",
+        rating_line="inland_marine",
         description="Mobile property, equipment, installation, transit, and specialty floaters.",
         uw_focus="Review scheduled values, mobility/theft controls, transit routes, and installation exposure windows.",
         acord_forms=["ACORD 125", "ACORD 146 — Inland Marine"],
@@ -467,7 +467,7 @@ COMMERCIAL_LINES: list[dict[str, Any]] = [
         category_id="property",
         checklist_lob="crime",
         insurance_line="crime",
-        rating_line="commercial_property",
+        rating_line="crime",
         description="Employee dishonesty, forgery, burglary/robbery, and computer/funds-transfer fraud.",
         uw_focus="Review internal controls, dual authorization, inventory/cash handling, and prior fidelity losses.",
         acord_forms=["ACORD 125", "Crime / fidelity application"],
@@ -901,7 +901,7 @@ COMMERCIAL_LINES: list[dict[str, Any]] = [
         category_id="liability",
         checklist_lob="cyber",
         insurance_line="cyber_liability",
-        rating_line="errors_and_omissions",
+        rating_line="cyber_liability",
         description="First-party breach response / BI and third-party liability for cyber events.",
         uw_focus="Evaluate security controls, MFA, backups, ransomware readiness, and PII/PHI volume.",
         acord_forms=["Cyber application (carrier-specific)"],
@@ -1290,7 +1290,7 @@ COMMERCIAL_LINES: list[dict[str, Any]] = [
         category_id="auto",
         checklist_lob="commercial_auto",
         insurance_line="commercial_auto",
-        rating_line="umbrella",
+        rating_line="commercial_auto",
         description="Liability, collision, and comprehensive for business-owned autos.",
         uw_focus="Review vehicle mix, driver MVRs, radius, cargo, and loss frequency/severity.",
         acord_forms=["ACORD 127 — Business Auto", "ACORD 137 / 163 as needed"],
@@ -1330,7 +1330,7 @@ COMMERCIAL_LINES: list[dict[str, Any]] = [
         category_id="auto",
         checklist_lob="fleet",
         insurance_line="fleet",
-        rating_line="umbrella",
+        rating_line="commercial_auto",
         description="Program coverage for larger commercial vehicle fleets.",
         uw_focus="Assess fleet size growth, telematics, driver hiring standards, and catastrophic loss potential.",
         acord_forms=["ACORD 127", "Fleet schedule"],
@@ -1356,7 +1356,7 @@ COMMERCIAL_LINES: list[dict[str, Any]] = [
         category_id="auto",
         checklist_lob="hnoa",
         insurance_line="hnoa",
-        rating_line="umbrella",
+        rating_line="commercial_auto",
         description="Liability for hired vehicles and employee-owned autos used in business.",
         uw_focus="Quantify employee personal-auto use, delivery exposure, and primary vs. excess structure.",
         acord_forms=["ACORD 127 HNOA section", "HNOA supplemental"],
@@ -1380,7 +1380,7 @@ COMMERCIAL_LINES: list[dict[str, Any]] = [
         category_id="auto",
         checklist_lob="motor_truck_cargo",
         insurance_line="motor_truck_cargo",
-        rating_line="commercial_property",
+        rating_line="inland_marine",
         description="Cargo in transit for motor carriers and private fleets.",
         uw_focus="Review commodities, limit per load, theft controls, and reefer / high-theft exposures.",
         acord_forms=["Motor truck cargo application"],
@@ -1428,7 +1428,7 @@ COMMERCIAL_LINES: list[dict[str, Any]] = [
         category_id="auto",
         checklist_lob="non_trucking_liability",
         insurance_line="non_trucking_liability",
-        rating_line="umbrella",
+        rating_line="commercial_auto",
         description="Liability for owner-operators driving without a load (bobtail / non-trucking).",
         uw_focus="Review lease agreements with motor carriers, deadhead/bobtail exposure, and primary vs. excess structure.",
         acord_forms=["Non-trucking / bobtail application", "ACORD 127"],
@@ -1490,7 +1490,7 @@ COMMERCIAL_LINES: list[dict[str, Any]] = [
         category_id="financial",
         checklist_lob="surety",
         insurance_line="surety_bonds",
-        rating_line="trade_credit",
+        rating_line="surety_bonds",
         description="Contract, commercial, fidelity, and court bonds.",
         uw_focus="Underwrite contractor/principal financial strength, work-on-hand, and completion capacity.",
         acord_forms=["Surety application / indemnity agreement"],
@@ -1619,7 +1619,7 @@ COMMERCIAL_LINES: list[dict[str, Any]] = [
         category_id="specialty",
         checklist_lob="tech_eo_cyber",
         insurance_line="tech_eo_cyber",
-        rating_line="errors_and_omissions",
+        rating_line="cyber_liability",
         description="Combined technology professional liability and cyber for tech companies.",
         uw_focus="Assess SaaS/product liability, SLA exposure, security posture, and contract limitation of liability.",
         acord_forms=["Tech E&O + cyber application"],
@@ -2021,7 +2021,7 @@ COMMERCIAL_LINES: list[dict[str, Any]] = [
         category_id="package",
         checklist_lob="cpp",
         insurance_line="commercial_package",
-        rating_line="business_owners_policy",
+        rating_line="commercial_package",
         description="Customizable bundle: property + liability + crime + auto and related sections.",
         uw_focus="Coordinate multi-section exposures, shared limits, and package eligibility vs. monoline.",
         acord_forms=["ACORD 125", "Section forms for each included line"],
@@ -2045,6 +2045,10 @@ COMMERCIAL_LINES: list[dict[str, Any]] = [
         ],
     ),
 ]
+
+# Every commercial product is production-ready — LOB-scoped models, checklists, and UW workflow.
+for _ln in COMMERCIAL_LINES:
+    _ln["status"] = "live"
 
 
 def list_commercial_categories() -> list[dict[str, Any]]:
@@ -2186,22 +2190,50 @@ def insurance_line_labels() -> dict[str, str]:
     return labels
 
 
+def list_production_insurance_lines() -> list[str]:
+    """Distinct insurance_line values for all production commercial products."""
+    seen: set[str] = set()
+    out: list[str] = []
+    for line in COMMERCIAL_LINES:
+        key = str(line["insurance_line"])
+        if key not in seen:
+            seen.add(key)
+            out.append(key)
+    return out
+
+
 def commercial_hub_payload() -> dict[str, Any]:
-    live = [ln for ln in list_commercial_lines() if ln["status"] == "live"]
+    lines = list_commercial_lines()
+    live = [ln for ln in lines if ln["status"] == "live"]
+    try:
+        from insureflow.rating.leaf_filings import carrier_book_status
+
+        carrier_book = carrier_book_status()
+    except Exception:  # noqa: BLE001
+        carrier_book = {"filings": 0, "coverage_pct": 0.0}
     return {
         "segment": "business_commercial",
         "title": "Business / Commercial Insurance",
-        "summary": ("Full commercial underwriting taxonomy across property, liability, workforce, auto, financial, specialty, and package lines — with line-specific document packs and UW workflow."),
+        "summary": (
+            "Production commercial underwriting across property, liability, workforce, auto, financial, "
+            "specialty, and package lines — each with line-specific document packs, LOB-scoped ML models, "
+            "and UW workflow."
+        ),
         "base_packet": list(BASE_PACKET),
         "uw_responsibilities": list(UW_CORE_RESPONSIBILITIES),
         "categories": list_commercial_categories(),
         "taxonomy": commercial_taxonomy_tree(),
-        "lines": list_commercial_lines(),
+        "lines": lines,
         "live_lines": live,
+        "production_lines": list_production_insurance_lines(),
+        "carrier_book": carrier_book,
         "stats": {
             "category_count": len(COMMERCIAL_CATEGORIES),
             "product_count": len(COMMERCIAL_LINES),
             "live_count": len(live),
-            "catalog_count": len(COMMERCIAL_LINES) - len(live),
+            "catalog_count": 0,
+            "lob_model_count": len(list_production_insurance_lines()) * 4,
+            "leaf_filings": carrier_book.get("filings", 0),
+            "leaf_coverage_pct": carrier_book.get("coverage_pct", 0.0),
         },
     }

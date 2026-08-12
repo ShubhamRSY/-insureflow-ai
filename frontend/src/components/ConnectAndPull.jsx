@@ -3,6 +3,8 @@ import { Cable, Check, CheckCircle2, FileText, Loader2, Play, X, AlertTriangle }
 import { endpoints } from '../lib/api';
 import ConnectorLogo from './ConnectorLogo';
 import { groupSourcesByCategory } from '../lib/connectorBrands';
+import { UI_HINTS } from '../lib/uiHints';
+import { Hint, HintCheckbox } from './ui';
 
 /**
  * "Connect & pull" source hub shared across verticals (insurance, mortgage,
@@ -362,15 +364,19 @@ export default function ConnectAndPull({
             })}
           </div>
           <div className="mt-2 flex items-center justify-between">
-            <label className="flex items-center gap-1.5 text-[10px] text-slate-500">
-              <input type="checkbox" checked={useLlm} onChange={(e) => setUseLlm(e.target.checked)} className="rounded" />
-              LLM extraction
-            </label>
-            <button type="button" onClick={runBundle} disabled={running}
-              className="btn-primary btn-sm text-xs disabled:opacity-40">
-              {running ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3 w-3" />}
-              Run pipeline ({bundleDocs.length})
-            </button>
+            <HintCheckbox
+              hint={UI_HINTS.llmExtraction}
+              label="LLM extraction"
+              checked={useLlm}
+              onChange={(e) => setUseLlm(e.target.checked)}
+            />
+            <Hint text={UI_HINTS.runPipeline}>
+              <button type="button" onClick={runBundle} disabled={running}
+                className="btn-primary btn-sm text-xs disabled:opacity-40">
+                {running ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3 w-3" />}
+                Run pipeline ({bundleDocs.length})
+              </button>
+            </Hint>
           </div>
         </div>
       )}

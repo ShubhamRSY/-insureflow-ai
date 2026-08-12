@@ -113,6 +113,11 @@ class InsurancePipeline:
         pdf_paths: list[str] | None = None,
         bundle_id: str | None = None,
         insurance_line: str | None = None,
+        commercial_product_id: str | None = None,
+        commercial_coverage_id: str | None = None,
+        commercial_product_name: str | None = None,
+        commercial_coverage_name: str | None = None,
+        commercial_category_id: str | None = None,
         skip_appetite_filter: bool = False,
         skip_oracles: bool = False,
         skip_portfolio: bool = False,
@@ -635,6 +640,7 @@ class InsurancePipeline:
             use_celery=False,
             resolve_with_llm=resolve_with_llm,
             skip_ml_fraud=funnel,
+            insurance_line=resolved_line.value if resolved_line else insurance_line,
         )
 
         if provenance_failed or reconciliation_failed:
@@ -926,12 +932,12 @@ class InsurancePipeline:
 
         # ── 9. Rating / policy admin quote ──
         progress.start("price", "Priced", "Calculating indicated premium")
+        from insureflow.rating.commercial_actuarial import resolve_quote_line
         from insureflow.rating.models import InsuranceLine
         from insureflow.underwriting.personal_lines import _blob as _package_blob
-        from insureflow.underwriting.personal_lines import detect_insurance_line
 
-        # Re-resolve from the ingested package so every uploaded file counts —
-        # not just the intake hint / demo preset.
+        # Prefer cascading picker (commercial_product_id / insurance_line) so UI
+        # choice is not overwritten by document keyword re-detection.
         quote_blob = " ".join(
             [
                 _package_blob(bundle),
@@ -943,13 +949,21 @@ class InsurancePipeline:
                 " ".join(supplemental_docs or []),
             ]
         )
-        line_for_quote = detect_insurance_line(
-            quote_blob,
-            (resolved_line.value if resolved_line else "") or (insurance_line or ""),
+        line_for_quote = resolve_quote_line(
+            commercial_product_id=commercial_product_id,
+            insurance_line=insurance_line or (resolved_line.value if resolved_line else None),
+            product_hint=insurance_line,
+            text_blob=quote_blob,
         )
         if not isinstance(line_for_quote, InsuranceLine):
             line_for_quote = InsuranceLine.COMMERCIAL_PROPERTY
-        quote = self.rating.quote(bundle, memo, line=line_for_quote)
+        quote = self.rating.quote(
+            bundle,
+            memo,
+            line=line_for_quote,
+            commercial_product_id=commercial_product_id,
+        )
+        uw_worksheet: dict[str, Any] | None = None
         specialty_retrieval: dict[str, Any] | None = None
         commercial_uw_summary: dict[str, Any] | None = None
         # Apply life medical / personal filing decision hints onto the memo
@@ -1090,6 +1104,28 @@ class InsurancePipeline:
             from insureflow.underwriting.memo_sync import dedupe_findings
 
             memo.key_findings = dedupe_findings(list(memo.key_findings or []))
+
+        from insureflow.underwriting.lob_rating import apply_lob_rating, build_uw_worksheet
+
+        quote = apply_lob_rating(
+            quote,
+            bundle,
+            memo,
+            line=line_for_quote,
+            insurance_line=insurance_line or line_for_quote.value,
+            commercial_coverage_id=commercial_coverage_id,
+            commercial_product_id=commercial_product_id,
+        )
+        uw_worksheet = build_uw_worksheet(
+            quote,
+            bundle,
+            memo,
+            line=line_for_quote,
+            insurance_line=insurance_line or line_for_quote.value,
+            commercial_product_name=commercial_product_name,
+            commercial_coverage_name=commercial_coverage_name,
+            commercial_coverage_id=commercial_coverage_id,
+        )
 
         progress.complete(
             "price",
@@ -1254,6 +1290,11 @@ class InsurancePipeline:
             "workflow_state": wf.state.value,
             "insurance_line": line_for_quote.value,
             "product_line": line_for_quote.value,
+            "commercial_product_id": commercial_product_id,
+            "commercial_coverage_id": commercial_coverage_id,
+            "commercial_product_name": commercial_product_name,
+            "commercial_coverage_name": commercial_coverage_name,
+            "commercial_category_id": commercial_category_id,
             "human_review_required": memo.human_review_required or wf.state == WorkflowState.PENDING_REVIEW,
             "funnel": funnel,
             "deep_dive_available": (
@@ -1277,6 +1318,8 @@ class InsurancePipeline:
             },
             "human_checkpoints": human_checkpoints,
             "open_conditions": open_conditions,
+            "subjectivities": [],
+            "bind_readiness": None,
             "quote": {
                 "adjusted_premium": quote.adjusted_premium,
                 "base_premium": quote.base_premium,
@@ -1311,6 +1354,7 @@ class InsurancePipeline:
             if specialty_retrieval is not None
             else None,
             "commercial_uw": commercial_uw_summary,
+            "uw_worksheet": uw_worksheet,
             "core_integration": core_results,
             "encryption_at_rest": self.encryption.enabled,
             "prediction_id": prediction.prediction_id,
@@ -1367,6 +1411,20 @@ class InsurancePipeline:
         )
 
         audit_paths = audit.persist(bundle, memo, provenance, reconciliation, extra=summary)
+        try:
+            from insureflow.underwriting.subjectivities import compute_bind_readiness, seed_subjectivities_from_conditions
+
+            summary["subjectivities"] = seed_subjectivities_from_conditions(summary)
+            summary["bind_readiness"] = compute_bind_readiness(summary)
+        except Exception as exc:
+            logger.debug("Bind readiness seed failed: %s", exc)
+        try:
+            from insureflow.evaluations.pipeline_shadow import run_shadow_eval
+
+            shadow = run_shadow_eval(summary=summary, quote=quote, memo=memo)
+            audit.store.save_json(bid, "shadow_eval.json", shadow, org_id=self.org_id)
+        except Exception as exc:
+            logger.debug("Shadow eval persist failed: %s", exc)
         try:
             audit.store.save_json(bid, "checkpoints.json", human_checkpoints, org_id=self.org_id)
         except Exception as exc:
@@ -1455,11 +1513,14 @@ class InsurancePipeline:
             }
 
         ml_inputs = self._deep_dive_ml_inputs(bundle)
+        insurance_line = None
+        if bundle.structured and bundle.structured.coverages:
+            insurance_line = getattr(bundle.structured.coverages[0], "line_of_business", None)
         for ml_name in ("fraud_ml", "premium_ml", "churn_ml"):
             if ml_name not in include:
                 continue
             results["completed"].append(ml_name)
-            results["findings"][ml_name] = self._run_ml_deep_dive(ml_name, ml_inputs)
+            results["findings"][ml_name] = self._run_ml_deep_dive(ml_name, ml_inputs, insurance_line=insurance_line)
 
         return results
 
@@ -1505,7 +1566,7 @@ class InsurancePipeline:
             "square_footage": float(square_footage),
         }
 
-    def _run_ml_deep_dive(self, ml_name: str, inputs: dict[str, float]) -> dict[str, Any]:
+    def _run_ml_deep_dive(self, ml_name: str, inputs: dict[str, float], *, insurance_line: str | None = None) -> dict[str, Any]:
         """Run a single ML model on bundle-derived inputs (never raises)."""
         from insureflow.agents.tools import MLTools
 
@@ -1519,6 +1580,7 @@ class InsurancePipeline:
                     requested_premium=inputs.get("requested_premium", 0.0),
                     year_built=int(inputs.get("year_built", 0)),
                     square_footage=inputs.get("square_footage", 0.0),
+                    insurance_line=insurance_line,
                 )
             if ml_name == "premium_ml":
                 return MLTools.predict_premium(
@@ -1526,12 +1588,14 @@ class InsurancePipeline:
                     loss_ratio=inputs["loss_ratio"],
                     credit_score=inputs["credit_score"],
                     prior_claims_count=int(inputs["prior_claims_count"]),
+                    insurance_line=insurance_line,
                 )
             if ml_name == "churn_ml":
                 return MLTools.predict_churn(
                     loss_ratio=inputs["loss_ratio"],
                     credit_score=inputs["credit_score"],
                     years_in_business=5.0,
+                    insurance_line=insurance_line,
                 )
         except Exception as exc:
             logger.warning("Deep-dive ML %s failed: %s", ml_name, exc)

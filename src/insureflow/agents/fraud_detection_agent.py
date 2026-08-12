@@ -18,7 +18,7 @@ class FraudDetectionAgent(ReActAgent):
         self._check_valuation_discrepancies(bundle)
         self._check_entity_consistency(bundle)
         self._check_recent_loss_cluster(bundle)
-        self._ml_fraud_scoring(bundle)
+        self._ml_fraud_scoring(bundle, insurance_line=kwargs.get("insurance_line"))
 
     def _check_non_disclosed_losses(self, bundle: SubmissionBundle) -> None:
         loss_run = self.tools.get_loss_run(bundle)
@@ -135,7 +135,7 @@ class FraudDetectionAgent(ReActAgent):
                     )
                 )
 
-    def _ml_fraud_scoring(self, bundle: SubmissionBundle) -> None:
+    def _ml_fraud_scoring(self, bundle: SubmissionBundle, *, insurance_line: str | None = None) -> None:
         """Run ML fraud anomaly detection on submission features."""
         if getattr(self, "defer_ml", False):
             return
@@ -169,6 +169,7 @@ class FraudDetectionAgent(ReActAgent):
                 requested_premium=requested_premium,
                 year_built=year_built,
                 square_footage=square_footage,
+                insurance_line=insurance_line,
             )
         except Exception as exc:
             import logging as _log

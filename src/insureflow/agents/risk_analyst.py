@@ -57,7 +57,7 @@ class RiskAnalystAgent(BaseAgent):
 
         self._assess_credit_rating(bundle)
         self._assess_reserving(bundle, **kwargs)
-        self._ml_loss_prediction(bundle)
+        self._ml_loss_prediction(bundle, insurance_line=kwargs.get("insurance_line"))
 
     def _assess_construction(self, profile: Any) -> None:
         ctype = profile.construction_type
@@ -304,7 +304,7 @@ class RiskAnalystAgent(BaseAgent):
                 )
             )
 
-    def _ml_loss_prediction(self, bundle: SubmissionBundle) -> None:
+    def _ml_loss_prediction(self, bundle: SubmissionBundle, *, insurance_line: str | None = None) -> None:
         """Run ML loss prediction model on submission."""
         from insureflow.agents.tools import MLTools
 
@@ -321,7 +321,12 @@ class RiskAnalystAgent(BaseAgent):
             return
 
         try:
-            result = MLTools.predict_loss(tiv=tiv, loss_ratio=0.5, prior_claims_count=prior_claims)
+            result = MLTools.predict_loss(
+                tiv=tiv,
+                loss_ratio=0.5,
+                prior_claims_count=prior_claims,
+                insurance_line=insurance_line,
+            )
         except Exception as exc:
             import logging as _log
 

@@ -155,21 +155,42 @@ class UnderwritingTools:
 
 
 class MLTools:
-    """ML prediction tools callable by any agent."""
+    """ML prediction tools callable by any agent — LOB-scoped when insurance_line is set."""
 
     @staticmethod
-    def predict_loss(tiv: float, loss_ratio: float, prior_claims_count: int = 0, credit_score: float = 700) -> dict[str, Any]:
+    def _get_model(model_type: "ModelType", insurance_line: str | None = None) -> "BaseMLModel | None":
         from insureflow.ml.base import BaseMLModel
+        from insureflow.ml.lob_registry import get_insurance_model
+
+        model = get_insurance_model(model_type, insurance_line)
+        return model if isinstance(model, BaseMLModel) else None
+
+    @staticmethod
+    def predict_loss(
+        tiv: float,
+        loss_ratio: float,
+        prior_claims_count: int = 0,
+        credit_score: float = 700,
+        *,
+        insurance_line: str | None = None,
+    ) -> dict[str, Any]:
         from insureflow.ml.features import FeatureVector
         from insureflow.ml.models import ModelType
-        from insureflow.ml.registry import get_ml_registry
 
-        registry = get_ml_registry()
-        model = registry.get(ModelType.LOSS_PREDICTION)
-        if model is None or not isinstance(model, BaseMLModel):
+        model = MLTools._get_model(ModelType.LOSS_PREDICTION, insurance_line)
+        if model is None:
             return {"error": "Model not available"}
-        fv = FeatureVector(tiv=tiv, loss_ratio=loss_ratio, prior_claims_count=prior_claims_count, credit_score=credit_score)
-        return model.predict(fv)
+        fv = FeatureVector(
+            tiv=tiv,
+            loss_ratio=loss_ratio,
+            prior_claims_count=prior_claims_count,
+            credit_score=credit_score,
+            product_line=insurance_line or "",
+        )
+        result = model.predict(fv)
+        if insurance_line:
+            result["insurance_line"] = insurance_line
+        return result
 
     @staticmethod
     def predict_fraud(
@@ -185,15 +206,14 @@ class MLTools:
         requested_premium: float = 0.0,
         year_built: int = 0,
         square_footage: float = 0.0,
+        *,
+        insurance_line: str | None = None,
     ) -> dict[str, Any]:
-        from insureflow.ml.base import BaseMLModel
         from insureflow.ml.features import FeatureVector
         from insureflow.ml.models import ModelType
-        from insureflow.ml.registry import get_ml_registry
 
-        registry = get_ml_registry()
-        model = registry.get(ModelType.FRAUD_DETECTION)
-        if model is None or not isinstance(model, BaseMLModel):
+        model = MLTools._get_model(ModelType.FRAUD_DETECTION, insurance_line)
+        if model is None:
             return {"error": "Model not available"}
         fv = FeatureVector(
             tiv=tiv,
@@ -208,36 +228,64 @@ class MLTools:
             requested_premium=requested_premium,
             year_built=year_built,
             square_footage=square_footage,
+            product_line=insurance_line or "",
         )
-        return model.predict(fv)
+        result = model.predict(fv)
+        if insurance_line:
+            result["insurance_line"] = insurance_line
+        return result
 
     @staticmethod
-    def predict_premium(tiv: float, loss_ratio: float, credit_score: float = 700, prior_claims_count: int = 0) -> dict[str, Any]:
-        from insureflow.ml.base import BaseMLModel
+    def predict_premium(
+        tiv: float,
+        loss_ratio: float,
+        credit_score: float = 700,
+        prior_claims_count: int = 0,
+        *,
+        insurance_line: str | None = None,
+    ) -> dict[str, Any]:
         from insureflow.ml.features import FeatureVector
         from insureflow.ml.models import ModelType
-        from insureflow.ml.registry import get_ml_registry
 
-        registry = get_ml_registry()
-        model = registry.get(ModelType.PREMIUM_OPTIMIZER)
-        if model is None or not isinstance(model, BaseMLModel):
+        model = MLTools._get_model(ModelType.PREMIUM_OPTIMIZER, insurance_line)
+        if model is None:
             return {"error": "Model not available"}
-        fv = FeatureVector(tiv=tiv, loss_ratio=loss_ratio, credit_score=credit_score, prior_claims_count=prior_claims_count)
-        return model.predict(fv)
+        fv = FeatureVector(
+            tiv=tiv,
+            loss_ratio=loss_ratio,
+            credit_score=credit_score,
+            prior_claims_count=prior_claims_count,
+            product_line=insurance_line or "",
+        )
+        result = model.predict(fv)
+        if insurance_line:
+            result["insurance_line"] = insurance_line
+        return result
 
     @staticmethod
-    def predict_churn(loss_ratio: float, credit_score: float = 700, years_in_business: float = 5.0) -> dict[str, Any]:
-        from insureflow.ml.base import BaseMLModel
+    def predict_churn(
+        loss_ratio: float,
+        credit_score: float = 700,
+        years_in_business: float = 5.0,
+        *,
+        insurance_line: str | None = None,
+    ) -> dict[str, Any]:
         from insureflow.ml.features import FeatureVector
         from insureflow.ml.models import ModelType
-        from insureflow.ml.registry import get_ml_registry
 
-        registry = get_ml_registry()
-        model = registry.get(ModelType.CHURN_PREDICTION)
-        if model is None or not isinstance(model, BaseMLModel):
+        model = MLTools._get_model(ModelType.CHURN_PREDICTION, insurance_line)
+        if model is None:
             return {"error": "Model not available"}
-        fv = FeatureVector(loss_ratio=loss_ratio, credit_score=credit_score, years_in_business=years_in_business)
-        return model.predict(fv)
+        fv = FeatureVector(
+            loss_ratio=loss_ratio,
+            credit_score=credit_score,
+            years_in_business=years_in_business,
+            product_line=insurance_line or "",
+        )
+        result = model.predict(fv)
+        if insurance_line:
+            result["insurance_line"] = insurance_line
+        return result
 
     @staticmethod
     def simulate_portfolio_risk(exposures: list[float], loss_probabilities: list[float], severity_means: list[float]) -> dict[str, Any]:

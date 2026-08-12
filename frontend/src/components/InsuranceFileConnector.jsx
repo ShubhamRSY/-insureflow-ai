@@ -7,6 +7,8 @@ import {
   buildSubmissionPayload,
   validatePackage,
 } from '../lib/insuranceDocs';
+import { UI_HINTS } from '../lib/uiHints';
+import { HintCheckbox } from './ui';
 
 export default function InsuranceFileConnector({ onSubmit, loading }) {
   const [files, setFiles] = useState([]);
@@ -171,10 +173,13 @@ export default function InsuranceFileConnector({ onSubmit, loading }) {
         )}
 
         <div className="flex flex-wrap items-center justify-between gap-4 border-t border-white/[0.06] pt-4">
-          <label className="flex items-center gap-2 text-sm text-slate-400">
-            <input type="checkbox" checked={useLlm} onChange={(e) => setUseLlm(e.target.checked)} className="rounded" />
-            Use LLM enhancement
-          </label>
+          <HintCheckbox
+            hint={UI_HINTS.llmExtraction}
+            label="Use LLM enhancement"
+            labelClassName="flex items-center gap-2 text-sm text-slate-400"
+            checked={useLlm}
+            onChange={(e) => setUseLlm(e.target.checked)}
+          />
           <button type="button" onClick={handleSubmit} disabled={loading || !files.length} className="btn-primary">
             {loading ? 'Running pipeline…' : 'Submit package to underwriting'}
           </button>

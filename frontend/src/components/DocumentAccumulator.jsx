@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { FileText, X, Package, Loader2, AlertCircle } from 'lucide-react';
+import { UI_HINTS } from '../lib/uiHints';
+import { Hint, HintCheckbox } from './ui';
 
 /**
  * DocumentAccumulator — persistent document list that survives source switches.
@@ -103,21 +105,20 @@ export default function DocumentAccumulator({
 
       {/* Actions */}
       <div className="flex items-center justify-between border-t border-white/[0.06] pt-3">
-        <label className="flex items-center gap-2 text-sm text-slate-400">
-          <input
-            type="checkbox"
-            checked={useLlm}
-            onChange={(e) => onToggleLlm?.(e.target.checked)}
-            className="rounded"
-          />
-          LLM enhancement
-        </label>
-        <button
-          type="button"
-          onClick={handleRun}
-          disabled={loading || running || documents.length === 0}
-          className="btn-primary"
-        >
+        <HintCheckbox
+          hint={UI_HINTS.llmExtraction}
+          label="LLM enhancement"
+          labelClassName="flex items-center gap-2 text-sm text-slate-400"
+          checked={useLlm}
+          onChange={(e) => onToggleLlm?.(e.target.checked)}
+        />
+        <Hint text={UI_HINTS.runPipeline}>
+          <button
+            type="button"
+            onClick={handleRun}
+            disabled={loading || running || documents.length === 0}
+            className="btn-primary"
+          >
           {loading || running ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -126,7 +127,8 @@ export default function DocumentAccumulator({
           ) : (
             `Run pipeline (${documents.length} docs)`
           )}
-        </button>
+          </button>
+        </Hint>
       </div>
 
       {documents.length === 0 && (

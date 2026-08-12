@@ -300,6 +300,7 @@ def setup_first_admin(admin: UserCreateRequest) -> dict[str, str]:
         raise HTTPException(status_code=400, detail="Username and password are required")
     store[username] = User(
         username=username,
+        email=username if "@" in username else "",
         hashed_password=hash_password(admin.password),
         role=Role.ADMIN,
         full_name=(admin.full_name or username).strip(),
@@ -312,8 +313,7 @@ def setup_first_admin(admin: UserCreateRequest) -> dict[str, str]:
 @limiter.limit("10/minute")
 def login(req: LoginRequest, request: Request) -> Token:
     store = get_user_store()
-    username = req.username.strip()
-    user = store.get(username)
+    user = store.resolve_user(req.username)
     if not user or not verify_password(req.password, user.hashed_password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
     if user.disabled:
@@ -340,6 +340,7 @@ def create_user(
         raise HTTPException(status_code=403, detail="Only CUO can create CUO users")
     store[new_user.username] = User(
         username=new_user.username,
+        email=new_user.username if "@" in new_user.username else "",
         hashed_password=hash_password(new_user.password),
         role=role,
         full_name=new_user.full_name or new_user.username,
@@ -382,6 +383,7 @@ def register_user(req: UserCreateRequest, request: Request) -> dict[str, str]:
     # Never trust client-supplied org_id — pin to default until an admin assigns.
     store[username] = User(
         username=username,
+        email=username if "@" in username else "",
         hashed_password=hash_password(req.password),
         role=role,
         full_name=req.full_name or username,
@@ -547,6 +549,11 @@ class SubmissionRequest(BaseModel):
     pdf_paths: Optional[list[str]] = None
     bundle_id: Optional[str] = None
     insurance_line: Optional[str] = None  # commercial_* | personal_homeowners | personal_auto | life
+    commercial_product_id: Optional[str] = None
+    commercial_coverage_id: Optional[str] = None
+    commercial_product_name: Optional[str] = None
+    commercial_coverage_name: Optional[str] = None
+    commercial_category_id: Optional[str] = None
     use_llm: bool = True
     use_legacy_pipeline: bool = False
     use_celery: bool = False
@@ -559,6 +566,18 @@ class SignOffRequest(BaseModel):
     override_reason: str = ""
     override_reason_category: str = ""  # pricing | coverage | terms | appetite | ...
     uw_confidence: str = ""  # low | medium | high
+    uw_indicated_premium: Optional[float] = None
+    uw_limit: Optional[float] = None
+    uw_deductible: Optional[float] = None
+
+
+class ValidateTermsRequest(BaseModel):
+    """Licensed UW validates / edits indicated policy terms before sign-off."""
+    indicated_premium: float
+    limit: float = 0.0
+    deductible: float = 0.0
+    notes: str = ""
+    license_number: str = ""
 
 
 class BindRequest(BaseModel):
@@ -684,6 +703,62 @@ async def demo_presets() -> dict[str, Any]:
             "description": "Key person — application, job justification, financials, corporate resolution",
             "vertical": "insurance",
             "insurance_line": "key_person",
+        },
+        {
+            "id": "novapay-cyber",
+            "name": "NovaPay Systems (Cyber)",
+            "description": "Cyber liability — fintech breach response + third-party limit",
+            "vertical": "insurance",
+            "insurance_line": "cyber_liability",
+        },
+        {
+            "id": "ridgehaul-auto",
+            "name": "RidgeHaul Logistics (Commercial Auto)",
+            "description": "Commercial auto — 42 power units, liability + physical damage",
+            "vertical": "insurance",
+            "insurance_line": "commercial_auto",
+        },
+        {
+            "id": "summit-wc",
+            "name": "Summit Fabrication (Workers Comp)",
+            "description": "Workers comp — NCCI class 5403, payroll, e-mod 0.92",
+            "vertical": "insurance",
+            "insurance_line": "workers_comp",
+        },
+        {
+            "id": "oaksteel-gl",
+            "name": "Oak & Steel (CGL)",
+            "description": "General liability — contractor sales / completed ops",
+            "vertical": "insurance",
+            "insurance_line": "general_liability",
+        },
+        {
+            "id": "corner-bop",
+            "name": "Corner Cafe Group (BOP)",
+            "description": "Businessowners package — property + GL + BI sections",
+            "vertical": "insurance",
+            "insurance_line": "business_owners_policy",
+        },
+        {
+            "id": "harbor-builders",
+            "name": "Harbor Pier (Builders Risk)",
+            "description": "Builders risk — $18.5M completed value course of construction",
+            "vertical": "insurance",
+            "insurance_line": "builders_risk",
+        },
+        {
+            "id": "ledger-crime",
+            "name": "LedgerTrust (Crime)",
+            "description": "Crime / fidelity — employee dishonesty + computer fraud",
+            "vertical": "insurance",
+            "insurance_line": "crime",
+        },
+        {
+            "id": "apex-surety",
+            "name": "Apex Civil (Surety)",
+            "description": "Contract surety — performance & payment bond $6.75M",
+            "vertical": "insurance",
+            "insurance_line": "surety_bonds",
         },
     ]
     mortgage = [
@@ -968,6 +1043,78 @@ def _load_cascade_key_person_submission() -> SubmissionRequest:
     )
 
 
+def _load_novapay_cyber_submission() -> SubmissionRequest:
+    return SubmissionRequest(
+        documents=_load_docs_from_dir("cyber_liability"),
+        insurance_line="cyber_liability",
+        commercial_product_id="cyber_liability",
+        use_llm=True,
+    )
+
+
+def _load_ridgehaul_auto_submission() -> SubmissionRequest:
+    return SubmissionRequest(
+        documents=_load_docs_from_dir("commercial_auto"),
+        insurance_line="commercial_auto",
+        commercial_product_id="commercial_auto",
+        use_llm=True,
+    )
+
+
+def _load_summit_wc_submission() -> SubmissionRequest:
+    return SubmissionRequest(
+        documents=_load_docs_from_dir("workers_comp"),
+        insurance_line="workers_comp",
+        commercial_product_id="workers_comp",
+        use_llm=True,
+    )
+
+
+def _load_oaksteel_gl_submission() -> SubmissionRequest:
+    return SubmissionRequest(
+        documents=_load_docs_from_dir("general_liability"),
+        insurance_line="general_liability",
+        commercial_product_id="general_liability",
+        use_llm=True,
+    )
+
+
+def _load_corner_bop_submission() -> SubmissionRequest:
+    return SubmissionRequest(
+        documents=_load_docs_from_dir("bop"),
+        insurance_line="business_owners_policy",
+        commercial_product_id="bop",
+        use_llm=True,
+    )
+
+
+def _load_harbor_builders_submission() -> SubmissionRequest:
+    return SubmissionRequest(
+        documents=_load_docs_from_dir("builders_risk"),
+        insurance_line="builders_risk",
+        commercial_product_id="builders_risk",
+        use_llm=True,
+    )
+
+
+def _load_ledger_crime_submission() -> SubmissionRequest:
+    return SubmissionRequest(
+        documents=_load_docs_from_dir("crime"),
+        insurance_line="crime",
+        commercial_product_id="crime",
+        use_llm=True,
+    )
+
+
+def _load_apex_surety_submission() -> SubmissionRequest:
+    return SubmissionRequest(
+        documents=_load_docs_from_dir("surety"),
+        insurance_line="surety_bonds",
+        commercial_product_id="surety_bonds",
+        use_llm=True,
+    )
+
+
 def _load_pacific_coast_submission() -> SubmissionRequest:
     acord = (EXAMPLES_DIR / "pacific_coast_acord.xml").read_text(encoding="utf-8")
     loss_run = (EXAMPLES_DIR / "pacific_coast_loss_run.md").read_text(encoding="utf-8")
@@ -1018,6 +1165,14 @@ async def run_insurance_demo(
         "harbor-trade-credit": ("trade_credit/trade_credit_application.md", _load_harbor_trade_credit_submission),
         "brightpath-eo": ("errors_and_omissions/eo_application.md", _load_brightpath_eo_submission),
         "cascade-key-person": ("key_person/key_person_application.md", _load_cascade_key_person_submission),
+        "novapay-cyber": ("cyber_liability/cyber_application.md", _load_novapay_cyber_submission),
+        "ridgehaul-auto": ("commercial_auto/auto_application.md", _load_ridgehaul_auto_submission),
+        "summit-wc": ("workers_comp/wc_application.md", _load_summit_wc_submission),
+        "oaksteel-gl": ("general_liability/gl_application.md", _load_oaksteel_gl_submission),
+        "corner-bop": ("bop/bop_application.md", _load_corner_bop_submission),
+        "harbor-builders": ("builders_risk/builders_application.md", _load_harbor_builders_submission),
+        "ledger-crime": ("crime/crime_application.md", _load_ledger_crime_submission),
+        "apex-surety": ("surety/surety_application.md", _load_apex_surety_submission),
     }
     if preset_id not in preset_map:
         raise HTTPException(status_code=404, detail=f"Unknown insurance preset: {preset_id}")
@@ -1929,6 +2084,11 @@ def _run_pipeline_task(job_id: str, request: SubmissionRequest, org_id: str) -> 
                 pdf_paths=request.pdf_paths,
                 bundle_id=request.bundle_id or job_id,
                 insurance_line=request.insurance_line,
+                commercial_product_id=request.commercial_product_id,
+                commercial_coverage_id=request.commercial_coverage_id,
+                commercial_product_name=request.commercial_product_name,
+                commercial_coverage_name=request.commercial_coverage_name,
+                commercial_category_id=request.commercial_category_id,
                 progress_callback=on_progress,
             )
         job_store.set(INSURANCE_NS, job_id, {"status": "completed", "results": result}, org_id=org_id)
@@ -1990,10 +2150,12 @@ def get_job_status(
     job_id: str,
     current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
+    from insureflow.api.job_sanitize import sanitize_job_for_client
+
     job = job_store.get(INSURANCE_NS, job_id, org_id=current.org_id)
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
-    return job
+    return sanitize_job_for_client(job) or job
 
 
 @app.get("/pipeline/jobs")
@@ -2210,6 +2372,143 @@ def get_workflow_status(
     return record.model_dump()
 
 
+@app.post("/pipeline/workflow/{bundle_id}/validate-terms")
+@limiter.limit("30/minute")
+def validate_uw_terms(
+    bundle_id: str,
+    req: ValidateTermsRequest,
+    request: Request,
+    current: TokenData = Depends(require_role(Role.LICENSED_UW)),
+) -> dict[str, Any]:
+    """Licensed UW validates/edits indicated premium, limit, and deductible."""
+    from datetime import datetime, timezone
+
+    from insureflow.workflow.service import WorkflowService
+
+    svc = WorkflowService()
+    record = svc.store.get(bundle_id, current.org_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="Workflow not found")
+
+    validated = {
+        "indicated_premium": round(float(req.indicated_premium), 2),
+        "limit": round(float(req.limit), 2),
+        "deductible": round(float(req.deductible), 2),
+        "notes": req.notes,
+        "license_number": req.license_number,
+        "validated_by": current.username or "",
+        "validated_at": datetime.now(tz=timezone.utc).isoformat(),
+    }
+    meta = dict(record.metadata or {})
+    meta["validated_terms"] = validated
+    record.metadata = meta
+    svc.store.save(record)
+
+    job = job_store.get(INSURANCE_NS, bundle_id, org_id=current.org_id)
+    if job and isinstance(job.get("results"), dict):
+        results = dict(job["results"])
+        results["validated_terms"] = validated
+        ws = dict(results.get("uw_worksheet") or {})
+        indicated = dict(ws.get("indicated_terms") or {})
+        indicated["uw_validated_premium"] = validated["indicated_premium"]
+        indicated["uw_validated_limit"] = validated["limit"]
+        indicated["uw_validated_deductible"] = validated["deductible"]
+        ws["indicated_terms"] = indicated
+        ws["validated"] = True
+        results["uw_worksheet"] = ws
+        try:
+            from insureflow.underwriting.subjectivities import compute_bind_readiness
+
+            results["bind_readiness"] = compute_bind_readiness(results)
+        except Exception:
+            pass
+        job_store.set(INSURANCE_NS, bundle_id, {**job, "results": results}, org_id=current.org_id)
+
+    return {"ok": True, "validated_terms": validated}
+
+
+class SubjectivityCreateRequest(BaseModel):
+    text: str
+    category: str = "other"
+
+
+class SubjectivityClearRequest(BaseModel):
+    notes: str = ""
+
+
+@app.get("/pipeline/workflow/{bundle_id}/subjectivities")
+def get_subjectivities(
+    bundle_id: str,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    from insureflow.underwriting.subjectivities import ensure_bind_readiness, list_subjectivities
+
+    try:
+        readiness = ensure_bind_readiness(bundle_id, current.org_id)
+        items = list_subjectivities(bundle_id, current.org_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Job not found") from None
+    return {"subjectivities": items, "bind_readiness": readiness}
+
+
+@app.post("/pipeline/workflow/{bundle_id}/subjectivities", status_code=201)
+def create_subjectivity(
+    bundle_id: str,
+    req: SubjectivityCreateRequest,
+    current: TokenData = Depends(require_role(Role.LICENSED_UW)),
+) -> dict[str, Any]:
+    from insureflow.underwriting.subjectivities import add_subjectivity
+
+    if not (req.text or "").strip():
+        raise HTTPException(status_code=400, detail="text required")
+    try:
+        item = add_subjectivity(
+            bundle_id,
+            current.org_id,
+            text=req.text,
+            category=req.category,
+            created_by=current.username or "",
+        )
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Job not found") from None
+    return item
+
+
+@app.post("/pipeline/workflow/{bundle_id}/subjectivities/{subjectivity_id}/clear")
+def clear_subjectivity_endpoint(
+    bundle_id: str,
+    subjectivity_id: str,
+    req: SubjectivityClearRequest,
+    current: TokenData = Depends(require_role(Role.LICENSED_UW)),
+) -> dict[str, Any]:
+    from insureflow.underwriting.subjectivities import clear_subjectivity
+
+    try:
+        item = clear_subjectivity(
+            bundle_id,
+            current.org_id,
+            subjectivity_id,
+            cleared_by=current.username or "",
+            notes=req.notes,
+        )
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Subjectivity or job not found") from None
+    return item
+
+
+@app.get("/pipeline/workflow/{bundle_id}/bind-readiness")
+def get_bind_readiness(
+    bundle_id: str,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    from insureflow.underwriting.subjectivities import ensure_bind_readiness
+
+    try:
+        return ensure_bind_readiness(bundle_id, current.org_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Job not found") from None
+
+
 @app.post("/pipeline/workflow/{bundle_id}/sign-off")
 @limiter.limit("20/minute")
 def licensed_uw_sign_off(
@@ -2240,8 +2539,8 @@ def licensed_uw_sign_off(
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
-    # Capture structured override analytics when UW decision differs from AI
-    if req.override_reason and record.ai_decision and record.final_decision:
+    # Capture structured override analytics when UW decision differs from AI or terms adjusted
+    if (req.override_reason or req.uw_indicated_premium) and record.ai_decision and record.final_decision:
         from uuid import uuid4
 
         from insureflow.outcomes.analytics import get_analytics_engine
@@ -2270,6 +2569,25 @@ def licensed_uw_sign_off(
             reason_freeform=req.override_reason,
             uw_confidence=req.uw_confidence,
         )
+        ai_premium = 0.0
+        try:
+            from insureflow.audit.store import AuditStore
+
+            summary = AuditStore().load_json(bundle_id, "pipeline_summary.json", org_id=current.org_id) or {}
+            ai_premium = float((summary.get("quote") or {}).get("adjusted_premium") or (summary.get("uw_worksheet") or {}).get("indicated_terms", {}).get("premium") or 0)
+        except Exception:
+            pass
+        uw_premium = float(req.uw_indicated_premium or 0)
+        if uw_premium > 0 and ai_premium > 0:
+            from insureflow.outcomes.override import PremiumDelta
+
+            detail.premium_delta = PremiumDelta(
+                ai_premium=ai_premium,
+                uw_premium=uw_premium,
+                delta=round(uw_premium - ai_premium, 2),
+                delta_pct=round((uw_premium - ai_premium) / ai_premium * 100, 2),
+                reason=req.override_reason or req.notes,
+            )
         get_analytics_engine().record_override(detail)
 
     # ── Step 5a: communicate the decision to the producer (good or bad) ──
@@ -6367,9 +6685,12 @@ def sign_off_v2(
 @app.get("/ml/status")
 def ml_status(current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
     """ML module status — all models, versions, and metrics."""
+    from insureflow.ml.lob_training import lob_training_summary
     from insureflow.ml.training import get_training_status
 
-    return get_training_status()
+    status = get_training_status()
+    status["lob_models"] = lob_training_summary()
+    return status
 
 
 @app.post("/ml/train")
@@ -6437,14 +6758,16 @@ def ml_predict_loss(features: dict[str, Any], current: TokenData = Depends(requi
     """Loss prediction — expected claim frequency, severity, and total loss."""
     from insureflow.ml.base import BaseMLModel
     from insureflow.ml.features import FeatureVector
+    from insureflow.ml.lob_registry import get_insurance_model
     from insureflow.ml.models import ModelType
-    from insureflow.ml.registry import get_ml_registry
 
-    registry = get_ml_registry()
-    model = registry.get(ModelType.LOSS_PREDICTION)
+    insurance_line = features.get("insurance_line") or features.get("product_line")
+    model = get_insurance_model(ModelType.LOSS_PREDICTION, insurance_line)
     if model is None or not isinstance(model, BaseMLModel):
         raise HTTPException(status_code=503, detail="Loss prediction model not available")
     fv = FeatureVector(**{k: v for k, v in features.items() if k in FeatureVector.model_fields})
+    if insurance_line and not fv.product_line:
+        fv = fv.model_copy(update={"product_line": str(insurance_line)})
     return model.predict(fv)
 
 
@@ -6453,14 +6776,16 @@ def ml_predict_fraud(features: dict[str, Any], current: TokenData = Depends(requ
     """Fraud anomaly detection — probability, risk level, flagged patterns."""
     from insureflow.ml.base import BaseMLModel
     from insureflow.ml.features import FeatureVector
+    from insureflow.ml.lob_registry import get_insurance_model
     from insureflow.ml.models import ModelType
-    from insureflow.ml.registry import get_ml_registry
 
-    registry = get_ml_registry()
-    model = registry.get(ModelType.FRAUD_DETECTION)
+    insurance_line = features.get("insurance_line") or features.get("product_line")
+    model = get_insurance_model(ModelType.FRAUD_DETECTION, insurance_line)
     if model is None or not isinstance(model, BaseMLModel):
         raise HTTPException(status_code=503, detail="Fraud detection model not available")
     fv = FeatureVector(**{k: v for k, v in features.items() if k in FeatureVector.model_fields})
+    if insurance_line and not fv.product_line:
+        fv = fv.model_copy(update={"product_line": str(insurance_line)})
     return model.predict(fv)
 
 
@@ -6469,14 +6794,16 @@ def ml_predict_premium(features: dict[str, Any], current: TokenData = Depends(re
     """Premium optimization — recommended price, elasticity, retention probability."""
     from insureflow.ml.base import BaseMLModel
     from insureflow.ml.features import FeatureVector
+    from insureflow.ml.lob_registry import get_insurance_model
     from insureflow.ml.models import ModelType
-    from insureflow.ml.registry import get_ml_registry
 
-    registry = get_ml_registry()
-    model = registry.get(ModelType.PREMIUM_OPTIMIZER)
+    insurance_line = features.get("insurance_line") or features.get("product_line")
+    model = get_insurance_model(ModelType.PREMIUM_OPTIMIZER, insurance_line)
     if model is None or not isinstance(model, BaseMLModel):
         raise HTTPException(status_code=503, detail="Premium optimizer model not available")
     fv = FeatureVector(**{k: v for k, v in features.items() if k in FeatureVector.model_fields})
+    if insurance_line and not fv.product_line:
+        fv = fv.model_copy(update={"product_line": str(insurance_line)})
     return model.predict(fv)
 
 
@@ -6485,14 +6812,16 @@ def ml_predict_churn(features: dict[str, Any], current: TokenData = Depends(requ
     """Churn prediction — non-renewal probability, LTV, retention actions."""
     from insureflow.ml.base import BaseMLModel
     from insureflow.ml.features import FeatureVector
+    from insureflow.ml.lob_registry import get_insurance_model
     from insureflow.ml.models import ModelType
-    from insureflow.ml.registry import get_ml_registry
 
-    registry = get_ml_registry()
-    model = registry.get(ModelType.CHURN_PREDICTION)
+    insurance_line = features.get("insurance_line") or features.get("product_line")
+    model = get_insurance_model(ModelType.CHURN_PREDICTION, insurance_line)
     if model is None or not isinstance(model, BaseMLModel):
         raise HTTPException(status_code=503, detail="Churn prediction model not available")
     fv = FeatureVector(**{k: v for k, v in features.items() if k in FeatureVector.model_fields})
+    if insurance_line and not fv.product_line:
+        fv = fv.model_copy(update={"product_line": str(insurance_line)})
     return model.predict(fv)
 
 

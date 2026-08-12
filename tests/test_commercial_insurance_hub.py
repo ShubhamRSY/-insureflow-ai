@@ -44,6 +44,14 @@ def test_full_commercial_taxonomy_shape():
             assert len(cov["documents"]) >= 1, f"{line['id']}.{cov.get('id')}"
 
 
+def test_all_commercial_lines_are_live():
+    assert all(ln.get("status") == "live" for ln in COMMERCIAL_LINES)
+    hub = commercial_hub_payload()
+    assert hub["stats"]["live_count"] == len(COMMERCIAL_LINES)
+    assert hub["stats"]["catalog_count"] == 0
+    assert len(hub["production_lines"]) >= 50
+
+
 def test_live_lines_still_present():
     live_slugs = {ln["slug"] for ln in list_commercial_lines(status="live")}
     assert {
@@ -117,7 +125,7 @@ def test_get_line_by_slug_and_id():
     cyber = get_commercial_line("cyber_liability")
     assert cyber is not None
     assert cyber["category_id"] == "liability"
-    assert cyber["status"] == "catalog"
+    assert cyber["status"] == "live"
 
     assert get_commercial_line("not-a-line") is None
 

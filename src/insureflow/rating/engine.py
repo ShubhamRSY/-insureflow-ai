@@ -17,11 +17,18 @@ ISO_LOSS_COSTS: dict[InsuranceLine, float] = {
     InsuranceLine.GENERAL_LIABILITY: 0.08,
     InsuranceLine.WORKERS_COMP: 0.05,
     InsuranceLine.BOP: 0.32,
+    InsuranceLine.COMMERCIAL_PACKAGE: 0.30,
     InsuranceLine.UMBRELLA: 0.03,
     InsuranceLine.DIRECTORS_AND_OFFICERS: 0.45,
     InsuranceLine.TRADE_CREDIT: 0.22,
     InsuranceLine.ERRORS_AND_OMISSIONS: 0.55,
     InsuranceLine.KEY_PERSON: 0.12,
+    InsuranceLine.CYBER: 0.85,
+    InsuranceLine.COMMERCIAL_AUTO: 0.40,
+    InsuranceLine.INLAND_MARINE: 0.55,
+    InsuranceLine.CRIME: 0.18,
+    InsuranceLine.BUILDERS_RISK: 0.42,
+    InsuranceLine.SURETY: 0.15,
     # Personal lines — representative synthetic rates (per $100 exposure)
     InsuranceLine.PERSONAL_HOMEOWNERS: 0.35,
     InsuranceLine.PERSONAL_AUTO: 1.20,
@@ -35,11 +42,18 @@ LCM: dict[InsuranceLine, float] = {
     InsuranceLine.GENERAL_LIABILITY: 2.25,
     InsuranceLine.WORKERS_COMP: 2.40,
     InsuranceLine.BOP: 2.00,
+    InsuranceLine.COMMERCIAL_PACKAGE: 2.05,
     InsuranceLine.UMBRELLA: 2.50,
     InsuranceLine.DIRECTORS_AND_OFFICERS: 2.35,
     InsuranceLine.TRADE_CREDIT: 2.15,
     InsuranceLine.ERRORS_AND_OMISSIONS: 2.40,
     InsuranceLine.KEY_PERSON: 1.70,
+    InsuranceLine.CYBER: 2.20,
+    InsuranceLine.COMMERCIAL_AUTO: 2.15,
+    InsuranceLine.INLAND_MARINE: 2.00,
+    InsuranceLine.CRIME: 2.15,
+    InsuranceLine.BUILDERS_RISK: 2.05,
+    InsuranceLine.SURETY: 1.80,
     InsuranceLine.PERSONAL_HOMEOWNERS: 1.85,
     InsuranceLine.PERSONAL_AUTO: 1.95,
     InsuranceLine.LIFE: 1.60,
@@ -104,11 +118,18 @@ MINIMUM_PREMIUMS: dict[InsuranceLine, float] = {
     InsuranceLine.GENERAL_LIABILITY: 750.0,
     InsuranceLine.WORKERS_COMP: 1_000.0,
     InsuranceLine.BOP: 1_500.0,
+    InsuranceLine.COMMERCIAL_PACKAGE: 2_500.0,
     InsuranceLine.UMBRELLA: 1_000.0,
     InsuranceLine.DIRECTORS_AND_OFFICERS: 2_500.0,
     InsuranceLine.TRADE_CREDIT: 1_500.0,
     InsuranceLine.ERRORS_AND_OMISSIONS: 2_000.0,
     InsuranceLine.KEY_PERSON: 500.0,
+    InsuranceLine.CYBER: 2_500.0,
+    InsuranceLine.COMMERCIAL_AUTO: 1_200.0,
+    InsuranceLine.INLAND_MARINE: 750.0,
+    InsuranceLine.CRIME: 500.0,
+    InsuranceLine.BUILDERS_RISK: 1_000.0,
+    InsuranceLine.SURETY: 250.0,
     InsuranceLine.PERSONAL_HOMEOWNERS: 450.0,
     InsuranceLine.PERSONAL_AUTO: 650.0,
     InsuranceLine.LIFE: 250.0,
@@ -199,6 +220,7 @@ class InsuranceRatingEngine:
         bundle: SubmissionBundle,
         memo: UnderwritingMemo,
         line: InsuranceLine = InsuranceLine.COMMERCIAL_PROPERTY,
+        commercial_product_id: str | None = None,
     ) -> QuoteResult:
         personal = line in PERSONAL_LINES
         if personal:
@@ -274,6 +296,55 @@ class InsuranceRatingEngine:
             meta["market_mod_pct"] = market_mod
             adapted.metadata = meta
             return adapted
+
+        # Extended actuarial manuals + NCCI WC + multi-section packages
+        from insureflow.rating.commercial_actuarial import (
+            is_extended_commercial,
+            is_package_line,
+            rate_extended_commercial,
+            rate_package_policy,
+            rate_workers_comp_ncci,
+        )
+        from insureflow.rating.models import PACKAGE_LINES
+
+        state = self._primary_state(bundle)
+        schedule_mod = memo.recommendation.suggested_premium_modification if memo.recommendation else 0.0
+        schedule_mod = float(schedule_mod or 0.0)
+        market_mod = self._get_market_mod(line)
+
+        if line == InsuranceLine.WORKERS_COMP:
+            result = rate_workers_comp_ncci(
+                bundle, memo, state=state, schedule_mod_pct=schedule_mod, market_mod_pct=market_mod
+            )
+            return self._adapt_actuarial_result(result, memo, bundle, schedule_mod)
+
+        if is_package_line(line) or line in PACKAGE_LINES:
+            result = rate_package_policy(
+                bundle, memo, line, state=state, schedule_mod_pct=schedule_mod, market_mod_pct=market_mod
+            )
+            return self._adapt_actuarial_result(result, memo, bundle, schedule_mod)
+
+        if is_extended_commercial(line):
+            result = rate_extended_commercial(
+                bundle, memo, line, state=state, schedule_mod_pct=schedule_mod, market_mod_pct=market_mod
+            )
+            if result is not None:
+                return self._adapt_actuarial_result(result, memo, bundle, schedule_mod)
+
+        # Per-product carrier leaf filings (unique math for each of 59 catalog products)
+        from insureflow.rating.leaf_filings import rate_leaf_filing, should_use_leaf_filing
+
+        if should_use_leaf_filing(commercial_product_id, line):
+            leaf = rate_leaf_filing(
+                bundle,
+                memo,
+                commercial_product_id or "",
+                state=state,
+                schedule_mod_pct=schedule_mod,
+                market_mod_pct=market_mod,
+            )
+            if leaf is not None:
+                return self._adapt_actuarial_result(leaf, memo, bundle, schedule_mod)
 
         personal_meta: dict[str, Any] = {}
         tiv = self._estimate_tiv(bundle)
@@ -393,6 +464,37 @@ class InsuranceRatingEngine:
 
     def bind(self, bundle_id: str, quote_reference: str, bound_by: str) -> dict[str, Any]:
         return self.adapter.bind_policy(bundle_id, quote_reference, bound_by)
+
+    def _adapt_actuarial_result(
+        self,
+        result: QuoteResult,
+        memo: UnderwritingMemo,
+        bundle: SubmissionBundle,
+        schedule_mod: float,
+    ) -> QuoteResult:
+        adapted = self.adapter.submit_quote(
+            QuoteRequest(
+                bundle_id=bundle.bundle_id,
+                line=result.line,
+                tiv=float((result.metadata or {}).get("exposure") or (result.metadata or {}).get("payroll") or (result.metadata or {}).get("tiv") or 0),
+                state=str((result.metadata or {}).get("state") or self._primary_state(bundle)),
+                naics_code=self._naics(bundle),
+                loss_ratio=self._loss_ratio(bundle),
+                schedule_mod_pct=float(schedule_mod),
+            ),
+            memo,
+            bundle,
+        )
+        adapted.base_premium = result.base_premium
+        adapted.adjusted_premium = result.adjusted_premium
+        adapted.schedule_modifications = result.schedule_modifications
+        adapted.rate_per_100_tiv = result.rate_per_100_tiv
+        adapted.eligible = result.eligible
+        adapted.ineligibility_reasons = list(result.ineligibility_reasons or [])
+        meta = dict(result.metadata or {})
+        meta["market_phase"] = self._market.current.phase.value
+        adapted.metadata = meta
+        return adapted
 
     def _estimate_tiv(self, bundle: SubmissionBundle) -> float:
         if bundle.structured:

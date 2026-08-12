@@ -5,6 +5,9 @@ import { endpoints } from '../lib/api';
 import { insuranceLineLabel } from '../lib/insuranceLines';
 import SubmissionJourney from '../components/SubmissionJourney';
 import InsuranceMemoView from '../components/InsuranceMemoView';
+import UwWorksheetView from '../components/UwWorksheetView';
+import UwPolicyValidator from '../components/UwPolicyValidator';
+import BindReadinessPanel from '../components/BindReadinessPanel';
 
 export default function InsuranceJobDetail() {
   const { jobId } = useParams();
@@ -17,6 +20,7 @@ export default function InsuranceJobDetail() {
   const [noteText, setNoteText] = useState('');
   const [checklist, setChecklist] = useState(null);
   const [infoRequests, setInfoRequests] = useState([]);
+  const [validatedTerms, setValidatedTerms] = useState(null);
 
   const fetchJob = async () => {
     try {
@@ -51,7 +55,8 @@ export default function InsuranceJobDetail() {
     endpoints.relationshipNotes(bundleId).then((r) => setNotes(r.notes || [])).catch(() => {});
     endpoints.packageChecklist(bundleId, lob).then(setChecklist).catch(() => {});
     endpoints.infoRequests(bundleId).then((r) => setInfoRequests(r.requests || [])).catch(() => {});
-  }, [bundleId, job?.results?.insurance_line, job?.results?.product_line]);
+    setValidatedTerms(job?.results?.validated_terms || null);
+  }, [bundleId, job?.results?.insurance_line, job?.results?.product_line, job?.results?.validated_terms]);
 
   const handleAddNote = async () => {
     if (!bundleId || !noteText.trim()) return;
@@ -172,6 +177,26 @@ export default function InsuranceJobDetail() {
 
       {/* Content */}
       <div className="mx-auto max-w-7xl px-6 py-6">
+        {job?.results?.uw_worksheet && (
+          <div className="mb-6 space-y-4">
+            <UwWorksheetView worksheet={job.results.uw_worksheet} validatedTerms={validatedTerms} />
+            <UwPolicyValidator
+              bundleId={bundleId}
+              worksheet={job.results.uw_worksheet}
+              validatedTerms={validatedTerms}
+              onValidated={(v) => {
+                setValidatedTerms(v);
+                fetchJob();
+              }}
+            />
+          </div>
+        )}
+        {bundleId && job?.results && (
+          <div className="mb-6">
+            <BindReadinessPanel bundleId={bundleId} onChanged={fetchJob} />
+          </div>
+        )}
+
         <SubmissionJourney job={job} />
 
         {bundleId && (

@@ -1,3 +1,32 @@
+export function Hint({ text, children, className = '', position = 'top' }) {
+  if (!text) return children;
+  const pos = position === 'bottom' ? 'hint-bubble-bottom' : 'hint-bubble-top';
+  return (
+    <span className={`hint-anchor ${className}`.trim()}>
+      {children}
+      <span role="tooltip" className={`hint-bubble ${pos}`}>{text}</span>
+    </span>
+  );
+}
+
+export function HintCheckbox({
+  hint,
+  label,
+  className = '',
+  inputClassName = 'rounded',
+  labelClassName = 'flex items-center gap-1.5 text-[10px] text-slate-500',
+  ...inputProps
+}) {
+  return (
+    <Hint text={hint} className={className}>
+      <label className={`${labelClassName} hint-label cursor-help`}>
+        <input type="checkbox" className={inputClassName} {...inputProps} />
+        <span>{label}</span>
+      </label>
+    </Hint>
+  );
+}
+
 export function Badge({ status, pulse = false, label }) {
   if (!status) return null;
   const s = String(status).toLowerCase();

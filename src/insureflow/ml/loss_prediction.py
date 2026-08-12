@@ -84,20 +84,28 @@ class LossPredictionModel(BaseMLModel):
         return dict(sorted(importance.items(), key=lambda x: x[1], reverse=True))
 
     def _fallback_prediction(self, fv: FeatureVector) -> dict[str, Any]:
-        """Rule-based fallback when no model is trained."""
-        base_frequency = 0.05 + (fv.prior_claims_count / max(fv.years_in_business, 1)) * 0.1
-        base_severity = fv.tiv * 0.005 * fv.loss_ratio if fv.loss_ratio > 0 else fv.tiv * 0.01
-        expected_loss = base_frequency * base_severity
+        """Rule-based fallback when no model is trained — LOB-adjusted when product_line set."""
+        from insureflow.ml.lob_profiles import lob_loss_fallback, lob_risk_factors
 
-        risk_factors = []
-        if fv.loss_ratio > 1.0:
-            risk_factors.append(f"Historical loss ratio {fv.loss_ratio:.1%} exceeds 100%")
-        if fv.prior_claims_count > 3:
-            risk_factors.append(f"{fv.prior_claims_count} prior claims in {fv.years_in_business:.0f} years")
-        if fv.credit_score < 600:
-            risk_factors.append(f"Low credit score: {fv.credit_score:.0f}")
-        if fv.tiv > 1e8:
-            risk_factors.append(f"High TIV: ${fv.tiv / 1e6:.0f}M")
+        line = fv.product_line or (fv.custom_features or {}).get("insurance_line", "")
+        if line:
+            base_frequency, base_severity, expected_loss = lob_loss_fallback(line, fv)
+            risk_factors = lob_risk_factors(line, fv)
+            model_version = f"lob-fallback:{line}"
+        else:
+            base_frequency = 0.05 + (fv.prior_claims_count / max(fv.years_in_business, 1)) * 0.1
+            base_severity = fv.tiv * 0.005 * fv.loss_ratio if fv.loss_ratio > 0 else fv.tiv * 0.01
+            expected_loss = base_frequency * base_severity
+            risk_factors = []
+            if fv.loss_ratio > 1.0:
+                risk_factors.append(f"Historical loss ratio {fv.loss_ratio:.1%} exceeds 100%")
+            if fv.prior_claims_count > 3:
+                risk_factors.append(f"{fv.prior_claims_count} prior claims in {fv.years_in_business:.0f} years")
+            if fv.credit_score < 600:
+                risk_factors.append(f"Low credit score: {fv.credit_score:.0f}")
+            if fv.tiv > 1e8:
+                risk_factors.append(f"High TIV: ${fv.tiv / 1e6:.0f}M")
+            model_version = "fallback"
 
         return LossPrediction(
             expected_frequency=round(base_frequency, 4),
@@ -107,7 +115,7 @@ class LossPredictionModel(BaseMLModel):
             loss_range_high=round(expected_loss * 2.0, 2),
             confidence=0.65,
             top_risk_factors=risk_factors,
-            model_version="fallback",
+            model_version=model_version,
         ).model_dump()
 
     def _format_prediction(self, fv: FeatureVector, raw_prediction: Any) -> dict[str, Any]:

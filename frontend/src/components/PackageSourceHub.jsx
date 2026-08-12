@@ -3,7 +3,9 @@ import {
   FileUp, FolderOpen, FlaskConical, Cable, Loader2, Home, Building2, Upload, X, FileText, Wallet,
 } from 'lucide-react';
 import { readFileForUpload } from '../lib/insuranceDocs';
+import { UI_HINTS } from '../lib/uiHints';
 import ConnectAndPull from './ConnectAndPull';
+import { HintCheckbox } from './ui';
 
 const TABS = [
   { id: 'upload', label: 'Upload', icon: FileUp },
@@ -255,15 +257,13 @@ export default function PackageSourceHub({
               </div>
             )}
             {perBorrower && (
-              <label className="flex items-center gap-2 text-xs text-slate-400">
-                <input
-                  type="checkbox"
-                  checked={splitFolders}
-                  onChange={(e) => setSplitFolders(e.target.checked)}
-                  className="rounded"
-                />
-                Split multi-borrower folders
-              </label>
+              <HintCheckbox
+                hint={UI_HINTS.splitFolders}
+                label="Split multi-borrower folders"
+                labelClassName="flex items-center gap-2 text-xs text-slate-400"
+                checked={splitFolders}
+                onChange={(e) => setSplitFolders(e.target.checked)}
+              />
             )}
           </div>
         )}
@@ -351,15 +351,13 @@ export default function PackageSourceHub({
                 ))}
               </select>
             )}
-            <label className="flex items-center gap-1.5 text-[11px] text-slate-500">
-              <input
-                type="checkbox"
-                checked={useLlm}
-                onChange={(e) => setUseLlm(e.target.checked)}
-                className="rounded"
-              />
-              LLM assist
-            </label>
+            <HintCheckbox
+              hint={UI_HINTS.llmExtraction}
+              label="LLM assist"
+              labelClassName="flex items-center gap-1.5 text-[11px] text-slate-500"
+              checked={useLlm}
+              onChange={(e) => setUseLlm(e.target.checked)}
+            />
             <button
               type="button"
               disabled={running || (sourceId === 'upload' && !fileList.length)}

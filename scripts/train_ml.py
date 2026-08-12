@@ -70,17 +70,63 @@ def main() -> int:
         help=argparse.SUPPRESS,  # kept for backward compat; real-data is now the default
     )
     parser.add_argument("--build-data", action="store_true", help="Build/refresh ml_data/*.csv before training")
+    parser.add_argument("--build-lob-data", action="store_true", help="Build per-LOB ml_data/lines/<line>/*.csv")
+    parser.add_argument("--lobs", action="store_true", help="Train per-LOB insurance models (requires --build-lob-data or existing CSVs)")
+    parser.add_argument("--lob-line", help="Train only this insurance_line when used with --lobs")
+    parser.add_argument("--book", action="store_true", help="Build+train LOB models from audit_logs book outcomes (book-first)")
     parser.add_argument("--export", action="store_true", help="Build ml_data/*.csv from audit logs before training")
     parser.add_argument("--data-root", default=None, help="Directory containing ml_data-style CSVs")
     args = parser.parse_args()
 
     from insureflow.ml.models import ModelType
 
+    if args.book:
+        from insureflow.ml.book_training import train_lob_models_from_book
+
+        report = train_lob_models_from_book(force=True)
+        print(f"  book LOB train: {report['gate_passed']}/{report['trained']} passed ({report['pass_rate']}%)")
+        print(f"  book lines blended: {report['build'].get('book_blended_files')}")
+        return 0 if report["gate_passed"] > 0 else 1
+
     if args.status:
         _print_status()
+        from insureflow.ml.lob_training import lob_training_summary
+
+        lob = lob_training_summary()
+        print(f"\n  LOB models: {lob.get('gate_passed', 0)}/{lob.get('lob_model_slots', 0)} passed gate")
         return 0
 
     allow_synthetic = bool(args.allow_synthetic)
+
+    if args.build_lob_data:
+        from insureflow.ml.lob_training import build_lob_training_csvs
+
+        report = build_lob_training_csvs(out_dir=Path(args.data_root) / "lines" if args.data_root else None)
+        print(f"  built LOB training CSVs: {report.get('line_count')} lines, {report.get('model_count')} files")
+        if args.lobs and not args.only:
+            from insureflow.ml.lob_training import train_all_lob_models
+
+            lines = [args.lob_line] if args.lob_line else None
+            lob_results = train_all_lob_models(
+                data_root=Path(args.data_root) / "lines" if args.data_root else None,
+                force=True,
+                insurance_lines=lines,
+            )
+            passed = sum(1 for r in lob_results if r.get("gate_passed"))
+            print(f"  trained {len(lob_results)} LOB models ({passed} passed gate)")
+            return 0 if lob_results else 1
+
+    if args.lobs and not args.only:
+        from insureflow.ml.lob_training import build_lob_training_csvs, train_all_lob_models
+
+        data_root = Path(args.data_root) / "lines" if args.data_root else Path("ml_data/lines")
+        if not data_root.exists():
+            build_lob_training_csvs(out_dir=data_root)
+        lines = [args.lob_line] if args.lob_line else None
+        lob_results = train_all_lob_models(data_root=data_root, force=True, insurance_lines=lines)
+        passed = sum(1 for r in lob_results if r.get("gate_passed"))
+        print(f"  trained {len(lob_results)} LOB models ({passed} passed gate)")
+        return 0 if lob_results else 1
 
     if args.build_data:
         from insureflow.ml.seed_datasets import build_all_training_csvs

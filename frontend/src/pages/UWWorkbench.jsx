@@ -28,7 +28,17 @@ const STATE_BADGE = {
   expired: { status: 'closed', label: 'Expired' },
 };
 
-const EMPTY_FORM = { action: 'approve', license_number: '', notes: '', override_reason: '', override_reason_category: 'other', uw_confidence: 'medium' };
+const EMPTY_FORM = {
+  action: 'approve',
+  license_number: '',
+  notes: '',
+  override_reason: '',
+  override_reason_category: 'other',
+  uw_confidence: 'medium',
+  uw_indicated_premium: '',
+  uw_limit: '',
+  uw_deductible: '',
+};
 
 function formatError(e) {
   let msg = e?.message || String(e);
@@ -92,7 +102,14 @@ export default function UWWorkbench({ onOpenJob, authorityData, onRefresh }) {
   const handleSignOff = async (bundleId) => {
     setBusy(bundleId);
     try {
-      await endpoints.signOff(bundleId, form);
+      const body = { ...form };
+      if (body.uw_indicated_premium !== '') body.uw_indicated_premium = parseFloat(body.uw_indicated_premium);
+      else delete body.uw_indicated_premium;
+      if (body.uw_limit !== '') body.uw_limit = parseFloat(body.uw_limit);
+      else delete body.uw_limit;
+      if (body.uw_deductible !== '') body.uw_deductible = parseFloat(body.uw_deductible);
+      else delete body.uw_deductible;
+      await endpoints.signOff(bundleId, body);
       await afterMutate();
     } catch (e) {
       setBusy(null);
@@ -344,7 +361,14 @@ export default function UWWorkbench({ onOpenJob, authorityData, onRefresh }) {
                     {c.state === 'pending_review' && !open && (
                       <button
                         type="button"
-                        onClick={() => { setSigningId(c.bundle_id); setForm((f) => ({ ...f, action: 'approve' })); }}
+                        onClick={() => {
+                          setSigningId(c.bundle_id);
+                          setForm((f) => ({
+                            ...f,
+                            action: 'approve',
+                            uw_indicated_premium: c.premium != null ? String(c.premium) : '',
+                          }));
+                        }}
                         className="btn-primary btn-sm text-xs"
                       >
                         Approve
@@ -398,6 +422,18 @@ export default function UWWorkbench({ onOpenJob, authorityData, onRefresh }) {
                         <input
                           type="text" placeholder="Override reason (required to override AI)" className="input-field w-full text-sm"
                           value={form.override_reason} onChange={(e) => setForm((f) => ({ ...f, override_reason: e.target.value }))}
+                        />
+                        <input
+                          type="number" placeholder="UW indicated premium" className="input-field w-full text-sm"
+                          value={form.uw_indicated_premium} onChange={(e) => setForm((f) => ({ ...f, uw_indicated_premium: e.target.value }))}
+                        />
+                        <input
+                          type="number" placeholder="UW limit" className="input-field w-full text-sm"
+                          value={form.uw_limit} onChange={(e) => setForm((f) => ({ ...f, uw_limit: e.target.value }))}
+                        />
+                        <input
+                          type="number" placeholder="UW deductible" className="input-field w-full text-sm"
+                          value={form.uw_deductible} onChange={(e) => setForm((f) => ({ ...f, uw_deductible: e.target.value }))}
                         />
                       </div>
                       <textarea
