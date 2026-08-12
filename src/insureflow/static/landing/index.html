@@ -68,7 +68,8 @@
       font-family: var(--font-body);
       background: var(--bg);
       color: var(--text);
-      line-height: 1.6;
+      line-height: 1.65;
+      letter-spacing: 0.01em;
       -webkit-font-smoothing: antialiased;
       overflow-x: hidden;
     }
@@ -176,7 +177,7 @@
     .btn-sm { padding: .5rem 1rem; font-size: .82rem; border-radius: .6rem; }
 
     main { max-width: var(--max); margin: 0 auto; padding: 0 2rem 3rem; }
-    section { padding: 5.5rem 0; border-bottom: 1px solid var(--border); }
+    section { padding: 6.5rem 0; border-bottom: 1px solid var(--border); }
     section:last-of-type { border-bottom: none; }
 
     .section-label {
@@ -189,8 +190,8 @@
     .section-label::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: linear-gradient(135deg, var(--brand), var(--accent)); box-shadow: 0 0 8px rgba(91,141,239,.8); }
     h1 {
       font-family: var(--font-display); font-weight: 800;
-      font-size: clamp(2.6rem, 6vw, 4.1rem); line-height: 1.04;
-      letter-spacing: -0.03em; max-width: 16ch; text-wrap: balance;
+      font-size: clamp(2.9rem, 6.4vw, 4.5rem); line-height: 1.05;
+      letter-spacing: -0.035em; max-width: 16ch; text-wrap: balance;
     }
     h1 .gradient {
       background: linear-gradient(120deg, #ffffff 18%, var(--brand-2) 55%, var(--accent) 100%);
@@ -198,11 +199,11 @@
       background-size: 200% auto; animation: gradientShift 6s ease-in-out infinite;
     }
     @keyframes gradientShift { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
-    h2 { font-family: var(--font-display); font-weight: 700; font-size: clamp(1.75rem, 3.4vw, 2.5rem); letter-spacing: -0.02em; margin-bottom: .9rem; line-height: 1.14; text-wrap: balance; }
-    h3 { font-size: 1.05rem; font-weight: 600; margin-bottom: .5rem; letter-spacing: -0.01em; }
-    .lead { margin-top: 1.4rem; font-size: 1.15rem; color: var(--muted); max-width: 54ch; line-height: 1.65; }
+    h2 { font-family: var(--font-display); font-weight: 700; font-size: clamp(1.9rem, 3.7vw, 2.7rem); letter-spacing: -0.03em; margin-bottom: 1rem; line-height: 1.15; text-wrap: balance; }
+    h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: .5rem; letter-spacing: -0.01em; }
+    .lead { margin-top: 1.5rem; font-size: 1.2rem; color: var(--muted); max-width: 56ch; line-height: 1.7; }
     .lead strong { color: var(--text); font-weight: 600; }
-    .section-desc { color: var(--muted-2); max-width: 62ch; margin-bottom: 2.4rem; font-size: 1.02rem; line-height: 1.7; }
+    .section-desc { color: var(--muted-2); max-width: 62ch; margin-bottom: 2.6rem; font-size: 1.05rem; line-height: 1.75; }
     .section-desc strong { color: var(--muted); font-weight: 600; }
     .cta { margin-top: 2rem; display: flex; gap: .9rem; flex-wrap: wrap; }
 
@@ -211,7 +212,13 @@
     .reveal.visible { opacity: 1; transform: translateY(0); }
 
     /* Hero */
-    .hero { padding-top: calc(var(--header-h) + 4.5rem); border-bottom: none; }
+    .hero { padding-top: calc(var(--header-h) + 5rem); border-bottom: none; position: relative; }
+    .hero::before {
+      content: ""; position: absolute; top: -80px; left: -10%; right: 30%;
+      height: 520px; z-index: -1;
+      background: radial-gradient(ellipse 70% 60% at 30% 40%, rgba(91,141,239,.16), transparent 70%);
+      pointer-events: none;
+    }
     .hero-grid { display: grid; grid-template-columns: 1.02fr .98fr; gap: 3rem; align-items: center; }
     .hero-badge {
       display: inline-flex; align-items: center; gap: .55rem;
@@ -222,6 +229,15 @@
     .hero-badge .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: pulse 2.2s ease infinite; box-shadow: 0 0 0 4px rgba(52,211,153,.15); }
     .hero-badge .ico { width: 15px; height: 15px; color: var(--amber); }
     @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
+    .hero-audience { margin-top: 2.2rem; display: flex; flex-wrap: wrap; gap: .55rem; }
+    .audience-pill {
+      display: inline-flex; align-items: center; gap: .45rem;
+      font-size: .78rem; font-weight: 600; color: var(--muted);
+      background: rgba(22,29,44,.6); border: 1px solid var(--border);
+      border-radius: 2rem; padding: .45rem .95rem; transition: border-color .2s, color .2s, transform .2s;
+    }
+    .audience-pill .ico { width: 14px; height: 14px; color: var(--brand-2); }
+    .audience-pill:hover { border-color: rgba(91,141,239,.45); color: var(--text); transform: translateY(-1px); }
 
     .stats { margin-top: 3.6rem; display: grid; gap: 1rem; grid-template-columns: repeat(4, 1fr); }
     .stat {
@@ -412,12 +428,36 @@
     .agent-card h3 { font-size: 1.02rem; }
     .agent-card p { font-size: .85rem; color: var(--muted-2); margin: 0; line-height: 1.6; }
 
+    /* Audience (who it's for) */
+    .audience-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(205px, 1fr)); }
+    .audience-card {
+      background: linear-gradient(180deg, rgba(255,255,255,.02), transparent), var(--surface);
+      border: 1px solid var(--border); border-radius: 1rem; padding: 1.4rem 1.4rem 1.5rem;
+      position: relative; overflow: hidden; display: flex; flex-direction: column;
+      transition: border-color .25s, transform .25s, box-shadow .25s;
+    }
+    .audience-card::before { content: ""; position: absolute; top: 0; left: 1.4rem; right: 1.4rem; height: 2px; border-radius: 2px; background: linear-gradient(90deg, transparent, var(--bc, var(--brand)), transparent); opacity: .55; transition: opacity .25s; }
+    .audience-card:hover { transform: translateY(-4px); border-color: var(--bc, rgba(91,141,239,.4)); box-shadow: 0 18px 46px rgba(0,0,0,.32); }
+    .audience-card:hover::before { opacity: 1; }
+    .audience-card .ac-ico { width: 40px; height: 40px; border-radius: .7rem; margin-bottom: .9rem; display: grid; place-items: center; color: var(--bc, var(--brand-2)); background: color-mix(in srgb, var(--bc, var(--brand)) 12%, transparent); border: 1px solid color-mix(in srgb, var(--bc, var(--brand)) 30%, transparent); }
+    .audience-card .ac-ico .ico { width: 19px; height: 19px; }
+    .audience-card h3 { font-size: 1.02rem; }
+    .audience-card .who { font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--bc, var(--brand-2)); margin-bottom: .6rem; }
+    .audience-card p { font-size: .85rem; color: var(--muted-2); margin: 0; line-height: 1.6; }
+    .audience-card.ac-blue { --bc: #8bb0f7; }
+    .audience-card.ac-green { --bc: #6ee7b7; }
+    .audience-card.ac-sky { --bc: #7dd3fc; }
+    .audience-card.ac-violet { --bc: #c4b5fd; }
+    .audience-card.ac-amber { --bc: #fcd34d; }
+
     /* Pipeline (how it works) */
     .pipeline-wrap { display: grid; grid-template-columns: 1fr 1.15fr; gap: 2rem; align-items: start; }
     .pipeline-steps { display: flex; flex-direction: column; gap: .6rem; }
-    .pipeline-step { display: flex; gap: 1rem; align-items: flex-start; padding: 1.05rem 1.15rem; border-radius: .9rem; border: 1px solid transparent; background: transparent; cursor: pointer; text-align: left; color: inherit; font: inherit; transition: background .2s, border-color .2s, transform .2s; }
+    .pipeline-step { display: flex; gap: 1rem; align-items: flex-start; padding: 1.05rem 1.15rem; border-radius: .9rem; border: 1px solid transparent; background: transparent; cursor: pointer; text-align: left; color: inherit; font: inherit; position: relative; transition: background .2s, border-color .2s, transform .2s; }
     .pipeline-step:hover { background: rgba(255,255,255,.03); }
     .pipeline-step.active { background: var(--surface); border-color: rgba(91,141,239,.4); box-shadow: 0 0 0 1px rgba(91,141,239,.12); }
+    .pipeline-step .step-num { position: absolute; top: .55rem; right: 1.05rem; font-family: var(--font-display); font-weight: 800; font-size: 1.5rem; letter-spacing: -0.03em; color: rgba(139,176,247,.16); transition: color .2s; }
+    .pipeline-step.active .step-num { color: rgba(139,176,247,.45); }
     .step-icon { flex-shrink: 0; width: 38px; height: 38px; border-radius: .65rem; display: grid; place-items: center; color: var(--brand-2); background: rgba(91,141,239,.13); border: 1px solid rgba(91,141,239,.25); transition: background .2s, color .2s; }
     .step-icon .ico { width: 17px; height: 17px; }
     .pipeline-step.active .step-icon { background: var(--brand); color: #fff; border-color: var(--brand); }
@@ -500,9 +540,13 @@
     .testimonial-stars .ico { width: 15px; height: 15px; fill: var(--amber); stroke: none; }
     .testimonial-card .quote { font-size: .92rem; color: var(--muted); line-height: 1.65; flex: 1; }
     .testimonial-card .quote::before { content: ""; }
-    .testimonial-card .who { border-top: 1px solid var(--border); padding-top: .95rem; }
+    .testimonial-card .who { display: flex; align-items: center; gap: .8rem; border-top: 1px solid var(--border); padding-top: .95rem; }
+    .testimonial-card .who .avatar { width: 40px; height: 40px; flex-shrink: 0; border-radius: 50%; display: grid; place-items: center; font-family: var(--font-display); font-weight: 700; font-size: .8rem; color: #fff; }
+    .testimonial-card .who .avatar.av-1 { background: linear-gradient(135deg, var(--brand), #6d5ef2); box-shadow: 0 4px 14px rgba(91,141,239,.4); }
+    .testimonial-card .who .avatar.av-2 { background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 14px rgba(52,211,153,.35); }
+    .testimonial-card .who .avatar.av-3 { background: linear-gradient(135deg, #a78bfa, #7c3aed); box-shadow: 0 4px 14px rgba(167,139,250,.4); }
     .testimonial-card .who strong { display: block; font-size: .86rem; color: var(--text); }
-    .testimonial-card .who span { font-size: .76rem; color: var(--muted-2); }
+    .testimonial-card .who .who-text span { font-size: .76rem; color: var(--muted-2); }
 
     /* FAQ */
     .faq-search { width: 100%; max-width: 420px; padding: .78rem 1.05rem; border-radius: .75rem; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: .9rem; margin-bottom: 1.6rem; outline: none; transition: border-color .2s; font-family: inherit; }
@@ -700,20 +744,27 @@
           <div class="reveal">
             <div class="hero-badge">
               <span class="dot"></span>
-              AI-native underwriting · Shadow pilots ready
+              Rytera · AI-native underwriting workbench
             </div>
             <h1>Bind-ready decisions <span class="gradient">in minutes, not days</span></h1>
             <p class="lead">
-              Rytera turns messy submissions — ACORD, broker PDFs, loss runs, W-2s — into a bind-ready underwriting memo
-              with quote, audit trail, and licensed sign-off. One platform for <strong>line and staff underwriters</strong>
-              across insurance, mortgage, and lending — from branch coverage decisions to home-office guides and audits.
+              Rytera takes the messy submissions that slow underwriting down — ACORD, broker PDFs, loss runs, W-2s — and
+              turns them into a <strong>bind-ready underwriting memo</strong> with quote, audit trail, and licensed
+              sign-off. One platform for <strong>line and staff underwriters</strong> across commercial &amp; personal
+              lines, mortgage, and lending.
             </p>
             <div class="cta">
               <button type="button" class="btn btn-primary" id="open-demo-hero">
                 Book a demo
                 <svg class="ico sm" aria-hidden="true"><use href="#i-arrow-right"/></svg>
               </button>
-              <a class="btn btn-ghost" href="/dashboard">Open dashboard</a>
+              <a class="btn btn-ghost" href="#how-it-works">See how it works</a>
+            </div>
+            <div class="hero-audience" aria-label="Built for">
+              <span class="audience-pill"><svg class="ico sm"><use href="#i-building"/></svg> Carriers</span>
+              <span class="audience-pill"><svg class="ico sm"><use href="#i-layers"/></svg> MGAs &amp; program administrators</span>
+              <span class="audience-pill"><svg class="ico sm"><use href="#i-home"/></svg> Personal lines</span>
+              <span class="audience-pill"><svg class="ico sm"><use href="#i-banknote"/></svg> Mortgage &amp; commercial lenders</span>
             </div>
           </div>
           <div class="hero-media reveal">
@@ -799,11 +850,53 @@
           <div class="marquee-track" id="marquee-track"></div>
         </div>
       </section>
+      <section id="audience">
+        <div class="reveal">
+          <p class="section-label">Who it's for</p>
+          <h2>Built for every desk that says yes or no to risk</h2>
+          <p class="section-desc">
+            Whether you quote a single account or steer a national book, Rytera fits the way your desk already works —
+            from branch line underwriters to home-office staff underwriters, and across every vertical.
+          </p>
+        </div>
+        <div class="audience-grid reveal">
+          <div class="audience-card ac-blue">
+            <span class="ac-ico"><svg class="ico" aria-hidden="true"><use href="#i-building"/></svg></span>
+            <h3>Commercial carriers &amp; MGAs</h3>
+            <p class="who">Line and staff underwriters running commercial books.</p>
+            <p>Get a live ranked submission queue, bind-ready memos, and licensed sign-off — GL, property, and specialty lines.</p>
+          </div>
+          <div class="audience-card ac-green">
+            <span class="ac-ico"><svg class="ico" aria-hidden="true"><use href="#i-home"/></svg></span>
+            <h3>Personal lines carriers</h3>
+            <p class="who">Homeowners, auto, and term-life underwriting teams.</p>
+            <p>Get filing-grade rating from tracked rate manuals, CLUE / MVR checks, and compliant state rate build-ups.</p>
+          </div>
+          <div class="audience-card ac-sky">
+            <span class="ac-ico"><svg class="ico" aria-hidden="true"><use href="#i-inbox"/></svg></span>
+            <h3>Mortgage lenders</h3>
+            <p class="who">Underwriters and processing teams.</p>
+            <p>Get income, asset, and collateral verification across 30+ document types — with TRID, Reg Z, and HMDA checks built in.</p>
+          </div>
+          <div class="audience-card ac-violet">
+            <span class="ac-ico"><svg class="ico" aria-hidden="true"><use href="#i-banknote"/></svg></span>
+            <h3>Commercial lenders</h3>
+            <p class="who">Credit and loan underwriting desks.</p>
+            <p>Get consumer and business loan decisioning with a credit risk engine, dynamic pricing, and Reg B / ECOA compliance.</p>
+          </div>
+          <div class="audience-card ac-amber">
+            <span class="ac-ico"><svg class="ico" aria-hidden="true"><use href="#i-layers"/></svg></span>
+            <h3>Program administrators &amp; aggregators</h3>
+            <p class="who">MGAs running books on behalf of carriers.</p>
+            <p>Get appetite steering across a portfolio, shadow pilots with bind off, and a clean cutover when you're ready.</p>
+          </div>
+        </div>
+      </section>
       <section id="ai-native">
         <div class="reveal">
-          <p class="section-label">Why Rytera</p>
-          <h2>AI-native vs. the old core</h2>
-          <p class="section-desc">Legacy workbenches were built for document storage, not decisions. Rytera is built for what underwriting actually needs.</p>
+          <p class="section-label">The problem &amp; the fix</p>
+          <h2>Built for decisions, not document storage</h2>
+          <p class="section-desc">Legacy workbenches were built to hold files. Underwriting was left to do the hard part — reading them all. Rytera flips the order: the platform does the reading, scoring, and pricing, so your team makes the decisions.</p>
         </div>
         <div class="compare reveal">
           <div class="compare-col">
@@ -833,12 +926,13 @@
 
       <section id="zta">
         <div class="reveal">
-          <p class="section-label">Zero Token Architecture</p>
-          <h2>The best token is the one you never had to generate.</h2>
+          <p class="section-label">Why Rytera is different</p>
+          <h2>Zero Token Architecture — efficiency you can measure</h2>
           <p class="section-desc">
-            Before any pipeline stage spends a token, Rytera asks: <em>can code, rules, or a trained model solve this
-            deterministically?</em> Most of underwriting can. LLM calls are the exception, not the rule — and every one is
-            budgeted, tracked, and reported in each job's <strong>zta_report</strong>.
+            Most AI underwriting tools burn tokens on everything. Rytera asks: <em>can code, rules, or a trained model
+            solve this deterministically?</em> Most of underwriting can — so you get faster, cheaper, fully reproducible
+            decisions, and every LLM call that does happen is budgeted, tracked, and reported in each job's
+            <strong>zta_report</strong>.
           </p>
         </div>
         <div class="zta-ladder reveal">
@@ -927,14 +1021,17 @@
         <div class="pipeline-wrap reveal">
           <div class="pipeline-steps" role="tablist" aria-label="Pipeline stages">
             <button class="pipeline-step active" data-step="0" role="tab" aria-selected="true">
+              <span class="step-num" aria-hidden="true">01</span>
               <span class="step-icon"><svg class="ico" aria-hidden="true"><use href="#i-search"/></svg></span>
               <span class="step-body"><strong>Triage</strong><span>Qualify the submission fast</span></span>
             </button>
             <button class="pipeline-step" data-step="1" role="tab" aria-selected="false">
+              <span class="step-num" aria-hidden="true">02</span>
               <span class="step-icon"><svg class="ico" aria-hidden="true"><use href="#i-scale"/></svg></span>
               <span class="step-body"><strong>Risk &amp; Price</strong><span>Verify, analyze &amp; price</span></span>
             </button>
             <button class="pipeline-step" data-step="2" role="tab" aria-selected="false">
+              <span class="step-num" aria-hidden="true">03</span>
               <span class="step-icon"><svg class="ico" aria-hidden="true"><use href="#i-file-check"/></svg></span>
               <span class="step-body"><strong>Decision</strong><span>UW memo &amp; deep dive</span></span>
             </button>
@@ -1137,21 +1234,30 @@
               <svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg>
             </div>
             <p class="quote">The queue ranks our book before we open a single file. We stopped hunting through shared drives and started underwriting.</p>
-            <div class="who"><strong>Head of Underwriting</strong><span>MGA · shadow pilot</span></div>
+            <div class="who">
+              <span class="avatar av-1" aria-hidden="true">HU</span>
+              <div class="who-text"><strong>Head of Underwriting</strong><span>MGA · shadow pilot</span></div>
+            </div>
           </div>
           <div class="testimonial-card">
             <div class="testimonial-stars">
               <svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg>
             </div>
             <p class="quote">Audit packages used to take days to assemble. Now every decision ships with its own SHA-256 manifest and full trace.</p>
-            <div class="who"><strong>Compliance Lead</strong><span>Carrier · shadow pilot</span></div>
+            <div class="who">
+              <span class="avatar av-2" aria-hidden="true">CL</span>
+              <div class="who-text"><strong>Compliance Lead</strong><span>Carrier · shadow pilot</span></div>
+            </div>
           </div>
           <div class="testimonial-card">
             <div class="testimonial-stars">
               <svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg>
             </div>
             <p class="quote">Shadow mode let us prove value without touching policy admin. Bind stayed off until our team approved the cutover.</p>
-            <div class="who"><strong>Operations Director</strong><span>Aggregator · shadow pilot</span></div>
+            <div class="who">
+              <span class="avatar av-3" aria-hidden="true">OD</span>
+              <div class="who-text"><strong>Operations Director</strong><span>Aggregator · shadow pilot</span></div>
+            </div>
           </div>
         </div>
       </section>
@@ -1168,11 +1274,15 @@
 
       <section id="contact">
         <div class="contact-box reveal">
-          <h2>Ready to see Rytera in action?</h2>
-          <p>Walk through the submission journey, multi-agent pipeline, and live dashboard with our team.</p>
-          <button type="button" class="btn btn-primary" id="open-demo-contact">Request a demo</button>
+          <p class="section-label" style="justify-content:center;background:transparent;">Ready when you are</p>
+          <h2>See your book move through Rytera</h2>
+          <p>Walk through the submission journey, multi-agent pipeline, and live dashboard on a 30-minute call. Start with a shadow pilot — bind stays off until your team approves the cutover.</p>
+          <div class="cta" style="justify-content:center;">
+            <button type="button" class="btn btn-primary" id="open-demo-contact">Book a demo</button>
+            <a class="btn btn-ghost" href="/dashboard">Open the live dashboard</a>
+          </div>
           <p style="margin-top:1.5rem;margin-bottom:0;font-size:.875rem">
-            Or email <a class="contact-email" href="mailto:hello@rytera.ai">hello@rytera.ai</a>
+            Prefer email? <a class="contact-email" href="mailto:hello@rytera.ai">hello@rytera.ai</a>
           </p>
         </div>
       </section>
