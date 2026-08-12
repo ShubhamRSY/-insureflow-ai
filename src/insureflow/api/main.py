@@ -1758,6 +1758,43 @@ async def root(request: Request) -> FileResponse | JSONResponse:
     )
 
 
+class DemoRequest(BaseModel):
+    name: str
+    email: str
+    company: str
+    message: str = ""
+    vertical: str = ""
+
+
+@app.post("/api/contact/demo-request")
+@limiter.limit("5/minute")
+async def demo_request_endpoint(request: Request, payload: DemoRequest) -> JSONResponse:
+    """Capture a landing-page demo request lead to data/demo_requests.jsonl."""
+    from datetime import datetime, timezone
+
+    name = (payload.name or "").strip()
+    email = (payload.email or "").strip().lower()
+    company = (payload.company or "").strip()
+    if not name or not email or "@" not in email or not company:
+        raise HTTPException(status_code=422, detail="Name, a valid work email, and company are required.")
+    row = {
+        "id": f"lead-{uuid.uuid4().hex[:10]}",
+        "name": name,
+        "email": email,
+        "company": company,
+        "message": (payload.message or "").strip(),
+        "vertical": (payload.vertical or "").strip(),
+        "source": "ryterainc.com/landing",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    leads_dir = PROJECT_ROOT / "data"
+    leads_dir.mkdir(parents=True, exist_ok=True)
+    with open(leads_dir / "demo_requests.jsonl", "a", encoding="utf-8") as fh:
+        fh.write(_json.dumps(row) + "\n")
+    logging.getLogger(__name__).info("Demo request captured: %s (%s)", row["email"], row["company"])
+    return JSONResponse({"ok": True, "id": row["id"]})
+
+
 @app.get("/robots.txt", include_in_schema=False)
 def robots_txt() -> FileResponse:
     path = STATIC_DIR / "landing" / "robots.txt"
