@@ -6609,3 +6609,35 @@ def ml_explain(model_type: str, features: dict[str, Any], current: TokenData = D
         raise HTTPException(status_code=403, detail=f"Model {model_type} does not support explanations")
     fv = FeatureVector(**{k: v for k, v in features.items() if k in FeatureVector.model_fields})
     return model.explain(fv)
+
+
+_LANDING_PAGES = ("platform", "technology", "underwriting", "integrations", "company")
+
+
+@app.get("/static/landing.css", include_in_schema=False)
+def landing_css() -> FileResponse:
+    """Shared stylesheet for the marketing pages."""
+    path = STATIC_DIR / "landing" / "landing.css"
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="landing.css not found")
+    return FileResponse(path, media_type="text/css")
+
+
+@app.get("/static/landing.js", include_in_schema=False)
+def landing_js() -> FileResponse:
+    """Shared JavaScript for the marketing pages."""
+    path = STATIC_DIR / "landing" / "landing.js"
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="landing.js not found")
+    return FileResponse(path, media_type="application/javascript")
+
+
+@app.get("/{landing_page}", include_in_schema=False)
+def landing_subpage(landing_page: str) -> FileResponse:
+    """Serve the static marketing sub-pages (registered last so specific routes win)."""
+    if landing_page not in _LANDING_PAGES:
+        raise HTTPException(status_code=404, detail=f"Page not found: /{landing_page}")
+    path = STATIC_DIR / "landing" / f"{landing_page}.html"
+    if not path.exists():
+        raise HTTPException(status_code=404, detail=f"Page not found: /{landing_page}")
+    return FileResponse(path)
