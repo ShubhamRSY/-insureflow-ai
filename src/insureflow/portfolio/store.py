@@ -293,28 +293,30 @@ class PortfolioStore:
         state_pct = (new_state_tiv / new_combined_tiv * 100) if new_combined_tiv > 0 else 0
         naics_pct = (new_naics_tiv / new_combined_tiv * 100) if new_combined_tiv > 0 else 0
 
-        if state_pct > 40:
-            warnings.append(f"Geographic concentration: {state} would represent {state_pct:.0f}% of portfolio TIV (threshold: 40%) — increased CAT tail risk")
-            score += 0.4
-        elif state_pct > 30:
-            warnings.append(f"Geographic concentration: {state} would represent {state_pct:.0f}% of portfolio TIV — monitor concentration")
-            score += 0.2
+        # Empty / seed books: first risk is always 100% of TIV — that is not concentration.
+        if total_count > 0 and total_tiv > 0:
+            if state_pct > 40:
+                warnings.append(f"Geographic concentration: {state} would represent {state_pct:.0f}% of portfolio TIV (threshold: 40%) — increased CAT tail risk")
+                score += 0.4
+            elif state_pct > 30:
+                warnings.append(f"Geographic concentration: {state} would represent {state_pct:.0f}% of portfolio TIV — monitor concentration")
+                score += 0.2
 
-        if naics_pct > 35:
-            warnings.append(f"Industry concentration: NAICS {naics2} would represent {naics_pct:.0f}% of portfolio TIV (threshold: 35%) — sector downturn risk")
-            score += 0.3
-        elif naics_pct > 25:
-            warnings.append(f"Industry concentration: NAICS {naics2} would represent {naics_pct:.0f}% of portfolio TIV — monitor industry exposure")
-            score += 0.15
+            if naics_pct > 35:
+                warnings.append(f"Industry concentration: NAICS {naics2} would represent {naics_pct:.0f}% of portfolio TIV (threshold: 35%) — sector downturn risk")
+                score += 0.3
+            elif naics_pct > 25:
+                warnings.append(f"Industry concentration: NAICS {naics2} would represent {naics_pct:.0f}% of portfolio TIV — monitor industry exposure")
+                score += 0.15
+
+            combined_state_and_naics = len([p for p in same_state if p.naics_code.startswith(naics2) and naics2])
+            if combined_state_and_naics >= 2 and state_pct > 20 and naics_pct > 20:
+                warnings.append(f"Double concentration: {combined_state_and_naics + 1} policies in {state} with NAICS {naics2} — geographic AND industry overlap")
+                score += 0.3
 
         if new_tiv > 25_000_000:
             warnings.append(f"Single-risk TIV ${new_tiv:,.0f} exceeds $25M — facultative reinsurance recommended")
             score += 0.2
-
-        combined_state_and_naics = len([p for p in same_state if p.naics_code.startswith(naics2) and naics2])
-        if combined_state_and_naics >= 2 and state_pct > 20 and naics_pct > 20:
-            warnings.append(f"Double concentration: {combined_state_and_naics + 1} policies in {state} with NAICS {naics2} — geographic AND industry overlap")
-            score += 0.3
 
         if total_count == 0 and new_tiv > 10_000_000:
             warnings.append("First policy in portfolio with TIV > $10M — no diversification baseline")

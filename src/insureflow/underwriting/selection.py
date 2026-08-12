@@ -635,7 +635,9 @@ def assess_selection(
 
 def _reject_for_tier(candidate: SelectionCandidate, tier: SelectionTier) -> tuple[UWDecision, list[str]]:
     if tier == SelectionTier.STRICT:
-        if candidate.risk_score >= 0.7:
+        # Keep a buffer under "clearly beyond absorb" so borderline mid-0.6 scores
+        # refer for UW review instead of hard-declining on empty/seed books.
+        if candidate.risk_score >= 0.75:
             return UWDecision.DECLINE, [
                 f"Strict selection standards admit only preferred/standard risks; "
                 f"substandard class with risk score {candidate.risk_score:.2f} is beyond the "

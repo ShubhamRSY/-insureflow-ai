@@ -92,9 +92,7 @@ def _rows_from_global_base(
     rng = np.random.RandomState(seed)
 
     X, _ = generate_synthetic_dataset(n_samples=n_target, model_type=model_type, seed=seed)
-    synth_rows: list[dict[str, Any]] = [
-        {name: float(X[i, j]) for j, name in enumerate(DEFAULT_FEATURE_NAMES)} for i in range(len(X))
-    ]
+    synth_rows: list[dict[str, Any]] = [{name: float(X[i, j]) for j, name in enumerate(DEFAULT_FEATURE_NAMES)} for i in range(len(X))]
 
     global_rows: list[dict[str, Any]] = []
     if global_csv.exists():
@@ -139,29 +137,14 @@ def _rows_from_global_base(
             target = max(0.0, signal * (1.0 + rng.normal(0, 0.04)))
         elif model_type == "fraud_detection":
             # Deterministic score → threshold labels (high AUC); light flip noise only
-            score = (
-                claims * 0.55
-                + max(0.0, 650.0 - credit) / 50.0
-                + max(0.0, lr - 0.55) * 2.0
-                + risk * 1.4
-                + fraud_p * 2.0
-                + float(row.get("prior_cancellations", 0)) * 0.4
-            )
+            score = claims * 0.55 + max(0.0, 650.0 - credit) / 50.0 + max(0.0, lr - 0.55) * 2.0 + risk * 1.4 + fraud_p * 2.0 + float(row.get("prior_cancellations", 0)) * 0.4
             row["_cls_score"] = score
             target = 0.0  # filled after ranking
         elif model_type == "premium_optimizer":
             signal = (tiv / 100.0) * 0.42 * prem_load * (1.0 + lr * 0.5) * (1.0 + claims * 0.06) * (0.8 + 0.4 * risk)
             target = max(1000.0, signal * (1.0 + rng.normal(0, 0.04)))
         elif model_type == "churn_prediction":
-            score = (
-                (lr - 0.4) * 2.5
-                + claims * 0.4
-                - years * 0.08
-                + churn_p * 2.0
-                + risk * 1.2
-                + (0.8 if credit < 620 else 0.0)
-                + float(row.get("prior_cancellations", 0)) * 0.35
-            )
+            score = (lr - 0.4) * 2.5 + claims * 0.4 - years * 0.08 + churn_p * 2.0 + risk * 1.2 + (0.8 if credit < 620 else 0.0) + float(row.get("prior_cancellations", 0)) * 0.35
             row["_cls_score"] = score
             target = 0.0
         else:

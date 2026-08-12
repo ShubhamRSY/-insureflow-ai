@@ -573,6 +573,7 @@ class SignOffRequest(BaseModel):
 
 class ValidateTermsRequest(BaseModel):
     """Licensed UW validates / edits indicated policy terms before sign-off."""
+
     indicated_premium: float
     limit: float = 0.0
     deductible: float = 0.0

@@ -129,10 +129,7 @@ def run_inprocess(use_llm: bool = True) -> dict:
         }
         results.append(row)
         eng_s = str(engine or "?")
-        print(
-            f"[{'PASS' if row['ok'] else 'FAIL'}] {preset:<18} eng={eng_s:<24} "
-            f"prem={row['premium']} subj={row['subjectivities']} worksheet={row['uw_worksheet']} ({row['duration_s']}s)"
-        )
+        print(f"[{'PASS' if row['ok'] else 'FAIL'}] {preset:<18} eng={eng_s:<24} prem={row['premium']} subj={row['subjectivities']} worksheet={row['uw_worksheet']} ({row['duration_s']}s)")
 
     passed = sum(1 for r in results if r["ok"] and r["stages_present"]["quote"] and r["stages_present"]["bind_readiness"])
     return {
@@ -204,10 +201,7 @@ def run_live(base_url: str, timeout: int = 300) -> dict:
             "error": job.get("error") or job.get("message"),
         }
         results.append(row)
-        print(
-            f"[{'PASS' if row['ok'] else 'FAIL'}] {preset:<18} status={row['status']} "
-            f"eng={engine} prem={row['premium']} ({row['duration_s']}s)"
-        )
+        print(f"[{'PASS' if row['ok'] else 'FAIL'}] {preset:<18} status={row['status']} eng={engine} prem={row['premium']} ({row['duration_s']}s)")
 
     passed = sum(1 for r in results if r["ok"])
     return {

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Seed + train LOB models from commercial book outcomes."""
+
 from __future__ import annotations
 
 import os

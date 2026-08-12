@@ -305,8 +305,11 @@ class InsurancePipeline:
             loss_run_expected = any("loss" in m.lower() for m in triage_result.document_checklist.present)
             if bundle.structured:
                 fin = bundle.structured.financial
-                has_claims = fin and fin.loss_run and len(fin.loss_run.claims) > 0
-                if not has_claims and (loss_run_raw.strip() or loss_run_expected):
+                has_claims = bool(fin and fin.loss_run and len(fin.loss_run.claims) > 0)
+                has_ratios = bool(fin and fin.loss_run and fin.loss_run.loss_ratios)
+                # Ratio tables without claim rows are usable history — only hard-fail when
+                # nothing structured was extracted from an expected/attached loss run.
+                if not has_claims and not has_ratios and (loss_run_raw.strip() or loss_run_expected):
                     validation_findings.append(
                         Finding(
                             title="Loss run provided but empty — no claims extracted",

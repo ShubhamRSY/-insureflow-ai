@@ -138,6 +138,8 @@ def _acord(
 
 def _clean_loss_run(insured: str, earned: float = 180_000, incurred: float = 22_000) -> str:
     lr = (incurred / earned * 100.0) if earned else 0.0
+    c1 = incurred * 0.55
+    c2 = incurred * 0.45
     return f"""# Loss Run — {insured}
 Carrier: Prior Mutual Insurance Company
 Policy Term: 2021-11-01 to 2026-10-31 (5 years)
@@ -153,6 +155,12 @@ Total incurred: ${incurred:,.0f}
 | 2024-2025 | ${earned * 0.21:,.0f} | ${incurred * 0.25:,.0f} | {lr * 1.0:.1f}% |
 | 2025-2026 | ${earned * 0.22:,.0f} | ${incurred * 0.15:,.0f} | {lr * 0.6:.1f}% |
 | 2021-2026 | ${earned:,.0f} | ${incurred:,.0f} | {lr:.1f}% |
+
+## Claims
+| DOL | Claim # | Type | Status | Incurred |
+|-----|---------|------|--------|----------|
+| 2022-03-14 | CLM-CLEAN-01 | Water damage | Closed | ${c1:,.0f} |
+| 2024-09-02 | CLM-CLEAN-02 | Theft | Closed | ${c2:,.0f} |
 
 No open claims. No prior cancellations or non-renewals.
 """
