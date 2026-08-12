@@ -99,11 +99,16 @@ NAV_LINKS = [
 NAV_ANCHORS = "\n".join(f'        <a href="{href}" data-nav>{label}</a>' for href, label in NAV_LINKS)
 NAV_ANCHORS_MOBILE = "\n".join(f'      <a href="{href}" data-nav>{label}</a>' for href, label in NAV_LINKS)
 
-HEADER = """    <header id="header">
+HEADER = (
+    """    <header id="header">
       <div class="nav-inner">
-""" + BRAND + """
+"""
+    + BRAND
+    + """
         <nav class="nav-desktop" aria-label="Main">
-""" + NAV_ANCHORS + """
+"""
+    + NAV_ANCHORS
+    + """
         </nav>
         <div class="nav-actions">
           <a class="nav-dash" href="/dashboard">Dashboard</a>
@@ -115,12 +120,16 @@ HEADER = """    <header id="header">
       </div>
     </header>
     <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile">
-""" + NAV_ANCHORS_MOBILE + """
+"""
+    + NAV_ANCHORS_MOBILE
+    + """
       <a href="/dashboard">Dashboard</a>
       <button type="button" class="btn btn-primary" id="open-demo-mobile">Book a demo</button>
     </nav>"""
+)
 
-FOOTER = """    <footer>
+FOOTER = (
+    """    <footer>
       <div class="footer-grid">
         <div class="brand" aria-label="Rytera">
           <span class="brand-mark" aria-hidden="true">
@@ -129,7 +138,9 @@ FOOTER = """    <footer>
           <span class="brand-name">Rytera<sup>&trade;</sup></span>
         </div>
         <nav class="footer-links" aria-label="Footer">
-""" + "\n".join(f'          <a href="{href}">{label}</a>' for href, label in NAV_LINKS) + """
+"""
+    + "\n".join(f'          <a href="{href}">{label}</a>' for href, label in NAV_LINKS)
+    + """
           <a href="/dashboard">Dashboard</a>
           <a href="/health">System status</a>
         </nav>
@@ -139,6 +150,7 @@ FOOTER = """    <footer>
         </div>
       </div>
     </footer>"""
+)
 
 MODAL = """  <div class="modal-overlay" id="demo-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <div class="modal">
@@ -196,8 +208,8 @@ MODAL = """  <div class="modal-overlay" id="demo-modal" role="dialog" aria-modal
 
 def head(title: str, desc: str, canonical: str, og_desc: str) -> str:
     return (
-        "  <meta charset=\"UTF-8\" />\n"
-        "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n"
+        '  <meta charset="UTF-8" />\n'
+        '  <meta name="viewport" content="width=device-width, initial-scale=1.0" />\n'
         f"  <title>{title}</title>\n"
         f'  <meta name="description" content="{desc}" />\n'
         f'  <link rel="canonical" href="https://ryterainc.com/{canonical}" />\n'
@@ -220,7 +232,7 @@ def head(title: str, desc: str, canonical: str, og_desc: str) -> str:
         '  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />\n'
         '  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />\n'
         '  <script type="application/ld+json">\n'
-        '  {\n'
+        "  {\n"
         '    "@context": "https://schema.org",\n'
         '    "@type": "Organization",\n'
         '    "name": "Rytera",\n'
@@ -228,8 +240,8 @@ def head(title: str, desc: str, canonical: str, og_desc: str) -> str:
         '    "logo": "https://ryterainc.com/icon-512.png",\n'
         '    "description": "AI underwriting platform for commercial & personal lines insurance, mortgage, and lending.",\n'
         '    "email": "hello@rytera.ai"\n'
-        '  }\n'
-        '  </script>\n'
+        "  }\n"
+        "  </script>\n"
         '  <link rel="preconnect" href="https://fonts.googleapis.com" />\n'
         '  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />\n'
         '  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet" />\n'
@@ -239,13 +251,13 @@ def head(title: str, desc: str, canonical: str, og_desc: str) -> str:
 
 def page(title: str, desc: str, canonical: str, og_desc: str, main_html: str) -> str:
     return (
-        "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n"
+        '<!DOCTYPE html>\n<html lang="en">\n<head>\n'
         + head(title, desc, canonical, og_desc)
         + "</head>\n<body>\n"
         + SPRITE
         + "\n"
         + BG
-        + "\n  <div class=\"page\">\n"
+        + '\n  <div class="page">\n'
         + HEADER
         + "\n\n    <main>\n"
         + main_html
@@ -253,7 +265,7 @@ def page(title: str, desc: str, canonical: str, og_desc: str, main_html: str) ->
         + FOOTER
         + "\n  </div>\n\n"
         + MODAL
-        + "\n  <script src=\"/static/landing.js\" defer></script>\n</body>\n</html>\n"
+        + '\n  <script src="/static/landing.js" defer></script>\n</body>\n</html>\n'
     )
 
 
@@ -261,8 +273,8 @@ def page(title: str, desc: str, canonical: str, og_desc: str, main_html: str) ->
 # Shared section builders
 # ---------------------------------------------------------------------------
 
-def sub_page_hero(label: str, h1: str, lead: str, primary: str = "book", primary_label: str = "Book a demo",
-                  secondary: str | None = None, secondary_label: str | None = None) -> str:
+
+def sub_page_hero(label: str, h1: str, lead: str, primary: str = "book", primary_label: str = "Book a demo", secondary: str | None = None, secondary_label: str | None = None) -> str:
     btns = []
     if primary == "book":
         btns.append('      <button type="button" class="btn btn-primary" id="open-demo-hero">Book a demo</button>')
@@ -274,13 +286,11 @@ def sub_page_hero(label: str, h1: str, lead: str, primary: str = "book", primary
     if btns:
         cta = '\n    <div class="cta">\n' + "\n".join(btns) + "\n    </div>"
     return (
-        "      <section class=\"page-hero\">\n"
-        "        <div class=\"reveal\">\n"
-        f"          <p class=\"section-label\">{label}</p>\n"
+        '      <section class="page-hero">\n'
+        '        <div class="reveal">\n'
+        f'          <p class="section-label">{label}</p>\n'
         f"          <h1>{h1}</h1>\n"
-        f"          <p class=\"lead\">{lead}</p>\n"
-        + cta
-        + "\n        </div>\n"
+        f'          <p class="lead">{lead}</p>\n' + cta + "\n        </div>\n"
         "      </section>"
     )
 
@@ -494,6 +504,7 @@ def testimonials_section() -> str:
 # Page bodies
 # ---------------------------------------------------------------------------
 
+
 def home_main() -> str:
     value = """      <section id="what-you-get">
         <div class="reveal">
@@ -524,27 +535,18 @@ def home_main() -> str:
       </section>"""
 
     how = pipeline_section()
-    how = how + """
+    how = (
+        how
+        + """
         <div class="cta reveal">
           <a class="btn btn-primary" href="/technology">
             Deep dive into the pipeline
             <svg class="ico sm" aria-hidden="true"><use href="#i-arrow-right"/></svg>
           </a>
         </div>"""
-
-    return (
-        hero_home()
-        + "\n\n"
-        + marquee_section()
-        + "\n\n"
-        + value
-        + "\n\n"
-        + how
-        + "\n\n"
-        + testimonials_section()
-        + "\n\n"
-        + contact_section()
     )
+
+    return hero_home() + "\n\n" + marquee_section() + "\n\n" + value + "\n\n" + how + "\n\n" + testimonials_section() + "\n\n" + contact_section()
 
 
 def platform_main() -> str:
@@ -1055,6 +1057,7 @@ def company_main() -> str:
 # ---------------------------------------------------------------------------
 # Extract shared CSS / JS from the legacy single-page file
 # ---------------------------------------------------------------------------
+
 
 def extract_shared() -> tuple[str, str]:
     script_dir = Path(__file__).resolve().parent
