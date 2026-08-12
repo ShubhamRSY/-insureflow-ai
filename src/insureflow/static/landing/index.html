@@ -37,7 +37,7 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
     :root {
       --bg: #0e131f;
@@ -60,7 +60,7 @@
       --max: 1160px;
       --header-h: 68px;
       --font-body: "DM Sans", system-ui, -apple-system, sans-serif;
-      --font-display: "Syne", "DM Sans", system-ui, sans-serif;
+      --font-display: "Sora", "DM Sans", system-ui, sans-serif;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
@@ -182,23 +182,27 @@
     .section-label {
       display: inline-flex; align-items: center; gap: .5rem;
       font-size: .72rem; font-weight: 700; letter-spacing: .16em;
-      text-transform: uppercase; color: var(--brand-2); margin-bottom: .9rem;
+      text-transform: uppercase; color: var(--brand-2); margin-bottom: 1rem;
+      background: rgba(91,141,239,.08); border: 1px solid rgba(91,141,239,.22);
+      padding: .4rem .85rem; border-radius: 2rem;
     }
-    .section-label::before { content: ""; width: 22px; height: 1.5px; background: linear-gradient(90deg, var(--brand), var(--accent)); }
+    .section-label::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: linear-gradient(135deg, var(--brand), var(--accent)); box-shadow: 0 0 8px rgba(91,141,239,.8); }
     h1 {
       font-family: var(--font-display); font-weight: 800;
-      font-size: clamp(2.5rem, 6vw, 4rem); line-height: 1.02;
-      letter-spacing: -0.02em; max-width: 15ch;
+      font-size: clamp(2.6rem, 6vw, 4.1rem); line-height: 1.04;
+      letter-spacing: -0.03em; max-width: 16ch; text-wrap: balance;
     }
     h1 .gradient {
-      background: linear-gradient(120deg, #ffffff 20%, var(--brand-2) 60%, var(--accent) 100%);
+      background: linear-gradient(120deg, #ffffff 18%, var(--brand-2) 55%, var(--accent) 100%);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      background-size: 200% auto; animation: gradientShift 6s ease-in-out infinite;
     }
-    h2 { font-family: var(--font-display); font-weight: 700; font-size: clamp(1.7rem, 3.4vw, 2.4rem); letter-spacing: -0.015em; margin-bottom: .85rem; line-height: 1.12; }
-    h3 { font-size: 1.05rem; font-weight: 600; margin-bottom: .5rem; }
+    @keyframes gradientShift { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+    h2 { font-family: var(--font-display); font-weight: 700; font-size: clamp(1.75rem, 3.4vw, 2.5rem); letter-spacing: -0.02em; margin-bottom: .9rem; line-height: 1.14; text-wrap: balance; }
+    h3 { font-size: 1.05rem; font-weight: 600; margin-bottom: .5rem; letter-spacing: -0.01em; }
     .lead { margin-top: 1.4rem; font-size: 1.15rem; color: var(--muted); max-width: 54ch; line-height: 1.65; }
     .lead strong { color: var(--text); font-weight: 600; }
-    .section-desc { color: var(--muted-2); max-width: 60ch; margin-bottom: 2.4rem; font-size: 1rem; }
+    .section-desc { color: var(--muted-2); max-width: 62ch; margin-bottom: 2.4rem; font-size: 1.02rem; line-height: 1.7; }
     .section-desc strong { color: var(--muted); font-weight: 600; }
     .cta { margin-top: 2rem; display: flex; gap: .9rem; flex-wrap: wrap; }
 
@@ -221,14 +225,15 @@
 
     .stats { margin-top: 3.6rem; display: grid; gap: 1rem; grid-template-columns: repeat(4, 1fr); }
     .stat {
-      background: rgba(22,29,44,.6); border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,.02), transparent), rgba(22,29,44,.6);
+      border: 1px solid var(--border);
       border-radius: 1rem; padding: 1.4rem 1rem; text-align: center;
-      transition: border-color .25s, transform .25s;
+      transition: border-color .25s, transform .25s, box-shadow .25s;
     }
-    .stat:hover { border-color: rgba(91,141,239,.4); transform: translateY(-3px); }
+    .stat:hover { border-color: rgba(91,141,239,.45); transform: translateY(-3px); box-shadow: 0 14px 40px rgba(0,0,0,.3); }
     .stat .num {
       display: block; font-family: var(--font-display); font-weight: 700;
-      font-size: 1.95rem; letter-spacing: -0.02em;
+      font-size: 2rem; letter-spacing: -0.02em;
       background: linear-gradient(135deg, var(--brand-2), var(--accent));
       -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
     }
@@ -349,23 +354,59 @@
     .compare-col .compare-head.ai + .compare-list li::before { content: "✓"; color: var(--green); }
 
     /* ZTA */
-    .zta-ladder { display: grid; gap: 1rem; grid-template-columns: repeat(3, 1fr); margin-top: 2.4rem; }
-    .zta-step { background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; padding: 1.5rem; position: relative; overflow: hidden; transition: transform .25s, border-color .25s; }
-    .zta-step:hover { transform: translateY(-3px); border-color: rgba(91,141,239,.4); }
-    .zta-step .step-ico { width: 40px; height: 40px; border-radius: .7rem; margin-bottom: 1rem; display: grid; place-items: center; color: var(--brand-2); background: rgba(91,141,239,.12); border: 1px solid rgba(91,141,239,.25); }
-    .zta-step .step-ico .ico { width: 19px; height: 19px; }
-    .zta-step .step-num { font-size: .64rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
-    .zta-step h3 { margin-top: .45rem; font-size: 1.05rem; }
-    .zta-step p { font-size: .875rem; color: var(--muted-2); margin: 0; line-height: 1.6; }
-    .tokens { display: inline-block; margin-top: .95rem; font-size: .7rem; font-weight: 700; padding: .28rem .65rem; border-radius: 2rem; }
+    .zta-ladder { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: .75rem; align-items: stretch; margin-top: 2.6rem; }
+    .zta-flow { display: grid; place-items: center; color: var(--brand-2); position: relative; }
+    .zta-flow .ico { width: 18px; height: 18px; }
+    .zta-flow::before { content: ""; position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: repeating-linear-gradient(90deg, rgba(139,176,247,.5) 0 5px, transparent 5px 9px); transform: translateY(-50%); z-index: 0; }
+    .zta-flow .ico { position: relative; z-index: 1; background: var(--bg); border-radius: 50%; }
+    .zta-step {
+      background: linear-gradient(180deg, rgba(255,255,255,.02), transparent), var(--surface);
+      border: 1px solid var(--border); border-radius: 1rem; padding: 1.5rem;
+      position: relative; overflow: hidden; transition: transform .25s, border-color .25s, box-shadow .25s;
+      display: flex; flex-direction: column;
+    }
+    .zta-step::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2.5px; background: linear-gradient(90deg, transparent, var(--zl, var(--brand)), transparent); opacity: .8; }
+    .zta-step.L1 { --zl: #34d399; }
+    .zta-step.L2 { --zl: #5b8def; }
+    .zta-step.L3 { --zl: #a78bfa; }
+    .zta-step:hover { transform: translateY(-3px); box-shadow: 0 18px 46px rgba(0,0,0,.35); border-color: color-mix(in srgb, var(--zl) 45%, transparent); }
+    .zta-step .step-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; }
+    .zta-step .step-ico { width: 42px; height: 42px; border-radius: .8rem; display: grid; place-items: center; background: color-mix(in srgb, var(--zl) 14%, transparent); border: 1px solid color-mix(in srgb, var(--zl) 32%, transparent); color: var(--zl); }
+    .zta-step .step-ico .ico { width: 20px; height: 20px; }
+    .zta-step .step-num { font-size: .64rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--zl); background: color-mix(in srgb, var(--zl) 12%, transparent); border: 1px solid color-mix(in srgb, var(--zl) 28%, transparent); padding: .28rem .6rem; border-radius: 2rem; }
+    .zta-step h3 { margin-top: 0; font-size: 1.08rem; }
+    .zta-step p { font-size: .875rem; color: var(--muted-2); margin: 0; line-height: 1.6; flex: 1; }
+    .tokens { display: inline-flex; align-items: center; gap: .35rem; align-self: flex-start; margin-top: 1rem; font-size: .7rem; font-weight: 700; padding: .32rem .7rem; border-radius: 2rem; }
+    .tokens .ico { width: 12px; height: 12px; }
     .tokens.zero { background: rgba(52,211,153,.1); color: var(--green); border: 1px solid rgba(52,211,153,.28); }
-    .tokens.one { background: rgba(56,189,248,.1); color: var(--accent); border: 1px solid rgba(56,189,248,.28); }
+    .tokens.one { background: rgba(167,139,250,.1); color: #c4b5fd; border: 1px solid rgba(167,139,250,.3); }
     .zta-stats { display: grid; gap: 1rem; grid-template-columns: repeat(3, 1fr); margin-top: 2rem; }
+    .zta-stat {
+      background: linear-gradient(180deg, rgba(255,255,255,.02), transparent), var(--surface);
+      border: 1px solid var(--border); border-radius: 1rem; padding: 1.3rem 1.4rem;
+      display: flex; align-items: center; gap: 1rem;
+      transition: border-color .25s, transform .25s;
+    }
+    .zta-stat:hover { border-color: rgba(91,141,239,.45); transform: translateY(-3px); }
+    .zta-stat .zstat-ico { width: 46px; height: 46px; flex-shrink: 0; border-radius: .9rem; display: grid; place-items: center; border: 1px solid; }
+    .zta-stat .zstat-ico .ico { width: 20px; height: 20px; }
+    .zta-stat .zstat-ico.green { color: var(--green); background: rgba(52,211,153,.1); border-color: rgba(52,211,153,.28); }
+    .zta-stat .zstat-ico.blue { color: var(--brand-2); background: rgba(91,141,239,.1); border-color: rgba(91,141,239,.28); }
+    .zta-stat .zstat-ico.violet { color: #c4b5fd; background: rgba(167,139,250,.1); border-color: rgba(167,139,250,.28); }
+    .zta-stat .body { display: flex; flex-direction: column; gap: .1rem; }
+    .zta-stat .num {
+      font-family: var(--font-display); font-weight: 700; font-size: 1.75rem; letter-spacing: -0.02em; line-height: 1.1;
+      background: linear-gradient(135deg, var(--brand-2), var(--accent));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .zta-stat p { font-size: .8rem; color: var(--muted-2); margin: 0; line-height: 1.45; }
 
     /* Agent grid */
     .agent-grid { display: grid; gap: 1rem; grid-template-columns: repeat(4, 1fr); }
-    .agent-card { background: linear-gradient(180deg, rgba(255,255,255,.02), transparent), var(--surface); border: 1px solid var(--border); border-radius: 1rem; padding: 1.5rem; transition: border-color .25s, transform .25s, box-shadow .25s; }
-    .agent-card:hover { border-color: rgba(56,189,248,.4); transform: translateY(-3px); box-shadow: 0 16px 44px rgba(0,0,0,.3); }
+    .agent-card { background: linear-gradient(180deg, rgba(255,255,255,.02), transparent), var(--surface); border: 1px solid var(--border); border-radius: 1rem; padding: 1.5rem; position: relative; overflow: hidden; transition: border-color .25s, transform .25s, box-shadow .25s; }
+    .agent-card::before { content: ""; position: absolute; top: 0; left: 1.5rem; right: 1.5rem; height: 2px; border-radius: 2px; background: linear-gradient(90deg, transparent, rgba(56,189,248,.7), transparent); opacity: 0; transition: opacity .25s; }
+    .agent-card:hover { border-color: rgba(56,189,248,.42); transform: translateY(-3px); box-shadow: 0 16px 44px rgba(0,0,0,.3); }
+    .agent-card:hover::before { opacity: 1; }
     .agent-card .ac-ico { width: 40px; height: 40px; border-radius: .7rem; margin-bottom: .95rem; display: grid; place-items: center; color: var(--accent); background: rgba(56,189,248,.1); border: 1px solid rgba(56,189,248,.22); }
     .agent-card .ac-ico .ico { width: 19px; height: 19px; }
     .agent-card h3 { font-size: 1.02rem; }
@@ -395,17 +436,24 @@
 
     /* Feature cards */
     .tabs { display: flex; gap: .5rem; margin-bottom: 1.8rem; flex-wrap: wrap; }
-    .tab { padding: .6rem 1.2rem; border-radius: 2rem; font-size: .86rem; font-weight: 600; background: transparent; border: 1px solid var(--border); color: var(--muted-2); cursor: pointer; transition: all .2s; }
-    .tab:hover { color: var(--text); border-color: var(--border-strong); }
-    .tab.active { background: rgba(91,141,239,.16); border-color: rgba(91,141,239,.5); color: var(--text); }
+    .tab { padding: .62rem 1.3rem; border-radius: 2rem; font-size: .86rem; font-weight: 600; background: transparent; border: 1px solid var(--border); color: var(--muted-2); cursor: pointer; transition: all .2s; position: relative; }
+    .tab:hover { color: var(--text); border-color: var(--border-strong); transform: translateY(-1px); }
+    .tab.active { background: linear-gradient(135deg, rgba(91,141,239,.2), rgba(56,189,248,.12)); border-color: rgba(91,141,239,.55); color: #fff; box-shadow: 0 4px 18px rgba(91,141,239,.22); }
     .tab-panel { display: none; animation: fadeIn .4s ease; }
     .tab-panel.active { display: block; }
     .feature-grid { display: grid; gap: 1rem; grid-template-columns: repeat(2, 1fr); }
-    .feature-card { background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; padding: 1.5rem; transition: transform .25s, border-color .25s, box-shadow .25s; }
-    .feature-card:hover { transform: translateY(-4px); border-color: rgba(91,141,239,.32); box-shadow: 0 16px 44px rgba(0,0,0,.3); }
-    .feature-card .icon { width: 42px; height: 42px; border-radius: .7rem; margin-bottom: .9rem; display: grid; place-items: center; color: var(--brand-2); background: rgba(91,141,239,.1); }
+    .feature-card {
+      background: linear-gradient(180deg, rgba(255,255,255,.02), transparent), var(--surface);
+      border: 1px solid var(--border); border-radius: 1rem; padding: 1.5rem;
+      position: relative; overflow: hidden;
+      transition: transform .25s, border-color .25s, box-shadow .25s;
+    }
+    .feature-card::before { content: ""; position: absolute; top: 0; left: 1.5rem; right: 1.5rem; height: 2px; border-radius: 2px; background: linear-gradient(90deg, transparent, rgba(91,141,239,.7), transparent); opacity: 0; transition: opacity .25s; }
+    .feature-card:hover { transform: translateY(-4px); border-color: rgba(91,141,239,.4); box-shadow: 0 16px 44px rgba(0,0,0,.3); }
+    .feature-card:hover::before { opacity: 1; }
+    .feature-card .icon { width: 42px; height: 42px; border-radius: .7rem; margin-bottom: .9rem; display: grid; place-items: center; color: var(--brand-2); background: rgba(91,141,239,.1); border: 1px solid rgba(91,141,239,.22); }
     .feature-card .icon .ico { width: 20px; height: 20px; }
-    .feature-card h3 { font-size: 1rem; }
+    .feature-card h3 { font-size: 1.02rem; }
     .feature-card p { font-size: .86rem; color: var(--muted-2); }
     .feature-card ul { margin-top: .65rem; padding-left: 1.05rem; font-size: .8rem; color: var(--muted); }
     .feature-card li { margin-bottom: .28rem; }
@@ -413,13 +461,25 @@
     /* Bento capabilities */
     .platform-cap { margin-top: 4rem; padding-top: 4rem; border-top: 1px solid var(--border); }
     .bento { display: grid; gap: 1rem; grid-template-columns: repeat(3, 1fr); }
-    .bento-card { background: linear-gradient(180deg, rgba(255,255,255,.02), transparent), var(--surface); border: 1px solid var(--border); border-radius: 1rem; padding: 1.45rem 1.5rem; transition: border-color .25s, transform .25s; }
-    .bento-card:hover { border-color: rgba(91,141,239,.4); transform: translateY(-2px); }
+    .bento-card {
+      background: linear-gradient(180deg, rgba(255,255,255,.02), transparent), var(--surface);
+      border: 1px solid var(--border); border-radius: 1rem; padding: 1.5rem 1.5rem 1.6rem;
+      position: relative; overflow: hidden;
+      transition: border-color .25s, transform .25s, box-shadow .25s;
+    }
+    .bento-card::before { content: ""; position: absolute; top: 0; left: 1.5rem; right: 1.5rem; height: 2px; border-radius: 2px; background: linear-gradient(90deg, transparent, var(--bc, var(--brand)), transparent); opacity: .55; transition: opacity .25s; }
+    .bento-card:hover { border-color: var(--bc, rgba(91,141,239,.4)); transform: translateY(-3px); box-shadow: 0 18px 46px rgba(0,0,0,.32); }
+    .bento-card:hover::before { opacity: 1; }
     .bento-card.wide { grid-column: span 2; }
-    .bento-kicker { font-size: .66rem; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; color: var(--brand-2); margin-bottom: .5rem; display: flex; align-items: center; gap: .45rem; }
-    .bento-kicker .ico { width: 14px; height: 14px; }
+    .bento-kicker { font-size: .66rem; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; color: var(--bc, var(--brand-2)); margin-bottom: .6rem; display: flex; align-items: center; gap: .5rem; }
+    .bento-kicker .ico { width: 15px; height: 15px; padding: 5px; box-sizing: content-box; border-radius: 8px; background: color-mix(in srgb, var(--bc, var(--brand)) 13%, transparent); border: 1px solid color-mix(in srgb, var(--bc, var(--brand)) 30%, transparent); color: var(--bc, var(--brand-2)); }
     .bento-card h3 { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.01em; margin-bottom: .55rem; line-height: 1.25; }
     .bento-card p { font-size: .9rem; color: var(--muted-2); margin: 0; line-height: 1.6; }
+    .bento-card.ac-blue { --bc: #8bb0f7; }
+    .bento-card.ac-green { --bc: #6ee7b7; }
+    .bento-card.ac-sky { --bc: #7dd3fc; }
+    .bento-card.ac-violet { --bc: #c4b5fd; }
+    .bento-card.ac-amber { --bc: #fcd34d; }
 
     /* Integrations */
     .filter-bar { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
@@ -505,7 +565,7 @@
     @media (max-width: 960px) {
       .hero-grid { grid-template-columns: 1fr; gap: 3.5rem; }
       .hero-media { max-width: 620px; }
-      .stats, .zta-ladder, .zta-stats, .agent-grid, .testimonial-grid, .bento, .feature-grid, .compare { grid-template-columns: 1fr 1fr; }
+      .stats, .zta-stats, .agent-grid, .testimonial-grid, .bento, .feature-grid, .compare { grid-template-columns: 1fr 1fr; }
       .bento-card.wide { grid-column: span 2; }
       .pipeline-wrap { grid-template-columns: 1fr; }
       .float-chip.fc-1 { right: 6px; top: -20px; }
@@ -517,7 +577,11 @@
       .menu-btn { display: block; }
       main { padding: 0 1.25rem 2rem; }
       section { padding: 4rem 0; }
-      .stats, .zta-ladder, .zta-stats, .agent-grid, .testimonial-grid, .bento, .feature-grid, .compare { grid-template-columns: 1fr; }
+      .stats, .zta-stats, .agent-grid, .testimonial-grid, .bento, .feature-grid, .compare { grid-template-columns: 1fr; }
+      .zta-ladder { grid-template-columns: 1fr; }
+      .zta-flow { padding: .35rem 0; }
+      .zta-flow::before { top: 0; bottom: 0; left: 50%; right: auto; width: 1px; height: auto; transform: none; background: repeating-linear-gradient(180deg, rgba(139,176,247,.5) 0 5px, transparent 5px 9px); }
+      .zta-flow .ico { transform: rotate(90deg); }
       .bento-card.wide { grid-column: span 1; }
       .float-chip { display: none; }
       .mock-body { grid-template-columns: 1fr; }
@@ -778,32 +842,49 @@
           </p>
         </div>
         <div class="zta-ladder reveal">
-          <div class="zta-step">
-            <span class="step-ico"><svg class="ico" aria-hidden="true"><use href="#i-cpu"/></svg></span>
-            <span class="step-num">Layer 1</span>
+          <div class="zta-step L1">
+            <div class="step-top">
+              <span class="step-ico"><svg class="ico" aria-hidden="true"><use href="#i-cpu"/></svg></span>
+              <span class="step-num">Layer 1</span>
+            </div>
             <h3>Deterministic code</h3>
             <p>Parsers, provenance, reconciliation, COPE, rating engines, and compliance rules solve everything they can — with zero tokens and full reproducibility.</p>
-            <span class="tokens zero">0 tokens · 100% reproducible</span>
+            <span class="tokens zero"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg> 0 tokens · 100% reproducible</span>
           </div>
-          <div class="zta-step">
-            <span class="step-ico"><svg class="ico" aria-hidden="true"><use href="#i-bot"/></svg></span>
-            <span class="step-num">Layer 2</span>
+          <div class="zta-flow" aria-hidden="true"><svg class="ico"><use href="#i-arrow-right"/></svg></div>
+          <div class="zta-step L2">
+            <div class="step-top">
+              <span class="step-ico"><svg class="ico" aria-hidden="true"><use href="#i-bot"/></svg></span>
+              <span class="step-num">Layer 2</span>
+            </div>
             <h3>Trained ML</h3>
             <p>Eight gradient-boosted models score loss, fraud, churn, premium, portfolio risk, and default — deterministic predictions, no prompt involved.</p>
-            <span class="tokens zero">0 tokens · deterministic</span>
+            <span class="tokens zero"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg> 0 tokens · deterministic</span>
           </div>
-          <div class="zta-step">
-            <span class="step-ico"><svg class="ico" aria-hidden="true"><use href="#i-zap"/></svg></span>
-            <span class="step-num">Layer 3</span>
+          <div class="zta-flow" aria-hidden="true"><svg class="ico"><use href="#i-arrow-right"/></svg></div>
+          <div class="zta-step L3">
+            <div class="step-top">
+              <span class="step-ico"><svg class="ico" aria-hidden="true"><use href="#i-zap"/></svg></span>
+              <span class="step-num">Layer 3</span>
+            </div>
             <h3>LLM — only when needed</h3>
             <p>Reasoning tasks that genuinely need it, gated by per-job budgets and coverage thresholds — never for work code can already solve.</p>
-            <span class="tokens one">budgeted · accounted</span>
+            <span class="tokens one"><svg class="ico" aria-hidden="true"><use href="#i-sliders"/></svg> budgeted · accounted</span>
           </div>
         </div>
         <div class="zta-stats reveal">
-          <div class="stat"><span class="num">~90%</span><span>of typical pipeline tasks resolve deterministically</span></div>
-          <div class="stat"><span class="num">0</span><span>tokens for ACORD parsing, rating, reconciliation</span></div>
-          <div class="stat"><span class="num" data-target="8">0</span><span>trained ML models in the registry</span></div>
+          <div class="zta-stat">
+            <span class="zstat-ico green"><svg class="ico" aria-hidden="true"><use href="#i-cpu"/></svg></span>
+            <div class="body"><span class="num">~90%</span><p>of typical pipeline tasks resolve deterministically</p></div>
+          </div>
+          <div class="zta-stat">
+            <span class="zstat-ico blue"><svg class="ico" aria-hidden="true"><use href="#i-database"/></svg></span>
+            <div class="body"><span class="num">0</span><p>tokens for ACORD parsing, rating, reconciliation</p></div>
+          </div>
+          <div class="zta-stat">
+            <span class="zstat-ico violet"><svg class="ico" aria-hidden="true"><use href="#i-bot"/></svg></span>
+            <div class="body"><span class="num" data-target="8">0</span><p>trained ML models in the model registry</p></div>
+          </div>
         </div>
       </section>
 
@@ -918,8 +999,12 @@
       <section id="features">
         <div class="reveal">
           <p class="section-label">Features</p>
-          <h2>One platform, four underwriting verticals</h2>
-          <p class="section-desc">Commercial &amp; personal lines carriers, mortgage lenders, and commercial lenders share one dashboard, agent spine, and audit infrastructure — plus a unified <strong>Connect &amp; pull</strong> intake: the same file upload, connector grid, email picker, and draft-bundle workflow on every vertical.</p>
+          <h2>Deep-dive underwriting, vertical by vertical</h2>
+          <p class="section-desc">
+            Rytera doesn't stop at a shared dashboard — it goes further in every line. Each vertical ships specialist
+            agents, filing-grade rating, and regulatory checks tuned to its own workflow. Select a vertical to explore
+            its deep dive, or see the shared <strong>Connect &amp; pull</strong> intake that powers all four.
+          </p>
         </div>
         <div class="tabs reveal" role="tablist" aria-label="Verticals">
           <button class="tab active" data-tab="insurance" role="tab">Commercial insurance</button>
@@ -968,52 +1053,52 @@
             triage, and examiner-ready audit as first-class product — not bolt-ons.
           </p>
           <div class="bento">
-            <div class="bento-card wide">
+            <div class="bento-card wide ac-blue">
               <p class="bento-kicker"><svg class="ico"><use href="#i-shield-check"/></svg> Governance</p>
               <h3>Human-in-the-loop by design</h3>
               <p>Licensed UW sign-off, checkpoint resolution, authority matrix tiers, and referral queues — AI assists, humans decide. Shadow pilots keep bind off until your team is ready.</p>
             </div>
-            <div class="bento-card">
+            <div class="bento-card ac-green">
               <p class="bento-kicker"><svg class="ico"><use href="#i-lock"/></svg> Privacy</p>
               <h3>PII redaction</h3>
               <p>Automated SSN, EIN, and DOB detection with document redaction before packages enter the pilot lane.</p>
             </div>
-            <div class="bento-card">
+            <div class="bento-card ac-sky">
               <p class="bento-kicker"><svg class="ico"><use href="#i-cable"/></svg> Intake</p>
               <h3>24 connectors</h3>
               <p>S3, SharePoint, Applied Epic, real IMAP email, SFTP, and more — live when configured, honest simulated otherwise. One Connect &amp; pull hub powers insurance, mortgage, and lending intake.</p>
             </div>
-            <div class="bento-card">
+            <div class="bento-card ac-violet">
               <p class="bento-kicker"><svg class="ico"><use href="#i-list-checks"/></svg> Operations</p>
               <h3>Queue triage</h3>
               <p>Prioritized submission queue with fit scores and journey strips so UW time goes to the right files first.</p>
             </div>
-            <div class="bento-card wide">
+            <div class="bento-card wide ac-green">
               <p class="bento-kicker"><svg class="ico"><use href="#i-file-check"/></svg> Compliance</p>
               <h3>Encrypted audit bundles</h3>
               <p>SHA-256 manifest ZIP exports for regulatory examiner review — every decision, override, and oracle call traceable.</p>
             </div>
-            <div class="bento-card">
+            <div class="bento-card ac-amber">
               <p class="bento-kicker"><svg class="ico"><use href="#i-database"/></svg> Oracles</p>
               <h3>Live loss history</h3>
               <p>CLUE, A-PLUS, NCCI, and CAT feeds in auto mode — no fake clean history when keys are missing.</p>
             </div>
-            <div class="bento-card">
+            <div class="bento-card ac-blue">
               <p class="bento-kicker"><svg class="ico"><use href="#i-server"/></svg> Reliability</p>
               <h3>Durable job stores</h3>
               <p>Redis or file-backed jobs survive restarts — no silent in-memory loss in pilot or bank mode.</p>
             </div>
-            <div class="bento-card">
+            <div class="bento-card ac-violet">
               <p class="bento-kicker"><svg class="ico"><use href="#i-refresh"/></svg> Renewals</p>
               <h3>Renewal &amp; premium audit</h3>
               <p>Pre-renewal tracking, premium audit, and loss feedback loops keep the book healthy between policy cycles.</p>
             </div>
-            <div class="bento-card">
+            <div class="bento-card ac-amber">
               <p class="bento-kicker"><svg class="ico"><use href="#i-pie"/></svg> Portfolio</p>
               <h3>Book &amp; concentration</h3>
               <p>Portfolio exposure, concentration buckets, and top lines of business — with market-cycle phase adjustments built in.</p>
             </div>
-            <div class="bento-card">
+            <div class="bento-card ac-sky">
               <p class="bento-kicker"><svg class="ico"><use href="#i-gauge"/></svg> Model intelligence</p>
               <h3>LLM performance &amp; price benchmark</h3>
               <p>Continuous benchmarking — TTFT, output speed, reasoning tokens, and blended 7:2:1 per-token cost — gated by quality thresholds and tracked on the eval dashboard.</p>
