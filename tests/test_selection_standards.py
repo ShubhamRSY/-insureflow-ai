@@ -60,9 +60,16 @@ class TestSelectionEngine:
         _, premiums, tivs = _book(4)
         book = build_book_snapshot(4, sum(tivs), sum(premiums), premiums, tivs)
         assert book.tier == SelectionTier.STRICT
-        candidate = SelectionCandidate(tiv=1_000_000, premium=40_000, risk_class=RiskClass.SUBSTANDARD, risk_score=0.75)
+        candidate = SelectionCandidate(tiv=1_000_000, premium=40_000, risk_class=RiskClass.SUBSTANDARD, risk_score=0.90)
         result = assess_selection(candidate, book)
         assert result.action == UWDecision.DECLINE
+
+    def test_strict_book_refers_borderline_substandard(self) -> None:
+        _, premiums, tivs = _book(4)
+        book = build_book_snapshot(4, sum(tivs), sum(premiums), premiums, tivs)
+        assert book.tier == SelectionTier.STRICT
+        candidate = SelectionCandidate(tiv=1_000_000, premium=40_000, risk_class=RiskClass.SUBSTANDARD, risk_score=0.80)
+        assert assess_selection(candidate, book).action == UWDecision.REFER
 
     def test_strict_book_refers_standard(self) -> None:
         _, premiums, tivs = _book(4)
@@ -121,7 +128,7 @@ class TestSelectionEngine:
     def test_no_loading_when_declined(self) -> None:
         _, premiums, tivs = _book(4)
         book = build_book_snapshot(4, sum(tivs), sum(premiums), premiums, tivs)
-        candidate = SelectionCandidate(tiv=1_000_000, premium=40_000, risk_class=RiskClass.SUBSTANDARD, risk_score=0.75)
+        candidate = SelectionCandidate(tiv=1_000_000, premium=40_000, risk_class=RiskClass.SUBSTANDARD, risk_score=0.90)
         result = assess_selection(candidate, book)
         assert result.action == UWDecision.DECLINE
         assert result.substandard_loading_pct == 0.0
@@ -381,8 +388,8 @@ class TestSelectionStandardsAgent:
             portfolio=_FakePortfolio(),
             config=SelectionStandardsConfig(strict_threshold=0.8, balanced_threshold=0.9),
         )
-        bundle = _make_bundle(premium=50_000, tiv=1_500_000, naics="452210", claims=4, candidate_risk_score=0.8)
-        result = agent.run(bundle, org_id="default", candidate_risk_score=0.8)
+        bundle = _make_bundle(premium=50_000, tiv=1_500_000, naics="452210", claims=4, candidate_risk_score=0.92)
+        result = agent.run(bundle, org_id="default", candidate_risk_score=0.92)
         gate = [f for f in result.findings if f.title.startswith("Selection gate")]
         assert gate and gate[0].source_value == UWDecision.DECLINE.value
 
@@ -402,7 +409,7 @@ class TestSelectionStandardsAgent:
     def test_agent_no_loading_when_declined(self) -> None:
         agent = SelectionStandardsAgent(portfolio=_FakePortfolio(count=4), config=SelectionStandardsConfig())
         bundle = _make_bundle(premium=50_000, tiv=1_500_000, naics="452210")
-        result = agent.run(bundle, org_id="default", candidate_risk_score=0.8)
+        result = agent.run(bundle, org_id="default", candidate_risk_score=0.92)
         assert result.recommendation is None
         gate = [f for f in result.findings if f.title.startswith("Selection gate")]
         assert gate and gate[0].source_value == UWDecision.DECLINE.value

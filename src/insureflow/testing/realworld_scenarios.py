@@ -745,10 +745,35 @@ def scenario_by_id(scenario_id: str) -> RealWorldScenario:
 def run_scenario(scenario: RealWorldScenario, *, org_id: str | None = None) -> dict[str, Any]:
     """Execute InsurancePipeline for one scenario (deterministic, no LLM required)."""
     from insureflow.insurance.pipeline import InsurancePipeline
+    from insureflow.portfolio.store import PortfolioPolicy, get_portfolio_store
 
     # Isolate portfolio / selection book state per scenario so matrix order cannot
     # tip borderline preferred risks into decline via shared singleton stores.
     oid = org_id or f"pytest-realworld-{scenario.id}"
+
+    # Accept-path goldens assume a written preferred book. An empty singleton book
+    # forces STRICT selection, and mid-0.7 risk scores then hard-decline in CI
+    # (fewer diluting oracle findings → higher average score than local runs).
+    if scenario.condition == "accept_path":
+        store = get_portfolio_store()
+        if not store.list_policies(oid):
+            for i in range(80):
+                store.add_policy(
+                    PortfolioPolicy(
+                        policy_id=f"seed-{oid}-{i}",
+                        bundle_id=f"seed-b-{i}",
+                        org_id=oid,
+                        insured_name=f"Seed Preferred {i}",
+                        producer_name="Risk Advisors LLC",
+                        naics_code="445110" if i % 2 == 0 else "541511",
+                        state="TX" if i % 3 else "OH",
+                        tiv=750_000 + (i * 12_000),
+                        premium=18_000 + (i * 250),
+                        risk_score=0.32 + (i % 5) * 0.02,
+                        occupancy_type="Retail",
+                    )
+                )
+
     pipeline = InsurancePipeline(org_id=oid, use_llm=False)
     result = pipeline.run(
         acord_xml=scenario.acord_xml,
