@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+
 from fastapi.testclient import TestClient
 
 from insureflow.api import app
@@ -135,8 +137,8 @@ def test_landing_page_html() -> None:
     resp = client.get("/", headers={"Accept": "text/html"})
     assert resp.status_code == 200
     assert "Rytera" in resp.text
-    assert "Platform capabilities" in resp.text
-    assert "Human-in-the-loop by design" in resp.text
+    assert "Bind-ready decisions" in resp.text
+    assert "What you get" in resp.text
 
     default = client.get("/")
     assert default.status_code == 200
@@ -160,3 +162,53 @@ def test_landing_page_html() -> None:
     og = client.get("/og-image.png")
     assert og.status_code == 200
     assert og.headers.get("content-type", "").startswith("image/")
+
+
+def test_landing_subpages_html() -> None:
+    landing_pages = {
+        "platform": ["Platform capabilities", "Human-in-the-loop by design"],
+        "technology": ["Zero Token Architecture", "Every decision defensible"],
+        "underwriting": ["Built for the desks that decide", "Rates built like an actuary builds them"],
+        "integrations": ["Connects to the systems you already use", "Live, simulated, or auto"],
+        "company": ["About Rytera", "Frequently asked questions"],
+    }
+    for slug, markers in landing_pages.items():
+        resp = client.get(f"/{slug}", headers={"Accept": "text/html"})
+        assert resp.status_code == 200, f"/{slug} expected 200, got {resp.status_code}"
+        assert "text/html" in resp.headers.get("content-type", "")
+        for marker in markers:
+            assert marker in resp.text, f"/{slug} missing {marker!r}"
+
+    unknown = client.get("/not-a-page")
+    assert unknown.status_code == 404
+
+
+def test_landing_static_assets() -> None:
+    css = client.get("/static/landing.css")
+    assert css.status_code == 200
+    assert "text/css" in css.headers.get("content-type", "")
+    assert "--grad" in css.text
+
+    js = client.get("/static/landing.js")
+    assert js.status_code == 200
+    assert "landing.js" in js.headers.get("content-type", "") or "javascript" in js.headers.get("content-type", "")
+    assert "IntersectionObserver" in js.text
+
+    pages = ["", "platform", "technology", "underwriting", "integrations", "company"]
+    for slug in pages:
+        path = "/" if not slug else f"/{slug}"
+        html = client.get(path).text
+        assert "/static/landing.css" in html
+        assert "/static/landing.js" in html
+
+
+def test_landing_pages_reference_existing_anchors() -> None:
+    pages = ["", "platform", "technology", "underwriting", "integrations", "company"]
+    for slug in pages:
+        path = "/" if not slug else f"/{slug}"
+        html = client.get(path).text
+        ids = set()
+        for m in re.finditer(r'id="([^"]+)"', html):
+            ids.add(m.group(1))
+        for href in re.findall(r'href="#([^"]+)"', html):
+            assert href in ids, f"{path}: missing anchor #{href}"

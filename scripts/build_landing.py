@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Generate the Rytera marketing site from shared fragments.
 
-Writes src/insureflow/static/landing/*.html plus landing.css / landing.js
-from the styles and scripts embedded in the legacy single-page index.html.
+Writes src/insureflow/static/landing/*.html plus landing.css / landing.js.
+Shared design tokens live in scripts/landing.css and scripts/landing.js.
 Re-run after editing page bodies here:
 
     python scripts/build_landing.py
@@ -10,7 +10,6 @@ Re-run after editing page bodies here:
 
 from __future__ import annotations
 
-import re
 from pathlib import Path
 
 LANDING = Path(__file__).resolve().parent.parent / "src" / "insureflow" / "static" / "landing"
@@ -77,7 +76,9 @@ BG = """  <div class="bg-canvas" aria-hidden="true">
     <div class="glow glow-2"></div>
     <div class="glow glow-3"></div>
     <div class="glow glow-4"></div>
-  </div>"""
+  </div>
+  <div class="bg-noise" aria-hidden="true"></div>
+  <div id="scroll-progress" aria-hidden="true"></div>"""
 
 BRAND = """      <a class="brand" href="/" aria-label="Rytera home">
         <span class="brand-mark" aria-hidden="true">
@@ -99,15 +100,19 @@ NAV_ANCHORS = "\n".join(f'        <a href="{href}" data-nav>{label}</a>' for hre
 NAV_ANCHORS_MOBILE = "\n".join(f'      <a href="{href}" data-nav>{label}</a>' for href, label in NAV_LINKS)
 
 HEADER = """    <header id="header">
+      <div class="nav-inner">
 """ + BRAND + """
-      <nav class="nav-desktop" aria-label="Main">
+        <nav class="nav-desktop" aria-label="Main">
 """ + NAV_ANCHORS + """
-        <a class="nav-dash" href="/dashboard">Dashboard</a>
-        <button type="button" class="btn btn-primary btn-sm" id="open-demo-nav">Book a demo</button>
-      </nav>
-      <button class="menu-btn" id="menu-btn" aria-label="Open menu" aria-expanded="false">
-        <svg class="ico" aria-hidden="true"><use href="#i-menu"/></svg>
-      </button>
+        </nav>
+        <div class="nav-actions">
+          <a class="nav-dash" href="/dashboard">Dashboard</a>
+          <button type="button" class="btn btn-primary btn-sm" id="open-demo-nav">Book a demo</button>
+        </div>
+        <button class="menu-btn" id="menu-btn" aria-label="Open menu" aria-expanded="false">
+          <svg class="ico" aria-hidden="true"><use href="#i-menu"/></svg>
+        </button>
+      </div>
     </header>
     <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile">
 """ + NAV_ANCHORS_MOBILE + """
@@ -116,19 +121,23 @@ HEADER = """    <header id="header">
     </nav>"""
 
 FOOTER = """    <footer>
-      <div class="brand" aria-label="Rytera">
-        <span class="brand-mark" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10l-6 16"/></svg>
-        </span>
-        <span class="brand-name">Rytera<sup>&trade;</sup></span>
+      <div class="footer-grid">
+        <div class="brand" aria-label="Rytera">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10l-6 16"/></svg>
+          </span>
+          <span class="brand-name">Rytera<sup>&trade;</sup></span>
+        </div>
+        <nav class="footer-links" aria-label="Footer">
+""" + "\n".join(f'          <a href="{href}">{label}</a>' for href, label in NAV_LINKS) + """
+          <a href="/dashboard">Dashboard</a>
+          <a href="/health">System status</a>
+        </nav>
+        <div>
+          <div style="margin-bottom:.25rem">AI-native underwriting for carriers, MGAs &amp; aggregators.</div>
+          <div>&copy; 2026 Rytera, Inc. All rights reserved.</div>
+        </div>
       </div>
-      <div>AI-native underwriting for carriers, MGAs &amp; aggregators.</div>
-      <div class="links">
-""" + "\n".join(f'        <a href="{href}">{label}</a>' for href, label in NAV_LINKS) + """
-        <a href="/dashboard">Dashboard</a>
-        <a href="/health">System status</a>
-      </div>
-      <div style="margin-top:.75rem">Rytera is a trademark of Rytera, Inc. All rights reserved.</div>
     </footer>"""
 
 MODAL = """  <div class="modal-overlay" id="demo-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
@@ -138,22 +147,32 @@ MODAL = """  <div class="modal-overlay" id="demo-modal" role="dialog" aria-modal
         <h3 id="modal-title">Request a demo</h3>
         <p class="m-sub">Tell us about your team and we'll schedule a walkthrough.</p>
         <form id="demo-form" novalidate>
-          <label for="d-name">Full name</label>
-          <input type="text" id="d-name" name="name" placeholder="Alex Chen" required />
-          <label for="d-email">Work email</label>
-          <input type="email" id="d-email" name="email" placeholder="alex@carrier.com" required />
-          <label for="d-company">Company</label>
-          <input type="text" id="d-company" name="company" placeholder="Meridian Mutual" required />
-          <label for="d-vertical">What do you underwrite?</label>
-          <select id="d-vertical" name="vertical">
-            <option value="Commercial insurance">Commercial insurance</option>
-            <option value="Personal lines">Personal lines</option>
-            <option value="Mortgage">Mortgage lending</option>
-            <option value="Commercial lending">Commercial lending</option>
-            <option value="Not sure yet">Not sure yet</option>
-          </select>
-          <label for="d-message">What are you hoping to automate? <span style="color:var(--muted-2);font-weight:400">(optional)</span></label>
-          <textarea id="d-message" name="message" rows="3" placeholder="We are drowning in broker PDFs and want to pilot shadow mode."></textarea>
+          <div class="field">
+            <label for="d-name">Full name</label>
+            <input type="text" id="d-name" name="name" placeholder="Alex Chen" required />
+          </div>
+          <div class="field">
+            <label for="d-email">Work email</label>
+            <input type="email" id="d-email" name="email" placeholder="alex@carrier.com" required />
+          </div>
+          <div class="field">
+            <label for="d-company">Company</label>
+            <input type="text" id="d-company" name="company" placeholder="Meridian Mutual" required />
+          </div>
+          <div class="field">
+            <label for="d-vertical">What do you underwrite?</label>
+            <select id="d-vertical" name="vertical">
+              <option value="Commercial insurance">Commercial insurance</option>
+              <option value="Personal lines">Personal lines</option>
+              <option value="Mortgage">Mortgage lending</option>
+              <option value="Commercial lending">Commercial lending</option>
+              <option value="Not sure yet">Not sure yet</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="d-message">What are you hoping to automate? <span style="color:var(--muted-2);font-weight:400">(optional)</span></label>
+            <textarea id="d-message" name="message" rows="3" placeholder="We are drowning in broker PDFs and want to pilot shadow mode."></textarea>
+          </div>
           <div class="form-status" id="form-status" role="status"></div>
           <div class="modal-actions">
             <button type="submit" class="btn btn-primary" style="flex:1" id="demo-submit">
@@ -213,7 +232,7 @@ def head(title: str, desc: str, canonical: str, og_desc: str) -> str:
         '  </script>\n'
         '  <link rel="preconnect" href="https://fonts.googleapis.com" />\n'
         '  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />\n'
-        '  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet" />\n'
+        '  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet" />\n'
         '  <link rel="stylesheet" href="/static/landing.css" />\n'
     )
 
@@ -269,7 +288,7 @@ def sub_page_hero(label: str, h1: str, lead: str, primary: str = "book", primary
 def contact_section() -> str:
     return """      <section id="contact">
         <div class="contact-box reveal">
-          <p class="section-label" style="justify-content:center;background:transparent;">Ready when you are</p>
+          <p class="section-label" style="justify-content:center;margin-left:auto;margin-right:auto;">Ready when you are</p>
           <h2>See your book move through Rytera</h2>
           <p>Walk through the submission journey, multi-agent pipeline, and live dashboard on a 30-minute call. Start with a shadow pilot &mdash; bind stays off until your team approves the cutover.</p>
           <div class="cta" style="justify-content:center;">
@@ -392,7 +411,7 @@ def hero_home() -> str:
 
 def marquee_section() -> str:
     return """      <section id="marquee" style="padding-top:0;padding-bottom:3.5rem;border-bottom:none;">
-        <p class="section-label reveal" style="justify-content:center;">Pulls from the systems you already use</p>
+        <p class="section-label reveal" style="justify-content:center;margin-left:auto;margin-right:auto;">Pulls from the systems you already use</p>
         <div class="marquee-wrap reveal" aria-hidden="true">
           <div class="marquee-track" id="marquee-track"></div>
         </div>
@@ -1038,46 +1057,9 @@ def company_main() -> str:
 # ---------------------------------------------------------------------------
 
 def extract_shared() -> tuple[str, str]:
-    legacy = (LANDING / "index.html").read_text(encoding="utf-8")
-
-    css = re.search(r"<style>\s*(.*?)\s*</style>", legacy, re.S).group(1)
-    css += """
-
-    /* Sub-pages */
-    .page-hero { padding-top: calc(var(--header-h) + 4.5rem); padding-bottom: 0; border-bottom: none; text-align: center; position: relative; }
-    .page-hero::before {
-      content: ""; position: absolute; top: -80px; left: -10%; right: -10%;
-      height: 480px; z-index: -1;
-      background: radial-gradient(ellipse 60% 55% at 50% 35%, rgba(91,141,239,.14), transparent 70%);
-      pointer-events: none;
-    }
-    .page-hero h1 { margin-left: auto; margin-right: auto; font-size: clamp(2.4rem, 5vw, 3.6rem); }
-    .page-hero .lead { margin-left: auto; margin-right: auto; margin-top: 1.25rem; }
-    .page-hero .cta { justify-content: center; }
-    .page-hero + section { padding-top: 4.5rem; }
-    .feature-card .card-link {
-      display: inline-flex; align-items: center; gap: .4rem; margin-top: .95rem;
-      font-size: .82rem; font-weight: 600; color: var(--brand-2); text-decoration: none;
-    }
-    .feature-card .card-link .ico { width: 14px; height: 14px; }
-    .feature-card .card-link:hover { color: #fff; }
-"""
-
-    scripts = re.findall(r"<script>(.*?)</script>", legacy, re.S)
-    js = scripts[-1]
-
-    start = js.index("      /* ---- Active nav link ---- */")
-    end = js.index("      /* ---- Vertical tabs ---- */")
-    js = js[:start] + js[end:]
-
-    js += """
-
-      /* ---- Active nav link (by path) ---- */
-      var pathname = window.location.pathname.replace(/\\/+$/, '') || '/';
-      document.querySelectorAll('a[data-nav]').forEach(function (a) {
-        if (a.getAttribute('href') === pathname) a.classList.add('active');
-      });
-"""
+    script_dir = Path(__file__).resolve().parent
+    css = (script_dir / "landing.css").read_text(encoding="utf-8")
+    js = (script_dir / "landing.js").read_text(encoding="utf-8")
     return css, js
 
 

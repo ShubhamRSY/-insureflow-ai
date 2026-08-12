@@ -37,7 +37,7 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/static/landing.css" />
 </head>
 <body>
@@ -99,27 +99,33 @@
     <div class="glow glow-3"></div>
     <div class="glow glow-4"></div>
   </div>
+  <div class="bg-noise" aria-hidden="true"></div>
+  <div id="scroll-progress" aria-hidden="true"></div>
   <div class="page">
     <header id="header">
+      <div class="nav-inner">
       <a class="brand" href="/" aria-label="Rytera home">
         <span class="brand-mark" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10l-6 16"/></svg>
         </span>
         <span class="brand-name">Rytera<sup>&trade;</sup></span>
       </a>
-      <nav class="nav-desktop" aria-label="Main">
+        <nav class="nav-desktop" aria-label="Main">
         <a href="/" data-nav>Home</a>
         <a href="/platform" data-nav>Platform</a>
         <a href="/technology" data-nav>Technology</a>
         <a href="/underwriting" data-nav>Underwriting</a>
         <a href="/integrations" data-nav>Integrations</a>
         <a href="/company" data-nav>Company</a>
-        <a class="nav-dash" href="/dashboard">Dashboard</a>
-        <button type="button" class="btn btn-primary btn-sm" id="open-demo-nav">Book a demo</button>
-      </nav>
-      <button class="menu-btn" id="menu-btn" aria-label="Open menu" aria-expanded="false">
-        <svg class="ico" aria-hidden="true"><use href="#i-menu"/></svg>
-      </button>
+        </nav>
+        <div class="nav-actions">
+          <a class="nav-dash" href="/dashboard">Dashboard</a>
+          <button type="button" class="btn btn-primary btn-sm" id="open-demo-nav">Book a demo</button>
+        </div>
+        <button class="menu-btn" id="menu-btn" aria-label="Open menu" aria-expanded="false">
+          <svg class="ico" aria-hidden="true"><use href="#i-menu"/></svg>
+        </button>
+      </div>
     </header>
     <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile">
       <a href="/" data-nav>Home</a>
@@ -179,7 +185,7 @@
       </section>
 
       <section id="marquee" style="padding-top:0;padding-bottom:3.5rem;border-bottom:none;">
-        <p class="section-label reveal" style="justify-content:center;">Pulls from the systems you already use</p>
+        <p class="section-label reveal" style="justify-content:center;margin-left:auto;margin-right:auto;">Pulls from the systems you already use</p>
         <div class="marquee-wrap reveal" aria-hidden="true">
           <div class="marquee-track" id="marquee-track"></div>
         </div>
@@ -187,7 +193,7 @@
 
       <section id="contact">
         <div class="contact-box reveal">
-          <p class="section-label" style="justify-content:center;background:transparent;">Ready when you are</p>
+          <p class="section-label" style="justify-content:center;margin-left:auto;margin-right:auto;">Ready when you are</p>
           <h2>See your book move through Rytera</h2>
           <p>Walk through the submission journey, multi-agent pipeline, and live dashboard on a 30-minute call. Start with a shadow pilot &mdash; bind stays off until your team approves the cutover.</p>
           <div class="cta" style="justify-content:center;">
@@ -201,24 +207,28 @@
       </section>
     </main>
     <footer>
-      <div class="brand" aria-label="Rytera">
-        <span class="brand-mark" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10l-6 16"/></svg>
-        </span>
-        <span class="brand-name">Rytera<sup>&trade;</sup></span>
+      <div class="footer-grid">
+        <div class="brand" aria-label="Rytera">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10l-6 16"/></svg>
+          </span>
+          <span class="brand-name">Rytera<sup>&trade;</sup></span>
+        </div>
+        <nav class="footer-links" aria-label="Footer">
+          <a href="/">Home</a>
+          <a href="/platform">Platform</a>
+          <a href="/technology">Technology</a>
+          <a href="/underwriting">Underwriting</a>
+          <a href="/integrations">Integrations</a>
+          <a href="/company">Company</a>
+          <a href="/dashboard">Dashboard</a>
+          <a href="/health">System status</a>
+        </nav>
+        <div>
+          <div style="margin-bottom:.25rem">AI-native underwriting for carriers, MGAs &amp; aggregators.</div>
+          <div>&copy; 2026 Rytera, Inc. All rights reserved.</div>
+        </div>
       </div>
-      <div>AI-native underwriting for carriers, MGAs &amp; aggregators.</div>
-      <div class="links">
-        <a href="/">Home</a>
-        <a href="/platform">Platform</a>
-        <a href="/technology">Technology</a>
-        <a href="/underwriting">Underwriting</a>
-        <a href="/integrations">Integrations</a>
-        <a href="/company">Company</a>
-        <a href="/dashboard">Dashboard</a>
-        <a href="/health">System status</a>
-      </div>
-      <div style="margin-top:.75rem">Rytera is a trademark of Rytera, Inc. All rights reserved.</div>
     </footer>
   </div>
 
@@ -229,22 +239,32 @@
         <h3 id="modal-title">Request a demo</h3>
         <p class="m-sub">Tell us about your team and we'll schedule a walkthrough.</p>
         <form id="demo-form" novalidate>
-          <label for="d-name">Full name</label>
-          <input type="text" id="d-name" name="name" placeholder="Alex Chen" required />
-          <label for="d-email">Work email</label>
-          <input type="email" id="d-email" name="email" placeholder="alex@carrier.com" required />
-          <label for="d-company">Company</label>
-          <input type="text" id="d-company" name="company" placeholder="Meridian Mutual" required />
-          <label for="d-vertical">What do you underwrite?</label>
-          <select id="d-vertical" name="vertical">
-            <option value="Commercial insurance">Commercial insurance</option>
-            <option value="Personal lines">Personal lines</option>
-            <option value="Mortgage">Mortgage lending</option>
-            <option value="Commercial lending">Commercial lending</option>
-            <option value="Not sure yet">Not sure yet</option>
-          </select>
-          <label for="d-message">What are you hoping to automate? <span style="color:var(--muted-2);font-weight:400">(optional)</span></label>
-          <textarea id="d-message" name="message" rows="3" placeholder="We are drowning in broker PDFs and want to pilot shadow mode."></textarea>
+          <div class="field">
+            <label for="d-name">Full name</label>
+            <input type="text" id="d-name" name="name" placeholder="Alex Chen" required />
+          </div>
+          <div class="field">
+            <label for="d-email">Work email</label>
+            <input type="email" id="d-email" name="email" placeholder="alex@carrier.com" required />
+          </div>
+          <div class="field">
+            <label for="d-company">Company</label>
+            <input type="text" id="d-company" name="company" placeholder="Meridian Mutual" required />
+          </div>
+          <div class="field">
+            <label for="d-vertical">What do you underwrite?</label>
+            <select id="d-vertical" name="vertical">
+              <option value="Commercial insurance">Commercial insurance</option>
+              <option value="Personal lines">Personal lines</option>
+              <option value="Mortgage">Mortgage lending</option>
+              <option value="Commercial lending">Commercial lending</option>
+              <option value="Not sure yet">Not sure yet</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="d-message">What are you hoping to automate? <span style="color:var(--muted-2);font-weight:400">(optional)</span></label>
+            <textarea id="d-message" name="message" rows="3" placeholder="We are drowning in broker PDFs and want to pilot shadow mode."></textarea>
+          </div>
           <div class="form-status" id="form-status" role="status"></div>
           <div class="modal-actions">
             <button type="submit" class="btn btn-primary" style="flex:1" id="demo-submit">
