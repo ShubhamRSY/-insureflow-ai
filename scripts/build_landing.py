@@ -82,7 +82,7 @@ BG = """  <div class="bg-canvas" aria-hidden="true">
 
 BRAND = """      <a class="brand" href="/" aria-label="Rytera home">
         <span class="brand-mark" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10l-6 16"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21V3h7a3.5 3.5 0 0 1 0 7H7m7 0 4 11"/></svg>
         </span>
         <span class="brand-name">Rytera<sup>&trade;</sup></span>
       </a>"""
@@ -133,7 +133,7 @@ FOOTER = (
       <div class="footer-grid">
         <div class="brand" aria-label="Rytera">
           <span class="brand-mark" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10l-6 16"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21V3h7a3.5 3.5 0 0 1 0 7H7m7 0 4 11"/></svg>
           </span>
           <span class="brand-name">Rytera<sup>&trade;</sup></span>
         </div>
@@ -142,11 +142,10 @@ FOOTER = (
     + "\n".join(f'          <a href="{href}">{label}</a>' for href, label in NAV_LINKS)
     + """
           <a href="/dashboard">Dashboard</a>
-          <a href="/health">System status</a>
         </nav>
         <div>
           <div style="margin-bottom:.25rem">AI-native underwriting for carriers, MGAs &amp; aggregators.</div>
-          <div>&copy; 2026 Rytera, Inc. All rights reserved.</div>
+          <div>&copy; 2026 Rytera Inc. All rights reserved.</div>
         </div>
       </div>
     </footer>"""
@@ -175,8 +174,16 @@ MODAL = """  <div class="modal-overlay" id="demo-modal" role="dialog" aria-modal
             <label for="d-vertical">What do you underwrite?</label>
             <select id="d-vertical" name="vertical">
               <option value="Commercial insurance">Commercial insurance</option>
+              <option value="General liability">General liability</option>
+              <option value="Commercial property">Commercial property</option>
+              <option value="Commercial auto">Commercial auto</option>
+              <option value="Workers' compensation">Workers' compensation</option>
+              <option value="Professional liability / E&O">Professional liability / E&O</option>
+              <option value="Cyber">Cyber</option>
+              <option value="Excess &amp; surplus / specialty">Excess &amp; surplus / specialty</option>
+              <option value="Inland &amp; ocean marine">Inland &amp; ocean marine</option>
               <option value="Personal lines">Personal lines</option>
-              <option value="Mortgage">Mortgage lending</option>
+              <option value="Mortgage lending">Mortgage lending</option>
               <option value="Commercial lending">Commercial lending</option>
               <option value="Not sure yet">Not sure yet</option>
             </select>
@@ -320,7 +327,7 @@ def hero_home() -> str:
               <span class="dot"></span>
               Rytera &middot; AI-native underwriting workbench
             </div>
-            <h1>Bind-ready decisions <span class="gradient">in minutes, not days</span></h1>
+            <h1>Turn messy submissions into <span class="gradient">bind-ready decisions in minutes</span></h1>
             <p class="lead">
               Rytera takes the messy submissions that slow underwriting down &mdash; ACORD, broker PDFs, loss runs, W-2s &mdash; and
               turns them into a <strong>bind-ready underwriting memo</strong> with quote, audit trail, and licensed
@@ -411,7 +418,7 @@ def hero_home() -> str:
           <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> No LLM key required</span>
         </div>
         <div class="stats reveal" aria-label="Platform highlights">
-          <div class="stat"><span class="num" data-target="4">0</span><span>Underwriting verticals</span></div>
+          <div class="stat"><span class="num" data-target="12">0</span><span>Underwriting verticals</span></div>
           <div class="stat"><span class="num" data-target="24">0</span><span>Enterprise connectors</span></div>
           <div class="stat"><span class="num" data-target="145">0</span><span>Document types supported</span></div>
           <div class="stat"><span class="num" data-target="1400" data-suffix="+">0</span><span>Automated tests in CI</span></div>
@@ -617,7 +624,7 @@ def platform_main() -> str:
           <p class="section-label">Deep-dive underwriting</p>
           <h2>Vertical by vertical, further than a shared dashboard</h2>
           <p class="section-desc">
-            Each vertical ships specialist agents, filing-grade rating, and regulatory checks tuned to its own workflow. Select a vertical to explore its deep dive, or see the shared <strong>Connect &amp; pull</strong> intake that powers all four.
+            Each vertical ships specialist agents, filing-grade rating, and regulatory checks tuned to its own workflow. Select a vertical to explore its deep dive, or see the shared <strong>Connect &amp; pull</strong> intake that powers every line.
           </p>
         </div>
         <div class="tabs reveal" role="tablist" aria-label="Verticals">
@@ -920,6 +927,25 @@ def underwriting_main() -> str:
         </div>
       </section>"""
 
+    verticals = """      <section id="verticals">
+        <div class="reveal">
+          <p class="section-label">Underwriting verticals</p>
+          <h2>Every line you write, on one platform</h2>
+          <p class="section-desc">From commercial lines to specialty, personal lines, mortgage, and lending &mdash; each vertical ships specialist agents, filing-grade rating, and regulatory checks tuned to its own workflow.</p>
+        </div>
+        <div class="feature-grid reveal">
+          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-file-text"/></svg></span><h3>Commercial lines</h3><p>GL, property, auto, and packages with ISO / AAIS loss costs, premium build-up, and ready-to-bind memos.</p></div>
+          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-shield-check"/></svg></span><h3>Workers' compensation</h3><p>NCCI class codes, experience mods, payroll audits, and state filing checks for WC books.</p></div>
+          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-lock"/></svg></span><h3>Professional liability &amp; E&amp;O</h3><p>Applications, claims history, and exposure scoring for E&amp;O, D&amp;O, and EPLI books.</p></div>
+          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-zap"/></svg></span><h3>Cyber</h3><p>Security posture reviews, breach-history checks, and cyber pricing with rapid quote turnarounds.</p></div>
+          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-package"/></svg></span><h3>Excess &amp; surplus / specialty</h3><p>Wholesale and E&amp;S submissions with bespoke appetite steering and binding authority checks.</p></div>
+          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-globe"/></svg></span><h3>Inland &amp; ocean marine</h3><p>Cargo, hull, and inland marine risks with transit exposure and valuation analysis.</p></div>
+          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-home"/></svg></span><h3>Personal lines</h3><p>Homeowners, auto, and term life with CLUE / MVR checks and filing-grade state rate manuals.</p></div>
+          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-landmark"/></svg></span><h3>Mortgage</h3><p>Income, asset, and collateral verification across 30+ document types with TRID, Reg Z, and HMDA checks.</p></div>
+          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-banknote"/></svg></span><h3>Lending</h3><p>Consumer and business loan decisioning with a credit risk engine, dynamic pricing, and Reg B / ECOA compliance.</p></div>
+        </div>
+      </section>"""
+
     ratemaking = """      <section id="ratemaking">
         <div class="reveal">
           <p class="section-label">Ratemaking &amp; Pricing</p>
@@ -952,6 +978,8 @@ def underwriting_main() -> str:
         + audience
         + "\n\n"
         + desks
+        + "\n\n"
+        + verticals
         + "\n\n"
         + ratemaking
         + "\n\n"
@@ -1016,7 +1044,7 @@ def company_main() -> str:
         <div class="reveal">
           <p class="section-label">About Rytera</p>
           <h2>We build underwriting software for underwriters</h2>
-          <p class="section-desc">Rytera, Inc. is an AI-native underwriting platform for carriers, MGAs, and aggregators across insurance, mortgage, and lending.</p>
+          <p class="section-desc">Rytera Inc. is an AI-native underwriting platform for carriers, MGAs, and aggregators across insurance, mortgage, and lending.</p>
         </div>
         <div class="feature-grid reveal">
           <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-users"/></svg></span><h3>Who we build for</h3><p>Commercial &amp; personal lines carriers, MGAs and program administrators, mortgage lenders, and commercial lenders &mdash; one platform for every desk.</p></div>
@@ -1039,7 +1067,7 @@ def company_main() -> str:
     return (
         sub_page_hero(
             "Company",
-            "Rytera, Inc.",
+            "Rytera Inc.",
             "We build AI-native underwriting for carriers, MGAs, and aggregators &mdash; with human-in-the-loop governance, zero-token efficiency, and audit you can hand to a regulator.",
             primary="book",
             secondary="/dashboard",
@@ -1074,7 +1102,7 @@ def main() -> None:
             "Rytera - AI-Native Underwriting for Carriers, MGAs & Aggregators",
             "Rytera turns messy submissions - ACORD, broker PDFs, loss runs, W-2s - into bind-ready underwriting memos with quote, audit trail, and licensed sign-off. One agentic platform for line and staff underwriters.",
             "",
-            "Bind-ready decisions in minutes, not days. One agentic platform for line and staff underwriters across insurance, mortgage, and lending.",
+            "Turn messy submissions into bind-ready decisions in minutes. One agentic platform for line and staff underwriters across insurance, mortgage, and lending.",
             home_main(),
         ),
         "platform.html": page(
@@ -1107,9 +1135,9 @@ def main() -> None:
         ),
         "company.html": page(
             "Rytera - About, FAQ & Contact",
-            "Rytera, Inc. - AI-native underwriting for carriers, MGAs, and aggregators. Frequently asked questions, our pilot model, and how to reach the team.",
+            "Rytera Inc. - AI-native underwriting for carriers, MGAs, and aggregators. Frequently asked questions, our pilot model, and how to reach the team.",
             "company",
-            "About Rytera, Inc., our shadow-first pilot model, FAQ, and how to book a walkthrough.",
+            "About Rytera Inc., our shadow-first pilot model, FAQ, and how to book a walkthrough.",
             company_main(),
         ),
     }

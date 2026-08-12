@@ -1769,7 +1769,7 @@ class DemoRequest(BaseModel):
 @app.post("/api/contact/demo-request")
 @limiter.limit("5/minute")
 async def demo_request_endpoint(request: Request, payload: DemoRequest) -> JSONResponse:
-    """Capture a landing-page demo request lead to data/demo_requests.jsonl."""
+    """Capture a landing-page demo request lead to data/demo_requests.jsonl + notify the team."""
     from datetime import datetime, timezone
 
     name = (payload.name or "").strip()
@@ -1792,6 +1792,17 @@ async def demo_request_endpoint(request: Request, payload: DemoRequest) -> JSONR
     with open(leads_dir / "demo_requests.jsonl", "a", encoding="utf-8") as fh:
         fh.write(_json.dumps(row) + "\n")
     logging.getLogger(__name__).info("Demo request captured: %s (%s)", row["email"], row["company"])
+
+    notify_to = os.getenv("LEAD_NOTIFY_TO", "shubham@ryterainc.com").strip()
+    if notify_to:
+        from insureflow.notifications.broker_notify import send_smtp_email
+
+        subject = f"New Rytera demo request - {company}"
+        body = (
+            f"Name: {name}\nEmail: {email}\nCompany: {company}\nVertical: {row['vertical'] or 'Not sure yet'}\nMessage: {row['message'] or '(none)'}\n\nSource: {row['source']}\nLead ID: {row['id']}\n"
+        )
+        await asyncio.to_thread(send_smtp_email, to_email=notify_to, subject=subject, body=body)
+
     return JSONResponse({"ok": True, "id": row["id"]})
 
 

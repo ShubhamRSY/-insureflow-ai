@@ -224,7 +224,7 @@
     { q: 'How do you handle PII and security?', a: 'PII like SSN, EIN, and DOB is auto-detected and redacted before packages enter the pilot lane. Every job is org-scoped and isolated, and every decision ships in an encrypted SHA-256 manifest audit bundle.' },
     { q: 'What if an oracle or data feed is unavailable?', a: 'Connectors run in live, simulated, or auto mode. In auto mode, missing keys are honest — the pipeline flags gaps instead of fabricating clean loss history, and the queue surfaces missing data for resolution.' },
     { q: 'How does UW sign-off work?', a: 'The pipeline proposes ACCEPT, CONDITIONAL_ACCEPT, REFER, or DECLINE. A licensed underwriter reviews within their authority matrix tier and either signs off or overrides — every override is traceable in the audit trail.' },
-    { q: 'Which verticals and lines are supported?', a: 'Commercial and personal lines carriers, mortgage lenders, and commercial lenders share one platform — from commercial GL / property, homeowners, auto, and term life to mortgage and consumer / commercial lending.' }
+    { q: 'Which verticals and lines are supported?', a: 'Commercial and personal lines carriers, mortgage lenders, and commercial lenders share one platform — commercial GL, property, auto, workers\' comp, professional liability / E&O, cyber, excess & surplus, and inland & ocean marine, plus homeowners, auto, term life, mortgage, and consumer / commercial lending.' }
   ];
   var faqList = document.getElementById('faq-list');
   function renderFaqs(filter) {

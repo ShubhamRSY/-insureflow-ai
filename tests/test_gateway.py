@@ -137,7 +137,7 @@ def test_landing_page_html() -> None:
     resp = client.get("/", headers={"Accept": "text/html"})
     assert resp.status_code == 200
     assert "Rytera" in resp.text
-    assert "Bind-ready decisions" in resp.text
+    assert "Turn messy submissions into" in resp.text
     assert "What you get" in resp.text
 
     default = client.get("/")
