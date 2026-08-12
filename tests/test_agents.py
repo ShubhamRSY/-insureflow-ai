@@ -674,7 +674,7 @@ class TestUWDecisionAgent:
         assert uw_result.recommendation is not None
         assert uw_result.recommendation.action == "refer"
 
-    def test_decline_decision(self) -> None:
+    def test_critical_findings_refer_not_auto_decline(self) -> None:
         agent = UWDecisionAgent()
         result = AgentResult(
             agent_type=AgentType.FRAUD_DETECTION,
@@ -690,7 +690,8 @@ class TestUWDecisionAgent:
         )
         uw_result = agent.run(_make_bundle(), agent_results={"FraudDetectionAgent": result})
         assert uw_result.recommendation is not None
-        assert uw_result.recommendation.action == "decline"
+        # Critical findings escalate to licensed UW; hard declines stay on appetite/moral/selection.
+        assert uw_result.recommendation.action == "refer"
 
     def test_produce_memo(self) -> None:
         agent = UWDecisionAgent()
