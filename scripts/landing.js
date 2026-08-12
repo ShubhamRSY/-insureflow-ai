@@ -348,7 +348,7 @@
         modalSuccess.classList.add('show');
       }).catch(function () {
         if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Send request'; }
-        status.textContent = 'Something went wrong — please email hello@rytera.ai or try again.';
+        status.textContent = 'Something went wrong — please email hello@ryterainc.com or try again.';
       });
     });
   }

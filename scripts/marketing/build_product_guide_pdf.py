@@ -432,7 +432,7 @@ def build_html() -> str:
     <img src="{overview}" alt="Rytera overview"/>
   </div>
   <div class="cover-foot">
-    <div>ryterainc.com · hello@rytera.ai</div>
+    <div>ryterainc.com · hello@ryterainc.com</div>
     <div>{today}</div>
   </div>
 </section>
@@ -608,7 +608,7 @@ def build_html() -> str:
 
   <div class="footer-note">
     Carrier / MGA next step → Pilot Partner Brief (30-day shadow ask, data drop, success criteria).<br/>
-    Rytera™ · <a href="https://ryterainc.com">ryterainc.com</a> · hello@rytera.ai
+    Rytera™ · <a href="https://ryterainc.com">ryterainc.com</a> · hello@ryterainc.com
   </div>
   <div class="page-num">5</div>
 </section>

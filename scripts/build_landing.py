@@ -201,7 +201,7 @@ MODAL = """  <div class="modal-overlay" id="demo-modal" role="dialog" aria-modal
             <a class="btn btn-ghost" href="/dashboard">Try dashboard</a>
           </div>
         </form>
-        <p class="form-note">Prefer email? <a href="mailto:hello@rytera.ai">hello@rytera.ai</a> &middot; or jump straight to the <a href="/dashboard">live dashboard</a></p>
+        <p class="form-note">Prefer email? <a href="mailto:hello@ryterainc.com">hello@ryterainc.com</a> &middot; or jump straight to the <a href="/dashboard">live dashboard</a></p>
       </div>
       <div class="modal-success" id="modal-success">
         <span class="ok-ico"><svg class="ico"><use href="#i-check-circle"/></svg></span>
@@ -246,7 +246,7 @@ def head(title: str, desc: str, canonical: str, og_desc: str) -> str:
         '    "url": "https://ryterainc.com/",\n'
         '    "logo": "https://ryterainc.com/icon-512.png",\n'
         '    "description": "AI underwriting platform for commercial & personal lines insurance, mortgage, and lending.",\n'
-        '    "email": "hello@rytera.ai"\n'
+        '    "email": "hello@ryterainc.com"\n'
         "  }\n"
         "  </script>\n"
         '  <link rel="preconnect" href="https://fonts.googleapis.com" />\n'
@@ -313,7 +313,7 @@ def contact_section() -> str:
             <a class="btn btn-ghost" href="/dashboard">Open the live dashboard</a>
           </div>
           <p style="margin-top:1.5rem;margin-bottom:0;font-size:.875rem">
-            Prefer email? <a class="contact-email" href="mailto:hello@rytera.ai">hello@rytera.ai</a>
+            Prefer email? <a class="contact-email" href="mailto:hello@ryterainc.com">hello@ryterainc.com</a>
           </p>
         </div>
       </section>"""
@@ -1050,7 +1050,7 @@ def company_main() -> str:
           <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-users"/></svg></span><h3>Who we build for</h3><p>Commercial &amp; personal lines carriers, MGAs and program administrators, mortgage lenders, and commercial lenders &mdash; one platform for every desk.</p></div>
           <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-refresh"/></svg></span><h3>The pilot model</h3><p>Shadow first, bind last. Measure accuracy on your real book before any policy admin integration turns on &mdash; with a clean cutover when you're ready.</p></div>
           <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-shield-check"/></svg></span><h3>Security &amp; compliance</h3><p>Fernet encryption, JWT + RBAC, org-scoped isolation, automated PII redaction, and a SHA-256 audit bundle behind every decision.</p></div>
-          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-mail"/></svg></span><h3>Get in touch</h3><p>Book a walkthrough or email <a class="contact-email" href="mailto:hello@rytera.ai">hello@rytera.ai</a> &mdash; our team responds within one business day.</p></div>
+          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-mail"/></svg></span><h3>Get in touch</h3><p>Book a walkthrough or email <a class="contact-email" href="mailto:hello@ryterainc.com">hello@ryterainc.com</a> &mdash; our team responds within one business day.</p></div>
         </div>
       </section>"""
 
