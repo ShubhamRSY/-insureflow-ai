@@ -54,7 +54,7 @@ def test_default_plan_is_pilot() -> None:
     assert plan.plan_id == "pilot"
     assert plan.allow_simulated_oracles is True
     assert plan.require_carrier_book is False
-    assert plan.allow_bind is False
+    assert plan.allow_bind is True
 
 
 def test_desk_entitlements_fail_closed() -> None:
@@ -117,6 +117,7 @@ def test_bundled_gateway_is_not_live() -> None:
     assert is_bundled_gateway_url("https://integrations.rytera.ai/oracles/clue/v2", "real-looking-key")
     assert is_bundled_gateway_url("https://api.lexisnexis.com/clue/v2", "rytera-dev-gateway-key-change-in-production")
     assert not is_bundled_gateway_url("https://api.lexisnexis.com/clue/v2", "vendor-sandbox-key")
+    assert not is_bundled_gateway_url("http://127.0.0.1:9/integrations/policy/guidewire/v1", "ci-e2e-guidewire-key")
     http = IntegrationHTTPClient(api_key="k", base_url="https://integrations.rytera.ai/oracles/clue/v2")
     assert resolve_integration_mode("auto", http) == "gateway_synthetic"
     assert resolve_integration_mode("live", http) == "gateway_synthetic"

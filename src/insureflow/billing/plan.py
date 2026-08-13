@@ -51,7 +51,7 @@ _PLANS: dict[str, PlanEntitlements] = {
         require_carrier_book=False,
         allow_simulated_pas=True,
         require_live_pas=False,
-        allow_bind=False,  # shadow / bind off
+        allow_bind=True,  # still gated by shadow/ready + bind_is_allowed()
     ),
     "desk": PlanEntitlements(
         plan_id="desk",

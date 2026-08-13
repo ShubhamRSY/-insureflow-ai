@@ -101,7 +101,7 @@ class DeviceIntelligenceEngine:
         level = _risk_level(score)
         return RiskAssessment(
             engine="device_intelligence",
-            subject_id=signals.devices_per_identity or fingerprint.device_id or signals.ip_address or "device",
+            subject_id=str(fingerprint.device_id or signals.ip_address or "device"),
             risk_score=round(score, 4),
             risk_level=level,
             signals=signal_list,

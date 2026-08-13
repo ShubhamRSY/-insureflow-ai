@@ -5,8 +5,6 @@ from insureflow.integrations.http_client import IntegrationHTTPClient
 
 _GATEWAY_URL_MARKERS = (
     "integrations.rytera.ai",
-    "/integrations/oracles/",
-    "/integrations/policy/",
     "127.0.0.1:8002",
     "localhost:8002",
     "[::1]:8002",

@@ -2789,10 +2789,10 @@ def bind_policy(
             status_code=403,
             detail=f"{plan.plan_id.title()} does not include bind. Upgrade to Desk+ with live Guidewire/BriteCore.",
         )
-    if plan.plan_id != "pilot" and not live_pas_ready():
+    if plan.require_live_pas and not live_pas_ready():
         raise HTTPException(
             status_code=403,
-            detail="Desk+ bind requires live Guidewire or BriteCore so UW does not re-key. Configure GUIDEWIRE_API_KEY + GUIDEWIRE_API_URL (or BriteCore) with MODE=live.",
+            detail="Book+ bind requires live Guidewire or BriteCore so UW does not re-key. Configure GUIDEWIRE_API_KEY + GUIDEWIRE_API_URL (or BriteCore) with MODE=live.",
         )
 
     from insureflow.integrations.factory import build_policy_admin_service

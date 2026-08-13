@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import math
 import statistics
+from collections.abc import Callable
 from typing import Any
 
 from insureflow.fraud.models import BehavioralSession, RiskAssessment
@@ -79,7 +80,7 @@ class BehavioralBiometricsEngine:
     def _score_typing(
         self,
         session: BehavioralSession,
-        add,
+        add: Callable[[str, float, str], None],
     ) -> None:
         flights = [k.flight_ms for k in session.keystrokes if k.flight_ms > 0]
         dwells = [k.dwell_ms for k in session.keystrokes if k.dwell_ms > 0]
@@ -111,7 +112,7 @@ class BehavioralBiometricsEngine:
         if session.input_field_count > 0 and pastes / max(session.input_field_count, 1) > 0.7:
             add("autofill_paste_dominant", 0.3, f"{pastes} fields populated via paste/autofill")
 
-    def _score_pointer(self, session: BehavioralSession, add) -> None:
+    def _score_pointer(self, session: BehavioralSession, add: Callable[[str, float, str], None]) -> None:
         moves = [p for p in session.pointers if p.kind == "move"]
         if len(moves) < 3:
             if session.keystrokes and session.input_field_count > 0:
@@ -148,7 +149,7 @@ class BehavioralBiometricsEngine:
         if jumps >= 3:
             add("coordinate_injection", 0.35, f"{jumps} instant pointer jumps — coordinate injection signature")
 
-    def _score_session(self, session: BehavioralSession, add) -> None:
+    def _score_session(self, session: BehavioralSession, add: Callable[[str, float, str], None]) -> None:
         if session.focus_events == 0 and session.scroll_events == 0 and session.session_duration_ms > 30_000:
             add("no_human_interaction", 0.2, "30s+ session with zero focus or scroll events")
 
@@ -156,14 +157,11 @@ class BehavioralBiometricsEngine:
             add("all_fields_pasted", 0.2, "every input field populated by paste/autofill")
 
     @staticmethod
-    def _max_straight_run(moves: list) -> int:
+    def _max_straight_run(moves: list[Any]) -> int:
         best = 1
         run = 1
         for i in range(2, len(moves)):
-            cross = abs(
-                (moves[i - 1].x - moves[i - 2].x) * (moves[i].y - moves[i - 1].y)
-                - (moves[i - 1].y - moves[i - 2].y) * (moves[i].x - moves[i - 1].x)
-            )
+            cross = abs((moves[i - 1].x - moves[i - 2].x) * (moves[i].y - moves[i - 1].y) - (moves[i - 1].y - moves[i - 2].y) * (moves[i].x - moves[i - 1].x))
             if cross < 0.0001:
                 run += 1
                 best = max(best, run)

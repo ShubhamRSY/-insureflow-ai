@@ -711,21 +711,7 @@ def home_main() -> str:
         </div>"""
     )
 
-    return (
-        hero_home()
-        + "\n\n"
-        + marquee_section()
-        + "\n\n"
-        + value
-        + "\n\n"
-        + how
-        + "\n\n"
-        + testimonials_section()
-        + "\n\n"
-        + pricing_section()
-        + "\n\n"
-        + contact_section()
-    )
+    return hero_home() + "\n\n" + marquee_section() + "\n\n" + value + "\n\n" + how + "\n\n" + testimonials_section() + "\n\n" + pricing_section() + "\n\n" + contact_section()
 
 
 def platform_main() -> str:

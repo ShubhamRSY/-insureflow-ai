@@ -146,8 +146,8 @@ def _exposure_for_basis(bundle: SubmissionBundle, basis: str, filing: dict[str, 
     if basis in ("contract_value",):
         v = _money(blob, "contract value", "project value", "exposure") or _tiv(bundle)
         return max(v, 250_000.0), "contract_value"
-    # default TIV
-    return max(_tiv(bundle), 500_000.0), "tiv"
+    # default TIV — never invent exposure when TIV is unknown
+    return _tiv(bundle), "tiv"
 
 
 def _line_enum(filing: dict[str, Any]) -> InsuranceLine:
@@ -207,8 +207,13 @@ def rate_leaf_filing(
             applied.append(name)
     schedule_pct += float(schedule_mod_pct or 0.0)
 
-    adjusted = base * (1 + market_mod_pct / 100.0) * (1 + schedule_pct / 100.0)
-    adjusted = max(round(adjusted, 2), minimum)
+    tiv_unknown = unit == "tiv" and exposure <= 0
+    if tiv_unknown:
+        base = 0.0
+        adjusted = 0.0
+    else:
+        adjusted = base * (1 + market_mod_pct / 100.0) * (1 + schedule_pct / 100.0)
+        adjusted = max(round(adjusted, 2), minimum)
 
     line = _line_enum(filing)
     components = [
@@ -219,6 +224,8 @@ def rate_leaf_filing(
     ]
     if schedule_pct:
         components.append(RateComponent("schedule", schedule_pct, "uw_schedule", schedule_pct))
+    if schedule_mod_pct:
+        components.append(RateComponent("uw_schedule_modification", 0.0, "uw_discretion", float(schedule_mod_pct)))
 
     book = load_carrier_book()
     return QuoteResult(
@@ -228,7 +235,8 @@ def rate_leaf_filing(
         adjusted_premium=adjusted,
         schedule_modifications=components,
         rate_per_100_tiv=round(adjusted / max(exposure / 100.0, 1.0), 4) if exposure else 0.0,
-        eligible=True,
+        eligible=not tiv_unknown,
+        ineligibility_reasons=["TIV could not be determined"] if tiv_unknown else [],
         metadata={
             "rating_engine": "carrier_leaf_filing",
             "product_id": filing.get("product_id"),

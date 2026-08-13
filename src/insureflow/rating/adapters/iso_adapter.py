@@ -130,9 +130,7 @@ class ISORatingAdapter(RatingAdapter):
             quote_valid_until=data.get("valid_until", ""),
             eligible=data.get("eligible", True),
             ineligibility_reasons=data.get("ineligibility_reasons", []),
-            policy_admin_reference=str(
-                data.get("job_number") or data.get("external_reference") or data.get("reference") or data.get("id") or f"LIVE-{uuid4().hex[:8].upper()}"
-            ),
+            policy_admin_reference=str(data.get("job_number") or data.get("external_reference") or data.get("reference") or data.get("id") or f"LIVE-{uuid4().hex[:8].upper()}"),
         )
 
     def bind_policy(self, bundle_id: str, quote_reference: str, bound_by: str) -> dict[str, Any]:

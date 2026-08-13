@@ -313,10 +313,15 @@ class InsuranceRatingEngine:
         market_mod = self._get_market_mod(line)
 
         # Customer SERFF book wins over hardcoded WC / cyber / auto / package tables.
-        from insureflow.rating.leaf_filings import rate_leaf_filing, should_use_leaf_filing
+        # Do not infer a leaf from InsuranceLine alone on the pilot book — that
+        # would replace ISO/COPE parent-line math with a catalog leaf.
+        from insureflow.billing.plan import is_customer_rate_book
+        from insureflow.rating.leaf_filings import carrier_book_status, rate_leaf_filing, should_use_leaf_filing
 
-        leaf_product = commercial_product_id or (line.value if line else "")
-        if should_use_leaf_filing(leaf_product, line):
+        leaf_product = (commercial_product_id or "").strip()
+        if not leaf_product and is_customer_rate_book(carrier_book_status()):
+            leaf_product = line.value if line else ""
+        if should_use_leaf_filing(leaf_product or None, line):
             leaf = rate_leaf_filing(
                 bundle,
                 memo,
@@ -474,10 +479,7 @@ class InsuranceRatingEngine:
         meta["is_customer_book"] = is_customer_rate_book(status)
         if plan.require_carrier_book and not is_customer_rate_book(status):
             result.eligible = False
-            reason = (
-                "Pilot manuals are not your SERFF filing. Import your carrier rate book "
-                "before Desk+ quoting (POST /rating/carrier-book or CARRIER_BOOK_PATH)."
-            )
+            reason = "Pilot manuals are not your SERFF filing. Import your carrier rate book before Desk+ quoting (POST /rating/carrier-book or CARRIER_BOOK_PATH)."
             if reason not in result.ineligibility_reasons:
                 result.ineligibility_reasons.append(reason)
             meta["rate_book_gate"] = "blocked_demo_book"
