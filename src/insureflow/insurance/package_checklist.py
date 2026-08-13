@@ -133,7 +133,14 @@ def _types_for_label(label: str) -> tuple[InsuranceDocumentType, ...]:
         add(InsuranceDocumentType.HIPAA_AUTHORIZATION)
     if "mib" in text or "medical information bureau" in text or "rx database" in text:
         add(InsuranceDocumentType.MIB_RX_AUTHORIZATION)
-    if "health questionnaire" in text or "health declaration" in text or "simplified health" in text or "medical declaration" in text or "self-declaration of good health" in text or "self declared health" in text:
+    if (
+        "health questionnaire" in text
+        or "health declaration" in text
+        or "simplified health" in text
+        or "medical declaration" in text
+        or "self-declaration of good health" in text
+        or "self declared health" in text
+    ):
         add(InsuranceDocumentType.HEALTH_QUESTIONNAIRE)
     if "proposal form" in text or "health application" in text or "mediclaim proposal" in text or "master policy proposal" in text or "master proposal" in text:
         add(InsuranceDocumentType.HEALTH_APPLICATION)
@@ -173,7 +180,6 @@ def _types_for_label(label: str) -> tuple[InsuranceDocumentType, ...]:
         add(InsuranceDocumentType.MEDICAL_EXAM)
     if "birth certificate" in text:
         add(InsuranceDocumentType.CHILD_BIRTH_CERTIFICATE)
-        add(InsuranceDocumentType.AGE_PROOF)
     if "cancelled cheque" in text or "bank account" in text or "auto-debit" in text or "payment instrument" in text:
         add(InsuranceDocumentType.BANK_ACH_FORM)
     if "suitability" in text or "risk profile" in text:

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from insureflow.insurance.commercial_lobs import flatten_line_documents
 from insureflow.insurance.general_lobs import (
     GENERAL_CATEGORIES,
@@ -18,6 +20,13 @@ from insureflow.insurance.package_checklist import CATALOGS, detect_lob, package
 from insureflow.rating.models import InsuranceLine
 from insureflow.rating.personal.general_rating import rate_general
 from insureflow.underwriting.general_product import LIVE_GENERAL_PRODUCT_IDS, is_filed_general_product
+
+
+def _gi_line(line_id: str) -> dict[str, Any]:
+    row = get_general_line(line_id)
+    assert row is not None
+    return row
+
 
 EXPECTED_CATS = {
     "motor",
@@ -116,10 +125,10 @@ def test_hub_payload_has_taxonomy_and_stats():
 
 
 def test_no_universal_kyc_forced_on_b2b_leaves():
-    cargo = get_general_line("marine_cargo")
-    hull = get_general_line("marine_hull")
-    re = get_general_line("reinsurance_treaty")
-    crop = get_general_line("crop_yield")
+    cargo = _gi_line("marine_cargo")
+    hull = _gi_line("marine_hull")
+    re = _gi_line("reinsurance_treaty")
+    crop = _gi_line("crop_yield")
     assert cargo["base_packet"] == []
     assert hull["base_packet"] == []
     assert re["base_packet"] == []
@@ -131,24 +140,24 @@ def test_no_universal_kyc_forced_on_b2b_leaves():
 
 
 def test_home_contents_does_not_require_deed():
-    structure = get_general_line("home_structure")
-    contents = get_general_line("home_contents")
+    structure = _gi_line("home_structure")
+    contents = _gi_line("home_contents")
     assert any("sale deed" in d.lower() or "ownership" in d.lower() for d in structure["documents"])
     assert not any("sale deed" in d.lower() or "registry" in d.lower() for d in contents["documents"])
     assert any("insured items" in d.lower() or "jewelry" in d.lower() for d in contents["documents"])
 
 
 def test_travel_domestic_vs_international_docs():
-    domestic = get_general_line("travel_domestic")
-    intl = get_general_line("travel_international")
+    domestic = _gi_line("travel_domestic")
+    intl = _gi_line("travel_international")
     assert not any("passport" in d.lower() for d in domestic["documents"])
     assert any("passport" in d.lower() for d in intl["documents"])
     assert any("visa" in d.lower() for d in intl["documents"])
 
 
 def test_cv_requires_fitness_permit_puc_car_tp_does_not():
-    car = get_general_line("car_tp")
-    cv = get_general_line("cv_tp")
+    car = _gi_line("car_tp")
+    cv = _gi_line("cv_tp")
     assert any("fitness" in d.lower() for d in cv["documents"])
     assert any("permit" in d.lower() for d in cv["documents"])
     assert any("puc" in d.lower() or "pollution" in d.lower() for d in cv["documents"])

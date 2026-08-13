@@ -463,7 +463,9 @@ def line_rate_build_ups(*, contingency_pct: float = 5.0, profit_pct: float = 5.0
 
     build_ups: list[RatemakingResult] = []
     for line in InsuranceLine:
-        loss_cost = ISO_LOSS_COSTS.get(line, 0.0)
+        loss_cost = ISO_LOSS_COSTS.get(line)
+        if loss_cost is None or loss_cost <= 0:
+            continue  # catalog-only lines (health / general) have no filed ISO loss cost
         lcm = LCM.get(line, 2.0)
         pure = loss_cost
         expense_loading = round(loss_cost * (lcm - 1.0), 4)

@@ -170,8 +170,10 @@ def test_ratemaking_factors():
 
 
 def test_line_rate_build_ups():
+    from insureflow.rating.engine import ISO_LOSS_COSTS
+
     build_ups = line_rate_build_ups()
-    assert len(build_ups) == len(list(InsuranceLine))
+    assert len(build_ups) == len(ISO_LOSS_COSTS)
     for b in build_ups:
         assert b.gross_rate > b.base_rate >= b.pure_premium
 

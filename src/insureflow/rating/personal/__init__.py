@@ -21,9 +21,9 @@ def rate_personal_line(
 ) -> "QuoteResult":
     from insureflow.rating.models import InsuranceLine
     from insureflow.rating.personal.auto_rating import rate_personal_auto
-    from insureflow.rating.personal.homeowners_rating import rate_homeowners
     from insureflow.rating.personal.general_rating import rate_general
     from insureflow.rating.personal.health_rating import rate_health
+    from insureflow.rating.personal.homeowners_rating import rate_homeowners
     from insureflow.rating.personal.life_rating import rate_life
 
     if line == InsuranceLine.PERSONAL_HOMEOWNERS:
