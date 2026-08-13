@@ -52,7 +52,6 @@ eval = [
     "mlflow>=2.14",
     "deepeval>=0.21",
     "arize-phoenix>=4.6",
-    "phoenix-evals>=0.1",
     "openinference-instrumentation-openai>=0.1",
     "openinference-instrumentation-langchain>=0.1",
     "opentelemetry-exporter-otlp-proto-grpc>=1.20",
