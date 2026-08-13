@@ -32,6 +32,8 @@ class InsuranceLine(str, Enum):
     PERSONAL_HOMEOWNERS = "personal_homeowners"
     PERSONAL_AUTO = "personal_auto"
     LIFE = "life"
+    HEALTH = "health"
+    GENERAL = "general"
 
 
 PERSONAL_LINES = frozenset(
@@ -39,6 +41,8 @@ PERSONAL_LINES = frozenset(
         InsuranceLine.PERSONAL_HOMEOWNERS,
         InsuranceLine.PERSONAL_AUTO,
         InsuranceLine.LIFE,
+        InsuranceLine.HEALTH,
+        InsuranceLine.GENERAL,
     }
 )
 
@@ -93,6 +97,8 @@ LINE_DISPLAY_NAMES: dict[str, str] = {
     "personal_homeowners": "Personal Homeowners",
     "personal_auto": "Personal Auto",
     "life": "Life Insurance",
+    "health": "Health Insurance",
+    "general": "General / Non-Life Insurance",
 }
 
 _LINE_DISPLAY_MERGED = False

@@ -35,10 +35,27 @@ LIFE_CATALOG: list[tuple[str, tuple[InsuranceDocumentType, ...]]] = [
     ("Beneficiary designation", (InsuranceDocumentType.BENEFICIARY_FORM,)),
 ]
 
+HEALTH_CATALOG: list[tuple[str, tuple[InsuranceDocumentType, ...]]] = [
+    ("Identity proof", (InsuranceDocumentType.PHOTO_ID,)),
+    ("Address proof", (InsuranceDocumentType.PROOF_OF_ADDRESS,)),
+    ("Age proof", (InsuranceDocumentType.AGE_PROOF, InsuranceDocumentType.CHILD_BIRTH_CERTIFICATE)),
+    ("Photograph", (InsuranceDocumentType.PASSPORT_PHOTO,)),
+    ("Proposal form", (InsuranceDocumentType.HEALTH_APPLICATION, InsuranceDocumentType.ENROLLMENT_FORM)),
+    ("Medical declaration", (InsuranceDocumentType.HEALTH_QUESTIONNAIRE,)),
+]
+
+GENERAL_CATALOG: list[tuple[str, tuple[InsuranceDocumentType, ...]]] = [
+    ("Identity proof", (InsuranceDocumentType.PHOTO_ID,)),
+    ("Address proof", (InsuranceDocumentType.PROOF_OF_ADDRESS,)),
+    ("Proposal / application", (InsuranceDocumentType.ACORD_XML, InsuranceDocumentType.HEALTH_APPLICATION)),
+]
+
 PERSONAL_CATALOGS: dict[str, list[tuple[str, tuple[InsuranceDocumentType, ...]]]] = {
     "homeowners": HOME_CATALOG,
     "auto": AUTO_CATALOG,
     "life": LIFE_CATALOG,
+    "health": HEALTH_CATALOG,
+    "general": GENERAL_CATALOG,
 }
 
 
@@ -116,10 +133,127 @@ def _types_for_label(label: str) -> tuple[InsuranceDocumentType, ...]:
         add(InsuranceDocumentType.HIPAA_AUTHORIZATION)
     if "mib" in text or "medical information bureau" in text or "rx database" in text:
         add(InsuranceDocumentType.MIB_RX_AUTHORIZATION)
-    if "health questionnaire" in text or "health declaration" in text or "simplified health" in text:
+    if "health questionnaire" in text or "health declaration" in text or "simplified health" in text or "medical declaration" in text or "self-declaration of good health" in text or "self declared health" in text:
         add(InsuranceDocumentType.HEALTH_QUESTIONNAIRE)
+    if "proposal form" in text or "health application" in text or "mediclaim proposal" in text or "master policy proposal" in text or "master proposal" in text:
+        add(InsuranceDocumentType.HEALTH_APPLICATION)
+        add(InsuranceDocumentType.ENROLLMENT_FORM)
+    if "age proof" in text or "10th marksheet" in text:
+        add(InsuranceDocumentType.AGE_PROOF)
+    if "passport-size" in text or "passport size" in text or ("photograph" in text and "photo id" not in text):
+        add(InsuranceDocumentType.PASSPORT_PHOTO)
+    if "aadhaar" in text or "voter id" in text or "identity proof" in text or "id proof" in text or "id + address" in text:
+        add(InsuranceDocumentType.PHOTO_ID)
+    if "address proof" in text:
+        add(InsuranceDocumentType.PROOF_OF_ADDRESS)
+    if "marriage certificate" in text or "marital status" in text:
+        add(InsuranceDocumentType.MARRIAGE_CERTIFICATE)
+    if "nominee" in text or "nomination form" in text:
+        add(InsuranceDocumentType.NOMINEE_FORM)
+        add(InsuranceDocumentType.BENEFICIARY_FORM)
+    if "occupation" in text:
+        add(InsuranceDocumentType.OCCUPATION_PROOF)
+    if "gst" in text or "company registration" in text or "company pan" in text or "association registration" in text:
+        add(InsuranceDocumentType.COMPANY_REGISTRATION)
+    if "employee list" in text or "member list" in text or "payroll" in text:
+        add(InsuranceDocumentType.EMPLOYEE_CENSUS)
+    if "existing illness" in text or "pre-existing" in text or "ped " in text or "existing condition" in text:
+        add(InsuranceDocumentType.PRE_EXISTING_DECLARATION)
+    if "family medical history" in text or "family history" in text or "family cardiac" in text:
+        add(InsuranceDocumentType.FAMILY_MEDICAL_HISTORY)
+    if "doctor" in text or "medical fitness" in text:
+        add(InsuranceDocumentType.DOCTOR_CERTIFICATE)
+    if "medication" in text or "prescription list" in text:
+        add(InsuranceDocumentType.MEDICATION_LIST)
+    if "visa" in text or "itinerary" in text or "travel ticket" in text:
+        add(InsuranceDocumentType.TRAVEL_DOCUMENTS)
+    if "wellness" in text or "fitness app" in text:
+        add(InsuranceDocumentType.WELLNESS_CONSENT)
+    if "pre-policy medical" in text or "pre policy medical" in text or "medical check-up" in text or "medical checkup" in text or "ecg" in text or "blood sugar" in text or "kidney function" in text:
+        add(InsuranceDocumentType.MEDICAL_EXAM)
+    if "birth certificate" in text:
+        add(InsuranceDocumentType.CHILD_BIRTH_CERTIFICATE)
+        add(InsuranceDocumentType.AGE_PROOF)
+    if "cancelled cheque" in text or "bank account" in text or "auto-debit" in text or "payment instrument" in text:
+        add(InsuranceDocumentType.BANK_ACH_FORM)
+    if "suitability" in text or "risk profile" in text:
+        add(InsuranceDocumentType.SUITABILITY_QUESTIONNAIRE)
+    if "existing base policy" in text or "existing policy" in text or "base policy copy" in text:
+        add(InsuranceDocumentType.DEC_PAGE)
+    if "previous claim" in text or "claim history" in text:
+        add(InsuranceDocumentType.LOSS_RUN)
     if "income proof" in text or "pay stub" in text or "paystub" in text or "w-2" in text:
         add(InsuranceDocumentType.INCOME_PROOF)
+
+    # General / non-life
+    if "registration certificate" in text or "vehicle rc" in text or " rc of" in text:
+        add(InsuranceDocumentType.VEHICLE_RC)
+    if "driving license" in text or "driving licence" in text:
+        add(InsuranceDocumentType.DRIVING_LICENSE)
+    if "fitness certificate" in text:
+        add(InsuranceDocumentType.FITNESS_CERTIFICATE)
+    if "permit" in text and ("national" in text or "state" in text or "vehicle" in text or "copy" in text):
+        add(InsuranceDocumentType.VEHICLE_PERMIT)
+    if "puc" in text or "pollution under control" in text:
+        add(InsuranceDocumentType.PUC_CERTIFICATE)
+    if "invoice" in text and ("vehicle" in text or "new vehicle" in text or "goods" in text or "purchase" in text):
+        add(InsuranceDocumentType.VEHICLE_INVOICE)
+    if "sale deed" in text or "title deed" in text or "ownership proof" in text or "registry" in text:
+        add(InsuranceDocumentType.PROPERTY_DEED)
+    if "valuation" in text:
+        add(InsuranceDocumentType.VALUATION_REPORT)
+    if "property tax" in text:
+        add(InsuranceDocumentType.PROPERTY_TAX)
+    if "list of insured" in text or "insured items" in text or ("contents" in text and "invoice" in text):
+        add(InsuranceDocumentType.CONTENTS_SCHEDULE)
+    if "packing list" in text:
+        add(InsuranceDocumentType.PACKING_LIST)
+    if "bill of lading" in text or "airway bill" in text or "air waybill" in text:
+        add(InsuranceDocumentType.BILL_OF_LADING)
+    if "iec" in text or ("importer" in text and "exporter" in text):
+        add(InsuranceDocumentType.IEC_CERTIFICATE)
+    if "letter of credit" in text:
+        add(InsuranceDocumentType.LETTER_OF_CREDIT)
+    if "vessel registration" in text or "ship registration" in text:
+        add(InsuranceDocumentType.VESSEL_REGISTRATION)
+    if "classification society" in text or "seaworthiness" in text:
+        add(InsuranceDocumentType.CLASSIFICATION_CERTIFICATE)
+    if "crew list" in text:
+        add(InsuranceDocumentType.CREW_LIST)
+    if "fire safety" in text:
+        add(InsuranceDocumentType.FIRE_SAFETY_CERTIFICATE)
+    if "professional license" in text or "medical/legal" in text or "ca license" in text:
+        add(InsuranceDocumentType.PROFESSIONAL_LICENSE)
+    if "manufacturing license" in text:
+        add(InsuranceDocumentType.MANUFACTURING_LICENSE)
+    if "iso" in text or "bis" in text or "quality certification" in text:
+        add(InsuranceDocumentType.QUALITY_CERTIFICATION)
+    if "khasra" in text or "khatauni" in text or "7-12" in text or "land ownership" in text or "tenancy" in text:
+        add(InsuranceDocumentType.LAND_RECORD)
+    if "sowing" in text:
+        add(InsuranceDocumentType.SOWING_CERTIFICATE)
+    if "animal health" in text:
+        add(InsuranceDocumentType.ANIMAL_HEALTH_CERT)
+    if "vaccination" in text:
+        add(InsuranceDocumentType.PET_VACCINATION)
+    if "event license" in text or "event permit" in text:
+        add(InsuranceDocumentType.EVENT_PERMIT)
+    if "vendor contract" in text or "venue booking" in text or "artist" in text:
+        add(InsuranceDocumentType.VENDOR_CONTRACT)
+    if "encumbrance" in text:
+        add(InsuranceDocumentType.ENCUMBRANCE_CERTIFICATE)
+    if "title search" in text:
+        add(InsuranceDocumentType.TITLE_SEARCH)
+    if "treaty" in text or "facultative" in text or "reinsurance agreement" in text:
+        add(InsuranceDocumentType.TREATY_AGREEMENT)
+    if "solvency" in text:
+        add(InsuranceDocumentType.SOLVENCY_STATEMENT)
+    if "category certificate" in text:
+        add(InsuranceDocumentType.CATEGORY_CERTIFICATE)
+    if "e-kyc" in text or "ekyc" in text or "digital kyc" in text:
+        add(InsuranceDocumentType.EKYC)
+    if "weather station" in text:
+        add(InsuranceDocumentType.SOWING_CERTIFICATE)
 
     # Life — product-specific add-ons
     if "illustration acknowledgment" in text or "illustration acknowledgement" in text:
@@ -239,6 +373,48 @@ def _life_catalogs() -> dict[str, list[tuple[str, tuple[InsuranceDocumentType, .
     return _catalogs_from_lobs(LIFE_LINES, flatten=flatten_line_documents)
 
 
+def _health_catalogs() -> dict[str, list[tuple[str, tuple[InsuranceDocumentType, ...]]]]:
+    from insureflow.insurance.commercial_lobs import flatten_line_documents
+    from insureflow.insurance.health_lobs import HEALTH_LINES
+
+    return _catalogs_from_lobs(HEALTH_LINES, flatten=flatten_line_documents)
+
+
+def _general_catalogs() -> dict[str, list[tuple[str, tuple[InsuranceDocumentType, ...]]]]:
+    from insureflow.insurance.commercial_lobs import flatten_line_documents
+    from insureflow.insurance.general_lobs import GENERAL_LINES
+
+    return _catalogs_from_lobs(GENERAL_LINES, flatten=flatten_line_documents)
+
+
+def _general_union_catalog() -> list[tuple[str, tuple[InsuranceDocumentType, ...]]]:
+    from insureflow.insurance.commercial_lobs import flatten_line_documents
+    from insureflow.insurance.general_lobs import GENERAL_LINES
+
+    docs: list[str] = []
+    seen: set[str] = set()
+    for line in GENERAL_LINES:
+        for doc in flatten_line_documents(line):
+            if doc not in seen:
+                seen.add(doc)
+                docs.append(doc)
+    return _catalog_from_documents(docs)
+
+
+def _health_union_catalog() -> list[tuple[str, tuple[InsuranceDocumentType, ...]]]:
+    from insureflow.insurance.commercial_lobs import flatten_line_documents
+    from insureflow.insurance.health_lobs import HEALTH_LINES
+
+    docs: list[str] = []
+    seen: set[str] = set()
+    for line in HEALTH_LINES:
+        for doc in flatten_line_documents(line):
+            if doc not in seen:
+                seen.add(doc)
+                docs.append(doc)
+    return _catalog_from_documents(docs)
+
+
 def _life_union_catalog() -> list[tuple[str, tuple[InsuranceDocumentType, ...]]]:
     """Union of every required document across all life products (base + add-ons).
 
@@ -262,6 +438,8 @@ def _build_catalogs() -> dict[str, list[tuple[str, tuple[InsuranceDocumentType, 
     catalogs = dict(PERSONAL_CATALOGS)
     catalogs.update(_commercial_catalogs())
     catalogs.update(_life_catalogs())
+    catalogs.update(_health_catalogs())
+    catalogs.update(_general_catalogs())
     # Generic "life" (used by triage / pipeline) = legacy core + full union of
     # every product's required documents so no life document is untracked.
     generic_life = list(LIFE_CATALOG)
@@ -271,6 +449,20 @@ def _build_catalogs() -> dict[str, list[tuple[str, tuple[InsuranceDocumentType, 
             generic_life.append((label, types))
             seen_labels.add(label)
     catalogs["life"] = generic_life
+    generic_health = list(HEALTH_CATALOG)
+    seen_health = {label for label, _ in generic_health}
+    for label, types in _health_union_catalog():
+        if label not in seen_health:
+            generic_health.append((label, types))
+            seen_health.add(label)
+    catalogs["health"] = generic_health
+    generic_general = list(GENERAL_CATALOG)
+    seen_general = {label for label, _ in generic_general}
+    for label, types in _general_union_catalog():
+        if label not in seen_general:
+            generic_general.append((label, types))
+            seen_general.add(label)
+    catalogs["general"] = generic_general
     return catalogs
 
 
@@ -359,6 +551,18 @@ def normalize_checklist_lob(lob: str) -> str:
     if aliased:
         return aliased
     try:
+        from insureflow.insurance.general_lobs import resolve_general_checklist_lob
+        from insureflow.insurance.health_lobs import resolve_health_checklist_lob
+
+        health_lob = resolve_health_checklist_lob(raw)
+        if health_lob:
+            return health_lob
+        general_lob = resolve_general_checklist_lob(raw)
+        if general_lob:
+            return general_lob
+    except Exception:
+        pass
+    try:
         from insureflow.insurance.commercial_lobs import resolve_checklist_lob
 
         return resolve_checklist_lob(raw, default="property")
@@ -376,7 +580,7 @@ def detect_lob(text_blob: str = "", product_hint: str = "") -> str:
 
     if hint:
         normalized_hint = normalize_checklist_lob(hint)
-        if commercial and normalized_hint in {"life", "auto", "homeowners"}:
+        if commercial and normalized_hint in {"life", "health", "general", "auto", "homeowners"}:
             return "property"
         if normalized_hint in CATALOGS:
             return normalized_hint
@@ -399,6 +603,62 @@ def detect_lob(text_blob: str = "", product_hint: str = "") -> str:
         any(
             k in blob
             for k in (
+                "health insurance",
+                "mediclaim",
+                "family floater",
+                "critical illness",
+                "personal accident",
+                "hospital cash",
+                "super top-up",
+                "super top up",
+                "senior citizen health",
+                "opd cover",
+                "insurance_line: health",
+                "insurance_line=health",
+                "disability income",
+            )
+        )
+        and not commercial
+    ):
+        return "health"
+
+    if (
+        any(
+            k in blob
+            for k in (
+                "third-party only",
+                "third party only",
+                "two-wheeler insurance",
+                "two wheeler insurance",
+                "commercial vehicle insurance",
+                "registration certificate of vehicle",
+                "domestic travel insurance",
+                "international travel insurance",
+                "marine cargo",
+                "marine hull",
+                "standard fire",
+                "professional indemnity",
+                "public liability insurance",
+                "yield-based crop",
+                "weather-based crop",
+                "livestock insurance",
+                "pet insurance",
+                "wedding insurance",
+                "title insurance",
+                "encumbrance certificate",
+                "reinsurance agreement",
+                "insurance_line: general",
+                "insurance_line=general",
+            )
+        )
+        and not commercial
+    ):
+        return "general"
+
+    if (
+        any(
+            k in blob
+            for k in (
                 "life insurance",
                 "term life",
                 "whole life",
@@ -409,8 +669,6 @@ def detect_lob(text_blob: str = "", product_hint: str = "") -> str:
                 "final expense",
                 "simplified issue",
                 "guaranteed issue",
-                "critical illness",
-                "disability income",
                 "long-term care hybrid",
                 "face amount",
                 "beneficiary designation",
@@ -544,9 +802,11 @@ def _coverage_scoped_catalog(lob: str, coverage_id: str) -> list[tuple[str, tupl
         get_commercial_line,
         get_line_coverage,
     )
+    from insureflow.insurance.general_lobs import get_general_line
+    from insureflow.insurance.health_lobs import get_health_line
     from insureflow.insurance.life_lobs import get_life_line
 
-    line = get_life_line(lob) or get_commercial_line(lob)
+    line = get_general_line(lob) or get_health_line(lob) or get_life_line(lob) or get_commercial_line(lob)
     if not line or get_line_coverage(line, coverage_id) is None:
         return None
     docs = flatten_coverage_documents(line, coverage_id)

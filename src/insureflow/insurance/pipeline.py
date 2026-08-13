@@ -48,30 +48,68 @@ logger = logging.getLogger(__name__)
 
 def _resolve_picker_scope(
     *,
-    insurance_line: str | None,
-    commercial_product_id: str | None,
-    life_product_id: str | None,
-    life_coverage_id: str | None,
-    commercial_coverage_id: str | None,
-    commercial_product_name: str | None,
-    commercial_coverage_name: str | None,
-    pre_blob: str,
+    insurance_line: str | None = None,
+    commercial_product_id: str | None = None,
+    life_product_id: str | None = None,
+    life_coverage_id: str | None = None,
+    health_product_id: str | None = None,
+    health_coverage_id: str | None = None,
+    general_product_id: str | None = None,
+    general_coverage_id: str | None = None,
+    commercial_coverage_id: str | None = None,
+    commercial_product_name: str | None = None,
+    commercial_coverage_name: str | None = None,
+    pre_blob: str = "",
 ) -> dict[str, Any]:
     """Honor the taxonomy picker: only the selected product + coverage runs."""
     from insureflow.insurance.commercial_lobs import get_commercial_line, get_line_coverage
+    from insureflow.insurance.general_lobs import detect_general_product, get_general_coverage, resolve_general_checklist_lob
+    from insureflow.insurance.health_lobs import detect_health_product, get_health_coverage, resolve_health_checklist_lob
     from insureflow.insurance.life_lobs import detect_life_product, get_life_coverage, resolve_life_checklist_lob
     from insureflow.rating.models import InsuranceLine
     from insureflow.underwriting.personal_lines import detect_insurance_line, parse_insurance_line
 
-    selected_coverage_id = (life_coverage_id or commercial_coverage_id or "").strip() or None
+    selected_coverage_id = (general_coverage_id or health_coverage_id or life_coverage_id or commercial_coverage_id or "").strip() or None
     life_checklist_lob: str | None = None
+    health_checklist_lob: str | None = None
+    general_checklist_lob: str | None = None
     commercial_checklist_lob: str | None = None
     product_name = commercial_product_name
     coverage_name = commercial_coverage_name
     resolved_line = None
 
+    general_from_coverage = bool(selected_coverage_id and resolve_general_checklist_lob(selected_coverage_id))
+    if general_product_id or general_from_coverage:
+        general_line, general_cov = get_general_coverage(general_product_id, selected_coverage_id)
+        general_checklist_lob = (
+            (str(general_line.get("checklist_lob") or "").strip() or None if general_line else None)
+            or resolve_general_checklist_lob(general_product_id)
+            or resolve_general_checklist_lob(selected_coverage_id)
+        )
+        if general_checklist_lob:
+            resolved_line = InsuranceLine.GENERAL
+            if general_line:
+                product_name = product_name or str(general_line.get("name") or "") or None
+            if general_cov:
+                coverage_name = coverage_name or str(general_cov.get("name") or "") or None
+                selected_coverage_id = str(general_cov.get("id") or selected_coverage_id)
+    health_from_coverage = bool(selected_coverage_id and resolve_health_checklist_lob(selected_coverage_id))
+    if resolved_line is None and (health_product_id or health_from_coverage):
+        health_line, health_cov = get_health_coverage(health_product_id, selected_coverage_id)
+        health_checklist_lob = (
+            (str(health_line.get("checklist_lob") or "").strip() or None if health_line else None)
+            or resolve_health_checklist_lob(health_product_id)
+            or resolve_health_checklist_lob(selected_coverage_id)
+        )
+        if health_checklist_lob:
+            resolved_line = InsuranceLine.HEALTH
+            if health_line:
+                product_name = product_name or str(health_line.get("name") or "") or None
+            if health_cov:
+                coverage_name = coverage_name or str(health_cov.get("name") or "") or None
+                selected_coverage_id = str(health_cov.get("id") or selected_coverage_id)
     life_from_coverage = bool(selected_coverage_id and resolve_life_checklist_lob(selected_coverage_id))
-    if life_product_id or life_from_coverage:
+    if resolved_line is None and (life_product_id or life_from_coverage):
         life_line, life_cov = get_life_coverage(life_product_id, selected_coverage_id)
         life_checklist_lob = (
             (str(life_line.get("checklist_lob") or "").strip() or None if life_line else None) or resolve_life_checklist_lob(life_product_id) or resolve_life_checklist_lob(selected_coverage_id)
@@ -83,7 +121,7 @@ def _resolve_picker_scope(
             if life_cov:
                 coverage_name = coverage_name or str(life_cov.get("name") or "") or None
                 selected_coverage_id = str(life_cov.get("id") or selected_coverage_id)
-    elif commercial_product_id:
+    if resolved_line is None and commercial_product_id:
         comm_line = get_commercial_line(commercial_product_id)
         if comm_line:
             commercial_checklist_lob = str(comm_line.get("checklist_lob") or "").strip() or None
@@ -100,14 +138,20 @@ def _resolve_picker_scope(
 
     if resolved_line is None:
         resolved_line = detect_insurance_line(pre_blob, insurance_line or "")
-        if resolved_line is not None and resolved_line.value == "life":
+        if resolved_line is not None and resolved_line.value == "general":
+            general_checklist_lob = resolve_general_checklist_lob(general_product_id) or detect_general_product(pre_blob)
+        elif resolved_line is not None and resolved_line.value == "health":
+            health_checklist_lob = resolve_health_checklist_lob(health_product_id) or detect_health_product(pre_blob)
+        elif resolved_line is not None and resolved_line.value == "life":
             life_checklist_lob = resolve_life_checklist_lob(life_product_id) or detect_life_product(pre_blob)
 
     return {
         "resolved_line": resolved_line,
         "life_checklist_lob": life_checklist_lob,
+        "health_checklist_lob": health_checklist_lob,
+        "general_checklist_lob": general_checklist_lob,
         "commercial_checklist_lob": commercial_checklist_lob,
-        "checklist_hint": life_checklist_lob or commercial_checklist_lob,
+        "checklist_hint": general_checklist_lob or health_checklist_lob or life_checklist_lob or commercial_checklist_lob,
         "selected_coverage_id": selected_coverage_id,
         "product_name": product_name,
         "coverage_name": coverage_name,
@@ -185,6 +229,10 @@ class InsurancePipeline:
         commercial_product_id: str | None = None,
         life_product_id: str | None = None,
         life_coverage_id: str | None = None,
+        health_product_id: str | None = None,
+        health_coverage_id: str | None = None,
+        general_product_id: str | None = None,
+        general_coverage_id: str | None = None,
         commercial_coverage_id: str | None = None,
         commercial_product_name: str | None = None,
         commercial_coverage_name: str | None = None,
@@ -236,6 +284,10 @@ class InsurancePipeline:
             commercial_product_id=commercial_product_id,
             life_product_id=life_product_id,
             life_coverage_id=life_coverage_id,
+            health_product_id=health_product_id,
+            health_coverage_id=health_coverage_id,
+            general_product_id=general_product_id,
+            general_coverage_id=general_coverage_id,
             commercial_coverage_id=commercial_coverage_id,
             commercial_product_name=commercial_product_name,
             commercial_coverage_name=commercial_coverage_name,
@@ -243,6 +295,8 @@ class InsurancePipeline:
         )
         resolved_line = scope["resolved_line"]
         life_checklist_lob = scope["life_checklist_lob"]
+        health_checklist_lob = scope["health_checklist_lob"]
+        general_checklist_lob = scope["general_checklist_lob"]
         checklist_hint = scope["checklist_hint"]
         selected_coverage_id = scope["selected_coverage_id"]
         commercial_product_name = scope["product_name"] or commercial_product_name
@@ -652,8 +706,24 @@ class InsurancePipeline:
         oracle_findings: list[Any] = []
         ofac_meta: dict[str, Any] = {}
         is_life_line = (resolved_line is not None and resolved_line.value == "life") or checklist_lob == "life" or life_checklist_lob is not None
+        is_health_line = (resolved_line is not None and resolved_line.value == "health") or checklist_lob == "health" or health_checklist_lob is not None
+        is_general_line = (resolved_line is not None and resolved_line.value == "general") or checklist_lob == "general" or general_checklist_lob is not None
         if funnel:
             progress.skip("verify", "Verified", "Deferred — available via Deep Dive")
+        elif is_general_line:
+            progress.start("verify", "Verified", "General / non-life — OFAC / sanctions")
+            from insureflow.underwriting.sanctions_gate import screen_submission
+
+            ofac_result = screen_submission(bundle)
+            ofac_meta = ofac_result.to_metadata()
+            progress.complete("verify", detail="OFAC complete")
+        elif is_health_line:
+            progress.start("verify", "Verified", "Health — OFAC / sanctions")
+            from insureflow.underwriting.sanctions_gate import screen_submission
+
+            ofac_result = screen_submission(bundle)
+            ofac_meta = ofac_result.to_metadata()
+            progress.complete("verify", detail="OFAC complete")
         elif is_life_line:
             progress.start("verify", "Verified", "Life bureaus — MIB / Rx / OFAC")
             from insureflow.underwriting.mib import persist_mib_report, request_mib_report
@@ -897,8 +967,8 @@ class InsurancePipeline:
             status="warning" if memo.human_review_required else "complete",
         )
 
-        # Drop P&C-only findings on life so the memo/report stay coherent
-        if is_life_line:
+        # Drop P&C-only findings on life/health so the memo/report stay coherent
+        if is_life_line or is_health_line or is_general_line:
             from insureflow.underwriting.memo_sync import dedupe_findings, resync_memo_narrative
 
             def _property_only(f: Any) -> bool:
@@ -939,8 +1009,8 @@ class InsurancePipeline:
         adverse_result = None
         if funnel:
             progress.skip("portfolio", "Portfolio", "Deferred — available via Deep Dive")
-        elif is_life_line:
-            progress.skip("portfolio", "Portfolio", "Not applicable for life")
+        elif is_life_line or is_health_line or is_general_line:
+            progress.skip("portfolio", "Portfolio", "Not applicable for personal life/health/general")
         elif not skip_portfolio:
             bundle.status = SubmissionStatus.PORTFOLIO_REVIEW
             portfolio_result = self.portfolio_risk.run(bundle, org_id=self.org_id)
@@ -1067,6 +1137,8 @@ class InsurancePipeline:
         life_reinsurance_meta: dict[str, Any] = {}
         if funnel:
             progress.skip("reinsurance", "Reinsurance", "Deferred — available via Deep Dive")
+        elif is_health_line or is_general_line:
+            progress.skip("reinsurance", "Reinsurance", "Not applicable for retail health/general catalog")
         elif is_life_line:
             from insureflow.underwriting.life_reinsurance import evaluate_life_reinsurance
             from insureflow.underwriting.memo_sync import worst_decision
@@ -1120,6 +1192,10 @@ class InsurancePipeline:
         )
         if life_checklist_lob:
             line_for_quote = InsuranceLine.LIFE
+        elif health_checklist_lob:
+            line_for_quote = InsuranceLine.HEALTH
+        elif general_checklist_lob:
+            line_for_quote = InsuranceLine.GENERAL
         else:
             line_for_quote = resolve_quote_line(
                 commercial_product_id=commercial_product_id,
@@ -1134,7 +1210,7 @@ class InsurancePipeline:
             bundle,
             memo,
             line=line_for_quote,
-            commercial_product_id=commercial_product_id,
+            commercial_product_id=commercial_product_id or life_product_id or health_product_id or general_product_id,
             commercial_coverage_id=selected_coverage_id,
             experience_mod=experience_mod,
         )
@@ -1299,6 +1375,54 @@ class InsurancePipeline:
                     f"scenarios={','.join((commercial_uw_summary or {}).get('scenario_codes') or []) or 'none'}; "
                     f"premium_mod={(commercial_uw_summary or {}).get('premium_mod_pct', 0)}%."
                 ),
+            )
+        elif line_for_quote == InsuranceLine.GENERAL:
+            from insureflow.models.agents import UWDecision
+            from insureflow.underwriting.general_uw import underwrite_general
+            from insureflow.underwriting.memo_sync import resync_memo_narrative, worst_decision
+
+            general_uw = underwrite_general(
+                bundle,
+                product_id=general_product_id or commercial_product_id,
+                coverage_id=selected_coverage_id or general_coverage_id,
+            )
+            for f in general_uw.findings:
+                memo.key_findings.append(f)
+            memo.decision = worst_decision(memo.decision, general_uw.decision)
+            memo.human_review_reasons.extend(general_uw.reasons)
+            memo.conditions.extend(general_uw.conditions)
+            if general_uw.decision != UWDecision.ACCEPT:
+                memo.human_review_required = True
+            qmeta = dict(quote.metadata or {})
+            qmeta["general_uw"] = general_uw.to_metadata()
+            quote.metadata = qmeta
+            resync_memo_narrative(
+                memo,
+                extra_summary=(f"General {general_uw.product_family} product={general_uw.product_id} coverage={general_uw.coverage_id or '—'} decision={general_uw.decision.value}."),
+            )
+        elif line_for_quote == InsuranceLine.HEALTH:
+            from insureflow.models.agents import UWDecision
+            from insureflow.underwriting.health_uw import underwrite_health
+            from insureflow.underwriting.memo_sync import resync_memo_narrative, worst_decision
+
+            health_uw = underwrite_health(
+                bundle,
+                product_id=health_product_id or commercial_product_id,
+                coverage_id=selected_coverage_id or health_coverage_id,
+            )
+            for f in health_uw.findings:
+                memo.key_findings.append(f)
+            memo.decision = worst_decision(memo.decision, health_uw.decision)
+            memo.human_review_reasons.extend(health_uw.reasons)
+            memo.conditions.extend(health_uw.conditions)
+            if health_uw.decision != UWDecision.ACCEPT:
+                memo.human_review_required = True
+            qmeta = dict(quote.metadata or {})
+            qmeta["health_uw"] = health_uw.to_metadata()
+            quote.metadata = qmeta
+            resync_memo_narrative(
+                memo,
+                extra_summary=(f"Health {health_uw.product_family} product={health_uw.product_id} coverage={health_uw.coverage_id or '—'} decision={health_uw.decision.value}."),
             )
         elif line_for_quote in (InsuranceLine.PERSONAL_HOMEOWNERS, InsuranceLine.PERSONAL_AUTO):
             from insureflow.underwriting.memo_sync import resync_memo_narrative
@@ -1520,8 +1644,14 @@ class InsurancePipeline:
             "commercial_product_id": commercial_product_id,
             "life_product_id": life_product_id,
             "life_coverage_id": life_coverage_id or (selected_coverage_id if life_checklist_lob else None),
+            "health_product_id": health_product_id,
+            "health_coverage_id": health_coverage_id or (selected_coverage_id if health_checklist_lob else None),
+            "general_product_id": general_product_id,
+            "general_coverage_id": general_coverage_id or (selected_coverage_id if general_checklist_lob else None),
             "checklist_lob": checklist_lob,
             "life_checklist_lob": life_checklist_lob,
+            "health_checklist_lob": health_checklist_lob,
+            "general_checklist_lob": general_checklist_lob,
             "commercial_coverage_id": commercial_coverage_id,
             "commercial_product_name": commercial_product_name,
             "commercial_coverage_name": commercial_coverage_name,
@@ -1572,6 +1702,10 @@ class InsurancePipeline:
                 "coverage_id": commercial_coverage_id,
                 "term_years": (quote.metadata or {}).get("term_years"),
                 "life_coverage_id": (quote.metadata or {}).get("life_coverage_id"),
+                "health_uw": (quote.metadata or {}).get("health_uw"),
+                "general_uw": (quote.metadata or {}).get("general_uw"),
+                "benefit_type": (quote.metadata or {}).get("benefit_type"),
+                "requires_passport": (quote.metadata or {}).get("requires_passport"),
                 "specialty": bool((quote.metadata or {}).get("specialty")),
                 "exposure_basis": (quote.metadata or {}).get("exposure_basis"),
                 "medical": (quote.metadata or {}).get("medical"),

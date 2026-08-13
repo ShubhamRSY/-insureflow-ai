@@ -73,6 +73,13 @@ export const INSURANCE_LINE_NAMES = {
   personal_homeowners: 'Personal Homeowners',
   personal_auto: 'Personal Auto',
   life: 'Life Insurance',
+  health: 'Health Insurance',
+  general: 'General / Non-Life Insurance',
+  mediclaim: 'Health Insurance',
+  family_floater: 'Family Floater Health',
+  critical_illness: 'Critical Illness Insurance',
+  personal_accident: 'Personal Accident Insurance',
+  hospital_cash: 'Hospital Cash',
 };
 
 export function insuranceLineLabel(value) {

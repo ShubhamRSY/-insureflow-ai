@@ -39,6 +39,8 @@ export default function RunSelector({
   commercialSelection,
   onCommercialSelectionChange,
   isLifeProductPicker = false,
+  isHealthProductPicker = false,
+  isGeneralProductPicker = false,
   includePurpose = false,
   purposeOptions = [],
   purposeDefault = '',
@@ -81,6 +83,12 @@ export default function RunSelector({
       if (isLifeProductPicker) {
         body.life_product_id = commercialSelection.checklist_lob || commercialSelection.productId;
         body.life_coverage_id = commercialSelection.coverageId || undefined;
+      } else if (isHealthProductPicker) {
+        body.health_product_id = commercialSelection.checklist_lob || commercialSelection.productId;
+        body.health_coverage_id = commercialSelection.coverageId || undefined;
+      } else if (isGeneralProductPicker) {
+        body.general_product_id = commercialSelection.checklist_lob || commercialSelection.productId;
+        body.general_coverage_id = commercialSelection.coverageId || undefined;
       } else {
         body.commercial_product_id = commercialSelection.productId;
       }
@@ -351,7 +359,11 @@ export default function RunSelector({
           insuranceLine={activeProduct || ''}
           lifeProductId={isLifeProductPicker ? (commercialSelection?.checklist_lob || commercialSelection?.productId || '') : ''}
           lifeCoverageId={isLifeProductPicker ? (commercialSelection?.coverageId || '') : ''}
-          commercialProductId={!isLifeProductPicker ? (commercialSelection?.productId || '') : ''}
+          healthProductId={isHealthProductPicker ? (commercialSelection?.checklist_lob || commercialSelection?.productId || '') : ''}
+          healthCoverageId={isHealthProductPicker ? (commercialSelection?.coverageId || '') : ''}
+          generalProductId={isGeneralProductPicker ? (commercialSelection?.checklist_lob || commercialSelection?.productId || '') : ''}
+          generalCoverageId={isGeneralProductPicker ? (commercialSelection?.coverageId || '') : ''}
+          commercialProductId={(!isLifeProductPicker && !isHealthProductPicker && !isGeneralProductPicker) ? (commercialSelection?.productId || '') : ''}
           coverageId={commercialSelection?.coverageId || ''}
           productName={commercialSelection?.productName || ''}
           coverageName={commercialSelection?.coverageName || ''}

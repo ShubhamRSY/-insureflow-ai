@@ -15,13 +15,23 @@ const nav = [
   {
     to: '/insurance',
     icon: Shield,
-    label: 'Commercial Hub',
+    label: 'Insurance',
     color: 'text-insurance',
     defaultOpen: true,
     children: [
-      { to: '/insurance/commercial', label: 'Business & Commercial', tag: 'Live' },
-      { to: '/insurance/life', label: 'Life Insurance', tag: 'Live' },
-      { soon: true, label: 'Personal Lines (Home / Auto)' },
+      { to: '/insurance', label: 'All 12 sections' },
+      { to: '/insurance/sections/life', label: '1. Life', tag: 'Live' },
+      { to: '/insurance/sections/health', label: '2. Health', tag: 'Catalog' },
+      { to: '/insurance/sections/general', label: '3. General / Non-Life', tag: 'Catalog' },
+      { to: '/insurance/sections/commercial', label: '4. Business / Commercial', tag: 'Live' },
+      { to: '/insurance/sections/specialty', label: '5. Other / Specialty', tag: 'Catalog' },
+      { to: '/insurance/sections/provider', label: '6. By Provider Type', tag: 'Catalog' },
+      { to: '/insurance/sections/engineering', label: '7. Engineering', tag: 'Catalog' },
+      { to: '/insurance/sections/aviation', label: '8. Aviation', tag: 'Catalog' },
+      { to: '/insurance/sections/fidelity', label: '9. Fidelity & Burglary', tag: 'Catalog' },
+      { to: '/insurance/sections/catastrophe', label: '10. Catastrophe', tag: 'Catalog' },
+      { to: '/insurance/sections/niche-liability', label: '11. Niche Liability', tag: 'Catalog' },
+      { to: '/insurance/sections/warranty-financial-emerging', label: '12. Warranty / Financial / Emerging', tag: 'Catalog' },
     ],
   },
   { section: 'Reference' },
@@ -69,10 +79,13 @@ const nav = [
 const CRUMBS = [
   { prefix: '/reference/commercial', labels: ['Reference', 'Commercial insurance'] },
   { prefix: '/reference', labels: ['Reference', 'Notebooks'] },
-  { prefix: '/insurance/life', labels: ['Insurance', 'Commercial Hub', 'Life Insurance'] },
-  { prefix: '/insurance/commercial', labels: ['Insurance', 'Commercial Hub', 'Business & Commercial'] },
-  { prefix: '/insurance/', labels: ['Insurance', 'Commercial Hub'] },
-  { prefix: '/insurance', labels: ['Insurance', 'Commercial Hub'] },
+  { prefix: '/insurance/sections', labels: ['Insurance', 'Section'] },
+  { prefix: '/insurance/general', labels: ['Insurance', 'General / Non-Life'] },
+  { prefix: '/insurance/health', labels: ['Insurance', 'Health Insurance'] },
+  { prefix: '/insurance/life', labels: ['Insurance', 'Life Insurance'] },
+  { prefix: '/insurance/commercial', labels: ['Insurance', 'Business & Commercial'] },
+  { prefix: '/insurance/', labels: ['Insurance'] },
+  { prefix: '/insurance', labels: ['Insurance'] },
   { prefix: '/line-uw', labels: ['UW Operations', 'Line UW Desk'] },
   { prefix: '/staff-uw', labels: ['UW Operations', 'Staff UW Desk'] },
   { prefix: '/uw-workbench', labels: ['UW Operations', 'UW Workbench'] },
@@ -193,12 +206,17 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
                   <NavLink
                     key={child.to}
                     to={child.to}
+                    end={child.to === '/insurance'}
                     className={({ isActive }) => `nav-link ${isActive ? 'nav-link-active' : ''}`}
                   >
-                    <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${pathname.startsWith(child.to) ? 'bg-brand' : 'bg-slate-600'}`} />
+                    <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${(child.to === '/insurance' ? pathname === '/insurance' : pathname.startsWith(child.to)) ? 'bg-brand' : 'bg-slate-600'}`} />
                     <span className="flex-1">{child.label}</span>
                     {child.tag && (
-                      <span className="rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-400">
+                      <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
+                        child.tag === 'Live'
+                          ? 'bg-emerald-500/15 text-emerald-400'
+                          : 'bg-amber-500/15 text-amber-400'
+                      }`}>
                         {child.tag}
                       </span>
                     )}

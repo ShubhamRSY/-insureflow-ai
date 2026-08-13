@@ -99,6 +99,50 @@ def _detect_line_from_content(blob: str) -> InsuranceLine:
         any(
             k in blob
             for k in (
+                "health insurance",
+                "mediclaim",
+                "family floater",
+                "critical illness",
+                "personal accident",
+                "hospital cash",
+                "insurance_line: health",
+                "insurance_line=health",
+                "disability income",
+            )
+        )
+        and not commercial
+    ):
+        return InsuranceLine.HEALTH
+
+    if (
+        any(
+            k in blob
+            for k in (
+                "third-party only",
+                "third party only",
+                "two-wheeler insurance",
+                "commercial vehicle insurance",
+                "domestic travel insurance",
+                "international travel insurance",
+                "marine cargo",
+                "marine hull",
+                "title insurance",
+                "wedding insurance",
+                "pet insurance",
+                "yield-based crop",
+                "weather-based crop",
+                "insurance_line: general",
+                "insurance_line=general",
+            )
+        )
+        and not commercial
+    ):
+        return InsuranceLine.GENERAL
+
+    if (
+        any(
+            k in blob
+            for k in (
                 "life insurance application",
                 "term life",
                 "whole life",
@@ -293,6 +337,16 @@ def parse_insurance_line(value: str | None) -> InsuranceLine | None:
         "car": InsuranceLine.PERSONAL_AUTO,
         "life": InsuranceLine.LIFE,
         "term_life": InsuranceLine.LIFE,
+        "health": InsuranceLine.HEALTH,
+        "mediclaim": InsuranceLine.HEALTH,
+        "family_floater": InsuranceLine.HEALTH,
+        "critical_illness": InsuranceLine.HEALTH,
+        "personal_accident": InsuranceLine.HEALTH,
+        "hospital_cash": InsuranceLine.HEALTH,
+        "general": InsuranceLine.GENERAL,
+        "motor": InsuranceLine.GENERAL,
+        "travel": InsuranceLine.GENERAL,
+        "title_insurance": InsuranceLine.GENERAL,
         # Commercial specialty hub aliases
         "do": InsuranceLine.DIRECTORS_AND_OFFICERS,
         "d&o": InsuranceLine.DIRECTORS_AND_OFFICERS,

@@ -575,10 +575,14 @@ class SubmissionRequest(BaseModel):
     documents: Optional[list[InsuranceDocumentPayload]] = None
     pdf_paths: Optional[list[str]] = None
     bundle_id: Optional[str] = None
-    insurance_line: Optional[str] = None  # commercial_* | personal_homeowners | personal_auto | life
+    insurance_line: Optional[str] = None  # commercial_* | personal_homeowners | personal_auto | life | health | general
     commercial_product_id: Optional[str] = None
     life_product_id: Optional[str] = None  # life product slug / id / checklist_lob (e.g. single-premium-ulip)
     life_coverage_id: Optional[str] = None  # e.g. level_term_10 — scopes checklist + rating to that coverage only
+    health_product_id: Optional[str] = None
+    health_coverage_id: Optional[str] = None
+    general_product_id: Optional[str] = None
+    general_coverage_id: Optional[str] = None
     commercial_coverage_id: Optional[str] = None
     commercial_product_name: Optional[str] = None
     commercial_coverage_name: Optional[str] = None
@@ -1802,6 +1806,10 @@ def run_draft_bundle(
     insurance_line: str = "",
     life_product_id: str = "",
     life_coverage_id: str = "",
+    health_product_id: str = "",
+    health_coverage_id: str = "",
+    general_product_id: str = "",
+    general_coverage_id: str = "",
     commercial_product_id: str = "",
     commercial_coverage_id: str = "",
     commercial_product_name: str = "",
@@ -1878,6 +1886,10 @@ def run_draft_bundle(
         insurance_line=insurance_line or None,
         life_product_id=life_product_id or None,
         life_coverage_id=life_coverage_id or None,
+        health_product_id=health_product_id or None,
+        health_coverage_id=health_coverage_id or None,
+        general_product_id=general_product_id or None,
+        general_coverage_id=general_coverage_id or None,
         commercial_product_id=commercial_product_id or None,
         commercial_coverage_id=commercial_coverage_id or None,
         commercial_product_name=commercial_product_name or None,
@@ -2243,6 +2255,10 @@ def _run_pipeline_task(job_id: str, request: SubmissionRequest, org_id: str) -> 
                 commercial_product_id=request.commercial_product_id,
                 life_product_id=request.life_product_id,
                 life_coverage_id=request.life_coverage_id,
+                health_product_id=request.health_product_id,
+                health_coverage_id=request.health_coverage_id,
+                general_product_id=request.general_product_id,
+                general_coverage_id=request.general_coverage_id,
                 commercial_coverage_id=request.commercial_coverage_id,
                 commercial_product_name=request.commercial_product_name,
                 commercial_coverage_name=request.commercial_coverage_name,
@@ -4841,6 +4857,92 @@ def life_insurance_line(
     if not line:
         raise HTTPException(status_code=404, detail=f"Unknown life line: {line_id}")
     template = package_checklist([], lob=str(line.get("checklist_lob") or "life"))
+    return {**line, "checklist_template": template}
+
+
+@app.get("/insurance/health")
+def health_insurance_hub(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Health Insurance hub — taxonomy, lines, base packet, UW workflow."""
+    from insureflow.insurance.health_lobs import health_hub_payload
+
+    return health_hub_payload()
+
+
+@app.get("/insurance/health/taxonomy")
+def health_insurance_taxonomy(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Nested health taxonomy: categories → products → coverages."""
+    from insureflow.insurance.health_lobs import health_hub_payload, health_taxonomy_tree, list_health_categories
+
+    hub = health_hub_payload()
+    return {
+        "segment": hub["segment"],
+        "title": hub["title"],
+        "stats": hub["stats"],
+        "categories": list_health_categories(),
+        "taxonomy": health_taxonomy_tree(),
+    }
+
+
+@app.get("/insurance/health/lines/{line_id}")
+def health_insurance_line(
+    line_id: str,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Single health LOB: full document pack + UW responsibilities."""
+    from insureflow.insurance.health_lobs import get_health_line
+    from insureflow.insurance.package_checklist import package_checklist
+
+    line = get_health_line(line_id)
+    if not line:
+        raise HTTPException(status_code=404, detail=f"Unknown health line: {line_id}")
+    template = package_checklist([], lob=str(line.get("checklist_lob") or "health"))
+    return {**line, "checklist_template": template}
+
+
+@app.get("/insurance/general")
+def general_insurance_hub(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """General / Non-Life hub — taxonomy, lines, UW workflow."""
+    from insureflow.insurance.general_lobs import general_hub_payload
+
+    return general_hub_payload()
+
+
+@app.get("/insurance/general/taxonomy")
+def general_insurance_taxonomy(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Nested general taxonomy: categories → products → coverages."""
+    from insureflow.insurance.general_lobs import general_hub_payload, general_taxonomy_tree, list_general_categories
+
+    hub = general_hub_payload()
+    return {
+        "segment": hub["segment"],
+        "title": hub["title"],
+        "stats": hub["stats"],
+        "categories": list_general_categories(),
+        "taxonomy": general_taxonomy_tree(),
+    }
+
+
+@app.get("/insurance/general/lines/{line_id}")
+def general_insurance_line(
+    line_id: str,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Single general LOB: full document pack + UW responsibilities."""
+    from insureflow.insurance.general_lobs import get_general_line
+    from insureflow.insurance.package_checklist import package_checklist
+
+    line = get_general_line(line_id)
+    if not line:
+        raise HTTPException(status_code=404, detail=f"Unknown general line: {line_id}")
+    template = package_checklist([], lob=str(line.get("checklist_lob") or "general"))
     return {**line, "checklist_template": template}
 
 

@@ -234,7 +234,7 @@ class InsuranceRatingEngine:
             from insureflow.underwriting.personal_lines import _blob, _state_from_blob
 
             state = self._primary_state(bundle) or _state_from_blob(_blob(bundle))
-            deductible = 0.0 if line == InsuranceLine.LIFE else self._estimate_deductible(bundle)
+            deductible = 0.0 if line in {InsuranceLine.LIFE, InsuranceLine.HEALTH, InsuranceLine.GENERAL} else self._estimate_deductible(bundle)
             if deductible <= 0 and line == InsuranceLine.PERSONAL_HOMEOWNERS:
                 deductible = 1000.0
             result = rate_personal_line(
@@ -395,9 +395,9 @@ class InsuranceRatingEngine:
         schedule_mod = memo.recommendation.suggested_premium_modification if memo.recommendation else 0.0
         schedule_mod = schedule_mod or 0.0
 
-        deductible = 0.0 if line == InsuranceLine.LIFE else self._estimate_deductible(bundle)
+        deductible = 0.0 if line in {InsuranceLine.LIFE, InsuranceLine.HEALTH, InsuranceLine.GENERAL} else self._estimate_deductible(bundle)
         deductible_credit = 0.0
-        if line != InsuranceLine.LIFE:
+        if line not in {InsuranceLine.LIFE, InsuranceLine.HEALTH, InsuranceLine.GENERAL}:
             for (lo, hi), cr in DEDUCTIBLE_CREDITS.items():
                 if lo <= deductible < hi:
                     deductible_credit = cr
@@ -522,6 +522,64 @@ class InsuranceRatingEngine:
                             f"{name} is catalog-only — no filed permanent/annuity rates (do not price as 20-year term)",
                         ],
                         metadata={"rating_engine": "catalog_only", "product_id": product_id, "catalog_status": status or "catalog"},
+                    )
+            return None
+        if line == InsuranceLine.HEALTH:
+            from insureflow.insurance.health_lobs import get_health_line
+            from insureflow.underwriting.health_product import is_filed_health_product
+            from insureflow.underwriting.health_uw import health_product_terms
+
+            row = get_health_line(product_id)
+            if row:
+                status = str(row.get("status") or "")
+                name = str(row.get("name") or product_id)
+            if status == "catalog" or (row and not is_filed_health_product(product_id)):
+                if status != "live":
+                    terms = health_product_terms(product_id, commercial_coverage_id)
+                    return QuoteResult(
+                        bundle_id=bundle.bundle_id,
+                        line=line,
+                        base_premium=0.0,
+                        adjusted_premium=0.0,
+                        eligible=False,
+                        ineligibility_reasons=[
+                            f"{name} is catalog-only — no filed health rate manual (will not invent premium)",
+                        ],
+                        metadata={
+                            "rating_engine": "catalog_only",
+                            "product_id": product_id,
+                            "catalog_status": status or "catalog",
+                            **terms,
+                        },
+                    )
+            return None
+        if line == InsuranceLine.GENERAL:
+            from insureflow.insurance.general_lobs import get_general_line
+            from insureflow.underwriting.general_product import is_filed_general_product
+            from insureflow.underwriting.general_uw import general_product_terms
+
+            row = get_general_line(product_id)
+            if row:
+                status = str(row.get("status") or "")
+                name = str(row.get("name") or product_id)
+            if status == "catalog" or (row and not is_filed_general_product(product_id)):
+                if status != "live":
+                    terms = general_product_terms(product_id, commercial_coverage_id)
+                    return QuoteResult(
+                        bundle_id=bundle.bundle_id,
+                        line=line,
+                        base_premium=0.0,
+                        adjusted_premium=0.0,
+                        eligible=False,
+                        ineligibility_reasons=[
+                            f"{name} is catalog-only — no filed general rate manual (will not invent premium)",
+                        ],
+                        metadata={
+                            "rating_engine": "catalog_only",
+                            "product_id": product_id,
+                            "catalog_status": status or "catalog",
+                            **terms,
+                        },
                     )
             return None
         from insureflow.insurance.commercial_lobs import get_commercial_line
@@ -698,5 +756,9 @@ class InsuranceRatingEngine:
         elif line == InsuranceLine.PERSONAL_AUTO:
             return (cycle.auto_rate_mod - 1.0) * 100.0
         elif line == InsuranceLine.LIFE:
+            return 0.0
+        elif line == InsuranceLine.HEALTH:
+            return 0.0
+        elif line == InsuranceLine.GENERAL:
             return 0.0
         return (cycle.auto_rate_mod - 1.0) * 100.0

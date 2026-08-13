@@ -1,19 +1,48 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
-  FileText, ClipboardCheck, Shield, AlertCircle, HeartPulse, Stethoscope,
+  FileText, ClipboardCheck, Shield, AlertCircle, Umbrella, Car, Home, Plane,
+  Ship, Flame, Scale, Cpu, Leaf, Dog, Calendar, Landmark, Building2,
 } from 'lucide-react';
 import { endpoints } from '../lib/api';
 import { defaultCommercialSelection } from '../lib/commercialTaxonomy';
 import RunSelector from '../components/RunSelector';
 
 const LOB_ICONS = {
-  level_term: HeartPulse,
-  whole_life: Shield,
-  disability_income: Stethoscope,
+  car_tp: Car,
+  car_comprehensive: Car,
+  tw_tp: Car,
+  tw_comprehensive: Car,
+  cv_tp: Car,
+  cv_comprehensive: Car,
+  home_structure: Home,
+  home_contents: Home,
+  home_comprehensive: Home,
+  travel_domestic: Plane,
+  travel_international: Plane,
+  marine_cargo: Ship,
+  marine_hull: Ship,
+  fire_residential: Flame,
+  fire_commercial: Flame,
+  professional_indemnity_gi: Scale,
+  public_liability_gi: Scale,
+  product_liability_gi: Scale,
+  cyber_data_breach: Cpu,
+  cyber_ransomware: Cpu,
+  crop_yield: Leaf,
+  crop_weather: Leaf,
+  livestock_cattle: Dog,
+  pet_insurance: Dog,
+  wedding_insurance: Calendar,
+  concert_event_insurance: Calendar,
+  title_insurance_gi: Landmark,
+  mortgage_insurance_gi: Landmark,
+  insurer_psu: Building2,
+  insurer_private: Building2,
+  reinsurance_treaty: Building2,
 };
 
-export default function LifeLinePage({ presets, onRunDemo, onSubmit }) {
+export default function GeneralLinePage({ presets, onRunDemo, onSubmit }) {
   const { lobSlug } = useParams();
   const [line, setLine] = useState(null);
   const [error, setError] = useState('');
@@ -24,7 +53,7 @@ export default function LifeLinePage({ presets, onRunDemo, onSubmit }) {
     setLine(null);
     setError('');
     setSelection(null);
-    endpoints.lifeInsuranceLine(lobSlug)
+    endpoints.generalInsuranceLine(lobSlug)
       .then((d) => { if (!cancelled) setLine(d); })
       .catch((e) => { if (!cancelled) setError(e.message || 'Line not found'); });
     return () => { cancelled = true; };
@@ -33,7 +62,7 @@ export default function LifeLinePage({ presets, onRunDemo, onSubmit }) {
   const lineTaxonomy = useMemo(() => {
     if (!line) return [];
     return [{
-      id: line.category_id || 'life',
+      id: line.category_id || 'general',
       name: line.short_name || line.name,
       products: [{
         id: line.id,
@@ -56,8 +85,8 @@ export default function LifeLinePage({ presets, onRunDemo, onSubmit }) {
       <div className="mx-auto max-w-3xl py-16 text-center">
         <AlertCircle className="mx-auto h-8 w-8 text-red-400" />
         <p className="mt-3 text-red-400">{error}</p>
-        <Link to="/insurance/life" className="mt-4 inline-block text-sm text-brand hover:underline">
-          Back to life hub
+        <Link to="/insurance/general" className="mt-4 inline-block text-sm text-brand hover:underline">
+          Back to general hub
         </Link>
       </div>
     );
@@ -71,7 +100,7 @@ export default function LifeLinePage({ presets, onRunDemo, onSubmit }) {
     );
   }
 
-  const Icon = LOB_ICONS[line.id] || HeartPulse;
+  const Icon = LOB_ICONS[line.id] || Umbrella;
   const missingTemplate = line.checklist_template?.missing || line.documents || [];
 
   return (
@@ -82,21 +111,18 @@ export default function LifeLinePage({ presets, onRunDemo, onSubmit }) {
           <span className="text-slate-700">/</span>
           <Link to="/insurance" className="text-slate-600 transition hover:text-slate-300">Insurance</Link>
           <span className="text-slate-700">/</span>
-          <Link to="/insurance/life" className="text-slate-600 transition hover:text-slate-300">Life Insurance</Link>
+          <Link to="/insurance/general" className="text-slate-600 transition hover:text-slate-300">General / Non-Life</Link>
           <span className="text-slate-700">/</span>
           <span className="font-semibold text-slate-200">{line.name}</span>
         </nav>
         <div className="mt-3 flex items-start gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-500/15 text-rose-400">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-500/15 text-sky-400">
             <Icon className="h-6 w-6" />
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-rose-400">Life Insurance</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-sky-400">General / Non-Life</p>
             <h1 className="text-3xl font-bold tracking-tight text-slate-100">{line.name}</h1>
             <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">{line.description}</p>
-            {(line.acord_forms || []).length > 0 && (
-              <p className="mt-2 text-xs text-slate-500">{line.acord_forms.join(' · ')}</p>
-            )}
           </div>
         </div>
       </div>
@@ -108,7 +134,7 @@ export default function LifeLinePage({ presets, onRunDemo, onSubmit }) {
               <FileText className="h-4 w-4" /> Document pack
             </h2>
             <p className="mt-2 text-xs text-slate-500">
-              Line-specific submission requirements. Missing items drive triage / broker requests.
+              Leaf-specific submission requirements. Missing items drive triage / broker requests.
             </p>
             <ol className="mt-4 space-y-2">
               {(line.documents || []).map((doc, i) => (
@@ -120,19 +146,21 @@ export default function LifeLinePage({ presets, onRunDemo, onSubmit }) {
             </ol>
           </section>
 
-          <section className="glass-card p-6">
-            <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-slate-400">
-              <Shield className="h-4 w-4" /> Base packet (keep ready)
-            </h2>
-            <ul className="mt-4 space-y-2">
-              {(line.base_packet || []).map((item) => (
-                <li key={item} className="flex gap-2 text-sm text-slate-300">
-                  <span className="text-rose-400">•</span>
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </section>
+          {(line.base_packet || []).length > 0 && (
+            <section className="glass-card p-6">
+              <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-slate-400">
+                <Shield className="h-4 w-4" /> Base packet (keep ready)
+              </h2>
+              <ul className="mt-4 space-y-2">
+                {(line.base_packet || []).map((item) => (
+                  <li key={item} className="flex gap-2 text-sm text-slate-300">
+                    <span className="text-sky-400">•</span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
         </div>
 
         <div className="space-y-6 lg:col-span-2">
@@ -186,7 +214,7 @@ export default function LifeLinePage({ presets, onRunDemo, onSubmit }) {
             commercialTaxonomy={lineTaxonomy}
             commercialSelection={selection}
             onCommercialSelectionChange={setSelection}
-            isLifeProductPicker
+            isGeneralProductPicker
             onRunDemo={onRunDemo}
             onSubmit={async (body) => {
               await onSubmit?.({

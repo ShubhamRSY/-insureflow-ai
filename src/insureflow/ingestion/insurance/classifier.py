@@ -90,6 +90,55 @@ class InsuranceDocumentType(str, Enum):
     CYBER_QUESTIONNAIRE = "cyber_questionnaire"
     REPLACEMENT_1035 = "replacement_1035"
     SURPLUS_LINES_AFFIDAVIT = "surplus_lines_affidavit"
+    # Health / mediclaim
+    HEALTH_APPLICATION = "health_application"
+    AGE_PROOF = "age_proof"
+    PASSPORT_PHOTO = "passport_photo"
+    MARRIAGE_CERTIFICATE = "marriage_certificate"
+    NOMINEE_FORM = "nominee_form"
+    OCCUPATION_PROOF = "occupation_proof"
+    COMPANY_REGISTRATION = "company_registration"
+    EMPLOYEE_CENSUS = "employee_census"
+    PRE_EXISTING_DECLARATION = "pre_existing_declaration"
+    FAMILY_MEDICAL_HISTORY = "family_medical_history"
+    DOCTOR_CERTIFICATE = "doctor_certificate"
+    MEDICATION_LIST = "medication_list"
+    TRAVEL_DOCUMENTS = "travel_documents"
+    WELLNESS_CONSENT = "wellness_consent"
+    # General / non-life
+    VEHICLE_RC = "vehicle_rc"
+    DRIVING_LICENSE = "driving_license"
+    FITNESS_CERTIFICATE = "fitness_certificate"
+    VEHICLE_PERMIT = "vehicle_permit"
+    PUC_CERTIFICATE = "puc_certificate"
+    VEHICLE_INVOICE = "vehicle_invoice"
+    PROPERTY_DEED = "property_deed"
+    VALUATION_REPORT = "valuation_report"
+    PROPERTY_TAX = "property_tax"
+    CONTENTS_SCHEDULE = "contents_schedule"
+    PACKING_LIST = "packing_list"
+    BILL_OF_LADING = "bill_of_lading"
+    IEC_CERTIFICATE = "iec_certificate"
+    LETTER_OF_CREDIT = "letter_of_credit"
+    VESSEL_REGISTRATION = "vessel_registration"
+    CLASSIFICATION_CERTIFICATE = "classification_certificate"
+    CREW_LIST = "crew_list"
+    FIRE_SAFETY_CERTIFICATE = "fire_safety_certificate"
+    PROFESSIONAL_LICENSE = "professional_license"
+    MANUFACTURING_LICENSE = "manufacturing_license"
+    QUALITY_CERTIFICATION = "quality_certification"
+    LAND_RECORD = "land_record"
+    SOWING_CERTIFICATE = "sowing_certificate"
+    ANIMAL_HEALTH_CERT = "animal_health_cert"
+    PET_VACCINATION = "pet_vaccination"
+    EVENT_PERMIT = "event_permit"
+    VENDOR_CONTRACT = "vendor_contract"
+    ENCUMBRANCE_CERTIFICATE = "encumbrance_certificate"
+    TITLE_SEARCH = "title_search"
+    TREATY_AGREEMENT = "treaty_agreement"
+    SOLVENCY_STATEMENT = "solvency_statement"
+    CATEGORY_CERTIFICATE = "category_certificate"
+    EKYC = "ekyc"
 
 
 # Life insurance document types — used to route LLM extraction schema.
@@ -132,6 +181,91 @@ LIFE_DOCUMENT_TYPES: frozenset[str] = frozenset(
     }
 )
 
+HEALTH_DOCUMENT_TYPES: frozenset[str] = frozenset(
+    {
+        "health_application",
+        "age_proof",
+        "passport_photo",
+        "marriage_certificate",
+        "nominee_form",
+        "occupation_proof",
+        "company_registration",
+        "employee_census",
+        "pre_existing_declaration",
+        "family_medical_history",
+        "doctor_certificate",
+        "medication_list",
+        "travel_documents",
+        "wellness_consent",
+        "photo_id",
+        "proof_of_address",
+        "health_questionnaire",
+        "medical_exam",
+        "aps_records",
+        "income_proof",
+        "bank_ach_form",
+        "enrollment_form",
+        "child_birth_certificate",
+        "suitability_questionnaire",
+        "dec_page",
+        "loss_run",
+        "beneficiary_form",
+    }
+)
+
+GENERAL_DOCUMENT_TYPES: frozenset[str] = frozenset(
+    {
+        "vehicle_rc",
+        "driving_license",
+        "fitness_certificate",
+        "vehicle_permit",
+        "puc_certificate",
+        "vehicle_invoice",
+        "property_deed",
+        "valuation_report",
+        "property_tax",
+        "contents_schedule",
+        "packing_list",
+        "bill_of_lading",
+        "iec_certificate",
+        "letter_of_credit",
+        "vessel_registration",
+        "classification_certificate",
+        "crew_list",
+        "fire_safety_certificate",
+        "professional_license",
+        "manufacturing_license",
+        "quality_certification",
+        "land_record",
+        "sowing_certificate",
+        "animal_health_cert",
+        "pet_vaccination",
+        "event_permit",
+        "vendor_contract",
+        "encumbrance_certificate",
+        "title_search",
+        "treaty_agreement",
+        "solvency_statement",
+        "category_certificate",
+        "ekyc",
+        "photo_id",
+        "proof_of_address",
+        "age_proof",
+        "passport_photo",
+        "travel_documents",
+        "company_registration",
+        "dec_page",
+        "inspection_report",
+        "loss_run",
+        "income_proof",
+        "bank_ach_form",
+        "loan_agreement",
+        "mortgage_statement",
+        "financial_statement",
+        "cyber_questionnaire",
+    }
+)
+
 
 class InsuranceDocumentClassifier:
     """Classify broker PDFs and text submissions by filename + content heuristics."""
@@ -169,6 +303,100 @@ class InsuranceDocumentClassifier:
             return InsuranceDocumentType.HEALTH_QUESTIONNAIRE
         if any(k in name or k in combined for k in ("income proof", "income_proof", "pay stub", "paystub", "w-2", "tax returns")):
             return InsuranceDocumentType.INCOME_PROOF
+        if any(k in name or k in combined for k in ("health proposal", "mediclaim proposal", "health application", "proposal form")):
+            return InsuranceDocumentType.HEALTH_APPLICATION
+        if any(k in name or k in combined for k in ("age proof", "birth certificate", "10th marksheet", "date of birth proof")):
+            return InsuranceDocumentType.AGE_PROOF
+        if any(k in name or k in combined for k in ("passport-size", "passport size photo", "passport photograph")):
+            return InsuranceDocumentType.PASSPORT_PHOTO
+        if any(k in name or k in combined for k in ("marriage certificate", "marriage_certificate")):
+            return InsuranceDocumentType.MARRIAGE_CERTIFICATE
+        if any(k in name or k in combined for k in ("nominee details", "nominee form", "nomination form")):
+            return InsuranceDocumentType.NOMINEE_FORM
+        if any(k in name or k in combined for k in ("occupation proof", "job role", "occupation details")):
+            return InsuranceDocumentType.OCCUPATION_PROOF
+        if any(k in name or k in combined for k in ("gst certificate", "company registration", "company pan")):
+            return InsuranceDocumentType.COMPANY_REGISTRATION
+        if any(k in name or k in combined for k in ("employee list", "employee census", "member list")):
+            return InsuranceDocumentType.EMPLOYEE_CENSUS
+        if any(k in name or k in combined for k in ("pre-existing", "existing illness", "ped declaration")):
+            return InsuranceDocumentType.PRE_EXISTING_DECLARATION
+        if any(k in name or k in combined for k in ("family medical history", "family history of cancer", "family cardiac history")):
+            return InsuranceDocumentType.FAMILY_MEDICAL_HISTORY
+        if any(k in name or k in combined for k in ("doctor's confirmation", "treating doctor", "medical fitness certificate")):
+            return InsuranceDocumentType.DOCTOR_CERTIFICATE
+        if any(k in name or k in combined for k in ("medication list", "prescription list", "existing medication")):
+            return InsuranceDocumentType.MEDICATION_LIST
+        if any(k in name or k in combined for k in ("visa copy", "travel itinerary", "overseas travel")):
+            return InsuranceDocumentType.TRAVEL_DOCUMENTS
+        if any(k in name or k in combined for k in ("wellness", "fitness app consent")):
+            return InsuranceDocumentType.WELLNESS_CONSENT
+        if any(k in name or k in combined for k in ("registration certificate", "vehicle rc", " rc book")):
+            return InsuranceDocumentType.VEHICLE_RC
+        if any(k in name or k in combined for k in ("driving license", "driving licence", "dl copy")):
+            return InsuranceDocumentType.DRIVING_LICENSE
+        if any(k in name or k in combined for k in ("fitness certificate",)):
+            return InsuranceDocumentType.FITNESS_CERTIFICATE
+        if any(k in name or k in combined for k in ("national permit", "state permit", "vehicle permit")):
+            return InsuranceDocumentType.VEHICLE_PERMIT
+        if any(k in name or k in combined for k in ("puc", "pollution under control")):
+            return InsuranceDocumentType.PUC_CERTIFICATE
+        if any(k in name or k in combined for k in ("vehicle invoice", "ex-showroom invoice")):
+            return InsuranceDocumentType.VEHICLE_INVOICE
+        if any(k in name or k in combined for k in ("sale deed", "title deed", "registry", "property ownership")):
+            return InsuranceDocumentType.PROPERTY_DEED
+        if any(k in name or k in combined for k in ("valuation report", "construction cost estimate", "asset valuation")):
+            return InsuranceDocumentType.VALUATION_REPORT
+        if any(k in name or k in combined for k in ("property tax",)):
+            return InsuranceDocumentType.PROPERTY_TAX
+        if any(k in name or k in combined for k in ("contents schedule", "list of insured items", "inventory of contents")):
+            return InsuranceDocumentType.CONTENTS_SCHEDULE
+        if any(k in name or k in combined for k in ("packing list",)):
+            return InsuranceDocumentType.PACKING_LIST
+        if any(k in name or k in combined for k in ("bill of lading", "airway bill", "air waybill")):
+            return InsuranceDocumentType.BILL_OF_LADING
+        if any(k in name or k in combined for k in ("iec certificate", "importer exporter code")):
+            return InsuranceDocumentType.IEC_CERTIFICATE
+        if any(k in name or k in combined for k in ("letter of credit",)):
+            return InsuranceDocumentType.LETTER_OF_CREDIT
+        if any(k in name or k in combined for k in ("vessel registration", "ship registration")):
+            return InsuranceDocumentType.VESSEL_REGISTRATION
+        if any(k in name or k in combined for k in ("classification society", "seaworthiness")):
+            return InsuranceDocumentType.CLASSIFICATION_CERTIFICATE
+        if any(k in name or k in combined for k in ("crew list",)):
+            return InsuranceDocumentType.CREW_LIST
+        if any(k in name or k in combined for k in ("fire safety", "fire noc")):
+            return InsuranceDocumentType.FIRE_SAFETY_CERTIFICATE
+        if any(k in name or k in combined for k in ("professional license", "medical council", "bar council")):
+            return InsuranceDocumentType.PROFESSIONAL_LICENSE
+        if any(k in name or k in combined for k in ("manufacturing license", "factory license")):
+            return InsuranceDocumentType.MANUFACTURING_LICENSE
+        if any(k in name or k in combined for k in ("iso certificate", "bis certificate", "quality certification")):
+            return InsuranceDocumentType.QUALITY_CERTIFICATION
+        if any(k in name or k in combined for k in ("khasra", "khatauni", "7-12", "land record", "tenancy proof")):
+            return InsuranceDocumentType.LAND_RECORD
+        if any(k in name or k in combined for k in ("sowing certificate",)):
+            return InsuranceDocumentType.SOWING_CERTIFICATE
+        if any(k in name or k in combined for k in ("animal health certificate",)):
+            return InsuranceDocumentType.ANIMAL_HEALTH_CERT
+        if any(k in name or k in combined for k in ("vaccination record", "pet vaccination")):
+            return InsuranceDocumentType.PET_VACCINATION
+        if any(k in name or k in combined for k in ("event license", "event permit")):
+            return InsuranceDocumentType.EVENT_PERMIT
+        if any(k in name or k in combined for k in ("vendor contract", "venue booking", "artist contract")):
+            return InsuranceDocumentType.VENDOR_CONTRACT
+        if any(k in name or k in combined for k in ("encumbrance certificate",)):
+            return InsuranceDocumentType.ENCUMBRANCE_CERTIFICATE
+        if any(k in name or k in combined for k in ("title search",)):
+            return InsuranceDocumentType.TITLE_SEARCH
+        if any(k in name or k in combined for k in ("reinsurance agreement", "treaty agreement", "facultative")):
+            return InsuranceDocumentType.TREATY_AGREEMENT
+        if any(k in name or k in combined for k in ("solvency",)):
+            return InsuranceDocumentType.SOLVENCY_STATEMENT
+        if any(k in name or k in combined for k in ("category certificate", "caste certificate")):
+            return InsuranceDocumentType.CATEGORY_CERTIFICATE
+        if any(k in name or k in combined for k in ("e-kyc", "ekyc", "digital kyc")):
+            return InsuranceDocumentType.EKYC
 
         # Life — product-specific add-ons
         if any(k in name or k in combined for k in ("illustration acknowledgment", "illustration acknowledgement", "illustration_acknowledgment", "cash value illustration")):

@@ -22,6 +22,8 @@ def rate_personal_line(
     from insureflow.rating.models import InsuranceLine
     from insureflow.rating.personal.auto_rating import rate_personal_auto
     from insureflow.rating.personal.homeowners_rating import rate_homeowners
+    from insureflow.rating.personal.general_rating import rate_general
+    from insureflow.rating.personal.health_rating import rate_health
     from insureflow.rating.personal.life_rating import rate_life
 
     if line == InsuranceLine.PERSONAL_HOMEOWNERS:
@@ -30,4 +32,8 @@ def rate_personal_line(
         return rate_personal_auto(bundle, state=state)
     if line == InsuranceLine.LIFE:
         return rate_life(bundle, coverage_id=coverage_id, coverage_name=coverage_name, product_id=product_id, state=state)
+    if line == InsuranceLine.HEALTH:
+        return rate_health(bundle, coverage_id=coverage_id, coverage_name=coverage_name, product_id=product_id, state=state)
+    if line == InsuranceLine.GENERAL:
+        return rate_general(bundle, coverage_id=coverage_id, coverage_name=coverage_name, product_id=product_id, state=state)
     raise ValueError(f"Not a personal line: {line}")

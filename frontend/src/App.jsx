@@ -11,6 +11,11 @@ import CommercialReference from './pages/CommercialReference';
 import CommercialLinePage from './pages/CommercialLine';
 import LifeInsuranceHub from './pages/LifeInsurance';
 import LifeLinePage from './pages/LifeLine';
+import HealthInsuranceHub from './pages/HealthInsurance';
+import HealthLinePage from './pages/HealthLine';
+import GeneralInsuranceHub from './pages/GeneralInsurance';
+import GeneralLinePage from './pages/GeneralLine';
+import InsuranceSegmentPage from './pages/InsuranceSegment';
 import MortgagePage from './pages/Mortgage';
 import LendingPage from './pages/Lending';
 import WorkflowPage from './pages/Workflow';
@@ -262,6 +267,11 @@ function AppRoutes() {
           <Route path="insurance/commercial" element={<Protected onLogin={() => setLoginOpen(true)}><CommercialInsuranceHub presets={presets} onRunDemo={runDemo} onSubmit={submitInsurance} jobs={insuranceJobs} /></Protected>} />
           <Route path="insurance/life/:lobSlug" element={<Protected onLogin={() => setLoginOpen(true)}><LifeLinePage presets={presets} onRunDemo={runDemo} onSubmit={submitInsurance} /></Protected>} />
           <Route path="insurance/life" element={<Protected onLogin={() => setLoginOpen(true)}><LifeInsuranceHub presets={presets} onRunDemo={runDemo} onSubmit={submitInsurance} jobs={insuranceJobs} /></Protected>} />
+          <Route path="insurance/health/:lobSlug" element={<Protected onLogin={() => setLoginOpen(true)}><HealthLinePage presets={presets} onRunDemo={runDemo} onSubmit={submitInsurance} /></Protected>} />
+          <Route path="insurance/health" element={<Protected onLogin={() => setLoginOpen(true)}><HealthInsuranceHub presets={presets} onRunDemo={runDemo} onSubmit={submitInsurance} jobs={insuranceJobs} /></Protected>} />
+          <Route path="insurance/general/:lobSlug" element={<Protected onLogin={() => setLoginOpen(true)}><GeneralLinePage presets={presets} onRunDemo={runDemo} onSubmit={submitInsurance} /></Protected>} />
+          <Route path="insurance/general" element={<Protected onLogin={() => setLoginOpen(true)}><GeneralInsuranceHub presets={presets} onRunDemo={runDemo} onSubmit={submitInsurance} jobs={insuranceJobs} /></Protected>} />
+          <Route path="insurance/sections/:sectionId" element={<Protected onLogin={() => setLoginOpen(true)}><InsuranceSegmentPage /></Protected>} />
           <Route path="insurance/:jobId" element={<Protected onLogin={() => setLoginOpen(true)}><InsuranceJobDetail /></Protected>} />
           <Route path="insurance" element={<Protected onLogin={() => setLoginOpen(true)}><InsurancePage presets={presets} jobs={insuranceJobs} onRunDemo={runDemo} onOpenJob={openJob} onSubmit={submitInsurance} onRefresh={loadInsuranceJobs} /></Protected>} />
           <Route path="line-uw" element={<Protected onLogin={() => setLoginOpen(true)}><LineUnderwriting /></Protected>} />

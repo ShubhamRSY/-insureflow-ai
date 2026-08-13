@@ -122,6 +122,12 @@ export const endpoints = {
   lifeInsuranceHub: () => api('/insurance/life'),
   lifeInsuranceTaxonomy: () => api('/insurance/life/taxonomy'),
   lifeInsuranceLine: (lineId) => api(`/insurance/life/lines/${encodeURIComponent(lineId)}`),
+  healthInsuranceHub: () => api('/insurance/health'),
+  healthInsuranceTaxonomy: () => api('/insurance/health/taxonomy'),
+  healthInsuranceLine: (lineId) => api(`/insurance/health/lines/${encodeURIComponent(lineId)}`),
+  generalInsuranceHub: () => api('/insurance/general'),
+  generalInsuranceTaxonomy: () => api('/insurance/general/taxonomy'),
+  generalInsuranceLine: (lineId) => api(`/insurance/general/lines/${encodeURIComponent(lineId)}`),
   insuranceSources: (vertical = 'insurance') => api(`/api/insurance/sources?vertical=${vertical}`),
   pullInsuranceSource: (sourceId, body = {}, vertical = 'insurance') =>
     api(`/api/insurance/sources/${sourceId}/pull?vertical=${vertical}`, { method: 'POST', body }),
@@ -146,6 +152,10 @@ export const endpoints = {
     if (opts.insurance_line) params.set('insurance_line', opts.insurance_line);
     if (opts.life_product_id) params.set('life_product_id', opts.life_product_id);
     if (opts.life_coverage_id) params.set('life_coverage_id', opts.life_coverage_id);
+    if (opts.health_product_id) params.set('health_product_id', opts.health_product_id);
+    if (opts.health_coverage_id) params.set('health_coverage_id', opts.health_coverage_id);
+    if (opts.general_product_id) params.set('general_product_id', opts.general_product_id);
+    if (opts.general_coverage_id) params.set('general_coverage_id', opts.general_coverage_id);
     if (opts.commercial_product_id) params.set('commercial_product_id', opts.commercial_product_id);
     if (opts.commercial_coverage_id) params.set('commercial_coverage_id', opts.commercial_coverage_id);
     if (opts.commercial_product_name) params.set('commercial_product_name', opts.commercial_product_name);
