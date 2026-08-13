@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any
 
 from insureflow.ingestion.insurance.sources import load_directory, load_package
+from insureflow.insurance.relevance import validate_documents_relevance
 from insureflow.integrations.connections import get_connection
 from insureflow.marketplace.catalog import get_source
 from insureflow.marketplace.registry import connect_source
@@ -63,23 +64,27 @@ def _artifact_document(source_id: str, meta: dict[str, Any], config: dict[str, A
         "pulled_at": datetime.now(tz=timezone.utc).isoformat(),
         "simulated": True,
         "config_keys": sorted(config.keys()),
-        "note": f"Marketplace pull from {meta.get('name')}. Live vendor API not configured — demo feed attached.",
+        "note": (f"Underwriting marketplace pull from {meta.get('name')}. Live vendor API not configured — demo feed attached."),
     }
     if kind == "oracle" or source_id in {"clue", "a-plus", "ncci", "cat-model", "bureau-credit", "osha", "mib-life"}:
         payload["loss_history"] = {
+            "description": "CLUE / A-PLUS loss run summary (simulated)",
             "claims_count": 0,
             "open_claims": 0,
             "undisclosed_hint": False,
             "experience_mod": 0.92 if source_id == "ncci" else None,
         }
     if kind == "kyc" or source_id in {"ofac-sdn", "world-check", "lexisnexis-bridger", "dow-jones-watchlist"}:
-        payload["sanctions"] = {"cleared": True, "hits": [], "list": "OFAC-SDN"}
+        payload["sanctions"] = {"cleared": True, "hits": [], "list": "OFAC-SDN", "underwriting_use": "named insured KYC"}
     if kind == "banking" or source_id in {"plaid", "yodlee", "finicity", "ocrolus", "mx-banking"}:
         payload["cashflow"] = {
             "ending_balance": 48_250.0,
             "transaction_count": 12,
             "ach_pulls_30d": 2,
+            "loan_application_support": True,
         }
+    if kind == "mortgage" or source_id in {"fannie-mae", "freddie-mac", "mers", "black-knight", "credit-plus"}:
+        payload["mortgage"] = {"product": "residential mortgage", "borrower_credit_report": "simulated"}
     return {
         "filename": f"{source_id}_marketplace_pull.json",
         "content": json.dumps(payload, indent=2),
@@ -141,16 +146,26 @@ def pull_marketplace_source(
             "sources": sorted({str(d.get("source_id") or "") for d in updated.get("documents") or [] if d.get("source_id")}),
         }
 
+    vert = (vertical or "insurance").lower()
+    relevance_docs = documents
+    if bundle_id:
+        full = store.get(bundle_id, org_id=org_id) or {}
+        relevance_docs = [{"filename": d.get("filename", ""), "content": d.get("content", ""), "encoding": d.get("encoding", "utf-8")} for d in (full.get("documents") or [])]
+    relevance = validate_documents_relevance(relevance_docs, vertical=vert, strict=False)
+
     return {
         "source_id": source_id,
         "simulated": True,
         "connection_label": display,
-        "vertical": (vertical or "insurance").lower(),
+        "vertical": vert,
         "package_id": used_package or package_id or "",
         "included_submission_package": add_package,
         "documents": documents,
         "file_count": len(documents),
         "accumulated": accumulated,
+        "relevance": relevance,
+        "warnings": list(relevance.get("warnings") or []),
+        "message": relevance.get("message") or "",
     }
 
 
@@ -196,12 +211,21 @@ def pull_marketplace_sources(
 
     final = store.get(bundle_id, org_id=org_id) or {}
     docs = final.get("documents") or []
+    vert = (vertical or "insurance").lower()
+    relevance = validate_documents_relevance(
+        [{"filename": d.get("filename", ""), "content": d.get("content", ""), "encoding": d.get("encoding", "utf-8")} for d in docs],
+        vertical=vert,
+        strict=False,
+    )
     return {
         "bundle_id": bundle_id,
         "created_bundle": created,
-        "vertical": (vertical or "insurance").lower(),
+        "vertical": vert,
         "document_count": len(docs),
         "sources": sorted({str(d.get("source_id") or "") for d in docs if d.get("source_id")}),
         "pulls": [{k: v for k, v in p.items() if k != "documents"} for p in pulls],
-        "run": {"method": "POST", "path": f"/pipeline/bundles/{bundle_id}/run", "query": {"vertical": (vertical or "insurance").lower(), "use_llm": False}},
+        "relevance": relevance,
+        "warnings": list(relevance.get("warnings") or []),
+        "message": relevance.get("message") or "",
+        "run": {"method": "POST", "path": f"/pipeline/bundles/{bundle_id}/run", "query": {"vertical": vert, "use_llm": False}},
     }

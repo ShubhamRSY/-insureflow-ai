@@ -121,10 +121,15 @@ def test_marketplace_pull_accumulates_multiple_sources_and_runs() -> None:
     assert "clue_marketplace_pull.json" in filenames
     assert "ofac-sdn_marketplace_pull.json" in filenames
 
+    assert first["relevance"]["can_run"] is True
+    assert second["relevance"]["can_run"] is True
+    assert second["relevance"]["relevant_count"] >= 1
+
     run = client.post(f"/pipeline/bundles/{bundle_id}/run?use_llm=false", headers=h, json={})
     assert run.status_code == 202
     data = run.json()
     assert data["job_id"].startswith("job-")
+    assert data["relevance"]["can_run"] is True
 
 
 def test_marketplace_multi_pull_creates_bundle_and_runs_mortgage() -> None:
@@ -155,3 +160,60 @@ def test_marketplace_pull_unknown_source_404() -> None:
     h = _headers()
     resp = client.post("/marketplace/sources/not-a-vendor/pull", headers=h, json={})
     assert resp.status_code == 404
+
+
+def test_wrong_file_type_warns_and_strict_run_blocks() -> None:
+    h = _headers()
+    bundle = client.post("/pipeline/bundles", headers=h, json={"name": "mkt-junk"}).json()
+    bundle_id = bundle["bundle_id"]
+
+    client.post(
+        "/marketplace/sources/clue/pull",
+        headers=h,
+        json={"bundle_id": bundle_id, "vertical": "insurance"},
+    )
+    added = client.post(
+        f"/pipeline/bundles/{bundle_id}/documents",
+        headers=h,
+        json={
+            "source_id": "manual-upload",
+            "connection_label": "Files tab",
+            "documents": [
+                {
+                    "filename": "dinner_menu.txt",
+                    "content": "Restaurant menu\nCalories\nIngredients for pasta carbonara",
+                    "encoding": "utf-8",
+                }
+            ],
+        },
+    )
+    assert added.status_code == 200
+    rel = added.json()["relevance"]
+    assert rel["irrelevant_count"] >= 1
+    assert rel["warnings"]
+    assert any("dinner_menu" in w or "irrelevant" in w.lower() for w in rel["warnings"])
+    # This upload batch alone is junk; the full bundle still has UW docs and can run.
+
+    run = client.post(f"/pipeline/bundles/{bundle_id}/run?use_llm=false", headers=h, json={})
+    assert run.status_code == 202
+    assert run.json()["relevance"]["irrelevant_count"] >= 1
+    assert run.json()["relevance"]["warnings"]
+
+    junk = client.post("/pipeline/bundles", headers=h, json={"name": "mkt-only-junk"}).json()
+    client.post(
+        f"/pipeline/bundles/{junk['bundle_id']}/documents",
+        headers=h,
+        json={
+            "documents": [
+                {"filename": "spotify.txt", "content": "Spotify playlist favorites", "encoding": "utf-8"},
+            ]
+        },
+    )
+    blocked = client.post(
+        f"/pipeline/bundles/{junk['bundle_id']}/run?use_llm=false&strict_relevance=true",
+        headers=h,
+        json={},
+    )
+    assert blocked.status_code == 400
+    detail = blocked.json()["detail"]
+    assert "irrelevant" in str(detail).lower() or "relevant" in str(detail).lower()
