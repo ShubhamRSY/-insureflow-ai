@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
   FileText, ClipboardCheck, Shield, AlertCircle, HeartPulse, Stethoscope,
 } from 'lucide-react';
 import { endpoints } from '../lib/api';
+import { defaultCommercialSelection } from '../lib/commercialTaxonomy';
 import RunSelector from '../components/RunSelector';
 
 const LOB_ICONS = {
@@ -16,16 +17,39 @@ export default function LifeLinePage({ presets, onRunDemo, onSubmit }) {
   const { lobSlug } = useParams();
   const [line, setLine] = useState(null);
   const [error, setError] = useState('');
+  const [selection, setSelection] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
     setLine(null);
     setError('');
+    setSelection(null);
     endpoints.lifeInsuranceLine(lobSlug)
       .then((d) => { if (!cancelled) setLine(d); })
       .catch((e) => { if (!cancelled) setError(e.message || 'Line not found'); });
     return () => { cancelled = true; };
   }, [lobSlug]);
+
+  const lineTaxonomy = useMemo(() => {
+    if (!line) return [];
+    return [{
+      id: line.category_id || 'life',
+      name: line.short_name || line.name,
+      products: [{
+        id: line.id,
+        name: line.name,
+        slug: line.slug,
+        insurance_line: line.insurance_line,
+        checklist_lob: line.checklist_lob,
+        coverages: line.coverages || [],
+      }],
+    }];
+  }, [line]);
+
+  useEffect(() => {
+    if (!lineTaxonomy.length) return;
+    setSelection(defaultCommercialSelection(lineTaxonomy));
+  }, [lineTaxonomy]);
 
   if (error) {
     return (
@@ -150,27 +174,29 @@ export default function LifeLinePage({ presets, onRunDemo, onSubmit }) {
           Start submission — {line.short_name}
         </h2>
         <p className="mt-2 mb-4 text-sm text-slate-400">
-          Upload the package for this line. The run is tagged with{' '}
-          <code className="text-brand-light">{line.insurance_line}</code> and scored against the per-product
-          checklist <code className="text-brand-light">{line.checklist_lob}</code>, so triage gates on this
-          product&apos;s exact document pack.
+          Select the coverage, then upload the package. Only that coverage runs — checklist, rating, and UW
+          stay scoped to <code className="text-brand-light">{line.checklist_lob}</code>
+          {selection?.coverageName ? <> · <code className="text-brand-light">{selection.coverageName}</code></> : null}.
         </p>
-        <RunSelector
-          presets={presets}
-          vertical="insurance"
-          productField="insurance_line"
-          productOptions={[{ id: line.insurance_line, label: line.name }]}
-          productDefault={line.insurance_line}
-          onRunDemo={onRunDemo}
-          onSubmit={async (body) => {
-            await onSubmit?.({
-              ...body,
-              insurance_line: line.insurance_line,
-              product_line: line.insurance_line,
-              life_product_id: line.checklist_lob,
-            });
-          }}
-        />
+        {selection && (
+          <RunSelector
+            presets={presets}
+            vertical="insurance"
+            productField="insurance_line"
+            commercialTaxonomy={lineTaxonomy}
+            commercialSelection={selection}
+            onCommercialSelectionChange={setSelection}
+            isLifeProductPicker
+            onRunDemo={onRunDemo}
+            onSubmit={async (body) => {
+              await onSubmit?.({
+                ...body,
+                insurance_line: line.insurance_line,
+                product_line: line.insurance_line,
+              });
+            }}
+          />
+        )}
       </section>
     </div>
   );

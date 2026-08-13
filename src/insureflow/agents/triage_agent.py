@@ -25,11 +25,22 @@ class SubmissionPriority(str, Enum):
 
 def _line_to_lob(insurance_line: str | None = None, checklist_lob_hint: str | None = None) -> str:
     if checklist_lob_hint:
+        from insureflow.insurance import package_checklist as pkg
         from insureflow.insurance.life_lobs import resolve_life_checklist_lob
 
         resolved = resolve_life_checklist_lob(checklist_lob_hint)
         if resolved:
             return resolved
+        from insureflow.insurance.commercial_lobs import resolve_checklist_lob
+
+        if not pkg.CATALOGS:
+            pkg.refresh_catalogs()
+        commercial = resolve_checklist_lob(checklist_lob_hint, default="")
+        if commercial and commercial in pkg.CATALOGS:
+            return commercial
+        hint_key = checklist_lob_hint.strip().lower().replace("-", "_").replace(" ", "_")
+        if hint_key in pkg.CATALOGS:
+            return hint_key
     raw = (insurance_line or "").strip().lower()
     mapping = {
         "life": "life",
@@ -94,6 +105,7 @@ class DocumentChecklist:
     """
 
     lob: str = "property"
+    coverage_id: str = ""
     present: list[str] = field(default_factory=list)
     _missing: list[str] = field(default_factory=list)
     _present_ids: list[str] = field(default_factory=list)
@@ -116,10 +128,11 @@ class DocumentChecklist:
         *,
         insurance_line: str | None = None,
         checklist_lob_hint: str | None = None,
+        coverage_id: str | None = None,
     ) -> DocumentChecklist:
         lob = _line_to_lob(insurance_line, checklist_lob_hint)
         types = _collect_doc_types(bundle)
-        pkg = package_checklist(types, lob=lob)
+        pkg = package_checklist(types, lob=lob, coverage_id=coverage_id)
         present = list(pkg.get("present") or [])
         missing = list(pkg.get("missing") or [])
         present_ids = list(pkg.get("present_ids") or [])
@@ -128,6 +141,7 @@ class DocumentChecklist:
         has_photos = "property_photos" in type_set or any("photo" in p.lower() for p in present) or bool(bundle.visual_analysis and (bundle.visual_analysis.get("analyzed_photos") or 0) > 0)
         return cls(
             lob=lob,
+            coverage_id=str(pkg.get("coverage_id") or coverage_id or ""),
             present=present,
             _missing=missing,
             _present_ids=present_ids,
@@ -213,6 +227,7 @@ class DocumentChecklist:
     def to_summary_dict(self) -> dict[str, Any]:
         return {
             "lob": self.lob,
+            "coverage_id": self.coverage_id,
             "completeness_pct": self.completeness_pct,
             "missing_documents": list(self.missing),
             "present_documents": list(self.present),
@@ -231,7 +246,9 @@ REQUIRED_CRITICAL_BY_LOB: dict[str, list[str]] = {
         "Loss run reports (3–5 years)",
         "Statement of Values (SOV)",
     ],
-    "workers_comp": ["ACORD 130", "Loss run reports"],
+    "workers_comp": ["ACORD 130", "Loss run reports", "NCCI experience modification worksheet"],
+    "commercial_auto": ["Auto application", "Motor vehicle reports (MVR) for all drivers"],
+    "general_liability": ["ACORD 126 (General Liability Section)", "Loss run reports (3–5 years)"],
     "trade_credit": ["Application form (carrier-specific)", "Accounts Receivable Aging Report"],
     "eo": ["E&O application (ACORD 126 / carrier)"],
     "key_person": ["Application form + medical questionnaire"],
@@ -293,6 +310,7 @@ class TriageAgent:
         *,
         insurance_line: str | None = None,
         checklist_lob_hint: str | None = None,
+        coverage_id: str | None = None,
     ) -> TriageResult:
         """Score a single submission and return a triage result."""
         naics = ""
@@ -314,6 +332,7 @@ class TriageAgent:
             bundle,
             insurance_line=insurance_line,
             checklist_lob_hint=checklist_lob_hint,
+            coverage_id=coverage_id,
         )
         lob = checklist.lob
 

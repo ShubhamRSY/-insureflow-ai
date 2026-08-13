@@ -177,6 +177,30 @@ def _types_for_label(label: str) -> tuple[InsuranceDocumentType, ...]:
 
     if "vehicle declaration" in text:
         add(InsuranceDocumentType.VEHICLE_DECLARATIONS)
+    if "mvr" in text or "motor vehicle report" in text or "driving record" in text:
+        add(InsuranceDocumentType.MVR_REPORT)
+    if "osha" in text or "300 log" in text or "300a" in text:
+        add(InsuranceDocumentType.OSHA_LOG)
+    if "phase i" in text or "phase 1 esa" in text or "environmental site assessment" in text or " esa" in text:
+        add(InsuranceDocumentType.ENVIRONMENTAL_SITE_ASSESSMENT)
+    if "liquor license" in text or "abc license" in text:
+        add(InsuranceDocumentType.LIQUOR_LICENSE)
+    if "e-mod" in text or "emod" in text or "experience mod" in text or "experience modification" in text:
+        add(InsuranceDocumentType.EXPERIENCE_MOD_WORKSHEET)
+    if "acord 126" in text:
+        add(InsuranceDocumentType.ACORD_126)
+    if "acord 127" in text:
+        add(InsuranceDocumentType.ACORD_127)
+    if "acord 130" in text:
+        add(InsuranceDocumentType.ACORD_130)
+    if "acord 131" in text:
+        add(InsuranceDocumentType.ACORD_131)
+    if "cyber questionnaire" in text or "cyber application" in text or "ransomware" in text:
+        add(InsuranceDocumentType.CYBER_QUESTIONNAIRE)
+    if "1035" in text or "replacement form" in text or "naic replacement" in text:
+        add(InsuranceDocumentType.REPLACEMENT_1035)
+    if "diligent search" in text or "surplus lines" in text or "stamping office" in text:
+        add(InsuranceDocumentType.SURPLUS_LINES_AFFIDAVIT)
 
     return tuple(types)
 
@@ -513,16 +537,40 @@ def detect_lob(text_blob: str = "", product_hint: str = "") -> str:
     return "property"
 
 
+def _coverage_scoped_catalog(lob: str, coverage_id: str) -> list[tuple[str, tuple[InsuranceDocumentType, ...]]] | None:
+    """Product base + selected coverage only. None if the coverage is unknown."""
+    from insureflow.insurance.commercial_lobs import (
+        flatten_coverage_documents,
+        get_commercial_line,
+        get_line_coverage,
+    )
+    from insureflow.insurance.life_lobs import get_life_line
+
+    line = get_life_line(lob) or get_commercial_line(lob)
+    if not line or get_line_coverage(line, coverage_id) is None:
+        return None
+    docs = flatten_coverage_documents(line, coverage_id)
+    return _catalog_from_documents(docs)
+
+
 def package_checklist(
     document_types: list[str],
     *,
     lob: str = "property",
+    coverage_id: str | None = None,
 ) -> dict[str, Any]:
     if not CATALOGS:
         refresh_catalogs()
     present_types = {str(t).lower() for t in document_types}
     resolved = normalize_checklist_lob(lob)
     catalog = CATALOGS.get(resolved) or CATALOGS.get("property") or PROPERTY_CATALOG
+    cov_id = (coverage_id or "").strip() or None
+    if cov_id:
+        scoped = _coverage_scoped_catalog(resolved, cov_id)
+        if scoped:
+            catalog = scoped
+        else:
+            cov_id = None
     present: list[str] = []
     missing: list[str] = []
     present_ids: list[str] = []
@@ -539,6 +587,7 @@ def package_checklist(
     total = len(catalog) or 1
     return {
         "lob": resolved,
+        "coverage_id": cov_id or "",
         "present": present,
         "missing": missing,
         "present_ids": present_ids,

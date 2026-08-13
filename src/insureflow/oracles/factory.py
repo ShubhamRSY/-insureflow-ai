@@ -5,6 +5,7 @@ from insureflow.oracles.aplus_client import APlusClient
 from insureflow.oracles.bureau_client import CreditBureauClient
 from insureflow.oracles.cat_model_client import CatastropheModelClient
 from insureflow.oracles.clue_client import CLUEClient
+from insureflow.oracles.mvr_client import MVRClient
 from insureflow.oracles.ncci_client import NCCIClient
 from insureflow.oracles.oracle_agent import OracleAgent
 from insureflow.oracles.osha_client import OSHAClient
@@ -79,6 +80,15 @@ def build_osha_client() -> OSHAClient:
     )
 
 
+def build_mvr_client() -> MVRClient:
+    return MVRClient(
+        api_key=settings.mvr_api_key,
+        base_url=settings.mvr_api_url,
+        mode=_oracle_mode(),
+        query_path=settings.mvr_query_path,
+    )
+
+
 def build_rating_agency_client() -> CreditRatingAgencyClient:
     return CreditRatingAgencyClient(
         api_key=settings.rating_agency_api_key,
@@ -98,4 +108,5 @@ def build_oracle_agent() -> OracleAgent:
         public_records_client=build_public_records_client(),
         osha_client=build_osha_client(),
         rating_agency_client=build_rating_agency_client(),
+        mvr_client=build_mvr_client(),
     )

@@ -54,12 +54,13 @@ class ISORatingAdapter(RatingAdapter):
         adjusted = base_premium
         mods: list[RateComponent] = []
 
-        if request.loss_ratio > 0.40:
-            adjusted *= 1.25
-            mods.append(RateComponent("loss_ratio_surcharge", adjusted - base_premium, "loss_ratio", 25.0))
-        elif request.loss_ratio < 0.10:
-            adjusted *= 0.90
-            mods.append(RateComponent("loss_free_credit", adjusted - base_premium, "loss_ratio", -10.0))
+        if getattr(request, "loss_ratio_known", True):
+            if request.loss_ratio > 0.40:
+                adjusted *= 1.25
+                mods.append(RateComponent("loss_ratio_surcharge", adjusted - base_premium, "loss_ratio", 25.0))
+            elif request.loss_ratio < 0.10:
+                adjusted *= 0.90
+                mods.append(RateComponent("loss_free_credit", adjusted - base_premium, "loss_ratio", -10.0))
 
         if request.schedule_mod_pct:
             factor = 1 + (request.schedule_mod_pct / 100.0)

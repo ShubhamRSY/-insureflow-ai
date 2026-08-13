@@ -120,6 +120,8 @@ class LossRunData(BaseModel):
     total_open_reserves: float = 0.0
     claims: list[ClaimRecord] = Field(default_factory=list)
     loss_ratios: dict[str, float] = Field(default_factory=dict)
+    earned_premium: float = 0.0
+    written_premium: float = 0.0
 
 
 class ScheduleItem(BaseModel):
@@ -144,6 +146,7 @@ class FinancialData(BaseModel):
     total_asset_value: Optional[float] = None
     annual_revenue: Optional[float] = None
     payroll: Optional[float] = None
+    employee_count: Optional[int] = None
     prior_losses: list[dict[str, Any]] = Field(default_factory=list)
     loss_run: Optional[LossRunData] = None
     credit_rating: Optional[str] = None

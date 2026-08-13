@@ -18,7 +18,7 @@ const REASON_CATEGORIES = [
 
 export default function WorkflowPage({ pending, onRefresh, authorityData, onOpenJob }) {
   const [showSignOff, setShowSignOff] = useState(null);
-  const [form, setForm] = useState({ action: 'approve', license_number: '', notes: '', override_reason: '', override_reason_category: 'other', uw_confidence: 'medium' });
+  const [form, setForm] = useState({ action: 'quote', license_number: '', notes: '', override_reason: '', override_reason_category: 'other', uw_confidence: 'medium' });
   const [workflowDetail, setWorkflowDetail] = useState(null);
   const [detailBundleId, setDetailBundleId] = useState(null);
 
@@ -26,7 +26,7 @@ export default function WorkflowPage({ pending, onRefresh, authorityData, onOpen
     try {
       await endpoints.signOff(bundleId, form);
       setShowSignOff(null);
-      setForm({ action: 'approve', license_number: '', notes: '', override_reason: '', override_reason_category: 'other', uw_confidence: 'medium' });
+      setForm({ action: 'quote', license_number: '', notes: '', override_reason: '', override_reason_category: 'other', uw_confidence: 'medium' });
       onRefresh();
     } catch (e) {
       alert(e.message);
@@ -83,11 +83,11 @@ export default function WorkflowPage({ pending, onRefresh, authorityData, onOpen
 
                     <div className="mt-4 flex flex-wrap gap-2">
                       <button type="button" onClick={() => onOpenJob?.('insurance', id, id)} className="btn-secondary text-xs">View</button>
-                      <button type="button" onClick={() => { setShowSignOff(id); setForm(f => ({ ...f, action: 'approve' })); }} className="btn-primary btn-sm text-xs">Approve</button>
+                      <button type="button" onClick={() => { setShowSignOff(id); setForm(f => ({ ...f, action: 'quote' })); }} className="btn-primary btn-sm text-xs">Quote</button>
+                      <button type="button" onClick={() => { setShowSignOff(id); setForm(f => ({ ...f, action: 'no_quote' })); }} className="rounded-xl px-3 py-1.5 text-xs text-red-400 ring-1 ring-red-500/30 hover:bg-red-500/10">No quote</button>
                       <button type="button" onClick={() => { setShowSignOff(id); setForm(f => ({ ...f, action: 'request_info' })); }} className="btn-secondary text-xs">Request info</button>
                       <button type="button" onClick={() => { setShowSignOff(id); setForm(f => ({ ...f, action: 'refer' })); }} className="btn-secondary text-xs">Refer</button>
-                      <button type="button" onClick={() => { setShowSignOff(id); setForm(f => ({ ...f, action: 'decline' })); }} className="rounded-xl px-3 py-1.5 text-xs text-red-400 ring-1 ring-red-500/30 hover:bg-red-500/10">Decline</button>
-                      {p.state === 'approved' && (
+                      {(p.state === 'approved' || p.state === 'quoted') && (
                         <button type="button" onClick={async () => { await endpoints.bindPolicy(id).catch(e => alert(e.message)); onRefresh?.(); }} className="rounded-xl px-3 py-1.5 text-xs text-emerald-400 ring-1 ring-emerald-500/30 hover:bg-emerald-500/10"><FileCheck className="h-3 w-3 inline" /> Bind</button>
                       )}
                       <button type="button" onClick={async () => { setDetailBundleId(id); try { const d = await endpoints.workflowDetail(id); setWorkflowDetail(d); } catch (e) { alert(e.message); } }} className="btn-secondary text-xs"><Search className="h-3 w-3 inline" /> Detail</button>
@@ -121,13 +121,13 @@ export default function WorkflowPage({ pending, onRefresh, authorityData, onOpen
                         />
                       </div>
                       <textarea
-                        placeholder={form.action === 'request_info' ? 'What do you need from the broker? (e.g. docs: loss run, SOV)' : 'Notes…'}
+                        placeholder={form.action === 'request_info' ? 'What do you need from the broker? (e.g. docs: loss run, SOV)' : form.action === 'no_quote' ? 'Why no quote?' : 'Notes…'}
                         className="input-field w-full text-sm" rows={2}
                         value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
                       />
                       <div className="flex gap-2">
                         <button type="button" onClick={() => handleSignOff(id)} className="btn-primary btn-sm text-xs">
-                          Confirm {form.action}
+                          Confirm {form.action === 'no_quote' ? 'no quote' : form.action}
                         </button>
                         <button type="button" onClick={() => setShowSignOff(null)} className="btn-secondary text-xs">Cancel</button>
                       </div>

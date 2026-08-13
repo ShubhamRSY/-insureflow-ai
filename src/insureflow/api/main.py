@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any, Callable, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect, status
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, StreamingResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -36,6 +36,12 @@ try:
 
     configure_cloudwatch_logging()
     maybe_enable_langsmith_tracing()
+    try:
+        from insureflow.observability.openobserve import configure_openobserve_logging
+
+        configure_openobserve_logging()
+    except Exception:
+        pass
     _security_errors = bootstrap_security()
     if _security_errors:
         _boot_posture = _resolve_boot_posture()
@@ -84,6 +90,13 @@ app = FastAPI(
 )
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
+
+try:
+    from insureflow.observability.http_middleware import PrometheusHTTPMiddleware
+
+    app.add_middleware(PrometheusHTTPMiddleware)
+except Exception:
+    pass
 
 if integration_gateway_router is not None:
     app.include_router(integration_gateway_router, prefix="/integrations")
@@ -558,6 +571,7 @@ class SubmissionRequest(BaseModel):
     insurance_line: Optional[str] = None  # commercial_* | personal_homeowners | personal_auto | life
     commercial_product_id: Optional[str] = None
     life_product_id: Optional[str] = None  # life product slug / id / checklist_lob (e.g. single-premium-ulip)
+    life_coverage_id: Optional[str] = None  # e.g. level_term_10 — scopes checklist + rating to that coverage only
     commercial_coverage_id: Optional[str] = None
     commercial_product_name: Optional[str] = None
     commercial_coverage_name: Optional[str] = None
@@ -568,7 +582,7 @@ class SubmissionRequest(BaseModel):
 
 
 class SignOffRequest(BaseModel):
-    action: str  # approve | decline | refer | request_info
+    action: str  # quote | no_quote | approve | decline | refer | request_info
     license_number: str = ""
     notes: str = ""
     override_reason: str = ""
@@ -634,6 +648,21 @@ async def health() -> dict[str, str]:
     return {"status": "ok", "version": "0.3.1"}
 
 
+@app.get("/metrics")
+@limiter.exempt
+def prometheus_metrics(request: Request) -> Response:
+    """Prometheus scrape endpoint (optional ``METRICS_BEARER``)."""
+    from insureflow.observability.prometheus_metrics import render_metrics
+
+    expected = os.getenv("METRICS_BEARER", "").strip()
+    if expected:
+        auth = request.headers.get("authorization") or ""
+        if auth != f"Bearer {expected}":
+            raise HTTPException(status_code=401, detail="metrics unauthorized")
+    body, ctype = render_metrics()
+    return Response(content=body, media_type=ctype)
+
+
 @app.get("/billing/plan")
 def billing_plan(current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
     """Plan entitlements + whether live oracles / carrier book / PAS are actually ready."""
@@ -693,6 +722,17 @@ def ops_snapshot(
 
     snap = collect_ops_snapshot(job_store)
     snap["org_id"] = current.org_id
+    try:
+        from insureflow.observability.openobserve import status as openobserve_status
+        from insureflow.observability.prometheus_metrics import available as prometheus_available
+
+        snap["observability"] = {
+            "prometheus": {"metrics_path": "/metrics", "client_available": prometheus_available()},
+            "openobserve": openobserve_status(),
+            "grafana": {"local_url": os.getenv("GRAFANA_URL", "http://localhost:3000")},
+        }
+    except Exception:
+        pass
     return snap
 
 
@@ -1023,8 +1063,8 @@ def uw_workbench(
         }
 
     pending = [_enrich(r) for r in records if r.state.value in ("pending_review", "pending_co_sign")]
-    approved = [_enrich(r) for r in records if r.state.value == "approved"]
-    done = [_enrich(r) for r in records if r.state.value in ("declined", "bound", "expired")][:12]
+    approved = [_enrich(r) for r in records if r.state.value in ("approved", "quoted")]
+    done = [_enrich(r) for r in records if r.state.value in ("declined", "no_quote", "bound", "expired")][:12]
     return {
         "org_id": org_id,
         "pending": pending,
@@ -1751,6 +1791,12 @@ def run_draft_bundle(
     vertical: str = "insurance",
     insurance_line: str = "",
     life_product_id: str = "",
+    life_coverage_id: str = "",
+    commercial_product_id: str = "",
+    commercial_coverage_id: str = "",
+    commercial_product_name: str = "",
+    commercial_coverage_name: str = "",
+    commercial_category_id: str = "",
     strict_relevance: bool = False,
 ) -> dict[str, Any]:
     """Execute the pipeline using all accumulated documents in a draft bundle.
@@ -1821,6 +1867,12 @@ def run_draft_bundle(
         use_llm=use_llm,
         insurance_line=insurance_line or None,
         life_product_id=life_product_id or None,
+        life_coverage_id=life_coverage_id or None,
+        commercial_product_id=commercial_product_id or None,
+        commercial_coverage_id=commercial_coverage_id or None,
+        commercial_product_name=commercial_product_name or None,
+        commercial_coverage_name=commercial_coverage_name or None,
+        commercial_category_id=commercial_category_id or None,
     )
     background_tasks.add_task(_run_pipeline_task, job_id, req, current.org_id)
 
@@ -2180,6 +2232,7 @@ def _run_pipeline_task(job_id: str, request: SubmissionRequest, org_id: str) -> 
                 insurance_line=request.insurance_line,
                 commercial_product_id=request.commercial_product_id,
                 life_product_id=request.life_product_id,
+                life_coverage_id=request.life_coverage_id,
                 commercial_coverage_id=request.commercial_coverage_id,
                 commercial_product_name=request.commercial_product_name,
                 commercial_coverage_name=request.commercial_coverage_name,
@@ -2620,6 +2673,14 @@ def licensed_uw_sign_off(
     except ValueError:
         raise HTTPException(status_code=400, detail=f"Invalid action: {req.action}")
 
+    from insureflow.audit.store import AuditStore
+    from insureflow.underwriting.bind_gates import quote_issuance_error
+
+    summary = AuditStore().load_json(bundle_id, "pipeline_summary.json", org_id=current.org_id) or {}
+    issuance_err = quote_issuance_error(summary, action=action.value, override_reason=req.override_reason)
+    if issuance_err:
+        raise HTTPException(status_code=400, detail=issuance_err)
+
     svc = WorkflowService()
     try:
         record = svc.sign_off(
@@ -2722,8 +2783,10 @@ def bind_policy(
 
     wf = WorkflowService()
     record = wf.store.get(bundle_id, current.org_id)
-    if not record or record.state.value != "approved":
-        raise HTTPException(status_code=400, detail="Policy must be UW-approved before bind")
+    from insureflow.workflow.models import allows_bind
+
+    if not record or not allows_bind(record.state):
+        raise HTTPException(status_code=400, detail="Policy must be quoted or UW-approved before bind")
 
     from insureflow.pilot.sandbox_readiness import bind_is_allowed, is_shadow_mode
 
@@ -2744,6 +2807,28 @@ def bind_policy(
     quote_ref = quote.get("policy_admin_reference", "")
     if not quote.get("eligible", True):
         raise HTTPException(status_code=400, detail="Quote is not eligible for bind")
+    quote_meta = quote.get("metadata") or summary.get("quote_metadata") or quote
+    from insureflow.underwriting.bind_gates import commercial_bind_holds, life_evidence_holds
+
+    holds: list[str] = []
+    try:
+        from insureflow.models.submissions import SubmissionBundle
+
+        raw_bundle = store.load_json(bundle_id, "submission_bundle.json", org_id=current.org_id)
+        bundle_obj = SubmissionBundle.model_validate(raw_bundle) if raw_bundle else None
+    except Exception:
+        bundle_obj = None
+    if str(quote.get("insurance_line") or summary.get("insurance_line") or "").lower() == "life" or (quote_meta or {}).get("personal_lines"):
+        if bundle_obj is not None:
+            holds.extend(life_evidence_holds(bundle_obj, quote_meta if isinstance(quote_meta, dict) else {}))
+        else:
+            med = (quote_meta or {}).get("medical") or {}
+            if med.get("require_aps") or med.get("require_paramed"):
+                holds.append("APS/paramed required before bind — package not loaded to confirm fulfillment")
+    else:
+        holds.extend(commercial_bind_holds(quote_meta if isinstance(quote_meta, dict) else {}))
+    if holds:
+        raise HTTPException(status_code=400, detail={"message": "Cannot bind — outstanding underwriting holds", "holds": holds})
     if not quote_ref:
         raise HTTPException(status_code=400, detail="Missing policy admin quote reference — cannot bind")
 
@@ -2856,6 +2941,12 @@ def bind_policy(
                 },
             )
     if bind_result.get("success") is False or bind_result.get("status") == "failed":
+        try:
+            from insureflow.observability.prometheus_metrics import observe_bind
+
+            observe_bind("failed")
+        except Exception:
+            pass
         raise HTTPException(
             status_code=502,
             detail=bind_result.get("error") or "Policy bind failed on policy-admin system",
@@ -2868,6 +2959,13 @@ def bind_policy(
         wf.mark_bound(bundle_id, current.org_id, policy_number, binder_username=current.username or "")
     except ValueError as exc:
         raise HTTPException(status_code=403, detail=str(exc)) from exc
+
+    try:
+        from insureflow.observability.prometheus_metrics import observe_bind
+
+        observe_bind("success")
+    except Exception:
+        pass
 
     # Record in portfolio only after successful bind
     try:

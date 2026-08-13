@@ -22,6 +22,12 @@ export default function ConnectAndPull({
   onRunResult,
   insuranceLine = '',
   lifeProductId = '',
+  lifeCoverageId = '',
+  commercialProductId = '',
+  coverageId = '',
+  productName = '',
+  coverageName = '',
+  commercialCategoryId = '',
   strictRelevance = true,
 }) {
   const [sources, setSources] = useState([]);
@@ -206,6 +212,12 @@ export default function ConnectAndPull({
       const result = await endpoints.runDraftBundle(bundleId, useLlm, vertical, {
         insurance_line: insuranceLine,
         life_product_id: lifeProductId,
+        life_coverage_id: lifeCoverageId,
+        commercial_product_id: commercialProductId,
+        commercial_coverage_id: coverageId,
+        commercial_product_name: productName,
+        commercial_coverage_name: coverageName,
+        commercial_category_id: commercialCategoryId,
         strict_relevance: strictRelevance,
       });
       if (result.relevance?.irrelevant_count) {

@@ -69,6 +69,22 @@ def generate_quote_html(
     else:
         coverages_html = '<p class="muted">Coverage details not available — see quote breakdown below.</p>'
 
+    iso_forms = list(meta.get("iso_forms") or [])
+    if iso_forms:
+        rows = "".join(
+            f"<tr><td>{_esc(f.get('number'))}</td><td>{_esc(f.get('title'))}</td><td class='text-right'>{_esc(f.get('edition'))}</td></tr>"
+            for f in iso_forms
+        )
+        forms_html = f"<h2>ISO / form schedule</h2><div class='card'><table>{rows}</table><p class='muted' style='margin-top:8px;'>Jacket map only — not a filed edition date until the carrier book supplies one.</p></div>"
+    else:
+        forms_html = ""
+    sl = meta.get("surplus_lines") or {}
+    if sl:
+        forms_html += (
+            f"<h2>Admitted / E&amp;S</h2><div class='card'><p>{_esc(sl.get('market_status') or sl.get('status') or 'unknown')}"
+            f" — {_esc(sl.get('reason') or '')}</p></div>"
+        )
+
     exclusions: list[str] = []
     if memo.recommendation and memo.recommendation.conditions:
         exclusions.extend(memo.recommendation.conditions)
@@ -253,6 +269,8 @@ def generate_quote_html(
 
   <h2>Coverages</h2>
   {coverages_html}
+
+  {forms_html}
 
   <h2>Exclusions & Conditions</h2>
   <ul class="list">{exclusions_html}</ul>

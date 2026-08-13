@@ -79,6 +79,17 @@ class InsuranceDocumentType(str, Enum):
     # Key person
     KEY_PERSON_APPLICATION = "key_person_application"
     CORPORATE_RESOLUTION = "corporate_resolution"
+    OSHA_LOG = "osha_log"
+    ENVIRONMENTAL_SITE_ASSESSMENT = "environmental_site_assessment"
+    LIQUOR_LICENSE = "liquor_license"
+    EXPERIENCE_MOD_WORKSHEET = "experience_mod_worksheet"
+    ACORD_126 = "acord_126"
+    ACORD_127 = "acord_127"
+    ACORD_130 = "acord_130"
+    ACORD_131 = "acord_131"
+    CYBER_QUESTIONNAIRE = "cyber_questionnaire"
+    REPLACEMENT_1035 = "replacement_1035"
+    SURPLUS_LINES_AFFIDAVIT = "surplus_lines_affidavit"
 
 
 # Life insurance document types — used to route LLM extraction schema.
@@ -208,6 +219,28 @@ class InsuranceDocumentClassifier:
             return InsuranceDocumentType.ATTORNEY_DOCUMENTATION
         if any(k in name or k in combined for k in ("simplified issue application", "no-exam application", "guaranteed issue application")):
             return InsuranceDocumentType.LIFE_APPLICATION
+        if any(k in name or k in combined for k in ("osha 300", "osha-300", "osha log", "300a summary")):
+            return InsuranceDocumentType.OSHA_LOG
+        if any(k in name or k in combined for k in ("phase i esa", "phase 1 esa", "environmental site assessment", "phase i environmental")):
+            return InsuranceDocumentType.ENVIRONMENTAL_SITE_ASSESSMENT
+        if any(k in name or k in combined for k in ("liquor license", "abc license", "alcohol beverage")):
+            return InsuranceDocumentType.LIQUOR_LICENSE
+        if any(k in name or k in combined for k in ("e-mod worksheet", "emod worksheet", "experience mod worksheet", "experience modification worksheet", "ncci worksheet")):
+            return InsuranceDocumentType.EXPERIENCE_MOD_WORKSHEET
+        if any(k in name or k in combined for k in ("acord 126", "acord-126")):
+            return InsuranceDocumentType.ACORD_126
+        if any(k in name or k in combined for k in ("acord 127", "acord-127")):
+            return InsuranceDocumentType.ACORD_127
+        if any(k in name or k in combined for k in ("acord 130", "acord-130")):
+            return InsuranceDocumentType.ACORD_130
+        if any(k in name or k in combined for k in ("acord 131", "acord-131")):
+            return InsuranceDocumentType.ACORD_131
+        if any(k in name or k in combined for k in ("cyber questionnaire", "cyber application", "ransomware questionnaire")):
+            return InsuranceDocumentType.CYBER_QUESTIONNAIRE
+        if any(k in name or k in combined for k in ("1035 exchange", "replacement form", "naic replacement", "absolute assignment")):
+            return InsuranceDocumentType.REPLACEMENT_1035
+        if any(k in name or k in combined for k in ("diligent search", "surplus lines affidavit", "stamping office", "due diligence affidavit")):
+            return InsuranceDocumentType.SURPLUS_LINES_AFFIDAVIT
         if any(k in name or k in combined for k in ("mvr", "motor vehicle report", "driving record report")):
             return InsuranceDocumentType.MVR_REPORT
         if any(k in name or k in combined for k in ("auto application", "personal auto application", "auto_application")):

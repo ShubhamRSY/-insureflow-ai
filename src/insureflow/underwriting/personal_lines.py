@@ -466,6 +466,10 @@ class LifeFactors:
     foreign_travel: bool = False
     criminal_history: bool = False
     income: float = 0.0
+    net_worth: float = 0.0
+    in_force_face: float = 0.0
+    beneficiary_relationship: str = ""
+    state: str = ""
     findings: list[Finding] = field(default_factory=list)
 
     @property
@@ -496,8 +500,11 @@ class LifeFactors:
             mod += 10.0
         if self.criminal_history:
             mod += 20.0
-        if self.face_amount and self.income and self.face_amount > self.income * 30:
-            mod += 15.0  # financial underwriting stretch
+        if self.face_amount and self.income:
+            from insureflow.underwriting.life_financial import income_multiple_for_age
+
+            if self.face_amount > self.income * income_multiple_for_age(self.age):
+                mod += 15.0  # financial underwriting stretch
         return mod
 
 
@@ -621,7 +628,15 @@ def extract_life_factors(bundle: SubmissionBundle) -> LifeFactors:
                 re.I,
             )
         ),
-        income=_money(blob, "annual income", "income", "salary", "net worth"),
+        income=_money(blob, "annual income", "earned income", "salary", "w-2 income"),
+        net_worth=_money(blob, "net worth", "networth", "liquid net worth"),
+        in_force_face=_money(blob, "in-force face", "in force coverage", "existing life insurance", "inforce face"),
+        beneficiary_relationship=(
+            re.search(r"beneficiary(?:\s+relationship)?\s*[:=]\s*([A-Za-z][A-Za-z /-]{1,40})", blob, re.I).group(1).strip()
+            if re.search(r"beneficiary(?:\s+relationship)?\s*[:=]\s*([A-Za-z][A-Za-z /-]{1,40})", blob, re.I)
+            else ""
+        ),
+        state=_state_from_blob(blob),
     )
     if f.smoker:
         f.findings.append(

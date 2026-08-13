@@ -45,10 +45,23 @@ def test_resolve_quote_line_commercial_auto():
 def test_rate_cyber_manual():
     b = _bundle()
     m = UnderwritingMemo(bundle_id=b.bundle_id, insured_name="Test")
+    from insureflow.models.submissions import CoverageDetail
+
+    b.structured.coverages = [CoverageDetail(coverage_type="cyber", limit_amount=2_000_000, deductible=25_000, premium=0)]
     q = rate_extended_commercial(b, m, InsuranceLine.CYBER)
     assert q is not None
+    assert q.eligible is True
     assert q.metadata["rating_engine"] == "cyber_manual"
     assert q.adjusted_premium >= 2500
+
+
+def test_cyber_without_limit_is_ineligible():
+    b = _bundle()
+    m = UnderwritingMemo(bundle_id=b.bundle_id, insured_name="Test")
+    q = rate_extended_commercial(b, m, InsuranceLine.CYBER)
+    assert q is not None
+    assert q.eligible is False
+    assert any("limit" in r.lower() for r in q.ineligibility_reasons)
 
 
 def test_rate_commercial_auto_units():
@@ -67,11 +80,37 @@ def test_rate_commercial_auto_units():
 def test_ncci_wc_uses_class_and_payroll():
     b = _bundle()
     m = UnderwritingMemo(bundle_id=b.bundle_id, insured_name="Test")
+    from insureflow.models.submissions import UnstructuredSubmission
+
+    b.unstructured = [UnstructuredSubmission(submission_id="u1", raw_text="Experience modification: 1.12 e-mod: 1.12")]
     q = rate_workers_comp_ncci(b, m, state="IL")
+    assert q.eligible is True
     assert q.metadata["ncci_class_code"] == "5403"
     assert q.metadata["rating_engine"] == "ncci_class_emod"
     assert q.metadata["payroll"] > 0
+    assert q.metadata["experience_mod"] == 1.12
     assert q.adjusted_premium >= 1000
+
+
+def test_ncci_wc_without_emod_is_ineligible():
+    b = _bundle()
+    m = UnderwritingMemo(bundle_id=b.bundle_id, insured_name="Test")
+    q = rate_workers_comp_ncci(b, m, state="IL")
+    assert q.eligible is False
+    assert any("modification" in r.lower() or "e-mod" in r.lower() for r in q.ineligibility_reasons)
+
+
+def test_gl_uses_sales_not_tiv():
+    from insureflow.models.submissions import CoverageDetail
+    from insureflow.rating.commercial_actuarial import rate_general_liability_iso
+
+    b = _bundle()
+    b.structured.coverages = [CoverageDetail(coverage_type="gl", limit_amount=1_000_000, deductible=5_000, premium=0)]
+    m = UnderwritingMemo(bundle_id=b.bundle_id, insured_name="Test")
+    q = rate_general_liability_iso(b, m, state="TX")
+    assert q.eligible is True
+    assert q.metadata["rating_engine"] == "iso_gl_sales"
+    assert q.metadata["sales"] == 10_000_000
 
 
 def test_bop_package_sections():
@@ -84,12 +123,16 @@ def test_bop_package_sections():
     assert sum(s["adjusted_premium"] for s in sections) > 0
 
 
-def test_cpp_includes_crime_and_auto_sections():
+def test_cpp_skips_crime_and_auto_without_exposures():
     b = _bundle()
     m = UnderwritingMemo(bundle_id=b.bundle_id, insured_name="Test")
     q = rate_package_policy(b, m, InsuranceLine.COMMERCIAL_PACKAGE)
+    assert q.eligible is True
     ids = {s["section"] for s in q.metadata["package_sections"]}
-    assert "crime" in ids and "commercial_auto" in ids
+    assert "property" in ids and "general_liability" in ids
+    assert "crime" not in ids and "commercial_auto" not in ids
+    skipped = " ".join(q.metadata.get("skipped_sections") or [])
+    assert "crime" in skipped and "commercial_auto" in skipped
 
 
 def test_bind_readiness_from_conditions():

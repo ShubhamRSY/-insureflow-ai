@@ -221,8 +221,13 @@ class InsuranceRatingEngine:
         memo: UnderwritingMemo,
         line: InsuranceLine = InsuranceLine.COMMERCIAL_PROPERTY,
         commercial_product_id: str | None = None,
+        commercial_coverage_id: str | None = None,
+        experience_mod: float | None = None,
     ) -> QuoteResult:
         personal = line in PERSONAL_LINES
+        catalog_block = self._catalog_only_quote(bundle, line, commercial_product_id, commercial_coverage_id)
+        if catalog_block is not None:
+            return self._finalize_quote(catalog_block)
         if personal:
             from insureflow.rating.personal import rate_personal_line
             from insureflow.underwriting.personal_lines import _blob, _state_from_blob
@@ -231,7 +236,14 @@ class InsuranceRatingEngine:
             deductible = 0.0 if line == InsuranceLine.LIFE else self._estimate_deductible(bundle)
             if deductible <= 0 and line == InsuranceLine.PERSONAL_HOMEOWNERS:
                 deductible = 1000.0
-            result = rate_personal_line(bundle, line, state=state, deductible=deductible)
+            result = rate_personal_line(
+                bundle,
+                line,
+                state=state,
+                deductible=deductible,
+                coverage_id=commercial_coverage_id,
+                product_id=commercial_product_id,
+            )
             # Preserve adapter reference fields
             adapted = self.adapter.submit_quote(
                 QuoteRequest(
@@ -241,6 +253,7 @@ class InsuranceRatingEngine:
                     state=state,
                     naics_code="",
                     loss_ratio=0.0,
+                    loss_ratio_known=False,
                     schedule_mod_pct=0.0,
                 ),
                 memo,
@@ -280,6 +293,7 @@ class InsuranceRatingEngine:
                     state=state,
                     naics_code=self._naics(bundle),
                     loss_ratio=self._loss_ratio(bundle),
+                    loss_ratio_known=self._loss_ratio_result(bundle).known,
                     schedule_mod_pct=float(schedule_mod),
                 ),
                 memo,
@@ -334,7 +348,14 @@ class InsuranceRatingEngine:
                 return self._adapt_actuarial_result(leaf, memo, bundle, schedule_mod)
 
         if line == InsuranceLine.WORKERS_COMP:
-            result = rate_workers_comp_ncci(bundle, memo, state=state, schedule_mod_pct=schedule_mod, market_mod_pct=market_mod)
+            result = rate_workers_comp_ncci(
+                bundle,
+                memo,
+                state=state,
+                schedule_mod_pct=schedule_mod,
+                market_mod_pct=market_mod,
+                experience_mod=experience_mod,
+            )
             return self._adapt_actuarial_result(result, memo, bundle, schedule_mod)
 
         if is_package_line(line) or line in PACKAGE_LINES:
@@ -381,12 +402,14 @@ class InsuranceRatingEngine:
                     deductible_credit = cr
                     break
 
-        loss_ratio = self._loss_ratio(bundle)
+        lr_result = self._loss_ratio_result(bundle)
+        loss_ratio = lr_result.ratio if lr_result.known else 0.0
         exp_mod = 0.0
-        for lo_, hi_, mod in LOSS_EXPERIENCE_MODIFIERS:
-            if (lo_ is None or loss_ratio >= lo_) and (hi_ is None or loss_ratio < hi_):
-                exp_mod = mod
-                break
+        if lr_result.known:
+            for lo_, hi_, mod in LOSS_EXPERIENCE_MODIFIERS:
+                if (lo_ is None or loss_ratio >= lo_) and (hi_ is None or loss_ratio < hi_):
+                    exp_mod = mod
+                    break
 
         years_mod = 0.0 if personal else self._years_in_business_mod(bundle)
 
@@ -424,6 +447,7 @@ class InsuranceRatingEngine:
                 state=state,
                 naics_code=self._naics(bundle),
                 loss_ratio=loss_ratio,
+                loss_ratio_known=lr_result.known,
                 schedule_mod_pct=cope_mod + schedule_mod + exp_mod + deductible_credit,
             ),
             memo,
@@ -465,9 +489,65 @@ class InsuranceRatingEngine:
     def bind(self, bundle_id: str, quote_reference: str, bound_by: str) -> dict[str, Any]:
         return self.adapter.bind_policy(bundle_id, quote_reference, bound_by)
 
+    def _catalog_only_quote(
+        self,
+        bundle: SubmissionBundle,
+        line: InsuranceLine,
+        commercial_product_id: str | None,
+        commercial_coverage_id: str | None,
+    ) -> QuoteResult | None:
+        product_id = (commercial_product_id or "").strip()
+        if not product_id:
+            return None
+        status = ""
+        name = product_id
+        if line == InsuranceLine.LIFE:
+            from insureflow.insurance.life_lobs import get_life_line
+            from insureflow.underwriting.life_product import is_filed_term_product
+
+            row = get_life_line(product_id)
+            if row:
+                status = str(row.get("status") or "")
+                name = str(row.get("name") or product_id)
+            if status == "catalog" or (row and not is_filed_term_product(product_id, commercial_coverage_id)):
+                if status != "live":
+                    return QuoteResult(
+                        bundle_id=bundle.bundle_id,
+                        line=line,
+                        base_premium=0.0,
+                        adjusted_premium=0.0,
+                        eligible=False,
+                        ineligibility_reasons=[
+                            f"{name} is catalog-only — no filed permanent/annuity rates (do not price as 20-year term)",
+                        ],
+                        metadata={"rating_engine": "catalog_only", "product_id": product_id, "catalog_status": status or "catalog"},
+                    )
+            return None
+        from insureflow.insurance.commercial_lobs import get_commercial_line
+
+        row = get_commercial_line(product_id)
+        if not row:
+            return None
+        status = str(row.get("status") or "")
+        if status == "catalog":
+            name = str(row.get("name") or product_id)
+            return QuoteResult(
+                bundle_id=bundle.bundle_id,
+                line=line,
+                base_premium=0.0,
+                adjusted_premium=0.0,
+                eligible=False,
+                ineligibility_reasons=[
+                    f"{name} is catalog-only — parent-line proxy, not an underwritable filing",
+                ],
+                metadata={"rating_engine": "catalog_only", "product_id": product_id, "catalog_status": "catalog"},
+            )
+        return None
+
     def _finalize_quote(self, result: QuoteResult) -> QuoteResult:
         """Desk+ refuses pilot manuals — rating must be the carrier's SERFF book."""
         from insureflow.billing.plan import current_plan, is_customer_rate_book
+        from insureflow.rating.iso_forms import attach_iso_forms
         from insureflow.rating.leaf_filings import carrier_book_status
 
         plan = current_plan()
@@ -477,6 +557,12 @@ class InsuranceRatingEngine:
         meta["rate_book_posture"] = status.get("posture")
         meta["rate_book_id"] = status.get("book_id")
         meta["is_customer_book"] = is_customer_rate_book(status)
+        meta = attach_iso_forms(
+            meta,
+            result.line,
+            coverage_id=str(meta.get("life_coverage_id") or meta.get("coverage_id") or ""),
+            product_id=str(meta.get("product_id") or ""),
+        )
         if plan.require_carrier_book and not is_customer_rate_book(status):
             result.eligible = False
             reason = "Pilot manuals are not your SERFF filing. Import your carrier rate book before Desk+ quoting (POST /rating/carrier-book or CARRIER_BOOK_PATH)."
@@ -503,6 +589,7 @@ class InsuranceRatingEngine:
                 state=str((result.metadata or {}).get("state") or self._primary_state(bundle)),
                 naics_code=self._naics(bundle),
                 loss_ratio=self._loss_ratio(bundle),
+                loss_ratio_known=self._loss_ratio_result(bundle).known,
                 schedule_mod_pct=float(schedule_mod),
             ),
             memo,
@@ -521,10 +608,11 @@ class InsuranceRatingEngine:
 
     def _estimate_tiv(self, bundle: SubmissionBundle) -> float:
         if bundle.structured:
-            for loc in bundle.structured.locations:
-                total = (loc.building_value or 0) + (loc.contents_value or 0) + (loc.bi_value or 0)
-                if total > 0:
-                    return total
+            total = 0.0
+            for loc in bundle.structured.locations or []:
+                total += float(loc.building_value or 0) + float(loc.contents_value or 0) + float(loc.bi_value or 0)
+            if total > 0:
+                return total
             if bundle.structured.financial and bundle.structured.financial.total_asset_value:
                 return bundle.structured.financial.total_asset_value
             for cov in bundle.structured.coverages:
@@ -538,14 +626,14 @@ class InsuranceRatingEngine:
                     pass
         return 0.0
 
+    def _loss_ratio_result(self, bundle: SubmissionBundle):
+        from insureflow.underwriting.loss_ratio import loss_ratio_from_bundle
+
+        return loss_ratio_from_bundle(bundle)
+
     def _loss_ratio(self, bundle: SubmissionBundle) -> float:
-        fin = bundle.structured.financial if bundle.structured else None
-        if fin and fin.loss_run and fin.loss_run.loss_ratios:
-            return max(fin.loss_run.loss_ratios.values(), default=0.0)
-        if fin and fin.loss_run and fin.loss_run.total_incurred > 0:
-            premium_proxy = self._estimate_tiv(bundle) * 0.0045
-            return fin.loss_run.total_incurred / premium_proxy if premium_proxy else 0.0
-        return 0.0
+        result = self._loss_ratio_result(bundle)
+        return result.ratio if result.known else 0.0
 
     def _primary_state(self, bundle: SubmissionBundle) -> str:
         if bundle.structured and bundle.structured.locations:

@@ -134,6 +134,35 @@ class TestWorkflowSignOff:
         assert record.state == WorkflowState.APPROVED
         assert record.sign_offs[0].license_number == "UW-CA-12345"
 
+    def test_quote_and_no_quote(self, tmp_path: Path) -> None:
+        from insureflow.workflow.store import WorkflowStore
+
+        store = WorkflowStore(base_path=tmp_path / "workflows")
+        svc = WorkflowService(store=store)
+        svc.submit_for_review("bundle-q", "test-org", "refer")
+        quoted = svc.sign_off("bundle-q", "test-org", SignOffAction.QUOTE, signed_by="jane.uw", license_number="UW-1")
+        assert quoted.state == WorkflowState.QUOTED
+        assert quoted.final_decision == "quote"
+        assert quoted.metadata.get("quote_intent") == "quote"
+
+        svc.submit_for_review("bundle-nq", "test-org", "refer")
+        nq = svc.sign_off(
+            "bundle-nq",
+            "test-org",
+            SignOffAction.NO_QUOTE,
+            signed_by="jane.uw",
+            notes="Outside appetite — habitational coastal",
+        )
+        assert nq.state == WorkflowState.NO_QUOTE
+        assert nq.final_decision == "no_quote"
+
+        bound = svc.mark_bound("bundle-q", "test-org", "POL-Q-1", binder_username="jane.uw")
+        assert bound.state == WorkflowState.BOUND
+
+        svc.submit_for_review("bundle-nq2", "test-org", "refer")
+        with pytest.raises(ValueError, match="no-quote"):
+            svc.sign_off("bundle-nq2", "test-org", SignOffAction.NO_QUOTE, signed_by="jane.uw")
+
 
 class TestFeedbackLoop:
     def test_calibration_after_loss_experience(self, tmp_path: Path) -> None:

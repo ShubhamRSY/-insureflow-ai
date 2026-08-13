@@ -15,6 +15,9 @@ def rate_personal_line(
     *,
     state: str = "",
     deductible: float = 1000.0,
+    coverage_id: str | None = None,
+    coverage_name: str | None = None,
+    product_id: str | None = None,
 ) -> "QuoteResult":
     from insureflow.rating.models import InsuranceLine
     from insureflow.rating.personal.auto_rating import rate_personal_auto
@@ -26,5 +29,5 @@ def rate_personal_line(
     if line == InsuranceLine.PERSONAL_AUTO:
         return rate_personal_auto(bundle, state=state)
     if line == InsuranceLine.LIFE:
-        return rate_life(bundle)
+        return rate_life(bundle, coverage_id=coverage_id, coverage_name=coverage_name, product_id=product_id, state=state)
     raise ValueError(f"Not a personal line: {line}")

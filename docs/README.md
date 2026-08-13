@@ -4,7 +4,7 @@
 |--------|----------|
 | [architecture/](./architecture/) | System design |
 | [product/](./product/) | **[Application guide](./product/PRODUCT_GUIDE.md)** · **[PDF](./product/PRODUCT_GUIDE.pdf)**, pilot partner brief |
-| [ops/](./ops/) | Launch, sandbox, oracle wiring, gap status, bank landing zone |
+| [ops/](./ops/) | Launch, sandbox, oracle wiring, **[observability](./ops/OBSERVABILITY.md)**, gap status, bank landing zone |
 | [outreach/](./outreach/) | This-week emails + vendor sandbox templates |
 
 ## Start here

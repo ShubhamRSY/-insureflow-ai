@@ -133,6 +133,7 @@ class QuoteRequest:
     state: str = ""
     naics_code: str = ""
     loss_ratio: float = 0.0
+    loss_ratio_known: bool = True
     schedule_mod_pct: float = 0.0
 
 

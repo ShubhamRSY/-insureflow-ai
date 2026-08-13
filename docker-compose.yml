@@ -27,6 +27,14 @@ x-api-env: &api-env
   WEB_CONCURRENCY: ${WEB_CONCURRENCY:-2}
   METRICS_BACKEND: ${METRICS_BACKEND:-redis}
   INSURANCE_USE_CELERY: ${INSURANCE_USE_CELERY:-1}
+  PROMETHEUS_MULTIPROC_DIR: /tmp/rytera-prom
+  METRICS_BEARER: ${METRICS_BEARER:-}
+  OPENOBSERVE_ENABLED: ${OPENOBSERVE_ENABLED:-true}
+  OPENOBSERVE_URL: ${OPENOBSERVE_URL:-http://openobserve:5080}
+  OPENOBSERVE_ORG: ${OPENOBSERVE_ORG:-default}
+  OPENOBSERVE_USER: ${ZO_ROOT_USER_EMAIL:-root@example.com}
+  OPENOBSERVE_PASSWORD: ${ZO_ROOT_USER_PASSWORD:-Complexpass#123}
+  GRAFANA_URL: ${GRAFANA_URL:-http://localhost:3000}
 
 services:
   api:
@@ -62,6 +70,54 @@ services:
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
 
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./deploy/observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=15d
+      - --web.enable-lifecycle
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-rytera}
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_USERS_DEFAULT_THEME: dark
+      GF_SERVER_ROOT_URL: ${GRAFANA_ROOT_URL:-http://localhost:3000}
+    volumes:
+      - ./deploy/observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./deploy/observability/grafana/dashboards:/etc/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+  openobserve:
+    image: public.ecr.aws/zinclabs/openobserve:latest
+    ports:
+      - "5080:5080"
+    environment:
+      ZO_ROOT_USER_EMAIL: ${ZO_ROOT_USER_EMAIL:-root@example.com}
+      ZO_ROOT_USER_PASSWORD: ${ZO_ROOT_USER_PASSWORD:-Complexpass#123}
+      ZO_COMPACT_DATA_RETENTION_DAYS: "14"
+    volumes:
+      - oo-data:/data
+    restart: unless-stopped
+
   db:
     image: pgvector/pgvector:pg17
     environment:
@@ -82,3 +138,6 @@ services:
 
 volumes:
   pgdata:
+  prometheus-data:
+  grafana-data:
+  oo-data:

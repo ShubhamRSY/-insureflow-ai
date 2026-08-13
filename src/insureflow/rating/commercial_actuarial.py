@@ -73,6 +73,23 @@ WC_DEFAULT_RATE = 3.25
 WC_EXPENSE_CONSTANT = 160.0
 WC_MIN = 1_000.0
 
+# ISO CGL: rate per $1,000 gross sales / receipts (not TIV)
+GL_RATE_PER_1K_SALES = 0.42
+GL_LCM = 2.25
+GL_MIN = 750.0
+GL_ILF: dict[float, float] = {
+    300_000.0: 1.00,
+    500_000.0: 1.15,
+    1_000_000.0: 1.35,
+    2_000_000.0: 1.55,
+    5_000_000.0: 1.85,
+}
+
+# Umbrella: percent of underlying GL + per-million excess
+UMBRELLA_PCT_OF_UNDERLYING = 0.18
+UMBRELLA_PER_MILLION = 850.0
+UMBRELLA_MIN = 1_250.0
+
 # Package section weights (BOP / CPP)
 BOP_SECTIONS = (
     ("property", 0.55, InsuranceLine.COMMERCIAL_PROPERTY),
@@ -94,6 +111,8 @@ EXTENDED_COMMERCIAL_LINES = frozenset(
         InsuranceLine.CRIME,
         InsuranceLine.BUILDERS_RISK,
         InsuranceLine.SURETY,
+        InsuranceLine.GENERAL_LIABILITY,
+        InsuranceLine.UMBRELLA,
     }
 )
 
@@ -150,7 +169,19 @@ def _money(blob: str, *labels: str) -> float:
     return 0.0
 
 
-def _employees(bundle: SubmissionBundle) -> int:
+def _ineligible(bundle: SubmissionBundle, line: InsuranceLine, reasons: list[str], *, meta: dict[str, Any] | None = None) -> QuoteResult:
+    return QuoteResult(
+        bundle_id=bundle.bundle_id,
+        line=line,
+        base_premium=0.0,
+        adjusted_premium=0.0,
+        eligible=False,
+        ineligibility_reasons=list(reasons),
+        metadata={"invented_exposure": False, "exposure_unknown": True, **(meta or {})},
+    )
+
+
+def _employees(bundle: SubmissionBundle) -> int | None:
     if bundle.structured and bundle.structured.financial:
         n = getattr(bundle.structured.financial, "employee_count", None)
         if n:
@@ -159,32 +190,37 @@ def _employees(bundle: SubmissionBundle) -> int:
     m = re.search(r"(?:employees?|fte|headcount)\s*[:=]?\s*(\d{1,5})", blob, re.I)
     if m:
         return max(int(m.group(1)), 1)
-    return 25
+    return None
 
 
-def _payroll(bundle: SubmissionBundle) -> float:
+def _payroll(bundle: SubmissionBundle) -> float | None:
     if bundle.structured and bundle.structured.financial:
         fin = bundle.structured.financial
         for attr in ("payroll", "annual_payroll", "total_payroll"):
             v = getattr(fin, attr, None)
             if v and float(v) > 0:
                 return float(v)
-        rev = float(getattr(fin, "annual_revenue", 0) or 0)
-        emp = _employees(bundle)
-        if rev > 0:
-            return max(rev * 0.35, emp * 45_000.0)
     blob = _blob(bundle)
     v = _money(blob, "payroll", "annual payroll", "total payroll", "remuneration")
     if v > 0:
         return v
-    return float(_employees(bundle) * 55_000.0)
+    return None
 
 
-def _class_code(bundle: SubmissionBundle) -> str:
+def _sales(bundle: SubmissionBundle) -> float | None:
+    if bundle.structured and bundle.structured.financial:
+        rev = float(bundle.structured.financial.annual_revenue or 0)
+        if rev > 0:
+            return rev
+    blob = _blob(bundle)
+    v = _money(blob, "gross sales", "annual sales", "gross receipts", "receipts", "annual revenue", "revenue")
+    return v if v > 0 else None
+
+
+def _class_code(bundle: SubmissionBundle) -> str | None:
     if bundle.structured and bundle.structured.risk_profile:
         code = (bundle.structured.risk_profile.ncci_class_code or "").strip()
         if code:
-            # take first 4 digits
             digits = re.sub(r"\D", "", code)
             if len(digits) >= 4:
                 return digits[:4]
@@ -192,45 +228,41 @@ def _class_code(bundle: SubmissionBundle) -> str:
     m = re.search(r"(?:ncci|class\s*code|class)\s*[#:=]?\s*(\d{4})", blob, re.I)
     if m:
         return m.group(1)
-    return WC_DEFAULT_CLASS
+    return None
 
 
-def _emod(bundle: SubmissionBundle) -> float:
-    """Experience modification factor — from package or credibility-blended proxy."""
+def _emod(bundle: SubmissionBundle, oracle_emod: float | None = None) -> tuple[float | None, str]:
+    """Experience modification — package or NCCI oracle only. Never invent from LR."""
+    if oracle_emod is not None:
+        try:
+            val = float(oracle_emod)
+            if 0.5 <= val <= 2.5:
+                return val, "ncci_oracle"
+        except (TypeError, ValueError):
+            pass
     blob = _blob(bundle)
     m = re.search(r"(?:e-?mod|experience\s*mod(?:ification)?|x-?mod)\s*[:=]?\s*(\d+\.?\d*)", blob, re.I)
     if m:
         try:
             val = float(m.group(1))
             if 0.5 <= val <= 2.5:
-                return val
+                return val, "package"
         except ValueError:
             pass
-    # Credibility-blended proxy from loss ratio
-    lr = 0.55
-    claims_n = 0
-    if bundle.structured and bundle.structured.financial and bundle.structured.financial.loss_run:
-        lr_map = bundle.structured.financial.loss_run.loss_ratios or {}
-        if lr_map:
-            lr = max(lr_map.values())
-        claims_n = int(bundle.structured.financial.loss_run.total_claims or 0)
-    if bundle.structured and bundle.structured.risk_profile:
-        claims_n = max(claims_n, len(bundle.structured.risk_profile.prior_claims or []))
-    raw = 1.0 + min(max((lr - 0.55) * 0.4, -0.25), 0.50)
-    z = claims_n / (claims_n + 8.0) if claims_n else 0.0
-    return round((1.0 - z) * 1.0 + z * raw, 3)
+    if re.search(r"new venture|no experience(?:\s+mod)?|unrated\s+risk|emod\s*(?:is|=|:)\s*1\.00", blob, re.I):
+        return 1.0, "new_venture_unity"
+    return None, ""
 
 
-def _vehicle_count(bundle: SubmissionBundle) -> int:
+def _vehicle_count(bundle: SubmissionBundle) -> int | None:
     blob = _blob(bundle)
     m = re.search(r"(?:vehicles?|power\s*units?|fleet\s*size)\s*[:=]?\s*(\d{1,4})", blob, re.I)
     if m:
         return max(int(m.group(1)), 1)
-    # VIN count heuristic
     vins = re.findall(r"\b[A-HJ-NPR-Z0-9]{17}\b", blob.upper())
     if vins:
         return max(len(set(vins)), 1)
-    return 5
+    return None
 
 
 def _tiv(bundle: SubmissionBundle) -> float:
@@ -249,13 +281,146 @@ def _tiv(bundle: SubmissionBundle) -> float:
     return max(total, 0.0)
 
 
-def _limit(bundle: SubmissionBundle, default: float = 1_000_000.0) -> float:
+def _limit(bundle: SubmissionBundle, *extra_labels: str) -> float | None:
     if bundle.structured:
         for cov in bundle.structured.coverages or []:
             if (cov.limit_amount or 0) > 0:
                 return float(cov.limit_amount)
-    v = _money(_blob(bundle), "aggregate limit", "policy limit", "limit of liability", "cyber limit")
-    return v if v > 0 else default
+    labels = ("aggregate limit", "policy limit", "limit of liability", "cyber limit", "occurrence limit", *extra_labels)
+    v = _money(_blob(bundle), *labels)
+    return v if v > 0 else None
+
+
+def _ilf(limit: float) -> float:
+    chosen = 1.0
+    for threshold, factor in sorted(GL_ILF.items()):
+        if limit >= threshold:
+            chosen = factor
+    return chosen
+
+
+def rate_general_liability_iso(
+    bundle: SubmissionBundle,
+    memo: UnderwritingMemo,
+    *,
+    state: str = "",
+    schedule_mod_pct: float = 0.0,
+    market_mod_pct: float = 0.0,
+) -> QuoteResult:
+    """ISO CGL: (sales / 1,000) × loss cost × LCM × ILF. Never TIV+COPE."""
+    sales = _sales(bundle)
+    limit = _limit(bundle, "gl limit", "cgl limit")
+    if not sales:
+        return _ineligible(
+            bundle,
+            InsuranceLine.GENERAL_LIABILITY,
+            ["Gross sales/receipts missing — cannot rate CGL (TIV is not a GL exposure)"],
+            meta={"rating_engine": "iso_gl_sales", "insurance_line": "general_liability", "state": state},
+        )
+    if not limit:
+        return _ineligible(
+            bundle,
+            InsuranceLine.GENERAL_LIABILITY,
+            ["CGL occurrence/aggregate limit missing — cannot apply increased-limits factor"],
+            meta={"rating_engine": "iso_gl_sales", "insurance_line": "general_liability", "sales": sales, "state": state},
+        )
+    ilf = _ilf(limit)
+    base = (sales / 1000.0) * GL_RATE_PER_1K_SALES * GL_LCM * ilf
+    components = [
+        RateComponent("gl_rate_per_1k_sales", GL_RATE_PER_1K_SALES, "iso_sales"),
+        RateComponent("gl_lcm", GL_LCM, "expense_profit"),
+        RateComponent("increased_limits_factor", ilf, f"limit={limit:,.0f}"),
+        RateComponent("gross_sales", sales, "receipts"),
+    ]
+    adjusted = base * (1 + market_mod_pct / 100.0) * (1 + schedule_mod_pct / 100.0)
+    adjusted = max(round(adjusted, 2), GL_MIN)
+    if market_mod_pct:
+        components.append(RateComponent("market_cycle", market_mod_pct, "market", market_mod_pct))
+    if schedule_mod_pct:
+        components.append(RateComponent("uw_schedule", schedule_mod_pct, "uw_discretion", schedule_mod_pct))
+    return QuoteResult(
+        bundle_id=bundle.bundle_id,
+        line=InsuranceLine.GENERAL_LIABILITY,
+        base_premium=round(base, 2),
+        adjusted_premium=adjusted,
+        schedule_modifications=components,
+        rate_per_100_tiv=round(adjusted / max(sales / 100.0, 1), 4),
+        eligible=True,
+        metadata={
+            "exposure_basis": "gross_sales",
+            "sales": sales,
+            "gl_limit": limit,
+            "ilf": ilf,
+            "rating_engine": "iso_gl_sales",
+            "insurance_line": "general_liability",
+            "state": state,
+        },
+    )
+
+
+def rate_umbrella(
+    bundle: SubmissionBundle,
+    memo: UnderwritingMemo,
+    *,
+    state: str = "",
+    schedule_mod_pct: float = 0.0,
+    market_mod_pct: float = 0.0,
+) -> QuoteResult:
+    """Umbrella/excess: % of underlying GL + per-million excess. Not property TIV."""
+    umb_limit = _limit(bundle, "umbrella limit", "excess limit")
+    underlying = _money(_blob(bundle), "underlying premium", "primary gl premium", "underlying gl premium")
+    gl = rate_general_liability_iso(bundle, memo, state=state, schedule_mod_pct=0.0, market_mod_pct=0.0)
+    if underlying <= 0 and gl.eligible:
+        underlying = float(gl.adjusted_premium or 0)
+    if not umb_limit:
+        return _ineligible(
+            bundle,
+            InsuranceLine.UMBRELLA,
+            ["Umbrella/excess limit missing — cannot rate attachment"],
+            meta={"rating_engine": "iso_umbrella", "insurance_line": "umbrella", "state": state},
+        )
+    if underlying <= 0:
+        return _ineligible(
+            bundle,
+            InsuranceLine.UMBRELLA,
+            ["Underlying GL premium/sales missing — umbrella is not rated on property TIV"],
+            meta={"rating_engine": "iso_umbrella", "insurance_line": "umbrella", "umbrella_limit": umb_limit, "state": state},
+        )
+    millions = max(umb_limit / 1_000_000.0, 1.0)
+    base = max(underlying * UMBRELLA_PCT_OF_UNDERLYING, millions * UMBRELLA_PER_MILLION)
+    components = [
+        RateComponent("underlying_premium", underlying, "primary_gl"),
+        RateComponent("umbrella_pct", UMBRELLA_PCT_OF_UNDERLYING, "of_underlying"),
+        RateComponent("per_million_excess", UMBRELLA_PER_MILLION, f"{millions:.1f}m"),
+    ]
+    adjusted = base * (1 + market_mod_pct / 100.0) * (1 + schedule_mod_pct / 100.0)
+    adjusted = max(round(adjusted, 2), UMBRELLA_MIN)
+    if market_mod_pct:
+        components.append(RateComponent("market_cycle", market_mod_pct, "market", market_mod_pct))
+    if schedule_mod_pct:
+        components.append(RateComponent("uw_schedule", schedule_mod_pct, "uw_discretion", schedule_mod_pct))
+    return QuoteResult(
+        bundle_id=bundle.bundle_id,
+        line=InsuranceLine.UMBRELLA,
+        base_premium=round(base, 2),
+        adjusted_premium=adjusted,
+        schedule_modifications=components,
+        rate_per_100_tiv=round(adjusted / max(umb_limit / 100.0, 1), 4),
+        eligible=True,
+        metadata={
+            "exposure_basis": "underlying_gl",
+            "underlying_premium": underlying,
+            "umbrella_limit": umb_limit,
+            "rating_engine": "iso_umbrella",
+            "insurance_line": "umbrella",
+            "state": state,
+            "underlying_gl": {
+                "eligible": gl.eligible,
+                "premium": gl.adjusted_premium,
+                "ineligibility_reasons": list(gl.ineligibility_reasons or []),
+            },
+        },
+    )
 
 
 def rate_extended_commercial(
@@ -267,15 +432,26 @@ def rate_extended_commercial(
     schedule_mod_pct: float = 0.0,
     market_mod_pct: float = 0.0,
 ) -> QuoteResult | None:
-    """Rate cyber / commercial auto / inland marine / crime / builders risk / surety."""
+    """Rate cyber / auto / marine / crime / BR / surety / CGL / umbrella. Fail-closed on missing bases."""
     if line not in EXTENDED_COMMERCIAL_LINES:
         return None
 
+    if line == InsuranceLine.GENERAL_LIABILITY:
+        return rate_general_liability_iso(
+            bundle, memo, state=state, schedule_mod_pct=schedule_mod_pct, market_mod_pct=market_mod_pct
+        )
+    if line == InsuranceLine.UMBRELLA:
+        return rate_umbrella(bundle, memo, state=state, schedule_mod_pct=schedule_mod_pct, market_mod_pct=market_mod_pct)
+
     components: list[RateComponent] = []
-    meta: dict[str, Any] = {"insurance_line": line.value, "state": state}
+    meta: dict[str, Any] = {"insurance_line": line.value, "state": state, "invented_exposure": False}
 
     if line == InsuranceLine.CYBER:
-        exposure = _limit(bundle, 2_000_000.0)
+        exposure = _limit(bundle, "cyber limit")
+        if not exposure:
+            return _ineligible(
+                bundle, line, ["Cyber limit missing — will not invent $1M"], meta={**meta, "rating_engine": "cyber_manual"}
+            )
         base = (exposure / 100.0) * CYBER_LOSS_COST * CYBER_LCM
         components += [
             RateComponent("cyber_loss_cost", CYBER_LOSS_COST, "per_100_limit"),
@@ -286,6 +462,13 @@ def rate_extended_commercial(
 
     elif line == InsuranceLine.COMMERCIAL_AUTO:
         units = _vehicle_count(bundle)
+        if not units:
+            return _ineligible(
+                bundle,
+                line,
+                ["Power units / fleet size missing — will not invent vehicle count"],
+                meta={**meta, "rating_engine": "commercial_auto_manual"},
+            )
         liab = units * AUTO_LIABILITY_PER_UNIT
         pd = units * AUTO_PD_PER_UNIT
         base = liab + pd
@@ -294,9 +477,8 @@ def rate_extended_commercial(
             RateComponent("auto_physical_damage", round(pd, 2), "per_power_unit", 0.0),
             RateComponent("fleet_units", float(units), "count", 0.0),
         ]
-        meta.update({"exposure_basis": "power_units", "units": units, "rating_engine": "commercial_auto_manual"})
+        meta.update({"exposure_basis": "power_units", "units": units, "rating_engine": "commercial_auto_manual", "mvr_required": True})
         min_p = AUTO_MIN
-        # Apply guide surcharges additively (capped)
         try:
             from insureflow.rating.surcharges import SurchargeBasis, builtin_commercial_auto_surcharges, evaluate_surcharges
 
@@ -312,7 +494,14 @@ def rate_extended_commercial(
             pass
 
     elif line == InsuranceLine.INLAND_MARINE:
-        exposure = _tiv(bundle) or 500_000.0
+        exposure = _tiv(bundle)
+        if exposure <= 0:
+            return _ineligible(
+                bundle,
+                line,
+                ["Scheduled values / TIV missing — will not invent inland marine exposure"],
+                meta={**meta, "rating_engine": "inland_marine_manual"},
+            )
         base = (exposure / 100.0) * INLAND_MARINE_LOSS_COST * INLAND_MARINE_LCM
         components += [
             RateComponent("inland_marine_loss_cost", INLAND_MARINE_LOSS_COST, "per_100_values"),
@@ -323,7 +512,18 @@ def rate_extended_commercial(
 
     elif line == InsuranceLine.CRIME:
         emp = _employees(bundle)
-        fidelity_limit = _limit(bundle, 250_000.0)
+        fidelity_limit = _limit(bundle, "fidelity limit", "crime limit")
+        if not emp:
+            return _ineligible(
+                bundle, line, ["Employee count missing — will not invent headcount"], meta={**meta, "rating_engine": "crime_fidelity_manual"}
+            )
+        if not fidelity_limit:
+            return _ineligible(
+                bundle,
+                line,
+                ["Fidelity / crime limit missing — will not invent $250k"],
+                meta={**meta, "rating_engine": "crime_fidelity_manual", "employees": emp},
+            )
         base = emp * CRIME_PER_EMPLOYEE + (fidelity_limit / 100.0) * CRIME_LIMIT_RATE * CRIME_LCM
         components += [
             RateComponent("crime_per_employee", CRIME_PER_EMPLOYEE, "employees"),
@@ -341,7 +541,14 @@ def rate_extended_commercial(
         min_p = CRIME_MIN
 
     elif line == InsuranceLine.BUILDERS_RISK:
-        exposure = _tiv(bundle) or _money(_blob(bundle), "completed value", "contract value", "project value") or 2_000_000.0
+        exposure = _tiv(bundle) or _money(_blob(bundle), "completed value", "contract value", "project value")
+        if not exposure:
+            return _ineligible(
+                bundle,
+                line,
+                ["Completed / contract value missing — will not invent $2M builders risk"],
+                meta={**meta, "rating_engine": "builders_risk_manual"},
+            )
         base = (exposure / 100.0) * BUILDERS_RISK_LOSS_COST * BUILDERS_RISK_LCM
         components += [
             RateComponent("builders_risk_loss_cost", BUILDERS_RISK_LOSS_COST, "per_100_completed_value"),
@@ -351,7 +558,14 @@ def rate_extended_commercial(
         min_p = BUILDERS_RISK_MIN
 
     elif line == InsuranceLine.SURETY:
-        bond = _money(_blob(bundle), "bond amount", "bond penalty", "contract amount", "penal sum") or _tiv(bundle) or 500_000.0
+        bond = _money(_blob(bundle), "bond amount", "bond penalty", "contract amount", "penal sum") or _tiv(bundle)
+        if not bond:
+            return _ineligible(
+                bundle,
+                line,
+                ["Bond penalty / contract amount missing — will not invent surety exposure"],
+                meta={**meta, "rating_engine": "surety_rate_manual"},
+            )
         base = bond * (SURETY_RATE_PCT / 100.0)
         components += [
             RateComponent("surety_rate_pct", SURETY_RATE_PCT, "pct_of_bond"),
@@ -370,7 +584,7 @@ def rate_extended_commercial(
     if schedule_mod_pct:
         components.append(RateComponent("uw_schedule", schedule_mod_pct, "uw_discretion", schedule_mod_pct))
 
-    exposure_for_rate = float(meta.get("exposure") or meta.get("bond_amount") or meta.get("fidelity_limit") or _tiv(bundle) or 100_000.0)
+    exposure_for_rate = float(meta.get("exposure") or meta.get("bond_amount") or meta.get("fidelity_limit") or _tiv(bundle) or 0)
     if line == InsuranceLine.COMMERCIAL_AUTO:
         exposure_for_rate = float(meta.get("units") or 1) * 50_000.0
 
@@ -380,7 +594,7 @@ def rate_extended_commercial(
         base_premium=round(base, 2),
         adjusted_premium=adjusted,
         schedule_modifications=components,
-        rate_per_100_tiv=round(adjusted / max(exposure_for_rate / 100.0, 1), 4),
+        rate_per_100_tiv=round(adjusted / max(exposure_for_rate / 100.0, 1), 4) if exposure_for_rate else 0.0,
         eligible=True,
         metadata=meta,
     )
@@ -393,12 +607,36 @@ def rate_workers_comp_ncci(
     state: str = "",
     schedule_mod_pct: float = 0.0,
     market_mod_pct: float = 0.0,
+    experience_mod: float | None = None,
 ) -> QuoteResult:
-    """NCCI-style WC: (payroll/100) × class rate × e-mod × LCM factors."""
+    """NCCI-style WC: (payroll/100) × class rate × e-mod. No invented payroll or e-mod."""
     payroll = _payroll(bundle)
     class_code = _class_code(bundle)
+    emod, emod_source = _emod(bundle, oracle_emod=experience_mod)
+    missing: list[str] = []
+    if not payroll:
+        missing.append("Annual payroll / remuneration missing — will not invent from headcount")
+    if not class_code:
+        missing.append("NCCI class code missing — will not invent a default class")
+    if emod is None:
+        missing.append("Experience modification missing — NCCI e-mod or worksheet required (will not invent from loss ratio)")
+    if missing:
+        return _ineligible(
+            bundle,
+            InsuranceLine.WORKERS_COMP,
+            missing,
+            meta={
+                "rating_engine": "ncci_class_emod",
+                "insurance_line": "workers_comp",
+                "payroll": payroll or 0,
+                "ncci_class_code": class_code or "",
+                "experience_mod": emod,
+                "emod_source": emod_source,
+                "state": state,
+            },
+        )
+
     manual_rate = WC_CLASS_RATES.get(class_code, WC_DEFAULT_RATE)
-    emod = _emod(bundle)
     state_rel = {"CA": 1.15, "NY": 1.10, "FL": 1.00, "TX": 0.95, "IL": 0.92}.get(state.upper(), 1.0) if state else 1.0
 
     manual_premium = (payroll / 100.0) * manual_rate
@@ -409,7 +647,7 @@ def rate_workers_comp_ncci(
     components = [
         RateComponent("ncci_class_rate", manual_rate, f"class_{class_code}"),
         RateComponent("payroll", payroll, "annual_payroll"),
-        RateComponent("experience_mod", emod, "ncci_emod", (emod - 1.0) * 100),
+        RateComponent("experience_mod", emod, emod_source or "ncci_emod", (emod - 1.0) * 100),
         RateComponent("state_relativity", state_rel, "state"),
         RateComponent("expense_constant", WC_EXPENSE_CONSTANT, "flat"),
     ]
@@ -430,6 +668,7 @@ def rate_workers_comp_ncci(
             "ncci_class_code": class_code,
             "manual_rate": manual_rate,
             "experience_mod": emod,
+            "emod_source": emod_source,
             "state_relativity": state_rel,
             "rating_engine": "ncci_class_emod",
             "insurance_line": "workers_comp",
@@ -447,30 +686,47 @@ def rate_package_policy(
     market_mod_pct: float = 0.0,
     section_rater: Any = None,
 ) -> QuoteResult:
-    """BOP / CPP: price as sum of coverage sections, not a single blob."""
+    """BOP / CPP: price as sum of coverage sections. Skip sections with unknown exposure."""
     sections_def = BOP_SECTIONS if line == InsuranceLine.BOP else CPP_SECTIONS
     section_rows: list[dict[str, Any]] = []
     total_base = 0.0
     total_adj = 0.0
     components: list[RateComponent] = []
+    skipped: list[str] = []
 
-    tiv = _tiv(bundle) or 1_500_000.0
-    sales = 0.0
-    if bundle.structured and bundle.structured.financial:
-        sales = float(bundle.structured.financial.annual_revenue or 0)
+    tiv = _tiv(bundle)
+    sales = _sales(bundle) or 0.0
+    employees = _employees(bundle)
+    vehicles = _vehicle_count(bundle)
+
+    required_missing: list[str] = []
+    if tiv <= 0:
+        required_missing.append("TIV/SOV missing — cannot rate property section")
     if sales <= 0:
-        sales = max(tiv * 0.4, 500_000.0)
+        required_missing.append("Gross sales missing — cannot rate GL section (will not invent sales from TIV)")
+    if required_missing:
+        return _ineligible(
+            bundle,
+            line,
+            required_missing,
+            meta={"rating_engine": "package_section_rating", "insurance_line": line.value, "tiv": tiv, "sales": sales},
+        )
 
     for section_id, weight, section_line in sections_def:
         if section_line == InsuranceLine.COMMERCIAL_PROPERTY:
-            # Property section: TIV × loss cost × LCM × weight
             section_prem = (tiv / 100.0) * 0.28 * 2.10 * weight
         elif section_line == InsuranceLine.GENERAL_LIABILITY:
-            section_prem = (sales / 1000.0) * 0.42 * weight
+            section_prem = (sales / 1000.0) * GL_RATE_PER_1K_SALES * weight
         elif section_line == InsuranceLine.CRIME:
-            section_prem = _employees(bundle) * CRIME_PER_EMPLOYEE * weight * 2
+            if not employees:
+                skipped.append("crime: employee count missing")
+                continue
+            section_prem = employees * CRIME_PER_EMPLOYEE * weight * 2
         elif section_line == InsuranceLine.COMMERCIAL_AUTO:
-            section_prem = _vehicle_count(bundle) * (AUTO_LIABILITY_PER_UNIT * 0.5) * weight
+            if not vehicles:
+                skipped.append("commercial_auto: power units missing")
+                continue
+            section_prem = vehicles * (AUTO_LIABILITY_PER_UNIT * 0.5) * weight
         else:
             section_prem = (tiv / 100.0) * 0.20 * weight
 
@@ -511,6 +767,7 @@ def rate_package_policy(
             "rating_engine": "package_section_rating",
             "insurance_line": line.value,
             "package_sections": section_rows,
+            "skipped_sections": skipped,
             "tiv": tiv,
             "sales": sales,
         },

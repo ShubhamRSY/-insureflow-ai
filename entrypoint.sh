@@ -4,6 +4,10 @@ set -e
 # Run multiple uvicorn worker processes so one event loop is never a single
 # point of failure. Pin WEB_CONCURRENCY explicitly (compose/Railway) or
 # default to CPU count, capped at 4.
+# Multi-worker Prometheus: each uvicorn process writes to this dir.
+export PROMETHEUS_MULTIPROC_DIR="${PROMETHEUS_MULTIPROC_DIR:-/tmp/rytera-prom}"
+mkdir -p "$PROMETHEUS_MULTIPROC_DIR"
+
 WEB_CONCURRENCY="${WEB_CONCURRENCY:-}"
 if [ -z "$WEB_CONCURRENCY" ]; then
     NPROC="$(python3 -c 'import os; print(os.cpu_count() or 1)' 2>/dev/null || echo 1)"

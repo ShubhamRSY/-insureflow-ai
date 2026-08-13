@@ -183,7 +183,7 @@ export default function BrokerStatus() {
                 { label: 'Document Processing & Analysis', done: data.status === 'completed' || data.status === 'declined' },
                 { label: 'External Data Verification', done: data.status === 'completed' || data.status === 'declined' },
                 { label: 'Underwriting Decision', done: data.status === 'completed' || data.status === 'declined' || data.status === 'failed' },
-                { label: 'UW Review & Sign-Off', done: data.workflow_state === 'approved' || data.workflow_state === 'bound' || data.workflow_state === 'declined' },
+                { label: 'UW Review & Sign-Off', done: ['approved', 'quoted', 'bound', 'declined', 'no_quote'].includes(data.workflow_state) },
               ].map((step, i) => (
                 <div key={i} className="flex items-center gap-3">
                   <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${

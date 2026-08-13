@@ -56,8 +56,12 @@ export default function UwWorksheetView({ worksheet, validatedTerms }) {
         {worksheet.loss_experience && (
           <>
             <div>
-              <p className="font-medium text-slate-400">Loss ratio</p>
-              <p className="text-slate-200">{(worksheet.loss_experience.loss_ratio * 100).toFixed(1)}%</p>
+              <p className="font-medium text-slate-400">Loss ratio (incurred / earned premium)</p>
+              <p className="text-slate-200">
+                {worksheet.loss_experience.known === false
+                  ? 'Unknown — no earned/written premium'
+                  : `${(worksheet.loss_experience.loss_ratio * 100).toFixed(1)}%`}
+              </p>
             </div>
             <div>
               <p className="font-medium text-slate-400">Credibility (Z)</p>

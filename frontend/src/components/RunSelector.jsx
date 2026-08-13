@@ -74,14 +74,15 @@ export default function RunSelector({
         throw new Error('Select category, product, and coverage before running');
       }
       body[productField] = commercialSelection.insurance_line;
+      body.commercial_product_name = commercialSelection.productName;
+      body.commercial_coverage_name = commercialSelection.coverageName;
+      body.commercial_coverage_id = commercialSelection.coverageId || undefined;
+      body.commercial_category_id = commercialSelection.categoryId;
       if (isLifeProductPicker) {
         body.life_product_id = commercialSelection.checklist_lob || commercialSelection.productId;
+        body.life_coverage_id = commercialSelection.coverageId || undefined;
       } else {
         body.commercial_product_id = commercialSelection.productId;
-        body.commercial_coverage_id = commercialSelection.coverageId || undefined;
-        body.commercial_product_name = commercialSelection.productName;
-        body.commercial_coverage_name = commercialSelection.coverageName;
-        body.commercial_category_id = commercialSelection.categoryId;
       }
       return body;
     }
@@ -349,6 +350,12 @@ export default function RunSelector({
           vertical={vertical}
           insuranceLine={activeProduct || ''}
           lifeProductId={isLifeProductPicker ? (commercialSelection?.checklist_lob || commercialSelection?.productId || '') : ''}
+          lifeCoverageId={isLifeProductPicker ? (commercialSelection?.coverageId || '') : ''}
+          commercialProductId={!isLifeProductPicker ? (commercialSelection?.productId || '') : ''}
+          coverageId={commercialSelection?.coverageId || ''}
+          productName={commercialSelection?.productName || ''}
+          coverageName={commercialSelection?.coverageName || ''}
+          commercialCategoryId={commercialSelection?.categoryId || ''}
           strictRelevance={strictRelevance}
           onRunJob={onRunJob || (onSubmit ? (jobId) => onSubmit?.({ _jobId: jobId }) : undefined)}
           onRunResult={onRunResult}

@@ -2,16 +2,18 @@
 
 from __future__ import annotations
 
-from insureflow.insurance.commercial_lobs import flatten_line_documents
+from insureflow.insurance.commercial_lobs import flatten_coverage_documents, flatten_line_documents
 from insureflow.insurance.life_lobs import (
     LIFE_BASE_PACKET,
     LIFE_CATEGORIES,
     LIFE_LINES,
+    get_life_coverage,
     get_life_line,
     life_hub_payload,
     life_taxonomy_tree,
     list_life_categories,
     list_life_lines,
+    resolve_life_checklist_lob,
 )
 from insureflow.insurance.package_checklist import CATALOGS, detect_lob, package_checklist
 
@@ -44,11 +46,15 @@ def test_full_life_taxonomy_shape():
             assert len(cov["documents"]) >= 1, f"{line['id']}.{cov.get('id')}"
 
 
-def test_all_life_lines_are_live():
-    assert all(ln.get("status") == "live" for ln in LIFE_LINES)
+def test_life_live_vs_catalog_split():
+    live = [ln for ln in LIFE_LINES if ln.get("status") == "live"]
+    catalog = [ln for ln in LIFE_LINES if ln.get("status") == "catalog"]
+    assert {ln["id"] for ln in live} >= {"level_term", "mortgage_life", "rop_term", "group_term_life"}
+    assert {ln["id"] for ln in catalog} >= {"traditional_whole_life", "indexed_universal_life", "variable_universal_life", "immediate_annuity"}
     hub = life_hub_payload()
-    assert hub["stats"]["live_count"] == len(LIFE_LINES)
-    assert hub["stats"]["catalog_count"] == 0
+    assert hub["stats"]["live_count"] == len(live)
+    assert hub["stats"]["catalog_count"] == len(catalog)
+    assert hub["stats"]["product_count"] == len(LIFE_LINES)
 
 
 def test_live_lines_still_present():
@@ -59,20 +65,14 @@ def test_live_lines_still_present():
         "credit-life",
         "return-of-premium-term",
         "group-term-life",
+    } <= live_slugs
+    catalog_slugs = {ln["slug"] for ln in list_life_lines(status="catalog")}
+    assert {
         "traditional-whole-life",
-        "single-premium-whole-life",
-        "graded-guaranteed-issue-whole-life",
-        "guaranteed-universal-life",
         "indexed-universal-life",
         "variable-universal-life",
-        "single-premium-ulip",
-        "child-ulip",
-        "traditional-money-back",
         "immediate-annuity",
-        "variable-annuity",
-        "qualified-longevity-annuity-contract",
-        "structured-settlement-annuity",
-    } <= live_slugs
+    } <= catalog_slugs
 
 
 def test_hub_payload_has_taxonomy_and_stats():
@@ -113,6 +113,40 @@ def test_flatten_line_documents_includes_coverage_docs():
     assert "Completed life insurance application" in flat
     assert len(flat) == len(set(flat))
     assert term["all_documents"] == flat
+
+
+def test_flatten_coverage_documents_excludes_sibling_coverages():
+    term = get_life_line("level_term")
+    assert term is not None
+    ten = flatten_coverage_documents(term, "level_term_10")
+    thirty = flatten_coverage_documents(term, "level_term_30")
+    full = flatten_line_documents(term)
+    assert "Paramedical exam report (required above ~$100K–$250K)" in thirty
+    assert "Paramedical exam report (required above ~$100K–$250K)" not in ten
+    assert len(ten) < len(full)
+    assert len(thirty) <= len(full)
+
+
+def test_resolve_life_coverage_id_to_product():
+    assert resolve_life_checklist_lob("level_term_10") == "level_term"
+    assert resolve_life_checklist_lob("10-Year Level Term") == "level_term"
+    line, cov = get_life_coverage("level_term", "level_term_10")
+    assert line is not None and cov is not None
+    assert cov["id"] == "level_term_10"
+    line_only, cov_only = get_life_coverage(None, "level_term_20")
+    assert line_only is not None and cov_only is not None
+    assert line_only["checklist_lob"] == "level_term"
+    assert cov_only["id"] == "level_term_20"
+
+
+def test_package_checklist_scopes_to_life_coverage():
+    ten = package_checklist([], lob="level_term", coverage_id="level_term_10")
+    thirty = package_checklist([], lob="level_term", coverage_id="level_term_30")
+    assert ten["lob"] == "level_term"
+    assert ten["coverage_id"] == "level_term_10"
+    assert thirty["coverage_id"] == "level_term_30"
+    assert any("Paramedical" in m for m in thirty["missing"])
+    assert not any("Paramedical" in m for m in ten["missing"])
 
 
 def test_get_line_by_slug_and_id():

@@ -6,7 +6,7 @@ from typing import Any
 
 from insureflow.ml.lob_profiles import lob_profile
 from insureflow.models.agents import UnderwritingMemo
-from insureflow.models.submissions import ClaimRecord, SubmissionBundle
+from insureflow.models.submissions import SubmissionBundle
 from insureflow.rating.models import InsuranceLine, QuoteResult, RateComponent
 
 # Coverage-level premium allocation factors (property product)
@@ -37,18 +37,13 @@ GL_RATE_PER_1K_SALES = 0.42
 
 
 def _estimate_payroll(bundle: SubmissionBundle) -> float:
-    rev = 0.0
-    employees = 10
     if bundle.structured and bundle.structured.financial:
         fin = bundle.structured.financial
-        rev = float(fin.annual_revenue or 0)
-        employees = int(getattr(fin, "employee_count", None) or employees)
-    if rev <= 0 and bundle.structured and bundle.structured.risk_profile:
-        rev = float(getattr(bundle.structured.risk_profile, "annual_revenue", 0) or 0)
-    if rev <= 0:
-        tiv = _estimate_tiv(bundle)
-        rev = max(tiv * 0.35, 250_000.0)
-    return max(rev / max(employees, 1) * employees * 0.42, 50_000.0)
+        for attr in ("payroll", "annual_payroll", "total_payroll"):
+            v = getattr(fin, attr, None)
+            if v and float(v) > 0:
+                return float(v)
+    return 0.0
 
 
 def _estimate_sales(bundle: SubmissionBundle) -> float:
@@ -56,7 +51,7 @@ def _estimate_sales(bundle: SubmissionBundle) -> float:
         rev = float(bundle.structured.financial.annual_revenue or 0)
         if rev > 0:
             return rev
-    return max(_estimate_tiv(bundle) * 0.35, 500_000.0)
+    return 0.0
 
 
 def _estimate_tiv(bundle: SubmissionBundle) -> float:
@@ -71,26 +66,10 @@ def _estimate_tiv(bundle: SubmissionBundle) -> float:
 
 
 def _loss_ratio(bundle: SubmissionBundle) -> float:
-    if bundle.structured and bundle.structured.financial:
-        fin = bundle.structured.financial
-        lr = getattr(fin, "loss_ratio", None)
-        if lr is None and fin.loss_run and fin.loss_run.loss_ratios:
-            try:
-                lr = max(float(v) for v in fin.loss_run.loss_ratios.values())
-                if lr > 3.0:  # percentages stored as 55 vs 0.55
-                    lr = lr / 100.0
-            except (TypeError, ValueError):
-                lr = None
-        if lr is not None and float(lr) > 0:
-            return float(lr)
-    claims: list[ClaimRecord] = []
-    if bundle.structured and bundle.structured.risk_profile:
-        claims = list(bundle.structured.risk_profile.prior_claims or [])
-    if not claims:
-        return 0.45
-    incurred = float(sum(float(c.incurred_amount or 0) for c in claims))
-    tiv = max(_estimate_tiv(bundle), 1.0)
-    return min(incurred / (tiv * 0.04), 2.5)
+    from insureflow.underwriting.loss_ratio import loss_ratio_from_bundle
+
+    result = loss_ratio_from_bundle(bundle)
+    return result.ratio if result.known else 0.0
 
 
 def _credibility_mod(prior_claims: int, raw_mod: float, *, k: float = 8.0) -> tuple[float, float]:
@@ -127,7 +106,8 @@ def apply_lob_rating(
     meta = dict(quote.metadata or {})
     # Dedicated actuarial manuals already applied in InsuranceRatingEngine — do not overwrite.
     engine = str(meta.get("rating_engine") or "")
-    if engine in {
+    if line == InsuranceLine.LIFE or engine in {
+        "life_filing",
         "ncci_class_emod",
         "package_section_rating",
         "cyber_manual",
@@ -138,6 +118,8 @@ def apply_lob_rating(
         "surety_rate_manual",
         "carrier_leaf_filing",
         "iso_gl_sales",
+        "iso_umbrella",
+        "catalog_only",
     }:
         if commercial_coverage_id:
             cov_factor = _coverage_factor(commercial_coverage_id)
@@ -152,9 +134,15 @@ def apply_lob_rating(
     if bundle.structured and bundle.structured.risk_profile:
         prior_claims = len(bundle.structured.risk_profile.prior_claims or [])
 
-    lr = _loss_ratio(bundle)
-    raw_exp_mod = 1.0 + min(max((lr - 0.55) * 0.35, -0.25), 0.45)
-    exp_mod, credibility_z = _credibility_mod(prior_claims, raw_exp_mod)
+    from insureflow.underwriting.loss_ratio import loss_ratio_from_bundle
+
+    lr_result = loss_ratio_from_bundle(bundle)
+    lr = lr_result.ratio if lr_result.known else 0.0
+    if lr_result.known:
+        raw_exp_mod = 1.0 + min(max((lr - 0.55) * 0.35, -0.25), 0.45)
+        exp_mod, credibility_z = _credibility_mod(prior_claims, raw_exp_mod)
+    else:
+        exp_mod, credibility_z = 1.0, 0.0
 
     cov_factor = _coverage_factor(commercial_coverage_id)
     meta["lob_profile"] = {
@@ -196,6 +184,8 @@ def apply_lob_rating(
     quote.schedule_modifications = components
     meta["credibility_z"] = credibility_z
     meta["loss_ratio_input"] = lr
+    meta["loss_ratio_known"] = lr_result.known
+    meta["loss_ratio_basis"] = lr_result.basis
     meta["experience_mod_blended"] = exp_mod
     quote.metadata = meta
     return quote
@@ -265,6 +255,9 @@ def build_uw_worksheet(
         },
         "loss_experience": {
             "loss_ratio": round(lr, 4),
+            "known": bool(meta.get("loss_ratio_known", lr > 0)),
+            "basis": meta.get("loss_ratio_basis") or ("stored" if lr > 0 else "unknown"),
+            "formula": "incurred_losses / earned_premium",
             "credibility_z": meta.get("credibility_z"),
             "experience_mod": meta.get("experience_mod_blended"),
         },

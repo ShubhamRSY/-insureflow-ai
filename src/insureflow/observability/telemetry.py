@@ -187,6 +187,25 @@ class TelemetryCollector:
                 self._layer_totals[layer]["total_ms"] += stats["total_ms"]
                 self._layer_totals[layer]["count"] += stats["count"]
             self._persist(summary)
+        try:
+            from insureflow.observability.openobserve import emit_traces
+
+            emit_traces(
+                [
+                    {
+                        "_timestamp": summary.get("completed_at"),
+                        "event": "pipeline_trace",
+                        "service": "insureflow-api",
+                        "trace_id": summary.get("trace_id"),
+                        "bundle_id": summary.get("bundle_id"),
+                        "total_duration_ms": summary.get("total_duration_ms"),
+                        "span_count": summary.get("span_count"),
+                        "layer_latencies": summary.get("layer_latencies"),
+                    }
+                ]
+            )
+        except Exception:
+            pass
         return summary
 
     def _persist(self, summary: dict[str, Any]) -> None:

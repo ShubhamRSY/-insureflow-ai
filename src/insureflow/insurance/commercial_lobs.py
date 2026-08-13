@@ -147,6 +147,49 @@ def flatten_line_documents(line: dict[str, Any]) -> list[str]:
     return out
 
 
+def _coverage_key(value: str | None) -> str:
+    return (value or "").strip().lower().replace("-", "_").replace(" ", "_")
+
+
+def get_line_coverage(line: dict[str, Any] | None, coverage_id: str | None) -> dict[str, Any] | None:
+    """Return the coverage dict on ``line`` matching ``coverage_id``, if any."""
+    if not line or not coverage_id:
+        return None
+    key = _coverage_key(coverage_id)
+    if not key:
+        return None
+    for cov in line.get("coverages") or []:
+        if not isinstance(cov, dict):
+            continue
+        if _coverage_key(str(cov.get("id") or "")) == key:
+            return cov
+    return None
+
+
+def flatten_coverage_documents(line: dict[str, Any], coverage_id: str | None) -> list[str]:
+    """Product base docs + only the selected coverage (not sibling coverages).
+
+    Unknown / missing coverage_id falls back to the full product flatten so
+    callers without a taxonomy picker stay backward compatible.
+    """
+    match = get_line_coverage(line, coverage_id)
+    if match is None:
+        return flatten_line_documents(line)
+    seen: set[str] = set()
+    out: list[str] = []
+    for doc in list(line.get("documents") or []):
+        text = str(doc).strip()
+        if text and text not in seen:
+            seen.add(text)
+            out.append(text)
+    for doc in match.get("documents") or []:
+        text = str(doc).strip()
+        if text and text not in seen:
+            seen.add(text)
+            out.append(text)
+    return out
+
+
 def _line(
     *,
     id: str,
@@ -2046,9 +2089,43 @@ COMMERCIAL_LINES: list[dict[str, Any]] = [
     ),
 ]
 
-# Every commercial product is production-ready — LOB-scoped models, checklists, and UW workflow.
+# Only products with a dedicated rater (or true property TIV+COPE) are live.
+# Aviation / K&R / crop / captive / E&S specialties stay catalog — parent-line proxies are not underwritable.
+LIVE_COMMERCIAL_PRODUCT_IDS = frozenset(
+    {
+        "property_bi",
+        "business_interruption",
+        "builders_risk",
+        "inland_marine",
+        "crime",
+        "ordinance_or_law",
+        "rent_loss_of_rents",
+        "equipment_breakdown",
+        "general_liability",
+        "product_liability",
+        "errors_omissions",
+        "architects_engineers",
+        "miscellaneous_professional",
+        "directors_officers",
+        "epli",
+        "fiduciary_liability",
+        "cyber_liability",
+        "umbrella",
+        "workers_comp",
+        "employers_liability",
+        "key_person",
+        "commercial_auto",
+        "fleet",
+        "trade_credit",
+        "surety_bonds",
+        "tech_eo_cyber",
+        "construction",
+        "bop",
+        "cpp",
+    }
+)
 for _ln in COMMERCIAL_LINES:
-    _ln["status"] = "live"
+    _ln["status"] = "live" if _ln["id"] in LIVE_COMMERCIAL_PRODUCT_IDS else "catalog"
 
 
 def list_commercial_categories() -> list[dict[str, Any]]:
@@ -2246,7 +2323,7 @@ def commercial_hub_payload() -> dict[str, Any]:
             "category_count": len(COMMERCIAL_CATEGORIES),
             "product_count": len(COMMERCIAL_LINES),
             "live_count": len(live),
-            "catalog_count": 0,
+            "catalog_count": max(0, len(lines) - len(live)),
             "lob_model_count": len(list_production_insurance_lines()) * 4,
             "leaf_filings": carrier_book.get("filings", 0),
             "leaf_coverage_pct": carrier_book.get("coverage_pct", 0.0),

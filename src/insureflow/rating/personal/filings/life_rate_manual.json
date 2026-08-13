@@ -23,6 +23,13 @@
     "substandard": 2.0
   },
   "tobacco_factor": 1.85,
+  "term_duration_factors": {
+    "10": 0.62,
+    "15": 0.80,
+    "20": 1.00,
+    "25": 1.22,
+    "30": 1.48
+  },
   "sex_factors": {
     "male": 1.0,
     "female": 0.88,
@@ -201,11 +208,51 @@
   ],
   "jumbo_threshold": 5000000,
   "facultative_threshold": 10000000,
+  "retention_limit": 1000000,
+  "automatic_reinsurance_limit": 5000000,
+  "unisex_states": ["MT"],
+  "modal_factors": {
+    "annual": 1.0,
+    "semiannual": 0.51,
+    "quarterly": 0.26,
+    "monthly": 0.087
+  },
+  "state_relativities": {
+    "IL": 1.0,
+    "CA": 1.08,
+    "NY": 1.12,
+    "TX": 0.98,
+    "FL": 1.05,
+    "MT": 1.0
+  },
+  "product_families": {
+    "term": 1.0,
+    "whole_life": 2.85,
+    "universal": 2.15,
+    "variable_universal": 1.95,
+    "endowment": 2.4,
+    "ulip": 1.8,
+    "money_back": 2.2
+  },
+  "rider_rates_per_1000": {
+    "waiver_of_premium": 0.12,
+    "accidental_death": 0.5,
+    "child_term": 0.35,
+    "accelerated_benefit": 0.08
+  },
   "eligibility": {
     "min_age": 18,
     "max_age": 75,
     "max_issue_age_preferred": 60,
-    "financial_multiple_income": 30
+    "financial_multiple_income": 30,
+    "net_worth_multiple": 0.5,
+    "financial_multiple_by_age": {
+      "30": 30,
+      "40": 25,
+      "50": 20,
+      "60": 15,
+      "99": 10
+    }
   },
-  "notes": "Company term life rate manual. Pilot exhibit; actuarial memorandum required for production."
+  "notes": "IL term exhibit only. Permanent/annuity families are illustrative loads, not issueable filings. Modal factors convert annual premium; actuarial memorandum required for production."
 }

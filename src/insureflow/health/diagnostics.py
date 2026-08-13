@@ -48,6 +48,7 @@ class SystemDiagnostics:
             self._check_example_data(),
             self._check_mortgage_fixtures(),
             self._check_postgres(),
+            self._check_observability(),
         ]
         ok = sum(1 for c in checks if c.status == CheckStatus.OK)
         degraded = sum(1 for c in checks if c.status == CheckStatus.DEGRADED)
@@ -412,3 +413,37 @@ class SystemDiagnostics:
                 category="rag",
                 details={},
             )
+
+    def _check_observability(self) -> ComponentCheck:
+        from insureflow.observability.openobserve import status as openobserve_status
+        from insureflow.observability.prometheus_metrics import available as prometheus_available
+
+        oo = openobserve_status()
+        prom_ok = prometheus_available()
+        details = {
+            "metrics_path": "/metrics",
+            "prometheus_client": prom_ok,
+            "openobserve_enabled": oo.get("enabled"),
+            "openobserve_url": oo.get("url"),
+            "grafana_local": "http://localhost:3000",
+            "fix": "docker compose up prometheus grafana openobserve",
+        }
+        if not prom_ok:
+            return ComponentCheck(
+                component="observability",
+                status=CheckStatus.DEGRADED,
+                message="prometheus_client missing — /metrics will be a stub",
+                category="ops",
+                details=details,
+            )
+        if oo.get("enabled"):
+            msg = f"Prometheus /metrics ready; OpenObserve shipping → {oo.get('url')}"
+        else:
+            msg = "Prometheus /metrics ready (OpenObserve optional — set OPENOBSERVE_URL)"
+        return ComponentCheck(
+            component="observability",
+            status=CheckStatus.OK,
+            message=msg,
+            category="ops",
+            details=details,
+        )

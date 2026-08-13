@@ -36,7 +36,12 @@ class GuidewireAdapter(BasePolicyAdminAdapter):
         self.last_quote_reference = ""
 
     def get_system_name(self) -> str:
-        return "Guidewire PolicyCenter"
+        mode = self._resolved_mode()
+        if mode == "live":
+            return "Guidewire PolicyCenter"
+        if mode == "gateway_synthetic":
+            return "Rytera PAS simulator (not Guidewire PolicyCenter)"
+        return "Simulated PAS (not Guidewire PolicyCenter)"
 
     def _resolved_mode(self) -> str:
         return resolve_integration_mode(self.mode, self.http)

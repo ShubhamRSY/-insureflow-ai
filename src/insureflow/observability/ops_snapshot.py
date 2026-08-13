@@ -76,4 +76,20 @@ def collect_ops_snapshot(job_store: Any | None = None) -> dict[str, Any]:
         "alerts": alerts,
         "railway_healthcheck": "/health",
         "ops_endpoint": "/ops/snapshot",
+        "metrics_endpoint": "/metrics",
+        "observability": _observability_status(),
     }
+
+
+def _observability_status() -> dict[str, Any]:
+    try:
+        from insureflow.observability.openobserve import status as openobserve_status
+        from insureflow.observability.prometheus_metrics import available as prometheus_available
+
+        return {
+            "prometheus": {"metrics_path": "/metrics", "client_available": prometheus_available()},
+            "openobserve": openobserve_status(),
+            "grafana": {"local_url": os.getenv("GRAFANA_URL", "http://localhost:3000")},
+        }
+    except Exception as exc:
+        return {"error": str(exc)}

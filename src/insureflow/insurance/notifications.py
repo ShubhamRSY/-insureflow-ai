@@ -149,10 +149,12 @@ class ProducerNotificationService:
         """Send the sign-off outcome to the producer (good or bad)."""
         decision_label = decision.upper()
         message_parts: list[str] = []
-        if action == "approve":
-            message_parts.append(f"Your submission {bundle_id} has been APPROVED by underwriter {signed_by}. Coverage may now be bound.")
-        elif action == "decline":
-            message_parts.append(f"Your submission {bundle_id} was DECLINED ({decision_label}).")
+        if action in ("approve", "quote"):
+            verb = "QUOTED" if action == "quote" else "APPROVED"
+            message_parts.append(f"Your submission {bundle_id} has been {verb} by underwriter {signed_by}. Coverage may now be bound.")
+        elif action in ("decline", "no_quote"):
+            label = "NO QUOTE" if action == "no_quote" else f"DECLINED ({decision_label})"
+            message_parts.append(f"Your submission {bundle_id} was {label}.")
         elif action == "request_info":
             message_parts.append(f"Additional underwriting information is required for {bundle_id} to proceed.")
         elif action == "refer":

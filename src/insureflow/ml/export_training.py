@@ -91,15 +91,25 @@ def _normalize_occupancy(value: Any) -> str:
 
 
 def _latest_loss_ratio(financial: dict[str, Any]) -> float:
+    from insureflow.underwriting.loss_ratio import compute_loss_ratio, normalize_stored_ratio
+
     ratios = (financial.get("loss_run") or {}).get("loss_ratios") or {}
-    if not isinstance(ratios, dict) or not ratios:
-        return 0.0
-    latest = 0.0
-    for _year, value in ratios.items():
-        ratio = _as_float(value) / 100.0
-        if ratio > 0.0:
-            latest = max(latest, ratio)
-    return min(max(latest, 0.0), 3.0)
+    if isinstance(ratios, dict) and ratios:
+        latest = 0.0
+        found = False
+        for _year, value in ratios.items():
+            ratio = normalize_stored_ratio(_as_float(value))
+            if ratio > 0.0:
+                latest = max(latest, ratio)
+                found = True
+        if found:
+            return min(max(latest, 0.0), 3.0)
+    loss_run = financial.get("loss_run") or {}
+    incurred = _as_float(loss_run.get("total_incurred")) or _as_float(loss_run.get("total_paid"))
+    earned = _as_float(loss_run.get("earned_premium"))
+    written = _as_float(loss_run.get("written_premium"))
+    result = compute_loss_ratio(incurred=incurred, earned_premium=earned, written_premium=written)
+    return result.ratio if result.known else 0.0
 
 
 def _insurance_row(summary: dict[str, Any], bundle: dict[str, Any], feature_names: list[str], target: float) -> dict[str, Any]:
@@ -124,8 +134,8 @@ def _insurance_row(summary: dict[str, Any], bundle: dict[str, Any], feature_name
     prior_claims_count = _as_float(loss_run.get("total_claims"))
     prior_claims_total = _as_float(loss_run.get("total_incurred")) or _as_float(loss_run.get("total_paid"))
     loss_ratio = _latest_loss_ratio(financial)
-    if loss_ratio <= 0.0 and tiv > 0.0:
-        loss_ratio = min(max(prior_claims_total / tiv, 0.0), 3.0)
+    if loss_ratio <= 0.0 and premium > 0.0:
+        loss_ratio = min(max(prior_claims_total / premium, 0.0), 3.0)
     year_built = _as_int(loc.get("year_built"))
     current_year = 2026
     property_age = max(current_year - year_built, 0) if year_built > 0 else 0.0

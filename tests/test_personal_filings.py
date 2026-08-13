@@ -42,6 +42,29 @@ def test_auto_filing_rates_from_manual() -> None:
     assert q.metadata.get("state_minimum_bi")
 
 
+def test_life_term_duration_factors() -> None:
+    from insureflow.rating.personal.life_rating import rate_life
+    from insureflow.rating.personal.manuals import clear_manual_cache
+
+    clear_manual_cache()
+
+    b = _bundle(
+        (
+            "life_application.md",
+            "Term life application. Applicant age: 42. Sex: female. Face amount: $750000. Annual income: 145000. Non-smoker. Preferred. Blood pressure: 118/76. BMI: 23.4. Cholesterol: 185.",
+        )
+    )
+    q10 = rate_life(b, coverage_id="level_term_10")
+    q20 = rate_life(b, coverage_id="level_term_20")
+    q30 = rate_life(b, coverage_id="level_term_30")
+    assert q10.metadata["term_years"] == 10
+    assert q20.metadata["term_years"] == 20
+    assert q30.metadata["term_years"] == 30
+    assert q10.adjusted_premium < q20.adjusted_premium < q30.adjusted_premium
+    assert any(c.name == "term_duration" for c in q10.schedule_modifications)
+    assert q10.metadata["product"] == "10-Year Level Term"
+
+
 def test_life_medical_and_filing() -> None:
     clean = _bundle(
         (

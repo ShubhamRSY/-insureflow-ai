@@ -30,6 +30,15 @@ services:
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD required for bank mode}
 
+  prometheus:
+    ports: !reset []
+
+  grafana:
+    ports: !reset []
+
+  openobserve:
+    ports: !reset []
+
   tls:
     image: caddy:2-alpine
     ports:

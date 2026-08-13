@@ -138,6 +138,10 @@ class Settings:
     osha_api_url: str = os.getenv("OSHA_API_URL", "https://integrations.rytera.ai/oracles/osha/v1")
     osha_query_path: str = os.getenv("OSHA_QUERY_PATH", "/searches")
 
+    mvr_api_key: str = os.getenv("MVR_API_KEY", "")
+    mvr_api_url: str = os.getenv("MVR_API_URL", "https://integrations.rytera.ai/oracles/mvr/v1")
+    mvr_query_path: str = os.getenv("MVR_QUERY_PATH", "/records")
+
     rating_agency_api_key: str = os.getenv("RATING_AGENCY_API_KEY", "")
     rating_agency_api_url: str = os.getenv("RATING_AGENCY_API_URL", "https://integrations.rytera.ai/oracles/rating-agency/v2")
     rating_agency_query_path: str = os.getenv("RATING_AGENCY_QUERY_PATH", "/entities")
@@ -199,6 +203,13 @@ class Settings:
     aws_region: str = os.getenv("AWS_REGION", os.getenv("AWS_DEFAULT_REGION", "us-east-1"))
     aws_secrets_arn: str = os.getenv("AWS_SECRETS_ARN", os.getenv("AWS_SECRET_ID", ""))
     cloudwatch_logs: bool = os.getenv("CLOUDWATCH_LOGS", "").lower() in {"1", "true", "yes"}
+    metrics_bearer: str = os.getenv("METRICS_BEARER", "")
+    prometheus_multiproc_dir: str = os.getenv("PROMETHEUS_MULTIPROC_DIR", "")
+    openobserve_url: str = os.getenv("OPENOBSERVE_URL", "")
+    openobserve_enabled: bool = os.getenv("OPENOBSERVE_ENABLED", "true").lower() in {"1", "true", "yes", "on"}
+    openobserve_org: str = os.getenv("OPENOBSERVE_ORG", "default")
+    openobserve_user: str = os.getenv("OPENOBSERVE_USER", os.getenv("ZO_ROOT_USER_EMAIL", ""))
+    openobserve_password: str = os.getenv("OPENOBSERVE_PASSWORD", os.getenv("ZO_ROOT_USER_PASSWORD", ""))
     worm_audit_path: Path = Path(os.getenv("WORM_AUDIT_PATH", "./audit_logs/worm"))
     audit_retention_days: int = int(os.getenv("AUDIT_RETENTION_DAYS", "2555"))
     retention_s3_bucket: str = os.getenv("RETENTION_S3_BUCKET", "")

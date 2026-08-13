@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from insureflow.agents.base import BaseAgent
@@ -9,6 +10,7 @@ from insureflow.oracles.aplus_client import APlusClient
 from insureflow.oracles.bureau_client import CreditBureauClient
 from insureflow.oracles.cat_model_client import CatastropheModelClient
 from insureflow.oracles.clue_client import CLUEClient
+from insureflow.oracles.mvr_client import MVRClient, extract_drivers
 from insureflow.oracles.ncci_client import NCCIClient
 from insureflow.oracles.osha_client import OSHAClient
 from insureflow.oracles.public_records_client import PublicRecordsClient
@@ -34,6 +36,7 @@ class OracleAgent(BaseAgent):
         public_records_client: PublicRecordsClient | None = None,
         osha_client: OSHAClient | None = None,
         rating_agency_client: CreditRatingAgencyClient | None = None,
+        mvr_client: MVRClient | None = None,
     ) -> None:
         super().__init__()
         self.clue = clue_client or CLUEClient()
@@ -44,11 +47,17 @@ class OracleAgent(BaseAgent):
         self.public_records = public_records_client or PublicRecordsClient()
         self.osha = osha_client or OSHAClient()
         self.rating_agency = rating_agency_client or CreditRatingAgencyClient()
+        self.mvr = mvr_client or MVRClient()
+        self.last_ncci_emod: float | None = None
+        self.last_mvr_cleared: bool | None = None
 
     def _analyze(self, bundle: SubmissionBundle, **kwargs: Any) -> None:
+        self.last_ncci_emod = None
+        self.last_mvr_cleared = None
         if not self._live_oracles_ok():
             return
-        for findings in (
+        line = str(kwargs.get("insurance_line") or "")
+        queries = [
             self._query_clue(bundle),
             self._query_aplus(bundle),
             self._query_ncci(bundle),
@@ -57,7 +66,10 @@ class OracleAgent(BaseAgent):
             self._query_public_records(bundle),
             self._query_osha(bundle),
             self._query_rating_agency(bundle),
-        ):
+        ]
+        if self._should_query_mvr(bundle, line):
+            queries.append(self._query_mvr(bundle))
+        for findings in queries:
             for f in findings:
                 self._add_finding(f)
 
@@ -78,6 +90,7 @@ class OracleAgent(BaseAgent):
             ("PublicRecords", self.public_records),
             ("OSHA", self.osha),
             ("RatingAgency", self.rating_agency),
+            ("MVR", self.mvr),
         ):
             mode = ""
             if hasattr(client, "_resolved_mode"):
@@ -379,6 +392,10 @@ class OracleAgent(BaseAgent):
                         source_value=mod.mod_factor,
                     )
                 )
+
+        worst = result.worst_mod
+        if worst is not None:
+            self.last_ncci_emod = float(worst.mod_factor)
 
         return findings
 
@@ -756,4 +773,89 @@ class OracleAgent(BaseAgent):
                 )
             )
 
+        return findings
+
+    def _should_query_mvr(self, bundle: SubmissionBundle, line: str) -> bool:
+        key = (line or "").lower()
+        if any(tok in key for tok in ("auto", "fleet", "vehicle", "motor")):
+            return True
+        from insureflow.underwriting.personal_lines import _blob
+
+        blob = _blob(bundle)
+        return bool(extract_drivers(blob) or re.search(r"\b(?:mvr|fleet|power unit|commercial auto|driver)\b", blob, re.I))
+
+    def _query_mvr(self, bundle: SubmissionBundle) -> list[Finding]:
+        from insureflow.underwriting.personal_lines import _blob
+
+        blob = _blob(bundle)
+        drivers = extract_drivers(blob)
+        if not drivers:
+            insured = self.tools.get_named_insured(bundle)
+            if insured:
+                drivers = [insured]
+        findings: list[Finding] = []
+        if not drivers:
+            findings.append(
+                Finding(
+                    title="MVR: no drivers identified",
+                    description="Commercial auto requires named drivers / MVRs — none found on the package.",
+                    severity=RiskSeverity.CRITICAL,
+                    category="external_oracle",
+                    field_path="oracles.mvr",
+                )
+            )
+            self.last_mvr_cleared = False
+            return findings
+
+        any_major = False
+        synthetic = False
+        for name in drivers[:8]:
+            result = self.mvr.query_driver(name)
+            synthetic = synthetic or result.synthetic or result.mode != "live"
+            if result.error:
+                findings.append(
+                    Finding(
+                        title=f"MVR query failed ({name})",
+                        description=result.error,
+                        severity=RiskSeverity.HIGH,
+                        category="external_oracle",
+                        field_path="oracles.mvr",
+                    )
+                )
+                any_major = True
+                continue
+            if result.synthetic:
+                findings.append(
+                    Finding(
+                        title=f"MVR unverified ({name})",
+                        description="Simulated MVR is not a clean driving record. Connect a live MVR vendor or upload MVRs.",
+                        severity=RiskSeverity.HIGH,
+                        category="external_oracle",
+                        field_path="oracles.mvr",
+                    )
+                )
+                any_major = True
+                continue
+            if result.has_major or result.total_points >= 6:
+                any_major = True
+                findings.append(
+                    Finding(
+                        title=f"MVR adverse ({name})",
+                        description=f"{result.total_points} points, {result.accidents} accident(s), {result.suspensions} suspension(s)",
+                        severity=RiskSeverity.CRITICAL if result.has_major else RiskSeverity.HIGH,
+                        category="external_oracle",
+                        field_path="oracles.mvr",
+                    )
+                )
+            else:
+                findings.append(
+                    Finding(
+                        title=f"MVR clear ({name})",
+                        description="No major violations on live MVR.",
+                        severity=RiskSeverity.LOW,
+                        category="external_oracle",
+                        field_path="oracles.mvr",
+                    )
+                )
+        self.last_mvr_cleared = not any_major and not synthetic
         return findings

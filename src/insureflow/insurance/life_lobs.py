@@ -20,6 +20,7 @@ from insureflow.insurance.commercial_lobs import (
     _normalize_coverages,
     flatten_line_documents,
 )
+from insureflow.underwriting.life_product import LIVE_TERM_PRODUCT_IDS
 
 # BASE DOCUMENT SET — required for every life insurance policy (US)
 LIFE_BASE_PACKET: list[str] = [
@@ -974,6 +975,11 @@ LIFE_LINES: list[dict[str, Any]] = [
     ),
 ]
 
+# Term products have a filed exhibit. WL / IUL / VUL / annuity stay catalog until
+# a permanent/annuity filing is imported — they must not look "live" as 20-year term.
+for _ln in LIFE_LINES:
+    _ln["status"] = "live" if _ln["id"] in LIVE_TERM_PRODUCT_IDS else "catalog"
+
 
 # ---------------------------------------------------------------------------
 # Catalog queries (mirror commercial_lobs)
@@ -1095,7 +1101,7 @@ def get_life_line(line_id_or_slug: str) -> dict[str, Any] | None:
 
 
 def resolve_life_checklist_lob(identifier: str | None) -> str | None:
-    """Resolve a life product identifier (slug / id / checklist_lob / name) to its checklist_lob."""
+    """Resolve a life product or coverage identifier to its product checklist_lob."""
     if not identifier:
         return None
     target = re.sub(r"[\s_-]+", " ", str(identifier).strip().lower())
@@ -1110,10 +1116,47 @@ def resolve_life_checklist_lob(identifier: str | None) -> str | None:
             re.sub(r"[\s_-]+", " ", str(line.get("slug") or "").strip().lower()),
             re.sub(r"[\s_-]+", " ", str(line.get("name") or "").strip().lower()),
             re.sub(r"[\s_-]+", " ", str(line.get("short_name") or "").strip().lower()),
+            re.sub(r"[\s_-]+", " ", lob.lower()),
         }
         if target in candidates:
             return lob
+        for cov in line.get("coverages") or []:
+            if not isinstance(cov, dict):
+                continue
+            cov_ids = {
+                re.sub(r"[\s_-]+", " ", str(cov.get("id") or "").strip().lower()),
+                re.sub(r"[\s_-]+", " ", str(cov.get("name") or "").strip().lower()),
+            }
+            if target in cov_ids:
+                return lob
     return None
+
+
+def get_life_coverage(
+    product_id: str | None = None,
+    coverage_id: str | None = None,
+) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
+    """Resolve picker selection to ``(product line, coverage)``.
+
+    Coverage-only lookup walks the catalog so a coverage id like ``level_term_10``
+    still finds Level Term when product_id is omitted.
+    """
+    from insureflow.insurance.commercial_lobs import get_line_coverage
+
+    line = get_life_line(product_id or "") if product_id else None
+    if line is None and coverage_id:
+        key = (coverage_id or "").strip().lower().replace("-", "_").replace(" ", "_")
+        for candidate in LIFE_LINES:
+            for cov in candidate.get("coverages") or []:
+                if not isinstance(cov, dict):
+                    continue
+                cid = str(cov.get("id") or "").strip().lower().replace("-", "_").replace(" ", "_")
+                if cid == key:
+                    return get_life_line(str(candidate.get("id") or "")), cov
+        return None, None
+    if line is None:
+        return None, None
+    return line, get_line_coverage(line, coverage_id)
 
 
 def _product_keywords(line: dict[str, Any]) -> set[str]:
@@ -1189,7 +1232,7 @@ def life_hub_payload() -> dict[str, Any]:
             "category_count": len(LIFE_CATEGORIES),
             "product_count": len(LIFE_LINES),
             "live_count": len(live),
-            "catalog_count": 0,
+            "catalog_count": max(0, len(lines) - len(live)),
             "lob_model_count": 0,
         },
     }

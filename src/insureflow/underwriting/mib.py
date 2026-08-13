@@ -121,6 +121,20 @@ def request_mib_report(bundle: SubmissionBundle) -> MibReport:
     table = _known_code_table()
     if not codes_raw:
         report.no_hit = True
+        try:
+            from insureflow.billing.plan import current_plan
+
+            if current_plan().require_live_oracles:
+                report.discrepancies.append(
+                    MibDiscrepancy(
+                        code_type=MibCodeType.UNKNOWN,
+                        description="Live MIB required",
+                        severity=RiskSeverity.CRITICAL,
+                        reason="Desk+ does not treat a simulated MIB no-hit or auth form as a bureau query. Upload an MIB report or connect a live vendor.",
+                    )
+                )
+        except Exception:
+            pass
         return report
 
     for code, _src in codes_raw:

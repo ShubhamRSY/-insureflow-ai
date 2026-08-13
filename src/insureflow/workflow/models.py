@@ -13,16 +13,28 @@ class WorkflowState(str, Enum):
     PENDING_REVIEW = "pending_review"
     PENDING_CO_SIGN = "pending_co_sign"
     APPROVED = "approved"
+    QUOTED = "quoted"
     DECLINED = "declined"
+    NO_QUOTE = "no_quote"
     BOUND = "bound"
     EXPIRED = "expired"
 
 
 class SignOffAction(str, Enum):
     APPROVE = "approve"
+    QUOTE = "quote"
+    NO_QUOTE = "no_quote"
     DECLINE = "decline"
     REFER = "refer"
     REQUEST_INFO = "request_info"
+
+
+BINDABLE_STATES = frozenset({WorkflowState.APPROVED, WorkflowState.QUOTED})
+
+
+def allows_bind(state: WorkflowState | str) -> bool:
+    value = state if isinstance(state, WorkflowState) else WorkflowState(str(state))
+    return value in BINDABLE_STATES
 
 
 class SignOffRecord(BaseModel):

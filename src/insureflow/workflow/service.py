@@ -4,7 +4,7 @@ from uuid import uuid4
 
 from insureflow.decisions import DecisionOutcome, is_decline, normalize_decision, to_vertical
 from insureflow.underwriting.cosign import CoSignStatus, active_cosign, cosign_allows_bind, create_cosign_request, resolve_cosign
-from insureflow.workflow.models import SignOffAction, SignOffRecord, WorkflowRecord, WorkflowState
+from insureflow.workflow.models import SignOffAction, SignOffRecord, WorkflowRecord, WorkflowState, allows_bind
 from insureflow.workflow.store import WorkflowStore
 
 
@@ -41,7 +41,7 @@ class WorkflowService:
 
     def submit_for_review(self, bundle_id: str, org_id: str, ai_decision: str) -> WorkflowRecord:
         record = self.store.get(bundle_id, org_id) or WorkflowRecord(bundle_id=bundle_id, org_id=org_id)
-        if record.state in (WorkflowState.APPROVED, WorkflowState.BOUND):
+        if record.state in (WorkflowState.APPROVED, WorkflowState.QUOTED, WorkflowState.BOUND):
             raise ValueError(f"Cannot reopen workflow in {record.state.value} state")
         record.state = WorkflowState.PENDING_REVIEW
         record.ai_decision = ai_decision
@@ -67,9 +67,11 @@ class WorkflowService:
             raise ValueError(f"Cannot sign off — workflow state is {record.state.value}. Must be PENDING_REVIEW (or PENDING_CO_SIGN to cancel back to review).")
 
         prior_ai = ai_decision or record.ai_decision
-        if action == SignOffAction.APPROVE and is_decline(prior_ai):
+        if action in (SignOffAction.APPROVE, SignOffAction.QUOTE) and is_decline(prior_ai):
             if not (override_reason or "").strip():
-                raise ValueError("override_reason is required when approving a submission the AI declined")
+                raise ValueError("override_reason is required when quoting or approving a submission the AI declined")
+        if action == SignOffAction.NO_QUOTE and not (notes or override_reason).strip():
+            raise ValueError("notes or override_reason is required for a no-quote decision")
 
         sign_off = SignOffRecord(
             sign_off_id=f"so-{uuid4().hex[:10]}",
@@ -97,10 +99,22 @@ class WorkflowService:
             record.state = WorkflowState.APPROVED
             record.final_decision = to_vertical(DecisionOutcome.ACCEPT, "insurance")
             record.metadata["outcome"] = DecisionOutcome.ACCEPT.value
+            record.metadata["quote_intent"] = "quote"
+        elif action == SignOffAction.QUOTE:
+            record.state = WorkflowState.QUOTED
+            record.final_decision = "quote"
+            record.metadata["outcome"] = DecisionOutcome.ACCEPT.value
+            record.metadata["quote_intent"] = "quote"
+        elif action == SignOffAction.NO_QUOTE:
+            record.state = WorkflowState.NO_QUOTE
+            record.final_decision = "no_quote"
+            record.metadata["outcome"] = DecisionOutcome.DECLINE.value
+            record.metadata["quote_intent"] = "no_quote"
         elif action == SignOffAction.DECLINE:
             record.state = WorkflowState.DECLINED
             record.final_decision = to_vertical(DecisionOutcome.DECLINE, "insurance")
             record.metadata["outcome"] = DecisionOutcome.DECLINE.value
+            record.metadata["quote_intent"] = "no_quote"
         elif action == SignOffAction.REQUEST_INFO:
             record.state = WorkflowState.PENDING_REVIEW
             record.final_decision = "request_info"
@@ -148,8 +162,8 @@ class WorkflowService:
         record = self.store.get(bundle_id, org_id)
         if not record:
             raise ValueError(f"No workflow found for bundle {bundle_id}")
-        if record.state not in (WorkflowState.APPROVED, WorkflowState.PENDING_CO_SIGN):
-            raise ValueError("Co-sign can only be requested after UW approval")
+        if record.state not in (WorkflowState.APPROVED, WorkflowState.QUOTED, WorkflowState.PENDING_CO_SIGN):
+            raise ValueError("Co-sign can only be requested after UW quote/approval")
         existing = active_cosign(record.metadata)
         if existing and existing.status == CoSignStatus.APPROVED:
             return record
@@ -188,10 +202,11 @@ class WorkflowService:
             org_id=org_id,
         )
         record.metadata["co_sign"] = updated.model_dump(mode="json")
+        restored = WorkflowState.QUOTED if record.final_decision == "quote" else WorkflowState.APPROVED
         if approve:
-            record.state = WorkflowState.APPROVED
+            record.state = restored
         else:
-            record.state = WorkflowState.APPROVED  # UW approval stands; bind still blocked until new co-sign
+            record.state = restored  # UW quote/approval stands; bind still blocked until new co-sign
             # Keep rejected record so binder sees rejection; they must re-request
         self.store.save(record)
         return record
@@ -200,8 +215,8 @@ class WorkflowService:
         record = self.store.get(bundle_id, org_id)
         if not record:
             raise ValueError(f"No workflow found for bundle {bundle_id}")
-        if record.state not in (WorkflowState.APPROVED,):
-            raise ValueError("Policy can only be bound after UW approval (and co-sign if required)")
+        if not allows_bind(record.state):
+            raise ValueError("Policy can only be bound after UW quote/approval (and co-sign if required)")
         if binder_username:
             ok, reason = cosign_allows_bind(record.metadata, binder_username)
             if not ok:

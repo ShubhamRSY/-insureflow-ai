@@ -492,7 +492,7 @@ RegistryEntry   entry_id · component_type · version_label · checksum · statu
 | Portfolio | `/portfolio/summary` |
 | ZTA | `/api/zta/status`, `/api/zta/route` |
 | Pilot | `/pilot/*` (packages, redact, calibration, sandbox, seed, email intake) |
-| Observability | `/ops/snapshot`, `/observability/log-explorers` |
+| Observability | `/ops/snapshot`, `/metrics`, `/observability/log-explorers` |
 | System | `/health`, `/system/diagnostics`, `/security/status`, `/api/dashboard/overview` |
 | Broker | `/broker/status/{token}`, `/broker/status/{token}/respond` |
 | Releases | `/releases/checklist`, `/releases/experiments*` |
@@ -576,8 +576,8 @@ Endpoints under `/pilot/*` (packages, redact, calibration, sandbox-status, seed)
 | Area | Mechanism |
 |------|-----------|
 | Health | `/health` (status + version) |
-| Diagnostics | `/system/diagnostics` — 10 checks (LLM, Redis, job store, encryption, OCR, audit storage, examples, mortgage fixtures, pgvector, gateway) |
-| Telemetry | `observability/` — telemetry, CloudWatch adapter, `ops/snapshot`, log explorers |
+| Diagnostics | `/system/diagnostics` — LLM, Redis, job store, encryption, OCR, audit storage, examples, mortgage fixtures, pgvector, observability |
+| Telemetry | `observability/` — Prometheus `/metrics`, Grafana dashboards, OpenObserve shipper, CloudWatch, `ops/snapshot`, log explorers |
 | Security posture | `/security/status`, secrets loader, gateway key auth |
 | Encryption | Fernet envelope encryption; SHA-256 manifest on regulatory ZIPs |
 
@@ -597,7 +597,7 @@ Endpoints under `/pilot/*` (packages, redact, calibration, sandbox-status, seed)
 | User store | Redis-backed + JSON fallback | Auth persistence |
 | Registry store | Versioned files | Model/guideline governance |
 | Encryption | Fernet | Audit bundle encryption at rest |
-| Container | Docker + Compose | Redis, Postgres, API, Celery worker |
+| Container | Docker + Compose | Redis, Postgres, API, Celery worker, Prometheus, Grafana, OpenObserve |
 | Deploy | Railway | Production at ryterainc.com |
 | CLI | Typer | `serve`, `agents`, `doctor`, `e2e`, `auth-reset` |
 | MCP | FastMCP over SSE | Claude Desktop / Cursor integration |
@@ -610,6 +610,9 @@ Endpoints under `/pilot/*` (packages, redact, calibration, sandbox-status, seed)
 | Redis | 6379 |
 | PostgreSQL | 5432 |
 | MCP server | 8010 (SSE) |
+| Prometheus | 9090 |
+| Grafana | 3000 |
+| OpenObserve | 5080 |
 | Celery worker | — |
 
 ### 17.3 Runtime modes

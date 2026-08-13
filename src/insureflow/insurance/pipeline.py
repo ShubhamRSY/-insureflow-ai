@@ -46,6 +46,74 @@ from insureflow.zta.router import ZeroTokenRouter
 logger = logging.getLogger(__name__)
 
 
+def _resolve_picker_scope(
+    *,
+    insurance_line: str | None,
+    commercial_product_id: str | None,
+    life_product_id: str | None,
+    life_coverage_id: str | None,
+    commercial_coverage_id: str | None,
+    commercial_product_name: str | None,
+    commercial_coverage_name: str | None,
+    pre_blob: str,
+) -> dict[str, Any]:
+    """Honor the taxonomy picker: only the selected product + coverage runs."""
+    from insureflow.insurance.commercial_lobs import get_commercial_line, get_line_coverage
+    from insureflow.insurance.life_lobs import detect_life_product, get_life_coverage, resolve_life_checklist_lob
+    from insureflow.rating.models import InsuranceLine
+    from insureflow.underwriting.personal_lines import detect_insurance_line, parse_insurance_line
+
+    selected_coverage_id = (life_coverage_id or commercial_coverage_id or "").strip() or None
+    life_checklist_lob: str | None = None
+    commercial_checklist_lob: str | None = None
+    product_name = commercial_product_name
+    coverage_name = commercial_coverage_name
+    resolved_line = None
+
+    life_from_coverage = bool(selected_coverage_id and resolve_life_checklist_lob(selected_coverage_id))
+    if life_product_id or life_from_coverage:
+        life_line, life_cov = get_life_coverage(life_product_id, selected_coverage_id)
+        life_checklist_lob = (
+            (str(life_line.get("checklist_lob") or "").strip() or None if life_line else None) or resolve_life_checklist_lob(life_product_id) or resolve_life_checklist_lob(selected_coverage_id)
+        )
+        if life_checklist_lob:
+            resolved_line = InsuranceLine.LIFE
+            if life_line:
+                product_name = product_name or str(life_line.get("name") or "") or None
+            if life_cov:
+                coverage_name = coverage_name or str(life_cov.get("name") or "") or None
+                selected_coverage_id = str(life_cov.get("id") or selected_coverage_id)
+    elif commercial_product_id:
+        comm_line = get_commercial_line(commercial_product_id)
+        if comm_line:
+            commercial_checklist_lob = str(comm_line.get("checklist_lob") or "").strip() or None
+            product_name = product_name or str(comm_line.get("name") or "") or None
+            cov = get_line_coverage(comm_line, selected_coverage_id)
+            if cov:
+                coverage_name = coverage_name or str(cov.get("name") or "") or None
+                selected_coverage_id = str(cov.get("id") or selected_coverage_id)
+            for key in (comm_line.get("rating_line"), comm_line.get("insurance_line"), commercial_checklist_lob):
+                parsed = parse_insurance_line(str(key or ""))
+                if parsed is not None:
+                    resolved_line = parsed
+                    break
+
+    if resolved_line is None:
+        resolved_line = detect_insurance_line(pre_blob, insurance_line or "")
+        if resolved_line is not None and resolved_line.value == "life":
+            life_checklist_lob = resolve_life_checklist_lob(life_product_id) or detect_life_product(pre_blob)
+
+    return {
+        "resolved_line": resolved_line,
+        "life_checklist_lob": life_checklist_lob,
+        "commercial_checklist_lob": commercial_checklist_lob,
+        "checklist_hint": life_checklist_lob or commercial_checklist_lob,
+        "selected_coverage_id": selected_coverage_id,
+        "product_name": product_name,
+        "coverage_name": coverage_name,
+    }
+
+
 class InsurancePipeline:
     """Production insurance pipeline with:
     - Submission triage & scoring (sort 100 apps, surface best first)
@@ -116,6 +184,7 @@ class InsurancePipeline:
         insurance_line: str | None = None,
         commercial_product_id: str | None = None,
         life_product_id: str | None = None,
+        life_coverage_id: str | None = None,
         commercial_coverage_id: str | None = None,
         commercial_product_name: str | None = None,
         commercial_coverage_name: str | None = None,
@@ -148,10 +217,9 @@ class InsurancePipeline:
         progress.start("intake", "Intake", "Receiving submission package")
         progress.complete("intake", detail="Submission received")
         progress.start("triage", "Triage", "Scoring submission priority")
-        from insureflow.underwriting.personal_lines import detect_insurance_line
 
-        # Always infer from the full package. Wrong UI hints (e.g. personal_auto)
-        # must not short-circuit detection for commercial submissions.
+        # Explicit taxonomy picker (product + coverage) wins. Without a picker,
+        # infer from the full package so a wrong UI hint cannot short-circuit.
         pre_blob = " ".join(
             [
                 acord_xml or "",
@@ -163,15 +231,23 @@ class InsurancePipeline:
                 " ".join(d.get("filename", "") + " " + d.get("content", "")[:2000] for d in (documents or [])),
             ]
         )
-        resolved_line = detect_insurance_line(pre_blob, insurance_line or "")
-
-        # Per-product life catalog resolution: explicit product hint wins, else
-        # best-effort detection from the package text, else generic "life".
-        life_checklist_lob: str | None = None
-        if resolved_line is not None and resolved_line.value == "life":
-            from insureflow.insurance.life_lobs import detect_life_product, resolve_life_checklist_lob
-
-            life_checklist_lob = resolve_life_checklist_lob(life_product_id) or detect_life_product(pre_blob)
+        scope = _resolve_picker_scope(
+            insurance_line=insurance_line,
+            commercial_product_id=commercial_product_id,
+            life_product_id=life_product_id,
+            life_coverage_id=life_coverage_id,
+            commercial_coverage_id=commercial_coverage_id,
+            commercial_product_name=commercial_product_name,
+            commercial_coverage_name=commercial_coverage_name,
+            pre_blob=pre_blob,
+        )
+        resolved_line = scope["resolved_line"]
+        life_checklist_lob = scope["life_checklist_lob"]
+        checklist_hint = scope["checklist_hint"]
+        selected_coverage_id = scope["selected_coverage_id"]
+        commercial_product_name = scope["product_name"] or commercial_product_name
+        commercial_coverage_name = scope["coverage_name"] or commercial_coverage_name
+        commercial_coverage_id = selected_coverage_id or commercial_coverage_id
 
         triage_result = self.triage.score_submission(
             self._build_preliminary_bundle(
@@ -181,7 +257,8 @@ class InsurancePipeline:
                 bundle_id=bid,
             ),
             insurance_line=resolved_line.value if resolved_line else insurance_line,
-            checklist_lob_hint=life_checklist_lob,
+            checklist_lob_hint=checklist_hint,
+            coverage_id=selected_coverage_id,
         )
         progress.complete(
             "triage",
@@ -290,7 +367,8 @@ class InsurancePipeline:
         triage_result = self.triage.score_submission(
             bundle,
             insurance_line=line_hint,
-            checklist_lob_hint=life_checklist_lob,
+            checklist_lob_hint=checklist_hint,
+            coverage_id=selected_coverage_id,
         )
         checklist_lob = triage_result.document_checklist.lob
 
@@ -570,20 +648,71 @@ class InsurancePipeline:
         extraction_issues = validate_extraction(bundle)
         bundle.status = SubmissionStatus.EXTRACTED
 
-        # ── 4. EXTERNAL DATA ORACLES (CLUE, NCCI, CAT) — skip property oracles on life ──
+        # ── 4. EXTERNAL DATA ORACLES (CLUE, NCCI, CAT / life MIB+Rx) + OFAC ──
         oracle_findings: list[Any] = []
+        ofac_meta: dict[str, Any] = {}
         is_life_line = (resolved_line is not None and resolved_line.value == "life") or checklist_lob == "life" or life_checklist_lob is not None
         if funnel:
             progress.skip("verify", "Verified", "Deferred — available via Deep Dive")
         elif is_life_line:
-            progress.start("verify", "Verified", "Life medical UW (P&C oracles skipped)")
-            progress.complete("verify", detail="Life — medical underwriting path", findings=0)
+            progress.start("verify", "Verified", "Life bureaus — MIB / Rx / OFAC")
+            from insureflow.underwriting.mib import persist_mib_report, request_mib_report
+            from insureflow.underwriting.rx_history import screen_rx
+            from insureflow.underwriting.sanctions_gate import screen_submission
+
+            mib_report = request_mib_report(bundle)
+            persist_mib_report(mib_report, org_id=self.org_id)
+            rx_result = screen_rx(bundle)
+            ofac_result = screen_submission(bundle)
+            ofac_meta = ofac_result.to_metadata()
+            from insureflow.models.agents import Finding, RiskSeverity
+
+            if mib_report.no_hit and mib_report.discrepancies:
+                oracle_findings.append(
+                    Finding(
+                        title="MIB not run",
+                        description=mib_report.discrepancies[0].reason or "MIB authorization is not a bureau hit.",
+                        severity=RiskSeverity.CRITICAL,
+                        category="mib",
+                    )
+                )
+            elif mib_report.discrepancies:
+                for d in mib_report.discrepancies:
+                    oracle_findings.append(
+                        Finding(
+                            title=f"MIB discrepancy: {d.description}",
+                            description=d.reason,
+                            severity=d.severity,
+                            category="mib",
+                        )
+                    )
+            elif mib_report.no_hit:
+                oracle_findings.append(
+                    Finding(
+                        title="MIB no-hit (uploaded codes absent)",
+                        description="No MIB codes on the package — authorization alone is not a query.",
+                        severity=RiskSeverity.HIGH,
+                        category="mib",
+                    )
+                )
+            oracle_findings.extend(rx_result.findings)
+            oracle_findings.extend(ofac_result.findings)
+            progress.complete(
+                "verify",
+                detail=f"{len(oracle_findings)} life bureau/OFAC finding(s)",
+                findings=len(oracle_findings),
+                status="warning" if oracle_findings else "complete",
+            )
         else:
             progress.start("verify", "Verified", "Running external oracle checks")
             if not skip_oracles:
                 bundle.status = SubmissionStatus.EXTERNAL_ORACLE_CHECK
-                oracle_result = self.oracle_agent.run(bundle, org_id=self.org_id)
-                oracle_findings = oracle_result.findings
+                oracle_result = self.oracle_agent.run(
+                    bundle,
+                    org_id=self.org_id,
+                    insurance_line=insurance_line or (resolved_line.value if resolved_line else "") or "",
+                )
+                oracle_findings = list(oracle_result.findings)
                 audit.log(
                     PipelineEvent.VERIFICATION_COMPLETE,
                     f"Oracle queries: {len(oracle_findings)} findings from CLUE, NCCI, CAT models",
@@ -592,6 +721,11 @@ class InsurancePipeline:
                         "oracle_findings": len(oracle_findings),
                     },
                 )
+            from insureflow.underwriting.sanctions_gate import screen_submission
+
+            ofac_result = screen_submission(bundle)
+            ofac_meta = ofac_result.to_metadata()
+            oracle_findings.extend(ofac_result.findings)
 
             progress.complete(
                 "verify",
@@ -930,10 +1064,26 @@ class InsurancePipeline:
 
         # ── 8. REINSURANCE TREATY ANALYSIS ──
         reinsurance_result = None
+        life_reinsurance_meta: dict[str, Any] = {}
         if funnel:
             progress.skip("reinsurance", "Reinsurance", "Deferred — available via Deep Dive")
         elif is_life_line:
-            progress.skip("reinsurance", "Reinsurance", "Not applicable for life")
+            from insureflow.underwriting.life_reinsurance import evaluate_life_reinsurance
+            from insureflow.underwriting.memo_sync import worst_decision
+
+            life_re = evaluate_life_reinsurance(bundle)
+            life_reinsurance_meta = life_re.to_metadata()
+            for f in life_re.findings:
+                memo.key_findings.append(f)
+                if f.severity.value in ("critical", "high"):
+                    memo.human_review_reasons.append(f.title)
+                    memo.human_review_required = True
+            memo.decision = worst_decision(memo.decision, life_re.decision_hint)
+            progress.complete(
+                "reinsurance",
+                detail=f"Retain ${life_re.retention:,.0f} · cede ${life_re.cession:,.0f}",
+                status="warning" if life_re.facultative_required or life_re.jumbo else "complete",
+            )
         elif not skip_reinsurance:
             bundle.status = SubmissionStatus.REINSURANCE_REVIEW
             reinsurance_result = self.reinsurance.run(bundle, org_id=self.org_id)
@@ -968,20 +1118,64 @@ class InsurancePipeline:
                 " ".join(supplemental_docs or []),
             ]
         )
-        line_for_quote = resolve_quote_line(
-            commercial_product_id=commercial_product_id,
-            insurance_line=insurance_line or (resolved_line.value if resolved_line else None),
-            product_hint=insurance_line,
-            text_blob=quote_blob,
-        )
+        if life_checklist_lob:
+            line_for_quote = InsuranceLine.LIFE
+        else:
+            line_for_quote = resolve_quote_line(
+                commercial_product_id=commercial_product_id,
+                insurance_line=insurance_line or (resolved_line.value if resolved_line else None),
+                product_hint=insurance_line,
+                text_blob=quote_blob,
+            )
         if not isinstance(line_for_quote, InsuranceLine):
             line_for_quote = InsuranceLine.COMMERCIAL_PROPERTY
+        experience_mod = getattr(self.oracle_agent, "last_ncci_emod", None)
         quote = self.rating.quote(
             bundle,
             memo,
             line=line_for_quote,
             commercial_product_id=commercial_product_id,
+            commercial_coverage_id=selected_coverage_id,
+            experience_mod=experience_mod,
         )
+        qmeta = dict(quote.metadata or {})
+        if ofac_meta:
+            qmeta["ofac"] = ofac_meta
+            qmeta["ofac_cleared"] = ofac_meta.get("ofac_cleared")
+            if ofac_meta.get("ofac_hits"):
+                quote.eligible = False
+                reason = "OFAC / sanctions hit — cannot quote"
+                if reason not in (quote.ineligibility_reasons or []):
+                    quote.ineligibility_reasons = list(quote.ineligibility_reasons or []) + [reason]
+        if life_reinsurance_meta:
+            qmeta["life_reinsurance"] = life_reinsurance_meta
+            qmeta["facultative_required"] = life_reinsurance_meta.get("facultative_required")
+        if line_for_quote.value in {"commercial_auto", "personal_auto"} or str(qmeta.get("mvr_required")):
+            cleared = getattr(self.oracle_agent, "last_mvr_cleared", None)
+            qmeta["mvr_required"] = True
+            qmeta["mvr_cleared"] = cleared
+            from insureflow.billing.plan import current_plan
+
+            if cleared is False and current_plan().require_live_oracles:
+                quote.eligible = False
+                reason = "Commercial auto MVR not cleared — live MVR required on this plan"
+                if reason not in (quote.ineligibility_reasons or []):
+                    quote.ineligibility_reasons = list(quote.ineligibility_reasons or []) + [reason]
+        try:
+            from insureflow.underwriting.surplus_lines import classify_surplus_lines
+
+            sl = classify_surplus_lines(
+                bundle,
+                line=line_for_quote,
+                state=self.rating._primary_state(bundle) if hasattr(self.rating, "_primary_state") else "",
+                product_id=commercial_product_id or "",
+            )
+            qmeta["surplus_lines"] = sl.to_metadata()
+            for f in sl.findings:
+                memo.key_findings.append(f)
+        except Exception:
+            pass
+        quote.metadata = qmeta
         uw_worksheet: dict[str, Any] | None = None
         specialty_retrieval: dict[str, Any] | None = None
         commercial_uw_summary: dict[str, Any] | None = None
@@ -1325,6 +1519,7 @@ class InsurancePipeline:
             "product_line": line_for_quote.value,
             "commercial_product_id": commercial_product_id,
             "life_product_id": life_product_id,
+            "life_coverage_id": life_coverage_id or (selected_coverage_id if life_checklist_lob else None),
             "checklist_lob": checklist_lob,
             "life_checklist_lob": life_checklist_lob,
             "commercial_coverage_id": commercial_coverage_id,
@@ -1374,9 +1569,21 @@ class InsurancePipeline:
                 "rating_engine": (quote.metadata or {}).get("rating_engine"),
                 "serff_tracking": (quote.metadata or {}).get("serff_tracking"),
                 "insurance_line": line_for_quote.value,
+                "coverage_id": commercial_coverage_id,
+                "term_years": (quote.metadata or {}).get("term_years"),
+                "life_coverage_id": (quote.metadata or {}).get("life_coverage_id"),
                 "specialty": bool((quote.metadata or {}).get("specialty")),
                 "exposure_basis": (quote.metadata or {}).get("exposure_basis"),
                 "medical": (quote.metadata or {}).get("medical"),
+                "ofac_cleared": (quote.metadata or {}).get("ofac_cleared"),
+                "ofac": (quote.metadata or {}).get("ofac"),
+                "surplus_lines": (quote.metadata or {}).get("surplus_lines"),
+                "facultative_required": (quote.metadata or {}).get("facultative_required"),
+                "life_reinsurance": (quote.metadata or {}).get("life_reinsurance"),
+                "mvr_required": (quote.metadata or {}).get("mvr_required"),
+                "mvr_cleared": (quote.metadata or {}).get("mvr_cleared"),
+                "iso_forms": (quote.metadata or {}).get("iso_forms"),
+                "personal_lines": (quote.metadata or {}).get("personal_lines"),
                 "components": [
                     {
                         "name": c.name,
@@ -1472,6 +1679,19 @@ class InsurancePipeline:
             audit.store.save_json(bid, "checkpoints.json", human_checkpoints, org_id=self.org_id)
         except Exception as exc:
             logger.warning("Failed to persist checkpoints.json: %s", exc)
+
+        try:
+            from insureflow.observability.pipeline_hooks import record_pipeline_observability
+
+            obs = dict(summary)
+            if not obs.get("quote"):
+                try:
+                    obs["quote"] = dataclasses.asdict(quote)
+                except Exception:
+                    pass
+            record_pipeline_observability(obs)
+        except Exception:
+            pass
 
         return {
             **summary,
@@ -1591,10 +1811,11 @@ class InsurancePipeline:
             fin = bundle.structured.financial
             if fin is not None:
                 revenue = float(fin.annual_revenue or 0.0)
-                if fin.loss_run and fin.loss_run.claims:
-                    incurred = sum(c.incurred_amount or 0 for c in fin.loss_run.claims)
-                    if tiv > 0:
-                        loss_ratio = min(incurred / tiv, 3.0)
+                from insureflow.underwriting.loss_ratio import loss_ratio_from_bundle
+
+                lr_result = loss_ratio_from_bundle(bundle)
+                if lr_result.known:
+                    loss_ratio = min(lr_result.ratio, 3.0)
                 credit_score = float(getattr(fin, "credit_score", 0) or credit_score or 0)
             if credit_score <= 0 and bundle.structured.risk_profile is not None:
                 credit_score = float(getattr(bundle.structured.risk_profile, "credit_score", 0) or 0)

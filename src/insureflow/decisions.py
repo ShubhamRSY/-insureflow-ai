@@ -35,6 +35,9 @@ _ALIASES: dict[str, DecisionOutcome] = {
     "accepted": DecisionOutcome.ACCEPT,
     "approve": DecisionOutcome.ACCEPT,
     "approved": DecisionOutcome.ACCEPT,
+    "quote": DecisionOutcome.ACCEPT,
+    "quoted": DecisionOutcome.ACCEPT,
+    "will_quote": DecisionOutcome.ACCEPT,
     "bind": DecisionOutcome.ACCEPT,
     "bound": DecisionOutcome.ACCEPT,
     # conditional
@@ -58,6 +61,9 @@ _ALIASES: dict[str, DecisionOutcome] = {
     "denied": DecisionOutcome.DECLINE,
     "reject": DecisionOutcome.DECLINE,
     "rejected": DecisionOutcome.DECLINE,
+    "no_quote": DecisionOutcome.DECLINE,
+    "no-quote": DecisionOutcome.DECLINE,
+    "will_not_quote": DecisionOutcome.DECLINE,
 }
 
 

@@ -58,6 +58,32 @@ class TestProducerNotificationStore:
 
 
 class TestProducerNotificationService:
+    def test_notify_decision_quote(self, tmp_path) -> None:
+        svc = ProducerNotificationService(store=ProducerNotificationStore(audit_store=AuditStore(base_path=tmp_path / "audit")))
+        n = svc.notify_decision(
+            "ins-1",
+            "default",
+            decision="quote",
+            action="quote",
+            signed_by="sfields",
+            producer_name="Acme Brokerage",
+        )
+        assert "QUOTED" in n["message"]
+        assert "sfields" in n["message"]
+
+    def test_notify_decision_no_quote(self, tmp_path) -> None:
+        svc = ProducerNotificationService(store=ProducerNotificationStore(audit_store=AuditStore(base_path=tmp_path / "audit")))
+        n = svc.notify_decision(
+            "ins-1",
+            "default",
+            decision="no_quote",
+            action="no_quote",
+            signed_by="sfields",
+            reason="Outside appetite",
+        )
+        assert "NO QUOTE" in n["message"]
+        assert "Outside appetite" in n["message"]
+
     def test_notify_decision_approve(self, tmp_path) -> None:
         svc = ProducerNotificationService(store=ProducerNotificationStore(audit_store=AuditStore(base_path=tmp_path / "audit")))
         n = svc.notify_decision(

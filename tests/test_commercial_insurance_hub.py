@@ -8,6 +8,7 @@ from insureflow.insurance.commercial_lobs import (
     COMMERCIAL_LINES,
     commercial_hub_payload,
     commercial_taxonomy_tree,
+    flatten_coverage_documents,
     flatten_line_documents,
     get_commercial_line,
     list_commercial_categories,
@@ -44,12 +45,15 @@ def test_full_commercial_taxonomy_shape():
             assert len(cov["documents"]) >= 1, f"{line['id']}.{cov.get('id')}"
 
 
-def test_all_commercial_lines_are_live():
-    assert all(ln.get("status") == "live" for ln in COMMERCIAL_LINES)
+def test_commercial_live_vs_catalog_split():
+    live = [ln for ln in COMMERCIAL_LINES if ln.get("status") == "live"]
+    catalog = [ln for ln in COMMERCIAL_LINES if ln.get("status") == "catalog"]
+    assert {ln["id"] for ln in live} >= {"general_liability", "workers_comp", "commercial_auto", "cyber_liability", "bop"}
+    assert {ln["id"] for ln in catalog} >= {"aviation", "kidnap_ransom", "crop_insurance", "captive_insurance"}
     hub = commercial_hub_payload()
-    assert hub["stats"]["live_count"] == len(COMMERCIAL_LINES)
-    assert hub["stats"]["catalog_count"] == 0
-    assert len(hub["production_lines"]) >= 50
+    assert hub["stats"]["live_count"] == len(live)
+    assert hub["stats"]["catalog_count"] == len(catalog)
+    assert hub["stats"]["product_count"] == len(COMMERCIAL_LINES)
 
 
 def test_live_lines_still_present():
@@ -107,6 +111,28 @@ def test_flatten_line_documents_includes_coverage_docs():
     # de-duplicated
     assert len(flat) == len(set(flat))
     assert prop["all_documents"] == flat
+
+
+def test_flatten_coverage_documents_scopes_property_coverages():
+    prop = get_commercial_line("property_bi")
+    assert prop is not None
+    building = flatten_coverage_documents(prop, "building_structure")
+    bpp = flatten_coverage_documents(prop, "bpp")
+    assert "Structure replacement cost appraisal" in building
+    assert "Inventory/asset list with values" not in building
+    assert "Inventory/asset list with values" in bpp
+    assert "Structure replacement cost appraisal" not in bpp
+
+
+def test_package_checklist_scopes_to_commercial_coverage():
+    building = package_checklist([], lob="property", coverage_id="building_structure")
+    bpp = package_checklist([], lob="property", coverage_id="bpp")
+    assert building["coverage_id"] == "building_structure"
+    assert bpp["coverage_id"] == "bpp"
+    assert "Structure replacement cost appraisal" in building["missing"]
+    assert "Inventory/asset list with values" not in building["missing"]
+    assert "Inventory/asset list with values" in bpp["missing"]
+    assert "Structure replacement cost appraisal" not in bpp["missing"]
 
 
 def test_get_line_by_slug_and_id():

@@ -23,13 +23,15 @@ const STATE_BADGE = {
   pending_review: { status: 'pending', label: 'Pending review' },
   pending_co_sign: { status: 'refer', label: 'Needs co-sign' },
   approved: { status: 'approved', label: 'Approved — ready to bind' },
+  quoted: { status: 'approved', label: 'Quoted — ready to bind' },
   declined: { status: 'decline', label: 'Declined' },
+  no_quote: { status: 'decline', label: 'No quote' },
   bound: { status: 'bound', label: 'Bound' },
   expired: { status: 'closed', label: 'Expired' },
 };
 
 const EMPTY_FORM = {
-  action: 'approve',
+  action: 'quote',
   license_number: '',
   notes: '',
   override_reason: '',
@@ -186,9 +188,9 @@ export default function UWWorkbench({ onOpenJob, authorityData, onRefresh }) {
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard label="Awaiting UW" value={pendingCount} sub="review or co-sign" accent="brand" />
-        <StatCard label="Ready to bind" value={bindCount} sub="approved by UW" accent="success" />
+        <StatCard label="Ready to bind" value={bindCount} sub="quoted / approved" accent="success" />
         <StatCard label="Need co-sign" value={coSignCount} sub="above binding authority" accent="mortgage" />
-        <StatCard label="Decided" value={totals.done || 0} sub="bound · declined · expired" accent="insurance" />
+        <StatCard label="Decided" value={totals.done || 0} sub="bound · no quote · declined" accent="insurance" />
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -347,7 +349,7 @@ export default function UWWorkbench({ onOpenJob, authorityData, onRefresh }) {
                   <div className="mt-4 flex flex-wrap gap-2">
                     <button type="button" onClick={() => onOpenJob?.('insurance', c.bundle_id, c.bundle_id)} className="btn-secondary text-xs"><Search className="h-3 w-3 inline" /> View</button>
 
-                    {c.state === 'approved' && (
+                    {(c.state === 'approved' || c.state === 'quoted') && (
                       <button
                         type="button"
                         disabled={busy === c.bundle_id}
@@ -365,20 +367,20 @@ export default function UWWorkbench({ onOpenJob, authorityData, onRefresh }) {
                           setSigningId(c.bundle_id);
                           setForm((f) => ({
                             ...f,
-                            action: 'approve',
+                            action: 'quote',
                             uw_indicated_premium: c.premium != null ? String(c.premium) : '',
                           }));
                         }}
                         className="btn-primary btn-sm text-xs"
                       >
-                        Approve
+                        Quote
                       </button>
                     )}
                     {c.state === 'pending_review' && (
                       <>
+                        <button type="button" onClick={() => { setSigningId(c.bundle_id); setForm((f) => ({ ...f, action: 'no_quote' })); }} className="rounded-xl px-3 py-1.5 text-xs text-red-400 ring-1 ring-red-500/30 hover:bg-red-500/10">No quote</button>
                         <button type="button" onClick={() => { setSigningId(c.bundle_id); setForm((f) => ({ ...f, action: 'refer' })); }} className="btn-secondary text-xs">Refer</button>
                         <button type="button" onClick={() => { setSigningId(c.bundle_id); setForm((f) => ({ ...f, action: 'request_info' })); }} className="btn-secondary text-xs">Request info</button>
-                        <button type="button" onClick={() => { setSigningId(c.bundle_id); setForm((f) => ({ ...f, action: 'decline' })); }} className="rounded-xl px-3 py-1.5 text-xs text-red-400 ring-1 ring-red-500/30 hover:bg-red-500/10">Decline</button>
                       </>
                     )}
                     {c.state === 'pending_co_sign' && (
@@ -395,7 +397,7 @@ export default function UWWorkbench({ onOpenJob, authorityData, onRefresh }) {
                   {isOpen && (
                     <div className="mt-4 space-y-3 rounded-lg bg-black/20 p-4 ring-1 ring-white/[0.06]">
                       <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                        {form.action === 'approve' ? 'Approve / sign' : form.action} — {c.bundle_id}
+                        {form.action === 'quote' ? 'Quote' : form.action === 'no_quote' ? 'No quote' : form.action === 'approve' ? 'Approve / sign' : form.action} — {c.bundle_id}
                       </p>
                       <div className="grid gap-3 sm:grid-cols-2">
                         <input
@@ -437,13 +439,13 @@ export default function UWWorkbench({ onOpenJob, authorityData, onRefresh }) {
                         />
                       </div>
                       <textarea
-                        placeholder={form.action === 'request_info' ? 'What do you need from the broker? (e.g. loss runs, SOV)' : 'Notes…'}
+                        placeholder={form.action === 'request_info' ? 'What do you need from the broker? (e.g. loss runs, SOV)' : form.action === 'no_quote' ? 'Why no quote? (appetite, risk, incomplete package…)' : 'Notes…'}
                         className="input-field w-full text-sm" rows={2}
                         value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
                       />
                       <div className="flex gap-2">
                         <button type="button" disabled={busy === c.bundle_id} onClick={() => handleSignOff(c.bundle_id)} className="btn-primary btn-sm text-xs">
-                          {busy === c.bundle_id ? 'Submitting…' : `Confirm ${form.action}`}
+                          {busy === c.bundle_id ? 'Submitting…' : `Confirm ${form.action === 'no_quote' ? 'no quote' : form.action}`}
                         </button>
                         <button type="button" onClick={() => setSigningId(null)} className="btn-secondary text-xs">Cancel</button>
                       </div>

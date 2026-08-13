@@ -386,4 +386,5 @@ def test_detect_life_product_matches_known_products() -> None:
 def test_hub_payload_product_count_stable() -> None:
     hub = life_hub_payload()
     assert hub["stats"]["product_count"] == len(LIFE_LINES)
-    assert hub["stats"]["live_count"] == len(LIFE_LINES)
+    assert hub["stats"]["live_count"] + hub["stats"]["catalog_count"] == len(LIFE_LINES)
+    assert hub["stats"]["live_count"] < len(LIFE_LINES)

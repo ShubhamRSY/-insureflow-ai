@@ -52,5 +52,7 @@ docker compose -f docker-compose.yml -f deploy/docker-compose.bank.yml up --buil
 
 - **LangSmith** — LLM/agent traces + eval metrics (precision/recall/Ragas)
 - **CloudWatch** — infra JSON logs + optional custom metrics (`Rytera/InsureFlow`)
+- **Prometheus + Grafana** — `/metrics` scrape + UW dashboards (compose; internal-only under bank overlay)
+- **OpenObserve** — log + trace ingest (`OPENOBSERVE_URL`); optional Prometheus remote_write
 
-Both are required for a credible bank AIOps story; neither replaces the other.
+LangSmith + CloudWatch remain the bank AIOps pair; Prom/Grafana/OO cover self-hosted ops. See [OBSERVABILITY.md](./OBSERVABILITY.md).

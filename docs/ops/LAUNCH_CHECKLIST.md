@@ -21,6 +21,7 @@ Use this checklist before public launch at [rytera.ai](https://rytera.ai).
 - [x] Compose bank overlay: no host ports for Postgres/Redis; TLS on `:8443`
 - [x] AWS landing zone Terraform (VPC, ECS, RDS, Redis, Secrets/KMS, WAF, CloudTrail, Cognito)
 - [x] CloudWatch JSON logs + LangSmith AI tracing
+- [x] Prometheus `/metrics` + Grafana dashboards + OpenObserve shipper (`docs/ops/OBSERVABILITY.md`)
 - [x] WORM audit retention module + S3 Object Lock bucket in Terraform
 - [x] SSO stubs (`/auth/sso/*`) for Cognito/Okta
 - [x] DPA / Privacy / SOC 2 questionnaire templates under `legal/`

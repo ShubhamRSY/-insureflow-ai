@@ -145,6 +145,12 @@ export const endpoints = {
     });
     if (opts.insurance_line) params.set('insurance_line', opts.insurance_line);
     if (opts.life_product_id) params.set('life_product_id', opts.life_product_id);
+    if (opts.life_coverage_id) params.set('life_coverage_id', opts.life_coverage_id);
+    if (opts.commercial_product_id) params.set('commercial_product_id', opts.commercial_product_id);
+    if (opts.commercial_coverage_id) params.set('commercial_coverage_id', opts.commercial_coverage_id);
+    if (opts.commercial_product_name) params.set('commercial_product_name', opts.commercial_product_name);
+    if (opts.commercial_coverage_name) params.set('commercial_coverage_name', opts.commercial_coverage_name);
+    if (opts.commercial_category_id) params.set('commercial_category_id', opts.commercial_category_id);
     if (opts.strict_relevance) params.set('strict_relevance', 'true');
     return api(`/pipeline/bundles/${id}/run?${params}`, { method: 'POST' });
   },

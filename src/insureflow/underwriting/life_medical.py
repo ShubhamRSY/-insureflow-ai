@@ -234,13 +234,16 @@ def underwrite_life(bundle: SubmissionBundle) -> LifeMedicalDecision:
             decision = UWDecision.REFER
         reasons.append("Jumbo face amount")
 
-    if factors.income and face > factors.income * float(elig.get("financial_multiple_income", 30)):
+    from insureflow.underwriting.life_financial import income_multiple_for_age
+
+    income_mult = income_multiple_for_age(age if factors.age else age)
+    if factors.income and face > factors.income * income_mult:
         decision = UWDecision.REFER if decision != UWDecision.DECLINE else decision
-        reasons.append("Financial underwriting — face exceeds income multiple")
+        reasons.append("Financial underwriting — face exceeds age-banded income multiple")
         findings.append(
             Finding(
                 title="Financial underwriting stretch",
-                description=f"Face ${face:,.0f} vs income ${factors.income:,.0f}",
+                description=f"Face ${face:,.0f} vs earned income ${factors.income:,.0f} × {income_mult:.0f}",
                 severity=RiskSeverity.HIGH,
                 category="life_medical",
             )
