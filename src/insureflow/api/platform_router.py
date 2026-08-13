@@ -32,6 +32,25 @@ class MarketplaceConnectRequest(BaseModel):
     label: str = ""
 
 
+class MarketplacePullRequest(BaseModel):
+    bundle_id: str | None = None
+    package_id: str | None = None
+    vertical: str = "insurance"
+    config: dict[str, Any] = Field(default_factory=dict)
+    label: str = ""
+    include_submission: bool | None = None
+
+
+class MarketplaceMultiPullRequest(BaseModel):
+    source_ids: list[str]
+    bundle_id: str | None = None
+    create_bundle: bool = True
+    bundle_name: str = ""
+    package_id: str | None = None
+    vertical: str = "insurance"
+    config: dict[str, Any] = Field(default_factory=dict)
+
+
 class TransactionIn(BaseModel):
     txn_id: str = ""
     amount: float = 0.0
@@ -183,6 +202,55 @@ def marketplace_disconnect(source_id: str, current: TokenData = Depends(require_
     if not removed:
         raise HTTPException(status_code=404, detail=f"No connection for {source_id}")
     return {"ok": True, "source_id": source_id}
+
+
+@router.post("/marketplace/sources/{source_id}/pull")
+def marketplace_pull_one(
+    source_id: str,
+    payload: MarketplacePullRequest,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    from insureflow.marketplace.pull import pull_marketplace_source
+
+    try:
+        return pull_marketplace_source(
+            source_id,
+            org_id=current.org_id or "default",
+            bundle_id=payload.bundle_id,
+            vertical=payload.vertical,
+            package_id=payload.package_id,
+            config=payload.config,
+            label=payload.label,
+            include_submission=payload.include_submission,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/marketplace/pull")
+def marketplace_pull_many(
+    payload: MarketplaceMultiPullRequest,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    from insureflow.marketplace.pull import pull_marketplace_sources
+
+    try:
+        return pull_marketplace_sources(
+            payload.source_ids,
+            org_id=current.org_id or "default",
+            bundle_id=payload.bundle_id,
+            create_bundle=payload.create_bundle,
+            bundle_name=payload.bundle_name,
+            vertical=payload.vertical,
+            package_id=payload.package_id,
+            config=payload.config,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
 @router.post("/banking/transactions/categorize")

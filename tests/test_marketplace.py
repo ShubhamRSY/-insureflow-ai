@@ -85,3 +85,73 @@ def test_marketplace_api_list_and_connect() -> None:
 
     gone = client.delete("/marketplace/connect/plaid", headers=h)
     assert gone.status_code == 200
+
+
+def test_marketplace_pull_accumulates_multiple_sources_and_runs() -> None:
+    h = _headers()
+    bundle = client.post("/pipeline/bundles", headers=h, json={"name": "mkt-multi"}).json()
+    bundle_id = bundle["bundle_id"]
+
+    clue = client.post(
+        "/marketplace/sources/clue/pull",
+        headers=h,
+        json={"bundle_id": bundle_id, "vertical": "insurance"},
+    )
+    assert clue.status_code == 200
+    first = clue.json()
+    assert first["included_submission_package"] is True
+    assert first["file_count"] >= 2
+    assert first["accumulated"]["bundle_id"] == bundle_id
+    first_count = first["accumulated"]["document_count"]
+
+    ofac = client.post(
+        "/marketplace/sources/ofac-sdn/pull",
+        headers=h,
+        json={"bundle_id": bundle_id, "vertical": "insurance"},
+    )
+    assert ofac.status_code == 200
+    second = ofac.json()
+    assert second["included_submission_package"] is False
+    assert second["accumulated"]["document_count"] > first_count
+    assert {"clue", "ofac-sdn"}.issubset(set(second["accumulated"]["sources"]))
+
+    detail = client.get(f"/pipeline/bundles/{bundle_id}", headers=h).json()
+    assert detail["document_count"] == second["accumulated"]["document_count"]
+    filenames = {d["filename"] for d in detail["documents"]}
+    assert "clue_marketplace_pull.json" in filenames
+    assert "ofac-sdn_marketplace_pull.json" in filenames
+
+    run = client.post(f"/pipeline/bundles/{bundle_id}/run?use_llm=false", headers=h, json={})
+    assert run.status_code == 202
+    data = run.json()
+    assert data["job_id"].startswith("job-")
+
+
+def test_marketplace_multi_pull_creates_bundle_and_runs_mortgage() -> None:
+    h = _headers()
+    multi = client.post(
+        "/marketplace/pull",
+        headers=h,
+        json={"source_ids": ["plaid", "fannie-mae"], "vertical": "mortgage", "bundle_name": "mkt-mortgage"},
+    )
+    assert multi.status_code == 200
+    body = multi.json()
+    assert body["created_bundle"] is True
+    assert body["document_count"] >= 3
+    assert {"plaid", "fannie-mae"}.issubset(set(body["sources"]))
+    assert body["run"]["path"] == f"/pipeline/bundles/{body['bundle_id']}/run"
+
+    run = client.post(
+        f"/pipeline/bundles/{body['bundle_id']}/run?vertical=mortgage&use_llm=false",
+        headers=h,
+        json={},
+    )
+    assert run.status_code == 202
+    assert run.json()["vertical"] == "mortgage"
+    assert run.json()["status"] == "processing"
+
+
+def test_marketplace_pull_unknown_source_404() -> None:
+    h = _headers()
+    resp = client.post("/marketplace/sources/not-a-vendor/pull", headers=h, json={})
+    assert resp.status_code == 404
