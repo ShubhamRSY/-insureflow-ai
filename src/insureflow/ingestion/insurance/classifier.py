@@ -37,6 +37,38 @@ class InsuranceDocumentType(str, Enum):
     MEDICAL_EXAM = "medical_exam"
     APS_RECORDS = "aps_records"
     BENEFICIARY_FORM = "beneficiary_form"
+    # Life — base package (US document set)
+    PHOTO_ID = "photo_id"
+    SOCIAL_SECURITY_NUMBER = "social_security_number"
+    PROOF_OF_ADDRESS = "proof_of_address"
+    HIPAA_AUTHORIZATION = "hipaa_authorization"
+    MIB_RX_AUTHORIZATION = "mib_rx_authorization"
+    HEALTH_QUESTIONNAIRE = "health_questionnaire"
+    INCOME_PROOF = "income_proof"
+    # Life — product-specific add-ons
+    ILLUSTRATION_ACKNOWLEDGMENT = "illustration_acknowledgment"
+    SUITABILITY_QUESTIONNAIRE = "suitability_questionnaire"
+    PROSPECTUS_ACKNOWLEDGMENT = "prospectus_acknowledgment"
+    SUB_ACCOUNT_ELECTION = "sub_account_election"
+    BROKER_DEALER_FORM = "broker_dealer_form"
+    SOURCE_OF_FUNDS = "source_of_funds"
+    AML_DECLARATION = "aml_declaration"
+    DIVIDEND_ELECTION = "dividend_election"
+    INDEX_ALLOCATION_ELECTION = "index_allocation_election"
+    GRADED_BENEFIT_DISCLOSURE = "graded_benefit_disclosure"
+    MORTGAGE_STATEMENT = "mortgage_statement"
+    LOAN_AGREEMENT = "loan_agreement"
+    LENDER_INFORMATION = "lender_information"
+    ENROLLMENT_FORM = "enrollment_form"
+    RENEWAL_FORM = "renewal_form"
+    CONVERSION_REQUEST_FORM = "conversion_request_form"
+    BANK_ACH_FORM = "bank_ach_form"
+    CHILD_BIRTH_CERTIFICATE = "child_birth_certificate"
+    PREMIUM_WAIVER_RIDER = "premium_waiver_rider"
+    RETIREMENT_ACCOUNT_STATEMENT = "retirement_account_statement"
+    TAX_FORM_1098Q = "tax_form_1098q"
+    COURT_ORDER = "court_order"
+    ATTORNEY_DOCUMENTATION = "attorney_documentation"
     # Trade credit
     TRADE_CREDIT_APPLICATION = "trade_credit_application"
     AR_AGING_REPORT = "ar_aging_report"
@@ -47,6 +79,45 @@ class InsuranceDocumentType(str, Enum):
     # Key person
     KEY_PERSON_APPLICATION = "key_person_application"
     CORPORATE_RESOLUTION = "corporate_resolution"
+
+
+# Life insurance document types — used to route LLM extraction schema.
+LIFE_DOCUMENT_TYPES: frozenset[str] = frozenset({
+    "life_application",
+    "medical_exam",
+    "aps_records",
+    "beneficiary_form",
+    "photo_id",
+    "social_security_number",
+    "proof_of_address",
+    "hipaa_authorization",
+    "mib_rx_authorization",
+    "health_questionnaire",
+    "income_proof",
+    "illustration_acknowledgment",
+    "suitability_questionnaire",
+    "prospectus_acknowledgment",
+    "sub_account_election",
+    "broker_dealer_form",
+    "source_of_funds",
+    "aml_declaration",
+    "dividend_election",
+    "index_allocation_election",
+    "graded_benefit_disclosure",
+    "mortgage_statement",
+    "loan_agreement",
+    "lender_information",
+    "enrollment_form",
+    "renewal_form",
+    "conversion_request_form",
+    "bank_ach_form",
+    "child_birth_certificate",
+    "premium_waiver_rider",
+    "retirement_account_statement",
+    "tax_form_1098q",
+    "court_order",
+    "attorney_documentation",
+})
 
 
 class InsuranceDocumentClassifier:
@@ -67,8 +138,74 @@ class InsuranceDocumentClassifier:
             return InsuranceDocumentType.MEDICAL_EXAM
         if any(k in name or k in combined for k in ("attending physician", "aps_", "aps records", "medical records summary")):
             return InsuranceDocumentType.APS_RECORDS
-        if any(k in name or k in combined for k in ("beneficiary designation", "beneficiary form", "beneficiary_form")):
+        if any(k in name or k in combined for k in ("beneficiary designation", "beneficiary_designation", "beneficiary form", "beneficiary_form")):
             return InsuranceDocumentType.BENEFICIARY_FORM
+
+        # Life — base package (US document set)
+        if any(k in name or k in combined for k in ("hipaa", "medical records release", "health information release")):
+            return InsuranceDocumentType.HIPAA_AUTHORIZATION
+        if any(k in name or k in combined for k in ("mib", "medical information bureau", "rx database", "rx check", "mib_rx")):
+            return InsuranceDocumentType.MIB_RX_AUTHORIZATION
+        if any(k in name or k in combined for k in ("photo id", "government id", "government-issued photo", "passport", "state id", "photo_id")):
+            return InsuranceDocumentType.PHOTO_ID
+        if any(k in name or k in combined for k in ("social security number", "social_security", "ssn form", "proof of ssn")):
+            return InsuranceDocumentType.SOCIAL_SECURITY_NUMBER
+        if any(k in name or k in combined for k in ("proof of address", "proof_of_address", "utility bill", "proof of residency", "lease agreement")):
+            return InsuranceDocumentType.PROOF_OF_ADDRESS
+        if any(k in name or k in combined for k in ("health questionnaire", "health_questionnaire", "health declaration", "medical questionnaire")):
+            return InsuranceDocumentType.HEALTH_QUESTIONNAIRE
+        if any(k in name or k in combined for k in ("income proof", "income_proof", "pay stub", "paystub", "w-2", "tax returns")):
+            return InsuranceDocumentType.INCOME_PROOF
+
+        # Life — product-specific add-ons
+        if any(k in name or k in combined for k in ("illustration acknowledgment", "illustration acknowledgement", "illustration_acknowledgment", "cash value illustration")):
+            return InsuranceDocumentType.ILLUSTRATION_ACKNOWLEDGMENT
+        if any(k in name or k in combined for k in ("suitability questionnaire", "suitability", "risk profiling", "finra")):
+            return InsuranceDocumentType.SUITABILITY_QUESTIONNAIRE
+        if any(k in name or k in combined for k in ("prospectus",)):
+            return InsuranceDocumentType.PROSPECTUS_ACKNOWLEDGMENT
+        if any(k in name or k in combined for k in ("sub-account election", "sub-account allocation", "subaccount", "fund allocation election", "sub_account")):
+            return InsuranceDocumentType.SUB_ACCOUNT_ELECTION
+        if any(k in name or k in combined for k in ("broker-dealer", "broker dealer account", "broker_dealer")):
+            return InsuranceDocumentType.BROKER_DEALER_FORM
+        if any(k in name or k in combined for k in ("source of funds", "proof of lump sum", "funding source", "source_of_funds")):
+            return InsuranceDocumentType.SOURCE_OF_FUNDS
+        if any(k in name or k in combined for k in ("anti-money laundering", "aml declaration", "aml_declaration")):
+            return InsuranceDocumentType.AML_DECLARATION
+        if any(k in name or k in combined for k in ("dividend option", "dividend election", "bonus option election", "dividend_election")):
+            return InsuranceDocumentType.DIVIDEND_ELECTION
+        if any(k in name or k in combined for k in ("index allocation", "index crediting strategy", "index election", "index_allocation")):
+            return InsuranceDocumentType.INDEX_ALLOCATION_ELECTION
+        if any(k in name or k in combined for k in ("graded benefit disclosure", "graded_benefit_disclosure")):
+            return InsuranceDocumentType.GRADED_BENEFIT_DISCLOSURE
+        if any(k in name or k in combined for k in ("mortgage statement", "mortgage documents", "loan statement", "mortgage_statement")):
+            return InsuranceDocumentType.MORTGAGE_STATEMENT
+        if any(k in name or k in combined for k in ("loan agreement", "credit account documents", "credit agreement", "loan_agreement")):
+            return InsuranceDocumentType.LOAN_AGREEMENT
+        if any(k in name or k in combined for k in ("lender information", "lender's name", "lender name", "lender account number", "lender_information")):
+            return InsuranceDocumentType.LENDER_INFORMATION
+        if any(k in name or k in combined for k in ("enrollment form", "enrollment packet", "enrollment_form")):
+            return InsuranceDocumentType.ENROLLMENT_FORM
+        if any(k in name or k in combined for k in ("renewal form", "renewal_form")):
+            return InsuranceDocumentType.RENEWAL_FORM
+        if any(k in name or k in combined for k in ("conversion request", "conversion form", "conversion_request")):
+            return InsuranceDocumentType.CONVERSION_REQUEST_FORM
+        if any(k in name or k in combined for k in ("ach form", "ach authorization", "bank account", "auto-debit", "bank_ach", "direct deposit")):
+            return InsuranceDocumentType.BANK_ACH_FORM
+        if any(k in name or k in combined for k in ("birth certificate", "birth_certificate")):
+            return InsuranceDocumentType.CHILD_BIRTH_CERTIFICATE
+        if any(k in name or k in combined for k in ("premium waiver", "waiver rider", "premium_waiver")):
+            return InsuranceDocumentType.PREMIUM_WAIVER_RIDER
+        if any(k in name or k in combined for k in ("retirement account statement", "retirement account", "custodian transfer", "401(k)", "rollover", "retirement_account")):
+            return InsuranceDocumentType.RETIREMENT_ACCOUNT_STATEMENT
+        if any(k in name or k in combined for k in ("1098-q", "form 1098", "tax_form_1098q")):
+            return InsuranceDocumentType.TAX_FORM_1098Q
+        if any(k in name or k in combined for k in ("court order", "settlement agreement", "court_order")):
+            return InsuranceDocumentType.COURT_ORDER
+        if any(k in name or k in combined for k in ("attorney", "legal representative", "attorney_documentation")):
+            return InsuranceDocumentType.ATTORNEY_DOCUMENTATION
+        if any(k in name or k in combined for k in ("simplified issue application", "no-exam application", "guaranteed issue application")):
+            return InsuranceDocumentType.LIFE_APPLICATION
         if any(k in name or k in combined for k in ("mvr", "motor vehicle report", "driving record report")):
             return InsuranceDocumentType.MVR_REPORT
         if any(k in name or k in combined for k in ("auto application", "personal auto application", "auto_application")):
@@ -140,7 +277,7 @@ class InsuranceDocumentClassifier:
         if any(k in combined for k in ("inspection report", "inspector", "property condition", "roof condition")):
             return InsuranceDocumentType.INSPECTION_REPORT
 
-        if any(k in combined for k in ("balance sheet", "income statement", "financial statement", "annual revenue")):
+        if any(k in combined for k in ("balance sheet", "income statement", "financial statement", "financial_statement", "annual revenue")):
             return InsuranceDocumentType.FINANCIAL_STATEMENT
 
         # Demote obvious non-UW junk before defaulting to supplemental

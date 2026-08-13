@@ -20,7 +20,8 @@ const nav = [
     defaultOpen: true,
     children: [
       { to: '/insurance/commercial', label: 'Business & Commercial', tag: 'Live' },
-      { soon: true, label: 'Personal Lines' },
+      { to: '/insurance/life', label: 'Life Insurance', tag: 'Live' },
+      { soon: true, label: 'Personal Lines (Home / Auto)' },
     ],
   },
   { section: 'Reference' },
@@ -68,6 +69,7 @@ const nav = [
 const CRUMBS = [
   { prefix: '/reference/commercial', labels: ['Reference', 'Commercial insurance'] },
   { prefix: '/reference', labels: ['Reference', 'Notebooks'] },
+  { prefix: '/insurance/life', labels: ['Insurance', 'Commercial Hub', 'Life Insurance'] },
   { prefix: '/insurance/commercial', labels: ['Insurance', 'Commercial Hub', 'Business & Commercial'] },
   { prefix: '/insurance/', labels: ['Insurance', 'Commercial Hub'] },
   { prefix: '/insurance', labels: ['Insurance', 'Commercial Hub'] },

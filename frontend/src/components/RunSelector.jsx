@@ -38,6 +38,7 @@ export default function RunSelector({
   commercialTaxonomy = null,
   commercialSelection,
   onCommercialSelectionChange,
+  isLifeProductPicker = false,
   includePurpose = false,
   purposeOptions = [],
   purposeDefault = '',
@@ -73,11 +74,15 @@ export default function RunSelector({
         throw new Error('Select category, product, and coverage before running');
       }
       body[productField] = commercialSelection.insurance_line;
-      body.commercial_product_id = commercialSelection.productId;
-      body.commercial_coverage_id = commercialSelection.coverageId || undefined;
-      body.commercial_product_name = commercialSelection.productName;
-      body.commercial_coverage_name = commercialSelection.coverageName;
-      body.commercial_category_id = commercialSelection.categoryId;
+      if (isLifeProductPicker) {
+        body.life_product_id = commercialSelection.checklist_lob || commercialSelection.productId;
+      } else {
+        body.commercial_product_id = commercialSelection.productId;
+        body.commercial_coverage_id = commercialSelection.coverageId || undefined;
+        body.commercial_product_name = commercialSelection.productName;
+        body.commercial_coverage_name = commercialSelection.coverageName;
+        body.commercial_category_id = commercialSelection.categoryId;
+      }
       return body;
     }
     if (normalizedOptions.length > 0) body[productField] = activeProduct;
@@ -343,6 +348,7 @@ export default function RunSelector({
         <ConnectAndPull
           vertical={vertical}
           insuranceLine={activeProduct || ''}
+          lifeProductId={isLifeProductPicker ? (commercialSelection?.checklist_lob || commercialSelection?.productId || '') : ''}
           strictRelevance={strictRelevance}
           onRunJob={onRunJob || (onSubmit ? (jobId) => onSubmit?.({ _jobId: jobId }) : undefined)}
           onRunResult={onRunResult}

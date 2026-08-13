@@ -119,6 +119,9 @@ export const endpoints = {
   commercialInsuranceHub: () => api('/insurance/commercial'),
   commercialInsuranceTaxonomy: () => api('/insurance/commercial/taxonomy'),
   commercialInsuranceLine: (lineId) => api(`/insurance/commercial/lines/${encodeURIComponent(lineId)}`),
+  lifeInsuranceHub: () => api('/insurance/life'),
+  lifeInsuranceTaxonomy: () => api('/insurance/life/taxonomy'),
+  lifeInsuranceLine: (lineId) => api(`/insurance/life/lines/${encodeURIComponent(lineId)}`),
   insuranceSources: (vertical = 'insurance') => api(`/api/insurance/sources?vertical=${vertical}`),
   pullInsuranceSource: (sourceId, body = {}, vertical = 'insurance') =>
     api(`/api/insurance/sources/${sourceId}/pull?vertical=${vertical}`, { method: 'POST', body }),
@@ -139,6 +142,7 @@ export const endpoints = {
       vertical,
     });
     if (opts.insurance_line) params.set('insurance_line', opts.insurance_line);
+    if (opts.life_product_id) params.set('life_product_id', opts.life_product_id);
     if (opts.strict_relevance) params.set('strict_relevance', 'true');
     return api(`/pipeline/bundles/${id}/run?${params}`, { method: 'POST' });
   },

@@ -23,7 +23,13 @@ class SubmissionPriority(str, Enum):
     NO_FIT = "no_fit"  # Don't bother — score < 25
 
 
-def _line_to_lob(insurance_line: str | None) -> str:
+def _line_to_lob(insurance_line: str | None = None, checklist_lob_hint: str | None = None) -> str:
+    if checklist_lob_hint:
+        from insureflow.insurance.life_lobs import resolve_life_checklist_lob
+
+        resolved = resolve_life_checklist_lob(checklist_lob_hint)
+        if resolved:
+            return resolved
     raw = (insurance_line or "").strip().lower()
     mapping = {
         "life": "life",
@@ -104,8 +110,14 @@ class DocumentChecklist:
     signed_application: bool = False
 
     @classmethod
-    def from_bundle(cls, bundle: SubmissionBundle, *, insurance_line: str | None = None) -> DocumentChecklist:
-        lob = _line_to_lob(insurance_line)
+    def from_bundle(
+        cls,
+        bundle: SubmissionBundle,
+        *,
+        insurance_line: str | None = None,
+        checklist_lob_hint: str | None = None,
+    ) -> DocumentChecklist:
+        lob = _line_to_lob(insurance_line, checklist_lob_hint)
         types = _collect_doc_types(bundle)
         pkg = package_checklist(types, lob=lob)
         present = list(pkg.get("present") or [])
@@ -225,6 +237,19 @@ REQUIRED_CRITICAL_BY_LOB: dict[str, list[str]] = {
     "key_person": ["Application form + medical questionnaire"],
 }
 
+# Every life product's catalog owns the base-packet application label as its
+# hard gate, so per-product pipelines gate on the exact label in that catalog.
+try:
+    from insureflow.insurance.life_lobs import LIFE_LINES
+
+    _LIFE_APPLICATION_LABEL = "Completed life insurance application"
+    for _life_line in LIFE_LINES:
+        _life_lob = str(_life_line.get("checklist_lob") or "").strip()
+        if _life_lob and _life_lob not in REQUIRED_CRITICAL_BY_LOB:
+            REQUIRED_CRITICAL_BY_LOB[_life_lob] = [_LIFE_APPLICATION_LABEL]
+except Exception:  # pragma: no cover - defensive import
+    pass
+
 
 @dataclass
 class TriageResult:
@@ -267,6 +292,7 @@ class TriageAgent:
         bundle: SubmissionBundle,
         *,
         insurance_line: str | None = None,
+        checklist_lob_hint: str | None = None,
     ) -> TriageResult:
         """Score a single submission and return a triage result."""
         naics = ""
@@ -284,7 +310,11 @@ class TriageAgent:
             for cov in bundle.structured.coverages:
                 premium += cov.premium
 
-        checklist = DocumentChecklist.from_bundle(bundle, insurance_line=insurance_line)
+        checklist = DocumentChecklist.from_bundle(
+            bundle,
+            insurance_line=insurance_line,
+            checklist_lob_hint=checklist_lob_hint,
+        )
         lob = checklist.lob
 
         # NAICS / geography / size are commercial-property oriented — soften for personal lines

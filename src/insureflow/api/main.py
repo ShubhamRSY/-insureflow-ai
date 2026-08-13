@@ -550,6 +550,7 @@ class SubmissionRequest(BaseModel):
     bundle_id: Optional[str] = None
     insurance_line: Optional[str] = None  # commercial_* | personal_homeowners | personal_auto | life
     commercial_product_id: Optional[str] = None
+    life_product_id: Optional[str] = None  # life product slug / id / checklist_lob (e.g. single-premium-ulip)
     commercial_coverage_id: Optional[str] = None
     commercial_product_name: Optional[str] = None
     commercial_coverage_name: Optional[str] = None
@@ -1659,6 +1660,7 @@ def run_draft_bundle(
     use_llm: bool = True,
     vertical: str = "insurance",
     insurance_line: str = "",
+    life_product_id: str = "",
     strict_relevance: bool = False,
 ) -> dict[str, Any]:
     """Execute the pipeline using all accumulated documents in a draft bundle.
@@ -1728,6 +1730,7 @@ def run_draft_bundle(
         documents=[InsuranceDocumentPayload(**d) for d in docs],
         use_llm=use_llm,
         insurance_line=insurance_line or None,
+        life_product_id=life_product_id or None,
     )
     background_tasks.add_task(_run_pipeline_task, job_id, req, current.org_id)
 
@@ -2086,6 +2089,7 @@ def _run_pipeline_task(job_id: str, request: SubmissionRequest, org_id: str) -> 
                 bundle_id=request.bundle_id or job_id,
                 insurance_line=request.insurance_line,
                 commercial_product_id=request.commercial_product_id,
+                life_product_id=request.life_product_id,
                 commercial_coverage_id=request.commercial_coverage_id,
                 commercial_product_name=request.commercial_product_name,
                 commercial_coverage_name=request.commercial_coverage_name,
@@ -4556,6 +4560,49 @@ def commercial_insurance_line(
         raise HTTPException(status_code=404, detail=f"Unknown commercial line: {line_id}")
     # Empty package checklist template for this LOB (what a complete submission needs)
     template = package_checklist([], lob=str(line.get("checklist_lob") or "property"))
+    return {**line, "checklist_template": template}
+
+
+@app.get("/insurance/life")
+def life_insurance_hub(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Life Insurance hub — taxonomy, lines, base packet, UW workflow."""
+    from insureflow.insurance.life_lobs import life_hub_payload
+
+    return life_hub_payload()
+
+
+@app.get("/insurance/life/taxonomy")
+def life_insurance_taxonomy(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Nested life taxonomy: categories → products → coverages."""
+    from insureflow.insurance.life_lobs import life_hub_payload, life_taxonomy_tree, list_life_categories
+
+    hub = life_hub_payload()
+    return {
+        "segment": hub["segment"],
+        "title": hub["title"],
+        "stats": hub["stats"],
+        "categories": list_life_categories(),
+        "taxonomy": life_taxonomy_tree(),
+    }
+
+
+@app.get("/insurance/life/lines/{line_id}")
+def life_insurance_line(
+    line_id: str,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Single life LOB: full document pack + UW responsibilities."""
+    from insureflow.insurance.life_lobs import get_life_line
+    from insureflow.insurance.package_checklist import package_checklist
+
+    line = get_life_line(line_id)
+    if not line:
+        raise HTTPException(status_code=404, detail=f"Unknown life line: {line_id}")
+    template = package_checklist([], lob=str(line.get("checklist_lob") or "life"))
     return {**line, "checklist_template": template}
 
 

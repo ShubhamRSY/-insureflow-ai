@@ -20,6 +20,7 @@ export default function ConnectAndPull({
   onRunJob,
   onRunResult,
   insuranceLine = '',
+  lifeProductId = '',
   strictRelevance = true,
 }) {
   const [sources, setSources] = useState([]);
@@ -201,6 +202,7 @@ export default function ConnectAndPull({
     try {
       const result = await endpoints.runDraftBundle(bundleId, useLlm, vertical, {
         insurance_line: insuranceLine,
+        life_product_id: lifeProductId,
         strict_relevance: strictRelevance,
       });
       if (result.relevance?.irrelevant_count) {

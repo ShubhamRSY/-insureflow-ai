@@ -6,7 +6,7 @@ to avoid drift. Personal lines keep explicit catalog entries.
 
 from __future__ import annotations
 
-from typing import Any, Iterable
+from typing import Any, Callable, Iterable
 
 from insureflow.ingestion.insurance.classifier import InsuranceDocumentType
 
@@ -104,6 +104,77 @@ def _types_for_label(label: str) -> tuple[InsuranceDocumentType, ...]:
         add(InsuranceDocumentType.MEDICAL_EXAM)
     if "medical records" in text or "aps" in text:
         add(InsuranceDocumentType.APS_RECORDS)
+
+    # Life — base package (US document set)
+    if "photo id" in text or "government-issued" in text or "passport" in text or ("driver" in text and "license" in text):
+        add(InsuranceDocumentType.PHOTO_ID)
+    if "social security" in text or " ssn" in text:
+        add(InsuranceDocumentType.SOCIAL_SECURITY_NUMBER)
+    if "proof of address" in text or "utility bill" in text or "lease" in text:
+        add(InsuranceDocumentType.PROOF_OF_ADDRESS)
+    if "hipaa" in text or "medical records release" in text:
+        add(InsuranceDocumentType.HIPAA_AUTHORIZATION)
+    if "mib" in text or "medical information bureau" in text or "rx database" in text:
+        add(InsuranceDocumentType.MIB_RX_AUTHORIZATION)
+    if "health questionnaire" in text or "health declaration" in text or "simplified health" in text:
+        add(InsuranceDocumentType.HEALTH_QUESTIONNAIRE)
+    if "income proof" in text or "pay stub" in text or "paystub" in text or "w-2" in text:
+        add(InsuranceDocumentType.INCOME_PROOF)
+
+    # Life — product-specific add-ons
+    if "illustration acknowledgment" in text or "illustration acknowledgement" in text:
+        add(InsuranceDocumentType.ILLUSTRATION_ACKNOWLEDGMENT)
+    if "prospectus" in text:
+        add(InsuranceDocumentType.PROSPECTUS_ACKNOWLEDGMENT)
+    if "suitability" in text or "risk profiling" in text or "finra" in text:
+        add(InsuranceDocumentType.SUITABILITY_QUESTIONNAIRE)
+    if "sub-account" in text or "subaccount" in text or "fund allocation" in text:
+        add(InsuranceDocumentType.SUB_ACCOUNT_ELECTION)
+    if "broker-dealer" in text or "broker dealer" in text:
+        add(InsuranceDocumentType.BROKER_DEALER_FORM)
+    if "source of funds" in text or "funding source" in text or "lump sum" in text:
+        add(InsuranceDocumentType.SOURCE_OF_FUNDS)
+    if "anti-money laundering" in text or "aml" in text:
+        add(InsuranceDocumentType.AML_DECLARATION)
+    if "dividend option" in text or "dividend election" in text or "bonus option" in text:
+        add(InsuranceDocumentType.DIVIDEND_ELECTION)
+    if "index allocation" in text or "index election" in text:
+        add(InsuranceDocumentType.INDEX_ALLOCATION_ELECTION)
+    if "graded benefit" in text:
+        add(InsuranceDocumentType.GRADED_BENEFIT_DISCLOSURE)
+    if "mortgage statement" in text or "mortgage document" in text or "loan statement" in text:
+        add(InsuranceDocumentType.MORTGAGE_STATEMENT)
+    if "loan agreement" in text or "credit account" in text or "credit agreement" in text:
+        add(InsuranceDocumentType.LOAN_AGREEMENT)
+    if "lender information" in text or ("lender" in text and "account number" in text):
+        add(InsuranceDocumentType.LENDER_INFORMATION)
+    if "enrollment form" in text:
+        add(InsuranceDocumentType.ENROLLMENT_FORM)
+    if "renewal form" in text:
+        add(InsuranceDocumentType.RENEWAL_FORM)
+    if "conversion request" in text or "conversion form" in text:
+        add(InsuranceDocumentType.CONVERSION_REQUEST_FORM)
+    if "ach form" in text or "ach authorization" in text or "bank account" in text or "auto-debit" in text:
+        add(InsuranceDocumentType.BANK_ACH_FORM)
+    if "birth certificate" in text:
+        add(InsuranceDocumentType.CHILD_BIRTH_CERTIFICATE)
+    if "premium waiver" in text or "waiver rider" in text:
+        add(InsuranceDocumentType.PREMIUM_WAIVER_RIDER)
+    if "retirement account" in text or "custodian transfer" in text or "401(k)" in text:
+        add(InsuranceDocumentType.RETIREMENT_ACCOUNT_STATEMENT)
+    if "1098-q" in text or "form 1098" in text:
+        add(InsuranceDocumentType.TAX_FORM_1098Q)
+    if "court order" in text or "settlement agreement" in text:
+        add(InsuranceDocumentType.COURT_ORDER)
+    if "attorney" in text or "legal representative" in text:
+        add(InsuranceDocumentType.ATTORNEY_DOCUMENTATION)
+    if "no-exam application" in text:
+        add(InsuranceDocumentType.LIFE_APPLICATION)
+    if "life application" in text or "life insurance application" in text:
+        add(InsuranceDocumentType.LIFE_APPLICATION)
+    if "second annuitant" in text:
+        add(InsuranceDocumentType.BENEFICIARY_FORM)
+
     if "vehicle declaration" in text:
         add(InsuranceDocumentType.VEHICLE_DECLARATIONS)
 
@@ -114,24 +185,68 @@ def _catalog_from_documents(documents: list[str]) -> list[tuple[str, tuple[Insur
     return [(doc, _types_for_label(doc)) for doc in documents if str(doc).strip()]
 
 
-def _commercial_catalogs() -> dict[str, list[tuple[str, tuple[InsuranceDocumentType, ...]]]]:
-    from insureflow.insurance.commercial_lobs import COMMERCIAL_LINES, flatten_line_documents
-
+def _catalogs_from_lobs(
+    lines: list[dict[str, Any]],
+    *,
+    flatten: Callable[[dict[str, Any]], list[str]],
+) -> dict[str, list[tuple[str, tuple[InsuranceDocumentType, ...]]]]:
     catalogs: dict[str, list[tuple[str, tuple[InsuranceDocumentType, ...]]]] = {}
-    for line in COMMERCIAL_LINES:
+    for line in lines:
         key = str(line.get("checklist_lob") or "").strip()
         if not key:
             continue
-        docs = flatten_line_documents(line)
+        docs = flatten(line)
         # Prefer first product that owns this checklist_lob (stable mapping)
         if key not in catalogs:
             catalogs[key] = _catalog_from_documents(docs)
     return catalogs
 
 
+def _commercial_catalogs() -> dict[str, list[tuple[str, tuple[InsuranceDocumentType, ...]]]]:
+    from insureflow.insurance.commercial_lobs import COMMERCIAL_LINES, flatten_line_documents
+
+    return _catalogs_from_lobs(COMMERCIAL_LINES, flatten=flatten_line_documents)
+
+
+def _life_catalogs() -> dict[str, list[tuple[str, tuple[InsuranceDocumentType, ...]]]]:
+    from insureflow.insurance.commercial_lobs import flatten_line_documents
+    from insureflow.insurance.life_lobs import LIFE_LINES
+
+    return _catalogs_from_lobs(LIFE_LINES, flatten=flatten_line_documents)
+
+
+def _life_union_catalog() -> list[tuple[str, tuple[InsuranceDocumentType, ...]]]:
+    """Union of every required document across all life products (base + add-ons).
+
+    Drives the generic ``life`` checklist so the pipeline tracks the full base
+    document set and every product-specific add-on, not just the legacy core.
+    """
+    from insureflow.insurance.commercial_lobs import flatten_line_documents
+    from insureflow.insurance.life_lobs import LIFE_LINES
+
+    docs: list[str] = []
+    seen: set[str] = set()
+    for line in LIFE_LINES:
+        for doc in flatten_line_documents(line):
+            if doc not in seen:
+                seen.add(doc)
+                docs.append(doc)
+    return _catalog_from_documents(docs)
+
+
 def _build_catalogs() -> dict[str, list[tuple[str, tuple[InsuranceDocumentType, ...]]]]:
     catalogs = dict(PERSONAL_CATALOGS)
     catalogs.update(_commercial_catalogs())
+    catalogs.update(_life_catalogs())
+    # Generic "life" (used by triage / pipeline) = legacy core + full union of
+    # every product's required documents so no life document is untracked.
+    generic_life = list(LIFE_CATALOG)
+    seen_labels = {label for label, _ in generic_life}
+    for label, types in _life_union_catalog():
+        if label not in seen_labels:
+            generic_life.append((label, types))
+            seen_labels.add(label)
+    catalogs["life"] = generic_life
     return catalogs
 
 
@@ -262,6 +377,17 @@ def detect_lob(text_blob: str = "", product_hint: str = "") -> str:
             for k in (
                 "life insurance",
                 "term life",
+                "whole life",
+                "universal life",
+                "variable life",
+                "survivorship",
+                "second-to-die",
+                "final expense",
+                "simplified issue",
+                "guaranteed issue",
+                "critical illness",
+                "disability income",
+                "long-term care hybrid",
                 "face amount",
                 "beneficiary designation",
                 "paramedical",

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Shield, Building2, ArrowRight, FileText, Briefcase, Users,
-  HardHat, CreditCard, Scale, HeartPulse, Layers, Plus,
+  HardHat, CreditCard, Scale, HeartPulse, Layers,
 } from 'lucide-react';
 import { endpoints } from '../lib/api';
 import { insuranceLineLabel } from '../lib/insuranceLines';
@@ -19,6 +19,7 @@ const LOB_ICONS = {
 export default function InsurancePage({ jobs, onRefresh }) {
   const navigate = useNavigate();
   const [hub, setHub] = useState(null);
+  const [lifeHub, setLifeHub] = useState(null);
   const [error, setError] = useState('');
   const recent = (jobs || []).slice(0, 6);
 
@@ -27,6 +28,9 @@ export default function InsurancePage({ jobs, onRefresh }) {
     endpoints.commercialInsuranceHub()
       .then((d) => { if (!cancelled) setHub(d); })
       .catch((e) => { if (!cancelled) setError(e.message || 'Failed to load commercial hub'); });
+    endpoints.lifeInsuranceHub()
+      .then((d) => { if (!cancelled) setLifeHub(d); })
+      .catch(() => { /* life hub is optional on this page */ });
     return () => { cancelled = true; };
   }, []);
 
@@ -46,7 +50,7 @@ export default function InsurancePage({ jobs, onRefresh }) {
             <div>
               <h1 className="text-3xl font-bold tracking-tight text-slate-100">Insurance</h1>
               <p className="mt-1 max-w-2xl text-sm text-slate-400">
-                Business / Commercial is live — more segments ship one at a time.
+                Business / Commercial and Life are live — more segments ship one at a time.
               </p>
             </div>
           </div>
@@ -82,6 +86,28 @@ export default function InsurancePage({ jobs, onRefresh }) {
             </p>
           </Link>
 
+          <Link
+            to="/insurance/life"
+            className="group glass-card block p-6 transition hover:ring-1 hover:ring-rose-400/40"
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-500/15 text-rose-400">
+                <HeartPulse className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-emerald-400">Live</p>
+                <h2 className="text-xl font-semibold text-slate-100">Life Insurance</h2>
+              </div>
+            </div>
+            <p className="mt-3 text-sm leading-relaxed text-slate-400">
+              Term, whole / cash value, disability income, business-owned, group &amp; worksite, and
+              specialty life — with medical / financial UW workflow.
+            </p>
+            <p className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-rose-400 group-hover:gap-2">
+              Open life hub <ArrowRight className="h-4 w-4" />
+            </p>
+          </Link>
+
           <div className="glass-card p-6 opacity-70">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-500/15 text-slate-400">
@@ -93,14 +119,8 @@ export default function InsurancePage({ jobs, onRefresh }) {
               </div>
             </div>
             <p className="mt-3 text-sm text-slate-500">
-              Homeowners, personal auto, and life — coming after commercial is complete.
+              Homeowners and personal auto — coming after commercial and life are complete.
             </p>
-          </div>
-
-          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/[0.1] p-6 text-center opacity-70">
-            <Plus className="h-6 w-6 text-slate-600" />
-            <p className="mt-2 text-sm font-medium text-slate-400">Next segment</p>
-            <p className="mt-1 text-xs text-slate-500">More insurance segments arrive one at a time.</p>
           </div>
         </div>
       </section>
@@ -142,16 +162,48 @@ export default function InsurancePage({ jobs, onRefresh }) {
         </section>
       )}
 
+      {/* Life preview */}
+      {lifeHub && (
+        <section className="space-y-4">
+          <div className="flex items-end justify-between gap-3">
+            <div>
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">Life lines</h3>
+              <p className="mt-1 text-sm text-slate-400">{lifeHub.summary}</p>
+            </div>
+            <Link to="/insurance/life" className="text-sm text-brand hover:underline">View all</Link>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {(lifeHub.lines || []).slice(0, 9).map((line) => (
+              <button
+                key={line.id}
+                type="button"
+                onClick={() => navigate(`/insurance/life/${line.slug}`)}
+                className="rounded-xl bg-surface-overlay p-4 text-left ring-1 ring-white/[0.04] transition hover:ring-rose-400/30"
+              >
+                <div className="flex items-center gap-2">
+                  <HeartPulse className="h-4 w-4 text-rose-400" />
+                  <p className="font-medium text-slate-200">{line.short_name}</p>
+                </div>
+                <p className="mt-2 line-clamp-2 text-xs text-slate-500">{line.description}</p>
+                <p className="mt-3 text-[11px] uppercase tracking-wide text-slate-600">
+                  {line.document_count} documents in pack
+                </p>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Recent jobs */}
       <section className="glass-card overflow-hidden">
         <div className="flex items-center justify-between border-b border-white/[0.06] px-5 py-4">
           <h3 className="text-sm font-semibold text-slate-200">Recent insurance jobs</h3>
           <Link to="/insurance/commercial" className="text-xs text-brand hover:underline">
-            Start commercial submission →
+            Start a commercial or life submission →
           </Link>
         </div>
         {!recent.length ? (
-          <p className="px-5 py-8 text-sm text-slate-500">No jobs yet. Open a commercial line and run a package.</p>
+          <p className="px-5 py-8 text-sm text-slate-500">No jobs yet. Open a commercial or life line and run a package.</p>
         ) : (
           <div className="divide-y divide-white/[0.04]">
             {recent.map((j) => (

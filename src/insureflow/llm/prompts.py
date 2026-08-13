@@ -19,6 +19,32 @@ Only extract values explicitly stated in the text. Do not infer or guess.
 
 IMPORTANT: Output ONLY valid JSON. Do not include markdown blocks like ```json."""
 
+LIFE_EXTRACTION_PROMPT = """\
+You are an expert life insurance underwriting document analyst. \
+Extract structured risk data from the following life insurance document text. \
+Return a JSON object with these fields (use null for missing values):
+- insured_name: string
+- date_of_birth: string
+- face_amount: number
+- premium: number
+- premium_mode: string (monthly, quarterly, semi-annual, annual)
+- beneficiary: string
+- beneficiary_relationship: string
+- smoker_status: string (smoker, non-smoker)
+- height: string
+- weight: number
+- blood_pressure: string
+- existing_conditions: array of strings
+- medications: array of strings
+- annual_income: number
+- employer: string
+- occupation: string
+- coverage_type: string (term, whole life, universal life, etc.)
+
+Only extract values explicitly stated in the text. Do not infer or guess.
+
+IMPORTANT: Output ONLY valid JSON. Do not include markdown blocks like ```json."""
+
 RECONCILIATION_PROMPT = """You are a reconciliation analyst for commercial underwriting. Compare the structured ACORD XML data with the unstructured inspection report data for the same submission.
 
 Identify discrepancies between:

@@ -1,5 +1,11 @@
 from __future__ import annotations
 
+import os
+
+# Isolate the auth store for the whole test session so test runs can never wipe
+# real production credentials (Redis key + file live in a test-only namespace).
+os.environ.setdefault("INSUREFLOW_AUTH_TESTING", "1")
+
 from datetime import date
 
 import pytest

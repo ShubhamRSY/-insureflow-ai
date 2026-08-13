@@ -63,6 +63,7 @@ def run_pipeline(self: Any, job_id: str, request_data: dict[str, Any], org_id: s
                 pdf_paths=req.pdf_paths,
                 bundle_id=req.bundle_id or job_id,
                 insurance_line=getattr(req, "insurance_line", None),
+                life_product_id=getattr(req, "life_product_id", None),
                 progress_callback=on_progress,
             )
 

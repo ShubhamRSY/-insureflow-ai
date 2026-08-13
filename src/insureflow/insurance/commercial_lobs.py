@@ -2139,12 +2139,29 @@ def commercial_taxonomy_tree() -> list[dict[str, Any]]:
     ]
 
 
+def _line_payload(line: dict[str, Any]) -> dict[str, Any]:
+    coverages = _serialize_coverages(line.get("coverages"))
+    return {
+        **line,
+        "coverages": coverages,
+        "all_documents": flatten_line_documents({**line, "coverages": coverages}),
+        "base_packet": list(BASE_PACKET),
+        "uw_responsibilities": list(UW_CORE_RESPONSIBILITIES),
+        "uw_question": ("If I take on this risk, what's the probability and cost of it going wrong, and what price makes that bet worthwhile for the insurer?"),
+    }
+
+
 def get_commercial_line(line_id_or_slug: str) -> dict[str, Any] | None:
     raw = (line_id_or_slug or "").strip().lower()
     if not raw:
         return None
     dashed = raw.replace("_", "-")
     underscored = raw.replace("-", "_")
+    variants = {raw, dashed, underscored}
+
+    # 1) Direct identifiers — id / slug / checklist_lob / insurance_line.
+    #    rating_line is a shared grouping key (e.g. several workforce lines map to
+    #    "key_person"), so it must NOT outrank the product's own identifiers.
     for line in COMMERCIAL_LINES:
         candidates = {
             line["id"],
@@ -2154,18 +2171,16 @@ def get_commercial_line(line_id_or_slug: str) -> dict[str, Any] | None:
             line["id"].replace("_", "-"),
             line["checklist_lob"].replace("_", "-"),
             line["insurance_line"].replace("_", "-"),
-            (line.get("rating_line") or "").replace("_", "-"),
         }
-        if raw in candidates or dashed in candidates or underscored in candidates:
-            coverages = _serialize_coverages(line.get("coverages"))
-            return {
-                **line,
-                "coverages": coverages,
-                "all_documents": flatten_line_documents({**line, "coverages": coverages}),
-                "base_packet": list(BASE_PACKET),
-                "uw_responsibilities": list(UW_CORE_RESPONSIBILITIES),
-                "uw_question": ("If I take on this risk, what's the probability and cost of it going wrong, and what price makes that bet worthwhile for the insurer?"),
-            }
+        if variants & candidates:
+            return _line_payload(line)
+
+    # 2) Fallback — rating_line alias for callers resolving a rating key.
+    for line in COMMERCIAL_LINES:
+        rating = (line.get("rating_line") or "").replace("_", "-")
+        if variants & {rating}:
+            return _line_payload(line)
+
     return None
 
 

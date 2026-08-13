@@ -21,6 +21,19 @@ DEFAULT_EXPECTED_FIELDS: dict[str, int] = {
     "schedule_of_values": 10,
     "broker_application": 8,
     "policy_declaration": 8,
+    # Life — native US document set
+    "life_application": 7,
+    "beneficiary_form": 4,
+    "health_questionnaire": 4,
+    "income_proof": 3,
+    "medical_exam": 5,
+    "photo_id": 3,
+    "proof_of_address": 3,
+    "social_security_number": 3,
+    "source_of_funds": 2,
+    "mortgage_statement": 2,
+    "retirement_account_statement": 2,
+    "premium_waiver_rider": 2,
 }
 FALLBACK_EXPECTED_FIELDS = 6
 

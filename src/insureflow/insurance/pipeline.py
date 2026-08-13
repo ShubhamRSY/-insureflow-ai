@@ -114,6 +114,7 @@ class InsurancePipeline:
         bundle_id: str | None = None,
         insurance_line: str | None = None,
         commercial_product_id: str | None = None,
+        life_product_id: str | None = None,
         commercial_coverage_id: str | None = None,
         commercial_product_name: str | None = None,
         commercial_coverage_name: str | None = None,
@@ -163,6 +164,14 @@ class InsurancePipeline:
         )
         resolved_line = detect_insurance_line(pre_blob, insurance_line or "")
 
+        # Per-product life catalog resolution: explicit product hint wins, else
+        # best-effort detection from the package text, else generic "life".
+        life_checklist_lob: str | None = None
+        if resolved_line is not None and resolved_line.value == "life":
+            from insureflow.insurance.life_lobs import detect_life_product, resolve_life_checklist_lob
+
+            life_checklist_lob = resolve_life_checklist_lob(life_product_id) or detect_life_product(pre_blob)
+
         triage_result = self.triage.score_submission(
             self._build_preliminary_bundle(
                 acord_xml=acord_xml,
@@ -171,6 +180,7 @@ class InsurancePipeline:
                 bundle_id=bid,
             ),
             insurance_line=resolved_line.value if resolved_line else insurance_line,
+            checklist_lob_hint=life_checklist_lob,
         )
         progress.complete(
             "triage",
@@ -276,7 +286,11 @@ class InsurancePipeline:
 
         # ── 2b. RE-SCORE DOCUMENT CHECKLIST on fully-ingested bundle ──
         line_hint = resolved_line.value if resolved_line else insurance_line
-        triage_result = self.triage.score_submission(bundle, insurance_line=line_hint)
+        triage_result = self.triage.score_submission(
+            bundle,
+            insurance_line=line_hint,
+            checklist_lob_hint=life_checklist_lob,
+        )
         checklist_lob = triage_result.document_checklist.lob
 
         # ── 2c. REQUIRED DATA VALIDATION (LOB-aware hard gates) ──
@@ -545,7 +559,7 @@ class InsurancePipeline:
                 RouteContext(
                     text=getattr(doc, "raw_text", None),
                     regex_field_count=len(getattr(doc, "extracted_fields", {}) or {}),
-                    doc_type="inspection_report",
+                    doc_type=getattr(doc, "document_type", "inspection_report"),
                 ),
             )
             if extract_route.decision == RouteDecision.LLM and self.zta_config.enabled:
@@ -556,7 +570,7 @@ class InsurancePipeline:
 
         # ── 4. EXTERNAL DATA ORACLES (CLUE, NCCI, CAT) — skip property oracles on life ──
         oracle_findings: list[Any] = []
-        is_life_line = (resolved_line is not None and resolved_line.value == "life") or checklist_lob == "life"
+        is_life_line = (resolved_line is not None and resolved_line.value == "life") or checklist_lob == "life" or life_checklist_lob is not None
         if funnel:
             progress.skip("verify", "Verified", "Deferred — available via Deep Dive")
         elif is_life_line:
@@ -1294,6 +1308,9 @@ class InsurancePipeline:
             "insurance_line": line_for_quote.value,
             "product_line": line_for_quote.value,
             "commercial_product_id": commercial_product_id,
+            "life_product_id": life_product_id,
+            "checklist_lob": checklist_lob,
+            "life_checklist_lob": life_checklist_lob,
             "commercial_coverage_id": commercial_coverage_id,
             "commercial_product_name": commercial_product_name,
             "commercial_coverage_name": commercial_coverage_name,

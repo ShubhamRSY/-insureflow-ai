@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import tempfile
 import threading
 from collections.abc import ItemsView
 from pathlib import Path
@@ -13,9 +14,24 @@ from insureflow.storage.lock import FileLock, atomic_write
 
 logger = logging.getLogger(__name__)
 
-_DEFAULT_PATH = Path.cwd() / ".insureflow" / "auth_users.json"
+
+def _test_namespace() -> bool:
+    """Tests run against an isolated store so they can never wipe real credentials."""
+    return os.environ.get("INSUREFLOW_AUTH_TESTING") == "1"
+
+
+def _default_path() -> Path:
+    if os.environ.get("INSUREFLOW_AUTH_STORE_PATH"):
+        return Path(os.environ["INSUREFLOW_AUTH_STORE_PATH"])
+    if _test_namespace():
+        return Path(tempfile.gettempdir()) / "insureflow_test" / "auth_users.json"
+    return Path.cwd() / ".insureflow" / "auth_users.json"
+
+
+_DEFAULT_PATH = _default_path()
 
 _REDIS_KEY = "rytera:auth:users"
+_TEST_REDIS_KEY = "rytera:auth:users:test"
 
 
 def _get_redis_client() -> Any:
@@ -40,6 +56,7 @@ class UserStore:
         self._users: dict[str, User] = {}
         self._lock = threading.RLock()
         self._redis = _get_redis_client()
+        self._redis_key = _TEST_REDIS_KEY if _test_namespace() else _REDIS_KEY
         self._path = path or _DEFAULT_PATH
         self.load()
 
@@ -50,7 +67,7 @@ class UserStore:
     def _load_locked(self) -> None:
         if self._redis:
             try:
-                raw = self._redis.get(_REDIS_KEY)
+                raw = self._redis.get(self._redis_key)
                 if raw:
                     data = json.loads(raw)
                     self._users = {k: User.model_validate(v) for k, v in data.items()}
@@ -79,7 +96,7 @@ class UserStore:
 
         if self._redis:
             try:
-                self._redis.set(_REDIS_KEY, data)
+                self._redis.set(self._redis_key, data)
             except Exception as exc:
                 logger.warning("Redis save failed: %s", exc)
 
@@ -131,12 +148,13 @@ class UserStore:
             self._users.clear()
             if self._redis:
                 try:
-                    self._redis.delete(_REDIS_KEY)
+                    self._redis.delete(self._redis_key)
                 except Exception:
                     pass
             if self._path.exists():
                 try:
-                    self._path.unlink()
+                    backup = self._path.with_suffix(".json.bak")
+                    self._path.rename(backup)
                 except OSError:
                     pass
             return count

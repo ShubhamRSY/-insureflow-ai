@@ -3,9 +3,10 @@ from __future__ import annotations
 from typing import Any, Optional
 
 from insureflow.ingestion.acord_parser import ACORDParser
+from insureflow.ingestion.insurance.classifier import LIFE_DOCUMENT_TYPES
 from insureflow.ingestion.report_extractor import InspectionReportExtractor
 from insureflow.llm.client import LLMClient
-from insureflow.llm.prompts import EXTRACTION_PROMPT
+from insureflow.llm.prompts import EXTRACTION_PROMPT, LIFE_EXTRACTION_PROMPT
 from insureflow.models.submissions import StructuredSubmission, SubmissionBundle, UnstructuredSubmission
 from insureflow.redaction.pipeline import RedactedLLMClient
 from insureflow.redaction.redactor import PIIRedactor
@@ -58,8 +59,9 @@ class ExtractionAgent:
             return submission
         raw_text = submission.raw_text or ""
         text_for_llm = self.redactor.redact(raw_text[:8000]) if self.redactor else raw_text[:8000]
+        prompt = LIFE_EXTRACTION_PROMPT if submission.document_type in LIFE_DOCUMENT_TYPES else EXTRACTION_PROMPT
         try:
-            llm_result = self.llm.complete(EXTRACTION_PROMPT, text_for_llm)
+            llm_result = self.llm.complete(prompt, text_for_llm)
         except Exception:
             return submission
 
