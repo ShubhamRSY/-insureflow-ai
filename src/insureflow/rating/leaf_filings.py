@@ -242,6 +242,8 @@ def rate_leaf_filing(
             "schedule_credits_applied": applied,
             "carrier_book_id": book.get("book_id"),
             "carrier": book.get("carrier"),
+            "rate_book_posture": book.get("posture"),
+            "serff_tracking": filing.get("serff_tracking") or filing.get("filing_id"),
             "insurance_line": line.value,
             "source": filing.get("source"),
         },
@@ -274,13 +276,29 @@ DEDICATED_MANUAL_PRODUCTS = frozenset(
 
 
 def should_use_leaf_filing(product_id: str | None, line: InsuranceLine | None = None) -> bool:
-    """Leaf filings apply for catalog products without a dedicated manual branch."""
+    """Leaf filings apply for catalog products without a dedicated manual branch.
+
+    A customer SERFF import wins over hardcoded dedicated manuals (WC, cyber, auto, …).
+    The InsureFlow pilot book does not — dedicated actuarial tables still apply there.
+    """
     if not product_id:
         return False
     pid = product_id.strip().lower()
+    filing = get_leaf_filing(pid)
+    if filing is None:
+        line_obj = get_commercial_line(pid)
+        if line_obj:
+            pid = str(line_obj["id"])
+            filing = get_leaf_filing(pid)
+    if not filing:
+        return False
+    from insureflow.billing.plan import is_customer_rate_book
+
+    if is_customer_rate_book(carrier_book_status()):
+        return True
     if pid in DEDICATED_MANUAL_PRODUCTS:
         return False
     line_obj = get_commercial_line(pid)
     if line_obj and line_obj["id"] in DEDICATED_MANUAL_PRODUCTS:
         return False
-    return get_leaf_filing(pid) is not None
+    return True

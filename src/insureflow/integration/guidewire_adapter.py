@@ -103,20 +103,7 @@ class GuidewireAdapter(BasePolicyAdminAdapter):
 
     def _submit_live(self, payload: PolicySubmissionPayload) -> IntegrationResult:
         try:
-            body = {
-                "bundle_id": payload.bundle_id,
-                "org_id": payload.org_id,
-                "insured_name": payload.insured_name,
-                "naics_code": payload.naics_code,
-                "state": payload.state,
-                "tiv": payload.tiv,
-                "base_premium": payload.base_premium,
-                "adjusted_premium": payload.adjusted_premium,
-                "uw_decision": payload.uw_decision,
-                "coverages": payload.coverages,
-                "locations": payload.locations,
-                "memo_summary": payload.memo_summary,
-            }
+            body = payload.to_dict()
             resp = self.http.post(self.submit_path, body)
             if not resp.ok:
                 return IntegrationResult(success=False, system=self.get_system_name(), error=f"HTTP {resp.status_code}")
@@ -129,10 +116,9 @@ class GuidewireAdapter(BasePolicyAdminAdapter):
 
     def _bind_live(self, payload: PolicySubmissionPayload, quote_reference: str) -> IntegrationResult:
         try:
-            resp = self.http.post(
-                self.bind_path,
-                {"quote_reference": quote_reference, "bundle_id": payload.bundle_id, "premium": payload.adjusted_premium},
-            )
+            body = payload.to_dict()
+            body["quote_reference"] = quote_reference
+            resp = self.http.post(self.bind_path, body)
             if not resp.ok:
                 return IntegrationResult(success=False, system=self.get_system_name(), error=f"HTTP {resp.status_code}")
             data = resp.json_dict()

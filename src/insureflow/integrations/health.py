@@ -18,14 +18,15 @@ from insureflow.oracles.factory import (
 
 
 def effective_mode(service_mode: str, client: IntegrationHTTPClient) -> str:
-    mode = (service_mode or "auto").lower()
-    if mode == "simulated":
-        return "simulated"
-    if not client.configured:
-        return "misconfigured" if mode == "live" else "simulated"
+    from insureflow.oracles._live import resolve_integration_mode
+
+    resolved = resolve_integration_mode(service_mode, client)
+    if resolved != "live":
+        return resolved
     health = client.health_check()
     if health.get("reachable"):
         return "live"
+    mode = (service_mode or "auto").lower()
     return "simulated" if mode == "auto" else "degraded"
 
 

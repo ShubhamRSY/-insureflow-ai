@@ -3,21 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Rytera - Zero Token Architecture, Security & Audit</title>
-  <meta name="description" content="Zero Token Architecture: deterministic code and trained ML solve most of underwriting before any LLM call. Every token budgeted, tracked, and reported. Encrypted audit bundles and RBAC." />
-  <link rel="canonical" href="https://ryterainc.com/technology" />
+  <title>Rytera - Pricing for live oracles, your SERFF book, and Guidewire bind</title>
+  <meta name="description" content="Pilot is free and honest. Desk, Book, and Enterprise fail closed unless live oracles, your carrier rate book, and no-rekey Guidewire bind are in place. From $0 to $6,500+/mo." />
+  <link rel="canonical" href="https://ryterainc.com/pricing" />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://ryterainc.com/technology" />
-  <meta property="og:title" content="Rytera - Zero Token Architecture, Security & Audit" />
-  <meta property="og:description" content="Deterministic first, token-light always. ZTA keeps decisions fast, cheap, reproducible - with audit bundles a regulator can review." />
+  <meta property="og:url" content="https://ryterainc.com/pricing" />
+  <meta property="og:title" content="Rytera - Pricing for live oracles, your SERFF book, and Guidewire bind" />
+  <meta property="og:description" content="Carriers will not buy simulated oracles at Desk prices, pilot manuals as SERFF, or a Guidewire bind that still needs re-key. Rytera prices only the real desk." />
   <meta property="og:site_name" content="Rytera" />
   <meta property="og:image" content="https://ryterainc.com/og-image.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:image:alt" content="Rytera - AI underwriting platform" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Rytera - Zero Token Architecture, Security & Audit" />
-  <meta name="twitter:description" content="Deterministic first, token-light always. ZTA keeps decisions fast, cheap, reproducible - with audit bundles a regulator can review." />
+  <meta name="twitter:title" content="Rytera - Pricing for live oracles, your SERFF book, and Guidewire bind" />
+  <meta name="twitter:description" content="Carriers will not buy simulated oracles at Desk prices, pilot manuals as SERFF, or a Guidewire bind that still needs re-key. Rytera prices only the real desk." />
   <meta name="twitter:image" content="https://ryterainc.com/og-image.png" />
   <link rel="icon" href="/favicon.ico" sizes="any" />
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
@@ -143,9 +143,9 @@
     <main>
       <section class="page-hero">
         <div class="reveal">
-          <p class="section-label">Technology</p>
-          <h1>Deterministic first. Token-light always.</h1>
-          <p class="lead">Rytera is built on Zero Token Architecture: code and trained ML solve what they can, LLMs are invoked only when reasoning genuinely requires it, and every token is accounted for.</p>
+          <p class="section-label">Pricing</p>
+          <h1>Plans that only charge when the data is real</h1>
+          <p class="lead">Pilot is free and honest: simulated oracles, demo book, bind off. Desk, Book, and Enterprise fail closed unless live oracles, your SERFF book, and Guidewire bind without re-key are in place.</p>
 
     <div class="cta">
       <button type="button" class="btn btn-primary" id="open-demo-hero">Book a demo</button>
@@ -154,110 +154,133 @@
         </div>
       </section>
 
-      <section id="zta">
+      <section id="pricing">
         <div class="reveal">
-          <p class="section-label">Zero Token Architecture</p>
-          <h2>Efficiency you can measure</h2>
-          <p class="section-desc">
-            Most AI underwriting tools burn tokens on everything. Rytera asks: <em>can code, rules, or a trained model
-            solve this deterministically?</em> Most of underwriting can &mdash; so you get faster, cheaper, fully reproducible
-            decisions, and every LLM call that does happen is budgeted, tracked, and reported in each job's
-            <strong>zta_report</strong>.
-          </p>
+          <p class="section-label">Plans &amp; pricing</p>
+          <h2>Priced per bind-ready memo &mdash; not per data pull</h2>
+          <p class="section-desc">Carriers will not buy simulated oracles at Desk prices, pilot manuals sold as SERFF, or a Guidewire bind that still needs re-key. Desk+ fail-closes on all three. Shadow pilots stay free.</p>
         </div>
-        <div class="zta-ladder reveal">
-          <div class="zta-step L1">
-            <div class="step-top">
-              <span class="step-ico"><svg class="ico" aria-hidden="true"><use href="#i-cpu"/></svg></span>
-              <span class="step-num">Layer 1</span>
-            </div>
-            <h3>Deterministic code</h3>
-            <p>Parsers, provenance, reconciliation, COPE, rating engines, and compliance rules solve everything they can &mdash; with zero tokens and full reproducibility.</p>
-            <span class="tokens zero"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg> 0 tokens &middot; 100% reproducible</span>
-          </div>
-          <div class="zta-flow" aria-hidden="true"><svg class="ico"><use href="#i-arrow-right"/></svg></div>
-          <div class="zta-step L2">
-            <div class="step-top">
-              <span class="step-ico"><svg class="ico" aria-hidden="true"><use href="#i-bot"/></svg></span>
-              <span class="step-num">Layer 2</span>
-            </div>
-            <h3>Trained ML</h3>
-            <p>Eight gradient-boosted models score loss, fraud, churn, premium, portfolio risk, and default &mdash; deterministic predictions, no prompt involved.</p>
-            <span class="tokens zero"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg> 0 tokens &middot; deterministic</span>
-          </div>
-          <div class="zta-flow" aria-hidden="true"><svg class="ico"><use href="#i-arrow-right"/></svg></div>
-          <div class="zta-step L3">
-            <div class="step-top">
-              <span class="step-ico"><svg class="ico" aria-hidden="true"><use href="#i-zap"/></svg></span>
-              <span class="step-num">Layer 3</span>
-            </div>
-            <h3>LLM &mdash; only when needed</h3>
-            <p>Reasoning tasks that genuinely need it, gated by per-job budgets and coverage thresholds &mdash; never for work code can already solve.</p>
-            <span class="tokens one"><svg class="ico" aria-hidden="true"><use href="#i-sliders"/></svg> budgeted &middot; accounted</span>
-          </div>
+        <div class="buy-gates reveal">
+          <article class="buy-gate">
+            <p class="gate-kicker gate-no">They will not buy if</p>
+            <h3>Oracles are simulated</h3>
+            <p>Fake clean CLUE / NCCI / A+ history at Desk prices is a non-starter. Desk+ requires live feeds; missing keys refer the file instead of inventing a clean loss run.</p>
+          </article>
+          <article class="buy-gate">
+            <p class="gate-kicker gate-no">They will not buy if</p>
+            <h3>Rating isn&rsquo;t their book</h3>
+            <p>Pilot manuals &ne; SERFF. Desk+ quotes only after you import your filed carrier book. Until then the quote is ineligible &mdash; not silently priced off our demo LCM.</p>
+          </article>
+          <article class="buy-gate">
+            <p class="gate-kicker gate-no">They will not buy if</p>
+            <h3>Bind still re-works Guidewire</h3>
+            <p>Bind posts the full quote, coverages, filing ID, subjectivities, and terms. No re-key. Live PAS is required on Desk+; simulated bind is refused.</p>
+          </article>
         </div>
-        <div class="zta-stats reveal">
-          <div class="zta-stat">
-            <span class="zstat-ico green"><svg class="ico" aria-hidden="true"><use href="#i-cpu"/></svg></span>
-            <div class="body"><span class="num">~90%</span><p>of typical pipeline tasks resolve deterministically</p></div>
-          </div>
-          <div class="zta-stat">
-            <span class="zstat-ico blue"><svg class="ico" aria-hidden="true"><use href="#i-database"/></svg></span>
-            <div class="body"><span class="num">0</span><p>tokens for ACORD parsing, rating, reconciliation</p></div>
-          </div>
-          <div class="zta-stat">
-            <span class="zstat-ico violet"><svg class="ico" aria-hidden="true"><use href="#i-bot"/></svg></span>
-            <div class="body"><span class="num" data-target="8">0</span><p>trained ML models in the model registry</p></div>
-          </div>
+        <div class="pricing-grid reveal">
+          <article class="price-card">
+            <p class="price-tier">Pilot</p>
+            <p class="price-amount">$0<span>/mo</span></p>
+            <p class="price-sub">5 memos included &middot; then $95 each</p>
+            <p class="price-ideal">Shadow pilots &amp; early-stage desks under 10 submissions / month</p>
+            <ul class="price-bullets">
+              <li><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg> Bind-ready AI memo (accept / refer / decline)</li>
+              <li><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg> Simulated oracles + demo rate book (honest)</li>
+              <li><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg> Subjectivities &amp; bind-readiness checklist</li>
+              <li><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg> Encrypted audit trail &middot; bind off</li>
+            </ul>
+            <a class="btn btn-ghost" href="/dashboard">Get started free</a>
+          </article>
+          <article class="price-card">
+            <p class="price-tier">Desk</p>
+            <p class="price-amount">$799<span>/mo</span></p>
+            <p class="price-sub">25 memos included &middot; then $55 each</p>
+            <p class="price-ideal">Line desks processing 15&ndash;40 submissions / month</p>
+            <ul class="price-bullets">
+              <li><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg> Live CLUE / NCCI / A+ / CAT / ISO &mdash; no simulated fallback</li>
+              <li><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg> Your SERFF / carrier leaf filings (not our pilot book)</li>
+              <li><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg> Appetite &amp; selection gates</li>
+              <li><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg> Live PAS bind when Guidewire is connected</li>
+            </ul>
+            <button type="button" class="btn btn-ghost" data-open-demo>Book a demo</button>
+          </article>
+          <article class="price-card featured">
+            <p class="price-badge">Most popular</p>
+            <p class="price-tier">Book</p>
+            <p class="price-amount">$2,490<span>/mo</span></p>
+            <p class="price-sub">80 memos included &middot; then $38 each</p>
+            <p class="price-ideal">Books processing 50&ndash;120 submissions / month</p>
+            <ul class="price-bullets">
+              <li><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg> Guidewire / BriteCore bind &mdash; full terms, no re-key</li>
+              <li><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg> Oracles included (fair use)</li>
+              <li><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg> Portfolio concentration &amp; reinsurance</li>
+              <li><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg> Dedicated onboarding of your rate book + PAS</li>
+            </ul>
+            <button type="button" class="btn btn-primary" data-open-demo>Get started</button>
+          </article>
+          <article class="price-card">
+            <p class="price-tier">Enterprise</p>
+            <p class="price-amount">From $6,500<span>/mo</span></p>
+            <p class="price-sub">Custom volume &middot; $22&ndash;$32 per memo</p>
+            <p class="price-ideal">Carriers &amp; MGAs at 100+ submissions / month, multi-org</p>
+            <ul class="price-bullets">
+              <li><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg> Private VPC / SSO / examiner export</li>
+              <li><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg> Custom SERFF / multi-company rate books</li>
+              <li><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg> Dedicated CSM &amp; priority SLA</li>
+              <li><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg> Broker portal priority</li>
+            </ul>
+            <a class="btn btn-ghost" href="mailto:hello@ryterainc.com?subject=Rytera%20Enterprise">Talk to sales</a>
+          </article>
         </div>
+
+        <div class="matrix-wrap reveal">
+          <table class="price-matrix">
+            <thead>
+              <tr>
+                <th scope="col">Features &amp; benefits</th>
+                <th scope="col">Pilot</th>
+                <th scope="col">Desk</th>
+                <th scope="col">Book</th>
+                <th scope="col">Enterprise</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row">Monthly subscription</th><td>$0</td><td>$799</td><td>$2,490</td><td>From $6,500</td></tr>
+              <tr><th scope="row">Included memos / month</th><td>5</td><td>25</td><td>80</td><td>Custom</td></tr>
+              <tr><th scope="row">Additional memo</th><td>$95</td><td>$55</td><td>$38</td><td>$22&ndash;$32</td></tr>
+              <tr><th scope="row">Blended cost at included volume</th><td>$95</td><td>~$32</td><td>~$31</td><td>$22&ndash;$32</td></tr>
+              <tr><th scope="row">Ideal for</th><td>Pilots &amp; low volume</td><td>15+ memos / mo</td><td>50+ memos / mo</td><td>100+ memos / mo</td></tr>
+              <tr><th scope="row">Shadow pilot (bind off until you cut over)</th><td><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg></td><td><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg></td><td><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg></td><td><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg></td></tr>
+              <tr><th scope="row">AI UW memo, findings &amp; credit / loss insights</th><td><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg></td><td><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg></td><td><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg></td><td><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg></td></tr>
+              <tr><th scope="row">Subjectivities, open conditions &amp; bind readiness</th><td><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg></td><td><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg></td><td><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg></td><td><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg></td></tr>
+              <tr><th scope="row">Appetite, selection &amp; moral-hazard gates</th><td><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg></td><td><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg></td><td><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg></td><td><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg></td></tr>
+              <tr><th scope="row">Filing-style rating (ISO / NCCI / leaf filings)</th><td>Demo book only</td><td>Your SERFF book required</td><td>Your SERFF book required</td><td>SERFF / multi-company</td></tr>
+              <tr><th scope="row">Live oracles &mdash; CLUE, NCCI, A+, CAT, ISO</th><td>Simulated (honest)</td><td>Live only &middot; <span class="cell-fee">Pass-through + 15%</span></td><td><span class="cell-incl">Included</span></td><td><span class="cell-incl">Included</span></td></tr>
+              <tr><th scope="row">Fail-closed if oracles simulated</th><td>n/a</td><td><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg></td><td><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg></td><td><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg></td></tr>
+              <tr><th scope="row">Policy admin &mdash; Guidewire, BriteCore, Duck Creek</th><td>Bind off</td><td>Live bind, no re-key</td><td><span class="cell-incl">Included</span></td><td><span class="cell-incl">Included</span></td></tr>
+              <tr><th scope="row">Full PAS payload (limits, filing, subjectivities)</th><td><span class="cell-dash" aria-hidden="true">&mdash;</span></td><td><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg></td><td><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg></td><td><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg></td></tr>
+              <tr><th scope="row">Portfolio concentration &amp; reinsurance</th><td><span class="cell-dash" aria-hidden="true">&mdash;</span></td><td><span class="cell-dash" aria-hidden="true">&mdash;</span></td><td><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg></td><td><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg></td></tr>
+              <tr><th scope="row">Encrypted audit bundle &amp; examiner export</th><td>Basic</td><td><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg></td><td><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg></td><td>SSO / VPC</td></tr>
+              <tr><th scope="row">Broker / producer portal</th><td><span class="cell-dash" aria-hidden="true">&mdash;</span></td><td><span class="cell-soon">Coming soon</span></td><td><span class="cell-soon">Coming soon</span></td><td>Priority</td></tr>
+              <tr><th scope="row">Dedicated onboarding &amp; client success</th><td><span class="cell-dash" aria-hidden="true">&mdash;</span></td><td><span class="cell-dash" aria-hidden="true">&mdash;</span></td><td><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg></td><td><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg></td></tr>
+              <tr><th scope="row">Enterprise SLA &amp; priority support</th><td><span class="cell-dash" aria-hidden="true">&mdash;</span></td><td><span class="cell-dash" aria-hidden="true">&mdash;</span></td><td><span class="cell-dash" aria-hidden="true">&mdash;</span></td><td><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="price-footnote reveal">Oracle vendor fees (LexisNexis, ISO, NCCI, and similar) pass through at cost on Pilot and Desk. Book and Enterprise include fair-use live feeds; overage is billed at vendor cost. Desk+ will not quote on the InsureFlow pilot book or bind through a simulated PAS. Shadow bind stays off until licensed UW approves cutover. Prices in USD, billed monthly, cancel anytime on Pilot &amp; Desk.</p>
       </section>
 
-      <section id="how-it-works">
+      <section id="go-live">
         <div class="reveal">
-          <p class="section-label">How it works</p>
-          <h2>From intake to bind-ready decision</h2>
-          <p class="section-desc">Click each stage to explore what happens inside the pipeline &mdash; no black boxes.</p>
-        </div>
-        <div class="pipeline-wrap reveal">
-          <div class="pipeline-steps" role="tablist" aria-label="Pipeline stages">
-            <button class="pipeline-step active" data-step="0" role="tab" aria-selected="true">
-              <span class="step-num" aria-hidden="true">01</span>
-              <span class="step-icon"><svg class="ico" aria-hidden="true"><use href="#i-search"/></svg></span>
-              <span class="step-body"><strong>Triage</strong><span>Qualify the submission fast</span></span>
-            </button>
-            <button class="pipeline-step" data-step="1" role="tab" aria-selected="false">
-              <span class="step-num" aria-hidden="true">02</span>
-              <span class="step-icon"><svg class="ico" aria-hidden="true"><use href="#i-scale"/></svg></span>
-              <span class="step-body"><strong>Risk &amp; Price</strong><span>Verify, analyze &amp; price</span></span>
-            </button>
-            <button class="pipeline-step" data-step="2" role="tab" aria-selected="false">
-              <span class="step-num" aria-hidden="true">03</span>
-              <span class="step-icon"><svg class="ico" aria-hidden="true"><use href="#i-file-check"/></svg></span>
-              <span class="step-body"><strong>Decision</strong><span>UW memo &amp; deep dive</span></span>
-            </button>
-          </div>
-          <div class="pipeline-panel" id="pipeline-panel" role="tabpanel"></div>
-        </div>
-      </section>
-
-      <section id="security">
-        <div class="reveal">
-          <p class="section-label">Security &amp; audit</p>
-          <h2>Every decision defensible</h2>
-          <p class="section-desc">Encryption, access control, and examiner-ready audit are engineered into the pipeline &mdash; not bolted on after.</p>
+          <p class="section-label">What Desk+ actually turns on</p>
+          <h2>Product, not a services wrapper around fake data</h2>
+          <p class="section-desc">Implementation is paid and real: wire live oracles, load your SERFF book, connect Guidewire. Until those three are live, Rytera stays on Pilot &mdash; it will not pretend otherwise.</p>
         </div>
         <div class="feature-grid reveal">
-          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-lock"/></svg></span><h3>Encryption at rest</h3><p>Fernet-encrypted job stores with org-scoped isolation, and automated SSN / EIN / DOB redaction before packages enter the pilot lane.</p></div>
-          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-key"/></svg></span><h3>Access control</h3><p>JWT auth with RBAC tiers and per-org data isolation on every job, decision, and audit record.</p></div>
-          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-file-check"/></svg></span><h3>Examiner-ready audit</h3><p>Every decision, override, and oracle call ships in a SHA-256 manifest ZIP built for regulatory review.</p></div>
-          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-shield-check"/></svg></span><h3>Human-in-the-loop</h3><p>Licensed UW sign-off, authority-matrix tiers, and referral queues. AI proposes; underwriters dispose; every override is traceable.</p></div>
-        </div>
-        <div class="trust-strip reveal" aria-label="Security and compliance">
-          <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> JWT + RBAC, org-scoped</span>
-          <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> Fernet encryption at rest</span>
-          <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> Automated PII redaction</span>
-          <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> SHA-256 audit ZIPs</span>
-          <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> No LLM key required</span>
+          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-search"/></svg></span><h3>1. Live oracles</h3><p>Set <code>ORACLE_MODE=live</code> and vendor keys. Desk+ refuses simulated CLUE / NCCI / A+ / CAT. Missing keys become a critical finding, not a clean history.</p></div>
+          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-layers"/></svg></span><h3>2. Your rate book</h3><p>POST <code>/rating/carrier-book</code> or set <code>CARRIER_BOOK_PATH</code> to your SERFF JSON/CSV. Pilot manuals cannot price a Desk+ quote.</p></div>
+          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-zap"/></svg></span><h3>3. Guidewire bind</h3><p>Live PAS receives the full payload &mdash; limits, deductibles, filing ID, subjectivities, indicated premium. Bind is refused if the adapter is still simulated.</p></div>
+          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-shield-check"/></svg></span><h3>Plan gate</h3><p><code>GET /billing/plan</code> shows entitlements and whether oracles, the carrier book, and PAS are actually ready. Buyers can verify before they pay.</p></div>
         </div>
       </section>
 

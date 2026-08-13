@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import re
 
+from insureflow.ingestion.insurance.value_normalizers import normalize_field
 from insureflow.models.submissions import ExtractedField
 
 
 def _field(name: str, value: str, confidence: float = 0.85) -> list[ExtractedField]:
     if not value or not str(value).strip():
         return []
-    return [ExtractedField(field_name=name, value=str(value).strip(), confidence=confidence)]
+    return [ExtractedField(field_name=name, value=normalize_field(name, str(value).strip()), confidence=confidence)]
 
 
 def extract_broker_slip(text: str) -> dict[str, list[ExtractedField]]:

@@ -590,6 +590,14 @@ class BindRequest(BaseModel):
     certificate_holder: str = ""  # party named on the certificate of insurance
 
 
+class CarrierBookImportRequest(BaseModel):
+    filings: dict[str, Any] | None = None
+    csv_text: str = ""
+    carrier: str = ""
+    book_id: str = ""
+    effective_date: str = ""
+
+
 class LossExperienceRequest(BaseModel):
     policy_number: str
     policy_year: int
@@ -617,6 +625,56 @@ class InsuranceSourcePullRequest(BaseModel):
 @app.get("/health")
 async def health() -> dict[str, str]:
     return {"status": "ok", "version": "0.3.1"}
+
+
+@app.get("/billing/plan")
+def billing_plan(current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
+    """Plan entitlements + whether live oracles / carrier book / PAS are actually ready."""
+    from insureflow.billing.plan import current_plan, live_pas_ready
+    from insureflow.config import settings
+    from insureflow.rating.book_import import current_book_status
+
+    plan = current_plan()
+    book = current_book_status()
+    return {
+        **plan.to_dict(),
+        "rate_book": book,
+        "oracle_mode": settings.oracle_mode,
+        "guidewire_mode": settings.guidewire_mode,
+        "live_pas_ready": live_pas_ready(),
+        "org_id": current.org_id,
+    }
+
+
+@app.get("/rating/carrier-book")
+def get_carrier_book(current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
+    from insureflow.rating.book_import import current_book_status
+
+    return current_book_status()
+
+
+@app.post("/rating/carrier-book")
+def import_carrier_book(
+    req: CarrierBookImportRequest,
+    current: TokenData = Depends(require_role(Role.ADMIN)),
+) -> dict[str, Any]:
+    """Replace the live rate book with the carrier's SERFF / filed rates."""
+    from insureflow.rating.book_import import filings_from_csv_text, filings_from_json_obj, import_filings
+
+    if (req.csv_text or "").strip():
+        filings = filings_from_csv_text(req.csv_text)
+    elif req.filings:
+        filings = filings_from_json_obj(req.filings)
+    else:
+        raise HTTPException(status_code=400, detail="Provide filings JSON or csv_text")
+    if not filings:
+        raise HTTPException(status_code=400, detail="No product filings found in import")
+    return import_filings(
+        filings=filings,
+        carrier=req.carrier,
+        book_id=req.book_id,
+        effective_date=req.effective_date,
+    )
 
 
 @app.get("/ops/snapshot")
@@ -2723,8 +2781,48 @@ def bind_policy(
                 },
             )
 
-    rating = InsuranceRatingEngine()
-    bind_result = rating.bind(bundle_id, quote_ref, current.username or "")
+    from insureflow.billing.plan import current_plan, live_pas_ready
+
+    plan = current_plan()
+    if not plan.allow_bind:
+        raise HTTPException(
+            status_code=403,
+            detail=f"{plan.plan_id.title()} does not include bind. Upgrade to Desk+ with live Guidewire/BriteCore.",
+        )
+    if plan.plan_id != "pilot" and not live_pas_ready():
+        raise HTTPException(
+            status_code=403,
+            detail="Desk+ bind requires live Guidewire or BriteCore so UW does not re-key. Configure GUIDEWIRE_API_KEY + GUIDEWIRE_API_URL (or BriteCore) with MODE=live.",
+        )
+
+    from insureflow.integrations.factory import build_policy_admin_service
+
+    pas_results = build_policy_admin_service().bind_from_summary(summary, quote_ref, current.org_id)
+    successful_pas = [r for r in pas_results if r.get("success")]
+    if successful_pas:
+        top = successful_pas[0]
+        bind_result = {
+            "success": True,
+            "status": "bound",
+            "mode": "live",
+            "policy_number": top.get("policy_number") or "",
+            "quote_reference": quote_ref,
+            "external_reference": top.get("external_reference") or quote_ref,
+            "systems": pas_results,
+            "bound_by": current.username or "",
+        }
+    else:
+        rating = InsuranceRatingEngine()
+        bind_result = rating.bind(bundle_id, quote_ref, current.username or "")
+        bind_result["systems"] = pas_results
+        if plan.require_live_pas or plan.plan_id in {"book", "enterprise"}:
+            raise HTTPException(
+                status_code=502,
+                detail={
+                    "message": bind_result.get("error") or "Live PAS bind failed — refusing simulated fallback that would force Guidewire re-work",
+                    "systems": pas_results,
+                },
+            )
     if bind_result.get("success") is False or bind_result.get("status") == "failed":
         raise HTTPException(
             status_code=502,
@@ -6999,7 +7097,7 @@ def ml_explain(model_type: str, features: dict[str, Any], current: TokenData = D
     return model.explain(fv)
 
 
-_LANDING_PAGES = ("platform", "technology", "underwriting", "integrations", "company")
+_LANDING_PAGES = ("platform", "technology", "underwriting", "integrations", "company", "pricing")
 
 
 @app.get("/static/landing.css", include_in_schema=False)

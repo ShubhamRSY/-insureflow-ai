@@ -332,9 +332,9 @@ def test_life_document_structuring_extracts_fields() -> None:
 
     app_fields = {k: f[0].value for k, f in docs["life_application"].extracted_fields.items()}
     assert app_fields["insured_name"] == "John Q. Public"
-    assert app_fields["dob"] == "03/14/1985"
-    assert app_fields["face_amount"] == "750,000"
-    assert app_fields["premium"] == "4,350"
+    assert app_fields["dob"] == "1985-03-14"
+    assert app_fields["face_amount"] == "750000"
+    assert app_fields["premium"] == "4350"
     assert app_fields["beneficiary"] == "Jane Public"
     assert app_fields["beneficiary_relationship"] == "Spouse"
 
@@ -347,7 +347,7 @@ def test_life_document_structuring_extracts_fields() -> None:
     assert hq_fields["medications"] == "Lisinopril"
 
     inc_fields = {k: f[0].value for k, f in docs["income_proof"].extracted_fields.items()}
-    assert inc_fields["income_amount"] == "125,000"
+    assert inc_fields["income_amount"] == "125000"
     assert inc_fields["employer"] == "Acme Corp"
 
     med_fields = {k: f[0].value for k, f in docs["medical_exam"].extracted_fields.items()}

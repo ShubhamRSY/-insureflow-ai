@@ -46,6 +46,8 @@ class OracleAgent(BaseAgent):
         self.rating_agency = rating_agency_client or CreditRatingAgencyClient()
 
     def _analyze(self, bundle: SubmissionBundle, **kwargs: Any) -> None:
+        if not self._live_oracles_ok():
+            return
         for findings in (
             self._query_clue(bundle),
             self._query_aplus(bundle),
@@ -58,6 +60,49 @@ class OracleAgent(BaseAgent):
         ):
             for f in findings:
                 self._add_finding(f)
+
+    def _live_oracles_ok(self) -> bool:
+        """Desk+ fail closed: never return simulated 'clean history' at paid prices."""
+        from insureflow.billing.plan import current_plan
+
+        plan = current_plan()
+        if not plan.require_live_oracles:
+            return True
+        simulated: list[str] = []
+        for name, client in (
+            ("CLUE", self.clue),
+            ("A-PLUS", self.aplus),
+            ("NCCI", self.ncci),
+            ("CAT", self.cat_model),
+            ("Bureau", self.bureau),
+            ("PublicRecords", self.public_records),
+            ("OSHA", self.osha),
+            ("RatingAgency", self.rating_agency),
+        ):
+            mode = ""
+            if hasattr(client, "_resolved_mode"):
+                try:
+                    mode = str(client._resolved_mode() or "")
+                except Exception:
+                    mode = "unknown"
+            if mode != "live":
+                simulated.append(f"{name}:{mode or 'simulated'}")
+        if not simulated:
+            return True
+        self._add_finding(
+            Finding(
+                title="Live oracles required for this plan",
+                description=(
+                    f"{plan.plan_id.title()} does not allow simulated oracle feeds while charging Desk+ prices. "
+                    "Point CLUE / NCCI / A+ / CAT at vendor sandboxes (not integrations.rytera.ai) or stay on Pilot. "
+                    f"Not live: {', '.join(simulated)}."
+                ),
+                severity=RiskSeverity.CRITICAL,
+                category="oracle_posture",
+                evidence=simulated,
+            )
+        )
+        return False
 
     def _identity(self, bundle: SubmissionBundle) -> tuple[str, str, str]:
         insured_name = self.tools.get_named_insured(bundle)

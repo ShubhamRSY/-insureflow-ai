@@ -19,6 +19,7 @@ from insureflow.analytics.documents import DocumentAnalyticsEngine
 from insureflow.audit.insurance_audit import InsuranceAuditLogger
 from insureflow.audit.store import AuditStore
 from insureflow.ingestion.insurance.loader import InsuranceDocumentLoader
+from insureflow.ingestion.insurance.validation import validate_extraction
 from insureflow.ingestion.loader import SubmissionLoader
 from insureflow.insurance.progress import PipelineProgressTracker
 from insureflow.integrations.factory import build_policy_admin_service
@@ -566,6 +567,7 @@ class InsurancePipeline:
                 self.extraction.enhance_unstructured(doc)
         if self.use_llm and getattr(self.extraction.llm, "api_key", None):
             bundle = self.extraction.process_bundle(bundle)
+        extraction_issues = validate_extraction(bundle)
         bundle.status = SubmissionStatus.EXTRACTED
 
         # ── 4. EXTERNAL DATA ORACLES (CLUE, NCCI, CAT) — skip property oracles on life ──
@@ -1173,6 +1175,12 @@ class InsurancePipeline:
         if not skip_core_integration and not skip_core_for_decision and not appetite_referral:
             core_results = self.policy_admin.submit_to_core_systems(bundle, memo, quote, self.org_id)
             successful = [r for r in core_results if r.get("success")]
+            pas_ref = str((successful[0] or {}).get("external_reference") or "") if successful else ""
+            if pas_ref:
+                quote.policy_admin_reference = pas_ref
+                quote.metadata = dict(quote.metadata or {})
+                quote.metadata["pas_job_reference"] = pas_ref
+                quote.metadata["pas_system"] = successful[0].get("system")
             audit.log(
                 PipelineEvent.PIPELINE_COMPLETE,
                 f"Core system integration: {len(successful)}/{len(core_results)} systems updated",
@@ -1184,6 +1192,14 @@ class InsurancePipeline:
                 "Core system integration skipped (referral/decline — provisional only)",
                 metadata={"ai_decision": memo.decision.value, "appetite_referral": appetite_referral},
             )
+
+        if not (quote.metadata or {}).get("pas_bind_payload"):
+            try:
+                built = self.policy_admin._build_payload(bundle, memo, quote, self.org_id)
+                quote.metadata = dict(quote.metadata or {})
+                quote.metadata["pas_bind_payload"] = built.to_dict()
+            except Exception:
+                pass
 
         # ── 11. Feedback loop: record prediction ──
         prediction = self.feedback.record_prediction(bid, memo, quote, org_id=self.org_id)
@@ -1330,6 +1346,12 @@ class InsurancePipeline:
             "document_count": len(bundle.unstructured) + (1 if bundle.structured else 0),
             "document_checklist": triage_result.document_checklist.to_summary_dict(),
             "reconciliation_discrepancies": len(reconciliation.discrepancies),
+            "extraction_issues": extraction_issues,
+            "extraction_issue_summary": {
+                "total": len(extraction_issues),
+                "errors": sum(1 for i in extraction_issues if i.get("severity") == "error"),
+                "warnings": sum(1 for i in extraction_issues if i.get("severity") == "warning"),
+            },
             "pipeline_stages": progress.stages,
             "provenance_summary": {
                 "total_fields": provenance.record_count(),
@@ -1376,6 +1398,7 @@ class InsurancePipeline:
             "commercial_uw": commercial_uw_summary,
             "uw_worksheet": uw_worksheet,
             "core_integration": core_results,
+            "pas_bind_payload": dict((quote.metadata or {}).get("pas_bind_payload") or {}),
             "encryption_at_rest": self.encryption.enabled,
             "prediction_id": prediction.prediction_id,
             "zta_mode": self.zta_config.mode,

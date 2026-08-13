@@ -58,6 +58,10 @@ def test_ready_mode_defaults_and_bind_gate(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setenv("GUIDEWIRE_API_URL", "https://example.com/gw")
     assert bind_is_allowed() is True
 
+    monkeypatch.setenv("GUIDEWIRE_API_URL", "https://integrations.rytera.ai/policy/guidewire/v1")
+    assert bind_is_allowed() is False
+    monkeypatch.setenv("GUIDEWIRE_API_URL", "https://example.com/gw")
+
     monkeypatch.setenv("OPERATING_MODE", "shadow")
     assert is_shadow_mode() is True
     assert bind_is_allowed() is False

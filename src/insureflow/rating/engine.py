@@ -256,7 +256,7 @@ class InsuranceRatingEngine:
             meta["market_phase"] = self._market.current.phase.value
             meta["market_mod_pct"] = self._get_market_mod(line)
             adapted.metadata = meta
-            return adapted
+            return self._finalize_quote(adapted)
 
         if line in COMMERCIAL_SPECIALTY_LINES:
             from insureflow.rating.commercial_specialty import rate_specialty_line
@@ -295,7 +295,7 @@ class InsuranceRatingEngine:
             meta["market_phase"] = self._market.current.phase.value
             meta["market_mod_pct"] = market_mod
             adapted.metadata = meta
-            return adapted
+            return self._finalize_quote(adapted)
 
         # Extended actuarial manuals + NCCI WC + multi-section packages
         from insureflow.rating.commercial_actuarial import (
@@ -312,6 +312,22 @@ class InsuranceRatingEngine:
         schedule_mod = float(schedule_mod or 0.0)
         market_mod = self._get_market_mod(line)
 
+        # Customer SERFF book wins over hardcoded WC / cyber / auto / package tables.
+        from insureflow.rating.leaf_filings import rate_leaf_filing, should_use_leaf_filing
+
+        leaf_product = commercial_product_id or (line.value if line else "")
+        if should_use_leaf_filing(leaf_product, line):
+            leaf = rate_leaf_filing(
+                bundle,
+                memo,
+                leaf_product,
+                state=state,
+                schedule_mod_pct=schedule_mod,
+                market_mod_pct=market_mod,
+            )
+            if leaf is not None:
+                return self._adapt_actuarial_result(leaf, memo, bundle, schedule_mod)
+
         if line == InsuranceLine.WORKERS_COMP:
             result = rate_workers_comp_ncci(bundle, memo, state=state, schedule_mod_pct=schedule_mod, market_mod_pct=market_mod)
             return self._adapt_actuarial_result(result, memo, bundle, schedule_mod)
@@ -324,21 +340,6 @@ class InsuranceRatingEngine:
             extended = rate_extended_commercial(bundle, memo, line, state=state, schedule_mod_pct=schedule_mod, market_mod_pct=market_mod)
             if extended is not None:
                 return self._adapt_actuarial_result(extended, memo, bundle, schedule_mod)
-
-        # Per-product carrier leaf filings (unique math for each of 59 catalog products)
-        from insureflow.rating.leaf_filings import rate_leaf_filing, should_use_leaf_filing
-
-        if should_use_leaf_filing(commercial_product_id, line):
-            leaf = rate_leaf_filing(
-                bundle,
-                memo,
-                commercial_product_id or "",
-                state=state,
-                schedule_mod_pct=schedule_mod,
-                market_mod_pct=market_mod,
-            )
-            if leaf is not None:
-                return self._adapt_actuarial_result(leaf, memo, bundle, schedule_mod)
 
         personal_meta: dict[str, Any] = {}
         tiv = self._estimate_tiv(bundle)
@@ -454,10 +455,36 @@ class InsuranceRatingEngine:
         if personal_meta:
             result.metadata["personal_factors"] = {k: v for k, v in personal_meta.items() if k != "findings"}
 
-        return result
+        return self._finalize_quote(result)
 
     def bind(self, bundle_id: str, quote_reference: str, bound_by: str) -> dict[str, Any]:
         return self.adapter.bind_policy(bundle_id, quote_reference, bound_by)
+
+    def _finalize_quote(self, result: QuoteResult) -> QuoteResult:
+        """Desk+ refuses pilot manuals — rating must be the carrier's SERFF book."""
+        from insureflow.billing.plan import current_plan, is_customer_rate_book
+        from insureflow.rating.leaf_filings import carrier_book_status
+
+        plan = current_plan()
+        status = carrier_book_status()
+        meta = dict(result.metadata or {})
+        meta["plan_id"] = plan.plan_id
+        meta["rate_book_posture"] = status.get("posture")
+        meta["rate_book_id"] = status.get("book_id")
+        meta["is_customer_book"] = is_customer_rate_book(status)
+        if plan.require_carrier_book and not is_customer_rate_book(status):
+            result.eligible = False
+            reason = (
+                "Pilot manuals are not your SERFF filing. Import your carrier rate book "
+                "before Desk+ quoting (POST /rating/carrier-book or CARRIER_BOOK_PATH)."
+            )
+            if reason not in result.ineligibility_reasons:
+                result.ineligibility_reasons.append(reason)
+            meta["rate_book_gate"] = "blocked_demo_book"
+        else:
+            meta["rate_book_gate"] = "ok"
+        result.metadata = meta
+        return result
 
     def _adapt_actuarial_result(
         self,
@@ -488,7 +515,7 @@ class InsuranceRatingEngine:
         meta = dict(result.metadata or {})
         meta["market_phase"] = self._market.current.phase.value
         adapted.metadata = meta
-        return adapted
+        return self._finalize_quote(adapted)
 
     def _estimate_tiv(self, bundle: SubmissionBundle) -> float:
         if bundle.structured:

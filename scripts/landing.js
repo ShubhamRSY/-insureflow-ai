@@ -220,11 +220,13 @@
     { q: 'How is Rytera different from a document-extraction tool?', a: 'Extraction stops at text. Rytera runs an end-to-end pipeline — triage, risk verification, rating, and a decision with audit trail — so underwriters review a bind-ready memo instead of a pile of parsed PDFs.' },
     { q: 'What is Zero Token Architecture (ZTA)?', a: 'ZTA means deterministic code and trained ML solve everything they can before any LLM is invoked. Most stages run at zero tokens. When an LLM is truly needed, it is budgeted per job, tracked per stage, and reported in each job\'s zta_report.' },
     { q: 'Can we pilot in shadow mode before binding anything?', a: 'Yes. Shadow mode runs the full pipeline on real submissions with bind off, so your team can measure accuracy and steer the book before any live decision or policy admin integration is enabled.' },
-    { q: 'Does Rytera work with our policy administration system?', a: 'Ready mode enables bind into Guidewire PolicyCenter, Duck Creek, or Applied Epic after licensed UW sign-off. Integrations support live, simulated, and auto modes, each with health monitoring.' },
+    { q: 'Does Rytera work with our policy administration system?', a: 'Desk+ bind posts the full quote, coverages, filing ID, and subjectivities into Guidewire PolicyCenter, BriteCore, or Duck Creek after licensed UW sign-off. Simulated PAS is refused on paid plans so UW does not re-key. Pilot keeps bind off in shadow.' },
     { q: 'How do you handle PII and security?', a: 'PII like SSN, EIN, and DOB is auto-detected and redacted before packages enter the pilot lane. Every job is org-scoped and isolated, and every decision ships in an encrypted SHA-256 manifest audit bundle.' },
-    { q: 'What if an oracle or data feed is unavailable?', a: 'Connectors run in live, simulated, or auto mode. In auto mode, missing keys are honest — the pipeline flags gaps instead of fabricating clean loss history, and the queue surfaces missing data for resolution.' },
+    { q: 'What if an oracle or data feed is unavailable?', a: 'Pilot may use simulated oracles. Desk+ fail-closes: missing live CLUE / NCCI / A+ / CAT keys become a critical finding instead of a fake clean history. Auto mode never invents loss runs.' },
     { q: 'How does UW sign-off work?', a: 'The pipeline proposes ACCEPT, CONDITIONAL_ACCEPT, REFER, or DECLINE. A licensed underwriter reviews within their authority matrix tier and either signs off or overrides — every override is traceable in the audit trail.' },
-    { q: 'Which verticals and lines are supported?', a: 'Commercial and personal lines carriers, mortgage lenders, and commercial lenders share one platform — commercial GL, property, auto, workers\' comp, professional liability / E&O, cyber, excess & surplus, and inland & ocean marine, plus homeowners, auto, term life, mortgage, and consumer / commercial lending.' }
+    { q: 'Which verticals and lines are supported?', a: 'Commercial and personal lines carriers, mortgage lenders, and commercial lenders share one platform — commercial GL, property, auto, workers\' comp, professional liability / E&O, cyber, excess & surplus, and inland & ocean marine, plus homeowners, auto, term life, mortgage, and consumer / commercial lending.' },
+    { q: 'How is Rytera priced?', a: 'Per bind-ready memo. Pilot $0/mo (5 memos, then $95). Desk $799/mo (25, then $55) — live oracles + your SERFF book required. Book $2,490/mo (80, then $38) with live Guidewire bind, no re-key. Enterprise from $6,500/mo. Simulated oracles, pilot manuals, or simulated PAS are not sold at Desk+ prices.' },
+    { q: 'Is rating from our filed rates or a demo book?', a: 'Pilot uses the InsureFlow demo book. Desk+ will not quote until you import your SERFF / carrier filings via POST /rating/carrier-book or CARRIER_BOOK_PATH. Pilot manuals are never silently used as your book.' }
   ];
   var faqList = document.getElementById('faq-list');
   function renderFaqs(filter) {
@@ -305,7 +307,7 @@
     modal.classList.remove('open');
     document.body.style.overflow = '';
   }
-  document.querySelectorAll('#open-demo-nav, #open-demo-hero, #open-demo-mobile, #open-demo-contact').forEach(function (btn) {
+  document.querySelectorAll('#open-demo-nav, #open-demo-hero, #open-demo-mobile, #open-demo-contact, [data-open-demo]').forEach(function (btn) {
     btn.addEventListener('click', openModal);
   });
   var closeBtn = document.getElementById('close-demo');

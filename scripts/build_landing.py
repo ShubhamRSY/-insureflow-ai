@@ -89,6 +89,7 @@ BRAND = """      <a class="brand" href="/" aria-label="Rytera home">
 
 NAV_LINKS = [
     ("/", "Home"),
+    ("/pricing", "Pricing"),
     ("/platform", "Platform"),
     ("/technology", "Technology"),
     ("/underwriting", "Underwriting"),
@@ -302,6 +303,162 @@ def sub_page_hero(label: str, h1: str, lead: str, primary: str = "book", primary
     )
 
 
+def pricing_section() -> str:
+    """Competitor-style plans + feature matrix, priced per bind-ready memo."""
+    check = '<svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg>'
+    dash = '<span class="cell-dash" aria-hidden="true">&mdash;</span>'
+    soon = '<span class="cell-soon">Coming soon</span>'
+    extra = '<span class="cell-fee">Pass-through + 15%</span>'
+    incl = '<span class="cell-incl">Included</span>'
+    return f"""      <section id="pricing">
+        <div class="reveal">
+          <p class="section-label">Plans &amp; pricing</p>
+          <h2>Priced per bind-ready memo &mdash; not per data pull</h2>
+          <p class="section-desc">Carriers will not buy simulated oracles at Desk prices, pilot manuals sold as SERFF, or a Guidewire bind that still needs re-key. Desk+ fail-closes on all three. Shadow pilots stay free.</p>
+        </div>
+        <div class="buy-gates reveal">
+          <article class="buy-gate">
+            <p class="gate-kicker gate-no">They will not buy if</p>
+            <h3>Oracles are simulated</h3>
+            <p>Fake clean CLUE / NCCI / A+ history at Desk prices is a non-starter. Desk+ requires live feeds; missing keys refer the file instead of inventing a clean loss run.</p>
+          </article>
+          <article class="buy-gate">
+            <p class="gate-kicker gate-no">They will not buy if</p>
+            <h3>Rating isn&rsquo;t their book</h3>
+            <p>Pilot manuals &ne; SERFF. Desk+ quotes only after you import your filed carrier book. Until then the quote is ineligible &mdash; not silently priced off our demo LCM.</p>
+          </article>
+          <article class="buy-gate">
+            <p class="gate-kicker gate-no">They will not buy if</p>
+            <h3>Bind still re-works Guidewire</h3>
+            <p>Bind posts the full quote, coverages, filing ID, subjectivities, and terms. No re-key. Live PAS is required on Desk+; simulated bind is refused.</p>
+          </article>
+        </div>
+        <div class="pricing-grid reveal">
+          <article class="price-card">
+            <p class="price-tier">Pilot</p>
+            <p class="price-amount">$0<span>/mo</span></p>
+            <p class="price-sub">5 memos included &middot; then $95 each</p>
+            <p class="price-ideal">Shadow pilots &amp; early-stage desks under 10 submissions / month</p>
+            <ul class="price-bullets">
+              <li>{check} Bind-ready AI memo (accept / refer / decline)</li>
+              <li>{check} Simulated oracles + demo rate book (honest)</li>
+              <li>{check} Subjectivities &amp; bind-readiness checklist</li>
+              <li>{check} Encrypted audit trail &middot; bind off</li>
+            </ul>
+            <a class="btn btn-ghost" href="/dashboard">Get started free</a>
+          </article>
+          <article class="price-card">
+            <p class="price-tier">Desk</p>
+            <p class="price-amount">$799<span>/mo</span></p>
+            <p class="price-sub">25 memos included &middot; then $55 each</p>
+            <p class="price-ideal">Line desks processing 15&ndash;40 submissions / month</p>
+            <ul class="price-bullets">
+              <li>{check} Live CLUE / NCCI / A+ / CAT / ISO &mdash; no simulated fallback</li>
+              <li>{check} Your SERFF / carrier leaf filings (not our pilot book)</li>
+              <li>{check} Appetite &amp; selection gates</li>
+              <li>{check} Live PAS bind when Guidewire is connected</li>
+            </ul>
+            <button type="button" class="btn btn-ghost" data-open-demo>Book a demo</button>
+          </article>
+          <article class="price-card featured">
+            <p class="price-badge">Most popular</p>
+            <p class="price-tier">Book</p>
+            <p class="price-amount">$2,490<span>/mo</span></p>
+            <p class="price-sub">80 memos included &middot; then $38 each</p>
+            <p class="price-ideal">Books processing 50&ndash;120 submissions / month</p>
+            <ul class="price-bullets">
+              <li>{check} Guidewire / BriteCore bind &mdash; full terms, no re-key</li>
+              <li>{check} Oracles included (fair use)</li>
+              <li>{check} Portfolio concentration &amp; reinsurance</li>
+              <li>{check} Dedicated onboarding of your rate book + PAS</li>
+            </ul>
+            <button type="button" class="btn btn-primary" data-open-demo>Get started</button>
+          </article>
+          <article class="price-card">
+            <p class="price-tier">Enterprise</p>
+            <p class="price-amount">From $6,500<span>/mo</span></p>
+            <p class="price-sub">Custom volume &middot; $22&ndash;$32 per memo</p>
+            <p class="price-ideal">Carriers &amp; MGAs at 100+ submissions / month, multi-org</p>
+            <ul class="price-bullets">
+              <li>{check} Private VPC / SSO / examiner export</li>
+              <li>{check} Custom SERFF / multi-company rate books</li>
+              <li>{check} Dedicated CSM &amp; priority SLA</li>
+              <li>{check} Broker portal priority</li>
+            </ul>
+            <a class="btn btn-ghost" href="mailto:hello@ryterainc.com?subject=Rytera%20Enterprise">Talk to sales</a>
+          </article>
+        </div>
+
+        <div class="matrix-wrap reveal">
+          <table class="price-matrix">
+            <thead>
+              <tr>
+                <th scope="col">Features &amp; benefits</th>
+                <th scope="col">Pilot</th>
+                <th scope="col">Desk</th>
+                <th scope="col">Book</th>
+                <th scope="col">Enterprise</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row">Monthly subscription</th><td>$0</td><td>$799</td><td>$2,490</td><td>From $6,500</td></tr>
+              <tr><th scope="row">Included memos / month</th><td>5</td><td>25</td><td>80</td><td>Custom</td></tr>
+              <tr><th scope="row">Additional memo</th><td>$95</td><td>$55</td><td>$38</td><td>$22&ndash;$32</td></tr>
+              <tr><th scope="row">Blended cost at included volume</th><td>$95</td><td>~$32</td><td>~$31</td><td>$22&ndash;$32</td></tr>
+              <tr><th scope="row">Ideal for</th><td>Pilots &amp; low volume</td><td>15+ memos / mo</td><td>50+ memos / mo</td><td>100+ memos / mo</td></tr>
+              <tr><th scope="row">Shadow pilot (bind off until you cut over)</th><td>{check}</td><td>{check}</td><td>{check}</td><td>{check}</td></tr>
+              <tr><th scope="row">AI UW memo, findings &amp; credit / loss insights</th><td>{check}</td><td>{check}</td><td>{check}</td><td>{check}</td></tr>
+              <tr><th scope="row">Subjectivities, open conditions &amp; bind readiness</th><td>{check}</td><td>{check}</td><td>{check}</td><td>{check}</td></tr>
+              <tr><th scope="row">Appetite, selection &amp; moral-hazard gates</th><td>{check}</td><td>{check}</td><td>{check}</td><td>{check}</td></tr>
+              <tr><th scope="row">Filing-style rating (ISO / NCCI / leaf filings)</th><td>Demo book only</td><td>Your SERFF book required</td><td>Your SERFF book required</td><td>SERFF / multi-company</td></tr>
+              <tr><th scope="row">Live oracles &mdash; CLUE, NCCI, A+, CAT, ISO</th><td>Simulated (honest)</td><td>Live only &middot; {extra}</td><td>{incl}</td><td>{incl}</td></tr>
+              <tr><th scope="row">Fail-closed if oracles simulated</th><td>n/a</td><td>{check}</td><td>{check}</td><td>{check}</td></tr>
+              <tr><th scope="row">Policy admin &mdash; Guidewire, BriteCore, Duck Creek</th><td>Bind off</td><td>Live bind, no re-key</td><td>{incl}</td><td>{incl}</td></tr>
+              <tr><th scope="row">Full PAS payload (limits, filing, subjectivities)</th><td>{dash}</td><td>{check}</td><td>{check}</td><td>{check}</td></tr>
+              <tr><th scope="row">Portfolio concentration &amp; reinsurance</th><td>{dash}</td><td>{dash}</td><td>{check}</td><td>{check}</td></tr>
+              <tr><th scope="row">Encrypted audit bundle &amp; examiner export</th><td>Basic</td><td>{check}</td><td>{check}</td><td>SSO / VPC</td></tr>
+              <tr><th scope="row">Broker / producer portal</th><td>{dash}</td><td>{soon}</td><td>{soon}</td><td>Priority</td></tr>
+              <tr><th scope="row">Dedicated onboarding &amp; client success</th><td>{dash}</td><td>{dash}</td><td>{check}</td><td>{check}</td></tr>
+              <tr><th scope="row">Enterprise SLA &amp; priority support</th><td>{dash}</td><td>{dash}</td><td>{dash}</td><td>{check}</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="price-footnote reveal">Oracle vendor fees (LexisNexis, ISO, NCCI, and similar) pass through at cost on Pilot and Desk. Book and Enterprise include fair-use live feeds; overage is billed at vendor cost. Desk+ will not quote on the InsureFlow pilot book or bind through a simulated PAS. Shadow bind stays off until licensed UW approves cutover. Prices in USD, billed monthly, cancel anytime on Pilot &amp; Desk.</p>
+      </section>"""
+
+
+def pricing_main() -> str:
+    impl = """      <section id="go-live">
+        <div class="reveal">
+          <p class="section-label">What Desk+ actually turns on</p>
+          <h2>Product, not a services wrapper around fake data</h2>
+          <p class="section-desc">Implementation is paid and real: wire live oracles, load your SERFF book, connect Guidewire. Until those three are live, Rytera stays on Pilot &mdash; it will not pretend otherwise.</p>
+        </div>
+        <div class="feature-grid reveal">
+          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-search"/></svg></span><h3>1. Live oracles</h3><p>Set <code>ORACLE_MODE=live</code> and vendor keys. Desk+ refuses simulated CLUE / NCCI / A+ / CAT. Missing keys become a critical finding, not a clean history.</p></div>
+          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-layers"/></svg></span><h3>2. Your rate book</h3><p>POST <code>/rating/carrier-book</code> or set <code>CARRIER_BOOK_PATH</code> to your SERFF JSON/CSV. Pilot manuals cannot price a Desk+ quote.</p></div>
+          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-zap"/></svg></span><h3>3. Guidewire bind</h3><p>Live PAS receives the full payload &mdash; limits, deductibles, filing ID, subjectivities, indicated premium. Bind is refused if the adapter is still simulated.</p></div>
+          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-shield-check"/></svg></span><h3>Plan gate</h3><p><code>GET /billing/plan</code> shows entitlements and whether oracles, the carrier book, and PAS are actually ready. Buyers can verify before they pay.</p></div>
+        </div>
+      </section>"""
+    return (
+        sub_page_hero(
+            "Pricing",
+            "Plans that only charge when the data is real",
+            "Pilot is free and honest: simulated oracles, demo book, bind off. Desk, Book, and Enterprise fail closed unless live oracles, your SERFF book, and Guidewire bind without re-key are in place.",
+            primary="book",
+            secondary="/dashboard",
+            secondary_label="Open the live dashboard",
+        )
+        + "\n\n"
+        + pricing_section()
+        + "\n\n"
+        + impl
+        + "\n\n"
+        + contact_section()
+    )
+
+
 def contact_section() -> str:
     return """      <section id="contact">
         <div class="contact-box reveal">
@@ -340,6 +497,7 @@ def hero_home() -> str:
                 <svg class="ico sm" aria-hidden="true"><use href="#i-arrow-right"/></svg>
               </button>
               <a class="btn btn-ghost" href="#how-it-works">See how it works</a>
+              <a class="btn btn-ghost" href="/pricing">See plans</a>
             </div>
             <div class="hero-audience" aria-label="Built for">
               <span class="audience-pill"><svg class="ico sm"><use href="#i-building"/></svg> Carriers</span>
@@ -553,7 +711,21 @@ def home_main() -> str:
         </div>"""
     )
 
-    return hero_home() + "\n\n" + marquee_section() + "\n\n" + value + "\n\n" + how + "\n\n" + testimonials_section() + "\n\n" + contact_section()
+    return (
+        hero_home()
+        + "\n\n"
+        + marquee_section()
+        + "\n\n"
+        + value
+        + "\n\n"
+        + how
+        + "\n\n"
+        + testimonials_section()
+        + "\n\n"
+        + pricing_section()
+        + "\n\n"
+        + contact_section()
+    )
 
 
 def platform_main() -> str:
@@ -1139,6 +1311,13 @@ def main() -> None:
             "company",
             "About Rytera Inc., our shadow-first pilot model, FAQ, and how to book a walkthrough.",
             company_main(),
+        ),
+        "pricing.html": page(
+            "Rytera - Pricing for live oracles, your SERFF book, and Guidewire bind",
+            "Pilot is free and honest. Desk, Book, and Enterprise fail closed unless live oracles, your carrier rate book, and no-rekey Guidewire bind are in place. From $0 to $6,500+/mo.",
+            "pricing",
+            "Carriers will not buy simulated oracles at Desk prices, pilot manuals as SERFF, or a Guidewire bind that still needs re-key. Rytera prices only the real desk.",
+            pricing_main(),
         ),
     }
 

@@ -2,8 +2,11 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
+from pydantic import BaseModel, Field
+
 from insureflow.ingestion.acord_parser import ACORDParser
 from insureflow.ingestion.insurance.classifier import LIFE_DOCUMENT_TYPES
+from insureflow.ingestion.insurance.value_normalizers import normalize_field
 from insureflow.ingestion.report_extractor import InspectionReportExtractor
 from insureflow.llm.client import LLMClient
 from insureflow.llm.prompts import EXTRACTION_PROMPT, LIFE_EXTRACTION_PROMPT
@@ -24,6 +27,58 @@ LLM_FIELD_ALIASES: dict[str, str] = {
     "year_built_in": "year_built",
     "total_premium": "premium",
 }
+
+
+class LifeExtractionSchema(BaseModel):
+    """Structured-output schema for the LLM extraction of life documents."""
+
+    insured_name: Optional[str] = None
+    dob: Optional[str] = None
+    insured_sex: Optional[str] = None
+    smoker_status: Optional[str] = None
+    face_amount: Optional[float] = None
+    premium: Optional[float] = None
+    premium_mode: Optional[str] = None
+    policy_number: Optional[str] = None
+    beneficiary_name: Optional[str] = None
+    beneficiary_relationship: Optional[str] = None
+    allocation_percent: Optional[float] = None
+    height: Optional[str] = None
+    weight: Optional[float] = None
+    blood_pressure: Optional[str] = None
+    pulse: Optional[int] = None
+    existing_conditions: list[str] = Field(default_factory=list)
+    medications: list[str] = Field(default_factory=list)
+    income_amount: Optional[float] = None
+    income_frequency: Optional[str] = None
+    employer: Optional[str] = None
+    occupation: Optional[str] = None
+    full_name: Optional[str] = None
+    address: Optional[str] = None
+    funding_amount: Optional[float] = None
+    funding_source: Optional[str] = None
+    outstanding_balance: Optional[float] = None
+    account_value: Optional[float] = None
+    rider_benefit: Optional[float] = None
+    rider_type: Optional[str] = None
+
+
+class CommercialExtractionSchema(BaseModel):
+    """Structured-output schema for the LLM extraction of commercial documents."""
+
+    construction_type: Optional[str] = None
+    year_built: Optional[int] = None
+    square_footage: Optional[float] = None
+    number_of_stories: Optional[int] = None
+    occupancy_type: Optional[str] = None
+    sprinklered: Optional[bool] = None
+    protection_class: Optional[int] = None
+    roof_type: Optional[str] = None
+    security_features: Optional[str] = None
+    overall_condition: Optional[str] = None
+    prior_claims: list[str] = Field(default_factory=list)
+    recommendations: list[str] = Field(default_factory=list)
+
 
 # Deterministic regex extraction is authoritative over the LLM's guess, which
 # runs on truncated, redacted text and is inherently non-deterministic.
@@ -53,26 +108,65 @@ class ExtractionAgent:
 
         Deterministic regex extraction always runs first; the LLM only merges
         additional fields in when the router decided this document genuinely
-        needs it.
+        needs it. The completion is coerced through a Pydantic schema so the
+        model's free-form answer is parsed into canonical, type-safe keys.
         """
         if not self.llm.api_key:
             return submission
         raw_text = submission.raw_text or ""
         text_for_llm = self.redactor.redact(raw_text[:8000]) if self.redactor else raw_text[:8000]
-        prompt = LIFE_EXTRACTION_PROMPT if submission.document_type in LIFE_DOCUMENT_TYPES else EXTRACTION_PROMPT
+        is_life = submission.document_type in LIFE_DOCUMENT_TYPES
+        prompt = LIFE_EXTRACTION_PROMPT if is_life else EXTRACTION_PROMPT
+        schema = LifeExtractionSchema if is_life else CommercialExtractionSchema
         try:
-            llm_result = self.llm.complete(prompt, text_for_llm)
+            llm_result = self.llm.complete(prompt, text_for_llm, response_format=schema)
         except Exception:
             return submission
 
-        try:
-            import json
+        parsed = self._parse_json_response(llm_result)
+        if parsed is None:
+            return submission
 
-            parsed = json.loads(llm_result)
-            self._merge_llm_results(submission, parsed)
-        except (json.JSONDecodeError, TypeError):
-            pass
+        try:
+            instance = schema.model_validate(parsed)
+        except Exception:
+            return submission
+
+        self._merge_llm_results(submission, self._schema_to_llm_fields(instance))
         return submission
+
+    @staticmethod
+    def _parse_json_response(raw: str) -> Any:
+        """Parse an LLM JSON answer, tolerating markdown code fences."""
+        import json
+
+        clean_raw = raw.strip()
+        if clean_raw.startswith("```json"):
+            clean_raw = clean_raw[7:]
+        if clean_raw.startswith("```"):
+            clean_raw = clean_raw[3:]
+        if clean_raw.endswith("```"):
+            clean_raw = clean_raw[:-3]
+        try:
+            return json.loads(clean_raw.strip())
+        except (json.JSONDecodeError, TypeError):
+            return None
+
+    @staticmethod
+    def _schema_to_llm_fields(instance: BaseModel) -> dict[str, Any]:
+        """Flatten a schema instance into canonical extracted field values."""
+        out: dict[str, Any] = {}
+        for name, value in instance.model_dump().items():
+            if value is None:
+                continue
+            if isinstance(value, (list, tuple)):
+                if not value:
+                    continue
+                value = "; ".join(str(v) for v in value)
+            elif isinstance(value, bool):
+                value = "yes" if value else "no"
+            out[name] = value
+        return out
 
     def redact_bundle(self, bundle: SubmissionBundle) -> SubmissionBundle:
         if not self.redactor:
@@ -119,7 +213,7 @@ class ExtractionAgent:
             submission.extracted_fields[key].append(
                 ExtractedField(
                     field_name=key,
-                    value=str_val,
+                    value=normalize_field(key, str_val),
                     confidence=LLM_MERGE_CONFIDENCE,
                     context="llm_extraction",
                 )

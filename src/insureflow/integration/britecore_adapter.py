@@ -97,14 +97,8 @@ class BriteCoreAdapter(BasePolicyAdminAdapter):
 
     def _submit_live(self, payload: PolicySubmissionPayload) -> IntegrationResult:
         try:
-            body = {
-                "agency_id": self.agency_id,
-                "bundle_id": payload.bundle_id,
-                "insured_name": payload.insured_name,
-                "premium": payload.adjusted_premium,
-                "locations": payload.locations,
-                "coverages": payload.coverages,
-            }
+            body = payload.to_dict()
+            body["agency_id"] = self.agency_id
             resp = self.http.post(self.submit_path, body)
             if not resp.ok:
                 return IntegrationResult(success=False, system=self.get_system_name(), error=f"HTTP {resp.status_code}")
@@ -117,7 +111,9 @@ class BriteCoreAdapter(BasePolicyAdminAdapter):
 
     def _bind_live(self, payload: PolicySubmissionPayload, quote_reference: str) -> IntegrationResult:
         try:
-            resp = self.http.post(self.bind_path, {"quote_id": quote_reference, "bundle_id": payload.bundle_id})
+            body = payload.to_dict()
+            body["quote_id"] = quote_reference
+            resp = self.http.post(self.bind_path, body)
             if not resp.ok:
                 return IntegrationResult(success=False, system=self.get_system_name(), error=f"HTTP {resp.status_code}")
             data = resp.json_dict()

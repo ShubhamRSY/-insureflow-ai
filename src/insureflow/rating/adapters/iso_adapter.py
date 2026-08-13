@@ -31,7 +31,13 @@ class ISORatingAdapter(RatingAdapter):
 
     @property
     def _use_live(self) -> bool:
-        return bool(self._guidewire_key or self._iso_key)
+        from insureflow.oracles._live import is_bundled_gateway_url
+
+        if self._guidewire_key and not is_bundled_gateway_url(self._guidewire_url, self._guidewire_key):
+            return True
+        if self._iso_key and not is_bundled_gateway_url(self._iso_url, self._iso_key):
+            return True
+        return False
 
     def submit_quote(self, request: QuoteRequest, memo: UnderwritingMemo, bundle: SubmissionBundle) -> QuoteResult:
         if self._use_live:
@@ -89,7 +95,7 @@ class ISORatingAdapter(RatingAdapter):
         import json
         import urllib.request
 
-        url = f"{self._guidewire_url.rstrip('/')}/quotes" if self._guidewire_key else f"{self._iso_url.rstrip('/')}/rate"
+        url = f"{self._guidewire_url.rstrip('/')}/jobs" if self._guidewire_key else f"{self._iso_url.rstrip('/')}/rate"
         payload = json.dumps(
             {
                 "bundle_id": request.bundle_id,
@@ -124,7 +130,9 @@ class ISORatingAdapter(RatingAdapter):
             quote_valid_until=data.get("valid_until", ""),
             eligible=data.get("eligible", True),
             ineligibility_reasons=data.get("ineligibility_reasons", []),
-            policy_admin_reference=data.get("reference", f"LIVE-{uuid4().hex[:8].upper()}"),
+            policy_admin_reference=str(
+                data.get("job_number") or data.get("external_reference") or data.get("reference") or data.get("id") or f"LIVE-{uuid4().hex[:8].upper()}"
+            ),
         )
 
     def bind_policy(self, bundle_id: str, quote_reference: str, bound_by: str) -> dict[str, Any]:
@@ -172,12 +180,14 @@ class ISORatingAdapter(RatingAdapter):
         import json
         import urllib.request
 
-        url = f"{self._guidewire_url.rstrip('/')}/policies"
+        url = f"{self._guidewire_url.rstrip('/')}/policies/bind"
         payload = json.dumps(
             {
                 "bundle_id": bundle_id,
                 "quote_reference": quote_reference,
                 "bound_by": bound_by,
+                "source": "iso_adapter",
+                "note": "Prefer PolicyAdminService.bind_from_summary for full Guidewire terms",
             }
         ).encode()
         req = urllib.request.Request(

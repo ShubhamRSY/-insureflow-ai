@@ -103,6 +103,9 @@ class Settings:
     extraction_chunk_size: int = 4000
     extraction_overlap: int = 200
 
+    # Commercial plan: pilot | desk | book | enterprise (default pilot so CI stays simulated)
+    rytera_plan: str = os.getenv("RYTERA_PLAN", "pilot")
+
     # Oracle clients: simulated | live | auto
     oracle_mode: str = os.getenv("ORACLE_MODE", "auto")
     carrier_book_path: str = os.getenv("CARRIER_BOOK_PATH", "")

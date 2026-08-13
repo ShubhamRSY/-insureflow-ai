@@ -139,6 +139,10 @@ def test_landing_page_html() -> None:
     assert "Rytera" in resp.text
     assert "Turn messy submissions into" in resp.text
     assert "What you get" in resp.text
+    assert "Plans &amp; pricing" in resp.text or "Plans & pricing" in resp.text
+    assert "They will not buy if" in resp.text
+    assert "Pilot" in resp.text
+    assert "$2,490" in resp.text
 
     default = client.get("/")
     assert default.status_code == 200
@@ -171,6 +175,7 @@ def test_landing_subpages_html() -> None:
         "underwriting": ["Built for the desks that decide", "Rates built like an actuary builds them"],
         "integrations": ["Connects to the systems you already use", "Live, simulated, or auto"],
         "company": ["About Rytera", "Frequently asked questions"],
+        "pricing": ["They will not buy if", "Your SERFF / carrier leaf filings", "no re-key"],
     }
     for slug, markers in landing_pages.items():
         resp = client.get(f"/{slug}", headers={"Accept": "text/html"})
@@ -194,7 +199,7 @@ def test_landing_static_assets() -> None:
     assert "landing.js" in js.headers.get("content-type", "") or "javascript" in js.headers.get("content-type", "")
     assert "IntersectionObserver" in js.text
 
-    pages = ["", "platform", "technology", "underwriting", "integrations", "company"]
+    pages = ["", "platform", "technology", "underwriting", "integrations", "company", "pricing"]
     for slug in pages:
         path = "/" if not slug else f"/{slug}"
         html = client.get(path).text
@@ -203,7 +208,7 @@ def test_landing_static_assets() -> None:
 
 
 def test_landing_pages_reference_existing_anchors() -> None:
-    pages = ["", "platform", "technology", "underwriting", "integrations", "company"]
+    pages = ["", "platform", "technology", "underwriting", "integrations", "company", "pricing"]
     for slug in pages:
         path = "/" if not slug else f"/{slug}"
         html = client.get(path).text
