@@ -607,6 +607,7 @@ def extract_life_factors(bundle: SubmissionBundle) -> LifeFactors:
         health = "preferred"
     elif "substandard" in blob or "rated table" in blob or "table rating" in blob:
         health = "substandard"
+    beneficiary_match = re.search(r"beneficiary(?:\s+relationship)?\s*[:=]\s*([A-Za-z][A-Za-z /-]{1,40})", blob, re.I)
     f = LifeFactors(
         face_amount=_money(blob, "face amount", "death benefit", "coverage amount", "sum assured"),
         age=_int_field(blob, "applicant age", "insured age", "age:"),
@@ -631,11 +632,7 @@ def extract_life_factors(bundle: SubmissionBundle) -> LifeFactors:
         income=_money(blob, "annual income", "earned income", "salary", "w-2 income"),
         net_worth=_money(blob, "net worth", "networth", "liquid net worth"),
         in_force_face=_money(blob, "in-force face", "in force coverage", "existing life insurance", "inforce face"),
-        beneficiary_relationship=(
-            re.search(r"beneficiary(?:\s+relationship)?\s*[:=]\s*([A-Za-z][A-Za-z /-]{1,40})", blob, re.I).group(1).strip()
-            if re.search(r"beneficiary(?:\s+relationship)?\s*[:=]\s*([A-Za-z][A-Za-z /-]{1,40})", blob, re.I)
-            else ""
-        ),
+        beneficiary_relationship=beneficiary_match.group(1).strip() if beneficiary_match else "",
         state=_state_from_blob(blob),
     )
     if f.smoker:

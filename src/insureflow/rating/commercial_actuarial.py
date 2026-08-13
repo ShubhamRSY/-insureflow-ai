@@ -437,9 +437,7 @@ def rate_extended_commercial(
         return None
 
     if line == InsuranceLine.GENERAL_LIABILITY:
-        return rate_general_liability_iso(
-            bundle, memo, state=state, schedule_mod_pct=schedule_mod_pct, market_mod_pct=market_mod_pct
-        )
+        return rate_general_liability_iso(bundle, memo, state=state, schedule_mod_pct=schedule_mod_pct, market_mod_pct=market_mod_pct)
     if line == InsuranceLine.UMBRELLA:
         return rate_umbrella(bundle, memo, state=state, schedule_mod_pct=schedule_mod_pct, market_mod_pct=market_mod_pct)
 
@@ -449,9 +447,7 @@ def rate_extended_commercial(
     if line == InsuranceLine.CYBER:
         exposure = _limit(bundle, "cyber limit")
         if not exposure:
-            return _ineligible(
-                bundle, line, ["Cyber limit missing — will not invent $1M"], meta={**meta, "rating_engine": "cyber_manual"}
-            )
+            return _ineligible(bundle, line, ["Cyber limit missing — will not invent $1M"], meta={**meta, "rating_engine": "cyber_manual"})
         base = (exposure / 100.0) * CYBER_LOSS_COST * CYBER_LCM
         components += [
             RateComponent("cyber_loss_cost", CYBER_LOSS_COST, "per_100_limit"),
@@ -514,9 +510,7 @@ def rate_extended_commercial(
         emp = _employees(bundle)
         fidelity_limit = _limit(bundle, "fidelity limit", "crime limit")
         if not emp:
-            return _ineligible(
-                bundle, line, ["Employee count missing — will not invent headcount"], meta={**meta, "rating_engine": "crime_fidelity_manual"}
-            )
+            return _ineligible(bundle, line, ["Employee count missing — will not invent headcount"], meta={**meta, "rating_engine": "crime_fidelity_manual"})
         if not fidelity_limit:
             return _ineligible(
                 bundle,
@@ -620,11 +614,11 @@ def rate_workers_comp_ncci(
         missing.append("NCCI class code missing — will not invent a default class")
     if emod is None:
         missing.append("Experience modification missing — NCCI e-mod or worksheet required (will not invent from loss ratio)")
-    if missing:
+    if missing or payroll is None or not class_code or emod is None:
         return _ineligible(
             bundle,
             InsuranceLine.WORKERS_COMP,
-            missing,
+            missing or ["Workers comp exposure incomplete"],
             meta={
                 "rating_engine": "ncci_class_emod",
                 "insurance_line": "workers_comp",
@@ -636,18 +630,21 @@ def rate_workers_comp_ncci(
             },
         )
 
-    manual_rate = WC_CLASS_RATES.get(class_code, WC_DEFAULT_RATE)
-    state_rel = {"CA": 1.15, "NY": 1.10, "FL": 1.00, "TX": 0.95, "IL": 0.92}.get(state.upper(), 1.0) if state else 1.0
+    pay = float(payroll)
+    klass = str(class_code)
+    exp_mod = float(emod)
+    manual_rate = WC_CLASS_RATES.get(klass, WC_DEFAULT_RATE)
+    state_rel = {"CA": 1.15, "NY": 1.10, "FL": 1.00, "TX": 0.95, "IL": 0.92}.get((state or "").upper(), 1.0)
 
-    manual_premium = (payroll / 100.0) * manual_rate
-    subject = manual_premium * emod * state_rel
+    manual_premium = (pay / 100.0) * manual_rate
+    subject = manual_premium * exp_mod * state_rel
     adjusted = subject * (1 + market_mod_pct / 100.0) * (1 + schedule_mod_pct / 100.0) + WC_EXPENSE_CONSTANT
     adjusted = max(round(adjusted, 2), WC_MIN)
 
     components = [
-        RateComponent("ncci_class_rate", manual_rate, f"class_{class_code}"),
-        RateComponent("payroll", payroll, "annual_payroll"),
-        RateComponent("experience_mod", emod, emod_source or "ncci_emod", (emod - 1.0) * 100),
+        RateComponent("ncci_class_rate", manual_rate, f"class_{klass}"),
+        RateComponent("payroll", pay, "annual_payroll"),
+        RateComponent("experience_mod", exp_mod, emod_source or "ncci_emod", (exp_mod - 1.0) * 100),
         RateComponent("state_relativity", state_rel, "state"),
         RateComponent("expense_constant", WC_EXPENSE_CONSTANT, "flat"),
     ]
@@ -660,14 +657,14 @@ def rate_workers_comp_ncci(
         base_premium=round(manual_premium, 2),
         adjusted_premium=adjusted,
         schedule_modifications=components,
-        rate_per_100_tiv=round(adjusted / max(payroll / 100.0, 1), 4),
+        rate_per_100_tiv=round(adjusted / max(pay / 100.0, 1), 4),
         eligible=True,
         metadata={
             "exposure_basis": "payroll",
-            "payroll": payroll,
-            "ncci_class_code": class_code,
+            "payroll": pay,
+            "ncci_class_code": klass,
             "manual_rate": manual_rate,
-            "experience_mod": emod,
+            "experience_mod": exp_mod,
             "emod_source": emod_source,
             "state_relativity": state_rel,
             "rating_engine": "ncci_class_emod",

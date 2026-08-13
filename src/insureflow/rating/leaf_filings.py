@@ -114,11 +114,11 @@ def _exposure_for_basis(bundle: SubmissionBundle, basis: str, filing: dict[str, 
     basis = (basis or "tiv").lower()
 
     if basis in ("payroll", "remuneration"):
-        return _payroll(bundle), "payroll"
+        return float(_payroll(bundle) or 0.0), "payroll"
     if basis in ("power_units", "vehicles", "units"):
-        return float(_vehicle_count(bundle)), "power_units"
+        return float(_vehicle_count(bundle) or 0), "power_units"
     if basis in ("limit", "policy_limit"):
-        return _limit(bundle, 1_000_000.0), "limit"
+        return float(_limit(bundle) or 0.0), "limit"
     if basis in ("completed_value", "builders"):
         v = _tiv(bundle) or _money(blob, "completed value", "contract value", "project value")
         return max(v, 500_000.0), "completed_value"
@@ -129,11 +129,11 @@ def _exposure_for_basis(bundle: SubmissionBundle, basis: str, filing: dict[str, 
         v = _money(blob, "bond amount", "bond penalty", "penal sum", "contract value") or _tiv(bundle)
         return max(v, 100_000.0), "bond_penalty"
     if basis in ("employees_x_limit", "fidelity"):
-        emp = float(_employees(bundle))
-        lim = _limit(bundle, 250_000.0)
+        emp = float(_employees(bundle) or 0)
+        lim = float(_limit(bundle) or 0.0)
         return emp * (lim / 100.0), "employees_x_limit"
     if basis in ("employees",):
-        return float(_employees(bundle)), "employees"
+        return float(_employees(bundle) or 0), "employees"
     if basis in ("receivables", "ar"):
         v = _money(blob, "accounts receivable", "receivables", "ar balance") or _tiv(bundle)
         if bundle.structured and bundle.structured.financial:
@@ -141,7 +141,7 @@ def _exposure_for_basis(bundle: SubmissionBundle, basis: str, filing: dict[str, 
             v = max(v, float(getattr(bundle.structured.financial, "annual_revenue", 0) or 0) * 0.15)
         return max(v, 250_000.0), "receivables"
     if basis in ("benefit_amount", "face_amount"):
-        v = _money(blob, "benefit amount", "face amount", "key person amount", "coverage amount") or _limit(bundle)
+        v = _money(blob, "benefit amount", "face amount", "key person amount", "coverage amount") or float(_limit(bundle) or 0.0)
         return max(v, 500_000.0), "benefit_amount"
     if basis in ("contract_value",):
         v = _money(blob, "contract value", "project value", "exposure") or _tiv(bundle)

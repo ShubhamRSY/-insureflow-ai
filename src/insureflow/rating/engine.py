@@ -8,6 +8,7 @@ from insureflow.models.submissions import SubmissionBundle
 from insureflow.rating.calibration import calibrated_lcm, calibrated_loss_costs, calibrated_territory, load_rate_curves
 from insureflow.rating.models import COMMERCIAL_SPECIALTY_LINES, PERSONAL_LINES, InsuranceLine, QuoteRequest, QuoteResult, RateComponent, RatingAdapter
 from insureflow.underwriting.cope import COPERatingEngine
+from insureflow.underwriting.loss_ratio import LossRatioResult
 from insureflow.underwriting.market import get_market_cycle
 
 # ISO-style base loss costs (per $100 of TIV) — representative values
@@ -626,7 +627,7 @@ class InsuranceRatingEngine:
                     pass
         return 0.0
 
-    def _loss_ratio_result(self, bundle: SubmissionBundle):
+    def _loss_ratio_result(self, bundle: SubmissionBundle) -> LossRatioResult:
         from insureflow.underwriting.loss_ratio import loss_ratio_from_bundle
 
         return loss_ratio_from_bundle(bundle)

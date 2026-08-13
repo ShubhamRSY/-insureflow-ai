@@ -68,10 +68,7 @@ def evaluate_life_reinsurance(bundle: SubmissionBundle, *, face_amount: float | 
         findings.append(
             Finding(
                 title="Facultative life reinsurance required",
-                description=(
-                    f"Face ${face:,.0f} is above automatic treaty (${automatic:,.0f}). "
-                    f"Retain ${retention:,.0f}; cede ${cession:,.0f} facultatively. Do not bind until placed."
-                ),
+                description=(f"Face ${face:,.0f} is above automatic treaty (${automatic:,.0f}). Retain ${retention:,.0f}; cede ${cession:,.0f} facultatively. Do not bind until placed."),
                 severity=RiskSeverity.CRITICAL,
                 category="life_reinsurance",
             )

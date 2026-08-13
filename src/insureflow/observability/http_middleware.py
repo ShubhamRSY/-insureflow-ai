@@ -14,7 +14,7 @@ class PrometheusHTTPMiddleware:
     def __init__(self, app: Callable[..., Any]) -> None:
         self.app = app
 
-    async def __call__(self, scope: dict[str, Any], receive: Callable, send: Callable) -> None:
+    async def __call__(self, scope: dict[str, Any], receive: Callable[..., Any], send: Callable[..., Any]) -> None:
         if scope.get("type") != "http":
             await self.app(scope, receive, send)
             return

@@ -14,7 +14,7 @@ from insureflow.underwriting.personal_lines import LifeFactors, _blob, extract_l
 
 
 def income_multiple_for_age(age: int | None) -> float:
-    elig = (life_manual().get("eligibility") or {})
+    elig = life_manual().get("eligibility") or {}
     bands = elig.get("financial_multiple_by_age") or {}
     if not bands:
         return float(elig.get("financial_multiple_income") or 30)
@@ -114,8 +114,7 @@ def evaluate_life_financial(
                 title="Financial underwriting stretch",
                 description=(
                     f"Applied + in-force ${total_face:,.0f} vs income ${income:,.0f} × {multiple:.0f} "
-                    f"(cap ${max_income:,.0f})"
-                    + (f" and net worth ${net_worth:,.0f} × {nw_mult:.0%} (cap ${max_nw:,.0f})" if net_worth else "")
+                    f"(cap ${max_income:,.0f})" + (f" and net worth ${net_worth:,.0f} × {nw_mult:.0%} (cap ${max_nw:,.0f})" if net_worth else "")
                 ),
                 severity=RiskSeverity.HIGH,
                 category="life_financial",

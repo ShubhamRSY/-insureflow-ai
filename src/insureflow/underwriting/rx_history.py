@@ -87,9 +87,7 @@ def screen_rx(bundle: SubmissionBundle) -> RxScreenResult:
                 )
             )
 
-    report_present = bool(
-        re.search(r"rx\s*(?:report|history|database\s+hit)|milliman|scriptcheck|interrogatories", blob, re.I)
-    )
+    report_present = bool(re.search(r"rx\s*(?:report|history|database\s+hit)|milliman|scriptcheck|interrogatories", blob, re.I))
     auth_present = bool(re.search(r"mib\s*/?\s*rx|rx\s+authorization|prescription\s+history\s+auth", blob, re.I))
     live_required = bool(plan.require_live_oracles)
 

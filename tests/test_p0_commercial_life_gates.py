@@ -51,6 +51,7 @@ def test_auto_without_units_is_ineligible():
 
 def test_wc_oracle_emod_is_used():
     b = _bundle(payroll=1_200_000)
+    assert b.structured is not None
     b.structured.risk_profile = RiskProfile(ncci_class_code="5403")
     q = rate_workers_comp_ncci(b, UnderwritingMemo(bundle_id="p0-1"), state="IL", experience_mod=1.25)
     assert q.eligible is True
@@ -151,10 +152,7 @@ def test_life_reinsurance_facultative_and_aps_hold():
 
 
 def test_replacement_1035_and_suitability_flags():
-    text = (
-        "Face amount: 250000 Applicant age: 68 Annual income: 90000 Beneficiary relationship: spouse "
-        "This is a 1035 exchange replacing existing annuity. Variable universal life."
-    )
+    text = "Face amount: 250000 Applicant age: 68 Annual income: 90000 Beneficiary relationship: spouse This is a 1035 exchange replacing existing annuity. Variable universal life."
     fin = evaluate_life_financial(_bundle(text), product_id="variable_universal_life")
     assert fin.exchange_1035 is True
     assert any("1035" in r or "Replacement" in r for r in fin.reasons)

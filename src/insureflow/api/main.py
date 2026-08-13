@@ -649,7 +649,7 @@ async def health() -> dict[str, str]:
 
 
 @app.get("/metrics")
-@limiter.exempt
+@limiter.exempt  # type: ignore[untyped-decorator]
 def prometheus_metrics(request: Request) -> Response:
     """Prometheus scrape endpoint (optional ``METRICS_BEARER``)."""
     from insureflow.observability.prometheus_metrics import render_metrics

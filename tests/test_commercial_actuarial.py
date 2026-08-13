@@ -47,6 +47,7 @@ def test_rate_cyber_manual():
     m = UnderwritingMemo(bundle_id=b.bundle_id, insured_name="Test")
     from insureflow.models.submissions import CoverageDetail
 
+    assert b.structured is not None
     b.structured.coverages = [CoverageDetail(coverage_type="cyber", limit_amount=2_000_000, deductible=25_000, premium=0)]
     q = rate_extended_commercial(b, m, InsuranceLine.CYBER)
     assert q is not None
@@ -105,6 +106,7 @@ def test_gl_uses_sales_not_tiv():
     from insureflow.rating.commercial_actuarial import rate_general_liability_iso
 
     b = _bundle()
+    assert b.structured is not None
     b.structured.coverages = [CoverageDetail(coverage_type="gl", limit_amount=1_000_000, deductible=5_000, premium=0)]
     m = UnderwritingMemo(bundle_id=b.bundle_id, insured_name="Test")
     q = rate_general_liability_iso(b, m, state="TX")

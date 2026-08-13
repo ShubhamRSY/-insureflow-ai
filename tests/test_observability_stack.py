@@ -81,6 +81,4 @@ class TestOpenObserve:
             assert ingest_url("rytera_logs") == "http://openobserve:5080/api/default/rytera_logs/_json"
 
     def test_pipeline_hook_does_not_raise(self) -> None:
-        record_pipeline_observability(
-            {"insurance_line": "life", "ai_decision": "refer", "status": "complete", "quote": {"eligible": False}}
-        )
+        record_pipeline_observability({"insurance_line": "life", "ai_decision": "refer", "status": "complete", "quote": {"eligible": False}})

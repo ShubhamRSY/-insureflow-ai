@@ -8,35 +8,24 @@ from __future__ import annotations
 import os
 import re
 import time
-from typing import Any
+from typing import Any, Iterable
+
+from prometheus_client import CONTENT_TYPE_LATEST, CollectorRegistry, Counter, Histogram, Info, generate_latest
+from prometheus_client import REGISTRY as _DEFAULT_REGISTRY
+from prometheus_client.core import GaugeMetricFamily, Metric
+from prometheus_client.registry import Collector
 
 _PATH_UUID = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", re.I)
 _PATH_HEX = re.compile(r"/[0-9a-f]{16,}(?=/|$)", re.I)
 _PATH_DEMO = re.compile(r"/demo-[0-9a-f]+", re.I)
 _PATH_NUM = re.compile(r"/\d+(?=/|$)")
 
-_PROM_AVAILABLE = True
-try:
-    from prometheus_client import CONTENT_TYPE_LATEST, CollectorRegistry, Counter, Histogram, Info, generate_latest
-    from prometheus_client import REGISTRY as _DEFAULT_REGISTRY
-    from prometheus_client.core import GaugeMetricFamily
-    from prometheus_client.registry import Collector
-except ImportError:  # pragma: no cover - optional until pip install
-    _PROM_AVAILABLE = False
-    CONTENT_TYPE_LATEST = "text/plain; version=0.0.4; charset=utf-8"
-    CollectorRegistry = Any  # type: ignore[misc,assignment]
-    Counter = Histogram = Info = object  # type: ignore[misc,assignment]
-    generate_latest = None  # type: ignore[assignment]
-    _DEFAULT_REGISTRY = None
-    GaugeMetricFamily = object  # type: ignore[misc,assignment]
-    Collector = object  # type: ignore[misc,assignment]
-
 
 def _mp_dir() -> str:
     return (os.getenv("PROMETHEUS_MULTIPROC_DIR") or "").strip()
 
 
-class JobStoreCollector(Collector):  # type: ignore[misc]
+class JobStoreCollector(Collector):
     """Scrape-time job counts — avoids multiprocess Gauge staleness."""
 
     def __init__(self) -> None:
@@ -55,7 +44,7 @@ class JobStoreCollector(Collector):  # type: ignore[misc]
         self._cache = (now, snap)
         return snap
 
-    def collect(self):  # type: ignore[no-untyped-def]
+    def collect(self) -> Iterable[Metric]:
         g = GaugeMetricFamily(
             "rytera_jobs",
             "Job-store counts by namespace and status",
@@ -71,8 +60,6 @@ class JobStoreCollector(Collector):  # type: ignore[misc]
 
 
 def _build_metrics() -> dict[str, Any]:
-    if not _PROM_AVAILABLE:
-        return {}
     http_requests = Counter(
         "rytera_http_requests_total",
         "HTTP requests",
@@ -117,13 +104,13 @@ def _build_metrics() -> dict[str, Any]:
 
 
 _METRICS = _build_metrics()
-_JOB_COLLECTOR = JobStoreCollector() if _PROM_AVAILABLE else None
+_JOB_COLLECTOR = JobStoreCollector()
 _JOB_REGISTERED = False
 
 
 def _ensure_job_collector() -> None:
     global _JOB_REGISTERED
-    if not _PROM_AVAILABLE or _JOB_REGISTERED or _DEFAULT_REGISTRY is None or _JOB_COLLECTOR is None:
+    if _JOB_REGISTERED:
         return
     try:
         _DEFAULT_REGISTRY.register(_JOB_COLLECTOR)
@@ -136,7 +123,7 @@ _ensure_job_collector()
 
 
 def available() -> bool:
-    return _PROM_AVAILABLE
+    return True
 
 
 def normalize_path(path: str) -> str:
@@ -183,15 +170,12 @@ def observe_bind(result: str) -> None:
 
 def render_metrics() -> tuple[bytes, str]:
     """Return (body, content_type) for ``GET /metrics``."""
-    if not _PROM_AVAILABLE or generate_latest is None:
-        body = b"# Prometheus client not installed. pip install prometheus_client\n"
-        return body, "text/plain; charset=utf-8"
     mp = _mp_dir()
     if mp:
         from prometheus_client import multiprocess
 
         registry = CollectorRegistry()
-        multiprocess.MultiProcessCollector(registry)
+        multiprocess.MultiProcessCollector(registry)  # type: ignore[no-untyped-call]
         registry.register(JobStoreCollector())
         return generate_latest(registry), CONTENT_TYPE_LATEST
     _ensure_job_collector()
