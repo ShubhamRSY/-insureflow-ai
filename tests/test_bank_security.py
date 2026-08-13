@@ -152,3 +152,17 @@ def test_auth_reset_blocked_in_bank_mode(monkeypatch: MonkeyPatch) -> None:
 
     posture = resolve_security_posture()
     assert posture.allow_auth_reset is False
+
+
+def test_hardened_ops_endpoints_require_auth(monkeypatch: MonkeyPatch) -> None:
+    monkeypatch.setenv("BANK_MODE", "true")
+    monkeypatch.delenv("METRICS_BEARER", raising=False)
+    from fastapi.testclient import TestClient
+
+    from insureflow.api import app
+
+    client = TestClient(app)
+    assert client.get("/system/diagnostics").status_code == 401
+    assert client.get("/security/status").status_code == 401
+    assert client.get("/metrics").status_code == 401
+    assert client.get("/health").status_code == 200

@@ -5,7 +5,13 @@ __pycache__/
 dist/
 build/
 .env
+.env.*
+!.env.example
+!.env.production.example
 .insureflow/
+credentials.json
+secrets.json
+*.key
 audit_logs/
 pilot_packages/**
 !pilot_packages/README.md

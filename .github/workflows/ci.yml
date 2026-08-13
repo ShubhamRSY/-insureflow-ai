@@ -26,6 +26,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Least privilege for GITHUB_TOKEN. Jobs that push packages / SARIF raise this.
+permissions:
+  contents: read
+
 jobs:
   changes:
     runs-on: ubuntu-latest
@@ -345,18 +349,12 @@ jobs:
             exit 1
           fi
           echo "health: $(cat /tmp/health.json)"
-          echo "--- /system/diagnostics ---"
-          curl -fsS --max-time 20 "$base_url/system/diagnostics"
-          echo ""
           echo "--- /dashboard (SPA shell) ---"
           html="$(curl -fsS --max-time 20 "$base_url/dashboard")"
           case "$html" in
             *Rytera*|*InsureFlow*) echo "dashboard shell OK" ;;
             *) echo "::error::/dashboard did not return the SPA shell"; exit 1 ;;
           esac
-          echo "--- /api/demo/presets ---"
-          curl -fsS --max-time 20 "$base_url/api/demo/presets"
-          echo ""
 
   notify:
     runs-on: ubuntu-latest

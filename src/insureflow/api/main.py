@@ -231,9 +231,16 @@ def auth_status() -> dict[str, Any]:
     }
 
 
+def _require_auth_if_hardened(current: TokenData | None) -> None:
+    """Production/bank mode: do not advertise config to anonymous scanners."""
+    if _posture().is_hardened and current is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required")
+
+
 @app.get("/security/status")
-def security_status() -> dict[str, Any]:
-    """Bank landing-zone security summary (no secrets)."""
+def security_status(current: TokenData | None = Depends(get_current_user_optional)) -> dict[str, Any]:
+    """Bank landing-zone security summary (no secrets). Auth required in production."""
+    _require_auth_if_hardened(current)
     from insureflow.auth.sso import sso_status
     from insureflow.config import settings
 
@@ -655,6 +662,8 @@ def prometheus_metrics(request: Request) -> Response:
     from insureflow.observability.prometheus_metrics import render_metrics
 
     expected = os.getenv("METRICS_BEARER", "").strip()
+    if _posture().is_hardened and not expected:
+        raise HTTPException(status_code=401, detail="METRICS_BEARER required in production")
     if expected:
         auth = request.headers.get("authorization") or ""
         if auth != f"Bearer {expected}":
@@ -737,8 +746,9 @@ def ops_snapshot(
 
 
 @app.get("/system/diagnostics")
-async def system_diagnostics() -> dict[str, Any]:
-    """Public system health — shows what's configured without exposing secrets."""
+async def system_diagnostics(current: TokenData | None = Depends(get_current_user_optional)) -> dict[str, Any]:
+    """System health — public in development; auth required in production/bank mode."""
+    _require_auth_if_hardened(current)
     from insureflow.health.diagnostics import SystemDiagnostics
 
     return SystemDiagnostics(project_root=PROJECT_ROOT).run_all()

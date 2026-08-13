@@ -2,7 +2,7 @@
 
 > Enterprise AI underwriting for **commercial insurance**, **bank mortgage**, and **consumer/commercial lending** — from messy submission packages to a bind-ready, audit-ready decision.
 
-**Production:** [ryterainc.com](https://ryterainc.com) · **Module:** `insureflow`
+**Production:** [ryterainc.com](https://ryterainc.com) · **Module:** `insureflow` · **Source:** private proprietary IP — see [SECURITY.md](./SECURITY.md)
 
 Rytera reads the documents carriers actually receive — ACORD XML, broker PDFs, loss runs, schedules of values, floor plans, financial statements, W-2s, credit reports, appraisals — and turns them into an underwriting memo with a recommendation, a premium or rate quote, an encrypted audit trail, and optional licensed-UW sign-off.
 
