@@ -121,8 +121,9 @@ class DraftBundleStore:
         if not bundle:
             return None
         for doc in bundle.get("documents") or []:
-            if doc.get("doc_id") == doc_id:
-                return doc
+            if isinstance(doc, dict) and doc.get("doc_id") == doc_id:
+                typed: dict[str, Any] = {str(k): v for k, v in doc.items()}
+                return typed
         return None
 
     def file_tree(self, bundle_id: str, org_id: str = "default") -> dict[str, Any] | None:
