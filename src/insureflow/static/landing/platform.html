@@ -31,7 +31,7 @@
     "name": "Rytera",
     "url": "https://ryterainc.com/",
     "logo": "https://ryterainc.com/icon-512.png",
-    "description": "AI underwriting platform for commercial & personal lines insurance, mortgage, and lending.",
+    "description": "AI underwriting platform covering 12 insurance sections plus mortgage and lending.",
     "email": "hello@ryterainc.com"
   }
   </script>
@@ -111,13 +111,19 @@
         <span class="brand-name">Rytera<sup>&trade;</sup></span>
       </a>
         <nav class="nav-desktop" aria-label="Main">
-        <a href="/" data-nav>Home</a>
-        <a href="/pricing" data-nav>Pricing</a>
-        <a href="/platform" data-nav>Platform</a>
-        <a href="/technology" data-nav>Technology</a>
-        <a href="/underwriting" data-nav>Underwriting</a>
-        <a href="/integrations" data-nav>Integrations</a>
-        <a href="/company" data-nav>Company</a>
+          <label class="nav-goto">
+            <span class="sr-only">Go to page</span>
+            <select class="nav-page-select" aria-label="Go to page">
+              <option value="/">Home</option>
+              <option value="/pricing">Pricing</option>
+              <option value="/platform">Platform</option>
+              <option value="/technology">Technology</option>
+              <option value="/underwriting">Underwriting</option>
+              <option value="/integrations">Integrations</option>
+              <option value="/company">Company</option>
+              <option value="/dashboard">Dashboard</option>
+            </select>
+          </label>
         </nav>
         <div class="nav-actions">
           <a class="nav-dash" href="/dashboard">Dashboard</a>
@@ -129,13 +135,19 @@
       </div>
     </header>
     <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile">
-      <a href="/" data-nav>Home</a>
-      <a href="/pricing" data-nav>Pricing</a>
-      <a href="/platform" data-nav>Platform</a>
-      <a href="/technology" data-nav>Technology</a>
-      <a href="/underwriting" data-nav>Underwriting</a>
-      <a href="/integrations" data-nav>Integrations</a>
-      <a href="/company" data-nav>Company</a>
+      <label class="nav-goto nav-goto-mobile">
+        <span class="sr-only">Go to page</span>
+        <select class="nav-page-select" aria-label="Go to page">
+          <option value="/">Home</option>
+          <option value="/pricing">Pricing</option>
+          <option value="/platform">Platform</option>
+          <option value="/technology">Technology</option>
+          <option value="/underwriting">Underwriting</option>
+          <option value="/integrations">Integrations</option>
+          <option value="/company">Company</option>
+          <option value="/dashboard">Dashboard</option>
+        </select>
+      </label>
       <a href="/dashboard">Dashboard</a>
       <button type="button" class="btn btn-primary" id="open-demo-mobile">Book a demo</button>
     </nav>
@@ -145,7 +157,7 @@
         <div class="reveal">
           <p class="section-label">The platform</p>
           <h1>One workbench for every submission</h1>
-          <p class="lead">From messy intake to a bind-ready memo &mdash; Rytera replaces the legacy workbench with an AI-native pipeline your underwriters actually review, not a pile of parsed PDFs.</p>
+          <p class="lead">From messy intake to a bind-ready memo &mdash; twelve insurance sections, mortgage, and lending on one AI-native pipeline your underwriters actually review, not a pile of parsed PDFs.</p>
 
     <div class="cta">
       <button type="button" class="btn btn-primary" id="open-demo-hero">Book a demo</button>
@@ -221,29 +233,29 @@
           <p class="section-label">Deep-dive underwriting</p>
           <h2>Vertical by vertical, further than a shared dashboard</h2>
           <p class="section-desc">
-            Each vertical ships specialist agents, filing-grade rating, and regulatory checks tuned to its own workflow. Select a vertical to explore its deep dive, or see the shared <strong>Connect &amp; pull</strong> intake that powers every line.
+            Each section ships specialist agents, coverage-scoped checklists, and regulatory checks tuned to its own workflow. Select a desk to explore its deep dive, or see the shared <strong>Connect &amp; pull</strong> intake that powers every line.
           </p>
         </div>
         <div class="tabs reveal" role="tablist" aria-label="Verticals">
-          <button class="tab active" data-tab="insurance" role="tab">Commercial insurance</button>
-          <button class="tab" data-tab="personal" role="tab">Personal lines</button>
+          <button class="tab active" data-tab="insurance" role="tab">Commercial &amp; specialty</button>
+          <button class="tab" data-tab="personal" role="tab">Life, health &amp; general</button>
           <button class="tab" data-tab="mortgage" role="tab">Mortgage</button>
           <button class="tab" data-tab="lending" role="tab">Lending</button>
         </div>
         <div class="tab-panel active reveal" id="tab-insurance" role="tabpanel">
           <div class="feature-grid">
-            <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-file-text"/></svg></span><h3>Document ingestion</h3><p>ACORD XML, broker slips, loss runs, SOV, inspections &mdash; auto-classified, parsed, and PII-screened for pilots.</p></div>
-            <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-bot"/></svg></span><h3>Specialist agents</h3><p>A focused 3-phase funnel &mdash; Triage &rarr; Risk &amp; Price &rarr; Decision &mdash; with deep-dive analysis on demand.</p></div>
-            <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-banknote"/></svg></span><h3>Premium &amp; ready bind</h3><p>ACCEPT / CONDITIONAL_ACCEPT / REFER / DECLINE with indicated premium. Ready mode enables PAS bind after licensed UW sign-off when Guidewire is configured.</p></div>
+            <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-file-text"/></svg></span><h3>Document ingestion</h3><p>ACORD XML, broker slips, loss runs, SOV, inspections &mdash; multi-source viewer, auto-classified, parsed, and PII-screened.</p></div>
+            <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-bot"/></svg></span><h3>Specialist agents</h3><p>A focused 3-phase funnel &mdash; Triage &rarr; Risk &amp; Price &rarr; Decision &mdash; with coverage-scoped checklists per product leaf.</p></div>
+            <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-banknote"/></svg></span><h3>Quote or no-quote</h3><p>ACCEPT / CONDITIONAL_ACCEPT / REFER / DECLINE / NO_QUOTE. Unfiled products stay catalog-only. Live PAS bind after licensed UW sign-off when Guidewire is configured.</p></div>
             <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-search"/></svg></span><h3>Submission journey</h3><p>Full pipeline panel per job &mdash; COPE, live oracles, provenance, pricing build-up, and encrypted audit trail.</p></div>
           </div>
         </div>
         <div class="tab-panel reveal" id="tab-personal" role="tabpanel">
           <div class="feature-grid">
-            <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-home"/></svg></span><h3>Homeowners</h3><p>HO-3 applications, dwelling coverage, CLUE checks, and inspection-based risk scoring with filing-grade rate manuals.</p></div>
-            <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-car"/></svg></span><h3>Personal auto</h3><p>Applications, MVRs, and vehicle declarations &mdash; driver &amp; vehicle risk scoring with state rate manual build-up.</p></div>
-            <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-heart-pulse"/></svg></span><h3>Term life</h3><p>Applications, paramedical exams, and medical underwriting &mdash; mortality scoring with life rate and medical guides.</p></div>
-            <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-file-check"/></svg></span><h3>Filing-grade rating</h3><p>Homeowners, auto, and life rating engines driven by tracked rate manuals and state filing books.</p></div>
+            <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-heart-pulse"/></svg></span><h3>Life &mdash; term live</h3><p>Level, decreasing, mortgage, ROP, group, and credit life with paramed / APS gates. Whole, ULIP, endowment, and annuity stay catalog until filed.</p></div>
+            <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-shield"/></svg></span><h3>Health &mdash; 37 products</h3><p>Individual, family floater, maternity, OPD, CI, senior, group, top-up, PA, and disability. Distinct UW per leaf. Catalog-only until a filed health manual exists.</p></div>
+            <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-car"/></svg></span><h3>General / non-life &mdash; 31 products</h3><p>Motor TP vs comprehensive, home structure vs contents, travel domestic vs international, cargo vs hull, fire, liability, cyber. Per-leaf docs, not generic KYC.</p></div>
+            <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-home"/></svg></span><h3>Homeowners &amp; auto</h3><p>HO-3, CLUE, MVR, and inspection scoring with filing-grade state rate manuals when your book is loaded.</p></div>
           </div>
         </div>
         <div class="tab-panel reveal" id="tab-mortgage" role="tabpanel">
@@ -324,6 +336,21 @@
             <h3>LLM performance &amp; price benchmark</h3>
             <p>Continuous benchmarking &mdash; TTFT, output speed, reasoning tokens, and blended 7:2:1 per-token cost &mdash; gated by quality thresholds and tracked on the eval dashboard.</p>
           </div>
+          <div class="bento-card ac-green">
+            <p class="bento-kicker"><svg class="ico"><use href="#i-list-checks"/></svg> Coverage scope</p>
+            <h3>Per-leaf checklists</h3>
+            <p>Maternity is not OPD. Car TP is not comprehensive. Cargo is not hull. Each product leaf has its own documents and UW gates.</p>
+          </div>
+          <div class="bento-card ac-violet">
+            <p class="bento-kicker"><svg class="ico"><use href="#i-inbox"/></svg> Multi-source files</p>
+            <h3>Connect &amp; pull viewer</h3>
+            <p>Email, S3, SharePoint, SFTP, and uploads land in one file viewer so UW does not hunt shared drives.</p>
+          </div>
+          <div class="bento-card ac-amber">
+            <p class="bento-kicker"><svg class="ico"><use href="#i-chart"/></svg> Observability</p>
+            <h3>Prometheus, Grafana, OpenObserve</h3>
+            <p>Pipeline metrics, dashboards, and log ingest so ops can see health without inventing a fake green status.</p>
+          </div>
         </div>
       </section>
 
@@ -361,7 +388,7 @@
           <a href="/dashboard">Dashboard</a>
         </nav>
         <div>
-          <div style="margin-bottom:.25rem">AI-native underwriting for carriers, MGAs &amp; aggregators.</div>
+          <div style="margin-bottom:.25rem">AI-native underwriting across 12 insurance sections, mortgage &amp; lending.</div>
           <div>&copy; 2026 Rytera Inc. All rights reserved.</div>
         </div>
       </div>
@@ -390,16 +417,16 @@
           <div class="field">
             <label for="d-vertical">What do you underwrite?</label>
             <select id="d-vertical" name="vertical">
-              <option value="Commercial insurance">Commercial insurance</option>
-              <option value="General liability">General liability</option>
-              <option value="Commercial property">Commercial property</option>
-              <option value="Commercial auto">Commercial auto</option>
+              <option value="Life insurance">Life insurance</option>
+              <option value="Health insurance">Health insurance</option>
+              <option value="General / non-life">General / non-life (motor, home, travel)</option>
+              <option value="Commercial lines">Commercial lines</option>
               <option value="Workers' compensation">Workers' compensation</option>
               <option value="Professional liability / E&O">Professional liability / E&O</option>
               <option value="Cyber">Cyber</option>
-              <option value="Excess &amp; surplus / specialty">Excess &amp; surplus / specialty</option>
-              <option value="Inland &amp; ocean marine">Inland &amp; ocean marine</option>
-              <option value="Personal lines">Personal lines</option>
+              <option value="Specialty / E&amp;S">Specialty / E&amp;S</option>
+              <option value="Engineering / aviation">Engineering / aviation</option>
+              <option value="Catastrophe">Catastrophe / flood / earthquake</option>
               <option value="Mortgage lending">Mortgage lending</option>
               <option value="Commercial lending">Commercial lending</option>
               <option value="Not sure yet">Not sure yet</option>

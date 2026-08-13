@@ -31,7 +31,7 @@
     "name": "Rytera",
     "url": "https://ryterainc.com/",
     "logo": "https://ryterainc.com/icon-512.png",
-    "description": "AI underwriting platform for commercial & personal lines insurance, mortgage, and lending.",
+    "description": "AI underwriting platform covering 12 insurance sections plus mortgage and lending.",
     "email": "hello@ryterainc.com"
   }
   </script>
@@ -111,13 +111,19 @@
         <span class="brand-name">Rytera<sup>&trade;</sup></span>
       </a>
         <nav class="nav-desktop" aria-label="Main">
-        <a href="/" data-nav>Home</a>
-        <a href="/pricing" data-nav>Pricing</a>
-        <a href="/platform" data-nav>Platform</a>
-        <a href="/technology" data-nav>Technology</a>
-        <a href="/underwriting" data-nav>Underwriting</a>
-        <a href="/integrations" data-nav>Integrations</a>
-        <a href="/company" data-nav>Company</a>
+          <label class="nav-goto">
+            <span class="sr-only">Go to page</span>
+            <select class="nav-page-select" aria-label="Go to page">
+              <option value="/">Home</option>
+              <option value="/pricing">Pricing</option>
+              <option value="/platform">Platform</option>
+              <option value="/technology">Technology</option>
+              <option value="/underwriting">Underwriting</option>
+              <option value="/integrations">Integrations</option>
+              <option value="/company">Company</option>
+              <option value="/dashboard">Dashboard</option>
+            </select>
+          </label>
         </nav>
         <div class="nav-actions">
           <a class="nav-dash" href="/dashboard">Dashboard</a>
@@ -129,13 +135,19 @@
       </div>
     </header>
     <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile">
-      <a href="/" data-nav>Home</a>
-      <a href="/pricing" data-nav>Pricing</a>
-      <a href="/platform" data-nav>Platform</a>
-      <a href="/technology" data-nav>Technology</a>
-      <a href="/underwriting" data-nav>Underwriting</a>
-      <a href="/integrations" data-nav>Integrations</a>
-      <a href="/company" data-nav>Company</a>
+      <label class="nav-goto nav-goto-mobile">
+        <span class="sr-only">Go to page</span>
+        <select class="nav-page-select" aria-label="Go to page">
+          <option value="/">Home</option>
+          <option value="/pricing">Pricing</option>
+          <option value="/platform">Platform</option>
+          <option value="/technology">Technology</option>
+          <option value="/underwriting">Underwriting</option>
+          <option value="/integrations">Integrations</option>
+          <option value="/company">Company</option>
+          <option value="/dashboard">Dashboard</option>
+        </select>
+      </label>
       <a href="/dashboard">Dashboard</a>
       <button type="button" class="btn btn-primary" id="open-demo-mobile">Book a demo</button>
     </nav>
@@ -145,7 +157,7 @@
         <div class="reveal">
           <p class="section-label">Integrations</p>
           <h1>Connects to the systems you already use</h1>
-          <p class="lead">One Connect &amp; pull hub feeds insurance, mortgage, and lending intake &mdash; policy admin, CRM, oracles, and document sources, each with live, simulated, and auto modes.</p>
+          <p class="lead">One Connect &amp; pull hub feeds all 12 insurance sections plus mortgage and lending &mdash; policy admin, CRM, oracles, and document sources, each with live, simulated, and auto modes.</p>
 
     <div class="cta">
       <button type="button" class="btn btn-primary" id="open-demo-hero">Book a demo</button>
@@ -227,7 +239,7 @@
           <a href="/dashboard">Dashboard</a>
         </nav>
         <div>
-          <div style="margin-bottom:.25rem">AI-native underwriting for carriers, MGAs &amp; aggregators.</div>
+          <div style="margin-bottom:.25rem">AI-native underwriting across 12 insurance sections, mortgage &amp; lending.</div>
           <div>&copy; 2026 Rytera Inc. All rights reserved.</div>
         </div>
       </div>
@@ -256,16 +268,16 @@
           <div class="field">
             <label for="d-vertical">What do you underwrite?</label>
             <select id="d-vertical" name="vertical">
-              <option value="Commercial insurance">Commercial insurance</option>
-              <option value="General liability">General liability</option>
-              <option value="Commercial property">Commercial property</option>
-              <option value="Commercial auto">Commercial auto</option>
+              <option value="Life insurance">Life insurance</option>
+              <option value="Health insurance">Health insurance</option>
+              <option value="General / non-life">General / non-life (motor, home, travel)</option>
+              <option value="Commercial lines">Commercial lines</option>
               <option value="Workers' compensation">Workers' compensation</option>
               <option value="Professional liability / E&O">Professional liability / E&O</option>
               <option value="Cyber">Cyber</option>
-              <option value="Excess &amp; surplus / specialty">Excess &amp; surplus / specialty</option>
-              <option value="Inland &amp; ocean marine">Inland &amp; ocean marine</option>
-              <option value="Personal lines">Personal lines</option>
+              <option value="Specialty / E&amp;S">Specialty / E&amp;S</option>
+              <option value="Engineering / aviation">Engineering / aviation</option>
+              <option value="Catastrophe">Catastrophe / flood / earthquake</option>
               <option value="Mortgage lending">Mortgage lending</option>
               <option value="Commercial lending">Commercial lending</option>
               <option value="Not sure yet">Not sure yet</option>
