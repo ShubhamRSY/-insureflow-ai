@@ -20,6 +20,7 @@ from insureflow.models.agents import AgentResult, AgentType, Finding, Recommenda
 from insureflow.models.submissions import SubmissionBundle
 from insureflow.outcomes.feedback import FeedbackEngine
 from insureflow.rating.engine import InsuranceRatingEngine
+from insureflow.rating.engine import ISO_LOSS_COSTS
 from insureflow.rating.models import InsuranceLine
 from insureflow.storage.encryption import EnvelopeEncryption
 from insureflow.workflow.models import SignOffAction, WorkflowState
@@ -328,7 +329,7 @@ class TestInsuranceAPIProduction:
         overview = client.get("/pipeline/rating/ratemaking", headers=headers)
         assert overview.status_code == 200
         data = overview.json()
-        assert len(data["line_build_ups"]) == len(list(InsuranceLine))
+        assert len(data["line_build_ups"]) == len(ISO_LOSS_COSTS)
         assert {"ISO", "AAIS", "NCCI"}.issubset(set(data["advisory_organizations"]))
         assert len(data["regulatory"]) == 3
         assert len(data["characteristics"]) == 5

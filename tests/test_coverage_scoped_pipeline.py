@@ -123,10 +123,7 @@ def test_health_pipeline_runs_only_selected_cancer_coverage(tmp_path: Path) -> N
 
 
 def test_health_pipeline_maternity_logic_differs_from_opd(tmp_path: Path) -> None:
-    kyc = (
-        "Identity proof Aadhaar. Address proof utility bill. Age proof 10th marksheet. "
-        "Passport-size photograph. Proposal form. Age: 30. Already pregnant 10 weeks."
-    )
+    kyc = "Identity proof Aadhaar. Address proof utility bill. Age proof 10th marksheet. Passport-size photograph. Proposal form. Age: 30. Already pregnant 10 weeks."
     mat = _pipeline(tmp_path, "cov-mat").run(
         bundle_id="health-mat",
         insurance_line="health",
