@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Cable, Check, CheckCircle2, FileText, Loader2, Play, X, AlertTriangle } from 'lucide-react';
+import { Cable, Check, CheckCircle2, Loader2, Play } from 'lucide-react';
 import { endpoints } from '../lib/api';
 import ConnectorLogo from './ConnectorLogo';
+import PulledFilesBrowser from './PulledFilesBrowser';
 import { groupSourcesByCategory } from '../lib/connectorBrands';
 import { UI_HINTS } from '../lib/uiHints';
 import { Hint, HintCheckbox } from './ui';
@@ -34,6 +35,7 @@ export default function ConnectAndPull({
   const [pulling, setPulling] = useState(false);
   const [bundleId, setBundleId] = useState(null);
   const [bundleDocs, setBundleDocs] = useState([]);
+  const [bundleTree, setBundleTree] = useState([]);
   const [relevanceByName, setRelevanceByName] = useState({});
   const [useLlm, setUseLlm] = useState(true);
   const [running, setRunning] = useState(false);
@@ -72,6 +74,7 @@ export default function ConnectAndPull({
       const detail = await endpoints.getDraftBundle(bid);
       const docs = detail.documents || [];
       setBundleDocs(docs);
+      setBundleTree(detail.tree || []);
       if (docs.length) {
         const payload = docs.map((d) => ({
           filename: d.filename,
@@ -337,35 +340,16 @@ export default function ConnectAndPull({
       )}
 
       {bundleDocs.length > 0 && (
-        <div className="rounded-lg border border-white/[0.06] bg-surface/40 p-2">
-          <div className="mb-1 flex items-center justify-between px-1">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Pulled documents</p>
-            {bundleDocs.some((d) => relevanceByName[d.filename]?.relevant === false) && (
-              <button type="button" onClick={removeIrrelevant} className="text-[10px] text-amber-400 hover:text-amber-300">
-                Remove irrelevant
-              </button>
-            )}
-          </div>
-          <div className="max-h-36 space-y-0.5 overflow-y-auto">
-            {bundleDocs.map((doc) => {
-              const rel = relevanceByName[doc.filename];
-              const bad = rel && rel.relevant === false;
-              return (
-                <div key={doc.doc_id} className={`group flex items-center gap-2 rounded-md px-2 py-1 ${bad ? 'bg-amber-500/10' : ''}`}>
-                  {bad ? <AlertTriangle className="h-3 w-3 shrink-0 text-amber-400" /> : <FileText className="h-3 w-3 shrink-0 text-insurance" />}
-                  <span className="min-w-0 flex-1 truncate text-[11px] text-slate-300" title={rel?.reason || ''}>{doc.filename}</span>
-                  <span className={`shrink-0 text-[9px] ${bad ? 'text-amber-400' : 'text-slate-600'}`}>
-                    {bad ? 'irrelevant' : (rel?.doc_type || doc.source_id)}
-                  </span>
-                  <button type="button" onClick={() => handleRemoveDoc(bundleId, doc.doc_id)}
-                    className="shrink-0 text-slate-600 transition hover:text-red-400">
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-          <div className="mt-2 flex items-center justify-between">
+        <div className="space-y-2">
+          <PulledFilesBrowser
+            bundleId={bundleId}
+            documents={bundleDocs}
+            tree={bundleTree}
+            relevanceByName={relevanceByName}
+            onRemove={handleRemoveDoc}
+            onRemoveIrrelevant={removeIrrelevant}
+          />
+          <div className="flex items-center justify-between">
             <HintCheckbox
               hint={UI_HINTS.llmExtraction}
               label="LLM extraction"

@@ -304,16 +304,23 @@ DEMO_CONNECTORS: dict[str, dict[str, Any]] = {
 }
 
 
-def _encode_file(path: Path) -> dict[str, str]:
+def _encode_file(path: Path, root: Path | None = None) -> dict[str, str]:
     ext = path.suffix.lower()
+    rel = path.relative_to(root).as_posix() if root is not None else path.name
+    parent = str(Path(rel).parent)
+    directory = "" if parent in {".", ""} else parent
     if ext in SUPPORTED_BINARY:
         return {
             "filename": path.name,
+            "path": rel,
+            "directory": directory,
             "content": base64.b64encode(path.read_bytes()).decode("ascii"),
             "encoding": "base64",
         }
     return {
         "filename": path.name,
+        "path": rel,
+        "directory": directory,
         "content": path.read_text(encoding="utf-8"),
         "encoding": "utf-8",
     }
@@ -327,7 +334,10 @@ def load_package(examples_dir: Path, package_id: str) -> list[dict[str, str]]:
     for fname in pkg["files"]:
         path = examples_dir / fname
         if path.is_file():
-            docs.append(_encode_file(path))
+            encoded = _encode_file(path, root=examples_dir)
+            encoded["directory"] = package_id
+            encoded["path"] = f"{package_id}/{path.name}"
+            docs.append(encoded)
     if not docs:
         raise FileNotFoundError(f"No files found for package {package_id}")
     return docs
@@ -341,7 +351,7 @@ def load_directory(directory: Path, max_files: int = 40) -> list[dict[str, str]]
     for path in sorted(directory.rglob("*")):
         if not path.is_file() or path.suffix.lower() not in allowed:
             continue
-        docs.append(_encode_file(path))
+        docs.append(_encode_file(path, root=directory))
         if len(docs) >= max_files:
             break
     if not docs:

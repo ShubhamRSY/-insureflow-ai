@@ -156,6 +156,40 @@ def test_marketplace_multi_pull_creates_bundle_and_runs_mortgage() -> None:
     assert run.json()["status"] == "processing"
 
 
+def test_connect_and_marketplace_file_tree_and_preview() -> None:
+    h = _headers()
+    bundle = client.post("/pipeline/bundles", headers=h, json={"name": "file-tree"}).json()
+    bundle_id = bundle["bundle_id"]
+    pulled = client.post("/api/insurance/sources/pacific-coast/pull", headers=h, json={"bundle_id": bundle_id})
+    assert pulled.status_code == 200
+    extra = client.post(
+        "/marketplace/sources/clue/pull",
+        headers=h,
+        json={"bundle_id": bundle_id, "include_submission": False},
+    )
+    assert extra.status_code == 200
+
+    detail = client.get(f"/pipeline/bundles/{bundle_id}", headers=h)
+    assert detail.status_code == 200
+    body = detail.json()
+    assert body["tree"]
+    assert body["document_count"] >= 2
+    source_ids = {s["source_id"] for s in body["tree"]}
+    assert "pacific-coast" in source_ids
+    assert "clue" in source_ids
+    dirs = {d["path"] for s in body["tree"] for d in s["directories"]}
+    assert "pacific-coast" in dirs
+    assert "clue" in dirs
+
+    tree = client.get(f"/pipeline/bundles/{bundle_id}/files", headers=h)
+    assert tree.status_code == 200
+    first = tree.json()["sources"][0]["directories"][0]["files"][0]
+    preview = client.get(f"/pipeline/bundles/{bundle_id}/documents/{first['doc_id']}", headers=h)
+    assert preview.status_code == 200
+    assert preview.json()["filename"]
+    assert preview.json().get("path")
+
+
 def test_marketplace_pull_unknown_source_404() -> None:
     h = _headers()
     resp = client.post("/marketplace/sources/not-a-vendor/pull", headers=h, json={})

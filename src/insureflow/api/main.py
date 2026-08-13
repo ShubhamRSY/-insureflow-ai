@@ -1619,25 +1619,50 @@ def get_draft_bundle(
     bundle = store.get(bundle_id, org_id=current.org_id)
     if not bundle:
         raise HTTPException(status_code=404, detail="Draft bundle not found")
-    # Return without document content for the list view
+    from insureflow.storage.draft_bundle_store import _public_file_meta, build_file_tree
+
+    documents = [_public_file_meta(d) for d in bundle.get("documents", [])]
     return {
         "bundle_id": bundle["bundle_id"],
         "name": bundle.get("name", ""),
         "status": bundle.get("status", ""),
-        "documents": [
-            {
-                "doc_id": d["doc_id"],
-                "filename": d["filename"],
-                "source_id": d.get("source_id", ""),
-                "connection_label": d.get("connection_label", ""),
-                "added_at": d.get("added_at", ""),
-            }
-            for d in bundle.get("documents", [])
-        ],
-        "document_count": len(bundle.get("documents", [])),
+        "documents": documents,
+        "tree": build_file_tree(bundle.get("documents", [])),
+        "document_count": len(documents),
         "created_at": bundle.get("created_at", ""),
         "updated_at": bundle.get("updated_at", ""),
     }
+
+
+@app.get("/pipeline/bundles/{bundle_id}/files")
+def draft_bundle_file_tree(
+    bundle_id: str,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Directory tree of pulled files grouped by source → folder."""
+    from insureflow.storage.draft_bundle_store import get_draft_bundle_store
+
+    store = get_draft_bundle_store()
+    tree = store.file_tree(bundle_id, org_id=current.org_id)
+    if not tree:
+        raise HTTPException(status_code=404, detail="Draft bundle not found")
+    return tree
+
+
+@app.get("/pipeline/bundles/{bundle_id}/documents/{doc_id}")
+def preview_draft_document(
+    bundle_id: str,
+    doc_id: str,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Preview a single accumulated file (text snippet; binary is metadata-only)."""
+    from insureflow.storage.draft_bundle_store import get_draft_bundle_store, preview_document
+
+    store = get_draft_bundle_store()
+    doc = store.get_document(bundle_id, doc_id, org_id=current.org_id)
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+    return preview_document(doc)
 
 
 @app.post("/pipeline/bundles/{bundle_id}/documents")

@@ -42,6 +42,7 @@ def test_add_documents() -> None:
     assert len(result["documents"]) == 2
     assert result["documents"][0]["source_id"] == "email-inbox"
     assert result["documents"][0]["doc_id"].startswith("doc-")
+    assert result["documents"][0]["filename"] == "acord.xml"
 
 
 def test_add_documents_accumulates() -> None:
@@ -111,6 +112,43 @@ def test_to_pipeline_documents() -> None:
     # Should not include metadata fields
     assert "doc_id" not in docs[0]
     assert "source_id" not in docs[0]
+
+
+def test_file_tree_groups_by_source_and_directory() -> None:
+    store = _make_store()
+    bundle = store.create(org_id="test")
+    store.add_documents(
+        bundle["bundle_id"],
+        [
+            {"filename": "acord.xml", "path": "pacific-coast/acord.xml", "directory": "pacific-coast", "content": "<xml/>", "encoding": "utf-8"},
+            {"filename": "loss.md", "path": "pacific-coast/loss.md", "directory": "pacific-coast", "content": "# Loss", "encoding": "utf-8"},
+        ],
+        source_id="google-drive",
+        connection_label="Google Drive › Broker Submissions",
+        org_id="test",
+    )
+    store.add_documents(
+        bundle["bundle_id"],
+        [{"filename": "clue.json", "path": "clue/clue.json", "directory": "clue", "content": "{}", "encoding": "utf-8"}],
+        source_id="clue",
+        connection_label="LexisNexis CLUE",
+        org_id="test",
+    )
+    tree = store.file_tree(bundle["bundle_id"], org_id="test")
+    assert tree is not None
+    assert tree["document_count"] == 3
+    by_source = {s["source_id"]: s for s in tree["sources"]}
+    assert by_source["google-drive"]["file_count"] == 2
+    assert by_source["google-drive"]["directories"][0]["path"] == "pacific-coast"
+    assert by_source["clue"]["label"] == "LexisNexis CLUE"
+    drive_files = by_source["google-drive"]["directories"][0]["files"]
+    preview = store.get_document(bundle["bundle_id"], drive_files[0]["doc_id"], org_id="test")
+    assert preview is not None
+    from insureflow.storage.draft_bundle_store import preview_document
+
+    shown = preview_document(preview)
+    assert shown["previewable"] is True
+    assert shown["content"]
 
 
 def test_org_isolation() -> None:

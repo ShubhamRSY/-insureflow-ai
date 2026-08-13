@@ -85,8 +85,11 @@ def _artifact_document(source_id: str, meta: dict[str, Any], config: dict[str, A
         }
     if kind == "mortgage" or source_id in {"fannie-mae", "freddie-mac", "mers", "black-knight", "credit-plus"}:
         payload["mortgage"] = {"product": "residential mortgage", "borrower_credit_report": "simulated"}
+    filename = f"{source_id}_marketplace_pull.json"
     return {
-        "filename": f"{source_id}_marketplace_pull.json",
+        "filename": filename,
+        "path": f"{source_id}/{filename}",
+        "directory": source_id,
         "content": json.dumps(payload, indent=2),
         "encoding": "utf-8",
     }

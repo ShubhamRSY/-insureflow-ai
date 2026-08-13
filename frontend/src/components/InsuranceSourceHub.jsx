@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  Cloud, FolderOpen, Database, FileText, CheckCircle2, Loader2,
+  Cloud, FolderOpen, Database, CheckCircle2, Loader2,
   Building2, PenLine, MessageSquare, Briefcase, Link2, Package, Inbox,
-  ArrowLeftRight, Warehouse, Mail, Check, Upload, X,
+  ArrowLeftRight, Warehouse, Mail, Check, Upload,
 } from 'lucide-react';
 import { endpoints } from '../lib/api';
-import { detectDocType } from '../lib/insuranceDocs';
 import { groupSourcesByCategory } from '../lib/connectorBrands';
 import { UI_HINTS } from '../lib/uiHints';
 import ConnectorLogo from './ConnectorLogo';
+import PulledFilesBrowser from './PulledFilesBrowser';
 import { HintCheckbox } from './ui';
 
 const SECTION_ICONS = {
@@ -64,6 +64,7 @@ export default function InsuranceSourceHub({ onSubmit, loading }) {
 
   const [bundleId, setBundleId] = useState(null);
   const [bundleDocs, setBundleDocs] = useState([]);
+  const [bundleTree, setBundleTree] = useState([]);
 
   const sections = useMemo(() => groupSourcesByCategory(sources), [sources]);
   const activeSection = sections.find((s) => s.id === categoryId) || sections[0];
@@ -89,7 +90,11 @@ export default function InsuranceSourceHub({ onSubmit, loading }) {
 
   const refreshBundle = async (bid) => {
     if (!bid) return;
-    try { const detail = await endpoints.getDraftBundle(bid); setBundleDocs(detail.documents || []); }
+    try {
+      const detail = await endpoints.getDraftBundle(bid);
+      setBundleDocs(detail.documents || []);
+      setBundleTree(detail.tree || []);
+    }
     catch { /* noop */ }
   };
 
@@ -141,14 +146,14 @@ export default function InsuranceSourceHub({ onSubmit, loading }) {
   };
 
   const handleClearAll = async (bid) => {
-    try { await endpoints.deleteDraftBundle(bid); setBundleId(null); setBundleDocs([]); setConnected(null); setActiveSource(null); setEmails([]); setSelectedEmailIds(new Set()); }
+    try { await endpoints.deleteDraftBundle(bid); setBundleId(null); setBundleDocs([]); setBundleTree([]); setConnected(null); setActiveSource(null); setEmails([]); setSelectedEmailIds(new Set()); }
     catch (e) { setError(e.message); }
   };
 
   const handleRunPipeline = async (bid, llm) => {
     try {
       const result = await endpoints.runDraftBundle(bid, llm);
-      setBundleId(null); setBundleDocs([]); setConnected(null); setActiveSource(null);
+      setBundleId(null); setBundleDocs([]); setBundleTree([]); setConnected(null); setActiveSource(null);
       setEmails([]); setSelectedEmailIds(new Set());
       await onSubmit?.({ _jobId: result.job_id });
     } catch (e) { setError(e.message); }
@@ -298,19 +303,13 @@ export default function InsuranceSourceHub({ onSubmit, loading }) {
             </div>
           </div>
 
-          {/* Doc list compact */}
-          <div className="mb-2 max-h-32 space-y-0.5 overflow-y-auto">
-            {bundleDocs.map((doc) => (
-              <div key={doc.doc_id} className="flex items-center gap-2 rounded-md bg-white/[0.02] px-2 py-1 group">
-                <FileText className="h-3 w-3 shrink-0 text-insurance" />
-                <span className="truncate text-[11px] text-slate-400 flex-1">{doc.filename}</span>
-                <span className="text-[9px] text-slate-600 shrink-0">{doc.source_id}</span>
-                <button type="button" onClick={() => handleRemoveDoc(bundleId, doc.doc_id)}
-                  className="opacity-0 group-hover:opacity-100 text-slate-600 hover:text-red-400 transition">
-                  <X className="h-3 w-3" />
-                </button>
-              </div>
-            ))}
+          <div className="mb-2">
+            <PulledFilesBrowser
+              bundleId={bundleId}
+              documents={bundleDocs}
+              tree={bundleTree}
+              onRemove={handleRemoveDoc}
+            />
           </div>
 
           <button type="button" onClick={() => handleRunPipeline(bundleId, useLlm)}

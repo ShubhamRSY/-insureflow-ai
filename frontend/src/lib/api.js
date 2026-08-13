@@ -131,6 +131,8 @@ export const endpoints = {
   draftBundles: () => api('/pipeline/bundles'),
   createDraftBundle: (name = '') => api('/pipeline/bundles', { method: 'POST', body: { name } }),
   getDraftBundle: (id) => api(`/pipeline/bundles/${id}`),
+  draftBundleFiles: (id) => api(`/pipeline/bundles/${id}/files`),
+  previewDraftDocument: (bundleId, docId) => api(`/pipeline/bundles/${bundleId}/documents/${docId}`),
   addDocsToDraft: (id, documents, sourceId = '', connectionLabel = '') =>
     api(`/pipeline/bundles/${id}/documents`, { method: 'POST', body: { documents, source_id: sourceId, connection_label: connectionLabel } }),
   removeDocFromDraft: (bundleId, docId) =>
