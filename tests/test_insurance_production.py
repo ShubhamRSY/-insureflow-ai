@@ -19,8 +19,7 @@ from insureflow.insurance.pipeline import InsurancePipeline
 from insureflow.models.agents import AgentResult, AgentType, Finding, Recommendation, RiskSeverity, UnderwritingMemo, UWDecision
 from insureflow.models.submissions import SubmissionBundle
 from insureflow.outcomes.feedback import FeedbackEngine
-from insureflow.rating.engine import InsuranceRatingEngine
-from insureflow.rating.engine import ISO_LOSS_COSTS
+from insureflow.rating.engine import ISO_LOSS_COSTS, InsuranceRatingEngine
 from insureflow.rating.models import InsuranceLine
 from insureflow.storage.encryption import EnvelopeEncryption
 from insureflow.workflow.models import SignOffAction, WorkflowState
