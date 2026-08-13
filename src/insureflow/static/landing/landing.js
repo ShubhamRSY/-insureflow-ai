@@ -9,12 +9,26 @@
     if (a.getAttribute('href') === pathname) a.classList.add('active');
   });
 
-  document.querySelectorAll('.nav-page-select').forEach(function (sel) {
-    var match = Array.prototype.some.call(sel.options, function (o) { return o.value === pathname; });
-    if (match) sel.value = pathname;
-    sel.addEventListener('change', function () {
-      if (sel.value) window.location.href = sel.value;
+  document.querySelectorAll('.nav-item').forEach(function (item) {
+    var trigger = item.querySelector(':scope > a');
+    if (!trigger) return;
+    trigger.addEventListener('click', function (e) {
+      if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+      e.preventDefault();
+      var open = item.classList.contains('open');
+      document.querySelectorAll('.nav-item.open').forEach(function (el) { el.classList.remove('open'); });
+      if (!open) item.classList.add('open');
     });
+  });
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest('.nav-item')) {
+      document.querySelectorAll('.nav-item.open').forEach(function (el) { el.classList.remove('open'); });
+    }
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.nav-item.open').forEach(function (el) { el.classList.remove('open'); });
+    }
   });
 
   /* ---- Reveal on scroll ---- */
@@ -232,7 +246,7 @@
     { q: 'How do you handle PII and security?', a: 'PII like SSN, EIN, and DOB is auto-detected and redacted before packages enter the pilot lane. Every job is org-scoped and isolated, and every decision ships in an encrypted SHA-256 manifest audit bundle.' },
     { q: 'What if an oracle or data feed is unavailable?', a: 'Pilot may use simulated oracles. Desk+ fail-closes: missing live CLUE / NCCI / A+ / CAT keys become a critical finding instead of a fake clean history. Auto mode never invents loss runs.' },
     { q: 'How does UW sign-off work?', a: 'The pipeline proposes ACCEPT, CONDITIONAL_ACCEPT, REFER, or DECLINE. A licensed underwriter reviews within their authority matrix tier and either signs off or overrides — every override is traceable in the audit trail.' },
-    { q: 'Which verticals and lines are supported?', a: 'Twelve insurance sections on one workbench — life (term live), health, general/non-life, commercial, specialty, provider type, engineering, aviation, fidelity & burglary, catastrophe, niche liability, and warranty / financial / emerging — plus mortgage and commercial lending. Health, general, and specialty stay catalog-only until your filed rate manual is loaded; we do not invent a premium.' },
+    { q: 'Which verticals and lines are supported?', a: '12 insurance sections on one workbench — life (term live), health, general/non-life, commercial, specialty, provider type, engineering, aviation, fidelity & burglary, catastrophe, niche liability, and warranty / financial / emerging — plus mortgage and commercial lending. Health, general, and specialty stay catalog-only until your filed rate manual is loaded; we do not invent a premium.' },
     { q: 'How is Rytera priced?', a: 'Per bind-ready memo. Pilot $0/mo (5 memos, then $95). Desk $799/mo (25, then $55) — live oracles + your SERFF book required. Book $2,490/mo (80, then $38) with live Guidewire bind, no re-key. Enterprise from $6,500/mo. Simulated oracles, pilot manuals, or simulated PAS are not sold at Desk+ prices.' },
     { q: 'Is rating from our filed rates or a demo book?', a: 'Pilot uses the InsureFlow demo book. Desk+ will not quote until you import your SERFF / carrier filings via POST /rating/carrier-book or CARRIER_BOOK_PATH. Pilot manuals are never silently used as your book.' }
   ];

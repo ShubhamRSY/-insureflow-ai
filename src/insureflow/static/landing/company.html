@@ -111,19 +111,79 @@
         <span class="brand-name">Rytera<sup>&trade;</sup></span>
       </a>
         <nav class="nav-desktop" aria-label="Main">
-          <label class="nav-goto">
-            <span class="sr-only">Go to page</span>
-            <select class="nav-page-select" aria-label="Go to page">
-              <option value="/">Home</option>
-              <option value="/pricing">Pricing</option>
-              <option value="/platform">Platform</option>
-              <option value="/technology">Technology</option>
-              <option value="/underwriting">Underwriting</option>
-              <option value="/integrations">Integrations</option>
-              <option value="/company">Company</option>
-              <option value="/dashboard">Dashboard</option>
-            </select>
-          </label>
+          <div class="nav-item">
+            <a href="/" data-nav>Home</a>
+            <div class="nav-drop">
+              <a href="/">Overview</a>
+              <a href="/#why">Why Rytera</a>
+              <a href="/#effect">The effect</a>
+              <a href="/#keywords">Keywords</a>
+            </div>
+          </div>
+          <div class="nav-item">
+            <a href="/pricing" data-nav>Pricing</a>
+            <div class="nav-drop">
+              <a href="/pricing">All plans</a>
+              <a href="/pricing#pricing">Compare features</a>
+              <a href="/pricing#go-live">Go live</a>
+            </div>
+          </div>
+          <div class="nav-item">
+            <a href="/platform" data-nav>Platform</a>
+            <div class="nav-drop">
+              <a href="/platform">Overview</a>
+              <a href="/platform#ai-native">AI-native vs legacy</a>
+              <a href="/platform#agentic">Agentic workbench</a>
+              <a href="/platform#features">Deep-dive verticals</a>
+              <a href="/platform#capabilities">Governance &amp; audit</a>
+            </div>
+          </div>
+          <div class="nav-item">
+            <a href="/technology" data-nav>Technology</a>
+            <div class="nav-drop">
+              <a href="/technology">Overview</a>
+              <a href="/technology#zta">Zero Token Architecture</a>
+              <a href="/technology#how-it-works">Pipeline</a>
+              <a href="/technology#security">Security &amp; audit</a>
+              <a href="/technology#observability">Observability</a>
+            </div>
+          </div>
+          <div class="nav-item">
+            <a href="/underwriting" data-nav>Underwriting</a>
+            <div class="nav-drop nav-drop-uw">
+              <a href="/underwriting">Overview</a>
+              <a href="/underwriting#audience">Who it&rsquo;s for</a>
+              <a href="/underwriting#uw-desks">Line &amp; staff desks</a>
+              <a href="/underwriting#ratemaking">Ratemaking</a>
+              <p class="nav-drop-label">Insurance book</p>
+              <a href="/dashboard/insurance/sections/life">Life <span class="nav-pill live">Live</span></a>
+              <a href="/dashboard/insurance/sections/health">Health <span class="nav-pill">Catalog</span></a>
+              <a href="/dashboard/insurance/sections/general">General / Non-Life</a>
+              <a href="/dashboard/insurance/sections/commercial">Commercial <span class="nav-pill live">Live</span></a>
+              <a href="/dashboard/insurance/sections/specialty">Specialty</a>
+              <a href="/underwriting#insurance-book">All 12 sections</a>
+              <p class="nav-drop-label">Other desks</p>
+              <a href="/underwriting#audience">Mortgage</a>
+              <a href="/underwriting#audience">Lending</a>
+            </div>
+          </div>
+          <div class="nav-item">
+            <a href="/integrations" data-nav>Integrations</a>
+            <div class="nav-drop">
+              <a href="/integrations">All connectors</a>
+              <a href="/integrations#integrations">Browse catalog</a>
+              <a href="/integrations#modes">Live / simulated / auto</a>
+            </div>
+          </div>
+          <div class="nav-item">
+            <a href="/company" data-nav>Company</a>
+            <div class="nav-drop">
+              <a href="/company">About Rytera</a>
+              <a href="/company#faq">FAQ</a>
+              <a href="/company#contact">Contact</a>
+              <a href="/dashboard">Dashboard</a>
+            </div>
+          </div>
         </nav>
         <div class="nav-actions">
           <a class="nav-dash" href="/dashboard">Dashboard</a>
@@ -135,19 +195,58 @@
       </div>
     </header>
     <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile">
-      <label class="nav-goto nav-goto-mobile">
-        <span class="sr-only">Go to page</span>
-        <select class="nav-page-select" aria-label="Go to page">
-          <option value="/">Home</option>
-          <option value="/pricing">Pricing</option>
-          <option value="/platform">Platform</option>
-          <option value="/technology">Technology</option>
-          <option value="/underwriting">Underwriting</option>
-          <option value="/integrations">Integrations</option>
-          <option value="/company">Company</option>
-          <option value="/dashboard">Dashboard</option>
-        </select>
-      </label>
+      <details class="nav-acc">
+        <summary>Home</summary>
+        <a href="/" data-nav>Overview</a>
+        <a href="/#why">Why Rytera</a>
+        <a href="/#effect">The effect</a>
+        <a href="/#keywords">Keywords</a>
+      </details>
+      <details class="nav-acc">
+        <summary>Pricing</summary>
+        <a href="/pricing" data-nav>All plans</a>
+        <a href="/pricing#pricing">Compare features</a>
+        <a href="/pricing#go-live">Go live</a>
+      </details>
+      <details class="nav-acc">
+        <summary>Platform</summary>
+        <a href="/platform" data-nav>Overview</a>
+        <a href="/platform#ai-native">AI-native vs legacy</a>
+        <a href="/platform#agentic">Agentic workbench</a>
+        <a href="/platform#features">Deep-dive verticals</a>
+        <a href="/platform#capabilities">Governance &amp; audit</a>
+      </details>
+      <details class="nav-acc">
+        <summary>Technology</summary>
+        <a href="/technology" data-nav>Overview</a>
+        <a href="/technology#zta">Zero Token Architecture</a>
+        <a href="/technology#how-it-works">Pipeline</a>
+        <a href="/technology#security">Security &amp; audit</a>
+        <a href="/technology#observability">Observability</a>
+      </details>
+      <details class="nav-acc">
+        <summary>Underwriting</summary>
+        <a href="/underwriting" data-nav>Overview</a>
+        <a href="/underwriting#uw-desks">Line &amp; staff desks</a>
+        <a href="/dashboard/insurance/sections/life">Life</a>
+        <a href="/dashboard/insurance/sections/health">Health</a>
+        <a href="/dashboard/insurance/sections/general">General / Non-Life</a>
+        <a href="/dashboard/insurance/sections/commercial">Commercial</a>
+        <a href="/underwriting#insurance-book">All 12 sections</a>
+        <a href="/underwriting#audience">Mortgage &amp; lending</a>
+        <a href="/underwriting#ratemaking">Ratemaking</a>
+      </details>
+      <details class="nav-acc">
+        <summary>Integrations</summary>
+        <a href="/integrations" data-nav>All connectors</a>
+        <a href="/integrations#modes">Live / simulated / auto</a>
+      </details>
+      <details class="nav-acc">
+        <summary>Company</summary>
+        <a href="/company" data-nav>About Rytera</a>
+        <a href="/company#faq">FAQ</a>
+        <a href="/company#contact">Contact</a>
+      </details>
       <a href="/dashboard">Dashboard</a>
       <button type="button" class="btn btn-primary" id="open-demo-mobile">Book a demo</button>
     </nav>
@@ -224,7 +323,7 @@
           <a href="/dashboard">Dashboard</a>
         </nav>
         <div>
-          <div style="margin-bottom:.25rem">AI-native underwriting across 12 insurance sections, mortgage &amp; lending.</div>
+          <div style="margin-bottom:.25rem">AI-native underwriting for carriers, MGAs &amp; aggregators.</div>
           <div>&copy; 2026 Rytera Inc. All rights reserved.</div>
         </div>
       </div>
