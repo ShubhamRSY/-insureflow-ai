@@ -89,7 +89,7 @@ export default function InsuranceSegmentPage() {
   const accent = insuranceSectionAccent(section.accent);
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8 animate-fade-in pb-12">
+    <div className="mx-auto w-full max-w-[1600px] space-y-8 animate-fade-in pb-12">
       <div>
         <nav className="flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
           <Link to="/insurance" className="transition hover:text-slate-300">Insurance</Link>

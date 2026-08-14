@@ -25,7 +25,7 @@ export default function ConnectorLogo({ sourceId, name, size = 40 }) {
 
   return (
     <div
-      className="flex items-center justify-center rounded-lg text-xs font-bold tracking-tight text-white shadow-inner"
+      className="keep-white flex items-center justify-center rounded-lg text-xs font-bold tracking-tight text-white shadow-inner"
       style={{ width: px, height: px, backgroundColor: bg, color: brand.color ? `#${brand.color}` : '#fff' }}
       aria-hidden
     >

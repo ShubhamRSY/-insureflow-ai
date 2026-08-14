@@ -212,7 +212,7 @@ export const INSURANCE_SECTIONS = [
     summary: 'Extended warranty, surety, gadget & jewelry, legal expense, credit life, bancassurance, micro, on-demand, UBI, personal cyber.',
     status: 'live',
     hub: '/insurance/commercial',
-    accent: 'slate',
+    accent: 'lime',
     icon: 'ShieldCheck',
     hubKind: 'mixed',
     products: [
@@ -237,18 +237,19 @@ export function getInsuranceSection(id) {
 
 export function insuranceSectionAccent(accent) {
   const map = {
-    rose: { ring: 'hover:ring-rose-400/40', iconBg: 'bg-rose-500/15 text-rose-400', tag: 'text-rose-400', num: 'text-rose-400/80' },
-    teal: { ring: 'hover:ring-teal-400/40', iconBg: 'bg-teal-500/15 text-teal-400', tag: 'text-teal-400', num: 'text-teal-400/80' },
-    sky: { ring: 'hover:ring-sky-400/40', iconBg: 'bg-sky-500/15 text-sky-400', tag: 'text-sky-400', num: 'text-sky-400/80' },
-    brand: { ring: 'hover:ring-brand/40', iconBg: 'bg-brand/15 text-brand', tag: 'text-brand', num: 'text-brand/80' },
-    amber: { ring: 'hover:ring-amber-400/40', iconBg: 'bg-amber-500/15 text-amber-400', tag: 'text-amber-400', num: 'text-amber-400/80' },
-    violet: { ring: 'hover:ring-violet-400/40', iconBg: 'bg-violet-500/15 text-violet-400', tag: 'text-violet-400', num: 'text-violet-400/80' },
-    orange: { ring: 'hover:ring-orange-400/40', iconBg: 'bg-orange-500/15 text-orange-400', tag: 'text-orange-400', num: 'text-orange-400/80' },
-    indigo: { ring: 'hover:ring-indigo-400/40', iconBg: 'bg-indigo-500/15 text-indigo-400', tag: 'text-indigo-400', num: 'text-indigo-400/80' },
-    fuchsia: { ring: 'hover:ring-fuchsia-400/40', iconBg: 'bg-fuchsia-500/15 text-fuchsia-400', tag: 'text-fuchsia-400', num: 'text-fuchsia-400/80' },
-    cyan: { ring: 'hover:ring-cyan-400/40', iconBg: 'bg-cyan-500/15 text-cyan-400', tag: 'text-cyan-400', num: 'text-cyan-400/80' },
-    emerald: { ring: 'hover:ring-emerald-400/40', iconBg: 'bg-emerald-500/15 text-emerald-400', tag: 'text-emerald-400', num: 'text-emerald-400/80' },
-    slate: { ring: 'hover:ring-slate-400/40', iconBg: 'bg-slate-500/15 text-slate-300', tag: 'text-slate-300', num: 'text-slate-400' },
+    rose: { ring: 'hover:ring-rose-400/40', iconBg: 'bg-rose-500/15 text-rose-400', tag: 'text-rose-400', num: 'text-rose-400/80', dot: 'bg-rose-400' },
+    teal: { ring: 'hover:ring-teal-400/40', iconBg: 'bg-teal-500/15 text-teal-400', tag: 'text-teal-400', num: 'text-teal-400/80', dot: 'bg-teal-400' },
+    sky: { ring: 'hover:ring-sky-400/40', iconBg: 'bg-sky-500/15 text-sky-400', tag: 'text-sky-400', num: 'text-sky-400/80', dot: 'bg-sky-400' },
+    brand: { ring: 'hover:ring-brand/40', iconBg: 'bg-brand/15 text-brand', tag: 'text-brand', num: 'text-brand/80', dot: 'bg-brand' },
+    amber: { ring: 'hover:ring-amber-400/40', iconBg: 'bg-amber-500/15 text-amber-400', tag: 'text-amber-400', num: 'text-amber-400/80', dot: 'bg-amber-400' },
+    violet: { ring: 'hover:ring-violet-400/40', iconBg: 'bg-violet-500/15 text-violet-400', tag: 'text-violet-400', num: 'text-violet-400/80', dot: 'bg-violet-400' },
+    orange: { ring: 'hover:ring-orange-400/40', iconBg: 'bg-orange-500/15 text-orange-400', tag: 'text-orange-400', num: 'text-orange-400/80', dot: 'bg-orange-400' },
+    indigo: { ring: 'hover:ring-indigo-400/40', iconBg: 'bg-indigo-500/15 text-indigo-400', tag: 'text-indigo-400', num: 'text-indigo-400/80', dot: 'bg-indigo-400' },
+    fuchsia: { ring: 'hover:ring-fuchsia-400/40', iconBg: 'bg-fuchsia-500/15 text-fuchsia-400', tag: 'text-fuchsia-400', num: 'text-fuchsia-400/80', dot: 'bg-fuchsia-400' },
+    cyan: { ring: 'hover:ring-cyan-400/40', iconBg: 'bg-cyan-500/15 text-cyan-400', tag: 'text-cyan-400', num: 'text-cyan-400/80', dot: 'bg-cyan-400' },
+    emerald: { ring: 'hover:ring-emerald-400/40', iconBg: 'bg-emerald-500/15 text-emerald-400', tag: 'text-emerald-400', num: 'text-emerald-400/80', dot: 'bg-emerald-400' },
+    lime: { ring: 'hover:ring-lime-400/40', iconBg: 'bg-lime-500/15 text-lime-400', tag: 'text-lime-400', num: 'text-lime-400/80', dot: 'bg-lime-400' },
+    slate: { ring: 'hover:ring-slate-400/40', iconBg: 'bg-slate-500/15 text-slate-300', tag: 'text-slate-300', num: 'text-slate-400', dot: 'bg-slate-400' },
   };
   return map[accent] || map.slate;
 }

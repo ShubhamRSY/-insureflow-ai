@@ -7,6 +7,12 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { auth } from '../lib/api';
+import { INSURANCE_SECTIONS, insuranceSectionAccent } from '../lib/insuranceSections';
+import ThemeToggle from './ThemeToggle';
+
+const SECTION_DOT = Object.fromEntries(
+  INSURANCE_SECTIONS.map((section) => [section.id, insuranceSectionAccent(section.accent).dot]),
+);
 
 const nav = [
   { to: '/', icon: LayoutDashboard, label: 'Overview' },
@@ -21,18 +27,18 @@ const nav = [
     scrollChildren: true,
     children: [
       { to: '/insurance', label: 'All 12 sections' },
-      { to: '/insurance/sections/life', label: '1. Life', tag: 'Live' },
-      { to: '/insurance/sections/health', label: '2. Health', tag: 'Live' },
-      { to: '/insurance/sections/general', label: '3. General / Non-Life', tag: 'Live' },
-      { to: '/insurance/sections/commercial', label: '4. Business / Commercial', tag: 'Live' },
-      { to: '/insurance/sections/specialty', label: '5. Other / Specialty', tag: 'Live' },
-      { to: '/insurance/sections/provider', label: '6. By Provider Type', tag: 'Live' },
-      { to: '/insurance/sections/engineering', label: '7. Engineering', tag: 'Live' },
-      { to: '/insurance/sections/aviation', label: '8. Aviation', tag: 'Live' },
-      { to: '/insurance/sections/fidelity', label: '9. Fidelity & Burglary', tag: 'Live' },
-      { to: '/insurance/sections/catastrophe', label: '10. Catastrophe', tag: 'Live' },
-      { to: '/insurance/sections/niche-liability', label: '11. Niche Liability', tag: 'Live' },
-      { to: '/insurance/sections/warranty-financial-emerging', label: '12. Warranty / Financial / Emerging', tag: 'Live' },
+      { to: '/insurance/sections/life', label: '1. Life', tag: 'Live', sectionId: 'life' },
+      { to: '/insurance/sections/health', label: '2. Health', tag: 'Live', sectionId: 'health' },
+      { to: '/insurance/sections/general', label: '3. General / Non-Life', tag: 'Live', sectionId: 'general' },
+      { to: '/insurance/sections/commercial', label: '4. Business / Commercial', tag: 'Live', sectionId: 'commercial' },
+      { to: '/insurance/sections/specialty', label: '5. Other / Specialty', tag: 'Live', sectionId: 'specialty' },
+      { to: '/insurance/sections/provider', label: '6. By Provider Type', tag: 'Live', sectionId: 'provider' },
+      { to: '/insurance/sections/engineering', label: '7. Engineering', tag: 'Live', sectionId: 'engineering' },
+      { to: '/insurance/sections/aviation', label: '8. Aviation', tag: 'Live', sectionId: 'aviation' },
+      { to: '/insurance/sections/fidelity', label: '9. Fidelity & Burglary', tag: 'Live', sectionId: 'fidelity' },
+      { to: '/insurance/sections/catastrophe', label: '10. Catastrophe', tag: 'Live', sectionId: 'catastrophe' },
+      { to: '/insurance/sections/niche-liability', label: '11. Niche Liability', tag: 'Live', sectionId: 'niche-liability' },
+      { to: '/insurance/sections/warranty-financial-emerging', label: '12. Warranty / Financial / Emerging', tag: 'Live', sectionId: 'warranty-financial-emerging' },
     ],
   },
   { section: 'Reference' },
@@ -216,8 +222,12 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
                     end={child.to === '/insurance'}
                     className={({ isActive }) => `nav-link ${isActive ? 'nav-link-active' : ''}`}
                   >
-                    <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${(child.to === '/insurance' ? pathname === '/insurance' : pathname.startsWith(child.to)) ? 'bg-brand' : 'bg-slate-600'}`} />
-                    <span className="flex-1">{child.label}</span>
+                    <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${
+                      child.sectionId
+                        ? SECTION_DOT[child.sectionId]
+                        : ((child.to === '/insurance' ? pathname === '/insurance' : pathname.startsWith(child.to)) ? 'bg-brand' : 'bg-slate-600')
+                    }`} />
+                    <span className={`flex-1 ${child.sectionId ? insuranceSectionAccent(INSURANCE_SECTIONS.find((s) => s.id === child.sectionId)?.accent).tag : ''}`}>{child.label}</span>
                     {child.tag && (
                       <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
                         child.tag === 'Live'
@@ -266,12 +276,12 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
         <div className="flex items-center gap-3 border-b border-white/[0.06] px-5 py-5">
           {sidebarCollapsed ? (
             <button type="button" className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-brand to-indigo-600 shadow-glow" onClick={() => setSidebarCollapsed(false)}>
-              <Shield className="h-5 w-5 text-white" />
+              <Shield className="keep-white h-5 w-5 text-white" />
             </button>
           ) : (
             <>
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-brand to-indigo-600 shadow-glow">
-                <Shield className="h-5 w-5 text-white" />
+                <Shield className="keep-white h-5 w-5 text-white" />
               </div>
               <div>
                 <h1 className="font-display text-base font-bold tracking-tight">Rytera</h1>
@@ -310,7 +320,7 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
             )}
             {user ? (
               <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-brand to-indigo-500 text-xs font-bold">
+                <div className="keep-white flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-brand to-indigo-500 text-xs font-bold text-white">
                   {user.username?.slice(0, 2).toUpperCase()}
                 </div>
                 <div className="min-w-0 flex-1">
@@ -345,7 +355,7 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
             >
               <Menu className="h-5 w-5" />
             </button>
-            <nav className="hidden min-w-0 items-center gap-1.5 text-xs text-slate-500 md:flex" aria-label="Breadcrumb">
+            <nav className="hidden min-w-0 items-center gap-1.5 text-sm text-slate-400 md:flex" aria-label="Breadcrumb">
               {crumbs.map((c, i) => (
                 <span key={`${c}-${i}`} className="flex items-center gap-1.5 whitespace-nowrap">
                   {i > 0 && <span className="text-slate-700">/</span>}
@@ -354,21 +364,24 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
               ))}
             </nav>
           </div>
-          <button type="button" onClick={onRefresh} className="btn-secondary btn-sm shrink-0 text-xs">
-            <RefreshCw className="h-3.5 w-3.5" /> Refresh
-          </button>
+          <div className="flex shrink-0 items-center gap-2">
+            <ThemeToggle compact />
+            <button type="button" onClick={onRefresh} className="btn-secondary btn-sm shrink-0 text-xs">
+              <RefreshCw className="h-3.5 w-3.5" /> Refresh
+            </button>
+          </div>
         </header>
 
         <main className="flex-1 p-6 lg:p-8">
           {(pathname.startsWith('/insurance') || pathname.startsWith('/mortgage') || pathname.startsWith('/lending')) && (
-            <div className="mb-4 rounded-xl border border-emerald-500/20 bg-emerald-500/8 px-4 py-2.5 text-xs leading-relaxed text-emerald-200/90">
+            <div className="pii-banner mb-4 rounded-xl px-4 py-2.5 text-sm leading-relaxed">
               Named insureds and PII are stripped before any LLM API call — every insurance section, mortgage, and lending.
             </div>
           )}
           <Outlet context={{ user, onLogin }} />
         </main>
 
-        <footer className="border-t border-white/[0.06] px-6 py-3 text-center text-[10px] text-slate-600">
+        <footer className="border-t border-white/[0.06] px-6 py-3 text-center text-xs text-slate-400">
           Rytera™ · <a href="https://rytera.ai" className="text-slate-500 hover:text-slate-400">rytera.ai</a>
           {' · '}Rytera is a trademark of Rytera, Inc. All rights reserved.
         </footer>

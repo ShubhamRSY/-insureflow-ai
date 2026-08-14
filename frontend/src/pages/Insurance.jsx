@@ -16,7 +16,7 @@ export default function InsurancePage({ jobs, onRefresh }) {
   const recent = (jobs || []).slice(0, 8);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8 animate-fade-in pb-12">
+    <div className="mx-auto w-full max-w-[1600px] space-y-8 animate-fade-in pb-12">
       <div>
         <nav className="flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
           <span className="text-slate-600">Insurance</span>

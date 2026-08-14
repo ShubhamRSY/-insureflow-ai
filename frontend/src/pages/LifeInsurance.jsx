@@ -38,7 +38,7 @@ export default function LifeInsuranceHub({ presets, onRunDemo, onSubmit, jobs })
   const selectionLabel = commercialSelectionLabel(selection);
 
   return (
-    <div className="mx-auto max-w-4xl animate-fade-in space-y-6 pb-12">
+    <div className="mx-auto w-full max-w-[1600px] animate-fade-in space-y-6 pb-12">
       <div>
         <nav className="flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
           <Link to="/insurance" className="transition hover:text-slate-300">Insurance</Link>
@@ -63,10 +63,10 @@ export default function LifeInsuranceHub({ presets, onRunDemo, onSubmit, jobs })
         </div>
       </div>
 
-      <section className="glass-card overflow-hidden">
+      <section className="glass-card">
         <div className="border-b border-white/[0.06] px-5 py-4">
           <h2 className="text-sm font-semibold text-slate-100">New submission</h2>
-          <p className="mt-0.5 text-xs text-slate-500">
+          <p className="mt-0.5 text-sm text-slate-400">
             Choose category → product → coverage, then upload the life package. Medical / financial UW and rating follow automatically.
           </p>
         </div>

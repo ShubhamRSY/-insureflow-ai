@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { auth, endpoints } from '../lib/api';
+import ThemeToggle from '../components/ThemeToggle';
 
 const ROLE_BADGE = {
   viewer: 'bg-slate-500/15 text-slate-300',
@@ -38,8 +39,20 @@ export default function SettingsPage({ onLogin, onAuthReset }) {
   };
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6 animate-fade-in">
+    <div className="mx-auto w-full max-w-3xl space-y-6 animate-fade-in">
       <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
+
+      <div className="glass-card">
+        <div className="border-b border-white/[0.04] px-6 py-4">
+          <h2 className="font-semibold">Appearance</h2>
+          <p className="mt-0.5 text-sm text-slate-400">
+            Dark, light, or default — default follows the time of day (light 7am–7pm, dark otherwise).
+          </p>
+        </div>
+        <div className="px-6 py-4">
+          <ThemeToggle />
+        </div>
+      </div>
 
       {user ? (
         <div className="glass-card divide-y divide-white/[0.04]">

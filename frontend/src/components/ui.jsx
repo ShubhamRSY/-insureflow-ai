@@ -1,10 +1,59 @@
+import { useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+
 export function Hint({ text, children, className = '', position = 'top' }) {
+  const anchorRef = useRef(null);
+  const [open, setOpen] = useState(false);
+  const [box, setBox] = useState(null);
+
+  useLayoutEffect(() => {
+    if (!open || !anchorRef.current) return undefined;
+    const place = () => {
+      const rect = anchorRef.current.getBoundingClientRect();
+      const width = Math.min(320, window.innerWidth - 16);
+      let left = rect.left + rect.width / 2 - width / 2;
+      left = Math.max(8, Math.min(left, window.innerWidth - width - 8));
+      const preferTop = position !== 'bottom' && rect.top > 88;
+      const gap = 8;
+      const top = preferTop ? rect.top - gap : rect.bottom + gap;
+      setBox({ left, top, width, preferTop });
+    };
+    place();
+    window.addEventListener('scroll', place, true);
+    window.addEventListener('resize', place);
+    return () => {
+      window.removeEventListener('scroll', place, true);
+      window.removeEventListener('resize', place);
+    };
+  }, [open, position, text]);
+
   if (!text) return children;
-  const pos = position === 'bottom' ? 'hint-bubble-bottom' : 'hint-bubble-top';
   return (
-    <span className={`hint-anchor ${className}`.trim()}>
+    <span
+      ref={anchorRef}
+      className={`hint-anchor ${className}`.trim()}
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+      onFocus={() => setOpen(true)}
+      onBlur={() => setOpen(false)}
+    >
       {children}
-      <span role="tooltip" className={`hint-bubble ${pos}`}>{text}</span>
+      {open && box && createPortal(
+        <span
+          role="tooltip"
+          className="hint-bubble"
+          style={{
+            position: 'fixed',
+            left: box.left,
+            width: box.width,
+            top: box.preferTop ? undefined : box.top,
+            bottom: box.preferTop ? window.innerHeight - box.top : undefined,
+          }}
+        >
+          {text}
+        </span>,
+        document.body,
+      )}
     </span>
   );
 }
@@ -14,7 +63,7 @@ export function HintCheckbox({
   label,
   className = '',
   inputClassName = 'rounded',
-  labelClassName = 'flex items-center gap-1.5 text-[10px] text-slate-500',
+  labelClassName = 'flex items-center gap-1.5 text-xs text-slate-300',
   ...inputProps
 }) {
   return (

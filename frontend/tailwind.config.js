@@ -23,10 +23,10 @@ export default {
           950: '#0f172a',
         },
         surface: {
-          DEFAULT: '#10141f',
-          raised: '#161d2c',
-          overlay: '#1c2538',
-          hover: '#243044',
+          DEFAULT: 'rgb(var(--ry-surface) / <alpha-value>)',
+          raised: 'rgb(var(--ry-raised) / <alpha-value>)',
+          overlay: 'rgb(var(--ry-overlay) / <alpha-value>)',
+          hover: 'rgb(var(--ry-hover) / <alpha-value>)',
         },
         brand: {
           DEFAULT: '#5b8def',
@@ -38,12 +38,12 @@ export default {
         lending: '#34d399',
       },
       boxShadow: {
-        glow: '0 0 40px rgba(91, 141, 239, 0.15)',
-        card: '0 1px 0 rgba(255,255,255,0.04) inset, 0 8px 32px rgba(0,0,0,0.4)',
+        glow: 'var(--ry-glow)',
+        card: 'var(--ry-card-shadow)',
       },
       backgroundImage: {
-        mesh: 'radial-gradient(at 20% 20%, rgba(91,141,239,0.18) 0, transparent 50%), radial-gradient(at 80% 0%, rgba(56,189,248,0.10) 0, transparent 45%), radial-gradient(at 50% 100%, rgba(52,211,153,0.06) 0, transparent 50%)',
-        'hero-glow': 'radial-gradient(ellipse 80% 60% at 50% -10%, rgba(91,141,239,0.28), transparent 55%), radial-gradient(ellipse 50% 40% at 90% 20%, rgba(56,189,248,0.12), transparent 50%), linear-gradient(180deg, #12182a 0%, #10141f 100%)',
+        mesh: 'var(--ry-mesh)',
+        'hero-glow': 'var(--ry-hero)',
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-out both',

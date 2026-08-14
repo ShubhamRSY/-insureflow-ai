@@ -770,6 +770,7 @@ async def demo_presets() -> dict[str, Any]:
             "description": "Commercial P&C — ACORD, loss run, SOV, inspection, broker API",
             "vertical": "insurance",
             "insurance_line": "commercial_property",
+            "product_id": "property_bi",
         },
         {
             "id": "northwind",
@@ -777,6 +778,7 @@ async def demo_presets() -> dict[str, Any]:
             "description": "Transportation & logistics — ACORD, loss run, SOV, inspection",
             "vertical": "insurance",
             "insurance_line": "commercial_property",
+            "product_id": "property_bi",
         },
         {
             "id": "maya-homeowners",
@@ -784,6 +786,7 @@ async def demo_presets() -> dict[str, Any]:
             "description": "Personal HO-3 — application, dwelling inspection, CLUE",
             "vertical": "insurance",
             "insurance_line": "personal_homeowners",
+            "product_id": "home_comprehensive",
         },
         {
             "id": "jordan-auto",
@@ -791,6 +794,7 @@ async def demo_presets() -> dict[str, Any]:
             "description": "Personal auto — application, MVR, vehicle declarations",
             "vertical": "insurance",
             "insurance_line": "personal_auto",
+            "product_id": "car_comprehensive",
         },
         {
             "id": "priya-life",
@@ -798,6 +802,7 @@ async def demo_presets() -> dict[str, Any]:
             "description": "Term life — application, paramedical exam, beneficiary",
             "vertical": "insurance",
             "insurance_line": "life",
+            "product_id": "level_term",
         },
         {
             "id": "meridian-do",
@@ -805,6 +810,7 @@ async def demo_presets() -> dict[str, Any]:
             "description": "Directors & Officers — application, financials, bylaws, loss run, litigation disclosure",
             "vertical": "insurance",
             "insurance_line": "directors_and_officers",
+            "product_id": "directors_officers",
         },
         {
             "id": "harbor-trade-credit",
@@ -812,6 +818,7 @@ async def demo_presets() -> dict[str, Any]:
             "description": "Trade credit — application, AR aging, buyer list, financials, credit policy",
             "vertical": "insurance",
             "insurance_line": "trade_credit",
+            "product_id": "trade_credit",
         },
         {
             "id": "brightpath-eo",
@@ -819,6 +826,7 @@ async def demo_presets() -> dict[str, Any]:
             "description": "Errors & Omissions — application, services scope, engagement letter, loss run",
             "vertical": "insurance",
             "insurance_line": "errors_and_omissions",
+            "product_id": "errors_omissions",
         },
         {
             "id": "cascade-key-person",
@@ -826,6 +834,7 @@ async def demo_presets() -> dict[str, Any]:
             "description": "Key person — application, job justification, financials, corporate resolution",
             "vertical": "insurance",
             "insurance_line": "key_person",
+            "product_id": "key_person",
         },
         {
             "id": "novapay-cyber",
@@ -833,6 +842,7 @@ async def demo_presets() -> dict[str, Any]:
             "description": "Cyber liability — fintech breach response + third-party limit",
             "vertical": "insurance",
             "insurance_line": "cyber_liability",
+            "product_id": "cyber_liability",
         },
         {
             "id": "ridgehaul-auto",
@@ -840,6 +850,7 @@ async def demo_presets() -> dict[str, Any]:
             "description": "Commercial auto — 42 power units, liability + physical damage",
             "vertical": "insurance",
             "insurance_line": "commercial_auto",
+            "product_id": "commercial_auto",
         },
         {
             "id": "summit-wc",
@@ -847,6 +858,7 @@ async def demo_presets() -> dict[str, Any]:
             "description": "Workers comp — NCCI class 5403, payroll, e-mod 0.92",
             "vertical": "insurance",
             "insurance_line": "workers_comp",
+            "product_id": "workers_comp",
         },
         {
             "id": "oaksteel-gl",
@@ -854,6 +866,7 @@ async def demo_presets() -> dict[str, Any]:
             "description": "General liability — contractor sales / completed ops",
             "vertical": "insurance",
             "insurance_line": "general_liability",
+            "product_id": "general_liability",
         },
         {
             "id": "corner-bop",
@@ -861,6 +874,7 @@ async def demo_presets() -> dict[str, Any]:
             "description": "Businessowners package — property + GL + BI sections",
             "vertical": "insurance",
             "insurance_line": "business_owners_policy",
+            "product_id": "bop",
         },
         {
             "id": "harbor-builders",
@@ -868,6 +882,7 @@ async def demo_presets() -> dict[str, Any]:
             "description": "Builders risk — $18.5M completed value course of construction",
             "vertical": "insurance",
             "insurance_line": "builders_risk",
+            "product_id": "builders_risk",
         },
         {
             "id": "ledger-crime",
@@ -875,6 +890,7 @@ async def demo_presets() -> dict[str, Any]:
             "description": "Crime / fidelity — employee dishonesty + computer fraud",
             "vertical": "insurance",
             "insurance_line": "crime",
+            "product_id": "crime",
         },
         {
             "id": "apex-surety",
@@ -882,6 +898,7 @@ async def demo_presets() -> dict[str, Any]:
             "description": "Contract surety — performance & payment bond $6.75M",
             "vertical": "insurance",
             "insurance_line": "surety_bonds",
+            "product_id": "surety_bonds",
         },
     ]
     mortgage = [

@@ -54,7 +54,7 @@ export default function CommercialLinePicker({ taxonomy = [], value, onChange, d
     <div className="space-y-3 rounded-xl border border-white/[0.06] bg-surface/30 p-3">
       <div>
         <Hint text={UI_HINTS.commercialCategory}>
-          <label htmlFor="commercial-category" className="hint-label mb-1 block cursor-help text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+          <label htmlFor="commercial-category" className="hint-label mb-1 block cursor-help text-xs font-semibold uppercase tracking-wider text-slate-300">
             Line of business
           </label>
         </Hint>
@@ -63,7 +63,7 @@ export default function CommercialLinePicker({ taxonomy = [], value, onChange, d
           value={selection.categoryId}
           onChange={(e) => onCategoryChange(e.target.value)}
           disabled={disabled}
-          className="input-field w-full text-xs"
+          className="input-field w-full text-sm"
           aria-label="Commercial insurance category"
         >
           {(taxonomy || []).map((cat, i) => (
@@ -75,7 +75,7 @@ export default function CommercialLinePicker({ taxonomy = [], value, onChange, d
       {products.length > 0 && (
         <div>
           <Hint text={UI_HINTS.commercialProduct}>
-            <label htmlFor="commercial-product" className="hint-label mb-1 block cursor-help text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+            <label htmlFor="commercial-product" className="hint-label mb-1 block cursor-help text-xs font-semibold uppercase tracking-wider text-slate-300">
               Product
             </label>
           </Hint>
@@ -84,7 +84,7 @@ export default function CommercialLinePicker({ taxonomy = [], value, onChange, d
             value={selection.productId}
             onChange={(e) => onProductChange(e.target.value)}
             disabled={disabled}
-            className="input-field w-full text-xs"
+            className="input-field w-full text-sm"
             aria-label="Commercial insurance product"
           >
             {products.map((p) => (
@@ -97,7 +97,7 @@ export default function CommercialLinePicker({ taxonomy = [], value, onChange, d
       {coverages.length > 0 && (
         <div>
           <Hint text={UI_HINTS.commercialCoverage}>
-            <label htmlFor="commercial-coverage" className="hint-label mb-1 block cursor-help text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+            <label htmlFor="commercial-coverage" className="hint-label mb-1 block cursor-help text-xs font-semibold uppercase tracking-wider text-slate-300">
               Coverage
             </label>
           </Hint>
@@ -106,7 +106,7 @@ export default function CommercialLinePicker({ taxonomy = [], value, onChange, d
             value={selection.coverageId}
             onChange={(e) => onCoverageChange(e.target.value)}
             disabled={disabled}
-            className="input-field w-full text-xs"
+            className="input-field w-full text-sm"
             aria-label="Commercial insurance coverage"
           >
             {coverages.map((c) => (
@@ -117,7 +117,7 @@ export default function CommercialLinePicker({ taxonomy = [], value, onChange, d
       )}
 
       {selection.productName && (
-        <p className="text-[10px] leading-relaxed text-slate-500">
+        <p className="text-xs leading-relaxed text-slate-400">
           Pipeline will run as{' '}
           <span className="text-slate-300">{selection.productName}</span>
           {selection.coverageName ? (

@@ -60,7 +60,7 @@ export default function CompanyPicker({ value = '', name = '', onChange, disable
   return (
     <div className="space-y-2 rounded-xl border border-white/[0.06] bg-surface/30 p-3">
       <Hint text={UI_HINTS.insuranceCompany}>
-        <label htmlFor="insurance-company" className="hint-label mb-1 flex cursor-help items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+        <label htmlFor="insurance-company" className="hint-label mb-1 flex cursor-help items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate-300">
           <Building2 className="h-3.5 w-3.5" />
           Insurance company
         </label>
@@ -70,7 +70,7 @@ export default function CompanyPicker({ value = '', name = '', onChange, disable
         value={adding ? '__add__' : value}
         onChange={(e) => handleSelect(e.target.value)}
         disabled={disabled}
-        className="input-field w-full text-xs"
+        className="input-field w-full text-sm"
         aria-label="Insurance company"
       >
         <option value="">Choose writing company…</option>
@@ -100,9 +100,9 @@ export default function CompanyPicker({ value = '', name = '', onChange, disable
         </div>
       )}
       {name && value ? (
-        <p className="text-[10px] text-slate-500">This file will underwrite for <span className="font-medium text-slate-300">{name}</span>.</p>
+        <p className="text-xs text-slate-400">This file will underwrite for <span className="font-medium text-slate-200">{name}</span>.</p>
       ) : (
-        <p className="text-[10px] text-slate-600">Optional — pick whose paper this file is for. Your panel, not a market Rytera invented.</p>
+        <p className="text-xs text-slate-400">Optional — pick whose paper this file is for. Your panel, not a market Rytera invented.</p>
       )}
       {error ? <p className="text-[10px] text-amber-400">{error}</p> : null}
     </div>

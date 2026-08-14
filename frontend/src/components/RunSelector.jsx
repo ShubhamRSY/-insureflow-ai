@@ -10,6 +10,22 @@ import CompanyPicker from './CompanyPicker';
 import { Hint, HintCheckbox } from './ui';
 import { isCommercialSelectionComplete } from '../lib/commercialTaxonomy';
 
+const HUB_WIDE_LINES = new Set(['life', 'health', 'general']);
+
+function insuranceSampleMatches(sample, selection) {
+  if (!selection) return false;
+  const productId = String(selection.productId || '').toLowerCase();
+  const checklist = String(selection.checklist_lob || '').toLowerCase();
+  const line = String(selection.insurance_line || '').toLowerCase();
+  const sampleProduct = String(sample.product_id || '').toLowerCase();
+  const sampleLine = String(sample.insurance_line || sample.product_line || sample.product_type || '').toLowerCase();
+  if (sampleProduct) {
+    return Boolean(productId) && (sampleProduct === productId || sampleProduct === checklist);
+  }
+  if (!sampleLine || HUB_WIDE_LINES.has(sampleLine)) return false;
+  return sampleLine === line || sampleLine === productId || sampleLine === checklist;
+}
+
 const TABS = [
   { id: 'files', label: 'Files', icon: Upload, hint: UI_HINTS.tabFiles },
   { id: 'connect', label: 'Connect & pull', icon: Cable, hint: UI_HINTS.tabConnect },
@@ -111,9 +127,19 @@ export default function RunSelector({
   }, [productDefault, productValue]);
 
   const allSamples = samples || presets?.insurance || [];
-  const sampleList = normalizedOptions.length > 0 && vertical === 'insurance'
-    ? allSamples.filter((s) => (s.insurance_line || s.product_line || s.product_type) === activeProduct)
-    : allSamples;
+  const sampleList = useCommercialPicker
+    ? allSamples.filter((s) => insuranceSampleMatches(s, commercialSelection))
+    : (normalizedOptions.length > 0 && vertical === 'insurance'
+      ? allSamples.filter((s) => (s.insurance_line || s.product_line || s.product_type) === activeProduct)
+      : allSamples);
+
+  const sampleIds = sampleList.map((s) => s.id).join('|');
+  useEffect(() => {
+    if (tab === 'sample' && !sampleIds) setTab('files');
+    if (dataId && !sampleIds.split('|').includes(dataId)) setDataId('');
+  }, [tab, sampleIds, dataId]);
+
+  const visibleTabs = TABS.filter((t) => t.id !== 'sample' || sampleList.length > 0);
 
   const setActiveProduct = (id) => {
     if (onProductChange) onProductChange(id);
@@ -238,14 +264,14 @@ export default function RunSelector({
   };
 
   return (
-    <div className="glass-card p-5">
+    <div>
       <div className="mb-3 flex items-center justify-between">
-        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Select files or data to run</p>
+        <p className="text-sm font-semibold uppercase tracking-wider text-slate-400">Select files or data to run</p>
         <div className="flex rounded-lg bg-surface/60 p-0.5">
-          {TABS.map((t) => (
+          {visibleTabs.map((t) => (
             <Hint key={t.id} text={t.hint}>
               <button type="button" onClick={() => { setTab(t.id); setError(''); setWarning(''); }}
-                className={`rounded-md px-3 py-1 text-[11px] font-medium transition ${
+                className={`rounded-md px-3 py-1.5 text-xs font-medium transition ${
                   tab === t.id ? 'bg-brand/15 text-brand ring-1 ring-brand/25' : 'text-slate-500 hover:text-slate-300'
                 }`}>
                 <span className="inline-flex items-center gap-1"><t.icon className="h-3 w-3" /> {t.label}</span>
@@ -273,8 +299,8 @@ export default function RunSelector({
             onDragOver={(e) => e.preventDefault()}
             className="flex w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-white/[0.12] bg-surface/30 px-4 py-6 text-center transition hover:border-brand/40 hover:bg-brand/5">
             <Upload className="h-5 w-5 text-slate-500" />
-            <span className="text-xs font-medium text-slate-300">Drop multiple files here or click to browse</span>
-            <span className="text-[10px] text-slate-600">.pdf .xml .json .txt .md — multi-select supported</span>
+            <span className="text-sm font-medium text-slate-200">Drop multiple files here or click to browse</span>
+            <span className="text-xs text-slate-400">.pdf .xml .json .txt .md — multi-select supported</span>
             <input type="file" multiple className="hidden" accept=".xml,.json,.pdf,.txt,.md,.png,.jpg,.jpeg"
               onChange={(e) => { addFiles(e.target.files); e.target.value = ''; }} />
           </label>
@@ -312,7 +338,7 @@ export default function RunSelector({
             <div className="flex flex-wrap items-center gap-3">
               <label className="flex min-w-[240px] flex-1 items-center gap-2">
                 <Hint text={UI_HINTS.lineOfBusiness}>
-                  <span className="hint-label cursor-help text-[11px] font-semibold uppercase tracking-wider text-slate-500">Line of business</span>
+                  <span className="hint-label cursor-help text-xs font-semibold uppercase tracking-wider text-slate-400">Line of business</span>
                 </Hint>
                 <select
                   value={activeProduct}
@@ -349,14 +375,14 @@ export default function RunSelector({
             <div className="ml-auto flex items-center gap-2">
               {fileScores.some((s) => !s.relevant) && (
                 <Hint text={UI_HINTS.removeIrrelevant}>
-                  <button type="button" onClick={removeIrrelevantFiles} className="hint-label cursor-help text-[10px] text-amber-400/90 transition hover:text-amber-300">
+                  <button type="button" onClick={removeIrrelevantFiles} className="hint-label cursor-help text-xs text-amber-400/90 transition hover:text-amber-300">
                     Remove irrelevant
                   </button>
                 </Hint>
               )}
               {files.length > 0 && (
                 <Hint text={UI_HINTS.clearFiles}>
-                  <button type="button" onClick={() => { setFiles([]); setWarning(''); }} className="hint-label cursor-help text-[10px] text-red-400/70 transition hover:text-red-400">Clear</button>
+                  <button type="button" onClick={() => { setFiles([]); setWarning(''); }} className="hint-label cursor-help text-xs text-red-400/80 transition hover:text-red-400">Clear</button>
                 </Hint>
               )}
               <Hint text={UI_HINTS.runPipeline}>
@@ -398,10 +424,10 @@ export default function RunSelector({
         <div className="space-y-3">
           {sampleList.length === 0 ? (
             <div className="rounded-xl border border-dashed border-white/[0.12] bg-surface/30 px-4 py-5 text-center">
-              <p className="text-xs font-medium text-slate-400">
+              <p className="text-sm font-medium text-slate-300">
                 {vertical === 'insurance' ? `No demo case for ${insuranceLineLabel(activeProduct)} yet — coming soon.` : 'No sample data sets available.'}
               </p>
-              <p className="mt-1 text-[10px] text-slate-600">Upload files in the Files tab or connect a source above.</p>
+              <p className="mt-1 text-xs text-slate-400">Upload files in the Files tab or connect a source above.</p>
             </div>
           ) : (
             <>
@@ -413,7 +439,7 @@ export default function RunSelector({
                   </option>
                 ))}
               </select>
-              {dataId && <p className="text-[11px] text-slate-500">{sampleList.find((s) => s.id === dataId)?.description}</p>}
+              {dataId && <p className="text-xs text-slate-400">{sampleList.find((s) => s.id === dataId)?.description}</p>}
               <div className="flex justify-end">
                 <Hint text={UI_HINTS.runSample}>
                   <button type="button" onClick={runSample} disabled={running || !dataId}
