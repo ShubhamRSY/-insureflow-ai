@@ -155,7 +155,7 @@ class LLMClient:
             from insureflow.redaction.redactor import PIIRedactor
 
             self._redactor = PIIRedactor()
-        return self._redactor.redact(text)
+        return str(self._redactor.redact(text))
 
     def complete(
         self,

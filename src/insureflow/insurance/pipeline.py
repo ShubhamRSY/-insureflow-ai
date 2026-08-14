@@ -23,7 +23,6 @@ from insureflow.ingestion.insurance.validation import validate_extraction
 from insureflow.ingestion.loader import SubmissionLoader
 from insureflow.insurance.progress import PipelineProgressTracker
 from insureflow.integrations.factory import build_policy_admin_service
-from insureflow.redaction.pipeline import RedactedLLMClient
 from insureflow.models.agents import Recommendation
 from insureflow.models.audit import PipelineEvent
 from insureflow.models.submissions import SubmissionBundle, SubmissionStatus
@@ -33,6 +32,7 @@ from insureflow.portfolio.store import get_portfolio_store
 from insureflow.provenance.hierarchy import ProvenanceEngine
 from insureflow.rating.engine import InsuranceRatingEngine
 from insureflow.reconciliation.engine import ReconciliationEngine
+from insureflow.redaction.pipeline import RedactedLLMClient
 from insureflow.registry.service import RegistryService
 from insureflow.storage.encryption import EnvelopeEncryption
 from insureflow.webhooks.dispatcher import webhook_dispatcher

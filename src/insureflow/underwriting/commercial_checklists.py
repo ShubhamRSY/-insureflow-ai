@@ -1340,7 +1340,16 @@ def _eval_kr(blob: str) -> tuple[list[ChecklistFlag], list[ScenarioHit]]:
             category=category,
         )
 
-    if _neg(blob, "crisis protocol", "crisis response plan", "response plan", "travel security") or _has(blob, "no crisis protocol", "no crisis response plan", "no response plan", "no travel security", "lack of training"):
+    missing_crisis = _neg(blob, "crisis protocol", "crisis response plan", "response plan", "travel security")
+    denied_crisis = _has(
+        blob,
+        "no crisis protocol",
+        "no crisis response plan",
+        "no response plan",
+        "no travel security",
+        "lack of training",
+    )
+    if missing_crisis or denied_crisis:
         _add_flag(
             flags,
             "KR_NO_CRISIS_PLAN",

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import Any
 
 from insureflow.models.submissions import SubmissionBundle
@@ -57,7 +58,7 @@ from insureflow.underwriting.general_uw import (
 )
 from insureflow.underwriting.personal_lines import _blob, _int_field
 
-_RISK_TABLES: dict[str, list[tuple[str, float, tuple[str, ...]]]] = {
+_RISK_TABLES: dict[str, Sequence[tuple[str, float, tuple[str, ...]]]] = {
     "professional_indemnity_gi": _PI_RISK_TABLE,
     "public_liability_gi": _PUBLIC_HAZARD_TABLE,
     "product_liability_gi": _PRODUCT_RISK_TABLE,

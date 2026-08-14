@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
@@ -1182,7 +1183,7 @@ def _scaled_money(blob: str, *labels: str) -> float:
     return 0.0
 
 
-def _risk_class(blob: str, table: list[tuple[str, float, tuple[str, ...]]]) -> tuple[str, float]:
+def _risk_class(blob: str, table: Sequence[tuple[str, float, tuple[str, ...]]]) -> tuple[str, float]:
     """Highest-factor class whose keywords appear in the blob; else the table's lowest."""
     lowest = min(table, key=lambda row: row[1])
     best_id, best_factor = lowest[0], lowest[1]
@@ -1279,16 +1280,17 @@ def _uw_pi(ctx: _Ctx) -> GeneralUWDecision:
 
     if cls == "high":
         extra.append(("profession_risk_class", False, "High-risk profession class detected — specialist PI terms required", RiskSeverity.HIGH))
+    fees_ratio: float | None = None
     if fees > 0 and limit > 0:
-        ratio = limit / fees
-        if ratio > 5.0:
-            extra.append(("limit_vs_fees", False, f"Indemnity limit {ratio:.1f}x gross fees — beyond the 5x capacity band", RiskSeverity.HIGH))
+        fees_ratio = limit / fees
+        if fees_ratio > 5.0:
+            extra.append(("limit_vs_fees", False, f"Indemnity limit {fees_ratio:.1f}x gross fees — beyond the 5x capacity band", RiskSeverity.HIGH))
     if staff and not supervision:
         extra.append(("staff_supervision", False, "Supervising / QA controls for staff professionals not declared", RiskSeverity.MODERATE))
     if severity in {"high", "critical"}:
         extra.append(("claims_severity", False, f"Prior claim with '{severity}' severity — refer for specialist assessment", RiskSeverity.HIGH))
 
-    ratio = round(limit / fees, 2) if fees > 0 and limit > 0 else None
+    ratio = round(fees_ratio, 2) if fees_ratio is not None else None
     score = round(
         min(1.0, 0.4 * cls_factor + 0.3 * (0.9 if severity in {"high", "critical"} else 0.1) + 0.2 * (0.8 if ratio and ratio > 5 else 0.1) + 0.1 * (0.8 if staff and not supervision else 0.1)),
         3,

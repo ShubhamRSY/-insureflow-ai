@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+from collections.abc import Iterator
 from typing import Any
 
-from insureflow.llm.client import LLMClient
+from insureflow.llm.client import LLMClient, StreamChunk
 from insureflow.redaction.redactor import PIIRedactor
 
 
@@ -31,7 +32,7 @@ class RedactedLLMClient(LLMClient):
         redacted_user = self.redactor.redact(user_prompt)
         return super().extract_structured(redacted_system, redacted_user, response_model)
 
-    def stream(self, system_prompt: str, user_prompt: str):
+    def stream(self, system_prompt: str, user_prompt: str) -> Iterator[StreamChunk]:
         redacted_system = self.redactor.redact(system_prompt)
         redacted_user = self.redactor.redact(user_prompt)
         yield from super().stream(redacted_system, redacted_user)

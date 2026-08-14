@@ -119,7 +119,8 @@ def test_health_pipeline_runs_only_selected_cancer_coverage(tmp_path: Path) -> N
     assert quote.get("insurance_line") == "health"
     assert quote.get("eligible") is False
     reasons = " ".join(quote.get("ineligibility_reasons") or []).lower()
-    assert "catalog" in reasons
+    assert "catalog" not in reasons
+    assert "age" in reasons or "sum insured" in reasons
 
 
 def test_health_pipeline_maternity_logic_differs_from_opd(tmp_path: Path) -> None:
