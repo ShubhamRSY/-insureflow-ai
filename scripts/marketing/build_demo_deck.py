@@ -36,8 +36,8 @@ def _set_run_font(run, *, size: int, color: RGBColor, bold: bool = False, name: 
     run.font.name = name
 
 
-def _textbox(slide, l, t, w, h, text, *, size=18, color=WHITE, bold=False, align=PP_ALIGN.LEFT, name="Calibri"):
-    box = slide.shapes.add_textbox(l, t, w, h)
+def _textbox(slide, left, t, w, h, text, *, size=18, color=WHITE, bold=False, align=PP_ALIGN.LEFT, name="Calibri"):
+    box = slide.shapes.add_textbox(left, t, w, h)
     tf = box.text_frame
     tf.word_wrap = True
     p = tf.paragraphs[0]
@@ -58,8 +58,8 @@ def _para(tf, text, *, size=15, color=MUTED, bold=False, space_before=8, space_a
     return p
 
 
-def _rect(slide, l, t, w, h, fill: RGBColor, line=None):
-    sh = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, l, t, w, h)
+def _rect(slide, left, t, w, h, fill: RGBColor, line=None):
+    sh = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, left, t, w, h)
     sh.fill.solid()
     sh.fill.fore_color.rgb = fill
     if line is None:
@@ -99,7 +99,7 @@ def build() -> Path:
     prs.slide_width = Inches(13.333)
     prs.slide_height = Inches(7.5)
     blank = prs.slide_layouts[6]
-    TOTAL = 13
+    total_slides = 13
 
     # ── 1. Title ──────────────────────────────────────────────
     s = prs.slides.add_slide(blank)
@@ -119,12 +119,13 @@ def build() -> Path:
         color=SOFT,
     )
     _textbox(s, Inches(0.7), Inches(5.7), Inches(11), Inches(0.4), "Software  ·  B2B SaaS workbench  ·  Carriers, MGAs, line UW, staff UW, credit ops", size=14, color=MUTED)
-    _footer(s, 1, TOTAL)
+    _footer(s, 1, total_slides)
     _notes(
         s,
         """HOOK (first 60 seconds starts here — do not click around yet).
 Open on this slide. Say: “Your desk was built for yes or no — not shared drives, re-key, and 11pm audit packs.”
-Then: “In the next 12 minutes I will take one real-shaped file — Pacific Coast Distributors, a $4.35M warehouse — from broker package to a memo a licensed underwriter can sign. Bind stays off. Shadow stays on.”
+Then: “In the next 12 minutes I will take one real-shaped file — Pacific Coast Distributors,
+a $4.35M warehouse — from broker package to a memo a licensed underwriter can sign. Bind stays off. Shadow stays on.”
 Do not list features. Promise the journey.""",
     )
 
@@ -152,7 +153,7 @@ Do not list features. Promise the journey.""",
         bar.line.fill.background()
         _textbox(s, x + Inches(0.35), y + Inches(0.22), Inches(5.5), Inches(0.4), title, size=16, color=accent, bold=True)
         _textbox(s, x + Inches(0.35), y + Inches(0.7), Inches(5.5), Inches(1.35), body, size=15, color=SOFT)
-    _footer(s, 2, TOTAL)
+    _footer(s, 2, total_slides)
     _notes(
         s,
         """Answer the room’s silent question in 20 seconds: this is software for underwriters and credit officers, not a robot that binds.
@@ -178,7 +179,7 @@ If a PAS vendor is in the room: “We sit in front of Guidewire / Duck Creek. We
         _rect(s, Inches(0.55), y, Inches(12.2), Inches(1.08), CARD)
         _textbox(s, Inches(0.8), y + Inches(0.12), Inches(11.7), Inches(0.35), h, size=16, color=WHITE, bold=True)
         _textbox(s, Inches(0.8), y + Inches(0.48), Inches(11.7), Inches(0.5), b, size=14, color=MUTED)
-    _footer(s, 3, TOTAL)
+    _footer(s, 3, total_slides)
     _notes(
         s,
         """Stay on pain. Mirror their words: shared drive, late submission, producer calling for a quote, exam next quarter.
@@ -222,7 +223,7 @@ Do not jump to the product yet. 20–25 seconds.""",
         y = Inches(2.95 + i * 0.45)
         _textbox(s, Inches(8.45), y, Inches(1.35), Inches(0.4), k, size=12, color=MUTED)
         _textbox(s, Inches(9.85), y, Inches(2.7), Inches(0.4), v, size=13, color=SOFT, bold=True)
-    _footer(s, 4, TOTAL)
+    _footer(s, 4, total_slides)
     _notes(
         s,
         """Show the destination before the clicks. Read the Pacific Coast card aloud.
@@ -263,7 +264,7 @@ If live demo is ready, switch to the dashboard on the NEXT slide. If not, stay i
         size=15,
         color=SOFT,
     )
-    _footer(s, 5, TOTAL)
+    _footer(s, 5, total_slides)
     _notes(
         s,
         """GOLDEN PATH — do not deviate.
@@ -303,7 +304,7 @@ Do not claim live CLUE / NCCI / Guidewire bind. Say “wired when your contracts
         _rect(s, Inches(6.8), y, Inches(6.0), Inches(1.5), CARD)
         _textbox(s, Inches(7.05), y + Inches(0.15), Inches(5.5), Inches(0.35), h, size=16, color=BRAND_LT, bold=True)
         _textbox(s, Inches(7.05), y + Inches(0.52), Inches(5.5), Inches(0.85), b, size=13, color=SOFT)
-    _footer(s, 6, TOTAL)
+    _footer(s, 6, total_slides)
     _notes(
         s,
         """WHILE CLICKING: hover the PII banner: “Named insureds and PII are stripped before any LLM API call — every insurance section, mortgage, and lending.”
@@ -331,7 +332,7 @@ Then start the run. Watch the stage strip: Intake → Parse → Verify…""",
         _rect(s, x, y, Inches(6.05), Inches(2.3), CARD)
         _textbox(s, x + Inches(0.3), y + Inches(0.25), Inches(5.45), Inches(0.4), h, size=18, color=c, bold=True)
         _textbox(s, x + Inches(0.3), y + Inches(0.75), Inches(5.45), Inches(1.3), b, size=15, color=SOFT)
-    _footer(s, 7, TOTAL)
+    _footer(s, 7, total_slides)
     _notes(
         s,
         """Open the submission journey. Point at provenance: “This TIV came from the ACORD, not the model.”
@@ -361,7 +362,7 @@ Premium: if the demo book shows an indicated premium, say it is the pilot manual
         _rect(s, x, y, Inches(4.0), Inches(2.35), CARD)
         _textbox(s, x + Inches(0.22), y + Inches(0.2), Inches(3.55), Inches(0.55), h, size=16, color=GREEN if i == 0 else BRAND_LT, bold=True)
         _textbox(s, x + Inches(0.22), y + Inches(0.8), Inches(3.55), Inches(1.35), b, size=13, color=SOFT)
-    _footer(s, 8, TOTAL)
+    _footer(s, 8, total_slides)
     _notes(
         s,
         """THIS IS THE WOW. Slow down.
@@ -403,7 +404,7 @@ Do not claim live carrier appointments.""",
         "Why it matters: the home office steers the book without another spreadsheet stack",
     ):
         _para(tf, "•  " + t, size=16, color=SOFT, space_before=10)
-    _footer(s, 9, TOTAL)
+    _footer(s, 9, total_slides)
     _notes(
         s,
         """Optional 45-second click: /line-uw then /staff-uw. If time is short, stay on this slide.
@@ -430,7 +431,7 @@ Also mention mortgage (Chen residential / Oak Street commercial) and lending (Bl
         y = Inches(1.4 + i * 0.85)
         _textbox(s, Inches(0.55), y, Inches(2.2), Inches(0.75), h, size=14, color=AMBER, bold=True)
         _textbox(s, Inches(2.8), y, Inches(9.9), Inches(0.8), b, size=14, color=SOFT)
-    _footer(s, 10, TOTAL)
+    _footer(s, 10, total_slides)
     _notes(
         s,
         """SKIP THIS SLIDE with the customer unless they ask how you run pilots. It is for your rehearsal.
@@ -456,7 +457,7 @@ Night-before: log in, run Pacific Coast once, leave the completed job in Recent 
         _rect(s, x, Inches(1.7), Inches(3.0), Inches(4.4), CARD)
         _textbox(s, x + Inches(0.2), Inches(2.0), Inches(2.6), Inches(0.8), h, size=22, color=GREEN, bold=True)
         _textbox(s, x + Inches(0.2), Inches(2.9), Inches(2.6), Inches(2.8), b, size=15, color=SOFT)
-    _footer(s, 11, TOTAL)
+    _footer(s, 11, total_slides)
     _notes(
         s,
         """Read the four words. Then: “Underwriters work the exceptions. Rytera works the stack.”
@@ -482,7 +483,7 @@ Then go to CTA. Do not open another screen.""",
         _textbox(s, Inches(0.8), y + Inches(0.2), Inches(0.6), Inches(0.8), n, size=24, color=BRAND_LT, bold=True)
         _textbox(s, Inches(1.6), y + Inches(0.18), Inches(10.7), Inches(0.4), h, size=18, color=WHITE, bold=True)
         _textbox(s, Inches(1.6), y + Inches(0.6), Inches(10.7), Inches(0.45), b, size=14, color=MUTED)
-    _footer(s, 12, TOTAL)
+    _footer(s, 12, total_slides)
     _notes(
         s,
         """Ask for ONE next step: “Who owns the shadow-pilot decision, and can we lock 30 minutes this week on your top three commercial files?”
@@ -501,8 +502,18 @@ Do not offer a free-for-all sandbox without a named UW sponsor.""",
     _rect(s, Inches(0.7), Inches(4.1), Inches(11.9), Inches(2.35), CARD)
     _textbox(s, Inches(1.0), Inches(4.35), Inches(11.2), Inches(0.4), "hello@ryterainc.com", size=22, color=WHITE, bold=True)
     _textbox(s, Inches(1.0), Inches(4.9), Inches(11.2), Inches(0.4), "ryterainc.com   ·   ryterainc.com/dashboard   ·   Book a demo on the site", size=16, color=SOFT)
-    _textbox(s, Inches(1.0), Inches(5.5), Inches(11.2), Inches(0.6), "Likely Qs: live oracles · SERFF book · Guidewire bind · PII · line vs staff · mortgage/lending. Answer honestly: fail closed until those are actually live.", size=14, color=MUTED)
-    _footer(s, 13, TOTAL)
+    _textbox(
+        s,
+        Inches(1.0),
+        Inches(5.5),
+        Inches(11.2),
+        Inches(0.6),
+        "Likely Qs: live oracles · SERFF book · Guidewire bind · PII · line vs staff · "
+        "mortgage/lending. Answer honestly: fail closed until those are actually live.",
+        size=14,
+        color=MUTED,
+    )
+    _footer(s, 13, total_slides)
     _notes(
         s,
         """Leave this up for the entire Q&A.

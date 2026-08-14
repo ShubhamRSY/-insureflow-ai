@@ -215,7 +215,7 @@ def test_guard_output_strips_ssn() -> None:
 def test_llama_provider_is_openai_compatible(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setenv("LLM_PROVIDER", "llama")
     monkeypatch.setenv("LLM_BASE_URL", "http://vllm.internal/v1")
-    from insureflow.llm.client import LLMClient, _OPENAI_COMPAT
+    from insureflow.llm.client import _OPENAI_COMPAT, LLMClient
 
     client = LLMClient()
     assert client.provider in _OPENAI_COMPAT

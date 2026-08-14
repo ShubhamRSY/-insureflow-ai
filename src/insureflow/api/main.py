@@ -492,7 +492,7 @@ def auth_sso_callback_redirect(request: Request, code: str = "", state: str = ""
 @limiter.limit("10/minute")
 def auth_sso_login(request: Request) -> dict[str, str]:
     """Start Cognito/Okta OIDC login — PKCE verifier stays on the server."""
-    from insureflow.auth.sso import start_authorization, sso_status
+    from insureflow.auth.sso import sso_status, start_authorization
 
     status_info = sso_status()
     if not status_info.get("enabled"):

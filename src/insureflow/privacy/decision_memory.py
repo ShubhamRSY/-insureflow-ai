@@ -124,7 +124,7 @@ class DecisionMemoryStore:
             from insureflow.privacy.data_plane import retain_source_documents
 
             # Always remember the decision; never copy names even in lab mode.
-            reasons = []
+            reasons: list[str] = []
             for key in ("human_review_reasons", "conditions", "rationale"):
                 val = summary.get(key)
                 if isinstance(val, list):
