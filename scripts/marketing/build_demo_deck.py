@@ -508,8 +508,7 @@ Do not offer a free-for-all sandbox without a named UW sponsor.""",
         Inches(5.5),
         Inches(11.2),
         Inches(0.6),
-        "Likely Qs: live oracles · SERFF book · Guidewire bind · PII · line vs staff · "
-        "mortgage/lending. Answer honestly: fail closed until those are actually live.",
+        "Likely Qs: live oracles · SERFF book · Guidewire bind · PII · line vs staff · mortgage/lending. Answer honestly: fail closed until those are actually live.",
         size=14,
         color=MUTED,
     )

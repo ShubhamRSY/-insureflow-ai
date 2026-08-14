@@ -231,10 +231,7 @@ def maybe_enable_langsmith_tracing() -> bool:
         if not allow_langsmith_in_bank():
             os.environ["LANGCHAIN_TRACING_V2"] = "false"
             os.environ["LANGSMITH_TRACING"] = "false"
-            logger.warning(
-                "LangSmith tracing disabled in BANK_MODE (prompts would leave the customer VPC). "
-                "Set LANGSMITH_ALLOW_IN_BANK=true only with a bank-approved LangSmith org."
-            )
+            logger.warning("LangSmith tracing disabled in BANK_MODE (prompts would leave the customer VPC). Set LANGSMITH_ALLOW_IN_BANK=true only with a bank-approved LangSmith org.")
             return False
     os.environ.setdefault("LANGSMITH_API_KEY", settings.langsmith_api_key)
     os.environ.setdefault("LANGCHAIN_API_KEY", settings.langsmith_api_key)

@@ -545,19 +545,10 @@ def _say_roi(
     rate: float,
 ) -> str:
     if n <= 0:
-        return (
-            "No cycle-time samples yet — Total Return needs measured first-pass time vs a 2-hour desk. "
-            "ROI% = (Net Profit / Cost of Investment) × 100."
-        )
-    return_bit = (
-        f"Total Return ${total_return:,.0f} = {hours_saved:.2f}h saved/file × ${rate:.0f}/h × {volume:,} files/year "
-        f"(${usd_per_file:,.0f}/file vs a 2-hour first pass)."
-    )
+        return "No cycle-time samples yet — Total Return needs measured first-pass time vs a 2-hour desk. ROI% = (Net Profit / Cost of Investment) × 100."
+    return_bit = f"Total Return ${total_return:,.0f} = {hours_saved:.2f}h saved/file × ${rate:.0f}/h × {volume:,} files/year (${usd_per_file:,.0f}/file vs a 2-hour first pass)."
     if cost <= 0:
-        return (
-            f"{n} runs · {return_bit} Cost of Investment $0 (Pilot list / no LLM spend) — "
-            "ROI% is undefined until there is a non-zero investment. Assumptions labeled — not a billed invoice."
-        )
+        return f"{n} runs · {return_bit} Cost of Investment $0 (Pilot list / no LLM spend) — ROI% is undefined until there is a non-zero investment. Assumptions labeled — not a billed invoice."
     return (
         f"{n} runs · {return_bit} Cost of Investment ${cost:,.0f}. "
         f"Net Profit ${net_profit:,.0f} = Total Return − Total Cost. "

@@ -79,6 +79,7 @@ LENDING_NS = "lending"
 
 job_store: JobStore = get_job_store()
 
+
 def _rate_limit_key(request: Request) -> str:
     """Honor X-Forwarded-For only behind a trusted ALB/Caddy (TRUSTED_PROXY=true)."""
     trusted = os.getenv("TRUSTED_PROXY", "").strip().lower() in {"1", "true", "yes", "on"}
@@ -292,8 +293,7 @@ def security_status(current: TokenData | None = Depends(get_current_user_optiona
         },
         "observability": {
             "langsmith_key_present": bool(settings.langsmith_api_key),
-            "langsmith_tracing": bool(settings.langsmith_api_key)
-            and (not posture.bank_mode or os.getenv("LANGSMITH_ALLOW_IN_BANK", "").lower() in {"1", "true", "yes"}),
+            "langsmith_tracing": bool(settings.langsmith_api_key) and (not posture.bank_mode or os.getenv("LANGSMITH_ALLOW_IN_BANK", "").lower() in {"1", "true", "yes"}),
             "cloudwatch_logs": settings.cloudwatch_logs or posture.bank_mode,
             "aws_region": settings.aws_region,
             "aws_secrets_configured": bool(settings.aws_secrets_arn),

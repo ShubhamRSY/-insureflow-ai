@@ -27,13 +27,9 @@ class PiiLogFilter(logging.Filter):
                 record.msg = redactor.redact(record.msg, mask=False)
             if record.args:
                 if isinstance(record.args, dict):
-                    record.args = {
-                        k: redactor.redact(v, mask=False) if isinstance(v, str) else v for k, v in record.args.items()
-                    }
+                    record.args = {k: redactor.redact(v, mask=False) if isinstance(v, str) else v for k, v in record.args.items()}
                 elif isinstance(record.args, tuple):
-                    record.args = tuple(
-                        redactor.redact(a, mask=False) if isinstance(a, str) else a for a in record.args
-                    )
+                    record.args = tuple(redactor.redact(a, mask=False) if isinstance(a, str) else a for a in record.args)
         except Exception:
             pass
         return True

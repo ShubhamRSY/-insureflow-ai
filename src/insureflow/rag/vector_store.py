@@ -138,10 +138,7 @@ class PgVectorStore(VectorStore):
                 cur.execute(f"ALTER TABLE {self._collection} ADD COLUMN IF NOT EXISTS {col} {ddl}")
             self._conn.commit()
             try:
-                cur.execute(
-                    f"CREATE INDEX IF NOT EXISTS {self._collection}_hnsw "
-                    f"ON {self._collection} USING hnsw (embedding vector_cosine_ops)"
-                )
+                cur.execute(f"CREATE INDEX IF NOT EXISTS {self._collection}_hnsw ON {self._collection} USING hnsw (embedding vector_cosine_ops)")
                 self._conn.commit()
             except Exception as exc:
                 logger.debug("HNSW index skipped: %s", exc)
