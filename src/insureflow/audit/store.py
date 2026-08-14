@@ -69,6 +69,9 @@ class AuditStore:
 
     def _write_json(self, path: Path, data: dict[str, Any]) -> None:
         try:
+            from insureflow.privacy.data_plane import prepare_persisted_payload
+
+            data = prepare_persisted_payload(data) if isinstance(data, dict) else data
             path.write_text(json.dumps(data, indent=2, default=str, ensure_ascii=False), encoding="utf-8")
         except OSError as e:
             raise StorageError(f"Failed to write JSON to {path}: {e}")

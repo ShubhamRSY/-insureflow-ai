@@ -8,7 +8,7 @@
 | Simulated oracles | Medium | **CODE-READY / blocked on keys** | Live HTTP in `oracles/*` + `docs/ops/ORACLE_LIVE_WIRING.md` — needs LexisNexis/Verisk sandbox credentials |
 | No Celery for insurance | Medium | **FILLED** | `tasks/pipeline_tasks.py`; `/pipeline/run` honors `use_celery` or `INSURANCE_USE_CELERY=true` |
 | Pricing calibration | Medium | **FILLED** (file/URL rate curves) | `rating/calibration.py`, `data/rate_curves.json`, `RATE_CURVES_URL` / `RATE_CURVES_PATH` |
-| Stub connectors | Medium | **FILLED** (2 priority real fetches) | **Email IMAP** + **AWS S3** real pull; others remain demo stubs until vendor creds |
+| Stub connectors | Medium | **FILLED** (3 live fetches) | **Email IMAP** + **AWS S3** + **SFTP**; other catalog rows stay demo stubs until vendor creds. No Airbyte/Fivetran/Airflow/Kafka. |
 | Mortgage progress/errors | Low | **FILLED** | Stage progress via `PipelineProgressTracker` → job_store; fail-closed empty/error → refer |
 
 ## Still external (not a code gap)

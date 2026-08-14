@@ -4,7 +4,50 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from insureflow.analytics.business_kpis import BusinessKPIService, CatchRateTracker, DecisionRoutingTracker, bootstrap_business_kpis
+from insureflow.analytics.business_kpis import (
+    BusinessKPIService,
+    CatchRateTracker,
+    DecisionRoutingTracker,
+    _compute_roi,
+    bootstrap_business_kpis,
+)
+
+
+def test_roi_formula_net_profit_over_investment() -> None:
+    empty = _compute_roi(0, 0, platform_usd_annual=0, llm_usd_annual=0)
+    assert empty["sample_size"] == 0
+    assert empty["value"] is None
+    assert empty["status"] == "not_measured"
+    assert empty["cost_of_investment_usd"] == 0
+    assert empty["net_profit_usd"] == 0
+
+    desk_annual = 799.0 * 12
+    measured = _compute_roi(12, 10.0, platform_usd_annual=desk_annual, llm_usd_annual=0)
+    hours_raw = (7200.0 - 10.0) / 3600.0
+    usd_per_file = round(hours_raw * 175.0, 2)
+    total_return = round(usd_per_file * 1000, 2)
+    net = round(total_return - desk_annual, 2)
+    expected_pct = round((net / desk_annual) * 100.0, 1)
+
+    assert measured["status"] == "production_ready"
+    assert measured["unit"] == "percent"
+    assert measured["hours_saved_per_file"] == round(hours_raw, 3)
+    assert measured["total_return_usd"] == total_return
+    assert measured["cost_of_investment_usd"] == desk_annual
+    assert measured["net_profit_usd"] == net
+    assert measured["value"] == expected_pct
+    assert measured["pass"] is True
+    assert "Net Profit" in measured["what_to_say"]
+
+
+def test_roi_undefined_when_investment_is_zero() -> None:
+    measured = _compute_roi(12, 10.0, platform_usd_annual=0, llm_usd_annual=0)
+    assert measured["cost_of_investment_usd"] == 0
+    assert measured["value"] is None
+    assert measured["status"] == "lab_partial"
+    assert measured["pass"] is False
+    assert measured["planning_at_desk"]["roi_percent"] is not None
+    assert measured["planning_at_desk"]["cost_of_investment_usd"] == 799.0 * 12
 
 
 def test_decision_routing_and_catch_stats(tmp_path: Path) -> None:
@@ -43,6 +86,10 @@ def test_bootstrap_produces_measurable_kpis() -> None:
     assert kpis["missing_doc_conflict_catch"]["sample_size"] >= 1
     assert kpis["missing_doc_conflict_catch"]["value"] >= 0.9
     assert kpis["override_rate"]["sample_size"] >= 14
+    assert kpis["roi"]["sample_size"] >= 14
+    assert kpis["roi"]["hours_saved_per_file"] > 1.5
+    assert kpis["roi"]["total_return_usd"] > 0
+    assert kpis["roi"]["formula"].startswith("ROI =")
     # Bind / LR remain empty without production outcomes
     assert kpis["bind_rate_after_accept"]["sample_size"] == 0
     assert kpis["loss_ratio"]["sample_size"] == 0

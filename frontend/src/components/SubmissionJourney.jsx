@@ -8,6 +8,7 @@ import {
 import { fmtCurrency, endpoints } from '../lib/api';
 import { getJourneyContext } from '../lib/pipelineJourney';
 import { insuranceLineLabel } from '../lib/insuranceLines';
+import SimilarPriors from './SimilarPriors';
 
 const STATUS_ICON = {
   complete: { Icon: CheckCircle2, cls: 'text-emerald-400' },
@@ -73,7 +74,7 @@ function PipelineTimeline({ stages, processing, currentStage }) {
         })}
       </div>
       {processing && (
-        <p className="mt-2 text-sm text-brand-light/80">Live — {currentStage ? `Running ${currentStage}` : 'pipeline in progress'}</p>
+        <p className="pipeline-live mt-2 text-sm font-semibold text-brand-light">Live — {currentStage ? `Running ${currentStage}` : 'pipeline in progress'}</p>
       )}
     </div>
   );
@@ -425,12 +426,15 @@ function EnterpriseOpsPanel({ ecosystem, onDispatchLC }) {
             const isLive = f.mode === 'live' && f.reachable;
             const label = isLive ? 'live' : (f.configured === false ? 'not configured' : f.mode);
             return (
-              <span key={f.name} title={isLive ? undefined : `Set the API key for ${f.name} in Railway Variables to enable live data`} className={`rounded-full px-2 py-0.5 ring-1 cursor-default ${isLive ? 'text-emerald-400 ring-emerald-500/30' : 'text-slate-400 ring-white/10'}`}>
+              <span key={f.name} title={isLive ? undefined : `Set the API key for ${f.name} — code-ready is not live ${f.name}`} className={`rounded-full px-2 py-0.5 ring-1 cursor-default ${isLive ? 'text-emerald-400 ring-emerald-500/30' : 'text-slate-400 ring-white/10'}`}>
                 {f.name}: {label}
               </span>
             );
           })}
         </div>
+        {feeds.some((f) => !(f.mode === 'live' && f.reachable)) && (
+          <p className="mt-2 text-[11px] text-amber-300/90">Simulated / not configured is not live CLUE (or A-PLUS / NCCI). The pipeline fail-closes when those keys are required.</p>
+        )}
       </div>
       <div className="grid gap-2 sm:grid-cols-2">
         <div className="rounded-lg bg-black/20 p-2">
@@ -755,6 +759,10 @@ export default function SubmissionJourney({ job }) {
 
           <Section title="Audit Trail" icon={FileText} defaultOpen={false}>
             <AuditTrailInline audit={audit} />
+          </Section>
+
+          <Section title="Similar prior files" icon={GitCompare} defaultOpen={false}>
+            <SimilarPriors bundleId={ctx.bundleId} />
           </Section>
 
           {!isLifeLine && (

@@ -199,6 +199,18 @@ class VisionLLMAnalyzer:
     ) -> dict[str, Any]:
         if not self.available:
             return {}
+        try:
+            from insureflow.privacy.data_plane import allow_vision_egress
+
+            if not allow_vision_egress():
+                logger.warning(
+                    "Vision LLM egress blocked — property photos stay in the customer environment. "
+                    "Set ALLOW_VISION_EGRESS=true only with a bank-approved private model."
+                )
+                return {}
+        except Exception:
+            logger.warning("Vision egress gate failed closed", exc_info=True)
+            return {}
         if self.provider == "openai":
             return _call_openai_vision(image_data, filename)
         if self.provider == "anthropic":

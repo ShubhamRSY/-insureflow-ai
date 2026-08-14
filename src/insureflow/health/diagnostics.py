@@ -44,10 +44,14 @@ class SystemDiagnostics:
             self._check_job_store(),
             self._check_encryption(),
             self._check_ocr(),
+            self._check_intake(),
+            self._check_governance(),
             self._check_audit_storage(),
             self._check_example_data(),
             self._check_mortgage_fixtures(),
             self._check_postgres(),
+            self._check_object_storage(),
+            self._check_knowledge_graph(),
             self._check_observability(),
         ]
         ok = sum(1 for c in checks if c.status == CheckStatus.OK)
@@ -306,6 +310,54 @@ class SystemDiagnostics:
             details=details,
         )
 
+    def _check_intake(self) -> ComponentCheck:
+        from insureflow.ingestion.status import ingestion_status
+
+        status = ingestion_status()
+        connectors = status.get("connectors") or {}
+        live = [name for name, meta in connectors.items() if meta.get("configured")]
+        return ComponentCheck(
+            component="intake",
+            status=CheckStatus.OK,
+            message="IMAP + S3 + SFTP + folder; parsers in-process; Celery when Redis is up — not Airbyte/Airflow/Kafka",
+            category="ingestion",
+            details={
+                "configured": live,
+                "workflow": status.get("workflow"),
+                "parsers": status.get("parsers"),
+                "ocr": status.get("ocr"),
+            },
+        )
+
+    def _check_governance(self) -> ComponentCheck:
+        from insureflow.ops.stack import platform_stack
+        from insureflow.security.posture import resolve_security_posture
+        from insureflow.storage.encryption import EnvelopeEncryption
+
+        stack = platform_stack()
+        posture = resolve_security_posture()
+        enc = EnvelopeEncryption().enabled
+        if posture.is_hardened and not enc:
+            status = CheckStatus.MISSING
+            message = "BANK_MODE requires ENCRYPTION_KEY"
+        else:
+            status = CheckStatus.OK
+            message = "RBAC + PII redaction + audit; encryption " + ("on" if enc else "optional in lab")
+        return ComponentCheck(
+            component="governance",
+            status=status,
+            message=message,
+            category="security",
+            details={
+                "rbac": stack["identity"]["app_rbac"],
+                "encryption_at_rest": enc,
+                "pii_redaction": True,
+                "policy_checks": stack["security"]["policy_checks"],
+                "secrets": stack["supporting"]["secrets"],
+                "cost": "/billing/usage",
+            },
+        )
+
     def _check_audit_storage(self) -> ComponentCheck:
         from insureflow.config import settings
 
@@ -388,14 +440,20 @@ class SystemDiagnostics:
         try:
             import psycopg2
 
-            conn = psycopg2.connect(url)
+            conn = psycopg2.connect(url, connect_timeout=3)
+            cur = conn.cursor()
+            cur.execute("CREATE EXTENSION IF NOT EXISTS vector")
+            cur.execute("SELECT extname FROM pg_extension WHERE extname = 'vector'")
+            has_vector = cur.fetchone() is not None
+            conn.commit()
+            cur.close()
             conn.close()
             return ComponentCheck(
                 component="postgres_pgvector",
-                status=CheckStatus.OK,
-                message="PostgreSQL reachable — pgvector RAG available",
+                status=CheckStatus.OK if has_vector else CheckStatus.DEGRADED,
+                message="PostgreSQL reachable — pgvector RAG available" if has_vector else "PostgreSQL reachable but vector extension missing",
                 category="rag",
-                details={"host": url.split("@")[-1] if "@" in url else "configured"},
+                details={"host": url.split("@")[-1] if "@" in url else "configured", "vector_extension": has_vector, "table": "guideline_embeddings"},
             )
         except ImportError:
             return ComponentCheck(
@@ -413,6 +471,38 @@ class SystemDiagnostics:
                 category="rag",
                 details={},
             )
+
+    def _check_object_storage(self) -> ComponentCheck:
+        import os
+
+        bucket = os.getenv("RETENTION_S3_BUCKET", "").strip()
+        if bucket:
+            return ComponentCheck(
+                component="object_storage",
+                status=CheckStatus.OK,
+                message="S3 Object Lock bucket configured for WORM examiner copies",
+                category="storage",
+                details={"bucket": bucket, "role": "audit_retention_not_source_files"},
+            )
+        return ComponentCheck(
+            component="object_storage",
+            status=CheckStatus.DEGRADED,
+            message="No RETENTION_S3_BUCKET — WORM seals stay on local disk",
+            category="storage",
+            details={"fix": "Set RETENTION_S3_BUCKET in the landing zone (already in Terraform)"},
+        )
+
+    def _check_knowledge_graph(self) -> ComponentCheck:
+        from insureflow.rag.knowledge_graph import get_knowledge_graph
+
+        stats = get_knowledge_graph().stats()
+        return ComponentCheck(
+            component="knowledge_graph",
+            status=CheckStatus.OK,
+            message="In-process UW knowledge graph (not Neo4j)",
+            category="rag",
+            details={"nodes": stats.get("nodes"), "edges": stats.get("edges")},
+        )
 
     def _check_observability(self) -> ComponentCheck:
         from insureflow.observability.openobserve import status as openobserve_status

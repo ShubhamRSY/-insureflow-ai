@@ -19,7 +19,7 @@ Use this as the internal control narrative while a formal SOC 2 Type I/II engage
 - Roles: viewer → underwriter → licensed_uw → admin → cuo
 - Open registration **off** in BANK_MODE
 - Auth reset **off** in BANK_MODE (break-glass via `ALLOW_AUTH_RESET`)
-- Optional Cognito/Okta SSO (`/auth/sso/*`)
+- Optional Cognito/Okta SSO (`/auth/sso/*`) with PKCE; `SSO_REQUIRED` disables password login
 
 ## Logging & audit
 
@@ -33,7 +33,7 @@ Use this as the internal control narrative while a formal SOC 2 Type I/II engage
 - [ ] Penetration test + remediations
 - [ ] Vendor risk reviews for LLM providers
 - [ ] Documented incident response runbook drills
-- [ ] Production SSO JWKS validation (beyond stub)
+- [x] Production SSO JWKS validation (aud/iss/exp) + PKCE code exchange
 - [ ] Multi-AZ RDS + tested restore drill
 
 ## Contact

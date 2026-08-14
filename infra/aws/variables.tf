@@ -60,6 +60,12 @@ variable "ecs_desired_count" {
   default = 2
 }
 
+variable "ecs_worker_desired_count" {
+  type        = number
+  default     = 1
+  description = "Celery workers for pipeline/mortgage/agent queues (orchestration bus)."
+}
+
 variable "langsmith_api_key" {
   type      = string
   default   = ""
@@ -79,6 +85,24 @@ variable "enable_cognito" {
 variable "cognito_callback_urls" {
   type    = list(string)
   default = ["https://app.rytera.ai/auth/sso/callback"]
+}
+
+variable "domain_name" {
+  type        = string
+  default     = ""
+  description = "FQDN for the desk (e.g. uw.bank.example). Empty = skip Route 53."
+}
+
+variable "route53_zone_id" {
+  type        = string
+  default     = ""
+  description = "Existing public hosted zone. Required when domain_name is set."
+}
+
+variable "waf_rate_limit" {
+  type        = number
+  default     = 2000
+  description = "WAF requests per 5 minutes per IP before block (DDoS / credential stuffing)."
 }
 
 variable "tags" {

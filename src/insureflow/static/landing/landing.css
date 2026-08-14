@@ -664,13 +664,35 @@ section + section { border-top: 1px solid var(--border); }
 
 .audience-pill .ico { width: 15px; height: 15px; color: var(--brand-2); }
 
-.brand-line {
-  margin: 1.1rem 0 0;
-  font-family: var(--font-display);
+.brand-line-2 {
+  margin-top: .35rem;
+  color: var(--brand-2);
+  font-size: 1.05rem;
+}
+
+.punch-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  margin-top: 1rem;
+}
+
+.punch-row span {
+  padding: .4rem .75rem;
+  border-radius: 999px;
+  border: 1px solid rgba(52, 211, 153, .28);
+  background: rgba(16, 185, 129, .08);
+  color: #d1fae5;
+  font-size: .78rem;
+  font-weight: 650;
+  letter-spacing: -.01em;
+}
+
+.num.static {
   font-size: 1.15rem;
-  font-weight: 600;
-  letter-spacing: -.02em;
-  color: #e2e8f0;
+  font-weight: 750;
+  letter-spacing: -.03em;
+  line-height: 1.2;
 }
 
 .keyword-strip {

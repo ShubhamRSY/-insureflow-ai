@@ -364,3 +364,19 @@ def test_rag_vector_store_clear() -> None:
     store.clear()
     results = store.search("test", top_k=5)
     assert results == []
+
+
+def test_get_vector_store_without_postgres(monkeypatch) -> None:
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    from insureflow.rag.vector_store import InMemoryVectorStore, get_vector_store
+
+    store = get_vector_store()
+    assert isinstance(store, InMemoryVectorStore)
+
+
+def test_get_vector_store_bad_url_falls_back(monkeypatch) -> None:
+    monkeypatch.setenv("DATABASE_URL", "postgresql://nobody:nopass@127.0.0.1:1/none?connect_timeout=1")
+    from insureflow.rag.vector_store import InMemoryVectorStore, get_vector_store
+
+    store = get_vector_store()
+    assert isinstance(store, InMemoryVectorStore)

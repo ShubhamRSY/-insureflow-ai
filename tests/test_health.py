@@ -15,6 +15,12 @@ class TestSystemDiagnostics:
         components = {c["component"]: c for c in report["checks"]}
         assert "llm_api_key" in components
         assert "job_store" in components
+        assert "knowledge_graph" in components
+        assert "intake" in components
+        assert "governance" in components
+        assert components["knowledge_graph"]["status"] == "ok"
+        assert components["intake"]["status"] == "ok"
+        assert components["governance"]["status"] == "ok"
         # Deterministic mode is first-class — not degraded/missing
         assert components["llm_api_key"]["status"] == "ok"
         assert components["llm_pipeline_mode"]["status"] == "ok"

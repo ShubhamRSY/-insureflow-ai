@@ -157,7 +157,7 @@ export default function LineUnderwriting() {
             <div className="mt-5 space-y-3 border-t border-white/[0.06] pt-4">
               <p className="text-sm text-slate-300">{assist.summary}</p>
               {(assist.recommendations || []).map((r) => (
-                <div key={r.title} className="rounded-xl bg-surface-overlay px-3 py-3">
+                <div key={r.title} className="rounded-xl bg-surface-overlay px-3 py-3 ring-1 ring-white/[0.06]">
                   <div className="flex items-center gap-2">
                     <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${ACTION_COLOR[r.action] || ''}`}>{r.action}</span>
                     <span className="text-sm font-medium">{r.title}</span>
@@ -199,7 +199,7 @@ export default function LineUnderwriting() {
             {tickets.length === 0 ? (
               <EmptyState icon={Briefcase} title="No open service work" description="Quotes, endorsements, certificates, and renewals appear here." />
             ) : tickets.map((t) => (
-              <div key={t.ticket_id} className="flex items-start justify-between gap-3 rounded-xl bg-surface-overlay px-3 py-3">
+              <div key={t.ticket_id} className="flex items-start justify-between gap-3 rounded-xl bg-surface-overlay px-3 py-3 ring-1 ring-white/[0.06]">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge>{t.request_type}</Badge>

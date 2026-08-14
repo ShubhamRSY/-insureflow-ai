@@ -166,3 +166,155 @@ def test_hardened_ops_endpoints_require_auth(monkeypatch: MonkeyPatch) -> None:
     assert client.get("/security/status").status_code == 401
     assert client.get("/metrics").status_code == 401
     assert client.get("/health").status_code == 200
+
+
+def test_sso_required_off_by_default(monkeypatch: MonkeyPatch) -> None:
+    monkeypatch.delenv("SSO_REQUIRED", raising=False)
+    from insureflow.auth.sso import sso_required
+
+    assert sso_required() is False
+
+
+def test_pkce_s256_rfc7636() -> None:
+    from insureflow.auth.sso import _code_challenge
+
+    verifier = "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+    assert _code_challenge(verifier) == "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM"
+
+
+def test_token_endpoint_okta_vs_cognito(monkeypatch: MonkeyPatch) -> None:
+    from insureflow.auth.sso import OIDCConfig, _token_endpoint
+
+    monkeypatch.setattr("insureflow.auth.sso._openid_config", lambda _issuer: {})
+    monkeypatch.setenv("OKTA_DOMAIN", "bank.okta.com")
+    monkeypatch.delenv("COGNITO_DOMAIN", raising=False)
+    okta = OIDCConfig(
+        enabled=True,
+        provider="okta",
+        issuer="https://bank.okta.com",
+        client_id="cid",
+        client_secret="",
+        redirect_uri="https://app.example/cb",
+    )
+    assert _token_endpoint(okta) == "https://bank.okta.com/oauth2/v1/token"
+
+    custom = OIDCConfig(
+        enabled=True,
+        provider="okta",
+        issuer="https://bank.okta.com/oauth2/default",
+        client_id="cid",
+        client_secret="",
+        redirect_uri="https://app.example/cb",
+    )
+    assert _token_endpoint(custom) == "https://bank.okta.com/oauth2/default/v1/token"
+
+    monkeypatch.delenv("OKTA_DOMAIN", raising=False)
+    monkeypatch.setenv("COGNITO_DOMAIN", "myapp.auth.us-east-1.amazoncognito.com")
+    cognito = OIDCConfig(
+        enabled=True,
+        provider="cognito",
+        issuer="https://cognito-idp.us-east-1.amazonaws.com/us-east-1_xx",
+        client_id="cid",
+        client_secret="",
+        redirect_uri="https://app.example/cb",
+    )
+    assert _token_endpoint(cognito) == "https://myapp.auth.us-east-1.amazoncognito.com/oauth2/token"
+
+
+def test_start_authorization_keeps_verifier_server_side(monkeypatch: MonkeyPatch) -> None:
+    monkeypatch.setenv("SSO_ENABLED", "true")
+    monkeypatch.setenv("SSO_PROVIDER", "okta")
+    monkeypatch.setenv("OIDC_ISSUER", "https://bank.okta.com")
+    monkeypatch.setenv("OIDC_CLIENT_ID", "cid")
+    monkeypatch.setenv("OKTA_DOMAIN", "bank.okta.com")
+    monkeypatch.setattr("insureflow.auth.sso._openid_config", lambda _issuer: {})
+    from insureflow.auth.sso import start_authorization
+
+    out = start_authorization()
+    assert "code_verifier" not in out
+    assert "authorize_url" in out and "state" in out
+    assert "code_challenge=" in out["authorize_url"]
+    assert "code_challenge_method=S256" in out["authorize_url"]
+
+
+def test_password_login_blocked_when_sso_required(monkeypatch: MonkeyPatch) -> None:
+    monkeypatch.setenv("SSO_REQUIRED", "true")
+    from fastapi.testclient import TestClient
+
+    from insureflow.api import app
+
+    client = TestClient(app)
+    resp = client.post("/auth/login", json={"username": "alice", "password": "secret"})
+    assert resp.status_code == 403
+    assert "SSO" in resp.json()["detail"]
+
+
+def test_auth_status_includes_sso_flags() -> None:
+    from fastapi.testclient import TestClient
+
+    from insureflow.api import app
+
+    client = TestClient(app)
+    resp = client.get("/auth/status")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert "sso" in body
+    assert "sso_required" in body
+    assert body["sso_required"] is False
+
+
+def test_sso_callback_get_redirects_to_spa() -> None:
+    from fastapi.testclient import TestClient
+
+    from insureflow.api import app
+
+    client = TestClient(app, follow_redirects=False)
+    resp = client.get("/auth/sso/callback?code=abc&state=xyz")
+    assert resp.status_code in {302, 307}
+    loc = resp.headers.get("location") or ""
+    assert "/dashboard/sso/callback" in loc
+    assert "code=abc" in loc
+    assert "state=xyz" in loc
+
+
+def test_billing_usage_requires_auth() -> None:
+    from fastapi.testclient import TestClient
+
+    from insureflow.api import app
+
+    client = TestClient(app)
+    assert client.get("/billing/usage").status_code == 401
+
+
+def test_ingestion_status_requires_auth() -> None:
+    from fastapi.testclient import TestClient
+
+    from insureflow.api import app
+
+    client = TestClient(app)
+    assert client.get("/ingestion/status").status_code == 401
+
+
+def test_platform_stack_requires_auth() -> None:
+    from fastapi.testclient import TestClient
+
+    from insureflow.api import app
+
+    client = TestClient(app)
+    assert client.get("/platform/stack").status_code == 401
+
+
+def test_security_headers_on_health() -> None:
+    from fastapi.testclient import TestClient
+
+    from insureflow.api import app
+
+    client = TestClient(app)
+    resp = client.get("/health")
+    assert resp.status_code == 200
+    assert resp.headers.get("x-content-type-options") == "nosniff"
+    assert resp.headers.get("x-frame-options") == "DENY"
+    assert resp.headers.get("referrer-policy") == "no-referrer"
+    assert "camera=()" in (resp.headers.get("permissions-policy") or "")
+    https = client.get("/health", headers={"x-forwarded-proto": "https"})
+    assert "max-age=" in (https.headers.get("strict-transport-security") or "")

@@ -19,11 +19,11 @@ Use this checklist before public launch at [rytera.ai](https://rytera.ai).
 - [x] `BANK_MODE` / `ENVIRONMENT=production` disables open registration + `/auth/reset`
 - [x] Encryption key required in bank mode
 - [x] Compose bank overlay: no host ports for Postgres/Redis; TLS on `:8443`
-- [x] AWS landing zone Terraform (VPC, ECS, RDS, Redis, Secrets/KMS, WAF, CloudTrail, Cognito)
+- [x] AWS landing zone Terraform (VPC, ECS API + Celery worker, RDS, Redis, Secrets/KMS, WAF, CloudTrail, Cognito)
 - [x] CloudWatch JSON logs + LangSmith AI tracing
 - [x] Prometheus `/metrics` + Grafana dashboards + OpenObserve shipper (`docs/ops/OBSERVABILITY.md`)
 - [x] WORM audit retention module + S3 Object Lock bucket in Terraform
-- [x] SSO stubs (`/auth/sso/*`) for Cognito/Okta
+- [x] SSO (`/auth/sso/*`) PKCE + JWKS for Cognito/Okta; set `SSO_REQUIRED=true` at bank cutover to disable password login
 - [x] DPA / Privacy / SOC 2 questionnaire templates under `legal/`
 - [ ] Apply Terraform to a real AWS account + ACM certificate
 - [x] Complete OIDC JWKS validation for production SSO tokens (aud/iss/exp enforced when configured)

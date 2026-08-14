@@ -92,6 +92,11 @@ export const endpoints = {
   uwWorkbench: () => api('/api/uw/workbench'),
   login: (username, password) => api('/auth/login', { method: 'POST', body: { username, password } }),
   authStatus: () => api('/auth/status'),
+  ssoStatus: () => api('/auth/sso/status'),
+  ssoLogin: () => api('/auth/sso/login'),
+  ssoCallback: (body) => api('/auth/sso/callback', { method: 'POST', body }),
+  billingPlan: () => api('/billing/plan'),
+  billingUsage: () => api('/billing/usage'),
   authReset: () => api('/auth/reset', { method: 'POST' }).then((r) => { auth.wipeSession(); return r; }),
   setup: (body) => api('/auth/setup', { method: 'POST', body }),
   me: () => api('/auth/me'),
@@ -323,6 +328,9 @@ export const endpoints = {
   calibration: () => api('/pipeline/outcomes/calibration'),
   businessKpis: () => api('/analytics/business-kpis'),
   bootstrapBusinessKpis: () => api('/analytics/business-kpis/bootstrap', { method: 'POST' }),
+  decisionMemory: (qs = '') => api(`/analytics/decision-memory${qs ? `?${qs}` : ''}`),
+  decisionArchive: () => api('/pipeline/archive'),
+  similarDecisions: (bundleId) => api(`/pipeline/audit/${bundleId}/similar`),
 
   // Issuance — binder / policy worksheet / certificate (Step 5b)
   issuanceRecords: () => api('/pipeline/issuance'),

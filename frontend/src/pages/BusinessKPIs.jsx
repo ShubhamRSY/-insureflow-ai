@@ -9,8 +9,17 @@ const statusBadge = (s) => {
   return 'failed';
 };
 
+const fmtUsd = (n) => `$${Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+
 const fmtValue = (kpi) => {
   if (!kpi || kpi.sample_size === 0) return '—';
+  if (kpi.unit === 'percent') {
+    if (kpi.value == null) return '—';
+    return `${Number(kpi.value).toFixed(1)}%`;
+  }
+  if (kpi.unit === 'usd_annual') {
+    return fmtUsd(kpi.value);
+  }
   if (kpi.unit === 'seconds_avg') return `${kpi.value}s`;
   if (kpi.unit === 'rate' || kpi.unit === 'stp_rate' || kpi.unit === 'ratio') {
     return `${(Number(kpi.value) * 100).toFixed(1)}%`;
@@ -19,6 +28,7 @@ const fmtValue = (kpi) => {
 };
 
 const KPI_META = [
+  { key: 'roi', title: 'ROI', hint: '(Net Profit / Cost of Investment) × 100 · Net Profit = Total Return − Total Cost' },
   { key: 'cycle_time', title: 'Cycle time', hint: 'First-pass pipeline duration' },
   { key: 'override_rate', title: 'Override rate', hint: 'UW changes AI decision' },
   { key: 'bind_rate_after_accept', title: 'Bind rate after Accept', hint: 'Accepts that go in-force' },
@@ -29,6 +39,7 @@ const KPI_META = [
 
 export default function BusinessKPIsPage() {
   const [report, setReport] = useState(null);
+  const [usage, setUsage] = useState(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -38,8 +49,12 @@ export default function BusinessKPIsPage() {
     setLoading(true);
     setError('');
     try {
-      const r = await endpoints.businessKpis();
+      const [r, u] = await Promise.all([
+        endpoints.businessKpis(),
+        endpoints.billingUsage().catch(() => null),
+      ]);
       setReport(r);
+      setUsage(u);
     } catch (e) {
       setError(e.message || String(e));
     } finally {
@@ -86,9 +101,9 @@ export default function BusinessKPIsPage() {
             <Gauge className="h-6 w-6 text-brand" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Business KPIs</h1>
+            <h1 className="text-3xl font-bold tracking-tight">ROI &amp; business KPIs</h1>
             <p className="mt-1 text-slate-400">
-              Production scorecard — cycle time, override, bind, loss ratio, STP, catch rate
+              Production scorecard — ROI% = (Net Profit / Cost of Investment) × 100, cycle time, override, bind, loss ratio, STP, catch rate
             </p>
           </div>
         </div>
@@ -110,12 +125,12 @@ export default function BusinessKPIsPage() {
         <StatCard
           label="Overall"
           value={overall.replace(/_/g, ' ')}
-          sub={`${report?.production_ready_count ?? 0}/${report?.total_kpis ?? 6} production-ready`}
+          sub={`${report?.production_ready_count ?? 0}/${report?.total_kpis ?? 7} production-ready`}
           accent="insurance"
         />
         <StatCard
           label="Measured"
-          value={`${report?.measured_count ?? 0}/${report?.total_kpis ?? 6}`}
+          value={`${report?.measured_count ?? 0}/${report?.total_kpis ?? 7}`}
           sub="KPIs with sample size &gt; 0"
         />
         <StatCard
@@ -178,9 +193,40 @@ export default function BusinessKPIsPage() {
                     min {kpi.min_seconds}s · p50 {kpi.p50_seconds}s · max {kpi.max_seconds}s
                   </p>
                 )}
+                {key === 'roi' && kpi.sample_size > 0 && (
+                  <div className="space-y-1 text-xs text-slate-500">
+                    <p>
+                      Total Return {fmtUsd(kpi.total_return_usd)} − Cost of Investment {fmtUsd(kpi.cost_of_investment_usd)} = Net Profit {fmtUsd(kpi.net_profit_usd)}
+                    </p>
+                    <p>
+                      {kpi.hours_saved_per_file}h saved / file · {fmtUsd(kpi.usd_per_file)} / file · measured avg {kpi.measured_avg_seconds}s vs {kpi.baseline_minutes} min desk
+                    </p>
+                    {kpi.value == null && kpi.planning_at_desk?.roi_percent != null && (
+                      <p>
+                        Planning at Desk list: ROI {Number(kpi.planning_at_desk.roi_percent).toFixed(1)}% on {fmtUsd(kpi.planning_at_desk.cost_of_investment_usd)} investment
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
             );
           })}
+        </div>
+      )}
+
+      {usage && (
+        <div className="glass-card p-5 space-y-2">
+          <h3 className="text-sm font-semibold text-slate-100">Plan &amp; LLM usage</h3>
+          <p className="text-xs text-slate-500">
+            Plan <span className="text-slate-300">{usage.plan_id || '—'}</span>
+            {' · '}session {fmtUsd(usage.session?.total_cost)}
+            {' · '}{usage.session?.request_count ?? 0} LLM calls
+          </p>
+          {usage.budget?.monthly_limit > 0 && (
+            <p className="text-xs text-slate-500">
+              Monthly budget {fmtUsd(usage.budget.monthly_spent)} / {fmtUsd(usage.budget.monthly_limit)}
+            </p>
+          )}
         </div>
       )}
 

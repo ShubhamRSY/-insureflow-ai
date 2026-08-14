@@ -70,7 +70,7 @@ export default function IntegrationsPage() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Integrations</h1>
             <p className="mt-1 text-slate-400">
-              Connect to document sources — then pull them from Insurance, Mortgage &amp; Lending
+              Live drops: IMAP, S3, SFTP, folder. SharePoint / Drive / IVANS stay dark until contracted — they are not live feeds.
             </p>
           </div>
         </div>
@@ -114,8 +114,17 @@ export default function IntegrationsPage() {
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-medium text-slate-200">{src.name}</p>
-                          <p className="truncate text-xs text-slate-500">{src.description}</p>
+                          <p className="truncate text-xs text-slate-500">{src.honesty || src.description}</p>
                         </div>
+                        {src.kind === 'catalog_stub' && (
+                          <span className="shrink-0 rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Not contracted</span>
+                        )}
+                        {src.kind === 'live' && (
+                          <span className="shrink-0 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-400">Live</span>
+                        )}
+                        {src.kind === 'needs_config' && (
+                          <span className="shrink-0 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-400">Needs creds</span>
+                        )}
                         {src.connected ? (
                           <div className="flex shrink-0 items-center gap-2">
                             <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-400">
@@ -200,20 +209,22 @@ export default function IntegrationsPage() {
                     <tr className="border-b border-white/[0.06] bg-surface-overlay text-left text-xs uppercase tracking-wider text-slate-500">
                       <th className="px-6 py-3">System</th>
                       <th className="px-6 py-3">Mode</th>
-                      <th className="px-6 py-3">Status</th>
+                      <th className="px-6 py-3">Honesty</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/[0.04]">
                     {systems.map((a, i) => (
                       <tr key={i} className="hover:bg-white/[0.02]">
                         <td className="px-6 py-3.5 text-slate-300">{a.name}</td>
-                        <td className="px-6 py-3.5 text-xs text-slate-400">{a.mode || '—'}</td>
-                        <td className="px-6 py-3.5">
-                          {a.configured || a.healthy ? (
-                            <span className="inline-flex items-center gap-1 text-xs text-emerald-400"><CheckCircle2 className="h-3 w-3" /> Connected</span>
+                        <td className="px-6 py-3.5 text-xs text-slate-400">
+                          {a.mode === 'live' ? (
+                            <span className="text-emerald-400">live</span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 text-xs text-slate-500"><XCircle className="h-3 w-3" /> Not configured</span>
+                            <span className="text-amber-400">simulated — not a live bind</span>
                           )}
+                        </td>
+                        <td className="px-6 py-3.5 text-xs text-slate-500">
+                          {a.honesty || (a.mode === 'live' ? 'PAS sandbox reachable' : 'Code-ready until they hand you credentials')}
                         </td>
                       </tr>
                     ))}

@@ -259,6 +259,45 @@ Thank you,
         </div>
       </section>
 
+      {readiness?.honesty && (
+        <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3 text-sm text-slate-300">
+          <p className="font-medium text-slate-200">What is live vs invented</p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-slate-400">
+            <li>System of record: their PAS — not this Postgres</li>
+            <li>{readiness.honesty.oracles}</li>
+            <li>{readiness.honesty.connectors}</li>
+            <li>{readiness.honesty.pricing}</li>
+          </ul>
+        </div>
+      )}
+
+      <section className="glass-card overflow-hidden">
+        <div className="border-b border-white/[0.06] px-5 py-3">
+          <h3 className="text-sm font-semibold">Bind cutover checklist</h3>
+          <p className="mt-0.5 text-[11px] text-slate-500">Do not invent a bind. This is the gate before PAS cutover.</p>
+        </div>
+        <div className="divide-y divide-white/[0.04]">
+          {(readiness?.bind_cutover?.steps || []).map((s) => (
+            <div key={s.id} className="flex items-start gap-3 px-5 py-3">
+              {s.done ? (
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
+              ) : (
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="text-sm text-slate-200">{s.title}{s.required ? '' : ' (optional)'}</p>
+                {s.note && <p className="mt-0.5 text-[11px] text-slate-500">{s.note}</p>}
+              </div>
+            </div>
+          ))}
+        </div>
+        {readiness?.bind_cutover && (
+          <p className="border-t border-white/[0.06] px-5 py-3 text-xs text-slate-500">
+            Cutover ready: {readiness.bind_cutover.cutover_ready ? 'yes' : 'no'} · Bind allowed: {readiness.bind_cutover.bind_allowed ? 'yes' : 'no'}
+          </p>
+        )}
+      </section>
+
       <section className="glass-card overflow-hidden">
         <div className="border-b border-white/[0.06] px-5 py-3">
           <h3 className="text-sm font-semibold">Integration feeds</h3>

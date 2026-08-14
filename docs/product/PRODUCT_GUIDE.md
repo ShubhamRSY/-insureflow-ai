@@ -36,7 +36,7 @@ Every vertical follows the same spine:
 
 | Stage | In practice |
 |-------|-------------|
-| **Intake** | Upload, folder drop, email/IMAP, S3, or one-click demos |
+| **Intake** | Upload, folder drop, email/IMAP, S3, SFTP, or one-click demos |
 | **Parse** | ACORD / loss runs / SOV / inspections (or mortgage & lending docs) classified and extracted |
 | **Verify** | Cross-document reconciliation + oracles (CLUE, A-PLUS, NCCI, CAT when keyed) |
 | **Score** | Risk, loss-run, compliance, fraud, and vertical-specific agents |

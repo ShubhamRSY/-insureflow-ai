@@ -35,6 +35,11 @@ class PIISpan:
 PATTERNS: dict[PIICategory, list[re.Pattern[str]]] = {
     PIICategory.SSN: [
         re.compile(r"\b\d{3}-\d{2}-\d{4}\b"),
+        re.compile(
+            r"\b(?:SSN|Social Security(?: Number)?|ITIN)\s*[:#]?\s*\d{3}[-\s]?\d{2}[-\s]?\d{4}\b",
+            re.IGNORECASE,
+        ),
+        re.compile(r"\b(?:SSN|Social Security(?: Number)?|ITIN)\s*[:#]?\s*\d{9}\b", re.IGNORECASE),
     ],
     PIICategory.EMAIL: [
         re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b"),
@@ -49,6 +54,7 @@ PATTERNS: dict[PIICategory, list[re.Pattern[str]]] = {
     PIICategory.BANK_ACCOUNT: [
         re.compile(r"\b(?:Account|Acct|Routing|ABA)\s*(?:#|No\.?|Number)?\s*[:.]?\s*\d{8,17}\b", re.IGNORECASE),
         re.compile(r"\b\d{3}-\d{1,6}-\d{1,6}\b"),
+        re.compile(r"\bIBAN\s*[:#]?\s*[A-Z]{2}\d{2}[A-Z0-9]{10,30}\b", re.IGNORECASE),
     ],
     PIICategory.TAX_ID: [
         re.compile(r"\b\d{2}-\d{7}\b"),

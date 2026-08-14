@@ -463,8 +463,8 @@ def contact_section() -> str:
     return """      <section id="contact">
         <div class="contact-box reveal">
           <p class="section-label" style="justify-content:center;margin-left:auto;margin-right:auto;">Ready when you are</p>
-          <h2>See your book move through Rytera</h2>
-          <p>Walk through the submission journey, multi-agent pipeline, and live dashboard on a 30-minute call. Start with a shadow pilot &mdash; bind stays off until your team approves the cutover.</p>
+          <h2>Bring the desk back to deciding.</h2>
+          <p>30 minutes. Your book. Shadow on. Bind off until your licensed UW says otherwise.</p>
           <div class="cta" style="justify-content:center;">
             <button type="button" class="btn btn-primary" id="open-demo-contact">Book a demo</button>
             <a class="btn btn-ghost" href="/dashboard">Open the live dashboard</a>
@@ -482,22 +482,28 @@ def hero_home() -> str:
           <div class="reveal">
             <div class="hero-badge">
               <span class="dot"></span>
-              Rytera &middot; AI-native underwriting workbench
+              AI underwriting &middot; bind-ready &middot; human still decides
             </div>
-            <h1>Turn messy submissions into <span class="gradient">bind-ready decisions in minutes</span></h1>
+            <h1>Stop hunting PDFs.<br /><span class="gradient">Start underwriting.</span></h1>
             <p class="lead">
-              Rytera takes the messy submissions that slow underwriting down &mdash; ACORD, broker PDFs, loss runs, W-2s &mdash; and
-              turns them into a <strong>bind-ready underwriting memo</strong> with quote, audit trail, and licensed
-              sign-off. One platform for <strong>line and staff underwriters</strong> across commercial &amp; personal
-              lines, mortgage, and lending.
+              Your desk was built for <strong>yes or no</strong> &mdash; not shared drives, re-key, and late-night audit packs.
+              Rytera turns messy submissions into a <strong>bind-ready memo</strong> so licensed underwriters work the exceptions, not the stack.
             </p>
+            <p class="brand-line">The file arrives messy. The memo doesn&rsquo;t.</p>
+            <p class="brand-line brand-line-2">Minutes to memo. The yes or no stays human.</p>
+            <div class="punch-row" aria-hidden="true">
+              <span>Work the exception.</span>
+              <span>We work the stack.</span>
+              <span>12 books. One desk.</span>
+              <span>Zero invented premiums.</span>
+            </div>
             <div class="cta">
               <button type="button" class="btn btn-primary" id="open-demo-hero">
                 Book a demo
                 <svg class="ico sm" aria-hidden="true"><use href="#i-arrow-right"/></svg>
               </button>
-              <a class="btn btn-ghost" href="#how-it-works">See how it works</a>
-              <a class="btn btn-ghost" href="/pricing">See plans</a>
+              <a class="btn btn-ghost" href="/#why">Why companies buy</a>
+              <a class="btn btn-ghost" href="/platform">See the platform</a>
             </div>
             <div class="hero-audience" aria-label="Built for">
               <span class="audience-pill"><svg class="ico sm"><use href="#i-building"/></svg> Carriers</span>
@@ -567,26 +573,26 @@ def hero_home() -> str:
             </div>
           </div>
         </div>
-        <div class="trust-strip reveal" aria-label="Security and compliance">
-          <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> JWT + RBAC, org-scoped</span>
-          <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> Line + staff UW desks</span>
-          <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> Fernet encryption at rest</span>
-          <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> Automated PII redaction</span>
-          <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> SHA-256 audit ZIPs</span>
-          <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> No LLM key required</span>
+        <div class="trust-strip reveal" aria-label="Brand promises">
+          <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> Licensed UW still signs off</span>
+          <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> Shadow first &middot; bind off</span>
+          <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> Examiner-ready audit</span>
+          <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> PII stripped before any LLM call</span>
+          <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> No invented premium</span>
+          <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> Line + staff desks</span>
         </div>
         <div class="stats reveal" aria-label="Platform highlights">
-          <div class="stat"><span class="num" data-target="12">0</span><span>Underwriting verticals</span></div>
-          <div class="stat"><span class="num" data-target="24">0</span><span>Enterprise connectors</span></div>
-          <div class="stat"><span class="num" data-target="145">0</span><span>Document types supported</span></div>
-          <div class="stat"><span class="num" data-target="1400" data-suffix="+">0</span><span>Automated tests in CI</span></div>
+          <div class="stat"><span class="num" data-target="12">12</span><span>Insurance sections on one desk</span></div>
+          <div class="stat"><span class="num static">IMAP · S3 · SFTP</span><span>Live broker drops (folder too)</span></div>
+          <div class="stat"><span class="num" data-target="3">3</span><span>Desks: insurance, mortgage, lending</span></div>
+          <div class="stat"><span class="num" data-target="1400" data-suffix="+">1400+</span><span>Automated tests in CI</span></div>
         </div>
       </section>"""
 
 
 def marquee_section() -> str:
     return """      <section id="marquee" style="padding-top:0;padding-bottom:3.5rem;border-bottom:none;">
-        <p class="section-label reveal" style="justify-content:center;margin-left:auto;margin-right:auto;">Pulls from the systems you already use</p>
+        <p class="section-label reveal" style="justify-content:center;margin-left:auto;margin-right:auto;">Live intake is IMAP, S3, SFTP, and folder &mdash; not a fake 24-vendor mesh</p>
         <div class="marquee-wrap reveal" aria-hidden="true">
           <div class="marquee-track" id="marquee-track"></div>
         </div>
@@ -671,47 +677,158 @@ def testimonials_section() -> str:
 
 
 def home_main() -> str:
-    value = """      <section id="what-you-get">
+    keywords = """      <section id="keywords">
         <div class="reveal">
-          <p class="section-label">What you get</p>
-          <h2>One platform, three promises</h2>
-          <p class="section-desc">Rytera is a workbench, not a pile of parsers. Here is what that means on the ground.</p>
+          <p class="section-label">The language of the desk</p>
+          <h2>Search it. Buy it. Run it.</h2>
+          <p class="section-desc">The words carriers already use &mdash; not a new category to explain in a steering committee.</p>
+        </div>
+        <div class="keyword-strip reveal" aria-label="Keywords">
+          <span>AI underwriting</span>
+          <span>Bind-ready memo</span>
+          <span>Appetite triage</span>
+          <span>Licensed UW sign-off</span>
+          <span>Shadow pilot</span>
+          <span>Examiner-ready audit</span>
+          <span>Commercial lines</span>
+          <span>Personal lines</span>
+          <span>MGA workbench</span>
+          <span>Line UW</span>
+          <span>Staff UW</span>
+          <span>No invented premium</span>
+          <span>De-identified LLM</span>
+          <span>Named insured stripped</span>
+          <span>Life</span>
+          <span>Health</span>
+          <span>Commercial P&amp;C</span>
+          <span>Mortgage</span>
+          <span>Lending</span>
+          <span>Appointed company panel</span>
+        </div>
+      </section>"""
+
+    products = """      <section id="products">
+        <div class="reveal">
+          <p class="section-label">The product book</p>
+          <h2>Every desk that says yes or no &mdash; on one workbench.</h2>
+          <p class="section-desc">Commercial, life, health, general, specialty, mortgage, and lending share one spine: intake &rarr; parse &rarr; score &rarr; price &rarr; licensed UW sign-off. Live rating where a filing exists. Unfiled leaves stay catalog-only. We do not invent a premium.</p>
+        </div>
+        <div class="lob-grid reveal">
+          <a class="lob-card" href="/underwriting#insurance-book"><span class="lob-n">01</span><h3>Life</h3><p>Term live. Whole / UL / annuity stay catalog until a filing is loaded.</p><span class="lob-tag live">Live term</span></a>
+          <a class="lob-card" href="/underwriting#insurance-book"><span class="lob-n">02</span><h3>Health</h3><p>37 products &mdash; individual, floater, maternity, OPD, CI, senior, group.</p><span class="lob-tag live">Live</span></a>
+          <a class="lob-card" href="/underwriting#insurance-book"><span class="lob-n">03</span><h3>General / Non-Life</h3><p>Motor, home, travel, marine, fire, cyber. Catalog until your filed manual is in.</p><span class="lob-tag catalog">Catalog</span></a>
+          <a class="lob-card" href="/underwriting#insurance-book"><span class="lob-n">04</span><h3>Commercial P&amp;C</h3><p>Property &amp; BI, GL, WC, auto, D&amp;O, E&amp;O, trade credit, key person.</p><span class="lob-tag live">Live</span></a>
+          <a class="lob-card" href="/underwriting#insurance-book"><span class="lob-n">05</span><h3>Specialty</h3><p>Crop, livestock, pet, events, title, engineering, aviation, cat.</p><span class="lob-tag catalog">Catalog</span></a>
+          <a class="lob-card" href="/underwriting#insurance-book"><span class="lob-n">06</span><h3>Niche &amp; emerging</h3><p>Umbrella, pollution, surety, credit life, UBI, personal cyber.</p><span class="lob-tag live">Live leaves</span></a>
+        </div>
+        <div class="feature-grid reveal" style="margin-top:1.6rem">
+          <div class="feature-card">
+            <span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-landmark"/></svg></span>
+            <h3>Mortgage</h3>
+            <p>Income, asset, and collateral packs &mdash; TRID, Reg Z, HMDA checks. Same HITL desk. Bind stays off in shadow.</p>
+          </div>
+          <div class="feature-card">
+            <span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-banknote"/></svg></span>
+            <h3>Lending</h3>
+            <p>Consumer and business loan files with credit risk, pricing, and Reg B / ECOA. Refer when required feeds are missing.</p>
+          </div>
+          <div class="feature-card">
+            <span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-building"/></svg></span>
+            <h3>Your appointed panel</h3>
+            <p>Pick the writing company before the file runs. Rytera does not invent a live market appointment.</p>
+          </div>
+        </div>
+        <div class="cta reveal" style="margin-top:1.75rem">
+          <a class="btn btn-primary" href="/underwriting">See every product <svg class="ico sm" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+          <a class="btn btn-ghost" href="/dashboard">Open the live dashboard</a>
+        </div>
+      </section>"""
+
+    why = """      <section id="why">
+        <div class="reveal">
+          <p class="section-label">Why companies buy</p>
+          <h2>Because the desk is drowning &mdash; not because AI is trendy.</h2>
+          <p class="section-desc">Boards don&rsquo;t fund another parser. They fund faster decisions, a cleaner book, and a story that survives an exam.</p>
         </div>
         <div class="feature-grid reveal">
           <div class="feature-card">
-            <span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-file-check"/></svg></span>
-            <h3>Bind-ready memos</h3>
-            <p>ACORD, broker PDFs, loss runs, and W-2s become a bind-ready underwriting memo with quote, audit trail, and licensed sign-off.</p>
-            <a class="card-link" href="/platform">Explore the platform <svg class="ico sm" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
-          </div>
-          <div class="feature-card">
             <span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-zap"/></svg></span>
-            <h3>Token-light by design</h3>
-            <p>~90% of pipeline tasks resolve deterministically &mdash; no LLM call, no token bill. The calls that do happen are budgeted and reported.</p>
-            <a class="card-link" href="/technology">See the technology <svg class="ico sm" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+            <h3>Cycle time collapses</h3>
+            <p>Files rot in inboxes for days. Rytera ranks the queue and hands back a memo in minutes &mdash; so quote speed stops being a competitive wound.</p>
           </div>
           <div class="feature-card">
-            <span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-briefcase"/></svg></span>
-            <h3>Built for every desk</h3>
-            <p>Line and staff underwriters across commercial lines, personal lines, mortgage, and lending &mdash; one workbench for every yes or no.</p>
-            <a class="card-link" href="/underwriting">Meet your desks <svg class="ico sm" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+            <span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-banknote"/></svg></span>
+            <h3>Cost per yes / no drops</h3>
+            <p>Senior UW hours should not go to hunting ACORDs and assembling audit packs. Same headcount. More decisions. Fewer late nights.</p>
+          </div>
+          <div class="feature-card">
+            <span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-shield"/></svg></span>
+            <h3>The book gets cleaner</h3>
+            <p>Appetite fires before emotion. Out-of-appetite files refer. Fake-clean loss runs don&rsquo;t sneak into Desk+. Selection improves. Loss ratio follows.</p>
+          </div>
+          <div class="feature-card">
+            <span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-file-check"/></svg></span>
+            <h3>Exams get quieter</h3>
+            <p>When someone asks &ldquo;why this file?&rdquo; you hand them a SHA-256 audit ZIP &mdash; not a war story from three shared drives.</p>
+          </div>
+          <div class="feature-card">
+            <span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-lock"/></svg></span>
+            <h3>Real files never go raw to an LLM</h3>
+            <p>Named insureds, SSNs, EINs, and DOBs are stripped before any model API call &mdash; every section, including mortgage and lending. That is the compliance story you can say out loud.</p>
           </div>
         </div>
       </section>"""
 
-    how = pipeline_section()
-    how = (
-        how
-        + """
-        <div class="cta reveal">
-          <a class="btn btn-primary" href="/technology">
-            Deep dive into the pipeline
-            <svg class="ico sm" aria-hidden="true"><use href="#i-arrow-right"/></svg>
-          </a>
-        </div>"""
-    )
+    effect = """      <section id="effect">
+        <div class="reveal">
+          <p class="section-label">The effect</p>
+          <h2>What changes when Rytera is on the desk.</h2>
+        </div>
+        <div class="impact-list reveal">
+          <blockquote class="impact-line">Underwriters work the exceptions. Rytera works the stack.</blockquote>
+          <blockquote class="impact-line">Same desk. More yes or no. Fewer 11pm PDF hunts.</blockquote>
+          <blockquote class="impact-line">Bind-ready in minutes. Audit-ready forever.</blockquote>
+          <blockquote class="impact-line">Shadow first. Bind stays off until your licensed UW says cut over.</blockquote>
+          <blockquote class="impact-line">If we can&rsquo;t price it honestly, we don&rsquo;t invent a premium.</blockquote>
+          <blockquote class="impact-line">Named insureds never hit an LLM API. We strip first. Then we call.</blockquote>
+          <blockquote class="impact-line">Pick the company. Then underwrite. One desk, your appointed panel.</blockquote>
+          <blockquote class="impact-line">IMAP, S3, SFTP, folder. SharePoint and IVANS stay dark until contracted.</blockquote>
+          <blockquote class="impact-line">Code-ready is not live CLUE. Missing keys refer &mdash; they do not invent a clean history.</blockquote>
+        </div>
+        <div class="cta reveal" style="margin-top:2rem">
+          <a class="btn btn-ghost" href="/underwriting">See the desks</a>
+          <a class="btn btn-ghost" href="/technology">See the architecture</a>
+          <a class="btn btn-ghost" href="/platform">See the workbench</a>
+        </div>
+      </section>"""
 
-    return hero_home() + "\n\n" + marquee_section() + "\n\n" + value + "\n\n" + how + "\n\n" + testimonials_section() + "\n\n" + pricing_section() + "\n\n" + contact_section()
+    privacy = """      <section id="privacy" class="privacy-band">
+        <div class="reveal">
+          <p class="section-label">De-identification</p>
+          <h2>Named insureds never leave the gate.</h2>
+          <p class="section-desc">If anyone gives us real files, named insureds and PII are stripped before we touch them with any LLM API. Same gate on all 12 insurance sections, mortgage, and lending. Deterministic UW still sees the file. The model does not.</p>
+        </div>
+      </section>"""
+
+    return (
+        hero_home()
+        + "\n\n"
+        + marquee_section()
+        + "\n\n"
+        + keywords
+        + "\n\n"
+        + products
+        + "\n\n"
+        + why
+        + "\n\n"
+        + effect
+        + "\n\n"
+        + testimonials_section()
+        + "\n\n"
+        + privacy
+        + "\n\n"
+        + contact_section()
+    )
 
 
 def platform_main() -> str:
@@ -736,7 +853,7 @@ def platform_main() -> str:
           <div class="compare-col">
             <div class="compare-head ai"><svg class="ico" aria-hidden="true"><use href="#i-check-circle"/></svg> Rytera AI-native</div>
             <ul class="compare-list">
-              <li>Intake from 24 connectors &mdash; email, S3, SharePoint, SFTP</li>
+              <li>Live intake from IMAP, S3, SFTP, and folder &mdash; SharePoint stays catalog until contracted</li>
               <li>Context-aware triage that prioritizes by appetite, impact, and exposure</li>
               <li>Documents parsed, reconciled, and deduplicated automatically</li>
               <li>Bind-ready UW memo in minutes &mdash; not hours</li>
@@ -847,8 +964,8 @@ def platform_main() -> str:
           </div>
           <div class="bento-card ac-sky">
             <p class="bento-kicker"><svg class="ico"><use href="#i-cable"/></svg> Intake</p>
-            <h3>24 connectors</h3>
-            <p>S3, SharePoint, Applied Epic, real IMAP email, SFTP, and more &mdash; live when configured, honest simulated otherwise. One Connect &amp; pull hub powers insurance, mortgage, and lending intake.</p>
+            <h3>Live intake paths</h3>
+            <p>IMAP, S3, SFTP, and folder are live when configured. SharePoint, Drive, and IVANS stay catalog stubs until contracted. One Connect &amp; pull hub powers insurance, mortgage, and lending intake.</p>
           </div>
           <div class="bento-card ac-violet">
             <p class="bento-kicker"><svg class="ico"><use href="#i-list-checks"/></svg> Operations</p>
@@ -1153,7 +1270,7 @@ def integrations_main() -> str:
           <p class="section-desc">Every adapter supports three honest modes. Auto uses live feeds when keys are present and flags gaps instead of guessing clean data.</p>
         </div>
         <div class="feature-grid reveal">
-          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-cable"/></svg></span><h3>Live</h3><p>Real connectors wired to your accounts &mdash; IMAP email, SFTP, S3, SharePoint, Applied Epic, and the loss-history oracles.</p></div>
+          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-cable"/></svg></span><h3>Live</h3><p>Real drops wired to your accounts &mdash; IMAP, SFTP, S3, and folder. SharePoint, Drive, IVANS, and Applied Epic stay catalog until contracted. Loss-history oracles stay dark without keys.</p></div>
           <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-sliders"/></svg></span><h3>Simulated</h3><p>Honest demo data when keys aren't connected &mdash; nothing fabricated, nothing mislabeled as real history.</p></div>
           <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-refresh"/></svg></span><h3>Auto</h3><p>Uses live feeds whenever keys are present; otherwise surfaces gaps for resolution instead of inventing clean loss history.</p></div>
           <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-gauge"/></svg></span><h3>Health monitoring</h3><p>Every adapter reports status. Pilots see live / simulated / auto at a glance and get alerted before a feed goes stale.</p></div>
@@ -1257,10 +1374,10 @@ def main() -> None:
 
     pages = {
         "index.html": page(
-            "Rytera - AI-Native Underwriting for Carriers, MGAs & Aggregators",
-            "Rytera turns messy submissions - ACORD, broker PDFs, loss runs, W-2s - into bind-ready underwriting memos with quote, audit trail, and licensed sign-off. One agentic platform for line and staff underwriters.",
+            "Rytera - AI Underwriting that Makes Desks Faster, Cleaner, Defensible",
+            "AI-native underwriting for carriers, MGAs, and aggregators. Stop hunting PDFs. Start deciding. Bind-ready memos, licensed UW sign-off, examiner-ready audit — without inventing a premium.",
             "",
-            "Turn messy submissions into bind-ready decisions in minutes. One agentic platform for line and staff underwriters across insurance, mortgage, and lending.",
+            "AI underwriting that turns messy submissions into bind-ready decisions. Faster desks. Cleaner books. Audit you can hand to an examiner.",
             home_main(),
         ),
         "platform.html": page(
@@ -1286,7 +1403,7 @@ def main() -> None:
         ),
         "integrations.html": page(
             "Rytera - Integrations & Connectors",
-            "24 connectors: policy admin, CRM, oracles, and document sources - Guidewire, Duck Creek, Applied Epic, CLUE, A-PLUS, NCCI, S3, SharePoint, and more. Live, simulated, and auto modes.",
+            "Live intake is IMAP, S3, SFTP, and folder. Policy admin, CRM, oracles, SharePoint, and IVANS stay catalog until contracted. Live, simulated, and auto modes — never fabricated.",
             "integrations",
             "Connects to the systems you already use - policy admin, CRM, oracles, and document sources in live, simulated, or auto modes.",
             integrations_main(),

@@ -68,6 +68,9 @@ dev = [
 aws = [
     "boto3>=1.34",
 ]
+sftp = [
+    "paramiko>=3.4",
+]
 ml = [
     "numpy>=1.24",
     "scikit-learn>=1.3",

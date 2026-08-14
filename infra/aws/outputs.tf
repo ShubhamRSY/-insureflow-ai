@@ -2,8 +2,8 @@ output "alb_dns_name" {
   value = aws_lb.api.dns_name
 }
 
-output "ecs_cluster_name" {
-  value = aws_ecs_cluster.main.name
+output "ecs_worker_service" {
+  value = aws_ecs_service.worker.name
 }
 
 output "secrets_manager_arn" {

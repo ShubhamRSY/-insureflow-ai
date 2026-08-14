@@ -20,6 +20,7 @@ services:
       CLOUDWATCH_LOGS: "true"
       ALLOW_OPEN_REGISTRATION: "false"
       ALLOW_AUTH_RESET: "false"
+      TRUSTED_PROXY: "true"
       SECRET_KEY: ${SECRET_KEY:?required}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY:?required}
       DATABASE_URL: postgresql://insureflow:${POSTGRES_PASSWORD}@db:5432/insureflow
@@ -27,12 +28,35 @@ services:
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/0
       JOB_STORE_BACKEND: redis
+      INSURANCE_USE_CELERY: "true"
       LLM_API_KEY: ${LLM_API_KEY:-}
       LLM_CHEAP_API_KEY: ${LLM_CHEAP_API_KEY:-}
       LLM_EXPENSIVE_API_KEY: ${LLM_EXPENSIVE_API_KEY:-}
       CLAUDE_API_KEY: ${CLAUDE_API_KEY:-}
       LANGSMITH_API_KEY: ${LANGSMITH_API_KEY:-}
       LANGSMITH_PROJECT: ${LANGSMITH_PROJECT:-insureflow-evals}
+      PYTHONPATH: /app
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  worker:
+    build: .
+    command: celery -A insureflow.tasks.celery_app worker -Q agents,pipeline,mortgage -l info --concurrency=2
+    environment:
+      ENVIRONMENT: production
+      BANK_MODE: "true"
+      TRUSTED_PROXY: "true"
+      SECRET_KEY: ${SECRET_KEY:?required}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?required}
+      DATABASE_URL: postgresql://insureflow:${POSTGRES_PASSWORD}@db:5432/insureflow
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      JOB_STORE_BACKEND: redis
+      INSURANCE_USE_CELERY: "true"
       PYTHONPATH: /app
     depends_on:
       db:

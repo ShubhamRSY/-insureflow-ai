@@ -980,6 +980,8 @@ class TestSSOAdversarial:
         assert "enabled" in status
         assert "provider" in status
         assert "login_path" in status
+        assert status["required"] is False
+        assert status["pkce"] is True
 
 
 # ===========================================================================

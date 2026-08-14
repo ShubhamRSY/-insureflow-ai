@@ -9,6 +9,9 @@ export default function LoginModal({ open, onClose, onSuccess }) {
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const [setupRequired, setSetupRequired] = useState(false);
+  const [ssoEnabled, setSsoEnabled] = useState(false);
+  const [ssoRequired, setSsoRequired] = useState(false);
+  const [allowRegister, setAllowRegister] = useState(true);
 
   useEffect(() => {
     if (!open) return;
@@ -16,6 +19,9 @@ export default function LoginModal({ open, onClose, onSuccess }) {
       .then((s) => {
         setSetupRequired(s.setup_required);
         setMode(s.setup_required ? 'setup' : 'login');
+        setSsoEnabled(Boolean(s.sso?.enabled));
+        setSsoRequired(Boolean(s.sso_required));
+        setAllowRegister(s.allow_open_registration !== false && !s.sso_required);
         setError('');
         setSuccess('');
       })
@@ -23,6 +29,19 @@ export default function LoginModal({ open, onClose, onSuccess }) {
   }, [open]);
 
   if (!open) return null;
+
+  const handleSso = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const r = await endpoints.ssoLogin();
+      if (!r.authorize_url) throw new Error('SSO is not configured');
+      window.location.assign(r.authorize_url);
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+    }
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -145,12 +164,22 @@ export default function LoginModal({ open, onClose, onSuccess }) {
         ) : (
           <>
             <h2 className="text-2xl font-bold tracking-tight">Welcome back</h2>
-            <p className="mt-1 text-sm text-slate-400">Sign in to run pipelines and view results</p>
+            <p className="mt-1 text-sm text-slate-400">
+              {ssoRequired ? 'Sign in with your organization identity provider' : 'Sign in to run pipelines and view results'}
+            </p>
 
             {error && <p className="mt-4 rounded-xl bg-red-500/10 px-3 py-2 text-sm text-red-400">{error}</p>}
             {success && <p className="mt-4 rounded-xl bg-emerald-500/10 px-3 py-2 text-sm text-emerald-400">{success}</p>}
 
+            {ssoEnabled && (
+              <button type="button" disabled={loading} onClick={handleSso} className="btn-primary mt-6 w-full">
+                {loading ? 'Redirecting…' : 'Sign in with SSO'}
+              </button>
+            )}
+
+            {!ssoRequired && (
             <form onSubmit={handleLogin} className="mt-6 space-y-4">
+              {ssoEnabled && <p className="text-center text-xs text-slate-500">or use a local account</p>}
               <div>
                 <label htmlFor="login-username" className="mb-1.5 block text-xs font-medium text-slate-400">Username or email</label>
                 <input
@@ -169,11 +198,14 @@ export default function LoginModal({ open, onClose, onSuccess }) {
               </div>
               <button type="submit" disabled={loading} className="btn-primary w-full">{loading ? 'Signing in…' : 'Sign In'}</button>
             </form>
+            )}
 
+            {allowRegister && (
             <p className="mt-4 text-center text-xs text-slate-500">
               No account?{' '}
               <button type="button" onClick={() => { setMode('register'); setError(''); setSuccess(''); }} className="text-brand-light underline">Create one</button>
             </p>
+            )}
           </>
         )}
       </div>

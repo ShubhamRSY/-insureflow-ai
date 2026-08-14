@@ -49,6 +49,11 @@
     var target = parseFloat(el.getAttribute('data-target'));
     if (isNaN(target)) return;
     var suffix = el.getAttribute('data-suffix') || '';
+    var shown = (el.textContent || '').replace(suffix, '').trim();
+    if (shown !== '0' && shown !== '') {
+      el.textContent = Math.round(target) + suffix;
+      return;
+    }
     var dur = 1400, start = null;
     function step(ts) {
       if (!start) start = ts;

@@ -2,7 +2,7 @@ from insureflow.rag.guidelines import Guideline, GuidelineCategory, GuidelineSou
 from insureflow.rag.knowledge_graph import UnderwritingKnowledgeGraph, get_knowledge_graph
 from insureflow.rag.rag_agent import RAGAgent, retrieval_policy_payload
 from insureflow.rag.retrieval_config import RetrievalConfig
-from insureflow.rag.vector_store import InMemoryVectorStore, PgVectorStore, VectorStore
+from insureflow.rag.vector_store import InMemoryVectorStore, PgVectorStore, VectorStore, get_vector_store
 
 __all__ = [
     "Guideline",
@@ -18,4 +18,5 @@ __all__ = [
     "PgVectorStore",
     "UnderwritingKnowledgeGraph",
     "get_knowledge_graph",
+    "get_vector_store",
 ]

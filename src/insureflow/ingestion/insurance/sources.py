@@ -61,7 +61,7 @@ DEMO_CONNECTORS: dict[str, dict[str, Any]] = {
         "name": "AWS S3",
         "type": "cloud",
         "category": "Document Storage",
-        "description": "Submission drop bucket (s3://carrier-submissions/)",
+        "description": "Live drop-bucket pull when S3_SUBMISSIONS_BUCKET / AWS creds are set; lab stub otherwise",
         "config_fields": [
             {"key": "bucket", "label": "Bucket", "placeholder": "carrier-submissions"},
             {"key": "prefix", "label": "Prefix", "placeholder": "brokers/golden-gate/"},
@@ -99,7 +99,7 @@ DEMO_CONNECTORS: dict[str, dict[str, Any]] = {
         "name": "SFTP / Broker Portal",
         "type": "sftp",
         "category": "Submission Intake",
-        "description": "Wholesale broker automated feed (ACORD XML + PDFs)",
+        "description": "Live broker drop when SFTP_HOST + credentials are set; lab stub otherwise",
         "config_fields": [{"key": "host", "label": "Host", "placeholder": "sftp.broker.com"}],
         "label": lambda req: req.host or "sftp.wholesale-broker.com",
     },
@@ -303,6 +303,57 @@ DEMO_CONNECTORS: dict[str, dict[str, Any]] = {
     },
 }
 
+# Real pull adapters. Everything else in DEMO_CONNECTORS is a lab stub.
+LIVE_CONNECTOR_IDS = frozenset({"email-inbox", "s3-bucket", "sftp", "server-folder"})
+
+
+def _live_connector_configured(source_id: str) -> bool:
+    if source_id == "server-folder":
+        return True
+    if source_id == "email-inbox":
+        from insureflow.ingestion.insurance.email_connector import ImapConnection
+
+        return ImapConnection().is_configured
+    if source_id == "s3-bucket":
+        from insureflow.ingestion.insurance.s3_connector import s3_configured
+
+        return s3_configured()
+    if source_id == "sftp":
+        from insureflow.ingestion.insurance.sftp_connector import sftp_configured
+
+        return sftp_configured()
+    return False
+
+
+def annotate_source(entry: dict[str, object]) -> dict[str, object]:
+    """Mark live vs lab-demo vs uncontracted stub so the grid cannot look like 24 live feeds."""
+    sid = str(entry.get("id") or "")
+    if entry.get("type") == "library" or entry.get("category") == "Demo Packages":
+        entry["kind"] = "lab_demo"
+        entry["honesty"] = "Lab sample — not a live broker feed"
+        entry["configured"] = True
+        entry["pullable"] = True
+        return entry
+    if sid in LIVE_CONNECTOR_IDS:
+        configured = _live_connector_configured(sid)
+        entry["kind"] = "live" if configured else "needs_config"
+        entry["configured"] = configured
+        entry["pullable"] = configured if sid == "email-inbox" else True
+        if sid == "email-inbox":
+            entry["honesty"] = "Live IMAP" if configured else "Set IMAP_HOST, IMAP_USERNAME, IMAP_PASSWORD"
+        elif sid == "s3-bucket":
+            entry["honesty"] = "Live S3 drop" if configured else "Set S3_SUBMISSIONS_BUCKET / AWS credentials"
+        elif sid == "sftp":
+            entry["honesty"] = "Live SFTP drop" if configured else "Set SFTP_HOST + username + password or key"
+        else:
+            entry["honesty"] = "Live folder on this server"
+        return entry
+    entry["kind"] = "catalog_stub"
+    entry["honesty"] = "Not contracted — lab simulation only, not a live connection"
+    entry["configured"] = False
+    entry["pullable"] = True  # lab maps to a demo package; bank listing hides these
+    return entry
+
 
 def _encode_file(path: Path, root: Path | None = None) -> dict[str, str]:
     ext = path.suffix.lower()
@@ -370,6 +421,7 @@ def list_sources(
     examples_dir: Path,
     extra_packages: list[dict[str, object]] | None = None,
     include_insurance_packages: bool = True,
+    hardened: bool = False,
 ) -> list[dict[str, object]]:
     packages: list[dict[str, object]] = (
         [
@@ -401,7 +453,7 @@ def list_sources(
         }
         for sid, meta in DEMO_CONNECTORS.items()
     ]
-    return (
+    rows = (
         packages
         + [
             {
@@ -416,3 +468,7 @@ def list_sources(
         ]
         + enterprise
     )
+    annotated = [annotate_source(dict(r)) for r in rows]
+    if hardened:
+        return [r for r in annotated if r.get("kind") in {"live", "needs_config"}]
+    return annotated

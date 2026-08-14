@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any, Callable, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect, status
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response, StreamingResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -35,6 +35,12 @@ try:
     from insureflow.security.posture import resolve_security_posture as _resolve_boot_posture
 
     configure_cloudwatch_logging()
+    try:
+        from insureflow.privacy.log_filter import install_pii_log_filter
+
+        install_pii_log_filter()
+    except Exception:
+        pass
     maybe_enable_langsmith_tracing()
     try:
         from insureflow.observability.openobserve import configure_openobserve_logging
@@ -73,7 +79,17 @@ LENDING_NS = "lending"
 
 job_store: JobStore = get_job_store()
 
-limiter = Limiter(key_func=get_remote_address, default_limits=["30/minute"])
+def _rate_limit_key(request: Request) -> str:
+    """Honor X-Forwarded-For only behind a trusted ALB/Caddy (TRUSTED_PROXY=true)."""
+    trusted = os.getenv("TRUSTED_PROXY", "").strip().lower() in {"1", "true", "yes", "on"}
+    if trusted:
+        forwarded = (request.headers.get("x-forwarded-for") or "").split(",")[0].strip()
+        if forwarded:
+            return forwarded
+    return get_remote_address(request)
+
+
+limiter = Limiter(key_func=_rate_limit_key, default_limits=["30/minute"])
 
 
 @asynccontextmanager
@@ -97,6 +113,19 @@ try:
     app.add_middleware(PrometheusHTTPMiddleware)
 except Exception:
     pass
+
+try:
+    from insureflow.security.headers import SecurityHeadersMiddleware
+
+    app.add_middleware(SecurityHeadersMiddleware)
+except Exception:
+    pass
+
+_allowed_hosts = [h.strip() for h in os.getenv("ALLOWED_HOSTS", "").split(",") if h.strip()]
+if _allowed_hosts:
+    from starlette.middleware.trustedhost import TrustedHostMiddleware
+
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=_allowed_hosts)
 
 if integration_gateway_router is not None:
     app.include_router(integration_gateway_router, prefix="/integrations")
@@ -219,6 +248,8 @@ def _posture() -> SecurityPosture:
 @app.get("/auth/status")
 def auth_status() -> dict[str, Any]:
     """Auth setup status + bank security posture flags."""
+    from insureflow.auth.sso import sso_required, sso_status
+
     posture = _posture()
     return {
         "setup_required": not bool(get_user_store()),
@@ -228,6 +259,8 @@ def auth_status() -> dict[str, Any]:
         "allow_open_registration": posture.allow_open_registration,
         "allow_auth_reset": posture.allow_auth_reset,
         "require_encryption": posture.require_encryption,
+        "sso": sso_status(),
+        "sso_required": sso_required(),
     }
 
 
@@ -243,6 +276,7 @@ def security_status(current: TokenData | None = Depends(get_current_user_optiona
     _require_auth_if_hardened(current)
     from insureflow.auth.sso import sso_status
     from insureflow.config import settings
+    from insureflow.privacy.data_plane import allow_embedding_egress, allow_vision_egress, retain_source_documents
 
     posture = _posture()
     return {
@@ -257,10 +291,20 @@ def security_status(current: TokenData | None = Depends(get_current_user_optiona
             "secret_key_is_default": settings.secret_key == "CHANGE_ME_TO_A_LONG_SECRET_KEY_IN_PRODUCTION",
         },
         "observability": {
-            "langsmith": bool(settings.langsmith_api_key),
+            "langsmith_key_present": bool(settings.langsmith_api_key),
+            "langsmith_tracing": bool(settings.langsmith_api_key)
+            and (not posture.bank_mode or os.getenv("LANGSMITH_ALLOW_IN_BANK", "").lower() in {"1", "true", "yes"}),
             "cloudwatch_logs": settings.cloudwatch_logs or posture.bank_mode,
             "aws_region": settings.aws_region,
             "aws_secrets_configured": bool(settings.aws_secrets_arn),
+        },
+        "data_plane": {
+            "role": "decision_maker",
+            "retain_source_documents": retain_source_documents(),
+            "vision_egress": allow_vision_egress(),
+            "embedding_egress": allow_embedding_egress(),
+            "langsmith_in_bank": os.getenv("LANGSMITH_ALLOW_IN_BANK", "").lower() in {"1", "true", "yes"},
+            "decision_memory": "feature bands + outcome in customer AUDIT_LOG_PATH — no named insured, no account text",
         },
         "sso": sso_status(),
         "retention": {
@@ -339,6 +383,13 @@ def setup_first_admin(admin: UserCreateRequest) -> dict[str, str]:
 @app.post("/auth/login")
 @limiter.limit("10/minute")
 def login(req: LoginRequest, request: Request) -> Token:
+    from insureflow.auth.sso import sso_required
+
+    if sso_required():
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Password login is disabled. Use SSO.",
+        )
     store = get_user_store()
     user = store.resolve_user(req.username)
     if not user or not verify_password(req.password, user.hashed_password):
@@ -426,20 +477,32 @@ def auth_sso_status() -> dict[str, Any]:
     return sso_status()
 
 
+@app.get("/auth/sso/callback")
+@limiter.limit("10/minute")
+def auth_sso_callback_redirect(request: Request, code: str = "", state: str = "") -> RedirectResponse:
+    """IdP redirects here with GET ?code=&state= — send the SPA to finish PKCE."""
+    from urllib.parse import urlencode
+
+    q = urlencode({k: v for k, v in (("code", code), ("state", state)) if v})
+    dest = "/dashboard/sso/callback"
+    return RedirectResponse(url=f"{dest}?{q}" if q else dest, status_code=302)
+
+
 @app.get("/auth/sso/login")
-def auth_sso_login() -> dict[str, str]:
-    """Start Cognito/Okta OIDC login — returns authorize URL for the SPA to redirect."""
-    from insureflow.auth.sso import build_authorize_url, sso_status
+@limiter.limit("10/minute")
+def auth_sso_login(request: Request) -> dict[str, str]:
+    """Start Cognito/Okta OIDC login — PKCE verifier stays on the server."""
+    from insureflow.auth.sso import start_authorization, sso_status
 
     status_info = sso_status()
     if not status_info.get("enabled"):
         raise HTTPException(status_code=404, detail="SSO is not configured")
-    state = uuid.uuid4().hex
-    return {"authorize_url": build_authorize_url(state), "state": state}
+    return start_authorization()
 
 
 @app.post("/auth/sso/callback")
-def auth_sso_callback(payload: dict[str, Any]) -> dict[str, Any]:
+@limiter.limit("10/minute")
+def auth_sso_callback(payload: dict[str, Any], request: Request) -> dict[str, Any]:
     """OIDC callback — exchanges code, validates JWKS, issues local app JWT."""
     from insureflow.auth import Role
     from insureflow.auth.jwt import create_access_token
@@ -451,7 +514,8 @@ def auth_sso_callback(payload: dict[str, Any]) -> dict[str, Any]:
     code = str(payload.get("code") or "")
     if not code:
         raise HTTPException(status_code=400, detail="Missing authorization code")
-    claims = exchange_code_for_claims(code)
+    state = str(payload.get("state") or "") or None
+    claims = exchange_code_for_claims(code, state=state)
 
     if claims.get("status") != "validated" or not claims.get("email"):
         return {"claims": claims, "access_token": None, "error": claims.get("status", "unknown")}
@@ -694,6 +758,42 @@ def billing_plan(current: TokenData = Depends(require_role(Role.VIEWER))) -> dic
         "guidewire_mode": settings.guidewire_mode,
         "live_pas_ready": live_pas_ready(),
         "org_id": current.org_id,
+    }
+
+
+@app.get("/ingestion/status")
+def ingestion_status_endpoint(current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
+    """IMAP / S3 / SFTP / folder + parsers + Celery — not an Airbyte/Airflow mesh."""
+    from insureflow.ingestion.status import ingestion_status
+
+    return ingestion_status()
+
+
+@app.get("/platform/stack")
+def platform_stack_endpoint(current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
+    """Compute, identity, security, APIs, flags — the in-product stack, not a vendor mesh."""
+    from insureflow.ops.stack import platform_stack
+
+    payload = platform_stack()
+    payload["org_id"] = current.org_id
+    return payload
+
+
+@app.get("/billing/usage")
+def billing_usage(current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
+    """Plan + LLM token spend + budget — in-process usage meter, not a billing microservice."""
+    from insureflow.billing.plan import current_plan
+    from insureflow.llm.budget import get_budget_manager
+    from insureflow.llm.tracker import get_token_tracker
+
+    tracker = get_token_tracker()
+    return {
+        **current_plan().to_dict(),
+        "org_id": current.org_id,
+        "session": tracker.get_session_totals(),
+        "by_model": tracker.get_by_model(),
+        "by_agent": tracker.get_by_agent(),
+        "budget": get_budget_manager().check_budget(),
     }
 
 
@@ -1071,6 +1171,10 @@ def uw_workbench(
 
     def _enrich(rec: Any) -> dict[str, Any]:
         job = job_store.get(INSURANCE_NS, rec.bundle_id, org_id=org_id) or {}
+        if not job:
+            from insureflow.privacy.archive import hydrate_job_from_archive
+
+            job = hydrate_job_from_archive(rec.bundle_id, org_id=org_id) or {}
         results = job.get("results") or {}
         memo = results.get("memo") or {}
         quote = results.get("quote") or {}
@@ -1097,7 +1201,43 @@ def uw_workbench(
 
     pending = [_enrich(r) for r in records if r.state.value in ("pending_review", "pending_co_sign")]
     approved = [_enrich(r) for r in records if r.state.value in ("approved", "quoted")]
-    done = [_enrich(r) for r in records if r.state.value in ("declined", "no_quote", "bound", "expired")][:12]
+    done = [_enrich(r) for r in records if r.state.value in ("declined", "no_quote", "bound", "expired")]
+    known = {r.bundle_id for r in records}
+    try:
+        from insureflow.privacy.archive import list_archive
+
+        for card in list_archive(org_id, limit=80):
+            if card["bundle_id"] in known:
+                continue
+            done.append(
+                {
+                    "bundle_id": card["bundle_id"],
+                    "state": "archived",
+                    "ai_decision": card.get("ai_decision") or "",
+                    "final_decision": card.get("ai_decision") or "",
+                    "assigned_to": "",
+                    "updated_at": card.get("updated_at"),
+                    "job_status": "archived",
+                    "insured_name": None,
+                    "insurance_line": card.get("insurance_line") or "",
+                    "risk_score": None,
+                    "severity": None,
+                    "premium": None,
+                    "broker_name": None,
+                    "human_review_required": False,
+                    "human_review_reasons": [],
+                    "conditions": [],
+                    "checkpoints": [],
+                    "sign_offs": [],
+                    "archived": True,
+                    "source_docs_retained": card.get("source_docs_retained"),
+                    "tiv_band": card.get("tiv_band"),
+                    "primary_state": card.get("primary_state"),
+                }
+            )
+    except Exception:
+        logger.debug("Archive merge into workbench skipped", exc_info=True)
+    done = done[:40]
     return {
         "org_id": org_id,
         "pending": pending,
@@ -1353,13 +1493,15 @@ def list_insurance_sources(
     from insureflow.ingestion.insurance.sources import list_sources
 
     extra = _vertical_package_list(vertical) if vertical != "insurance" else None
+    hardened = _posture().is_hardened
     return {
         "sources": list_sources(
             EXAMPLES_DIR,
             extra_packages=extra,
             include_insurance_packages=vertical == "insurance",
+            hardened=hardened,
         ),
-        "hardened": _posture().is_hardened,
+        "hardened": hardened,
     }
 
 
@@ -1516,6 +1658,64 @@ def pull_insurance_source(
                 detail="Email integration not configured. Admin must set IMAP_HOST, IMAP_USERNAME, IMAP_PASSWORD.",
             )
 
+        # Live S3 / SFTP before DEMO_CONNECTORS — those ids are also listed as lab stubs.
+        if source_id == "s3-bucket":
+            from insureflow.ingestion.insurance.s3_connector import pull_s3_submissions, s3_configured
+
+            if s3_configured(req.bucket):
+                try:
+                    pull = pull_s3_submissions(bucket=req.bucket, prefix=req.prefix or "")
+                except Exception as exc:
+                    raise HTTPException(status_code=502, detail=f"S3 pull failed: {exc}") from exc
+                label = f"s3://{pull['bucket']}/{pull.get('prefix') or ''}"
+                result = {
+                    "source_id": source_id,
+                    "simulated": False,
+                    "connection_label": label,
+                    "documents": pull["documents"],
+                    "file_count": pull["documents_found"],
+                    "objects_considered": pull.get("objects_considered", 0),
+                }
+                accum = _accumulate(pull["documents"], source_id, label)
+                if accum:
+                    result["accumulated"] = accum
+                _register(label)
+                return result
+            if _posture().is_hardened:
+                raise HTTPException(
+                    status_code=400,
+                    detail="S3 not configured — set bucket on request or S3_SUBMISSIONS_BUCKET / AWS credentials",
+                )
+
+        if source_id == "sftp":
+            from insureflow.ingestion.insurance.sftp_connector import pull_sftp_submissions, sftp_configured
+
+            remote = (req.prefix or req.path or "").strip() or None
+            if sftp_configured(req.host):
+                try:
+                    pull = pull_sftp_submissions(host=req.host, remote_dir=remote)
+                except Exception as exc:
+                    raise HTTPException(status_code=502, detail=f"SFTP pull failed: {exc}") from exc
+                label = f"sftp://{pull['host']}/{pull.get('remote_dir') or '.'}"
+                result = {
+                    "source_id": source_id,
+                    "simulated": False,
+                    "connection_label": label,
+                    "documents": pull["documents"],
+                    "file_count": pull["documents_found"],
+                    "objects_considered": pull.get("objects_considered", 0),
+                }
+                accum = _accumulate(pull["documents"], source_id, label)
+                if accum:
+                    result["accumulated"] = accum
+                _register(label)
+                return result
+            if _posture().is_hardened:
+                raise HTTPException(
+                    status_code=400,
+                    detail="SFTP not configured — set SFTP_HOST, SFTP_USERNAME, and SFTP_PASSWORD or SFTP_KEY_PATH",
+                )
+
         if source_id in DEMO_CONNECTORS:
             if _posture().is_hardened:
                 raise HTTPException(
@@ -1584,33 +1784,6 @@ def pull_insurance_source(
                 "file_count": len(documents),
             }
             accum = _accumulate(documents, source_id, label)
-            if accum:
-                result["accumulated"] = accum
-            _register(label)
-            return result
-
-        if source_id == "s3-bucket":
-            from insureflow.ingestion.insurance.s3_connector import pull_s3_submissions, s3_configured
-
-            if not s3_configured(req.bucket):
-                raise HTTPException(
-                    status_code=400,
-                    detail="S3 not configured — set bucket on request or S3_SUBMISSIONS_BUCKET / AWS credentials",
-                )
-            try:
-                pull = pull_s3_submissions(bucket=req.bucket, prefix=req.prefix or "")
-            except Exception as exc:
-                raise HTTPException(status_code=502, detail=f"S3 pull failed: {exc}") from exc
-            label = f"s3://{pull['bucket']}/{pull.get('prefix') or ''}"
-            result = {
-                "source_id": source_id,
-                "simulated": False,
-                "connection_label": label,
-                "documents": pull["documents"],
-                "file_count": pull["documents_found"],
-                "objects_considered": pull.get("objects_considered", 0),
-            }
-            accum = _accumulate(pull["documents"], source_id, label)
             if accum:
                 result["accumulated"] = accum
             _register(label)
@@ -2387,6 +2560,10 @@ def get_job_status(
 
     job = job_store.get(INSURANCE_NS, job_id, org_id=current.org_id)
     if not job:
+        from insureflow.privacy.archive import hydrate_job_from_archive
+
+        job = hydrate_job_from_archive(job_id, org_id=current.org_id)
+    if not job:
         raise HTTPException(status_code=404, detail="Job not found")
     return sanitize_job_for_client(job) or job
 
@@ -2473,6 +2650,11 @@ def _resolve_job_any_vertical(job_id: str, org_id: str) -> tuple[dict[str, Any] 
         job = job_store.get(ns, job_id, org_id=org_id)
         if job:
             return job, ns
+    from insureflow.privacy.archive import hydrate_job_from_archive
+
+    archived = hydrate_job_from_archive(job_id, org_id=org_id)
+    if archived:
+        return archived, INSURANCE_NS
     return None, ""
 
 
@@ -2554,6 +2736,7 @@ def get_insurance_audit(
     current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
     from insureflow.audit.store import AuditStore
+    from insureflow.privacy.data_plane import retain_source_documents
 
     store = AuditStore()
     return {
@@ -2565,6 +2748,65 @@ def get_insurance_audit(
         "provenance": store.load_json(bundle_id, "provenance_record.json", org_id=current.org_id),
         "reconciliation": store.load_json(bundle_id, "reconciliation.json", org_id=current.org_id),
         "summary": store.load_json(bundle_id, "pipeline_summary.json", org_id=current.org_id),
+        "source_docs_retained": retain_source_documents(),
+    }
+
+
+@app.get("/pipeline/audit/{bundle_id}/similar")
+def similar_prior_decisions(
+    bundle_id: str,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Pattern-memory neighbors — same shape of risk, not the same named insured."""
+    from insureflow.privacy.archive import similar_payload
+
+    return similar_payload(current.org_id, bundle_id)
+
+
+@app.get("/pipeline/archive")
+def list_decision_archive(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+    limit: int = 200,
+) -> dict[str, Any]:
+    """Durable cases on disk (survives Redis job TTL)."""
+    from insureflow.privacy.archive import list_archive
+    from insureflow.privacy.data_plane import retain_source_documents
+
+    rows = list_archive(current.org_id, limit=limit)
+    return {
+        "org_id": current.org_id,
+        "source_docs_retained": retain_source_documents(),
+        "count": len(rows),
+        "cases": rows,
+    }
+
+
+@app.get("/analytics/decision-memory")
+def search_decision_memory(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+    q: str = "",
+    line: str = "",
+    state: str = "",
+    tiv_band: str = "",
+    decision: str = "",
+    limit: int = 100,
+) -> dict[str, Any]:
+    """Search PII-free pattern memory in the customer landing zone."""
+    from insureflow.privacy.decision_memory import get_decision_memory
+
+    recs = get_decision_memory().list_records(
+        current.org_id,
+        line=line,
+        state=state,
+        tiv_band=tiv_band,
+        decision=decision,
+        q=q,
+        limit=limit,
+    )
+    return {
+        "org_id": current.org_id,
+        "count": len(recs),
+        "records": [r.model_dump(mode="json") for r in recs],
     }
 
 
@@ -3472,7 +3714,7 @@ def get_calibration_summary(
 def get_business_kpis(
     current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
-    """Production business KPIs: cycle time, override, bind, LR, STP, catch rate."""
+    """Production business KPIs: ROI% = (Net Profit / Cost of Investment)×100, cycle time, override, bind, LR, STP, catch."""
     from insureflow.analytics.business_kpis import get_business_kpi_service
 
     return get_business_kpi_service().compute(org_id=current.org_id)
@@ -6215,8 +6457,9 @@ def integration_status(
     from insureflow.integrations.connections import list_connections
 
     conns = list_connections(current.org_id)
+    hardened = _posture().is_hardened
     adapters: list[dict[str, Any]] = []
-    for s in list_sources(EXAMPLES_DIR):
+    for s in list_sources(EXAMPLES_DIR, hardened=hardened):
         if s["type"] == "library":
             continue  # demo packages are sample data, not adapters
         source_id = str(s["id"])
@@ -6229,29 +6472,52 @@ def integration_status(
                 "category": s["category"],
                 "description": s["description"],
                 "config_fields": s.get("config_fields", []),
+                "kind": s.get("kind"),
+                "honesty": s.get("honesty"),
+                "configured": s.get("configured"),
                 "connected": source_id in conns,
                 "connection_label": (entry or {}).get("label"),
                 "status": "connected" if source_id in conns else "ready",
             }
         )
 
-    britecore = BriteCoreAdapter(api_key=os.getenv("BRITECORE_API_KEY", ""))
-    guidewire = GuidewireAdapter(api_key=os.getenv("GUIDEWIRE_API_KEY", ""))
+    from insureflow.oracles._live import is_bundled_gateway_url
+
+    gw_key = os.getenv("GUIDEWIRE_API_KEY", "")
+    gw_url = os.getenv("GUIDEWIRE_API_URL", "")
+    bc_key = os.getenv("BRITECORE_API_KEY", "")
+    bc_url = os.getenv("BRITECORE_API_URL", "")
+    _dev = "rytera-dev-gateway-key-change-in-production"
+
+    def _pas_live(key: str, url: str) -> bool:
+        k = (key or "").strip()
+        u = (url or "").strip()
+        if not k or k == _dev or not u:
+            return False
+        return not is_bundled_gateway_url(u, k)
+
+    gw_live = _pas_live(gw_key, gw_url)
+    bc_live = _pas_live(bc_key, bc_url)
+    britecore = BriteCoreAdapter(api_key=bc_key)
+    guidewire = GuidewireAdapter(api_key=gw_key)
 
     return {
         "adapters": adapters,
+        "hardened": hardened,
         "systems": [
             {
                 "name": britecore.get_system_name(),
-                "configured": bool(os.getenv("BRITECORE_API_KEY")),
-                "mode": "simulated" if not os.getenv("BRITECORE_API_KEY") else "live",
+                "configured": bool(bc_key),
+                "mode": "live" if bc_live else "simulated",
                 "healthy": True,
+                "honesty": "Live PAS" if bc_live else "Key present is not a live bind — sandbox URL required",
             },
             {
                 "name": guidewire.get_system_name(),
-                "configured": bool(os.getenv("GUIDEWIRE_API_KEY")),
-                "mode": "simulated" if not os.getenv("GUIDEWIRE_API_KEY") else "live",
+                "configured": bool(gw_key),
+                "mode": "live" if gw_live else "simulated",
                 "healthy": True,
+                "honesty": "Live PAS" if gw_live else "Code-ready is not a live Guidewire bind",
             },
         ],
     }

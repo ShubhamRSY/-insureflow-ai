@@ -10,6 +10,13 @@ from insureflow.rag.guidelines import Guideline
 
 logger = logging.getLogger(__name__)
 
+_DEFAULT_COLLECTION = "guideline_embeddings"
+
+
+def _sql_ident(name: str) -> str:
+    cleaned = "".join(c for c in (name or "") if c.isalnum() or c == "_")
+    return cleaned or _DEFAULT_COLLECTION
+
 
 class VectorStore(ABC):
     @abstractmethod
@@ -82,10 +89,10 @@ class PgVectorStore(VectorStore):
     def __init__(
         self,
         connection_string: str,
-        collection_name: str = "underwriting_guidelines",
+        collection_name: str = _DEFAULT_COLLECTION,
     ) -> None:
         self._conn_str = connection_string
-        self._collection = collection_name
+        self._collection = _sql_ident(collection_name)
         self._conn: Any = None
         self._openai_client: Any = None
 
@@ -96,9 +103,10 @@ class PgVectorStore(VectorStore):
             import psycopg2
             from pgvector.psycopg2 import register_vector
 
-            self._conn = psycopg2.connect(self._conn_str)
+            self._conn = psycopg2.connect(self._conn_str, connect_timeout=3)
             register_vector(self._conn)
             cur = self._conn.cursor()
+            cur.execute("CREATE EXTENSION IF NOT EXISTS vector")
             cur.execute(f"""
                 CREATE TABLE IF NOT EXISTS {self._collection} (
                     id TEXT PRIMARY KEY,
@@ -129,6 +137,15 @@ class PgVectorStore(VectorStore):
             ):
                 cur.execute(f"ALTER TABLE {self._collection} ADD COLUMN IF NOT EXISTS {col} {ddl}")
             self._conn.commit()
+            try:
+                cur.execute(
+                    f"CREATE INDEX IF NOT EXISTS {self._collection}_hnsw "
+                    f"ON {self._collection} USING hnsw (embedding vector_cosine_ops)"
+                )
+                self._conn.commit()
+            except Exception as exc:
+                logger.debug("HNSW index skipped: %s", exc)
+                self._conn.rollback()
             cur.close()
         except Exception as exc:
             logger.error("PgVectorStore connection failed: %s", exc)
@@ -226,17 +243,25 @@ class PgVectorStore(VectorStore):
         cur.close()
 
     def _get_embedding(self, text: str) -> list[float]:
-        try:
-            from openai import OpenAI
+        from insureflow.llm.embeddings import embed_text
 
-            client = OpenAI()
-            resp = client.embeddings.create(
-                model="text-embedding-3-small",
-                input=text[:8000],
-            )
-            return resp.data[0].embedding
-        except Exception as exc:
-            import logging as _log
+        return embed_text(text)
 
-            _log.getLogger(__name__).warning("OpenAI embedding failed, using zero vector: %s", exc)
-            return [0.0] * 1536
+
+def get_vector_store(database_url: str | None = None) -> VectorStore:
+    """Postgres + pgvector when DATABASE_URL is set; otherwise in-memory.
+
+    This is the product vector DB — not Pinecone, Weaviate, or Qdrant.
+    """
+    import os
+
+    url = (database_url if database_url is not None else os.getenv("DATABASE_URL", "")).strip()
+    if not url.lower().startswith("postgres"):
+        return InMemoryVectorStore()
+    try:
+        store = PgVectorStore(url)
+        store._ensure_connected()
+        return store
+    except Exception as exc:
+        logger.warning("pgvector unavailable (%s) — in-memory guideline vectors", exc)
+        return InMemoryVectorStore()

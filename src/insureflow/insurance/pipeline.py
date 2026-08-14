@@ -1304,6 +1304,7 @@ class InsurancePipeline:
             )
             if is_specialty:
                 from insureflow.rag.rag_agent import RAGAgent as HybridRAG
+                from insureflow.rag.vector_store import get_vector_store
                 from insureflow.rating.commercial_specialty import underwrite_specialty
 
                 specialty = underwrite_specialty(bundle, line_for_quote)
@@ -1332,7 +1333,10 @@ class InsurancePipeline:
                     memo.human_review_reasons.append(f"Rated on default exposure ({(quote.metadata or {}).get('exposure_basis')}) — confirm limit/AR/face amount")
                     memo.human_review_required = True
                 try:
-                    specialty_retrieval = HybridRAG(use_knowledge_graph=True).retrieve_contexts(
+                    specialty_retrieval = HybridRAG(
+                        vector_store=get_vector_store(),
+                        use_knowledge_graph=True,
+                    ).retrieve_contexts(
                         f"{line_for_quote.value} underwriting risk assessment {quote_blob[:1200]}",
                         top_k=5,
                         line_of_business=line_for_quote.value,
@@ -1808,6 +1812,19 @@ class InsurancePipeline:
         )
 
         audit_paths = audit.persist(bundle, memo, provenance, reconciliation, extra=summary)
+        try:
+            from insureflow.privacy.decision_memory import get_decision_memory
+
+            remembered = get_decision_memory().remember_from_summary(summary, org_id=self.org_id)
+            if remembered:
+                summary["decision_memory"] = {
+                    "stored": True,
+                    "tiv_band": remembered.tiv_band,
+                    "line": remembered.line,
+                    "state": remembered.state,
+                }
+        except Exception as exc:
+            logger.debug("Decision memory skipped: %s", exc)
         try:
             from insureflow.underwriting.subjectivities import compute_bind_readiness, seed_subjectivities_from_conditions
 

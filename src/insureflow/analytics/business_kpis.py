@@ -1,12 +1,14 @@
 """Production business KPIs for underwriting performance.
 
-Tracks the six carrier-facing metrics:
+Tracks the seven carrier-facing metrics:
   1. Cycle time (first-pass)
-  2. Override rate (UW vs AI)
-  3. Bind rate after Accept
-  4. Loss ratio (AI-assisted book)
-  5. Straight-through vs referred mix
-  6. Missing-doc / conflict catch rate
+  2. ROI% = (Net Profit / Cost of Investment) × 100
+     Net Profit = Total Return − Total Cost
+  3. Override rate (UW vs AI)
+  4. Bind rate after Accept
+  5. Loss ratio (AI-assisted book)
+  6. Straight-through vs referred mix
+  7. Missing-doc / conflict catch rate
 
 Persists durable JSONL events under ``audit_logs/metrics/`` so numbers survive restarts.
 """
@@ -36,6 +38,21 @@ TARGETS: dict[str, dict[str, Any]] = {
     "loss_ratio": {"max": 0.70, "label": "portfolio LR ≤ 70% (book-dependent)"},
     "stp_rate": {"min": 0.30, "label": "straight-through share ≥ 30% (when Accept path exists)"},
     "catch_rate": {"min": 0.90, "label": "missing-doc/conflict catch ≥ 90% on labeled cases"},
+    "roi": {
+        "baseline_first_pass_seconds": 7200.0,
+        "loaded_uw_usd_per_hour": 175.0,
+        "planning_volume": 1000,
+        "min_percent": 0.0,
+        "label": "ROI% = (Net Profit / Cost of Investment) × 100 · Net Profit = Total Return − Total Cost",
+    },
+}
+
+# Published monthly list from pricing.html — Cost of Investment, not an invoice.
+_PLAN_MONTHLY_USD = {
+    "pilot": 0.0,
+    "desk": 799.0,
+    "book": 2490.0,
+    "enterprise": 6500.0,
 }
 
 
@@ -385,6 +402,7 @@ class BusinessKPIService:
                 "pass": catch.get("sample_size", 0) >= 5 and catch.get("catch_rate", 0) >= TARGETS["catch_rate"]["min"],
                 "what_to_say": _say_catch(catch),
             },
+            "roi": _compute_roi(cycle.get("total_runs", 0), avg_s),
         }
 
         ready_count = sum(1 for k in kpis.values() if k["status"] == "production_ready")
@@ -400,6 +418,152 @@ class BusinessKPIService:
             "targets": TARGETS,
             "kpis": kpis,
         }
+
+
+def _platform_annual_usd() -> tuple[float, str]:
+    """Annual Cost of Investment from published plan list (or RYTERA_ROI_PLATFORM_USD_ANNUAL)."""
+    override = os.getenv("RYTERA_ROI_PLATFORM_USD_ANNUAL", "").strip()
+    if override:
+        try:
+            return max(0.0, float(override)), "env:RYTERA_ROI_PLATFORM_USD_ANNUAL"
+        except ValueError:
+            pass
+    try:
+        from insureflow.billing.plan import current_plan
+
+        plan_id = current_plan().plan_id
+    except Exception:
+        plan_id = "pilot"
+    monthly = float(_PLAN_MONTHLY_USD.get(plan_id, 0.0))
+    return monthly * 12.0, f"plan:{plan_id} list ${monthly:,.0f}/mo"
+
+
+def _llm_annual_usd(n: int, volume: int) -> float:
+    """Annualize measured LLM spend at planning volume. Zero when no tokens recorded."""
+    if n <= 0:
+        return 0.0
+    try:
+        from insureflow.llm.tracker import get_token_tracker
+
+        spent = float(get_token_tracker().get_session_totals().get("total_cost") or 0.0)
+    except Exception:
+        spent = 0.0
+    if spent <= 0:
+        return 0.0
+    return round((spent / n) * volume, 2)
+
+
+def _compute_roi(
+    n: int,
+    avg_s: float,
+    *,
+    platform_usd_annual: float | None = None,
+    llm_usd_annual: float | None = None,
+    platform_source: str | None = None,
+) -> dict[str, Any]:
+    """ROI% = (Net Profit / Cost of Investment) × 100.
+
+    Total Return = UW hours saved vs a 2-hour first pass × loaded hourly cost × planning volume.
+    Cost of Investment = annual platform list + annualized LLM spend.
+    Net Profit = Total Return − Cost of Investment.
+    Assumptions labeled — not a billed invoice.
+    """
+    tgt = TARGETS["roi"]
+    baseline = float(tgt["baseline_first_pass_seconds"])
+    rate = float(tgt["loaded_uw_usd_per_hour"])
+    volume = int(tgt["planning_volume"])
+    hours_saved = max(0.0, (baseline - avg_s) / 3600.0) if n > 0 else 0.0
+    usd_per_file = round(hours_saved * rate, 2)
+    total_return = round(usd_per_file * volume, 2)
+
+    if platform_usd_annual is None:
+        platform_usd_annual, inferred_source = _platform_annual_usd()
+        platform_source = platform_source or inferred_source
+    else:
+        platform_usd_annual = max(0.0, float(platform_usd_annual))
+        platform_source = platform_source or "caller"
+
+    if llm_usd_annual is None:
+        llm_usd_annual = _llm_annual_usd(n, volume)
+    else:
+        llm_usd_annual = max(0.0, float(llm_usd_annual))
+
+    cost = round(float(platform_usd_annual) + float(llm_usd_annual), 2)
+    net_profit = round(total_return - cost, 2)
+    roi_percent: float | None = round((net_profit / cost) * 100.0, 1) if cost > 0 else None
+
+    desk_monthly = float(_PLAN_MONTHLY_USD["desk"])
+    desk_cost = round(desk_monthly * 12.0 + float(llm_usd_annual), 2)
+    planning_desk_net = round(total_return - desk_cost, 2)
+    planning_desk_roi = round((planning_desk_net / desk_cost) * 100.0, 1) if desk_cost > 0 else None
+
+    status = _status_sample(n, min_n=10)
+    if n >= 10 and cost <= 0:
+        status = "lab_partial"
+
+    return {
+        "status": status,
+        "sample_size": n,
+        "value": roi_percent,
+        "unit": "percent",
+        "formula": "ROI = (Net Profit / Cost of Investment) × 100",
+        "net_profit_formula": "Net Profit = Total Return − Total Cost",
+        "total_return_usd": total_return,
+        "cost_of_investment_usd": cost,
+        "net_profit_usd": net_profit,
+        "platform_usd_annual": round(float(platform_usd_annual), 2),
+        "llm_usd_annual": round(float(llm_usd_annual), 2),
+        "cost_source": platform_source,
+        "hours_saved_per_file": round(hours_saved, 3),
+        "usd_per_file": usd_per_file,
+        "annual_at_planning_volume_usd": total_return,
+        "planning_volume": volume,
+        "baseline_minutes": int(baseline / 60),
+        "loaded_uw_usd_per_hour": rate,
+        "measured_avg_seconds": round(avg_s, 3) if n else 0.0,
+        "planning_at_desk": {
+            "cost_of_investment_usd": desk_cost,
+            "net_profit_usd": planning_desk_net,
+            "roi_percent": planning_desk_roi,
+            "note": f"Desk list ${desk_monthly:,.0f}/mo × 12 + LLM — labeled planning, not an invoice",
+        },
+        "target": tgt,
+        "pass": n >= 10 and roi_percent is not None and roi_percent > float(tgt["min_percent"]),
+        "what_to_say": _say_roi(n, hours_saved, usd_per_file, total_return, cost, net_profit, roi_percent, volume, rate),
+    }
+
+
+def _say_roi(
+    n: int,
+    hours_saved: float,
+    usd_per_file: float,
+    total_return: float,
+    cost: float,
+    net_profit: float,
+    roi_percent: float | None,
+    volume: int,
+    rate: float,
+) -> str:
+    if n <= 0:
+        return (
+            "No cycle-time samples yet — Total Return needs measured first-pass time vs a 2-hour desk. "
+            "ROI% = (Net Profit / Cost of Investment) × 100."
+        )
+    return_bit = (
+        f"Total Return ${total_return:,.0f} = {hours_saved:.2f}h saved/file × ${rate:.0f}/h × {volume:,} files/year "
+        f"(${usd_per_file:,.0f}/file vs a 2-hour first pass)."
+    )
+    if cost <= 0:
+        return (
+            f"{n} runs · {return_bit} Cost of Investment $0 (Pilot list / no LLM spend) — "
+            "ROI% is undefined until there is a non-zero investment. Assumptions labeled — not a billed invoice."
+        )
+    return (
+        f"{n} runs · {return_bit} Cost of Investment ${cost:,.0f}. "
+        f"Net Profit ${net_profit:,.0f} = Total Return − Total Cost. "
+        f"ROI = ({net_profit:,.0f} / {cost:,.0f}) × 100 = {roi_percent:.1f}%. "
+        "Assumptions labeled — not a billed invoice."
+    )
 
 
 def _status_sample(n: int, min_n: int) -> str:

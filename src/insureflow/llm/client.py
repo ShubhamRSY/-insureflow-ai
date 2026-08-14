@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 import logging
+import os
 from dataclasses import dataclass
-from typing import Any, Iterator, Optional, cast
+from typing import Any, Iterator, Optional
 
 from insureflow.config import settings
 
 logger = logging.getLogger(__name__)
+
+_OPENAI_COMPAT = frozenset({"openai", "vllm", "llama", "ollama"})
+_ANTHROPIC = frozenset({"anthropic", "claude"})
 
 
 @dataclass
@@ -35,23 +39,25 @@ class LLMClient:
         self.redact_pii = redact_pii
         self._client: Any = None
         self._redactor: Any = None
+        self._enable_fallback = True
 
         if model_tier == "cheap":
-            self.provider = settings.llm_cheap_provider or settings.llm_provider
-            self.model = settings.llm_cheap_model
-            self.api_key = settings.llm_cheap_api_key or settings.llm_api_key
-            self.base_url = settings.llm_cheap_base_url or settings.llm_base_url
+            self.provider = os.getenv("LLM_CHEAP_PROVIDER") or settings.llm_cheap_provider or os.getenv("LLM_PROVIDER") or settings.llm_provider
+            self.model = os.getenv("LLM_CHEAP_MODEL") or settings.llm_cheap_model
+            self.api_key = os.getenv("LLM_CHEAP_API_KEY") or settings.llm_cheap_api_key or os.getenv("LLM_API_KEY") or settings.llm_api_key
+            self.base_url = os.getenv("LLM_CHEAP_BASE_URL") or settings.llm_cheap_base_url or os.getenv("LLM_BASE_URL") or settings.llm_base_url
         elif model_tier == "expensive":
-            self.provider = settings.llm_expensive_provider or settings.llm_provider
-            self.model = settings.llm_expensive_model
-            self.api_key = settings.llm_expensive_api_key or settings.llm_api_key
-            self.base_url = settings.llm_expensive_base_url or settings.llm_base_url
+            self.provider = os.getenv("LLM_EXPENSIVE_PROVIDER") or settings.llm_expensive_provider or os.getenv("LLM_PROVIDER") or settings.llm_provider
+            self.model = os.getenv("LLM_EXPENSIVE_MODEL") or settings.llm_expensive_model
+            self.api_key = os.getenv("LLM_EXPENSIVE_API_KEY") or settings.llm_expensive_api_key or os.getenv("LLM_API_KEY") or settings.llm_api_key
+            self.base_url = os.getenv("LLM_EXPENSIVE_BASE_URL") or settings.llm_expensive_base_url or os.getenv("LLM_BASE_URL") or settings.llm_base_url
         else:
-            self.provider = settings.llm_provider
-            self.model = settings.llm_model
-            self.api_key = settings.llm_api_key
-            self.base_url = settings.llm_base_url
+            self.provider = os.getenv("LLM_PROVIDER") or settings.llm_provider
+            self.model = os.getenv("LLM_MODEL") or settings.llm_model
+            self.api_key = os.getenv("LLM_API_KEY") or settings.llm_api_key
+            self.base_url = os.getenv("LLM_BASE_URL") or settings.llm_base_url
 
+        self.provider = (self.provider or "openai").strip().lower()
         self.temperature = settings.llm_temperature
         self.max_tokens = settings.llm_max_tokens
 
@@ -114,7 +120,7 @@ class LLMClient:
 
         provider = self.provider
 
-        if provider == "openai" or provider == "vllm":
+        if provider in _OPENAI_COMPAT:
             from openai import OpenAI
 
             client_kwargs: dict[str, Any] = {
@@ -124,7 +130,7 @@ class LLMClient:
                 client_kwargs["base_url"] = self.base_url
             self._client = OpenAI(**client_kwargs)
 
-        elif provider == "anthropic" or provider == "claude":
+        elif provider in _ANTHROPIC:
             try:
                 from anthropic import Anthropic
             except ImportError:
@@ -155,7 +161,23 @@ class LLMClient:
             from insureflow.redaction.redactor import PIIRedactor
 
             self._redactor = PIIRedactor()
-        return str(self._redactor.redact(text))
+        # Full token replacement — last-4 / email domain must not leave the process.
+        return str(self._redactor.redact(text, mask=False))
+
+    def _spawn_fallback(self) -> LLMClient | None:
+        if not self._enable_fallback:
+            return None
+        provider = os.getenv("LLM_FALLBACK_PROVIDER", "").strip().lower()
+        if not provider or provider == self.provider:
+            return None
+        fb = LLMClient(model_tier=self.model_tier, agent=self.agent, redact_pii=self.redact_pii)
+        fb._enable_fallback = False
+        fb.provider = provider
+        fb.model = os.getenv("LLM_FALLBACK_MODEL", "").strip() or fb.model
+        fb.api_key = os.getenv("LLM_FALLBACK_API_KEY", "").strip() or fb.api_key
+        fb.base_url = os.getenv("LLM_FALLBACK_BASE_URL", "").strip() or fb.base_url
+        fb._client = None
+        return fb
 
     def complete(
         self,
@@ -163,16 +185,34 @@ class LLMClient:
         user_prompt: str,
         response_format: Optional[type] = None,
     ) -> str:
+        from insureflow.llm.guardrails import guard_model_output, neutralize_injection
+
         budget = self._get_budget()
         if budget is not None:
             budget.enforce()
 
+        system_prompt = self._redact_for_egress(system_prompt)
+        user_prompt = neutralize_injection(self._redact_for_egress(user_prompt))
+        try:
+            text = self._complete_once(system_prompt, user_prompt, response_format)
+        except Exception as exc:
+            fb = self._spawn_fallback()
+            if fb is None:
+                raise
+            logger.warning("Primary LLM (%s/%s) failed: %s — routing to %s", self.provider, self.model, exc, fb.provider)
+            text = fb._complete_once(system_prompt, user_prompt, response_format)
+        return guard_model_output(text)
+
+    def _complete_once(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        response_format: Optional[type] = None,
+    ) -> str:
         client = self._get_client()
         provider = self.provider
-        system_prompt = self._redact_for_egress(system_prompt)
-        user_prompt = self._redact_for_egress(user_prompt)
 
-        if provider == "openai" or provider == "vllm":
+        if provider in _OPENAI_COMPAT:
             kwargs: dict[str, Any] = {
                 "model": self.model,
                 "messages": [
@@ -196,7 +236,7 @@ class LLMClient:
             self._track_usage(response)
             return response.choices[0].message.content or ""
 
-        elif provider == "anthropic" or provider == "claude":
+        if provider in _ANTHROPIC:
             kwargs = {
                 "model": self.model,
                 "system": system_prompt,
@@ -209,9 +249,8 @@ class LLMClient:
             self._track_usage(response)
             return str(response.content[0].text) if response.content else ""
 
-        else:
-            msg = f"Unsupported LLM provider: {provider}"
-            raise ValueError(msg)
+        msg = f"Unsupported LLM provider: {provider}"
+        raise ValueError(msg)
 
     def stream(self, system_prompt: str, user_prompt: str) -> Iterator[StreamChunk]:
         """Stream a completion token-by-token, yielding StreamChunk deltas.
@@ -221,10 +260,12 @@ class LLMClient:
         """
         client = self._get_client()
         provider = self.provider
-        system_prompt = self._redact_for_egress(system_prompt)
-        user_prompt = self._redact_for_egress(user_prompt)
+        from insureflow.llm.guardrails import neutralize_injection
 
-        if provider == "openai" or provider == "vllm":
+        system_prompt = self._redact_for_egress(system_prompt)
+        user_prompt = neutralize_injection(self._redact_for_egress(user_prompt))
+
+        if provider in _OPENAI_COMPAT:
             kwargs: dict[str, Any] = {
                 "model": self.model,
                 "messages": [
@@ -248,7 +289,7 @@ class LLMClient:
                 yield StreamChunk(text=text, reasoning=reasoning)
             return
 
-        if provider == "anthropic" or provider == "claude":
+        if provider in _ANTHROPIC:
             kwargs = {
                 "model": self.model,
                 "system": system_prompt,
@@ -287,15 +328,7 @@ class LLMClient:
             return response_model(raw=raw)
 
     def embed(self, text: str) -> list[float]:
-        """Generates a vector embedding for the given text."""
-        client = self._get_client()
-        provider = self.provider
-        text = self._redact_for_egress(text)
+        """Guideline/query embedding — local hashed vectors in bank mode."""
+        from insureflow.llm.embeddings import embed_text
 
-        if provider in ("openai", "vllm"):
-            # Using OpenAI's standard embedding model
-            response = client.embeddings.create(input=text, model="text-embedding-3-small")
-            return cast(list[float], response.data[0].embedding)
-
-        # Fallback for non-supported providers during local testing
-        return [0.0] * 1536
+        return embed_text(self._redact_for_egress(text))

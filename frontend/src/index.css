@@ -71,10 +71,18 @@ html.theme-light {
     @apply inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-surface-overlay px-4 py-2.5 text-sm font-medium text-slate-100 transition hover:bg-surface-hover;
   }
 
+  .input,
   .input-field {
     @apply w-full rounded-xl border border-white/15 bg-surface px-3.5 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30;
   }
 
+  .btn-sm {
+    @apply px-3 py-1.5 text-xs;
+  }
+
+  .input:-webkit-autofill,
+  .input:-webkit-autofill:hover,
+  .input:-webkit-autofill:focus,
   .input-field:-webkit-autofill,
   .input-field:-webkit-autofill:hover,
   .input-field:-webkit-autofill:focus {
@@ -164,6 +172,9 @@ html.theme-light .text-white\/60,
 html.theme-light .text-white\/70 { color: rgb(15 23 42 / 0.72) !important; }
 
 html.theme-light .text-brand-light { color: #1d4ed8 !important; }
+html.theme-light .text-brand-light\/80,
+html.theme-light .text-brand-light\/70 { color: #1e3a8a !important; }
+html.theme-light .pipeline-live { color: #1e3a8a !important; }
 html.theme-light .text-sky-100,
 html.theme-light .text-sky-200,
 html.theme-light .text-sky-300 { color: #075985 !important; }
@@ -249,24 +260,50 @@ html.theme-light .bg-black\/30 {
 
 html.theme-light .glass-card {
   background-color: rgb(255 255 255 / 0.96);
-  border-color: rgb(15 23 42 / 0.1);
+  border-color: rgb(15 23 42 / 0.14);
+}
+
+html.theme-light .rounded-xl.bg-surface-overlay,
+html.theme-light .rounded-lg.bg-surface-overlay,
+html.theme-light .rounded-xl.bg-surface-overlay\/40,
+html.theme-light .rounded-xl.bg-surface-overlay\/50,
+html.theme-light .rounded-xl.bg-surface-overlay\/60 {
+  box-shadow: inset 0 0 0 1px rgb(15 23 42 / 0.14);
+}
+
+html.theme-light .bg-surface-overlay\/40,
+html.theme-light .bg-surface-overlay\/50,
+html.theme-light .bg-surface-overlay\/60,
+html.theme-light .bg-surface-overlay\/80 {
+  background-color: #f1f5f9 !important;
+}
+
+html.theme-light .bg-surface\/30,
+html.theme-light .bg-surface\/40,
+html.theme-light .bg-surface\/60 {
+  background-color: #ffffff !important;
 }
 
 html.theme-light .btn-secondary {
-  border-color: rgb(15 23 42 / 0.14);
+  border-color: rgb(15 23 42 / 0.16);
   color: #0f172a;
 }
 
+html.theme-light .input,
 html.theme-light .input-field {
   background-color: #ffffff;
   color: #0f172a;
-  border-color: rgb(15 23 42 / 0.16);
+  border-color: rgb(15 23 42 / 0.22);
 }
 
+html.theme-light .input::placeholder,
 html.theme-light .input-field::placeholder {
   color: #64748b;
 }
 
+html.theme-light .input:-webkit-autofill,
+html.theme-light .input:-webkit-autofill:hover,
+html.theme-light .input:-webkit-autofill:focus,
 html.theme-light .input-field:-webkit-autofill,
 html.theme-light .input-field:-webkit-autofill:hover,
 html.theme-light .input-field:-webkit-autofill:focus {

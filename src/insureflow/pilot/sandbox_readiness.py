@@ -42,6 +42,103 @@ def _pas_configured() -> bool:
     return gw or bc
 
 
+def pas_configured() -> bool:
+    """True when Guidewire (or BriteCore) has a non-dev key and a real PAS URL (not the synthetic gateway)."""
+    return _pas_configured()
+
+
+def bind_cutover_checklist() -> dict[str, Any]:
+    """Honest bind gate — credentials and UW sign-off, not an invented PAS."""
+    from insureflow.auth.sso import sso_required
+    from insureflow.rating.book_import import current_book_status
+    from insureflow.security.posture import allow_simulated_bind, resolve_security_posture
+
+    posture = resolve_security_posture()
+    shadow = is_shadow_mode()
+    pas = _pas_configured()
+    sim_bind = allow_simulated_bind()
+    clue = _key_ok("CLUE_API_KEY") and bool(os.getenv("CLUE_API_URL"))
+    aplus = _key_ok("APLUS_API_KEY") and bool(os.getenv("APLUS_API_URL"))
+    book = current_book_status()
+    steps = [
+        {
+            "id": "shadow_off",
+            "title": "Shadow mode off (OPERATING_MODE=ready)",
+            "done": not shadow,
+            "required": True,
+            "note": "Bind stays off in shadow. Do not invent a PAS bind.",
+        },
+        {
+            "id": "pas_live",
+            "title": "Guidewire or BriteCore live URL + non-dev key",
+            "done": pas,
+            "required": True,
+            "note": "A key against integrations.rytera.ai is not their PAS.",
+        },
+        {
+            "id": "no_sim_bind",
+            "title": "ALLOW_SIMULATED_BIND is false",
+            "done": not sim_bind,
+            "required": posture.is_hardened,
+            "note": "Bank mode refuses a fake bind.",
+        },
+        {
+            "id": "one_oracle",
+            "title": "At least one live oracle (CLUE or A-PLUS)",
+            "done": clue or aplus,
+            "required": False,
+            "note": "Code-ready is not live CLUE.",
+        },
+        {
+            "id": "encryption",
+            "title": "ENCRYPTION_KEY set",
+            "done": bool(os.getenv("ENCRYPTION_KEY")),
+            "required": True,
+        },
+        {
+            "id": "sso",
+            "title": "SSO_REQUIRED at bank cutover",
+            "done": (not posture.is_hardened) or sso_required(),
+            "required": posture.is_hardened,
+        },
+        {
+            "id": "uw_hitl",
+            "title": "Bind only after licensed UW sign-off",
+            "done": True,
+            "required": True,
+            "note": "Always enforced in workflow.",
+        },
+        {
+            "id": "not_sor",
+            "title": "This app is not the system of record",
+            "done": True,
+            "required": True,
+            "note": "Postgres/pgvector is RAG. Policies stay in the carrier PAS.",
+        },
+        {
+            "id": "carrier_book",
+            "title": "Customer filed rate book loaded",
+            "done": bool(book.get("is_customer_book")),
+            "required": bool(book.get("carrier_book_required")),
+            "note": "Indications are not a bind. Unfiled products stay catalog-only.",
+        },
+    ]
+    required = [s for s in steps if s["required"]]
+    ready = all(bool(s["done"]) for s in required)
+    return {
+        "bind_allowed": bind_is_allowed(),
+        "cutover_ready": ready and bind_is_allowed() and not sim_bind,
+        "steps": steps,
+        "system_of_record": "customer_pas",
+        "pricing_note": "Indications are not filed premiums unless a carrier book is loaded.",
+        "carrier_book": {
+            "is_customer_book": book.get("is_customer_book"),
+            "carrier": book.get("carrier"),
+            "book_id": book.get("book_id"),
+        },
+    }
+
+
 def operating_mode() -> str:
     """Product posture: ``ready`` (bind allowed) or ``shadow`` (bind blocked).
 
@@ -209,6 +306,32 @@ def assess_sandbox_readiness(*, ping: bool = True) -> dict[str, Any]:
         )
     )
 
+    from insureflow.ingestion.insurance.email_connector import ImapConnection
+    from insureflow.ingestion.insurance.s3_connector import s3_configured
+    from insureflow.ingestion.insurance.sftp_connector import sftp_configured
+
+    imap_ok = ImapConnection().is_configured
+    s3_ok = s3_configured()
+    sftp_ok = sftp_configured()
+    for label, ok, keys in (
+        ("IMAP broker inbox", imap_ok, ["IMAP_HOST", "IMAP_USERNAME", "IMAP_PASSWORD"]),
+        ("S3 submission drop", s3_ok, ["S3_SUBMISSIONS_BUCKET"]),
+        ("SFTP broker drop", sftp_ok, ["SFTP_HOST", "SFTP_USERNAME"]),
+    ):
+        feeds.append(
+            FeedReadiness(
+                name=label,
+                category="intake",
+                required_for_pilot=False,
+                mode="configured" if ok else "missing",
+                configured=ok,
+                reachable=None,
+                status="ready" if ok else "simulated",
+                next_action="OK" if ok else f"Set {', '.join(keys)} for a live broker drop",
+                env_keys=list(keys),
+            )
+        )
+
     posture = resolve_security_posture()
     shadow = is_shadow_mode()
     ready = is_ready_mode()
@@ -280,6 +403,13 @@ def assess_sandbox_readiness(*, ping: bool = True) -> dict[str, Any]:
         "blocked": [asdict(f) for f in blocked],
         "feeds": [asdict(f) for f in feeds],
         "checklist": checklist,
+        "bind_cutover": bind_cutover_checklist(),
+        "honesty": {
+            "system_of_record": "customer_pas",
+            "oracles": "simulated unless CLUE/A-PLUS keys and a non-gateway URL are set",
+            "connectors": "IMAP/S3/SFTP/folder are live; SharePoint/Drive/IVANS stay dark until contracted",
+            "pricing": "indications are not a bind; unfiled products stay catalog-only",
+        },
         "ecosystem": ecosystem,
         "partner_ask": [
             "20–50 redacted commercial submissions (ACORD XML/PDF, loss runs, SOV, inspection)",

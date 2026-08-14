@@ -56,7 +56,18 @@ export default function Overview({ overview, health, presets, onRunDemo, onOpenJ
         )}
 
         {user && (
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            <button
+              type="button"
+              onClick={() => navigate('/business-kpis')}
+              className="group flex items-center justify-between rounded-2xl border border-emerald-500/20 bg-gradient-to-r from-emerald-500/10 to-transparent px-5 py-4 text-left transition hover:border-emerald-500/40"
+            >
+              <div>
+                <p className="font-semibold text-emerald-100">ROI &amp; KPIs</p>
+                <p className="text-sm text-slate-400">ROI% = (Net Profit / Cost of Investment) × 100</p>
+              </div>
+              <ArrowRight className="h-4 w-4 text-emerald-400 transition group-hover:translate-x-0.5" />
+            </button>
             <button
               type="button"
               onClick={() => navigate('/line-uw')}

@@ -59,6 +59,8 @@ jobs:
               - '.github/**'
               - 'docker-compose*.yml'
               - 'railway.json'
+              - 'infra/**'
+              - 'deploy/**'
 
   lint:
     needs: changes

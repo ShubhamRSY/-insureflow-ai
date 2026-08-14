@@ -147,7 +147,7 @@ export default function StaffUnderwriting() {
             <h2 className="font-semibold">Staff underwriting tasks</h2>
             <ul className="mt-3 grid gap-2 sm:grid-cols-2">
               {(overview.tasks || []).map((t) => (
-                <li key={t} className="rounded-lg bg-surface-overlay px-3 py-2 text-sm text-slate-300">{t}</li>
+                <li key={t} className="rounded-lg bg-surface-overlay px-3 py-2 text-sm text-slate-300 ring-1 ring-white/[0.06]">{t}</li>
               ))}
             </ul>
           </div>

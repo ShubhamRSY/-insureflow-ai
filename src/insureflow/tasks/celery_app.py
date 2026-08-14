@@ -4,6 +4,11 @@ import os
 
 from celery import Celery
 
+try:
+    import insureflow.config  # noqa: F401  # AWS secrets + env before tasks import
+except Exception:
+    pass
+
 BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379/0")
 BACKEND_URL = os.environ.get("CELERY_RESULT_BACKEND", "redis://localhost:6379/0")
 

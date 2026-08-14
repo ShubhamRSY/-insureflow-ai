@@ -180,6 +180,15 @@ export default function InsuranceJobDetail() {
         </div>
       </div>
 
+      {job?.archived && (
+        <div className="border-b border-amber-500/20 bg-amber-500/10 px-6 py-2 text-sm text-amber-200">
+          Archived from the landing-zone disk (Redis job expired). Memo and decision are here.
+          {job.source_docs_retained === false
+            ? ' Raw source files were not stored — pull those from the carrier PAS.'
+            : ''}
+        </div>
+      )}
+
       {/* Content */}
       <div className="mx-auto max-w-7xl px-6 py-6">
         {job?.results?.uw_worksheet && (

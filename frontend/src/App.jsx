@@ -4,6 +4,7 @@ import Layout from './components/Layout';
 import LoginModal from './components/LoginModal';
 import JobDrawer from './components/JobDrawer';
 import Overview from './pages/Overview';
+import SsoCallback from './pages/SsoCallback';
 import SystemPage from './pages/System';
 import InsurancePage from './pages/Insurance';
 import CommercialInsuranceHub from './pages/CommercialInsurance';
@@ -41,6 +42,7 @@ import LineUnderwriting from './pages/LineUnderwriting';
 import StaffUnderwriting from './pages/StaffUnderwriting';
 import RatemakingPage from './pages/Ratemaking';
 import BusinessKPIsPage from './pages/BusinessKPIs';
+import PriorDecisionsPage from './pages/PriorDecisions';
 import { auth, endpoints, AuthError } from './lib/api';
 
 function Protected({ children, onLogin }) {
@@ -257,6 +259,7 @@ function AppRoutes() {
     <>
       <Routes>
         <Route path="broker/status/:token" element={<BrokerStatusPage />} />
+        <Route path="sso/callback" element={<SsoCallback />} />
         <Route element={<Layout health={health} pendingCount={pending.length} onRefresh={refreshAll} onLogin={() => setLoginOpen(true)} user={user} setUser={setUser} />}>
           <Route index element={<Overview overview={overview} health={health} presets={presets} onRunDemo={runDemo} onOpenJob={openJob} onLogin={() => setLoginOpen(true)} marketCycle={marketCycle} queueStats={queueStats} insuranceJobs={insuranceJobs} />} />
           <Route path="system" element={<SystemPage health={health} />} />
@@ -281,6 +284,7 @@ function AppRoutes() {
           <Route path="lending" element={<Protected onLogin={() => setLoginOpen(true)}><LendingPage presets={presets} demoResult={lendingDemoResult} onRunDemo={runDemo} /></Protected>} />
           <Route path="workflow" element={<Protected onLogin={() => setLoginOpen(true)}><WorkflowPage pending={pending} onRefresh={loadOverview} onOpenJob={openJob} authorityData={authorityData} /></Protected>} />
           <Route path="uw-workbench" element={<Protected onLogin={() => setLoginOpen(true)}><UWWorkbench onOpenJob={openJob} authorityData={authorityData} onRefresh={refreshAll} /></Protected>} />
+          <Route path="prior-decisions" element={<Protected onLogin={() => setLoginOpen(true)}><PriorDecisionsPage /></Protected>} />
           <Route path="issuance" element={<Protected onLogin={() => setLoginOpen(true)}><IssuancePage /></Protected>} />
           <Route path="producer-comms" element={<Protected onLogin={() => setLoginOpen(true)}><ProducerCommsPage /></Protected>} />
           <Route path="monitoring" element={<Protected onLogin={() => setLoginOpen(true)}><MonitoringPage /></Protected>} />

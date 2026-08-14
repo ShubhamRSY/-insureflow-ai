@@ -160,12 +160,24 @@ def observe_pipeline(summary: dict[str, Any] | None) -> None:
     findings_n = int(summary.get("oracle_findings_count") or 0)
     if findings_n:
         _METRICS["oracle_findings"].labels(severity="mixed").inc(findings_n)
+    _emit_cloudwatch("PipelineRuns", 1.0, {"line": line, "decision": decision, "status": status})
 
 
 def observe_bind(result: str) -> None:
     if not _METRICS:
         return
-    _METRICS["binds"].labels(result=str(result or "unknown")[:32]).inc()
+    label = str(result or "unknown")[:32]
+    _METRICS["binds"].labels(result=label).inc()
+    _emit_cloudwatch("Binds", 1.0, {"result": label})
+
+
+def _emit_cloudwatch(name: str, value: float, dimensions: dict[str, str] | None = None) -> None:
+    try:
+        from insureflow.observability.cloudwatch import emit_metric
+
+        emit_metric(name, value, dimensions=dimensions)
+    except Exception:
+        pass
 
 
 def render_metrics() -> tuple[bytes, str]:

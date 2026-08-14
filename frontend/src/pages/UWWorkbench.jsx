@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Badge, EmptyState, StatCard } from '../components/ui';
 import { endpoints, fmtCurrency, AuthError } from '../lib/api';
 import { insuranceLineLabel } from '../lib/insuranceLines';
@@ -28,6 +29,7 @@ const STATE_BADGE = {
   no_quote: { status: 'decline', label: 'No quote' },
   bound: { status: 'bound', label: 'Bound' },
   expired: { status: 'closed', label: 'Expired' },
+  archived: { status: 'closed', label: 'Archived memo' },
 };
 
 const EMPTY_FORM = {
@@ -70,6 +72,7 @@ function checkpointLabel(name) {
 }
 
 export default function UWWorkbench({ onOpenJob, authorityData, onRefresh }) {
+  const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -172,9 +175,12 @@ export default function UWWorkbench({ onOpenJob, authorityData, onRefresh }) {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">UW Workbench</h1>
-          <p className="mt-1 text-slate-400">Every case, every decision, one desk — with sign-off, co-sign, and bind</p>
+          <p className="mt-1 text-slate-400">Every case, every decision, one desk — with sign-off, co-sign, and bind. Old memos survive Redis in Prior decisions.</p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <button type="button" onClick={() => navigate('/prior-decisions')} className="btn-secondary btn-sm text-xs">
+            <History className="h-3.5 w-3.5" /> Prior decisions
+          </button>
           <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-overlay px-3 py-1 text-xs text-slate-300 ring-1 ring-white/[0.06]">
             <UserCheck className="h-3 w-3" /> Desk routing: {coSignCount > 0 ? `${coSignCount} need co-sign` : 'within authority'}
           </span>
@@ -345,6 +351,12 @@ export default function UWWorkbench({ onOpenJob, authorityData, onRefresh }) {
                       ))}
                     </div>
                   )}
+
+                      {c.archived && (
+                        <p className="mt-2 text-[11px] text-slate-500">
+                          Archived memo · {c.source_docs_retained === false ? 'source file is in the PAS, not here' : 'open to view decision'}
+                        </p>
+                      )}
 
                   <div className="mt-4 flex flex-wrap gap-2">
                     <button type="button" onClick={() => onOpenJob?.('insurance', c.bundle_id, c.bundle_id)} className="btn-secondary text-xs"><Search className="h-3 w-3 inline" /> View</button>

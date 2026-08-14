@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Shield, Home, Activity, ClipboardCheck, Settings, LogOut, RefreshCw, Menu, X,
   FileText, Users, BarChart3, BookOpen, Wallet, Layers, Link2, LineChart, Search, Database, FlaskConical,
   FileCheck, MessagesSquare, Radar, Briefcase, Building2, Calculator, ChevronDown, ChevronRight, Plus,
-  ShieldCheck, Library,
+  ShieldCheck, Library, History,
 } from 'lucide-react';
 import { useState } from 'react';
 import { auth } from '../lib/api';
@@ -60,6 +60,7 @@ const nav = [
   { to: '/staff-uw', icon: Building2, label: 'Staff UW Desk', color: 'text-violet-400' },
   { to: '/workflow', icon: ClipboardCheck, label: 'UW Sign-off', badge: true },
   { to: '/uw-workbench', icon: ShieldCheck, label: 'UW Workbench', color: 'text-teal-400' },
+  { to: '/prior-decisions', icon: History, label: 'Prior decisions', color: 'text-slate-300' },
   { to: '/queue', icon: Search, label: 'Queue' },
   { section: 'Post-Decision' },
   { to: '/issuance', icon: FileCheck, label: 'Issuance', color: 'text-emerald-400' },
@@ -68,7 +69,7 @@ const nav = [
   { section: 'Analytics' },
   { to: '/renewals', icon: FileText, label: 'Renewals' },
   { to: '/overrides', icon: LineChart, label: 'Override Analytics' },
-  { to: '/business-kpis', icon: BarChart3, label: 'Business KPIs', color: 'text-brand' },
+  { to: '/business-kpis', icon: BarChart3, label: 'ROI & KPIs', color: 'text-brand' },
   { to: '/eval-trends', icon: Activity, label: 'Eval Trends' },
   { to: '/portfolio', icon: Layers, label: 'Portfolio' },
   { to: '/ratemaking', icon: Calculator, label: 'Ratemaking & Pricing', color: 'text-brand' },
@@ -96,6 +97,7 @@ const CRUMBS = [
   { prefix: '/line-uw', labels: ['UW Operations', 'Line UW Desk'] },
   { prefix: '/staff-uw', labels: ['UW Operations', 'Staff UW Desk'] },
   { prefix: '/uw-workbench', labels: ['UW Operations', 'UW Workbench'] },
+  { prefix: '/prior-decisions', labels: ['UW Operations', 'Prior decisions'] },
   { prefix: '/mortgage', labels: ['Mortgage & Lending', 'Mortgage'] },
   { prefix: '/lending', labels: ['Mortgage & Lending', 'Lending'] },
   { prefix: '/workflow', labels: ['UW Operations', 'UW Sign-off'] },
@@ -105,7 +107,7 @@ const CRUMBS = [
   { prefix: '/producer-comms', labels: ['Post-Decision', 'Producer Comms'] },
   { prefix: '/renewals', labels: ['Analytics', 'Renewals'] },
   { prefix: '/overrides', labels: ['Analytics', 'Override Analytics'] },
-  { prefix: '/business-kpis', labels: ['Analytics', 'Business KPIs'] },
+  { prefix: '/business-kpis', labels: ['Analytics', 'ROI & KPIs'] },
   { prefix: '/eval-trends', labels: ['Analytics', 'Eval Trends'] },
   { prefix: '/portfolio', labels: ['Analytics', 'Portfolio'] },
   { prefix: '/ratemaking', labels: ['Analytics', 'Ratemaking & Pricing'] },

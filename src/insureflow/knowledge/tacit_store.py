@@ -106,6 +106,18 @@ class TacitKnowledgeStore:
         self._persist_path = persist_path or Path(os.getenv("TACIT_KNOWLEDGE_PATH", "./audit_logs/tacit_knowledge.json"))
 
     def add_rule(self, rule: TacitRule) -> TacitRule:
+        from insureflow.redaction.redactor import PIIRedactor
+
+        redactor = PIIRedactor()
+        rule = rule.model_copy(
+            update={
+                "title": redactor.redact(rule.title or "", mask=False),
+                "description": redactor.redact(rule.description or "", mask=False),
+                "action": redactor.redact(rule.action or "", mask=False),
+                "rationale": redactor.redact(rule.rationale or "", mask=False),
+                "trigger_conditions": [redactor.redact(c, mask=False) for c in (rule.trigger_conditions or [])],
+            }
+        )
         with self._lock:
             if rule.rule_id in self._rules:
                 existing = self._rules[rule.rule_id]

@@ -47,7 +47,9 @@ def configure_cloudwatch_logging(level: int = logging.INFO) -> None:
 
 def emit_metric(name: str, value: float, unit: str = "Count", dimensions: dict[str, str] | None = None) -> None:
     """Best-effort CloudWatch custom metric (no-op without boto3 / AWS credentials)."""
-    if os.getenv("CLOUDWATCH_METRICS", "true").lower() not in {"1", "true", "yes"}:
+    explicit = os.getenv("CLOUDWATCH_METRICS", "").lower() in {"1", "true", "yes"}
+    bank = os.getenv("BANK_MODE", "").lower() in {"1", "true", "yes"}
+    if not (explicit or bank):
         return
     try:
         import boto3

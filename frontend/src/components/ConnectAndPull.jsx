@@ -7,6 +7,22 @@ import { groupSourcesByCategory } from '../lib/connectorBrands';
 import { UI_HINTS } from '../lib/uiHints';
 import { Hint, HintCheckbox } from './ui';
 
+function KindBadge({ kind }) {
+  if (kind === 'live') {
+    return <span className="shrink-0 rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-emerald-400">Live</span>;
+  }
+  if (kind === 'needs_config') {
+    return <span className="shrink-0 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-amber-400">Needs creds</span>;
+  }
+  if (kind === 'lab_demo') {
+    return <span className="shrink-0 rounded-full bg-slate-500/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-slate-400">Lab sample</span>;
+  }
+  if (kind === 'catalog_stub') {
+    return <span className="shrink-0 rounded-full bg-white/5 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-slate-500">Not contracted</span>;
+  }
+  return null;
+}
+
 /**
  * "Connect & pull" source hub shared across verticals (insurance, mortgage,
  * lending). Lists connectors + demo packages from the vertical-aware
@@ -141,6 +157,7 @@ export default function ConnectAndPull({
       for (const src of list) {
         // Skip sources that need credentials the user hasn't filled
         if ((src.config_fields || []).length > 0) continue;
+        if (src.kind === 'catalog_stub' || src.kind === 'needs_config') continue;
         try {
           await endpoints.pullInsuranceSource(src.id, { bundle_id: bid }, vertical);
           pulled += 1;
@@ -258,6 +275,11 @@ export default function ConnectAndPull({
 
   return (
     <div className="space-y-3">
+      <p className="text-[11px] text-slate-500">
+        <span className="font-semibold text-emerald-400">Live</span> = IMAP / S3 / SFTP / folder when credentials are set.
+        {' '}<span className="font-semibold text-slate-400">Lab sample</span> = Pacific Coast-style demos.
+        {' '}<span className="font-semibold text-slate-500">Not contracted</span> = SharePoint, Drive, IVANS — simulation only.
+      </p>
       <div className="flex flex-wrap items-center gap-2">
         <select value={categoryId}
           onChange={(e) => { setCategoryId(e.target.value); setActiveSource(null); setConnected(null); setEmails([]); setSelectedEmailIds(new Set()); setConfig({}); setError(''); }}
@@ -290,8 +312,9 @@ export default function ConnectAndPull({
               </div>
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-xs font-medium text-slate-200">{src.name}</span>
-                <span className="block truncate text-[10px] text-slate-500">{src.description}</span>
+                <span className="block truncate text-[10px] text-slate-500">{src.honesty || src.description}</span>
               </span>
+              <KindBadge kind={src.kind} />
             </button>
           );
         })}
@@ -299,6 +322,12 @@ export default function ConnectAndPull({
 
       {activeSource && needsConfig && !connected && (
         <div className="space-y-2 rounded-lg border border-white/[0.06] bg-surface/40 p-3">
+          {activeSource.kind === 'catalog_stub' && (
+            <p className="text-[11px] text-amber-300">This is not a live {activeSource.name} connection. Pull uses a lab demo package until that vendor is contracted.</p>
+          )}
+          {activeSource.kind === 'needs_config' && (
+            <p className="text-[11px] text-amber-300">{activeSource.honesty}</p>
+          )}
           {activeSource.config_fields.map((f) => (
             <div key={f.key}>
               <label className="mb-0.5 block text-[10px] text-slate-500">{f.label}</label>
@@ -316,11 +345,19 @@ export default function ConnectAndPull({
       )}
 
       {activeSource && !needsConfig && !connected && (
-        <button type="button" onClick={() => pullSource(activeSource.id, {})} disabled={pulling}
-          className="btn-primary btn-sm w-full text-xs disabled:opacity-40">
-          {pulling ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Cable className="h-3 w-3" />}
-          Pull from {activeSource.name}
-        </button>
+        <div className="space-y-2">
+          {activeSource.kind === 'needs_config' && (
+            <p className="text-[11px] text-amber-300">{activeSource.honesty}</p>
+          )}
+          {activeSource.kind === 'lab_demo' && (
+            <p className="text-[11px] text-slate-400">Lab sample package — not a live broker feed.</p>
+          )}
+          <button type="button" onClick={() => pullSource(activeSource.id, {})} disabled={pulling || (activeSource.kind === 'needs_config' && !activeSource.pullable)}
+            className="btn-primary btn-sm w-full text-xs disabled:opacity-40">
+            {pulling ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Cable className="h-3 w-3" />}
+            Pull from {activeSource.name}
+          </button>
+        </div>
       )}
 
       {connected && (

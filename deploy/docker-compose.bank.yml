@@ -21,6 +21,7 @@ services:
       ENCRYPTION_KEY: ${ENCRYPTION_KEY:?ENCRYPTION_KEY required for bank mode}
       ALLOW_OPEN_REGISTRATION: "false"
       ALLOW_AUTH_RESET: "false"
+      TRUSTED_PROXY: "true"
 
   redis:
     ports: !reset []

@@ -6,3 +6,8 @@ container_image      = "ghcr.io/YOUR_ORG/insureflow-ai:latest"
 allowed_cidr_blocks  = ["10.0.0.0/8"]  # bank VPN / office
 langsmith_api_key    = ""               # or set via TF_VAR_langsmith_api_key
 enable_cognito       = true
+# Optional Route 53 alias (leave empty if DNS is InfoBlox / existing Cloudflare)
+domain_name          = ""
+route53_zone_id      = ""
+waf_rate_limit       = 2000             # requests / 5 min / IP
+ecs_worker_desired_count = 1            # Celery pipeline workers
