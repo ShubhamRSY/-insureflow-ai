@@ -81,8 +81,7 @@ def test_home_three_leaves_domain_distinctness():
     )
     contents = underwrite_general(
         _bundle(
-            KYC
-            + " List of insured items with values including jewelry and electronics."
+            KYC + " List of insured items with values including jewelry and electronics."
             " Purchase invoices of high-value items. Photographs of contents."
             " Total contents value 800000. Locks and alarm. No prior claims."
         ),
@@ -90,8 +89,7 @@ def test_home_three_leaves_domain_distinctness():
     )
     comp = underwrite_general(
         _bundle(
-            KYC
-            + " Sale deed. Property valuation. List + invoices of insured contents."
+            KYC + " Sale deed. Property valuation. List + invoices of insured contents."
             " Property tax receipt. Interior and exterior photographs."
             " Built in year 2015. Alarm. Coastal location. No prior claims."
         ),
@@ -295,8 +293,7 @@ def test_provider_channel_distinctness():
     )
     rei = underwrite_general(
         _bundle(
-            "Ceding insurer registration license. Treaty facultative reinsurance agreement. Risk portfolio details."
-            " Loss history claims data. Solvency financial statements. IRDAI regulatory approval."
+            "Ceding insurer registration license. Treaty facultative reinsurance agreement. Risk portfolio details. Loss history claims data. Solvency financial statements. IRDAI regulatory approval."
         ),
         product_id="reinsurance_treaty",
     )

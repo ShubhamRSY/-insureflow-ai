@@ -123,10 +123,7 @@ class TestRedactionAdversarial:
 
     def test_policyholder_applicant_proposer_stripped(self) -> None:
         redactor = PIIRedactor()
-        blob = (
-            "Policyholder: Maria Santos. Applicant: Robert Chen. "
-            "Proposer: Elena Rossi. Life Assured: David Kim."
-        )
+        blob = "Policyholder: Maria Santos. Applicant: Robert Chen. Proposer: Elena Rossi. Life Assured: David Kim."
         result = redactor.redact(blob, mask=False)
         for name in ("Maria Santos", "Robert Chen", "Elena Rossi", "David Kim"):
             assert name not in result, f"{name} leaked in: {result}"

@@ -135,11 +135,7 @@ def _rate_filed(
     base_rate = float(cov_conf.get("base_rate", 0.0))
     expense_constant = float(cov_conf.get("expense_constant", 0.0))
     min_premium = float(cov_conf.get("min_premium", 0.0))
-    duration = (
-        _int_field(blob, "trip duration", "duration days", "trip days", "number of days", "duration")
-        if conf.get("duration_factors")
-        else None
-    )
+    duration = _int_field(blob, "trip duration", "duration days", "trip days", "number of days", "duration") if conf.get("duration_factors") else None
     duration_f = _band_factor(conf.get("duration_factors") or [], float(duration or 0.0), "max_days")
 
     reasons: list[str] = []

@@ -351,10 +351,7 @@ def _uw_home_structure(ctx: _Ctx) -> GeneralUWDecision:
         ),
         (
             "prior_claims",
-            _has(ctx, "claims history", "no claims", "no prior claim", types=("loss_run",))
-            or "no claims" in ctx.blob
-            or "no prior fire claims" in ctx.blob
-            or "no previous claims" in ctx.blob,
+            _has(ctx, "claims history", "no claims", "no prior claim", types=("loss_run",)) or "no claims" in ctx.blob or "no prior fire claims" in ctx.blob or "no previous claims" in ctx.blob,
             "Prior property claims history required (or explicit nil)",
             RiskSeverity.MODERATE,
         ),
@@ -402,10 +399,7 @@ def _uw_home_contents(ctx: _Ctx) -> GeneralUWDecision:
         ),
         (
             "prior_claims",
-            _has(ctx, "claims history", "no claims", "no prior claim", types=("loss_run",))
-            or "no claims" in ctx.blob
-            or "no prior contents claims" in ctx.blob
-            or "no theft claims" in ctx.blob,
+            _has(ctx, "claims history", "no claims", "no prior claim", types=("loss_run",)) or "no claims" in ctx.blob or "no prior contents claims" in ctx.blob or "no theft claims" in ctx.blob,
             "Prior contents / theft claims history required (or explicit nil)",
             RiskSeverity.MODERATE,
         ),
@@ -447,10 +441,7 @@ def _uw_home_comp(ctx: _Ctx) -> GeneralUWDecision:
         ),
         (
             "prior_claims",
-            _has(ctx, "claims history", "no claims", "no prior claim", types=("loss_run",))
-            or "no claims" in ctx.blob
-            or "no prior fire claims" in ctx.blob
-            or "no previous claims" in ctx.blob,
+            _has(ctx, "claims history", "no claims", "no prior claim", types=("loss_run",)) or "no claims" in ctx.blob or "no prior fire claims" in ctx.blob or "no previous claims" in ctx.blob,
             "Prior claims history required (or explicit nil)",
             RiskSeverity.MODERATE,
         ),
@@ -1121,9 +1112,7 @@ def _uw_fire_comm(ctx: _Ctx) -> GeneralUWDecision:
         ),
         (
             "prior_fire_losses",
-            _has(ctx, "claims history", "fire losses", "no fire loss", "no claims", types=("loss_run",))
-            or "no claims" in ctx.blob
-            or "no fire loss" in ctx.blob,
+            _has(ctx, "claims history", "fire losses", "no fire loss", "no claims", types=("loss_run",)) or "no claims" in ctx.blob or "no fire loss" in ctx.blob,
             "Prior fire loss history required (or explicit nil)",
             RiskSeverity.MODERATE,
         ),
