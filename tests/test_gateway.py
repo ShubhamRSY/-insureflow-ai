@@ -137,12 +137,11 @@ def test_landing_page_html() -> None:
     resp = client.get("/", headers={"Accept": "text/html"})
     assert resp.status_code == 200
     assert "Rytera" in resp.text
-    assert "Turn messy submissions into" in resp.text
-    assert "What you get" in resp.text
-    assert "Plans &amp; pricing" in resp.text or "Plans & pricing" in resp.text
-    assert "They will not buy if" in resp.text
-    assert "Pilot" in resp.text
-    assert "$2,490" in resp.text
+    assert "Stop hunting PDFs" in resp.text
+    assert "Start underwriting" in resp.text
+    assert "Why companies buy" in resp.text
+    assert "The file arrives messy" in resp.text
+    assert "bind-ready memo" in resp.text.lower()
 
     default = client.get("/")
     assert default.status_code == 200
