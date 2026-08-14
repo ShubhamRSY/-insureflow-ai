@@ -142,6 +142,9 @@ def test_landing_page_html() -> None:
     assert "Why companies buy" in resp.text
     assert "The file arrives messy" in resp.text
     assert "bind-ready memo" in resp.text.lower()
+    assert "Named insureds never leave the gate" in resp.text
+    assert "stripped before we touch them with any LLM API" in resp.text
+    assert "Pick the company. Then underwrite." in resp.text
 
     default = client.get("/")
     assert default.status_code == 200
@@ -169,12 +172,12 @@ def test_landing_page_html() -> None:
 
 def test_landing_subpages_html() -> None:
     landing_pages = {
-        "platform": ["Platform capabilities", "Human-in-the-loop by design"],
-        "technology": ["Zero Token Architecture", "Every decision defensible"],
-        "underwriting": ["Built for the desks that decide", "Rates built like an actuary builds them"],
-        "integrations": ["Connects to the systems you already use", "Live, simulated, or auto"],
-        "company": ["About Rytera", "Frequently asked questions"],
-        "pricing": ["They will not buy if", "Your SERFF / carrier leaf filings", "no re-key"],
+        "platform": ["Platform capabilities", "Human-in-the-loop by design", "Named insureds never leave the gate", "Choose the insurance company"],
+        "technology": ["Zero Token Architecture", "Every decision defensible", "Named insureds never leave the gate"],
+        "underwriting": ["Built for the desks that decide", "Rates built like an actuary builds them", "Named insureds never leave the gate"],
+        "integrations": ["Connects to the systems you already use", "Live, simulated, or auto", "Named insureds never leave the gate"],
+        "company": ["About Rytera", "Frequently asked questions", "Named insureds never leave the gate"],
+        "pricing": ["They will not buy if", "Your SERFF / carrier leaf filings", "no re-key", "Named insureds never leave the gate"],
     }
     for slug, markers in landing_pages.items():
         resp = client.get(f"/{slug}", headers={"Accept": "text/html"})

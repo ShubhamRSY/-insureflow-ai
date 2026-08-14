@@ -30,3 +30,11 @@ class RedactedLLMClient(LLMClient):
         redacted_system = self.redactor.redact(system_prompt)
         redacted_user = self.redactor.redact(user_prompt)
         return super().extract_structured(redacted_system, redacted_user, response_model)
+
+    def stream(self, system_prompt: str, user_prompt: str):
+        redacted_system = self.redactor.redact(system_prompt)
+        redacted_user = self.redactor.redact(user_prompt)
+        yield from super().stream(redacted_system, redacted_user)
+
+    def embed(self, text: str) -> list[float]:
+        return super().embed(self.redactor.redact(text))

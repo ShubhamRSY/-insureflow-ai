@@ -144,6 +144,14 @@ def _has(blob: str, *terms: str) -> bool:
     return any(term in cleaned for term in terms)
 
 
+def _neg(blob: str, *terms: str) -> bool:
+    """True when a term is explicitly negated (e.g. 'no elevation certificate')."""
+    for term in terms:
+        if re.search(rf"(?:no |without |missing |lack of |absent |none |not ){re.escape(term)}", blob):
+            return True
+    return False
+
+
 def _add_flag(
     flags: list[ChecklistFlag],
     code: str,
@@ -1123,6 +1131,352 @@ def _eval_key_person(blob: str) -> tuple[list[ChecklistFlag], list[ScenarioHit]]
     return flags, scenarios
 
 
+def _eval_aviation(blob: str) -> tuple[list[ChecklistFlag], list[ScenarioHit]]:
+    flags: list[ChecklistFlag] = []
+    scenarios: list[ScenarioHit] = []
+    category = "aviation"
+
+    hull = _num(blob, "hull value", "aircraft value", "insurable value", "insured value")
+    if hull is not None and hull > 5_000_000:
+        _add_flag(
+            flags,
+            "AV_HIGH_HULL",
+            "High hull value",
+            f"Hull valued at ${hull:,.0f} — concentration / reinsurance review.",
+            severity=RiskSeverity.MODERATE,
+            category=category,
+        )
+
+    if _has(blob, "aging fleet", "old fleet", "high cycle", "airframe age", "vintage aircraft"):
+        _add_flag(
+            flags,
+            "AV_AGING_FLEET",
+            "Aging / high-cycle fleet",
+            "Older airframes or high cycle counts — maintenance record review required.",
+            severity=RiskSeverity.HIGH,
+            category=category,
+        )
+
+    if _has(blob, "single engine", "single-engine", "piston engine", "experimental", "homebuilt"):
+        _add_flag(
+            flags,
+            "AV_SINGLE_ENGINE",
+            "Single-engine / experimental airframes",
+            "Single-engine or experimental aircraft — elevated hull + liability frequency.",
+            severity=RiskSeverity.MODERATE,
+            category=category,
+        )
+
+    if _has(blob, "no pilots", "pilot shortage", "fatigue", "undocumented crew") or _has(blob, "pilot", "crew") and _has(blob, "undocumented", "unlicensed", "expired medical"):
+        _add_flag(
+            flags,
+            "AV_CREW_DOCS",
+            "Crew qualification gap",
+            "Pilot / crew qualification or medical currency not documented.",
+            severity=RiskSeverity.HIGH,
+            category=category,
+        )
+
+    if _has(blob, "territory", "war risk", "conflict zone", "hostile", "sanctioned airspace"):
+        _add_flag(
+            flags,
+            "AV_TERRITORY_RISK",
+            "Hostile / special territory exposure",
+            "Operations into conflict or special-risk territories — war-risk and political risk review.",
+            severity=RiskSeverity.HIGH,
+            category=category,
+        )
+
+    if _has(blob, "no maintenance", "lack of maintenance", "deferred maintenance", "maintenance deferred", "airworthy"):
+        _add_flag(
+            flags,
+            "AV_MAINTENANCE",
+            "Maintenance / airworthiness concern",
+            "Deferred maintenance or airworthiness questions — require maintenance log review.",
+            severity=RiskSeverity.HIGH,
+            category=category,
+        )
+
+    codes = _flag_codes(flags)
+    if {"AV_AGING_FLEET", "AV_MAINTENANCE"} <= codes and "AV_TERRITORY_RISK" in codes:
+        scenarios.append(
+            ScenarioHit(
+                code="AV_FLEET_TERRITORY_SCENARIO",
+                name="Aged fleet into special territory",
+                description=("Aging airframes with maintenance concerns operating into special-risk territory."),
+                flag_codes=sorted(codes),
+                decision_hint=UWDecision.REFER,
+                actions=[
+                    UWAction(UWActionType.REQUIRE_DOC, "AV_FLEET_TERRITORY_SCENARIO", detail="Require full maintenance log and crew currency documentation."),
+                    UWAction(UWActionType.PRICE_UP, "AV_FLEET_TERRITORY_SCENARIO", premium_mod_pct=25.0, detail="Aviation exposure debit."),
+                    UWAction(UWActionType.REFER, "AV_FLEET_TERRITORY_SCENARIO", detail="Refer to aviation underwriter / reinsurer."),
+                ],
+            )
+        )
+
+    return flags, scenarios
+
+
+def _eval_cat_property(blob: str, *, peril: str) -> tuple[list[ChecklistFlag], list[ScenarioHit]]:
+    flags: list[ChecklistFlag] = []
+    scenarios: list[ScenarioHit] = []
+    category = f"catastrophe_{peril}"
+
+    in_zone = _has(blob, "flood zone", "sfha", "zone ae", "zone ve", "zone a ", "seismic zone", "quake zone", "fault line", "special flood")
+    if in_zone:
+        _add_flag(
+            flags,
+            f"CAT_{peril.upper()}_ZONE",
+            f"{peril.title()} zone exposure",
+            f"Subject located in a designated {peril} zone.",
+            severity=RiskSeverity.MODERATE,
+            category=category,
+        )
+
+    has_mit = _has(blob, "elevation certificate", "raised foundation", "dry floodproof", "seismic retrofit", "base isolation", "shear wall")
+    if in_zone and (not has_mit or _neg(blob, "elevation certificate", "raised foundation", "dry floodproof", "seismic retrofit", "base isolation", "shear wall")):
+        _add_flag(
+            flags,
+            f"CAT_{peril.upper()}_NO_MITIGATION",
+            f"No {peril} mitigation documented",
+            f"{peril.title()} zone without elevation / retrofit documentation — likely deductible or attachment adjustment.",
+            severity=RiskSeverity.HIGH,
+            category=category,
+        )
+
+    if _has(blob, "prior loss", "prior flood", "prior earthquake", "past claims", "flood loss", "quake loss"):
+        _add_flag(
+            flags,
+            f"CAT_{peril.upper()}_PRIOR_LOSS",
+            f"Prior {peril} losses",
+            "Claim history for the same peril — frequency accumulation.",
+            severity=RiskSeverity.HIGH,
+            category=category,
+        )
+
+    return flags, scenarios
+
+
+def _eval_flood(blob: str) -> tuple[list[ChecklistFlag], list[ScenarioHit]]:
+    flags, scenarios = _eval_cat_property(blob, peril="flood")
+    return flags, scenarios
+
+
+def _eval_earthquake(blob: str) -> tuple[list[ChecklistFlag], list[ScenarioHit]]:
+    flags, scenarios = _eval_cat_property(blob, peril="earthquake")
+    return flags, scenarios
+
+
+def _eval_pollution(blob: str) -> tuple[list[ChecklistFlag], list[ScenarioHit]]:
+    flags: list[ChecklistFlag] = []
+    scenarios: list[ScenarioHit] = []
+    category = "pollution_liability"
+
+    if _has(blob, "no esa", "no phase i", "no phase ii", "missing assessment"):
+        _add_flag(
+            flags,
+            "POL_NO_ESA",
+            "No environmental site assessment",
+            "Phase I / II ESA missing — site condition unknown.",
+            severity=RiskSeverity.HIGH,
+            category=category,
+        )
+
+    if _has(blob, "underground storage", "ust", "storage tank"):
+        _add_flag(
+            flags,
+            "POL_UST",
+            "Underground storage tanks",
+            "UST exposure — leak detection and tank registration review.",
+            severity=RiskSeverity.HIGH,
+            category=category,
+        )
+
+    if _has(blob, "chemical", "hazardous", "solvent", "waste", "flammable storage", "chlorine", "asbestos"):
+        _add_flag(
+            flags,
+            "POL_HAZMAT",
+            "Hazardous material handling",
+            "Chemical / hazardous materials on site — spill and cleanup exposure.",
+            severity=RiskSeverity.MODERATE,
+            category=category,
+        )
+
+    if _has(blob, "remediation", "contaminated", "cleanup", "spill", "violation", "cease and desist"):
+        _add_flag(
+            flags,
+            "POL_CONTAMINATION",
+            "Prior contamination / violations",
+            "Remediation or regulatory action history — claims exposure.",
+            severity=RiskSeverity.HIGH,
+            category=category,
+        )
+
+    return flags, scenarios
+
+
+def _eval_kr(blob: str) -> tuple[list[ChecklistFlag], list[ScenarioHit]]:
+    flags: list[ChecklistFlag] = []
+    scenarios: list[ScenarioHit] = []
+    category = "kidnap_ransom"
+
+    if _has(blob, "high profile", "celebrity", "public figure", "prominent", "executive", "high net worth"):
+        _add_flag(
+            flags,
+            "KR_HIGH_PROFILE",
+            "High-profile insured",
+            "Celebrity / executive / high-net-worth profile elevates kidnapping and extortion exposure.",
+            severity=RiskSeverity.MODERATE,
+            category=category,
+        )
+
+    if _has(blob, "high risk country", "high risk jurisdiction", "elevated threat", "threat level", "conflict", "kidnap hotspot"):
+        _add_flag(
+            flags,
+            "KR_GEO_RISK",
+            "High-risk geography",
+            "Operations in high-risk / elevated-threat jurisdictions.",
+            severity=RiskSeverity.HIGH,
+            category=category,
+        )
+
+    if _neg(blob, "crisis protocol", "crisis response plan", "response plan", "travel security") or _has(blob, "no crisis protocol", "no crisis response plan", "no response plan", "no travel security", "lack of training"):
+        _add_flag(
+            flags,
+            "KR_NO_CRISIS_PLAN",
+            "No crisis / response plan",
+            "Absence of crisis management and travel security procedures.",
+            severity=RiskSeverity.HIGH,
+            category=category,
+        )
+
+    return flags, scenarios
+
+
+def _eval_political_risk(blob: str) -> tuple[list[ChecklistFlag], list[ScenarioHit]]:
+    flags: list[ChecklistFlag] = []
+    scenarios: list[ScenarioHit] = []
+    category = "political_risk"
+
+    if _has(blob, "expropriation", "nationalization", "confiscation", "creeping expropriation"):
+        _add_flag(
+            flags,
+            "PR_EXPROPRIATION",
+            "Expropriation exposure",
+            "Host-country expropriation / nationalization risk disclosed.",
+            severity=RiskSeverity.HIGH,
+            category=category,
+        )
+
+    if _has(blob, "currency", "transfer risk", "inconvertibility", "remittance", "blocked funds"):
+        _add_flag(
+            flags,
+            "PR_TRANSFER_RISK",
+            "Currency transfer risk",
+            "Currency inconvertibility / transfer restrictions exposure.",
+            severity=RiskSeverity.HIGH,
+            category=category,
+        )
+
+    if _has(blob, "political violence", "civil unrest", "insurrection", "war", "sanctions"):
+        _add_flag(
+            flags,
+            "PR_VIOLENCE",
+            "Political violence / sanctions",
+            "Political violence or sanctions-related exposure in covered territories.",
+            severity=RiskSeverity.HIGH,
+            category=category,
+        )
+
+    if _has(blob, "single country", "single contract", "concentration"):
+        _add_flag(
+            flags,
+            "PR_CONCENTRATION",
+            "Country / contract concentration",
+            "Concentrated exposure in one country or contract — portfolio spread concern.",
+            severity=RiskSeverity.MODERATE,
+            category=category,
+        )
+
+    return flags, scenarios
+
+
+def _eval_terrorism(blob: str) -> tuple[list[ChecklistFlag], list[ScenarioHit]]:
+    flags: list[ChecklistFlag] = []
+    scenarios: list[ScenarioHit] = []
+    category = "terrorism"
+
+    if _has(blob, "certified act", "certified event", "treasury certification", "tripwire"):
+        _add_flag(
+            flags,
+            "TERR_CERTIFIED",
+            "Certified-acts coverage structure",
+            "Coverage triggers on certified acts — confirm TRIA-style certification terms.",
+            severity=RiskSeverity.MODERATE,
+            category=category,
+        )
+
+    if _has(blob, "iconic", "landmark", "high profile", "government", "stadium", "crowd concentration", "mass gathering"):
+        _add_flag(
+            flags,
+            "TERR_TARGET",
+            "High-profile / high-crowd target",
+            "Iconic or crowd-concentrating location elevates terrorist attack exposure.",
+            severity=RiskSeverity.HIGH,
+            category=category,
+        )
+
+    if _has(blob, "no counterterror", "no security plan", "no access control"):
+        _add_flag(
+            flags,
+            "TERR_NO_SECURITY",
+            "Security plan gap",
+            "No counterterror / physical security plan documented.",
+            severity=RiskSeverity.MODERATE,
+            category=category,
+        )
+
+    return flags, scenarios
+
+
+def _eval_legal_expense(blob: str) -> tuple[list[ChecklistFlag], list[ScenarioHit]]:
+    flags: list[ChecklistFlag] = []
+    scenarios: list[ScenarioHit] = []
+    category = "legal_expense"
+
+    if _has(blob, "litigation", "lawsuit", "pending claim", "dispute", "claim pending"):
+        _add_flag(
+            flags,
+            "LEG_PENDING_LITIGATION",
+            "Pending litigation / dispute",
+            "Active or anticipated litigation drives defence-cost exposure.",
+            severity=RiskSeverity.HIGH,
+            category=category,
+        )
+
+    if _has(blob, "employment", "discrimination", "wrongful termination", "harassment"):
+        _add_flag(
+            flags,
+            "LEG_EMPLOYMENT",
+            "Employment-related exposure",
+            "Employment disputes — frequency-prone defence costs.",
+            severity=RiskSeverity.MODERATE,
+            category=category,
+        )
+
+    if _has(blob, "no panel", "no counsel", "no legal team", "no firm"):
+        _add_flag(
+            flags,
+            "LEG_NO_PANEL",
+            "No panel counsel arrangements",
+            "No established panel counsel — defence cost control unclear.",
+            severity=RiskSeverity.MODERATE,
+            category=category,
+        )
+
+    return flags, scenarios
+
+
 _EVALUATORS: dict[InsuranceLine, Callable[[str], tuple[list[ChecklistFlag], list[ScenarioHit]]]] = {
     InsuranceLine.COMMERCIAL_PROPERTY: _eval_property,
     InsuranceLine.BOP: _eval_property,
@@ -1131,6 +1485,14 @@ _EVALUATORS: dict[InsuranceLine, Callable[[str], tuple[list[ChecklistFlag], list
     InsuranceLine.TRADE_CREDIT: _eval_trade_credit,
     InsuranceLine.ERRORS_AND_OMISSIONS: _eval_eo,
     InsuranceLine.KEY_PERSON: _eval_key_person,
+    InsuranceLine.AVIATION: _eval_aviation,
+    InsuranceLine.FLOOD: _eval_flood,
+    InsuranceLine.EARTHQUAKE: _eval_earthquake,
+    InsuranceLine.POLLUTION: _eval_pollution,
+    InsuranceLine.KIDNAP_RANSOM: _eval_kr,
+    InsuranceLine.POLITICAL_RISK: _eval_political_risk,
+    InsuranceLine.TERRORISM: _eval_terrorism,
+    InsuranceLine.LEGAL_EXPENSE: _eval_legal_expense,
 }
 
 

@@ -118,6 +118,7 @@
               <a href="/#why">Why Rytera</a>
               <a href="/#effect">The effect</a>
               <a href="/#keywords">Keywords</a>
+              <a href="/#privacy">De-identification</a>
             </div>
           </div>
           <div class="nav-item">
@@ -136,6 +137,7 @@
               <a href="/platform#agentic">Agentic workbench</a>
               <a href="/platform#features">Deep-dive verticals</a>
               <a href="/platform#capabilities">Governance &amp; audit</a>
+              <a href="/platform#companies">Company panel</a>
             </div>
           </div>
           <div class="nav-item">
@@ -145,6 +147,7 @@
               <a href="/technology#zta">Zero Token Architecture</a>
               <a href="/technology#how-it-works">Pipeline</a>
               <a href="/technology#security">Security &amp; audit</a>
+              <a href="/technology#privacy">De-identification</a>
               <a href="/technology#observability">Observability</a>
             </div>
           </div>
@@ -157,7 +160,7 @@
               <a href="/underwriting#ratemaking">Ratemaking</a>
               <p class="nav-drop-label">Insurance book</p>
               <a href="/dashboard/insurance/sections/life">Life <span class="nav-pill live">Live</span></a>
-              <a href="/dashboard/insurance/sections/health">Health <span class="nav-pill">Catalog</span></a>
+              <a href="/dashboard/insurance/sections/health">Health <span class="nav-pill live">Live</span></a>
               <a href="/dashboard/insurance/sections/general">General / Non-Life</a>
               <a href="/dashboard/insurance/sections/commercial">Commercial <span class="nav-pill live">Live</span></a>
               <a href="/dashboard/insurance/sections/specialty">Specialty</a>
@@ -201,6 +204,7 @@
         <a href="/#why">Why Rytera</a>
         <a href="/#effect">The effect</a>
         <a href="/#keywords">Keywords</a>
+        <a href="/#privacy">De-identification</a>
       </details>
       <details class="nav-acc">
         <summary>Pricing</summary>
@@ -215,6 +219,7 @@
         <a href="/platform#agentic">Agentic workbench</a>
         <a href="/platform#features">Deep-dive verticals</a>
         <a href="/platform#capabilities">Governance &amp; audit</a>
+        <a href="/platform#companies">Company panel</a>
       </details>
       <details class="nav-acc">
         <summary>Technology</summary>
@@ -222,6 +227,7 @@
         <a href="/technology#zta">Zero Token Architecture</a>
         <a href="/technology#how-it-works">Pipeline</a>
         <a href="/technology#security">Security &amp; audit</a>
+        <a href="/technology#privacy">De-identification</a>
         <a href="/technology#observability">Observability</a>
       </details>
       <details class="nav-acc">
@@ -299,6 +305,7 @@
               <li><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg> Simulated oracles + demo rate book (honest)</li>
               <li><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg> Subjectivities &amp; bind-readiness checklist</li>
               <li><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg> Encrypted audit trail &middot; bind off</li>
+              <li><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg> Named insureds &amp; PII stripped before any LLM call</li>
             </ul>
             <a class="btn btn-ghost" href="/dashboard">Get started free</a>
           </article>
@@ -372,6 +379,7 @@
               <tr><th scope="row">Full PAS payload (limits, filing, subjectivities)</th><td><span class="cell-dash" aria-hidden="true">&mdash;</span></td><td><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg></td><td><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg></td><td><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg></td></tr>
               <tr><th scope="row">Portfolio concentration &amp; reinsurance</th><td><span class="cell-dash" aria-hidden="true">&mdash;</span></td><td><span class="cell-dash" aria-hidden="true">&mdash;</span></td><td><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg></td><td><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg></td></tr>
               <tr><th scope="row">Encrypted audit bundle &amp; examiner export</th><td>Basic</td><td><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg></td><td><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg></td><td>SSO / VPC</td></tr>
+              <tr><th scope="row">Named insureds &amp; PII stripped before any LLM API</th><td><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg></td><td><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg></td><td><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg></td><td><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg></td></tr>
               <tr><th scope="row">Broker / producer portal</th><td><span class="cell-dash" aria-hidden="true">&mdash;</span></td><td><span class="cell-soon">Coming soon</span></td><td><span class="cell-soon">Coming soon</span></td><td>Priority</td></tr>
               <tr><th scope="row">Dedicated onboarding &amp; client success</th><td><span class="cell-dash" aria-hidden="true">&mdash;</span></td><td><span class="cell-dash" aria-hidden="true">&mdash;</span></td><td><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg></td><td><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg></td></tr>
               <tr><th scope="row">Enterprise SLA &amp; priority support</th><td><span class="cell-dash" aria-hidden="true">&mdash;</span></td><td><span class="cell-dash" aria-hidden="true">&mdash;</span></td><td><span class="cell-dash" aria-hidden="true">&mdash;</span></td><td><svg class="ico sm yes" aria-hidden="true"><use href="#i-check"/></svg></td></tr>
@@ -392,6 +400,14 @@
           <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-layers"/></svg></span><h3>2. Your rate book</h3><p>POST <code>/rating/carrier-book</code> or set <code>CARRIER_BOOK_PATH</code> to your SERFF JSON/CSV. Pilot manuals cannot price a Desk+ quote.</p></div>
           <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-zap"/></svg></span><h3>3. Guidewire bind</h3><p>Live PAS receives the full payload &mdash; limits, deductibles, filing ID, subjectivities, indicated premium. Bind is refused if the adapter is still simulated.</p></div>
           <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-shield-check"/></svg></span><h3>Plan gate</h3><p><code>GET /billing/plan</code> shows entitlements and whether oracles, the carrier book, and PAS are actually ready. Buyers can verify before they pay.</p></div>
+        </div>
+      </section>
+
+      <section id="privacy" class="privacy-band">
+        <div class="reveal">
+          <p class="section-label">De-identification</p>
+          <h2>Named insureds never leave the gate.</h2>
+          <p class="section-desc">If anyone gives us real files, named insureds and PII are stripped before we touch them with any LLM API. Same gate on all 12 insurance sections, mortgage, and lending. Deterministic UW still sees the file. The model does not.</p>
         </div>
       </section>
 
@@ -429,6 +445,7 @@
           <a href="/dashboard">Dashboard</a>
         </nav>
         <div>
+          <div style="margin-bottom:.25rem">Named insureds &amp; PII stripped before any LLM API call &mdash; every section.</div>
           <div style="margin-bottom:.25rem">AI-native underwriting for carriers, MGAs &amp; aggregators.</div>
           <div>&copy; 2026 Rytera Inc. All rights reserved.</div>
         </div>

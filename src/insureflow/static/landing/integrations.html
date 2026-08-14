@@ -118,6 +118,7 @@
               <a href="/#why">Why Rytera</a>
               <a href="/#effect">The effect</a>
               <a href="/#keywords">Keywords</a>
+              <a href="/#privacy">De-identification</a>
             </div>
           </div>
           <div class="nav-item">
@@ -136,6 +137,7 @@
               <a href="/platform#agentic">Agentic workbench</a>
               <a href="/platform#features">Deep-dive verticals</a>
               <a href="/platform#capabilities">Governance &amp; audit</a>
+              <a href="/platform#companies">Company panel</a>
             </div>
           </div>
           <div class="nav-item">
@@ -145,6 +147,7 @@
               <a href="/technology#zta">Zero Token Architecture</a>
               <a href="/technology#how-it-works">Pipeline</a>
               <a href="/technology#security">Security &amp; audit</a>
+              <a href="/technology#privacy">De-identification</a>
               <a href="/technology#observability">Observability</a>
             </div>
           </div>
@@ -157,7 +160,7 @@
               <a href="/underwriting#ratemaking">Ratemaking</a>
               <p class="nav-drop-label">Insurance book</p>
               <a href="/dashboard/insurance/sections/life">Life <span class="nav-pill live">Live</span></a>
-              <a href="/dashboard/insurance/sections/health">Health <span class="nav-pill">Catalog</span></a>
+              <a href="/dashboard/insurance/sections/health">Health <span class="nav-pill live">Live</span></a>
               <a href="/dashboard/insurance/sections/general">General / Non-Life</a>
               <a href="/dashboard/insurance/sections/commercial">Commercial <span class="nav-pill live">Live</span></a>
               <a href="/dashboard/insurance/sections/specialty">Specialty</a>
@@ -201,6 +204,7 @@
         <a href="/#why">Why Rytera</a>
         <a href="/#effect">The effect</a>
         <a href="/#keywords">Keywords</a>
+        <a href="/#privacy">De-identification</a>
       </details>
       <details class="nav-acc">
         <summary>Pricing</summary>
@@ -215,6 +219,7 @@
         <a href="/platform#agentic">Agentic workbench</a>
         <a href="/platform#features">Deep-dive verticals</a>
         <a href="/platform#capabilities">Governance &amp; audit</a>
+        <a href="/platform#companies">Company panel</a>
       </details>
       <details class="nav-acc">
         <summary>Technology</summary>
@@ -222,6 +227,7 @@
         <a href="/technology#zta">Zero Token Architecture</a>
         <a href="/technology#how-it-works">Pipeline</a>
         <a href="/technology#security">Security &amp; audit</a>
+        <a href="/technology#privacy">De-identification</a>
         <a href="/technology#observability">Observability</a>
       </details>
       <details class="nav-acc">
@@ -256,7 +262,7 @@
         <div class="reveal">
           <p class="section-label">Integrations</p>
           <h1>Connects to the systems you already use</h1>
-          <p class="lead">One Connect &amp; pull hub feeds all 12 insurance sections plus mortgage and lending &mdash; policy admin, CRM, oracles, and document sources, each with live, simulated, and auto modes.</p>
+          <p class="lead">One Connect &amp; pull hub feeds all 12 insurance sections plus mortgage and lending &mdash; policy admin, CRM, oracles, and document sources, each with live, simulated, and auto modes. Real files are de-identified before any LLM API call.</p>
 
     <div class="cta">
       <button type="button" class="btn btn-primary" id="open-demo-hero">Book a demo</button>
@@ -304,6 +310,14 @@
         </div>
       </section>
 
+      <section id="privacy" class="privacy-band">
+        <div class="reveal">
+          <p class="section-label">De-identification</p>
+          <h2>Named insureds never leave the gate.</h2>
+          <p class="section-desc">If anyone gives us real files, named insureds and PII are stripped before we touch them with any LLM API. Same gate on all 12 insurance sections, mortgage, and lending. Deterministic UW still sees the file. The model does not.</p>
+        </div>
+      </section>
+
       <section id="contact">
         <div class="contact-box reveal">
           <p class="section-label" style="justify-content:center;margin-left:auto;margin-right:auto;">Ready when you are</p>
@@ -338,6 +352,7 @@
           <a href="/dashboard">Dashboard</a>
         </nav>
         <div>
+          <div style="margin-bottom:.25rem">Named insureds &amp; PII stripped before any LLM API call &mdash; every section.</div>
           <div style="margin-bottom:.25rem">AI-native underwriting for carriers, MGAs &amp; aggregators.</div>
           <div>&copy; 2026 Rytera Inc. All rights reserved.</div>
         </div>

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Rytera - AI Underwriting that Makes Desks Faster, Cleaner, Defensible</title>
   <meta name="description" content="AI-native underwriting for carriers, MGAs, and aggregators. Stop hunting PDFs. Start deciding. Bind-ready memos, licensed UW sign-off, examiner-ready audit — without inventing a premium." />
-  <meta name="keywords" content="AI underwriting, AI native underwriting, bind-ready memo, insurance underwriting software, commercial lines underwriting, MGA underwriting workbench, licensed UW sign-off, submission triage, appetite underwriting, examiner-ready audit, shadow pilot underwriting, personal lines, mortgage underwriting, lending underwriting" />
+  <meta name="keywords" content="AI underwriting, AI native underwriting, bind-ready memo, insurance underwriting software, commercial lines underwriting, MGA underwriting workbench, licensed UW sign-off, submission triage, appetite underwriting, examiner-ready audit, shadow pilot underwriting, personal lines, mortgage underwriting, lending underwriting, PII redaction, named insured de-identification" />
   <link rel="canonical" href="https://ryterainc.com/" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://ryterainc.com/" />
@@ -119,6 +119,7 @@
               <a href="/#why">Why Rytera</a>
               <a href="/#effect">The effect</a>
               <a href="/#keywords">Keywords</a>
+              <a href="/#privacy">De-identification</a>
             </div>
           </div>
           <div class="nav-item">
@@ -137,6 +138,7 @@
               <a href="/platform#agentic">Agentic workbench</a>
               <a href="/platform#features">Deep-dive verticals</a>
               <a href="/platform#capabilities">Governance &amp; audit</a>
+              <a href="/platform#companies">Company panel</a>
             </div>
           </div>
           <div class="nav-item">
@@ -146,6 +148,7 @@
               <a href="/technology#zta">Zero Token Architecture</a>
               <a href="/technology#how-it-works">Pipeline</a>
               <a href="/technology#security">Security &amp; audit</a>
+              <a href="/technology#privacy">De-identification</a>
               <a href="/technology#observability">Observability</a>
             </div>
           </div>
@@ -158,7 +161,7 @@
               <a href="/underwriting#ratemaking">Ratemaking</a>
               <p class="nav-drop-label">Insurance book</p>
               <a href="/dashboard/insurance/sections/life">Life <span class="nav-pill live">Live</span></a>
-              <a href="/dashboard/insurance/sections/health">Health <span class="nav-pill">Catalog</span></a>
+              <a href="/dashboard/insurance/sections/health">Health <span class="nav-pill live">Live</span></a>
               <a href="/dashboard/insurance/sections/general">General / Non-Life</a>
               <a href="/dashboard/insurance/sections/commercial">Commercial <span class="nav-pill live">Live</span></a>
               <a href="/dashboard/insurance/sections/specialty">Specialty</a>
@@ -202,6 +205,7 @@
         <a href="/#why">Why Rytera</a>
         <a href="/#effect">The effect</a>
         <a href="/#keywords">Keywords</a>
+        <a href="/#privacy">De-identification</a>
       </details>
       <details class="nav-acc">
         <summary>Pricing</summary>
@@ -216,6 +220,7 @@
         <a href="/platform#agentic">Agentic workbench</a>
         <a href="/platform#features">Deep-dive verticals</a>
         <a href="/platform#capabilities">Governance &amp; audit</a>
+        <a href="/platform#companies">Company panel</a>
       </details>
       <details class="nav-acc">
         <summary>Technology</summary>
@@ -223,6 +228,7 @@
         <a href="/technology#zta">Zero Token Architecture</a>
         <a href="/technology#how-it-works">Pipeline</a>
         <a href="/technology#security">Security &amp; audit</a>
+        <a href="/technology#privacy">De-identification</a>
         <a href="/technology#observability">Observability</a>
       </details>
       <details class="nav-acc">
@@ -346,6 +352,7 @@
           <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> Licensed UW still signs off</span>
           <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> Shadow first &middot; bind off</span>
           <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> Examiner-ready audit</span>
+          <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> PII stripped before any LLM call</span>
           <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> No invented premium</span>
           <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> Line + staff desks</span>
         </div>
@@ -383,6 +390,9 @@
           <span>Line UW</span>
           <span>Staff UW</span>
           <span>No invented premium</span>
+          <span>De-identified LLM</span>
+          <span>Named insured stripped</span>
+          <span>Appointed company panel</span>
         </div>
       </section>
 
@@ -413,6 +423,11 @@
             <h3>Exams get quieter</h3>
             <p>When someone asks &ldquo;why this file?&rdquo; you hand them a SHA-256 audit ZIP &mdash; not a war story from three shared drives.</p>
           </div>
+          <div class="feature-card">
+            <span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-lock"/></svg></span>
+            <h3>Real files never go raw to an LLM</h3>
+            <p>Named insureds, SSNs, EINs, and DOBs are stripped before any model API call &mdash; every section, including mortgage and lending. That is the compliance story you can say out loud.</p>
+          </div>
         </div>
       </section>
 
@@ -427,6 +442,8 @@
           <blockquote class="impact-line">Bind-ready in minutes. Audit-ready forever.</blockquote>
           <blockquote class="impact-line">Shadow first. Bind stays off until your licensed UW says cut over.</blockquote>
           <blockquote class="impact-line">If we can&rsquo;t price it honestly, we don&rsquo;t invent a premium.</blockquote>
+          <blockquote class="impact-line">Named insureds never hit an LLM API. We strip first. Then we call.</blockquote>
+          <blockquote class="impact-line">Pick the company. Then underwrite. One desk, your appointed panel.</blockquote>
         </div>
         <div class="cta reveal" style="margin-top:2rem">
           <a class="btn btn-ghost" href="/underwriting">See the desks</a>
@@ -475,6 +492,14 @@
         </div>
       </section>
 
+      <section id="privacy" class="privacy-band">
+        <div class="reveal">
+          <p class="section-label">De-identification</p>
+          <h2>Named insureds never leave the gate.</h2>
+          <p class="section-desc">If anyone gives us real files, named insureds and PII are stripped before we touch them with any LLM API. Same gate on all 12 insurance sections, mortgage, and lending. Deterministic UW still sees the file. The model does not.</p>
+        </div>
+      </section>
+
       <section id="contact">
         <div class="contact-box reveal">
           <p class="section-label" style="justify-content:center;margin-left:auto;margin-right:auto;">Ready when you are</p>
@@ -509,6 +534,7 @@
           <a href="/dashboard">Dashboard</a>
         </nav>
         <div>
+          <div style="margin-bottom:.25rem">Named insureds &amp; PII stripped before any LLM API call &mdash; every section.</div>
           <div style="margin-bottom:.25rem">AI-native underwriting for carriers, MGAs &amp; aggregators.</div>
           <div>&copy; 2026 Rytera Inc. All rights reserved.</div>
         </div>

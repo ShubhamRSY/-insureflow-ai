@@ -118,6 +118,7 @@
               <a href="/#why">Why Rytera</a>
               <a href="/#effect">The effect</a>
               <a href="/#keywords">Keywords</a>
+              <a href="/#privacy">De-identification</a>
             </div>
           </div>
           <div class="nav-item">
@@ -136,6 +137,7 @@
               <a href="/platform#agentic">Agentic workbench</a>
               <a href="/platform#features">Deep-dive verticals</a>
               <a href="/platform#capabilities">Governance &amp; audit</a>
+              <a href="/platform#companies">Company panel</a>
             </div>
           </div>
           <div class="nav-item">
@@ -145,6 +147,7 @@
               <a href="/technology#zta">Zero Token Architecture</a>
               <a href="/technology#how-it-works">Pipeline</a>
               <a href="/technology#security">Security &amp; audit</a>
+              <a href="/technology#privacy">De-identification</a>
               <a href="/technology#observability">Observability</a>
             </div>
           </div>
@@ -157,7 +160,7 @@
               <a href="/underwriting#ratemaking">Ratemaking</a>
               <p class="nav-drop-label">Insurance book</p>
               <a href="/dashboard/insurance/sections/life">Life <span class="nav-pill live">Live</span></a>
-              <a href="/dashboard/insurance/sections/health">Health <span class="nav-pill">Catalog</span></a>
+              <a href="/dashboard/insurance/sections/health">Health <span class="nav-pill live">Live</span></a>
               <a href="/dashboard/insurance/sections/general">General / Non-Life</a>
               <a href="/dashboard/insurance/sections/commercial">Commercial <span class="nav-pill live">Live</span></a>
               <a href="/dashboard/insurance/sections/specialty">Specialty</a>
@@ -201,6 +204,7 @@
         <a href="/#why">Why Rytera</a>
         <a href="/#effect">The effect</a>
         <a href="/#keywords">Keywords</a>
+        <a href="/#privacy">De-identification</a>
       </details>
       <details class="nav-acc">
         <summary>Pricing</summary>
@@ -215,6 +219,7 @@
         <a href="/platform#agentic">Agentic workbench</a>
         <a href="/platform#features">Deep-dive verticals</a>
         <a href="/platform#capabilities">Governance &amp; audit</a>
+        <a href="/platform#companies">Company panel</a>
       </details>
       <details class="nav-acc">
         <summary>Technology</summary>
@@ -222,6 +227,7 @@
         <a href="/technology#zta">Zero Token Architecture</a>
         <a href="/technology#how-it-works">Pipeline</a>
         <a href="/technology#security">Security &amp; audit</a>
+        <a href="/technology#privacy">De-identification</a>
         <a href="/technology#observability">Observability</a>
       </details>
       <details class="nav-acc">
@@ -352,7 +358,7 @@
         <div class="tab-panel reveal" id="tab-personal" role="tabpanel">
           <div class="feature-grid">
             <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-heart-pulse"/></svg></span><h3>Life &mdash; term live</h3><p>Level, decreasing, mortgage, ROP, group, and credit life with paramed / APS gates. Whole, ULIP, endowment, and annuity stay catalog until filed.</p></div>
-            <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-shield"/></svg></span><h3>Health &mdash; 37 products</h3><p>Individual, family floater, maternity, OPD, CI, senior, group, top-up, PA, and disability. Distinct UW per leaf. Catalog-only until a filed health manual exists.</p></div>
+            <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-shield"/></svg></span><h3>Health &mdash; 37 products</h3><p>Individual, family floater, maternity, OPD, CI, senior, group, top-up, PA, and disability. Distinct UW per leaf. Live from the filed health manual (HLTH-2026-01); we do not invent a premium.</p></div>
             <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-car"/></svg></span><h3>General / non-life &mdash; 31 products</h3><p>Motor TP vs comprehensive, home structure vs contents, travel domestic vs international, cargo vs hull, fire, liability, cyber. Per-leaf docs, not generic KYC.</p></div>
             <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-home"/></svg></span><h3>Homeowners &amp; auto</h3><p>HO-3, CLUE, MVR, and inspection scoring with filing-grade state rate manuals when your book is loaded.</p></div>
           </div>
@@ -375,6 +381,26 @@
         </div>
       </section>
 
+      <section id="companies">
+        <div class="reveal">
+          <p class="section-label">Company panel</p>
+          <h2>Choose the insurance company. Then underwrite.</h2>
+          <p class="section-desc">Every file is for someone&rsquo;s paper. Pick the writing company from your appointed panel &mdash; Meridian Mutual, Harbor Casualty, or a carrier you add. Rytera does not invent a market appointment you do not have. Rating still uses the loaded rate book.</p>
+        </div>
+        <div class="keyword-strip reveal" aria-label="Example appointed companies">
+          <span>InsureFlow Pilot Carrier</span>
+          <span>Meridian Mutual</span>
+          <span>Harbor Casualty</span>
+          <span>Northwind Indemnity</span>
+          <span>Pacific Coast Assurance</span>
+          <span>Add your appointed company</span>
+        </div>
+        <div class="feature-grid reveal" style="margin-top:1.6rem">
+          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-building"/></svg></span><h3>Your panel, your choice</h3><p>Line UW picks whose paper the file is for before the pipeline runs. The company is stamped on the job, the memo, and the audit bundle.</p></div>
+          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-list-checks"/></svg></span><h3>Add a company anytime</h3><p>MGAs and multi-company carriers add appointed names in Settings. Same desk, 12 sections, whichever company the file needs.</p></div>
+        </div>
+      </section>
+
       <section id="capabilities">
         <div class="reveal">
           <p class="section-label">Platform capabilities</p>
@@ -392,8 +418,8 @@
           </div>
           <div class="bento-card ac-green">
             <p class="bento-kicker"><svg class="ico"><use href="#i-lock"/></svg> Privacy</p>
-            <h3>PII redaction</h3>
-            <p>Automated SSN, EIN, and DOB detection with document redaction before packages enter the pilot lane.</p>
+            <h3>Named insureds &amp; PII stripped first</h3>
+            <p>Named insureds, SSNs, EINs, and DOBs are stripped before any LLM API call &mdash; every insurance section, mortgage, and lending. Deterministic UW still sees the file. The model does not.</p>
           </div>
           <div class="bento-card ac-sky">
             <p class="bento-kicker"><svg class="ico"><use href="#i-cable"/></svg> Intake</p>
@@ -453,6 +479,14 @@
         </div>
       </section>
 
+      <section id="privacy" class="privacy-band">
+        <div class="reveal">
+          <p class="section-label">De-identification</p>
+          <h2>Named insureds never leave the gate.</h2>
+          <p class="section-desc">If anyone gives us real files, named insureds and PII are stripped before we touch them with any LLM API. Same gate on all 12 insurance sections, mortgage, and lending. Deterministic UW still sees the file. The model does not.</p>
+        </div>
+      </section>
+
       <section id="contact">
         <div class="contact-box reveal">
           <p class="section-label" style="justify-content:center;margin-left:auto;margin-right:auto;">Ready when you are</p>
@@ -487,6 +521,7 @@
           <a href="/dashboard">Dashboard</a>
         </nav>
         <div>
+          <div style="margin-bottom:.25rem">Named insureds &amp; PII stripped before any LLM API call &mdash; every section.</div>
           <div style="margin-bottom:.25rem">AI-native underwriting for carriers, MGAs &amp; aggregators.</div>
           <div>&copy; 2026 Rytera Inc. All rights reserved.</div>
         </div>

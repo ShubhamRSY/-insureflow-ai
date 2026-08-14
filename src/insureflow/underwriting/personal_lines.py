@@ -385,6 +385,12 @@ def parse_insurance_line(value: str | None) -> InsuranceLine | None:
         "cpp": InsuranceLine.COMMERCIAL_PACKAGE,
         "commercial_package": InsuranceLine.COMMERCIAL_PACKAGE,
         "package": InsuranceLine.COMMERCIAL_PACKAGE,
+        "pollution": InsuranceLine.POLLUTION,
+        "flood": InsuranceLine.FLOOD,
+        "earthquake": InsuranceLine.EARTHQUAKE,
+        "k_and_r": InsuranceLine.KIDNAP_RANSOM,
+        "knr": InsuranceLine.KIDNAP_RANSOM,
+        "legal_expenses": InsuranceLine.LEGAL_EXPENSE,
     }
     if normalized in aliases:
         return aliases[normalized]

@@ -1,0 +1,288 @@
+{
+  "filing_id": "GNR-SPC-2026-01",
+  "product": "General Specialty — Crop, Livestock, Pet, Event, Title, Mortgage, Provider Channels",
+  "carrier": "Filed General Non-Life Rate Manual",
+  "serff_tracking": "SERFF-GI-2026-SPC-001",
+  "effective_date": "2026-01-01",
+  "state_version": "IND-ALL",
+  "currency": "INR",
+  "rating_basis": "Rate per 10 lakh (1,000,000 INR) of sum insured / cover limit, adjusted by per-leaf specialty risk band. Indemnity-capped leaves apply a 1.0x limit-to-declared-exposure cap.",
+  "rating_engine": "general_specialty_filing",
+  "eligibility": {
+    "min_limit": 100000,
+    "max_limit": 500000000,
+    "min_declared_exposure": 0
+  },
+  "products": {
+    "crop_yield": {
+      "name": "Yield-based Crop Insurance (PMFBY-type)",
+      "rate_basis": "limit",
+      "exposure_key": "land_area",
+      "exposure_label": "Sum Insured per Area",
+      "exposure_labels": ["sum insured per acre", "sum insured per hectare", "land area value"],
+      "limit_labels": ["sum insured", "cover limit", "indemnity limit", "crop cover"],
+      "unit": 1000000,
+      "coverages": {
+        "default": { "base_rate": 1500, "min_premium": 2000, "expense_constant": 300 }
+      },
+      "risk_class_factors": { "high": 1.5, "medium": 1.15, "low": 1.0 },
+      "limit_factors": [
+        { "max_limit": 1000000, "factor": 1.0 },
+        { "max_limit": 5000000, "factor": 0.97 },
+        { "max_limit": 25000000, "factor": 0.94 },
+        { "max_limit": 100000000, "factor": 0.9 }
+      ],
+      "deductible_factors": [
+        { "max_deductible": 100000, "factor": 1.0 },
+        { "max_deductible": 500000, "factor": 0.95 }
+      ],
+      "claims_factors": { "none": 1.0, "medium": 1.15, "high": 1.3 }
+    },
+    "crop_weather": {
+      "name": "Weather-based Crop Insurance",
+      "rate_basis": "limit",
+      "exposure_key": "land_area",
+      "exposure_label": "Sum Insured per Area",
+      "exposure_labels": ["sum insured per acre", "sum insured per hectare"],
+      "limit_labels": ["sum insured", "cover limit", "indemnity limit", "crop cover"],
+      "unit": 1000000,
+      "coverages": {
+        "default": { "base_rate": 1300, "min_premium": 1500, "expense_constant": 300 }
+      },
+      "risk_class_factors": { "high": 1.55, "medium": 1.15, "low": 1.0 },
+      "limit_factors": [
+        { "max_limit": 1000000, "factor": 1.0 },
+        { "max_limit": 5000000, "factor": 0.97 },
+        { "max_limit": 25000000, "factor": 0.94 },
+        { "max_limit": 100000000, "factor": 0.9 }
+      ],
+      "deductible_factors": [
+        { "max_deductible": 100000, "factor": 1.0 },
+        { "max_deductible": 500000, "factor": 0.95 }
+      ],
+      "claims_factors": { "none": 1.0, "medium": 1.15, "high": 1.3 }
+    },
+    "livestock_cattle": {
+      "name": "Livestock / Cattle Insurance",
+      "rate_basis": "limit",
+      "exposure_key": "animal_value",
+      "exposure_label": "Animal Value",
+      "exposure_labels": ["animal value", "valuation certificate value", "assessed value", "declared animal value"],
+      "limit_labels": ["sum insured", "cover limit", "indemnity limit", "animal cover"],
+      "limit_exposure_ratio_cap": 1.0,
+      "unit": 1000000,
+      "coverages": {
+        "default": { "base_rate": 2500, "min_premium": 3000, "expense_constant": 500 }
+      },
+      "risk_class_factors": { "high": 1.6, "medium": 1.2, "low": 1.0 },
+      "limit_factors": [
+        { "max_limit": 1000000, "factor": 1.0 },
+        { "max_limit": 5000000, "factor": 0.96 },
+        { "max_limit": 25000000, "factor": 0.93 },
+        { "max_limit": 100000000, "factor": 0.9 }
+      ],
+      "deductible_factors": [
+        { "max_deductible": 100000, "factor": 1.0 },
+        { "max_deductible": 500000, "factor": 0.95 }
+      ],
+      "claims_factors": { "none": 1.0, "medium": 1.2, "high": 1.35 }
+    },
+    "pet_insurance": {
+      "name": "Pet Insurance",
+      "rate_basis": "limit",
+      "exposure_key": "pet_value",
+      "exposure_label": "Pet Value",
+      "exposure_labels": ["pet value", "adoption value", "purchase value"],
+      "limit_labels": ["sum insured", "cover limit", "annual limit", "pet cover"],
+      "unit": 1000000,
+      "coverages": {
+        "default": { "base_rate": 1500, "min_premium": 1200, "expense_constant": 300 }
+      },
+      "risk_class_factors": { "high": 1.7, "medium": 1.25, "low": 1.0 },
+      "limit_factors": [
+        { "max_limit": 1000000, "factor": 1.0 },
+        { "max_limit": 5000000, "factor": 0.96 },
+        { "max_limit": 25000000, "factor": 0.93 },
+        { "max_limit": 100000000, "factor": 0.9 }
+      ],
+      "deductible_factors": [
+        { "max_deductible": 100000, "factor": 1.0 },
+        { "max_deductible": 500000, "factor": 0.95 }
+      ],
+      "claims_factors": { "none": 1.0, "medium": 1.2, "high": 1.35 }
+    },
+    "wedding_insurance": {
+      "name": "Wedding Insurance",
+      "rate_basis": "limit",
+      "exposure_key": "event_budget",
+      "exposure_label": "Event Budget",
+      "exposure_labels": ["event budget", "wedding budget", "budget breakdown", "total event cost"],
+      "limit_labels": ["sum insured", "cover limit", "indemnity limit", "wedding cover"],
+      "limit_exposure_ratio_cap": 1.0,
+      "unit": 1000000,
+      "coverages": {
+        "default": { "base_rate": 1200, "min_premium": 4000, "expense_constant": 500 }
+      },
+      "risk_class_factors": { "high": 1.5, "medium": 1.15, "low": 1.0 },
+      "limit_factors": [
+        { "max_limit": 1000000, "factor": 1.0 },
+        { "max_limit": 5000000, "factor": 0.97 },
+        { "max_limit": 25000000, "factor": 0.94 },
+        { "max_limit": 100000000, "factor": 0.9 }
+      ],
+      "deductible_factors": [
+        { "max_deductible": 100000, "factor": 1.0 },
+        { "max_deductible": 500000, "factor": 0.95 }
+      ],
+      "claims_factors": { "none": 1.0, "medium": 1.15, "high": 1.3 }
+    },
+    "concert_event_insurance": {
+      "name": "Event / Concert Insurance",
+      "rate_basis": "limit",
+      "exposure_key": "event_budget",
+      "exposure_label": "Event Budget",
+      "exposure_labels": ["event budget", "production budget", "ticket sales projection", "total event cost"],
+      "limit_labels": ["sum insured", "cover limit", "indemnity limit", "event cover"],
+      "limit_exposure_ratio_cap": 1.0,
+      "unit": 1000000,
+      "coverages": {
+        "default": { "base_rate": 1600, "min_premium": 6000, "expense_constant": 500 }
+      },
+      "risk_class_factors": { "high": 1.7, "medium": 1.3, "low": 1.0 },
+      "limit_factors": [
+        { "max_limit": 1000000, "factor": 1.0 },
+        { "max_limit": 5000000, "factor": 0.97 },
+        { "max_limit": 25000000, "factor": 0.94 },
+        { "max_limit": 100000000, "factor": 0.9 }
+      ],
+      "deductible_factors": [
+        { "max_deductible": 100000, "factor": 1.0 },
+        { "max_deductible": 500000, "factor": 0.95 }
+      ],
+      "claims_factors": { "none": 1.0, "medium": 1.2, "high": 1.35 }
+    },
+    "title_insurance_gi": {
+      "name": "Title Insurance",
+      "rate_basis": "limit",
+      "exposure_key": "property_value",
+      "exposure_label": "Property Value",
+      "exposure_labels": ["property value", "property consideration", "sale consideration", "market value"],
+      "limit_labels": ["sum insured", "cover limit", "title cover", "indemnity limit"],
+      "limit_exposure_ratio_cap": 1.0,
+      "unit": 1000000,
+      "coverages": {
+        "default": { "base_rate": 900, "min_premium": 8000, "expense_constant": 700 }
+      },
+      "risk_class_factors": { "high": 1.6, "medium": 1.2, "low": 1.0 },
+      "limit_factors": [
+        { "max_limit": 1000000, "factor": 1.0 },
+        { "max_limit": 5000000, "factor": 0.97 },
+        { "max_limit": 25000000, "factor": 0.94 },
+        { "max_limit": 100000000, "factor": 0.9 }
+      ],
+      "deductible_factors": [
+        { "max_deductible": 100000, "factor": 1.0 },
+        { "max_deductible": 500000, "factor": 0.95 }
+      ],
+      "claims_factors": { "none": 1.0, "medium": 1.2, "high": 1.35 }
+    },
+    "mortgage_insurance_gi": {
+      "name": "Mortgage Insurance",
+      "rate_basis": "limit",
+      "exposure_key": "loan_outstanding",
+      "exposure_label": "Loan Outstanding",
+      "exposure_labels": ["loan outstanding", "outstanding principal", "loan amount", "mortgage amount"],
+      "limit_labels": ["sum insured", "cover limit", "mortgage cover", "indemnity limit"],
+      "limit_exposure_ratio_cap": 1.0,
+      "unit": 1000000,
+      "coverages": {
+        "default": { "base_rate": 1400, "min_premium": 2500, "expense_constant": 400 }
+      },
+      "risk_class_factors": { "high": 1.6, "medium": 1.2, "low": 1.0 },
+      "limit_factors": [
+        { "max_limit": 1000000, "factor": 1.0 },
+        { "max_limit": 5000000, "factor": 0.97 },
+        { "max_limit": 25000000, "factor": 0.94 },
+        { "max_limit": 100000000, "factor": 0.9 }
+      ],
+      "deductible_factors": [
+        { "max_deductible": 100000, "factor": 1.0 },
+        { "max_deductible": 500000, "factor": 0.95 }
+      ],
+      "claims_factors": { "none": 1.0, "medium": 1.2, "high": 1.35 }
+    },
+    "insurer_psu": {
+      "name": "Public Sector Insurer Channel",
+      "rate_basis": "limit",
+      "exposure_key": "channel_limit",
+      "exposure_label": "Channel Limit",
+      "exposure_labels": ["channel limit", "policy limit", "scheme sum insured"],
+      "limit_labels": ["sum insured", "cover limit", "policy limit", "scheme limit"],
+      "unit": 1000000,
+      "coverages": {
+        "default": { "base_rate": 250, "min_premium": 1000, "expense_constant": 200 }
+      },
+      "risk_class_factors": { "high": 1.3, "medium": 1.15, "low": 1.0 },
+      "limit_factors": [
+        { "max_limit": 1000000, "factor": 1.0 },
+        { "max_limit": 5000000, "factor": 0.98 },
+        { "max_limit": 25000000, "factor": 0.96 },
+        { "max_limit": 100000000, "factor": 0.93 }
+      ],
+      "deductible_factors": [
+        { "max_deductible": 100000, "factor": 1.0 },
+        { "max_deductible": 500000, "factor": 0.98 }
+      ],
+      "claims_factors": { "none": 1.0, "medium": 1.1, "high": 1.2 }
+    },
+    "insurer_private": {
+      "name": "Private Insurer Channel",
+      "rate_basis": "limit",
+      "exposure_key": "channel_limit",
+      "exposure_label": "Channel Limit",
+      "exposure_labels": ["channel limit", "policy limit", "sum insured"],
+      "limit_labels": ["sum insured", "cover limit", "policy limit"],
+      "unit": 1000000,
+      "coverages": {
+        "default": { "base_rate": 400, "min_premium": 1000, "expense_constant": 200 }
+      },
+      "risk_class_factors": { "high": 1.5, "medium": 1.2, "low": 1.0 },
+      "limit_factors": [
+        { "max_limit": 1000000, "factor": 1.0 },
+        { "max_limit": 5000000, "factor": 0.98 },
+        { "max_limit": 25000000, "factor": 0.96 },
+        { "max_limit": 100000000, "factor": 0.93 }
+      ],
+      "deductible_factors": [
+        { "max_deductible": 100000, "factor": 1.0 },
+        { "max_deductible": 500000, "factor": 0.98 }
+      ],
+      "claims_factors": { "none": 1.0, "medium": 1.15, "high": 1.25 }
+    },
+    "reinsurance_treaty": {
+      "name": "Reinsurance Treaty (B2B)",
+      "rate_basis": "limit",
+      "exposure_key": "portfolio_value",
+      "exposure_label": "Cedant Portfolio Value",
+      "exposure_labels": ["portfolio value", "gross premium", "net retained", "cedant portfolio"],
+      "limit_labels": ["sum insured", "treaty limit", "cover limit", "session limit"],
+      "unit": 1000000,
+      "coverages": {
+        "default": { "base_rate": 1000, "min_premium": 100000, "expense_constant": 10000 }
+      },
+      "risk_class_factors": { "high": 1.8, "medium": 1.25, "low": 1.0 },
+      "limit_factors": [
+        { "max_limit": 1000000, "factor": 1.0 },
+        { "max_limit": 5000000, "factor": 0.97 },
+        { "max_limit": 25000000, "factor": 0.94 },
+        { "max_limit": 100000000, "factor": 0.9 },
+        { "max_limit": 500000000, "factor": 0.85 }
+      ],
+      "deductible_factors": [
+        { "max_deductible": 100000, "factor": 1.0 },
+        { "max_deductible": 500000, "factor": 0.95 }
+      ],
+      "claims_factors": { "none": 1.0, "medium": 1.2, "high": 1.4 }
+    }
+  }
+}

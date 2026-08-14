@@ -2090,7 +2090,9 @@ COMMERCIAL_LINES: list[dict[str, Any]] = [
 ]
 
 # Only products with a dedicated rater (or true property TIV+COPE) are live.
-# Aviation / K&R / crop / captive / E&S specialties stay catalog — parent-line proxies are not underwritable.
+# Extended taxonomy leaves (aviation, catastrophe, pollution, K&R, political risk,
+# terrorism, legal expense) rate from their carrier leaf filings. Pure parent-line
+# proxies that remain catalog are crop / captive / E&S specialties.
 LIVE_COMMERCIAL_PRODUCT_IDS = frozenset(
     {
         "property_bi",
@@ -2122,6 +2124,14 @@ LIVE_COMMERCIAL_PRODUCT_IDS = frozenset(
         "construction",
         "bop",
         "cpp",
+        "aviation",
+        "flood_commercial",
+        "earthquake_commercial",
+        "pollution",
+        "kidnap_ransom",
+        "political_risk",
+        "terrorism",
+        "legal_expense",
     }
 )
 for _ln in COMMERCIAL_LINES:

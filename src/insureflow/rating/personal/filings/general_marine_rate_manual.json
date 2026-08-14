@@ -1,0 +1,68 @@
+{
+  "filing_id": "GNR-MAR-2026-01",
+  "product": "General Marine — Cargo / Hull",
+  "carrier": "Filed General Non-Life Rate Manual",
+  "serff_tracking": "SERFF-GI-2026-MAR-001",
+  "effective_date": "2026-01-01",
+  "state_version": "IND-ALL",
+  "currency": "INR",
+  "rating_basis": "Cargo: rate per 10 lakh (1,000,000 INR) of declared cargo value. Hull: rate per 10 lakh of hull insured value.",
+  "rating_engine": "general_marine_filing",
+  "eligibility": {
+    "min_limit": 1000000,
+    "max_limit": 50000000,
+    "min_declared_exposure": 100000
+  },
+  "products": {
+    "marine_cargo": {
+      "name": "Marine Cargo",
+      "rate_basis": "exposure",
+      "exposure_key": "cargo_value",
+      "exposure_label": "Cargo Value",
+      "exposure_labels": ["cargo value", "invoice value", "goods value", "declared cargo value", "consignment value"],
+      "limit_labels": ["sum insured", "cargo limit", "cover limit", "indemnity limit"],
+      "limit_exposure_ratio_cap": 1.0,
+      "unit": 1000000,
+      "coverages": {
+        "default": { "base_rate": 600, "min_premium": 3000, "expense_constant": 400 }
+      },
+      "risk_class_factors": { "high": 1.9, "medium": 1.25, "low": 1.0 },
+      "limit_factors": [
+        { "max_limit": 10000000, "factor": 1.0 },
+        { "max_limit": 25000000, "factor": 0.95 },
+        { "max_limit": 50000000, "factor": 0.9 }
+      ],
+      "deductible_factors": [
+        { "max_deductible": 50000, "factor": 1.0 },
+        { "max_deductible": 250000, "factor": 0.9 },
+        { "max_deductible": 500000, "factor": 0.85 }
+      ],
+      "claims_factors": { "none": 1.0, "medium": 1.2, "high": 1.35 }
+    },
+    "marine_hull": {
+      "name": "Marine Hull",
+      "rate_basis": "limit",
+      "exposure_key": "revenue",
+      "exposure_label": "Declared Revenue",
+      "exposure_labels": ["revenue", "annual revenue", "gross receipts", "charter income", "turnover"],
+      "limit_labels": ["sum insured", "hull value", "hull insured value", "insured value", "vessel value", "vessel valuation"],
+      "limit_exposure_ratio_cap": 1.0,
+      "unit": 1000000,
+      "coverages": {
+        "default": { "base_rate": 1800, "min_premium": 12000, "expense_constant": 800 }
+      },
+      "risk_class_factors": { "high": 1.85, "medium": 1.15, "low": 1.0 },
+      "limit_factors": [
+        { "max_limit": 10000000, "factor": 1.0 },
+        { "max_limit": 25000000, "factor": 0.92 },
+        { "max_limit": 50000000, "factor": 0.85 }
+      ],
+      "deductible_factors": [
+        { "max_deductible": 100000, "factor": 1.0 },
+        { "max_deductible": 500000, "factor": 0.9 },
+        { "max_deductible": 1000000, "factor": 0.82 }
+      ],
+      "claims_factors": { "none": 1.0, "medium": 1.2, "high": 1.35 }
+    }
+  }
+}

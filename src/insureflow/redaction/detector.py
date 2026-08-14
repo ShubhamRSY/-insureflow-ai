@@ -81,9 +81,27 @@ PATTERNS: dict[PIICategory, list[re.Pattern[str]]] = {
 }
 
 
+# Labels are case-insensitive; the name/entity itself must still be capitalized
+# so we do not swallow ordinary sentences like "the insured must provide".
+# Name tokens do not include '.' so "Santos. Applicant" cannot glue two labels.
+_NAME_TOKEN = r"[A-Z][A-Za-z0-9'&-]+"
 NAME_PATTERN = re.compile(
-    r"\b(?:Patient|Claimant|Insured|Employee|Dr\.|Mr\.|Mrs\.|Ms\.)\s+"
-    r"[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+\b",
+    r"\b(?i:Named\s+Insureds?"
+    r"|Additional\s+Named\s+Insureds?"
+    r"|Insured(?:'s)?\s+Name"
+    r"|Policyholders?"
+    r"|Proposers?"
+    r"|Applicants?"
+    r"|Life\s+Assured"
+    r"|Assured"
+    r"|Beneficiar(?:y|ies)"
+    r"|Patients?"
+    r"|Claimants?"
+    r"|Insureds?"
+    r"|Employees?"
+    r"|Dr\.|Mr\.|Mrs\.|Ms\.)"
+    r"\s*[:#]?\s+"
+    rf"{_NAME_TOKEN}(?:\s+{_NAME_TOKEN})+\b",
 )
 
 

@@ -44,6 +44,42 @@ def auto_manual() -> dict[str, Any]:
     return load_manual("auto_rate_manual.json")
 
 
+def general_liability_manual() -> dict[str, Any]:
+    return load_manual("general_liability_rate_manual.json")
+
+
+def general_cyber_manual() -> dict[str, Any]:
+    return load_manual("general_cyber_rate_manual.json")
+
+
+def general_marine_manual() -> dict[str, Any]:
+    return load_manual("general_marine_rate_manual.json")
+
+
+def general_fire_manual() -> dict[str, Any]:
+    return load_manual("general_fire_rate_manual.json")
+
+
+def general_travel_manual() -> dict[str, Any]:
+    return load_manual("general_travel_rate_manual.json")
+
+
+def general_home_manual() -> dict[str, Any]:
+    return load_manual("general_home_rate_manual.json")
+
+
+def general_motor_manual() -> dict[str, Any]:
+    return load_manual("general_motor_rate_manual.json")
+
+
+def general_specialty_manual() -> dict[str, Any]:
+    return load_manual("general_specialty_rate_manual.json")
+
+
+def general_health_manual() -> dict[str, Any]:
+    return load_manual("general_health_rate_manual.json")
+
+
 def life_manual() -> dict[str, Any]:
     return load_manual("life_rate_manual.json")
 

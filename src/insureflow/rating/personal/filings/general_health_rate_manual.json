@@ -1,0 +1,273 @@
+{
+  "filing_id": "HLTH-2026-01",
+  "product": "Retail Health — Mediclaim, Family Floater, Critical Illness, Senior, Group, Top-up, Personal Accident, Disability",
+  "carrier": "Filed Health Rate Manual",
+  "serff_tracking": "SERFF-HLTH-2026-001",
+  "effective_date": "2026-01-01",
+  "state_version": "IND-ALL",
+  "currency": "INR",
+  "rating_basis": "Rate per ₹1,000 of sum insured per annum, adjusted for attained-age band, sum-insured band, deductible band and claim history. Disability-income leaves rate on a monthly-income-replacement basis; hospital-cash leaves annualize the daily benefit.",
+  "rating_engine": "health_filing",
+  "eligibility": {
+    "min_sum_insured": 100000,
+    "max_sum_insured": 100000000,
+    "min_age": 18,
+    "max_age": 75
+  },
+  "age_factors": [
+    { "max_age": 25, "factor": 0.85 },
+    { "max_age": 35, "factor": 0.9 },
+    { "max_age": 45, "factor": 1.0 },
+    { "max_age": 55, "factor": 1.2 },
+    { "max_age": 65, "factor": 1.5 },
+    { "max_age": 75, "factor": 2.0 }
+  ],
+  "sum_insured_factors": [
+    { "max_sum_insured": 300000, "factor": 1.0 },
+    { "max_sum_insured": 1000000, "factor": 0.95 },
+    { "max_sum_insured": 5000000, "factor": 0.85 },
+    { "max_sum_insured": 100000000, "factor": 0.75 }
+  ],
+  "deductible_factors": [
+    { "max_deductible": 0, "factor": 1.0 },
+    { "max_deductible": 5000, "factor": 0.95 },
+    { "max_deductible": 25000, "factor": 0.85 }
+  ],
+  "claims_factors": { "none": 1.0, "medium": 1.1, "high": 1.2 },
+  "products": {
+    "individual_basic": {
+      "name": "Individual Basic Mediclaim",
+      "base_rate": 6.0,
+      "min_premium": 2500,
+      "max_age": 60,
+      "si_labels": ["sum insured", "cover amount", "sum assured", "annual limit", "mediclaim cover"]
+    },
+    "individual_comprehensive": {
+      "name": "Individual Comprehensive Mediclaim",
+      "base_rate": 8.0,
+      "min_premium": 4000,
+      "si_labels": ["sum insured", "cover amount", "sum assured", "annual limit"]
+    },
+    "maternity_inclusive": {
+      "name": "Maternity-Inclusive Mediclaim",
+      "base_rate": 9.5,
+      "min_premium": 5000,
+      "si_labels": ["sum insured", "maternity cover", "cover amount", "annual limit"]
+    },
+    "opd_cover": {
+      "name": "OPD Add-on Cover",
+      "base_rate": 12.0,
+      "min_premium": 1500,
+      "si_labels": ["opd limit", "opd cover", "sum insured", "annual limit"]
+    },
+    "ulip_health": {
+      "name": "Unit-Linked Health Plan",
+      "base_rate": 6.5,
+      "min_premium": 5000,
+      "si_labels": ["sum insured", "sum assured", "cover amount", "annual limit"]
+    },
+    "family_floater_standard": {
+      "name": "Family Floater",
+      "base_rate": 6.5,
+      "min_premium": 4500,
+      "si_labels": ["sum insured", "floater cover", "cover amount", "family sum insured"]
+    },
+    "family_floater_parent": {
+      "name": "Family Floater with Parents",
+      "base_rate": 9.0,
+      "min_premium": 5500,
+      "si_labels": ["sum insured", "floater cover", "cover amount", "family sum insured"]
+    },
+    "family_floater_multiyear": {
+      "name": "Multi-year Family Floater",
+      "base_rate": 6.0,
+      "min_premium": 8000,
+      "si_labels": ["sum insured", "floater cover", "cover amount"]
+    },
+    "family_floater_restore": {
+      "name": "Family Floater with Sum Restore",
+      "base_rate": 7.5,
+      "min_premium": 5000,
+      "si_labels": ["sum insured", "floater cover", "cover amount"]
+    },
+    "critical_illness_standalone": {
+      "name": "Standalone Critical Illness",
+      "base_rate": 8.5,
+      "min_premium": 3500,
+      "si_labels": ["sum insured", "ci cover", "critical illness cover", "cover amount"]
+    },
+    "critical_illness_rider": {
+      "name": "Critical Illness Rider",
+      "base_rate": 6.0,
+      "min_premium": 1500,
+      "si_labels": ["sum insured", "ci cover", "rider sum assured", "cover amount"]
+    },
+    "disease_specific": {
+      "name": "Disease-Specific Plan",
+      "base_rate": 7.0,
+      "min_premium": 2500,
+      "si_labels": ["sum insured", "disease cover", "cover amount"]
+    },
+    "critical_illness_multistage": {
+      "name": "Multi-stage Critical Illness",
+      "base_rate": 10.0,
+      "min_premium": 4000,
+      "si_labels": ["sum insured", "ci cover", "cover amount"]
+    },
+    "senior_standard": {
+      "name": "Senior Citizen Mediclaim",
+      "base_rate": 12.0,
+      "min_premium": 6000,
+      "min_age": 60,
+      "si_labels": ["sum insured", "cover amount", "senior cover", "annual limit"]
+    },
+    "senior_preexisting": {
+      "name": "Senior Preexisting Condition Plan",
+      "base_rate": 15.0,
+      "min_premium": 8000,
+      "min_age": 60,
+      "si_labels": ["sum insured", "cover amount", "senior cover"]
+    },
+    "senior_no_medical": {
+      "name": "Senior No-Medical Plan",
+      "base_rate": 16.0,
+      "min_premium": 9000,
+      "min_age": 60,
+      "si_labels": ["sum insured", "cover amount", "senior cover"]
+    },
+    "senior_topup": {
+      "name": "Senior Top-up",
+      "base_rate": 7.0,
+      "min_premium": 3000,
+      "min_age": 60,
+      "si_labels": ["sum insured", "topup cover", "cover amount"]
+    },
+    "group_employer_mediclaim": {
+      "name": "Group Employer Mediclaim",
+      "base_rate": 4.5,
+      "min_premium": 20000,
+      "si_labels": ["sum insured", "sum insured per member", "member cover", "group cover"]
+    },
+    "group_association": {
+      "name": "Group / Association Health",
+      "base_rate": 5.0,
+      "min_premium": 15000,
+      "si_labels": ["sum insured", "sum insured per member", "member cover"]
+    },
+    "group_government_psu": {
+      "name": "Government / PSU Group Health",
+      "base_rate": 4.0,
+      "min_premium": 25000,
+      "si_labels": ["sum insured", "sum insured per member", "member cover"]
+    },
+    "group_pa_health_combo": {
+      "name": "Group PA + Health Combo",
+      "base_rate": 5.5,
+      "min_premium": 20000,
+      "si_labels": ["sum insured", "sum insured per member", "member cover"]
+    },
+    "topup_plan": {
+      "name": "Top-up Plan",
+      "base_rate": 3.5,
+      "min_premium": 1500,
+      "si_labels": ["sum insured", "topup cover", "cover amount", "aggregate limit"]
+    },
+    "super_topup_plan": {
+      "name": "Super Top-up Plan",
+      "base_rate": 2.5,
+      "min_premium": 1500,
+      "si_labels": ["sum insured", "topup cover", "cover amount", "aggregate limit"]
+    },
+    "pa_individual": {
+      "name": "Personal Accident — Individual",
+      "base_rate": 2.5,
+      "min_premium": 1000,
+      "si_labels": ["sum insured", "accident cover", "pa cover", "capital sum insured"]
+    },
+    "pa_family": {
+      "name": "Personal Accident — Family",
+      "base_rate": 2.0,
+      "min_premium": 1500,
+      "si_labels": ["sum insured", "accident cover", "family pa cover"]
+    },
+    "pa_group": {
+      "name": "Personal Accident — Group",
+      "base_rate": 1.5,
+      "min_premium": 10000,
+      "si_labels": ["sum insured", "accident cover", "sum insured per member"]
+    },
+    "pa_add": {
+      "name": "Accidental Death / Dismemberment (PA Add-on)",
+      "base_rate": 1.0,
+      "min_premium": 500,
+      "si_labels": ["sum insured", "accident cover", "add cover", "capital sum insured"]
+    },
+    "disability_ptd": {
+      "name": "Permanent Total Disability",
+      "base_rate": 1.5,
+      "min_premium": 800,
+      "si_labels": ["sum insured", "disability cover", "ptd cover"]
+    },
+    "disability_ppd": {
+      "name": "Permanent Partial Disability",
+      "base_rate": 1.0,
+      "min_premium": 800,
+      "si_labels": ["sum insured", "disability cover", "ppd cover"]
+    },
+    "disability_ttd": {
+      "name": "Temporary Total Disability",
+      "base_rate": 0.75,
+      "min_premium": 800,
+      "si_labels": ["sum insured", "disability cover", "ttd cover"]
+    },
+    "disability_income": {
+      "name": "Disability Income Replacement",
+      "income_basis": true,
+      "coverage_ratio": 0.75,
+      "benefit_months": 24,
+      "max_benefit_per_month": 200000,
+      "base_rate": 2.5,
+      "min_premium": 1500,
+      "income_labels": ["monthly income", "gross monthly income", "monthly salary"],
+      "annual_income_labels": ["annual income", "yearly income", "annual salary"]
+    },
+    "hospital_cash": {
+      "name": "Hospital Cash",
+      "daily_basis": true,
+      "annualization_factor": 365,
+      "base_rate": 1.2,
+      "min_premium": 1000,
+      "daily_labels": ["daily cash", "daily benefit", "hospital cash", "cash per day"]
+    },
+    "mediclaim_basic": {
+      "name": "Basic Mediclaim",
+      "base_rate": 5.5,
+      "min_premium": 2000,
+      "si_labels": ["sum insured", "cover amount", "annual limit", "mediclaim cover"]
+    },
+    "maternity_newborn_standalone": {
+      "name": "Maternity / Newborn Standalone",
+      "base_rate": 14.0,
+      "min_premium": 6000,
+      "si_labels": ["sum insured", "maternity cover", "newborn cover"]
+    },
+    "overseas_health": {
+      "name": "Overseas Health Insurance",
+      "base_rate": 10.0,
+      "min_premium": 4000,
+      "si_labels": ["sum insured", "overseas cover", "cover amount", "annual limit"]
+    },
+    "opd_only": {
+      "name": "OPD-only Reimbursement",
+      "base_rate": 12.0,
+      "min_premium": 1500,
+      "si_labels": ["opd limit", "opd cover", "sum insured"]
+    },
+    "wellness_savings": {
+      "name": "Health Savings / Wellness Plan",
+      "base_rate": 0.5,
+      "min_premium": 500,
+      "si_labels": ["sum insured", "wellness cover", "cashback limit"]
+    }
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "filing_id": "GNR-FIRE-2026-01",
+  "product": "General Fire — Residential / Commercial",
+  "carrier": "Filed General Non-Life Rate Manual",
+  "serff_tracking": "SERFF-GI-2026-FIR-001",
+  "effective_date": "2026-01-01",
+  "state_version": "IND-ALL",
+  "currency": "INR",
+  "rating_basis": "Rate per 10 lakh (1,000,000 INR) of sum insured; exposure is the declared property value (residential) or total asset value (commercial) used for the limit-cap check.",
+  "rating_engine": "general_fire_filing",
+  "eligibility": {
+    "min_limit": 1000000,
+    "max_limit": 50000000,
+    "min_declared_exposure": 100000
+  },
+  "products": {
+    "fire_residential": {
+      "name": "Standard Fire & Allied Perils — Residential",
+      "rate_basis": "limit",
+      "exposure_key": "property_value",
+      "exposure_label": "Property Value",
+      "exposure_labels": ["property value", "replacement cost", "rebuilding cost", "property valuation", "declared property value"],
+      "limit_labels": ["sum insured", "cover limit", "indemnity limit", "fire sum insured"],
+      "limit_exposure_ratio_cap": 1.0,
+      "unit": 1000000,
+      "coverages": {
+        "default": { "base_rate": 900, "min_premium": 2500, "expense_constant": 500 }
+      },
+      "risk_class_factors": { "high": 1.85, "medium": 1.15, "low": 1.0 },
+      "limit_factors": [
+        { "max_limit": 10000000, "factor": 1.0 },
+        { "max_limit": 25000000, "factor": 0.95 },
+        { "max_limit": 50000000, "factor": 0.9 }
+      ],
+      "deductible_factors": [
+        { "max_deductible": 50000, "factor": 1.0 },
+        { "max_deductible": 200000, "factor": 0.92 },
+        { "max_deductible": 500000, "factor": 0.85 }
+      ],
+      "claims_factors": { "none": 1.0, "medium": 1.2, "high": 1.35 }
+    },
+    "fire_commercial": {
+      "name": "Fire Insurance — Commercial / Industrial",
+      "rate_basis": "limit",
+      "exposure_key": "asset_value",
+      "exposure_label": "Total Asset Value",
+      "exposure_labels": ["asset value", "asset valuation", "total assets", "gross block", "building stock machinery value", "declared assets"],
+      "limit_labels": ["sum insured", "cover limit", "indemnity limit", "fire sum insured", "plant and machinery"],
+      "limit_exposure_ratio_cap": 1.0,
+      "unit": 1000000,
+      "coverages": {
+        "default": { "base_rate": 1400, "min_premium": 8000, "expense_constant": 1000 }
+      },
+      "risk_class_factors": { "high": 1.95, "medium": 1.25, "low": 1.0 },
+      "limit_factors": [
+        { "max_limit": 10000000, "factor": 1.0 },
+        { "max_limit": 25000000, "factor": 0.92 },
+        { "max_limit": 50000000, "factor": 0.85 }
+      ],
+      "deductible_factors": [
+        { "max_deductible": 100000, "factor": 1.0 },
+        { "max_deductible": 500000, "factor": 0.9 },
+        { "max_deductible": 1000000, "factor": 0.82 }
+      ],
+      "claims_factors": { "none": 1.0, "medium": 1.25, "high": 1.4 }
+    }
+  }
+}

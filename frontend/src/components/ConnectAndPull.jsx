@@ -32,6 +32,8 @@ export default function ConnectAndPull({
   productName = '',
   coverageName = '',
   commercialCategoryId = '',
+  insuranceCompanyId = '',
+  insuranceCompanyName = '',
   strictRelevance = true,
 }) {
   const [sources, setSources] = useState([]);
@@ -226,6 +228,8 @@ export default function ConnectAndPull({
         commercial_product_name: productName,
         commercial_coverage_name: coverageName,
         commercial_category_id: commercialCategoryId,
+        insurance_company_id: insuranceCompanyId,
+        insurance_company_name: insuranceCompanyName,
         strict_relevance: strictRelevance,
       });
       if (result.relevance?.irrelevant_count) {

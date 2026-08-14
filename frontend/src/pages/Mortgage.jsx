@@ -36,8 +36,8 @@ export default function MortgagePage({ presets, jobs, onRunDemo, onOpenJob, onRu
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Mortgage Underwriting</h1>
-          <p className="mt-2 text-sm text-slate-400 max-w-xl">
-            Income, credit, and property → decision + rate.
+          <p className="mt-2 max-w-xl text-sm text-slate-400">
+            Income, credit, and property → decision + rate. Named insureds and PII are stripped before any LLM API call.
           </p>
         </div>
         <button type="button" onClick={loadMortgageProducts} className="btn-secondary btn-sm text-xs">

@@ -587,6 +587,8 @@ class SubmissionRequest(BaseModel):
     commercial_product_name: Optional[str] = None
     commercial_coverage_name: Optional[str] = None
     commercial_category_id: Optional[str] = None
+    insurance_company_id: Optional[str] = None
+    insurance_company_name: Optional[str] = None
     use_llm: bool = True
     use_legacy_pipeline: bool = False
     use_celery: bool = False
@@ -1344,6 +1346,40 @@ def list_insurance_sources(
     }
 
 
+class InsuranceCompanyAddRequest(BaseModel):
+    name: str
+    naic: str = ""
+    notes: str = ""
+
+
+@app.get("/api/insurance/companies")
+def list_insurance_companies(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    from insureflow.insurance.companies import default_panel, list_companies
+
+    panel = default_panel()
+    return {
+        "companies": list_companies(current.org_id),
+        "description": panel.get("description") or "",
+        "org_id": current.org_id,
+    }
+
+
+@app.post("/api/insurance/companies")
+def add_insurance_company(
+    req: InsuranceCompanyAddRequest,
+    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+) -> dict[str, Any]:
+    from insureflow.insurance.companies import add_company
+
+    try:
+        company = add_company(current.org_id, name=req.name, naic=req.naic, notes=req.notes)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return company
+
+
 @app.post("/api/insurance/sources/{source_id}/pull")
 def pull_insurance_source(
     source_id: str,
@@ -1815,6 +1851,8 @@ def run_draft_bundle(
     commercial_product_name: str = "",
     commercial_coverage_name: str = "",
     commercial_category_id: str = "",
+    insurance_company_id: str = "",
+    insurance_company_name: str = "",
     strict_relevance: bool = False,
 ) -> dict[str, Any]:
     """Execute the pipeline using all accumulated documents in a draft bundle.
@@ -1895,6 +1933,8 @@ def run_draft_bundle(
         commercial_product_name=commercial_product_name or None,
         commercial_coverage_name=commercial_coverage_name or None,
         commercial_category_id=commercial_category_id or None,
+        insurance_company_id=insurance_company_id or None,
+        insurance_company_name=insurance_company_name or None,
     )
     background_tasks.add_task(_run_pipeline_task, job_id, req, current.org_id)
 
@@ -2263,6 +2303,8 @@ def _run_pipeline_task(job_id: str, request: SubmissionRequest, org_id: str) -> 
                 commercial_product_name=request.commercial_product_name,
                 commercial_coverage_name=request.commercial_coverage_name,
                 commercial_category_id=request.commercial_category_id,
+                insurance_company_id=request.insurance_company_id,
+                insurance_company_name=request.insurance_company_name,
                 progress_callback=on_progress,
             )
         job_store.set(INSURANCE_NS, job_id, {"status": "completed", "results": result}, org_id=org_id)

@@ -43,7 +43,7 @@ def test_full_health_taxonomy_shape():
         assert line["uw_focus"]
         assert line["insurance_line"] == "health"
         assert line["checklist_lob"]
-        assert line["status"] == "catalog"
+        assert line["status"] == "live"
         for cov in line.get("coverages") or []:
             assert isinstance(cov, dict), line["id"]
             assert cov.get("id")
@@ -52,17 +52,19 @@ def test_full_health_taxonomy_shape():
             assert len(cov["documents"]) >= 1, f"{line['id']}.{cov.get('id')}"
 
 
-def test_health_all_catalog_until_filed():
-    assert LIVE_HEALTH_PRODUCT_IDS == frozenset()
-    assert not is_filed_health_product("individual_basic")
+def test_health_hub_fully_live():
+    assert len(LIVE_HEALTH_PRODUCT_IDS) == len(HEALTH_LINES)
+    assert is_filed_health_product("individual_basic")
     live = [ln for ln in HEALTH_LINES if ln.get("status") == "live"]
     catalog = [ln for ln in HEALTH_LINES if ln.get("status") == "catalog"]
-    assert live == []
-    assert len(catalog) == len(HEALTH_LINES)
+    assert len(live) == len(HEALTH_LINES)
+    assert catalog == []
     hub = health_hub_payload()
-    assert hub["stats"]["live_count"] == 0
-    assert hub["stats"]["catalog_count"] == len(HEALTH_LINES)
+    assert hub["stats"]["live_count"] == len(HEALTH_LINES)
+    assert hub["stats"]["catalog_count"] == 0
     assert hub["stats"]["product_count"] == len(HEALTH_LINES)
+    assert "HLTH-2026-01" in hub["summary"]
+    assert "catalog-only" not in hub["uw_responsibilities"][-1]["summary"].lower()
 
 
 def test_hub_payload_has_taxonomy_and_stats():
@@ -185,11 +187,76 @@ def test_detect_lob_health_keywords_before_life():
     assert detect_lob("term life insurance face amount beneficiary designation paramedical", "") == "life"
 
 
-def test_rate_health_is_catalog_only():
+def test_rate_health_filed_mediclaim():
     from insureflow.models.submissions import SubmissionBundle, UnstructuredSubmission
 
     bundle = SubmissionBundle(
         bundle_id="health-test",
+        unstructured=[
+            UnstructuredSubmission(
+                submission_id="d1",
+                document_type="health_application",
+                raw_text="Mediclaim proposal. Age 34. Sum insured 500000. Self-declared good health.",
+            )
+        ],
+    )
+    quote = rate_health(bundle, product_id="individual_basic")
+    assert quote.line == InsuranceLine.HEALTH
+    assert quote.eligible is True
+    assert quote.adjusted_premium > 0
+    assert quote.metadata.get("rating_engine") == "health_filing"
+    assert quote.metadata.get("filed") is True
+    assert quote.metadata.get("benefit_type") == "hospitalization_indemnity"
+    assert quote.metadata.get("age") == 34
+    assert quote.metadata.get("sum_insured") == 500_000
+    assert any(c.name == "attained_age" for c in quote.schedule_modifications)
+    assert quote.rate_per_100_tiv > 0
+
+
+def test_rate_health_income_basis_disability():
+    from insureflow.models.submissions import SubmissionBundle, UnstructuredSubmission
+
+    bundle = SubmissionBundle(
+        bundle_id="health-di",
+        unstructured=[
+            UnstructuredSubmission(
+                submission_id="d1",
+                document_type="health_application",
+                raw_text="Disability income. Age 40. Monthly income 100000. Good health.",
+            )
+        ],
+    )
+    quote = rate_health(bundle, product_id="disability_income")
+    assert quote.eligible is True
+    assert quote.adjusted_premium > 0
+    assert quote.metadata.get("rating_engine") == "health_filing"
+    assert quote.metadata.get("sum_insured") == 1_800_000
+
+
+def test_rate_health_daily_cash_hospital():
+    from insureflow.models.submissions import SubmissionBundle, UnstructuredSubmission
+
+    bundle = SubmissionBundle(
+        bundle_id="health-hc",
+        unstructured=[
+            UnstructuredSubmission(
+                submission_id="d1",
+                document_type="health_application",
+                raw_text="Hospital cash. Age 50. Daily cash 1000. Good health.",
+            )
+        ],
+    )
+    quote = rate_health(bundle, product_id="hospital_cash")
+    assert quote.eligible is True
+    assert quote.adjusted_premium > 0
+    assert quote.metadata.get("sum_insured") == 365_000
+
+
+def test_rate_health_missing_sum_insured_ineligible():
+    from insureflow.models.submissions import SubmissionBundle, UnstructuredSubmission
+
+    bundle = SubmissionBundle(
+        bundle_id="health-nosi",
         unstructured=[
             UnstructuredSubmission(
                 submission_id="d1",
@@ -199,8 +266,27 @@ def test_rate_health_is_catalog_only():
         ],
     )
     quote = rate_health(bundle, product_id="individual_basic")
-    assert quote.line == InsuranceLine.HEALTH
     assert quote.eligible is False
     assert quote.adjusted_premium == 0.0
-    assert any("catalog-only" in r.lower() for r in quote.ineligibility_reasons)
-    assert quote.metadata.get("benefit_type") == "hospitalization_indemnity"
+    assert any("sum insured not declared" in r.lower() for r in quote.ineligibility_reasons)
+
+
+def test_rate_health_age_gate_routes_senior():
+    from insureflow.models.submissions import SubmissionBundle, UnstructuredSubmission
+
+    bundle = SubmissionBundle(
+        bundle_id="health-age",
+        unstructured=[
+            UnstructuredSubmission(
+                submission_id="d1",
+                document_type="health_application",
+                raw_text="Mediclaim proposal. Age 65. Sum insured 500000. Self-declared good health.",
+            )
+        ],
+    )
+    quote = rate_health(bundle, product_id="individual_basic")
+    assert quote.eligible is False
+    assert any("above the" in r.lower() for r in quote.ineligibility_reasons)
+    senior = rate_health(bundle, product_id="senior_standard")
+    assert senior.eligible is True
+    assert senior.adjusted_premium > quote.adjusted_premium

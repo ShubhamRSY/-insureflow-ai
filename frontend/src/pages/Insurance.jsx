@@ -33,6 +33,7 @@ export default function InsurancePage({ jobs, onRefresh }) {
               <p className="mt-1 max-w-2xl text-sm text-slate-400">
                 Twelve sections — life, health, general, commercial, specialty, provider type,
                 engineering, aviation, fidelity, catastrophe, niche liability, and warranty / financial / emerging.
+                Named insureds and PII are stripped before any LLM API call on every section.
               </p>
             </div>
           </div>
@@ -110,7 +111,11 @@ export default function InsurancePage({ jobs, onRefresh }) {
           <p className="px-5 py-8 text-sm text-slate-500">No jobs yet. Open a section and run a package.</p>
         ) : (
           <div className="divide-y divide-white/[0.04]">
-            {recent.map((j) => (
+            {recent.map((j) => {
+              const results = j.job?.results || j.results || {};
+              const company = results.insurance_company_name || j.insurance_company_name;
+              const line = results.insurance_line || results.product_line || j.insurance_line || j.product_line || 'commercial';
+              return (
               <button
                 key={j.id}
                 type="button"
@@ -118,12 +123,16 @@ export default function InsurancePage({ jobs, onRefresh }) {
                 className="flex w-full items-center justify-between gap-3 px-5 py-3 text-left hover:bg-white/[0.02]"
               >
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-slate-200">{j.name || j.insured_name || j.id}</p>
-                  <p className="text-xs text-slate-500">{insuranceLineLabel(j.insurance_line || j.product_line || 'commercial')}</p>
+                  <p className="truncate text-sm font-medium text-slate-200">{j.name || results.insured_name || j.insured_name || j.id}</p>
+                  <p className="text-xs text-slate-500">
+                    {company ? `${company} · ` : ''}
+                    {insuranceLineLabel(line)}
+                  </p>
                 </div>
-                <span className="shrink-0 text-xs capitalize text-slate-400">{j.status || '—'}</span>
+                <span className="shrink-0 text-xs capitalize text-slate-400">{j.job?.status || j.status || '—'}</span>
               </button>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>

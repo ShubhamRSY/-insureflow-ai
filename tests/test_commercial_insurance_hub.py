@@ -49,7 +49,8 @@ def test_commercial_live_vs_catalog_split():
     live = [ln for ln in COMMERCIAL_LINES if ln.get("status") == "live"]
     catalog = [ln for ln in COMMERCIAL_LINES if ln.get("status") == "catalog"]
     assert {ln["id"] for ln in live} >= {"general_liability", "workers_comp", "commercial_auto", "cyber_liability", "bop"}
-    assert {ln["id"] for ln in catalog} >= {"aviation", "kidnap_ransom", "crop_insurance", "captive_insurance"}
+    assert {ln["id"] for ln in catalog} >= {"crop_insurance", "captive_insurance", "group_health", "ocean_marine"}
+    assert {"aviation", "kidnap_ransom", "flood_commercial", "terrorism", "legal_expense"} <= {ln["id"] for ln in live}
     hub = commercial_hub_payload()
     assert hub["stats"]["live_count"] == len(live)
     assert hub["stats"]["catalog_count"] == len(catalog)

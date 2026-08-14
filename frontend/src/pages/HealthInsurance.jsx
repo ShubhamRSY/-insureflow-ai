@@ -54,8 +54,8 @@ export default function HealthInsuranceHub({ presets, onRunDemo, onSubmit, jobs 
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-2xl font-bold tracking-tight text-slate-100">{hub.title}</h1>
-              <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-400">
-                Catalog
+              <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-400">
+                Live
               </span>
             </div>
             <p className="mt-1 max-w-2xl text-sm text-slate-400">{hub.summary}</p>
@@ -67,7 +67,7 @@ export default function HealthInsuranceHub({ presets, onRunDemo, onSubmit, jobs 
         <div className="border-b border-white/[0.06] px-5 py-4">
           <h2 className="text-sm font-semibold text-slate-100">New submission</h2>
           <p className="mt-0.5 text-xs text-slate-500">
-            Choose category → product → coverage, then upload the health package. KYC + medical UW follow; premiums stay catalog-only until a filed health manual exists.
+            Choose category → product → coverage, then upload the health package. KYC + medical UW and rating follow from the filed health manual (HLTH-2026-01). Unfiled coverages stay catalog-only — we do not invent a premium.
           </p>
         </div>
         <div className="p-5">

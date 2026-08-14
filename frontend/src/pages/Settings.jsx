@@ -14,9 +14,13 @@ const ROLE_BADGE = {
 export default function SettingsPage({ onLogin, onAuthReset }) {
   const { user } = useOutletContext() || {};
   const [roles, setRoles] = useState([]);
+  const [companies, setCompanies] = useState([]);
+  const [companyName, setCompanyName] = useState('');
+  const [companyError, setCompanyError] = useState('');
 
   useEffect(() => {
     endpoints.roles().then((d) => setRoles(d.roles || [])).catch(() => {});
+    endpoints.insuranceCompanies().then((d) => setCompanies(d.companies || [])).catch(() => {});
   }, []);
 
   const handleReset = async () => {
@@ -72,6 +76,51 @@ export default function SettingsPage({ onLogin, onAuthReset }) {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {user && (
+        <div className="glass-card">
+          <div className="border-b border-white/[0.04] px-6 py-4">
+            <h2 className="font-semibold">Insurance company panel</h2>
+            <p className="mt-0.5 text-sm text-slate-400">
+              Choose whose paper a file is for. These are your appointed companies — not live appointments Rytera claims.
+            </p>
+          </div>
+          <div className="divide-y divide-white/[0.04]">
+            {companies.map((c) => (
+              <div key={c.id} className="flex items-center justify-between gap-3 px-6 py-3">
+                <div>
+                  <p className="text-sm font-medium text-slate-200">{c.name}</p>
+                  <p className="text-[11px] text-slate-500">{c.kind === 'demo' ? 'Demo book' : 'Appointed panel'}{c.naic ? ` · NAIC ${c.naic}` : ''}</p>
+                </div>
+              </div>
+            ))}
+            {!companies.length && <p className="px-6 py-4 text-sm text-slate-500">No companies loaded.</p>}
+          </div>
+          <form
+            className="flex flex-wrap gap-2 border-t border-white/[0.04] px-6 py-4"
+            onSubmit={async (e) => {
+              e.preventDefault();
+              setCompanyError('');
+              try {
+                const created = await endpoints.addInsuranceCompany({ name: companyName });
+                setCompanies((prev) => [...prev.filter((c) => c.id !== created.id), created]);
+                setCompanyName('');
+              } catch (err) {
+                setCompanyError(err.message || 'Could not add company');
+              }
+            }}
+          >
+            <input
+              value={companyName}
+              onChange={(e) => setCompanyName(e.target.value)}
+              placeholder="Add appointed company"
+              className="input-field min-w-[12rem] flex-1 text-sm"
+            />
+            <button type="submit" className="btn-secondary btn-sm text-sm" disabled={!companyName.trim()}>Add</button>
+            {companyError ? <p className="w-full text-xs text-amber-400">{companyError}</p> : null}
+          </form>
         </div>
       )}
 

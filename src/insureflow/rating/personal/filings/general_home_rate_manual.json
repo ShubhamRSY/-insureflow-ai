@@ -1,0 +1,90 @@
+{
+  "filing_id": "GNR-HOME-2026-01",
+  "product": "General Home — Structure / Contents / Comprehensive",
+  "carrier": "Filed General Non-Life Rate Manual",
+  "serff_tracking": "SERFF-GI-2026-HOM-001",
+  "effective_date": "2026-01-01",
+  "state_version": "IND-ALL",
+  "currency": "INR",
+  "rating_basis": "Rate per 10 lakh (1,000,000 INR) of sum insured (structure / contents / combined). Exposure is the declared property value; a 1.0 limit-to-exposure cap applies.",
+  "rating_engine": "general_home_filing",
+  "eligibility": {
+    "min_limit": 500000,
+    "max_limit": 100000000,
+    "min_declared_exposure": 100000
+  },
+  "products": {
+    "home_structure": {
+      "name": "Structure-only Cover",
+      "rate_basis": "limit",
+      "exposure_key": "property_value",
+      "exposure_label": "Property Value",
+      "exposure_labels": ["property value", "replacement cost", "construction cost", "rebuilding cost", "property valuation", "estimated value"],
+      "limit_labels": ["sum insured", "building sum insured", "structure cover", "building cover", "cover limit"],
+      "limit_exposure_ratio_cap": 1.0,
+      "unit": 1000000,
+      "coverages": {
+        "default": { "base_rate": 750, "min_premium": 2000, "expense_constant": 500 }
+      },
+      "risk_class_factors": { "high": 1.7, "medium": 1.2, "low": 1.0 },
+      "limit_factors": [
+        { "max_limit": 10000000, "factor": 1.0 },
+        { "max_limit": 50000000, "factor": 0.98 },
+        { "max_limit": 100000000, "factor": 0.95 }
+      ],
+      "deductible_factors": [
+        { "max_deductible": 100000, "factor": 1.0 },
+        { "max_deductible": 500000, "factor": 0.95 }
+      ],
+      "claims_factors": { "none": 1.0, "medium": 1.2, "high": 1.35 }
+    },
+    "home_contents": {
+      "name": "Contents-only Cover",
+      "rate_basis": "limit",
+      "exposure_key": "contents_value",
+      "exposure_label": "Contents Value",
+      "exposure_labels": ["declared contents value", "contents value", "total insured contents", "inventory value", "insured contents value"],
+      "limit_labels": ["sum insured", "contents sum insured", "contents cover", "cover limit"],
+      "limit_exposure_ratio_cap": 1.0,
+      "unit": 1000000,
+      "coverages": {
+        "default": { "base_rate": 1200, "min_premium": 1500, "expense_constant": 400 }
+      },
+      "risk_class_factors": { "high": 1.8, "medium": 1.25, "low": 1.0 },
+      "limit_factors": [
+        { "max_limit": 10000000, "factor": 1.0 },
+        { "max_limit": 50000000, "factor": 0.98 },
+        { "max_limit": 100000000, "factor": 0.95 }
+      ],
+      "deductible_factors": [
+        { "max_deductible": 50000, "factor": 1.0 },
+        { "max_deductible": 200000, "factor": 0.95 }
+      ],
+      "claims_factors": { "none": 1.0, "medium": 1.25, "high": 1.4 }
+    },
+    "home_comprehensive": {
+      "name": "Structure + Contents (Comprehensive)",
+      "rate_basis": "limit",
+      "exposure_key": "property_value",
+      "exposure_label": "Property Value",
+      "exposure_labels": ["property value", "replacement cost", "property valuation", "declared value", "estimated value"],
+      "limit_labels": ["sum insured", "comprehensive cover", "combined cover", "cover limit"],
+      "limit_exposure_ratio_cap": 1.0,
+      "unit": 1000000,
+      "coverages": {
+        "default": { "base_rate": 1000, "min_premium": 3000, "expense_constant": 700 }
+      },
+      "risk_class_factors": { "high": 1.7, "medium": 1.2, "low": 1.0 },
+      "limit_factors": [
+        { "max_limit": 10000000, "factor": 1.0 },
+        { "max_limit": 50000000, "factor": 0.98 },
+        { "max_limit": 100000000, "factor": 0.95 }
+      ],
+      "deductible_factors": [
+        { "max_deductible": 100000, "factor": 1.0 },
+        { "max_deductible": 500000, "factor": 0.95 }
+      ],
+      "claims_factors": { "none": 1.0, "medium": 1.2, "high": 1.35 }
+    }
+  }
+}

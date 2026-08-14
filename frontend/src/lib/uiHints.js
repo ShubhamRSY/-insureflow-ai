@@ -12,6 +12,8 @@ export const UI_HINTS = {
     'Specific insurance product within the category — drives checklist, LOB-scoped ML, and rating path.',
   commercialCoverage:
     'Coverage part within the product (e.g. Building, BPP) so triage and memo are not misaligned with the request.',
+  insuranceCompany:
+    'Pick the writing company this file is for — your appointed panel. Rytera does not invent a market appointment. Rating still uses the loaded rate book.',
   uwValidatePremium:
     'Your indicated annual premium after UW judgment. Saved separately from AI output for override tracking.',
   uwValidateLimit:

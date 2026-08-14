@@ -61,7 +61,7 @@ def test_wc_oracle_emod_is_used():
 
 def test_catalog_only_commercial_product_not_quoted():
     engine = InsuranceRatingEngine()
-    q = engine.quote(_bundle(), UnderwritingMemo(bundle_id="p0-1"), line=InsuranceLine.COMMERCIAL_PROPERTY, commercial_product_id="aviation")
+    q = engine.quote(_bundle(), UnderwritingMemo(bundle_id="p0-1"), line=InsuranceLine.COMMERCIAL_PROPERTY, commercial_product_id="crop_insurance")
     assert q.eligible is False
     assert q.metadata.get("rating_engine") == "catalog_only"
     assert any("catalog" in r.lower() for r in q.ineligibility_reasons)

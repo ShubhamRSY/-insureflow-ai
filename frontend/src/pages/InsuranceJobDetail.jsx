@@ -149,6 +149,11 @@ export default function InsuranceJobDetail() {
               <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Insurance Submission</p>
               <p className="font-mono text-sm font-semibold">{jobId}</p>
               {insuredName && <p className="text-xs text-slate-400">{insuredName}</p>}
+              {(job?.results?.insurance_company_name || job?.results?.insurance_company_id) && (
+                <p className="text-[11px] text-slate-500">
+                  Company: {job.results.insurance_company_name || job.results.insurance_company_id}
+                </p>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-2">

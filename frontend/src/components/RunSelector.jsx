@@ -6,6 +6,7 @@ import { UI_HINTS } from '../lib/uiHints';
 import { endpoints } from '../lib/api';
 import ConnectAndPull from './ConnectAndPull';
 import CommercialLinePicker from './CommercialLinePicker';
+import CompanyPicker from './CompanyPicker';
 import { Hint, HintCheckbox } from './ui';
 import { isCommercialSelectionComplete } from '../lib/commercialTaxonomy';
 
@@ -55,6 +56,8 @@ export default function RunSelector({
   const [product, setProduct] = useState(productDefault);
   const [purpose, setPurpose] = useState(purposeDefault);
   const [strictRelevance, setStrictRelevance] = useState(true);
+  const [companyId, setCompanyId] = useState('');
+  const [companyName, setCompanyName] = useState('');
 
   const useCommercialPicker = Array.isArray(commercialTaxonomy) && commercialTaxonomy.length > 0;
 
@@ -92,9 +95,13 @@ export default function RunSelector({
       } else {
         body.commercial_product_id = commercialSelection.productId;
       }
-      return body;
+    } else if (normalizedOptions.length > 0) {
+      body[productField] = activeProduct;
     }
-    if (normalizedOptions.length > 0) body[productField] = activeProduct;
+    if (vertical === 'insurance') {
+      if (companyId) body.insurance_company_id = companyId;
+      if (companyName) body.insurance_company_name = companyName;
+    }
     return body;
   };
 
@@ -248,6 +255,17 @@ export default function RunSelector({
         </div>
       </div>
 
+      {vertical === 'insurance' && (
+        <div className="mb-3">
+          <CompanyPicker
+            value={companyId}
+            name={companyName}
+            disabled={running}
+            onChange={(c) => { setCompanyId(c.id || ''); setCompanyName(c.name || ''); }}
+          />
+        </div>
+      )}
+
       {tab === 'files' && (
         <div className="space-y-3">
           <label
@@ -368,6 +386,8 @@ export default function RunSelector({
           productName={commercialSelection?.productName || ''}
           coverageName={commercialSelection?.coverageName || ''}
           commercialCategoryId={commercialSelection?.categoryId || ''}
+          insuranceCompanyId={companyId}
+          insuranceCompanyName={companyName}
           strictRelevance={strictRelevance}
           onRunJob={onRunJob || (onSubmit ? (jobId) => onSubmit?.({ _jobId: jobId }) : undefined)}
           onRunResult={onRunResult}

@@ -216,12 +216,13 @@ def test_group_employer_requires_company_kyc():
     assert full.decision == UWDecision.ACCEPT
 
 
-def test_rate_health_terms_differ_by_leaf_still_no_premium():
-    bundle = _bundle(KYC)
+def test_rate_health_terms_differ_by_leaf():
+    bundle = _bundle(KYC + " Sum insured 500000. OPD limit 500000.")
     mat = rate_health(bundle, product_id="maternity_inclusive", coverage_id="maternity_inclusive_std")
     opd = rate_health(bundle, product_id="opd_cover", coverage_id="opd_reimbursement")
-    assert mat.eligible is False and opd.eligible is False
-    assert mat.adjusted_premium == 0 and opd.adjusted_premium == 0
+    assert mat.eligible is True and opd.eligible is True
+    assert mat.adjusted_premium > 0 and opd.adjusted_premium > 0
+    assert mat.adjusted_premium != opd.adjusted_premium
     assert mat.metadata["benefit_type"] == "hospitalization_indemnity_maternity"
     assert opd.metadata["benefit_type"] == "opd_reimbursement"
     assert opd.metadata["payout_channel"] == "bank_reimbursement"

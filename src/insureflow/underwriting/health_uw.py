@@ -200,7 +200,7 @@ def _finalize(
         decision = UWDecision.CONDITIONAL_ACCEPT
     else:
         decision = UWDecision.ACCEPT
-        conds.append("Eligibility clear — premium remains catalog-only until a filed health rate manual is imported")
+        conds.append("Eligibility clear — filed health rate manual applies (filing HLTH-2026-01)")
 
     terms = health_product_terms(ctx.product_id, ctx.coverage_id)
     meta = {

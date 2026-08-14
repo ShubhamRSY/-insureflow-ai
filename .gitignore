@@ -50,6 +50,8 @@ data/*
 !data/rate_curves.json
 !data/rating/
 !data/rating/*.json
+!data/insurance/
+data/insurance/panels/
 frontend/data/
 # Keep schema docs for real training datasets (CSVs are regenerated locally)
 ml_data/**

@@ -117,6 +117,8 @@ export const endpoints = {
   clearSubjectivity: (bundleId, id, body) => api(`/pipeline/workflow/${bundleId}/subjectivities/${id}/clear`, { method: 'POST', body }),
   bindReadiness: (bundleId) => api(`/pipeline/workflow/${bundleId}/bind-readiness`),
   commercialInsuranceHub: () => api('/insurance/commercial'),
+  insuranceCompanies: () => api('/api/insurance/companies'),
+  addInsuranceCompany: (body) => api('/api/insurance/companies', { method: 'POST', body }),
   commercialInsuranceTaxonomy: () => api('/insurance/commercial/taxonomy'),
   commercialInsuranceLine: (lineId) => api(`/insurance/commercial/lines/${encodeURIComponent(lineId)}`),
   lifeInsuranceHub: () => api('/insurance/life'),
@@ -161,6 +163,8 @@ export const endpoints = {
     if (opts.commercial_product_name) params.set('commercial_product_name', opts.commercial_product_name);
     if (opts.commercial_coverage_name) params.set('commercial_coverage_name', opts.commercial_coverage_name);
     if (opts.commercial_category_id) params.set('commercial_category_id', opts.commercial_category_id);
+    if (opts.insurance_company_id) params.set('insurance_company_id', opts.insurance_company_id);
+    if (opts.insurance_company_name) params.set('insurance_company_name', opts.insurance_company_name);
     if (opts.strict_relevance) params.set('strict_relevance', 'true');
     return api(`/pipeline/bundles/${id}/run?${params}`, { method: 'POST' });
   },

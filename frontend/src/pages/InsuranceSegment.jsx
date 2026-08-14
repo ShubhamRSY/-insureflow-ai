@@ -55,6 +55,24 @@ export default function InsuranceSegmentPage() {
     return rows;
   }, [section, hubLines]);
 
+  const liveByCat = useMemo(() => {
+    if (!hubLines) return {};
+    const map = {};
+    for (const ln of hubLines) {
+      if (ln.status === 'live' && ln.category_id) map[ln.category_id] = true;
+    }
+    return map;
+  }, [hubLines]);
+
+  const sectionLive = useMemo(() => {
+    if (section.hubKind && hubLines) {
+      return hubLines.some((ln) => ln.status === 'live');
+    }
+    return section.status === 'live';
+  }, [section, hubLines]);
+
+  const sectionStatus = sectionLive ? 'live' : 'catalog';
+
   if (!section) {
     return (
       <div className="mx-auto max-w-3xl py-16 text-center">
@@ -89,14 +107,17 @@ export default function InsuranceSegmentPage() {
             <div className="mt-1 flex flex-wrap items-center gap-2">
               <h1 className="text-3xl font-bold tracking-tight text-slate-100">{section.title}</h1>
               <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-                section.status === 'live'
+                sectionStatus === 'live'
                   ? 'bg-emerald-500/15 text-emerald-400'
                   : 'bg-amber-500/15 text-amber-400'
               }`}>
-                {section.status === 'live' ? 'Live' : 'Catalog'}
+                {sectionStatus === 'live' ? 'Live' : 'Catalog'}
               </span>
             </div>
             <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">{section.summary}</p>
+            <p className="mt-2 max-w-3xl text-xs leading-relaxed text-emerald-400/90">
+              Named insureds and PII are stripped before any LLM API call on this section.
+            </p>
             {section.hub && section.hub !== `/insurance/sections/${section.id}` ? (
               <Link to={section.hub} className={`mt-3 inline-flex items-center gap-1 text-sm font-medium ${accent.tag}`}>
                 Open full hub <ArrowRight className="h-4 w-4" />
@@ -116,7 +137,14 @@ export default function InsuranceSegmentPage() {
               onClick={() => navigate(p.href || section.hub)}
               className="rounded-xl bg-surface-overlay p-4 text-left ring-1 ring-white/[0.04] transition hover:ring-white/20"
             >
-              <p className="font-medium text-slate-200">{p.name}</p>
+              <div className="flex items-center justify-between gap-2">
+                <p className="font-medium text-slate-200">{p.name}</p>
+                {p.cat && liveByCat[p.cat] ? (
+                  <span className="shrink-0 rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-400">
+                    Live
+                  </span>
+                ) : null}
+              </div>
               {p.hint ? <p className="mt-1 text-xs leading-relaxed text-slate-500">{p.hint}</p> : null}
               <p className={`mt-3 inline-flex items-center gap-1 text-xs font-medium ${accent.tag}`}>
                 Open <ArrowRight className="h-3.5 w-3.5" />

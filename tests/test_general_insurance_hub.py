@@ -44,6 +44,42 @@ EXPECTED_CATS = {
     "provider",
 }
 
+EXPECTED_LIVE_GENERAL = frozenset(
+    {
+        "professional_indemnity_gi",
+        "public_liability_gi",
+        "product_liability_gi",
+        "cyber_data_breach",
+        "cyber_ransomware",
+        "marine_cargo",
+        "marine_hull",
+        "fire_residential",
+        "fire_commercial",
+        "travel_domestic",
+        "travel_international",
+        "home_structure",
+        "home_contents",
+        "home_comprehensive",
+        "car_tp",
+        "car_comprehensive",
+        "tw_tp",
+        "tw_comprehensive",
+        "cv_tp",
+        "cv_comprehensive",
+        "crop_yield",
+        "crop_weather",
+        "livestock_cattle",
+        "pet_insurance",
+        "wedding_insurance",
+        "concert_event_insurance",
+        "title_insurance_gi",
+        "mortgage_insurance_gi",
+        "insurer_psu",
+        "insurer_private",
+        "reinsurance_treaty",
+    }
+)
+
 EXPECTED_IDS = {
     "car_tp",
     "car_comprehensive",
@@ -90,7 +126,7 @@ def test_full_general_taxonomy_shape():
         assert line["uw_focus"]
         assert line["insurance_line"] == "general"
         assert line["checklist_lob"]
-        assert line["status"] == "catalog"
+        assert line["status"] == ("live" if line["id"] in EXPECTED_LIVE_GENERAL else "catalog")
         for cov in line.get("coverages") or []:
             assert cov.get("id")
             assert cov.get("name")
@@ -98,15 +134,17 @@ def test_full_general_taxonomy_shape():
             assert len(cov["documents"]) >= 1, f"{line['id']}.{cov.get('id')}"
 
 
-def test_all_catalog_until_filed():
-    assert LIVE_GENERAL_PRODUCT_IDS == frozenset()
-    assert not is_filed_general_product("car_tp")
-    assert not is_filed_general_product("reinsurance_treaty")
+def test_filed_products_are_live_rest_catalog():
+    assert LIVE_GENERAL_PRODUCT_IDS == EXPECTED_LIVE_GENERAL
+    assert LIVE_GENERAL_PRODUCT_IDS == {ln["id"] for ln in GENERAL_LINES}
+    for pid in EXPECTED_LIVE_GENERAL:
+        assert is_filed_general_product(pid)
+    assert not is_filed_general_product("bogus_product")
     live = [ln for ln in GENERAL_LINES if ln.get("status") == "live"]
-    assert live == []
+    assert {ln["id"] for ln in live} == EXPECTED_LIVE_GENERAL
     hub = general_hub_payload()
-    assert hub["stats"]["live_count"] == 0
-    assert hub["stats"]["catalog_count"] == 31
+    assert hub["stats"]["live_count"] == 31
+    assert hub["stats"]["catalog_count"] == 0
     assert hub["stats"]["product_count"] == 31
 
 
@@ -241,7 +279,7 @@ def test_detect_lob_general_keywords():
     assert detect_lob("mediclaim proposal identity proof family floater", "") == "health"
 
 
-def test_rate_general_is_catalog_only():
+def test_rate_general_unknown_product_is_catalog_only():
     from insureflow.models.submissions import SubmissionBundle, UnstructuredSubmission
 
     bundle = SubmissionBundle(
@@ -249,15 +287,15 @@ def test_rate_general_is_catalog_only():
         unstructured=[
             UnstructuredSubmission(
                 submission_id="d1",
-                document_type="vehicle_rc",
-                raw_text="Car third-party only. RC attached. Driving license. Age 34.",
+                document_type="crop_application",
+                raw_text="Yield-based crop insurance. Khasra sowing certificate. Village block.",
             )
         ],
     )
-    quote = rate_general(bundle, product_id="car_tp")
+    quote = rate_general(bundle, product_id="bogus_product")
     assert quote.line == InsuranceLine.GENERAL
     assert quote.eligible is False
     assert quote.adjusted_premium == 0.0
     assert any("catalog-only" in r.lower() for r in quote.ineligibility_reasons)
-    assert quote.metadata.get("benefit_type") == "motor_third_party"
-    assert quote.metadata.get("vehicle_class") == "car"
+    assert quote.metadata.get("rating_engine") == "catalog_only"
+    assert quote.metadata.get("product_id") == "bogus_product"

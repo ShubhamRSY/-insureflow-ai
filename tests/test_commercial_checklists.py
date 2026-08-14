@@ -128,3 +128,87 @@ def test_summary_dict_shape() -> None:
     assert "flag_codes" in summary
     assert "scenario_codes" in summary
     assert "story" in summary
+
+
+def test_aviation_aging_fleet_territory_scenario() -> None:
+    text = "Aviation hull. Aging fleet high cycle airframes. Deferred maintenance. Operations into conflict zone war risk territory."
+    result = evaluate_commercial_checklist(_bundle(text), InsuranceLine.AVIATION)
+    assert "AV_AGING_FLEET" in _flag_codes(result)
+    assert "AV_MAINTENANCE" in _flag_codes(result)
+    assert "AV_TERRITORY_RISK" in _flag_codes(result)
+    assert "AV_FLEET_TERRITORY_SCENARIO" in _codes(result)
+    assert result.premium_mod_pct >= 25.0
+
+
+def test_flood_elevation_cert_gate() -> None:
+    text = "Flood commercial. SFHA flood zone. No elevation certificate."
+    result = evaluate_commercial_checklist(_bundle(text), InsuranceLine.FLOOD)
+    assert "CAT_FLOOD_ZONE" in _flag_codes(result)
+    assert "CAT_FLOOD_NO_MITIGATION" in _flag_codes(result)
+    safe = evaluate_commercial_checklist(
+        _bundle("Flood commercial. Flood zone AE. Elevation certificate and raised foundation."),
+        InsuranceLine.FLOOD,
+    )
+    assert "CAT_FLOOD_NO_MITIGATION" not in _flag_codes(safe)
+
+
+def test_earthquake_retrofit_gate() -> None:
+    text = "Earthquake commercial. Seismic zone 4 near fault line. No seismic retrofit."
+    result = evaluate_commercial_checklist(_bundle(text), InsuranceLine.EARTHQUAKE)
+    assert "CAT_EARTHQUAKE_ZONE" in _flag_codes(result)
+    assert "CAT_EARTHQUAKE_NO_MITIGATION" in _flag_codes(result)
+
+
+def test_pollution_esa_ust_flags() -> None:
+    text = "Pollution liability. No phase I environmental assessment. Underground storage tanks. Chemical waste on site."
+    result = evaluate_commercial_checklist(_bundle(text), InsuranceLine.POLLUTION)
+    assert "POL_NO_ESA" in _flag_codes(result)
+    assert "POL_UST" in _flag_codes(result)
+    assert "POL_HAZMAT" in _flag_codes(result)
+
+
+def test_kr_geo_risk_and_crisis_plan() -> None:
+    text = "Kidnap and ransom. High profile executive. Operations in high risk country. No crisis response plan."
+    result = evaluate_commercial_checklist(_bundle(text), InsuranceLine.KIDNAP_RANSOM)
+    assert "KR_HIGH_PROFILE" in _flag_codes(result)
+    assert "KR_GEO_RISK" in _flag_codes(result)
+    assert "KR_NO_CRISIS_PLAN" in _flag_codes(result)
+
+
+def test_political_risk_expropriation_and_transfer() -> None:
+    text = "Political risk. Expropriation nationalization risk. Currency inconvertibility. Single country concentration 100%."
+    result = evaluate_commercial_checklist(_bundle(text), InsuranceLine.POLITICAL_RISK)
+    assert "PR_EXPROPRIATION" in _flag_codes(result)
+    assert "PR_TRANSFER_RISK" in _flag_codes(result)
+    assert "PR_CONCENTRATION" in _flag_codes(result)
+
+
+def test_terrorism_certified_and_crowd_target() -> None:
+    text = "Terrorism. Certified acts coverage. Stadium mass gathering iconic landmark target."
+    result = evaluate_commercial_checklist(_bundle(text), InsuranceLine.TERRORISM)
+    assert "TERR_CERTIFIED" in _flag_codes(result)
+    assert "TERR_TARGET" in _flag_codes(result)
+
+
+def test_legal_expense_pending_litigation() -> None:
+    text = "Legal expense. Pending lawsuit litigation dispute. Employment discrimination claim."
+    result = evaluate_commercial_checklist(_bundle(text), InsuranceLine.LEGAL_EXPENSE)
+    assert "LEG_PENDING_LITIGATION" in _flag_codes(result)
+    assert "LEG_EMPLOYMENT" in _flag_codes(result)
+
+
+def test_extended_lines_do_not_fall_back_to_property() -> None:
+    for line, text in (
+        (InsuranceLine.AVIATION, "Aviation fleet"),
+        (InsuranceLine.FLOOD, "Flood zone SFHA"),
+        (InsuranceLine.EARTHQUAKE, "Seismic zone"),
+        (InsuranceLine.POLLUTION, "Environmental site assessment"),
+        (InsuranceLine.KIDNAP_RANSOM, "Kidnap ransom exposure"),
+        (InsuranceLine.POLITICAL_RISK, "Expropriation risk"),
+        (InsuranceLine.TERRORISM, "Certified act"),
+        (InsuranceLine.LEGAL_EXPENSE, "Defence costs"),
+    ):
+        result = evaluate_commercial_checklist(_bundle(text), line)
+        assert result.line == line
+        assert not any(f.code.startswith("PROP_") for f in result.flags)
+        assert result.story

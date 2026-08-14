@@ -107,6 +107,58 @@ class TestRedactionAdversarial:
         assert "111-22" not in result
         assert "john@test.com" not in result
         assert "5309" in result
+        assert "John Smith" not in result
+
+    def test_named_insured_person_stripped(self) -> None:
+        redactor = PIIRedactor()
+        result = redactor.redact("Named Insured: Jane Doe submitted an ACORD 125.", mask=False)
+        assert "Jane Doe" not in result
+        assert "[REDACTED NAME]" in result
+
+    def test_named_insured_entity_stripped(self) -> None:
+        redactor = PIIRedactor()
+        result = redactor.redact("Named Insured: Acme Manufacturing LLC", mask=False)
+        assert "Acme Manufacturing" not in result
+        assert "[REDACTED NAME]" in result
+
+    def test_policyholder_applicant_proposer_stripped(self) -> None:
+        redactor = PIIRedactor()
+        blob = (
+            "Policyholder: Maria Santos. Applicant: Robert Chen. "
+            "Proposer: Elena Rossi. Life Assured: David Kim."
+        )
+        result = redactor.redact(blob, mask=False)
+        for name in ("Maria Santos", "Robert Chen", "Elena Rossi", "David Kim"):
+            assert name not in result, f"{name} leaked in: {result}"
+        assert result.count("[REDACTED NAME]") >= 4
+
+    def test_llm_complete_never_sends_named_insured(self) -> None:
+        from types import SimpleNamespace
+
+        from insureflow.llm.client import LLMClient
+
+        captured: dict[str, Any] = {}
+
+        class FakeCompletions:
+            def create(self, **kwargs: Any) -> Any:
+                captured["messages"] = kwargs["messages"]
+                return SimpleNamespace(
+                    choices=[SimpleNamespace(message=SimpleNamespace(content="ok"))],
+                    usage=None,
+                )
+
+        llm = LLMClient()
+        llm.provider = "openai"
+        llm.model = "test-model"
+        llm._client = SimpleNamespace(chat=SimpleNamespace(completions=FakeCompletions()))
+        llm.complete(
+            "You are an underwriter.",
+            "Named Insured: Jane Doe, SSN: 111-22-3333, email: jane@acme.com",
+        )
+        blob = str(captured["messages"])
+        assert "Jane Doe" not in blob
+        assert "111-22" not in blob
+        assert "jane@acme.com" not in blob
 
 
 # ===========================================================================

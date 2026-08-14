@@ -23,7 +23,7 @@ from insureflow.ingestion.insurance.validation import validate_extraction
 from insureflow.ingestion.loader import SubmissionLoader
 from insureflow.insurance.progress import PipelineProgressTracker
 from insureflow.integrations.factory import build_policy_admin_service
-from insureflow.llm.client import LLMClient
+from insureflow.redaction.pipeline import RedactedLLMClient
 from insureflow.models.agents import Recommendation
 from insureflow.models.audit import PipelineEvent
 from insureflow.models.submissions import SubmissionBundle, SubmissionStatus
@@ -182,7 +182,7 @@ class InsurancePipeline:
         self.use_llm = use_llm
         self.doc_loader = InsuranceDocumentLoader()
         self.legacy_loader = SubmissionLoader()
-        self.extraction = ExtractionAgent(LLMClient(model_tier="cheap") if use_llm else None)
+        self.extraction = ExtractionAgent(RedactedLLMClient(model_tier="cheap") if use_llm else None)
         self.provenance = ProvenanceEngine()
         self.reconciliation = ReconciliationEngine()
         self.supervisor = SupervisorAgent()
@@ -237,6 +237,8 @@ class InsurancePipeline:
         commercial_product_name: str | None = None,
         commercial_coverage_name: str | None = None,
         commercial_category_id: str | None = None,
+        insurance_company_id: str | None = None,
+        insurance_company_name: str | None = None,
         skip_appetite_filter: bool = False,
         skip_oracles: bool = False,
         skip_portfolio: bool = False,
@@ -246,6 +248,15 @@ class InsurancePipeline:
         progress_callback: Callable[[dict[str, Any]], None] | None = None,
     ) -> dict[str, Any]:
         bid = bundle_id or f"ins-{uuid4().hex[:12]}"
+        from insureflow.insurance.companies import resolve_company
+
+        company = resolve_company(
+            company_id=insurance_company_id or "",
+            company_name=insurance_company_name or "",
+            org_id=self.org_id,
+        )
+        insurance_company_id = company.get("id") or None
+        insurance_company_name = company.get("name") or None
         audit = InsuranceAuditLogger(self.audit_store, self.encryption, org_id=self.org_id)
         audit.start(bid)
         progress = PipelineProgressTracker(on_update=progress_callback)
@@ -1656,6 +1667,8 @@ class InsurancePipeline:
             "commercial_product_name": commercial_product_name,
             "commercial_coverage_name": commercial_coverage_name,
             "commercial_category_id": commercial_category_id,
+            "insurance_company_id": (insurance_company_id or "").strip() or None,
+            "insurance_company_name": (insurance_company_name or "").strip() or None,
             "human_review_required": memo.human_review_required or wf.state == WorkflowState.PENDING_REVIEW,
             "funnel": funnel,
             "deep_dive_available": (

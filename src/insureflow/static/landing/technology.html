@@ -118,6 +118,7 @@
               <a href="/#why">Why Rytera</a>
               <a href="/#effect">The effect</a>
               <a href="/#keywords">Keywords</a>
+              <a href="/#privacy">De-identification</a>
             </div>
           </div>
           <div class="nav-item">
@@ -136,6 +137,7 @@
               <a href="/platform#agentic">Agentic workbench</a>
               <a href="/platform#features">Deep-dive verticals</a>
               <a href="/platform#capabilities">Governance &amp; audit</a>
+              <a href="/platform#companies">Company panel</a>
             </div>
           </div>
           <div class="nav-item">
@@ -145,6 +147,7 @@
               <a href="/technology#zta">Zero Token Architecture</a>
               <a href="/technology#how-it-works">Pipeline</a>
               <a href="/technology#security">Security &amp; audit</a>
+              <a href="/technology#privacy">De-identification</a>
               <a href="/technology#observability">Observability</a>
             </div>
           </div>
@@ -157,7 +160,7 @@
               <a href="/underwriting#ratemaking">Ratemaking</a>
               <p class="nav-drop-label">Insurance book</p>
               <a href="/dashboard/insurance/sections/life">Life <span class="nav-pill live">Live</span></a>
-              <a href="/dashboard/insurance/sections/health">Health <span class="nav-pill">Catalog</span></a>
+              <a href="/dashboard/insurance/sections/health">Health <span class="nav-pill live">Live</span></a>
               <a href="/dashboard/insurance/sections/general">General / Non-Life</a>
               <a href="/dashboard/insurance/sections/commercial">Commercial <span class="nav-pill live">Live</span></a>
               <a href="/dashboard/insurance/sections/specialty">Specialty</a>
@@ -201,6 +204,7 @@
         <a href="/#why">Why Rytera</a>
         <a href="/#effect">The effect</a>
         <a href="/#keywords">Keywords</a>
+        <a href="/#privacy">De-identification</a>
       </details>
       <details class="nav-acc">
         <summary>Pricing</summary>
@@ -215,6 +219,7 @@
         <a href="/platform#agentic">Agentic workbench</a>
         <a href="/platform#features">Deep-dive verticals</a>
         <a href="/platform#capabilities">Governance &amp; audit</a>
+        <a href="/platform#companies">Company panel</a>
       </details>
       <details class="nav-acc">
         <summary>Technology</summary>
@@ -222,6 +227,7 @@
         <a href="/technology#zta">Zero Token Architecture</a>
         <a href="/technology#how-it-works">Pipeline</a>
         <a href="/technology#security">Security &amp; audit</a>
+        <a href="/technology#privacy">De-identification</a>
         <a href="/technology#observability">Observability</a>
       </details>
       <details class="nav-acc">
@@ -358,7 +364,7 @@
           <p class="section-desc">Encryption, access control, and examiner-ready audit are engineered into the pipeline &mdash; not bolted on after.</p>
         </div>
         <div class="feature-grid reveal">
-          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-lock"/></svg></span><h3>Encryption at rest</h3><p>Fernet-encrypted job stores with org-scoped isolation, and automated SSN / EIN / DOB redaction before packages enter the pilot lane.</p></div>
+          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-lock"/></svg></span><h3>Encryption at rest</h3><p>Fernet-encrypted job stores with org-scoped isolation. Named insureds, SSNs, EINs, and DOBs are stripped before any LLM API call &mdash; every section.</p></div>
           <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-key"/></svg></span><h3>Access control</h3><p>JWT auth with RBAC tiers and per-org data isolation on every job, decision, and audit record.</p></div>
           <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-file-check"/></svg></span><h3>Examiner-ready audit</h3><p>Every decision, override, and oracle call ships in a SHA-256 manifest ZIP built for regulatory review.</p></div>
           <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-shield-check"/></svg></span><h3>Human-in-the-loop</h3><p>Licensed UW sign-off, authority-matrix tiers, and referral queues. AI proposes; underwriters dispose; every override is traceable.</p></div>
@@ -366,7 +372,7 @@
         <div class="trust-strip reveal" aria-label="Security and compliance">
           <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> JWT + RBAC, org-scoped</span>
           <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> Fernet encryption at rest</span>
-          <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> Automated PII redaction</span>
+          <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> Named insureds stripped before any LLM call</span>
           <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> SHA-256 audit ZIPs</span>
           <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> No LLM key required</span>
         </div>
@@ -383,6 +389,14 @@
           <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-chart"/></svg></span><h3>Grafana dashboards</h3><p>Pre-built panels for queue depth, bind-ready memos, fail-closed oracle referrals, and ZTA token spend.</p></div>
           <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-database"/></svg></span><h3>OpenObserve ingest</h3><p>Structured JSON logs land in OpenObserve for search across submissions, UW overrides, and PAS bind attempts.</p></div>
           <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-shield-check"/></svg></span><h3>Fail-closed honesty</h3><p>Missing live oracles or an unfiled rate book refer the file. Desk+ will not invent a clean loss run or a demo-book premium.</p></div>
+        </div>
+      </section>
+
+      <section id="privacy" class="privacy-band">
+        <div class="reveal">
+          <p class="section-label">De-identification</p>
+          <h2>Named insureds never leave the gate.</h2>
+          <p class="section-desc">If anyone gives us real files, named insureds and PII are stripped before we touch them with any LLM API. Same gate on all 12 insurance sections, mortgage, and lending. Deterministic UW still sees the file. The model does not.</p>
         </div>
       </section>
 
@@ -420,6 +434,7 @@
           <a href="/dashboard">Dashboard</a>
         </nav>
         <div>
+          <div style="margin-bottom:.25rem">Named insureds &amp; PII stripped before any LLM API call &mdash; every section.</div>
           <div style="margin-bottom:.25rem">AI-native underwriting for carriers, MGAs &amp; aggregators.</div>
           <div>&copy; 2026 Rytera Inc. All rights reserved.</div>
         </div>

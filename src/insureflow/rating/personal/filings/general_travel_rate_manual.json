@@ -1,0 +1,74 @@
+{
+  "filing_id": "GNR-TRAVEL-2026-01",
+  "product": "General Travel — Domestic / International",
+  "carrier": "Filed General Non-Life Rate Manual",
+  "serff_tracking": "SERFF-GI-2026-TRL-001",
+  "effective_date": "2026-01-01",
+  "state_version": "IND-ALL",
+  "currency": "INR",
+  "rating_basis": "Rate per 10 lakh (1,000,000 INR) of medical sum insured, multiplied by a trip-duration band (days). Exposure is the declared trip cost; no limit-cap applies to travel.",
+  "rating_engine": "general_travel_filing",
+  "eligibility": {
+    "min_limit": 1000000,
+    "max_limit": 50000000,
+    "min_declared_exposure": 0
+  },
+  "products": {
+    "travel_domestic": {
+      "name": "Domestic Travel",
+      "rate_basis": "limit",
+      "exposure_key": "trip_cost",
+      "exposure_label": "Trip Cost",
+      "exposure_labels": ["trip cost", "trip budget", "total trip cost", "package cost"],
+      "limit_labels": ["sum insured", "medical cover", "medical limit", "cover limit", "indemnity limit"],
+      "unit": 1000000,
+      "coverages": {
+        "default": { "base_rate": 800, "min_premium": 500, "expense_constant": 200 }
+      },
+      "risk_class_factors": { "high": 1.6, "medium": 1.2, "low": 1.0 },
+      "limit_factors": [
+        { "max_limit": 10000000, "factor": 1.0 },
+        { "max_limit": 25000000, "factor": 1.0 },
+        { "max_limit": 50000000, "factor": 1.0 }
+      ],
+      "duration_factors": [
+        { "max_days": 7, "factor": 1.0 },
+        { "max_days": 30, "factor": 1.3 },
+        { "max_days": 365, "factor": 1.7 }
+      ],
+      "deductible_factors": [
+        { "max_deductible": 50000, "factor": 1.0 },
+        { "max_deductible": 200000, "factor": 0.95 }
+      ],
+      "claims_factors": { "none": 1.0, "medium": 1.2, "high": 1.35 }
+    },
+    "travel_international": {
+      "name": "International Travel",
+      "rate_basis": "limit",
+      "exposure_key": "trip_cost",
+      "exposure_label": "Trip Cost",
+      "exposure_labels": ["trip cost", "trip budget", "total trip cost", "package cost"],
+      "limit_labels": ["sum insured", "medical cover", "medical limit", "cover limit", "indemnity limit"],
+      "unit": 1000000,
+      "coverages": {
+        "default": { "base_rate": 1800, "min_premium": 1500, "expense_constant": 400 }
+      },
+      "risk_class_factors": { "high": 1.9, "medium": 1.35, "low": 1.0 },
+      "limit_factors": [
+        { "max_limit": 10000000, "factor": 1.0 },
+        { "max_limit": 25000000, "factor": 1.0 },
+        { "max_limit": 50000000, "factor": 0.95 }
+      ],
+      "duration_factors": [
+        { "max_days": 7, "factor": 1.0 },
+        { "max_days": 30, "factor": 1.35 },
+        { "max_days": 365, "factor": 1.8 }
+      ],
+      "deductible_factors": [
+        { "max_deductible": 100000, "factor": 1.0 },
+        { "max_deductible": 500000, "factor": 0.9 }
+      ],
+      "claims_factors": { "none": 1.0, "medium": 1.25, "high": 1.4 }
+    }
+  }
+}

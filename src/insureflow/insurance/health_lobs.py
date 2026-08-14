@@ -54,7 +54,7 @@ HEALTH_UW_RESPONSIBILITIES: list[dict[str, str]] = [
     {
         "id": "decision",
         "title": "Decision",
-        "summary": "Issue, load, impose waiting periods / exclusions, refer, or decline. Catalog products are not auto-rated.",
+        "summary": "Issue, load, impose waiting periods / exclusions, refer, or decline. Filed health leaves rate from HLTH-2026-01; do not invent premium off the manual.",
     },
 ]
 
@@ -926,8 +926,8 @@ def health_hub_payload() -> dict[str, Any]:
         "summary": (
             "Retail health underwriting — individual mediclaim, family floater, critical illness, "
             "senior, group/affinity, top-up, personal accident, disability, and related covers. "
-            "Each leaf has a shared KYC base packet plus product-specific documents. "
-            "Catalog until a filed health rate manual is imported (no invented premium)."
+            "Each leaf has a shared KYC base packet plus product-specific documents and rates "
+            "from the filed health manual (HLTH-2026-01) — all 37 leaves are live."
         ),
         "base_packet": list(HEALTH_BASE_PACKET),
         "uw_responsibilities": list(HEALTH_UW_RESPONSIBILITIES),

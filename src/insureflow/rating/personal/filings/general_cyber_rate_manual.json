@@ -1,0 +1,68 @@
+{
+  "filing_id": "GNR-CYBER-2026-01",
+  "product": "General Cyber — Data Breach / Ransomware",
+  "carrier": "Filed General Non-Life Rate Manual",
+  "serff_tracking": "SERFF-GI-2026-CYB-001",
+  "effective_date": "2026-01-01",
+  "state_version": "IND-ALL",
+  "currency": "INR",
+  "rating_basis": "Rate per 10 lakh (1,000,000 INR) of indemnity limit; exposure is declared annual revenue used for the limit-cap check.",
+  "rating_engine": "general_cyber_filing",
+  "eligibility": {
+    "min_limit": 1000000,
+    "max_limit": 50000000,
+    "min_declared_exposure": 100000
+  },
+  "products": {
+    "cyber_data_breach": {
+      "name": "Cyber Data Breach Cover",
+      "rate_basis": "limit",
+      "exposure_key": "revenue",
+      "exposure_label": "Declared Revenue",
+      "exposure_labels": ["revenue", "annual revenue", "gross revenue", "gross receipts", "turnover"],
+      "limit_labels": ["indemnity limit", "limit of indemnity", "sum insured", "cyber limit", "breach limit"],
+      "limit_exposure_ratio_cap": 2.0,
+      "unit": 1000000,
+      "coverages": {
+        "default": { "base_rate": 3500, "min_premium": 12000, "expense_constant": 700 }
+      },
+      "risk_class_factors": { "high": 1.9, "medium": 1.2, "low": 1.0 },
+      "limit_factors": [
+        { "max_limit": 10000000, "factor": 1.15 },
+        { "max_limit": 25000000, "factor": 1.0 },
+        { "max_limit": 50000000, "factor": 0.9 }
+      ],
+      "deductible_factors": [
+        { "max_deductible": 100000, "factor": 1.0 },
+        { "max_deductible": 500000, "factor": 0.9 },
+        { "max_deductible": 1000000, "factor": 0.82 }
+      ],
+      "claims_factors": { "none": 1.0, "medium": 1.2, "high": 1.35 }
+    },
+    "cyber_ransomware": {
+      "name": "Cyberattack / Ransomware Cover",
+      "rate_basis": "limit",
+      "exposure_key": "revenue",
+      "exposure_label": "Declared Revenue",
+      "exposure_labels": ["revenue", "annual revenue", "gross revenue", "gross receipts", "turnover"],
+      "limit_labels": ["indemnity limit", "limit of indemnity", "sum insured", "cyber limit", "ransomware limit"],
+      "limit_exposure_ratio_cap": 2.0,
+      "unit": 1000000,
+      "coverages": {
+        "default": { "base_rate": 3000, "min_premium": 15000, "expense_constant": 800 }
+      },
+      "risk_class_factors": { "high": 1.95, "medium": 1.25, "low": 1.0 },
+      "limit_factors": [
+        { "max_limit": 10000000, "factor": 1.2 },
+        { "max_limit": 25000000, "factor": 1.0 },
+        { "max_limit": 50000000, "factor": 0.88 }
+      ],
+      "deductible_factors": [
+        { "max_deductible": 100000, "factor": 1.0 },
+        { "max_deductible": 500000, "factor": 0.92 },
+        { "max_deductible": 1000000, "factor": 0.85 }
+      ],
+      "claims_factors": { "none": 1.0, "medium": 1.25, "high": 1.4 }
+    }
+  }
+}

@@ -28,6 +28,15 @@ class InsuranceLine(str, Enum):
     CRIME = "crime"
     BUILDERS_RISK = "builders_risk"
     SURETY = "surety_bonds"
+    # Extended commercial taxonomy leaves (leaf-filing rated)
+    AVIATION = "aviation"
+    FLOOD = "flood_commercial"
+    EARTHQUAKE = "earthquake_commercial"
+    POLLUTION = "pollution_liability"
+    KIDNAP_RANSOM = "kidnap_ransom"
+    POLITICAL_RISK = "political_risk"
+    TERRORISM = "terrorism"
+    LEGAL_EXPENSE = "legal_expense"
     # Personal lines
     PERSONAL_HOMEOWNERS = "personal_homeowners"
     PERSONAL_AUTO = "personal_auto"

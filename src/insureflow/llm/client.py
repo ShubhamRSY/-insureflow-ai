@@ -28,10 +28,13 @@ class LLMClient:
         self,
         model_tier: str = "default",
         agent: str = "",
+        redact_pii: bool = True,
     ) -> None:
         self.model_tier = model_tier
         self.agent = agent
+        self.redact_pii = redact_pii
         self._client: Any = None
+        self._redactor: Any = None
 
         if model_tier == "cheap":
             self.provider = settings.llm_cheap_provider or settings.llm_provider
@@ -140,6 +143,20 @@ class LLMClient:
 
         return self._client
 
+    def _redact_for_egress(self, text: str) -> str:
+        """Strip named insureds and PII before any model API call.
+
+        Deterministic UW still sees the original file locally. Only the
+        payload that leaves the process toward an LLM provider is redacted.
+        """
+        if not self.redact_pii or not text:
+            return text
+        if self._redactor is None:
+            from insureflow.redaction.redactor import PIIRedactor
+
+            self._redactor = PIIRedactor()
+        return self._redactor.redact(text)
+
     def complete(
         self,
         system_prompt: str,
@@ -152,6 +169,8 @@ class LLMClient:
 
         client = self._get_client()
         provider = self.provider
+        system_prompt = self._redact_for_egress(system_prompt)
+        user_prompt = self._redact_for_egress(user_prompt)
 
         if provider == "openai" or provider == "vllm":
             kwargs: dict[str, Any] = {
@@ -202,6 +221,8 @@ class LLMClient:
         """
         client = self._get_client()
         provider = self.provider
+        system_prompt = self._redact_for_egress(system_prompt)
+        user_prompt = self._redact_for_egress(user_prompt)
 
         if provider == "openai" or provider == "vllm":
             kwargs: dict[str, Any] = {
@@ -269,6 +290,7 @@ class LLMClient:
         """Generates a vector embedding for the given text."""
         client = self._get_client()
         provider = self.provider
+        text = self._redact_for_egress(text)
 
         if provider in ("openai", "vllm"):
             # Using OpenAI's standard embedding model

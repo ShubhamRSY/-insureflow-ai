@@ -1,0 +1,41 @@
+{
+  "panel_id": "rytera_default_panel",
+  "description": "Appointed writing companies for this desk. Replace or extend with your carrier panel. These are panel slots — not live market appointments Rytera claims on your behalf.",
+  "companies": [
+    {
+      "id": "pilot-carrier",
+      "name": "InsureFlow Pilot Carrier",
+      "kind": "demo",
+      "naic": "",
+      "notes": "Demo rate-book company for shadow pilots. Not a live appointment."
+    },
+    {
+      "id": "meridian-mutual",
+      "name": "Meridian Mutual",
+      "kind": "panel",
+      "naic": "",
+      "notes": "Example appointed carrier. Swap for a company on your panel."
+    },
+    {
+      "id": "harbor-casualty",
+      "name": "Harbor Casualty",
+      "kind": "panel",
+      "naic": "",
+      "notes": "Example appointed carrier."
+    },
+    {
+      "id": "northwind-indemnity",
+      "name": "Northwind Indemnity",
+      "kind": "panel",
+      "naic": "",
+      "notes": "Example appointed carrier."
+    },
+    {
+      "id": "pacific-coast-assurance",
+      "name": "Pacific Coast Assurance",
+      "kind": "panel",
+      "naic": "",
+      "notes": "Example appointed carrier."
+    }
+  ]
+}

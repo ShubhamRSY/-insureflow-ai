@@ -22,17 +22,17 @@ const nav = [
     children: [
       { to: '/insurance', label: 'All 12 sections' },
       { to: '/insurance/sections/life', label: '1. Life', tag: 'Live' },
-      { to: '/insurance/sections/health', label: '2. Health', tag: 'Catalog' },
-      { to: '/insurance/sections/general', label: '3. General / Non-Life', tag: 'Catalog' },
+      { to: '/insurance/sections/health', label: '2. Health', tag: 'Live' },
+      { to: '/insurance/sections/general', label: '3. General / Non-Life', tag: 'Live' },
       { to: '/insurance/sections/commercial', label: '4. Business / Commercial', tag: 'Live' },
-      { to: '/insurance/sections/specialty', label: '5. Other / Specialty', tag: 'Catalog' },
-      { to: '/insurance/sections/provider', label: '6. By Provider Type', tag: 'Catalog' },
-      { to: '/insurance/sections/engineering', label: '7. Engineering', tag: 'Catalog' },
-      { to: '/insurance/sections/aviation', label: '8. Aviation', tag: 'Catalog' },
-      { to: '/insurance/sections/fidelity', label: '9. Fidelity & Burglary', tag: 'Catalog' },
-      { to: '/insurance/sections/catastrophe', label: '10. Catastrophe', tag: 'Catalog' },
-      { to: '/insurance/sections/niche-liability', label: '11. Niche Liability', tag: 'Catalog' },
-      { to: '/insurance/sections/warranty-financial-emerging', label: '12. Warranty / Financial / Emerging', tag: 'Catalog' },
+      { to: '/insurance/sections/specialty', label: '5. Other / Specialty', tag: 'Live' },
+      { to: '/insurance/sections/provider', label: '6. By Provider Type', tag: 'Live' },
+      { to: '/insurance/sections/engineering', label: '7. Engineering', tag: 'Live' },
+      { to: '/insurance/sections/aviation', label: '8. Aviation', tag: 'Live' },
+      { to: '/insurance/sections/fidelity', label: '9. Fidelity & Burglary', tag: 'Live' },
+      { to: '/insurance/sections/catastrophe', label: '10. Catastrophe', tag: 'Live' },
+      { to: '/insurance/sections/niche-liability', label: '11. Niche Liability', tag: 'Live' },
+      { to: '/insurance/sections/warranty-financial-emerging', label: '12. Warranty / Financial / Emerging', tag: 'Live' },
     ],
   },
   { section: 'Reference' },
@@ -360,6 +360,11 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
         </header>
 
         <main className="flex-1 p-6 lg:p-8">
+          {(pathname.startsWith('/insurance') || pathname.startsWith('/mortgage') || pathname.startsWith('/lending')) && (
+            <div className="mb-4 rounded-xl border border-emerald-500/20 bg-emerald-500/8 px-4 py-2.5 text-xs leading-relaxed text-emerald-200/90">
+              Named insureds and PII are stripped before any LLM API call — every insurance section, mortgage, and lending.
+            </div>
+          )}
           <Outlet context={{ user, onLogin }} />
         </main>
 
