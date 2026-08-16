@@ -1505,6 +1505,148 @@ _EVALUATORS: dict[InsuranceLine, Callable[[str], tuple[list[ChecklistFlag], list
 }
 
 
+# Business-interruption triggers — BI runs as an additive pass whenever the
+# submission carries BI / extra-expense coverages.
+_BI_TRIGGERS = (
+    "business interruption",
+    "extra expense",
+    "extra_extra_expense",
+    "contingent business interruption",
+    "civil authority",
+    "gross earnings",
+    "gross profit",
+    "business income",
+    "b.i.",
+)
+
+
+def _eval_bi(blob: str) -> tuple[list[ChecklistFlag], list[ScenarioHit]]:
+    """Business interruption / extra-expense worksheet review.
+
+    BI protects the lost net income + continuing expenses during a covered
+    shutdown — so an inadequate BI limit, missing 80% coinsurance, or reliance
+    on a single supplier/location all undermine the protection.
+    """
+    flags: list[ChecklistFlag] = []
+    scenarios: list[ScenarioHit] = []
+    category = "business_interruption"
+
+    bi_limit = _num(blob, "bi limit", "business interruption limit", "bi amount", "gross earnings limit", "gross profit limit")
+    gross = _num(blob, "gross earnings", "gross profit", "annual gross earnings", "annual gross profit")
+    if gross is not None and bi_limit is not None and bi_limit < gross * 0.80:
+        _add_flag(
+            flags,
+            "BI_LIMIT_BELOW_80PCT",
+            "BI limit below 80% of gross earnings",
+            f"BI limit {bi_limit:,.0f} covers only {bi_limit / gross:.1%} of gross earnings {gross:,.0f} — under-reporting risk at loss time.",
+            severity=RiskSeverity.HIGH,
+            category=category,
+        )
+
+    coinsurance = _pct(blob, "bi coinsurance", "coinsurance")
+    if coinsurance is not None and coinsurance < 80:
+        _add_flag(
+            flags,
+            "BI_COINSURANCE_LOW",
+            "BI coinsurance below 80%",
+            f"BI coinsurance clause at {coinsurance:.0f}% — claims subject to the coinsurance penalty if under-reported.",
+            severity=RiskSeverity.HIGH,
+            category=category,
+        )
+
+    elimination = _num(blob, "elimination period", "waiting period", "bi elimination")
+    if elimination is not None and elimination > 72:
+        _add_flag(
+            flags,
+            "BI_ELIMINATION_LONG",
+            "Long BI elimination period",
+            f"Elimination period of {elimination:.0f} hours means coverage does not respond until that point — confirm the insured can absorb the gap.",
+            severity=RiskSeverity.MODERATE,
+            category=category,
+        )
+
+    single_supplier = _has(blob, "single supplier", "sole supplier", "single source", "single location dependency")
+    if single_supplier:
+        _add_flag(
+            flags,
+            "BI_SINGLE_SUPPLIER",
+            "Single supplier / location dependency",
+            "Revenue depends on a single supplier or location — contingent BI exposure is concentrated.",
+            severity=RiskSeverity.MODERATE,
+            category=category,
+        )
+        scenarios.append(
+            ScenarioHit(
+                code="BI_SINGLE_SOURCE_SCENARIO",
+                name="Single-source dependency",
+                description="Concentration of supply or production in one node amplifies any interruption.",
+                flag_codes=["BI_SINGLE_SUPPLIER"],
+                actions=[
+                    UWAction(
+                        action_type=UWActionType.HIGHER_DEDUCTIBLE,
+                        reason="Reduce BI loss potential via a longer elimination period",
+                    )
+                ],
+                decision_hint=UWDecision.CONDITIONAL_ACCEPT,
+            )
+        )
+
+    has_extra = _has(blob, "extra expense", "extra_extra_expense", "extra expense coverage")
+    has_contingent = _has(blob, "contingent business interruption", "contingent bi")
+    has_civil = _has(blob, "civil authority")
+    if has_extra:
+        _add_flag(
+            flags,
+            "BI_EXTRA_EXPENSE_PRESENT",
+            "Extra expense coverage present",
+            "Extra expense coverage found — verify the limit is sufficient to keep the operation running during restoration.",
+            severity=RiskSeverity.LOW,
+            category=category,
+        )
+    if has_contingent:
+        _add_flag(
+            flags,
+            "BI_CONTINGENT_PRESENT",
+            "Contingent BI coverage present",
+            "Contingent business interruption found — confirm key suppliers / customers are scheduled.",
+            severity=RiskSeverity.LOW,
+            category=category,
+        )
+    if has_civil:
+        _add_flag(
+            flags,
+            "BI_CIVIL_AUTHORITY_PRESENT",
+            "Civil-authority coverage present",
+            "Civil-authority ingress/egress coverage found — verify the time-and-distance limit.",
+            severity=RiskSeverity.LOW,
+            category=category,
+        )
+
+    return flags, scenarios
+
+
+def evaluate_bi_checklist(bundle: SubmissionBundle) -> CommercialUWResult:
+    """Run the business-interruption evaluator standalone and return a result."""
+    blob = _blob(bundle).lower()
+    flags, scenarios = _eval_bi(blob)
+    actions: list[UWAction] = []
+    for scenario in scenarios:
+        actions.extend(scenario.actions)
+    decision = _decision_from_flags_and_actions(flags, actions, scenarios)
+    findings = _flags_to_findings(flags, InsuranceLine.COMMERCIAL_PROPERTY)
+    story = _build_story(InsuranceLine.COMMERCIAL_PROPERTY, flags, scenarios, decision, actions, 0.0)
+    return CommercialUWResult(
+        line=InsuranceLine.COMMERCIAL_PROPERTY,
+        decision=decision,
+        flags=flags,
+        scenarios=scenarios,
+        actions=actions,
+        findings=findings,
+        premium_mod_pct=0.0,
+        story=story,
+    )
+
+
 def _build_story(
     line: InsuranceLine,
     flags: list[ChecklistFlag],
@@ -1591,6 +1733,16 @@ def evaluate_commercial_checklist(bundle: SubmissionBundle, line: InsuranceLine)
     blob = _blob(bundle).lower()
     evaluator = _EVALUATORS.get(line, _eval_property)
     flags, scenarios = evaluator(blob)
+
+    # Additive BI pass: business-interruption coverages ride on property lines,
+    # so evaluate them whenever the package carries BI / extra-expense terms.
+    if any(t in blob for t in _BI_TRIGGERS):
+        try:
+            bi_flags, bi_scenarios = _eval_bi(blob)
+            flags = list(flags) + bi_flags
+            scenarios = list(scenarios) + bi_scenarios
+        except Exception:
+            pass
 
     actions: list[UWAction] = []
     for scenario in scenarios:

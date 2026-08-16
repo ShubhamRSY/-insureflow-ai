@@ -278,7 +278,7 @@ export default function InsuranceSourceHub({ onSubmit, loading }) {
         <label className="inline-flex cursor-pointer items-center gap-1.5 text-xs text-slate-500 hover:text-slate-300 transition">
           <Upload className="h-3.5 w-3.5" />
           Upload files
-          <input type="file" multiple className="hidden" accept=".xml,.json,.pdf,.txt,.md" onChange={handleManualUpload} />
+          <input type="file" multiple className="hidden" accept=".xml,.json,.pdf,.txt,.md,.csv,.xlsx,.xls,.docx,.doc,.eml,.html,.png,.jpg,.jpeg,.tiff,.tif,.bmp" onChange={handleManualUpload} />
         </label>
       </div>
 

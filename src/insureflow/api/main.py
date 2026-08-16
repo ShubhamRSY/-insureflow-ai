@@ -4226,6 +4226,38 @@ def get_cope_analysis(
     }
 
 
+@app.get("/verification/{bundle_id}")
+def get_verification_report(
+    bundle_id: str,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Return the layered extraction-verification report + exception queue for a bundle.
+
+    The queue entries carry ``page_number``/``bbox`` so review UIs can highlight the
+    exact source location next to the disputed extracted value.
+    """
+    from insureflow.audit.store import AuditStore
+
+    store = AuditStore()
+    report = store.load_json(bundle_id, "verification.json", org_id=current.org_id)
+    if report is None:
+        bundle_data = store.load_json(bundle_id, "submission_bundle.json", org_id=current.org_id)
+        if not bundle_data:
+            raise HTTPException(status_code=404, detail="No verification data for bundle")
+        from insureflow.models.submissions import SubmissionBundle
+        from insureflow.verification.aggregate import aggregate_verification
+
+        try:
+            report = aggregate_verification(SubmissionBundle(**bundle_data))
+        except Exception as exc:
+            raise HTTPException(status_code=500, detail=f"Could not rebuild verification report: {exc}") from exc
+    return {
+        "bundle_id": bundle_id,
+        "report": report,
+        "review_required": bool(report.get("flagged_doc_count")),
+    }
+
+
 @app.get("/underwriting/market")
 def get_market_cycle_status(
     current: TokenData = Depends(require_role(Role.VIEWER)),

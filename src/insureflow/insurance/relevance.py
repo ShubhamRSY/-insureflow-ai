@@ -70,7 +70,7 @@ _IRRELEVANT_KEYWORDS: tuple[str, ...] = (
     "unsubscribe from this email",
 )
 
-_INSURANCE_EXT = {".xml", ".json", ".pdf", ".txt", ".md", ".doc", ".docx", ".csv", ".xlsx", ".xls", ".png", ".jpg", ".jpeg", ".tif", ".tiff"}
+_INSURANCE_EXT = {".xml", ".json", ".pdf", ".txt", ".md", ".doc", ".docx", ".csv", ".xlsx", ".xls", ".png", ".jpg", ".jpeg", ".tif", ".tiff", ".eml", ".msg", ".html", ".htm"}
 _TYPED = {t for t in InsuranceDocumentType if t not in {InsuranceDocumentType.SUPPLEMENTAL, InsuranceDocumentType.IRRELEVANT}}
 
 

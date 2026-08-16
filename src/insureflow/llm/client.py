@@ -311,7 +311,7 @@ class LLMClient:
         user_prompt: str,
         response_model: type,
     ) -> Any:
-        raw = self.complete(system_prompt, user_prompt)
+        raw = self.complete(system_prompt, user_prompt, response_format=response_model)
 
         clean_raw = raw.strip()
         if clean_raw.startswith("```json"):

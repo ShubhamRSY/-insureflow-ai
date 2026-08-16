@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import math
+import os
 import re
 from abc import ABC, abstractmethod
 from typing import Any
@@ -245,12 +246,209 @@ class PgVectorStore(VectorStore):
         return embed_text(text)
 
 
-def get_vector_store(database_url: str | None = None) -> VectorStore:
-    """Postgres + pgvector when DATABASE_URL is set; otherwise in-memory.
+class ChromaVectorStore(VectorStore):
+    """ChromaDB backend — enabled when ``CHROMA_PERSIST_DIR`` is set.
 
-    This is the product vector DB — not Pinecone, Weaviate, or Qdrant.
+    Uses a local ``PersistentClient`` (EphemeralClient when the dir is empty)
+    with cosine space. Guidelines are serialized as JSON metadata so every
+    field survives a round trip.
+    """
+
+    def __init__(self, persist_dir: str, collection_name: str = _DEFAULT_COLLECTION) -> None:
+        self._persist_dir = persist_dir
+        self._collection_name = _sql_ident(collection_name)
+        self._client: Any = None
+        self._collection: Any = None
+        self._ids: set[str] = set()
+
+    def _ensure_collection(self) -> Any:
+        if self._collection is not None:
+            return self._collection
+        import chromadb
+
+        if self._persist_dir:
+            self._client = chromadb.PersistentClient(path=self._persist_dir)
+        else:
+            self._client = chromadb.EphemeralClient()
+        self._collection = self._client.get_or_create_collection(
+            name=self._collection_name,
+            metadata={"hnsw:space": "cosine"},
+        )
+        return self._collection
+
+    def index_guidelines(self, guidelines: list[Guideline]) -> None:
+        if not guidelines:
+            return
+        col = self._ensure_collection()
+        col.upsert(
+            ids=[g.id for g in guidelines],
+            embeddings=[self._embed(f"{g.title} {g.content}") for g in guidelines],
+            documents=[g.content for g in guidelines],
+            metadatas=[self._meta(g) for g in guidelines],
+        )
+        self._ids.update(g.id for g in guidelines)
+
+    def search(self, query: str, top_k: int = 5) -> list[tuple[Guideline, float]]:
+        col = self._ensure_collection()
+        try:
+            result = col.query(query_embeddings=[self._embed(query)], n_results=max(top_k, 1))
+        except Exception:
+            count = col.count()
+            if count == 0:
+                return []
+            result = col.query(query_embeddings=[self._embed(query)], n_results=count)
+        scored: list[tuple[Guideline, float]] = []
+        for meta, distance in zip(result.get("metadatas", [[]])[0] or [], result.get("distances", [[]])[0] or []):
+            raw = meta.get("json") if meta else None
+            if not raw:
+                continue
+            g = Guideline.model_validate_json(raw)
+            sim = 1.0 - float(distance)
+            scored.append((g, max(0.0, min(sim, 1.0))))
+        scored.sort(key=lambda x: x[1], reverse=True)
+        return scored[:top_k]
+
+    def clear(self) -> None:
+        col = self._ensure_collection()
+        if self._ids:
+            col.delete(ids=list(self._ids))
+            self._ids.clear()
+
+    @staticmethod
+    def _meta(g: Guideline) -> dict[str, Any]:
+        return {"json": g.model_dump_json()}
+
+    @staticmethod
+    def _embed(text: str) -> list[float]:
+        from insureflow.llm.embeddings import embed_text
+
+        return embed_text(text)
+
+
+class WeaviateVectorStore(VectorStore):
+    """Weaviate backend — enabled when ``WEAVIATE_URL`` is set.
+
+    Best-effort: supports the v4 client (``connect_to_custom``) and falls back
+    to the v3 ``weaviate.Client``. Never raises at selection time; any failure
+    degrades to in-memory.
+    """
+
+    def __init__(self, url: str, collection_name: str = _DEFAULT_COLLECTION) -> None:
+        self._url = url
+        self._collection_name = _sql_ident(collection_name)
+        self._client: Any = None
+        self._v4 = False
+
+    def _connect(self) -> Any:
+        if self._client is not None:
+            return self._client
+        import weaviate
+
+        auth = None
+        if os.getenv("WEAVIATE_API_KEY"):
+            from weaviate.auth import AuthApiKey
+
+            auth = AuthApiKey(os.getenv("WEAVIATE_API_KEY"))
+        try:  # v4 client
+            from weaviate.config import ConnectionConfig
+
+            params = ConnectionConfig.from_url(self._url)
+            self._client = weaviate.connect_to_custom(params, auth_client_secret=auth)  # type: ignore[call-arg]
+            self._v4 = True
+        except Exception:
+            self._client = weaviate.Client(url=self._url)  # v3 client
+        return self._client
+
+    def _ensure_collection(self) -> Any:
+        client = self._connect()
+        if self._v4:
+            if client.collections.exists(self._collection_name):
+                return client.collections.get(self._collection_name)
+            return client.collections.create(self._collection_name)
+        try:
+            client.schema.get(self._collection_name)
+        except Exception:
+            client.schema.create_class({"class": self._collection_name})
+        return client
+
+    def index_guidelines(self, guidelines: list[Guideline]) -> None:
+        if not guidelines:
+            return
+        col = self._ensure_collection()
+        if self._v4:
+            col.data.insert_many(
+                [{**_properties(g), "vector": self._embed(f"{g.title} {g.content}")} for g in guidelines]
+            )
+        else:
+            for g in guidelines:
+                col.data_object.create(**_properties(g), vector=self._embed(f"{g.title} {g.content}"))
+
+    def search(self, query: str, top_k: int = 5) -> list[tuple[Guideline, float]]:
+        col = self._ensure_collection()
+        vec = self._embed(query)
+        if self._v4:
+            response = col.query.near_vector(near_vector=vec, limit=top_k, return_metadata=["distance"])
+            items = response.objects
+            scored = []
+            for obj in items:
+                g = Guideline.model_validate_json(obj.properties["json"])
+                scored.append((g, max(0.0, 1.0 - float(getattr(obj.metadata, "distance", 0.0)))))
+        else:
+            query_result = col.query.get(self._collection_name, _FIELDS).with_near_vector({"vector": vec}).with_limit(top_k).do()
+            data = query_result.get("data", {}).get("Get", {}).get(self._collection_name, [])
+            scored = []
+            for item in data:
+                g = Guideline.model_validate_json(item.pop("json"))
+                scored.append((g, 1.0 - float(item.get("_additional", {}).get("distance", 0.0))))
+        scored.sort(key=lambda x: x[1], reverse=True)
+        return scored[:top_k]
+
+    def clear(self) -> None:
+        col = self._ensure_collection()
+        if self._v4:
+            col.data.delete_many(where={})
+        else:
+            col.data_object.delete_by_id(id="*")
+
+
+_FIELDS = "title content category source risk_impact version status json"
+
+
+def _properties(g: Guideline) -> dict[str, Any]:
+    return {
+        "title": g.title,
+        "content": g.content,
+        "category": g.category.value,
+        "source": g.source.value,
+        "risk_impact": g.risk_impact,
+        "version": g.version,
+        "status": g.status.value,
+        "json": g.model_dump_json(),
+    }
+
+
+def get_vector_store(database_url: str | None = None) -> VectorStore:
+    """Vector backend selection: Chroma → Weaviate → Postgres/pgvector → in-memory.
+
+    This is the product vector DB — Chroma/Weaviate only when explicitly
+    configured via ``CHROMA_PERSIST_DIR`` / ``WEAVIATE_URL``, otherwise pgvector
+    on ``DATABASE_URL``, otherwise in-memory.
     """
     import os
+
+    chroma_dir = os.getenv("CHROMA_PERSIST_DIR", "").strip()
+    if chroma_dir:
+        try:
+            return ChromaVectorStore(chroma_dir)
+        except Exception as exc:
+            logger.warning("Chroma unavailable (%s) — falling through", exc)
+
+    weaviate_url = os.getenv("WEAVIATE_URL", "").strip()
+    if weaviate_url:
+        try:
+            return WeaviateVectorStore(weaviate_url)
+        except Exception as exc:
+            logger.warning("Weaviate unavailable (%s) — falling through", exc)
 
     url = (database_url if database_url is not None else os.getenv("DATABASE_URL", "")).strip()
     if not url.lower().startswith("postgres"):

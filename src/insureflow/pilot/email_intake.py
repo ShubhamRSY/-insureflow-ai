@@ -12,7 +12,7 @@ from typing import Any
 from insureflow.pilot.auto_redact import redact_pilot_package
 from insureflow.pilot.package_loader import load_pilot_package
 
-BINARY_SUFFIXES = {".pdf", ".png", ".jpg", ".jpeg", ".tiff", ".bmp", ".tif"}
+BINARY_SUFFIXES = {".pdf", ".png", ".jpg", ".jpeg", ".tiff", ".bmp", ".tif", ".xlsx", ".xls", ".xlsm", ".docx", ".doc", ".eml", ".msg"}
 
 
 def _slug(value: str, fallback: str = "submission") -> str:

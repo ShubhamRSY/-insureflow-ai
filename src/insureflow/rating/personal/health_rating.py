@@ -143,6 +143,25 @@ def rate_health(
     ded_f = _band_factor(manual.get("deductible_factors") or [], deductible, "max_deductible")
     claims_f = float((manual.get("claims_factors") or {}).get(severity, 1.0))
 
+    # Morbidity-table incidence + covered-lives exposure base + network structure
+    # enrich the metadata without disturbing the filed rate calculation.
+    morbidity = 0.0
+    covered_lives = 0.0
+    network = None
+    benefit = str(terms.get("benefit_type") or "").lower()
+    if age is not None:
+        from insureflow.rating.personal.morbidity import morbidity_rate
+
+        benefit_type = "critical_illness" if "critical" in benefit or "ci" in benefit else "disability"
+        morbidity = morbidity_rate(age=age, sex="male", benefit_type=benefit_type)
+    from insureflow.underwriting.health_exposure import covered_lives as _covered_lives
+
+    if bundle.structured is not None and bundle.structured.financial is not None:
+        covered_lives = _covered_lives(employee_count=bundle.structured.financial.employee_count)
+    from insureflow.underwriting.health_network import network_assessment_from_bundle
+
+    network = network_assessment_from_bundle(bundle)
+
     base_premium = round(base_rate * (si / 1000.0), 2)
     adjusted = base_premium * age_f * si_f * ded_f * claims_f + expense_constant
     adjusted = max(adjusted, min_premium)
@@ -180,6 +199,9 @@ def rate_health(
             "sum_insured": si,
             "deductible": deductible,
             "claims_severity": severity,
+            "morbidity_rate_per_1000": morbidity,
+            "covered_lives": covered_lives,
+            "network": network,
             **terms,
         },
     )

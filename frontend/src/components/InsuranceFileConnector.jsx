@@ -88,13 +88,13 @@ export default function InsuranceFileConnector({ onSubmit, loading }) {
         >
           <Upload className="mx-auto h-10 w-10 text-slate-500" />
           <p className="mt-3 font-medium text-slate-200">Drop broker documents here</p>
-          <p className="mt-1 text-sm text-slate-500">ACORD XML, loss runs, SOV, inspections, broker JSON, PDFs</p>
+          <p className="mt-1 text-sm text-slate-500">ACORD XML, loss runs, SOV, inspections, broker JSON, PDFs, Office docs</p>
           <label className="btn-primary mt-5 cursor-pointer inline-flex">
             Browse files
             <input
               type="file"
               multiple
-              accept=".xml,.json,.pdf,.txt,.md,.png,.jpg,.jpeg"
+              accept=".xml,.json,.pdf,.txt,.md,.csv,.xlsx,.xls,.docx,.doc,.eml,.html,.png,.jpg,.jpeg,.tiff,.tif,.bmp"
               className="hidden"
               onChange={(e) => ingestFiles(e.target.files)}
             />

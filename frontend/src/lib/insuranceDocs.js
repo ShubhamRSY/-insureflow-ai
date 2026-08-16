@@ -12,40 +12,40 @@ export const DOC_SLOTS = {
     id: 'loss_run',
     label: 'Loss Run',
     required: false,
-    accept: '.pdf,.txt,.md,.xml,.json',
+    accept: '.pdf,.txt,.md,.xml,.json,.xlsx,.xls,.csv,.docx',
     hint: 'Claims history from the current/prior carrier: claim dates, amounts paid & incurred, loss ratio.',
   },
   schedule_of_values: {
     id: 'schedule_of_values',
     label: 'Schedule of Values (SOV)',
     required: false,
-    accept: '.pdf,.txt,.md,.xlsx,.csv',
+    accept: '.pdf,.txt,.md,.xlsx,.xls,.csv',
     hint: 'Property schedule listing each location/asset and its insured value (TIV, building limits).',
   },
   inspection_report: {
     id: 'inspection_report',
     label: 'Inspection Report',
     required: false,
-    accept: '.pdf,.txt,.md',
+    accept: '.pdf,.txt,.md,.docx,.html',
     hint: 'Third-party property inspection — roof, sprinkler, occupancy, hazards.',
   },
   broker_slip: {
     id: 'broker_slip',
     label: 'Broker API / JSON',
     required: false,
-    accept: '.json,.txt,.md',
+    accept: '.json,.txt,.md,.eml',
     hint: 'Broker portal export or submission summary JSON from the wholesaler.',
   },
   supplemental: {
     id: 'supplemental',
     label: 'Other / PDF',
     required: false,
-    accept: '.pdf,.png,.jpg,.jpeg,.txt,.md',
-    hint: 'Additional PDFs or scans — OCR will extract text automatically.',
+    accept: '.pdf,.png,.jpg,.jpeg,.tiff,.bmp,.tif,.docx,.doc,.xlsx,.xls,.csv,.eml,.html,.txt,.md',
+    hint: 'Additional PDFs, Office docs, or scans — text and tables are extracted automatically.',
   },
 };
 
-const BINARY_EXT = new Set(['pdf', 'png', 'jpg', 'jpeg', 'tiff', 'bmp', 'tif']);
+const BINARY_EXT = new Set(['pdf', 'png', 'jpg', 'jpeg', 'tiff', 'bmp', 'tif', 'xlsx', 'xls', 'docx', 'doc', 'eml', 'msg']);
 
 export function detectDocType(filename, textPreview = '') {
   const combined = `${filename}\n${textPreview}`.toLowerCase();

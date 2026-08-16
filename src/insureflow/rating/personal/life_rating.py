@@ -70,6 +70,28 @@ def rate_life(
         )
 
     if family == "annuity":
+        meta: dict[str, Any] = {
+            "filing_id": manual.get("filing_id"),
+            "rating_engine": "catalog_only",
+            "product_family": family,
+            "product_id": product_id or "",
+            "medical": medical.to_metadata(),
+            "financial": financial.to_metadata(),
+            "life_reinsurance": reinsurance.to_metadata(),
+        }
+        try:
+            from insureflow.rating.personal.annuity_rating import rate_annuity
+
+            illustration = rate_annuity(
+                bundle,
+                product_id=product_id,
+                coverage_id=coverage_id,
+                coverage_name=coverage_name,
+            )
+            meta["annuity_illustration"] = illustration.metadata.get("illustrative_payout", {})
+            meta["annuity_subtype"] = illustration.metadata.get("annuity_subtype", "fixed")
+        except Exception:
+            pass
         return QuoteResult(
             bundle_id=bundle.bundle_id,
             line=InsuranceLine.LIFE,
@@ -77,15 +99,7 @@ def rate_life(
             adjusted_premium=0.0,
             eligible=False,
             ineligibility_reasons=["Annuity requires payout / consideration factors — not rated on term mortality"],
-            metadata={
-                "filing_id": manual.get("filing_id"),
-                "rating_engine": "catalog_only",
-                "product_family": family,
-                "product_id": product_id or "",
-                "medical": medical.to_metadata(),
-                "financial": financial.to_metadata(),
-                "life_reinsurance": reinsurance.to_metadata(),
-            },
+            metadata=meta,
         )
 
     age = factors.age or 40

@@ -713,6 +713,41 @@ class InsurancePipeline:
         extraction_issues = validate_extraction(bundle)
         bundle.status = SubmissionStatus.EXTRACTED
 
+        # ── 3a. LAYERED EXTRACTION VERIFICATION (deterministic + agentic) ──
+        verification_meta: dict[str, Any] = {}
+        try:
+            from insureflow.verification.aggregate import aggregate_verification, flagged_submissions
+
+            verification_meta = aggregate_verification(bundle)
+            if verification_meta["checked_docs"]:
+                flagged = verification_meta["flagged_doc_count"]
+                audit.log(
+                    PipelineEvent.VERIFICATION_COMPLETE,
+                    f"Extraction verification: {verification_meta['checked_docs']} doc(s) checked, "
+                    f"{flagged} flagged · {verification_meta['error_count']} error(s) · "
+                    f"{verification_meta['warning_count']} warning(s)",
+                    metadata={
+                        "flagged_doc_count": flagged,
+                        "error_count": verification_meta["error_count"],
+                        "warning_count": verification_meta["warning_count"],
+                        "exception_count": verification_meta["exception_count"],
+                        "issues_by_code": verification_meta["issues_by_code"],
+                        "straight_through_processing": verification_meta["straight_through_processing"],
+                    },
+                )
+                try:
+                    audit.store.save_json(bid, "verification.json", verification_meta, org_id=self.org_id)
+                except Exception as exc:
+                    logger.debug("verification.json persist failed: %s", exc)
+                if flagged:
+                    progress.complete(
+                        "extraction",
+                        detail=f"{len(flagged_submissions(bundle))} doc(s) flagged for review",
+                        status="warning",
+                    )
+        except Exception as exc:
+            logger.warning("extraction verification aggregation failed: %s", exc)
+
         # ── 4. EXTERNAL DATA ORACLES (CLUE, NCCI, CAT / life MIB+Rx) + OFAC ──
         oracle_findings: list[Any] = []
         ofac_meta: dict[str, Any] = {}
@@ -911,6 +946,27 @@ class InsurancePipeline:
             memo.human_review_reasons.append("OCR failure on required documents")
             if memo.decision not in (UWDecision.DECLINE, UWDecision.REFER):
                 memo.decision = UWDecision.REFER
+
+        # Extraction-verification hold: flagged docs block straight-through processing.
+        if verification_meta and verification_meta.get("flagged_doc_count"):
+            from insureflow.models.agents import Finding, UWDecision
+            from insureflow.models.audit import EventSeverity
+            from insureflow.verification.aggregate import verification_findings
+
+            for finding in verification_findings(bundle):
+                memo.key_findings.append(Finding(**finding))
+            memo.human_review_required = True
+            memo.human_review_reasons.append(
+                f"Extraction verification flagged {verification_meta['flagged_doc_count']} document(s)"
+            )
+            if memo.decision not in (UWDecision.DECLINE, UWDecision.REFER):
+                memo.decision = UWDecision.REFER
+            audit.log(
+                PipelineEvent.HUMAN_REVIEW_REQUIRED,
+                f"Extraction verification hold: {verification_meta['flagged_doc_count']} document(s) "
+                f"flagged · {verification_meta['exception_count']} exception(s) in queue",
+                severity=EventSeverity.WARNING,
+            )
 
         # ── 6a. Low-confidence critical field hold ──
         confidence_floor = 0.6
@@ -1763,6 +1819,81 @@ class InsurancePipeline:
             "zta_report": zta_report,
         }
 
+        # ── Domain analytics: the full insurance taxonomy (financial metrics,
+        #    policy architecture, insurability, disclosure, claims lifecycle,
+        #    valuation, exposure bases). Each block degrades gracefully.
+        try:
+            from insureflow.rating.premium_accounting import premium_accounting_for_bundle
+            from insureflow.underwriting.causation import analyze_proximate_cause
+            from insureflow.underwriting.claims import (
+                claims_recovery_review,
+                defense_cost_assessment,
+                indemnity_valuation,
+            )
+            from insureflow.underwriting.combined_ratio import combined_ratio_from_bundle
+            from insureflow.underwriting.disclosure import assess_disclosure
+            from insureflow.underwriting.health_exposure import health_exposure_base
+            from insureflow.underwriting.insurability import assess_insurability
+            from insureflow.underwriting.legal_remedies import remedy_matrix
+            from insureflow.underwriting.policy_architecture import architecture_assessment
+            from insureflow.underwriting.solvency import assess_solvency
+            from insureflow.underwriting.valuation import valuation_from_bundle
+
+            premium_accounting = premium_accounting_for_bundle(bundle)
+            combined = combined_ratio_from_bundle(bundle)
+            insurability = assess_insurability(bundle)
+            disclosure = assess_disclosure(bundle)
+            remedy = remedy_matrix(disclosure)
+            claims_recovery = claims_recovery_review(bundle)
+            valuation = valuation_from_bundle(bundle)
+
+            claim_analytics: list[dict[str, Any]] = []
+            loss_run_claims: list[Any] = []
+            if bundle.structured is not None and bundle.structured.financial is not None and bundle.structured.financial.loss_run is not None:
+                loss_run_claims = list(bundle.structured.financial.loss_run.claims)
+                for claim in loss_run_claims:
+                    entry: dict[str, Any] = {"claim_id": claim.claim_id}
+                    try:
+                        entry["proximate_cause"] = analyze_proximate_cause(
+                            cause=claim.cause, description=claim.description
+                        ).model_dump()
+                    except Exception:
+                        pass
+                    claim_analytics.append(entry)
+
+            solvency = assess_solvency(
+                total_assets=0.0,
+                total_liabilities=0.0,
+                net_written_premium=premium_accounting.written_premium or 0.0,
+            )
+
+            domain: dict[str, Any] = {
+                "premium_accounting": premium_accounting.model_dump(),
+                "combined_ratio": combined.model_dump(),
+                "insurability": insurability.model_dump(),
+                "disclosure": disclosure.model_dump(),
+                "legal_remedy": remedy,
+                "claims_recovery": claims_recovery,
+                "claim_analytics": claim_analytics,
+                "defense_costs": defense_cost_assessment(loss_run_claims),
+                "indemnity_valuation": indemnity_valuation(
+                    replacement_cost=float(valuation.get("total_effective_value") or 0.0)
+                ),
+                "valuation": valuation,
+                "solvency": solvency.model_dump(),
+                "policy_architecture": [
+                    architecture_assessment(c) for c in (bundle.structured.coverages if bundle.structured else [])
+                ],
+                "health_exposure": health_exposure_base(bundle),
+            }
+            if insurability.insurable is False:
+                domain["insurability_blocked"] = insurability.failed_criteria
+            if not disclosure.utmost_good_faith:
+                domain["disclosure_breached"] = True
+            summary["domain_analytics"] = domain
+        except Exception as exc:
+            logger.debug("domain analytics skipped: %s", exc)
+
         # Add portfolio concentration data if available
         if portfolio_result:
             summary["portfolio_concentration_score"] = portfolio_result.risk_score
@@ -1864,6 +1995,7 @@ class InsurancePipeline:
             "quote_html": quote_html,
             "reconciliation": reconciliation.model_dump(),
             "provenance": provenance.model_dump(),
+            "verification": verification_meta,
             "audit_paths": audit_paths,
             "audit_trail_entries": len(audit.trail.entries) if audit.trail else 0,
         }

@@ -74,6 +74,18 @@ class CoverageDetail(BaseModel):
     sublimits: dict[str, float] = Field(default_factory=dict)
     endorsements: list[str] = Field(default_factory=list)
 
+    # ── Policy architecture (structured, not just text labels) ──
+    per_occurrence_limit: Optional[float] = None
+    aggregate_limit: Optional[float] = None
+    lifetime_maximum: Optional[float] = None
+    annual_maximum: Optional[float] = None
+    self_insured_retention: Optional[float] = None
+    coinsurance_pct: Optional[float] = None  # property coinsurance clause (e.g. 80)
+    copayment: Optional[float] = None  # health flat fee per service
+    elimination_period_days: Optional[int] = None  # disability / BI
+    waiting_period_days: Optional[int] = None  # pre-existing / maternity
+    valuation_basis: Optional[str] = None  # rcv | acv | agreed_value
+
 
 class LocationData(BaseModel):
     address: str
@@ -111,6 +123,13 @@ class ClaimRecord(BaseModel):
     # (0.0 = unknown/untrusted, 1.0 = fully verified). Computed by the parser from
     # extraction signals (table completeness, cross-source agreement, format).
     extraction_confidence: float = 0.0
+    # ── Claims lifecycle structured outcomes ──
+    subrogation_recovery: float = 0.0  # amount recovered from a negligent third party
+    salvage_value: float = 0.0  # value of retained/resold damaged property
+    defense_cost: float = 0.0  # defense costs incurred defending the claim
+    settlement_amount: Optional[float] = None  # negotiated settlement (if settled)
+    denial_reason: Optional[str] = None  # coverage denial basis if denied
+    adjudication_decision: Optional[str] = None  # approved | denied | settled | pending
 
 
 class LossRunData(BaseModel):
@@ -122,6 +141,8 @@ class LossRunData(BaseModel):
     loss_ratios: dict[str, float] = Field(default_factory=dict)
     earned_premium: float = 0.0
     written_premium: float = 0.0
+    collected_premium: float = 0.0  # cash actually received from policyholders
+    unearned_premium: float = 0.0  # pro-rata share held for unexpired coverage days
 
 
 class ScheduleItem(BaseModel):
@@ -253,6 +274,11 @@ class UnstructuredSubmission(BaseModel):
     chunks: list[ExtractedChunk] = Field(default_factory=list)
     extracted_fields: dict[str, list[ExtractedField]] = Field(default_factory=dict)
     processed_at: Optional[datetime] = None
+    # Spatial grounding index: page number -> { line text -> normalized [x0,y0,x1,y1] }
+    # populated by OCR/cloud providers so extracted fields can be boxed and cited.
+    spatial_lines: dict[int, dict[str, list[float]]] = Field(default_factory=dict)
+    # Layered verification result (deterministic checks + agentic reviews).
+    verification: Optional[VerificationReport] = None
 
 
 class ExtractedChunk(BaseModel):
@@ -270,6 +296,53 @@ class ExtractedField(BaseModel):
     context: str = ""
     chunk_index: int = 0
     page_number: Optional[int] = None
+    # Spatial grounding: normalized [x0, y0, x1, y1] box on ``page_number``
+    # plus a human/audit citation string (e.g. "page 2, region 0.10,0.20..0.55,0.35").
+    bbox: Optional[list[float]] = None
+    source_ref: str = ""
+
+
+class VerificationIssue(BaseModel):
+    """A single check result in the layered extraction-verification defense.
+
+    ``severity`` is one of ``"info"``, ``"warning"``, ``"error"``. Errors block
+    straight-through processing; warnings route the field to human review.
+    ``code`` is a stable machine-readable identifier (e.g. ``"sum_to_total"``,
+    ``"aba_checksum"``, ``"consensus_divergence"``). When available, the issue
+    also carries the normalized ``page_number``/``bbox`` of the offending value so
+    underwriter UIs can highlight the exact source location.
+    """
+
+    code: str
+    severity: str  # "info" | "warning" | "error"
+    message: str
+    field_name: str = ""
+    page_number: Optional[int] = None
+    bbox: Optional[list[float]] = None
+
+
+class VerificationReport(BaseModel):
+    """Aggregated result of the verification layers for one submission.
+
+    ``auto_approve`` is True only when no error-severity issues exist and every
+    critical numeric field meets the straight-through-processing confidence bar.
+    ``flagged_for_review`` mirrors the presence of any error — i.e. the document
+    should land in the human-review (exception) queue.
+    """
+
+    passed: bool
+    auto_approve: bool = False
+    flagged_for_review: bool = False
+    checks_run: list[str] = Field(default_factory=list)
+    issues: list[VerificationIssue] = Field(default_factory=list)
+
+    @property
+    def errors(self) -> list[VerificationIssue]:
+        return [i for i in self.issues if i.severity == "error"]
+
+    @property
+    def warnings(self) -> list[VerificationIssue]:
+        return [i for i in self.issues if i.severity == "warning"]
 
 
 class SubmissionBundle(BaseModel):

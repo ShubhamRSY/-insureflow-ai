@@ -145,3 +145,48 @@ def classify_surplus_lines(
         findings=findings,
         can_bind=can_bind,
     )
+
+
+# Representative per-claim guaranty-fund coverage caps (state insurance
+# guaranty associations, where admitted carriers' unpaid claims are backed).
+_GUARANTY_FUND_CAPS: dict[str, float] = {
+    "CA": 300_000.0,
+    "NY": 1_000_000.0,
+    "TX": 300_000.0,
+    "FL": 300_000.0,
+    "IL": 300_000.0,
+    "NJ": 500_000.0,
+}
+_GUARANTY_FUND_DEFAULT_CAP = 300_000.0
+
+
+def guarantee_fund_assessment(*, admitted: bool, state: str = "", premium: float = 0.0) -> dict[str, Any]:
+    """Assess the state guarantee-fund backstop for the placement.
+
+    Admitted carriers' unpaid claims are backed (up to per-claim caps) by the
+    state insurance guaranty association; non-admitted surplus-lines carriers
+    are not covered by the fund, which is part of the admitted/non-admitted
+    consumer-protection distinction.
+    """
+    st = (state or "").strip().upper()[:2]
+    if not admitted:
+        return {
+            "guaranty_fund_backed": False,
+            "detail": "Non-admitted placement — unpaid claims are NOT backed by a state guaranty fund; rely on the surplus-lines carrier's financial strength",
+            "per_claim_cap": 0.0,
+            "assessments_recoverable": 0.0,
+        }
+    cap = _GUARANTY_FUND_CAPS.get(st, _GUARANTY_FUND_DEFAULT_CAP)
+    prem = max(float(premium or 0.0), 0.0)
+    # Guaranty associations recoup fund payouts from member insurers via
+    # premium-based assessments (commonly a small fraction of written premium).
+    assessments = round(prem * 0.005, 2)
+    return {
+        "guaranty_fund_backed": True,
+        "detail": (
+            f"Admitted placement — unpaid claims backed by the {st or 'state'} insurance "
+            f"guaranty association up to {cap:,.0f} per claim"
+        ),
+        "per_claim_cap": cap,
+        "assessments_recoverable": assessments,
+    }

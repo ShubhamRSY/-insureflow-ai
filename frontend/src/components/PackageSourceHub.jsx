@@ -191,7 +191,7 @@ export default function PackageSourceHub({
                 ref={fileInputRef}
                 type="file"
                 multiple
-                accept=".pdf,.txt,.md,.xml,.json,.csv,.png,.jpg,.jpeg,.tiff,.tif,.bmp"
+                accept=".pdf,.txt,.md,.xml,.json,.csv,.xlsx,.xls,.docx,.doc,.eml,.html,.png,.jpg,.jpeg,.tiff,.tif,.bmp"
                 className="hidden"
                 onChange={(e) => {
                   addFiles(e.target.files);

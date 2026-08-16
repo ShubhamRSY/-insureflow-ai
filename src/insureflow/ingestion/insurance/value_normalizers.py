@@ -25,10 +25,17 @@ _WORD_SUFFIX = {
 }
 _DATE_FORMATS = (
     "%Y-%m-%d",
+    "%Y%m%d",
     "%m/%d/%Y",
     "%m-%d-%Y",
+    "%m.%d.%Y",
     "%m/%d/%y",
     "%m-%d-%y",
+    "%Y/%m/%d",
+    "%Y-%m-%d %H:%M:%S",
+    "%Y-%m-%dT%H:%M:%S",
+    "%m/%d/%Y %H:%M:%S",
+    "%m/%d/%y %H:%M:%S",
     "%B %d, %Y",
     "%b %d, %Y",
     "%d %B %Y",
@@ -94,8 +101,15 @@ _NON_NUMERIC_ID_FIELDS = frozenset(
         "account_number",
         "tax_id",
         "ssn",
+        "ein",
+        "fein",
         "loan_number",
         "zip",
+        "phone",
+        "fax",
+        "sic_code",
+        "naic_code",
+        "license_number",
         "serff_tracking",
     }
 )
@@ -112,7 +126,10 @@ def normalize_amount(raw: str) -> str:
     value = _clean(str(raw))
     if not value:
         return ""
-    lowered = value.lower().replace(",", "").replace("$", "").replace("usd", "").strip()
+    # Strip leading currency markers: "US$750K", "USD 750K", "₹5,00,000", "Rs. 25,000"
+    cleaned = re.sub(r"^\s*(?:usd|us\$|inr|rs\.?|ind|€|£|₹)\s*\$?\s*", "", value, flags=re.IGNORECASE)
+    cleaned = cleaned.replace("$", "").replace("₹", "").replace(",", "")
+    lowered = cleaned.lower().strip()
 
     # "$1.2M", "750K", "4.35 million", "12bn"
     m = re.fullmatch(r"([+-]?\d+(?:\.\d+)?)\s*([a-z]+)", lowered)

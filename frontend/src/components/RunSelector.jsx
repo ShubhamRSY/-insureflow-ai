@@ -300,8 +300,8 @@ export default function RunSelector({
             className="flex w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-white/[0.12] bg-surface/30 px-4 py-6 text-center transition hover:border-brand/40 hover:bg-brand/5">
             <Upload className="h-5 w-5 text-slate-500" />
             <span className="text-sm font-medium text-slate-200">Drop multiple files here or click to browse</span>
-            <span className="text-xs text-slate-400">.pdf .xml .json .txt .md — multi-select supported</span>
-            <input type="file" multiple className="hidden" accept=".xml,.json,.pdf,.txt,.md,.png,.jpg,.jpeg"
+            <span className="text-xs text-slate-400">.pdf .xml .json .txt .md .xlsx .docx .eml — multi-select supported</span>
+            <input type="file" multiple className="hidden" accept=".xml,.json,.pdf,.txt,.md,.csv,.xlsx,.xls,.docx,.doc,.eml,.html,.png,.jpg,.jpeg,.tiff,.tif,.bmp"
               onChange={(e) => { addFiles(e.target.files); e.target.value = ''; }} />
           </label>
 

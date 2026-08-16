@@ -26,6 +26,8 @@ from email.message import Message
 from pathlib import Path
 from typing import Any
 
+from insureflow.ingestion.structured_docs import email_body_text
+
 logger = logging.getLogger(__name__)
 
 SUPPORTED_EXTENSIONS = {
@@ -35,6 +37,15 @@ SUPPORTED_EXTENSIONS = {
     ".txt",
     ".md",
     ".csv",
+    ".xlsx",
+    ".xls",
+    ".xlsm",
+    ".docx",
+    ".doc",
+    ".eml",
+    ".msg",
+    ".html",
+    ".htm",
     ".png",
     ".jpg",
     ".jpeg",
@@ -42,6 +53,10 @@ SUPPORTED_EXTENSIONS = {
     ".bmp",
     ".tif",
 }
+
+BINARY_EXTENSIONS = frozenset(
+    {".pdf", ".png", ".jpg", ".jpeg", ".tiff", ".bmp", ".tif", ".xlsx", ".xls", ".xlsm", ".docx", ".doc", ".eml", ".msg"}
+)
 
 MAX_ATTACHMENT_SIZE_MB = 25
 MAX_EMAILS = 50
@@ -102,7 +117,7 @@ def _extract_attachments(msg: Message) -> list[dict[str, str]]:
             )
             continue
 
-        is_binary = ext in {".pdf", ".png", ".jpg", ".jpeg", ".tiff", ".bmp", ".tif"}
+        is_binary = ext in BINARY_EXTENSIONS
 
         if is_binary:
             docs.append(
@@ -274,12 +289,25 @@ def pull_email_submissions(
             from_addr = _decode_header_value(msg.get("From"))
             date_str = _parse_email_date(msg.get("Date"))
             attachments = _extract_attachments(msg)
+            body = email_body_text(msg)
+
+            # Body-only emails still carry the submission narrative — surface it
+            # as a document so the pipeline has something to chew on.
+            if not attachments and body:
+                attachments = [
+                    {
+                        "filename": f"{_sanitize_filename(subject) or 'submission'}-body.txt",
+                        "content": body,
+                        "encoding": "utf-8",
+                    }
+                ]
 
             email_entry: dict[str, Any] = {
                 "id": f"email-{idx}",
                 "subject": subject,
                 "from": from_addr,
                 "date": date_str,
+                "body": body,
                 "attachment_count": len(attachments),
                 "documents": attachments,
             }
