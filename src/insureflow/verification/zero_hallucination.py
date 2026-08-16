@@ -362,7 +362,6 @@ def enforce_zero_hallucination_on_memo(
             continue
         blob = f"{finding.title}\n{finding.description}\n" + "\n".join(finding.evidence or [])
         bad = scan_text_for_ungrounded_money(blob, allowed_money)
-        invented_g = bool(_GUIDELINE_RE.search(blob)) and list(guideline_ids)
         # If guideline ids provided, drop invented ones; if none retrieved, drop any guideline citation
         drop = bool(bad)
         if _GUIDELINE_RE.search(blob):

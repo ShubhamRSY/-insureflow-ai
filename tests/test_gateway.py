@@ -179,7 +179,15 @@ def test_landing_page_html() -> None:
 
 def test_landing_subpages_html() -> None:
     landing_pages = {
-        "platform": ["Platform capabilities", "Human-in-the-loop by design", "Named insureds never leave the gate", "Choose the insurance company", "How we catch a wrong number", "A photo can lie", "EXIF / ELA"],
+        "platform": [
+            "Platform capabilities",
+            "Human-in-the-loop by design",
+            "Named insureds never leave the gate",
+            "Choose the insurance company",
+            "How we catch a wrong number",
+            "A photo can lie",
+            "EXIF / ELA",
+        ],
         "technology": ["Zero Token Architecture", "Every decision defensible", "Named insureds never leave the gate"],
         "underwriting": ["Built for the desks that decide", "Rates built like an actuary builds them", "Named insureds never leave the gate"],
         "integrations": ["Connects to the systems you already use", "Live, simulated, or auto", "Named insureds never leave the gate"],

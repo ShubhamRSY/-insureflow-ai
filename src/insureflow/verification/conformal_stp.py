@@ -25,7 +25,7 @@ class ConformalSTPResult:
     n_accepted: int
     method: str = "holdout_quantile"
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, float | int | str]:
         return {
             "threshold": round(self.threshold, 4),
             "target_error": self.target_error,

@@ -10,7 +10,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
 _LOB_HINTS = {
     "property": "COPE construction occupancy protection exposure building value sprinkler",
     "gl": "general liability premises operations products completed operations aggregate",

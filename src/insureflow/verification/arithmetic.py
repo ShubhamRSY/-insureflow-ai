@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import re
 from collections import defaultdict
-from typing import Mapping, Sequence
+from typing import Any, Mapping, Sequence
 
 from insureflow.models.submissions import ExtractedField, VerificationIssue
 from insureflow.verification.common import SEVERITY_ERROR, make_issue, to_number
@@ -159,7 +159,10 @@ def auto_sum_to_total(fields: Mapping[str, Sequence[ExtractedField]], tolerance:
     return issues
 
 
-def cross_page_reconciliation(value_sets: Mapping[str, list[tuple[object, object]]], tolerance: float = _DEFAULT_TOLERANCE) -> list[VerificationIssue]:
+def cross_page_reconciliation(
+    value_sets: Mapping[str, list[tuple[Any, Any]]],
+    tolerance: float = _DEFAULT_TOLERANCE,
+) -> list[VerificationIssue]:
     """Check figures stated in multiple locations reconcile.
 
     ``value_sets`` maps a metric (e.g. ``net_income``) to ``(location, value)``

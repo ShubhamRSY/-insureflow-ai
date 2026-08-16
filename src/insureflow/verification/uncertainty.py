@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import statistics
 from collections import defaultdict
-from typing import Callable, Mapping
+from typing import Any, Callable, Mapping, Sequence
 
 from insureflow.models.submissions import VerificationIssue
 from insureflow.verification.common import SEVERITY_WARNING
@@ -72,7 +72,7 @@ def high_variance_fields(
 
 
 def variance_from_extracted_fields(
-    fields: Mapping[str, list],
+    fields: Mapping[str, Sequence[Any]],
 ) -> dict[str, float]:
     """Coefficient of variation when the same field was read more than once.
 

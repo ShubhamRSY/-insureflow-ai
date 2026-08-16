@@ -497,7 +497,13 @@ def test_tampering_issues_clean():
 def test_engine_clean_document():
     from insureflow.verification.engine import VerificationEngine
 
-    fields = _fields({"total_assets": "1000", "total_liabilities": "600", "total_equity": "400", "credit_score": "720"})
+    # Grounded fields (page citations) so the citation gate does not fail a clean arithmetic set.
+    fields = {
+        "total_assets": [_field("total_assets", "1000", page=1)],
+        "total_liabilities": [_field("total_liabilities", "600", page=1)],
+        "total_equity": [_field("total_equity", "400", page=1)],
+        "credit_score": [_field("credit_score", "720", page=1)],
+    }
     report = VerificationEngine().run(fields, raw_text="clean", document_type="financial_statement")
     assert report.passed is True
     assert report.auto_approve is True

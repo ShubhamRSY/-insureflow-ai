@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import io
+from typing import Any
 
 import pytest
 
@@ -16,7 +17,7 @@ from PIL import Image  # noqa: E402
 
 def _jpeg(*, software: str = "", size: tuple[int, int] = (48, 48), color: tuple[int, int, int] = (90, 90, 90)) -> bytes:
     img = Image.new("RGB", size, color)
-    kwargs: dict = {"format": "JPEG", "quality": 90}
+    kwargs: dict[str, Any] = {"format": "JPEG", "quality": 90}
     if software:
         exif = Image.Exif()
         exif[0x0131] = software
@@ -32,11 +33,10 @@ def _jpeg_with_ela_hotspot() -> bytes:
     base.save(buf, format="JPEG", quality=95)
     original = Image.open(io.BytesIO(buf.getvalue())).convert("RGB")
     noise = Image.new("RGB", (48, 48))
-    px = noise.load()
     for y in range(48):
         for x in range(48):
             v = (x * 13 + y * 17) % 256
-            px[x, y] = (v, 255 - v, (x * y) % 256)
+            noise.putpixel((x, y), (v, 255 - v, (x * y) % 256))
     original.paste(noise, (16, 16))
     out = io.BytesIO()
     original.save(out, format="JPEG", quality=90)

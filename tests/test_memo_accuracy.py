@@ -11,7 +11,6 @@ from insureflow.models.submissions import (
     NamedInsured,
     StructuredSubmission,
     SubmissionBundle,
-    UnstructuredSubmission,
 )
 from insureflow.rag.entity_graph import build_submission_entity_graph, ungrounded_relation_issues
 from insureflow.rag.hyde import expand_query_deterministic, hyde_search_query

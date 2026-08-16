@@ -1,3 +1,5 @@
+from typing import Any
+
 from insureflow.rag.guidelines import Guideline, GuidelineCategory, GuidelineSource, UnderwritingGuidelines, builtin_guidelines
 from insureflow.rag.knowledge_graph import UnderwritingKnowledgeGraph, get_knowledge_graph
 from insureflow.rag.rag_agent import RAGAgent, retrieval_policy_payload
@@ -26,7 +28,7 @@ __all__ = [
 ]
 
 
-def __getattr__(name: str):
+def __getattr__(name: str) -> Any:
     if name == "hyde_search_query":
         from insureflow.rag.hyde import hyde_search_query
 

@@ -10,12 +10,12 @@ from insureflow.oracles.factory import (
     build_bureau_client,
     build_cat_client,
     build_clue_client,
+    build_cyber_scan_client,
     build_ncci_client,
     build_osha_client,
     build_public_records_client,
     build_rating_agency_client,
     build_telematics_client,
-    build_cyber_scan_client,
 )
 
 

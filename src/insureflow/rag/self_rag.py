@@ -75,7 +75,7 @@ def retrieve_with_self_rag(
 ) -> dict[str, Any]:
     """One adaptive retrieval pass with optional HyDE retry."""
     first = rag_agent.retrieve_contexts(query, top_k=top_k, line_of_business=line_of_business)
-    meta = {
+    meta: dict[str, Any] = {
         "self_rag": self_rag_enabled(),
         "passes": 1,
         "hyde_used": False,
