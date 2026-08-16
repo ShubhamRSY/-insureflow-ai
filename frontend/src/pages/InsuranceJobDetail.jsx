@@ -8,6 +8,7 @@ import InsuranceMemoView from '../components/InsuranceMemoView';
 import UwWorksheetView from '../components/UwWorksheetView';
 import UwPolicyValidator from '../components/UwPolicyValidator';
 import BindReadinessPanel from '../components/BindReadinessPanel';
+import PdfGroundingViewer from '../components/PdfGroundingViewer';
 
 export default function InsuranceJobDetail() {
   const { jobId } = useParams();
@@ -313,8 +314,11 @@ export default function InsuranceJobDetail() {
         )}
 
         {!processing && (
-          <div className="mt-6">
+          <div className="mt-6 space-y-6">
             <InsuranceMemoView job={job} />
+            <div className="rounded-2xl border border-white/10 bg-surface/40 p-5">
+              <PdfGroundingViewer bundleId={jobId} />
+            </div>
           </div>
         )}
       </div>

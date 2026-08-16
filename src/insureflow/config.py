@@ -146,6 +146,14 @@ class Settings:
     rating_agency_api_url: str = os.getenv("RATING_AGENCY_API_URL", "https://integrations.rytera.ai/oracles/rating-agency/v2")
     rating_agency_query_path: str = os.getenv("RATING_AGENCY_QUERY_PATH", "/entities")
 
+    telematics_api_key: str = os.getenv("TELEMATICS_API_KEY", "")
+    telematics_api_url: str = os.getenv("TELEMATICS_API_URL", "https://integrations.rytera.ai/oracles/telematics/v1")
+    telematics_query_path: str = os.getenv("TELEMATICS_QUERY_PATH", "/vehicles")
+
+    cyber_scan_api_key: str = os.getenv("CYBER_SCAN_API_KEY", "")
+    cyber_scan_api_url: str = os.getenv("CYBER_SCAN_API_URL", "https://integrations.rytera.ai/oracles/cyber-scan/v1")
+    cyber_scan_query_path: str = os.getenv("CYBER_SCAN_QUERY_PATH", "/scans")
+
     iso_rating_api_key: str = os.getenv("ISO_RATING_API_KEY", "")
     iso_rating_api_url: str = os.getenv("ISO_RATING_API_URL", "https://integrations.rytera.ai/oracles/iso/v1")
     iso_rating_mode: str = os.getenv("ISO_RATING_MODE", "auto")

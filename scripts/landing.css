@@ -467,6 +467,11 @@ section + section { border-top: 1px solid var(--border); }
   font-size: 1.15rem;
 }
 
+.hero .lead-soft {
+  margin-top: 1rem;
+  color: #e8e4ff;
+}
+
 .hero .cta { margin-top: 2.2rem; }
 
 .hero-audience {
@@ -847,6 +852,114 @@ section + section { border-top: 1px solid var(--border); }
 }
 
 .stat > span:last-child { display: block; margin-top: .4rem; color: var(--muted); font-size: .84rem; }
+
+/* ---- Plain English glossary ---- */
+.plain-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 2.2rem;
+}
+
+.plain-term {
+  margin: 0;
+  padding: 1.25rem 1.4rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(255, 255, 255, .05), rgba(255, 255, 255, .012));
+}
+
+.plain-term dt {
+  font-family: var(--font-display);
+  font-weight: 650;
+  letter-spacing: -.02em;
+  margin-bottom: .4rem;
+}
+
+.plain-term dd {
+  margin: 0;
+  color: var(--muted);
+  font-size: .9rem;
+  line-height: 1.55;
+}
+
+.new-tag {
+  display: inline-block;
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: .65rem;
+}
+
+/* ---- Challenges: pain / fix ---- */
+.challenge-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 2.4rem;
+}
+
+.challenge-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .04), rgba(255, 255, 255, .01));
+}
+
+.challenge-pain, .challenge-fix {
+  padding: 1.35rem 1.5rem;
+}
+
+.challenge-pain {
+  border-right: 1px solid var(--border);
+  background: rgba(255, 80, 110, .04);
+}
+
+.challenge-fix {
+  background: rgba(52, 211, 153, .05);
+}
+
+.challenge-row h3 {
+  margin: .4rem 0 .4rem;
+  font-size: 1.05rem;
+}
+
+.challenge-pain p, .challenge-fix p {
+  margin: 0;
+  color: var(--muted);
+  font-size: .9rem;
+  line-height: 1.55;
+}
+
+.sev {
+  display: inline-block;
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.sev-critical { color: #fb7185; }
+.sev-high { color: #fbbf24; }
+
+.fix-label {
+  display: inline-block;
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--green);
+}
+
+@media (max-width: 720px) {
+  .challenge-row { grid-template-columns: 1fr; }
+  .challenge-pain { border-right: none; border-bottom: 1px solid var(--border); }
+}
 
 /* ---- Marquee ---- */
 .marquee-wrap {
@@ -2055,7 +2168,7 @@ footer .brand-mark { width: 32px; height: 32px; border-radius: 10px; }
 }
 
 @media (max-width: 560px) {
-  .stats, .zta-stats, .agent-grid, .audience-grid, .feature-grid, .testimonial-grid, .bento, .integration-grid, .pricing-grid, .buy-gates { grid-template-columns: 1fr; }
+  .stats, .zta-stats, .agent-grid, .audience-grid, .feature-grid, .testimonial-grid, .bento, .integration-grid, .pricing-grid, .buy-gates, .plain-grid { grid-template-columns: 1fr; }
   .fc-1, .fc-2, .fc-3 { display: none; }
   .trust-strip { justify-content: flex-start; }
   .btn { padding: .75rem 1.25rem; }

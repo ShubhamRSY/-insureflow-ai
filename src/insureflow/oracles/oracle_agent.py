@@ -15,6 +15,7 @@ from insureflow.oracles.ncci_client import NCCIClient
 from insureflow.oracles.osha_client import OSHAClient
 from insureflow.oracles.public_records_client import PublicRecordsClient
 from insureflow.oracles.rating_agency_client import CreditRatingAgencyClient
+from insureflow.oracles.telematics_client import CyberScanClient, TelematicsClient, extract_domain, extract_vin
 
 
 class OracleAgent(BaseAgent):
@@ -37,6 +38,8 @@ class OracleAgent(BaseAgent):
         osha_client: OSHAClient | None = None,
         rating_agency_client: CreditRatingAgencyClient | None = None,
         mvr_client: MVRClient | None = None,
+        telematics_client: TelematicsClient | None = None,
+        cyber_scan_client: CyberScanClient | None = None,
     ) -> None:
         super().__init__()
         self.clue = clue_client or CLUEClient()
@@ -48,6 +51,8 @@ class OracleAgent(BaseAgent):
         self.osha = osha_client or OSHAClient()
         self.rating_agency = rating_agency_client or CreditRatingAgencyClient()
         self.mvr = mvr_client or MVRClient()
+        self.telematics = telematics_client or TelematicsClient()
+        self.cyber_scan = cyber_scan_client or CyberScanClient()
         self.last_ncci_emod: float | None = None
         self.last_mvr_cleared: bool | None = None
 
@@ -69,6 +74,10 @@ class OracleAgent(BaseAgent):
         ]
         if self._should_query_mvr(bundle, line):
             queries.append(self._query_mvr(bundle))
+        if self._should_query_telematics(bundle, line):
+            queries.append(self._query_telematics(bundle))
+        if self._should_query_cyber(bundle, line):
+            queries.append(self._query_cyber_scan(bundle))
         for findings in queries:
             for f in findings:
                 self._add_finding(f)
@@ -858,4 +867,178 @@ class OracleAgent(BaseAgent):
                     )
                 )
         self.last_mvr_cleared = not any_major and not synthetic
+        return findings
+
+    def _should_query_telematics(self, bundle: SubmissionBundle, line: str) -> bool:
+        key = (line or "").lower()
+        if any(tok in key for tok in ("auto", "fleet", "vehicle", "motor", "ubi")):
+            return True
+        from insureflow.underwriting.personal_lines import _blob
+
+        blob = _blob(bundle)
+        return bool(extract_vin(blob) or re.search(r"\b(?:telematics|annual mileage|odometer|vin)\b", blob, re.I))
+
+    def _query_telematics(self, bundle: SubmissionBundle) -> list[Finding]:
+        from insureflow.underwriting.personal_lines import _blob
+
+        blob = _blob(bundle)
+        vin = extract_vin(blob)
+        stated = None
+        match = re.search(r"annual\s+mileage\s*[:=]\s*([\d,]+)", blob, re.I)
+        if match:
+            try:
+                stated = float(match.group(1).replace(",", ""))
+            except ValueError:
+                stated = None
+        findings: list[Finding] = []
+        if not vin:
+            findings.append(
+                Finding(
+                    title="Telematics: no VIN on the file",
+                    description="Connected-car audit needs a VIN. None found — cannot compare stated mileage to a feed.",
+                    severity=RiskSeverity.HIGH,
+                    category="telematics",
+                    field_path="oracles.telematics",
+                )
+            )
+            return findings
+        result = self.telematics.query_vehicle(vin, stated_mileage=stated)
+        if result.error:
+            findings.append(
+                Finding(
+                    title="Telematics query failed",
+                    description=result.error,
+                    severity=RiskSeverity.HIGH,
+                    category="telematics",
+                    field_path="oracles.telematics",
+                )
+            )
+            return findings
+        if result.synthetic:
+            findings.append(
+                Finding(
+                    title="Telematics unverified",
+                    description="Simulated telematics is not a clean driving score. Connect a live connected-car feed or we will not pretend the mileage matches.",
+                    severity=RiskSeverity.HIGH,
+                    category="telematics",
+                    field_path="oracles.telematics",
+                    evidence=[f"vin={vin}", f"mode={result.mode}"],
+                )
+            )
+            return findings
+        if stated is not None and result.annual_mileage is not None:
+            delta = abs(result.annual_mileage - stated) / max(stated, 1.0)
+            if delta >= 0.25:
+                findings.append(
+                    Finding(
+                        title="Stated mileage does not match the car",
+                        description=f"Application says {stated:,.0f} miles/year; connected-car feed says {result.annual_mileage:,.0f} ({delta:.0%} apart).",
+                        severity=RiskSeverity.CRITICAL if delta >= 0.5 else RiskSeverity.HIGH,
+                        category="telematics",
+                        field_path="oracles.telematics",
+                    )
+                )
+        if result.hard_brake_per_1k is not None and result.hard_brake_per_1k >= 8:
+            findings.append(
+                Finding(
+                    title="Hard-brake rate elevated",
+                    description=f"{result.hard_brake_per_1k:.1f} hard brakes per 1,000 miles on the live feed.",
+                    severity=RiskSeverity.HIGH,
+                    category="telematics",
+                    field_path="oracles.telematics",
+                )
+            )
+        if not findings:
+            findings.append(
+                Finding(
+                    title="Telematics consistent",
+                    description="Live connected-car feed does not contradict the application.",
+                    severity=RiskSeverity.LOW,
+                    category="telematics",
+                    field_path="oracles.telematics",
+                )
+            )
+        return findings
+
+    def _should_query_cyber(self, bundle: SubmissionBundle, line: str) -> bool:
+        key = (line or "").lower()
+        if "cyber" in key:
+            return True
+        from insureflow.underwriting.personal_lines import _blob
+
+        blob = _blob(bundle)
+        return bool(re.search(r"\b(?:cyber|mfa|multi-factor|vulnerability scan)\b", blob, re.I))
+
+    def _query_cyber_scan(self, bundle: SubmissionBundle) -> list[Finding]:
+        from insureflow.underwriting.personal_lines import _blob
+
+        blob = _blob(bundle)
+        domain = extract_domain(blob)
+        claims_mfa = bool(re.search(r"\b(?:mfa|multi-factor|2fa)\b.{0,40}\b(?:yes|enabled|in place)\b", blob, re.I))
+        findings: list[Finding] = []
+        if not domain:
+            findings.append(
+                Finding(
+                    title="Cyber scan: no domain on the file",
+                    description="An outside vulnerability scan needs a domain. None found.",
+                    severity=RiskSeverity.HIGH,
+                    category="cyber_scan",
+                    field_path="oracles.cyber_scan",
+                )
+            )
+            return findings
+        result = self.cyber_scan.query_domain(domain)
+        if result.error:
+            findings.append(
+                Finding(
+                    title="Cyber scan query failed",
+                    description=result.error,
+                    severity=RiskSeverity.HIGH,
+                    category="cyber_scan",
+                    field_path="oracles.cyber_scan",
+                )
+            )
+            return findings
+        if result.synthetic:
+            findings.append(
+                Finding(
+                    title="Cyber scan unverified",
+                    description="Simulated scan is not a clean security posture. Connect a live scanner or we will not rubber-stamp the questionnaire.",
+                    severity=RiskSeverity.HIGH,
+                    category="cyber_scan",
+                    field_path="oracles.cyber_scan",
+                    evidence=[f"domain={domain}", f"mode={result.mode}"],
+                )
+            )
+            return findings
+        if result.critical_findings and result.critical_findings >= 1:
+            findings.append(
+                Finding(
+                    title="Live scan found critical exposures",
+                    description=f"{result.critical_findings} critical finding(s) on {domain}.",
+                    severity=RiskSeverity.CRITICAL,
+                    category="cyber_scan",
+                    field_path="oracles.cyber_scan",
+                )
+            )
+        if claims_mfa and result.mfa_observed is False:
+            findings.append(
+                Finding(
+                    title="Questionnaire says MFA; the scan does not see it",
+                    description=f"{domain} claimed multi-factor authentication; the live scan did not observe it.",
+                    severity=RiskSeverity.HIGH,
+                    category="cyber_scan",
+                    field_path="oracles.cyber_scan",
+                )
+            )
+        if not findings:
+            findings.append(
+                Finding(
+                    title="Cyber scan consistent",
+                    description="Live vulnerability scan does not contradict the questionnaire.",
+                    severity=RiskSeverity.LOW,
+                    category="cyber_scan",
+                    field_path="oracles.cyber_scan",
+                )
+            )
         return findings

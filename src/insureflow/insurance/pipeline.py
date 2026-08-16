@@ -965,6 +965,42 @@ class InsurancePipeline:
                 severity=EventSeverity.WARNING,
             )
 
+        # ── 6a0. Zero-hallucination gate (target count ≤ 0) ──
+        try:
+            from insureflow.underwriting.memo_sync import enforce_decision_consistency, resync_memo_narrative
+            from insureflow.verification.zero_hallucination import enforce_zero_hallucination_on_memo
+
+            zh_report = enforce_zero_hallucination_on_memo(memo, bundle)
+            if zh_report.checks_run and zh_report.checks_run != ["zero_hallucination_disabled"]:
+                audit.store.save_json(bid, "zero_hallucination.json", zh_report.to_dict(), org_id=self.org_id)
+            if not zh_report.passed:
+                from insureflow.models.audit import EventSeverity
+
+                audit.log(
+                    PipelineEvent.HUMAN_REVIEW_REQUIRED,
+                    f"Zero-hallucination gate: {zh_report.hallucination_count} uncited claim(s) (max {zh_report.max_allowed})",
+                    severity=EventSeverity.CRITICAL,
+                    metadata=zh_report.to_dict(),
+                )
+                enforce_decision_consistency(memo)
+                resync_memo_narrative(memo)
+        except Exception as exc:
+            logger.warning("zero-hallucination gate failed open to REFER: %s", exc)
+            from insureflow.models.agents import Finding, RiskSeverity, UWDecision
+
+            memo.key_findings.append(
+                Finding(
+                    title="Hallucination gate unavailable — human review required",
+                    description=f"Zero-hallucination enforcement error: {type(exc).__name__}. Fail closed.",
+                    severity=RiskSeverity.CRITICAL,
+                    category="hallucination",
+                    confidence=1.0,
+                )
+            )
+            memo.human_review_required = True
+            if memo.decision not in (UWDecision.DECLINE, UWDecision.REFER):
+                memo.decision = UWDecision.REFER
+
         # ── 6a. Low-confidence critical field hold ──
         confidence_floor = 0.6
         low_conf_fields = []

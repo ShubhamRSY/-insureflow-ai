@@ -122,37 +122,37 @@
   /* ---- Pipeline (how it works) ---- */
   var pipeline = [
     {
-      tag: 'Stage 1 · Triage',
-      title: 'Qualify the submission in seconds',
-      desc: 'Before a human opens a single document, deterministic rules qualify the file against your live underwriting guide.',
+      tag: 'Stage 1 · Sort the queue',
+      title: 'Which files need you first',
+      desc: 'Triage means sorting the pile before a human opens a document. Ordinary rules check the file against what you will write.',
       items: [
-        'Appetite filters fire first — product line, state, class code, and revenue checks against your UW guide',
-        'Impact and exposure scored from loss runs — exposure types, revenue limits, and limits / SIR',
-        'New-renewal and policy characteristics (first-party, third-party, employment practices) verified',
-        'Auto-routed to the right lane — or to a REFER queue — before an underwriter ever sees it'
+        'What you will write fires first — product, state, class, and size against your underwriting guide',
+        'How much is at risk is scored from claim history — limits, deductibles, and what sits on the page',
+        'New vs renewal, and whether the cover is first-party or third-party, is checked',
+        'Routed to the right lane — or to a human referral queue — before an underwriter ever sees it'
       ]
     },
     {
-      tag: 'Stage 2 · Risk & Price',
-      title: 'Verify, analyze, and price with evidence',
-      desc: 'Documents are parsed, reconciled, and scored. Risk is verified against live oracles, then priced with filing-grade rate manuals.',
+      tag: 'Stage 2 · Check & price',
+      title: 'Verify the file, then price from your rates',
+      desc: 'Documents are read and the numbers matched. Risk is checked against real outside data (when connected), then priced from the rates you filed with the state.',
       items: [
-        'Documents parsed, provenance tracked, reconciled, and deduplicated — gaps flagged, never guessed',
-        'Loss history via live oracles — CLUE, A-PLUS, NCCI, CAT — no fake clean data when keys are missing',
-        'COPE graded — construction, occupancy, protection, exposure',
-        'ZTA pipeline: deterministic rules, then trained ML, then LLM only where needed — every token accounted in zta_report',
-        'Rating engines and rate manuals (ISO / AAIS / NCCI) build the indicated premium'
+        'Documents read, sources tracked, numbers matched, duplicates removed — gaps flagged, never guessed',
+        'Claim history from live outside data — prior claims, workers-comp, catastrophe — no fake clean history when accounts are missing',
+        'How the building is built (COPE): construction, occupancy, protection, exposure',
+        'Ordinary rules first, then trained scorers, then a language model only where needed — every AI cost counted',
+        'Your filed rate manuals build the indicated premium. We do not invent a price'
       ]
     },
     {
-      tag: 'Stage 3 · Decision',
-      title: 'Bind-ready memo with licensed sign-off',
-      desc: 'A clear recommendation with reasons, premium, and audit trail — and bind only after a licensed UW signs off.',
+      tag: 'Stage 3 · You decide',
+      title: 'A memo you can sign',
+      desc: 'A clear recommendation with reasons, a premium, and a paper trail. The policy issues only after a licensed underwriter signs.',
       items: [
-        'ACCEPT / CONDITIONAL_ACCEPT / REFER / DECLINE with reasons and subjectivities',
-        'Deep dive re-runs oracles, portfolio, reinsurance, and fraud ML on demand',
-        'UW memo with quoted premium presented for licensed sign-off — AI proposes, humans decide',
-        'Encrypted audit bundle exported as a SHA-256 manifest ZIP, examiner-ready'
+        'Accept, accept with conditions, refer, or decline — with reasons and any conditions that must be true first',
+        'A deeper pass can re-check outside data, the rest of the book, reinsurance, and fraud flags when you ask',
+        'The memo with the quoted premium waits for licensed sign-off — AI proposes, humans decide',
+        'A sealed pack an examiner can open. Nobody can quietly rewrite the record'
       ]
     }
   ];
@@ -202,7 +202,7 @@
     { n: 'Azure Blob', c: 'sources' },
     { n: 'SFTP', c: 'sources' }
   ];
-  var catLabel = { oracles: 'Oracles', policy: 'Policy & CRM', ops: 'Enterprise ops', sources: 'Doc sources' };
+  var catLabel = { oracles: 'Outside data', policy: 'Policy & CRM', ops: 'Enterprise ops', sources: 'Doc sources' };
   var grid = document.getElementById('integration-grid');
   function renderGrid(filter) {
     if (!grid) return;
@@ -222,16 +222,18 @@
 
   /* ---- FAQ ---- */
   var faqs = [
-    { q: 'How is Rytera different from a document-extraction tool?', a: 'Extraction stops at text. Rytera runs an end-to-end pipeline — triage, risk verification, rating, and a decision with audit trail — so underwriters review a bind-ready memo instead of a pile of parsed PDFs.' },
-    { q: 'What is Zero Token Architecture (ZTA)?', a: 'ZTA means deterministic code and trained ML solve everything they can before any LLM is invoked. Most stages run at zero tokens. When an LLM is truly needed, it is budgeted per job, tracked per stage, and reported in each job\'s zta_report.' },
-    { q: 'Can we pilot in shadow mode before binding anything?', a: 'Yes. Shadow mode runs the full pipeline on real submissions with bind off, so your team can measure accuracy and steer the book before any live decision or policy admin integration is enabled.' },
-    { q: 'Does Rytera work with our policy administration system?', a: 'Desk+ bind posts the full quote, coverages, filing ID, and subjectivities into Guidewire PolicyCenter, BriteCore, or Duck Creek after licensed UW sign-off. Simulated PAS is refused on paid plans so UW does not re-key. Pilot keeps bind off in shadow.' },
-    { q: 'How do you handle PII and security?', a: 'PII like SSN, EIN, and DOB is auto-detected and redacted before packages enter the pilot lane. Every job is org-scoped and isolated, and every decision ships in an encrypted SHA-256 manifest audit bundle.' },
-    { q: 'What if an oracle or data feed is unavailable?', a: 'Pilot may use simulated oracles. Desk+ fail-closes: missing live CLUE / NCCI / A+ / CAT keys become a critical finding instead of a fake clean history. Auto mode never invents loss runs.' },
-    { q: 'How does UW sign-off work?', a: 'The pipeline proposes ACCEPT, CONDITIONAL_ACCEPT, REFER, or DECLINE. A licensed underwriter reviews within their authority matrix tier and either signs off or overrides — every override is traceable in the audit trail.' },
-    { q: 'Which verticals and lines are supported?', a: 'Commercial and personal lines carriers, mortgage lenders, and commercial lenders share one platform — commercial GL, property, auto, workers\' comp, professional liability / E&O, cyber, excess & surplus, and inland & ocean marine, plus homeowners, auto, term life, mortgage, and consumer / commercial lending.' },
-    { q: 'How is Rytera priced?', a: 'Per bind-ready memo. Pilot $0/mo (5 memos, then $95). Desk $799/mo (25, then $55) — live oracles + your SERFF book required. Book $2,490/mo (80, then $38) with live Guidewire bind, no re-key. Enterprise from $6,500/mo. Simulated oracles, pilot manuals, or simulated PAS are not sold at Desk+ prices.' },
-    { q: 'Is rating from our filed rates or a demo book?', a: 'Pilot uses the InsureFlow demo book. Desk+ will not quote until you import your SERFF / carrier filings via POST /rating/carrier-book or CARRIER_BOOK_PATH. Pilot manuals are never silently used as your book.' }
+    { q: 'How is Rytera different from a document-extraction tool?', a: 'Extraction stops at text. Rytera sorts the queue, checks the risk, prices from your rates, and hands you a memo you can sign — with a paper trail. You review a recommendation, not a pile of parsed PDFs.' },
+    { q: 'What is Zero Token Architecture (ZTA)?', a: 'Most steps are ordinary software (no AI bill). A language model is the last resort, counted, and never used to invent a fact. That is Zero Token Architecture, said simply: we do not pay an AI to do what a rule already can.' },
+    { q: 'Can we try it without issuing a policy?', a: 'Yes. Practice mode (sometimes called shadow) runs on real files without issuing a policy. Prove it on your book. Go live when you say so.' },
+    { q: 'Does Rytera work with our policy administration system?', a: 'After a licensed underwriter signs, Desk and above can send the full quote — coverages, filing ID, and conditions — into Guidewire, BriteCore, or Duck Creek so you do not re-type it. A pretend connection is refused on paid plans. Pilot keeps issue-off in practice mode.' },
+    { q: 'How do you handle names and private details?', a: 'The person or company on the policy (the named insured) and private details like Social Security numbers come off before any language model sees the page. Your underwriter still sees the real file. The AI does not. Every decision ships in a sealed pack an examiner can open.' },
+    { q: 'What if an outside data feed is unavailable?', a: 'Pilot may use honest demo data, labeled as demo. Desk and above stop: missing real claim-history or catastrophe accounts become a finding, not a fake clean history. We never invent a loss run.' },
+    { q: 'How does underwriter sign-off work?', a: 'The software proposes accept, accept with conditions, refer, or decline. A licensed underwriter reviews within who is allowed to sign what size of risk, then signs or changes it. Every change is recorded.' },
+    { q: 'Which lines are supported?', a: 'Insurance companies, mortgage lenders, and commercial lenders share one workbench — commercial liability, property, auto, workers’ comp, professional liability, cyber, excess & surplus, marine, plus homeowners, auto, term life, mortgage, and consumer / commercial lending.' },
+    { q: 'How is Rytera priced?', a: 'Per memo you can sign. Pilot $0/mo (5 memos, then $95). Desk $799/mo (25, then $55) — live outside data plus your filed rates required. Book $2,490/mo (80, then $38) with live Guidewire bind and no re-key. Enterprise from $6,500/mo. Demo data, demo rate books, or a pretend policy-system connection are not sold at Desk prices.' },
+    { q: 'Is the price from our filed rates or a demo book?', a: 'Pilot uses a demo book, honestly labeled. Desk and above will not quote until you load the rates you filed with the state. A demo book is never silently used as yours.' },
+    { q: 'Do you detect photoshopped photos, fraud rings, and live telematics?', a: 'Yes, and only as far as the code goes. Photos: we read EXIF editor tags and JPEG recompress scars, then ask for the original camera file — we do not claim a crime lab. Rings: a graph net links files that share a phone, email, tax ID, address, or IP. Connected-car and cyber-scan feeds compare the questionnaire to the car or domain only when that account is live. Simulated never invents a clean driving or security score.' },
+    { q: 'How do you stop the memo from inventing a fact?', a: 'Hard zero-hallucination gate: uncited limits, totals, and dollar figures are stripped and the file is referred. Max allowed hallucinations is 0. Citation gate, Self-RAG/HyDE, multi-read self-consistency, and a capped Extractor↔Auditor loop all run before bind. The glass box UI lets you click a value and see the page highlight.' }
   ];
   var faqList = document.getElementById('faq-list');
   function renderFaqs(filter) {

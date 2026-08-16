@@ -130,6 +130,8 @@ def test_integration_health_service_feed_shape() -> None:
     assert "Public Records" in names
     assert "OSHA" in names
     assert "Rating Agency" in names
+    assert "Telematics" in names
+    assert "Cyber Scan" in names
     assert all("mode" in f and "reachable" in f for f in feeds)
 
 
@@ -139,11 +141,16 @@ def test_landing_page_html() -> None:
     assert "Rytera" in resp.text
     assert "Stop hunting PDFs" in resp.text
     assert "Start underwriting" in resp.text
-    assert "Why companies buy" in resp.text
-    assert "The file arrives messy" in resp.text
-    assert "bind-ready memo" in resp.text.lower()
-    assert "Named insureds never leave the gate" in resp.text
-    assert "stripped before we touch them with any LLM API" in resp.text
+    assert "we know the pile" in resp.text.lower()
+    assert "The messy file is the problem" in resp.text
+    assert "bind-ready memo" in resp.text.lower() or "The memo" in resp.text
+    assert "Their names never leave the gate" in resp.text
+    assert "Trust. Buy. Profit." in resp.text
+    assert "How we catch a wrong number" in resp.text
+    assert "A photo can lie" in resp.text
+    assert "The same ring, new letterhead" in resp.text
+    assert "The questionnaire is not the car" in resp.text
+    assert "EXIF / ELA" in resp.text
     assert "Pick the company. Then underwrite." in resp.text
 
     default = client.get("/")
@@ -172,7 +179,7 @@ def test_landing_page_html() -> None:
 
 def test_landing_subpages_html() -> None:
     landing_pages = {
-        "platform": ["Platform capabilities", "Human-in-the-loop by design", "Named insureds never leave the gate", "Choose the insurance company"],
+        "platform": ["Platform capabilities", "Human-in-the-loop by design", "Named insureds never leave the gate", "Choose the insurance company", "How we catch a wrong number", "A photo can lie", "EXIF / ELA"],
         "technology": ["Zero Token Architecture", "Every decision defensible", "Named insureds never leave the gate"],
         "underwriting": ["Built for the desks that decide", "Rates built like an actuary builds them", "Named insureds never leave the gate"],
         "integrations": ["Connects to the systems you already use", "Live, simulated, or auto", "Named insureds never leave the gate"],

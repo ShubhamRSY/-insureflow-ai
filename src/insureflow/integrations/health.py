@@ -14,6 +14,8 @@ from insureflow.oracles.factory import (
     build_osha_client,
     build_public_records_client,
     build_rating_agency_client,
+    build_telematics_client,
+    build_cyber_scan_client,
 )
 
 
@@ -44,6 +46,8 @@ class IntegrationHealthService:
             self._oracle_feed("Public Records", build_public_records_client().http, settings.oracle_mode),
             self._oracle_feed("OSHA", build_osha_client().http, settings.oracle_mode),
             self._oracle_feed("Rating Agency", build_rating_agency_client().http, settings.oracle_mode),
+            self._oracle_feed("Telematics", build_telematics_client().http, settings.oracle_mode),
+            self._oracle_feed("Cyber Scan", build_cyber_scan_client().http, settings.oracle_mode),
             self._service_feed("ISO Loss Costs", build_iso_rating_client(), settings.iso_rating_mode),
             self._service_feed("Loss Control", build_loss_control_client(), settings.loss_control_mode),
             self._service_feed("Claims", build_claims_client(), settings.claims_mode),

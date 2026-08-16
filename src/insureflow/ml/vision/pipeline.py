@@ -143,6 +143,10 @@ class PropertyPhotoAnalyzer:
         if poor_photos > 0:
             recs.append(f"Request {poor_photos} higher-quality photos for accurate assessment")
 
+        edited = sum(1 for p in profile.photo_analyses if any(f.category == "photo_forensics" and f.severity == "warning" for f in p.findings))
+        if edited:
+            recs.append(f"{edited} photo(s) show edit-software tags or JPEG recompress hotspots — request original camera files")
+
         if profile.satellite and profile.satellite.aerial_risk in (VisualRisk.HIGH, VisualRisk.CRITICAL):
             recs.append("Satellite analysis flagged high-risk features — verify with field inspection")
 

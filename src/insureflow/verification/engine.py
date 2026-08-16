@@ -1,8 +1,8 @@
 """Aggregates the verification layers into a ``VerificationReport``.
 
-Deterministic layers (arithmetic, guardrails, layout, forensics, registry) run
-on every document when ``USE_VERIFICATION`` is on (default). Agentic layers
-(critic review) run only when explicitly enabled *and* an LLM is available.
+Deterministic layers (arithmetic, cross-field, self-consistency, guardrails,
+layout, forensics, registry) run on every document when ``USE_VERIFICATION`` is
+on (default). Agentic layers (critic review) run only when an LLM is passed in.
 The result drives straight-through processing: ``auto_approve`` requires zero
 error-severity issues and every critical numeric field at or above
 ``STP_CONFIDENCE_THRESHOLD`` (default 95%).
@@ -17,12 +17,16 @@ from typing import Any, Callable, Iterable, Mapping
 from insureflow.ingestion.forensics import inspect_pdf, tamper_checks_enabled, tampering_issues
 from insureflow.ingestion.spatial_graph import column_alignment_check
 from insureflow.models.submissions import ExtractedField, VerificationIssue, VerificationReport
-from insureflow.verification.arithmetic import auto_sum_to_total, balance_sheet_identity
+from insureflow.verification.arithmetic import auto_sum_to_total, balance_sheet_identity, cross_page_reconciliation, group_values_by_page
+from insureflow.verification.citation_gate import citation_issues
 from insureflow.verification.common import SEVERITY_ERROR, verification_enabled
 from insureflow.verification.critic import critic_review
+from insureflow.verification.cross_field import cross_field_checks
 from insureflow.verification.external_lookup import registry_verification_issues
 from insureflow.verification.guardrails import pattern_checks, range_checks, schema_validation
+from insureflow.verification.self_consistency import critical_self_consistency_issues
 from insureflow.verification.semantic_triangulation import triangulation_issues
+from insureflow.verification.uncertainty import uncertainty_issues, variance_from_extracted_fields
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +70,19 @@ class VerificationEngine:
         issues: list[VerificationIssue] = []
         checks_run: list[str] = []
         stp_threshold = float(os.getenv("STP_CONFIDENCE_THRESHOLD", "0.95"))
+        # Optional holdout-calibrated threshold (JSON list of [confidence, was_correct]).
+        calibrated = os.getenv("STP_CALIBRATION_LABELS", "").strip()
+        if calibrated:
+            try:
+                import json
+
+                from insureflow.verification.conformal_stp import calibrate_stp_threshold
+
+                labels = [(float(c), bool(ok)) for c, ok in json.loads(calibrated)]
+                result = calibrate_stp_threshold(labels, default_threshold=stp_threshold)
+                stp_threshold = result.threshold
+            except Exception as exc:  # pragma: no cover - defensive
+                logger.warning("STP calibration skipped: %s", exc)
 
         layers: tuple[tuple[str, Callable[[], list[VerificationIssue]]], ...] = (
             ("balance_sheet", lambda: balance_sheet_identity(fields)),
@@ -73,6 +90,11 @@ class VerificationEngine:
             ("range_checks", lambda: range_checks(fields)),
             ("pattern_checks", lambda: pattern_checks(fields)),
             ("schema_validation", lambda: schema_validation(fields)),
+            ("cross_field", lambda: cross_field_checks(fields)),
+            ("cross_page", lambda: cross_page_reconciliation(group_values_by_page(fields))),
+            ("self_consistency", lambda: uncertainty_issues(variance_from_extracted_fields(fields))),
+            ("critical_self_consistency", lambda: critical_self_consistency_issues(fields)),
+            ("citation_gate", lambda: citation_issues(fields)),
         )
         for layer, fn in layers:
             try:

@@ -97,6 +97,88 @@ def test_group_values_by_page():
     assert grouped["total_incurred"] == [("page 2", 5000.0), ("page 3", 4990.0)]
 
 
+# ── 1b. Cross-field logic & conditional bounds ───────────────────────────────
+
+
+def test_license_after_policy_start_flagged():
+    from insureflow.verification.cross_field import chronological_dates
+
+    issues = chronological_dates(_fields({"driver_license_issue_date": "2026-06-01", "effective_date": "2026-01-01"}))
+    assert issues and issues[0].code == "date_order"
+
+
+def test_expiration_before_effective_flagged():
+    from insureflow.verification.cross_field import chronological_dates
+
+    issues = chronological_dates(_fields({"effective_date": "2026-06-01", "expiration_date": "2026-01-01"}))
+    assert issues and issues[0].code == "date_order"
+
+
+def test_dates_in_order_clean():
+    from insureflow.verification.cross_field import chronological_dates
+
+    assert chronological_dates(_fields({"driver_license_issue_date": "2020-01-01", "effective_date": "2026-01-01", "expiration_date": "2027-01-01"})) == []
+
+
+def test_payroll_without_employees_flagged():
+    from insureflow.verification.cross_field import payroll_vs_headcount
+
+    issues = payroll_vs_headcount(_fields({"annual_payroll": "5000000", "employees": "0"}))
+    assert issues and issues[0].code == "payroll_without_employees"
+
+
+def test_payroll_with_staff_clean():
+    from insureflow.verification.cross_field import payroll_vs_headcount
+
+    assert payroll_vs_headcount(_fields({"annual_payroll": "5000000", "employees": "40"})) == []
+
+
+def test_small_home_huge_replacement_flagged():
+    from insureflow.verification.cross_field import replacement_cost_vs_area
+
+    issues = replacement_cost_vs_area(_fields({"square_footage": "1200", "replacement_cost": "15000000"}))
+    assert issues and issues[0].code == "replacement_vs_area"
+
+
+def test_large_property_high_value_clean():
+    from insureflow.verification.cross_field import replacement_cost_vs_area
+
+    assert replacement_cost_vs_area(_fields({"square_footage": "80000", "replacement_cost": "15000000"})) == []
+
+
+def test_deductible_exceeds_limit_flagged():
+    from insureflow.verification.cross_field import deductible_vs_limit
+
+    issues = deductible_vs_limit(_fields({"deductible": "25000", "limit": "10000"}))
+    assert issues and issues[0].code == "deductible_exceeds_limit"
+
+
+def test_engine_runs_cross_field_and_self_consistency():
+    from insureflow.verification.engine import VerificationEngine
+
+    fields = {
+        "total_incurred": [_field("total_incurred", "500000", page=1), _field("total_incurred", "120000", page=4)],
+        "square_footage": [_field("square_footage", "1200")],
+        "replacement_cost": [_field("replacement_cost", "15000000")],
+    }
+    report = VerificationEngine().run(fields, document_type="sov")
+    assert "cross_field" in report.checks_run
+    assert "self_consistency" in report.checks_run
+    assert "cross_page" in report.checks_run
+    assert any(i.code == "replacement_vs_area" for i in report.issues)
+    assert any(i.code in {"epistemic_variance", "cross_page_reconciliation"} for i in report.issues)
+
+
+def test_variance_from_extracted_fields_flags_disagreement():
+    from insureflow.verification.uncertainty import uncertainty_issues, variance_from_extracted_fields
+
+    fields = {"total_incurred": [_field("total_incurred", "1000"), _field("total_incurred", "5000")]}
+    cv = variance_from_extracted_fields(fields)
+    assert cv["total_incurred"] > 0.05
+    issues = uncertainty_issues(cv)
+    assert issues and issues[0].code == "epistemic_variance"
+
+
 # ── 2. Guardrails: range / regex / schema ───────────────────────────────────
 
 

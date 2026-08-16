@@ -70,6 +70,7 @@ dev = [
     "ruff>=0.1",
     "mypy>=1.0",
     "psycopg2-binary>=2.9",
+    "Pillow>=10.0",
 ]
 aws = [
     "boto3>=1.34",

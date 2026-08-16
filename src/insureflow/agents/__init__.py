@@ -1,25 +1,30 @@
-from insureflow.agents.base import BaseAgent
-from insureflow.agents.compliance_agent import ComplianceAgent
-from insureflow.agents.extraction_agent import ExtractionAgent
-from insureflow.agents.fraud_detection_agent import FraudDetectionAgent
-from insureflow.agents.loss_run_analyst import LossRunAnalystAgent
-from insureflow.agents.orchestrator import PipelineOrchestrator
-from insureflow.agents.risk_analyst import RiskAnalystAgent
-from insureflow.agents.supervisor import SupervisorAgent
-from insureflow.agents.synthesis_agent import SynthesisAgent
-from insureflow.agents.uw_decision_agent import UWDecisionAgent
-from insureflow.agents.verification_agent import VerificationAgent
+"""Underwriting agents. Heavy orchestrator imports stay lazy."""
 
-__all__ = [
-    "BaseAgent",
-    "ComplianceAgent",
-    "ExtractionAgent",
-    "FraudDetectionAgent",
-    "LossRunAnalystAgent",
-    "PipelineOrchestrator",
-    "RiskAnalystAgent",
-    "SupervisorAgent",
-    "SynthesisAgent",
-    "UWDecisionAgent",
-    "VerificationAgent",
-]
+from __future__ import annotations
+
+from importlib import import_module
+from typing import Any
+
+_LAZY_MAP: dict[str, tuple[str, str]] = {
+    "BaseAgent": ("insureflow.agents.base", "BaseAgent"),
+    "ComplianceAgent": ("insureflow.agents.compliance_agent", "ComplianceAgent"),
+    "ExtractionAgent": ("insureflow.agents.extraction_agent", "ExtractionAgent"),
+    "FraudDetectionAgent": ("insureflow.agents.fraud_detection_agent", "FraudDetectionAgent"),
+    "LossRunAnalystAgent": ("insureflow.agents.loss_run_analyst", "LossRunAnalystAgent"),
+    "PipelineOrchestrator": ("insureflow.agents.orchestrator", "PipelineOrchestrator"),
+    "RiskAnalystAgent": ("insureflow.agents.risk_analyst", "RiskAnalystAgent"),
+    "SupervisorAgent": ("insureflow.agents.supervisor", "SupervisorAgent"),
+    "SynthesisAgent": ("insureflow.agents.synthesis_agent", "SynthesisAgent"),
+    "UWDecisionAgent": ("insureflow.agents.uw_decision_agent", "UWDecisionAgent"),
+    "VerificationAgent": ("insureflow.agents.verification_agent", "VerificationAgent"),
+}
+
+
+def __getattr__(name: str) -> Any:
+    if name in _LAZY_MAP:
+        mod_path, attr = _LAZY_MAP[name]
+        return getattr(import_module(mod_path), attr)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+__all__ = list(_LAZY_MAP)

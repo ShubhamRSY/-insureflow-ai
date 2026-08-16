@@ -191,4 +191,11 @@ def score_photo_quality(
             )
         )
 
+    try:
+        from insureflow.ml.vision.forensics import inspect_photo_forensics
+
+        analysis.findings.extend(inspect_photo_forensics(image_data, filename))
+    except Exception as exc:  # pragma: no cover - defensive
+        logger.debug("photo forensics skipped: %s", exc)
+
     return analysis

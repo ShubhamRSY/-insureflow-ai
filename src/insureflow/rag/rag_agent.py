@@ -217,6 +217,24 @@ class RAGAgent:
             },
         }
 
+    def retrieve_adaptive(
+        self,
+        query: str,
+        top_k: int = 5,
+        line_of_business: str | None = None,
+        llm: Any = None,
+    ) -> dict[str, Any]:
+        """Self-RAG + HyDE retry on top of ``retrieve_contexts``."""
+        from insureflow.rag.self_rag import retrieve_with_self_rag
+
+        return retrieve_with_self_rag(
+            self,
+            query,
+            top_k=top_k,
+            line_of_business=line_of_business,
+            llm=llm,
+        )
+
     def format_context(self, query: str, top_k: int = 5) -> str:
         parts: list[str] = []
         scored = self.search_scored(query, top_k=top_k)

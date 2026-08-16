@@ -18,6 +18,7 @@ class FraudDetectionAgent(ReActAgent):
         self._check_valuation_discrepancies(bundle)
         self._check_entity_consistency(bundle)
         self._check_recent_loss_cluster(bundle)
+        self._check_fraud_rings(bundle)
         self._ml_fraud_scoring(bundle, insurance_line=kwargs.get("insurance_line"))
 
     def _check_non_disclosed_losses(self, bundle: SubmissionBundle) -> None:
@@ -134,6 +135,23 @@ class FraudDetectionAgent(ReActAgent):
                         evidence=[f"{c.claim_id}: {c.date_of_loss}" for c in recent],
                     )
                 )
+
+    def _check_fraud_rings(self, bundle: SubmissionBundle) -> None:
+        from insureflow.ml.fraud_graph import default_ring_index
+
+        hits = [h for h in default_ring_index().score(bundle) if bundle.bundle_id in h.member_ids]
+        for hit in hits:
+            others = [mid for mid in hit.member_ids if mid != bundle.bundle_id]
+            sev = RiskSeverity.CRITICAL if hit.ring_score >= 0.7 or len(hit.member_ids) >= 3 else RiskSeverity.HIGH
+            self._add_finding(
+                Finding(
+                    title="Linked-file fraud ring",
+                    description=hit.reason,
+                    severity=sev,
+                    category="fraud_ring",
+                    evidence=others[:8] or hit.shared_keys,
+                )
+            )
 
     def _ml_fraud_scoring(self, bundle: SubmissionBundle, *, insurance_line: str | None = None) -> None:
         """Run ML fraud anomaly detection on submission features."""

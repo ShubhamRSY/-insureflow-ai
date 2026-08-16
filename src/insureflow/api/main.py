@@ -4258,6 +4258,71 @@ def get_verification_report(
     }
 
 
+@app.get("/grounding/{bundle_id}")
+def get_grounding_map(
+    bundle_id: str,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Glass-box field → page/bbox map for bi-directional PDF highlighting.
+
+    Every extracted value that can point at a source box is listed with its
+    confidence so the UI can heat-map low-trust cells. Ungrounded critical
+    fields are listed separately — treat them as hypotheses, not facts.
+    """
+    from insureflow.audit.store import AuditStore
+    from insureflow.models.submissions import SubmissionBundle
+    from insureflow.rag.entity_graph import build_submission_entity_graph
+    from insureflow.verification.citation_gate import is_grounded
+    from insureflow.verification.zero_hallucination import evaluate_zero_hallucination
+
+    store = AuditStore()
+    bundle_data = store.load_json(bundle_id, "submission_bundle.json", org_id=current.org_id)
+    if not bundle_data:
+        raise HTTPException(status_code=404, detail="No submission bundle for grounding")
+    try:
+        bundle = SubmissionBundle(**bundle_data)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Could not load bundle: {exc}") from exc
+
+    fields: list[dict[str, Any]] = []
+    ungrounded: list[dict[str, Any]] = []
+    for doc in (*bundle.unstructured, *bundle.supplemental):
+        for key, entries in (doc.extracted_fields or {}).items():
+            if not entries:
+                continue
+            ef = entries[0]
+            row = {
+                "submission_id": doc.submission_id,
+                "document_type": doc.document_type,
+                "field_name": key,
+                "value": ef.value,
+                "confidence": ef.confidence,
+                "page_number": ef.page_number,
+                "bbox": ef.bbox,
+                "source_ref": ef.source_ref or "",
+                "grounded": is_grounded(ef),
+            }
+            fields.append(row)
+            if ef.value and not is_grounded(ef):
+                ungrounded.append(row)
+
+    graph = build_submission_entity_graph(bundle)
+    zh = store.load_json(bundle_id, "zero_hallucination.json", org_id=current.org_id)
+    if zh is None:
+        try:
+            zh = evaluate_zero_hallucination(bundle).to_dict()
+        except Exception:
+            zh = {"hallucination_count": None, "passed": None}
+    return {
+        "bundle_id": bundle_id,
+        "fields": fields,
+        "ungrounded": ungrounded,
+        "entity_graph": graph.to_dict(),
+        "zero_hallucination": zh,
+        "glass_box": True,
+    }
+
+
 @app.get("/underwriting/market")
 def get_market_cycle_status(
     current: TokenData = Depends(require_role(Role.VIEWER)),

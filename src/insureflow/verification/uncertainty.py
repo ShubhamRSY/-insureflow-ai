@@ -71,6 +71,34 @@ def high_variance_fields(
     return [field for field, cv in cv_map.items() if cv > cv_threshold]
 
 
+def variance_from_extracted_fields(
+    fields: Mapping[str, list],
+) -> dict[str, float]:
+    """Coefficient of variation when the same field was read more than once.
+
+    Two extractors (or two pages) that disagree on a dollar figure are a
+    self-consistency failure — we do not pick the pretty number.
+    """
+    from insureflow.verification.common import to_number
+
+    cv: dict[str, float] = {}
+    for key, entries in fields.items():
+        values: list[float] = []
+        for entry in entries or []:
+            raw = getattr(entry, "value", entry)
+            num = to_number(str(raw))
+            if num is not None:
+                values.append(num)
+        if len(values) < 2:
+            continue
+        mean = statistics.fmean(values)
+        if mean == 0:
+            cv[key] = 0.0 if statistics.pstdev(values) == 0 else 1.0
+            continue
+        cv[key] = statistics.pstdev(values) / abs(mean)
+    return cv
+
+
 def uncertainty_issues(
     cv_map: Mapping[str, float],
     cv_threshold: float = _DEFAULT_CV_THRESHOLD,

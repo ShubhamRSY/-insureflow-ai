@@ -11,6 +11,7 @@ from insureflow.oracles.oracle_agent import OracleAgent
 from insureflow.oracles.osha_client import OSHAClient
 from insureflow.oracles.public_records_client import PublicRecordsClient
 from insureflow.oracles.rating_agency_client import CreditRatingAgencyClient
+from insureflow.oracles.telematics_client import CyberScanClient, TelematicsClient
 
 
 def _oracle_mode() -> str:
@@ -98,6 +99,24 @@ def build_rating_agency_client() -> CreditRatingAgencyClient:
     )
 
 
+def build_telematics_client() -> TelematicsClient:
+    return TelematicsClient(
+        api_key=settings.telematics_api_key,
+        base_url=settings.telematics_api_url,
+        mode=_oracle_mode(),
+        query_path=settings.telematics_query_path,
+    )
+
+
+def build_cyber_scan_client() -> CyberScanClient:
+    return CyberScanClient(
+        api_key=settings.cyber_scan_api_key,
+        base_url=settings.cyber_scan_api_url,
+        mode=_oracle_mode(),
+        query_path=settings.cyber_scan_query_path,
+    )
+
+
 def build_oracle_agent() -> OracleAgent:
     return OracleAgent(
         clue_client=build_clue_client(),
@@ -109,4 +128,6 @@ def build_oracle_agent() -> OracleAgent:
         osha_client=build_osha_client(),
         rating_agency_client=build_rating_agency_client(),
         mvr_client=build_mvr_client(),
+        telematics_client=build_telematics_client(),
+        cyber_scan_client=build_cyber_scan_client(),
     )
