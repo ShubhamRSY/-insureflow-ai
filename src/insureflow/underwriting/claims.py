@@ -200,8 +200,7 @@ def adjudicate_claims(
         review.total_defense_costs += d.defense_costs
         review.total_settlements += d.settlement_amount or 0.0
     review.summary = (
-        f"{len(decisions)} claim(s): {review.approved_count} approved, {review.denied_count} denied, "
-        f"{review.settled_count} settled, {review.pending_count} pending"
+        f"{len(decisions)} claim(s): {review.approved_count} approved, {review.denied_count} denied, {review.settled_count} settled, {review.pending_count} pending"
         if decisions
         else "No claims to adjudicate"
     )
@@ -235,11 +234,7 @@ def evaluate_subrogation(claim: ClaimRecord) -> SubrogationRecovery:
         potential_recovery=potential,
         recovery_amount=recovered,
         recovery_percent=round(recovered / potential, 4) if potential > 0 else 0.0,
-        detail=(
-            f"Subrogation recovered {recovered:,.0f} against {third_party}"
-            if recovered > 0
-            else f"Subrogation pursued against {third_party} — potential recovery ~{potential:,.0f}"
-        ),
+        detail=(f"Subrogation recovered {recovered:,.0f} against {third_party}" if recovered > 0 else f"Subrogation pursued against {third_party} — potential recovery ~{potential:,.0f}"),
     )
 
 

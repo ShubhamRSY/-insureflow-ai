@@ -28,7 +28,7 @@ def sftp_configured(host: str | None = None) -> bool:
 
 def _apply_host_key_policy(client: Any) -> None:
     """Reject unknown hosts in bank/production; AutoAdd only in lab."""
-    import paramiko
+    import paramiko  # type: ignore[import-untyped]
 
     known = os.getenv("SFTP_KNOWN_HOSTS", "").strip()
     default_kh = Path.home() / ".ssh" / "known_hosts"

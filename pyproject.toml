@@ -81,7 +81,9 @@ ml = [
     "numpy>=1.24",
     "scikit-learn>=1.3",
     "spacy>=3.7",
-    "en-core-web-sm>=3.7",
+    # spaCy models (en_core_web_sm, …) are distributed via `python -m spacy
+    # download <model>`, not PyPI, so they are intentionally not declared here;
+    # the NER enrichment degrades to the regex extractors when absent.
 ]
 vector = [
     "chromadb>=0.4",
@@ -166,6 +168,12 @@ module = ["tests.*"]
 disallow_untyped_defs = false
 disallow_incomplete_defs = false
 check_untyped_defs = true
+# Test helpers (fake LLMs, doc builders, samplers) are intentionally untyped;
+# the strict "no untyped calls" rule is noise for them. warn_unused_ignores is
+# relaxed because test files keep env-guarded SDK ignores that are unused when
+# the optional SDK is not installed in the CI environment.
+disallow_untyped_calls = false
+warn_unused_ignores = false
 
 [[tool.mypy.overrides]]
 module = ["evaluations.ragas_eval", "evaluations.giskard_eval"]
@@ -182,9 +190,34 @@ ignore_errors = true
 module = ["insureflow.ml.*"]
 ignore_errors = true
 
+# SDK-integration layers: docling/pymupdf/pdfplumber/transformers/openai/anthropic
+# ship minimal or no stubs, so "call to untyped function" and similar checks are
+# noise here. The functions are guarded with try/except and degrade to None.
+[[tool.mypy.overrides]]
+module = [
+  "insureflow.ingestion.vlm_parser",
+  "insureflow.ingestion.router",
+  "insureflow.ingestion.ocr",
+  "insureflow.ingestion.forensics",
+  "insureflow.ingestion.vision_ml",
+  "insureflow.ingestion.cloud_ocr",
+  "insureflow.ingestion.structured_docs",
+  "insureflow.ingestion.insurance.sftp_connector",
+  "insureflow.agents.code_execution_agent",
+]
+disallow_untyped_calls = false
+warn_unused_ignores = false
+
 # Optional third-party eval SDK adapters: deepeval is only installed on eval
 # environments, so mypy resolves it to Any (ignore_missing_imports) and flags the
 # SDK-specific ignores as unused. Keep them so they bite when the SDK is present.
 [[tool.mypy.overrides]]
 module = ["evaluations.frameworks.deepeval_suite"]
 warn_unused_ignores = false
+
+# transformers ships typed source that crashes mypy<1.11 (Unpack kwargs in
+# sam_hq processing). It is an optional SDK only referenced through guarded
+# imports; skipping its internals keeps the gate stable on any installed version.
+[[tool.mypy.overrides]]
+module = ["transformers", "transformers.*"]
+follow_imports = "skip"

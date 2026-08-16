@@ -43,11 +43,7 @@ def critic_review(
     """Agent B audits extraction against the source; ungrounded values → issues."""
     if not critic_enabled() or llm is None or not getattr(llm, "api_key", None):
         return []
-    flattened = [
-        {"field": key, "value": entries[0].value}
-        for key, entries in fields.items()
-        if entries and entries[0].value
-    ][:_MAX_FIELDS_IN_PROMPT]
+    flattened = [{"field": key, "value": entries[0].value} for key, entries in fields.items() if entries and entries[0].value][:_MAX_FIELDS_IN_PROMPT]
     if not flattened:
         return []
     prompt = (
@@ -71,10 +67,7 @@ def critic_review(
             VerificationIssue(
                 code="critic_ungrounded",
                 severity=SEVERITY_ERROR if verdict.get("grounded") is False else SEVERITY_WARNING,
-                message=(
-                    f"critic could not ground {verdict.get('field')} "
-                    f"({verdict.get('note', 'no note')}) — verify against source"
-                ),
+                message=(f"critic could not ground {verdict.get('field')} ({verdict.get('note', 'no note')}) — verify against source"),
                 field_name=str(verdict.get("field", "")),
             )
         )
@@ -123,10 +116,7 @@ def dual_model_consensus(
                 VerificationIssue(
                     code="consensus_divergence",
                     severity=SEVERITY_ERROR,
-                    message=(
-                        f"{key} diverges between engines: primary={prim[key]} vs secondary={sec[key]} "
-                        f"(relative Δ {abs(a - b) / denom:.3f} > {tolerance:.2f}) — exception queue"
-                    ),
+                    message=(f"{key} diverges between engines: primary={prim[key]} vs secondary={sec[key]} (relative Δ {abs(a - b) / denom:.3f} > {tolerance:.2f}) — exception queue"),
                     field_name=key,
                 )
             )

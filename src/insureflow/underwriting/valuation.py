@@ -45,10 +45,7 @@ def valuation_assessment(
         detail = f"Agreed-value valuation {effective:,.0f} — depreciation not applied"
     elif basis is ValuationBasis.ACV:
         effective = acv
-        detail = (
-            f"ACV {acv:,.0f} = replacement cost {rcv:,.0f} − {dep_pct:.1%} depreciation"
-            + (f" over {age_years:.0f} years" if age_years else "")
-        )
+        detail = f"ACV {acv:,.0f} = replacement cost {rcv:,.0f} − {dep_pct:.1%} depreciation" + (f" over {age_years:.0f} years" if age_years else "")
     else:
         effective = rcv
         detail = f"Replacement cost valuation {rcv:,.0f} — no depreciation applied"

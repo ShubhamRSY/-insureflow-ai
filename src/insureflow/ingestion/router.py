@@ -10,6 +10,8 @@ Enabled by default via ``USE_DOCUMENT_ROUTER``; ``ROUTER_FORCE`` overrides the
 decision for testing/diagnostics (e.g. ``ROUTER_FORCE=vlm``).
 """
 
+# mypy: disable-error-code="no-untyped-call"
+
 from __future__ import annotations
 
 import logging
@@ -17,6 +19,7 @@ import os
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +85,7 @@ def _profile_pdf(profile: DocumentProfile, path: str, data: bytes | None) -> Non
 
             import pymupdf
 
-            doc = pymupdf.open(stream=io.BytesIO(data))
+            doc: Any = pymupdf.open(stream=io.BytesIO(data))
         else:
             import pymupdf
 

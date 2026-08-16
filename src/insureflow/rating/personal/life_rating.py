@@ -70,7 +70,7 @@ def rate_life(
         )
 
     if family == "annuity":
-        meta: dict[str, Any] = {
+        annuity_meta: dict[str, Any] = {
             "filing_id": manual.get("filing_id"),
             "rating_engine": "catalog_only",
             "product_family": family,
@@ -88,8 +88,8 @@ def rate_life(
                 coverage_id=coverage_id,
                 coverage_name=coverage_name,
             )
-            meta["annuity_illustration"] = illustration.metadata.get("illustrative_payout", {})
-            meta["annuity_subtype"] = illustration.metadata.get("annuity_subtype", "fixed")
+            annuity_meta["annuity_illustration"] = illustration.metadata.get("illustrative_payout", {})
+            annuity_meta["annuity_subtype"] = illustration.metadata.get("annuity_subtype", "fixed")
         except Exception:
             pass
         return QuoteResult(
@@ -99,7 +99,7 @@ def rate_life(
             adjusted_premium=0.0,
             eligible=False,
             ineligibility_reasons=["Annuity requires payout / consideration factors — not rated on term mortality"],
-            metadata=meta,
+            metadata=annuity_meta,
         )
 
     age = factors.age or 40

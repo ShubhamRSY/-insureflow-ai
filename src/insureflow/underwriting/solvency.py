@@ -37,9 +37,7 @@ def rbc_requirement(
     r1 = _RBC_FACTORS["fixed_income"] * max(float(fixed_income_assets or 0.0), 0.0)
     r2 = _RBC_FACTORS["equity"] * max(float(equity_investments or 0.0), 0.0)
     r3 = _RBC_FACTORS["credit"] * max(float(receivables or 0.0), 0.0)
-    r4 = _RBC_FACTORS["reserves"] * max(float(loss_reserves or 0.0), 0.0) + _RBC_FACTORS[
-        "net_written_premium"
-    ] * max(float(net_written_premium or 0.0), 0.0)
+    r4 = _RBC_FACTORS["reserves"] * max(float(loss_reserves or 0.0), 0.0) + _RBC_FACTORS["net_written_premium"] * max(float(net_written_premium or 0.0), 0.0)
     r5 = _RBC_FACTORS["reinsurance_ceded"] * max(float(reinsurance_ceded or 0.0), 0.0)
     # Covariance adjustment — the classic square-root formula.
     requirement = (r1 + r3) ** 2 + r2**2 + r4**2
@@ -77,9 +75,7 @@ def assess_solvency(
     solvent = ratio >= 1.0 if ratio is not None else None
     detail = (
         f"Policyholder surplus {surplus:,.0f} (assets {assets:,.0f} − liabilities {liabilities:,.0f}); "
-        f"RBC requirement {requirement:,.0f}"
-        + (f"; RBC ratio {ratio:.2f}" if ratio is not None else "")
-        + ("" if ratio is None else (" — solvent" if solvent else " — RBC action level"))
+        f"RBC requirement {requirement:,.0f}" + (f"; RBC ratio {ratio:.2f}" if ratio is not None else "") + ("" if ratio is None else (" — solvent" if solvent else " — RBC action level"))
     )
     return SolvencyAssessment(
         policyholder_surplus=surplus,

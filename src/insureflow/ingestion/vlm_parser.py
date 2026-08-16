@@ -11,6 +11,8 @@ every call returns ``None`` when the path is not configured — leaving the
 local/pdfplumber chain untouched.
 """
 
+# mypy: disable-error-code="no-untyped-call"
+
 from __future__ import annotations
 
 import base64
@@ -18,7 +20,7 @@ import logging
 import os
 import tempfile
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 logger = logging.getLogger(__name__)
 
@@ -94,7 +96,7 @@ def render_pdf_to_images(path: str, dpi: int = 200) -> list[bytes]:
         return []
     scale = dpi / 72.0
     images: list[bytes] = []
-    doc = pymupdf.open(path)
+    doc: Any = pymupdf.open(path)
     try:
         for page in doc:
             pix = page.get_pixmap(matrix=pymupdf.Matrix(scale, scale))
@@ -150,8 +152,8 @@ def _openai_vision(images: list[bytes]) -> str:
     contents.append({"type": "text", "text": _VLM_PROMPT})
     response = client.chat.completions.create(
         model=model,
-        messages=[{"role": "user", "content": contents}],
-        max_tokens=os.getenv("VLM_MAX_TOKENS", "4096"),
+        messages=cast(Any, [{"role": "user", "content": contents}]),
+        max_tokens=int(os.getenv("VLM_MAX_TOKENS", "4096")),
     )
     return response.choices[0].message.content or ""
 
@@ -171,9 +173,9 @@ def _anthropic_vision(images: list[bytes]) -> str:
     message = client.messages.create(
         model=model,
         max_tokens=int(os.getenv("VLM_MAX_TOKENS", "4096")),
-        messages=[{"role": "user", "content": blocks}],
+        messages=[{"role": "user", "content": cast(Any, blocks)}],
     )
-    return "".join(block.text or "" for block in message.content if getattr(block, "type", "") == "text")
+    return "".join(getattr(block, "text", "") or "" for block in message.content if getattr(block, "type", "") == "text")
 
 
 def _mistral_ocr(data: bytes, filename: str) -> str:

@@ -82,10 +82,7 @@ def uncertainty_issues(
             VerificationIssue(
                 code="epistemic_variance",
                 severity=SEVERITY_WARNING,
-                message=(
-                    f"{field} varied with CV {cv_map[field]:.3f} across extraction passes "
-                    f"(> {cv_threshold:.2f}); unstable value — route to human review"
-                ),
+                message=(f"{field} varied with CV {cv_map[field]:.3f} across extraction passes (> {cv_threshold:.2f}); unstable value — route to human review"),
                 field_name=field,
             )
         )

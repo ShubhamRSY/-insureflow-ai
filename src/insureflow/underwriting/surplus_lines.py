@@ -183,10 +183,7 @@ def guarantee_fund_assessment(*, admitted: bool, state: str = "", premium: float
     assessments = round(prem * 0.005, 2)
     return {
         "guaranty_fund_backed": True,
-        "detail": (
-            f"Admitted placement — unpaid claims backed by the {st or 'state'} insurance "
-            f"guaranty association up to {cap:,.0f} per claim"
-        ),
+        "detail": (f"Admitted placement — unpaid claims backed by the {st or 'state'} insurance guaranty association up to {cap:,.0f} per claim"),
         "per_claim_cap": cap,
         "assessments_recoverable": assessments,
     }

@@ -20,7 +20,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass
-from typing import Any, Iterable, Mapping
+from typing import Any, Mapping, Sequence
 
 from insureflow.models.submissions import ExtractedField, VerificationIssue
 from insureflow.verification.common import SEVERITY_WARNING
@@ -79,7 +79,7 @@ def lookup_entity(
 
 
 def registry_verification_issues(
-    fields: Mapping[str, Iterable[ExtractedField]],
+    fields: Mapping[str, Sequence[ExtractedField]],
     lookup: Any = None,
 ) -> list[VerificationIssue]:
     """Run name/EIN/address lookups when configured and report mismatches.

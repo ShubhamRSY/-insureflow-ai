@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Any, Iterable, Mapping
+from typing import Any, Callable, Iterable, Mapping
 
 from insureflow.ingestion.forensics import inspect_pdf, tamper_checks_enabled, tampering_issues
 from insureflow.ingestion.spatial_graph import column_alignment_check
@@ -67,13 +67,14 @@ class VerificationEngine:
         checks_run: list[str] = []
         stp_threshold = float(os.getenv("STP_CONFIDENCE_THRESHOLD", "0.95"))
 
-        for layer, fn in (
+        layers: tuple[tuple[str, Callable[[], list[VerificationIssue]]], ...] = (
             ("balance_sheet", lambda: balance_sheet_identity(fields)),
             ("sum_to_total", lambda: auto_sum_to_total(fields)),
             ("range_checks", lambda: range_checks(fields)),
             ("pattern_checks", lambda: pattern_checks(fields)),
             ("schema_validation", lambda: schema_validation(fields)),
-        ):
+        )
+        for layer, fn in layers:
             try:
                 layer_issues = fn()
             except Exception as exc:  # pragma: no cover - defensive
@@ -152,10 +153,7 @@ def _stp_confidence_issues(
                 VerificationIssue(
                     code="stp_block_low_confidence",
                     severity=SEVERITY_ERROR,
-                    message=(
-                        f"critical field {key}={field.value!r} has confidence {field.confidence:.3f} "
-                        f"< {stp_threshold:.3f} — blocks straight-through processing"
-                    ),
+                    message=(f"critical field {key}={field.value!r} has confidence {field.confidence:.3f} < {stp_threshold:.3f} — blocks straight-through processing"),
                     field_name=key,
                     page_number=field.page_number,
                     bbox=field.bbox,

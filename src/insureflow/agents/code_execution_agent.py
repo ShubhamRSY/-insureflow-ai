@@ -163,7 +163,7 @@ class CodeExecutionAgent:
         except Exception as exc:
             logger.warning("script generation failed: %s", exc)
             return ""
-        script = raw.strip()
+        script = str(raw).strip()
         if script.startswith("```python"):
             script = script[len("```python") :]
         elif script.startswith("```"):

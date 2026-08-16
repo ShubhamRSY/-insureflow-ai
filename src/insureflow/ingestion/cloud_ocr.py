@@ -93,7 +93,7 @@ def _textract_wait_and_get(client: Any, job_id: str) -> dict[str, Any]:
     for _ in range(120):
         status = client.get_document_analysis(JobId=job_id)
         if status["JobStatus"] in {"SUCCEEDED", "FAILED"}:
-            return status
+            return dict(status)
         time.sleep(2)
     raise TimeoutError("Textract analysis timed out")
 

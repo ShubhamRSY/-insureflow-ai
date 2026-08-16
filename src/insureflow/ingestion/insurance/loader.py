@@ -161,9 +161,7 @@ class InsuranceDocumentLoader:
             bundle.status = SubmissionStatus.PARSED
         return bundle
 
-    def _resolve_content(
-        self, content: str, filename: str, encoding: str
-    ) -> tuple[str, str, dict[str, list[ExtractedField]], dict[int, dict[str, list[float]]], bytes | None]:
+    def _resolve_content(self, content: str, filename: str, encoding: str) -> tuple[str, str, dict[str, list[ExtractedField]], dict[int, dict[str, list[float]]], bytes | None]:
         ext = Path(filename).suffix.lower()
         if encoding == "base64":
             data = base64.b64decode(content)
@@ -217,9 +215,7 @@ class InsuranceDocumentLoader:
         result = self._code_agent.parse_document(data, filename)
         if result is None or result.error or not result.fields:
             return None
-        fields: dict[str, list[ExtractedField]] = {
-            key: [ExtractedField(field_name=key, value=value, confidence=0.8, context="code_execution")] for key, value in result.fields.items()
-        }
+        fields: dict[str, list[ExtractedField]] = {key: [ExtractedField(field_name=key, value=value, confidence=0.8, context="code_execution")] for key, value in result.fields.items()}
         raw = "\n".join(f"{k}: {v}" for k, v in result.fields.items())
         return raw, "code_execution", fields, {}, data
 
@@ -261,21 +257,19 @@ class InsuranceDocumentLoader:
                 processed_at=datetime.now(timezone.utc),
             )
 
-        for key, fields in extra_fields.items():
-            sub.extracted_fields.setdefault(key, []).extend(fields)
+        for key, field_entries in extra_fields.items():
+            sub.extracted_fields.setdefault(key, []).extend(field_entries)
         if engine:
             sub.extracted_fields.setdefault("ocr_engine", []).append(ExtractedField(field_name="ocr_engine", value=engine, confidence=1.0))
-        for key, fields in extract_named_entities(raw_text).items():
-            sub.extracted_fields.setdefault(key, []).extend(fields)
+        for key, field_entries in extract_named_entities(raw_text).items():
+            sub.extracted_fields.setdefault(key, []).extend(field_entries)
 
         sub.spatial_lines = spatial_lines
 
         if agentic_enabled():
             fields, report = self._agentic_loop().run(raw_text, sub.extracted_fields, dtype)
             sub.extracted_fields = fields
-            sub.extracted_fields.setdefault("agentic_report", []).append(
-                ExtractedField(field_name="agentic_report", value="; ".join(report), confidence=1.0)
-            )
+            sub.extracted_fields.setdefault("agentic_report", []).append(ExtractedField(field_name="agentic_report", value="; ".join(report), confidence=1.0))
 
         self._ground_fields(sub.extracted_fields, spatial_lines)
         self._apply_structural_chunks(sub)

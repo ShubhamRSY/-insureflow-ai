@@ -62,17 +62,11 @@ def analyze_proximate_cause(
     unbroken = covered and not excluded
 
     if superseding:
-        reasoning = (
-            f"Cause '{cause}' maps to peril '{peril}' but description names superseding "
-            f"excluded event '{superseding}' — the chain of causation is broken"
-        )
+        reasoning = f"Cause '{cause}' maps to peril '{peril}' but description names superseding excluded event '{superseding}' — the chain of causation is broken"
     elif covered:
         reasoning = f"Cause '{cause}' maps to covered peril '{peril}' — unbroken chain from insured peril to loss"
     else:
-        reasoning = (
-            f"Cause '{cause}' maps to peril '{peril}' which is not in the covered perils "
-            f"({', '.join(policy_perils) or 'none declared'})"
-        )
+        reasoning = f"Cause '{cause}' maps to peril '{peril}' which is not in the covered perils ({', '.join(policy_perils) or 'none declared'})"
 
     decision = "covered" if unbroken else ("not_covered" if (excluded or not covered) else "indeterminate")
 

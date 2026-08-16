@@ -32,10 +32,7 @@ def combined_ratio(
     loss = max(float(loss_ratio or 0.0), 0.0)
     exp = max(float(expense_ratio or 0.0), 0.0)
     combined = round(loss + exp, 4)
-    detail = (
-        f"Combined ratio {combined:.1%} = loss ratio {loss:.1%} + expense ratio {exp:.1%}"
-        + (" — underwriting profit" if combined < 1.0 else " — underwriting loss")
-    )
+    detail = f"Combined ratio {combined:.1%} = loss ratio {loss:.1%} + expense ratio {exp:.1%}" + (" — underwriting profit" if combined < 1.0 else " — underwriting loss")
     return CombinedRatioResult(
         loss_ratio=loss,
         expense_ratio=exp,
@@ -64,9 +61,7 @@ def _estimate_expenses_from_bundle(bundle: SubmissionBundle) -> float | None:
     try:
         from insureflow.rating.expenses import project_expenses
 
-        projections = project_expenses(
-            {"commissions": written * 0.15, "general_expense": written * 0.10}
-        )
+        projections = project_expenses({"commissions": written * 0.15, "general_expense": written * 0.10})
         expenses = float(sum(p.projected for p in projections))
         if expenses > 0:
             return expenses
@@ -86,7 +81,7 @@ def combined_ratio_from_bundle(
     exp = None
     if expenses is not None:
         exp = expense_ratio(expenses=expenses, written_premium=lr.premium or 0.0)
-    else:
+    elif bundle is not None:
         est = _estimate_expenses_from_bundle(bundle)
         if est is not None:
             exp = expense_ratio(expenses=est, written_premium=lr.premium or 0.0)

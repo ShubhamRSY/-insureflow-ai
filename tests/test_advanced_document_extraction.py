@@ -49,7 +49,9 @@ def test_vlm_parse_document_uses_configured_provider(monkeypatch):
 
     monkeypatch.setattr(vlm_parser, "render_pdf_to_images", lambda path, dpi=200: [b"fake-png"])
     monkeypatch.setattr(vlm_parser, "_openai_vision", lambda images: "# Parsed\n\n| A | B |\n|---|---|")
-    markdown, provider = vlm_parser.vlm_parse_document(b"not really a pdf", "doc.pdf")
+    result = vlm_parser.vlm_parse_document(b"not really a pdf", "doc.pdf")
+    assert result is not None
+    markdown, provider = result
     assert markdown.startswith("# Parsed")
     assert provider == "vlm:openai"
 
@@ -184,11 +186,7 @@ def test_normalize_to_markdown_promotes_layout_rows():
 def test_hierarchical_chunker_splits_on_headings():
     from insureflow.ingestion.markdown_chunker import MarkdownHierarchicalChunker
 
-    md = (
-        "# Policy Summary\n\nNamed Insured: Pacific Coast\n\n"
-        "## Loss History\n\nOne claim in 2024.\n\n"
-        "## Assets\n\n| Item | Value |\n| --- | --- |\n| Building | 4,000,000 |"
-    )
+    md = "# Policy Summary\n\nNamed Insured: Pacific Coast\n\n## Loss History\n\nOne claim in 2024.\n\n## Assets\n\n| Item | Value |\n| --- | --- |\n| Building | 4,000,000 |"
     chunks = MarkdownHierarchicalChunker().chunk_text(md)
     assert any(chunk.startswith("## Policy Summary") for chunk in chunks)
     assert any("## Loss History" in chunk for chunk in chunks)
@@ -292,18 +290,14 @@ def test_route_plain_text():
 def test_route_scanned_low_density():
     from insureflow.ingestion.router import DocumentProfile, RouteKind, route_document
 
-    profile = DocumentProfile(
-        filename="scan.pdf", extension=".pdf", page_count=5, image_count=8, text_chars=40, text_density=0.004
-    )
+    profile = DocumentProfile(filename="scan.pdf", extension=".pdf", page_count=5, image_count=8, text_chars=40, text_density=0.004)
     assert route_document(profile).route == RouteKind.SCANNED
 
 
 def test_route_vlm_multi_column():
     from insureflow.ingestion.router import DocumentProfile, RouteKind, route_document
 
-    profile = DocumentProfile(
-        filename="report.pdf", extension=".pdf", page_count=10, text_chars=8800, text_density=0.4, column_span=0.8
-    )
+    profile = DocumentProfile(filename="report.pdf", extension=".pdf", page_count=10, text_chars=8800, text_density=0.4, column_span=0.8)
     assert route_document(profile).route == RouteKind.VLM
 
 
@@ -340,9 +334,7 @@ def test_loader_vlm_route(monkeypatch):
     monkeypatch.setenv("USE_VLM_PARSING", "1")
     from insureflow.ingestion.insurance import loader as loader_mod
 
-    monkeypatch.setattr(
-        loader_mod, "vlm_parse_document", lambda data, filename: ("# VLM Parsed\nNamed Insured: Acme Corp", "vlm:fake")
-    )
+    monkeypatch.setattr(loader_mod, "vlm_parse_document", lambda data, filename: ("# VLM Parsed\nNamed Insured: Acme Corp", "vlm:fake"))
     bundle = loader_mod.InsuranceDocumentLoader().load_from_documents(
         [{"filename": "bus.pdf", "content": base64.b64encode(b"pdf").decode("ascii"), "encoding": "base64"}],
         bundle_id="vlm-route",

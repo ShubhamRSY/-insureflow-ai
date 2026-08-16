@@ -20,29 +20,29 @@ import zipfile
 from email import message_from_bytes
 from email.message import Message
 from pathlib import Path
-from typing import Any, Iterator, Sequence
+from typing import Any, Iterator, Sequence, cast
 
 from insureflow.models.submissions import ExtractedField
 
 try:  # pragma: no cover - exercised when optional dep is installed
     from bs4 import BeautifulSoup
 except ImportError:  # pragma: no cover
-    BeautifulSoup = None  # type: ignore[assignment]
+    BeautifulSoup = None  # type: ignore[assignment,misc]
 
 try:  # pragma: no cover - exercised when optional dep is installed
     from lxml import etree
 except ImportError:  # pragma: no cover
-    etree = None  # type: ignore[assignment]
+    etree = None
 
 try:  # pragma: no cover - exercised when optional dep is installed
     from openpyxl import load_workbook
 except ImportError:  # pragma: no cover
-    load_workbook = None  # type: ignore[assignment]
+    load_workbook = None
 
 try:  # pragma: no cover - exercised when optional dep is installed
     from python_calamine import CalamineWorkbook
 except ImportError:  # pragma: no cover
-    CalamineWorkbook = None  # type: ignore[assignment]
+    CalamineWorkbook = None  # type: ignore[assignment,misc]
 
 try:  # pragma: no cover - exercised when optional dep is installed
     import docx as _python_docx
@@ -119,7 +119,7 @@ def _parse_workbook_polars(data: bytes, filename: str) -> tuple[str, dict[str, l
     if _pl is None:
         return None
     try:
-        frames = _pl.read_excel(io.BytesIO(data), sheet_name=None, engine="calamine")
+        frames = cast(dict[str, Any], _pl.read_excel(io.BytesIO(data), sheet_name=None, engine="calamine"))
     except Exception:
         return None
     sheets: dict[str, list[list[Any]]] = {}
@@ -139,11 +139,7 @@ def _parse_workbook_openpyxl(data: bytes, filename: str) -> tuple[str, dict[str,
     wb = load_workbook(io.BytesIO(data), data_only=True)
     sheets: dict[str, list[list[Any]]] = {}
     for sheet in wb.worksheets:
-        sheets[sheet.title] = [
-            list(row)
-            for row in sheet.iter_rows(values_only=True)
-            if any(cell is not None for cell in row)
-        ]
+        sheets[sheet.title] = [list(row) for row in sheet.iter_rows(values_only=True) if any(cell is not None for cell in row)]
     wb.close()
     return _render_workbook(sheets, filename)
 
@@ -151,10 +147,7 @@ def _parse_workbook_openpyxl(data: bytes, filename: str) -> tuple[str, dict[str,
 def _parse_workbook_calamine(data: bytes, filename: str) -> tuple[str, dict[str, list[ExtractedField]]]:
     wb = CalamineWorkbook.from_filelike(io.BytesIO(data))
     try:
-        sheets = {
-            name: wb.get_sheet_by_name(name).to_python()
-            for name in wb.sheet_names
-        }
+        sheets = {name: wb.get_sheet_by_name(name).to_python() for name in wb.sheet_names}
     finally:
         wb.close()
     return _render_workbook(sheets, filename)
@@ -271,7 +264,7 @@ def _parse_docx_zipxml(data: bytes, filename: str) -> tuple[str, dict[str, list[
         root = etree.fromstring(zf.read("word/document.xml"))
     blocks: list[str] = []
     body = root.find(_WML + "body")
-    for child in (list(body) if body is not None else []):
+    for child in list(body) if body is not None else []:
         if child.tag == _WML + "p":
             text = _docx_paragraph_text(child)
             if text:
@@ -292,7 +285,7 @@ def _message_part_text(msg: Message) -> str:
     for part in msg.walk():
         if part.get_content_type() == "text/plain":
             payload = part.get_payload(decode=True)
-            if payload:
+            if isinstance(payload, bytes):
                 charset = part.get_content_charset() or "utf-8"
                 try:
                     return payload.decode(charset)
@@ -301,7 +294,7 @@ def _message_part_text(msg: Message) -> str:
     for part in msg.walk():
         if part.get_content_type() == "text/html":
             payload = part.get_payload(decode=True)
-            if payload:
+            if isinstance(payload, bytes):
                 return _html_to_text(payload.decode("utf-8", errors="replace"))
     return ""
 
@@ -323,9 +316,7 @@ def email_body_text(msg: Message) -> str:
 def parse_eml_bytes(data: bytes, filename: str = "submission.eml") -> tuple[str, dict[str, list[ExtractedField]]]:
     """Extract headers + readable body from a raw .eml file."""
     msg = message_from_bytes(data)
-    headers = [
-        f"{key}: {value}" for key in ("Subject", "From", "To", "Date", "Reply-To") if (value := msg.get(key))
-    ]
+    headers = [f"{key}: {value}" for key in ("Subject", "From", "To", "Date", "Reply-To") if (value := msg.get(key))]
     body = _collapse_whitespace(_message_part_text(msg))
     parts = [block for block in [*headers, body] if block]
     fields: dict[str, list[ExtractedField]] = {}
@@ -357,9 +348,7 @@ STRUCTURED_PARSERS: dict[str, Any] = {
     ".mhtml": parse_html_bytes,
 }
 
-_TARGETED_STRUCTURED_EXTS = frozenset(
-    {".xlsx", ".xls", ".xlsm", ".xltx", ".xltm", ".csv", ".docx", ".eml", ".msg", ".html", ".htm", ".mhtml"}
-)
+_TARGETED_STRUCTURED_EXTS = frozenset({".xlsx", ".xls", ".xlsm", ".xltx", ".xltm", ".csv", ".docx", ".eml", ".msg", ".html", ".htm", ".mhtml"})
 
 
 def parse_structured_document(data: bytes, filename: str) -> tuple[str, str, dict[str, list[ExtractedField]]] | None:

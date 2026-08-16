@@ -55,7 +55,7 @@ def _application_claims(bundle: SubmissionBundle) -> list[ClaimRecord]:
 
 def _blob(bundle: SubmissionBundle) -> str:
     pieces: list[str] = []
-    if bundle.structured is not None:
+    if bundle.structured is not None and bundle.structured.risk_profile is not None:
         pieces.append(f"{bundle.structured.risk_profile.business_description or ''} {bundle.structured.risk_profile.occupancy_type or ''}")
     for doc in (bundle.unstructured or []) + (bundle.supplemental or []):
         pieces.append(doc.raw_text)
@@ -97,11 +97,7 @@ def assess_disclosure(bundle: SubmissionBundle) -> DisclosureAssessment:
 
     assessment.findings = findings
     assessment.utmost_good_faith = not (assessment.concealment or assessment.material_misrepresentation or assessment.warranty_breach)
-    assessment.detail = (
-        "Utmost good faith upheld — no material non-disclosure detected"
-        if assessment.utmost_good_faith
-        else "Material non-disclosure detected — full-disclosure duty breached"
-    )
+    assessment.detail = "Utmost good faith upheld — no material non-disclosure detected" if assessment.utmost_good_faith else "Material non-disclosure detected — full-disclosure duty breached"
     return assessment
 
 

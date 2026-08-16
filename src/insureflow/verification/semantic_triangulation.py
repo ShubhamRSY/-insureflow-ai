@@ -136,8 +136,7 @@ def triangulation_issues(markdown: str) -> list[VerificationIssue]:
                 VerificationIssue(
                     code="footnote_modifier",
                     severity=SEVERITY_WARNING,
-                    message=f"{binding.table}: figure {binding.figure!r} is governed by footnote "
-                    f"[{binding.marker}] '{binding.footnote[:120]}' — must not be read in isolation",
+                    message=f"{binding.table}: figure {binding.figure!r} is governed by footnote [{binding.marker}] '{binding.footnote[:120]}' — must not be read in isolation",
                     field_name=binding.figure,
                 )
             )

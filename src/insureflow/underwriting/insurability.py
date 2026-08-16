@@ -57,11 +57,7 @@ def assess_insurability(bundle: SubmissionBundle) -> InsurabilityCriteria:
     if structured is not None:
         has_values = bool(structured.schedule_of_values) or bool(structured.coverages)
         if structured.financial is not None:
-            has_values = has_values or (
-                structured.financial.total_asset_value is not None
-                or structured.financial.annual_revenue is not None
-                or structured.financial.payroll is not None
-            )
+            has_values = has_values or (structured.financial.total_asset_value is not None or structured.financial.annual_revenue is not None or structured.financial.payroll is not None)
         measurable = has_values
     if measurable:
         detail.append("Loss exposure is quantified (values / coverages declared)")
@@ -112,7 +108,7 @@ def assess_insurability(bundle: SubmissionBundle) -> InsurabilityCriteria:
     # 6. No systemic catastrophic hazard (unless government-backstopped).
     no_cat = True
     blob = ""
-    if structured is not None:
+    if structured is not None and structured.risk_profile is not None:
         blob = f"{structured.risk_profile.business_description or ''} {structured.risk_profile.occupancy_type or ''}".lower()
     for marker in ("flood zone", "terrorism", "war", "nuclear", "radiation"):
         if marker in blob:

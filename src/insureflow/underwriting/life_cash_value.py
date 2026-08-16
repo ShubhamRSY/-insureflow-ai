@@ -72,8 +72,7 @@ def project_cash_value(
         cash_value_schedule=schedule,
         guaranteed=guaranteed_only,
         notes=(
-            f"{product_family} cash-value projection at {'guaranteed' if guaranteed_only else 'illustrated'} crediting"
-            + (" — illustrative, not a policy illustration" if not guaranteed_only else "")
+            f"{product_family} cash-value projection at {'guaranteed' if guaranteed_only else 'illustrated'} crediting" + (" — illustrative, not a policy illustration" if not guaranteed_only else "")
         ),
     )
 

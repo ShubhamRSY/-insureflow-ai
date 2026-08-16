@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import re
 from collections import defaultdict
-from typing import Iterable, Mapping
+from typing import Mapping, Sequence
 
 from insureflow.models.submissions import ExtractedField, VerificationIssue
 from insureflow.verification.common import SEVERITY_ERROR, make_issue, to_number
@@ -57,16 +57,14 @@ _LINE_ITEM_WORDS = (
 )
 
 
-def _asset_keys(fields: Mapping[str, Iterable[ExtractedField]]) -> list[str]:
+def _asset_keys(fields: Mapping[str, Sequence[ExtractedField]]) -> list[str]:
     return [k for k in fields if re.search(r"asset", k, re.IGNORECASE) and not re.search(r"liab", k, re.IGNORECASE)]
 
 
-def balance_sheet_identity(
-    fields: Mapping[str, Iterable[ExtractedField]], tolerance: float = _DEFAULT_TOLERANCE
-) -> list[VerificationIssue]:
+def balance_sheet_identity(fields: Mapping[str, Sequence[ExtractedField]], tolerance: float = _DEFAULT_TOLERANCE) -> list[VerificationIssue]:
     """Assert Assets = Liabilities + Equity when all three are extracted."""
-    nums = {k: to_number(next(iter(fields[k])).value) for k in fields if fields[k]}
-    nums = {k: v for k, v in nums.items() if v is not None}
+    parsed = {k: to_number(next(iter(fields[k])).value) for k in fields if fields[k]}
+    nums: dict[str, float] = {k: v for k, v in parsed.items() if v is not None}
     assets = sum(v for k, v in nums.items() if re.search(r"asset", k, re.IGNORECASE) and "liab" not in k.lower())
     liabilities = sum(v for k, v in nums.items() if re.search(r"liab", k, re.IGNORECASE))
     equity = sum(v for k, v in nums.items() if re.search(r"equity", k, re.IGNORECASE))
@@ -86,8 +84,7 @@ def balance_sheet_identity(
             make_issue(
                 "balance_sheet_identity",
                 SEVERITY_ERROR,
-                f"Assets ({assets:,.2f}) ≠ Liabilities ({liabilities:,.2f}) + Equity ({equity:,.2f}) "
-                f"= {expected:,.2f} (Δ {assets - expected:,.2f})",
+                f"Assets ({assets:,.2f}) ≠ Liabilities ({liabilities:,.2f}) + Equity ({equity:,.2f}) = {expected:,.2f} (Δ {assets - expected:,.2f})",
                 fields,
                 field_name,
             )
@@ -96,13 +93,14 @@ def balance_sheet_identity(
 
 
 def sum_to_total_verification(
-    fields: Mapping[str, Iterable[ExtractedField]],
+    fields: Mapping[str, Sequence[ExtractedField]],
     total_key: str,
     item_keys: list[str],
     tolerance: float = _DEFAULT_TOLERANCE,
 ) -> list[VerificationIssue]:
     """Explicit sum-to-total check for a known line-item family."""
-    nums = {k: to_number(next(iter(fields[k])).value) for k in fields if fields[k]}
+    parsed = {k: to_number(next(iter(fields[k])).value) for k in fields if fields[k]}
+    nums: dict[str, float] = {k: v for k, v in parsed.items() if v is not None}
     total = nums.get(total_key)
     if total is None:
         return []
@@ -115,8 +113,7 @@ def sum_to_total_verification(
             make_issue(
                 "sum_to_total",
                 SEVERITY_ERROR,
-                f"line items ({', '.join(item_keys)}) sum to {summed:,.2f} but "
-                f"{total_key}={total:,.2f} (Δ {summed - total:,.2f})",
+                f"line items ({', '.join(item_keys)}) sum to {summed:,.2f} but {total_key}={total:,.2f} (Δ {summed - total:,.2f})",
                 fields,
                 total_key,
             )
@@ -124,17 +121,15 @@ def sum_to_total_verification(
     return []
 
 
-def auto_sum_to_total(
-    fields: Mapping[str, Iterable[ExtractedField]], tolerance: float = _DEFAULT_TOLERANCE
-) -> list[VerificationIssue]:
+def auto_sum_to_total(fields: Mapping[str, Sequence[ExtractedField]], tolerance: float = _DEFAULT_TOLERANCE) -> list[VerificationIssue]:
     """Auto-detect ``total_<stem>`` families and verify line items sum to them.
 
     Conservative: only checks when at least two sibling items share the stem or
     a line-item keyword (claim/premium/expense/...), and never treats count-like
     fields (``total_claims``, ``*_count``) as additive totals.
     """
-    nums = {k: to_number(next(iter(fields[k])).value) for k in fields if fields[k]}
-    nums = {k: v for k, v in nums.items() if v is not None}
+    parsed = {k: to_number(next(iter(fields[k])).value) for k in fields if fields[k]}
+    nums: dict[str, float] = {k: v for k, v in parsed.items() if v is not None}
 
     def _is_count_total(key: str) -> bool:
         stem = _TOTAL_RE.sub("", key).strip("_ ").lower()
@@ -146,13 +141,7 @@ def auto_sum_to_total(
     issues: list[VerificationIssue] = []
     for total_key in total_keys:
         stem = _TOTAL_RE.sub("", total_key).strip("_ ")
-        items = [
-            k
-            for k, v in nums.items()
-            if k != total_key
-            and not _TOTAL_RE.search(k)
-            and (stem and stem in k.lower() or any(word in k.lower() for word in _LINE_ITEM_WORDS))
-        ]
+        items = [k for k, v in nums.items() if k != total_key and not _TOTAL_RE.search(k) and (stem and stem in k.lower() or any(word in k.lower() for word in _LINE_ITEM_WORDS))]
         if len(items) < 2:
             continue
         summed = sum(nums[k] for k in items)
@@ -162,8 +151,7 @@ def auto_sum_to_total(
                 make_issue(
                     "sum_to_total",
                     SEVERITY_ERROR,
-                    f"line items ({', '.join(items)}) sum to {summed:,.2f} but "
-                    f"{total_key}={total:,.2f} (Δ {summed - total:,.2f})",
+                    f"line items ({', '.join(items)}) sum to {summed:,.2f} but {total_key}={total:,.2f} (Δ {summed - total:,.2f})",
                     fields,
                     total_key,
                 )
@@ -171,9 +159,7 @@ def auto_sum_to_total(
     return issues
 
 
-def cross_page_reconciliation(
-    value_sets: Mapping[str, list[tuple[object, object]]], tolerance: float = _DEFAULT_TOLERANCE
-) -> list[VerificationIssue]:
+def cross_page_reconciliation(value_sets: Mapping[str, list[tuple[object, object]]], tolerance: float = _DEFAULT_TOLERANCE) -> list[VerificationIssue]:
     """Check figures stated in multiple locations reconcile.
 
     ``value_sets`` maps a metric (e.g. ``net_income``) to ``(location, value)``
@@ -182,8 +168,8 @@ def cross_page_reconciliation(
     """
     issues: list[VerificationIssue] = []
     for metric, entries in value_sets.items():
-        numerics = [(loc, to_number(str(v))) for loc, v in entries]
-        numerics = [(loc, num) for loc, num in numerics if num is not None]
+        parsed = [(loc, to_number(str(v))) for loc, v in entries]
+        numerics: list[tuple[object, float]] = [(loc, num) for loc, num in parsed if num is not None]
         if len(numerics) < 2:
             continue
         baseline = numerics[0]
@@ -193,17 +179,14 @@ def cross_page_reconciliation(
                     VerificationIssue(
                         code="cross_page_reconciliation",
                         severity=SEVERITY_ERROR,
-                        message=(
-                            f"{metric} stated at {baseline[0]}={baseline[1]:,.2f} does not match "
-                            f"{loc}={num:,.2f} (Δ {baseline[1] - num:,.2f})"
-                        ),
+                        message=(f"{metric} stated at {baseline[0]}={baseline[1]:,.2f} does not match {loc}={num:,.2f} (Δ {baseline[1] - num:,.2f})"),
                         field_name=metric,
                     )
                 )
     return issues
 
 
-def group_values_by_page(fields: Mapping[str, Iterable[ExtractedField]]) -> dict[str, list[tuple[str, float]]]:
+def group_values_by_page(fields: Mapping[str, Sequence[ExtractedField]]) -> dict[str, list[tuple[str, float]]]:
     """Extract (page/section, value) pairs for every numeric field key."""
     out: dict[str, list[tuple[str, float]]] = defaultdict(list)
     for key, entries in fields.items():

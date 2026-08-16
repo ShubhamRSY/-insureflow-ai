@@ -353,7 +353,7 @@ class WeaviateVectorStore(VectorStore):
             from weaviate.config import ConnectionConfig
 
             params = ConnectionConfig.from_url(self._url)
-            self._client = weaviate.connect_to_custom(params, auth_client_secret=auth)  # type: ignore[call-arg]
+            self._client = weaviate.connect_to_custom(params, auth_client_secret=auth)
             self._v4 = True
         except Exception:
             self._client = weaviate.Client(url=self._url)  # v3 client
@@ -371,14 +371,18 @@ class WeaviateVectorStore(VectorStore):
             client.schema.create_class({"class": self._collection_name})
         return client
 
+    @staticmethod
+    def _embed(text: str) -> list[float]:
+        from insureflow.llm.embeddings import embed_text
+
+        return embed_text(text)
+
     def index_guidelines(self, guidelines: list[Guideline]) -> None:
         if not guidelines:
             return
         col = self._ensure_collection()
         if self._v4:
-            col.data.insert_many(
-                [{**_properties(g), "vector": self._embed(f"{g.title} {g.content}")} for g in guidelines]
-            )
+            col.data.insert_many([{**_properties(g), "vector": self._embed(f"{g.title} {g.content}")} for g in guidelines])
         else:
             for g in guidelines:
                 col.data_object.create(**_properties(g), vector=self._embed(f"{g.title} {g.content}"))

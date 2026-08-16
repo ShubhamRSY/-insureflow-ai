@@ -101,10 +101,7 @@ def column_alignment_check(
                         VerificationIssue(
                             code="column_misalignment",
                             severity=SEVERITY_WARNING,
-                            message=(
-                                f"page {page}: row {text!r} spans {count} column(s) while the band "
-                                f"norm is {mode}; possible value/header misalignment"
-                            ),
+                            message=(f"page {page}: row {text!r} spans {count} column(s) while the band norm is {mode}; possible value/header misalignment"),
                             page_number=page,
                             bbox=[float(v) for v in box],
                         )

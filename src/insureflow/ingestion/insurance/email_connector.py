@@ -54,9 +54,7 @@ SUPPORTED_EXTENSIONS = {
     ".tif",
 }
 
-BINARY_EXTENSIONS = frozenset(
-    {".pdf", ".png", ".jpg", ".jpeg", ".tiff", ".bmp", ".tif", ".xlsx", ".xls", ".xlsm", ".docx", ".doc", ".eml", ".msg"}
-)
+BINARY_EXTENSIONS = frozenset({".pdf", ".png", ".jpg", ".jpeg", ".tiff", ".bmp", ".tif", ".xlsx", ".xls", ".xlsm", ".docx", ".doc", ".eml", ".msg"})
 
 MAX_ATTACHMENT_SIZE_MB = 25
 MAX_EMAILS = 50

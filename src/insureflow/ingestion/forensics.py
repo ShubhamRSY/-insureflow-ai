@@ -15,6 +15,8 @@ All checks degrade to clean when PyMuPDF is unavailable or the bytes are not a
 PDF; nothing here can crash the load path.
 """
 
+# mypy: disable-error-code="no-untyped-call"
+
 from __future__ import annotations
 
 import logging
@@ -100,12 +102,7 @@ def inspect_pdf(pdf_bytes: bytes) -> PdfForensics | None:
                 ink_area = sum(abs(float(p.rect.width * p.rect.height)) for p in drawn)
                 text_area = 0.0
                 for block in page.get_text("dict")["blocks"]:
-                    text_area += abs(
-                        float(
-                            (block["bbox"][2] - block["bbox"][0])
-                            * (block["bbox"][3] - block["bbox"][1])
-                        )
-                    )
+                    text_area += abs(float((block["bbox"][2] - block["bbox"][0]) * (block["bbox"][3] - block["bbox"][1])))
                 text_coverage = (text_area + ink_area) / page_area if page_area else 0.0
             except Exception:
                 text_coverage = 0.0
@@ -132,10 +129,7 @@ def tampering_issues(forensics: PdfForensics | None) -> list[VerificationIssue]:
             VerificationIssue(
                 code="non_embedded_font",
                 severity=SEVERITY_WARNING,
-                message=(
-                    f"PDF uses non-embedded font {font!r}; text can be re-rendered by the "
-                    "viewer — substitution or tampering risk, verify figures against the image layer"
-                ),
+                message=(f"PDF uses non-embedded font {font!r}; text can be re-rendered by the viewer — substitution or tampering risk, verify figures against the image layer"),
             )
         )
     for page in forensics.full_page_image_pages:
@@ -143,10 +137,7 @@ def tampering_issues(forensics: PdfForensics | None) -> list[VerificationIssue]:
             VerificationIssue(
                 code="rasterized_page",
                 severity=SEVERITY_WARNING,
-                message=(
-                    f"page {page} is essentially a full-page image with almost no vector/text "
-                    "content — common in doctored statements; treat extraction cautiously"
-                ),
+                message=(f"page {page} is essentially a full-page image with almost no vector/text content — common in doctored statements; treat extraction cautiously"),
                 page_number=page,
             )
         )

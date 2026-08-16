@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 from pydantic import BaseModel, Field
 
@@ -128,7 +128,7 @@ class ExtractionAgent:
             return submission
 
         try:
-            instance = schema.model_validate(parsed)
+            instance = cast(Any, schema).model_validate(parsed)
         except Exception:
             return submission
 

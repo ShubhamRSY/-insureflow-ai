@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import re
 from datetime import date, datetime
-from typing import Iterable, Mapping
+from typing import Mapping, Sequence
 
 from insureflow.models.submissions import ExtractedField, VerificationIssue
 from insureflow.verification.common import (
@@ -85,7 +85,7 @@ def _fmt(value: float) -> str:
     return f"{value:g}"
 
 
-def range_checks(fields: Mapping[str, Iterable[ExtractedField]]) -> list[VerificationIssue]:
+def range_checks(fields: Mapping[str, Sequence[ExtractedField]]) -> list[VerificationIssue]:
     issues: list[VerificationIssue] = []
     for key, entries in fields.items():
         if not entries:
@@ -124,7 +124,7 @@ def _aba_checksum_ok(digits: str) -> bool:
     return (3 * (d[0] + d[3] + d[6]) + 7 * (d[1] + d[4] + d[7]) + (d[2] + d[5] + d[8])) % 10 == 0
 
 
-def pattern_checks(fields: Mapping[str, Iterable[ExtractedField]]) -> list[VerificationIssue]:
+def pattern_checks(fields: Mapping[str, Sequence[ExtractedField]]) -> list[VerificationIssue]:
     issues: list[VerificationIssue] = []
     for key, entries in fields.items():
         if not entries:
@@ -174,8 +174,7 @@ def pattern_checks(fields: Mapping[str, Iterable[ExtractedField]]) -> list[Verif
                     make_issue(
                         "policy_format",
                         SEVERITY_WARNING,
-                        f"{key}={value!r} does not look like a standard policy number "
-                        "(possible OCR confusion of S/5, O/0, I/1)",
+                        f"{key}={value!r} does not look like a standard policy number (possible OCR confusion of S/5, O/0, I/1)",
                         fields,
                         key,
                     )
@@ -196,13 +195,11 @@ def pattern_checks(fields: Mapping[str, Iterable[ExtractedField]]) -> list[Verif
                     try:
                         datetime.strptime(value, "%m/%d/%Y")
                     except ValueError:
-                        issues.append(
-                            make_issue("date_format", SEVERITY_ERROR, f"{key}={value!r} is an impossible date", fields, key)
-                        )
+                        issues.append(make_issue("date_format", SEVERITY_ERROR, f"{key}={value!r} is an impossible date", fields, key))
     return issues
 
 
-def schema_validation(fields: Mapping[str, Iterable[ExtractedField]]) -> list[VerificationIssue]:
+def schema_validation(fields: Mapping[str, Sequence[ExtractedField]]) -> list[VerificationIssue]:
     """Strict typing: counts must be integers, currency/ratios numeric, dates real."""
     issues: list[VerificationIssue] = []
     for key, entries in fields.items():

@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import os
 import re
-from typing import Iterable, Mapping
+from typing import Mapping, Sequence
 
 from insureflow.models.submissions import ExtractedField, VerificationIssue
 
@@ -32,7 +32,7 @@ def to_number(value: str) -> float | None:
         return None
 
 
-def numeric_fields(fields: Mapping[str, Iterable[ExtractedField]]) -> dict[str, float]:
+def numeric_fields(fields: Mapping[str, Sequence[ExtractedField]]) -> dict[str, float]:
     """First numeric value per field key."""
     out: dict[str, float] = {}
     for key, entries in fields.items():
@@ -44,7 +44,7 @@ def numeric_fields(fields: Mapping[str, Iterable[ExtractedField]]) -> dict[str, 
     return out
 
 
-def location_of(fields: Mapping[str, Iterable[ExtractedField]], key: str) -> tuple[int | None, list[float] | None]:
+def location_of(fields: Mapping[str, Sequence[ExtractedField]], key: str) -> tuple[int | None, list[float] | None]:
     """Look up (page_number, bbox) for a field so issues can cite the source box."""
     entries = fields.get(key) or []
     if not entries:
@@ -57,7 +57,7 @@ def make_issue(
     code: str,
     severity: str,
     message: str,
-    fields: Mapping[str, Iterable[ExtractedField]] | None = None,
+    fields: Mapping[str, Sequence[ExtractedField]] | None = None,
     field_name: str = "",
 ) -> VerificationIssue:
     page, bbox = None, None

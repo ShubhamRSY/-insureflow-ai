@@ -59,13 +59,9 @@ def test_balance_sheet_partial_side_clean():
 def test_sum_to_total_explicit():
     from insureflow.verification.arithmetic import sum_to_total_verification
 
-    issues = sum_to_total_verification(
-        _fields({"total_premium": "1000", "premium_1": "600", "premium_2": "400"}), "total_premium", ["premium_1", "premium_2"]
-    )
+    issues = sum_to_total_verification(_fields({"total_premium": "1000", "premium_1": "600", "premium_2": "400"}), "total_premium", ["premium_1", "premium_2"])
     assert issues == []
-    bad = sum_to_total_verification(
-        _fields({"total_premium": "2000", "premium_1": "600", "premium_2": "400"}), "total_premium", ["premium_1", "premium_2"]
-    )
+    bad = sum_to_total_verification(_fields({"total_premium": "2000", "premium_1": "600", "premium_2": "400"}), "total_premium", ["premium_1", "premium_2"])
     assert bad and bad[0].code == "sum_to_total"
 
 
@@ -214,12 +210,7 @@ def test_column_alignment_single_column_clean():
 def test_triangulation_binds_modifier_footnote():
     from insureflow.verification.semantic_triangulation import triangulation_issues
 
-    md = (
-        "| Building | Value |\n"
-        "| --- | --- |\n"
-        "| Warehouse | 4,000,000 [1] |\n\n"
-        "[1] Excluding detached structures not on foundation."
-    )
+    md = "| Building | Value |\n| --- | --- |\n| Warehouse | 4,000,000 [1] |\n\n[1] Excluding detached structures not on foundation."
     issues = triangulation_issues(md)
     assert any(i.code == "footnote_modifier" for i in issues)
 
@@ -336,6 +327,8 @@ def test_external_lookup_rejects_non_https(monkeypatch):
 
 
 def test_external_lookup_matched(monkeypatch):
+    import urllib.request
+
     monkeypatch.setenv("EXTERNAL_REGISTRY_API_URL", "https://registry.example.com")
     from insureflow.verification import external_lookup as el
 
@@ -349,7 +342,7 @@ def test_external_lookup_matched(monkeypatch):
         def read(self):
             return json.dumps({"match": True}).encode()
 
-    monkeypatch.setattr(el.urllib.request, "urlopen", lambda request, timeout=10: _Resp())
+    monkeypatch.setattr(urllib.request, "urlopen", lambda request, timeout=10: _Resp())
     result = el.lookup_entity("Acme Corp")
     assert result is not None and result.matched is True
 
@@ -482,9 +475,7 @@ def test_engine_critic_layer(monkeypatch):
     monkeypatch.setenv("USE_CRITIC_REVIEW", "1")
     from insureflow.verification.engine import VerificationEngine
 
-    report = VerificationEngine(llm=_FakeLLM('{"verdicts": [{"field": "total_assets", "grounded": false}]}')).run(
-        _fields({"total_assets": "999999"}), raw_text="no source"
-    )
+    report = VerificationEngine(llm=_FakeLLM('{"verdicts": [{"field": "total_assets", "grounded": false}]}')).run(_fields({"total_assets": "999999"}), raw_text="no source")
     assert "critic" in report.checks_run
     assert any(i.code == "critic_ungrounded" for i in report.errors)
 

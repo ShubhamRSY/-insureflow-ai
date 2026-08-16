@@ -49,13 +49,13 @@ def _make_docx(*, paragraphs: list[str], table: list[list[str]] | None = None) -
 
 def _make_docx_minimal(*, paragraphs: list[str], table: list[list[str]] | None = None) -> bytes:
     """Minimal zip+xml docx — exercises the zero-dependency fallback path."""
-    body = "<w:document xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:body>"
+    body = '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>'
     for p in paragraphs:
-        body += f"<w:p><w:r><w:t xml:space=\"preserve\">{p}</w:t></w:r></w:p>"
+        body += f'<w:p><w:r><w:t xml:space="preserve">{p}</w:t></w:r></w:p>'
     if table:
         body += "<w:tbl>"
         for row in table:
-            body += "<w:tr>" + "".join(f"<w:tc><w:p><w:r><w:t xml:space=\"preserve\">{c}</w:t></w:r></w:p></w:tc>" for c in row) + "</w:tr>"
+            body += "<w:tr>" + "".join(f'<w:tc><w:p><w:r><w:t xml:space="preserve">{c}</w:t></w:r></w:p></w:tc>' for c in row) + "</w:tr>"
         body += "</w:tbl>"
     body += "</w:body></w:document>"
     buf = io.BytesIO()
@@ -248,13 +248,9 @@ def test_parse_html_strips_markup() -> None:
 # Loader integration (binary dispatch + classification)
 # --------------------------------------------------------------------------- #
 def test_loader_parses_xlsx_into_sov() -> None:
-    data = _make_xlsx(
-        {"Schedule of Values": [["Location", "Building", "Contents"], ["1 Main St", 2500000, 500000]]}
-    )
+    data = _make_xlsx({"Schedule of Values": [["Location", "Building", "Contents"], ["1 Main St", 2500000, 500000]]})
     loader = InsuranceDocumentLoader()
-    bundle = loader.load_from_documents(
-        [{"filename": "sov.xlsx", "content": _b64(data), "encoding": "base64"}]
-    )
+    bundle = loader.load_from_documents([{"filename": "sov.xlsx", "content": _b64(data), "encoding": "base64"}])
     assert bundle.status.value == "parsed"
     assert len(bundle.unstructured) == 1
     sub = bundle.unstructured[0]
@@ -266,9 +262,7 @@ def test_loader_parses_xlsx_into_sov() -> None:
 def test_loader_parses_csv_as_financial_or_supplemental() -> None:
     data = "revenue,expenses,net_income\n1500000,900000,600000\n".encode("utf-8")
     loader = InsuranceDocumentLoader()
-    bundle = loader.load_from_documents(
-        [{"filename": "fin.csv", "content": _b64(data), "encoding": "base64"}]
-    )
+    bundle = loader.load_from_documents([{"filename": "fin.csv", "content": _b64(data), "encoding": "base64"}])
     assert bundle.status.value == "parsed"
     assert bundle.unstructured[0].raw_text and "1500000" in bundle.unstructured[0].raw_text
 
@@ -276,9 +270,7 @@ def test_loader_parses_csv_as_financial_or_supplemental() -> None:
 def test_loader_parses_docx_via_base64() -> None:
     data = _make_docx(paragraphs=["Named Insured: Acme", "General Liability 1,000,000"])
     loader = InsuranceDocumentLoader()
-    bundle = loader.load_from_documents(
-        [{"filename": "note.docx", "content": _b64(data), "encoding": "base64"}]
-    )
+    bundle = loader.load_from_documents([{"filename": "note.docx", "content": _b64(data), "encoding": "base64"}])
     sub = bundle.unstructured[0]
     assert "Named Insured: Acme" in sub.raw_text
     assert any(f.field_name == "ocr_engine" and "structured:" in f.value for f in sub.extracted_fields.get("ocr_engine", []))
@@ -287,9 +279,7 @@ def test_loader_parses_docx_via_base64() -> None:
 def test_loader_parses_eml_body() -> None:
     data = _make_eml(subject="Acme - DC 2026-07-01", body="SOV attached, TIV 5,000,000")
     loader = InsuranceDocumentLoader()
-    bundle = loader.load_from_documents(
-        [{"filename": "acme.eml", "content": _b64(data), "encoding": "base64"}]
-    )
+    bundle = loader.load_from_documents([{"filename": "acme.eml", "content": _b64(data), "encoding": "base64"}])
     sub = bundle.unstructured[0]
     assert "Subject: Acme - DC" in sub.raw_text
     assert "SOV attached" in sub.raw_text

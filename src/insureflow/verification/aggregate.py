@@ -120,7 +120,12 @@ def exception_queue_for(doc: UnstructuredSubmission) -> list[dict[str, Any]]:
 
 
 def flagged_submissions(bundle: SubmissionBundle) -> list[UnstructuredSubmission]:
-    return [doc for doc in bundle.unstructured if (_report(doc) is not None and _report(doc).flagged_for_review)]
+    flagged: list[UnstructuredSubmission] = []
+    for doc in bundle.unstructured:
+        report = _report(doc)
+        if report is not None and report.flagged_for_review:
+            flagged.append(doc)
+    return flagged
 
 
 def iter_reports(bundle: SubmissionBundle) -> Iterable[tuple[UnstructuredSubmission, VerificationReport]]:

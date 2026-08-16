@@ -956,15 +956,12 @@ class InsurancePipeline:
             for finding in verification_findings(bundle):
                 memo.key_findings.append(Finding(**finding))
             memo.human_review_required = True
-            memo.human_review_reasons.append(
-                f"Extraction verification flagged {verification_meta['flagged_doc_count']} document(s)"
-            )
+            memo.human_review_reasons.append(f"Extraction verification flagged {verification_meta['flagged_doc_count']} document(s)")
             if memo.decision not in (UWDecision.DECLINE, UWDecision.REFER):
                 memo.decision = UWDecision.REFER
             audit.log(
                 PipelineEvent.HUMAN_REVIEW_REQUIRED,
-                f"Extraction verification hold: {verification_meta['flagged_doc_count']} document(s) "
-                f"flagged · {verification_meta['exception_count']} exception(s) in queue",
+                f"Extraction verification hold: {verification_meta['flagged_doc_count']} document(s) flagged · {verification_meta['exception_count']} exception(s) in queue",
                 severity=EventSeverity.WARNING,
             )
 
@@ -1854,9 +1851,7 @@ class InsurancePipeline:
                 for claim in loss_run_claims:
                     entry: dict[str, Any] = {"claim_id": claim.claim_id}
                     try:
-                        entry["proximate_cause"] = analyze_proximate_cause(
-                            cause=claim.cause, description=claim.description
-                        ).model_dump()
+                        entry["proximate_cause"] = analyze_proximate_cause(cause=claim.cause, description=claim.description).model_dump()
                     except Exception:
                         pass
                     claim_analytics.append(entry)
@@ -1876,14 +1871,10 @@ class InsurancePipeline:
                 "claims_recovery": claims_recovery,
                 "claim_analytics": claim_analytics,
                 "defense_costs": defense_cost_assessment(loss_run_claims),
-                "indemnity_valuation": indemnity_valuation(
-                    replacement_cost=float(valuation.get("total_effective_value") or 0.0)
-                ),
+                "indemnity_valuation": indemnity_valuation(replacement_cost=float(valuation.get("total_effective_value") or 0.0)),
                 "valuation": valuation,
                 "solvency": solvency.model_dump(),
-                "policy_architecture": [
-                    architecture_assessment(c) for c in (bundle.structured.coverages if bundle.structured else [])
-                ],
+                "policy_architecture": [architecture_assessment(c) for c in (bundle.structured.coverages if bundle.structured else [])],
                 "health_exposure": health_exposure_base(bundle),
             }
             if insurability.insurable is False:

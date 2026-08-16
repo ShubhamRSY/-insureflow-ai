@@ -14,11 +14,13 @@ pipelines where they are installed.
     VISION_USE_GPU          set to any truthy value to request GPU placements
 """
 
+# mypy: disable-error-code="no-untyped-call"
+
 from __future__ import annotations
 
 import logging
 import os
-from typing import Any
+from typing import Any, cast
 
 logger = logging.getLogger(__name__)
 
@@ -117,7 +119,7 @@ def hf_document_ner_on_image(image_path: str) -> list[dict[str, Any]]:
         tokenizer = AutoTokenizer.from_pretrained(model)
         model_obj = AutoModelForTokenClassification.from_pretrained(model)
         pipe = pipeline("token-classification", model=model_obj, tokenizer=tokenizer)
-        image = Image.open(image_path).convert("RGB")
+        image = cast(Any, Image.open(image_path).convert("RGB"))
         return list(pipe(image))
     except Exception as exc:
         logger.warning("HF document NER failed: %s", exc)

@@ -28,10 +28,25 @@ except ImportError:
     HAS_CHROMA = False
 
 
+def _has_spacy_model() -> bool:
+    """True when a usable spaCy pipeline (model) is available on this machine."""
+    if not HAS_SPACY:
+        return False
+    try:
+        from insureflow.ingestion.entity_extraction import _get_nlp
+
+        return _get_nlp() is not None
+    except Exception:
+        return False
+
+
+HAS_SPACY_MODEL = _has_spacy_model()
+
+
 # ── spaCy NER enrichment ────────────────────────────────────────────────────
 
 
-@pytest.mark.skipif(not HAS_SPACY, reason="spacy not installed")
+@pytest.mark.skipif(not HAS_SPACY_MODEL, reason="spacy model not installed (download with: python -m spacy download en_core_web_sm)")
 def test_spacy_extract_named_entities(monkeypatch):
     monkeypatch.delenv("USE_SPACY_NER", raising=False)
     from insureflow.ingestion.entity_extraction import extract_named_entities
@@ -54,7 +69,7 @@ def test_spacy_empty_text_returns_no_fields(monkeypatch):
     assert extract_named_entities("   \n ") == {}
 
 
-@pytest.mark.skipif(not HAS_SPACY, reason="spacy not installed")
+@pytest.mark.skipif(not HAS_SPACY_MODEL, reason="spacy model not installed (download with: python -m spacy download en_core_web_sm)")
 def test_loader_enriches_with_spacy_fields():
     from insureflow.ingestion.insurance.loader import InsuranceDocumentLoader
 
@@ -162,7 +177,7 @@ def test_client_extract_structured_passes_response_format(monkeypatch):
     client.redact_pii = False
     client.model_tier = "cheap"
     client.agent = "underwriter"
-    client.fallback = None
+    client.fallback = None  # type: ignore[attr-defined]
 
     def fake_complete(self, system, user, response_format=None):
         called["response_format"] = response_format
@@ -313,15 +328,19 @@ def test_textract_extract_with_mocked_boto(monkeypatch):
             return FakeAnalyze()
 
     import sys as _sys
+    from typing import Any as _Any
 
     real_boto = _sys.modules.get("boto3")
-    fake_module = type(sys)("boto3")
+    fake_module: _Any = type(sys)("boto3")
     fake_module.client = FakeBoto().client
     _sys.modules["boto3"] = fake_module
     try:
         result = textract_extract(b"x" * 100, "scan.pdf")
     finally:
-        _sys.modules["boto3"] = real_boto
+        if real_boto is None:
+            _sys.modules.pop("boto3", None)
+        else:
+            _sys.modules["boto3"] = real_boto
 
     assert result is not None
     assert result.provider == "textract"

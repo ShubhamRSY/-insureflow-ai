@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -193,7 +194,7 @@ class TestVerificationPipelineWiring:
 
 class TestVerificationAPI:
     @pytest.fixture(autouse=True)
-    def redirect_audit_log(self, tmp_path: Path) -> None:
+    def redirect_audit_log(self, tmp_path: Path) -> Iterator[None]:
         original = settings.audit_log_path
         object.__setattr__(settings, "audit_log_path", tmp_path)
         yield
@@ -209,10 +210,7 @@ class TestVerificationAPI:
             SubmissionBundle(
                 bundle_id="endpoint-b1",
                 structured=None,
-                unstructured=[
-                    _doc("f", issues=[VerificationIssue(code="pattern_checks", severity="error", message="Bad EIN")],
-                         auto_approve=False, flagged=True)
-                ],
+                unstructured=[_doc("f", issues=[VerificationIssue(code="pattern_checks", severity="error", message="Bad EIN")], auto_approve=False, flagged=True)],
             )
         )
         store = AuditStore()

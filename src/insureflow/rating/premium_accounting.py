@@ -107,9 +107,7 @@ def apply_collection(
     accounting.collected_premium = round(collected, 2)
     accounting.collection_rate = rate
     if collected < written:
-        accounting.basis_note += (
-            f" — {written - collected:,.2f} premium receivable (billed but not yet collected)"
-        )
+        accounting.basis_note += f" — {written - collected:,.2f} premium receivable (billed but not yet collected)"
     return accounting
 
 

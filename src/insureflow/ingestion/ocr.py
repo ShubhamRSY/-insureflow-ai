@@ -1,9 +1,12 @@
+# mypy: disable-error-code="no-untyped-call"
+
 from __future__ import annotations
 
 import logging
 import os
 import tempfile
 from pathlib import Path
+from typing import Any
 
 from insureflow.ingestion.cloud_ocr import CloudOcrResult, cloud_extract
 from insureflow.ingestion.vision_ml import vision_extract_image
@@ -236,7 +239,7 @@ class OCRProcessor:
             except ImportError:  # pragma: no cover - older package name
                 import fitz as pymupdf  # type: ignore[no-redef]
 
-            doc = pymupdf.open(file_path)
+            doc: Any = pymupdf.open(file_path)
             try:
                 text = "\n".join(page.get_text("text") for page in doc)
             finally:
@@ -284,7 +287,7 @@ class OCRProcessor:
             with pdfplumber.open(file_path) as pdf:
                 for page_index, page in enumerate(pdf.pages, start=1):
                     words = page.extract_words()
-                    rows: dict[int, list[dict[str, object]]] = {}
+                    rows: dict[int, list[dict[str, Any]]] = {}
                     for word in words:
                         key = round(float(word["top"]) / 4.0)
                         rows.setdefault(key, []).append(word)
@@ -336,11 +339,7 @@ class OCRProcessor:
             with pdfplumber.open(file_path) as pdf:
                 for page in pdf.pages:
                     for table in page.extract_tables() or []:
-                        rows = [
-                            [_cell_str(c) for c in row]
-                            for row in table
-                            if any(c is not None and str(c).strip() for c in row)
-                        ]
+                        rows = [[_cell_str(c) for c in row] for row in table if any(c is not None and str(c).strip() for c in row)]
                         if rows:
                             blocks.append(_table_to_markdown(rows))
             if blocks:
@@ -358,15 +357,11 @@ class OCRProcessor:
         except ImportError:
             return ""
         try:
-            doc = pymupdf.open(file_path)
+            doc: Any = pymupdf.open(file_path)
             try:
                 for page in doc:
-                    for table in page.find_tables().tables:
-                        rows = [
-                            [_cell_str(c) for c in r]
-                            for r in table.extract()
-                            if any(c is not None and str(c).strip() for c in r)
-                        ]
+                    for table in page.find_tables().tables:  # type: ignore[attr-defined]
+                        rows = [[_cell_str(c) for c in r] for r in table.extract() if any(c is not None and str(c).strip() for c in r)]  # type: ignore[attr-defined]
                         if rows:
                             blocks.append(_table_to_markdown(rows))
             finally:

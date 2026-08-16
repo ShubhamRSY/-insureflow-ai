@@ -40,10 +40,7 @@ def coinsurance_penalty(
         "compliance_ratio": round(ratio, 4),
         "penalty_applies": ratio < 1.0,
         "penalty_pct": round(penalty_pct, 4),
-        "detail": (
-            "Coinsurance satisfied" if ratio >= 1.0
-            else f"Under-insured: carries {ratio:.1%} of the required {required:,.0f} — {penalty_pct:.1%} of each loss would be uninsured"
-        ),
+        "detail": ("Coinsurance satisfied" if ratio >= 1.0 else f"Under-insured: carries {ratio:.1%} of the required {required:,.0f} — {penalty_pct:.1%} of each loss would be uninsured"),
     }
 
 
@@ -78,11 +75,7 @@ def aggregate_utilization(
         "utilization_pct": round(utilization, 4),
         "remaining": round(limit - used, 2),
         "exhausted": used >= limit,
-        "detail": (
-            "Aggregate limit exhausted — coverage suspended"
-            if used >= limit
-            else f"{utilization:.1%} of aggregate limit consumed ({limit - used:,.0f} remaining)"
-        ),
+        "detail": ("Aggregate limit exhausted — coverage suspended" if used >= limit else f"{utilization:.1%} of aggregate limit consumed ({limit - used:,.0f} remaining)"),
     }
 
 
@@ -113,7 +106,7 @@ def architecture_assessment(coverage: CoverageDetail | dict[str, Any]) -> dict[s
         flags.append(f"{coverage.coverage_type}: SIR ({coverage.self_insured_retention:,.0f}) above the deductible — confirm defense-cost funding")
     if coverage.coinsurance_pct is not None and coverage.coinsurance_pct not in (80, 90, 100):
         flags.append(f"{coverage.coverage_type}: unusual coinsurance clause {coverage.coinsurance_pct}% — verify")
-    arch = {
+    arch: dict[str, Any] = {
         "per_occurrence_limit": coverage.per_occurrence_limit,
         "aggregate_limit": coverage.aggregate_limit,
         "lifetime_maximum": coverage.lifetime_maximum,

@@ -11,6 +11,7 @@ annuity payout illustration, and the BI evaluator on commercial packages.
 from __future__ import annotations
 
 from datetime import date
+from typing import Any
 
 from insureflow.models.policy import ClaimDecision, EarningMethod, HealthNetworkType
 from insureflow.models.submissions import (
@@ -72,6 +73,11 @@ def _claim(claim_id: str, *, cause: str, incurred: float, paid: float = 0.0, des
     )
 
 
+def _structured(bundle: SubmissionBundle) -> StructuredSubmission:
+    assert bundle.structured is not None
+    return bundle.structured
+
+
 def _bundle(**overrides) -> SubmissionBundle:
     structured = StructuredSubmission(
         submission_id="gap-1",
@@ -90,11 +96,11 @@ def _bundle(**overrides) -> SubmissionBundle:
         ),
         risk_profile=RiskProfile(naics_code="336111", business_description="metal fabrication"),
     )
-    kwargs: dict = {
+    kwargs: dict[str, Any] = {
         "bundle_id": "gap-1",
         "structured": structured,
         "unstructured": [
-            UnstructuredSubmission(submission_id="gap-1", doc_id="d1", raw_text="Application for metal fabrication — no prior losses"),
+            UnstructuredSubmission(submission_id="gap-1", raw_text="Application for metal fabrication — no prior losses"),
         ],
     }
     kwargs.update(overrides)
@@ -150,7 +156,7 @@ def test_premium_accounting_from_bundle_prefers_loss_run_earned():
     # No policy period → unearned until established, so the loss run's explicit
     # earned premium becomes the source of truth.
     bundle = _bundle()
-    bundle.structured.policy_period = None
+    _structured(bundle).policy_period = None
     result = premium_accounting_for_bundle(bundle)
     assert result.written_premium == 80_000
     assert result.earned_premium == 75_000
@@ -172,6 +178,7 @@ def test_expense_ratio_and_combined():
 
 def test_combined_ratio_from_bundle():
     result = combined_ratio_from_bundle(_bundle())
+    assert result.combined_ratio is not None
     assert result.combined_ratio > 0
     assert result.detail
 
@@ -188,6 +195,7 @@ def test_rbc_covariance_includes_charge_families():
 def test_solvency_flagged_by_surplus_ratio():
     ok = assess_solvency(total_assets=1_000_000, total_liabilities=200_000, net_written_premium=100_000)
     assert ok.solvent is True
+    assert ok.rbc_ratio is not None
     assert ok.rbc_ratio >= 1.0
     stressed = assess_solvency(total_assets=100_000, total_liabilities=90_000, net_written_premium=500_000)
     assert stressed.solvent is False
@@ -274,15 +282,7 @@ def test_insurability_fails_on_empty_submission():
 
 
 def test_intentional_loss_breaks_fortuity():
-    bundle = _bundle(
-        structured=_bundle().structured.model_copy(
-            update={
-                "financial": FinancialData(
-                    loss_run=LossRunData(claims=[_claim("c1", cause="intentional fire", incurred=50_000)])
-                )
-            }
-        )
-    )
+    bundle = _bundle(structured=_structured(_bundle()).model_copy(update={"financial": FinancialData(loss_run=LossRunData(claims=[_claim("c1", cause="intentional fire", incurred=50_000)]))}))
     result = assess_insurability(bundle)
     assert result.insurable is False
     assert "fortuitous" in result.failed_criteria
@@ -294,7 +294,7 @@ def test_intentional_loss_breaks_fortuity():
 def test_undisclosed_loss_run_claim_is_concealment():
     hidden = _claim("c9", cause="theft", incurred=90_000)
     bundle = _bundle(
-        structured=_bundle().structured.model_copy(
+        structured=_structured(_bundle()).model_copy(
             update={
                 "risk_profile": RiskProfile(business_description="metal fabrication", prior_claims=[]),
                 "financial": FinancialData(loss_run=LossRunData(claims=[_claim("c1", cause="fire", incurred=25_000), hidden])),
@@ -322,7 +322,7 @@ def test_remedy_matrix_driven_by_disclosure_breach():
     # Fully disclosed risk: the application names the same claim as the loss run.
     disclosed = _claim("c1", cause="fire", incurred=25_000)
     clean_bundle = _bundle(
-        structured=_bundle().structured.model_copy(
+        structured=_structured(_bundle()).model_copy(
             update={
                 "risk_profile": RiskProfile(business_description="metal fabrication", prior_claims=[disclosed]),
                 "financial": FinancialData(loss_run=LossRunData(claims=[disclosed])),
@@ -338,7 +338,7 @@ def test_remedy_matrix_driven_by_disclosure_breach():
     breached = assess_disclosure(
         _bundle(
             unstructured=[
-                UnstructuredSubmission(submission_id="gap-1", doc_id="d1", raw_text="Applicant failed to disclose material facts"),
+                UnstructuredSubmission(submission_id="gap-1", raw_text="Applicant failed to disclose material facts"),
             ]
         )
     )
@@ -427,7 +427,7 @@ def test_adjudicate_claim_denied_on_exclusion():
 
 def test_adjudicate_claims_batch_totals():
     bundle = _bundle(
-        structured=_bundle().structured.model_copy(
+        structured=_structured(_bundle()).model_copy(
             update={
                 "financial": FinancialData(
                     loss_run=LossRunData(
@@ -478,7 +478,7 @@ def test_indemnity_valuation_acv_vs_rcv():
 
 def test_claims_recovery_review_aggregates():
     bundle = _bundle(
-        structured=_bundle().structured.model_copy(
+        structured=_structured(_bundle()).model_copy(
             update={
                 "financial": FinancialData(
                     loss_run=LossRunData(
@@ -516,7 +516,7 @@ def test_valuation_basis_variants():
 
 def test_valuation_from_bundle_schedule_and_fallback():
     bundle = _bundle()
-    bundle.structured.schedule_of_values = [
+    _structured(bundle).schedule_of_values = [
         ScheduleOfValues(
             schedule_type="commercial",
             coverage_type="Property",
@@ -554,7 +554,7 @@ def test_cash_value_none_for_term():
 
 def test_cash_value_for_savings_product_from_bundle():
     bundle = _bundle(
-        structured=_bundle().structured.model_copy(
+        structured=_structured(_bundle()).model_copy(
             update={
                 "risk_profile": RiskProfile(
                     business_description="individual life",
@@ -581,7 +581,7 @@ def test_network_detection_and_rating_factor():
 
 
 def test_network_assessment_from_bundle_text():
-    bundle = _bundle(unstructured=[UnstructuredSubmission(submission_id="gap-1", doc_id="d1", raw_text="ppo plan with out-of-network coverage")])
+    bundle = _bundle(unstructured=[UnstructuredSubmission(submission_id="gap-1", raw_text="ppo plan with out-of-network coverage")])
     out = network_assessment_from_bundle(bundle)
     assert out["network_type"] == "ppo"
     assert out["rating_factor"] > 1.0
@@ -610,7 +610,7 @@ def test_annuity_factor_and_payout_positive():
 def test_bi_evaluator_flags_interruption_exposure():
     from insureflow.underwriting.commercial_checklists import evaluate_bi_checklist
 
-    bundle = _bundle(unstructured=[UnstructuredSubmission(submission_id="gap-1", doc_id="d1", raw_text="business interruption coverage sought with contingent business interruption")])
+    bundle = _bundle(unstructured=[UnstructuredSubmission(submission_id="gap-1", raw_text="business interruption coverage sought with contingent business interruption")])
     result = evaluate_bi_checklist(bundle)
     assert result.flags
     assert result.decision.value in ("accept", "conditional_accept", "refer", "decline")
@@ -620,7 +620,7 @@ def test_bi_pass_is_additive_in_commercial_evaluation():
     from insureflow.rating.models import InsuranceLine
     from insureflow.underwriting.commercial_checklists import evaluate_commercial_checklist
 
-    bundle = _bundle(unstructured=[UnstructuredSubmission(submission_id="gap-1", doc_id="d1", raw_text="business interruption coverage sought for the metal fabrication plant")])
+    bundle = _bundle(unstructured=[UnstructuredSubmission(submission_id="gap-1", raw_text="business interruption coverage sought for the metal fabrication plant")])
     plain = evaluate_commercial_checklist(bundle, InsuranceLine.COMMERCIAL_PROPERTY)
     # The BI additive pass runs as long as a BI trigger term is present.
     assert plain.decision in ("accept", "conditional_accept", "refer", "decline")
@@ -637,14 +637,7 @@ def test_pipeline_summary_includes_domain_analytics():
         documents=[
             {
                 "filename": "loss_run.txt",
-                "content": (
-                    "Loss Run\n"
-                    "Premium 80,000\n"
-                    "Earned 75,000\n"
-                    "Total 25,000\n"
-                    "Claims 1\n"
-                    "1. fire — 25,000"
-                ),
+                "content": ("Loss Run\nPremium 80,000\nEarned 75,000\nTotal 25,000\nClaims 1\n1. fire — 25,000"),
                 "encoding": "utf-8",
             }
         ],

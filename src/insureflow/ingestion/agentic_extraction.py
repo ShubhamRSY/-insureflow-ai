@@ -192,6 +192,4 @@ class AgenticExtractionLoop:
 
     @staticmethod
     def _record_agentic_meta(fields: dict[str, list[ExtractedField]], report: list[str]) -> None:
-        fields.setdefault("agentic", []).append(
-            ExtractedField(field_name="agentic", value="; ".join(report), confidence=1.0, context="agentic_loop")
-        )
+        fields.setdefault("agentic", []).append(ExtractedField(field_name="agentic", value="; ".join(report), confidence=1.0, context="agentic_loop"))
