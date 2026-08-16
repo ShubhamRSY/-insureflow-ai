@@ -186,7 +186,10 @@ def test_pdfplumber_table_extraction() -> None:
     import tempfile
     from pathlib import Path
 
-    import pymupdf
+    try:
+        import pymupdf
+    except ImportError:
+        pymupdf = pytest.importorskip("fitz")
 
     from insureflow.ingestion.ocr import OCRProcessor
 

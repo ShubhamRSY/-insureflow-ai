@@ -52,13 +52,16 @@ def _compute_blur_score(image_data: bytes) -> tuple[float, str]:
         score = min(1.0, variance / 500.0)
         return score, "laplacian"
     if engine == "pil":
-        img = lib.open(io.BytesIO(image_data))
-        small = img.convert("L").resize((100, 100))
-        pixels = list(small.getdata())
-        mean = sum(pixels) / len(pixels)
-        variance = sum((p - mean) ** 2 for p in pixels) / len(pixels)
-        score = min(1.0, variance / 2000.0)
-        return score, "pil_variance"
+        try:
+            img = lib.open(io.BytesIO(image_data))
+            small = img.convert("L").resize((100, 100))
+            pixels = list(small.getdata())
+            mean = sum(pixels) / len(pixels)
+            variance = sum((p - mean) ** 2 for p in pixels) / len(pixels)
+            score = min(1.0, variance / 2000.0)
+            return score, "pil_variance"
+        except Exception:
+            return 0.5, "unknown"
     return 0.5, "unavailable"
 
 
@@ -75,11 +78,14 @@ def _compute_brightness(image_data: bytes) -> float:
             return 0.5
         return float(_np.mean(img)) / 255.0
     if engine == "pil":
-        img = lib.open(io.BytesIO(image_data))
-        grayscale = img.convert("L")
-        pixels: list[int] = list(grayscale.getdata())
-        total = sum(pixels)
-        return total / (len(pixels) * 255.0)
+        try:
+            img = lib.open(io.BytesIO(image_data))
+            grayscale = img.convert("L")
+            pixels: list[int] = list(grayscale.getdata())
+            total = sum(pixels)
+            return total / (len(pixels) * 255.0)
+        except Exception:
+            return 0.5
     return 0.5
 
 
@@ -94,9 +100,12 @@ def _get_dimensions(image_data: bytes) -> tuple[int, int]:
             h, w = img.shape[:2]
             return w, h
     if engine == "pil":
-        img = lib.open(io.BytesIO(image_data))
-        size: tuple[int, int] = img.size
-        return size
+        try:
+            img = lib.open(io.BytesIO(image_data))
+            size: tuple[int, int] = img.size
+            return size
+        except Exception:
+            return 0, 0
     return 0, 0
 
 

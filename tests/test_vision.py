@@ -2,12 +2,25 @@
 
 from __future__ import annotations
 
+import struct
+import zlib
 from unittest.mock import patch
 
 from insureflow.audit.store import AuditStore
 from insureflow.ml.vision.damage_detector import DamageAssessment, DamageDetector, DamageSeverity, DamageType
 from insureflow.ml.vision.models import PhotoAnalysis, PhotoQuality, PropertyVisualProfile, SatelliteAnalysis, VisualFinding, VisualRisk
 from insureflow.ml.vision.photo_scorer import score_photo_quality
+
+
+def _minimal_png(*, width: int = 8, height: int = 8) -> bytes:
+    """Valid RGB PNG so PIL/OpenCV can decode fixture bytes in CI."""
+
+    def chunk(tag: bytes, data: bytes) -> bytes:
+        return struct.pack(">I", len(data)) + tag + data + struct.pack(">I", zlib.crc32(tag + data) & 0xFFFFFFFF)
+
+    raw = b"".join(b"\x00" + (b"\x80\x80\x80" * width) for _ in range(height))
+    return b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 0)) + chunk(b"IDAT", zlib.compress(raw)) + chunk(b"IEND", b"")
+
 
 # ─── Data Model Tests ───
 
@@ -93,7 +106,7 @@ class TestVisualFinding:
 
 class TestPhotoQualityScorer:
     def test_with_minimal_image(self):
-        image_data = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100
+        image_data = _minimal_png()
         analysis = score_photo_quality(image_data, "test.png", "p1")
         assert analysis.photo_id == "p1"
         assert analysis.filename == "test.png"
@@ -228,15 +241,26 @@ class TestPropertyPhotoAnalyzer:
     def test_analyze_photos_without_apis(self):
         from insureflow.ml.vision.pipeline import PropertyPhotoAnalyzer
 
-        analyzer = PropertyPhotoAnalyzer()
-        assert not analyzer.vision_available
-        assert not analyzer.satellite_available
+        with patch.dict(
+            "os.environ",
+            {
+                "OPENAI_API_KEY": "",
+                "ANTHROPIC_API_KEY": "",
+                "LLM_API_KEY": "",
+                "GOOGLE_MAPS_API_KEY": "",
+                "NEARMAP_API_KEY": "",
+            },
+            clear=False,
+        ):
+            analyzer = PropertyPhotoAnalyzer()
+            assert not analyzer.vision_available
+            assert not analyzer.satellite_available
 
-        photos = [{"image_data": b"\x89PNG\r\n\x1a\n" + b"\x00" * 100, "filename": "test.png"}]
-        profile = analyzer.analyze_photos(photos, bundle_id="b1")
-        assert profile.total_photos == 1
-        assert profile.analyzed_photos == 1
-        assert profile.processing_notes != ""
+            photos = [{"image_data": _minimal_png(), "filename": "test.png"}]
+            profile = analyzer.analyze_photos(photos, bundle_id="b1")
+            assert profile.total_photos == 1
+            assert profile.analyzed_photos == 1
+            assert profile.processing_notes != ""
 
 
 # ─── Bundle Visual-Analysis Population ───

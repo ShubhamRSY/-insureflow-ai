@@ -242,12 +242,12 @@ def test_uncertainty_deterministic_sampler_clean():
 
 
 def test_uncertainty_high_variance_flagged():
-    import random
-
     from insureflow.verification.uncertainty import estimate_uncertainty, uncertainty_issues
 
+    values = iter([4000.0, 6000.0, 3500.0, 6500.0, 5000.0])
+
     def jittered():
-        return {"total_incurred": 5000 + random.uniform(-800, 800)}
+        return {"total_incurred": next(values)}
 
     cv = estimate_uncertainty(jittered, n_passes=5)
     assert cv["total_incurred"] > 0.05
@@ -441,8 +441,12 @@ def test_engine_stp_blocks_low_confidence_critical():
     assert any(i.code == "stp_block_low_confidence" for i in report.errors)
 
 
+@pytest.mark.skipif(not HAS_PYMUPDF, reason="pymupdf not installed")
 def test_engine_forensics_on_pdf_bytes():
-    import fitz
+    try:
+        import fitz
+    except ImportError:
+        import pymupdf as fitz
 
     from insureflow.verification.engine import VerificationEngine
 

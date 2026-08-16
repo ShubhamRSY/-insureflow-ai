@@ -173,7 +173,7 @@ def documentai_extract(data: bytes, filename: str) -> CloudOcrResult | None:
     if not (project and processor):
         return None
     try:
-        from google.cloud import documentai
+        from google.cloud import documentai  # type: ignore[attr-defined]
     except ImportError:
         return None
     try:
