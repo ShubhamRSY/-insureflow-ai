@@ -61,10 +61,7 @@ class SynthesisAgent:
                     "match_rate": reconciliation_result.match_rate,
                     "overall_status": reconciliation_result.overall_status,
                     "rag_context": rag_context,
-                    "citation_rule": (
-                        "Do not add numeric or coverage facts that lack a page/bbox/source_ref. "
-                        "You may only rephrase existing reconciled fields. Hallucination count must stay 0."
-                    ),
+                    "citation_rule": ("Do not add numeric or coverage facts that lack a page/bbox/source_ref. You may only rephrase existing reconciled fields. Hallucination count must stay 0."),
                     "allowed_keys": sorted(pre_llm_keys),
                 }
 

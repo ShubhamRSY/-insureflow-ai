@@ -134,10 +134,7 @@ def _ela_findings(image_data: bytes, filename: str) -> list[VisualFinding]:
         return [
             VisualFinding(
                 category="photo_forensics",
-                description=(
-                    f"JPEG error-level analysis shows a local recompress hotspot "
-                    f"(block residual {max_block:.0f} vs mean {mean_res:.0f}) — possible edit or paste"
-                ),
+                description=(f"JPEG error-level analysis shows a local recompress hotspot (block residual {max_block:.0f} vs mean {mean_res:.0f}) — possible edit or paste"),
                 severity="warning",
                 confidence=min(0.9, 0.55 + (max_block / 80.0)),
             )
@@ -159,10 +156,7 @@ def _ela_residuals(img: Any) -> tuple[float, float]:
         rec_px = recompressed.tobytes()
         if not orig_px or len(orig_px) != len(rec_px):
             return 0.0, 0.0
-        residuals = [
-            abs(orig_px[i] - rec_px[i]) + abs(orig_px[i + 1] - rec_px[i + 1]) + abs(orig_px[i + 2] - rec_px[i + 2])
-            for i in range(0, len(orig_px), 3)
-        ]
+        residuals = [abs(orig_px[i] - rec_px[i]) + abs(orig_px[i + 1] - rec_px[i + 1]) + abs(orig_px[i + 2] - rec_px[i + 2]) for i in range(0, len(orig_px), 3)]
         mean_res = sum(residuals) / (len(residuals) * 3.0)
         max_block = 0.0
         block = _ELA_BLOCK

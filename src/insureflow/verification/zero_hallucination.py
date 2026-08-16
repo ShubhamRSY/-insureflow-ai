@@ -392,16 +392,11 @@ def enforce_zero_hallucination_on_memo(
 
     if not report.passed:
         memo.human_review_required = True
-        reason = (
-            f"Zero-hallucination gate failed: {report.hallucination_count} uncited claim(s) "
-            f"(max allowed {report.max_allowed})"
-        )
+        reason = f"Zero-hallucination gate failed: {report.hallucination_count} uncited claim(s) (max allowed {report.max_allowed})"
         if reason not in (memo.human_review_reasons or []):
             memo.human_review_reasons = list(memo.human_review_reasons or []) + [reason]
         if memo.decision not in (UWDecision.DECLINE, UWDecision.REFER):
             memo.decision = UWDecision.REFER
-        memo.conditions = list(memo.conditions or []) + [
-            "SUBJECT TO grounding: every money/limit/total in the memo must cite a page or source box"
-        ]
+        memo.conditions = list(memo.conditions or []) + ["SUBJECT TO grounding: every money/limit/total in the memo must cite a page or source box"]
 
     return report

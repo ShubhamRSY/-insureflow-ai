@@ -90,8 +90,6 @@ def test_live_cyber_mfa_contradiction() -> None:
     agent = OracleAgent(cyber_scan_client=client)
     with patch.object(client.http, "post", return_value=mock_resp):
         result = client.query_domain("acme-widgets.com")
-        findings = agent._query_cyber_scan(
-            _auto_bundle(text="Cyber application for acme-widgets.com. MFA: yes, enabled in place.")
-        )
+        findings = agent._query_cyber_scan(_auto_bundle(text="Cyber application for acme-widgets.com. MFA: yes, enabled in place."))
     assert result.mfa_observed is False
     assert any("MFA" in f.title or "mfa" in f.description.lower() for f in findings)

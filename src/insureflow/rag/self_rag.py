@@ -21,13 +21,7 @@ def self_rag_enabled() -> bool:
 def _context_is_adequate(contexts: dict[str, Any], *, min_chunks: int = 1, min_score: float = 0.15) -> bool:
     if contexts.get("no_context"):
         return False
-    chunks = (
-        contexts.get("retrieved_contexts")
-        or contexts.get("vector_guideline_chunks")
-        or contexts.get("contexts")
-        or contexts.get("vector_chunks")
-        or []
-    )
+    chunks = contexts.get("retrieved_contexts") or contexts.get("vector_guideline_chunks") or contexts.get("contexts") or contexts.get("vector_chunks") or []
     if len(chunks) < min_chunks:
         return False
     scores = contexts.get("scores") or []
@@ -43,15 +37,7 @@ def _critique_with_llm(query: str, contexts: dict[str, Any], llm: Any) -> bool:
     """Return True if the LLM says the context is enough to answer without invention."""
     if llm is None or not getattr(llm, "api_key", None):
         return _context_is_adequate(contexts)
-    joined = "\n".join(
-        str(c)
-        for c in (
-            contexts.get("retrieved_contexts")
-            or contexts.get("vector_guideline_chunks")
-            or contexts.get("contexts")
-            or []
-        )[:6]
-    )
+    joined = "\n".join(str(c) for c in (contexts.get("retrieved_contexts") or contexts.get("vector_guideline_chunks") or contexts.get("contexts") or [])[:6])
     prompt = (
         "You are auditing retrieval for an underwriting assistant. "
         "Answer YES if the context is sufficient to answer without inventing rules, else NO.\n\n"

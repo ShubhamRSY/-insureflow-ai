@@ -87,10 +87,7 @@ def citation_issues(
             VerificationIssue(
                 code="uncited_claim" if critical else "ungrounded_field",
                 severity=SEVERITY_ERROR if critical else SEVERITY_WARNING,
-                message=(
-                    f"{key}={value!r} has no page/bbox/source citation — "
-                    + ("blocks STP; treat as hypothesis until grounded" if critical else "route to human review")
-                ),
+                message=(f"{key}={value!r} has no page/bbox/source citation — " + ("blocks STP; treat as hypothesis until grounded" if critical else "route to human review")),
                 field_name=key,
                 page_number=field.page_number,
                 bbox=field.bbox,
@@ -130,10 +127,7 @@ def gate_memo_claims(
             VerificationIssue(
                 code="memo_uncited_claim",
                 severity=SEVERITY_ERROR,
-                message=(
-                    f"Memo claim {title or field_name or description[:60]!r} "
-                    "cannot point at a page — do not treat as fact"
-                ),
+                message=(f"Memo claim {title or field_name or description[:60]!r} cannot point at a page — do not treat as fact"),
                 field_name=field_name,
             )
         )

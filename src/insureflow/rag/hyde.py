@@ -28,11 +28,7 @@ def expand_query_deterministic(query: str, *, line_of_business: str | None = Non
     for key, words in _LOB_HINTS.items():
         if key in q.lower():
             hints = f"{hints} {words}".strip()
-    hypo = (
-        f"Underwriting guideline regarding: {q}. "
-        f"Risk factors, appetite limits, required documentation, and referral triggers. "
-        f"{hints}".strip()
-    )
+    hypo = f"Underwriting guideline regarding: {q}. Risk factors, appetite limits, required documentation, and referral triggers. {hints}".strip()
     return hypo
 
 

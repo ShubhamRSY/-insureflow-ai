@@ -65,9 +65,7 @@ def run_audit_loop(
         return AuditLoopResult(fields=working, history=["audit_loop_disabled"])
 
     max_loops = max_loops if max_loops is not None else int(os.getenv("AUDIT_MAX_LOOPS", "2"))
-    timeout_seconds = (
-        timeout_seconds if timeout_seconds is not None else float(os.getenv("AUDIT_LOOP_TIMEOUT_SECONDS", "8"))
-    )
+    timeout_seconds = timeout_seconds if timeout_seconds is not None else float(os.getenv("AUDIT_LOOP_TIMEOUT_SECONDS", "8"))
     started = time.monotonic()
     history: list[str] = []
     last_issues: list[VerificationIssue] = []

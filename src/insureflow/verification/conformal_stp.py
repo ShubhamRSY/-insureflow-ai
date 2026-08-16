@@ -90,9 +90,7 @@ def calibrate_stp_threshold(
         if wrong_conf:
             # Require threshold above the worst incorrect confidence we observed.
             best_t = min(1.0, max(default_threshold, wrong_conf[-1] + grid_step))
-            best_err = sum(1 for c, ok in zip(confidences, correct) if c >= best_t and not ok) / max(
-                sum(1 for c in confidences if c >= best_t), 1
-            )
+            best_err = sum(1 for c, ok in zip(confidences, correct) if c >= best_t and not ok) / max(sum(1 for c in confidences if c >= best_t), 1)
             best_accepted = sum(1 for c in confidences if c >= best_t)
             method = "fallback_above_wrong"
         else:

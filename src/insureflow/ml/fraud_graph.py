@@ -245,10 +245,7 @@ def detect_fraud_rings(entities: Sequence[EntitySnapshot], *, min_size: int = 2,
         if not strong and ring_score < score_floor and len(group) < 3:
             continue
         member_ids = [entities[i].entity_id for i in group]
-        reason = (
-            f"{len(group)} files share {', '.join(sorted(set(keys)))}; "
-            f"graph-net ring score {ring_score:.2f}"
-        )
+        reason = f"{len(group)} files share {', '.join(sorted(set(keys)))}; graph-net ring score {ring_score:.2f}"
         hits.append(
             FraudRingHit(
                 member_ids=member_ids,
