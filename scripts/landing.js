@@ -27,9 +27,10 @@
     var target = parseFloat(el.getAttribute('data-target'));
     if (isNaN(target)) return;
     var suffix = el.getAttribute('data-suffix') || '';
+    var decimals = parseInt(el.getAttribute('data-decimals') || '0', 10);
     var shown = (el.textContent || '').replace(suffix, '').trim();
     if (shown !== '0' && shown !== '') {
-      el.textContent = Math.round(target) + suffix;
+      el.textContent = (decimals > 0 ? target.toFixed(decimals) : Math.round(target)) + suffix;
       return;
     }
     var dur = 1400, start = null;
@@ -37,7 +38,8 @@
       if (!start) start = ts;
       var p = Math.min((ts - start) / dur, 1);
       var eased = 1 - Math.pow(1 - p, 3);
-      el.textContent = Math.round(target * eased) + suffix;
+      var current = target * eased;
+      el.textContent = (decimals > 0 ? current.toFixed(decimals) : Math.round(current)) + suffix;
       if (p < 1) requestAnimationFrame(step);
     }
     requestAnimationFrame(step);
@@ -52,7 +54,10 @@
     counters.forEach(function (el) { co.observe(el); });
   } else {
     counters.forEach(function (el) {
-      el.textContent = el.getAttribute('data-target') + (el.getAttribute('data-suffix') || '');
+      var target = parseFloat(el.getAttribute('data-target'));
+      var decimals = parseInt(el.getAttribute('data-decimals') || '0', 10);
+      var suffix = el.getAttribute('data-suffix') || '';
+      el.textContent = (decimals > 0 && !isNaN(target) ? target.toFixed(decimals) : el.getAttribute('data-target')) + suffix;
     });
   }
 
@@ -361,4 +366,206 @@
       });
     });
   }
+
+  /* ---- Glossary Interactive Reference ---- */
+  var glossaryTerms = [
+    { t: 'Underwriter', c: 'underwriting', d: 'The licensed person who decides yes, no, or not yet on a risk. Rytera drafts. They still sign.' },
+    { t: 'Carrier / MGA', c: 'underwriting', d: 'Carrier = the insurance company that takes the risk. MGA = a specialist team allowed to underwrite on a carrier’s behalf.' },
+    { t: 'Submission', c: 'underwriting', d: 'The pile a broker sends when they want a quote: PDFs, spreadsheets, emails, photos.' },
+    { t: 'The decision memo', c: 'underwriting', d: 'A clear recommendation you can read and sign. A completed, auditable file summary ready for approval — not a pile of notes you still have to rewrite.' },
+    { t: 'Practice mode (shadow)', c: 'underwriting', d: 'Run Rytera on real files without issuing a policy. Prove it on your book. Go live when you say so.' },
+    { t: 'Appetite', c: 'underwriting', d: 'What your company is willing to write. Files that don’t fit get referred out before they eat a day.' },
+    { t: 'Triage', c: 'underwriting', d: 'Sorting the queue so the files that need a human rise first, and the obvious no’s don’t steal the morning.' },
+    { t: 'Loss run / SOV / ACORD', c: 'underwriting', d: 'Loss run = history of claims. SOV (schedule of values) = the list of buildings and what they’re worth. ACORD = a standard insurance form brokers already use.' },
+    { t: 'Limit, deductible, exposure', c: 'underwriting', d: 'Limit = the most the policy would pay. Deductible = what the customer pays first. Exposure = how much is actually at risk.' },
+    { t: 'COPE', c: 'underwriting', d: 'Construction, Occupancy, Protection, Exposure — the four things a property underwriter always checks (how it’s built, who uses it, fire protection, what sits next door).' },
+    { t: 'Rate book / SERFF / filing', c: 'compliance', d: 'Your official prices, as filed with the state. SERFF is the system states use to receive those filings. We will not quote off a demo book and call it yours.' },
+    { t: 'Policy admin / Guidewire / PAS', c: 'data', d: 'The system that actually issues the policy. Bind without re-key means the quote lands there in full — you should not have to type it again.' },
+    { t: 'IMAP, S3, SFTP', c: 'data', d: 'How files already arrive: email (IMAP), a cloud folder (S3), or a secure drop (SFTP). We meet the file where it lives.' },
+    { t: 'AI / LLM', c: 'ai', d: 'A language model — software that can read and write. We use it only where judgment is needed. It never issues a policy. Names come off first.' },
+    { t: 'Zero Token Architecture', c: 'ai', d: 'Most steps are ordinary rules and checks (no AI bill). AI is the last resort, counted, and never used to invent a fact.' },
+    { t: 'Human-in-the-loop', c: 'compliance', d: 'A person stays in charge. Software proposes. A licensed underwriter disposes. Every change they make is recorded.' },
+    { t: 'Paper trail / exam pack', c: 'compliance', d: 'A sealed record of what was read, checked, and signed. When a regulator asks why this file, you hand them that — not a story from three shared drives.' },
+    { t: 'PII / de-identification', c: 'compliance', d: 'Private details: names, Social Security numbers, tax IDs, dates of birth. Stripping them before AI sees the page is de-identification.' },
+    { t: 'Catalog vs live', c: 'lines', d: 'Catalog = we show the product, but we will not pretend we can price or bind it yet. Live = your real rates and connections are in, so a quote is honest.' },
+    { t: 'Line desk vs staff desk', c: 'underwriting', d: 'Line underwriters work the files in the branch. Staff underwriters at home office set the rules the line desk follows.' },
+    { t: 'Filing-grade', c: 'compliance', d: 'Priced from your official, state-filed rates — not a demo book, not a guess.' },
+    { t: 'Tokens', c: 'ai', d: 'The unit an AI vendor bills. “Zero token” means that step used ordinary software, so there is no AI bill and the answer is repeatable.' },
+    { t: 'Locked files / who can see what', c: 'compliance', d: 'Fernet = files stored locked. JWT / RBAC = only the right people in your company can open them. SHA-256 = a seal so nobody can quietly change the record.' },
+    { t: 'Fail-closed', c: 'compliance', d: 'If a real data feed is missing, we stop or refer the file. We do not invent a clean history so the screen looks pretty.' },
+    { t: 'Re-key', c: 'data', d: 'Typing the same quote into another system by hand. Bind without re-key means the policy system receives the full quote.' },
+    { t: 'Subjectivities', c: 'underwriting', d: 'Conditions that must be true before the policy can go live (an inspection, a missing form, a signed warranty).' },
+    { t: 'Authority matrix', c: 'compliance', d: 'Who is allowed to sign what size of risk. A junior underwriter cannot silently bind a jumbo account.' },
+    { t: 'IVANS / SharePoint / Drive', c: 'data', d: 'Industry mailboxes and cloud folders where files already live. We connect when you contract them; until then we do not pretend they are live.' },
+    { t: 'GL, WC, D&O, E&O', c: 'lines', d: 'General liability, workers’ compensation, directors & officers, errors & omissions — common commercial covers. We say the long name first.' },
+    { t: 'UL, OPD, CI, UBI', c: 'lines', d: 'Universal life, outpatient (day-to-day doctor visits), critical illness, usage-based insurance (price from how you drive). Catalog until we can honestly price them.' },
+    { t: 'ISO / AAIS / NCCI', c: 'compliance', d: 'Industry groups that publish standard rates and class codes. Carriers start there, then add their own expenses and profit.' },
+    { t: 'E&S (excess & surplus)', c: 'lines', d: 'Risks the regular market will not write. A specialist market can, with extra checks on who is allowed to bind.' },
+    { t: 'TRID, Reg Z, HMDA / ECOA, Reg B', c: 'compliance', d: 'Mortgage and lending fairness rules: clear closing costs, honest credit pricing, equal treatment, and a written reason if we say no.' },
+    { t: 'MVR / CLUE / HO-3', c: 'data', d: 'MVR = driving record. CLUE = prior home/auto claims. HO-3 = a common homeowners policy form.' },
+    { t: 'Replacement cost', c: 'underwriting', d: 'What it would cost to rebuild, not what the building would sell for. A small house cannot claim a warehouse rebuild number.' },
+    { t: 'Cross-field check', c: 'underwriting', d: 'Two facts on the same file have to be able to be true together. Payroll needs people. A license cannot be issued after the policy starts.' },
+    { t: 'EXIF / ELA', c: 'ai', d: 'EXIF = the camera tag on a photo (who saved it, when). ELA = JPEG error-level analysis — a local paste often leaves a hotter recompress scar than an original shot.' },
+    { t: 'Fraud ring / graph net', c: 'ai', d: 'Files linked by the same phone, address, tax ID, or IP. A small neural net on that graph scores whether the cluster looks like a ring — not a guess from a single file.' },
+    { t: 'Telematics / cyber scan', c: 'data', d: 'Telematics = what the car actually did (miles, hard brakes). Cyber scan = an outside look at a domain. We compare those to the questionnaire only when the feed is live.' },
+    { t: 'Citation gate', c: 'ai', d: 'A critical number without a page, box, or source ref is not a fact. It fails straight-through processing and stays off the memo until grounded.' },
+    { t: 'Self-RAG / HyDE', c: 'ai', d: 'Self-RAG = retrieve, ask if the context is enough, retrieve again if not. HyDE = search with a hypothetical guideline paragraph when the desk question is too short for vector match.' },
+    { t: 'Glass box', c: 'ai', d: 'Click a value, see the page highlight. Warm color means low confidence. Approve still needs a licensed person.' },
+    { t: 'Zero-hallucination gate', c: 'ai', d: 'Target: zero uncited money, limits, or totals on a decision memo. Anything invented is stripped and the file is referred. We do not rubber-stamp a pretty number.' },
+    { t: 'Oracles (CLUE, NCCI, A+, CAT)', c: 'data', d: 'Outside data checks: prior claims, workers-comp history, catastrophe risk. We only treat them as real when your accounts are connected. We never fake a clean history.' },
+    { t: 'Verbatim Source Attribution', c: 'ai', d: 'Every extracted data point, financial metric, or policy clause links directly to its original document bounding box and page number.' },
+    { t: 'Chain-of-Thought Auditing', c: 'ai', d: 'A step-by-step audit trail showing how the multi-agent system reached a conclusion (e.g. why a risk score was elevated based on loss runs).' },
+    { t: 'Field-Level Confidence Scores', c: 'ai', d: 'Individual confidence scores per field rather than a single global score. Low-confidence extractions automatically route to human review.' },
+    { t: 'Frictionless Overrides', c: 'underwriting', d: 'Single-click override controls allowing an underwriter to modify AI recommendations with mandatory drop-down reason logging.' },
+    { t: 'Deterministic Guardrails (UWGs)', c: 'compliance', d: 'Hard-coded underwriting guidelines (minimum credit, class exclusions, maximum limits) executed via deterministic code, not LLM guesswork.' },
+    { t: 'Multi-Year Reproducibility', c: 'compliance', d: 'The ability to reconstruct the exact data state, prompts, and reasoning trail for state market-conduct exams 3+ years later.' },
+    { t: 'Graceful Degradation / Fail-Closed', c: 'compliance', d: 'If a scan is blurry or an API times out, the system cleanly halts and requests human intervention rather than hallucinating missing figures.' },
+    { t: 'Insufficient Data ("I Don\'t Know")', c: 'ai', d: 'Agents explicitly output "Insufficient Data" when information is absent from a submission, with zero financial interpolation or synthetic guessing.' }
+  ];
+
+  var catNames = {
+    all: 'All Terms',
+    underwriting: 'Underwriting',
+    ai: 'AI & Architecture',
+    data: 'Data & Oracles',
+    compliance: 'Compliance',
+    lines: 'Lines & Desks'
+  };
+
+  var glossaryModal = document.getElementById('glossary-modal');
+  var glossaryList = document.getElementById('glossary-modal-list');
+  var glossaryInput = document.getElementById('glossary-modal-input');
+  var currentCat = 'all';
+  var currentQuery = '';
+
+  function renderGlossary() {
+    if (!glossaryList) return;
+    var q = (currentQuery || '').toLowerCase().trim();
+    var filtered = glossaryTerms.filter(function (item) {
+      var matchesCat = (currentCat === 'all' || item.c === currentCat);
+      var matchesQuery = !q || (item.t.toLowerCase().indexOf(q) !== -1 || item.d.toLowerCase().indexOf(q) !== -1);
+      return matchesCat && matchesQuery;
+    });
+
+    if (filtered.length === 0) {
+      glossaryList.innerHTML = '<div class="glossary-empty"><p>No definitions found for "<strong>' + currentQuery + '</strong>".</p><button type="button" class="btn btn-ghost btn-sm" id="reset-glossary-btn" style="margin-top:.8rem">Show all terms</button></div>';
+      var rBtn = document.getElementById('reset-glossary-btn');
+      if (rBtn) {
+        rBtn.addEventListener('click', function () {
+          currentQuery = '';
+          currentCat = 'all';
+          if (glossaryInput) glossaryInput.value = '';
+          document.querySelectorAll('.glossary-filter-chip').forEach(function (c) {
+            c.classList.toggle('active', c.getAttribute('data-cat') === 'all');
+          });
+          renderGlossary();
+        });
+      }
+      return;
+    }
+
+    glossaryList.innerHTML = '<div class="glossary-grid">' + filtered.map(function (item) {
+      return '<div class="glossary-card" data-cat="' + item.c + '">' +
+        '<div class="glossary-card-top">' +
+          '<span class="glossary-term">' + item.t + '</span>' +
+          '<span class="glossary-category-tag">' + (catNames[item.c] || item.c) + '</span>' +
+        '</div>' +
+        '<p class="glossary-def">' + item.d + '</p>' +
+      '</div>';
+    }).join('') + '</div>';
+  }
+
+  function openGlossary(initialQuery, initialCat) {
+    if (!glossaryModal) return;
+    if (typeof initialQuery === 'string') {
+      currentQuery = initialQuery;
+      if (glossaryInput) glossaryInput.value = initialQuery;
+    }
+    if (typeof initialCat === 'string') {
+      currentCat = initialCat;
+      document.querySelectorAll('.glossary-filter-chip').forEach(function (c) {
+        c.classList.toggle('active', c.getAttribute('data-cat') === initialCat);
+      });
+    }
+    renderGlossary();
+    glossaryModal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    if (glossaryInput) setTimeout(function () { glossaryInput.focus(); }, 100);
+  }
+
+  function closeGlossary() {
+    if (!glossaryModal) return;
+    glossaryModal.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  document.querySelectorAll('#open-glossary-nav, #open-glossary-hero, #open-glossary-mobile, #open-glossary-footer, #open-glossary-full, [data-open-glossary]').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
+      openGlossary('', 'all');
+    });
+  });
+
+  // Intercept any <a href="#plain"> links so they open the interactive glossary modal
+  document.querySelectorAll('a[href="#plain"]').forEach(function (link) {
+    link.addEventListener('click', function (e) {
+      e.preventDefault();
+      openGlossary('', 'all');
+    });
+  });
+
+  // Featured terms click in preview box
+  document.querySelectorAll('.glossary-featured-grid .plain-term').forEach(function (card) {
+    card.style.cursor = 'pointer';
+    card.addEventListener('click', function () {
+      var term = card.getAttribute('data-term') || card.querySelector('dt').textContent;
+      openGlossary(term, 'all');
+    });
+  });
+
+  var previewInp = document.getElementById('preview-glossary-search');
+  var previewBtn = document.getElementById('preview-search-btn');
+  if (previewBtn && previewInp) {
+    previewBtn.addEventListener('click', function () {
+      openGlossary(previewInp.value);
+    });
+    previewInp.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') openGlossary(previewInp.value);
+    });
+  }
+
+  var closeGlossaryBtn = document.getElementById('close-glossary');
+  if (closeGlossaryBtn) closeGlossaryBtn.addEventListener('click', closeGlossary);
+
+  if (glossaryModal) {
+    glossaryModal.addEventListener('click', function (e) {
+      if (e.target === glossaryModal) closeGlossary();
+    });
+  }
+
+  if (glossaryInput) {
+    glossaryInput.addEventListener('input', function () {
+      currentQuery = glossaryInput.value;
+      renderGlossary();
+    });
+  }
+
+  var clearBtn = document.getElementById('clear-glossary-search');
+  if (clearBtn && glossaryInput) {
+    clearBtn.addEventListener('click', function () {
+      glossaryInput.value = '';
+      currentQuery = '';
+      renderGlossary();
+      glossaryInput.focus();
+    });
+  }
+
+  document.querySelectorAll('.glossary-filter-chip').forEach(function (chip) {
+    chip.addEventListener('click', function () {
+      document.querySelectorAll('.glossary-filter-chip').forEach(function (c) { c.classList.remove('active'); });
+      chip.classList.add('active');
+      currentCat = chip.getAttribute('data-cat') || 'all';
+      renderGlossary();
+    });
+  });
 })();

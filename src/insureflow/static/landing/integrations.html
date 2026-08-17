@@ -31,7 +31,7 @@
     "name": "Rytera",
     "url": "https://ryterainc.com/",
     "logo": "https://ryterainc.com/icon-512.png",
-    "description": "AI underwriting platform covering 12 insurance sections plus mortgage and lending.",
+    "description": "AI underwriting platform for commercial & personal lines insurance, mortgage, and lending.",
     "email": "hello@ryterainc.com"
   }
   </script>
@@ -111,84 +111,16 @@
         <span class="brand-name">Rytera<sup>&trade;</sup></span>
       </a>
         <nav class="nav-desktop" aria-label="Main">
-          <div class="nav-item">
-            <a href="/" data-nav>Home</a>
-            <div class="nav-drop">
-              <a href="/">Overview</a>
-              <a href="/#why">Why Rytera</a>
-              <a href="/#effect">The effect</a>
-              <a href="/#keywords">Keywords</a>
-              <a href="/#privacy">De-identification</a>
-            </div>
-          </div>
-          <div class="nav-item">
-            <a href="/pricing" data-nav>Pricing</a>
-            <div class="nav-drop">
-              <a href="/pricing">All plans</a>
-              <a href="/pricing#pricing">Compare features</a>
-              <a href="/pricing#go-live">Go live</a>
-            </div>
-          </div>
-          <div class="nav-item">
-            <a href="/platform" data-nav>Platform</a>
-            <div class="nav-drop">
-              <a href="/platform">Overview</a>
-              <a href="/platform#ai-native">AI-native vs legacy</a>
-              <a href="/platform#agentic">Agentic workbench</a>
-              <a href="/platform#features">Deep-dive verticals</a>
-              <a href="/platform#capabilities">Governance &amp; audit</a>
-              <a href="/platform#companies">Company panel</a>
-            </div>
-          </div>
-          <div class="nav-item">
-            <a href="/technology" data-nav>Technology</a>
-            <div class="nav-drop">
-              <a href="/technology">Overview</a>
-              <a href="/technology#zta">Zero Token Architecture</a>
-              <a href="/technology#how-it-works">Pipeline</a>
-              <a href="/technology#security">Security &amp; audit</a>
-              <a href="/technology#privacy">De-identification</a>
-              <a href="/technology#observability">Observability</a>
-            </div>
-          </div>
-          <div class="nav-item">
-            <a href="/underwriting" data-nav>Underwriting</a>
-            <div class="nav-drop nav-drop-uw">
-              <a href="/underwriting">Overview</a>
-              <a href="/underwriting#audience">Who it&rsquo;s for</a>
-              <a href="/underwriting#uw-desks">Line &amp; staff desks</a>
-              <a href="/underwriting#ratemaking">Ratemaking</a>
-              <p class="nav-drop-label">Insurance book</p>
-              <a href="/dashboard/insurance/sections/life">Life <span class="nav-pill live">Live</span></a>
-              <a href="/dashboard/insurance/sections/health">Health <span class="nav-pill live">Live</span></a>
-              <a href="/dashboard/insurance/sections/general">General / Non-Life</a>
-              <a href="/dashboard/insurance/sections/commercial">Commercial <span class="nav-pill live">Live</span></a>
-              <a href="/dashboard/insurance/sections/specialty">Specialty</a>
-              <a href="/underwriting#insurance-book">All 12 sections</a>
-              <p class="nav-drop-label">Other desks</p>
-              <a href="/underwriting#audience">Mortgage</a>
-              <a href="/underwriting#audience">Lending</a>
-            </div>
-          </div>
-          <div class="nav-item">
-            <a href="/integrations" data-nav>Integrations</a>
-            <div class="nav-drop">
-              <a href="/integrations">All connectors</a>
-              <a href="/integrations#integrations">Browse catalog</a>
-              <a href="/integrations#modes">Live / simulated / auto</a>
-            </div>
-          </div>
-          <div class="nav-item">
-            <a href="/company" data-nav>Company</a>
-            <div class="nav-drop">
-              <a href="/company">About Rytera</a>
-              <a href="/company#faq">FAQ</a>
-              <a href="/company#contact">Contact</a>
-              <a href="/dashboard">Dashboard</a>
-            </div>
-          </div>
+        <a href="/" data-nav>Home</a>
+        <a href="/pricing" data-nav>Pricing</a>
+        <a href="/platform" data-nav>Platform</a>
+        <a href="/technology" data-nav>Technology</a>
+        <a href="/underwriting" data-nav>Underwriting</a>
+        <a href="/integrations" data-nav>Integrations</a>
+        <a href="/company" data-nav>Company</a>
         </nav>
         <div class="nav-actions">
+          <button type="button" class="btn btn-ghost btn-sm" id="open-glossary-nav" style="border:1px solid var(--border)">Glossary</button>
           <a class="nav-dash" href="/dashboard">Dashboard</a>
           <button type="button" class="btn btn-primary btn-sm" id="open-demo-nav">Book a demo</button>
         </div>
@@ -198,61 +130,14 @@
       </div>
     </header>
     <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile">
-      <details class="nav-acc">
-        <summary>Home</summary>
-        <a href="/" data-nav>Overview</a>
-        <a href="/#why">Why Rytera</a>
-        <a href="/#effect">The effect</a>
-        <a href="/#keywords">Keywords</a>
-        <a href="/#privacy">De-identification</a>
-      </details>
-      <details class="nav-acc">
-        <summary>Pricing</summary>
-        <a href="/pricing" data-nav>All plans</a>
-        <a href="/pricing#pricing">Compare features</a>
-        <a href="/pricing#go-live">Go live</a>
-      </details>
-      <details class="nav-acc">
-        <summary>Platform</summary>
-        <a href="/platform" data-nav>Overview</a>
-        <a href="/platform#ai-native">AI-native vs legacy</a>
-        <a href="/platform#agentic">Agentic workbench</a>
-        <a href="/platform#features">Deep-dive verticals</a>
-        <a href="/platform#capabilities">Governance &amp; audit</a>
-        <a href="/platform#companies">Company panel</a>
-      </details>
-      <details class="nav-acc">
-        <summary>Technology</summary>
-        <a href="/technology" data-nav>Overview</a>
-        <a href="/technology#zta">Zero Token Architecture</a>
-        <a href="/technology#how-it-works">Pipeline</a>
-        <a href="/technology#security">Security &amp; audit</a>
-        <a href="/technology#privacy">De-identification</a>
-        <a href="/technology#observability">Observability</a>
-      </details>
-      <details class="nav-acc">
-        <summary>Underwriting</summary>
-        <a href="/underwriting" data-nav>Overview</a>
-        <a href="/underwriting#uw-desks">Line &amp; staff desks</a>
-        <a href="/dashboard/insurance/sections/life">Life</a>
-        <a href="/dashboard/insurance/sections/health">Health</a>
-        <a href="/dashboard/insurance/sections/general">General / Non-Life</a>
-        <a href="/dashboard/insurance/sections/commercial">Commercial</a>
-        <a href="/underwriting#insurance-book">All 12 sections</a>
-        <a href="/underwriting#audience">Mortgage &amp; lending</a>
-        <a href="/underwriting#ratemaking">Ratemaking</a>
-      </details>
-      <details class="nav-acc">
-        <summary>Integrations</summary>
-        <a href="/integrations" data-nav>All connectors</a>
-        <a href="/integrations#modes">Live / simulated / auto</a>
-      </details>
-      <details class="nav-acc">
-        <summary>Company</summary>
-        <a href="/company" data-nav>About Rytera</a>
-        <a href="/company#faq">FAQ</a>
-        <a href="/company#contact">Contact</a>
-      </details>
+      <a href="/" data-nav>Home</a>
+      <a href="/pricing" data-nav>Pricing</a>
+      <a href="/platform" data-nav>Platform</a>
+      <a href="/technology" data-nav>Technology</a>
+      <a href="/underwriting" data-nav>Underwriting</a>
+      <a href="/integrations" data-nav>Integrations</a>
+      <a href="/company" data-nav>Company</a>
+      <button type="button" class="btn btn-ghost" id="open-glossary-mobile" style="text-align:left;padding:.75rem 1rem">Underwriting Glossary</button>
       <a href="/dashboard">Dashboard</a>
       <button type="button" class="btn btn-primary" id="open-demo-mobile">Book a demo</button>
     </nav>
@@ -304,7 +189,7 @@
       </section>
 
       <section id="marquee" style="padding-top:0;padding-bottom:3.5rem;border-bottom:none;">
-        <p class="section-label reveal" style="justify-content:center;margin-left:auto;margin-right:auto;">Files still arrive the way they always have &mdash; email, folders, secure drop. We meet them there.</p>
+        <p class="section-label reveal" style="justify-content:center;margin-left:auto;margin-right:auto;">Seamlessly connecting with your core systems, rate filings, and external data oracles.</p>
         <div class="marquee-wrap reveal" aria-hidden="true">
           <div class="marquee-track" id="marquee-track"></div>
         </div>
@@ -316,60 +201,6 @@
           <h2>Named insureds never leave the gate.</h2>
           <p class="section-desc"><strong>Named insured</strong> means the person or company on the policy. <strong>PII</strong> means private details like Social Security numbers. Before any AI (a language model) looks at a file, we remove those. Your underwriter still sees the real file. The AI does not. Their names never leave the gate. Same promise on insurance, mortgage, and lending.</p>
         </div>
-      </section>
-
-      <section id="plain">
-        <div class="reveal">
-          <p class="section-label">In plain English</p>
-          <h2>Every technical word on this site, said simply.</h2>
-          <p class="section-desc">If a page used a desk word, this is what it means. No one should need a glossary from another company to read ours.</p>
-        </div>
-        <dl class="plain-grid reveal">
-          <div class="plain-term"><dt>Underwriter</dt><dd>The licensed person who decides yes, no, or not yet on a risk. Rytera drafts. They still sign.</dd></div>
-          <div class="plain-term"><dt>Carrier / MGA</dt><dd>Carrier = the insurance company that takes the risk. MGA = a specialist team allowed to underwrite on a carrier&rsquo;s behalf.</dd></div>
-          <div class="plain-term"><dt>Submission</dt><dd>The pile a broker sends when they want a quote: PDFs, spreadsheets, emails, photos.</dd></div>
-          <div class="plain-term"><dt>The memo (bind-ready)</dt><dd>A clear recommendation you can read and sign. Bind means issue the policy. Ready means you could, after you sign &mdash; not a pile of notes you still have to rewrite.</dd></div>
-          <div class="plain-term"><dt>Practice mode (shadow)</dt><dd>Run Rytera on real files without issuing a policy. Prove it on your book. Go live when you say so.</dd></div>
-          <div class="plain-term"><dt>Appetite</dt><dd>What your company is willing to write. Files that don&rsquo;t fit get referred out before they eat a day.</dd></div>
-          <div class="plain-term"><dt>Triage</dt><dd>Sorting the queue so the files that need a human rise first, and the obvious no&rsquo;s don&rsquo;t steal the morning.</dd></div>
-          <div class="plain-term"><dt>Loss run / SOV / ACORD</dt><dd>Loss run = history of claims. SOV (schedule of values) = the list of buildings and what they&rsquo;re worth. ACORD = a standard insurance form brokers already use.</dd></div>
-          <div class="plain-term"><dt>Limit, deductible, exposure</dt><dd>Limit = the most the policy would pay. Deductible = what the customer pays first. Exposure = how much is actually at risk.</dd></div>
-          <div class="plain-term"><dt>COPE</dt><dd>Construction, Occupancy, Protection, Exposure &mdash; the four things a property underwriter always checks (how it&rsquo;s built, who uses it, fire protection, what sits next door).</dd></div>
-          <div class="plain-term"><dt>Oracles (CLUE, NCCI, A+, CAT)</dt><dd>Outside data checks: prior claims, workers-comp history, catastrophe risk. We only treat them as real when your accounts are connected. We never fake a clean history.</dd></div>
-          <div class="plain-term"><dt>Rate book / SERFF / filing</dt><dd>Your official prices, as filed with the state. SERFF is the system states use to receive those filings. We will not quote off a demo book and call it yours.</dd></div>
-          <div class="plain-term"><dt>Policy admin / Guidewire / PAS</dt><dd>The system that actually issues the policy. Bind without re-key means the quote lands there in full &mdash; you should not have to type it again.</dd></div>
-          <div class="plain-term"><dt>IMAP, S3, SFTP</dt><dd>How files already arrive: email (IMAP), a cloud folder (S3), or a secure drop (SFTP). We meet the file where it lives.</dd></div>
-          <div class="plain-term"><dt>AI / LLM</dt><dd>A language model &mdash; software that can read and write. We use it only where judgment is needed. It never issues a policy. Names come off first.</dd></div>
-          <div class="plain-term"><dt>Zero Token Architecture</dt><dd>Most steps are ordinary rules and checks (no AI bill). AI is the last resort, counted, and never used to invent a fact.</dd></div>
-          <div class="plain-term"><dt>Human-in-the-loop</dt><dd>A person stays in charge. Software proposes. A licensed underwriter disposes. Every change they make is recorded.</dd></div>
-          <div class="plain-term"><dt>Paper trail / exam pack</dt><dd>A sealed record of what was read, checked, and signed. When a regulator asks why this file, you hand them that &mdash; not a story from three shared drives.</dd></div>
-          <div class="plain-term"><dt>PII / de-identification</dt><dd>Private details: names, Social Security numbers, tax IDs, dates of birth. Stripping them before AI sees the page is de-identification.</dd></div>
-          <div class="plain-term"><dt>Catalog vs live</dt><dd>Catalog = we show the product, but we will not pretend we can price or bind it yet. Live = your real rates and connections are in, so a quote is honest.</dd></div>
-          <div class="plain-term"><dt>Line desk vs staff desk</dt><dd>Line underwriters work the files in the branch. Staff underwriters at home office set the rules the line desk follows.</dd></div>
-          <div class="plain-term"><dt>Filing-grade</dt><dd>Priced from your official, state-filed rates &mdash; not a demo book, not a guess.</dd></div>
-          <div class="plain-term"><dt>Tokens</dt><dd>The unit an AI vendor bills. &ldquo;Zero token&rdquo; means that step used ordinary software, so there is no AI bill and the answer is repeatable.</dd></div>
-          <div class="plain-term"><dt>Locked files / who can see what</dt><dd>Fernet = files stored locked. JWT / RBAC = only the right people in your company can open them. SHA-256 = a seal so nobody can quietly change the record.</dd></div>
-          <div class="plain-term"><dt>Fail-closed</dt><dd>If a real data feed is missing, we stop or refer the file. We do not invent a clean history so the screen looks pretty.</dd></div>
-          <div class="plain-term"><dt>Re-key</dt><dd>Typing the same quote into another system by hand. Bind without re-key means the policy system receives the full quote.</dd></div>
-          <div class="plain-term"><dt>Subjectivities</dt><dd>Conditions that must be true before the policy can go live (an inspection, a missing form, a signed warranty).</dd></div>
-          <div class="plain-term"><dt>Authority matrix</dt><dd>Who is allowed to sign what size of risk. A junior underwriter cannot silently bind a jumbo account.</dd></div>
-          <div class="plain-term"><dt>IVANS / SharePoint / Drive</dt><dd>Industry mailboxes and cloud folders where files already live. We connect when you contract them; until then we do not pretend they are live.</dd></div>
-          <div class="plain-term"><dt>GL, WC, D&amp;O, E&amp;O</dt><dd>General liability, workers&rsquo; compensation, directors &amp; officers, errors &amp; omissions &mdash; common commercial covers. We say the long name first.</dd></div>
-          <div class="plain-term"><dt>UL, OPD, CI, UBI</dt><dd>Universal life, outpatient (day-to-day doctor visits), critical illness, usage-based insurance (price from how you drive). Catalog until we can honestly price them.</dd></div>
-          <div class="plain-term"><dt>ISO / AAIS / NCCI</dt><dd>Industry groups that publish standard rates and class codes. Carriers start there, then add their own expenses and profit.</dd></div>
-          <div class="plain-term"><dt>E&amp;S (excess &amp; surplus)</dt><dd>Risks the regular market will not write. A specialist market can, with extra checks on who is allowed to bind.</dd></div>
-          <div class="plain-term"><dt>TRID, Reg Z, HMDA / ECOA, Reg B</dt><dd>Mortgage and lending fairness rules: clear closing costs, honest credit pricing, equal treatment, and a written reason if we say no.</dd></div>
-          <div class="plain-term"><dt>MVR / CLUE / HO-3</dt><dd>MVR = driving record. CLUE = prior home/auto claims. HO-3 = a common homeowners policy form.</dd></div>
-          <div class="plain-term"><dt>Replacement cost</dt><dd>What it would cost to rebuild, not what the building would sell for. A small house cannot claim a warehouse rebuild number.</dd></div>
-          <div class="plain-term"><dt>Cross-field check</dt><dd>Two facts on the same file have to be able to be true together. Payroll needs people. A license cannot be issued after the policy starts.</dd></div>
-          <div class="plain-term"><dt>EXIF / ELA</dt><dd>EXIF = the camera tag on a photo (who saved it, when). ELA = JPEG error-level analysis &mdash; a local paste often leaves a hotter recompress scar than an original shot.</dd></div>
-          <div class="plain-term"><dt>Fraud ring / graph net</dt><dd>Files linked by the same phone, address, tax ID, or IP. A small neural net on that graph scores whether the cluster looks like a ring &mdash; not a guess from a single file.</dd></div>
-          <div class="plain-term"><dt>Telematics / cyber scan</dt><dd>Telematics = what the car actually did (miles, hard brakes). Cyber scan = an outside look at a domain. We compare those to the questionnaire only when the feed is live.</dd></div>
-          <div class="plain-term"><dt>Citation gate</dt><dd>A critical number without a page, box, or source ref is not a fact. It fails straight-through processing and stays off the bind-ready memo until grounded.</dd></div>
-          <div class="plain-term"><dt>Self-RAG / HyDE</dt><dd>Self-RAG = retrieve, ask if the context is enough, retrieve again if not. HyDE = search with a hypothetical guideline paragraph when the desk question is too short for vector match.</dd></div>
-          <div class="plain-term"><dt>Glass box</dt><dd>Click a value, see the page highlight. Warm color means low confidence. Approve still needs a licensed person.</dd></div>
-          <div class="plain-term"><dt>Zero-hallucination gate</dt><dd>Target: zero uncited money, limits, or totals on a bind-ready memo. Anything invented is stripped and the file is referred. We do not rubber-stamp a pretty number.</dd></div>
-        </dl>
       </section>
 
       <section id="contact">
@@ -404,7 +235,7 @@
           <a href="/integrations">Integrations</a>
           <a href="/company">Company</a>
           <a href="/dashboard">Dashboard</a>
-          <a href="#plain">In plain English</a>
+          <button type="button" class="footer-glossary-btn" id="open-glossary-footer">Underwriting Glossary</button>
         </nav>
         <div>
           <div style="margin-bottom:.25rem">Names and private details come off before any AI sees a page.</div>
@@ -437,16 +268,16 @@
           <div class="field">
             <label for="d-vertical">What do you underwrite?</label>
             <select id="d-vertical" name="vertical">
-              <option value="Life insurance">Life insurance</option>
-              <option value="Health insurance">Health insurance</option>
-              <option value="General / non-life">General / non-life (motor, home, travel)</option>
-              <option value="Commercial lines">Commercial lines</option>
+              <option value="Commercial insurance">Commercial insurance</option>
+              <option value="General liability">General liability</option>
+              <option value="Commercial property">Commercial property</option>
+              <option value="Commercial auto">Commercial auto</option>
               <option value="Workers' compensation">Workers' compensation</option>
               <option value="Professional liability / E&O">Professional liability / E&O</option>
               <option value="Cyber">Cyber</option>
-              <option value="Specialty / E&amp;S">Specialty / E&amp;S</option>
-              <option value="Engineering / aviation">Engineering / aviation</option>
-              <option value="Catastrophe">Catastrophe / flood / earthquake</option>
+              <option value="Excess &amp; surplus / specialty">Excess &amp; surplus / specialty</option>
+              <option value="Inland &amp; ocean marine">Inland &amp; ocean marine</option>
+              <option value="Personal lines">Personal lines</option>
               <option value="Mortgage lending">Mortgage lending</option>
               <option value="Commercial lending">Commercial lending</option>
               <option value="Not sure yet">Not sure yet</option>
@@ -472,6 +303,32 @@
         <h3>Request received</h3>
         <p>Thanks &mdash; our team will reach out within one business day to schedule your walkthrough.</p>
         <a class="btn btn-ghost" href="/dashboard">Explore the dashboard now</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="glossary-modal" role="dialog" aria-modal="true" aria-labelledby="glossary-modal-title">
+    <span id="plain" aria-hidden="true" style="display:none"></span>
+    <div class="modal glossary-modal-card">
+      <button class="modal-close" id="close-glossary" aria-label="Close glossary"><svg class="ico sm"><use href="#i-x"/></svg></button>
+      <div class="glossary-modal-header">
+        <h3 id="glossary-modal-title">The Underwriting &amp; Risk Glossary</h3>
+        <p class="m-sub">50+ clear definitions across insurance underwriting, mortgage, lending, and AI governance.</p>
+        <div class="glossary-modal-search">
+          <svg class="ico"><use href="#i-search"/></svg>
+          <input type="text" id="glossary-modal-input" placeholder="Type to filter definitions in real-time..." aria-label="Filter glossary" />
+        </div>
+        <div class="glossary-filters" role="tablist" aria-label="Glossary categories">
+          <button type="button" class="glossary-filter-chip active" data-cat="all">All (50+)</button>
+          <button type="button" class="glossary-filter-chip" data-cat="underwriting">Underwriting &amp; Risk</button>
+          <button type="button" class="glossary-filter-chip" data-cat="ai">AI &amp; Architecture</button>
+          <button type="button" class="glossary-filter-chip" data-cat="data">Data &amp; Oracles</button>
+          <button type="button" class="glossary-filter-chip" data-cat="compliance">Compliance &amp; Governance</button>
+          <button type="button" class="glossary-filter-chip" data-cat="lines">Lines &amp; Desks</button>
+        </div>
+      </div>
+      <div class="glossary-modal-body" id="glossary-modal-list">
+        <!-- Rendered dynamically by landing.js -->
       </div>
     </div>
   </div>

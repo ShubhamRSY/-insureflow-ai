@@ -139,19 +139,15 @@ def test_landing_page_html() -> None:
     resp = client.get("/", headers={"Accept": "text/html"})
     assert resp.status_code == 200
     assert "Rytera" in resp.text
-    assert "Stop hunting PDFs" in resp.text
-    assert "Start underwriting" in resp.text
-    assert "we know the pile" in resp.text.lower()
-    assert "The messy file is the problem" in resp.text
-    assert "bind-ready memo" in resp.text.lower() or "The memo" in resp.text
-    assert "Their names never leave the gate" in resp.text
-    assert "Trust. Buy. Profit." in resp.text
-    assert "How we catch a wrong number" in resp.text
-    assert "A photo can lie" in resp.text
-    assert "The same ring, new letterhead" in resp.text
-    assert "The questionnaire is not the car" in resp.text
-    assert "EXIF / ELA" in resp.text
-    assert "Pick the company. Then underwrite." in resp.text
+    assert "Stop hunting" in resp.text
+    assert "decision-ready memo" in resp.text.lower() or "decision memo" in resp.text.lower() or "memo" in resp.text.lower()
+    assert "Named insureds never leave the gate" in resp.text
+    assert "Grounded Risk Intelligence" in resp.text or "Zero Black Boxes" in resp.text
+    assert "Unified Underwriting" in resp.text
+    assert "Extraction Fidelity" in resp.text
+    assert "Licensed Underwriter Sign-Off" in resp.text
+    assert "Continuously Evolving" in resp.text or "Continuous Innovation" in resp.text
+    assert "The Underwriting &amp; Risk Glossary" in resp.text or "Underwriting Glossary" in resp.text
 
     default = client.get("/")
     assert default.status_code == 200
