@@ -9,13 +9,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from pptx.util import Inches
-
 from csuite_deck_shared import (
+    AMBER,
     ASSETS,
     BASELINE_LABOR_MO,
     BASELINE_MIN,
     BOOK_MO,
+    BRAND,
     CARD,
     COMPANY_FY,
     CONTENT_W,
@@ -28,14 +28,12 @@ from csuite_deck_shared import (
     GREEN,
     LOADED_UW_HR,
     MARGIN_L,
+    MUTED,
     QUARTERLY,
     QUARTERLY_EXPLAIN,
     RED,
-    AMBER,
-    BRAND,
-    VIOLET,
-    MUTED,
     SOFT,
+    VIOLET,
     WHITE,
     add_table,
     bar,
@@ -48,6 +46,7 @@ from csuite_deck_shared import (
     slide_header,
     textbox,
 )
+from pptx.util import Inches
 
 PPT_PATH = ASSETS / "Rytera_CSuite_Investor_Deck.pptx"
 
