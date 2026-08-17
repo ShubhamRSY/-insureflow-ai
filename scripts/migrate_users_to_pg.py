@@ -8,6 +8,7 @@ Usage:
 Reads users from the legacy Redis/file store and inserts them into PostgreSQL.
 Organizations are auto-created from unique org_id values.
 """
+
 from __future__ import annotations
 
 import json
