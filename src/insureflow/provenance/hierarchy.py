@@ -5,7 +5,16 @@ from typing import Any
 from uuid import uuid4
 
 from insureflow.config import settings
-from insureflow.models.provenance import DataSource, ProvenanceHierarchy, ProvenanceNode, ProvenanceRecord, SourceType, TrustLevel, VerificationStatus
+from insureflow.models.provenance import (
+    DataSource,
+    ProvenanceHierarchy,
+    ProvenanceNode,
+    ProvenanceRecord,
+    SourceType,
+    TrustLevel,
+    VerbatimCitation,
+    VerificationStatus,
+)
 from insureflow.models.submissions import StructuredSubmission, SubmissionBundle, UnstructuredSubmission
 
 
@@ -123,6 +132,7 @@ class ProvenanceEngine:
         )
 
         fields: dict[str, Any] = {}
+        citation_map: dict[str, VerbatimCitation] = {}
 
         for field_name, extracted_list in unstructured.extracted_fields.items():
             if field_name == "ocr_engine":
@@ -138,6 +148,18 @@ class ProvenanceEngine:
                         "context": ef.context,
                     }
                 )
+                if key not in citation_map:
+                    citation_map[key] = VerbatimCitation(
+                        document_id=unstructured.submission_id,
+                        document_type=unstructured.document_type,
+                        page_number=ef.page_number,
+                        bbox=ef.bbox,
+                        start_char=None,
+                        end_char=None,
+                        source_text=ef.context,
+                        confidence=ef.confidence,
+                        extraction_method=unstructured.document_type,
+                    )
 
         if not is_supplemental:
             per_field_confidence: dict[str, float] = {}
@@ -147,9 +169,19 @@ class ProvenanceEngine:
                 for ef in extracted_list:
                     mapped_key = self._map_extracted_to_structured(field_name)
                     fields[mapped_key] = ef.value
-                    # Prefer the extracted field's own computed confidence over
-                    # the document-level base confidence.
                     per_field_confidence[mapped_key] = ef.confidence
+                    if mapped_key not in citation_map:
+                        citation_map[mapped_key] = VerbatimCitation(
+                            document_id=unstructured.submission_id,
+                            document_type=unstructured.document_type,
+                            page_number=ef.page_number,
+                            bbox=ef.bbox,
+                            start_char=None,
+                            end_char=None,
+                            source_text=ef.context,
+                            confidence=ef.confidence,
+                            extraction_method=unstructured.document_type,
+                        )
 
         self._add_nodes(
             record,
@@ -157,6 +189,7 @@ class ProvenanceEngine:
             source,
             confidence=base_confidence,
             per_field_confidence=per_field_confidence if not is_supplemental else None,
+            citation_map=citation_map,
         )
 
     def _map_extracted_to_structured(self, field_name: str) -> str:
@@ -183,14 +216,17 @@ class ProvenanceEngine:
         source: DataSource,
         confidence: float = 0.0,
         per_field_confidence: dict[str, float] | None = None,
+        citation_map: dict[str, VerbatimCitation] | None = None,
     ) -> None:
         per_field_confidence = per_field_confidence or {}
+        citation_map = citation_map or {}
         for field_path, value in fields.items():
             node = ProvenanceNode(
                 node_id=f"node-{uuid4().hex[:8]}",
                 field_path=field_path,
                 value=value,
                 source=source,
+                citation=citation_map.get(field_path),
                 confidence=per_field_confidence.get(field_path, confidence),
                 extracted_at=datetime.now(timezone.utc),
             )

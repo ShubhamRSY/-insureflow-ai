@@ -38,11 +38,26 @@ class DataSource(BaseModel):
     hierarchy_rank: int = 0
 
 
+class VerbatimCitation(BaseModel):
+    """Links an extracted value to the exact source location in the original document."""
+
+    document_id: str = ""
+    document_type: str = ""
+    page_number: Optional[int] = None
+    bbox: Optional[list[float]] = None
+    start_char: Optional[int] = None
+    end_char: Optional[int] = None
+    source_text: str = ""
+    confidence: float = 0.0
+    extraction_method: str = ""  # ocr | vlm | structured_parser | llm
+
+
 class ProvenanceNode(BaseModel):
     node_id: str
     field_path: str
     value: Any
     source: DataSource
+    citation: Optional[VerbatimCitation] = None
     extracted_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
     confidence: float = 0.0
     verification_status: VerificationStatus = VerificationStatus.UNVERIFIED
