@@ -1,6 +1,7 @@
 import { useNavigate, useOutletContext } from 'react-router-dom';
+import { useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { Zap, ArrowRight, TrendingUp, TrendingDown, AlertTriangle, FlaskConical } from 'lucide-react';
+import { Zap, ArrowRight, TrendingUp, TrendingDown, AlertTriangle, FlaskConical, Lock, Mail, Eye, Shield, FileText, CheckCircle } from 'lucide-react';
 import { StatCard, DemoCard, Badge, EmptyState } from '../components/ui';
 import JourneyMiniStrip from '../components/JourneyMiniStrip';
 import {
@@ -11,9 +12,13 @@ import {
   UnderwriterPlaybook,
 } from '../components/MarketingShowcase';
 
-export default function Overview({ overview, health, presets, onRunDemo, onOpenJob, onLogin, marketCycle, queueStats, insuranceJobs }) {
+export default function Overview({ overview, health, presets, onRunDemo, onOpenJob, onLogin, marketCycle, queueStats, insuranceJobs, isLimited, remaining, trackView }) {
   const { user } = useOutletContext() || {};
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (trackView) trackView();
+  }, [trackView]);
 
   const chartData = overview ? [
     { name: 'Insurance', completed: overview.insurance?.completed || 0, processing: overview.insurance?.processing || 0, failed: overview.insurance?.failed || 0 },
@@ -93,6 +98,49 @@ export default function Overview({ overview, health, presets, onRunDemo, onOpenJ
           </div>
         )}
 
+        {!user && (
+          <div className="rounded-2xl border border-amber-500/20 bg-gradient-to-br from-amber-500/5 via-surface-overlay/50 to-surface-overlay/50 p-8 ring-1 ring-white/[0.06]">
+            <div className="flex items-start gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 ring-1 ring-amber-500/20">
+                <Eye className="h-6 w-6 text-amber-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-display text-lg font-semibold text-white">Preview Mode</h3>
+                <p className="mt-1 text-sm text-slate-400">
+                  You're viewing the platform overview. Sign in to run live demos, view job results, and access all 40+ pages.
+                </p>
+                <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                  <div className="flex items-center gap-2 rounded-lg bg-surface/60 px-3 py-2 ring-1 ring-white/[0.06]">
+                    <Shield className="h-4 w-4 text-insurance" />
+                    <span className="text-xs text-slate-300">View platform features</span>
+                  </div>
+                  <div className="flex items-center gap-2 rounded-lg bg-surface/60 px-3 py-2 ring-1 ring-white/[0.06]">
+                    <FileText className="h-4 w-4 text-brand-light" />
+                    <span className="text-xs text-slate-300">Explore solutions</span>
+                  </div>
+                  <div className="flex items-center gap-2 rounded-lg bg-surface/60 px-3 py-2 ring-1 ring-white/[0.06]">
+                    <CheckCircle className="h-4 w-4 text-emerald-400" />
+                    <span className="text-xs text-slate-300">See what's included</span>
+                  </div>
+                </div>
+                <div className="mt-5 flex flex-wrap items-center gap-3">
+                  <button type="button" onClick={onLogin} className="btn-primary px-5 py-2.5 text-sm">
+                    Sign in for full access
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                  <a
+                    href="mailto:shubham@ryterainc.com?subject=Rytera%20%E2%80%94%20Full%20Access%20Request"
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-amber-500/15 px-4 py-2.5 text-sm font-medium text-amber-200 ring-1 ring-amber-500/25 transition hover:bg-amber-500/25"
+                  >
+                    <Mail className="h-4 w-4" />
+                    Contact us
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {user && (
           <button
             type="button"
@@ -118,9 +166,14 @@ export default function Overview({ overview, health, presets, onRunDemo, onOpenJ
             <StatCard label="System" value={health?.overall || '—'} sub={`LLM: ${health?.llm_mode || 'unknown'}`} accent="success" />
           </div>
         ) : !user ? (
-          <div className="rounded-2xl bg-surface-overlay/50 p-8 text-center ring-1 ring-white/[0.06]">
-            <p className="text-slate-300">Sign in to view job metrics and run live demos</p>
-            <button type="button" onClick={onLogin} className="btn-primary mt-4">Sign In</button>
+          <div className="rounded-2xl bg-surface-overlay/50 p-6 ring-1 ring-white/[0.06]">
+            <div className="flex items-center gap-3">
+              <Lock className="h-5 w-5 text-amber-400" />
+              <div>
+                <p className="font-semibold text-slate-200">Sign in to access the full dashboard</p>
+                <p className="text-sm text-slate-400">Run live demos, view job metrics, and explore all 40+ pages</p>
+              </div>
+            </div>
           </div>
         ) : null}
 
@@ -144,48 +197,90 @@ export default function Overview({ overview, health, presets, onRunDemo, onOpenJ
           <div>
             <div className="mb-4 flex items-center gap-2">
               <Zap className="h-4 w-4 text-brand-light" />
-              <h3 className="font-display font-semibold">Quick Demos</h3>
+              <h3 className="font-display font-semibold">{user ? 'Quick Demos' : 'What You Can Do'}</h3>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {demos.map((d) => (
-                <DemoCard
-                  key={d.id}
-                  name={d.name}
-                  description={d.description}
-                  tag={d.vertical}
-                  tagColor={d.vertical === 'insurance' ? 'insurance' : d.vertical === 'lending' ? 'lending' : 'mortgage'}
-                  onClick={() => onRunDemo(d.vertical, d.id)}
-                />
-              ))}
-            </div>
+            {user ? (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {demos.map((d) => (
+                  <DemoCard
+                    key={d.id}
+                    name={d.name}
+                    description={d.description}
+                    tag={d.vertical}
+                    tagColor={d.vertical === 'insurance' ? 'insurance' : d.vertical === 'lending' ? 'lending' : 'mortgage'}
+                    onClick={() => onRunDemo(d.vertical, d.id)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {[
+                  { icon: Shield, label: 'Run insurance submissions', desc: 'ACORD, loss runs, SOVs, financials — full pipeline' },
+                  { icon: FileText, label: 'Generate UW memos', desc: 'AI-written decisions with source citations' },
+                  { icon: CheckCircle, label: 'Verify & validate', desc: 'Cross-document reconciliation, conflict detection' },
+                ].map((item) => (
+                  <div key={item.label} className="flex items-center gap-3 rounded-xl bg-surface/60 px-4 py-3 ring-1 ring-white/[0.06]">
+                    <item.icon className="h-5 w-5 shrink-0 text-brand-light" />
+                    <div>
+                      <p className="text-sm font-medium text-slate-200">{item.label}</p>
+                      <p className="text-xs text-slate-500">{item.desc}</p>
+                    </div>
+                    <Lock className="ml-auto h-3.5 w-3.5 shrink-0 text-slate-600" />
+                  </div>
+                ))}
+                <p className="text-xs text-slate-500">
+                  <Lock className="mr-1 inline h-3 w-3" />
+                  Sign in or contact us to unlock these features
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="glass-card">
             <div className="border-b border-white/[0.06] px-5 py-4">
-              <h3 className="font-display font-semibold">Recent Activity</h3>
+              <h3 className="font-display font-semibold">{user ? 'Recent Activity' : 'Platform Overview'}</h3>
             </div>
             <div className="divide-y divide-white/[0.04]">
-              {(overview?.recent_jobs || []).slice(0, 8).map((j) => {
-                const fullJob = insuranceJobs?.find(({ id }) => id === j.job_id)?.job;
-                return (
-                  <button
-                    key={j.job_id}
-                    type="button"
-                    onClick={() => onOpenJob(j.vertical, j.job_id)}
-                    className="flex w-full items-center gap-3 px-5 py-3 text-left transition hover:bg-white/[0.02]"
-                  >
-                    <Badge status={j.status} pulse={j.status === 'processing'} />
-                    <span className="flex-1 truncate font-mono text-xs text-slate-400">{j.job_id}</span>
-                    {j.vertical === 'insurance' && fullJob && (
-                      <JourneyMiniStrip job={fullJob} compact />
-                    )}
-                    <span className="text-xs capitalize text-slate-500">{j.vertical}</span>
-                    <ArrowRight className="h-3.5 w-3.5 text-slate-600" />
-                  </button>
-                );
-              })}
-              {(!overview?.recent_jobs?.length) && (
-                <EmptyState title="No jobs yet" description="Run a demo to see activity here" />
+              {user ? (
+                <>
+                  {(overview?.recent_jobs || []).slice(0, 8).map((j) => {
+                    const fullJob = insuranceJobs?.find(({ id }) => id === j.job_id)?.job;
+                    return (
+                      <button
+                        key={j.job_id}
+                        type="button"
+                        onClick={() => onOpenJob(j.vertical, j.job_id)}
+                        className="flex w-full items-center gap-3 px-5 py-3 text-left transition hover:bg-white/[0.02]"
+                      >
+                        <Badge status={j.status} pulse={j.status === 'processing'} />
+                        <span className="flex-1 truncate font-mono text-xs text-slate-400">{j.job_id}</span>
+                        {j.vertical === 'insurance' && fullJob && (
+                          <JourneyMiniStrip job={fullJob} compact />
+                        )}
+                        <span className="text-xs capitalize text-slate-500">{j.vertical}</span>
+                        <ArrowRight className="h-3.5 w-3.5 text-slate-600" />
+                      </button>
+                    );
+                  })}
+                  {(!overview?.recent_jobs?.length) && (
+                    <EmptyState title="No jobs yet" description="Run a demo to see activity here" />
+                  )}
+                </>
+              ) : (
+                <div className="p-5 space-y-3">
+                  {[
+                    '14-stage pipeline: ingest → extract → verify → decide',
+                    'Multi-format: PDF, Excel, XML, scanned docs, emails',
+                    'Verbatim source attribution on every field',
+                    'Human-in-the-loop checkpoints at every risk level',
+                    'WORM audit trail with SHA-256 hash chains',
+                  ].map((line) => (
+                    <div key={line} className="flex items-start gap-2 text-sm text-slate-400">
+                      <CheckCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500/70" />
+                      {line}
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           </div>

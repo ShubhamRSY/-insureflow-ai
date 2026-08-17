@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useNavigate, useParams } from '
 import Layout from './components/Layout';
 import LoginModal from './components/LoginModal';
 import JobDrawer from './components/JobDrawer';
+import FreemiumBanner from './components/FreemiumBanner';
 import Overview from './pages/Overview';
 import SsoCallback from './pages/SsoCallback';
 import SystemPage from './pages/System';
@@ -44,6 +45,7 @@ import RatemakingPage from './pages/Ratemaking';
 import BusinessKPIsPage from './pages/BusinessKPIs';
 import PriorDecisionsPage from './pages/PriorDecisions';
 import { auth, endpoints, AuthError } from './lib/api';
+import { useFreemium } from './lib/useFreemium';
 
 function Protected({ children, onLogin }) {
   if (!auth.isLoggedIn) {
@@ -72,6 +74,7 @@ function AppRoutes() {
   const [authorityData, setAuthorityData] = useState(null);
   const [lendingDemoResult, setLendingDemoResult] = useState(null);
   const [drawer, setDrawer] = useState({ vertical: null, jobId: null, job: null });
+  const { remaining, isLimited, trackView, DAILY_LIMIT } = useFreemium(auth.isLoggedIn);
 
   const loadHealth = useCallback(async () => {
     try { setHealth(await endpoints.diagnostics()); } catch { /* ignore */ }
@@ -216,6 +219,7 @@ function AppRoutes() {
 
   const runDemo = async (vertical, presetId) => {
     if (!auth.isLoggedIn) { setLoginOpen(true); return; }
+    if (isLimited) { setLoginOpen(true); return; }
     if (vertical === 'lending') {
       const res = await endpoints.runLendingDemo(presetId);
       setLendingDemoResult(res);
@@ -257,11 +261,12 @@ function AppRoutes() {
 
   return (
     <>
+      <FreemiumBanner remaining={remaining} DAILY_LIMIT={DAILY_LIMIT} onLogin={() => setLoginOpen(true)} isLoggedIn={auth.isLoggedIn} />
       <Routes>
         <Route path="broker/status/:token" element={<BrokerStatusPage />} />
         <Route path="sso/callback" element={<SsoCallback />} />
-        <Route element={<Layout health={health} pendingCount={pending.length} onRefresh={refreshAll} onLogin={() => setLoginOpen(true)} user={user} setUser={setUser} />}>
-          <Route index element={<Overview overview={overview} health={health} presets={presets} onRunDemo={runDemo} onOpenJob={openJob} onLogin={() => setLoginOpen(true)} marketCycle={marketCycle} queueStats={queueStats} insuranceJobs={insuranceJobs} />} />
+        <Route element={<Layout health={health} pendingCount={pending.length} onRefresh={refreshAll} onLogin={() => setLoginOpen(true)} user={user} setUser={setUser} isLimited={isLimited} />}>
+          <Route index element={<Overview overview={overview} health={health} presets={presets} onRunDemo={runDemo} onOpenJob={openJob} onLogin={() => setLoginOpen(true)} marketCycle={marketCycle} queueStats={queueStats} insuranceJobs={insuranceJobs} isLimited={isLimited} remaining={remaining} trackView={trackView} />} />
           <Route path="system" element={<SystemPage health={health} />} />
           <Route path="reference/commercial" element={<Protected onLogin={() => setLoginOpen(true)}><CommercialReference /></Protected>} />
           <Route path="reference" element={<Navigate to="/reference/commercial" replace />} />

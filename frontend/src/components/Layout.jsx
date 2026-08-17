@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Shield, Home, Activity, ClipboardCheck, Settings, LogOut, RefreshCw, Menu, X,
   FileText, Users, BarChart3, BookOpen, Wallet, Layers, Link2, LineChart, Search, Database, FlaskConical,
   FileCheck, MessagesSquare, Radar, Briefcase, Building2, Calculator, ChevronDown, ChevronRight, Plus,
-  ShieldCheck, Library, History,
+  ShieldCheck, Library, History, Lock,
 } from 'lucide-react';
 import { useState } from 'react';
 import { auth } from '../lib/api';
@@ -129,7 +129,7 @@ function crumbsFor(pathname) {
   return [];
 }
 
-export default function Layout({ health, pendingCount, onRefresh, onLogin, user, setUser }) {
+export default function Layout({ health, pendingCount, onRefresh, onLogin, user, setUser, isLimited }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [openGroups, setOpenGroups] = useState(() => {
@@ -249,17 +249,21 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
     }
 
     const Icon = item.icon;
+    const isProtected = item.to !== '/' && item.to !== '/system' && !user;
     return (
       <NavLink
         key={item.to}
         to={item.to}
         end={item.to === '/'}
         onClick={() => setMobileOpen(false)}
-        className={({ isActive }) => `nav-link ${isActive ? 'nav-link-active' : ''}`}
+        className={({ isActive }) => `nav-link ${isActive ? 'nav-link-active' : ''} ${isProtected && sidebarCollapsed ? 'opacity-60' : ''}`}
         title={sidebarCollapsed ? item.label : undefined}
       >
         <Icon className={`h-[18px] w-[18px] ${sidebarCollapsed ? 'mx-auto' : ''} ${item.color || ''}`} />
         {!sidebarCollapsed && <span className="flex-1">{item.label}</span>}
+        {!sidebarCollapsed && isProtected && (
+          <Lock className="h-3 w-3 shrink-0 text-slate-600" />
+        )}
         {!sidebarCollapsed && item.badge && pendingCount > 0 && (
           <span className="rounded-full bg-red-500/20 px-2 py-0.5 text-[10px] font-bold text-red-400">
             {pendingCount}
