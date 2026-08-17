@@ -91,6 +91,7 @@ class Settings:
     # Auth
     secret_key: str = os.getenv("SECRET_KEY", "CHANGE_ME_TO_A_LONG_SECRET_KEY_IN_PRODUCTION")
     access_token_expire_minutes: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
+    database_url: str = os.getenv("DATABASE_URL", "")
 
     # Job store (memory | redis | auto)
     job_store_backend: str = os.getenv("JOB_STORE_BACKEND", "auto")

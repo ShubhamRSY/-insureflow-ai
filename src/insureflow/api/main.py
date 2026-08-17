@@ -21,7 +21,9 @@ from slowapi.util import get_remote_address
 from insureflow.auth import Role
 from insureflow.auth.dependencies import clear_user_store, get_current_user, get_current_user_optional, get_user_store, require_role, require_staff_desk
 from insureflow.auth.jwt import create_access_token, hash_password, verify_password
-from insureflow.auth.models import LoginRequest, Token, TokenData, User, UserCreateRequest
+from insureflow.auth.models import LoginRequest, PasswordResetConfirm, PasswordResetRequest, Token, TokenData, User, UserCreateRequest
+from insureflow.auth.store import PostgresUserStore
+from insureflow.auth.validation import validate_registration
 from insureflow.insurance.pipeline import InsurancePipeline
 from insureflow.models.mortgage import ProductLine
 from insureflow.pipeline import UnderwritingPipeline
@@ -367,17 +369,35 @@ def setup_first_admin(admin: UserCreateRequest) -> dict[str, str]:
             detail="Admin already exists. Use /auth/login.",
         )
     username = admin.username.strip()
-    if not username or not admin.password:
-        raise HTTPException(status_code=400, detail="Username and password are required")
+    email = admin.email.strip() or (username if "@" in username else "")
+    company_name = admin.company_name.strip()
+
+    validation = validate_registration(
+        username=username,
+        email=email,
+        password=admin.password,
+        company_name=company_name or "Default Organization",
+    )
+    if not validation.valid:
+        raise HTTPException(status_code=400, detail="; ".join(validation.errors))
+
+    org_id = "default"
+    if isinstance(store, PostgresUserStore) and company_name:
+        org_id = store.get_or_create_org(company_name)
+
     store[username] = User(
         username=username,
-        email=username if "@" in username else "",
+        email=email,
         hashed_password=hash_password(admin.password),
         role=Role.ADMIN,
         full_name=(admin.full_name or username).strip(),
-        org_id=(admin.org_id or "default").strip(),
+        org_id=org_id,
+        company_name=company_name,
+        department=admin.department.strip(),
+        team=admin.team.strip(),
+        office_location=admin.office_location.strip(),
     )
-    return {"message": f"Admin '{username}' created for org '{admin.org_id}'"}
+    return {"message": f"Admin '{username}' created for org '{company_name or org_id}'"}
 
 
 @app.post("/auth/login")
@@ -408,31 +428,50 @@ def create_user(
     store = get_user_store()
     if new_user.username in store:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="User already exists")
-    # Admins can only create users in their own org
-    org_id = current.org_id
+
+    username = new_user.username.strip()
+    email = new_user.email.strip() or (username if "@" in username else "")
+    company_name = new_user.company_name.strip()
+
     if new_user.role in (Role.ADMIN, Role.CUO) and new_user.role != current.role and current.role != Role.CUO:
         raise HTTPException(status_code=403, detail="Cannot create users with a higher role than your own")
-    # Cap role: non-CUO admins cannot create CUO
     role = new_user.role
     if current.role != Role.CUO and role == Role.CUO:
         raise HTTPException(status_code=403, detail="Only CUO can create CUO users")
-    store[new_user.username] = User(
-        username=new_user.username,
-        email=new_user.username if "@" in new_user.username else "",
+
+    org_id = current.org_id
+    if isinstance(store, PostgresUserStore) and company_name:
+        org_id = store.get_or_create_org(company_name)
+
+    store[username] = User(
+        username=username,
+        email=email,
         hashed_password=hash_password(new_user.password),
         role=role,
-        full_name=new_user.full_name or new_user.username,
+        full_name=new_user.full_name.strip() or username,
         org_id=org_id,
+        company_name=company_name,
+        department=new_user.department.strip(),
+        team=new_user.team.strip(),
+        office_location=new_user.office_location.strip(),
     )
-    return {"message": f"User '{new_user.username}' created with role '{role.value}' in org '{org_id}'"}
+    return {"message": f"User '{username}' created with role '{role.value}' in org '{company_name or org_id}'"}
 
 
 @app.get("/auth/me")
 def get_me(current_user: TokenData = Depends(get_current_user)) -> dict[str, str | None]:
+    store = get_user_store()
+    user = store.get(current_user.username) if current_user.username else None
     return {
         "username": current_user.username,
         "role": current_user.role.value if current_user.role else "none",
         "org_id": current_user.org_id,
+        "email": user.email if user else None,
+        "full_name": user.full_name if user else None,
+        "company_name": user.company_name if user else None,
+        "department": user.department if user else None,
+        "team": user.team if user else None,
+        "office_location": user.office_location if user else None,
     }
 
 
@@ -446,28 +485,109 @@ def register_user(req: UserCreateRequest, request: Request) -> dict[str, str]:
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Open registration is disabled in BANK_MODE/production. An admin must create users via /auth/users or SSO.",
         )
-    store = get_user_store()
     username = req.username.strip()
-    if not username or not req.password:
-        raise HTTPException(status_code=400, detail="Username and password are required")
-    if len(req.password) < posture.min_password_length:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Password must be at least {posture.min_password_length} characters",
-        )
-    role = Role.VIEWER  # self-registration is always VIEWER; admin promotes later
+    email = req.email.strip() or (username if "@" in username else "")
+    company_name = req.company_name.strip()
+
+    validation = validate_registration(
+        username=username,
+        email=email,
+        password=req.password,
+        company_name=company_name,
+        min_password_length=posture.min_password_length,
+    )
+    if not validation.valid:
+        raise HTTPException(status_code=400, detail="; ".join(validation.errors))
+
+    store = get_user_store()
     if username in store:
         raise HTTPException(status_code=409, detail="Username already exists")
-    # Never trust client-supplied org_id — pin to default until an admin assigns.
+
+    role = Role.VIEWER
+    org_id = "default"
+    if isinstance(store, PostgresUserStore) and company_name:
+        org_id = store.get_or_create_org(company_name)
+
     store[username] = User(
         username=username,
-        email=username if "@" in username else "",
+        email=email,
         hashed_password=hash_password(req.password),
         role=role,
-        full_name=req.full_name or username,
-        org_id="default",
+        full_name=req.full_name.strip() or username,
+        org_id=org_id,
+        company_name=company_name,
+        department=req.department.strip(),
+        team=req.team.strip(),
+        office_location=req.office_location.strip(),
     )
-    return {"message": f"User '{username}' created with role '{role.value}'"}
+    return {"message": f"User '{username}' created with role '{role.value}' in org '{company_name or org_id}'"}
+
+
+@app.post("/auth/forgot-password", status_code=200)
+@limiter.limit("5/hour")
+def forgot_password(req: PasswordResetRequest, request: Request) -> dict[str, str]:
+    """Request a password reset token. In dev, returns the token directly."""
+    store = get_user_store()
+    user = store.resolve_user(req.username)
+    if not user:
+        return {"message": "If the account exists, a reset link has been sent."}
+    email_match = req.email.strip().lower()
+    if email_match and user.email.lower() != email_match:
+        return {"message": "If the account exists, a reset link has been sent."}
+    import datetime as _dt
+
+    reset_token = create_access_token(
+        data={"sub": user.username, "purpose": "password_reset"},
+        expires_delta=_dt.timedelta(minutes=15),
+    )
+    posture = _posture()
+    if posture.bank_mode:
+        logger.info("Password reset token for %s (bank_mode, not returning to client)", user.username)
+        return {"message": "If the account exists, a reset link has been sent."}
+    return {"message": "Reset token generated", "reset_token": reset_token}
+
+
+@app.post("/auth/reset-password", status_code=200)
+def reset_password(req: PasswordResetConfirm) -> dict[str, str]:
+    """Reset password using a valid reset token."""
+    try:
+        from jose import jwt as jose_jwt
+
+        from insureflow.auth.jwt import _secret_key
+
+        decoded = jose_jwt.decode(req.token, _secret_key(), algorithms=["HS256"])
+        if decoded.get("purpose") != "password_reset":
+            raise HTTPException(status_code=400, detail="Invalid reset token")
+        username = decoded.get("sub")
+        if not username:
+            raise HTTPException(status_code=400, detail="Invalid reset token")
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+
+    posture = _posture()
+    if len(req.new_password) < posture.min_password_length:
+        raise HTTPException(status_code=400, detail=f"Password must be at least {posture.min_password_length} characters")
+
+    store = get_user_store()
+    user = store.get(username)
+    if not user:
+        raise HTTPException(status_code=400, detail="User not found")
+    store[username] = User(
+        username=user.username,
+        email=user.email,
+        hashed_password=hash_password(req.new_password),
+        role=user.role,
+        disabled=user.disabled,
+        org_id=user.org_id,
+        company_name=user.company_name,
+        department=user.department,
+        team=user.team,
+        office_location=user.office_location,
+        full_name=user.full_name,
+    )
+    return {"message": "Password reset successful"}
 
 
 @app.get("/auth/sso/status")

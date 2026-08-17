@@ -8,6 +8,12 @@ from pydantic import BaseModel, Field
 from insureflow.auth import Role
 
 
+class Organization(BaseModel):
+    id: str = ""
+    name: str
+    created_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
+
+
 class User(BaseModel):
     username: str
     email: str = ""
@@ -15,6 +21,10 @@ class User(BaseModel):
     role: Role = Role.VIEWER
     disabled: bool = False
     org_id: str = "default"
+    company_name: str = ""
+    department: str = ""
+    team: str = ""
+    office_location: str = ""
     created_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
     full_name: str = ""
 
@@ -41,3 +51,18 @@ class UserCreateRequest(BaseModel):
     role: Role = Role.VIEWER
     full_name: str = ""
     org_id: str = "default"
+    email: str = ""
+    company_name: str = ""
+    department: str = ""
+    team: str = ""
+    office_location: str = ""
+
+
+class PasswordResetRequest(BaseModel):
+    username: str
+    email: str
+
+
+class PasswordResetConfirm(BaseModel):
+    token: str
+    new_password: str
