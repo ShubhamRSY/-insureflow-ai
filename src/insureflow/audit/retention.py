@@ -196,11 +196,7 @@ class RetentionEngine:
     def active_holds(self, org_id: str = "default") -> list[LegalHold]:
         """Return all active legal holds for an org."""
         now = datetime.now(timezone.utc)
-        return [
-            h
-            for h in self._holds.values()
-            if h.org_id == org_id and (h.expires_at is None or h.expires_at > now)
-        ]
+        return [h for h in self._holds.values() if h.org_id == org_id and (h.expires_at is None or h.expires_at > now)]
 
     def register_artifact(
         self,
@@ -225,11 +221,7 @@ class RetentionEngine:
         )
 
         if self.is_held(bundle_id, org_id):
-            holds = [
-                h.hold_id
-                for h in self._holds.values()
-                if h.bundle_id == bundle_id and h.org_id == org_id
-            ]
+            holds = [h.hold_id for h in self._holds.values() if h.bundle_id == bundle_id and h.org_id == org_id]
             record.legal_holds = holds
 
         key = f"{org_id}:{bundle_id}:{artifact_type.value}"

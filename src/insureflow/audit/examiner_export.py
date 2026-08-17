@@ -115,9 +115,7 @@ class ExaminerExportEngine:
                         verification_status="verified" if cit.reconciled else "unverified",
                         extraction_method=cit.extraction_method,
                         has_contradictions=bool(cit.contradicting_citations),
-                        contradicting_sources=[
-                            c.document_id for c in cit.contradicting_citations if c.document_id
-                        ],
+                        contradicting_sources=[c.document_id for c in cit.contradicting_citations if c.document_id],
                         reconciled_value=reconciled_values.get(field_path, ""),
                     )
                 )
@@ -162,11 +160,7 @@ class ExaminerExportEngine:
 
         guardian_flags: list[str] = []
         if findings:
-            guardian_flags = [
-                getattr(f, "description", "")
-                for f in findings
-                if getattr(f, "severity", "") in ("error", "critical")
-            ]
+            guardian_flags = [getattr(f, "description", "") for f in findings if getattr(f, "severity", "") in ("error", "critical")]
 
         return DecisionDefensePackage(
             decision=decision,

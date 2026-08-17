@@ -136,9 +136,7 @@ class StatementProvenanceChain:
                         verification_status="verified" if cit.reconciled else "unverified",
                         extraction_method=cit.extraction_method,
                         has_contradictions=bool(cit.contradicting_citations),
-                        contradicting_sources=[
-                            c.document_id for c in cit.contradicting_citations if c.document_id
-                        ],
+                        contradicting_sources=[c.document_id for c in cit.contradicting_citations if c.document_id],
                     )
                 )
         return output
@@ -166,9 +164,7 @@ class StatementProvenanceChain:
         for field_path, nodes in provenance.nodes.items():
             if field_path not in self._citations:
                 continue
-            contradicted = [
-                n for n in nodes if n.verification_status == VerificationStatus.CONTRADICTED
-            ]
+            contradicted = [n for n in nodes if n.verification_status == VerificationStatus.CONTRADICTED]
             if not contradicted:
                 continue
             for cit in self._citations[field_path]:

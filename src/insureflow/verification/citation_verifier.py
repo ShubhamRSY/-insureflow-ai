@@ -152,8 +152,6 @@ def verify_all_citations(
                 report.failed_count += 1
                 failed_fields.add(field_path)
 
-    report.pass_rate = (
-        report.verified_count / report.total_citations if report.total_citations > 0 else 0.0
-    )
+    report.pass_rate = report.verified_count / report.total_citations if report.total_citations > 0 else 0.0
     report.fields_with_failures = sorted(failed_fields)
     return report

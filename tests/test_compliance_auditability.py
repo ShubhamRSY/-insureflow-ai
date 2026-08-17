@@ -33,6 +33,7 @@ from insureflow.models.submissions import (
 
 # ── Helper builders ───────────────────────────────────────────────────────────
 
+
 def _make_citation(**overrides: Any) -> VerbatimCitation:
     return VerbatimCitation(
         document_id=overrides.get("document_id", "doc-1"),
@@ -48,13 +49,16 @@ def _make_citation(**overrides: Any) -> VerbatimCitation:
 
 
 def _make_node(**overrides: Any) -> ProvenanceNode:
-    source = overrides.pop("source", DataSource(
-        source_id="src-1",
-        source_type=SourceType.UNSTRUCTURED,
-        source_name="inspection_report",
-        received_at=datetime.now(tz=timezone.utc),
-        trust_level=TrustLevel.MEDIUM,
-    ))
+    source = overrides.pop(
+        "source",
+        DataSource(
+            source_id="src-1",
+            source_type=SourceType.UNSTRUCTURED,
+            source_name="inspection_report",
+            received_at=datetime.now(tz=timezone.utc),
+            trust_level=TrustLevel.MEDIUM,
+        ),
+    )
     citation = overrides.pop("citation", _make_citation())
     defaults = {
         "node_id": "node-1",
@@ -108,6 +112,7 @@ def _make_bundle() -> SubmissionBundle:
 
 # ── VerbatimCitation model tests ─────────────────────────────────────────────
 
+
 class TestVerbatimCitation:
     def test_default_values(self):
         cit = VerbatimCitation()
@@ -135,6 +140,7 @@ class TestVerbatimCitation:
 
 
 # ── ProvenanceEngine citation propagation ─────────────────────────────────────
+
 
 class TestProvenanceEngineCitationPropagation:
     def test_unstructured_fields_carry_citations(self):
@@ -177,6 +183,7 @@ class TestProvenanceEngineCitationPropagation:
 
 
 # ── Quote extraction ─────────────────────────────────────────────────────────
+
 
 class TestQuoteExtraction:
     def test_extract_source_quote_exact_match(self):
@@ -236,6 +243,7 @@ class TestQuoteExtraction:
 
 # ── Citation enrichment ──────────────────────────────────────────────────────
 
+
 class TestCitationEnrichment:
     def test_enrich_fills_missing_source_text(self):
         from insureflow.provenance.citation import enrich_citations
@@ -264,6 +272,7 @@ class TestCitationEnrichment:
 
 
 # ── Statement provenance chain ───────────────────────────────────────────────
+
 
 class TestStatementProvenanceChain:
     def test_build_chain(self):
@@ -339,9 +348,7 @@ class TestStatementProvenanceChain:
             citation=_make_citation(document_id="doc-2", source_text="Different value."),
         )
         node_contradicted.verification_status = VerificationStatus.CONTRADICTED
-        record = _make_record(
-            nodes={"risk_profile.construction_type": [node_verified, node_contradicted]}
-        )
+        record = _make_record(nodes={"risk_profile.construction_type": [node_verified, node_contradicted]})
         chain = StatementProvenanceChain()
         chain.build_chain(record)
 
@@ -350,6 +357,7 @@ class TestStatementProvenanceChain:
 
 
 # ── Citation verifier ────────────────────────────────────────────────────────
+
 
 class TestCitationVerifier:
     def test_verify_text_found_exact(self):
@@ -474,6 +482,7 @@ class TestCitationVerifier:
 
 # ── Retention engine ─────────────────────────────────────────────────────────
 
+
 class TestRetentionEngine:
     def test_default_policies_loaded(self):
         from insureflow.audit.retention import ArtifactType, RetentionEngine
@@ -588,6 +597,7 @@ class TestRetentionEngine:
 
 
 # ── Examiner export ──────────────────────────────────────────────────────────
+
 
 class TestExaminerExport:
     def test_field_citation_report(self):
