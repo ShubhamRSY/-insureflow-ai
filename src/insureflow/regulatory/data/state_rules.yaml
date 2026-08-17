@@ -1,0 +1,818 @@
+# State Insurance Regulatory Rules — InsureFlow
+# Comprehensive per-state regulatory data for compliance engine
+# Last updated: 2026-08
+
+states:
+  AL:
+    name: Alabama
+    rate_filing: prior_approval
+    rate_filing_notes: "Commissioner must approve rates before use for most personal lines"
+    surplus_lines: [diligent_search, tax_filing]
+    surplus_lines_notes: "2% retaliatory tax on non-admitted insurers from certain states"
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    commission_cap_pct: null
+    tort_model: modified_comparative_50
+    tort_notes: "Plaintiff cannot recover if 50% or more at fault"
+    windstorm_hurricane_deductible: false
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.04
+    surplus_lines_stamping_fee: 0.0
+    mandatory_coverages: []
+    regulatory_notes: "Alabama uses retrospective rating for workers comp"
+
+  AK:
+    name: Alaska
+    rate_filing: file_and_use
+    surplus_lines: [diligent_search]
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    tort_model: pure_comparative
+    windstorm_hurricane_deductible: false
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.04
+    surplus_lines_stamping_fee: 0.0
+    mandatory_coverages: []
+    regulatory_notes: "Alaska has no compulsory auto insurance but strong UM/UIM requirements"
+
+  AZ:
+    name: Arizona
+    rate_filing: use_and_file
+    surplus_lines: [diligent_search]
+    surplus_lines_notes: "No stamping office required"
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    tort_model: pure_comparative
+    windstorm_hurricane_deductible: false
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.042
+    surplus_lines_stamping_fee: 0.0
+    mandatory_coverages: []
+    regulatory_notes: "Arizona is a flex-rating state for commercial lines"
+
+  AR:
+    name: Arkansas
+    rate_filing: prior_approval
+    surplus_lines: [diligent_search, tax_filing]
+    binder_requires_written: false
+    claims_prompt_pay_days: 45
+    tort_model: modified_comparative_50
+    tort_notes: "50% bar on comparative negligence"
+    windstorm_hurricane_deductible: false
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.035
+    surplus_lines_stamping_fee: 0.0
+    mandatory_coverages: []
+    regulatory_notes: "Arkansas requires prior approval for personal auto and homeowners"
+
+  CA:
+    name: California
+    rate_filing: prior_approval
+    rate_filing_notes: "Prop 103 requires prior approval; public hearing for rate increases"
+    surplus_lines: [diligent_search, stamping_office, tax_filing]
+    surplus_lines_notes: "CDI oversees surplus lines; stamping required"
+    binder_requires_written: true
+    binder_notes: "Written binder required; oral binders not sufficient"
+    claims_prompt_pay_days: 30
+    commission_cap_pct: null
+    tort_model: pure_comparative
+    windstorm_hurricane_deductible: false
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.0325
+    surplus_lines_stamping_fee: 0.001
+    mandatory_coverages: ["earthquake disclosure"]
+    mandatory_coverages_notes: "Must offer earthquake coverage or provide written rejection"
+    regulatory_notes: "Proposition 103 mandates prior approval; CA has strictest rate regulation"
+
+  CO:
+    name: Colorado
+    rate_filing: file_and_use
+    surplus_lines: [diligent_search]
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    tort_model: pure_comparative
+    windstorm_hurricane_deductible: false
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.04
+    surplus_lines_stamping_fee: 0.0
+    mandatory_coverages: []
+    regulatory_notes: "Colorado uses competitive rating for most commercial lines"
+
+  CT:
+    name: Connecticut
+    rate_filing: prior_approval
+    surplus_lines: [diligent_search, stamping_office, tax_filing]
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    tort_model: pure_comparative
+    windstorm_hurricane_deductible: false
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.04
+    surplus_lines_stamping_fee: 0.0025
+    mandatory_coverages: []
+    regulatory_notes: "CT has strict rate regulation; prior approval for most lines"
+
+  DE:
+    name: Delaware
+    rate_filing: no_file
+    rate_filing_notes: "Competitive rating; no filing required for most commercial lines"
+    surplus_lines: [diligent_search]
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    tort_model: pure_comparative
+    windstorm_hurricane_deductible: false
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.05
+    surplus_lines_stamping_fee: 0.0
+    mandatory_coverages: []
+    regulatory_notes: "Delaware is a domicile state for many surplus lines carriers"
+
+  FL:
+    name: Florida
+    rate_filing: prior_approval
+    rate_filing_notes: "OIR must approve rates; emergency filing allowed for catastrophe"
+    surplus_lines: [diligent_search, stamping_office, tax_filing, export_fee]
+    surplus_lines_notes: "Florida requires stamping through SLTX; 5% emergency assessment possible"
+    binder_requires_written: true
+    binder_notes: "Written binder required per FL statute 627.420"
+    claims_prompt_pay_days: 20
+    claims_notes: "20-day prompt pay; bad faith exposure for late payment"
+    commission_cap_pct: null
+    tort_model: pure_comparative
+    windstorm_hurricane_deductible: true
+    windstorm_notes: "Mandatory hurricane deductible — 2%, 5%, or 10% of dwelling coverage"
+    hurricane_license_required: true
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.05
+    surplus_lines_stamping_fee: 0.005
+    mandatory_coverages: ["personal injury protection"]
+    mandatory_coverages_notes: "PIP (no-fault) mandatory for auto; $10K minimum"
+    regulatory_notes: "Florida has unique Citizens Property Insurance as insurer of last resort; My Safe Florida Home program"
+
+  GA:
+    name: Georgia
+    rate_filing: file_and_use
+    surplus_lines: [diligent_search, tax_filing]
+    binder_requires_written: false
+    claims_prompt_pay_days: 60
+    tort_model: modified_comparative_50
+    tort_notes: "50% bar; modified comparative negligence"
+    windstorm_hurricane_deductible: false
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.03
+    surplus_lines_stamping_fee: 0.0
+    mandatory_coverages: []
+    regulatory_notes: "Georgia uses file-and-use; competitive rating for commercial lines"
+
+  HI:
+    name: Hawaii
+    rate_filing: prior_approval
+    surplus_lines: [diligent_search, stamping_office]
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    tort_model: pure_comparative
+    windstorm_hurricane_deductible: false
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.04375
+    surplus_lines_stamping_fee: 0.0
+    mandatory_coverages: ["personal injury protection"]
+    mandatory_coverages_notes: "No-fault auto insurance required"
+    regulatory_notes: "Hawaii has state fund for workers comp"
+
+  ID:
+    name: Idaho
+    rate_filing: file_and_use
+    surplus_lines: [diligent_search]
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    tort_model: pure_comparative
+    windstorm_hurricane_deductible: false
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.04
+    surplus_lines_stamping_fee: 0.0
+    mandatory_coverages: []
+    regulatory_notes: "Idaho uses competitive rating; minimal rate regulation"
+
+  IL:
+    name: Illinois
+    rate_filing: use_and_file
+    surplus_lines: [diligent_search, stamping_office]
+    surplus_lines_notes: "Illinois Surplus Line Association (ISLA) handles stamping"
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    tort_model: modified_comparative_50
+    tort_notes: "50% bar; plaintiff cannot recover if more than 50% at fault"
+    windstorm_hurricane_deductible: false
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.04
+    surplus_lines_stamping_fee: 0.001
+    mandatory_coverages: []
+    regulatory_notes: "Illinois has competitive rating; strong surplus lines market"
+
+  IN:
+    name: Indiana
+    rate_filing: file_and_use
+    surplus_lines: [diligent_search]
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    tort_model: modified_comparative_51
+    tort_notes: "51% bar; plaintiff cannot recover if more than 51% at fault"
+    windstorm_hurricane_deductible: false
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.04
+    surplus_lines_stamping_fee: 0.0
+    mandatory_coverages: []
+    regulatory_notes: "Indiana uses file-and-use for personal lines"
+
+  IA:
+    name: Iowa
+    rate_filing: prior_approval
+    surplus_lines: [diligent_search]
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    tort_model: modified_comparative_51
+    tort_notes: "51% bar on comparative negligence"
+    windstorm_hurricane_deductible: false
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.04
+    surplus_lines_stamping_fee: 0.0
+    mandatory_coverages: []
+    regulatory_notes: "Iowa requires prior approval for personal lines"
+
+  KS:
+    name: Kansas
+    rate_filing: file_and_use
+    surplus_lines: [diligent_search]
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    tort_model: modified_comparative_50
+    tort_notes: "50% bar; plaintiff cannot recover if 50% or more at fault"
+    windstorm_hurricane_deductible: false
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.04
+    surplus_lines_stamping_fee: 0.0
+    mandatory_coverages: []
+    regulatory_notes: "Kansas has competitive rating for commercial lines"
+
+  KY:
+    name: Kentucky
+    rate_filing: prior_approval
+    surplus_lines: [diligent_search]
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    tort_model: modified_comparative_50
+    tort_notes: "50% bar; pure comparative for parties under 50%"
+    windstorm_hurricane_deductible: false
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.04
+    surplus_lines_stamping_fee: 0.0
+    mandatory_coverages: []
+    regulatory_notes: "Kentucky uses prior approval for personal lines"
+
+  LA:
+    name: Louisiana
+    rate_filing: prior_approval
+    surplus_lines: [diligent_search, stamping_office, tax_filing]
+    surplus_lines_notes: "Louisiana requires stamping; 3% surplus lines tax"
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    commission_cap_pct: null
+    tort_model: pure_comparative
+    windstorm_hurricane_deductible: true
+    windstorm_notes: "Hurricane deductible applies — 2%, 5%, or 10%"
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.04
+    surplus_lines_stamping_fee: 0.001
+    mandatory_coverages: ["personal injury protection"]
+    mandatory_coverages_notes: "PIP required for auto; $10K minimum"
+    regulatory_notes: "Louisiana has unique LA Citizens Property Insurance; coastal zone restrictions"
+
+  ME:
+    name: Maine
+    rate_filing: file_and_use
+    surplus_lines: [diligent_search]
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    tort_model: pure_comparative
+    windstorm_hurricane_deductible: false
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.04
+    surplus_lines_stamping_fee: 0.0
+    mandatory_coverages: []
+    regulatory_notes: "Maine uses file-and-use; competitive rating for commercial"
+
+  MD:
+    name: Maryland
+    rate_filing: prior_approval
+    surplus_lines: [diligent_search, stamping_office, tax_filing]
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    tort_model: pure_comparative
+    windstorm_hurricane_deductible: false
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.03
+    surplus_lines_stamping_fee: 0.0
+    mandatory_coverages: []
+    regulatory_notes: "Maryland has strict rate regulation; prior approval for personal lines"
+
+  MA:
+    name: Massachusetts
+    rate_filing: prior_approval
+    rate_filing_notes: "Managed competition model; OIR sets base rates"
+    surplus_lines: [diligent_search, stamping_office]
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    tort_model: modified_comparative_50
+    tort_notes: "50% bar on comparative negligence"
+    windstorm_hurricane_deductible: false
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.04
+    surplus_lines_stamping_fee: 0.0
+    mandatory_coverages: ["personal injury protection"]
+    mandatory_coverages_notes: "PIP mandatory; $8K minimum"
+    regulatory_notes: "Massachusetts uses managed competition for auto; prior approval for most lines"
+
+  MI:
+    name: Michigan
+    rate_filing: prior_approval
+    surplus_lines: [diligent_search]
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    tort_model: modified_comparative_51
+    tort_notes: "51% bar; modified comparative negligence"
+    windstorm_hurricane_deductible: false
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.04
+    surplus_lines_stamping_fee: 0.0
+    mandatory_coverages: ["personal injury protection"]
+    mandatory_coverages_notes: "PIP mandatory; unlimited PIP default (selection allowed since 2020 reform)"
+    regulatory_notes: "Michigan reformed no-fault in 2020; PIP selection options now available"
+
+  MN:
+    name: Minnesota
+    rate_filing: prior_approval
+    surplus_lines: [diligent_search]
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    tort_model: pure_comparative
+    windstorm_hurricane_deductible: false
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.04
+    surplus_lines_stamping_fee: 0.0
+    mandatory_coverages: ["personal injury protection"]
+    mandatory_coverages_notes: "PIP (no-fault) mandatory; $40K minimum"
+    regulatory_notes: "Minnesota has strong no-fault requirements"
+
+  MS:
+    name: Mississippi
+    rate_filing: file_and_use
+    surplus_lines: [diligent_search]
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    tort_model: pure_comparative
+    windstorm_hurricane_deductible: false
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.05
+    surplus_lines_stamping_fee: 0.0
+    mandatory_coverages: []
+    regulatory_notes: "Mississippi uses competitive rating for most lines"
+
+  MO:
+    name: Missouri
+    rate_filing: file_and_use
+    surplus_lines: [diligent_search]
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    tort_model: modified_comparative_50
+    tort_notes: "50% bar on comparative negligence"
+    windstorm_hurricane_deductible: false
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.04
+    surplus_lines_stamping_fee: 0.0
+    mandatory_coverages: []
+    regulatory_notes: "Missouri has competitive rating for commercial lines"
+
+  MT:
+    name: Montana
+    rate_filing: prior_approval
+    surplus_lines: [diligent_search]
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    tort_model: pure_comparative
+    windstorm_hurricane_deductible: false
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.04
+    surplus_lines_stamping_fee: 0.0
+    mandatory_coverages: []
+    regulatory_notes: "Montana requires prior approval for personal lines"
+
+  NE:
+    name: Nebraska
+    rate_filing: file_and_use
+    surplus_lines: [diligent_search]
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    tort_model: modified_comparative_50
+    tort_notes: "50% bar; plaintiff cannot recover if 50% or more at fault"
+    windstorm_hurricane_deductible: false
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.04
+    surplus_lines_stamping_fee: 0.0
+    mandatory_coverages: []
+    regulatory_notes: "Nebraska uses competitive rating for most lines"
+
+  NV:
+    name: Nevada
+    rate_filing: file_and_use
+    surplus_lines: [diligent_search, tax_filing]
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    tort_model: pure_comparative
+    windstorm_hurricane_deductible: false
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.035
+    surplus_lines_stamping_fee: 0.0
+    mandatory_coverages: []
+    regulatory_notes: "Nevada has strong surplus lines market; file-and-use rating"
+
+  NH:
+    name: New Hampshire
+    rate_filing: no_file
+    rate_filing_notes: "Competitive rating; no filing required for most lines"
+    surplus_lines: [diligent_search]
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    tort_model: pure_comparative
+    windstorm_hurricane_deductible: false
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.04
+    surplus_lines_stamping_fee: 0.0
+    mandatory_coverages: []
+    regulatory_notes: "New Hampshire is one of the least regulated states"
+
+  NJ:
+    name: New Jersey
+    rate_filing: prior_approval
+    surplus_lines: [diligent_search, stamping_office, tax_filing]
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    tort_model: modified_comparative_50
+    tort_notes: "50% bar; choice of no-fault or verbal threshold for auto"
+    windstorm_hurricane_deductible: true
+    windstorm_notes: "NJ requires hurricane deductible disclosure"
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.05
+    surplus_lines_stamping_fee: 0.0025
+    mandatory_coverages: ["personal injury protection"]
+    mandatory_coverages_notes: "PIP mandatory; verbal threshold or no-fault choice"
+    regulatory_notes: "New Jersey has strict rate regulation; JUA as insurer of last resort"
+
+  NM:
+    name: New Mexico
+    rate_filing: file_and_use
+    surplus_lines: [diligent_search]
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    tort_model: pure_comparative
+    windstorm_hurricane_deductible: false
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.04
+    surplus_lines_stamping_fee: 0.0
+    mandatory_coverages: []
+    regulatory_notes: "New Mexico uses competitive rating; no compulsory auto insurance"
+
+  NY:
+    name: New York
+    rate_filing: prior_approval
+    rate_filing_notes: "DFS must approve rates; public hearing required for rate increases"
+    surplus_lines: [diligent_search, stamping_office, tax_filing]
+    surplus_lines_notes: "NY SLA handles stamping; strict diligent search requirements"
+    binder_requires_written: false
+    claims_prompt_pay_days: 15
+    claims_notes: "15 business days for claims acknowledgment; strict prompt pay"
+    commission_cap_pct: null
+    tort_model: pure_comparative
+    windstorm_hurricane_deductible: true
+    windstorm_notes: "Hurricane deductible applies in coastal zones"
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.04
+    surplus_lines_stamping_fee: 0.003
+    mandatory_coverages: ["personal injury protection", "uninsured motorist"]
+    mandatory_coverages_notes: "PIP and UM mandatory for auto"
+    regulatory_notes: "NY has strictest rate regulation; DFS oversight; SERFF filings required"
+
+  NC:
+    name: North Carolina
+    rate_filing: prior_approval
+    surplus_lines: [diligent_search, stamping_office]
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    tort_model: modified_comparative_50
+    tort_notes: "50% bar on contributory negligence (modified comparative since 2011)"
+    windstorm_hurricane_deductible: true
+    windstorm_notes: "NC Beach Plan (FAIR Plan) for coastal properties"
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.04
+    surplus_lines_stamping_fee: 0.0
+    mandatory_coverages: []
+    regulatory_notes: "NC has rate bureau system for some lines; prior approval required"
+
+  ND:
+    name: North Dakota
+    rate_filing: file_and_use
+    surplus_lines: [diligent_search]
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    tort_model: modified_comparative_50
+    tort_notes: "50% bar on comparative negligence"
+    windstorm_hurricane_deductible: false
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.04
+    surplus_lines_stamping_fee: 0.0
+    mandatory_coverages: []
+    regulatory_notes: "North Dakota uses competitive rating; minimal regulation"
+
+  OH:
+    name: Ohio
+    rate_filing: file_and_use
+    surplus_lines: [diligent_search]
+    binder_requires_written: false
+    claims_prompt_pay_days: 21
+    claims_notes: "21 days for claims processing"
+    tort_model: modified_comparative_51
+    tort_notes: "51% bar on comparative negligence"
+    windstorm_hurricane_deductible: false
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.04
+    surplus_lines_stamping_fee: 0.0
+    mandatory_coverages: []
+    regulatory_notes: "Ohio has competitive rating; strong surplus lines market"
+
+  OK:
+    name: Oklahoma
+    rate_filing: file_and_use
+    surplus_lines: [diligent_search]
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    tort_model: modified_comparative_50
+    tort_notes: "50% bar; plaintiff cannot recover if 50% or more at fault"
+    windstorm_hurricane_deductible: false
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.0425
+    surplus_lines_stamping_fee: 0.0
+    mandatory_coverages: []
+    regulatory_notes: "Oklahoma has competitive rating; high tornado exposure"
+
+  OR:
+    name: Oregon
+    rate_filing: prior_approval
+    surplus_lines: [diligent_search]
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    tort_model: pure_comparative
+    windstorm_hurricane_deductible: false
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.04
+    surplus_lines_stamping_fee: 0.0
+    mandatory_coverages: []
+    regulatory_notes: "Oregon requires prior approval for personal lines"
+
+  PA:
+    name: Pennsylvania
+    rate_filing: prior_approval
+    surplus_lines: [diligent_search, stamping_office, tax_filing]
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    tort_model: modified_comparative_51
+    tort_notes: "51% bar on comparative negligence"
+    windstorm_hurricane_deductible: false
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.04
+    surplus_lines_stamping_fee: 0.0
+    mandatory_coverages: ["first party benefits"]
+    mandatory_coverages_notes: "PIP/first party benefits mandatory; $5K minimum"
+    regulatory_notes: "Pennsylvania has strict rate regulation; prior approval for most lines"
+
+  RI:
+    name: Rhode Island
+    rate_filing: file_and_use
+    surplus_lines: [diligent_search]
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    tort_model: pure_comparative
+    windstorm_hurricane_deductible: false
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.04
+    surplus_lines_stamping_fee: 0.0
+    mandatory_coverages: []
+    regulatory_notes: "Rhode Island uses competitive rating for commercial lines"
+
+  SC:
+    name: South Carolina
+    rate_filing: file_and_use
+    surplus_lines: [diligent_search]
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    tort_model: modified_comparative_51
+    tort_notes: "51% bar on comparative negligence"
+    windstorm_hurricane_deductible: true
+    windstorm_notes: "Hurricane deductible applies for coastal properties"
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.045
+    surplus_lines_stamping_fee: 0.0
+    mandatory_coverages: []
+    regulatory_notes: "South Carolina has competitive rating; coastal exposure considerations"
+
+  SD:
+    name: South Dakota
+    rate_filing: file_and_use
+    surplus_lines: [diligent_search]
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    tort_model: modified_comparative_50
+    tort_notes: "50% bar on comparative negligence"
+    windstorm_hurricane_deductible: false
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.04
+    surplus_lines_stamping_fee: 0.0
+    mandatory_coverages: []
+    regulatory_notes: "South Dakota uses competitive rating; minimal regulation"
+
+  TN:
+    name: Tennessee
+    rate_filing: file_and_use
+    surplus_lines: [diligent_search]
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    tort_model: modified_comparative_51
+    tort_notes: "51% bar on comparative negligence"
+    windstorm_hurricane_deductible: false
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.04
+    surplus_lines_stamping_fee: 0.0
+    mandatory_coverages: []
+    regulatory_notes: "Tennessee uses file-and-use; competitive rating for commercial"
+
+  TX:
+    name: Texas
+    rate_filing: file_and_use
+    rate_filing_notes: "TDI must be notified; competitive rating for most commercial lines"
+    surplus_lines: [diligent_search, stamping_office, tax_filing]
+    surplus_lines_notes: "Texas Surplus Lines Association (TSLA) handles stamping"
+    binder_requires_written: false
+    claims_prompt_pay_days: 15
+    claims_notes: "15 days to acknowledge; 5 business days to settle after determination"
+    commission_cap_pct: null
+    tort_model: modified_comparative_51
+    tort_notes: "51% bar on comparative negligence"
+    windstorm_hurricane_deductible: true
+    windstorm_notes: "Windstorm/hurricane deductible applies in TX coastal areas"
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.0485
+    surplus_lines_stamping_fee: 0.0018
+    mandatory_coverages: []
+    regulatory_notes: "Texas has strong surplus lines market; TWIA for windstorm in coastal counties"
+
+  UT:
+    name: Utah
+    rate_filing: file_and_use
+    surplus_lines: [diligent_search]
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    tort_model: modified_comparative_50
+    tort_notes: "50% bar on comparative negligence"
+    windstorm_hurricane_deductible: false
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.04
+    surplus_lines_stamping_fee: 0.0
+    mandatory_coverages: []
+    regulatory_notes: "Utah uses competitive rating; minimal regulation"
+
+  VT:
+    name: Vermont
+    rate_filing: prior_approval
+    surplus_lines: [diligent_search]
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    tort_model: pure_comparative
+    windstorm_hurricane_deductible: false
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.04
+    surplus_lines_stamping_fee: 0.0
+    mandatory_coverages: []
+    regulatory_notes: "Vermont requires prior approval; small state market"
+
+  VA:
+    name: Virginia
+    rate_filing: file_and_use
+    surplus_lines: [diligent_search, stamping_office]
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    tort_model: pure_comparative
+    windstorm_hurricane_deductible: false
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.04
+    surplus_lines_stamping_fee: 0.0
+    mandatory_coverages: []
+    regulatory_notes: "Virginia uses file-and-use; competitive rating for commercial"
+
+  WA:
+    name: Washington
+    rate_filing: prior_approval
+    surplus_lines: [diligent_search, stamping_office]
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    tort_model: pure_comparative
+    windstorm_hurricane_deductible: false
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.04
+    surplus_lines_stamping_fee: 0.0
+    mandatory_coverages: []
+    regulatory_notes: "Washington requires prior approval; strong rate regulation"
+
+  WV:
+    name: West Virginia
+    rate_filing: prior_approval
+    surplus_lines: [diligent_search]
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    tort_model: modified_comparative_50
+    tort_notes: "50% bar on comparative negligence"
+    windstorm_hurricane_deductible: false
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.04
+    surplus_lines_stamping_fee: 0.0
+    mandatory_coverages: []
+    regulatory_notes: "West Virginia requires prior approval for personal lines"
+
+  WI:
+    name: Wisconsin
+    rate_filing: file_and_use
+    surplus_lines: [diligent_search]
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    tort_model: modified_comparative_51
+    tort_notes: "51% bar on comparative negligence"
+    windstorm_hurricane_deductible: false
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.04
+    surplus_lines_stamping_fee: 0.0
+    mandatory_coverages: []
+    regulatory_notes: "Wisconsin uses competitive rating; minimal rate regulation"
+
+  WY:
+    name: Wyoming
+    rate_filing: no_file
+    rate_filing_notes: "Competitive rating; no filing required for most lines"
+    surplus_lines: [diligent_search]
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    tort_model: pure_comparative
+    windstorm_hurricane_deductible: false
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.04
+    surplus_lines_stamping_fee: 0.0
+    mandatory_coverages: []
+    regulatory_notes: "Wyoming is one of the least regulated states; competitive rating"
+
+  DC:
+    name: District of Columbia
+    rate_filing: file_and_use
+    surplus_lines: [diligent_search]
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    tort_model: pure_comparative
+    windstorm_hurricane_deductible: false
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.04
+    surplus_lines_stamping_fee: 0.0
+    mandatory_coverages: []
+    regulatory_notes: "DC uses file-and-use; competitive rating for commercial"
+
+  US_VI:
+    name: US Virgin Islands
+    rate_filing: prior_approval
+    surplus_lines: [diligent_search]
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    tort_model: pure_comparative
+    windstorm_hurricane_deductible: true
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.05
+    surplus_lines_stamping_fee: 0.0
+    mandatory_coverages: []
+    regulatory_notes: "USVI has its own insurance department; hurricane exposure"
+
+  PR:
+    name: Puerto Rico
+    rate_filing: prior_approval
+    surplus_lines: [diligent_search]
+    binder_requires_written: false
+    claims_prompt_pay_days: 30
+    tort_model: pure_comparative
+    windstorm_hurricane_deductible: true
+    workers_comp_state_fund: false
+    surplus_lines_tax_rate: 0.05
+    surplus_lines_stamping_fee: 0.0
+    mandatory_coverages: []
+    regulatory_notes: "Puerto Rico has its own insurance code; hurricane exposure"

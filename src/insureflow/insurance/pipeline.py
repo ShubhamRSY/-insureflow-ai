@@ -34,6 +34,7 @@ from insureflow.rating.engine import InsuranceRatingEngine
 from insureflow.reconciliation.engine import ReconciliationEngine
 from insureflow.redaction.pipeline import RedactedLLMClient
 from insureflow.registry.service import RegistryService
+from insureflow.regulatory.state_rules import StateRegulatoryEngine
 from insureflow.storage.encryption import EnvelopeEncryption
 from insureflow.webhooks.dispatcher import webhook_dispatcher
 from insureflow.workflow.models import WorkflowState
@@ -1685,6 +1686,22 @@ class InsurancePipeline:
             loc0 = bundle.structured.locations[0]
             primary_state = loc0.state or ""
             estimated_tiv = (loc0.building_value or 0) + (loc0.contents_value or 0) + (loc0.bi_value or 0)
+
+        state_compliance = None
+        if primary_state:
+            try:
+                reg_engine = StateRegulatoryEngine()
+                loc_dicts = [{"state": loc.state, "city": loc.city, "address": loc.address} for loc in (bundle.structured.locations if bundle.structured else [])]
+                detected = reg_engine.detect_state(loc_dicts) or primary_state
+                is_surplus = bool((quote.metadata or {}).get("surplus_lines"))
+                state_compliance = reg_engine.evaluate(
+                    detected,
+                    is_surplus_lines=is_surplus,
+                    is_windstorm_zone=detected in ("FL", "TX", "LA", "NC", "SC", "NJ", "NY"),
+                    has_oral_binder=False,
+                )
+            except Exception as exc:
+                logger.warning("State compliance check failed: %s", exc)
         if estimated_tiv <= 0:
             estimated_tiv = float(getattr(quote, "tiv", 0) or 0) or float((getattr(quote, "metadata", {}) or {}).get("tiv") or 0)
 
@@ -1737,6 +1754,7 @@ class InsurancePipeline:
             "insured_name": memo.insured_name,
             "broker_name": broker_name,
             "primary_state": primary_state,
+            "state_compliance": state_compliance.model_dump(mode="json") if state_compliance else None,
             "tiv": estimated_tiv,
             "triage_priority": triage_result.priority.value,
             "triage_score": triage_result.score,

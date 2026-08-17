@@ -980,6 +980,43 @@ async def system_diagnostics(current: TokenData | None = Depends(get_current_use
     return SystemDiagnostics(project_root=PROJECT_ROOT).run_all()
 
 
+@app.get("/api/state-rules")
+async def get_state_rules(state: str = "") -> dict[str, Any]:
+    """State insurance regulatory rules — load by state code or list all."""
+    from insureflow.regulatory.state_rules import StateRegulatoryEngine
+
+    engine = StateRegulatoryEngine()
+    if state:
+        code = state.upper().strip()
+        rule = engine.get_rule(code)
+        if rule is None:
+            raise HTTPException(status_code=404, detail=f"No rules for state '{code}'")
+        result = engine.evaluate(code)
+        return {"rule": rule.model_dump(mode="json"), "compliance": result.model_dump(mode="json")}
+    return {
+        "states": engine.get_available_states(),
+        "count": len(engine.get_available_states()),
+    }
+
+
+@app.get("/api/state-rules/{state_code}/compliance")
+async def check_state_compliance(
+    state_code: str,
+    surplus_lines: bool = False,
+    windstorm_zone: bool = False,
+) -> dict[str, Any]:
+    """Evaluate compliance flags for a given state."""
+    from insureflow.regulatory.state_rules import StateRegulatoryEngine
+
+    engine = StateRegulatoryEngine()
+    result = engine.evaluate(
+        state_code.upper().strip(),
+        is_surplus_lines=surplus_lines,
+        is_windstorm_zone=windstorm_zone,
+    )
+    return result.model_dump(mode="json")
+
+
 @app.get("/api/demo/presets")
 async def demo_presets() -> dict[str, Any]:
     """Available one-click demo submissions for the dashboard."""
