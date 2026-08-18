@@ -98,6 +98,7 @@ export const endpoints = {
   billingPlan: () => api('/billing/plan'),
   billingUsage: () => api('/billing/usage'),
   authReset: () => api('/auth/reset', { method: 'POST' }).then((r) => { auth.wipeSession(); return r; }),
+  clearStaleSession: () => api('/auth/clear-stale', { method: 'POST' }),
   setup: (body) => api('/auth/setup', { method: 'POST', body }),
   me: () => api('/auth/me'),
   register: (body) => api('/auth/register', { method: 'POST', body }),

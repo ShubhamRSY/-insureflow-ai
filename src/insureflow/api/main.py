@@ -333,6 +333,29 @@ def _do_auth_reset() -> dict[str, str | int | bool]:
     }
 
 
+@app.post("/auth/clear-stale")
+def clear_stale_session() -> dict[str, str | int | bool]:
+    """Clear stale browser session data when no server users exist.
+
+    This is an unauthenticated endpoint that only works when the user store
+    is empty (setup_required=True). It clears browser localStorage/sessionStorage
+    so the setup form can render fresh.
+    """
+    store = get_user_store()
+    if bool(store):
+        # Users exist — don't clear anything, tell them to log in
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Accounts exist. Use /auth/login instead.",
+        )
+    return {
+        "message": "No server accounts found. Browser session cleared.",
+        "users_removed": 0,
+        "setup_required": True,
+        "clear_browser_session": True,
+    }
+
+
 _RESET_HTML = """<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>Session cleared</title>
 <style>body{font-family:system-ui;background:#0c0f17;color:#e2e8f0;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}
@@ -369,17 +392,17 @@ def setup_first_admin(admin: UserCreateRequest) -> dict[str, str]:
             detail="Admin already exists. Use /auth/login.",
         )
     username = admin.username.strip()
-    email = admin.email.strip() or (username if "@" in username else "")
-    company_name = admin.company_name.strip()
+    email = admin.email.strip() or (username if "@" in username else f"{username}@insureflow.local")
+    company_name = admin.company_name.strip() or "Default Organization"
 
-    validation = validate_registration(
-        username=username,
-        email=email,
-        password=admin.password,
-        company_name=company_name or "Default Organization",
-    )
-    if not validation.valid:
-        raise HTTPException(status_code=400, detail="; ".join(validation.errors))
+    # Relaxed validation for first-time setup: skip company name length check
+    from insureflow.auth.validation import validate_password, validate_username
+
+    username_check = validate_username(username)
+    password_check = validate_password(admin.password)
+    if not username_check.valid or not password_check.valid:
+        errors = username_check.errors + password_check.errors
+        raise HTTPException(status_code=400, detail="; ".join(errors))
 
     org_id = "default"
     if isinstance(store, PostgresUserStore) and company_name:

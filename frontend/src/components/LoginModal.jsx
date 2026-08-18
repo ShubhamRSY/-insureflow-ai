@@ -74,10 +74,11 @@ export default function LoginModal({ open, onClose, onSuccess }) {
       const fd = new FormData(e.target);
       const username = String(fd.get('username') || '').trim();
       const password = String(fd.get('password') || '');
-      const org_id = String(fd.get('org_id') || 'default').trim() || 'default';
+      const email = String(fd.get('email') || '').trim();
       const full_name = String(fd.get('full_name') || username).trim();
+      const company_name = String(fd.get('company_name') || 'Default Organization').trim() || 'Default Organization';
 
-      await endpoints.setup({ username, password, full_name, org_id, role: 'admin' });
+      await endpoints.setup({ username, password, full_name, email, company_name, role: 'admin' });
 
       const token = await endpoints.login(username, password);
       auth.token = token.access_token;
@@ -132,13 +133,35 @@ export default function LoginModal({ open, onClose, onSuccess }) {
           <>
             <h2 className="text-2xl font-bold tracking-tight">First-time Setup</h2>
             <p className="mt-1 text-sm text-slate-400">Create the admin account to get started</p>
+            {error && <p className="mt-4 rounded-xl bg-red-500/10 px-3 py-2 text-sm text-red-400">{error}</p>}
             <form onSubmit={handleSetup} className="mt-6 space-y-4">
               <input name="username" placeholder="Username" required className="input-field" autoComplete="username" />
+              <input name="email" type="email" placeholder="Email address" required className="input-field" autoComplete="email" />
               <input name="full_name" placeholder="Full name (optional)" className="input-field" />
-              <input name="org_id" placeholder="Organization ID (default)" className="input-field" />
+              <input name="company_name" placeholder="Company / Organization" className="input-field" defaultValue="Default Organization" />
               <PasswordInput placeholder="Password" autoComplete="new-password" />
               <button type="submit" disabled={loading} className="btn-primary w-full">{loading ? 'Creating…' : 'Create Admin & Sign In'}</button>
             </form>
+            <div className="mt-4 border-t border-slate-700 pt-4">
+              <p className="text-xs text-slate-500 mb-2">Stuck? Clear old data and start fresh:</p>
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    await endpoints.clearStaleSession();
+                    localStorage.clear();
+                    sessionStorage.clear();
+                    setError('');
+                    setSuccess('Cleared. Fill in the form above to create your admin.');
+                  } catch (err) {
+                    setError(err.message || 'Could not clear — accounts may already exist. Try logging in.');
+                  }
+                }}
+                className="w-full rounded-xl border border-slate-600 px-3 py-2 text-xs text-slate-400 hover:border-red-500 hover:text-red-400 transition-colors"
+              >
+                Clear old login data
+              </button>
+            </div>
           </>
         ) : mode === 'register' ? (
           <>
