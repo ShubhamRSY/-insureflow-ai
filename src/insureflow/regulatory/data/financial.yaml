@@ -1,0 +1,482 @@
+# Financial / Credit Insurance — State Regulatory Data
+# Credit insurance (credit life, credit disability, credit property) is regulated differently by state
+# Last updated: 2026-08
+
+states:
+  AL:
+    name: Alabama
+    rate_filing: file_and_use
+    credit_insurance_regulated: true
+    credit_life_cap_pct: null
+    credit_disability_cap_pct: null
+    credit_property_cap_pct: null
+    required_disclosures: []
+    notes: "Alabama regulates credit insurance under general insurance laws"
+  AK:
+    name: Alaska
+    rate_filing: file_and_use
+    credit_insurance_regulated: true
+    credit_life_cap_pct: null
+    credit_disability_cap_pct: null
+    credit_property_cap_pct: null
+    required_disclosures: []
+    notes: "Alaska regulates credit insurance under general insurance laws"
+  AZ:
+    name: Arizona
+    rate_filing: use_and_file
+    credit_insurance_regulated: true
+    credit_life_cap_pct: null
+    credit_disability_cap_pct: null
+    credit_property_cap_pct: null
+    required_disclosures: []
+    notes: "Arizona regulates credit insurance under general insurance laws"
+  AR:
+    name: Arkansas
+    rate_filing: prior_approval
+    credit_insurance_regulated: true
+    credit_life_cap_pct: null
+    credit_disability_cap_pct: null
+    credit_property_cap_pct: null
+    required_disclosures: []
+    notes: "Arkansas requires prior approval for credit insurance rates"
+  CA:
+    name: California
+    rate_filing: prior_approval
+    credit_insurance_regulated: true
+    credit_life_cap_pct: null
+    credit_disability_cap_pct: null
+    credit_property_cap_pct: null
+    required_disclosures: ["cancellation_rights", "premium_refund"]
+    notes: "California has strict consumer protection requirements for credit insurance"
+  CO:
+    name: Colorado
+    rate_filing: file_and_use
+    credit_insurance_regulated: true
+    credit_life_cap_pct: null
+    credit_disability_cap_pct: null
+    credit_property_cap_pct: null
+    required_disclosures: []
+    notes: "Colorado regulates credit insurance under general insurance laws"
+  CT:
+    name: Connecticut
+    rate_filing: file_and_use
+    credit_insurance_regulated: true
+    credit_life_cap_pct: 0.15
+    credit_disability_cap_pct: 0.15
+    credit_property_cap_pct: null
+    required_disclosures: ["premium_rate_disclosure"]
+    notes: "Connecticut caps credit life and credit disability premiums at 15 cents per $100 of indebtedness per month"
+  DE:
+    name: Delaware
+    rate_filing: prior_approval
+    credit_insurance_regulated: true
+    credit_life_cap_pct: 0.12
+    credit_disability_cap_pct: 0.12
+    credit_property_cap_pct: null
+    required_disclosures: ["premium_rate_disclosure"]
+    notes: "Delaware caps credit life and credit disability premiums at 12 cents per $100 of indebtedness per month"
+  FL:
+    name: Florida
+    rate_filing: file_and_use
+    credit_insurance_regulated: true
+    credit_life_cap_pct: 0.15
+    credit_disability_cap_pct: 0.15
+    credit_property_cap_pct: null
+    required_disclosures: ["cancellation_rights", "premium_refund"]
+    notes: "Florida caps credit life and credit disability premiums; requires specific disclosures"
+  GA:
+    name: Georgia
+    rate_filing: file_and_use
+    credit_insurance_regulated: true
+    credit_life_cap_pct: 0.12
+    credit_disability_cap_pct: 0.12
+    credit_property_cap_pct: null
+    required_disclosures: []
+    notes: "Georgia caps credit life and credit disability premiums at 12 cents per $100 of indebtedness per month"
+  HI:
+    name: Hawaii
+    rate_filing: file_and_use
+    credit_insurance_regulated: true
+    credit_life_cap_pct: null
+    credit_disability_cap_pct: null
+    credit_property_cap_pct: null
+    required_disclosures: []
+    notes: "Hawaii regulates credit insurance under general insurance laws"
+  ID:
+    name: Idaho
+    rate_filing: file_and_use
+    credit_insurance_regulated: true
+    credit_life_cap_pct: null
+    credit_disability_cap_pct: null
+    credit_property_cap_pct: null
+    required_disclosures: []
+    notes: "Idaho regulates credit insurance under general insurance laws"
+  IL:
+    name: Illinois
+    rate_filing: file_and_use
+    credit_insurance_regulated: true
+    credit_life_cap_pct: null
+    credit_disability_cap_pct: null
+    credit_property_cap_pct: null
+    required_disclosures: ["cancellation_rights"]
+    notes: "Illinois requires specific disclosures for credit insurance"
+  IN:
+    name: Indiana
+    rate_filing: file_and_use
+    credit_insurance_regulated: true
+    credit_life_cap_pct: 0.12
+    credit_disability_cap_pct: 0.12
+    credit_property_cap_pct: null
+    required_disclosures: []
+    notes: "Indiana caps credit life and credit disability premiums at 12 cents per $100 of indebtedness per month"
+  IA:
+    name: Iowa
+    rate_filing: file_and_use
+    credit_insurance_regulated: true
+    credit_life_cap_pct: null
+    credit_disability_cap_pct: null
+    credit_property_cap_pct: null
+    required_disclosures: []
+    notes: "Iowa regulates credit insurance under general insurance laws"
+  KS:
+    name: Kansas
+    rate_filing: file_and_use
+    credit_insurance_regulated: true
+    credit_life_cap_pct: null
+    credit_disability_cap_pct: null
+    credit_property_cap_pct: null
+    required_disclosures: []
+    notes: "Kansas regulates credit insurance under general insurance laws"
+  KY:
+    name: Kentucky
+    rate_filing: file_and_use
+    credit_insurance_regulated: true
+    credit_life_cap_pct: 0.12
+    credit_disability_cap_pct: 0.12
+    credit_property_cap_pct: null
+    required_disclosures: []
+    notes: "Kentucky caps credit life and credit disability premiums at 12 cents per $100 of indebtedness per month"
+  LA:
+    name: Louisiana
+    rate_filing: prior_approval
+    credit_insurance_regulated: true
+    credit_life_cap_pct: null
+    credit_disability_cap_pct: null
+    credit_property_cap_pct: null
+    required_disclosures: []
+    notes: "Louisiana requires prior approval for credit insurance rates"
+  ME:
+    name: Maine
+    rate_filing: file_and_use
+    credit_insurance_regulated: true
+    credit_life_cap_pct: null
+    credit_disability_cap_pct: null
+    credit_property_cap_pct: null
+    required_disclosures: []
+    notes: "Maine regulates credit insurance under general insurance laws"
+  MD:
+    name: Maryland
+    rate_filing: file_and_use
+    credit_insurance_regulated: true
+    credit_life_cap_pct: 0.12
+    credit_disability_cap_pct: 0.12
+    credit_property_cap_pct: null
+    required_disclosures: []
+    notes: "Maryland caps credit life and credit disability premiums at 12 cents per $100 of indebtedness per month"
+  MA:
+    name: Massachusetts
+    rate_filing: prior_approval
+    credit_insurance_regulated: true
+    credit_life_cap_pct: null
+    credit_disability_cap_pct: null
+    credit_property_cap_pct: null
+    required_disclosures: ["premium_rate_disclosure"]
+    notes: "Massachusetts has strict rate regulation for credit insurance"
+  MI:
+    name: Michigan
+    rate_filing: file_and_use
+    credit_insurance_regulated: true
+    credit_life_cap_pct: null
+    credit_disability_cap_pct: null
+    credit_property_cap_pct: null
+    required_disclosures: []
+    notes: "Michigan regulates credit insurance under general insurance laws"
+  MN:
+    name: Minnesota
+    rate_filing: file_and_use
+    credit_insurance_regulated: true
+    credit_life_cap_pct: null
+    credit_disability_cap_pct: null
+    credit_property_cap_pct: null
+    required_disclosures: []
+    notes: "Minnesota regulates credit insurance under general insurance laws"
+  MS:
+    name: Mississippi
+    rate_filing: file_and_use
+    credit_insurance_regulated: true
+    credit_life_cap_pct: null
+    credit_disability_cap_pct: null
+    credit_property_cap_pct: null
+    required_disclosures: []
+    notes: "Mississippi regulates credit insurance under general insurance laws"
+  MO:
+    name: Missouri
+    rate_filing: file_and_use
+    credit_insurance_regulated: true
+    credit_life_cap_pct: 0.12
+    credit_disability_cap_pct: 0.12
+    credit_property_cap_pct: null
+    required_disclosures: []
+    notes: "Missouri caps credit life and credit disability premiums at 12 cents per $100 of indebtedness per month"
+  MT:
+    name: Montana
+    rate_filing: file_and_use
+    credit_insurance_regulated: true
+    credit_life_cap_pct: null
+    credit_disability_cap_pct: null
+    credit_property_cap_pct: null
+    required_disclosures: []
+    notes: "Montana regulates credit insurance under general insurance laws"
+  NE:
+    name: Nebraska
+    rate_filing: file_and_use
+    credit_insurance_regulated: true
+    credit_life_cap_pct: null
+    credit_disability_cap_pct: null
+    credit_property_cap_pct: null
+    required_disclosures: []
+    notes: "Nebraska regulates credit insurance under general insurance laws"
+  NV:
+    name: Nevada
+    rate_filing: file_and_use
+    credit_insurance_regulated: true
+    credit_life_cap_pct: null
+    credit_disability_cap_pct: null
+    credit_property_cap_pct: null
+    required_disclosures: []
+    notes: "Nevada regulates credit insurance under general insurance laws"
+  NH:
+    name: New Hampshire
+    rate_filing: file_and_use
+    credit_insurance_regulated: true
+    credit_life_cap_pct: null
+    credit_disability_cap_pct: null
+    credit_property_cap_pct: null
+    required_disclosures: []
+    notes: "New Hampshire regulates credit insurance under general insurance laws"
+  NJ:
+    name: New Jersey
+    rate_filing: prior_approval
+    credit_insurance_regulated: true
+    credit_life_cap_pct: 0.12
+    credit_disability_cap_pct: 0.12
+    credit_property_cap_pct: null
+    required_disclosures: ["premium_rate_disclosure"]
+    notes: "New Jersey caps credit life and credit disability premiums; requires prior approval"
+  NM:
+    name: New Mexico
+    rate_filing: prior_approval
+    credit_insurance_regulated: true
+    credit_life_cap_pct: null
+    credit_disability_cap_pct: null
+    credit_property_cap_pct: null
+    required_disclosures: []
+    notes: "New Mexico requires prior approval for credit insurance rates"
+  NY:
+    name: New York
+    rate_filing: prior_approval
+    credit_insurance_regulated: true
+    credit_life_cap_pct: 0.12
+    credit_disability_cap_pct: 0.12
+    credit_property_cap_pct: null
+    required_disclosures: ["premium_rate_disclosure", "cancellation_rights"]
+    notes: "New York caps credit life and credit disability premiums; strict consumer protection requirements"
+  NC:
+    name: North Carolina
+    rate_filing: prior_approval
+    credit_insurance_regulated: true
+    credit_life_cap_pct: 0.12
+    credit_disability_cap_pct: 0.12
+    credit_property_cap_pct: null
+    required_disclosures: []
+    notes: "North Carolina caps credit life and credit disability premiums at 12 cents per $100 of indebtedness per month"
+  ND:
+    name: North Dakota
+    rate_filing: file_and_use
+    credit_insurance_regulated: true
+    credit_life_cap_pct: null
+    credit_disability_cap_pct: null
+    credit_property_cap_pct: null
+    required_disclosures: []
+    notes: "North Dakota regulates credit insurance under general insurance laws"
+  OH:
+    name: Ohio
+    rate_filing: file_and_use
+    credit_insurance_regulated: true
+    credit_life_cap_pct: null
+    credit_disability_cap_pct: null
+    credit_property_cap_pct: null
+    required_disclosures: []
+    notes: "Ohio regulates credit insurance under general insurance laws"
+  OK:
+    name: Oklahoma
+    rate_filing: file_and_use
+    credit_insurance_regulated: true
+    credit_life_cap_pct: null
+    credit_disability_cap_pct: null
+    credit_property_cap_pct: null
+    required_disclosures: []
+    notes: "Oklahoma regulates credit insurance under general insurance laws"
+  OR:
+    name: Oregon
+    rate_filing: file_and_use
+    credit_insurance_regulated: true
+    credit_life_cap_pct: null
+    credit_disability_cap_pct: null
+    credit_property_cap_pct: null
+    required_disclosures: []
+    notes: "Oregon regulates credit insurance under general insurance laws"
+  PA:
+    name: Pennsylvania
+    rate_filing: prior_approval
+    credit_insurance_regulated: true
+    credit_life_cap_pct: 0.12
+    credit_disability_cap_pct: 0.12
+    credit_property_cap_pct: null
+    required_disclosures: ["premium_rate_disclosure"]
+    notes: "Pennsylvania caps credit life and credit disability premiums; requires prior approval"
+  RI:
+    name: Rhode Island
+    rate_filing: file_and_use
+    credit_insurance_regulated: true
+    credit_life_cap_pct: null
+    credit_disability_cap_pct: null
+    credit_property_cap_pct: null
+    required_disclosures: []
+    notes: "Rhode Island regulates credit insurance under general insurance laws"
+  SC:
+    name: South Carolina
+    rate_filing: prior_approval
+    credit_insurance_regulated: true
+    credit_life_cap_pct: 0.12
+    credit_disability_cap_pct: 0.12
+    credit_property_cap_pct: null
+    required_disclosures: []
+    notes: "South Carolina caps credit life and credit disability premiums at 12 cents per $100 of indebtedness per month"
+  SD:
+    name: South Dakota
+    rate_filing: file_and_use
+    credit_insurance_regulated: true
+    credit_life_cap_pct: null
+    credit_disability_cap_pct: null
+    credit_property_cap_pct: null
+    required_disclosures: []
+    notes: "South Dakota regulates credit insurance under general insurance laws"
+  TN:
+    name: Tennessee
+    rate_filing: file_and_use
+    credit_insurance_regulated: true
+    credit_life_cap_pct: null
+    credit_disability_cap_pct: null
+    credit_property_cap_pct: null
+    required_disclosures: []
+    notes: "Tennessee regulates credit insurance under general insurance laws"
+  TX:
+    name: Texas
+    rate_filing: file_and_use
+    credit_insurance_regulated: true
+    credit_life_cap_pct: 0.12
+    credit_disability_cap_pct: 0.12
+    credit_property_cap_pct: null
+    required_disclosures: ["premium_rate_disclosure", "cancellation_rights"]
+    notes: "Texas caps credit life and credit disability premiums; requires specific disclosures"
+  UT:
+    name: Utah
+    rate_filing: file_and_use
+    credit_insurance_regulated: true
+    credit_life_cap_pct: null
+    credit_disability_cap_pct: null
+    credit_property_cap_pct: null
+    required_disclosures: []
+    notes: "Utah regulates credit insurance under general insurance laws"
+  VT:
+    name: Vermont
+    rate_filing: file_and_use
+    credit_insurance_regulated: true
+    credit_life_cap_pct: null
+    credit_disability_cap_pct: null
+    credit_property_cap_pct: null
+    required_disclosures: []
+    notes: "Vermont regulates credit insurance under general insurance laws"
+  VA:
+    name: Virginia
+    rate_filing: file_and_use
+    credit_insurance_regulated: true
+    credit_life_cap_pct: null
+    credit_disability_cap_pct: null
+    credit_property_cap_pct: null
+    required_disclosures: []
+    notes: "Virginia regulates credit insurance under general insurance laws"
+  WA:
+    name: Washington
+    rate_filing: file_and_use
+    credit_insurance_regulated: true
+    credit_life_cap_pct: null
+    credit_disability_cap_pct: null
+    credit_property_cap_pct: null
+    required_disclosures: []
+    notes: "Washington regulates credit insurance under general insurance laws"
+  WV:
+    name: West Virginia
+    rate_filing: prior_approval
+    credit_insurance_regulated: true
+    credit_life_cap_pct: null
+    credit_disability_cap_pct: null
+    credit_property_cap_pct: null
+    required_disclosures: []
+    notes: "West Virginia requires prior approval for credit insurance rates"
+  WI:
+    name: Wisconsin
+    rate_filing: file_and_use
+    credit_insurance_regulated: true
+    credit_life_cap_pct: null
+    credit_disability_cap_pct: null
+    credit_property_cap_pct: null
+    required_disclosures: []
+    notes: "Wisconsin regulates credit insurance under general insurance laws"
+  WY:
+    name: Wyoming
+    rate_filing: file_and_use
+    credit_insurance_regulated: true
+    credit_life_cap_pct: null
+    credit_disability_cap_pct: null
+    credit_property_cap_pct: null
+    required_disclosures: []
+    notes: "Wyoming regulates credit insurance under general insurance laws"
+  DC:
+    name: District of Columbia
+    rate_filing: prior_approval
+    credit_insurance_regulated: true
+    credit_life_cap_pct: null
+    credit_disability_cap_pct: null
+    credit_property_cap_pct: null
+    required_disclosures: []
+    notes: "DC requires prior approval for credit insurance rates"
+  US_VI:
+    name: US Virgin Islands
+    rate_filing: prior_approval
+    credit_insurance_regulated: true
+    credit_life_cap_pct: null
+    credit_disability_cap_pct: null
+    credit_property_cap_pct: null
+    required_disclosures: []
+    notes: "US Virgin Islands requires prior approval for credit insurance rates"
+  PR:
+    name: Puerto Rico
+    rate_filing: prior_approval
+    credit_insurance_regulated: true
+    credit_life_cap_pct: null
+    credit_disability_cap_pct: null
+    credit_property_cap_pct: null
+    required_disclosures: []
+    notes: "Puerto Rico requires prior approval for credit insurance rates"

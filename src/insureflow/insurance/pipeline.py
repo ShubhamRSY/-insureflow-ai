@@ -1694,8 +1694,10 @@ class InsurancePipeline:
                 loc_dicts = [{"state": loc.state, "city": loc.city, "address": loc.address} for loc in (bundle.structured.locations if bundle.structured else [])]
                 detected = reg_engine.detect_state(loc_dicts) or primary_state
                 is_surplus = bool((quote.metadata or {}).get("surplus_lines"))
+                line_hint = resolved_line.value if resolved_line else ""
                 state_compliance = reg_engine.evaluate(
                     detected,
+                    line_of_business=line_hint,
                     is_surplus_lines=is_surplus,
                     is_windstorm_zone=detected in ("FL", "TX", "LA", "NC", "SC", "NJ", "NY"),
                     has_oral_binder=False,

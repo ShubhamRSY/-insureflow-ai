@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Optional
+from typing import Any, Optional
 
 from pydantic import BaseModel, Field
 
@@ -12,6 +12,7 @@ class RateFilingMethod(str, Enum):
     USE_AND_FILE = "use_and_file"
     FLEX_RATING = "flex_rating"
     NO_FILE = "no_file"
+    STATE_MANDATED = "state_mandated"
 
 
 class TortModel(str, Enum):
@@ -78,12 +79,22 @@ class StateRule(BaseModel):
     regulatory_notes: str = ""
 
 
+class LineSpecificRule(BaseModel):
+    """A line-specific regulatory rule for a state. Schema varies by line of business."""
+
+    state_code: str
+    state_name: str
+    line_of_business: str
+    data: dict[str, Any] = Field(default_factory=dict)
+
+
 class ComplianceFlag(BaseModel):
     state_code: str
     rule_category: str
     severity: ComplianceSeverity
     message: str
     action_required: str = ""
+    line_of_business: str = ""
 
 
 class StateComplianceResult(BaseModel):
@@ -91,4 +102,5 @@ class StateComplianceResult(BaseModel):
     state_name: str
     flags: list[ComplianceFlag] = Field(default_factory=list)
     rule: Optional[StateRule] = None
+    line_rule: Optional[LineSpecificRule] = None
     summary: str = ""

@@ -1,0 +1,915 @@
+# Life Insurance Regulatory Data — InsureFlow
+# Per-state life insurance regulatory rules and requirements
+# Last updated: 2026-08-17
+# Sources: NAIC Life Insurance Regulation, State Insurance Departments, NAIC Suitability in Annuity Transactions Model Regulation
+
+metadata:
+  line: life_insurance
+  description: "Life Insurance — state-specific regulatory rules"
+  last_updated: "2026-08-17"
+  sources:
+    - "NAIC Life Insurance Regulation"
+    - "State Insurance Departments"
+    - "NAIC Suitability in Annuity Transactions Model Regulation"
+
+states:
+  AL:
+    name: Alabama
+    rate_filing: file_and_use
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Standard NAIC-compliant life insurance regulations"
+
+  AK:
+    name: Alaska
+    rate_filing: file_and_use
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Standard NAIC-compliant life insurance regulations"
+
+  AZ:
+    name: Arizona
+    rate_filing: no_file
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "No file system for life rates; NAIC-compliant"
+
+  AR:
+    name: Arkansas
+    rate_filing: file_and_use
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "File and use system; NAIC-compliant regulations"
+
+  CA:
+    name: California
+    rate_filing: prior_approval
+    free_look_period_days: 30
+    illustration_standards: state_specific
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: true
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Prior approval for life rates; 30-day free look; strict illustration standards; credit scoring restricted"
+
+  CO:
+    name: Colorado
+    rate_filing: file_and_use
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Standard NAIC-compliant life insurance regulations"
+
+  CT:
+    name: Connecticut
+    rate_filing: file_and_use
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: true
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Credit scoring restricted for life insurance"
+
+  DE:
+    name: Delaware
+    rate_filing: file_and_use
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Standard NAIC-compliant life insurance regulations"
+
+  FL:
+    name: Florida
+    rate_filing: file_and_use
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: true
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "File and use; 10-day free look; credit scoring restricted for life"
+
+  GA:
+    name: Georgia
+    rate_filing: file_and_use
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Standard NAIC-compliant life insurance regulations"
+
+  HI:
+    name: Hawaii
+    rate_filing: file_and_use
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Standard NAIC-compliant life insurance regulations"
+
+  ID:
+    name: Idaho
+    rate_filing: no_file
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "No file system for life rates"
+
+  IL:
+    name: Illinois
+    rate_filing: no_file
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "No file system for life rates; NAIC-compliant"
+
+  IN:
+    name: Indiana
+    rate_filing: file_and_use
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Standard NAIC-compliant life insurance regulations"
+
+  IA:
+    name: Iowa
+    rate_filing: file_and_use
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Standard NAIC-compliant life insurance regulations"
+
+  KS:
+    name: Kansas
+    rate_filing: file_and_use
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Standard NAIC-compliant life insurance regulations"
+
+  KY:
+    name: Kentucky
+    rate_filing: file_and_use
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Standard NAIC-compliant life insurance regulations"
+
+  LA:
+    name: Louisiana
+    rate_filing: file_and_use
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Standard NAIC-compliant life insurance regulations"
+
+  ME:
+    name: Maine
+    rate_filing: file_and_use
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Standard NAIC-compliant life insurance regulations"
+
+  MD:
+    name: Maryland
+    rate_filing: file_and_use
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Standard NAIC-compliant life insurance regulations"
+
+  MA:
+    name: Massachusetts
+    rate_filing: prior_approval
+    free_look_period_days: 10
+    illustration_standards: state_specific
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: true
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Prior approval for life rates; strict illustration standards; credit scoring restricted"
+
+  MI:
+    name: Michigan
+    rate_filing: file_and_use
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Standard NAIC-compliant life insurance regulations"
+
+  MN:
+    name: Minnesota
+    rate_filing: file_and_use
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Standard NAIC-compliant life insurance regulations"
+
+  MS:
+    name: Mississippi
+    rate_filing: file_and_use
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Standard NAIC-compliant life insurance regulations"
+
+  MO:
+    name: Missouri
+    rate_filing: file_and_use
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Standard NAIC-compliant life insurance regulations"
+
+  MT:
+    name: Montana
+    rate_filing: file_and_use
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Standard NAIC-compliant life insurance regulations"
+
+  NE:
+    name: Nebraska
+    rate_filing: file_and_use
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Standard NAIC-compliant life insurance regulations"
+
+  NV:
+    name: Nevada
+    rate_filing: file_and_use
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Standard NAIC-compliant life insurance regulations"
+
+  NH:
+    name: New Hampshire
+    rate_filing: file_and_use
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Standard NAIC-compliant life insurance regulations"
+
+  NJ:
+    name: New Jersey
+    rate_filing: file_and_use
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Standard NAIC-compliant life insurance regulations"
+
+  NM:
+    name: New Mexico
+    rate_filing: file_and_use
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Standard NAIC-compliant life insurance regulations"
+
+  NY:
+    name: New York
+    rate_filing: prior_approval
+    free_look_period_days: 20
+    illustration_standards: state_specific
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: true
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Most regulated state; prior approval; 20-day free look; strict illustration standards; credit scoring restricted"
+
+  NC:
+    name: North Carolina
+    rate_filing: prior_approval
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Prior approval for life rates"
+
+  ND:
+    name: North Dakota
+    rate_filing: file_and_use
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Standard NAIC-compliant life insurance regulations"
+
+  OH:
+    name: Ohio
+    rate_filing: file_and_use
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Standard NAIC-compliant life insurance regulations"
+
+  OK:
+    name: Oklahoma
+    rate_filing: file_and_use
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Standard NAIC-compliant life insurance regulations"
+
+  OR:
+    name: Oregon
+    rate_filing: file_and_use
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Standard NAIC-compliant life insurance regulations"
+
+  PA:
+    name: Pennsylvania
+    rate_filing: file_and_use
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Standard NAIC-compliant life insurance regulations"
+
+  RI:
+    name: Rhode Island
+    rate_filing: file_and_use
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Standard NAIC-compliant life insurance regulations"
+
+  SC:
+    name: South Carolina
+    rate_filing: file_and_use
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Standard NAIC-compliant life insurance regulations"
+
+  SD:
+    name: South Dakota
+    rate_filing: file_and_use
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Standard NAIC-compliant life insurance regulations"
+
+  TN:
+    name: Tennessee
+    rate_filing: file_and_use
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Standard NAIC-compliant life insurance regulations"
+
+  TX:
+    name: Texas
+    rate_filing: file_and_use
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "File and use system; 10-day free look"
+
+  UT:
+    name: Utah
+    rate_filing: file_and_use
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Standard NAIC-compliant life insurance regulations"
+
+  VT:
+    name: Vermont
+    rate_filing: file_and_use
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Standard NAIC-compliant life insurance regulations"
+
+  VA:
+    name: Virginia
+    rate_filing: file_and_use
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Standard NAIC-compliant life insurance regulations"
+
+  WA:
+    name: Washington
+    rate_filing: file_and_use
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Standard NAIC-compliant life insurance regulations"
+
+  WV:
+    name: West Virginia
+    rate_filing: file_and_use
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Standard NAIC-compliant life insurance regulations"
+
+  WI:
+    name: Wisconsin
+    rate_filing: file_and_use
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Standard NAIC-compliant life insurance regulations"
+
+  WY:
+    name: Wyoming
+    rate_filing: file_and_use
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Standard NAIC-compliant life insurance regulations"
+
+  DC:
+    name: District of Columbia
+    rate_filing: file_and_use
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Standard NAIC-compliant life insurance regulations"
+
+  US_VI:
+    name: US Virgin Islands
+    rate_filing: file_and_use
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "US Virgin Islands follows NAIC model regulations; file and use system"
+
+  PR:
+    name: Puerto Rico
+    rate_filing: prior_approval
+    free_look_period_days: 10
+    illustration_standards: NAIC_compliant
+    suitability_annuity: true
+    replacement_regulations: true
+    contestable_period_years: 2
+    incontestable_after_years: 2
+    suicide_exclusion_years: 2
+    misstatement_of_age_years: 2
+    unfair_trade_practices: true
+    credit_scoring_restricted: false
+    mandated_benefits: []
+    commission_cap_pct: null
+    notes: "Puerto Rico insurance commissioner oversees; prior approval system"

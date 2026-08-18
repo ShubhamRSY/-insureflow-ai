@@ -1,0 +1,1176 @@
+metadata:
+  line: workers_compensation
+  description: "Workers Compensation Insurance — state-specific regulatory rules"
+  last_updated: "2026-08-17"
+  sources:
+    - "National Academy of Social Insurance (NASI)"
+    - "National Council on Compensation Insurance (NCCI)"
+    - "State Workers Compensation Agencies"
+
+states:
+  AL:
+    name: Alabama
+    state_fund: false
+    state_fund_type: ""
+    state_fund_notes: ""
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: false
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "AL Workers Compensation Division"
+    commission_cap_pct: null
+    notes: "Alabama does not require workers compensation for employers with fewer than 5 employees."
+  AK:
+    name: Alaska
+    state_fund: false
+    state_fund_type: ""
+    state_fund_notes: ""
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: false
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "AK Workers Compensation Division"
+    commission_cap_pct: null
+    notes: "Alaska requires workers compensation for all employers with 1 or more employees."
+  AZ:
+    name: Arizona
+    state_fund: false
+    state_fund_type: ""
+    state_fund_notes: ""
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: false
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "AZ Industrial Commission"
+    commission_cap_pct: null
+    notes: "Arizona requires workers compensation for all employers with 1 or more employees."
+  AR:
+    name: Arkansas
+    state_fund: false
+    state_fund_type: ""
+    state_fund_notes: ""
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: false
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "AR Workers Compensation Commission"
+    commission_cap_pct: null
+    notes: "Arkansas does not require workers compensation for employers with fewer than 3 employees."
+  CA:
+    name: California
+    state_fund: false
+    state_fund_type: ""
+    state_fund_notes: "State Fund exists but competes with private carriers (State Compensation Insurance Fund — SCIF)"
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: true
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "CA State Compensation Insurance Fund (SCIF)"
+    commission_cap_pct: null
+    notes: "California requires workers compensation for all employers with 1 or more employees. Retrospective rating available."
+  CO:
+    name: Colorado
+    state_fund: true
+    state_fund_type: "competitive"
+    state_fund_notes: "Colorado Public Employees' Insurance Agency (PEIA) competes with private carriers"
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: false
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "CO Division of Workers Compensation"
+    commission_cap_pct: null
+    notes: "Colorado requires workers compensation for all employers with 1 or more employees."
+  CT:
+    name: Connecticut
+    state_fund: true
+    state_fund_type: "competitive"
+    state_fund_notes: "Connecticut Insurance Guarantee Association competes with private carriers"
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: true
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "CT Workers Compensation Commission"
+    commission_cap_pct: null
+    notes: "Connecticut requires workers compensation for all employers with 1 or more employees. Uses NCCI-based algorithm for experience modification."
+  DE:
+    name: Delaware
+    state_fund: false
+    state_fund_type: ""
+    state_fund_notes: ""
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: true
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "DE Industrial Accident Board"
+    commission_cap_pct: null
+    notes: "Delaware requires workers compensation for all employers with 1 or more employees. Retrospective rating available."
+  FL:
+    name: Florida
+    state_fund: false
+    state_fund_type: ""
+    state_fund_notes: ""
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: false
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "FL Division of Workers Compensation"
+    commission_cap_pct: null
+    notes: "Florida does not require workers compensation for employers with fewer than 4 employees."
+  GA:
+    name: Georgia
+    state_fund: false
+    state_fund_type: ""
+    state_fund_notes: ""
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: false
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "GA State Board of Workers Compensation"
+    commission_cap_pct: null
+    notes: "Georgia does not require workers compensation for employers with fewer than 3 employees."
+  HI:
+    name: Hawaii
+    state_fund: false
+    state_fund_type: ""
+    state_fund_notes: ""
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: false
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "HI Department of Labor and Industrial Relations"
+    commission_cap_pct: null
+    notes: "Hawaii requires workers compensation for all employers with 1 or more employees."
+  ID:
+    name: Idaho
+    state_fund: false
+    state_fund_type: ""
+    state_fund_notes: ""
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: false
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "ID Industrial Commission"
+    commission_cap_pct: null
+    notes: "Idaho requires workers compensation for all employers with 1 or more employees."
+  IL:
+    name: Illinois
+    state_fund: false
+    state_fund_type: ""
+    state_fund_notes: ""
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: true
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "IL Workers Compensation Commission"
+    commission_cap_pct: null
+    notes: "Illinois requires workers compensation for all employers with 1 or more employees. Retrospective rating available."
+  IN:
+    name: Indiana
+    state_fund: false
+    state_fund_type: ""
+    state_fund_notes: ""
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: true
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "IN Workers Compensation Board"
+    commission_cap_pct: null
+    notes: "Indiana requires workers compensation for all employers with 1 or more employees. Retrospective rating available."
+  IA:
+    name: Iowa
+    state_fund: false
+    state_fund_type: ""
+    state_fund_notes: ""
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: false
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "IA Workers Compensation Division"
+    commission_cap_pct: null
+    notes: "Iowa requires workers compensation for all employers with 1 or more employees."
+  KS:
+    name: Kansas
+    state_fund: false
+    state_fund_type: ""
+    state_fund_notes: ""
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: false
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "KS Division of Workers Compensation"
+    commission_cap_pct: null
+    notes: "Kansas requires workers compensation for all employers with 1 or more employees."
+  KY:
+    name: Kentucky
+    state_fund: false
+    state_fund_type: ""
+    state_fund_notes: ""
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: false
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "KY Department of Workers Claims"
+    commission_cap_pct: null
+    notes: "Kentucky requires workers compensation for all employers with 1 or more employees."
+  LA:
+    name: Louisiana
+    state_fund: true
+    state_fund_type: "competitive"
+    state_fund_notes: "Louisiana Workers Compensation Corporation (LWCC) competes with private carriers"
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: false
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "LA Office of Workers Compensation"
+    commission_cap_pct: null
+    notes: "Louisiana requires workers compensation for all employers with 1 or more employees."
+  ME:
+    name: Maine
+    state_fund: true
+    state_fund_type: "competitive"
+    state_fund_notes: "Maine Employers Mutual Insurance Company (MEMIC) competes with private carriers"
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: true
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "ME Workers Compensation Board"
+    commission_cap_pct: null
+    notes: "Maine requires workers compensation for all employers with 1 or more employees. Retrospective rating available."
+  MD:
+    name: Maryland
+    state_fund: false
+    state_fund_type: ""
+    state_fund_notes: ""
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: true
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "MD Workers Compensation Commission"
+    commission_cap_pct: null
+    notes: "Maryland requires workers compensation for all employers with 1 or more employees. Retrospective rating available."
+  MA:
+    name: Massachusetts
+    state_fund: false
+    state_fund_type: ""
+    state_fund_notes: ""
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: true
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "MA Department of Industrial Accidents"
+    commission_cap_pct: null
+    notes: "Massachusetts requires workers compensation for all employers with 1 or more employees. Uses state-specific experience modification algorithm. Retrospective rating available."
+  MI:
+    name: Michigan
+    state_fund: true
+    state_fund_type: "competitive"
+    state_fund_notes: "Michigan Workers Disability Compensation Agency; Second Injury Fund exists"
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: true
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "MI Workers Disability Compensation Agency"
+    commission_cap_pct: null
+    notes: "Michigan requires workers compensation for all employers with 1 or more employees. Retrospective rating available."
+  MN:
+    name: Minnesota
+    state_fund: true
+    state_fund_type: "competitive"
+    state_fund_notes: "Minnesota State Fund competes with private carriers"
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: true
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "MN Department of Labor and Industry"
+    commission_cap_pct: null
+    notes: "Minnesota requires workers compensation for all employers with 1 or more employees. Retrospective rating available."
+  MS:
+    name: Mississippi
+    state_fund: false
+    state_fund_type: ""
+    state_fund_notes: ""
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: false
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "MS Workers Compensation Commission"
+    commission_cap_pct: null
+    notes: "Mississippi does not require workers compensation for employers with fewer than 5 employees."
+  MO:
+    name: Missouri
+    state_fund: true
+    state_fund_type: "competitive"
+    state_fund_notes: "Missouri Second Injury Fund exists; competitive market"
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: false
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "MO Division of Workers Compensation"
+    commission_cap_pct: null
+    notes: "Missouri does not require workers compensation for employers with fewer than 5 employees."
+  MT:
+    name: Montana
+    state_fund: false
+    state_fund_type: ""
+    state_fund_notes: ""
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: false
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "MT Department of Labor and Industry"
+    commission_cap_pct: null
+    notes: "Montana requires workers compensation for all employers with 1 or more employees."
+  NE:
+    name: Nebraska
+    state_fund: false
+    state_fund_type: ""
+    state_fund_notes: ""
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: false
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "NE Workers Compensation Court"
+    commission_cap_pct: null
+    notes: "Nebraska requires workers compensation for all employers with 1 or more employees."
+  NV:
+    name: Nevada
+    state_fund: false
+    state_fund_type: ""
+    state_fund_notes: ""
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: false
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "NV Department of Business and Industry — Division of Industrial Relations"
+    commission_cap_pct: null
+    notes: "Nevada requires workers compensation for all employers with 1 or more employees."
+  NH:
+    name: New Hampshire
+    state_fund: false
+    state_fund_type: ""
+    state_fund_notes: ""
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: false
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "NH Department of Labor"
+    commission_cap_pct: null
+    notes: "New Hampshire does not require workers compensation for employers with fewer than 5 employees."
+  NJ:
+    name: New Jersey
+    state_fund: false
+    state_fund_type: ""
+    state_fund_notes: ""
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: true
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "NJ Division of Workers Compensation"
+    commission_cap_pct: null
+    notes: "New Jersey requires workers compensation for all employers with 1 or more employees. Retrospective rating available."
+  NM:
+    name: New Mexico
+    state_fund: true
+    state_fund_type: "competitive"
+    state_fund_notes: "New Mexico Risk Management Division competes with private carriers"
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: false
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "NM Workers Compensation Administration"
+    commission_cap_pct: null
+    notes: "New Mexico does not require workers compensation for employers with fewer than 3 employees."
+  NY:
+    name: New York
+    state_fund: true
+    state_fund_type: "competitive"
+    state_fund_notes: "New York State Insurance Fund (NYSIF) competes with private carriers"
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: true
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "NY Workers Compensation Board"
+    commission_cap_pct: null
+    notes: "New York requires workers compensation for all employers with 1 or more employees. Uses state-specific experience modification algorithm. Retrospective rating available."
+  NC:
+    name: North Carolina
+    state_fund: false
+    state_fund_type: ""
+    state_fund_notes: ""
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: true
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "NC Industrial Commission"
+    commission_cap_pct: null
+    notes: "North Carolina does not require workers compensation for employers with fewer than 3 employees. Retrospective rating available."
+  ND:
+    name: North Dakota
+    state_fund: true
+    state_fund_type: "monopolistic"
+    state_fund_notes: "North Dakota is a monopolistic state fund — state is sole insurer for workers compensation"
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: false
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "ND Workforce Safety and Insurance"
+    commission_cap_pct: null
+    notes: "North Dakota is a monopolistic state fund — employers must purchase coverage through the state fund."
+  OH:
+    name: Ohio
+    state_fund: true
+    state_fund_type: "monopolistic"
+    state_fund_notes: "Ohio is a monopolistic state fund — state is sole insurer for workers compensation"
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$500,000/$500,000/$500,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$500,000"
+      disease_policy_limit: "$500,000"
+      disease_each_employee: "$500,000"
+    retrospective_rating: true
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "OH Bureau of Workers Compensation"
+    commission_cap_pct: null
+    notes: "Ohio is a monopolistic state fund. Ohio has higher minimum employers liability limits at $500,000. Retrospective rating available."
+  OK:
+    name: Oklahoma
+    state_fund: true
+    state_fund_type: "competitive"
+    state_fund_notes: "Oklahoma State Insurance Fund competes with private carriers"
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: false
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "OK Workers Compensation Court"
+    commission_cap_pct: null
+    notes: "Oklahoma requires workers compensation for all employers with 1 or more employees."
+  OR:
+    name: Oregon
+    state_fund: true
+    state_fund_type: "competitive"
+    state_fund_notes: "SAIF Corporation competes with private carriers"
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: true
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "OR SAIF Corporation"
+    commission_cap_pct: null
+    notes: "Oregon requires workers compensation for all employers with 1 or more employees. Retrospective rating available."
+  PA:
+    name: Pennsylvania
+    state_fund: false
+    state_fund_type: ""
+    state_fund_notes: ""
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: true
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "PA Bureau of Workers Compensation"
+    commission_cap_pct: null
+    notes: "Pennsylvania requires workers compensation for all employers with 1 or more employees. Retrospective rating available."
+  RI:
+    name: Rhode Island
+    state_fund: true
+    state_fund_type: "competitive"
+    state_fund_notes: "Rhode Island State Fund competes with private carriers"
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: true
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "RI Workers Compensation Court"
+    commission_cap_pct: null
+    notes: "Rhode Island requires workers compensation for all employers with 1 or more employees. Retrospective rating available."
+  SC:
+    name: South Carolina
+    state_fund: false
+    state_fund_type: ""
+    state_fund_notes: ""
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: false
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "SC Workers Compensation Commission"
+    commission_cap_pct: null
+    notes: "South Carolina does not require workers compensation for employers with fewer than 4 employees."
+  SD:
+    name: South Dakota
+    state_fund: false
+    state_fund_type: ""
+    state_fund_notes: ""
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: false
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "SD Department of Labor and Regulation"
+    commission_cap_pct: null
+    notes: "South Dakota requires workers compensation for all employers with 1 or more employees."
+  TN:
+    name: Tennessee
+    state_fund: false
+    state_fund_type: ""
+    state_fund_notes: ""
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: false
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "TN Bureau of Workers Compensation"
+    commission_cap_pct: null
+    notes: "Tennessee does not require workers compensation for employers with fewer than 5 employees."
+  TX:
+    name: Texas
+    state_fund: true
+    state_fund_type: "competitive"
+    state_fund_notes: "Texas Department of Insurance — Division of Workers Compensation; Texas is an optional coverage state"
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: false
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "TX Division of Workers Compensation"
+    commission_cap_pct: null
+    notes: "Texas is an optional coverage state — employers may choose not to carry workers compensation. Requires coverage for all employers with 1 or more employees if they elect to provide it."
+  UT:
+    name: Utah
+    state_fund: true
+    state_fund_type: "competitive"
+    state_fund_notes: "Utah State Fund competes with private carriers"
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: false
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "UT Labor Commission"
+    commission_cap_pct: null
+    notes: "Utah requires workers compensation for all employers with 1 or more employees."
+  VT:
+    name: Vermont
+    state_fund: false
+    state_fund_type: ""
+    state_fund_notes: ""
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: false
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "VT Department of Labor"
+    commission_cap_pct: null
+    notes: "Vermont requires workers compensation for all employers with 1 or more employees."
+  VA:
+    name: Virginia
+    state_fund: false
+    state_fund_type: ""
+    state_fund_notes: ""
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: true
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "VA Workers Compensation Commission"
+    commission_cap_pct: null
+    notes: "Virginia requires workers compensation for all employers with 1 or more employees. Retrospective rating available."
+  WA:
+    name: Washington
+    state_fund: true
+    state_fund_type: "monopolistic"
+    state_fund_notes: "Washington is a monopolistic state fund — state is sole insurer for workers compensation"
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$250,000/$250,000/$250,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$250,000"
+      disease_policy_limit: "$250,000"
+      disease_each_employee: "$250,000"
+    retrospective_rating: false
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "WA Department of Labor and Industries"
+    commission_cap_pct: null
+    notes: "Washington is a monopolistic state fund. Washington has higher minimum employers liability limits at $250,000."
+  WV:
+    name: West Virginia
+    state_fund: false
+    state_fund_type: ""
+    state_fund_notes: ""
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: false
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "WV Workers Compensation Commission"
+    commission_cap_pct: null
+    notes: "West Virginia requires workers compensation for all employers with 1 or more employees."
+  WI:
+    name: Wisconsin
+    state_fund: false
+    state_fund_type: ""
+    state_fund_notes: ""
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: true
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "WI Workers Compensation Division"
+    commission_cap_pct: null
+    notes: "Wisconsin does not require workers compensation for employers with fewer than 3 employees. Retrospective rating available."
+  WY:
+    name: Wyoming
+    state_fund: true
+    state_fund_type: "monopolistic"
+    state_fund_notes: "Wyoming is a monopolistic state fund — state is sole insurer for workers compensation"
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: false
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "WY Workers Compensation Division"
+    commission_cap_pct: null
+    notes: "Wyoming is a monopolistic state fund. Employers must purchase coverage through the state fund."
+  DC:
+    name: District of Columbia
+    state_fund: false
+    state_fund_type: ""
+    state_fund_notes: ""
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: false
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "DC Department of Employment Services"
+    commission_cap_pct: null
+    notes: "District of Columbia requires workers compensation for all employers with 1 or more employees."
+  US_VI:
+    name: US Virgin Islands
+    state_fund: false
+    state_fund_type: ""
+    state_fund_notes: ""
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: false
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "VI Department of Labor"
+    commission_cap_pct: null
+    notes: "US Virgin Islands requires workers compensation for all employers with 1 or more employees under the Virgin Islands Workers Compensation Act."
+  PR:
+    name: Puerto Rico
+    state_fund: false
+    state_fund_type: ""
+    state_fund_notes: ""
+    rate_filing: state_mandated
+    minimum_limits:
+      workers_comp: "state_schedule"
+      employers_liability: "$100,000/$100,000/$100,000"
+    required_coverages:
+      - workers_compensation
+      - employers_liability
+    employers_liability:
+      each_accident: "$100,000"
+      disease_policy_limit: "$100,000"
+      disease_each_employee: "$100,000"
+    retrospective_rating: false
+    experience_mod_eligible: true
+    experience_mod_threshold: null
+    assigned_risk_pool: "PR State Insurance Fund"
+    commission_cap_pct: null
+    notes: "Puerto Rico requires workers compensation for all employers under Act 148. Coverage is mandatory for all employers with 1 or more employees."

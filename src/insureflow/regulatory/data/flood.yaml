@@ -1,0 +1,535 @@
+# Flood Insurance — State Regulatory Data
+# NFIP participation, flood zone disclosure, private flood market status
+# Last updated: 2026-08
+
+states:
+  AL:
+    name: Alabama
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "Alabama participates in NFIP; private flood insurance is allowed"
+  AK:
+    name: Alaska
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "Alaska participates in NFIP; private flood insurance is allowed"
+  AZ:
+    name: Arizona
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "Arizona participates in NFIP; private flood insurance is allowed"
+  AR:
+    name: Arkansas
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "Arkansas participates in NFIP; private flood insurance is allowed"
+  CA:
+    name: California
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "California participates in NFIP; private flood insurance is allowed; strict flood disclosure requirements"
+  CO:
+    name: Colorado
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "Colorado participates in NFIP; private flood insurance is allowed"
+  CT:
+    name: Connecticut
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "Connecticut participates in NFIP; private flood insurance is allowed"
+  DE:
+    name: Delaware
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "Delaware participates in NFIP; private flood insurance is allowed"
+  FL:
+    name: Florida
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "Florida participates in NFIP; private flood insurance is allowed; extensive flood zone disclosure requirements"
+  GA:
+    name: Georgia
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "Georgia participates in NFIP; private flood insurance is allowed"
+  HI:
+    name: Hawaii
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "Hawaii participates in NFIP; private flood insurance is allowed"
+  ID:
+    name: Idaho
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "Idaho participates in NFIP; private flood insurance is allowed"
+  IL:
+    name: Illinois
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "Illinois participates in NFIP; private flood insurance is allowed"
+  IN:
+    name: Indiana
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "Indiana participates in NFIP; private flood insurance is allowed"
+  IA:
+    name: Iowa
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "Iowa participates in NFIP; private flood insurance is allowed"
+  KS:
+    name: Kansas
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "Kansas participates in NFIP; private flood insurance is allowed"
+  KY:
+    name: Kentucky
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "Kentucky participates in NFIP; private flood insurance is allowed"
+  LA:
+    name: Louisiana
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "Louisiana participates in NFIP; private flood insurance is allowed; extensive flood zone disclosure requirements"
+  ME:
+    name: Maine
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "Maine participates in NFIP; private flood insurance is allowed"
+  MD:
+    name: Maryland
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "Maryland participates in NFIP; private flood insurance is allowed"
+  MA:
+    name: Massachusetts
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "Massachusetts participates in NFIP; private flood insurance is allowed"
+  MI:
+    name: Michigan
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "Michigan participates in NFIP; private flood insurance is allowed"
+  MN:
+    name: Minnesota
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "Minnesota participates in NFIP; private flood insurance is allowed"
+  MS:
+    name: Mississippi
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "Mississippi participates in NFIP; private flood insurance is allowed"
+  MO:
+    name: Missouri
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "Missouri participates in NFIP; private flood insurance is allowed"
+  MT:
+    name: Montana
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "Montana participates in NFIP; private flood insurance is allowed"
+  NE:
+    name: Nebraska
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "Nebraska participates in NFIP; private flood insurance is allowed"
+  NV:
+    name: Nevada
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "Nevada participates in NFIP; private flood insurance is allowed"
+  NH:
+    name: New Hampshire
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "New Hampshire participates in NFIP; private flood insurance is allowed"
+  NJ:
+    name: New Jersey
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "New Jersey participates in NFIP; private flood insurance is allowed; extensive flood zone disclosure requirements"
+  NM:
+    name: New Mexico
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "New Mexico participates in NFIP; private flood insurance is allowed"
+  NY:
+    name: New York
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "New York participates in NFIP; private flood insurance is allowed; strict flood disclosure requirements"
+  NC:
+    name: North Carolina
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "North Carolina participates in NFIP; private flood insurance is allowed"
+  ND:
+    name: North Dakota
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "North Dakota participates in NFIP; private flood insurance is allowed"
+  OH:
+    name: Ohio
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "Ohio participates in NFIP; private flood insurance is allowed"
+  OK:
+    name: Oklahoma
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "Oklahoma participates in NFIP; private flood insurance is allowed"
+  OR:
+    name: Oregon
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "Oregon participates in NFIP; private flood insurance is allowed"
+  PA:
+    name: Pennsylvania
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "Pennsylvania participates in NFIP; private flood insurance is allowed"
+  RI:
+    name: Rhode Island
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "Rhode Island participates in NFIP; private flood insurance is allowed"
+  SC:
+    name: South Carolina
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "South Carolina participates in NFIP; private flood insurance is allowed"
+  SD:
+    name: South Dakota
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "South Dakota participates in NFIP; private flood insurance is allowed"
+  TN:
+    name: Tennessee
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "Tennessee participates in NFIP; private flood insurance is allowed"
+  TX:
+    name: Texas
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "Texas participates in NFIP; private flood insurance is allowed; extensive flood zone disclosure requirements"
+  UT:
+    name: Utah
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "Utah participates in NFIP; private flood insurance is allowed"
+  VT:
+    name: Vermont
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "Vermont participates in NFIP; private flood insurance is allowed"
+  VA:
+    name: Virginia
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "Virginia participates in NFIP; private flood insurance is allowed"
+  WA:
+    name: Washington
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "Washington participates in NFIP; private flood insurance is allowed"
+  WV:
+    name: West Virginia
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "West Virginia participates in NFIP; private flood insurance is allowed"
+  WI:
+    name: Wisconsin
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "Wisconsin participates in NFIP; private flood insurance is allowed"
+  WY:
+    name: Wyoming
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "Wyoming participates in NFIP; private flood insurance is allowed"
+  DC:
+    name: District of Columbia
+    nfip_participation: true
+    nfip_community_participation: "participating"
+    flood_disclosure_required: true
+    flood_zone_disclosure: true
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "DC participates in NFIP; private flood insurance is allowed"
+  US_VI:
+    name: US Virgin Islands
+    nfip_participation: false
+    nfip_community_participation: "non_participating"
+    flood_disclosure_required: false
+    flood_zone_disclosure: false
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "US Virgin Islands does not participate in NFIP; private flood insurance is the primary option"
+  PR:
+    name: Puerto Rico
+    nfip_participation: false
+    nfip_community_participation: "non_participating"
+    flood_disclosure_required: false
+    flood_zone_disclosure: false
+    private_flood_allowed: true
+    mandatory_flood_purchase: false
+    flood_insurance_eligibility: "all_zones"
+    notes: "Puerto Rico does not participate in NFIP; private flood insurance is the primary option"

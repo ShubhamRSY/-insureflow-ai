@@ -1,0 +1,1067 @@
+# General Liability / Professional Liability Regulatory Data — InsureFlow
+# Per-state liability insurance requirements and rules
+# Last updated: 2026-08
+
+states:
+  AL:
+    name: Alabama
+    rate_filing: prior_approval
+    comparative_negligence: modified_comparative_50
+    comparative_notes: "50% bar; plaintiff cannot recover if 50% or more at fault"
+    bad_faith_exposure: third_party
+    bad_faith_notes: "Third-party bad faith only; first-party bad faith recognized since 2017"
+    statute_of_limitations_personal_injury: "2 years"
+    statute_of_limitations_property_damage: "6 years"
+    statute_of_limitations_contract: "6 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    defense_costs_notes: "Defense costs typically outside policy limits"
+    punitive_damages_cap: null
+    medical_malpractice_rules: null
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Alabama prior approval; modified comparative negligence 50% bar"
+
+  AK:
+    name: Alaska
+    rate_filing: file_and_use
+    comparative_negligence: pure_comparative
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "2 years"
+    statute_of_limitations_property_damage: "6 years"
+    statute_of_limitations_contract: "6 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: null
+    medical_malpractice_rules: null
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Alaska file-and-use; pure comparative negligence"
+
+  AZ:
+    name: Arizona
+    rate_filing: use_and_file
+    comparative_negligence: pure_comparative
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "2 years"
+    statute_of_limitations_property_damage: "3 years"
+    statute_of_limitations_contract: "6 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: null
+    medical_malpractice_rules: null
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Arizona use-and-file; pure comparative negligence"
+
+  AR:
+    name: Arkansas
+    rate_filing: prior_approval
+    comparative_negligence: modified_comparative_50
+    comparative_notes: "50% bar on comparative negligence"
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "3 years"
+    statute_of_limitations_property_damage: "3 years"
+    statute_of_limitations_contract: "5 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: inside_limits
+    defense_costs_notes: "Defense costs may erode policy limits in some cases"
+    punitive_damages_cap: null
+    medical_malpractice_rules: null
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Arkansas prior approval; modified comparative negligence 50% bar"
+
+  CA:
+    name: California
+    rate_filing: prior_approval
+    rate_filing_notes: "Proposition 103 requires prior approval; public hearing for rate increases"
+    comparative_negligence: pure_comparative
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith; strict bad faith doctrine"
+    statute_of_limitations_personal_injury: "2 years"
+    statute_of_limitations_property_damage: "3 years"
+    statute_of_limitations_contract: "4 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    defense_costs_notes: "Defense costs outside policy limits standard in GL"
+    punitive_damages_cap: null
+    punitive_damages_notes: "No cap on punitive damages; must prove malice, oppression, or fraud by clear and convincing evidence"
+    medical_malpractice_rules: "MICRA caps: $250K non-economic damages; $50K future medical"
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers", "medical_professional_liability"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "CA Prop 103 strictest rate regulation; MICRA medical malpractice caps; pure comparative negligence"
+
+  CO:
+    name: Colorado
+    rate_filing: file_and_use
+    comparative_negligence: pure_comparative
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "2 years"
+    statute_of_limitations_property_damage: "3 years"
+    statute_of_limitations_contract: "6 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: "Statutory cap"
+    punitive_damages_notes: "Punitive damages capped at amount equal to actual damages"
+    medical_malpractice_rules: null
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Colorado file-and-use; punitive damages capped at actual damages amount"
+
+  CT:
+    name: Connecticut
+    rate_filing: prior_approval
+    comparative_negligence: pure_comparative
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "2 years"
+    statute_of_limitations_property_damage: "2 years"
+    statute_of_limitations_contract: "6 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: null
+    medical_malpractice_rules: null
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Connecticut prior approval; pure comparative negligence"
+
+  DE:
+    name: Delaware
+    rate_filing: no_file
+    rate_filing_notes: "Competitive rating; no filing required for most lines"
+    comparative_negligence: pure_comparative
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "2 years"
+    statute_of_limitations_property_damage: "2 years"
+    statute_of_limitations_contract: "4 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: null
+    medical_malpractice_rules: null
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Delaware competitive rating; pure comparative negligence; domicile state for many insurers"
+
+  FL:
+    name: Florida
+    rate_filing: prior_approval
+    rate_filing_notes: "OIR must approve rates; emergency filing allowed for catastrophe"
+    comparative_negligence: pure_comparative
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith; 2023 tort reform (HB 837)"
+    statute_of_limitations_personal_injury: "2 years"
+    statute_of_limitations_property_damage: "5 years"
+    statute_of_limitations_contract: "5 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: "3x compensatory or $500K"
+    punitive_damages_notes: "Punitive damages capped at 3x compensatory damages or $500K, whichever is greater"
+    medical_malpractice_rules: "No-fault standard of care; caps on non-economic damages"
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers", "medical_professional_liability"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Florida OIR strictest liability regulation; 2023 HB 837 tort reform; comparative negligence reform"
+
+  GA:
+    name: Georgia
+    rate_filing: file_and_use
+    comparative_negligence: modified_comparative_50
+    comparative_notes: "50% bar; modified comparative negligence"
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "2 years"
+    statute_of_limitations_property_damage: "4 years"
+    statute_of_limitations_contract: "6 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: null
+    punitive_damages_notes: "Punitive damages require clear and convincing evidence; no statutory cap"
+    medical_malpractice_rules: null
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Georgia file-and-use; modified comparative negligence 50% bar"
+
+  HI:
+    name: Hawaii
+    rate_filing: prior_approval
+    comparative_negligence: pure_comparative
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "2 years"
+    statute_of_limitations_property_damage: "2 years"
+    statute_of_limitations_contract: "6 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: null
+    medical_malpractice_rules: null
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Hawaii prior approval; pure comparative negligence"
+
+  ID:
+    name: Idaho
+    rate_filing: file_and_use
+    comparative_negligence: modified_comparative_50
+    comparative_notes: "50% bar; plaintiff cannot recover if 50% or more at fault"
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "2 years"
+    statute_of_limitations_property_damage: "3 years"
+    statute_of_limitations_contract: "5 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: null
+    medical_malpractice_rules: null
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Idaho file-and-use; modified comparative negligence 50% bar"
+
+  IL:
+    name: Illinois
+    rate_filing: use_and_file
+    comparative_negligence: modified_comparative_50
+    comparative_notes: "50% bar; plaintiff cannot recover if more than 50% at fault"
+    bad_faith_exposure: third_party
+    bad_faith_notes: "Third-party bad faith only; no first-party bad faith tort"
+    statute_of_limitations_personal_injury: "2 years"
+    statute_of_limitations_property_damage: "5 years"
+    statute_of_limitations_contract: "10 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: inside_limits
+    defense_costs_notes: "Defense costs inside policy limits standard"
+    punitive_damages_cap: null
+    medical_malpractice_rules: "PLF (Patient Liability Fund); certificate of merit required"
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers", "medical_professional_liability"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Illinois use-and-file; modified comparative negligence 50% bar; strong surplus lines market"
+
+  IN:
+    name: Indiana
+    rate_filing: file_and_use
+    comparative_negligence: modified_comparative_51
+    comparative_notes: "51% bar; plaintiff cannot recover if more than 51% at fault"
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "2 years"
+    statute_of_limitations_property_damage: "2 years"
+    statute_of_limitations_contract: "6 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: "3x compensatory"
+    punitive_damages_notes: "Punitive damages capped at 3x compensatory damages"
+    medical_malpractice_rules: null
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Indiana file-and-use; modified comparative negligence 51% bar; punitive damages 3x cap"
+
+  IA:
+    name: Iowa
+    rate_filing: prior_approval
+    comparative_negligence: modified_comparative_51
+    comparative_notes: "51% bar on comparative negligence"
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "2 years"
+    statute_of_limitations_property_damage: "5 years"
+    statute_of_limitations_contract: "10 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: null
+    medical_malpractice_rules: null
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Iowa prior approval for personal lines; modified comparative negligence 51% bar"
+
+  KS:
+    name: Kansas
+    rate_filing: file_and_use
+    comparative_negligence: modified_comparative_50
+    comparative_notes: "50% bar; plaintiff cannot recover if 50% or more at fault"
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "2 years"
+    statute_of_limitations_property_damage: "2 years"
+    statute_of_limitations_contract: "5 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: "5M or 3x actual"
+    punitive_damages_notes: "Punitive damages capped at lesser of $5M or 3x actual damages"
+    medical_malpractice_rules: null
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Kansas file-and-use; punitive damages cap; modified comparative negligence 50% bar"
+
+  KY:
+    name: Kentucky
+    rate_filing: prior_approval
+    comparative_negligence: modified_comparative_50
+    comparative_notes: "50% bar; pure comparative for parties under 50%"
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "1 year"
+    statute_of_limitations_property_damage: "2 years"
+    statute_of_limitations_contract: "5 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: null
+    medical_malpractice_rules: null
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Kentucky prior approval; shortest PI SOL in US (1 year)"
+
+  LA:
+    name: Louisiana
+    rate_filing: prior_approval
+    comparative_negligence: pure_comparative
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "1 year"
+    statute_of_limitations_property_damage: "2 years"
+    statute_of_limitations_contract: "10 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: null
+    punitive_damages_notes: "Punitive damages generally not available in Louisiana"
+    medical_malpractice_rules: null
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Louisiana prior approval; 1-year PI SOL; punitive damages generally unavailable"
+
+  ME:
+    name: Maine
+    rate_filing: file_and_use
+    comparative_negligence: pure_comparative
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "6 years"
+    statute_of_limitations_property_damage: "6 years"
+    statute_of_limitations_contract: "6 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: null
+    medical_malpractice_rules: null
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Maine file-and-use; pure comparative negligence; long SOL"
+
+  MD:
+    name: Maryland
+    rate_filing: prior_approval
+    comparative_negligence: pure_comparative
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "3 years"
+    statute_of_limitations_property_damage: "3 years"
+    statute_of_limitations_contract: "3 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: "2x actual or $750K"
+    punitive_damages_notes: "Punitive damages capped at lesser of 2x actual damages or $750K"
+    medical_malpractice_rules: "Certificate of merit required; must be filed within 90 days"
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers", "medical_professional_liability"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Maryland prior approval; punitive damages cap; certificate of merit for med mal"
+
+  MA:
+    name: Massachusetts
+    rate_filing: prior_approval
+    rate_filing_notes: "Managed competition model; OIR sets base rates"
+    comparative_negligence: modified_comparative_50
+    comparative_notes: "50% bar on comparative negligence"
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "3 years"
+    statute_of_limitations_property_damage: "3 years"
+    statute_of_limitations_contract: "6 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: null
+    medical_malpractice_rules: "Certificate of merit required; 3-year SOL from act or 1 year from discovery"
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers", "medical_professional_liability"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Massachusetts managed competition; modified comparative negligence 50% bar"
+
+  MI:
+    name: Michigan
+    rate_filing: prior_approval
+    comparative_negligence: modified_comparative_51
+    comparative_notes: "51% bar; modified comparative negligence"
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "3 years"
+    statute_of_limitations_property_damage: "3 years"
+    statute_of_limitations_contract: "6 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: null
+    medical_malpractice_rules: "Certificate of merit required; 2-year SOL from act or 6 months from discovery"
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers", "medical_professional_liability"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Michigan prior approval; modified comparative negligence 51% bar; no-fault auto affects PI claims"
+
+  MN:
+    name: Minnesota
+    rate_filing: prior_approval
+    comparative_negligence: pure_comparative
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "2 years"
+    statute_of_limitations_property_damage: "6 years"
+    statute_of_limitations_contract: "6 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: null
+    punitive_damages_notes: "Punitive damages require clear and convincing evidence"
+    medical_malpractice_rules: null
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Minnesota prior approval; pure comparative negligence"
+
+  MS:
+    name: Mississippi
+    rate_filing: file_and_use
+    comparative_negligence: pure_comparative
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "3 years"
+    statute_of_limitations_property_damage: "3 years"
+    statute_of_limitations_contract: "6 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: "20M or 1% of net worth"
+    punitive_damages_notes: "Punitive damages capped at lesser of $20M or 1% of defendant net worth"
+    medical_malpractice_rules: null
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Mississippi file-and-use; punitive damages cap; pure comparative negligence"
+
+  MO:
+    name: Missouri
+    rate_filing: file_and_use
+    comparative_negligence: modified_comparative_50
+    comparative_notes: "50% bar on comparative negligence"
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "5 years"
+    statute_of_limitations_property_damage: "5 years"
+    statute_of_limitations_contract: "10 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: null
+    medical_malpractice_rules: "Certificate of merit required; 2-year SOL from act or 1 year from discovery"
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers", "medical_professional_liability"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Missouri file-and-use; modified comparative negligence 50% bar"
+
+  MT:
+    name: Montana
+    rate_filing: prior_approval
+    comparative_negligence: pure_comparative
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "3 years"
+    statute_of_limitations_property_damage: "2 years"
+    statute_of_limitations_contract: "8 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: null
+    medical_malpractice_rules: null
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Montana prior approval for personal lines; pure comparative negligence"
+
+  NE:
+    name: Nebraska
+    rate_filing: file_and_use
+    comparative_negligence: modified_comparative_50
+    comparative_notes: "50% bar; plaintiff cannot recover if 50% or more at fault"
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "4 years"
+    statute_of_limitations_property_damage: "4 years"
+    statute_of_limitations_contract: "5 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: null
+    medical_malpractice_rules: null
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Nebraska competitive rating; modified comparative negligence 50% bar"
+
+  NV:
+    name: Nevada
+    rate_filing: file_and_use
+    comparative_negligence: pure_comparative
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "2 years"
+    statute_of_limitations_property_damage: "3 years"
+    statute_of_limitations_contract: "6 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: null
+    medical_malpractice_rules: null
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Nevada file-and-use; pure comparative negligence"
+
+  NH:
+    name: New Hampshire
+    rate_filing: no_file
+    rate_filing_notes: "Competitive rating; no filing required for most lines"
+    comparative_negligence: pure_comparative
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "3 years"
+    statute_of_limitations_property_damage: "3 years"
+    statute_of_limitations_contract: "6 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: null
+    medical_malpractice_rules: null
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "New Hampshire competitive rating; no filing required; pure comparative negligence"
+
+  NJ:
+    name: New Jersey
+    rate_filing: prior_approval
+    comparative_negligence: modified_comparative_50
+    comparative_notes: "50% bar; choice of no-fault or verbal threshold"
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "2 years"
+    statute_of_limitations_property_damage: "6 years"
+    statute_of_limitations_contract: "6 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: "5x actual or $350K"
+    punitive_damages_notes: "Punitive damages capped at lesser of 5x actual damages or $350K"
+    medical_malpractice_rules: null
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "New Jersey prior approval; punitive damages cap; modified comparative negligence 50% bar"
+
+  NM:
+    name: New Mexico
+    rate_filing: file_and_use
+    comparative_negligence: pure_comparative
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "3 years"
+    statute_of_limitations_property_damage: "4 years"
+    statute_of_limitations_contract: "6 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: null
+    medical_malpractice_rules: null
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "New Mexico competitive rating; pure comparative negligence"
+
+  NY:
+    name: New York
+    rate_filing: prior_approval
+    rate_filing_notes: "DFS must approve rates; public hearing required for rate increases"
+    comparative_negligence: pure_comparative
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "3 years"
+    statute_of_limitations_property_damage: "3 years"
+    statute_of_limitations_contract: "6 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: inside_limits
+    defense_costs_notes: "Defense costs inside policy limits standard"
+    punitive_damages_cap: null
+    medical_malpractice_rules: "Certificate of merit required; 2 year 6 month SOL from act or 1 year from discovery"
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers", "medical_professional_liability"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "New York DFS strictest regulation; pure comparative negligence; defense costs inside limits"
+
+  NC:
+    name: North Carolina
+    rate_filing: prior_approval
+    comparative_negligence: modified_comparative_50
+    comparative_notes: "50% bar on comparative negligence (modified since 2011)"
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "3 years"
+    statute_of_limitations_property_damage: "3 years"
+    statute_of_limitations_contract: "3 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: "250K or 3x actual"
+    punitive_damages_notes: "Punitive damages capped at lesser of $250K or 3x actual damages"
+    medical_malpractice_rules: "Certificate of merit required; 3-year SOL from act or 1 year from discovery"
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers", "medical_professional_liability"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "North Carolina prior approval; punitive damages cap; rate bureau system"
+
+  ND:
+    name: North Dakota
+    rate_filing: file_and_use
+    comparative_negligence: modified_comparative_50
+    comparative_notes: "50% bar on comparative negligence"
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "2 years"
+    statute_of_limitations_property_damage: "6 years"
+    statute_of_limitations_contract: "6 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: "2x actual or $250K"
+    punitive_damages_notes: "Punitive damages capped at lesser of 2x actual damages or $250K"
+    medical_malpractice_rules: null
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "North Dakota competitive rating; punitive damages cap; modified comparative negligence 50% bar"
+
+  OH:
+    name: Ohio
+    rate_filing: file_and_use
+    comparative_negligence: modified_comparative_51
+    comparative_notes: "51% bar on comparative negligence"
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "2 years"
+    statute_of_limitations_property_damage: "4 years"
+    statute_of_limitations_contract: "15 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: "2x compensatory"
+    punitive_damages_notes: "Punitive damages capped at 2x compensatory damages"
+    medical_malpractice_rules: null
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Ohio file-and-use; punitive damages 2x cap; modified comparative negligence 51% bar"
+
+  OK:
+    name: Oklahoma
+    rate_filing: file_and_use
+    comparative_negligence: modified_comparative_50
+    comparative_notes: "50% bar; plaintiff cannot recover if 50% or more at fault"
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "2 years"
+    statute_of_limitations_property_damage: "2 years"
+    statute_of_limitations_contract: "5 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: null
+    medical_malpractice_rules: null
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Oklahoma file-and-use; modified comparative negligence 50% bar"
+
+  OR:
+    name: Oregon
+    rate_filing: prior_approval
+    comparative_negligence: pure_comparative
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "3 years"
+    statute_of_limitations_property_damage: "6 years"
+    statute_of_limitations_contract: "6 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: null
+    medical_malpractice_rules: null
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Oregon prior approval; pure comparative negligence"
+
+  PA:
+    name: Pennsylvania
+    rate_filing: prior_approval
+    comparative_negligence: modified_comparative_51
+    comparative_notes: "51% bar on comparative negligence; choice no-fault"
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "2 years"
+    statute_of_limitations_property_damage: "2 years"
+    statute_of_limitations_contract: "4 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: null
+    medical_malpractice_rules: null
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Pennsylvania prior approval; modified comparative negligence 51% bar"
+
+  RI:
+    name: Rhode Island
+    rate_filing: file_and_use
+    comparative_negligence: pure_comparative
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "3 years"
+    statute_of_limitations_property_damage: "3 years"
+    statute_of_limitations_contract: "10 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: null
+    medical_malpractice_rules: null
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Rhode Island file-and-use; pure comparative negligence"
+
+  SC:
+    name: South Carolina
+    rate_filing: file_and_use
+    comparative_negligence: modified_comparative_51
+    comparative_notes: "51% bar on comparative negligence"
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "3 years"
+    statute_of_limitations_property_damage: "3 years"
+    statute_of_limitations_contract: "3 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: "3x actual or $500K"
+    punitive_damages_notes: "Punitive damages capped at lesser of 3x actual damages or $500K"
+    medical_malpractice_rules: null
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "South Carolina file-and-use; punitive damages cap; modified comparative negligence 51% bar"
+
+  SD:
+    name: South Dakota
+    rate_filing: file_and_use
+    comparative_negligence: modified_comparative_50
+    comparative_notes: "50% bar on comparative negligence"
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "3 years"
+    statute_of_limitations_property_damage: "6 years"
+    statute_of_limitations_contract: "6 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: null
+    medical_malpractice_rules: null
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "South Dakota file-and-use; modified comparative negligence 50% bar"
+
+  TN:
+    name: Tennessee
+    rate_filing: file_and_use
+    comparative_negligence: modified_comparative_51
+    comparative_notes: "51% bar on comparative negligence"
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "1 year"
+    statute_of_limitations_property_damage: "3 years"
+    statute_of_limitations_contract: "6 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: null
+    medical_malpractice_rules: null
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Tennessee file-and-use; modified comparative negligence 51% bar; 1-year PI SOL"
+
+  TX:
+    name: Texas
+    rate_filing: file_and_use
+    rate_filing_notes: "TDI must be notified; competitive rating for most commercial lines"
+    comparative_negligence: modified_comparative_51
+    comparative_notes: "51% bar on comparative negligence"
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "2 years"
+    statute_of_limitations_property_damage: "2 years"
+    statute_of_limitations_contract: "4 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: "20M or 750K"
+    punitive_damages_notes: "Punitive damages capped at lesser of $20M or $750K"
+    medical_malpractice_rules: null
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Texas file-and-use; punitive damages cap; modified comparative negligence 51% bar"
+
+  UT:
+    name: Utah
+    rate_filing: file_and_use
+    comparative_negligence: modified_comparative_50
+    comparative_notes: "50% bar on comparative negligence"
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "4 years"
+    statute_of_limitations_property_damage: "6 years"
+    statute_of_limitations_contract: "6 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: null
+    medical_malpractice_rules: null
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Utah competitive rating; modified comparative negligence 50% bar"
+
+  VT:
+    name: Vermont
+    rate_filing: prior_approval
+    comparative_negligence: pure_comparative
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "6 years"
+    statute_of_limitations_property_damage: "3 years"
+    statute_of_limitations_contract: "6 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: null
+    medical_malpractice_rules: null
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Vermont prior approval; pure comparative negligence; small state market"
+
+  VA:
+    name: Virginia
+    rate_filing: file_and_use
+    comparative_negligence: pure_comparative
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "2 years"
+    statute_of_limitations_property_damage: "5 years"
+    statute_of_limitations_contract: "5 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: null
+    medical_malpractice_rules: null
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Virginia file-and-use; pure comparative negligence"
+
+  WA:
+    name: Washington
+    rate_filing: prior_approval
+    comparative_negligence: pure_comparative
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "3 years"
+    statute_of_limitations_property_damage: "6 years"
+    statute_of_limitations_contract: "6 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: null
+    medical_malpractice_rules: null
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Washington prior approval; pure comparative negligence"
+
+  WV:
+    name: West Virginia
+    rate_filing: prior_approval
+    comparative_negligence: modified_comparative_50
+    comparative_notes: "50% bar on comparative negligence"
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "2 years"
+    statute_of_limitations_property_damage: "2 years"
+    statute_of_limitations_contract: "10 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: null
+    medical_malpractice_rules: null
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "West Virginia prior approval; modified comparative negligence 50% bar"
+
+  WI:
+    name: Wisconsin
+    rate_filing: file_and_use
+    comparative_negligence: modified_comparative_51
+    comparative_notes: "51% bar on comparative negligence"
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "3 years"
+    statute_of_limitations_property_damage: "3 years"
+    statute_of_limitations_contract: "6 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: "200K or 2x actual"
+    punitive_damages_notes: "Punitive damages capped at lesser of $200K or 2x actual damages"
+    medical_malpractice_rules: null
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Wisconsin file-and-use; punitive damages cap; modified comparative negligence 51% bar"
+
+  WY:
+    name: Wyoming
+    rate_filing: no_file
+    rate_filing_notes: "Competitive rating; no filing required for most lines"
+    comparative_negligence: pure_comparative
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "2 years"
+    statute_of_limitations_property_damage: "8 years"
+    statute_of_limitations_contract: "10 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: null
+    medical_malpractice_rules: null
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Wyoming competitive rating; no filing required; pure comparative negligence"
+
+  DC:
+    name: District of Columbia
+    rate_filing: file_and_use
+    comparative_negligence: pure_comparative
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "3 years"
+    statute_of_limitations_property_damage: "3 years"
+    statute_of_limitations_contract: "3 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: null
+    medical_malpractice_rules: null
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "DC file-and-use; competitive rating"
+
+  US_VI:
+    name: US Virgin Islands
+    rate_filing: prior_approval
+    comparative_negligence: pure_comparative
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "2 years"
+    statute_of_limitations_property_damage: "3 years"
+    statute_of_limitations_contract: "6 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: null
+    medical_malpractice_rules: null
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "USVI has its own insurance department"
+
+  PR:
+    name: Puerto Rico
+    rate_filing: prior_approval
+    comparative_negligence: pure_comparative
+    bad_faith_exposure: first_and_third_party
+    bad_faith_notes: "Both first-party and third-party bad faith recognized"
+    statute_of_limitations_personal_injury: "1 year"
+    statute_of_limitations_property_damage: "1 year"
+    statute_of_limitations_contract: "10 years"
+    occurrence_vs_claims_made: occurrence
+    defense_costs: outside_limits
+    punitive_damages_cap: null
+    medical_malpractice_rules: null
+    mandatory_coverages: []
+    optional_coverages: ["general_liability", "professional_liability", "errors_and_omissions", "directors_and_officers"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Puerto Rico has its own insurance code; 1-year PI/PD SOL"

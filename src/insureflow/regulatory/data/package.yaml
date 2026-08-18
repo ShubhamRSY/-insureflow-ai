@@ -1,0 +1,376 @@
+# Package / Bundled Policies — State Regulatory Data
+# Package and bundled policy regulations
+# Last updated: 2026-08
+
+states:
+  AL:
+    name: Alabama
+    rate_filing: prior_approval
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "Alabama allows package discounts with no specific cap"
+  AK:
+    name: Alaska
+    rate_filing: file_and_use
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "Alaska allows package discounts with no specific cap"
+  AZ:
+    name: Arizona
+    rate_filing: use_and_file
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "Arizona allows package discounts with no specific cap"
+  AR:
+    name: Arkansas
+    rate_filing: prior_approval
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "Arkansas requires prior approval for package discounts"
+  CA:
+    name: California
+    rate_filing: prior_approval
+    package_discount_allowed: true
+    multi_policy_discount_cap: 0.25
+    required_disclosures: ["discount_disclosure"]
+    notes: "California requires prior approval; 25% maximum discount on multi-policy packages"
+  CO:
+    name: Colorado
+    rate_filing: file_and_use
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "Colorado allows package discounts with no specific cap"
+  CT:
+    name: Connecticut
+    rate_filing: file_and_use
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "Connecticut allows package discounts with no specific cap"
+  DE:
+    name: Delaware
+    rate_filing: prior_approval
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "Delaware requires prior approval for package discounts"
+  FL:
+    name: Florida
+    rate_filing: file_and_use
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "Florida allows package discounts with no specific cap"
+  GA:
+    name: Georgia
+    rate_filing: file_and_use
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "Georgia allows package discounts with no specific cap"
+  HI:
+    name: Hawaii
+    rate_filing: file_and_use
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "Hawaii allows package discounts with no specific cap"
+  ID:
+    name: Idaho
+    rate_filing: file_and_use
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "Idaho allows package discounts with no specific cap"
+  IL:
+    name: Illinois
+    rate_filing: file_and_use
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "Illinois allows package discounts with no specific cap"
+  IN:
+    name: Indiana
+    rate_filing: file_and_use
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "Indiana allows package discounts with no specific cap"
+  IA:
+    name: Iowa
+    rate_filing: file_and_use
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "Iowa allows package discounts with no specific cap"
+  KS:
+    name: Kansas
+    rate_filing: file_and_use
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "Kansas allows package discounts with no specific cap"
+  KY:
+    name: Kentucky
+    rate_filing: file_and_use
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "Kentucky allows package discounts with no specific cap"
+  LA:
+    name: Louisiana
+    rate_filing: prior_approval
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "Louisiana requires prior approval for package discounts"
+  ME:
+    name: Maine
+    rate_filing: file_and_use
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "Maine allows package discounts with no specific cap"
+  MD:
+    name: Maryland
+    rate_filing: file_and_use
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "Maryland allows package discounts with no specific cap"
+  MA:
+    name: Massachusetts
+    rate_filing: prior_approval
+    package_discount_allowed: true
+    multi_policy_discount_cap: 0.20
+    required_disclosures: ["discount_disclosure"]
+    notes: "Massachusetts requires prior approval; 20% maximum discount on multi-policy packages"
+  MI:
+    name: Michigan
+    rate_filing: file_and_use
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "Michigan allows package discounts with no specific cap"
+  MN:
+    name: Minnesota
+    rate_filing: file_and_use
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "Minnesota allows package discounts with no specific cap"
+  MS:
+    name: Mississippi
+    rate_filing: file_and_use
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "Mississippi allows package discounts with no specific cap"
+  MO:
+    name: Missouri
+    rate_filing: file_and_use
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "Missouri allows package discounts with no specific cap"
+  MT:
+    name: Montana
+    rate_filing: file_and_use
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "Montana allows package discounts with no specific cap"
+  NE:
+    name: Nebraska
+    rate_filing: file_and_use
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "Nebraska allows package discounts with no specific cap"
+  NV:
+    name: Nevada
+    rate_filing: file_and_use
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "Nevada allows package discounts with no specific cap"
+  NH:
+    name: New Hampshire
+    rate_filing: file_and_use
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "New Hampshire allows package discounts with no specific cap"
+  NJ:
+    name: New Jersey
+    rate_filing: prior_approval
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "New Jersey requires prior approval for package discounts"
+  NM:
+    name: New Mexico
+    rate_filing: prior_approval
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "New Mexico requires prior approval for package discounts"
+  NY:
+    name: New York
+    rate_filing: prior_approval
+    package_discount_allowed: true
+    multi_policy_discount_cap: 0.25
+    required_disclosures: ["discount_disclosure"]
+    notes: "New York requires prior approval; 25% maximum discount on multi-policy packages"
+  NC:
+    name: North Carolina
+    rate_filing: prior_approval
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "North Carolina requires prior approval for package discounts"
+  ND:
+    name: North Dakota
+    rate_filing: file_and_use
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "North Dakota allows package discounts with no specific cap"
+  OH:
+    name: Ohio
+    rate_filing: file_and_use
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "Ohio allows package discounts with no specific cap"
+  OK:
+    name: Oklahoma
+    rate_filing: file_and_use
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "Oklahoma allows package discounts with no specific cap"
+  OR:
+    name: Oregon
+    rate_filing: file_and_use
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "Oregon allows package discounts with no specific cap"
+  PA:
+    name: Pennsylvania
+    rate_filing: prior_approval
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "Pennsylvania requires prior approval for package discounts"
+  RI:
+    name: Rhode Island
+    rate_filing: file_and_use
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "Rhode Island allows package discounts with no specific cap"
+  SC:
+    name: South Carolina
+    rate_filing: prior_approval
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "South Carolina requires prior approval for package discounts"
+  SD:
+    name: South Dakota
+    rate_filing: file_and_use
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "South Dakota allows package discounts with no specific cap"
+  TN:
+    name: Tennessee
+    rate_filing: file_and_use
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "Tennessee allows package discounts with no specific cap"
+  TX:
+    name: Texas
+    rate_filing: file_and_use
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "Texas allows package discounts with no specific cap"
+  UT:
+    name: Utah
+    rate_filing: file_and_use
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "Utah allows package discounts with no specific cap"
+  VT:
+    name: Vermont
+    rate_filing: file_and_use
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "Vermont allows package discounts with no specific cap"
+  VA:
+    name: Virginia
+    rate_filing: file_and_use
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "Virginia allows package discounts with no specific cap"
+  WA:
+    name: Washington
+    rate_filing: file_and_use
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "Washington allows package discounts with no specific cap"
+  WV:
+    name: West Virginia
+    rate_filing: prior_approval
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "West Virginia requires prior approval for package discounts"
+  WI:
+    name: Wisconsin
+    rate_filing: file_and_use
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "Wisconsin allows package discounts with no specific cap"
+  WY:
+    name: Wyoming
+    rate_filing: file_and_use
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "Wyoming allows package discounts with no specific cap"
+  DC:
+    name: District of Columbia
+    rate_filing: prior_approval
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "DC requires prior approval for package discounts"
+  US_VI:
+    name: US Virgin Islands
+    rate_filing: prior_approval
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "US Virgin Islands requires prior approval for package discounts"
+  PR:
+    name: Puerto Rico
+    rate_filing: prior_approval
+    package_discount_allowed: true
+    multi_policy_discount_cap: null
+    required_disclosures: []
+    notes: "Puerto Rico requires prior approval for package discounts"

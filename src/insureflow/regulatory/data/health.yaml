@@ -1,0 +1,1122 @@
+metadata:
+  line: health_insurance
+  description: "Health Insurance — state-specific regulatory rules"
+  last_updated: "2026-08-17"
+  sources:
+    - "NAIC Health Insurance Regulation"
+    - "CMS Marketplace Rules"
+    - "State Health Insurance Regulations"
+
+states:
+  AL:
+    name: Alabama
+    rate_filing: prior_approval
+    state_individual_mandate: false
+    state_exchange: false
+    state_exchange_type: federally_facilitated
+    small_group_reform: false
+    essential_health_benefits: federal_baseline
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: false
+    modified_community_rating: false
+    mandated_benefits: []
+    autism_mandate: true
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: false
+    grace_period_days: 30
+    external_review: true
+    notes: ""
+
+  AK:
+    name: Alaska
+    rate_filing: file_and_use
+    state_individual_mandate: false
+    state_exchange: false
+    state_exchange_type: federally_facilitated
+    small_group_reform: false
+    essential_health_benefits: federal_baseline
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: false
+    modified_community_rating: false
+    mandated_benefits: ["hearing_aids"]
+    autism_mandate: false
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: false
+    grace_period_days: 30
+    external_review: true
+    notes: ""
+
+  AZ:
+    name: Arizona
+    rate_filing: file_and_use
+    state_individual_mandate: false
+    state_exchange: false
+    state_exchange_type: federally_facilitated
+    small_group_reform: false
+    essential_health_benefits: federal_baseline
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: false
+    modified_community_rating: false
+    mandated_benefits: []
+    autism_mandate: true
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: false
+    grace_period_days: 30
+    external_review: true
+    notes: ""
+
+  AR:
+    name: Arkansas
+    rate_filing: prior_approval
+    state_individual_mandate: false
+    state_exchange: false
+    state_exchange_type: federally_facilitated
+    small_group_reform: false
+    essential_health_benefits: federal_baseline
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: false
+    modified_community_rating: false
+    mandated_benefits: ["hearing_aids"]
+    autism_mandate: false
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: false
+    grace_period_days: 30
+    external_review: true
+    notes: ""
+
+  CA:
+    name: California
+    rate_filing: prior_approval
+    state_individual_mandate: true
+    state_exchange: true
+    state_exchange_type: state_based
+    small_group_reform: false
+    essential_health_benefits: state_specific
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: false
+    modified_community_rating: true
+    mandated_benefits: ["hearing_aids", "infusion_therapy"]
+    autism_mandate: true
+    mental_health_parity: true
+    infusion_therapy: true
+    ivf_mandate: true
+    grace_period_days: 30
+    external_review: true
+    notes: "Covered California; strongest state consumer protections"
+
+  CO:
+    name: Colorado
+    rate_filing: prior_approval
+    state_individual_mandate: false
+    state_exchange: true
+    state_exchange_type: state_based
+    small_group_reform: true
+    essential_health_benefits: state_specific
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: true
+    modified_community_rating: true
+    mandated_benefits: ["hearing_aids"]
+    autism_mandate: true
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: true
+    grace_period_days: 30
+    external_review: true
+    notes: ""
+
+  CT:
+    name: Connecticut
+    rate_filing: prior_approval
+    state_individual_mandate: false
+    state_exchange: true
+    state_exchange_type: state_based
+    small_group_reform: true
+    essential_health_benefits: state_specific
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: true
+    modified_community_rating: true
+    mandated_benefits: ["hearing_aids"]
+    autism_mandate: true
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: true
+    grace_period_days: 30
+    external_review: true
+    notes: ""
+
+  DE:
+    name: Delaware
+    rate_filing: prior_approval
+    state_individual_mandate: false
+    state_exchange: true
+    state_exchange_type: state_based
+    small_group_reform: false
+    essential_health_benefits: state_specific
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: false
+    modified_community_rating: false
+    mandated_benefits: []
+    autism_mandate: false
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: false
+    grace_period_days: 30
+    external_review: true
+    notes: "Transitioned from partnership to state-based marketplace in 2024"
+
+  FL:
+    name: Florida
+    rate_filing: file_and_use
+    state_individual_mandate: false
+    state_exchange: false
+    state_exchange_type: federally_facilitated
+    small_group_reform: false
+    essential_health_benefits: federal_baseline
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: false
+    modified_community_rating: false
+    mandated_benefits: []
+    autism_mandate: true
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: false
+    grace_period_days: 30
+    external_review: true
+    notes: ""
+
+  GA:
+    name: Georgia
+    rate_filing: file_and_use
+    state_individual_mandate: false
+    state_exchange: false
+    state_exchange_type: federally_facilitated
+    small_group_reform: true
+    essential_health_benefits: federal_baseline
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: false
+    modified_community_rating: false
+    mandated_benefits: []
+    autism_mandate: true
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: false
+    grace_period_days: 30
+    external_review: true
+    notes: ""
+
+  HI:
+    name: Hawaii
+    rate_filing: prior_approval
+    state_individual_mandate: false
+    state_exchange: false
+    state_exchange_type: federally_facilitated
+    small_group_reform: true
+    essential_health_benefits: state_specific
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: true
+    modified_community_rating: true
+    mandated_benefits: ["hearing_aids"]
+    autism_mandate: false
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: true
+    grace_period_days: 30
+    external_review: true
+    notes: "Prepaid Health Care Act (1974) — unique employer mandate"
+
+  ID:
+    name: Idaho
+    rate_filing: prior_approval
+    state_individual_mandate: false
+    state_exchange: true
+    state_exchange_type: state_based
+    small_group_reform: true
+    essential_health_benefits: state_specific
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: true
+    modified_community_rating: true
+    mandated_benefits: []
+    autism_mandate: false
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: false
+    grace_period_days: 30
+    external_review: true
+    notes: ""
+
+  IL:
+    name: Illinois
+    rate_filing: prior_approval
+    state_individual_mandate: false
+    state_exchange: false
+    state_exchange_type: federally_facilitated
+    small_group_reform: false
+    essential_health_benefits: state_specific
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: false
+    modified_community_rating: false
+    mandated_benefits: ["hearing_aids"]
+    autism_mandate: true
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: true
+    grace_period_days: 30
+    external_review: true
+    notes: ""
+
+  IN:
+    name: Indiana
+    rate_filing: file_and_use
+    state_individual_mandate: false
+    state_exchange: false
+    state_exchange_type: federally_facilitated
+    small_group_reform: true
+    essential_health_benefits: federal_baseline
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: true
+    modified_community_rating: true
+    mandated_benefits: []
+    autism_mandate: true
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: false
+    grace_period_days: 30
+    external_review: true
+    notes: ""
+
+  IA:
+    name: Iowa
+    rate_filing: prior_approval
+    state_individual_mandate: false
+    state_exchange: false
+    state_exchange_type: federally_facilitated
+    small_group_reform: true
+    essential_health_benefits: federal_baseline
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: true
+    modified_community_rating: true
+    mandated_benefits: []
+    autism_mandate: true
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: false
+    grace_period_days: 30
+    external_review: true
+    notes: ""
+
+  KS:
+    name: Kansas
+    rate_filing: prior_approval
+    state_individual_mandate: false
+    state_exchange: false
+    state_exchange_type: federally_facilitated
+    small_group_reform: false
+    essential_health_benefits: federal_baseline
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: false
+    modified_community_rating: false
+    mandated_benefits: []
+    autism_mandate: true
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: false
+    grace_period_days: 30
+    external_review: true
+    notes: ""
+
+  KY:
+    name: Kentucky
+    rate_filing: prior_approval
+    state_individual_mandate: false
+    state_exchange: true
+    state_exchange_type: state_based
+    small_group_reform: true
+    essential_health_benefits: federal_baseline
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: true
+    modified_community_rating: true
+    mandated_benefits: ["hearing_aids"]
+    autism_mandate: true
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: false
+    grace_period_days: 30
+    external_review: true
+    notes: ""
+
+  LA:
+    name: Louisiana
+    rate_filing: prior_approval
+    state_individual_mandate: false
+    state_exchange: false
+    state_exchange_type: federally_facilitated
+    small_group_reform: false
+    essential_health_benefits: federal_baseline
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: false
+    modified_community_rating: false
+    mandated_benefits: ["hearing_aids"]
+    autism_mandate: true
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: false
+    grace_period_days: 30
+    external_review: true
+    notes: ""
+
+  ME:
+    name: Maine
+    rate_filing: prior_approval
+    state_individual_mandate: false
+    state_exchange: true
+    state_exchange_type: state_based
+    small_group_reform: true
+    essential_health_benefits: state_specific
+    minimum_metal_level: null
+    community_rating: true
+    guaranteed_issue: true
+    modified_community_rating: false
+    mandated_benefits: []
+    autism_mandate: false
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: false
+    grace_period_days: 30
+    external_review: true
+    notes: ""
+
+  MD:
+    name: Maryland
+    rate_filing: prior_approval
+    state_individual_mandate: false
+    state_exchange: true
+    state_exchange_type: state_based
+    small_group_reform: true
+    essential_health_benefits: state_specific
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: true
+    modified_community_rating: true
+    mandated_benefits: ["hearing_aids"]
+    autism_mandate: true
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: true
+    grace_period_days: 30
+    external_review: true
+    notes: ""
+
+  MA:
+    name: Massachusetts
+    rate_filing: prior_approval
+    state_individual_mandate: true
+    state_exchange: true
+    state_exchange_type: state_based
+    small_group_reform: true
+    essential_health_benefits: state_specific
+    minimum_metal_level: null
+    community_rating: true
+    guaranteed_issue: true
+    modified_community_rating: false
+    mandated_benefits: ["hearing_aids"]
+    autism_mandate: true
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: true
+    grace_period_days: 30
+    external_review: true
+    notes: "Oldest state individual mandate (2006); Romneycare model"
+
+  MI:
+    name: Michigan
+    rate_filing: prior_approval
+    state_individual_mandate: false
+    state_exchange: false
+    state_exchange_type: federally_facilitated
+    small_group_reform: true
+    essential_health_benefits: state_specific
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: true
+    modified_community_rating: true
+    mandated_benefits: []
+    autism_mandate: true
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: false
+    grace_period_days: 30
+    external_review: true
+    notes: ""
+
+  MN:
+    name: Minnesota
+    rate_filing: prior_approval
+    state_individual_mandate: false
+    state_exchange: true
+    state_exchange_type: state_based
+    small_group_reform: true
+    essential_health_benefits: state_specific
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: true
+    modified_community_rating: true
+    mandated_benefits: ["hearing_aids"]
+    autism_mandate: true
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: false
+    grace_period_days: 30
+    external_review: true
+    notes: ""
+
+  MS:
+    name: Mississippi
+    rate_filing: prior_approval
+    state_individual_mandate: false
+    state_exchange: false
+    state_exchange_type: federally_facilitated
+    small_group_reform: false
+    essential_health_benefits: federal_baseline
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: false
+    modified_community_rating: false
+    mandated_benefits: []
+    autism_mandate: false
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: false
+    grace_period_days: 30
+    external_review: true
+    notes: ""
+
+  MO:
+    name: Missouri
+    rate_filing: file_and_use
+    state_individual_mandate: false
+    state_exchange: false
+    state_exchange_type: federally_facilitated
+    small_group_reform: true
+    essential_health_benefits: state_specific
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: true
+    modified_community_rating: true
+    mandated_benefits: ["hearing_aids"]
+    autism_mandate: true
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: false
+    grace_period_days: 30
+    external_review: true
+    notes: ""
+
+  MT:
+    name: Montana
+    rate_filing: prior_approval
+    state_individual_mandate: false
+    state_exchange: false
+    state_exchange_type: federally_facilitated
+    small_group_reform: true
+    essential_health_benefits: state_specific
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: true
+    modified_community_rating: true
+    mandated_benefits: []
+    autism_mandate: false
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: false
+    grace_period_days: 30
+    external_review: true
+    notes: ""
+
+  NE:
+    name: Nebraska
+    rate_filing: prior_approval
+    state_individual_mandate: false
+    state_exchange: false
+    state_exchange_type: federally_facilitated
+    small_group_reform: false
+    essential_health_benefits: federal_baseline
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: false
+    modified_community_rating: false
+    mandated_benefits: []
+    autism_mandate: true
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: false
+    grace_period_days: 30
+    external_review: true
+    notes: ""
+
+  NV:
+    name: Nevada
+    rate_filing: file_and_use
+    state_individual_mandate: false
+    state_exchange: true
+    state_exchange_type: state_based
+    small_group_reform: false
+    essential_health_benefits: state_specific
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: false
+    modified_community_rating: false
+    mandated_benefits: []
+    autism_mandate: false
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: false
+    grace_period_days: 30
+    external_review: true
+    notes: ""
+
+  NH:
+    name: New Hampshire
+    rate_filing: prior_approval
+    state_individual_mandate: false
+    state_exchange: false
+    state_exchange_type: federally_facilitated
+    small_group_reform: false
+    essential_health_benefits: state_specific
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: false
+    modified_community_rating: true
+    mandated_benefits: ["hearing_aids"]
+    autism_mandate: true
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: true
+    grace_period_days: 30
+    external_review: true
+    notes: ""
+
+  NJ:
+    name: New Jersey
+    rate_filing: prior_approval
+    state_individual_mandate: true
+    state_exchange: true
+    state_exchange_type: state_based
+    small_group_reform: true
+    essential_health_benefits: state_specific
+    minimum_metal_level: null
+    community_rating: true
+    guaranteed_issue: true
+    modified_community_rating: false
+    mandated_benefits: ["hearing_aids"]
+    autism_mandate: true
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: true
+    grace_period_days: 30
+    external_review: true
+    notes: "Individual mandate adopted 2019; uses CA model"
+
+  NM:
+    name: New Mexico
+    rate_filing: prior_approval
+    state_individual_mandate: false
+    state_exchange: true
+    state_exchange_type: state_based
+    small_group_reform: true
+    essential_health_benefits: state_specific
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: true
+    modified_community_rating: true
+    mandated_benefits: ["hearing_aids"]
+    autism_mandate: true
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: false
+    grace_period_days: 30
+    external_review: true
+    notes: ""
+
+  NY:
+    name: New York
+    rate_filing: prior_approval
+    state_individual_mandate: false
+    state_exchange: true
+    state_exchange_type: state_based
+    small_group_reform: true
+    essential_health_benefits: state_specific
+    minimum_metal_level: null
+    community_rating: true
+    guaranteed_issue: true
+    modified_community_rating: false
+    mandated_benefits: ["hearing_aids", "infusion_therapy"]
+    autism_mandate: true
+    mental_health_parity: true
+    infusion_therapy: true
+    ivf_mandate: true
+    grace_period_days: 30
+    external_review: true
+    notes: "Pure community rating since 1993; strongest mandated benefit list"
+
+  NC:
+    name: North Carolina
+    rate_filing: prior_approval
+    state_individual_mandate: false
+    state_exchange: false
+    state_exchange_type: federally_facilitated
+    small_group_reform: true
+    essential_health_benefits: federal_baseline
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: true
+    modified_community_rating: true
+    mandated_benefits: []
+    autism_mandate: true
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: false
+    grace_period_days: 30
+    external_review: true
+    notes: ""
+
+  ND:
+    name: North Dakota
+    rate_filing: prior_approval
+    state_individual_mandate: false
+    state_exchange: false
+    state_exchange_type: federally_facilitated
+    small_group_reform: true
+    essential_health_benefits: state_specific
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: true
+    modified_community_rating: true
+    mandated_benefits: []
+    autism_mandate: false
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: false
+    grace_period_days: 30
+    external_review: true
+    notes: ""
+
+  OH:
+    name: Ohio
+    rate_filing: file_and_use
+    state_individual_mandate: false
+    state_exchange: false
+    state_exchange_type: federally_facilitated
+    small_group_reform: false
+    essential_health_benefits: state_specific
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: false
+    modified_community_rating: false
+    mandated_benefits: []
+    autism_mandate: true
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: false
+    grace_period_days: 30
+    external_review: true
+    notes: ""
+
+  OK:
+    name: Oklahoma
+    rate_filing: file_and_use
+    state_individual_mandate: false
+    state_exchange: false
+    state_exchange_type: federally_facilitated
+    small_group_reform: false
+    essential_health_benefits: state_specific
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: false
+    modified_community_rating: false
+    mandated_benefits: ["hearing_aids"]
+    autism_mandate: true
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: false
+    grace_period_days: 30
+    external_review: true
+    notes: ""
+
+  OR:
+    name: Oregon
+    rate_filing: prior_approval
+    state_individual_mandate: false
+    state_exchange: true
+    state_exchange_type: state_based
+    small_group_reform: true
+    essential_health_benefits: state_specific
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: true
+    modified_community_rating: true
+    mandated_benefits: ["hearing_aids"]
+    autism_mandate: true
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: false
+    grace_period_days: 30
+    external_review: true
+    notes: "Transitioned from partnership to state-based marketplace in 2024"
+
+  PA:
+    name: Pennsylvania
+    rate_filing: prior_approval
+    state_individual_mandate: false
+    state_exchange: true
+    state_exchange_type: state_based
+    small_group_reform: false
+    essential_health_benefits: federal_baseline
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: false
+    modified_community_rating: false
+    mandated_benefits: ["hearing_aids"]
+    autism_mandate: true
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: false
+    grace_period_days: 30
+    external_review: true
+    notes: ""
+
+  RI:
+    name: Rhode Island
+    rate_filing: prior_approval
+    state_individual_mandate: true
+    state_exchange: true
+    state_exchange_type: state_based
+    small_group_reform: true
+    essential_health_benefits: state_specific
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: true
+    modified_community_rating: true
+    mandated_benefits: ["hearing_aids"]
+    autism_mandate: true
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: true
+    grace_period_days: 30
+    external_review: true
+    notes: "Individual mandate adopted 2020"
+
+  SC:
+    name: South Carolina
+    rate_filing: file_and_use
+    state_individual_mandate: false
+    state_exchange: false
+    state_exchange_type: federally_facilitated
+    small_group_reform: false
+    essential_health_benefits: federal_baseline
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: false
+    modified_community_rating: false
+    mandated_benefits: []
+    autism_mandate: true
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: false
+    grace_period_days: 30
+    external_review: true
+    notes: ""
+
+  SD:
+    name: South Dakota
+    rate_filing: file_and_use
+    state_individual_mandate: false
+    state_exchange: false
+    state_exchange_type: federally_facilitated
+    small_group_reform: true
+    essential_health_benefits: state_specific
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: true
+    modified_community_rating: true
+    mandated_benefits: []
+    autism_mandate: true
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: false
+    grace_period_days: 30
+    external_review: true
+    notes: ""
+
+  TN:
+    name: Tennessee
+    rate_filing: file_and_use
+    state_individual_mandate: false
+    state_exchange: false
+    state_exchange_type: federally_facilitated
+    small_group_reform: false
+    essential_health_benefits: federal_baseline
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: false
+    modified_community_rating: false
+    mandated_benefits: ["hearing_aids"]
+    autism_mandate: true
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: false
+    grace_period_days: 30
+    external_review: true
+    notes: ""
+
+  TX:
+    name: Texas
+    rate_filing: file_and_use
+    state_individual_mandate: false
+    state_exchange: false
+    state_exchange_type: federally_facilitated
+    small_group_reform: false
+    essential_health_benefits: federal_baseline
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: false
+    modified_community_rating: false
+    mandated_benefits: ["hearing_aids"]
+    autism_mandate: true
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: false
+    grace_period_days: 30
+    external_review: true
+    notes: ""
+
+  UT:
+    name: Utah
+    rate_filing: prior_approval
+    state_individual_mandate: false
+    state_exchange: false
+    state_exchange_type: federally_facilitated
+    small_group_reform: true
+    essential_health_benefits: state_specific
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: true
+    modified_community_rating: true
+    mandated_benefits: []
+    autism_mandate: true
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: false
+    grace_period_days: 30
+    external_review: true
+    notes: ""
+
+  VT:
+    name: Vermont
+    rate_filing: prior_approval
+    state_individual_mandate: true
+    state_exchange: true
+    state_exchange_type: state_based
+    small_group_reform: true
+    essential_health_benefits: state_specific
+    minimum_metal_level: null
+    community_rating: true
+    guaranteed_issue: true
+    modified_community_rating: false
+    mandated_benefits: []
+    autism_mandate: false
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: false
+    grace_period_days: 30
+    external_review: true
+    notes: "Individual mandate adopted 2020 with no penalty"
+
+  VA:
+    name: Virginia
+    rate_filing: prior_approval
+    state_individual_mandate: false
+    state_exchange: false
+    state_exchange_type: federally_facilitated
+    small_group_reform: true
+    essential_health_benefits: state_specific
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: true
+    modified_community_rating: true
+    mandated_benefits: ["hearing_aids"]
+    autism_mandate: true
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: false
+    grace_period_days: 30
+    external_review: true
+    notes: ""
+
+  WA:
+    name: Washington
+    rate_filing: prior_approval
+    state_individual_mandate: false
+    state_exchange: true
+    state_exchange_type: state_based
+    small_group_reform: true
+    essential_health_benefits: state_specific
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: true
+    modified_community_rating: true
+    mandated_benefits: ["hearing_aids"]
+    autism_mandate: true
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: false
+    grace_period_days: 30
+    external_review: true
+    notes: ""
+
+  WV:
+    name: West Virginia
+    rate_filing: prior_approval
+    state_individual_mandate: false
+    state_exchange: false
+    state_exchange_type: federally_facilitated
+    small_group_reform: true
+    essential_health_benefits: state_specific
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: true
+    modified_community_rating: true
+    mandated_benefits: ["hearing_aids"]
+    autism_mandate: true
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: false
+    grace_period_days: 30
+    external_review: true
+    notes: ""
+
+  WI:
+    name: Wisconsin
+    rate_filing: prior_approval
+    state_individual_mandate: false
+    state_exchange: false
+    state_exchange_type: federally_facilitated
+    small_group_reform: true
+    essential_health_benefits: federal_baseline
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: true
+    modified_community_rating: true
+    mandated_benefits: ["hearing_aids"]
+    autism_mandate: true
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: false
+    grace_period_days: 30
+    external_review: true
+    notes: ""
+
+  WY:
+    name: Wyoming
+    rate_filing: file_and_use
+    state_individual_mandate: false
+    state_exchange: false
+    state_exchange_type: federally_facilitated
+    small_group_reform: true
+    essential_health_benefits: state_specific
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: true
+    modified_community_rating: true
+    mandated_benefits: []
+    autism_mandate: false
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: false
+    grace_period_days: 30
+    external_review: true
+    notes: ""
+
+  DC:
+    name: District of Columbia
+    rate_filing: prior_approval
+    state_individual_mandate: true
+    state_exchange: true
+    state_exchange_type: state_based
+    small_group_reform: true
+    essential_health_benefits: state_specific
+    minimum_metal_level: null
+    community_rating: true
+    guaranteed_issue: true
+    modified_community_rating: false
+    mandated_benefits: ["hearing_aids"]
+    autism_mandate: false
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: true
+    grace_period_days: 30
+    external_review: true
+    notes: "Individual mandate adopted 2020"
+
+  US_VI:
+    name: US Virgin Islands
+    rate_filing: prior_approval
+    state_individual_mandate: false
+    state_exchange: false
+    state_exchange_type: ""
+    small_group_reform: false
+    essential_health_benefits: federal_baseline
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: false
+    modified_community_rating: false
+    mandated_benefits: []
+    autism_mandate: false
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: false
+    grace_period_days: 30
+    external_review: true
+    notes: "US territory; ACA applies with modifications"
+
+  PR:
+    name: Puerto Rico
+    rate_filing: prior_approval
+    state_individual_mandate: false
+    state_exchange: false
+    state_exchange_type: ""
+    small_group_reform: false
+    essential_health_benefits: federal_baseline
+    minimum_metal_level: null
+    community_rating: false
+    guaranteed_issue: false
+    modified_community_rating: false
+    mandated_benefits: []
+    autism_mandate: false
+    mental_health_parity: true
+    infusion_therapy: false
+    ivf_mandate: false
+    grace_period_days: 30
+    external_review: true
+    notes: "US territory; ACA applies with modifications"

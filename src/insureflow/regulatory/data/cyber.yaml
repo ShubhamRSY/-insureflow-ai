@@ -1,0 +1,482 @@
+# Cyber / Data Breach Insurance — State Regulatory Data
+# Data breach notification laws vary significantly by state
+# Last updated: 2026-08
+
+states:
+  AL:
+    name: Alabama
+    rate_filing: no_file
+    data_breach_notification_days: 45
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: false
+    data_breach_notification_credit_reporting: false
+    required_coverages: []
+    notes: "Alabama Breach Notification Act (2018) requires notification within 45 days of discovery"
+  AK:
+    name: Alaska
+    rate_filing: file_and_use
+    data_breach_notification_days: 30
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: false
+    data_breach_notification_credit_reporting: false
+    required_coverages: []
+    notes: "Alaska requires notification within 30 days of discovery"
+  AZ:
+    name: Arizona
+    rate_filing: use_and_file
+    data_breach_notification_days: 45
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: false
+    data_breach_notification_credit_reporting: false
+    required_coverages: []
+    notes: "Arizona requires notification within 45 days of discovery"
+  AR:
+    name: Arkansas
+    rate_filing: prior_approval
+    data_breach_notification_days: 45
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: false
+    data_breach_notification_credit_reporting: false
+    required_coverages: []
+    notes: "Arkansas requires notification within 45 days of discovery"
+  CA:
+    name: California
+    rate_filing: prior_approval
+    data_breach_notification_days: 45
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: true
+    data_breach_notification_credit_reporting: true
+    required_coverages: []
+    notes: "California has most stringent breach laws; must notify AG if >500 residents; definition of personal information is broad"
+  CO:
+    name: Colorado
+    rate_filing: file_and_use
+    data_breach_notification_days: 30
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: true
+    data_breach_notification_credit_reporting: false
+    required_coverages: []
+    notes: "Colorado requires notification within 30 days of discovery"
+  CT:
+    name: Connecticut
+    rate_filing: file_and_use
+    data_breach_notification_days: 60
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: true
+    data_breach_notification_credit_reporting: true
+    required_coverages: []
+    notes: "Connecticut requires notification within 60 days of discovery; AG notification required"
+  DE:
+    name: Delaware
+    rate_filing: prior_approval
+    data_breach_notification_days: 60
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: true
+    data_breach_notification_credit_reporting: false
+    required_coverages: []
+    notes: "Delaware requires notification within 60 days of discovery"
+  FL:
+    name: Florida
+    rate_filing: file_and_use
+    data_breach_notification_days: 30
+    data_breach_notification_trigger: "threshold_500"
+    data_breach_notification_ag: true
+    data_breach_notification_credit_reporting: true
+    required_coverages: []
+    notes: "Florida requires notification within 30 days; AG notification if >500 residents affected"
+  GA:
+    name: Georgia
+    rate_filing: file_and_use
+    data_breach_notification_days: 60
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: false
+    data_breach_notification_credit_reporting: false
+    required_coverages: []
+    notes: "Georgia requires notification within 60 days of discovery"
+  HI:
+    name: Hawaii
+    rate_filing: file_and_use
+    data_breach_notification_days: 30
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: true
+    data_breach_notification_credit_reporting: false
+    required_coverages: []
+    notes: "Hawaii requires notification within 30 days of discovery"
+  ID:
+    name: Idaho
+    rate_filing: file_and_use
+    data_breach_notification_days: 30
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: false
+    data_breach_notification_credit_reporting: false
+    required_coverages: []
+    notes: "Idaho requires notification within 30 days of discovery"
+  IL:
+    name: Illinois
+    rate_filing: file_and_use
+    data_breach_notification_days: 45
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: true
+    data_breach_notification_credit_reporting: true
+    required_coverages: []
+    notes: "Illinois requires notification within 45 days of discovery; AG notification required"
+  IN:
+    name: Indiana
+    rate_filing: file_and_use
+    data_breach_notification_days: 45
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: true
+    data_breach_notification_credit_reporting: true
+    required_coverages: []
+    notes: "Indiana requires notification within 45 days of discovery"
+  IA:
+    name: Iowa
+    rate_filing: file_and_use
+    data_breach_notification_days: 45
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: true
+    data_breach_notification_credit_reporting: false
+    required_coverages: []
+    notes: "Iowa requires notification within 45 days of discovery"
+  KS:
+    name: Kansas
+    rate_filing: file_and_use
+    data_breach_notification_days: 45
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: false
+    data_breach_notification_credit_reporting: false
+    required_coverages: []
+    notes: "Kansas requires notification within 45 days of discovery"
+  KY:
+    name: Kentucky
+    rate_filing: file_and_use
+    data_breach_notification_days: 45
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: true
+    data_breach_notification_credit_reporting: false
+    required_coverages: []
+    notes: "Kentucky requires notification within 45 days of discovery"
+  LA:
+    name: Louisiana
+    rate_filing: prior_approval
+    data_breach_notification_days: 60
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: true
+    data_breach_notification_credit_reporting: false
+    required_coverages: []
+    notes: "Louisiana requires notification within 60 days of discovery"
+  ME:
+    name: Maine
+    rate_filing: file_and_use
+    data_breach_notification_days: 30
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: true
+    data_breach_notification_credit_reporting: true
+    required_coverages: []
+    notes: "Maine requires notification within 30 days of discovery; AG notification required"
+  MD:
+    name: Maryland
+    rate_filing: file_and_use
+    data_breach_notification_days: 45
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: true
+    data_breach_notification_credit_reporting: true
+    required_coverages: []
+    notes: "Maryland requires notification within 45 days of discovery; AG notification required"
+  MA:
+    name: Massachusetts
+    rate_filing: prior_approval
+    data_breach_notification_days: 30
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: true
+    data_breach_notification_credit_reporting: true
+    required_coverages: []
+    notes: "Massachusetts requires notification within 30 days of discovery; strict data security requirements"
+  MI:
+    name: Michigan
+    rate_filing: file_and_use
+    data_breach_notification_days: 45
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: false
+    data_breach_notification_credit_reporting: false
+    required_coverages: []
+    notes: "Michigan requires notification within 45 days of discovery"
+  MN:
+    name: Minnesota
+    rate_filing: file_and_use
+    data_breach_notification_days: 45
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: true
+    data_breach_notification_credit_reporting: true
+    required_coverages: []
+    notes: "Minnesota requires notification within 45 days of discovery"
+  MS:
+    name: Mississippi
+    rate_filing: file_and_use
+    data_breach_notification_days: 45
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: false
+    data_breach_notification_credit_reporting: false
+    required_coverages: []
+    notes: "Mississippi requires notification within 45 days of discovery"
+  MO:
+    name: Missouri
+    rate_filing: file_and_use
+    data_breach_notification_days: 45
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: false
+    data_breach_notification_credit_reporting: false
+    required_coverages: []
+    notes: "Missouri requires notification within 45 days of discovery"
+  MT:
+    name: Montana
+    rate_filing: file_and_use
+    data_breach_notification_days: 45
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: false
+    data_breach_notification_credit_reporting: false
+    required_coverages: []
+    notes: "Montana requires notification within 45 days of discovery"
+  NE:
+    name: Nebraska
+    rate_filing: file_and_use
+    data_breach_notification_days: 45
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: true
+    data_breach_notification_credit_reporting: false
+    required_coverages: []
+    notes: "Nebraska requires notification within 45 days of discovery"
+  NV:
+    name: Nevada
+    rate_filing: file_and_use
+    data_breach_notification_days: 30
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: true
+    data_breach_notification_credit_reporting: true
+    required_coverages: []
+    notes: "Nevada requires notification within 30 days of discovery"
+  NH:
+    name: New Hampshire
+    rate_filing: file_and_use
+    data_breach_notification_days: 60
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: true
+    data_breach_notification_credit_reporting: false
+    required_coverages: []
+    notes: "New Hampshire requires notification within 60 days of discovery"
+  NJ:
+    name: New Jersey
+    rate_filing: prior_approval
+    data_breach_notification_days: 30
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: true
+    data_breach_notification_credit_reporting: true
+    required_coverages: []
+    notes: "New Jersey requires notification within 30 days of discovery; AG notification required"
+  NM:
+    name: New Mexico
+    rate_filing: prior_approval
+    data_breach_notification_days: 45
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: true
+    data_breach_notification_credit_reporting: false
+    required_coverages: []
+    notes: "New Mexico requires notification within 45 days of discovery"
+  NY:
+    name: New York
+    rate_filing: prior_approval
+    data_breach_notification_days: 3
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: true
+    data_breach_notification_credit_reporting: true
+    required_coverages: []
+    notes: "NY SHIELD Act: 72 hours for risk assessment notification; broader definition of personal information"
+  NC:
+    name: North Carolina
+    rate_filing: prior_approval
+    data_breach_notification_days: 45
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: false
+    data_breach_notification_credit_reporting: false
+    required_coverages: []
+    notes: "North Carolina requires notification within 45 days of discovery"
+  ND:
+    name: North Dakota
+    rate_filing: file_and_use
+    data_breach_notification_days: 45
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: false
+    data_breach_notification_credit_reporting: false
+    required_coverages: []
+    notes: "North Dakota requires notification within 45 days of discovery"
+  OH:
+    name: Ohio
+    rate_filing: file_and_use
+    data_breach_notification_days: 45
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: false
+    data_breach_notification_credit_reporting: false
+    required_coverages: []
+    notes: "Ohio requires notification within 45 days of discovery"
+  OK:
+    name: Oklahoma
+    rate_filing: file_and_use
+    data_breach_notification_days: 60
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: false
+    data_breach_notification_credit_reporting: false
+    required_coverages: []
+    notes: "Oklahoma requires notification within 60 days of discovery"
+  OR:
+    name: Oregon
+    rate_filing: file_and_use
+    data_breach_notification_days: 45
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: true
+    data_breach_notification_credit_reporting: true
+    required_coverages: []
+    notes: "Oregon requires notification within 45 days of discovery"
+  PA:
+    name: Pennsylvania
+    rate_filing: prior_approval
+    data_breach_notification_days: 30
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: true
+    data_breach_notification_credit_reporting: false
+    required_coverages: []
+    notes: "Pennsylvania requires notification within 30 days of discovery"
+  RI:
+    name: Rhode Island
+    rate_filing: file_and_use
+    data_breach_notification_days: 30
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: true
+    data_breach_notification_credit_reporting: true
+    required_coverages: []
+    notes: "Rhode Island requires notification within 30 days of discovery"
+  SC:
+    name: South Carolina
+    rate_filing: prior_approval
+    data_breach_notification_days: 45
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: false
+    data_breach_notification_credit_reporting: false
+    required_coverages: []
+    notes: "South Carolina requires notification within 45 days of discovery"
+  SD:
+    name: South Dakota
+    rate_filing: file_and_use
+    data_breach_notification_days: 45
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: false
+    data_breach_notification_credit_reporting: false
+    required_coverages: []
+    notes: "South Dakota requires notification within 45 days of discovery"
+  TN:
+    name: Tennessee
+    rate_filing: file_and_use
+    data_breach_notification_days: 45
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: true
+    data_breach_notification_credit_reporting: true
+    required_coverages: []
+    notes: "Tennessee requires notification within 45 days of discovery"
+  TX:
+    name: Texas
+    rate_filing: file_and_use
+    data_breach_notification_days: 60
+    data_breach_notification_trigger: "threshold_250"
+    data_breach_notification_ag: true
+    data_breach_notification_credit_reporting: false
+    required_coverages: []
+    notes: "Texas requires notification within 60 days; AG notification if >250 residents affected"
+  UT:
+    name: Utah
+    rate_filing: file_and_use
+    data_breach_notification_days: 30
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: true
+    data_breach_notification_credit_reporting: false
+    required_coverages: []
+    notes: "Utah requires notification within 30 days of discovery"
+  VT:
+    name: Vermont
+    rate_filing: file_and_use
+    data_breach_notification_days: 45
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: true
+    data_breach_notification_credit_reporting: false
+    required_coverages: []
+    notes: "Vermont requires notification within 45 days of discovery"
+  VA:
+    name: Virginia
+    rate_filing: file_and_use
+    data_breach_notification_days: 60
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: true
+    data_breach_notification_credit_reporting: false
+    required_coverages: []
+    notes: "Virginia requires notification within 60 days of discovery"
+  WA:
+    name: Washington
+    rate_filing: file_and_use
+    data_breach_notification_days: 30
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: true
+    data_breach_notification_credit_reporting: true
+    required_coverages: []
+    notes: "Washington requires notification within 30 days of discovery; strict data security requirements"
+  WV:
+    name: West Virginia
+    rate_filing: prior_approval
+    data_breach_notification_days: 45
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: true
+    data_breach_notification_credit_reporting: false
+    required_coverages: []
+    notes: "West Virginia requires notification within 45 days of discovery"
+  WI:
+    name: Wisconsin
+    rate_filing: file_and_use
+    data_breach_notification_days: 45
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: false
+    data_breach_notification_credit_reporting: false
+    required_coverages: []
+    notes: "Wisconsin requires notification within 45 days of discovery"
+  WY:
+    name: Wyoming
+    rate_filing: file_and_use
+    data_breach_notification_days: 45
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: false
+    data_breach_notification_credit_reporting: false
+    required_coverages: []
+    notes: "Wyoming requires notification within 45 days of discovery"
+  DC:
+    name: District of Columbia
+    rate_filing: prior_approval
+    data_breach_notification_days: 30
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: true
+    data_breach_notification_credit_reporting: true
+    required_coverages: []
+    notes: "DC requires notification within 30 days of discovery; AG notification required"
+  US_VI:
+    name: US Virgin Islands
+    rate_filing: prior_approval
+    data_breach_notification_days: 30
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: false
+    data_breach_notification_credit_reporting: false
+    required_coverages: []
+    notes: "US Virgin Islands requires notification within 30 days of discovery"
+  PR:
+    name: Puerto Rico
+    rate_filing: prior_approval
+    data_breach_notification_days: 30
+    data_breach_notification_trigger: "all_residents"
+    data_breach_notification_ag: false
+    data_breach_notification_credit_reporting: false
+    required_coverages: []
+    notes: "Puerto Rico requires notification within 30 days of discovery"

@@ -1,0 +1,429 @@
+# Ocean Marine / Inland Marine — State Regulatory Data
+# Marine insurance is primarily federally regulated (Jones Act, federal maritime jurisdiction)
+# Last updated: 2026-08
+
+states:
+  AL:
+    name: Alabama
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  AK:
+    name: Alaska
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  AZ:
+    name: Arizona
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  AR:
+    name: Arkansas
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  CA:
+    name: California
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  CO:
+    name: Colorado
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  CT:
+    name: Connecticut
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  DE:
+    name: Delaware
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  FL:
+    name: Florida
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  GA:
+    name: Georgia
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  HI:
+    name: Hawaii
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  ID:
+    name: Idaho
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  IL:
+    name: Illinois
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  IN:
+    name: Indiana
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  IA:
+    name: Iowa
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  KS:
+    name: Kansas
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  KY:
+    name: Kentucky
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  LA:
+    name: Louisiana
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  ME:
+    name: Maine
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  MD:
+    name: Maryland
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  MA:
+    name: Massachusetts
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  MI:
+    name: Michigan
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  MN:
+    name: Minnesota
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  MS:
+    name: Mississippi
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  MO:
+    name: Missouri
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  MT:
+    name: Montana
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  NE:
+    name: Nebraska
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  NV:
+    name: Nevada
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  NH:
+    name: New Hampshire
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  NJ:
+    name: New Jersey
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  NM:
+    name: New Mexico
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  NY:
+    name: New York
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  NC:
+    name: North Carolina
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  ND:
+    name: North Dakota
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  OH:
+    name: Ohio
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  OK:
+    name: Oklahoma
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  OR:
+    name: Oregon
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  PA:
+    name: Pennsylvania
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  RI:
+    name: Rhode Island
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  SC:
+    name: South Carolina
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  SD:
+    name: South Dakota
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  TN:
+    name: Tennessee
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  TX:
+    name: Texas
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  UT:
+    name: Utah
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  VT:
+    name: Vermont
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  VA:
+    name: Virginia
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  WA:
+    name: Washington
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  WV:
+    name: West Virginia
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  WI:
+    name: Wisconsin
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  WY:
+    name: Wyoming
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  DC:
+    name: District of Columbia
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  US_VI:
+    name: US Virgin Islands
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"
+  PR:
+    name: Puerto Rico
+    rate_filing: no_file
+    federal_jurisdiction: true
+    jones_act: true
+    state_filing_required: false
+    required_coverages: []
+    notes: "Marine insurance is federally regulated; state filings not required"

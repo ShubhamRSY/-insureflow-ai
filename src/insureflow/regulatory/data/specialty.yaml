@@ -1,0 +1,482 @@
+# Specialty / Excess & Surplus Lines Insurance — State Regulatory Data
+# Surplus lines / E&S specific regulatory layer
+# Last updated: 2026-08
+
+states:
+  AL:
+    name: Alabama
+    surplus_lines_tax_rate: 0.04
+    stamping_office: false
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "Alabama requires diligent search with at least 3 non-admitted carriers"
+  AK:
+    name: Alaska
+    surplus_lines_tax_rate: 0.04
+    stamping_office: false
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "Alaska requires diligent search with at least 3 non-admitted carriers"
+  AZ:
+    name: Arizona
+    surplus_lines_tax_rate: 0.042
+    stamping_office: false
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "Arizona requires diligent search with at least 3 non-admitted carriers"
+  AR:
+    name: Arkansas
+    surplus_lines_tax_rate: 0.035
+    stamping_office: false
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "Arkansas requires diligent search with at least 3 non-admitted carriers"
+  CA:
+    name: California
+    surplus_lines_tax_rate: 0.0325
+    stamping_office: true
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.001
+    notes: "California requires stamping office and diligent search with at least 3 non-admitted carriers"
+  CO:
+    name: Colorado
+    surplus_lines_tax_rate: 0.04
+    stamping_office: false
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "Colorado requires diligent search with at least 3 non-admitted carriers"
+  CT:
+    name: Connecticut
+    surplus_lines_tax_rate: 0.03
+    stamping_office: true
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "Connecticut requires stamping office and diligent search with at least 3 non-admitted carriers"
+  DE:
+    name: Delaware
+    surplus_lines_tax_rate: 0.03
+    stamping_office: false
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "Delaware requires diligent search with at least 3 non-admitted carriers"
+  FL:
+    name: Florida
+    surplus_lines_tax_rate: 0.04
+    stamping_office: true
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "Florida requires stamping office and diligent search with at least 3 non-admitted carriers"
+  GA:
+    name: Georgia
+    surplus_lines_tax_rate: 0.03
+    stamping_office: true
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "Georgia requires stamping office and diligent search with at least 3 non-admitted carriers"
+  HI:
+    name: Hawaii
+    surplus_lines_tax_rate: 0.04
+    stamping_office: false
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "Hawaii requires diligent search with at least 3 non-admitted carriers"
+  ID:
+    name: Idaho
+    surplus_lines_tax_rate: 0.04
+    stamping_office: false
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "Idaho requires diligent search with at least 3 non-admitted carriers"
+  IL:
+    name: Illinois
+    surplus_lines_tax_rate: 0.04
+    stamping_office: true
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "Illinois requires stamping office and diligent search with at least 3 non-admitted carriers"
+  IN:
+    name: Indiana
+    surplus_lines_tax_rate: 0.03
+    stamping_office: false
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "Indiana requires diligent search with at least 3 non-admitted carriers"
+  IA:
+    name: Iowa
+    surplus_lines_tax_rate: 0.04
+    stamping_office: false
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "Iowa requires diligent search with at least 3 non-admitted carriers"
+  KS:
+    name: Kansas
+    surplus_lines_tax_rate: 0.04
+    stamping_office: false
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "Kansas requires diligent search with at least 3 non-admitted carriers"
+  KY:
+    name: Kentucky
+    surplus_lines_tax_rate: 0.04
+    stamping_office: false
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "Kentucky requires diligent search with at least 3 non-admitted carriers"
+  LA:
+    name: Louisiana
+    surplus_lines_tax_rate: 0.04
+    stamping_office: true
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "Louisiana requires stamping office and diligent search with at least 3 non-admitted carriers"
+  ME:
+    name: Maine
+    surplus_lines_tax_rate: 0.04
+    stamping_office: false
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "Maine requires diligent search with at least 3 non-admitted carriers"
+  MD:
+    name: Maryland
+    surplus_lines_tax_rate: 0.04
+    stamping_office: true
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "Maryland requires stamping office and diligent search with at least 3 non-admitted carriers"
+  MA:
+    name: Massachusetts
+    surplus_lines_tax_rate: 0.04
+    stamping_office: true
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "Massachusetts requires stamping office and diligent search with at least 3 non-admitted carriers"
+  MI:
+    name: Michigan
+    surplus_lines_tax_rate: 0.04
+    stamping_office: false
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "Michigan requires diligent search with at least 3 non-admitted carriers"
+  MN:
+    name: Minnesota
+    surplus_lines_tax_rate: 0.04
+    stamping_office: false
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "Minnesota requires diligent search with at least 3 non-admitted carriers"
+  MS:
+    name: Mississippi
+    surplus_lines_tax_rate: 0.04
+    stamping_office: false
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "Mississippi requires diligent search with at least 3 non-admitted carriers"
+  MO:
+    name: Missouri
+    surplus_lines_tax_rate: 0.04
+    stamping_office: false
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "Missouri requires diligent search with at least 3 non-admitted carriers"
+  MT:
+    name: Montana
+    surplus_lines_tax_rate: 0.04
+    stamping_office: false
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "Montana requires diligent search with at least 3 non-admitted carriers"
+  NE:
+    name: Nebraska
+    surplus_lines_tax_rate: 0.04
+    stamping_office: false
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "Nebraska requires diligent search with at least 3 non-admitted carriers"
+  NV:
+    name: Nevada
+    surplus_lines_tax_rate: 0.04
+    stamping_office: false
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "Nevada requires diligent search with at least 3 non-admitted carriers"
+  NH:
+    name: New Hampshire
+    surplus_lines_tax_rate: 0.04
+    stamping_office: false
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "New Hampshire requires diligent search with at least 3 non-admitted carriers"
+  NJ:
+    name: New Jersey
+    surplus_lines_tax_rate: 0.04
+    stamping_office: true
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "New Jersey requires stamping office and diligent search with at least 3 non-admitted carriers"
+  NM:
+    name: New Mexico
+    surplus_lines_tax_rate: 0.04
+    stamping_office: false
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "New Mexico requires diligent search with at least 3 non-admitted carriers"
+  NY:
+    name: New York
+    surplus_lines_tax_rate: 0.04
+    stamping_office: true
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "New York requires stamping office and diligent search with at least 3 non-admitted carriers"
+  NC:
+    name: North Carolina
+    surplus_lines_tax_rate: 0.04
+    stamping_office: true
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "North Carolina requires stamping office and diligent search with at least 3 non-admitted carriers"
+  ND:
+    name: North Dakota
+    surplus_lines_tax_rate: 0.04
+    stamping_office: false
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "North Dakota requires diligent search with at least 3 non-admitted carriers"
+  OH:
+    name: Ohio
+    surplus_lines_tax_rate: 0.04
+    stamping_office: false
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "Ohio requires diligent search with at least 3 non-admitted carriers"
+  OK:
+    name: Oklahoma
+    surplus_lines_tax_rate: 0.04
+    stamping_office: false
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "Oklahoma requires diligent search with at least 3 non-admitted carriers"
+  OR:
+    name: Oregon
+    surplus_lines_tax_rate: 0.04
+    stamping_office: false
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "Oregon requires diligent search with at least 3 non-admitted carriers"
+  PA:
+    name: Pennsylvania
+    surplus_lines_tax_rate: 0.04
+    stamping_office: true
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "Pennsylvania requires stamping office and diligent search with at least 3 non-admitted carriers"
+  RI:
+    name: Rhode Island
+    surplus_lines_tax_rate: 0.04
+    stamping_office: false
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "Rhode Island requires diligent search with at least 3 non-admitted carriers"
+  SC:
+    name: South Carolina
+    surplus_lines_tax_rate: 0.04
+    stamping_office: true
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "South Carolina requires stamping office and diligent search with at least 3 non-admitted carriers"
+  SD:
+    name: South Dakota
+    surplus_lines_tax_rate: 0.04
+    stamping_office: false
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "South Dakota requires diligent search with at least 3 non-admitted carriers"
+  TN:
+    name: Tennessee
+    surplus_lines_tax_rate: 0.04
+    stamping_office: true
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "Tennessee requires stamping office and diligent search with at least 3 non-admitted carriers"
+  TX:
+    name: Texas
+    surplus_lines_tax_rate: 0.04
+    stamping_office: true
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "Texas requires stamping office and diligent search with at least 3 non-admitted carriers"
+  UT:
+    name: Utah
+    surplus_lines_tax_rate: 0.04
+    stamping_office: false
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "Utah requires diligent search with at least 3 non-admitted carriers"
+  VT:
+    name: Vermont
+    surplus_lines_tax_rate: 0.04
+    stamping_office: false
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "Vermont requires diligent search with at least 3 non-admitted carriers"
+  VA:
+    name: Virginia
+    surplus_lines_tax_rate: 0.04
+    stamping_office: true
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "Virginia requires stamping office and diligent search with at least 3 non-admitted carriers"
+  WA:
+    name: Washington
+    surplus_lines_tax_rate: 0.04
+    stamping_office: false
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "Washington requires diligent search with at least 3 non-admitted carriers"
+  WV:
+    name: West Virginia
+    surplus_lines_tax_rate: 0.04
+    stamping_office: false
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "West Virginia requires diligent search with at least 3 non-admitted carriers"
+  WI:
+    name: Wisconsin
+    surplus_lines_tax_rate: 0.04
+    stamping_office: false
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "Wisconsin requires diligent search with at least 3 non-admitted carriers"
+  WY:
+    name: Wyoming
+    surplus_lines_tax_rate: 0.04
+    stamping_office: false
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "Wyoming requires diligent search with at least 3 non-admitted carriers"
+  DC:
+    name: District of Columbia
+    surplus_lines_tax_rate: 0.04
+    stamping_office: false
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "DC requires diligent search with at least 3 non-admitted carriers"
+  US_VI:
+    name: US Virgin Islands
+    surplus_lines_tax_rate: 0.04
+    stamping_office: false
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "US Virgin Islands requires diligent search with at least 3 non-admitted carriers"
+  PR:
+    name: Puerto Rico
+    surplus_lines_tax_rate: 0.04
+    stamping_office: false
+    diligent_search_required: true
+    diligent_search_carriers: 3
+    surplus_lines_broker_license: true
+    export_fee: 0.0
+    notes: "Puerto Rico requires diligent search with at least 3 non-admitted carriers"

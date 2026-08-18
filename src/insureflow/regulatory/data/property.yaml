@@ -1,0 +1,1048 @@
+# Property Insurance Regulatory Data — InsureFlow
+# Per-state commercial/personal property insurance requirements and rules
+# Last updated: 2026-08
+
+states:
+  AL:
+    name: Alabama
+    rate_filing: prior_approval
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["windstorm", "hail", "fire", "theft", "liability"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: false
+    windstorm_deductible_pct: null
+    named_storm_deductible: false
+    flood_exclusion_disclosure: true
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "Alabama uses prior approval; no mandatory windstorm/hurricane deductible; standard flood exclusion disclosure required"
+
+  AK:
+    name: Alaska
+    rate_filing: file_and_use
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["earthquake", "flood", "wildfire", "windstorm"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: false
+    windstorm_deductible_pct: null
+    named_storm_deductible: false
+    flood_exclusion_disclosure: true
+    earthquake_disclosure: true
+    earthquake_notes: "Earthquake coverage must be offered or written rejection obtained"
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "Alaska file-and-use; earthquake disclosure required; high seismic zone"
+
+  AZ:
+    name: Arizona
+    rate_filing: use_and_file
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "earthquake", "windstorm", "hail"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: false
+    windstorm_deductible_pct: null
+    named_storm_deductible: false
+    flood_exclusion_disclosure: true
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "Arizona use-and-file; competitive rating for commercial property"
+
+  AR:
+    name: Arkansas
+    rate_filing: prior_approval
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "windstorm", "hail", "earthquake"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: false
+    windstorm_deductible_pct: null
+    named_storm_deductible: false
+    flood_exclusion_disclosure: true
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "Arkansas prior approval for personal lines; tornado exposure"
+
+  CA:
+    name: California
+    rate_filing: prior_approval
+    rate_filing_notes: "Proposition 103 requires prior approval; public hearing for rate increases"
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["earthquake", "flood", "wildfire", "landslide"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: false
+    windstorm_deductible_pct: null
+    named_storm_deductible: false
+    flood_exclusion_disclosure: true
+    earthquake_disclosure: true
+    earthquake_notes: "CA Prop 103; must offer earthquake coverage or provide written rejection"
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: true
+    building_code_notes: "CA Building Code compliance affects wildfire zone underwriting"
+    business_interruption_required: false
+    notes: "CA Prop 103 strictest rate regulation; mandatory earthquake coverage offer; wildfire zones WUI"
+
+  CO:
+    name: Colorado
+    rate_filing: file_and_use
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "wildfire", "hail", "earthquake"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: false
+    windstorm_deductible_pct: null
+    named_storm_deductible: false
+    flood_exclusion_disclosure: true
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "Colorado file-and-use; wildfire and hail exposure; competitive rating"
+
+  CT:
+    name: Connecticut
+    rate_filing: prior_approval
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "windstorm", "hurricane", "earthquake"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: true
+    windstorm_deductible_pct: "2-5%"
+    named_storm_deductible: false
+    flood_exclusion_disclosure: true
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "Connecticut prior approval; windstorm/hurricane deductible for coastal properties"
+
+  DE:
+    name: Delaware
+    rate_filing: no_file
+    rate_filing_notes: "Competitive rating; no filing required for most lines"
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "windstorm", "hurricane", "earthquake"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: true
+    windstorm_deductible_pct: "2-5%"
+    named_storm_deductible: false
+    flood_exclusion_disclosure: true
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "Delaware competitive rating; coastal windstorm/hurricane deductible"
+
+  FL:
+    name: Florida
+    rate_filing: prior_approval
+    rate_filing_notes: "OIR must approve rates; emergency filing allowed for catastrophe"
+    minimum_limits: null
+    required_coverages: ["windstorm"]
+    optional_coverages: ["flood", "earthquake"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: true
+    windstorm_deductible_pct: "2%, 5%, or 10%"
+    named_storm_deductible: true
+    named_storm_notes: "Mandatory hurricane deductible — 2%, 5%, or 10% of dwelling coverage; applies to named storms"
+    flood_exclusion_disclosure: true
+    flood_notes: "Must offer flood coverage or provide written rejection per 627.715"
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: true
+    building_code_notes: "Florida Building Code compliance required for wind mitigation credits"
+    business_interruption_required: false
+    notes: "Florida OIR strictest property regulation; mandatory hurricane deductible; Citizens Property Insurance as insurer of last resort; flood exclusion disclosure mandatory"
+
+  GA:
+    name: Georgia
+    rate_filing: file_and_use
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "windstorm", "hurricane", "earthquake"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: false
+    windstorm_deductible_pct: null
+    named_storm_deductible: false
+    flood_exclusion_disclosure: true
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "Georgia file-and-use; competitive rating; coastal windstorm exposure"
+
+  HI:
+    name: Hawaii
+    rate_filing: prior_approval
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "hurricane", "volcanic", "tsunami"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: true
+    windstorm_deductible_pct: "2-5%"
+    named_storm_deductible: true
+    named_storm_notes: "Hurricane deductible applies; 2-5% of coverage A"
+    flood_exclusion_disclosure: true
+    earthquake_disclosure: true
+    earthquake_notes: "Must offer earthquake/volcanic coverage or provide rejection"
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "Hawaii prior approval; hurricane deductible; unique volcanic/earthquake exposure"
+
+  ID:
+    name: Idaho
+    rate_filing: file_and_use
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "wildfire", "earthquake"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: false
+    windstorm_deductible_pct: null
+    named_storm_deductible: false
+    flood_exclusion_disclosure: true
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "Idaho competitive rating; wildfire exposure in mountain areas"
+
+  IL:
+    name: Illinois
+    rate_filing: use_and_file
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "earthquake", "windstorm", "hail"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: false
+    windstorm_deductible_pct: null
+    named_storm_deductible: false
+    flood_exclusion_disclosure: true
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "Illinois use-and-file; competitive rating; tornado/hail belt"
+
+  IN:
+    name: Indiana
+    rate_filing: file_and_use
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "earthquake", "windstorm", "hail"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: false
+    windstorm_deductible_pct: null
+    named_storm_deductible: false
+    flood_exclusion_disclosure: true
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "Indiana file-and-use; competitive rating; tornado exposure"
+
+  IA:
+    name: Iowa
+    rate_filing: prior_approval
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "windstorm", "hail", "earthquake"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: false
+    windstorm_deductible_pct: null
+    named_storm_deductible: false
+    flood_exclusion_disclosure: true
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "Iowa prior approval for personal lines; tornado/hail exposure"
+
+  KS:
+    name: Kansas
+    rate_filing: file_and_use
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "windstorm", "hail", "tornado"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: false
+    windstorm_deductible_pct: null
+    named_storm_deductible: false
+    flood_exclusion_disclosure: true
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "Kansas file-and-use; high tornado/hail exposure; competitive rating"
+
+  KY:
+    name: Kentucky
+    rate_filing: prior_approval
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "windstorm", "earthquake"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: false
+    windstorm_deductible_pct: null
+    named_storm_deductible: false
+    flood_exclusion_disclosure: true
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "Kentucky prior approval for personal lines"
+
+  LA:
+    name: Louisiana
+    rate_filing: prior_approval
+    minimum_limits: null
+    required_coverages: ["windstorm"]
+    optional_coverages: ["flood", "earthquake"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: true
+    windstorm_deductible_pct: "2%, 5%, or 10%"
+    named_storm_deductible: true
+    named_storm_notes: "Hurricane deductible applies — 2%, 5%, or 10% of dwelling coverage"
+    flood_exclusion_disclosure: true
+    flood_notes: "Must offer flood coverage or written rejection; high flood risk zone"
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: true
+    building_code_notes: "Louisiana State Building Code compliance required for new construction"
+    business_interruption_required: false
+    notes: "Louisiana prior approval; mandatory hurricane deductible; LA Citizens Property Insurance; coastal zone restrictions; high flood/hurricane exposure"
+
+  ME:
+    name: Maine
+    rate_filing: file_and_use
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "windstorm", "hurricane", "ice_dam"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: true
+    windstorm_deductible_pct: "2-5%"
+    named_storm_deductible: false
+    flood_exclusion_disclosure: true
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "Maine file-and-use; coastal windstorm/hurricane deductible; ice dam exposure"
+
+  MD:
+    name: Maryland
+    rate_filing: prior_approval
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "windstorm", "hurricane", "earthquake"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: true
+    windstorm_deductible_pct: "2-5%"
+    named_storm_deductible: false
+    flood_exclusion_disclosure: true
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "Maryland prior approval; coastal windstorm/hurricane deductible; Chesapeake Bay flood exposure"
+
+  MA:
+    name: Massachusetts
+    rate_filing: prior_approval
+    rate_filing_notes: "Managed competition model; OIR sets base rates"
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "windstorm", "hurricane", "ice_dam"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: true
+    windstorm_deductible_pct: "2-5%"
+    named_storm_deductible: false
+    flood_exclusion_disclosure: true
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "Massachusetts managed competition; coastal windstorm/hurricane deductible"
+
+  MI:
+    name: Michigan
+    rate_filing: prior_approval
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "windstorm", "hail", "earthquake"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: false
+    windstorm_deductible_pct: null
+    named_storm_deductible: false
+    flood_exclusion_disclosure: true
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "Michigan prior approval; Great Lakes wind exposure"
+
+  MN:
+    name: Minnesota
+    rate_filing: prior_approval
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "windstorm", "hail", "ice_dam"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: false
+    windstorm_deductible_pct: null
+    named_storm_deductible: false
+    flood_exclusion_disclosure: true
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "Minnesota prior approval; ice/hail exposure"
+
+  MS:
+    name: Mississippi
+    rate_filing: file_and_use
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "windstorm", "hurricane"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: true
+    windstorm_deductible_pct: "2-5%"
+    named_storm_deductible: true
+    named_storm_notes: "Hurricane deductible applies for coastal properties"
+    flood_exclusion_disclosure: true
+    flood_notes: "Must offer flood coverage; high flood risk along Gulf Coast"
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "Mississippi file-and-use; Gulf Coast hurricane/flood exposure"
+
+  MO:
+    name: Missouri
+    rate_filing: file_and_use
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "windstorm", "hail", "earthquake"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: false
+    windstorm_deductible_pct: null
+    named_storm_deductible: false
+    flood_exclusion_disclosure: true
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "Missouri file-and-use; tornado/hail belt; New Madrid seismic zone"
+
+  MT:
+    name: Montana
+    rate_filing: prior_approval
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "wildfire", "earthquake", "hail"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: false
+    windstorm_deductible_pct: null
+    named_storm_deductible: false
+    flood_exclusion_disclosure: true
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "Montana prior approval; wildfire and hail exposure"
+
+  NE:
+    name: Nebraska
+    rate_filing: file_and_use
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "windstorm", "hail", "tornado"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: false
+    windstorm_deductible_pct: null
+    named_storm_deductible: false
+    flood_exclusion_disclosure: true
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "Nebraska competitive rating; tornado/hail exposure"
+
+  NV:
+    name: Nevada
+    rate_filing: file_and_use
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "earthquake", "wildfire"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: false
+    windstorm_deductible_pct: null
+    named_storm_deductible: false
+    flood_exclusion_disclosure: true
+    earthquake_disclosure: true
+    earthquake_notes: "Must offer earthquake coverage or provide written rejection"
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "Nevada file-and-use; earthquake disclosure required; wildfire exposure"
+
+  NH:
+    name: New Hampshire
+    rate_filing: no_file
+    rate_filing_notes: "Competitive rating; no filing required for most lines"
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "windstorm", "ice_dam"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: false
+    windstorm_deductible_pct: null
+    named_storm_deductible: false
+    flood_exclusion_disclosure: true
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "New Hampshire competitive rating; no filing required"
+
+  NJ:
+    name: New Jersey
+    rate_filing: prior_approval
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "windstorm", "hurricane", "earthquake"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: true
+    windstorm_deductible_pct: "2%, 5%, or 10%"
+    named_storm_deductible: true
+    named_storm_notes: "Hurricane deductible applies; must be offered and accepted"
+    flood_exclusion_disclosure: true
+    flood_notes: "Must offer flood coverage; high flood risk in coastal/barrier island areas"
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "New Jersey prior approval; hurricane deductible mandatory; JUA as insurer of last resort; coastal flood exposure"
+
+  NM:
+    name: New Mexico
+    rate_filing: file_and_use
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "wildfire", "earthquake", "hail"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: false
+    windstorm_deductible_pct: null
+    named_storm_deductible: false
+    flood_exclusion_disclosure: true
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "New Mexico competitive rating; wildfire and hail exposure"
+
+  NY:
+    name: New York
+    rate_filing: prior_approval
+    rate_filing_notes: "DFS must approve rates; public hearing required for rate increases"
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "windstorm", "hurricane", "earthquake"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: true
+    windstorm_deductible_pct: "2%, 5%, or 10%"
+    named_storm_deductible: true
+    named_storm_notes: "Hurricane deductible applies in coastal zones"
+    flood_exclusion_disclosure: true
+    flood_notes: "Must offer flood coverage; NY NFIP partnership; coastal flood zones"
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "New York DFS strictest property regulation; hurricane deductible in coastal zones; flood disclosure mandatory"
+
+  NC:
+    name: North Carolina
+    rate_filing: prior_approval
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "windstorm", "hurricane"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: true
+    windstorm_deductible_pct: "1%, 2%, or 5%"
+    named_storm_deductible: true
+    named_storm_notes: "NC Beach Plan (FAIR Plan) for coastal properties; hurricane deductible applies"
+    flood_exclusion_disclosure: true
+    flood_notes: "Must offer flood coverage; high coastal flood risk"
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "North Carolina prior approval; NC Beach Plan/FAIR Plan for coastal properties; hurricane deductible"
+
+  ND:
+    name: North Dakota
+    rate_filing: file_and_use
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "windstorm", "hail"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: false
+    windstorm_deductible_pct: null
+    named_storm_deductible: false
+    flood_exclusion_disclosure: true
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "North Dakota competitive rating; hail/wind exposure"
+
+  OH:
+    name: Ohio
+    rate_filing: file_and_use
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "earthquake", "windstorm", "hail"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: false
+    windstorm_deductible_pct: null
+    named_storm_deductible: false
+    flood_exclusion_disclosure: true
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "Ohio file-and-use; competitive rating; tornado/hail exposure"
+
+  OK:
+    name: Oklahoma
+    rate_filing: file_and_use
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "windstorm", "hail", "tornado"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: false
+    windstorm_deductible_pct: null
+    named_storm_deductible: false
+    flood_exclusion_disclosure: true
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "Oklahoma file-and-use; highest tornado risk in US; competitive rating"
+
+  OR:
+    name: Oregon
+    rate_filing: prior_approval
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "earthquake", "wildfire", "tsunami"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: false
+    windstorm_deductible_pct: null
+    named_storm_deductible: false
+    flood_exclusion_disclosure: true
+    earthquake_disclosure: true
+    earthquake_notes: "Must offer earthquake coverage or provide written rejection"
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "Oregon prior approval; earthquake disclosure required; wildfire and seismic exposure"
+
+  PA:
+    name: Pennsylvania
+    rate_filing: prior_approval
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "windstorm", "hurricane", "earthquake"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: true
+    windstorm_deductible_pct: "2-5%"
+    named_storm_deductible: false
+    flood_exclusion_disclosure: true
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "Pennsylvania prior approval; coastal windstorm/hurricane deductible"
+
+  RI:
+    name: Rhode Island
+    rate_filing: file_and_use
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "windstorm", "hurricane"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: true
+    windstorm_deductible_pct: "2-5%"
+    named_storm_deductible: false
+    flood_exclusion_disclosure: true
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "Rhode Island file-and-use; coastal windstorm/hurricane deductible"
+
+  SC:
+    name: South Carolina
+    rate_filing: file_and_use
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "windstorm", "hurricane"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: true
+    windstorm_deductible_pct: "1%, 2%, or 5%"
+    named_storm_deductible: true
+    named_storm_notes: "Hurricane deductible applies for coastal properties"
+    flood_exclusion_disclosure: true
+    flood_notes: "Must offer flood coverage; high coastal flood risk"
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "South Carolina file-and-use; hurricane deductible for coastal properties; wind/hail exposure"
+
+  SD:
+    name: South Dakota
+    rate_filing: file_and_use
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "windstorm", "hail", "tornado"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: false
+    windstorm_deductible_pct: null
+    named_storm_deductible: false
+    flood_exclusion_disclosure: true
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "South Dakota competitive rating; tornado/hail exposure"
+
+  TN:
+    name: Tennessee
+    rate_filing: file_and_use
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "windstorm", "hail", "earthquake"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: false
+    windstorm_deductible_pct: null
+    named_storm_deductible: false
+    flood_exclusion_disclosure: true
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "Tennessee file-and-use; tornado/hail exposure; competitive rating"
+
+  TX:
+    name: Texas
+    rate_filing: file_and_use
+    rate_filing_notes: "TDI must be notified; competitive rating for most commercial lines"
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "windstorm", "hurricane", "hail", "earthquake"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: true
+    windstorm_deductible_pct: "1%, 2%, or 5%"
+    named_storm_deductible: true
+    named_storm_notes: "Windstorm/hurricane deductible applies in TX coastal areas; TWIA for designated counties"
+    flood_exclusion_disclosure: true
+    flood_notes: "Must offer flood coverage; high flood risk in coastal and inland areas"
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: true
+    building_code_notes: "Texas Windstorm Insurance Association (TWIA) requires compliance with Texas Windstorm Building Code"
+    business_interruption_required: false
+    notes: "Texas file-and-use; TWIA for windstorm in coastal counties; hurricane/windstorm deductible; high hail/tornado exposure"
+
+  UT:
+    name: Utah
+    rate_filing: file_and_use
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "earthquake", "wildfire", "hail"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: false
+    windstorm_deductible_pct: null
+    named_storm_deductible: false
+    flood_exclusion_disclosure: true
+    earthquake_disclosure: true
+    earthquake_notes: "Must offer earthquake coverage or provide written rejection"
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "Utah competitive rating; earthquake disclosure required; Wasatch Fault seismic zone"
+
+  VT:
+    name: Vermont
+    rate_filing: prior_approval
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "windstorm", "ice_dam"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: false
+    windstorm_deductible_pct: null
+    named_storm_deductible: false
+    flood_exclusion_disclosure: true
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "Vermont prior approval; small state market; flood exposure"
+
+  VA:
+    name: Virginia
+    rate_filing: file_and_use
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "windstorm", "hurricane", "earthquake"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: true
+    windstorm_deductible_pct: "2-5%"
+    named_storm_deductible: false
+    flood_exclusion_disclosure: true
+    flood_notes: "Must offer flood coverage; coastal and Chesapeake Bay flood risk"
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "Virginia file-and-use; coastal windstorm/hurricane deductible; Chesapeake Bay flood exposure"
+
+  WA:
+    name: Washington
+    rate_filing: prior_approval
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "earthquake", "wildfire", "volcanic"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: false
+    windstorm_deductible_pct: null
+    named_storm_deductible: false
+    flood_exclusion_disclosure: true
+    earthquake_disclosure: true
+    earthquake_notes: "Must offer earthquake coverage or provide written rejection; Cascadia Subduction Zone"
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "Washington prior approval; earthquake disclosure required; Cascadia Subduction Zone seismic risk"
+
+  WV:
+    name: West Virginia
+    rate_filing: prior_approval
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "windstorm", "hail"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: false
+    windstorm_deductible_pct: null
+    named_storm_deductible: false
+    flood_exclusion_disclosure: true
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "West Virginia prior approval for personal lines"
+
+  WI:
+    name: Wisconsin
+    rate_filing: file_and_use
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "windstorm", "hail", "ice_dam"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: false
+    windstorm_deductible_pct: null
+    named_storm_deductible: false
+    flood_exclusion_disclosure: true
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "Wisconsin file-and-use; hail/ice storm exposure"
+
+  WY:
+    name: Wyoming
+    rate_filing: no_file
+    rate_filing_notes: "Competitive rating; no filing required for most lines"
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "wildfire", "earthquake", "hail"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: false
+    windstorm_deductible_pct: null
+    named_storm_deductible: false
+    flood_exclusion_disclosure: true
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "Wyoming competitive rating; wildfire and hail exposure"
+
+  DC:
+    name: District of Columbia
+    rate_filing: file_and_use
+    minimum_limits: null
+    required_coverages: []
+    optional_coverages: ["flood", "windstorm", "earthquake"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: false
+    windstorm_deductible_pct: null
+    named_storm_deductible: false
+    flood_exclusion_disclosure: true
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "DC file-and-use; competitive rating"
+
+  US_VI:
+    name: US Virgin Islands
+    rate_filing: prior_approval
+    minimum_limits: null
+    required_coverages: ["windstorm"]
+    optional_coverages: ["flood", "earthquake"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: true
+    windstorm_deductible_pct: "2-5%"
+    named_storm_deductible: true
+    flood_exclusion_disclosure: true
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "USVI has its own insurance department; hurricane deductible; high wind/flood exposure"
+
+  PR:
+    name: Puerto Rico
+    rate_filing: prior_approval
+    minimum_limits: null
+    required_coverages: ["windstorm"]
+    optional_coverages: ["flood", "earthquake"]
+    filing_deadline: null
+    commission_cap_pct: null
+    windstorm_hurricane_deductible: true
+    windstorm_deductible_pct: "2-5%"
+    named_storm_deductible: true
+    flood_exclusion_disclosure: true
+    earthquake_disclosure: false
+    replacement_cost_required: false
+    coinsurance_minimum_pct: null
+    building_code_compliance: false
+    business_interruption_required: false
+    notes: "Puerto Rico has its own insurance code; hurricane deductible; high wind/flood exposure"

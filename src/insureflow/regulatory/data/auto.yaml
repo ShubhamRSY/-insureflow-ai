@@ -1,0 +1,1110 @@
+# Automobile Insurance Regulatory Data — InsureFlow
+# Per-state auto insurance requirements, limits, and tort models
+# Last updated: 2026-08
+
+states:
+  AL:
+    name: Alabama
+    rate_filing: prior_approval
+    tort_model: modified_comparative_50
+    tort_notes: "50% bar; plaintiff cannot recover if 50% or more at fault"
+    fault_system: at_fault
+    minimum_limits:
+      bodily_injury: "$25,000/$50,000"
+      property_damage: "$25,000"
+    pip_required: false
+    pip_amount: null
+    um_required: true
+    um_offered: true
+    uim_required: false
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage"]
+    optional_coverages: ["um", "uim", "pip", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Alabama is at-fault; BI/PD mandatory; UM required but UIM optional"
+
+  AK:
+    name: Alaska
+    rate_filing: file_and_use
+    tort_model: pure_comparative
+    fault_system: at_fault
+    minimum_limits:
+      bodily_injury: "$50,000/$100,000"
+      property_damage: "$25,000"
+    pip_required: false
+    pip_amount: null
+    um_required: true
+    um_offered: true
+    uim_required: true
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage"]
+    optional_coverages: ["um", "uim", "pip", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Alaska has no compulsory auto insurance for liability but strong UM/UIM requirements if carried"
+
+  AZ:
+    name: Arizona
+    rate_filing: use_and_file
+    tort_model: pure_comparative
+    fault_system: at_fault
+    minimum_limits:
+      bodily_injury: "$25,000/$50,000"
+      property_damage: "$25,000"
+    pip_required: false
+    pip_amount: null
+    um_required: false
+    um_offered: true
+    uim_required: false
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage"]
+    optional_coverages: ["um", "uim", "pip", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Arizona is use-and-file; UM/UIM optional but must be offered"
+
+  AR:
+    name: Arkansas
+    rate_filing: prior_approval
+    tort_model: modified_comparative_50
+    tort_notes: "50% bar on comparative negligence"
+    fault_system: at_fault
+    minimum_limits:
+      bodily_injury: "$25,000/$50,000"
+      property_damage: "$25,000"
+    pip_required: false
+    pip_amount: null
+    um_required: true
+    um_offered: true
+    uim_required: false
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage"]
+    optional_coverages: ["um", "uim", "pip", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Arkansas requires prior approval; UM mandatory, UIM optional"
+
+  CA:
+    name: California
+    rate_filing: prior_approval
+    rate_filing_notes: "Proposition 103 requires prior approval; public hearing for rate increases"
+    tort_model: pure_comparative
+    fault_system: at_fault
+    minimum_limits:
+      bodily_injury: "$15,000/$30,000"
+      property_damage: "$5,000"
+    pip_required: false
+    pip_amount: null
+    um_required: false
+    um_offered: true
+    uim_required: false
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage"]
+    optional_coverages: ["um", "uim", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "CA Prop 103 strictest rate regulation; lowest BI/PD minimums in US; UM/UIM optional but must be offered in writing"
+
+  CO:
+    name: Colorado
+    rate_filing: file_and_use
+    tort_model: pure_comparative
+    fault_system: at_fault
+    minimum_limits:
+      bodily_injury: "$25,000/$50,000"
+      property_damage: "$15,000"
+    pip_required: false
+    pip_amount: null
+    um_required: true
+    um_offered: true
+    uim_required: true
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage"]
+    optional_coverages: ["um", "uim", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Colorado file-and-use; UM/UIM mandatory; no PIP"
+
+  CT:
+    name: Connecticut
+    rate_filing: prior_approval
+    tort_model: pure_comparative
+    fault_system: at_fault
+    minimum_limits:
+      bodily_injury: "$25,000/$50,000"
+      property_damage: "$25,000"
+    pip_required: false
+    pip_amount: null
+    um_required: true
+    um_offered: true
+    uim_required: true
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage"]
+    optional_coverages: ["um", "uim", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Connecticut prior approval; UM/UIM mandatory"
+
+  DE:
+    name: Delaware
+    rate_filing: no_file
+    rate_filing_notes: "Competitive rating; no filing required for most lines"
+    tort_model: pure_comparative
+    fault_system: at_fault
+    minimum_limits:
+      bodily_injury: "$25,000/$50,000"
+      property_damage: "$10,000"
+    pip_required: false
+    pip_amount: null
+    um_required: false
+    um_offered: true
+    uim_required: false
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage"]
+    optional_coverages: ["um", "uim", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Delaware competitive rating; no UM/UIM mandate"
+
+  FL:
+    name: Florida
+    rate_filing: prior_approval
+    rate_filing_notes: "OIR must approve rates; emergency filing allowed for catastrophe"
+    tort_model: pure_comparative
+    fault_system: no_fault
+    minimum_limits:
+      bodily_injury: null
+      property_damage: "$10,000"
+    pip_required: true
+    pip_amount: "$10,000"
+    pip_notes: "PIP mandatory; covers 80% of medical expenses and 60% of lost wages"
+    um_required: true
+    um_offered: true
+    uim_required: false
+    uim_offered: true
+    required_coverages: ["personal_injury_protection", "property_damage"]
+    optional_coverages: ["um", "uim", "collision", "comprehensive", "bodily_injury"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Florida is no-fault; PIP mandatory $10K; no BI minimum required (but recommended); PD $10K mandatory"
+
+  GA:
+    name: Georgia
+    rate_filing: file_and_use
+    tort_model: modified_comparative_50
+    tort_notes: "50% bar; modified comparative negligence"
+    fault_system: at_fault
+    minimum_limits:
+      bodily_injury: "$25,000/$50,000"
+      property_damage: "$25,000"
+    pip_required: false
+    pip_amount: null
+    um_required: false
+    um_offered: true
+    uim_required: false
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage"]
+    optional_coverages: ["um", "uim", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Georgia file-and-use; UM/UIM optional but must be offered"
+
+  HI:
+    name: Hawaii
+    rate_filing: prior_approval
+    tort_model: pure_comparative
+    fault_system: no_fault
+    minimum_limits:
+      bodily_injury: "$20,000/$40,000"
+      property_damage: "$10,000"
+    pip_required: true
+    pip_amount: "$10,000"
+    pip_notes: "No-fault auto insurance mandatory"
+    um_required: false
+    um_offered: true
+    uim_required: false
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage", "personal_injury_protection"]
+    optional_coverages: ["um", "uim", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Hawaii no-fault state; PIP mandatory $10K"
+
+  ID:
+    name: Idaho
+    rate_filing: file_and_use
+    tort_model: pure_comparative
+    fault_system: at_fault
+    minimum_limits:
+      bodily_injury: "$25,000/$50,000"
+      property_damage: "$15,000"
+    pip_required: false
+    pip_amount: null
+    um_required: false
+    um_offered: true
+    uim_required: false
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage"]
+    optional_coverages: ["um", "uim", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Idaho competitive rating; no UM/UIM mandate"
+
+  IL:
+    name: Illinois
+    rate_filing: use_and_file
+    tort_model: modified_comparative_50
+    tort_notes: "50% bar; plaintiff cannot recover if more than 50% at fault"
+    fault_system: at_fault
+    minimum_limits:
+      bodily_injury: "$25,000/$50,000"
+      property_damage: "$20,000"
+    pip_required: false
+    pip_amount: null
+    um_required: true
+    um_offered: true
+    uim_required: true
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage"]
+    optional_coverages: ["um", "uim", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Illinois use-and-file; UM/UIM mandatory"
+
+  IN:
+    name: Indiana
+    rate_filing: file_and_use
+    tort_model: modified_comparative_51
+    tort_notes: "51% bar; plaintiff cannot recover if more than 51% at fault"
+    fault_system: at_fault
+    minimum_limits:
+      bodily_injury: "$25,000/$50,000"
+      property_damage: "$25,000"
+    pip_required: false
+    pip_amount: null
+    um_required: false
+    um_offered: true
+    uim_required: false
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage"]
+    optional_coverages: ["um", "uim", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Indiana file-and-use; UM/UIM optional"
+
+  IA:
+    name: Iowa
+    rate_filing: prior_approval
+    tort_model: modified_comparative_51
+    tort_notes: "51% bar on comparative negligence"
+    fault_system: at_fault
+    minimum_limits:
+      bodily_injury: "$20,000/$40,000"
+      property_damage: "$15,000"
+    pip_required: false
+    pip_amount: null
+    um_required: false
+    um_offered: true
+    uim_required: false
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage"]
+    optional_coverages: ["um", "uim", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Iowa prior approval; no UM/UIM mandate"
+
+  KS:
+    name: Kansas
+    rate_filing: file_and_use
+    tort_model: modified_comparative_50
+    tort_notes: "50% bar; plaintiff cannot recover if 50% or more at fault"
+    fault_system: no_fault
+    minimum_limits:
+      bodily_injury: "$25,000/$50,000"
+      property_damage: "$25,000"
+    pip_required: true
+    pip_amount: "$4,500"
+    pip_notes: "No-fault; PIP covers medical expenses, lost wages, funeral expenses"
+    um_required: true
+    um_offered: true
+    uim_required: true
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage", "personal_injury_protection"]
+    optional_coverages: ["um", "uim", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Kansas no-fault; PIP $4,500 mandatory; UM/UIM mandatory"
+
+  KY:
+    name: Kentucky
+    rate_filing: prior_approval
+    tort_model: modified_comparative_50
+    tort_notes: "50% bar; choice of no-fault or tort"
+    fault_system: no_fault
+    minimum_limits:
+      bodily_injury: "$25,000/$50,000"
+      property_damage: "$25,000"
+    pip_required: true
+    pip_amount: "$10,000"
+    pip_notes: "No-fault system with choice to reject; PIP $10K"
+    um_required: true
+    um_offered: true
+    uim_required: true
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage", "personal_injury_protection"]
+    optional_coverages: ["um", "uim", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Kentucky choice no-fault; PIP $10K mandatory; UM/UIM mandatory"
+
+  LA:
+    name: Louisiana
+    rate_filing: prior_approval
+    tort_model: pure_comparative
+    fault_system: at_fault
+    minimum_limits:
+      bodily_injury: "$15,000/$30,000"
+      property_damage: "$25,000"
+    pip_required: false
+    pip_amount: null
+    um_required: true
+    um_offered: true
+    uim_required: false
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage"]
+    optional_coverages: ["um", "uim", "pip", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Louisiana prior approval; UM mandatory; no PIP requirement"
+
+  ME:
+    name: Maine
+    rate_filing: file_and_use
+    tort_model: pure_comparative
+    fault_system: at_fault
+    minimum_limits:
+      bodily_injury: "$50,000/$100,000"
+      property_damage: "$25,000"
+    pip_required: false
+    pip_amount: null
+    um_required: false
+    um_offered: true
+    uim_required: false
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage"]
+    optional_coverages: ["um", "uim", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Maine file-and-use; high BI minimums; no UM/UIM mandate"
+
+  MD:
+    name: Maryland
+    rate_filing: prior_approval
+    tort_model: pure_comparative
+    fault_system: at_fault
+    minimum_limits:
+      bodily_injury: "$30,000/$60,000"
+      property_damage: "$15,000"
+    pip_required: false
+    pip_amount: null
+    um_required: true
+    um_offered: true
+    uim_required: true
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage"]
+    optional_coverages: ["um", "uim", "pip", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Maryland prior approval; UM/UIM mandatory; PIP optional $2,500"
+
+  MA:
+    name: Massachusetts
+    rate_filing: prior_approval
+    rate_filing_notes: "Managed competition model; OIR sets base rates"
+    tort_model: modified_comparative_50
+    tort_notes: "50% bar on comparative negligence"
+    fault_system: no_fault
+    minimum_limits:
+      bodily_injury: "$20,000/$40,000"
+      property_damage: "$5,000"
+    pip_required: true
+    pip_amount: "$8,000"
+    pip_notes: "No-fault; PIP mandatory $8K"
+    um_required: true
+    um_offered: true
+    uim_required: true
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage", "personal_injury_protection"]
+    optional_coverages: ["um", "uim", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Massachusetts managed competition; no-fault; PIP $8K mandatory"
+
+  MI:
+    name: Michigan
+    rate_filing: prior_approval
+    tort_model: modified_comparative_51
+    tort_notes: "51% bar; modified comparative negligence"
+    fault_system: no_fault
+    minimum_limits:
+      bodily_injury: null
+      property_damage: "$10,000"
+    pip_required: true
+    pip_amount: "Unlimited"
+    pip_notes: "Unlimited PIP default; selection options allowed since 2020 reform (250K, 500K, 1M, unlimited)"
+    um_required: true
+    um_offered: true
+    uim_required: false
+    uim_offered: true
+    required_coverages: ["personal_injury_protection", "property_damage"]
+    optional_coverages: ["um", "uim", "collision", "comprehensive", "bodily_injury"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Michigan no-fault; PIP unlimited default with selection since 2020 reform; PD $10K mandatory"
+
+  MN:
+    name: Minnesota
+    rate_filing: prior_approval
+    tort_model: pure_comparative
+    fault_system: no_fault
+    minimum_limits:
+      bodily_injury: "$30,000/$60,000"
+      property_damage: "$10,000"
+    pip_required: true
+    pip_amount: "$40,000"
+    pip_notes: "No-fault; PIP mandatory $40K"
+    um_required: true
+    um_offered: true
+    uim_required: true
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage", "personal_injury_protection"]
+    optional_coverages: ["um", "uim", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Minnesota no-fault; PIP $40K mandatory; UM/UIM mandatory"
+
+  MS:
+    name: Mississippi
+    rate_filing: file_and_use
+    tort_model: pure_comparative
+    fault_system: at_fault
+    minimum_limits:
+      bodily_injury: "$25,000/$50,000"
+      property_damage: "$25,000"
+    pip_required: false
+    pip_amount: null
+    um_required: false
+    um_offered: true
+    uim_required: false
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage"]
+    optional_coverages: ["um", "uim", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Mississippi competitive rating; no UM/UIM mandate"
+
+  MO:
+    name: Missouri
+    rate_filing: file_and_use
+    tort_model: modified_comparative_50
+    tort_notes: "50% bar on comparative negligence"
+    fault_system: at_fault
+    minimum_limits:
+      bodily_injury: "$25,000/$50,000"
+      property_damage: "$25,000"
+    pip_required: false
+    pip_amount: null
+    um_required: true
+    um_offered: true
+    uim_required: true
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage"]
+    optional_coverages: ["um", "uim", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Missouri file-and-use; UM/UIM mandatory"
+
+  MT:
+    name: Montana
+    rate_filing: prior_approval
+    tort_model: pure_comparative
+    fault_system: at_fault
+    minimum_limits:
+      bodily_injury: "$25,000/$50,000"
+      property_damage: "$10,000"
+    pip_required: false
+    pip_amount: null
+    um_required: false
+    um_offered: true
+    uim_required: false
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage"]
+    optional_coverages: ["um", "uim", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Montana prior approval; no UM/UIM mandate"
+
+  NE:
+    name: Nebraska
+    rate_filing: file_and_use
+    tort_model: modified_comparative_50
+    tort_notes: "50% bar; plaintiff cannot recover if 50% or more at fault"
+    fault_system: at_fault
+    minimum_limits:
+      bodily_injury: "$25,000/$50,000"
+      property_damage: "$25,000"
+    pip_required: false
+    pip_amount: null
+    um_required: false
+    um_offered: true
+    uim_required: false
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage"]
+    optional_coverages: ["um", "uim", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Nebraska competitive rating; no UM/UIM mandate"
+
+  NV:
+    name: Nevada
+    rate_filing: file_and_use
+    tort_model: pure_comparative
+    fault_system: at_fault
+    minimum_limits:
+      bodily_injury: "$25,000/$50,000"
+      property_damage: "$20,000"
+    pip_required: false
+    pip_amount: null
+    um_required: false
+    um_offered: true
+    uim_required: false
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage"]
+    optional_coverages: ["um", "uim", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Nevada file-and-use; no UM/UIM mandate"
+
+  NH:
+    name: New Hampshire
+    rate_filing: no_file
+    rate_filing_notes: "Competitive rating; no filing required for most lines"
+    tort_model: pure_comparative
+    fault_system: at_fault
+    minimum_limits:
+      bodily_injury: "$25,000/$50,000"
+      property_damage: "$25,000"
+    pip_required: false
+    pip_amount: null
+    um_required: false
+    um_offered: true
+    uim_required: false
+    uim_offered: true
+    required_coverages: []
+    optional_coverages: ["bodily_injury", "property_damage", "um", "uim", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "New Hampshire does not require auto insurance; but if carried, must meet minimums; financial responsibility laws apply"
+
+  NJ:
+    name: New Jersey
+    rate_filing: prior_approval
+    tort_model: modified_comparative_50
+    tort_notes: "50% bar; choice of no-fault or verbal threshold"
+    fault_system: no_fault
+    minimum_limits:
+      bodily_injury: "$15,000/$30,000"
+      property_damage: "$5,000"
+    pip_required: true
+    pip_amount: "$15,000"
+    pip_notes: "No-fault; verbal threshold or choice of no-fault; PIP $15K"
+    um_required: true
+    um_offered: true
+    uim_required: true
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage", "personal_injury_protection"]
+    optional_coverages: ["um", "uim", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "New Jersey no-fault with choice; PIP $15K mandatory; UM/UIM mandatory"
+
+  NM:
+    name: New Mexico
+    rate_filing: file_and_use
+    tort_model: pure_comparative
+    fault_system: at_fault
+    minimum_limits:
+      bodily_injury: "$25,000/$50,000"
+      property_damage: "$10,000"
+    pip_required: false
+    pip_amount: null
+    um_required: false
+    um_offered: true
+    uim_required: false
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage"]
+    optional_coverages: ["um", "uim", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "New Mexico file-and-use; no compulsory auto insurance but financial responsibility laws"
+
+  NY:
+    name: New York
+    rate_filing: prior_approval
+    rate_filing_notes: "DFS must approve rates; public hearing required for rate increases"
+    tort_model: pure_comparative
+    fault_system: no_fault
+    minimum_limits:
+      bodily_injury: "$25,000/$50,000"
+      property_damage: "$10,000"
+    pip_required: true
+    pip_amount: "$50,000"
+    pip_notes: "No-fault; PIP mandatory $50K"
+    um_required: true
+    um_offered: true
+    uim_required: true
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage", "personal_injury_protection", "uninsured_motorist"]
+    optional_coverages: ["uim", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "New York no-fault; PIP $50K mandatory; UM/UIM mandatory; strictest DFS oversight"
+
+  NC:
+    name: North Carolina
+    rate_filing: prior_approval
+    tort_model: modified_comparative_50
+    tort_notes: "50% bar on comparative negligence (modified since 2011)"
+    fault_system: at_fault
+    minimum_limits:
+      bodily_injury: "$30,000/$60,000"
+      property_damage: "$25,000"
+    pip_required: false
+    pip_amount: null
+    um_required: true
+    um_offered: true
+    uim_required: true
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage"]
+    optional_coverages: ["um", "uim", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "North Carolina prior approval; rate bureau system; UM/UIM mandatory"
+
+  ND:
+    name: North Dakota
+    rate_filing: file_and_use
+    tort_model: modified_comparative_50
+    tort_notes: "50% bar on comparative negligence"
+    fault_system: no_fault
+    minimum_limits:
+      bodily_injury: "$25,000/$50,000"
+      property_damage: "$25,000"
+    pip_required: true
+    pip_amount: "$30,000"
+    pip_notes: "No-fault; PIP mandatory $30K"
+    um_required: true
+    um_offered: true
+    uim_required: true
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage", "personal_injury_protection"]
+    optional_coverages: ["um", "uim", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "North Dakota no-fault; PIP $30K mandatory; UM/UIM mandatory"
+
+  OH:
+    name: Ohio
+    rate_filing: file_and_use
+    tort_model: modified_comparative_51
+    tort_notes: "51% bar on comparative negligence"
+    fault_system: at_fault
+    minimum_limits:
+      bodily_injury: "$25,000/$50,000"
+      property_damage: "$25,000"
+    pip_required: false
+    pip_amount: null
+    um_required: false
+    um_offered: true
+    uim_required: false
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage"]
+    optional_coverages: ["um", "uim", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Ohio file-and-use; no UM/UIM mandate; competitive rating"
+
+  OK:
+    name: Oklahoma
+    rate_filing: file_and_use
+    tort_model: modified_comparative_50
+    tort_notes: "50% bar; plaintiff cannot recover if 50% or more at fault"
+    fault_system: at_fault
+    minimum_limits:
+      bodily_injury: "$25,000/$50,000"
+      property_damage: "$25,000"
+    pip_required: false
+    pip_amount: null
+    um_required: false
+    um_offered: true
+    uim_required: false
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage"]
+    optional_coverages: ["um", "uim", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Oklahoma file-and-use; no UM/UIM mandate; high tornado exposure"
+
+  OR:
+    name: Oregon
+    rate_filing: prior_approval
+    tort_model: pure_comparative
+    fault_system: at_fault
+    minimum_limits:
+      bodily_injury: "$25,000/$50,000"
+      property_damage: "$20,000"
+    pip_required: false
+    pip_amount: null
+    um_required: true
+    um_offered: true
+    uim_required: true
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage"]
+    optional_coverages: ["um", "uim", "pip", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Oregon prior approval; UM/UIM mandatory; PIP optional $15K"
+
+  PA:
+    name: Pennsylvania
+    rate_filing: prior_approval
+    tort_model: modified_comparative_51
+    tort_notes: "51% bar on comparative negligence; choice no-fault"
+    fault_system: no_fault
+    minimum_limits:
+      bodily_injury: "$15,000/$30,000"
+      property_damage: "$5,000"
+    pip_required: true
+    pip_amount: "$5,000"
+    pip_notes: "No-fault with choice; PIP/first party benefits mandatory $5K"
+    um_required: true
+    um_offered: true
+    uim_required: true
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage", "personal_injury_protection"]
+    optional_coverages: ["um", "uim", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Pennsylvania choice no-fault; PIP $5K mandatory; UM/UIM mandatory"
+
+  RI:
+    name: Rhode Island
+    rate_filing: file_and_use
+    tort_model: pure_comparative
+    fault_system: at_fault
+    minimum_limits:
+      bodily_injury: "$25,000/$50,000"
+      property_damage: "$25,000"
+    pip_required: false
+    pip_amount: null
+    um_required: false
+    um_offered: true
+    uim_required: false
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage"]
+    optional_coverages: ["um", "uim", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Rhode Island file-and-use; no UM/UIM mandate"
+
+  SC:
+    name: South Carolina
+    rate_filing: file_and_use
+    tort_model: modified_comparative_51
+    tort_notes: "51% bar on comparative negligence"
+    fault_system: at_fault
+    minimum_limits:
+      bodily_injury: "$25,000/$50,000"
+      property_damage: "$25,000"
+    pip_required: false
+    pip_amount: null
+    um_required: true
+    um_offered: true
+    uim_required: true
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage"]
+    optional_coverages: ["um", "uim", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "South Carolina file-and-use; UM/UIM mandatory"
+
+  SD:
+    name: South Dakota
+    rate_filing: file_and_use
+    tort_model: modified_comparative_50
+    tort_notes: "50% bar on comparative negligence"
+    fault_system: at_fault
+    minimum_limits:
+      bodily_injury: "$25,000/$50,000"
+      property_damage: "$25,000"
+    pip_required: false
+    pip_amount: null
+    um_required: false
+    um_offered: true
+    uim_required: false
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage"]
+    optional_coverages: ["um", "uim", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "South Dakota file-and-use; no UM/UIM mandate"
+
+  TN:
+    name: Tennessee
+    rate_filing: file_and_use
+    tort_model: modified_comparative_51
+    tort_notes: "51% bar on comparative negligence"
+    fault_system: at_fault
+    minimum_limits:
+      bodily_injury: "$25,000/$50,000"
+      property_damage: "$15,000"
+    pip_required: false
+    pip_amount: null
+    um_required: false
+    um_offered: true
+    uim_required: false
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage"]
+    optional_coverages: ["um", "uim", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Tennessee file-and-use; no UM/UIM mandate"
+
+  TX:
+    name: Texas
+    rate_filing: file_and_use
+    rate_filing_notes: "TDI must be notified; competitive rating for most commercial lines"
+    tort_model: modified_comparative_51
+    tort_notes: "51% bar on comparative negligence"
+    fault_system: at_fault
+    minimum_limits:
+      bodily_injury: "$30,000/$60,000"
+      property_damage: "$25,000"
+    pip_required: false
+    pip_amount: null
+    um_required: false
+    um_offered: true
+    uim_required: false
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage"]
+    optional_coverages: ["um", "uim", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Texas file-and-use; UM/UIM must be offered in writing; rejection permitted; TWIA for coastal windstorm"
+
+  UT:
+    name: Utah
+    rate_filing: file_and_use
+    tort_model: modified_comparative_50
+    tort_notes: "50% bar on comparative negligence"
+    fault_system: no_fault
+    minimum_limits:
+      bodily_injury: "$25,000/$65,000"
+      property_damage: "$15,000"
+    pip_required: true
+    pip_amount: "$3,000"
+    pip_notes: "No-fault; PIP mandatory $3K"
+    um_required: false
+    um_offered: true
+    uim_required: false
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage", "personal_injury_protection"]
+    optional_coverages: ["um", "uim", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Utah no-fault; PIP $3K mandatory; highest BI combined single limit among no-fault states"
+
+  VT:
+    name: Vermont
+    rate_filing: prior_approval
+    tort_model: pure_comparative
+    fault_system: at_fault
+    minimum_limits:
+      bodily_injury: "$25,000/$50,000"
+      property_damage: "$10,000"
+    pip_required: false
+    pip_amount: null
+    um_required: true
+    um_offered: true
+    uim_required: true
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage"]
+    optional_coverages: ["um", "uim", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Vermont prior approval; UM/UIM mandatory"
+
+  VA:
+    name: Virginia
+    rate_filing: file_and_use
+    tort_model: pure_comparative
+    fault_system: at_fault
+    minimum_limits:
+      bodily_injury: "$25,000/$50,000"
+      property_damage: "$20,000"
+    pip_required: false
+    pip_amount: null
+    um_required: false
+    um_offered: true
+    uim_required: false
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage"]
+    optional_coverages: ["um", "uim", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Virginia file-and-use; UM/UIM must be offered; rejection permitted; $500 uninsured motor vehicle fee option"
+
+  WA:
+    name: Washington
+    rate_filing: prior_approval
+    tort_model: pure_comparative
+    fault_system: at_fault
+    minimum_limits:
+      bodily_injury: "$25,000/$50,000"
+      property_damage: "$10,000"
+    pip_required: false
+    pip_amount: null
+    um_required: false
+    um_offered: true
+    uim_required: false
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage"]
+    optional_coverages: ["um", "uim", "pip", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Washington prior approval; no UM/UIM mandate; PIP optional $10K"
+
+  WV:
+    name: West Virginia
+    rate_filing: prior_approval
+    tort_model: modified_comparative_50
+    tort_notes: "50% bar on comparative negligence"
+    fault_system: at_fault
+    minimum_limits:
+      bodily_injury: "$25,000/$50,000"
+      property_damage: "$25,000"
+    pip_required: false
+    pip_amount: null
+    um_required: true
+    um_offered: true
+    uim_required: true
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage"]
+    optional_coverages: ["um", "uim", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "West Virginia prior approval; UM/UIM mandatory"
+
+  WI:
+    name: Wisconsin
+    rate_filing: file_and_use
+    tort_model: modified_comparative_51
+    tort_notes: "51% bar on comparative negligence"
+    fault_system: at_fault
+    minimum_limits:
+      bodily_injury: "$25,000/$50,000"
+      property_damage: "$10,000"
+    pip_required: false
+    pip_amount: null
+    um_required: true
+    um_offered: true
+    uim_required: true
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage"]
+    optional_coverages: ["um", "uim", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Wisconsin file-and-use; UM/UIM mandatory"
+
+  WY:
+    name: Wyoming
+    rate_filing: no_file
+    rate_filing_notes: "Competitive rating; no filing required for most lines"
+    tort_model: pure_comparative
+    fault_system: at_fault
+    minimum_limits:
+      bodily_injury: "$25,000/$50,000"
+      property_damage: "$20,000"
+    pip_required: false
+    pip_amount: null
+    um_required: false
+    um_offered: true
+    uim_required: false
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage"]
+    optional_coverages: ["um", "uim", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Wyoming competitive rating; no UM/UIM mandate"
+
+  DC:
+    name: District of Columbia
+    rate_filing: file_and_use
+    tort_model: pure_comparative
+    fault_system: no_fault
+    minimum_limits:
+      bodily_injury: "$25,000/$50,000"
+      property_damage: "$10,000"
+    pip_required: true
+    pip_amount: "$50,000"
+    pip_notes: "No-fault; PIP mandatory $50K"
+    um_required: true
+    um_offered: true
+    uim_required: true
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage", "personal_injury_protection", "uninsured_motorist"]
+    optional_coverages: ["uim", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "DC no-fault; PIP $50K mandatory; UM/UIM mandatory"
+
+  US_VI:
+    name: US Virgin Islands
+    rate_filing: prior_approval
+    tort_model: pure_comparative
+    fault_system: at_fault
+    minimum_limits:
+      bodily_injury: "$25,000/$50,000"
+      property_damage: "$10,000"
+    pip_required: false
+    pip_amount: null
+    um_required: false
+    um_offered: true
+    uim_required: false
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage"]
+    optional_coverages: ["um", "uim", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "USVI has its own insurance department; hurricane exposure"
+
+  PR:
+    name: Puerto Rico
+    rate_filing: prior_approval
+    tort_model: pure_comparative
+    fault_system: at_fault
+    minimum_limits:
+      bodily_injury: "$25,000/$50,000"
+      property_damage: "$10,000"
+    pip_required: false
+    pip_amount: null
+    um_required: false
+    um_offered: true
+    uim_required: false
+    uim_offered: true
+    required_coverages: ["bodily_injury", "property_damage"]
+    optional_coverages: ["um", "uim", "collision", "comprehensive"]
+    filing_deadline: null
+    commission_cap_pct: null
+    notes: "Puerto Rico has its own insurance code; hurricane exposure"

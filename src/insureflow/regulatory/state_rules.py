@@ -9,6 +9,7 @@ import yaml
 from insureflow.regulatory.models import (
     ComplianceFlag,
     ComplianceSeverity,
+    LineSpecificRule,
     RateFilingMethod,
     StateComplianceResult,
     StateRule,
@@ -19,7 +20,74 @@ from insureflow.regulatory.models import (
 logger = logging.getLogger(__name__)
 
 _DATA_DIR = Path(__file__).parent / "data"
-_RULES_FILE = _DATA_DIR / "state_rules.yaml"
+
+LINE_FILES: dict[str, str] = {
+    "auto": "auto.yaml",
+    "property": "property.yaml",
+    "liability": "liability.yaml",
+    "workers_comp": "workers_comp.yaml",
+    "life": "life.yaml",
+    "health": "health.yaml",
+    "cyber": "cyber.yaml",
+    "marine": "marine.yaml",
+    "financial": "financial.yaml",
+    "specialty": "specialty.yaml",
+    "package": "package.yaml",
+    "flood": "flood.yaml",
+}
+
+_LINE_ALIASES: dict[str, str] = {
+    "auto": "auto",
+    "automobile": "auto",
+    "car": "auto",
+    "personal_auto": "auto",
+    "commercial_auto": "auto",
+    "property": "property",
+    "commercial_property": "property",
+    "homeowners": "property",
+    "home": "property",
+    "dwelling": "property",
+    "liability": "liability",
+    "general_liability": "liability",
+    "professional_liability": "liability",
+    "gl": "liability",
+    "e_o": "liability",
+    "e_and_o": "liability",
+    "workers_comp": "workers_comp",
+    "workers_compensation": "workers_comp",
+    "wc": "workers_comp",
+    "workforce": "workers_comp",
+    "life": "life",
+    "life_insurance": "life",
+    "term_life": "life",
+    "whole_life": "life",
+    "universal_life": "life",
+    "annuity": "life",
+    "health": "health",
+    "health_insurance": "health",
+    "medical": "health",
+    "group_health": "health",
+    "individual_health": "health",
+    "cyber": "cyber",
+    "data_breach": "cyber",
+    "cybersecurity": "cyber",
+    "marine": "marine",
+    "ocean_marine": "marine",
+    "inland_marine": "marine",
+    "financial": "financial",
+    "credit": "financial",
+    "credit_life": "financial",
+    "specialty": "specialty",
+    "excess": "specialty",
+    "surplus_lines": "specialty",
+    "e_s": "specialty",
+    "package": "package",
+    "bundle": "package",
+    "bundled": "package",
+    "commercial_package": "package",
+    "flood": "flood",
+    "nfip": "flood",
+}
 
 
 def _load_yaml(path: Path) -> dict[str, Any]:
@@ -27,30 +95,61 @@ def _load_yaml(path: Path) -> dict[str, Any]:
         return yaml.safe_load(f) or {}
 
 
+def _resolve_line(line: str) -> Optional[str]:
+    normalized = line.lower().strip().replace("-", "_").replace(" ", "_")
+    return _LINE_ALIASES.get(normalized, _LINE_ALIASES.get(line.lower().strip()))
+
+
 class StateRegulatoryEngine:
-    """Loads per-state regulatory rules and produces compliance flags."""
+    """Loads per-state regulatory rules (general + line-specific) and produces compliance flags."""
 
     def __init__(self) -> None:
-        self._rules: dict[str, StateRule] = {}
-        self._raw: dict[str, Any] = {}
+        self._general_rules: dict[str, StateRule] = {}
+        self._line_rules: dict[str, dict[str, dict[str, Any]]] = {}
         self._loaded = False
 
     def _ensure_loaded(self) -> None:
         if self._loaded:
             return
         try:
-            data = _load_yaml(_RULES_FILE)
-            raw_states = data.get("states", {})
-            for code, raw in raw_states.items():
-                self._rules[code.upper()] = self._parse_rule(code.upper(), raw)
-            self._raw = raw_states
+            self._load_general()
+            self._load_line_rules()
             self._loaded = True
-            logger.info("Loaded state rules for %d jurisdictions", len(self._rules))
+            line_summary = ", ".join(f"{k}({len(v)})" for k, v in self._line_rules.items() if v)
+            logger.info(
+                "Loaded general rules for %d jurisdictions; line-specific: %s",
+                len(self._general_rules),
+                line_summary,
+            )
         except Exception as exc:
-            logger.warning("Failed to load state rules: %s", exc)
+            logger.warning("Failed to load regulatory rules: %s", exc)
+
+    def _load_general(self) -> None:
+        path = _DATA_DIR / "state_rules.yaml"
+        if not path.exists():
+            return
+        data = _load_yaml(path)
+        for code, raw in data.get("states", {}).items():
+            self._general_rules[code.upper()] = self._parse_general_rule(code.upper(), raw)
+
+    def _load_line_rules(self) -> None:
+        for line_key, filename in LINE_FILES.items():
+            path = _DATA_DIR / filename
+            if not path.exists():
+                continue
+            data = _load_yaml(path)
+            states_data = data.get("states", {})
+            if not states_data:
+                continue
+            self._line_rules[line_key] = {}
+            for code, raw in states_data.items():
+                self._line_rules[line_key][code.upper()] = {
+                    "name": raw.get("name", code),
+                    **{k: v for k, v in raw.items() if k != "name"},
+                }
 
     @staticmethod
-    def _parse_rule(code: str, raw: dict[str, Any]) -> StateRule:
+    def _parse_general_rule(code: str, raw: dict[str, Any]) -> StateRule:
         def _enum_safe(cls: Any, val: str, default: Any) -> Any:
             try:
                 return cls(val)
@@ -96,15 +195,51 @@ class StateRegulatoryEngine:
 
     def get_rule(self, state_code: str) -> Optional[StateRule]:
         self._ensure_loaded()
-        return self._rules.get(state_code.upper())
+        return self._general_rules.get(state_code.upper())
+
+    def get_line_rule(self, state_code: str, line_of_business: str) -> Optional[LineSpecificRule]:
+        self._ensure_loaded()
+        resolved = _resolve_line(line_of_business)
+        if not resolved:
+            return None
+        states = self._line_rules.get(resolved, {})
+        raw = states.get(state_code.upper())
+        if raw is None:
+            return None
+        return LineSpecificRule(
+            state_code=state_code.upper(),
+            state_name=raw.get("name", state_code),
+            line_of_business=resolved,
+            data={k: v for k, v in raw.items() if k != "name"},
+        )
 
     def get_all_rules(self) -> dict[str, StateRule]:
         self._ensure_loaded()
-        return dict(self._rules)
+        return dict(self._general_rules)
+
+    def get_all_line_rules(self, line_of_business: str) -> dict[str, LineSpecificRule]:
+        self._ensure_loaded()
+        resolved = _resolve_line(line_of_business)
+        if not resolved:
+            return {}
+        states = self._line_rules.get(resolved, {})
+        return {
+            code: LineSpecificRule(
+                state_code=code,
+                state_name=raw.get("name", code),
+                line_of_business=resolved,
+                data={k: v for k, v in raw.items() if k != "name"},
+            )
+            for code, raw in states.items()
+        }
 
     def get_available_states(self) -> list[str]:
         self._ensure_loaded()
-        return sorted(self._rules.keys())
+        return sorted(self._general_rules.keys())
+
+    def get_available_lines(self) -> list[str]:
+        self._ensure_loaded()
+        return sorted(self._line_rules.keys())
 
     def detect_state(self, locations: list[dict[str, str]]) -> str:
         """Extract primary state from submission locations."""
@@ -180,10 +315,12 @@ class StateRegulatoryEngine:
         has_oral_binder: bool = False,
         is_admitted: bool = True,
     ) -> StateComplianceResult:
-        """Evaluate compliance flags for a submission in a given state."""
+        """Evaluate compliance flags for a submission in a given state and line."""
         self._ensure_loaded()
         rule = self.get_rule(state_code)
-        if rule is None:
+        line_rule = self.get_line_rule(state_code, line_of_business) if line_of_business else None
+
+        if rule is None and line_rule is None:
             return StateComplianceResult(
                 state_code=state_code,
                 state_name=state_code,
@@ -199,6 +336,40 @@ class StateRegulatoryEngine:
                 summary=f"No rules loaded for {state_code}",
             )
 
+        flags: list[ComplianceFlag] = []
+
+        if rule is not None:
+            flags.extend(self._check_general_flags(rule, state_code, is_surplus_lines, is_windstorm_zone, has_oral_binder, is_admitted))
+
+        if line_rule is not None:
+            flags.extend(self._check_line_flags(line_rule, state_code, line_of_business))
+
+        summary = f"{rule.state_name}: rate_filing={rule.rate_filing.value}, tort={rule.tort_model.value}" if rule else ""
+        if rule and rule.surplus_lines:
+            summary += f", surplus_lines_tax={rule.surplus_lines_tax_rate * 100:.2f}%"
+        if rule and rule.claims_prompt_pay_days:
+            summary += f", claims_pay={rule.claims_prompt_pay_days}d"
+        if line_rule:
+            summary += f" [{line_of_business}: {len(line_rule.data)} fields]"
+
+        return StateComplianceResult(
+            state_code=state_code,
+            state_name=rule.state_name if rule else line_rule.state_name if line_rule else state_code,
+            flags=flags,
+            rule=rule,
+            line_rule=line_rule,
+            summary=summary,
+        )
+
+    def _check_general_flags(
+        self,
+        rule: StateRule,
+        state_code: str,
+        is_surplus_lines: bool,
+        is_windstorm_zone: bool,
+        has_oral_binder: bool,
+        is_admitted: bool,
+    ) -> list[ComplianceFlag]:
         flags: list[ComplianceFlag] = []
 
         if rule.rate_filing == RateFilingMethod.PRIOR_APPROVAL:
@@ -299,19 +470,244 @@ class StateRegulatoryEngine:
                 )
             )
 
-        summary = f"{rule.state_name}: rate_filing={rule.rate_filing.value}, tort={rule.tort_model.value}"
-        if rule.surplus_lines:
-            summary += f", surplus_lines_tax={rule.surplus_lines_tax_rate * 100:.2f}%"
-        if rule.claims_prompt_pay_days:
-            summary += f", claims_pay={rule.claims_prompt_pay_days}d"
+        return flags
 
-        return StateComplianceResult(
-            state_code=state_code,
-            state_name=rule.state_name,
-            flags=flags,
-            rule=rule,
-            summary=summary,
-        )
+    def _check_line_flags(
+        self,
+        line_rule: LineSpecificRule,
+        state_code: str,
+        line_of_business: str,
+    ) -> list[ComplianceFlag]:
+        flags: list[ComplianceFlag] = []
+        data = line_rule.data
+        resolved_line = _resolve_line(line_of_business) or line_of_business
+
+        # Rate filing for this specific line
+        line_rate_filing = data.get("rate_filing", "")
+        if line_rate_filing and line_rate_filing == "prior_approval":
+            flags.append(
+                ComplianceFlag(
+                    state_code=state_code,
+                    rule_category="rate_filing",
+                    severity=ComplianceSeverity.WARNING,
+                    message=f"{line_rule.state_name} requires prior approval for {resolved_line} rate changes",
+                    action_required=f"Ensure {resolved_line} rate filing is approved before quoting",
+                    line_of_business=resolved_line,
+                )
+            )
+
+        # No-fault / PIP (auto-specific)
+        pip_required = data.get("pip_required", data.get("mandatory_pip", False))
+        if pip_required:
+            pip_amount = data.get("pip_amount", data.get("minimum_pip_amount", ""))
+            flags.append(
+                ComplianceFlag(
+                    state_code=state_code,
+                    rule_category="mandatory_pip",
+                    severity=ComplianceSeverity.WARNING,
+                    message=f"{line_rule.state_name} requires PIP for auto: {pip_amount}",
+                    action_required=f"Ensure PIP coverage of {pip_amount} is included",
+                    line_of_business=resolved_line,
+                )
+            )
+
+        # UM/UIM requirements
+        um_required = data.get("um_required", data.get("mandatory_um", False))
+        if um_required:
+            flags.append(
+                ComplianceFlag(
+                    state_code=state_code,
+                    rule_category="mandatory_um",
+                    severity=ComplianceSeverity.WARNING,
+                    message=f"{line_rule.state_name} requires uninsured motorist coverage",
+                    action_required="Ensure UM coverage is offered/accepted",
+                    line_of_business=resolved_line,
+                )
+            )
+
+        uim_required = data.get("uim_required", data.get("mandatory_uim", False))
+        if uim_required:
+            flags.append(
+                ComplianceFlag(
+                    state_code=state_code,
+                    rule_category="mandatory_uim",
+                    severity=ComplianceSeverity.WARNING,
+                    message=f"{line_rule.state_name} requires underinsured motorist coverage",
+                    action_required="Ensure UIM coverage is offered/accepted",
+                    line_of_business=resolved_line,
+                )
+            )
+
+        # Windstorm deductible (property)
+        wind_deductible = data.get("windstorm_hurricane_deductible", data.get("hurricane_deductible", False))
+        if wind_deductible:
+            flags.append(
+                ComplianceFlag(
+                    state_code=state_code,
+                    rule_category="windstorm",
+                    severity=ComplianceSeverity.WARNING,
+                    message=f"{line_rule.state_name} requires windstorm/hurricane deductible for {resolved_line}",
+                    action_required="Ensure windstorm deductible is disclosed and accepted",
+                    line_of_business=resolved_line,
+                )
+            )
+
+        # Data breach notification (cyber)
+        breach_days = data.get("data_breach_notification_days")
+        if breach_days:
+            flags.append(
+                ComplianceFlag(
+                    state_code=state_code,
+                    rule_category="data_breach",
+                    severity=ComplianceSeverity.WARNING,
+                    message=f"{line_rule.state_name} data breach notification: {breach_days} days",
+                    action_required=f"Ensure breach response plan meets {breach_days}-day notification window",
+                    line_of_business=resolved_line,
+                )
+            )
+
+        breach_ag = data.get("data_breach_notification_ag", False)
+        if breach_ag:
+            flags.append(
+                ComplianceFlag(
+                    state_code=state_code,
+                    rule_category="data_breach",
+                    severity=ComplianceSeverity.INFO,
+                    message=f"{line_rule.state_name} requires AG notification for data breach",
+                    action_required="Notify state Attorney General per breach notification statute",
+                    line_of_business=resolved_line,
+                )
+            )
+
+        # State fund (workers comp)
+        state_fund = data.get("state_fund", False)
+        if state_fund:
+            fund_type = data.get("state_fund_type", "")
+            if fund_type == "monopolistic":
+                flags.append(
+                    ComplianceFlag(
+                        state_code=state_code,
+                        rule_category="state_fund",
+                        severity=ComplianceSeverity.CRITICAL,
+                        message=f"{line_rule.state_name} has monopolistic state fund — must purchase from state",
+                        action_required="Cannot purchase from private carriers; purchase from state fund",
+                        line_of_business=resolved_line,
+                    )
+                )
+            else:
+                flags.append(
+                    ComplianceFlag(
+                        state_code=state_code,
+                        rule_category="state_fund",
+                        severity=ComplianceSeverity.WARNING,
+                        message=f"{line_rule.state_name} has competitive state fund for {resolved_line}",
+                        action_required="State fund is available but private market may also be used",
+                        line_of_business=resolved_line,
+                    )
+                )
+
+        # Individual mandate (health)
+        indiv_mandate = data.get("state_individual_mandate", False)
+        if indiv_mandate:
+            flags.append(
+                ComplianceFlag(
+                    state_code=state_code,
+                    rule_category="individual_mandate",
+                    severity=ComplianceSeverity.WARNING,
+                    message=f"{line_rule.state_name} has state individual health insurance mandate",
+                    action_required="Ensure individual mandate compliance is addressed",
+                    line_of_business=resolved_line,
+                )
+            )
+
+        # Free look period (life)
+        free_look = data.get("free_look_period_days")
+        if free_look and int(free_look) > 10:
+            flags.append(
+                ComplianceFlag(
+                    state_code=state_code,
+                    rule_category="free_look",
+                    severity=ComplianceSeverity.INFO,
+                    message=f"{line_rule.state_name} requires {free_look}-day free look period for life insurance",
+                    action_required=f"Ensure {free_look}-day free look disclosure is provided",
+                    line_of_business=resolved_line,
+                )
+            )
+
+        # Surplus lines (specialty)
+        sl_tax = data.get("surplus_lines_tax_rate")
+        if sl_tax and float(sl_tax) > 0:
+            flags.append(
+                ComplianceFlag(
+                    state_code=state_code,
+                    rule_category="surplus_lines_tax",
+                    severity=ComplianceSeverity.INFO,
+                    message=f"{line_rule.state_name} surplus lines tax for {resolved_line}: {float(sl_tax) * 100:.2f}%",
+                    action_required="Collect and remit surplus lines tax",
+                    line_of_business=resolved_line,
+                )
+            )
+
+        diligent_search = data.get("diligent_search_required", False)
+        if diligent_search:
+            flags.append(
+                ComplianceFlag(
+                    state_code=state_code,
+                    rule_category="diligent_search",
+                    severity=ComplianceSeverity.WARNING,
+                    message=f"{line_rule.state_name} requires diligent search for admitted coverage",
+                    action_required="Document diligent search — at least 3 admitted carriers declined",
+                    line_of_business=resolved_line,
+                )
+            )
+
+        # NFIP participation (flood)
+        nfip = data.get("nfip_participation", False)
+        if nfip:
+            flags.append(
+                ComplianceFlag(
+                    state_code=state_code,
+                    rule_category="nfip",
+                    severity=ComplianceSeverity.INFO,
+                    message=f"{line_rule.state_name} participates in NFIP for flood insurance",
+                    action_required="Check NFIP participation and community rating",
+                    line_of_business=resolved_line,
+                )
+            )
+
+        # Minimum limits (generic)
+        min_limits = data.get("minimum_limits")
+        if isinstance(min_limits, dict):
+            for limit_type, limit_value in min_limits.items():
+                if limit_value:
+                    flags.append(
+                        ComplianceFlag(
+                            state_code=state_code,
+                            rule_category="minimum_limits",
+                            severity=ComplianceSeverity.INFO,
+                            message=f"{line_rule.state_name} minimum {limit_type}: {limit_value}",
+                            action_required=f"Ensure minimum {limit_type} limit of {limit_value}",
+                            line_of_business=resolved_line,
+                        )
+                    )
+
+        # Required coverages (generic)
+        required_covs = data.get("required_coverages", [])
+        if isinstance(required_covs, list):
+            for cov in required_covs:
+                if cov:
+                    flags.append(
+                        ComplianceFlag(
+                            state_code=state_code,
+                            rule_category="required_coverage",
+                            severity=ComplianceSeverity.WARNING,
+                            message=f"{line_rule.state_name} requires {cov} for {resolved_line}",
+                            action_required=f"Ensure {cov} coverage is included",
+                            line_of_business=resolved_line,
+                        )
+                    )
+
+        return flags
 
     def check_coverage_admitted(self, state_code: str, line_of_business: str, coverage_type: str) -> dict[str, Any]:
         """Check if a coverage is admitted in a state (simplified lookup)."""

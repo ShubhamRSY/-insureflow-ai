@@ -981,18 +981,23 @@ async def system_diagnostics(current: TokenData | None = Depends(get_current_use
 
 
 @app.get("/api/state-rules")
-async def get_state_rules(state: str = "") -> dict[str, Any]:
-    """State insurance regulatory rules — load by state code or list all."""
+async def get_state_rules(state: str = "", line: str = "") -> dict[str, Any]:
+    """State insurance regulatory rules — load by state code, line of business, or list all."""
     from insureflow.regulatory.state_rules import StateRegulatoryEngine
 
     engine = StateRegulatoryEngine()
     if state:
         code = state.upper().strip()
         rule = engine.get_rule(code)
-        if rule is None:
+        line_rule = engine.get_line_rule(code, line) if line else None
+        if rule is None and line_rule is None:
             raise HTTPException(status_code=404, detail=f"No rules for state '{code}'")
-        result = engine.evaluate(code)
-        return {"rule": rule.model_dump(mode="json"), "compliance": result.model_dump(mode="json")}
+        compliance = engine.evaluate(code, line_of_business=line) if line else engine.evaluate(code)
+        return {
+            "rule": rule.model_dump(mode="json") if rule else None,
+            "line_rule": line_rule.model_dump(mode="json") if line_rule else None,
+            "compliance": compliance.model_dump(mode="json"),
+        }
     return {
         "states": engine.get_available_states(),
         "count": len(engine.get_available_states()),
@@ -1004,17 +1009,46 @@ async def check_state_compliance(
     state_code: str,
     surplus_lines: bool = False,
     windstorm_zone: bool = False,
+    line: str = "",
 ) -> dict[str, Any]:
-    """Evaluate compliance flags for a given state."""
+    """Evaluate compliance flags for a given state and line of business."""
     from insureflow.regulatory.state_rules import StateRegulatoryEngine
 
     engine = StateRegulatoryEngine()
     result = engine.evaluate(
         state_code.upper().strip(),
+        line_of_business=line,
         is_surplus_lines=surplus_lines,
         is_windstorm_zone=windstorm_zone,
     )
     return result.model_dump(mode="json")
+
+
+@app.get("/api/state-rules/lines")
+async def list_regulatory_lines() -> dict[str, Any]:
+    """List all available lines of business with line-specific regulatory data."""
+    from insureflow.regulatory.state_rules import StateRegulatoryEngine
+
+    engine = StateRegulatoryEngine()
+    lines = engine.get_available_lines()
+    return {
+        "lines": lines,
+        "count": len(lines),
+        "aliases": {
+            "auto": ["automobile", "car", "personal_auto", "commercial_auto"],
+            "property": ["commercial_property", "homeowners", "home", "dwelling"],
+            "liability": ["general_liability", "professional_liability", "gl", "e_o"],
+            "workers_comp": ["workers_compensation", "wc", "workforce"],
+            "life": ["life_insurance", "term_life", "whole_life", "universal_life", "annuity"],
+            "health": ["health_insurance", "medical", "group_health", "individual_health"],
+            "cyber": ["data_breach", "cybersecurity"],
+            "marine": ["ocean_marine", "inland_marine"],
+            "financial": ["credit", "credit_life"],
+            "specialty": ["excess", "surplus_lines", "e_s"],
+            "package": ["bundle", "bundled", "commercial_package"],
+            "flood": ["nfip"],
+        },
+    }
 
 
 @app.get("/api/demo/presets")
