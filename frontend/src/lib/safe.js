@@ -13,7 +13,7 @@ export function displayText(value, fallback = '') {
   if (t === 'string' || t === 'number' || t === 'boolean') return String(value);
   if (Array.isArray(value)) return value.map((v) => displayText(v)).filter(Boolean).join(', ') || fallback;
   if (t === 'object') {
-    return displayText(
+    const nested = displayText(
       value.title
         || value.label
         || value.text
@@ -23,8 +23,14 @@ export function displayText(value, fallback = '') {
         || value.value
         || value.name
         || value.action,
-      fallback,
+      '',
     );
+    if (nested) return nested;
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return fallback;
+    }
   }
   return fallback;
 }

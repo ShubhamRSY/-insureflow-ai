@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { endpoints } from '../lib/api';
+import { displayText } from '../lib/safe';
 
 /**
  * Glass-box grounding: click a field → highlight its page bbox.
@@ -128,8 +129,8 @@ export default function PdfGroundingViewer({ bundleId }) {
                   {f.confidence != null ? `${Math.round(Number(f.confidence) * 100)}%` : '—'}
                 </span>
                 <span className="min-w-0">
-                  <span className="block truncate text-sm font-medium text-slate-200">{f.field_name}</span>
-                  <span className="block truncate text-xs text-slate-400">{f.value}</span>
+                  <span className="block truncate text-sm font-medium text-slate-200">{displayText(f.field_name)}</span>
+                  <span className="block truncate text-xs text-slate-400">{displayText(f.value)}</span>
                   <span className="mt-0.5 block text-[10px] text-slate-500">
                     {f.grounded
                       ? (f.source_ref || `page ${f.page_number}`)

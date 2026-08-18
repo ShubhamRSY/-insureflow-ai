@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { asList } from '../lib/safe';
+import { asList, displayText } from '../lib/safe';
 
 const RATE_TYPE_LABELS = {
   loss_cost: 'Filed Loss Cost',
@@ -109,10 +109,10 @@ export default function RateProvenance({ metadata, className = '' }) {
                 RATE_TYPE_COLORS[source.rate_type] || 'bg-gray-50 border-gray-200 text-gray-700'
               }`}
             >
-              <span className="font-medium">{RATE_TYPE_LABELS[source.rate_type] || source.rate_type}</span>
-              <span className="font-mono font-semibold">{source.value}</span>
-              {source.filing_id && <span className="text-gray-500">({source.filing_id})</span>}
-              {source.carrier && <span className="text-gray-500">Carrier: {source.carrier}</span>}
+              <span className="font-medium">{displayText(RATE_TYPE_LABELS[source.rate_type] || source.rate_type)}</span>
+              <span className="font-mono font-semibold">{displayText(source.value)}</span>
+              {source.filing_id && <span className="text-gray-500">({displayText(source.filing_id)})</span>}
+              {source.carrier && <span className="text-gray-500">Carrier: {displayText(source.carrier)}</span>}
               {source.effective_date && <span className="text-gray-500">Eff: {source.effective_date}</span>}
               {source.version && <span className="text-gray-500">v{source.version}</span>}
               {source.state && <span className="text-gray-500">{source.state}</span>}

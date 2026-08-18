@@ -20,6 +20,13 @@ const CRITICAL_FIELDS = new Set([
   'loss_history', 'loss_runs', 'experience_mod',
 ]);
 
+function nodeCount(nodes) {
+  if (Array.isArray(nodes)) return nodes.length;
+  if (nodes && typeof nodes === 'object') return Object.keys(nodes).length;
+  const n = Number(nodes);
+  return Number.isFinite(n) ? n : 0;
+}
+
 function CopyButton({ text }) {
   const [copied, setCopied] = useState(false);
   const handleCopy = async () => {
@@ -65,7 +72,7 @@ function SourceBadge({ pageNumber, bbox, sourceRef, sourceText, extractionMethod
       )}
       {extractionMethod && (
         <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-700/50 text-slate-400 uppercase">
-          {extractionMethod}
+          {displayText(extractionMethod)}
         </span>
       )}
     </div>
@@ -103,10 +110,10 @@ function FieldRow({ field, isExpanded, onToggle, onJumpToPage }) {
         </span>
 
         <span className="text-sm font-mono text-white flex-1 truncate">
-          {typeof value === 'string' ? value : JSON.stringify(value)}
+          {displayText(value)}
         </span>
 
-        <CopyButton text={String(value)} />
+        <CopyButton text={displayText(value)} />
 
         {confidence != null && (
           <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
@@ -151,13 +158,13 @@ function FieldRow({ field, isExpanded, onToggle, onJumpToPage }) {
 
           {sourceText && (
             <div className="rounded bg-black/30 px-2.5 py-1.5 text-[11px] text-slate-300 italic border-l-2 border-sky-500/30">
-              "{sourceText}"
+              "{displayText(sourceText)}"
             </div>
           )}
 
           {context && (
             <p className="text-[10px] text-slate-500">
-              Source: {context}
+              Source: {displayText(context)}
             </p>
           )}
 
@@ -367,7 +374,7 @@ export default function ProvenancePanel({ job, onJumpToPage }) {
           </p>
           {citationIssues.slice(0, 5).map((issue, i) => (
             <div key={i} className="text-[10px] text-red-300/70 ml-5">
-              {issue.message || `${issue.field_name}: ${issue.code}`}
+              {displayText(issue.message || `${displayText(issue.field_name)}: ${displayText(issue.code)}`)}
               {issue.page_number && <span className="text-sky-400 ml-1">(p. {issue.page_number})</span>}
             </div>
           ))}
@@ -377,7 +384,7 @@ export default function ProvenancePanel({ job, onJumpToPage }) {
       {/* Provenance record summary */}
       {provenance.record_id && (
         <div className="rounded-lg bg-slate-800/30 border border-slate-700/30 p-2.5 text-[10px] text-slate-500 font-mono">
-          Record: {provenance.record_id} · {provenance.nodes || 0} nodes
+          Record: {displayText(provenance.record_id)} · {nodeCount(provenance.nodes)} nodes
         </div>
       )}
 

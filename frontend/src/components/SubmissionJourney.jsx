@@ -368,10 +368,10 @@ function ProvenancePanel({ provenance }) {
       <div className="space-y-1.5">
         {provenance.fields.map((f) => (
           <div key={f.field} className="grid grid-cols-4 gap-2 rounded-lg bg-black/20 p-2 text-sm">
-            <span className="font-medium text-slate-300">{f.field}</span>
-            <span className="truncate font-mono text-slate-400">{String(f.value ?? '—')}</span>
-            <span className="truncate text-slate-500">{f.source}</span>
-            <span className="capitalize text-slate-500">{f.trust}</span>
+            <span className="font-medium text-slate-300">{displayText(f.field)}</span>
+            <span className="truncate font-mono text-slate-400">{displayText(f.value, '—')}</span>
+            <span className="truncate text-slate-500">{displayText(f.source)}</span>
+            <span className="capitalize text-slate-500">{displayText(f.trust)}</span>
           </div>
         ))}
       </div>
