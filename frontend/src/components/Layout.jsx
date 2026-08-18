@@ -78,6 +78,7 @@ const nav = [
   { section: 'Governance' },
   { to: '/pilot', icon: FlaskConical, label: 'Pilot Lab', color: 'text-amber-400' },
   { to: '/registry', icon: BookOpen, label: 'Model Registry' },
+  { to: '/regulatory-review', icon: ShieldCheck, label: 'Regulatory Review', color: 'text-emerald-400' },
   { to: '/integrations', icon: Link2, label: 'Integrations' },
   { to: '/webhooks', icon: Database, label: 'Webhooks' },
   { section: 'Account' },

@@ -1110,6 +1110,70 @@ async def regulatory_changelog(
     }
 
 
+@app.get("/api/regulatory/poll")
+async def regulatory_poll() -> dict[str, Any]:
+    """Poll all active regulatory sources and return collected items."""
+    from insureflow.regulatory.poller import RegulatoryPoller
+
+    poller = RegulatoryPoller()
+    results = poller.poll_all()
+    return {
+        "sources_polled": len(results),
+        "total_items": sum(len(v) for v in results.values()),
+        "results": {k: v[:10] for k, v in results.items()},
+    }
+
+
+@app.get("/api/regulatory/poll/log")
+async def regulatory_poll_log(limit: int = 20) -> dict[str, Any]:
+    """Recent poll log entries."""
+    from insureflow.regulatory.poller import RegulatoryPoller
+
+    poller = RegulatoryPoller()
+    return {"entries": poller.get_poll_log(limit=limit)}
+
+
+@app.get("/api/regulatory/review/pending")
+async def regulatory_review_pending() -> dict[str, Any]:
+    """Changes awaiting human review."""
+    from insureflow.regulatory.review import RegulatoryReviewService
+
+    service = RegulatoryReviewService()
+    return {
+        "pending": service.get_pending_reviews(),
+        "stats": service.get_review_stats(),
+    }
+
+
+@app.post("/api/regulatory/review/{changelog_id}")
+async def regulatory_review_decision(
+    changelog_id: str,
+    approved: bool = False,
+    reviewer: str = "system",
+    notes: str = "",
+) -> dict[str, Any]:
+    """Submit a review decision on a detected regulatory change."""
+    from insureflow.regulatory.review import RegulatoryReviewService, ReviewDecision
+
+    service = RegulatoryReviewService()
+    decision = ReviewDecision(
+        changelog_id=changelog_id,
+        reviewer=reviewer,
+        approved=approved,
+        notes=notes,
+    )
+    return service.submit_decision(decision)
+
+
+@app.get("/api/regulatory/review/history")
+async def regulatory_review_history(limit: int = 100) -> dict[str, Any]:
+    """History of all review decisions."""
+    from insureflow.regulatory.review import RegulatoryReviewService
+
+    service = RegulatoryReviewService()
+    return {"history": service.get_review_history(limit=limit)}
+
+
 @app.get("/api/demo/presets")
 async def demo_presets() -> dict[str, Any]:
     """Available one-click demo submissions for the dashboard."""

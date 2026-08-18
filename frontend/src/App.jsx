@@ -23,6 +23,7 @@ import LendingPage from './pages/Lending';
 import WorkflowPage from './pages/Workflow';
 import UWWorkbench from './pages/UWWorkbench';
 import SettingsPage from './pages/Settings';
+import RegulatoryReviewPage from './pages/RegulatoryReview';
 import BrokerStatusPage from './pages/BrokerStatus';
 import AuthorityMatrix from './pages/AuthorityMatrix';
 import MarketAdmin from './pages/MarketAdmin';
@@ -305,6 +306,7 @@ function AppRoutes() {
           <Route path="webhooks" element={<Protected onLogin={() => setLoginOpen(true)}><WebhooksPage /></Protected>} />
           <Route path="authority" element={<Protected onLogin={() => setLoginOpen(true)}><AuthorityMatrix /></Protected>} />
           <Route path="market" element={<Protected onLogin={() => setLoginOpen(true)}><MarketAdmin /></Protected>} />
+          <Route path="regulatory-review" element={<Protected onLogin={() => setLoginOpen(true)}><RegulatoryReviewPage /></Protected>} />
           <Route path="settings" element={<SettingsPage onLogin={() => setLoginOpen(true)} />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
