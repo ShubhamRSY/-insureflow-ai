@@ -3,10 +3,91 @@
 
   var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  /* ---- Location-time day/night theme (automatic — no user toggle) ---- */
+  var themeGeo = { lat: null, lng: null };
+
+  function sunTimes(lat, lng, date) {
+    var rad = Math.PI / 180;
+    var start = new Date(date.getFullYear(), 0, 0);
+    var day = Math.floor((date - start) / 86400000);
+    var lngHour = lng / 15;
+    var t = day + ((6 - lngHour) / 24);
+    var M = (357.5291 + 0.98560028 * t) % 360;
+    var C = 1.9148 * Math.sin(M * rad) + 0.02 * Math.sin(2 * M * rad);
+    var lambda = (M + 102.9372 + C + 180) % 360;
+    var Jtransit = 2451545 + t + 0.0053 * Math.sin(M * rad) - 0.0069 * Math.sin(2 * lambda * rad);
+    var sinDec = Math.sin(lambda * rad) * Math.sin(23.4397 * rad);
+    var cosDec = Math.cos(Math.asin(sinDec));
+    var zenith = 90.833 * rad;
+    var cosH = (Math.cos(zenith) - Math.sin(lat * rad) * sinDec) / (Math.cos(lat * rad) * cosDec);
+    if (cosH > 1 || cosH < -1) return null;
+    var H = Math.acos(cosH) / rad;
+    function jdToLocal(jd) {
+      return new Date((jd - 2440587.5) * 86400000 - date.getTimezoneOffset() * 60000);
+    }
+    return { sunrise: jdToLocal(Jtransit - H / 360), sunset: jdToLocal(Jtransit + H / 360) };
+  }
+
+  function isDaytime(now) {
+    if (themeGeo.lat != null && themeGeo.lng != null) {
+      var st = sunTimes(themeGeo.lat, themeGeo.lng, now);
+      if (st) return now >= st.sunrise && now < st.sunset;
+    }
+    var h = now.getHours() + now.getMinutes() / 60;
+    return h >= 6.5 && h < 19.5;
+  }
+
+  function applyLocationTheme() {
+    document.documentElement.setAttribute('data-theme', isDaytime(new Date()) ? 'day' : 'night');
+  }
+
+  applyLocationTheme();
+  setInterval(applyLocationTheme, 60000);
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) applyLocationTheme();
+  });
+
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function (pos) {
+        themeGeo.lat = pos.coords.latitude;
+        themeGeo.lng = pos.coords.longitude;
+        applyLocationTheme();
+      },
+      function () {},
+      { timeout: 8000, maximumAge: 3600000, enableHighAccuracy: false }
+    );
+  }
+
+  window.__ryteraTheme = { apply: applyLocationTheme, geo: themeGeo };
+
   /* ---- Active nav link (by path) ---- */
   var pathname = window.location.pathname.replace(/\/+$/, '') || '/';
   document.querySelectorAll('a[data-nav]').forEach(function (a) {
     if (a.getAttribute('href') === pathname) a.classList.add('active');
+  });
+
+  /* ---- Desktop dropdowns (tap on coarse pointers) ---- */
+  document.querySelectorAll('.nav-item').forEach(function (item) {
+    var trigger = item.querySelector(':scope > a');
+    if (!trigger) return;
+    trigger.addEventListener('click', function (e) {
+      if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+      e.preventDefault();
+      var open = item.classList.contains('open');
+      document.querySelectorAll('.nav-item.open').forEach(function (el) { el.classList.remove('open'); });
+      if (!open) item.classList.add('open');
+    });
+  });
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest('.nav-item')) {
+      document.querySelectorAll('.nav-item.open').forEach(function (el) { el.classList.remove('open'); });
+    }
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.nav-item.open').forEach(function (el) { el.classList.remove('open'); });
+    }
   });
 
   /* ---- Reveal on scroll ---- */
@@ -178,6 +259,47 @@
       b.addEventListener('click', function () { renderStep(Number(b.getAttribute('data-step'))); });
     });
     renderStep(0);
+  }
+
+  /* ---- ZTA interactive ladder ---- */
+  var ztaSteps = document.querySelectorAll('.zta-ladder.zta-interactive .zta-step');
+  var ztaDetail = document.getElementById('zta-detail-panel');
+  var ztaDetails = [
+    {
+      kicker: 'Layer 1 · ~90% of pipeline',
+      title: 'Ordinary rules run first',
+      desc: 'Document readers, cross-field math, COPE checks, your rate engine, and statutory compliance gates execute in deterministic code. Same inputs, same output — zero AI tokens billed.'
+    },
+    {
+      kicker: 'Layer 2 · trained scorers',
+      title: 'Eight models, no prompts',
+      desc: 'Loss, fraud, churn, premium, book risk, and default scorers behave like calculators — fixed weights, repeatable scores. Still zero token cost on typical jobs.'
+    },
+    {
+      kicker: 'Layer 3 · language model last',
+      title: 'Judgment only when code cannot decide',
+      desc: 'Free-text synthesis and narrative memo drafting run inside a per-job budget. Every token is counted, reported on the job, and never used to invent a fact the rules already know.'
+    }
+  ];
+  function renderZta(i) {
+    if (!ztaDetail || !ztaDetails[i]) return;
+    var d = ztaDetails[i];
+    ztaDetail.innerHTML = '<p class="zta-detail-kicker">' + d.kicker + '</p><h4>' + d.title + '</h4><p>' + d.desc + '</p>';
+    ztaSteps.forEach(function (step, idx) {
+      step.classList.toggle('active', idx === i);
+      step.setAttribute('aria-selected', idx === i ? 'true' : 'false');
+    });
+  }
+  if (ztaSteps.length && ztaDetail) {
+    ztaSteps.forEach(function (step, i) {
+      step.setAttribute('role', 'tab');
+      step.setAttribute('tabindex', '0');
+      step.addEventListener('click', function () { renderZta(i); });
+      step.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); renderZta(i); }
+      });
+    });
+    renderZta(0);
   }
 
   /* ---- Integrations ---- */

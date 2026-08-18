@@ -2,6 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <script>
+(function(){var t=new Date(),h=t.getHours()+t.getMinutes()/60;document.documentElement.setAttribute("data-theme",h>=6.5&&h<19.5?"day":"night");})();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Rytera - Built for the desks that decide</title>
   <meta name="description" content="Line underwriters run the files. Staff underwriters set the rules. Ranked queue, a memo you can sign, prices from rates you actually filed." />
@@ -111,13 +114,79 @@
         <span class="brand-name">Rytera<sup>&trade;</sup></span>
       </a>
         <nav class="nav-desktop" aria-label="Main">
-        <a href="/" data-nav>Home</a>
-        <a href="/pricing" data-nav>Pricing</a>
-        <a href="/platform" data-nav>Platform</a>
-        <a href="/technology" data-nav>Technology</a>
-        <a href="/underwriting" data-nav>Underwriting</a>
-        <a href="/integrations" data-nav>Integrations</a>
-        <a href="/company" data-nav>Company</a>
+          <div class="nav-item">
+            <a href="/" data-nav>Home</a>
+            <div class="nav-drop">
+              <a href="/">Overview</a>
+              <a href="/#desks">Desks</a>
+              <a href="/#trust">Trust</a>
+              <a href="/#how-it-works">How it works</a>
+              <a href="/#contact">Contact</a>
+            </div>
+          </div>
+          <div class="nav-item">
+            <a href="/pricing" data-nav>Pricing</a>
+            <div class="nav-drop">
+              <a href="/pricing">All plans</a>
+              <a href="/pricing#pricing">Compare features</a>
+              <a href="/pricing#go-live">Go live</a>
+            </div>
+          </div>
+          <div class="nav-item">
+            <a href="/platform" data-nav>Platform</a>
+            <div class="nav-drop">
+              <a href="/platform">Overview</a>
+              <a href="/platform#ai-native">AI-native vs legacy</a>
+              <a href="/platform#agentic">Agentic workbench</a>
+              <a href="/platform#features">Deep-dive verticals</a>
+              <a href="/platform#capabilities">Governance &amp; audit</a>
+            </div>
+          </div>
+          <div class="nav-item">
+            <a href="/technology" data-nav>Technology</a>
+            <div class="nav-drop">
+              <a href="/technology">Overview</a>
+              <a href="/technology#zta">Zero Token Architecture</a>
+              <a href="/technology#how-it-works">Pipeline</a>
+              <a href="/technology#security">Security &amp; audit</a>
+            </div>
+          </div>
+          <div class="nav-item">
+            <a href="/underwriting" data-nav>Underwriting</a>
+            <div class="nav-drop nav-drop-uw">
+              <a href="/underwriting">Overview</a>
+              <a href="/underwriting#audience">Who it&rsquo;s for</a>
+              <a href="/underwriting#uw-desks">Line &amp; staff desks</a>
+              <a href="/underwriting#ratemaking">Ratemaking</a>
+              <p class="nav-drop-label">Insurance book</p>
+              <a href="/dashboard/insurance/sections/life">Life <span class="nav-pill live">Live</span></a>
+              <a href="/dashboard/insurance/sections/health">Health <span class="nav-pill">Catalog</span></a>
+              <a href="/dashboard/insurance/sections/general">General / Non-Life</a>
+              <a href="/dashboard/insurance/sections/commercial">Commercial <span class="nav-pill live">Live</span></a>
+              <a href="/dashboard/insurance/sections/specialty">Specialty</a>
+              <a href="/underwriting#insurance-book">All 12 sections</a>
+              <p class="nav-drop-label">Other desks</p>
+              <a href="/underwriting#audience">Mortgage</a>
+              <a href="/underwriting#audience">Lending</a>
+            </div>
+          </div>
+          <div class="nav-item">
+            <a href="/integrations" data-nav>Integrations</a>
+            <div class="nav-drop">
+              <a href="/integrations">All connectors</a>
+              <a href="/integrations#integrations">Browse catalog</a>
+              <a href="/integrations#modes">Live / simulated / auto</a>
+            </div>
+          </div>
+          <div class="nav-item">
+            <a href="/company" data-nav>Company</a>
+            <div class="nav-drop">
+              <a href="/company">About Rytera</a>
+              <a href="/company#faq">FAQ</a>
+              <a href="/company#contact">Contact</a>
+              <a href="/dashboard">Dashboard</a>
+            </div>
+          </div>
         </nav>
         <div class="nav-actions">
           <button type="button" class="btn btn-ghost btn-sm" id="open-glossary-nav" style="border:1px solid var(--border)">Glossary</button>
@@ -130,13 +199,58 @@
       </div>
     </header>
     <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile">
-      <a href="/" data-nav>Home</a>
-      <a href="/pricing" data-nav>Pricing</a>
-      <a href="/platform" data-nav>Platform</a>
-      <a href="/technology" data-nav>Technology</a>
-      <a href="/underwriting" data-nav>Underwriting</a>
-      <a href="/integrations" data-nav>Integrations</a>
-      <a href="/company" data-nav>Company</a>
+      <details class="nav-acc">
+        <summary>Home</summary>
+        <a href="/" data-nav>Overview</a>
+        <a href="/#desks">Desks</a>
+        <a href="/#trust">Trust</a>
+        <a href="/#how-it-works">How it works</a>
+        <a href="/#contact">Contact</a>
+      </details>
+      <details class="nav-acc">
+        <summary>Pricing</summary>
+        <a href="/pricing" data-nav>All plans</a>
+        <a href="/pricing#pricing">Compare features</a>
+        <a href="/pricing#go-live">Go live</a>
+      </details>
+      <details class="nav-acc">
+        <summary>Platform</summary>
+        <a href="/platform" data-nav>Overview</a>
+        <a href="/platform#ai-native">AI-native vs legacy</a>
+        <a href="/platform#agentic">Agentic workbench</a>
+        <a href="/platform#features">Deep-dive verticals</a>
+        <a href="/platform#capabilities">Governance &amp; audit</a>
+      </details>
+      <details class="nav-acc">
+        <summary>Technology</summary>
+        <a href="/technology" data-nav>Overview</a>
+        <a href="/technology#zta">Zero Token Architecture</a>
+        <a href="/technology#how-it-works">Pipeline</a>
+        <a href="/technology#security">Security &amp; audit</a>
+      </details>
+      <details class="nav-acc">
+        <summary>Underwriting</summary>
+        <a href="/underwriting" data-nav>Overview</a>
+        <a href="/underwriting#uw-desks">Line &amp; staff desks</a>
+        <a href="/dashboard/insurance/sections/life">Life</a>
+        <a href="/dashboard/insurance/sections/health">Health</a>
+        <a href="/dashboard/insurance/sections/general">General / Non-Life</a>
+        <a href="/dashboard/insurance/sections/commercial">Commercial</a>
+        <a href="/underwriting#insurance-book">All 12 sections</a>
+        <a href="/underwriting#audience">Mortgage &amp; lending</a>
+        <a href="/underwriting#ratemaking">Ratemaking</a>
+      </details>
+      <details class="nav-acc">
+        <summary>Integrations</summary>
+        <a href="/integrations" data-nav>All connectors</a>
+        <a href="/integrations#modes">Live / simulated / auto</a>
+      </details>
+      <details class="nav-acc">
+        <summary>Company</summary>
+        <a href="/company" data-nav>About Rytera</a>
+        <a href="/company#faq">FAQ</a>
+        <a href="/company#contact">Contact</a>
+      </details>
       <button type="button" class="btn btn-ghost" id="open-glossary-mobile" style="text-align:left;padding:.75rem 1rem">Underwriting Glossary</button>
       <a href="/dashboard">Dashboard</a>
       <button type="button" class="btn btn-primary" id="open-demo-mobile">Book a demo</button>
@@ -254,25 +368,145 @@
         <div class="reveal">
           <p class="section-label">The insurance book</p>
           <h2>12 sections on 1 workbench</h2>
-          <p class="section-desc"><strong>Live</strong> means we can price it today from rates you loaded. <strong>Catalog</strong> means we list it, but we will not invent a premium. Maternity is not outpatient. Third-party auto is not comprehensive. Cargo is not hull. Each product has its own checklist. Names come off before any AI sees a page. Pick the writing company from your appointed panel before the file runs.</p>
+          <p class="section-desc"><strong>Live</strong> means we price from rates you loaded. <strong>Catalog</strong> means we show the product honestly &mdash; no invented premium. Maternity is not outpatient. Third-party auto is not comprehensive. Cargo is not hull. Each section has its own checklist, state rules, and appointed-company gate before the file runs.</p>
         </div>
         <div class="lob-grid reveal">
-          <a class="lob-card" href="/dashboard/insurance/sections/life"><span class="lob-n">01</span><h3>Life</h3><p>Term we can price today. Whole life, universal life, endowment, money-back, annuity wait until those rates are in.</p><span class="lob-tag live">Live</span></a>
-          <a class="lob-card" href="/dashboard/insurance/sections/health"><span class="lob-n">02</span><h3>Health</h3><p>Individual through disability &mdash; including outpatient visits and critical illness &mdash; when your health rates are loaded.</p><span class="lob-tag live">Live</span></a>
-          <a class="lob-card" href="/dashboard/insurance/sections/general"><span class="lob-n">03</span><h3>General / Non-Life</h3><p>Motor, home, travel, marine, fire, cyber. Listed so you can see coverage. No quote until your filed rates are in.</p><span class="lob-tag catalog">Catalog</span></a>
-          <a class="lob-card" href="/dashboard/insurance/sections/commercial"><span class="lob-n">04</span><h3>Business / Commercial</h3><p>Property &amp; business interruption, directors &amp; officers, workers&rsquo; comp, trade credit, errors &amp; omissions, key person.</p><span class="lob-tag live">Live</span></a>
-          <a class="lob-card" href="/dashboard/insurance/sections/specialty"><span class="lob-n">05</span><h3>Other / Specialty</h3><p>Crop, livestock, pet, events, title, mortgage guarantee. Catalog until those rates are loaded.</p><span class="lob-tag catalog">Catalog</span></a>
-          <a class="lob-card" href="/dashboard/insurance/sections/provider"><span class="lob-n">06</span><h3>By Provider Type</h3><p>Public vs private onboarding, business-to-business reinsurance. Catalog until contracted.</p><span class="lob-tag catalog">Catalog</span></a>
-          <a class="lob-card" href="/dashboard/insurance/sections/engineering"><span class="lob-n">07</span><h3>Engineering</h3><p>Contractors&rsquo; all risk, erection all risk, machinery, boiler, delay in start-up.</p><span class="lob-tag live">Live</span></a>
-          <a class="lob-card" href="/dashboard/insurance/sections/aviation"><span class="lob-n">08</span><h3>Aviation</h3><p>Hull, liability, and passenger risk.</p><span class="lob-tag live">Live</span></a>
-          <a class="lob-card" href="/dashboard/insurance/sections/fidelity"><span class="lob-n">09</span><h3>Fidelity &amp; Burglary</h3><p>Employee fraud and burglary / theft.</p><span class="lob-tag live">Live</span></a>
-          <a class="lob-card" href="/dashboard/insurance/sections/catastrophe"><span class="lob-n">10</span><h3>Catastrophe</h3><p>Flood, earthquake, and weather-index covers.</p><span class="lob-tag live">Live</span></a>
-          <a class="lob-card" href="/dashboard/insurance/sections/niche-liability"><span class="lob-n">11</span><h3>Niche Liability</h3><p>Umbrella, pollution, kidnap &amp; ransom, political risk, terrorism.</p><span class="lob-tag live">Live</span></a>
-          <a class="lob-card" href="/dashboard/insurance/sections/warranty-financial-emerging"><span class="lob-n">12</span><h3>Warranty / Financial / Emerging</h3><p>Surety, credit life, gadget, micro, usage-based (price from how you drive), personal cyber.</p><span class="lob-tag live">Live</span></a>
+          <a class="lob-card" href="/dashboard/insurance/sections/life">
+            <div class="lob-card-top"><span class="lob-n">01</span><span class="lob-tag live">Live</span></div>
+            <h3>Life</h3>
+            <p class="lob-desc">Term priced from your filed manual today. Permanent and annuity products wait for their rate tables.</p>
+            <ul class="lob-list">
+              <li>Term life — indication from SERFF-filed rates</li>
+              <li>Whole / universal / variable UL — catalog until loaded</li>
+              <li>Paramed &amp; mortality scoring from your life guide</li>
+            </ul>
+            <span class="lob-cta">Open checklist <svg class="ico sm" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
+          </a>
+          <a class="lob-card" href="/dashboard/insurance/sections/health">
+            <div class="lob-card-top"><span class="lob-n">02</span><span class="lob-tag live">Live</span></div>
+            <h3>Health</h3>
+            <p class="lob-desc">Individual through disability when your health rates are in the workbench.</p>
+            <ul class="lob-list">
+              <li>Individual &amp; group medical — outpatient vs inpatient split</li>
+              <li>Critical illness &amp; disability — separate checklists</li>
+              <li>ACA &amp; state mandate rules applied per jurisdiction</li>
+            </ul>
+            <span class="lob-cta">Open checklist <svg class="ico sm" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
+          </a>
+          <a class="lob-card" href="/dashboard/insurance/sections/general">
+            <div class="lob-card-top"><span class="lob-n">03</span><span class="lob-tag catalog">Catalog</span></div>
+            <h3>General / Non-Life</h3>
+            <p class="lob-desc">Motor, home, travel, marine, fire, cyber — visible coverage, honest pricing.</p>
+            <ul class="lob-list">
+              <li>Personal auto &amp; homeowners — catalog until filed rates load</li>
+              <li>Travel, marine hull, fire — each with its own SOV / ACORD pack</li>
+              <li>Cyber — questionnaire vs live scan when connected</li>
+            </ul>
+            <span class="lob-cta">Open checklist <svg class="ico sm" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
+          </a>
+          <a class="lob-card" href="/dashboard/insurance/sections/commercial">
+            <div class="lob-card-top"><span class="lob-n">04</span><span class="lob-tag live">Live</span></div>
+            <h3>Business / Commercial</h3>
+            <p class="lob-desc">The commercial desk most MGAs live in — property, liability, and management lines.</p>
+            <ul class="lob-list">
+              <li>Property &amp; business interruption with COPE scoring</li>
+              <li>Directors &amp; officers, E&amp;O, workers&rsquo; comp, trade credit</li>
+              <li>Key person &amp; package policies from your appointed panel</li>
+            </ul>
+            <span class="lob-cta">Open checklist <svg class="ico sm" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
+          </a>
+          <a class="lob-card" href="/dashboard/insurance/sections/specialty">
+            <div class="lob-card-top"><span class="lob-n">05</span><span class="lob-tag catalog">Catalog</span></div>
+            <h3>Other / Specialty</h3>
+            <p class="lob-desc">Crop, livestock, pet, events, title, mortgage guarantee.</p>
+            <ul class="lob-list">
+              <li>Event cancellation &amp; weather-index triggers</li>
+              <li>Title &amp; mortgage guarantee — catalog until contracted</li>
+              <li>Pet &amp; livestock — species-specific appetite gates</li>
+            </ul>
+            <span class="lob-cta">Open checklist <svg class="ico sm" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
+          </a>
+          <a class="lob-card" href="/dashboard/insurance/sections/provider">
+            <div class="lob-card-top"><span class="lob-n">06</span><span class="lob-tag catalog">Catalog</span></div>
+            <h3>By Provider Type</h3>
+            <p class="lob-desc">Public vs private onboarding and B2B reinsurance structures.</p>
+            <ul class="lob-list">
+              <li>Admitted vs surplus-lines routing by state</li>
+              <li>Reinsurance treaties &amp; fronting arrangements</li>
+              <li>Provider onboarding checklists — catalog until contracted</li>
+            </ul>
+            <span class="lob-cta">Open checklist <svg class="ico sm" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
+          </a>
+          <a class="lob-card" href="/dashboard/insurance/sections/engineering">
+            <div class="lob-card-top"><span class="lob-n">07</span><span class="lob-tag live">Live</span></div>
+            <h3>Engineering</h3>
+            <p class="lob-desc">Contractors&rsquo; all risk, erection, machinery breakdown, delay in start-up.</p>
+            <ul class="lob-list">
+              <li>CAR / EAR with project schedule &amp; sub limits</li>
+              <li>Boiler &amp; machinery — inspection history required</li>
+              <li>DSU tied to critical path milestones</li>
+            </ul>
+            <span class="lob-cta">Open checklist <svg class="ico sm" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
+          </a>
+          <a class="lob-card" href="/dashboard/insurance/sections/aviation">
+            <div class="lob-card-top"><span class="lob-n">08</span><span class="lob-tag live">Live</span></div>
+            <h3>Aviation</h3>
+            <p class="lob-desc">Hull, liability, and passenger exposure for fixed- and rotary-wing.</p>
+            <ul class="lob-list">
+              <li>Hull values vs bluebook / agreed value</li>
+              <li>Passenger liability &amp; war-risk routing</li>
+              <li>Pilot hours, ratings, and loss history</li>
+            </ul>
+            <span class="lob-cta">Open checklist <svg class="ico sm" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
+          </a>
+          <a class="lob-card" href="/dashboard/insurance/sections/fidelity">
+            <div class="lob-card-top"><span class="lob-n">09</span><span class="lob-tag live">Live</span></div>
+            <h3>Fidelity &amp; Burglary</h3>
+            <p class="lob-desc">Employee dishonesty and third-party theft covers.</p>
+            <ul class="lob-list">
+              <li>Fidelity bond limits vs payroll &amp; headcount</li>
+              <li>Burglary / theft with alarm &amp; guard credits</li>
+              <li>ERISA fidelity where employee benefit plans apply</li>
+            </ul>
+            <span class="lob-cta">Open checklist <svg class="ico sm" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
+          </a>
+          <a class="lob-card" href="/dashboard/insurance/sections/catastrophe">
+            <div class="lob-card-top"><span class="lob-n">10</span><span class="lob-tag live">Live</span></div>
+            <h3>Catastrophe</h3>
+            <p class="lob-desc">Flood, earthquake, and weather-index covers with honest CAT data.</p>
+            <ul class="lob-list">
+              <li>Flood zones from FEMA / private flood models</li>
+              <li>Earthquake deductibles &amp; retrofit credits</li>
+              <li>Parametric weather-index triggers</li>
+            </ul>
+            <span class="lob-cta">Open checklist <svg class="ico sm" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
+          </a>
+          <a class="lob-card" href="/dashboard/insurance/sections/niche-liability">
+            <div class="lob-card-top"><span class="lob-n">11</span><span class="lob-tag live">Live</span></div>
+            <h3>Niche Liability</h3>
+            <p class="lob-desc">Umbrella, pollution, K&amp;R, political risk, and terrorism.</p>
+            <ul class="lob-list">
+              <li>Umbrella follow-form &amp; underlying schedule</li>
+              <li>Pollution gradual vs sudden &amp; accidental</li>
+              <li>K&amp;R, political risk, TRIA terrorism routing</li>
+            </ul>
+            <span class="lob-cta">Open checklist <svg class="ico sm" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
+          </a>
+          <a class="lob-card" href="/dashboard/insurance/sections/warranty-financial-emerging">
+            <div class="lob-card-top"><span class="lob-n">12</span><span class="lob-tag live">Live</span></div>
+            <h3>Warranty / Financial / Emerging</h3>
+            <p class="lob-desc">Surety, credit life, gadget, micro, UBI, and personal cyber.</p>
+            <ul class="lob-list">
+              <li>Surety bond capacity &amp; indemnity review</li>
+              <li>Usage-based auto — telematics when live</li>
+              <li>Micro-insurance &amp; gadget cover — catalog until rates in</li>
+            </ul>
+            <span class="lob-cta">Open checklist <svg class="ico sm" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
+          </a>
         </div>
         <div class="feature-grid reveal" style="margin-top:1.6rem">
-          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-landmark"/></svg></span><h3>Mortgage</h3><p>Income, assets, and the property that backs the loan. Fairness rules for closing costs, credit pricing, and reporting are built in.</p></div>
-          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-banknote"/></svg></span><h3>Lending</h3><p>Consumer and business loans. Credit scoring, a price that can move, equal treatment, and a written reason if you say no.</p></div>
+          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-landmark"/></svg></span><h3>Mortgage desk</h3><p>Income, assets, and collateral across 30+ document types. TRID, Reg Z, and HMDA fairness rules built in.</p></div>
+          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-banknote"/></svg></span><h3>Lending desk</h3><p>Consumer and commercial loans with Reg B / ECOA equal-credit checks and a written adverse-action reason.</p></div>
         </div>
       </section>
 
@@ -296,19 +530,18 @@
         </div>
       </section>
 
-      <section id="privacy" class="privacy-band">
-        <div class="reveal">
-          <p class="section-label">A quiet promise</p>
-          <h2>Named insureds never leave the gate.</h2>
-          <p class="section-desc"><strong>Named insured</strong> means the person or company on the policy. <strong>PII</strong> means private details like Social Security numbers. Before any AI (a language model) looks at a file, we remove those. Your underwriter still sees the real file. The AI does not. Their names never leave the gate. Same promise on insurance, mortgage, and lending.</p>
-        </div>
+      <section class="uw-quote-band reveal" aria-label="Underwriter quote">
+        <blockquote cite="#">
+          <p>&ldquo;An ounce of prevention is worth a pound of cure.&rdquo;</p>
+          <footer>&mdash; Benjamin Franklin<span style="display:block;margin-top:.35rem;font-size:.78rem;color:var(--muted-2)">On catching the wrong risk before it binds</span></footer>
+        </blockquote>
       </section>
 
       <section id="contact">
         <div class="contact-box reveal">
-          <p class="section-label" style="justify-content:center;margin-left:auto;margin-right:auto;">We saved you a seat</p>
-          <h2>Bring a real file. Leave with your evening.</h2>
-          <p>Thirty minutes. Your messy submission. Practice mode on &mdash; nothing goes live until you say so. You still sign. We just stop the hunt.</p>
+          <p class="section-label" style="justify-content:center;margin-left:auto;margin-right:auto;">See it on your file</p>
+          <h2>Thirty minutes with a real submission.</h2>
+          <p>Bring one messy broker pack. We run it in practice mode &mdash; nothing binds until you say so. You still sign. We show you the memo, the math, and the paper trail.</p>
           <div class="cta" style="justify-content:center;">
             <button type="button" class="btn btn-primary" id="open-demo-contact">Book a demo</button>
             <a class="btn btn-ghost" href="/dashboard">Open the live dashboard</a>
@@ -339,7 +572,7 @@
           <button type="button" class="footer-glossary-btn" id="open-glossary-footer">Underwriting Glossary</button>
         </nav>
         <div>
-          <div style="margin-bottom:.25rem">Names and private details come off before any AI sees a page.</div>
+          <div style="margin-bottom:.25rem">Names and private details come off before any AI sees a page. <a href="/technology#privacy">How it works</a></div>
           <div style="margin-bottom:.25rem">A licensed underwriter still signs. We never invent a price.</div>
           <div>&copy; 2026 Rytera Inc. All rights reserved.</div>
         </div>

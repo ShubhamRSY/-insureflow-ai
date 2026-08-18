@@ -2,9 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <script>
+(function(){var t=new Date(),h=t.getHours()+t.getMinutes()/60;document.documentElement.setAttribute("data-theme",h>=6.5&&h<19.5?"day":"night");})();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Rytera - Connects to the systems you already use</title>
-  <meta name="description" content="Meet the file where it already lives: email, folders, the policy system, and outside data checks. Live, simulated, or auto — never fabricated." />
+  <meta name="description" content="Meet the file where it already lives: email, folders, the policy system, and outside data checks. Real when connected, honest demo when not." />
   <link rel="canonical" href="https://ryterainc.com/integrations" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://ryterainc.com/integrations" />
@@ -111,13 +114,79 @@
         <span class="brand-name">Rytera<sup>&trade;</sup></span>
       </a>
         <nav class="nav-desktop" aria-label="Main">
-        <a href="/" data-nav>Home</a>
-        <a href="/pricing" data-nav>Pricing</a>
-        <a href="/platform" data-nav>Platform</a>
-        <a href="/technology" data-nav>Technology</a>
-        <a href="/underwriting" data-nav>Underwriting</a>
-        <a href="/integrations" data-nav>Integrations</a>
-        <a href="/company" data-nav>Company</a>
+          <div class="nav-item">
+            <a href="/" data-nav>Home</a>
+            <div class="nav-drop">
+              <a href="/">Overview</a>
+              <a href="/#desks">Desks</a>
+              <a href="/#trust">Trust</a>
+              <a href="/#how-it-works">How it works</a>
+              <a href="/#contact">Contact</a>
+            </div>
+          </div>
+          <div class="nav-item">
+            <a href="/pricing" data-nav>Pricing</a>
+            <div class="nav-drop">
+              <a href="/pricing">All plans</a>
+              <a href="/pricing#pricing">Compare features</a>
+              <a href="/pricing#go-live">Go live</a>
+            </div>
+          </div>
+          <div class="nav-item">
+            <a href="/platform" data-nav>Platform</a>
+            <div class="nav-drop">
+              <a href="/platform">Overview</a>
+              <a href="/platform#ai-native">AI-native vs legacy</a>
+              <a href="/platform#agentic">Agentic workbench</a>
+              <a href="/platform#features">Deep-dive verticals</a>
+              <a href="/platform#capabilities">Governance &amp; audit</a>
+            </div>
+          </div>
+          <div class="nav-item">
+            <a href="/technology" data-nav>Technology</a>
+            <div class="nav-drop">
+              <a href="/technology">Overview</a>
+              <a href="/technology#zta">Zero Token Architecture</a>
+              <a href="/technology#how-it-works">Pipeline</a>
+              <a href="/technology#security">Security &amp; audit</a>
+            </div>
+          </div>
+          <div class="nav-item">
+            <a href="/underwriting" data-nav>Underwriting</a>
+            <div class="nav-drop nav-drop-uw">
+              <a href="/underwriting">Overview</a>
+              <a href="/underwriting#audience">Who it&rsquo;s for</a>
+              <a href="/underwriting#uw-desks">Line &amp; staff desks</a>
+              <a href="/underwriting#ratemaking">Ratemaking</a>
+              <p class="nav-drop-label">Insurance book</p>
+              <a href="/dashboard/insurance/sections/life">Life <span class="nav-pill live">Live</span></a>
+              <a href="/dashboard/insurance/sections/health">Health <span class="nav-pill">Catalog</span></a>
+              <a href="/dashboard/insurance/sections/general">General / Non-Life</a>
+              <a href="/dashboard/insurance/sections/commercial">Commercial <span class="nav-pill live">Live</span></a>
+              <a href="/dashboard/insurance/sections/specialty">Specialty</a>
+              <a href="/underwriting#insurance-book">All 12 sections</a>
+              <p class="nav-drop-label">Other desks</p>
+              <a href="/underwriting#audience">Mortgage</a>
+              <a href="/underwriting#audience">Lending</a>
+            </div>
+          </div>
+          <div class="nav-item">
+            <a href="/integrations" data-nav>Integrations</a>
+            <div class="nav-drop">
+              <a href="/integrations">All connectors</a>
+              <a href="/integrations#integrations">Browse catalog</a>
+              <a href="/integrations#modes">Live / simulated / auto</a>
+            </div>
+          </div>
+          <div class="nav-item">
+            <a href="/company" data-nav>Company</a>
+            <div class="nav-drop">
+              <a href="/company">About Rytera</a>
+              <a href="/company#faq">FAQ</a>
+              <a href="/company#contact">Contact</a>
+              <a href="/dashboard">Dashboard</a>
+            </div>
+          </div>
         </nav>
         <div class="nav-actions">
           <button type="button" class="btn btn-ghost btn-sm" id="open-glossary-nav" style="border:1px solid var(--border)">Glossary</button>
@@ -130,13 +199,58 @@
       </div>
     </header>
     <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile">
-      <a href="/" data-nav>Home</a>
-      <a href="/pricing" data-nav>Pricing</a>
-      <a href="/platform" data-nav>Platform</a>
-      <a href="/technology" data-nav>Technology</a>
-      <a href="/underwriting" data-nav>Underwriting</a>
-      <a href="/integrations" data-nav>Integrations</a>
-      <a href="/company" data-nav>Company</a>
+      <details class="nav-acc">
+        <summary>Home</summary>
+        <a href="/" data-nav>Overview</a>
+        <a href="/#desks">Desks</a>
+        <a href="/#trust">Trust</a>
+        <a href="/#how-it-works">How it works</a>
+        <a href="/#contact">Contact</a>
+      </details>
+      <details class="nav-acc">
+        <summary>Pricing</summary>
+        <a href="/pricing" data-nav>All plans</a>
+        <a href="/pricing#pricing">Compare features</a>
+        <a href="/pricing#go-live">Go live</a>
+      </details>
+      <details class="nav-acc">
+        <summary>Platform</summary>
+        <a href="/platform" data-nav>Overview</a>
+        <a href="/platform#ai-native">AI-native vs legacy</a>
+        <a href="/platform#agentic">Agentic workbench</a>
+        <a href="/platform#features">Deep-dive verticals</a>
+        <a href="/platform#capabilities">Governance &amp; audit</a>
+      </details>
+      <details class="nav-acc">
+        <summary>Technology</summary>
+        <a href="/technology" data-nav>Overview</a>
+        <a href="/technology#zta">Zero Token Architecture</a>
+        <a href="/technology#how-it-works">Pipeline</a>
+        <a href="/technology#security">Security &amp; audit</a>
+      </details>
+      <details class="nav-acc">
+        <summary>Underwriting</summary>
+        <a href="/underwriting" data-nav>Overview</a>
+        <a href="/underwriting#uw-desks">Line &amp; staff desks</a>
+        <a href="/dashboard/insurance/sections/life">Life</a>
+        <a href="/dashboard/insurance/sections/health">Health</a>
+        <a href="/dashboard/insurance/sections/general">General / Non-Life</a>
+        <a href="/dashboard/insurance/sections/commercial">Commercial</a>
+        <a href="/underwriting#insurance-book">All 12 sections</a>
+        <a href="/underwriting#audience">Mortgage &amp; lending</a>
+        <a href="/underwriting#ratemaking">Ratemaking</a>
+      </details>
+      <details class="nav-acc">
+        <summary>Integrations</summary>
+        <a href="/integrations" data-nav>All connectors</a>
+        <a href="/integrations#modes">Live / simulated / auto</a>
+      </details>
+      <details class="nav-acc">
+        <summary>Company</summary>
+        <a href="/company" data-nav>About Rytera</a>
+        <a href="/company#faq">FAQ</a>
+        <a href="/company#contact">Contact</a>
+      </details>
       <button type="button" class="btn btn-ghost" id="open-glossary-mobile" style="text-align:left;padding:.75rem 1rem">Underwriting Glossary</button>
       <a href="/dashboard">Dashboard</a>
       <button type="button" class="btn btn-primary" id="open-demo-mobile">Book a demo</button>
@@ -147,7 +261,7 @@
         <div class="reveal">
           <p class="section-label">Integrations</p>
           <h1>Connects to the systems you already use</h1>
-          <p class="lead">One Connect &amp; pull hub meets the file where it already lives &mdash; email, folders, the policy system, CRM, and outside data checks. Each connection is live, simulated, or auto. Never fabricated.</p>
+          <p class="lead">One Connect &amp; pull hub meets the file where it already lives &mdash; email, folders, the policy system, CRM, and outside data checks. Real when wired, honest demo when not.</p>
 
     <div class="cta">
       <button type="button" class="btn btn-primary" id="open-demo-hero">Book a demo</button>
@@ -177,8 +291,8 @@
       <section id="modes">
         <div class="reveal">
           <p class="section-label">How connectors run</p>
-          <h2>Live, simulated, or auto &mdash; never fabricated</h2>
-          <p class="section-desc"><strong>Live</strong> means your real accounts. <strong>Simulated</strong> means honest demo data, labeled as demo. <strong>Auto</strong> uses live when keys exist and flags the gap instead of guessing a clean history. <a href="#plain">What oracles and IMAP mean.</a></p>
+          <h2>Real when connected. Demo when not. Nothing invented.</h2>
+          <p class="section-desc"><strong>Live</strong> means your real accounts. <strong>Simulated</strong> means honest demo data, clearly labeled. <strong>Auto</strong> uses live when keys exist and shows the gap instead of guessing a clean history. <a href="#plain">What oracles and IMAP mean.</a></p>
         </div>
         <div class="feature-grid reveal">
           <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-cable"/></svg></span><h3>Live</h3><p>Real drops wired to your accounts &mdash; email, a secure folder, a cloud bucket, or a local folder. SharePoint, Drive, industry mailboxes, and Applied Epic wait until you contract them. Claim-history checks stay dark without keys.</p></div>
@@ -195,19 +309,18 @@
         </div>
       </section>
 
-      <section id="privacy" class="privacy-band">
-        <div class="reveal">
-          <p class="section-label">A quiet promise</p>
-          <h2>Named insureds never leave the gate.</h2>
-          <p class="section-desc"><strong>Named insured</strong> means the person or company on the policy. <strong>PII</strong> means private details like Social Security numbers. Before any AI (a language model) looks at a file, we remove those. Your underwriter still sees the real file. The AI does not. Their names never leave the gate. Same promise on insurance, mortgage, and lending.</p>
-        </div>
+      <section class="uw-quote-band reveal" aria-label="Underwriter quote">
+        <blockquote cite="#">
+          <p>&ldquo;What gets measured gets managed.&rdquo;</p>
+          <footer>&mdash; Peter Drucker<span style="display:block;margin-top:.35rem;font-size:.78rem;color:var(--muted-2)">On knowing which feeds are live, simulated, or missing</span></footer>
+        </blockquote>
       </section>
 
       <section id="contact">
         <div class="contact-box reveal">
-          <p class="section-label" style="justify-content:center;margin-left:auto;margin-right:auto;">We saved you a seat</p>
-          <h2>Bring a real file. Leave with your evening.</h2>
-          <p>Thirty minutes. Your messy submission. Practice mode on &mdash; nothing goes live until you say so. You still sign. We just stop the hunt.</p>
+          <p class="section-label" style="justify-content:center;margin-left:auto;margin-right:auto;">See it on your file</p>
+          <h2>Thirty minutes with a real submission.</h2>
+          <p>Bring one messy broker pack. We run it in practice mode &mdash; nothing binds until you say so. You still sign. We show you the memo, the math, and the paper trail.</p>
           <div class="cta" style="justify-content:center;">
             <button type="button" class="btn btn-primary" id="open-demo-contact">Book a demo</button>
             <a class="btn btn-ghost" href="/dashboard">Open the live dashboard</a>
@@ -238,7 +351,7 @@
           <button type="button" class="footer-glossary-btn" id="open-glossary-footer">Underwriting Glossary</button>
         </nav>
         <div>
-          <div style="margin-bottom:.25rem">Names and private details come off before any AI sees a page.</div>
+          <div style="margin-bottom:.25rem">Names and private details come off before any AI sees a page. <a href="/technology#privacy">How it works</a></div>
           <div style="margin-bottom:.25rem">A licensed underwriter still signs. We never invent a price.</div>
           <div>&copy; 2026 Rytera Inc. All rights reserved.</div>
         </div>

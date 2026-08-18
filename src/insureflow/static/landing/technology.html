@@ -2,6 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <script>
+(function(){var t=new Date(),h=t.getHours()+t.getMinutes()/60;document.documentElement.setAttribute("data-theme",h>=6.5&&h<19.5?"day":"night");})();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Rytera - Rules first. AI last.</title>
   <meta name="description" content="Most steps are ordinary software. A language model is the last resort, counted, and never used to invent a fact. Files stay locked. A person still signs." />
@@ -111,13 +114,79 @@
         <span class="brand-name">Rytera<sup>&trade;</sup></span>
       </a>
         <nav class="nav-desktop" aria-label="Main">
-        <a href="/" data-nav>Home</a>
-        <a href="/pricing" data-nav>Pricing</a>
-        <a href="/platform" data-nav>Platform</a>
-        <a href="/technology" data-nav>Technology</a>
-        <a href="/underwriting" data-nav>Underwriting</a>
-        <a href="/integrations" data-nav>Integrations</a>
-        <a href="/company" data-nav>Company</a>
+          <div class="nav-item">
+            <a href="/" data-nav>Home</a>
+            <div class="nav-drop">
+              <a href="/">Overview</a>
+              <a href="/#desks">Desks</a>
+              <a href="/#trust">Trust</a>
+              <a href="/#how-it-works">How it works</a>
+              <a href="/#contact">Contact</a>
+            </div>
+          </div>
+          <div class="nav-item">
+            <a href="/pricing" data-nav>Pricing</a>
+            <div class="nav-drop">
+              <a href="/pricing">All plans</a>
+              <a href="/pricing#pricing">Compare features</a>
+              <a href="/pricing#go-live">Go live</a>
+            </div>
+          </div>
+          <div class="nav-item">
+            <a href="/platform" data-nav>Platform</a>
+            <div class="nav-drop">
+              <a href="/platform">Overview</a>
+              <a href="/platform#ai-native">AI-native vs legacy</a>
+              <a href="/platform#agentic">Agentic workbench</a>
+              <a href="/platform#features">Deep-dive verticals</a>
+              <a href="/platform#capabilities">Governance &amp; audit</a>
+            </div>
+          </div>
+          <div class="nav-item">
+            <a href="/technology" data-nav>Technology</a>
+            <div class="nav-drop">
+              <a href="/technology">Overview</a>
+              <a href="/technology#zta">Zero Token Architecture</a>
+              <a href="/technology#how-it-works">Pipeline</a>
+              <a href="/technology#security">Security &amp; audit</a>
+            </div>
+          </div>
+          <div class="nav-item">
+            <a href="/underwriting" data-nav>Underwriting</a>
+            <div class="nav-drop nav-drop-uw">
+              <a href="/underwriting">Overview</a>
+              <a href="/underwriting#audience">Who it&rsquo;s for</a>
+              <a href="/underwriting#uw-desks">Line &amp; staff desks</a>
+              <a href="/underwriting#ratemaking">Ratemaking</a>
+              <p class="nav-drop-label">Insurance book</p>
+              <a href="/dashboard/insurance/sections/life">Life <span class="nav-pill live">Live</span></a>
+              <a href="/dashboard/insurance/sections/health">Health <span class="nav-pill">Catalog</span></a>
+              <a href="/dashboard/insurance/sections/general">General / Non-Life</a>
+              <a href="/dashboard/insurance/sections/commercial">Commercial <span class="nav-pill live">Live</span></a>
+              <a href="/dashboard/insurance/sections/specialty">Specialty</a>
+              <a href="/underwriting#insurance-book">All 12 sections</a>
+              <p class="nav-drop-label">Other desks</p>
+              <a href="/underwriting#audience">Mortgage</a>
+              <a href="/underwriting#audience">Lending</a>
+            </div>
+          </div>
+          <div class="nav-item">
+            <a href="/integrations" data-nav>Integrations</a>
+            <div class="nav-drop">
+              <a href="/integrations">All connectors</a>
+              <a href="/integrations#integrations">Browse catalog</a>
+              <a href="/integrations#modes">Live / simulated / auto</a>
+            </div>
+          </div>
+          <div class="nav-item">
+            <a href="/company" data-nav>Company</a>
+            <div class="nav-drop">
+              <a href="/company">About Rytera</a>
+              <a href="/company#faq">FAQ</a>
+              <a href="/company#contact">Contact</a>
+              <a href="/dashboard">Dashboard</a>
+            </div>
+          </div>
         </nav>
         <div class="nav-actions">
           <button type="button" class="btn btn-ghost btn-sm" id="open-glossary-nav" style="border:1px solid var(--border)">Glossary</button>
@@ -130,13 +199,58 @@
       </div>
     </header>
     <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile">
-      <a href="/" data-nav>Home</a>
-      <a href="/pricing" data-nav>Pricing</a>
-      <a href="/platform" data-nav>Platform</a>
-      <a href="/technology" data-nav>Technology</a>
-      <a href="/underwriting" data-nav>Underwriting</a>
-      <a href="/integrations" data-nav>Integrations</a>
-      <a href="/company" data-nav>Company</a>
+      <details class="nav-acc">
+        <summary>Home</summary>
+        <a href="/" data-nav>Overview</a>
+        <a href="/#desks">Desks</a>
+        <a href="/#trust">Trust</a>
+        <a href="/#how-it-works">How it works</a>
+        <a href="/#contact">Contact</a>
+      </details>
+      <details class="nav-acc">
+        <summary>Pricing</summary>
+        <a href="/pricing" data-nav>All plans</a>
+        <a href="/pricing#pricing">Compare features</a>
+        <a href="/pricing#go-live">Go live</a>
+      </details>
+      <details class="nav-acc">
+        <summary>Platform</summary>
+        <a href="/platform" data-nav>Overview</a>
+        <a href="/platform#ai-native">AI-native vs legacy</a>
+        <a href="/platform#agentic">Agentic workbench</a>
+        <a href="/platform#features">Deep-dive verticals</a>
+        <a href="/platform#capabilities">Governance &amp; audit</a>
+      </details>
+      <details class="nav-acc">
+        <summary>Technology</summary>
+        <a href="/technology" data-nav>Overview</a>
+        <a href="/technology#zta">Zero Token Architecture</a>
+        <a href="/technology#how-it-works">Pipeline</a>
+        <a href="/technology#security">Security &amp; audit</a>
+      </details>
+      <details class="nav-acc">
+        <summary>Underwriting</summary>
+        <a href="/underwriting" data-nav>Overview</a>
+        <a href="/underwriting#uw-desks">Line &amp; staff desks</a>
+        <a href="/dashboard/insurance/sections/life">Life</a>
+        <a href="/dashboard/insurance/sections/health">Health</a>
+        <a href="/dashboard/insurance/sections/general">General / Non-Life</a>
+        <a href="/dashboard/insurance/sections/commercial">Commercial</a>
+        <a href="/underwriting#insurance-book">All 12 sections</a>
+        <a href="/underwriting#audience">Mortgage &amp; lending</a>
+        <a href="/underwriting#ratemaking">Ratemaking</a>
+      </details>
+      <details class="nav-acc">
+        <summary>Integrations</summary>
+        <a href="/integrations" data-nav>All connectors</a>
+        <a href="/integrations#modes">Live / simulated / auto</a>
+      </details>
+      <details class="nav-acc">
+        <summary>Company</summary>
+        <a href="/company" data-nav>About Rytera</a>
+        <a href="/company#faq">FAQ</a>
+        <a href="/company#contact">Contact</a>
+      </details>
       <button type="button" class="btn btn-ghost" id="open-glossary-mobile" style="text-align:left;padding:.75rem 1rem">Underwriting Glossary</button>
       <a href="/dashboard">Dashboard</a>
       <button type="button" class="btn btn-primary" id="open-demo-mobile">Book a demo</button>
@@ -166,18 +280,18 @@
             <a href="#plain">Every word, said simply.</a>
           </p>
         </div>
-        <div class="zta-ladder reveal">
-          <div class="zta-step L1">
+        <div class="zta-ladder zta-interactive reveal" id="zta-ladder" role="tablist" aria-label="Zero Token Architecture layers">
+          <div class="zta-step L1 active" data-zta="0" role="tab" aria-selected="true" tabindex="0">
             <div class="step-top">
               <span class="step-ico"><svg class="ico" aria-hidden="true"><use href="#i-cpu"/></svg></span>
               <span class="step-num">Layer 1</span>
             </div>
             <h3>Ordinary rules</h3>
-            <p>Readers, matching numbers, how the building is built, your rate engine, and compliance rules do everything they can. No AI bill. Same answer twice.</p>
+            <p>Readers, matching numbers, COPE, your rate engine, and compliance rules do everything they can. No AI bill. Same answer twice.</p>
             <span class="tokens zero"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg> 0 AI cost &middot; fully repeatable</span>
           </div>
           <div class="zta-flow" aria-hidden="true"><svg class="ico"><use href="#i-arrow-right"/></svg></div>
-          <div class="zta-step L2">
+          <div class="zta-step L2" data-zta="1" role="tab" aria-selected="false" tabindex="0">
             <div class="step-top">
               <span class="step-ico"><svg class="ico" aria-hidden="true"><use href="#i-bot"/></svg></span>
               <span class="step-num">Layer 2</span>
@@ -187,7 +301,7 @@
             <span class="tokens zero"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg> 0 AI cost &middot; repeatable</span>
           </div>
           <div class="zta-flow" aria-hidden="true"><svg class="ico"><use href="#i-arrow-right"/></svg></div>
-          <div class="zta-step L3">
+          <div class="zta-step L3" data-zta="2" role="tab" aria-selected="false" tabindex="0">
             <div class="step-top">
               <span class="step-ico"><svg class="ico" aria-hidden="true"><use href="#i-zap"/></svg></span>
               <span class="step-num">Layer 3</span>
@@ -197,6 +311,17 @@
             <span class="tokens one"><svg class="ico" aria-hidden="true"><use href="#i-sliders"/></svg> counted &middot; reported</span>
           </div>
         </div>
+        <div class="zta-share-wrap reveal">
+          <div class="zta-share-bar" role="img" aria-label="Roughly 90 percent rules, 8 percent scorers, 2 percent language model">
+            <span class="zta-share-l1"></span><span class="zta-share-l2"></span><span class="zta-share-l3"></span>
+          </div>
+          <div class="zta-share-legend">
+            <div class="zta-legend-item"><span class="zta-swatch l1" aria-hidden="true"></span><span><strong>~90%</strong> Layer 1 &middot; ordinary rules (no AI cost)</span></div>
+            <div class="zta-legend-item"><span class="zta-swatch l2" aria-hidden="true"></span><span><strong>~8%</strong> Layer 2 &middot; trained scorers (no AI cost)</span></div>
+            <div class="zta-legend-item"><span class="zta-swatch l3" aria-hidden="true"></span><span><strong>~2%</strong> Layer 3 &middot; language model (counted &amp; reported)</span></div>
+          </div>
+        </div>
+        <div class="zta-detail-panel reveal" id="zta-detail-panel" role="tabpanel"></div>
         <div class="zta-stats reveal">
           <div class="zta-stat">
             <span class="zstat-ico green"><svg class="ico" aria-hidden="true"><use href="#i-cpu"/></svg></span>
@@ -241,6 +366,38 @@
         </div>
       </section>
 
+      <section id="privacy" class="privacy-band">
+        <div class="privacy-head reveal">
+          <p class="section-label">A quiet promise</p>
+          <h2>Private customer details never go to the AI.</h2>
+          <p class="section-desc">Every application includes names, Social Security numbers, tax IDs, and dates of birth. That is normal &mdash; and it is sensitive. Two paths, one gate:</p>
+        </div>
+        <div class="privacy-flow reveal">
+          <article class="privacy-card human">
+            <span class="privacy-badge">Full file</span>
+            <span class="privacy-icon human"><svg class="ico" aria-hidden="true"><use href="#i-users"/></svg></span>
+            <h3>Your underwriter</h3>
+            <p>Sees the real submission &mdash; nothing removed from what they review and sign.</p>
+          </article>
+          <div class="privacy-gate" aria-hidden="true">
+            <span class="privacy-gate-line"></span>
+            <span class="privacy-gate-chip"><svg class="ico sm"><use href="#i-shield"/></svg> Redacted at the gate</span>
+            <span class="privacy-gate-line"></span>
+          </div>
+          <article class="privacy-card ai">
+            <span class="privacy-badge">Redacted copy</span>
+            <span class="privacy-icon ai"><svg class="ico" aria-hidden="true"><use href="#i-bot"/></svg></span>
+            <h3>The AI</h3>
+            <p>Names and IDs are stripped out before any language model reads a page.</p>
+          </article>
+        </div>
+        <div class="privacy-scope reveal">
+          <span class="privacy-scope-item"><svg class="ico sm"><use href="#i-check"/></svg> Insurance</span>
+          <span class="privacy-scope-item"><svg class="ico sm"><use href="#i-check"/></svg> Mortgage</span>
+          <span class="privacy-scope-item"><svg class="ico sm"><use href="#i-check"/></svg> Lending</span>
+        </div>
+      </section>
+
       <section id="security">
         <div class="reveal">
           <p class="section-label">Security &amp; paper trail</p>
@@ -262,19 +419,87 @@
         </div>
       </section>
 
-      <section id="privacy" class="privacy-band">
+      <section id="state-compliance">
         <div class="reveal">
-          <p class="section-label">A quiet promise</p>
-          <h2>Named insureds never leave the gate.</h2>
-          <p class="section-desc"><strong>Named insured</strong> means the person or company on the policy. <strong>PII</strong> means private details like Social Security numbers. Before any AI (a language model) looks at a file, we remove those. Your underwriter still sees the real file. The AI does not. Their names never leave the gate. Same promise on insurance, mortgage, and lending.</p>
+          <p class="section-label">State regulatory engine</p>
+          <h2>State law on every quote &mdash; not a footnote</h2>
+          <p class="section-desc">Rytera ships a compliance engine with <strong>50 states + DC</strong>, line-specific rules for auto, property, liability, workers&rsquo; comp, life, health, cyber, marine, and more. Rate filing method, surplus-lines diligence, tort model, binder rules, and prompt-pay deadlines are checked before a memo goes bind-ready. Regulatory feeds from state DOIs, NAIC, and the Federal Register are polled and surfaced for staff review.</p>
         </div>
+        <div class="reg-grid reveal">
+          <div class="reg-card">
+            <h4>California <span>CDI</span></h4>
+            <ul>
+              <li>Prior-approval vs use-and-file by line</li>
+              <li>Earthquake &amp; wildfire disclosure rules</li>
+              <li>Prop 103 rate-intervention context on filings</li>
+            </ul>
+          </div>
+          <div class="reg-card">
+            <h4>Texas <span>TDI</span></h4>
+            <ul>
+              <li>Windstorm &amp; coastal pool routing</li>
+              <li>Surplus-lines tax &amp; stamping requirements</li>
+              <li>Prompt-pay on claims (statutory days)</li>
+            </ul>
+          </div>
+          <div class="reg-card">
+            <h4>New York <span>DFS</span></h4>
+            <ul>
+              <li>Prior approval on many personal lines</li>
+              <li>Free-look &amp; cancellation notice periods</li>
+              <li>Surplus-lines diligent-search documentation</li>
+            </ul>
+          </div>
+          <div class="reg-card">
+            <h4>Florida <span>OIR</span></h4>
+            <ul>
+              <li>Hurricane deductible &amp; roof-age rules</li>
+              <li>Citizens take-out &amp; depopulation context</li>
+              <li>Assignment-of-benefits fraud flags</li>
+            </ul>
+          </div>
+          <div class="reg-card">
+            <h4>Workers&rsquo; comp <span>multi-state</span></h4>
+            <ul>
+              <li>Monopolistic state fund states (OH, WA, WY, ND)</li>
+              <li>NCCI vs independent bureau class codes</li>
+              <li>Experience mod &amp; payroll audit hooks</li>
+            </ul>
+          </div>
+          <div class="reg-card">
+            <h4>Live monitoring <span>NAIC + FR</span></h4>
+            <ul>
+              <li>NAIC model laws &amp; content API changelog</li>
+              <li>Federal Register insurance rule notices</li>
+              <li>Staff review queue before rules auto-apply</li>
+            </ul>
+          </div>
+        </div>
+        <div class="reg-strip reveal" aria-label="Coverage">
+          <span class="reg-chip">Rate filing: prior approval · file &amp; use · use &amp; file</span>
+          <span class="reg-chip">Surplus lines: diligent search · tax · stamping</span>
+          <span class="reg-chip">Tort: contributory · comparative · no-fault</span>
+          <span class="reg-chip">Health: ACA mandates · state benefit floors</span>
+          <span class="reg-chip">12 lines × 51 jurisdictions</span>
+        </div>
+        <div class="cta reveal" style="margin-top:1.6rem">
+          <a class="btn btn-primary btn-sm" href="/dashboard/regulatory-review">Open regulatory review <svg class="ico sm" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+          <a class="btn btn-ghost btn-sm" href="#state-compliance">How rules attach to a job</a>
+        </div>
+      </section>
+
+      <section class="uw-quote-band reveal" aria-label="Underwriter quote">
+        <blockquote cite="#">
+          <p>&ldquo;Risk comes from not knowing what you're doing.&rdquo;</p>
+          <footer>&mdash; Warren Buffett<span style="display:block;margin-top:.35rem;font-size:.78rem;color:var(--muted-2)">On measuring what your pipeline actually runs</span></footer>
+        </blockquote>
       </section>
 
       <section id="contact">
         <div class="contact-box reveal">
-          <p class="section-label" style="justify-content:center;margin-left:auto;margin-right:auto;">We saved you a seat</p>
-          <h2>Bring a real file. Leave with your evening.</h2>
-          <p>Thirty minutes. Your messy submission. Practice mode on &mdash; nothing goes live until you say so. You still sign. We just stop the hunt.</p>
+          <p class="section-label" style="justify-content:center;margin-left:auto;margin-right:auto;">See it on your file</p>
+          <h2>Thirty minutes with a real submission.</h2>
+          <p>Bring one messy broker pack. We run it in practice mode &mdash; nothing binds until you say so. You still sign. We show you the memo, the math, and the paper trail.</p>
           <div class="cta" style="justify-content:center;">
             <button type="button" class="btn btn-primary" id="open-demo-contact">Book a demo</button>
             <a class="btn btn-ghost" href="/dashboard">Open the live dashboard</a>
@@ -305,7 +530,7 @@
           <button type="button" class="footer-glossary-btn" id="open-glossary-footer">Underwriting Glossary</button>
         </nav>
         <div>
-          <div style="margin-bottom:.25rem">Names and private details come off before any AI sees a page.</div>
+          <div style="margin-bottom:.25rem">Names and private details come off before any AI sees a page. <a href="/technology#privacy">How it works</a></div>
           <div style="margin-bottom:.25rem">A licensed underwriter still signs. We never invent a price.</div>
           <div>&copy; 2026 Rytera Inc. All rights reserved.</div>
         </div>

@@ -97,20 +97,148 @@ NAV_LINKS = [
     ("/company", "Company"),
 ]
 
-NAV_ANCHORS = "\n".join(f'        <a href="{href}" data-nav>{label}</a>' for href, label in NAV_LINKS)
-NAV_ANCHORS_MOBILE = "\n".join(f'      <a href="{href}" data-nav>{label}</a>' for href, label in NAV_LINKS)
+NAV_DESKTOP = """        <nav class="nav-desktop" aria-label="Main">
+          <div class="nav-item">
+            <a href="/" data-nav>Home</a>
+            <div class="nav-drop">
+              <a href="/">Overview</a>
+              <a href="/#desks">Desks</a>
+              <a href="/#trust">Trust</a>
+              <a href="/#how-it-works">How it works</a>
+              <a href="/#contact">Contact</a>
+            </div>
+          </div>
+          <div class="nav-item">
+            <a href="/pricing" data-nav>Pricing</a>
+            <div class="nav-drop">
+              <a href="/pricing">All plans</a>
+              <a href="/pricing#pricing">Compare features</a>
+              <a href="/pricing#go-live">Go live</a>
+            </div>
+          </div>
+          <div class="nav-item">
+            <a href="/platform" data-nav>Platform</a>
+            <div class="nav-drop">
+              <a href="/platform">Overview</a>
+              <a href="/platform#ai-native">AI-native vs legacy</a>
+              <a href="/platform#agentic">Agentic workbench</a>
+              <a href="/platform#features">Deep-dive verticals</a>
+              <a href="/platform#capabilities">Governance &amp; audit</a>
+            </div>
+          </div>
+          <div class="nav-item">
+            <a href="/technology" data-nav>Technology</a>
+            <div class="nav-drop">
+              <a href="/technology">Overview</a>
+              <a href="/technology#zta">Zero Token Architecture</a>
+              <a href="/technology#how-it-works">Pipeline</a>
+              <a href="/technology#security">Security &amp; audit</a>
+            </div>
+          </div>
+          <div class="nav-item">
+            <a href="/underwriting" data-nav>Underwriting</a>
+            <div class="nav-drop nav-drop-uw">
+              <a href="/underwriting">Overview</a>
+              <a href="/underwriting#audience">Who it&rsquo;s for</a>
+              <a href="/underwriting#uw-desks">Line &amp; staff desks</a>
+              <a href="/underwriting#ratemaking">Ratemaking</a>
+              <p class="nav-drop-label">Insurance book</p>
+              <a href="/dashboard/insurance/sections/life">Life <span class="nav-pill live">Live</span></a>
+              <a href="/dashboard/insurance/sections/health">Health <span class="nav-pill">Catalog</span></a>
+              <a href="/dashboard/insurance/sections/general">General / Non-Life</a>
+              <a href="/dashboard/insurance/sections/commercial">Commercial <span class="nav-pill live">Live</span></a>
+              <a href="/dashboard/insurance/sections/specialty">Specialty</a>
+              <a href="/underwriting#insurance-book">All 12 sections</a>
+              <p class="nav-drop-label">Other desks</p>
+              <a href="/underwriting#audience">Mortgage</a>
+              <a href="/underwriting#audience">Lending</a>
+            </div>
+          </div>
+          <div class="nav-item">
+            <a href="/integrations" data-nav>Integrations</a>
+            <div class="nav-drop">
+              <a href="/integrations">All connectors</a>
+              <a href="/integrations#integrations">Browse catalog</a>
+              <a href="/integrations#modes">Live / simulated / auto</a>
+            </div>
+          </div>
+          <div class="nav-item">
+            <a href="/company" data-nav>Company</a>
+            <div class="nav-drop">
+              <a href="/company">About Rytera</a>
+              <a href="/company#faq">FAQ</a>
+              <a href="/company#contact">Contact</a>
+              <a href="/dashboard">Dashboard</a>
+            </div>
+          </div>
+        </nav>"""
+
+NAV_MOBILE = """    <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile">
+      <details class="nav-acc">
+        <summary>Home</summary>
+        <a href="/" data-nav>Overview</a>
+        <a href="/#desks">Desks</a>
+        <a href="/#trust">Trust</a>
+        <a href="/#how-it-works">How it works</a>
+        <a href="/#contact">Contact</a>
+      </details>
+      <details class="nav-acc">
+        <summary>Pricing</summary>
+        <a href="/pricing" data-nav>All plans</a>
+        <a href="/pricing#pricing">Compare features</a>
+        <a href="/pricing#go-live">Go live</a>
+      </details>
+      <details class="nav-acc">
+        <summary>Platform</summary>
+        <a href="/platform" data-nav>Overview</a>
+        <a href="/platform#ai-native">AI-native vs legacy</a>
+        <a href="/platform#agentic">Agentic workbench</a>
+        <a href="/platform#features">Deep-dive verticals</a>
+        <a href="/platform#capabilities">Governance &amp; audit</a>
+      </details>
+      <details class="nav-acc">
+        <summary>Technology</summary>
+        <a href="/technology" data-nav>Overview</a>
+        <a href="/technology#zta">Zero Token Architecture</a>
+        <a href="/technology#how-it-works">Pipeline</a>
+        <a href="/technology#security">Security &amp; audit</a>
+      </details>
+      <details class="nav-acc">
+        <summary>Underwriting</summary>
+        <a href="/underwriting" data-nav>Overview</a>
+        <a href="/underwriting#uw-desks">Line &amp; staff desks</a>
+        <a href="/dashboard/insurance/sections/life">Life</a>
+        <a href="/dashboard/insurance/sections/health">Health</a>
+        <a href="/dashboard/insurance/sections/general">General / Non-Life</a>
+        <a href="/dashboard/insurance/sections/commercial">Commercial</a>
+        <a href="/underwriting#insurance-book">All 12 sections</a>
+        <a href="/underwriting#audience">Mortgage &amp; lending</a>
+        <a href="/underwriting#ratemaking">Ratemaking</a>
+      </details>
+      <details class="nav-acc">
+        <summary>Integrations</summary>
+        <a href="/integrations" data-nav>All connectors</a>
+        <a href="/integrations#modes">Live / simulated / auto</a>
+      </details>
+      <details class="nav-acc">
+        <summary>Company</summary>
+        <a href="/company" data-nav>About Rytera</a>
+        <a href="/company#faq">FAQ</a>
+        <a href="/company#contact">Contact</a>
+      </details>
+      <button type="button" class="btn btn-ghost" id="open-glossary-mobile" style="text-align:left;padding:.75rem 1rem">Underwriting Glossary</button>
+      <a href="/dashboard">Dashboard</a>
+      <button type="button" class="btn btn-primary" id="open-demo-mobile">Book a demo</button>
+    </nav>"""
 
 HEADER = (
     """    <header id="header">
       <div class="nav-inner">
 """
     + BRAND
+    + "\n"
+    + NAV_DESKTOP
     + """
-        <nav class="nav-desktop" aria-label="Main">
-"""
-    + NAV_ANCHORS
-    + """
-        </nav>
         <div class="nav-actions">
           <button type="button" class="btn btn-ghost btn-sm" id="open-glossary-nav" style="border:1px solid var(--border)">Glossary</button>
           <a class="nav-dash" href="/dashboard">Dashboard</a>
@@ -121,14 +249,8 @@ HEADER = (
         </button>
       </div>
     </header>
-    <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile">
 """
-    + NAV_ANCHORS_MOBILE
-    + """
-      <button type="button" class="btn btn-ghost" id="open-glossary-mobile" style="text-align:left;padding:.75rem 1rem">Underwriting Glossary</button>
-      <a href="/dashboard">Dashboard</a>
-      <button type="button" class="btn btn-primary" id="open-demo-mobile">Book a demo</button>
-    </nav>"""
+    + NAV_MOBILE
 )
 
 FOOTER = (
@@ -148,7 +270,7 @@ FOOTER = (
           <button type="button" class="footer-glossary-btn" id="open-glossary-footer">Underwriting Glossary</button>
         </nav>
         <div>
-          <div style="margin-bottom:.25rem">Names and private details come off before any AI sees a page.</div>
+          <div style="margin-bottom:.25rem">Names and private details come off before any AI sees a page. <a href="/technology#privacy">How it works</a></div>
           <div style="margin-bottom:.25rem">A licensed underwriter still signs. We never invent a price.</div>
           <div>&copy; 2026 Rytera Inc. All rights reserved.</div>
         </div>
@@ -244,10 +366,19 @@ MODAL = """  <div class="modal-overlay" id="demo-modal" role="dialog" aria-modal
   </div>"""
 
 
+THEME_BOOTSTRAP = (
+    '  <script>\n'
+    '(function(){var t=new Date(),h=t.getHours()+t.getMinutes()/60;'
+    'document.documentElement.setAttribute("data-theme",h>=6.5&&h<19.5?"day":"night");})();\n'
+    '  </script>\n'
+)
+
+
 def head(title: str, desc: str, canonical: str, og_desc: str) -> str:
     return (
         '  <meta charset="UTF-8" />\n'
-        '  <meta name="viewport" content="width=device-width, initial-scale=1.0" />\n'
+        + THEME_BOOTSTRAP
+        + '  <meta name="viewport" content="width=device-width, initial-scale=1.0" />\n'
         f"  <title>{title}</title>\n"
         f'  <meta name="description" content="{desc}" />\n'
         f'  <link rel="canonical" href="https://ryterainc.com/{canonical}" />\n'
@@ -461,8 +592,8 @@ def pricing_main() -> str:
     impl = """      <section id="go-live">
         <div class="reveal">
           <p class="section-label">What Desk and above actually turn on</p>
-          <h2>Product, not a pretty demo around fake data</h2>
-          <p class="section-desc">Three real connections: live outside data, your filed rate book, and the system that issues the policy. Until those three are live, Rytera stays on Pilot &mdash; it will not pretend otherwise. <a href="#plain">In plain English.</a></p>
+          <h2>Three live connections before Desk turns on</h2>
+          <p class="section-desc">Desk and above require real outside data, your SERFF-filed rate book, and policy-system bind without re-key. Until all three are live, Rytera stays honest on Pilot &mdash; we do not dress a demo in production pricing. <a href="#plain">In plain English.</a></p>
         </div>
         <div class="feature-grid reveal">
           <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-search"/></svg></span><h3>1. Live outside data</h3><p>Connect your real claim-history and catastrophe accounts. Desk and above will not use pretend-clean history. Missing accounts become a finding, not a green screen.</p></div>
@@ -474,8 +605,8 @@ def pricing_main() -> str:
     return (
         sub_page_hero(
             "Pricing",
-            "Plans that only charge when the data is real",
-            "Pilot is free and honest: practice outside data, a demo rate book, and nothing issued. Desk, Book, and Enterprise stop unless live outside data, your filed rates, and policy-system bind without re-key are in place.",
+            "You pay for production — not pretend data",
+            "Pilot is free and honest: practice outside data, a demo rate book, and nothing issued. Desk, Book, and Enterprise refuse to quote unless live oracles, your filed rates, and PAS bind without re-key are actually connected.",
             primary="book",
             secondary="/dashboard",
             secondary_label="Open the live dashboard",
@@ -485,16 +616,40 @@ def pricing_main() -> str:
         + "\n\n"
         + impl
         + "\n\n"
-        + page_close()
+        + page_close("pricing")
     )
 
 
 def privacy_band() -> str:
     return """      <section id="privacy" class="privacy-band">
-        <div class="reveal">
+        <div class="privacy-head reveal">
           <p class="section-label">A quiet promise</p>
-          <h2>Named insureds never leave the gate.</h2>
-          <p class="section-desc"><strong>Named insured</strong> means the person or company on the policy. <strong>PII</strong> means private details like Social Security numbers. Before any AI (a language model) looks at a file, we remove those. Your underwriter still sees the real file. The AI does not. Their names never leave the gate. Same promise on insurance, mortgage, and lending.</p>
+          <h2>Private customer details never go to the AI.</h2>
+          <p class="section-desc">Every application includes names, Social Security numbers, tax IDs, and dates of birth. That is normal &mdash; and it is sensitive. Two paths, one gate:</p>
+        </div>
+        <div class="privacy-flow reveal">
+          <article class="privacy-card human">
+            <span class="privacy-badge">Full file</span>
+            <span class="privacy-icon human"><svg class="ico" aria-hidden="true"><use href="#i-users"/></svg></span>
+            <h3>Your underwriter</h3>
+            <p>Sees the real submission &mdash; nothing removed from what they review and sign.</p>
+          </article>
+          <div class="privacy-gate" aria-hidden="true">
+            <span class="privacy-gate-line"></span>
+            <span class="privacy-gate-chip"><svg class="ico sm"><use href="#i-shield"/></svg> Redacted at the gate</span>
+            <span class="privacy-gate-line"></span>
+          </div>
+          <article class="privacy-card ai">
+            <span class="privacy-badge">Redacted copy</span>
+            <span class="privacy-icon ai"><svg class="ico" aria-hidden="true"><use href="#i-bot"/></svg></span>
+            <h3>The AI</h3>
+            <p>Names and IDs are stripped out before any language model reads a page.</p>
+          </article>
+        </div>
+        <div class="privacy-scope reveal">
+          <span class="privacy-scope-item"><svg class="ico sm"><use href="#i-check"/></svg> Insurance</span>
+          <span class="privacy-scope-item"><svg class="ico sm"><use href="#i-check"/></svg> Mortgage</span>
+          <span class="privacy-scope-item"><svg class="ico sm"><use href="#i-check"/></svg> Lending</span>
         </div>
       </section>"""
 
@@ -598,9 +753,9 @@ def validation_section() -> str:
 def contact_section() -> str:
     return """      <section id="contact">
         <div class="contact-box reveal">
-          <p class="section-label" style="justify-content:center;margin-left:auto;margin-right:auto;">We saved you a seat</p>
-          <h2>Bring a real file. Leave with your evening.</h2>
-          <p>Thirty minutes. Your messy submission. Practice mode on &mdash; nothing goes live until you say so. You still sign. We just stop the hunt.</p>
+          <p class="section-label" style="justify-content:center;margin-left:auto;margin-right:auto;">See it on your file</p>
+          <h2>Thirty minutes with a real submission.</h2>
+          <p>Bring one messy broker pack. We run it in practice mode &mdash; nothing binds until you say so. You still sign. We show you the memo, the math, and the paper trail.</p>
           <div class="cta" style="justify-content:center;">
             <button type="button" class="btn btn-primary" id="open-demo-contact">Book a demo</button>
             <a class="btn btn-ghost" href="/dashboard">Open the live dashboard</a>
@@ -612,8 +767,222 @@ def contact_section() -> str:
       </section>"""
 
 
-def page_close() -> str:
-    return privacy_band() + "\n\n" + contact_section()
+UW_QUOTES: dict[str, tuple[str, str, str]] = {
+    "home": (
+        "Warren Buffett",
+        "Predicting rain doesn't count. Building arks does.",
+        "On preparing for risk before it arrives",
+    ),
+    "platform": (
+        "Lloyd's of London (motto)",
+        "Your word is your bond.",
+        "On the trust every underwriter puts behind a signature",
+    ),
+    "technology": (
+        "Warren Buffett",
+        "Risk comes from not knowing what you're doing.",
+        "On measuring what your pipeline actually runs",
+    ),
+    "underwriting": (
+        "Benjamin Franklin",
+        "An ounce of prevention is worth a pound of cure.",
+        "On catching the wrong risk before it binds",
+    ),
+    "integrations": (
+        "Peter Drucker",
+        "What gets measured gets managed.",
+        "On knowing which feeds are live, simulated, or missing",
+    ),
+    "pricing": (
+        "Warren Buffett",
+        "Price is what you pay. Value is what you get.",
+        "On paying for real connections, not demo theater",
+    ),
+    "company": (
+        "Warren Buffett",
+        "It takes twenty years to build a reputation and five minutes to ruin it.",
+        "On why the paper trail matters as much as the quote",
+    ),
+}
+
+
+def uw_quote_band(page: str) -> str:
+    author, text, note = UW_QUOTES.get(page, UW_QUOTES["home"])
+    return f"""      <section class="uw-quote-band reveal" aria-label="Underwriter quote">
+        <blockquote cite="#">
+          <p>&ldquo;{text}&rdquo;</p>
+          <footer>&mdash; {author}<span style="display:block;margin-top:.35rem;font-size:.78rem;color:var(--muted-2)">{note}</span></footer>
+        </blockquote>
+      </section>"""
+
+
+def lob_card(n: int, title: str, status: str, desc: str, items: list[str], href: str) -> str:
+    tag_cls = "live" if status.lower() == "live" else "catalog"
+    items_html = "\n".join(f"              <li>{item}</li>" for item in items)
+    return f"""          <a class="lob-card" href="{href}">
+            <div class="lob-card-top"><span class="lob-n">{n:02d}</span><span class="lob-tag {tag_cls}">{status}</span></div>
+            <h3>{title}</h3>
+            <p class="lob-desc">{desc}</p>
+            <ul class="lob-list">
+{items_html}
+            </ul>
+            <span class="lob-cta">Open checklist <svg class="ico sm" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
+          </a>"""
+
+
+def insurance_book_section() -> str:
+    sections = [
+        (1, "Life", "Live", "Term priced from your filed manual today. Permanent and annuity products wait for their rate tables.", [
+            "Term life — indication from SERFF-filed rates",
+            "Whole / universal / variable UL — catalog until loaded",
+            "Paramed &amp; mortality scoring from your life guide",
+        ], "/dashboard/insurance/sections/life"),
+        (2, "Health", "Live", "Individual through disability when your health rates are in the workbench.", [
+            "Individual &amp; group medical — outpatient vs inpatient split",
+            "Critical illness &amp; disability — separate checklists",
+            "ACA &amp; state mandate rules applied per jurisdiction",
+        ], "/dashboard/insurance/sections/health"),
+        (3, "General / Non-Life", "Catalog", "Motor, home, travel, marine, fire, cyber — visible coverage, honest pricing.", [
+            "Personal auto &amp; homeowners — catalog until filed rates load",
+            "Travel, marine hull, fire — each with its own SOV / ACORD pack",
+            "Cyber — questionnaire vs live scan when connected",
+        ], "/dashboard/insurance/sections/general"),
+        (4, "Business / Commercial", "Live", "The commercial desk most MGAs live in — property, liability, and management lines.", [
+            "Property &amp; business interruption with COPE scoring",
+            "Directors &amp; officers, E&amp;O, workers&rsquo; comp, trade credit",
+            "Key person &amp; package policies from your appointed panel",
+        ], "/dashboard/insurance/sections/commercial"),
+        (5, "Other / Specialty", "Catalog", "Crop, livestock, pet, events, title, mortgage guarantee.", [
+            "Event cancellation &amp; weather-index triggers",
+            "Title &amp; mortgage guarantee — catalog until contracted",
+            "Pet &amp; livestock — species-specific appetite gates",
+        ], "/dashboard/insurance/sections/specialty"),
+        (6, "By Provider Type", "Catalog", "Public vs private onboarding and B2B reinsurance structures.", [
+            "Admitted vs surplus-lines routing by state",
+            "Reinsurance treaties &amp; fronting arrangements",
+            "Provider onboarding checklists — catalog until contracted",
+        ], "/dashboard/insurance/sections/provider"),
+        (7, "Engineering", "Live", "Contractors&rsquo; all risk, erection, machinery breakdown, delay in start-up.", [
+            "CAR / EAR with project schedule &amp; sub limits",
+            "Boiler &amp; machinery — inspection history required",
+            "DSU tied to critical path milestones",
+        ], "/dashboard/insurance/sections/engineering"),
+        (8, "Aviation", "Live", "Hull, liability, and passenger exposure for fixed- and rotary-wing.", [
+            "Hull values vs bluebook / agreed value",
+            "Passenger liability &amp; war-risk routing",
+            "Pilot hours, ratings, and loss history",
+        ], "/dashboard/insurance/sections/aviation"),
+        (9, "Fidelity &amp; Burglary", "Live", "Employee dishonesty and third-party theft covers.", [
+            "Fidelity bond limits vs payroll &amp; headcount",
+            "Burglary / theft with alarm &amp; guard credits",
+            "ERISA fidelity where employee benefit plans apply",
+        ], "/dashboard/insurance/sections/fidelity"),
+        (10, "Catastrophe", "Live", "Flood, earthquake, and weather-index covers with honest CAT data.", [
+            "Flood zones from FEMA / private flood models",
+            "Earthquake deductibles &amp; retrofit credits",
+            "Parametric weather-index triggers",
+        ], "/dashboard/insurance/sections/catastrophe"),
+        (11, "Niche Liability", "Live", "Umbrella, pollution, K&amp;R, political risk, and terrorism.", [
+            "Umbrella follow-form &amp; underlying schedule",
+            "Pollution gradual vs sudden &amp; accidental",
+            "K&amp;R, political risk, TRIA terrorism routing",
+        ], "/dashboard/insurance/sections/niche-liability"),
+        (12, "Warranty / Financial / Emerging", "Live", "Surety, credit life, gadget, micro, UBI, and personal cyber.", [
+            "Surety bond capacity &amp; indemnity review",
+            "Usage-based auto — telematics when live",
+            "Micro-insurance &amp; gadget cover — catalog until rates in",
+        ], "/dashboard/insurance/sections/warranty-financial-emerging"),
+    ]
+    cards = "\n".join(lob_card(n, t, s, d, items, href) for n, t, s, d, items, href in sections)
+    return f"""      <section id="insurance-book">
+        <div class="reveal">
+          <p class="section-label">The insurance book</p>
+          <h2>12 sections on 1 workbench</h2>
+          <p class="section-desc"><strong>Live</strong> means we price from rates you loaded. <strong>Catalog</strong> means we show the product honestly &mdash; no invented premium. Maternity is not outpatient. Third-party auto is not comprehensive. Cargo is not hull. Each section has its own checklist, state rules, and appointed-company gate before the file runs.</p>
+        </div>
+        <div class="lob-grid reveal">
+{cards}
+        </div>
+        <div class="feature-grid reveal" style="margin-top:1.6rem">
+          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-landmark"/></svg></span><h3>Mortgage desk</h3><p>Income, assets, and collateral across 30+ document types. TRID, Reg Z, and HMDA fairness rules built in.</p></div>
+          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-banknote"/></svg></span><h3>Lending desk</h3><p>Consumer and commercial loans with Reg B / ECOA equal-credit checks and a written adverse-action reason.</p></div>
+        </div>
+      </section>"""
+
+
+def state_regulatory_section() -> str:
+    return """      <section id="state-compliance">
+        <div class="reveal">
+          <p class="section-label">State regulatory engine</p>
+          <h2>State law on every quote &mdash; not a footnote</h2>
+          <p class="section-desc">Rytera ships a compliance engine with <strong>50 states + DC</strong>, line-specific rules for auto, property, liability, workers&rsquo; comp, life, health, cyber, marine, and more. Rate filing method, surplus-lines diligence, tort model, binder rules, and prompt-pay deadlines are checked before a memo goes bind-ready. Regulatory feeds from state DOIs, NAIC, and the Federal Register are polled and surfaced for staff review.</p>
+        </div>
+        <div class="reg-grid reveal">
+          <div class="reg-card">
+            <h4>California <span>CDI</span></h4>
+            <ul>
+              <li>Prior-approval vs use-and-file by line</li>
+              <li>Earthquake &amp; wildfire disclosure rules</li>
+              <li>Prop 103 rate-intervention context on filings</li>
+            </ul>
+          </div>
+          <div class="reg-card">
+            <h4>Texas <span>TDI</span></h4>
+            <ul>
+              <li>Windstorm &amp; coastal pool routing</li>
+              <li>Surplus-lines tax &amp; stamping requirements</li>
+              <li>Prompt-pay on claims (statutory days)</li>
+            </ul>
+          </div>
+          <div class="reg-card">
+            <h4>New York <span>DFS</span></h4>
+            <ul>
+              <li>Prior approval on many personal lines</li>
+              <li>Free-look &amp; cancellation notice periods</li>
+              <li>Surplus-lines diligent-search documentation</li>
+            </ul>
+          </div>
+          <div class="reg-card">
+            <h4>Florida <span>OIR</span></h4>
+            <ul>
+              <li>Hurricane deductible &amp; roof-age rules</li>
+              <li>Citizens take-out &amp; depopulation context</li>
+              <li>Assignment-of-benefits fraud flags</li>
+            </ul>
+          </div>
+          <div class="reg-card">
+            <h4>Workers&rsquo; comp <span>multi-state</span></h4>
+            <ul>
+              <li>Monopolistic state fund states (OH, WA, WY, ND)</li>
+              <li>NCCI vs independent bureau class codes</li>
+              <li>Experience mod &amp; payroll audit hooks</li>
+            </ul>
+          </div>
+          <div class="reg-card">
+            <h4>Live monitoring <span>NAIC + FR</span></h4>
+            <ul>
+              <li>NAIC model laws &amp; content API changelog</li>
+              <li>Federal Register insurance rule notices</li>
+              <li>Staff review queue before rules auto-apply</li>
+            </ul>
+          </div>
+        </div>
+        <div class="reg-strip reveal" aria-label="Coverage">
+          <span class="reg-chip">Rate filing: prior approval · file &amp; use · use &amp; file</span>
+          <span class="reg-chip">Surplus lines: diligent search · tax · stamping</span>
+          <span class="reg-chip">Tort: contributory · comparative · no-fault</span>
+          <span class="reg-chip">Health: ACA mandates · state benefit floors</span>
+          <span class="reg-chip">12 lines × 51 jurisdictions</span>
+        </div>
+        <div class="cta reveal" style="margin-top:1.6rem">
+          <a class="btn btn-primary btn-sm" href="/dashboard/regulatory-review">Open regulatory review <svg class="ico sm" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+          <a class="btn btn-ghost btn-sm" href="#state-compliance">How rules attach to a job</a>
+        </div>
+      </section>"""
+
+
+def page_close(quote_key: str = "home") -> str:
+    return uw_quote_band(quote_key) + "\n\n" + contact_section()
 
 
 def hero_home() -> str:
@@ -1013,9 +1382,7 @@ def home_main() -> str:
         + "\n\n"
         + testimonials_section()
         + "\n\n"
-        + privacy_band()
-        + "\n\n"
-        + contact_section()
+        + page_close("home")
     )
 
 
@@ -1055,8 +1422,8 @@ def platform_main() -> str:
     agentic = """      <section id="agentic">
         <div class="reveal">
           <p class="section-label">How the workbench runs</p>
-          <h2>Sort. Check and price. Decide.</h2>
-          <p class="section-desc">Three steps: <strong>sort the queue</strong> (triage), <strong>check the risk and the price</strong>, then <strong>a recommendation you sign</strong>. A deeper pass can re-check outside data (prior claims, catastrophe), the rest of the book, and fraud flags. You work the exceptions. Not the pile.</p>
+          <h2>Triage the queue. Verify the risk. Sign the memo.</h2>
+          <p class="section-desc">Three steps every file follows: <strong>sort the queue</strong> so the right submissions rise first, <strong>check the risk and price from your filed rates</strong>, then hand you a <strong>recommendation a licensed underwriter can sign</strong>. You work exceptions &mdash; not the pile.</p>
         </div>
         <div class="agent-grid reveal">
           <div class="agent-card">
@@ -1162,52 +1529,93 @@ def platform_main() -> str:
           <div class="bento-card wide ac-blue">
             <p class="bento-kicker"><svg class="ico"><use href="#i-shield-check"/></svg> Governance</p>
             <h3>Human-in-the-loop by design</h3>
-            <p>A licensed underwriter signs. Who can sign what size of risk is written down. Files that need a human go to a referral queue. AI assists. Humans decide. Practice mode keeps policies from issuing until you are ready.</p>
+            <ul class="bento-list">
+              <li>Licensed underwriter signs every bind-ready memo</li>
+              <li>Authority matrix limits who can sign what size of risk</li>
+              <li>Referral queue for files that need a human before bind</li>
+              <li>Practice mode blocks policy issue until you cut over</li>
+            </ul>
           </div>
           <div class="bento-card ac-green">
             <p class="bento-kicker"><svg class="ico"><use href="#i-lock"/></svg> Privacy</p>
             <h3>Names come off first</h3>
-            <p>Social Security numbers, tax IDs, and dates of birth are found and removed before any AI sees the page. You still see the real file.</p>
+            <ul class="bento-list">
+              <li>SSN, tax ID, and DOB stripped before any AI sees the page</li>
+              <li>Underwriters still view the full, real submission</li>
+              <li>De-identified facts only in model context</li>
+            </ul>
           </div>
           <div class="bento-card ac-sky">
             <p class="bento-kicker"><svg class="ico"><use href="#i-cable"/></svg> Intake</p>
             <h3>Meet the file where it lives</h3>
-            <p>Email, a cloud folder, a secure drop, or a local folder &mdash; when you connect them. SharePoint, Drive, and industry mailboxes wait until you contract them. One Connect &amp; pull hub for insurance, mortgage, and lending.</p>
+            <ul class="bento-list">
+              <li>Email, cloud folder, secure drop, or local watch folder</li>
+              <li>SharePoint, Drive, IVANS wait until you contract them</li>
+              <li>One Connect &amp; pull hub across insurance, mortgage, lending</li>
+            </ul>
           </div>
           <div class="bento-card ac-violet">
             <p class="bento-kicker"><svg class="ico"><use href="#i-list-checks"/></svg> Operations</p>
             <h3>The queue, sorted</h3>
-            <p>A ranked list so underwriter time goes to the right files first &mdash; not whoever emailed last.</p>
+            <ul class="bento-list">
+              <li>Ranked by appetite fit, severity, and premium at risk</li>
+              <li>Renewals and large accounts rise before routine traffic</li>
+              <li>Not whoever emailed last</li>
+            </ul>
           </div>
           <div class="bento-card wide ac-green">
             <p class="bento-kicker"><svg class="ico"><use href="#i-file-check"/></svg> Compliance</p>
             <h3>A sealed exam pack</h3>
-            <p>A locked zip an examiner can open: every decision, every change you made, every outside data check. Nothing quietly rewritten.</p>
+            <ul class="bento-list">
+              <li>Locked zip: every decision, override, and oracle check</li>
+              <li>SHA-256 manifest &mdash; nothing quietly rewritten</li>
+              <li>Reconstructible years later for market-conduct exams</li>
+            </ul>
           </div>
           <div class="bento-card ac-amber">
             <p class="bento-kicker"><svg class="ico"><use href="#i-database"/></svg> Outside data</p>
             <h3>Real claim history &mdash; or a flag</h3>
-            <p>Prior claims, workers-comp history, catastrophe risk. If the accounts are not connected, we flag the gap. We never fake a clean history.</p>
+            <ul class="bento-list">
+              <li>Prior claims, workers-comp, catastrophe when connected</li>
+              <li>Missing accounts become a finding, not a green screen</li>
+              <li>Never a fabricated clean loss run</li>
+            </ul>
           </div>
           <div class="bento-card ac-blue">
             <p class="bento-kicker"><svg class="ico"><use href="#i-server"/></svg> Reliability</p>
             <h3>Jobs that survive a restart</h3>
-            <p>Work is saved, not held only in memory. A restart does not silently lose the file you were in.</p>
+            <ul class="bento-list">
+              <li>Work persisted &mdash; not held only in memory</li>
+              <li>Restart does not silently lose the file you were in</li>
+              <li>Queue state survives deploys and failovers</li>
+            </ul>
           </div>
           <div class="bento-card ac-violet">
             <p class="bento-kicker"><svg class="ico"><use href="#i-refresh"/></svg> Renewals</p>
             <h3>Renewal &amp; premium audit</h3>
-            <p>Pre-renewal tracking, premium audit, and loss feedback so the book stays healthy between cycles.</p>
+            <ul class="bento-list">
+              <li>Pre-renewal tracking and loss feedback loops</li>
+              <li>Premium audit hooks for payroll and exposure drift</li>
+              <li>Book health between cycles, not only at bind</li>
+            </ul>
           </div>
           <div class="bento-card ac-amber">
             <p class="bento-kicker"><svg class="ico"><use href="#i-pie"/></svg> Portfolio</p>
             <h3>The book, not only the file</h3>
-            <p>How much you already have in one place, concentration, and top lines of business &mdash; with a sense of where the market cycle is.</p>
+            <ul class="bento-list">
+              <li>Concentration by geography, class, and limit</li>
+              <li>Top lines of business vs appetite</li>
+              <li>Market-cycle context on large accounts</li>
+            </ul>
           </div>
           <div class="bento-card ac-sky">
             <p class="bento-kicker"><svg class="ico"><use href="#i-gauge"/></svg> Model intelligence</p>
             <h3>AI quality, watched</h3>
-            <p>We watch speed, quality, and cost of the language model. If quality drops, it does not silently keep writing memos.</p>
+            <ul class="bento-list">
+              <li>Speed, quality, and cost tracked per job</li>
+              <li>Quality drop triggers refer &mdash; not silent memo churn</li>
+              <li>Token spend visible on every language-model step</li>
+            </ul>
           </div>
         </div>
       </section>"""
@@ -1231,9 +1639,11 @@ def platform_main() -> str:
         + "\n\n"
         + bento
         + "\n\n"
+        + state_regulatory_section()
+        + "\n\n"
         + validation_section()
         + "\n\n"
-        + page_close()
+        + page_close("platform")
     )
 
 
@@ -1248,18 +1658,18 @@ def technology_main() -> str:
             <a href="#plain">Every word, said simply.</a>
           </p>
         </div>
-        <div class="zta-ladder reveal">
-          <div class="zta-step L1">
+        <div class="zta-ladder zta-interactive reveal" id="zta-ladder" role="tablist" aria-label="Zero Token Architecture layers">
+          <div class="zta-step L1 active" data-zta="0" role="tab" aria-selected="true" tabindex="0">
             <div class="step-top">
               <span class="step-ico"><svg class="ico" aria-hidden="true"><use href="#i-cpu"/></svg></span>
               <span class="step-num">Layer 1</span>
             </div>
             <h3>Ordinary rules</h3>
-            <p>Readers, matching numbers, how the building is built, your rate engine, and compliance rules do everything they can. No AI bill. Same answer twice.</p>
+            <p>Readers, matching numbers, COPE, your rate engine, and compliance rules do everything they can. No AI bill. Same answer twice.</p>
             <span class="tokens zero"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg> 0 AI cost &middot; fully repeatable</span>
           </div>
           <div class="zta-flow" aria-hidden="true"><svg class="ico"><use href="#i-arrow-right"/></svg></div>
-          <div class="zta-step L2">
+          <div class="zta-step L2" data-zta="1" role="tab" aria-selected="false" tabindex="0">
             <div class="step-top">
               <span class="step-ico"><svg class="ico" aria-hidden="true"><use href="#i-bot"/></svg></span>
               <span class="step-num">Layer 2</span>
@@ -1269,7 +1679,7 @@ def technology_main() -> str:
             <span class="tokens zero"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg> 0 AI cost &middot; repeatable</span>
           </div>
           <div class="zta-flow" aria-hidden="true"><svg class="ico"><use href="#i-arrow-right"/></svg></div>
-          <div class="zta-step L3">
+          <div class="zta-step L3" data-zta="2" role="tab" aria-selected="false" tabindex="0">
             <div class="step-top">
               <span class="step-ico"><svg class="ico" aria-hidden="true"><use href="#i-zap"/></svg></span>
               <span class="step-num">Layer 3</span>
@@ -1279,6 +1689,17 @@ def technology_main() -> str:
             <span class="tokens one"><svg class="ico" aria-hidden="true"><use href="#i-sliders"/></svg> counted &middot; reported</span>
           </div>
         </div>
+        <div class="zta-share-wrap reveal">
+          <div class="zta-share-bar" role="img" aria-label="Roughly 90 percent rules, 8 percent scorers, 2 percent language model">
+            <span class="zta-share-l1"></span><span class="zta-share-l2"></span><span class="zta-share-l3"></span>
+          </div>
+          <div class="zta-share-legend">
+            <div class="zta-legend-item"><span class="zta-swatch l1" aria-hidden="true"></span><span><strong>~90%</strong> Layer 1 &middot; ordinary rules (no AI cost)</span></div>
+            <div class="zta-legend-item"><span class="zta-swatch l2" aria-hidden="true"></span><span><strong>~8%</strong> Layer 2 &middot; trained scorers (no AI cost)</span></div>
+            <div class="zta-legend-item"><span class="zta-swatch l3" aria-hidden="true"></span><span><strong>~2%</strong> Layer 3 &middot; language model (counted &amp; reported)</span></div>
+          </div>
+        </div>
+        <div class="zta-detail-panel reveal" id="zta-detail-panel" role="tabpanel"></div>
         <div class="zta-stats reveal">
           <div class="zta-stat">
             <span class="zstat-ico green"><svg class="ico" aria-hidden="true"><use href="#i-cpu"/></svg></span>
@@ -1329,9 +1750,13 @@ def technology_main() -> str:
         + "\n\n"
         + pipeline_section()
         + "\n\n"
+        + privacy_band()
+        + "\n\n"
         + security
         + "\n\n"
-        + page_close()
+        + state_regulatory_section()
+        + "\n\n"
+        + page_close("technology")
     )
 
 
@@ -1430,31 +1855,7 @@ def underwriting_main() -> str:
         </div>
       </section>"""
 
-    book = """      <section id="insurance-book">
-        <div class="reveal">
-          <p class="section-label">The insurance book</p>
-          <h2>12 sections on 1 workbench</h2>
-          <p class="section-desc"><strong>Live</strong> means we can price it today from rates you loaded. <strong>Catalog</strong> means we list it, but we will not invent a premium. Maternity is not outpatient. Third-party auto is not comprehensive. Cargo is not hull. Each product has its own checklist. Names come off before any AI sees a page. Pick the writing company from your appointed panel before the file runs.</p>
-        </div>
-        <div class="lob-grid reveal">
-          <a class="lob-card" href="/dashboard/insurance/sections/life"><span class="lob-n">01</span><h3>Life</h3><p>Term we can price today. Whole life, universal life, endowment, money-back, annuity wait until those rates are in.</p><span class="lob-tag live">Live</span></a>
-          <a class="lob-card" href="/dashboard/insurance/sections/health"><span class="lob-n">02</span><h3>Health</h3><p>Individual through disability &mdash; including outpatient visits and critical illness &mdash; when your health rates are loaded.</p><span class="lob-tag live">Live</span></a>
-          <a class="lob-card" href="/dashboard/insurance/sections/general"><span class="lob-n">03</span><h3>General / Non-Life</h3><p>Motor, home, travel, marine, fire, cyber. Listed so you can see coverage. No quote until your filed rates are in.</p><span class="lob-tag catalog">Catalog</span></a>
-          <a class="lob-card" href="/dashboard/insurance/sections/commercial"><span class="lob-n">04</span><h3>Business / Commercial</h3><p>Property &amp; business interruption, directors &amp; officers, workers&rsquo; comp, trade credit, errors &amp; omissions, key person.</p><span class="lob-tag live">Live</span></a>
-          <a class="lob-card" href="/dashboard/insurance/sections/specialty"><span class="lob-n">05</span><h3>Other / Specialty</h3><p>Crop, livestock, pet, events, title, mortgage guarantee. Catalog until those rates are loaded.</p><span class="lob-tag catalog">Catalog</span></a>
-          <a class="lob-card" href="/dashboard/insurance/sections/provider"><span class="lob-n">06</span><h3>By Provider Type</h3><p>Public vs private onboarding, business-to-business reinsurance. Catalog until contracted.</p><span class="lob-tag catalog">Catalog</span></a>
-          <a class="lob-card" href="/dashboard/insurance/sections/engineering"><span class="lob-n">07</span><h3>Engineering</h3><p>Contractors&rsquo; all risk, erection all risk, machinery, boiler, delay in start-up.</p><span class="lob-tag live">Live</span></a>
-          <a class="lob-card" href="/dashboard/insurance/sections/aviation"><span class="lob-n">08</span><h3>Aviation</h3><p>Hull, liability, and passenger risk.</p><span class="lob-tag live">Live</span></a>
-          <a class="lob-card" href="/dashboard/insurance/sections/fidelity"><span class="lob-n">09</span><h3>Fidelity &amp; Burglary</h3><p>Employee fraud and burglary / theft.</p><span class="lob-tag live">Live</span></a>
-          <a class="lob-card" href="/dashboard/insurance/sections/catastrophe"><span class="lob-n">10</span><h3>Catastrophe</h3><p>Flood, earthquake, and weather-index covers.</p><span class="lob-tag live">Live</span></a>
-          <a class="lob-card" href="/dashboard/insurance/sections/niche-liability"><span class="lob-n">11</span><h3>Niche Liability</h3><p>Umbrella, pollution, kidnap &amp; ransom, political risk, terrorism.</p><span class="lob-tag live">Live</span></a>
-          <a class="lob-card" href="/dashboard/insurance/sections/warranty-financial-emerging"><span class="lob-n">12</span><h3>Warranty / Financial / Emerging</h3><p>Surety, credit life, gadget, micro, usage-based (price from how you drive), personal cyber.</p><span class="lob-tag live">Live</span></a>
-        </div>
-        <div class="feature-grid reveal" style="margin-top:1.6rem">
-          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-landmark"/></svg></span><h3>Mortgage</h3><p>Income, assets, and the property that backs the loan. Fairness rules for closing costs, credit pricing, and reporting are built in.</p></div>
-          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-banknote"/></svg></span><h3>Lending</h3><p>Consumer and business loans. Credit scoring, a price that can move, equal treatment, and a written reason if you say no.</p></div>
-        </div>
-      </section>"""
+    book = insurance_book_section()
 
     ratemaking = """      <section id="ratemaking">
         <div class="reveal">
@@ -1495,7 +1896,7 @@ def underwriting_main() -> str:
         + "\n\n"
         + ratemaking
         + "\n\n"
-        + page_close()
+        + page_close("underwriting")
     )
 
 
@@ -1503,8 +1904,8 @@ def integrations_main() -> str:
     modes = """      <section id="modes">
         <div class="reveal">
           <p class="section-label">How connectors run</p>
-          <h2>Live, simulated, or auto &mdash; never fabricated</h2>
-          <p class="section-desc"><strong>Live</strong> means your real accounts. <strong>Simulated</strong> means honest demo data, labeled as demo. <strong>Auto</strong> uses live when keys exist and flags the gap instead of guessing a clean history. <a href="#plain">What oracles and IMAP mean.</a></p>
+          <h2>Real when connected. Demo when not. Nothing invented.</h2>
+          <p class="section-desc"><strong>Live</strong> means your real accounts. <strong>Simulated</strong> means honest demo data, clearly labeled. <strong>Auto</strong> uses live when keys exist and shows the gap instead of guessing a clean history. <a href="#plain">What oracles and IMAP mean.</a></p>
         </div>
         <div class="feature-grid reveal">
           <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-cable"/></svg></span><h3>Live</h3><p>Real drops wired to your accounts &mdash; email, a secure folder, a cloud bucket, or a local folder. SharePoint, Drive, industry mailboxes, and Applied Epic wait until you contract them. Claim-history checks stay dark without keys.</p></div>
@@ -1536,7 +1937,7 @@ def integrations_main() -> str:
         sub_page_hero(
             "Integrations",
             "Connects to the systems you already use",
-            "One Connect &amp; pull hub meets the file where it already lives &mdash; email, folders, the policy system, CRM, and outside data checks. Each connection is live, simulated, or auto. Never fabricated.",
+            "One Connect &amp; pull hub meets the file where it already lives &mdash; email, folders, the policy system, CRM, and outside data checks. Real when wired, honest demo when not.",
             secondary="/dashboard",
             secondary_label="Open the live dashboard",
         )
@@ -1547,7 +1948,7 @@ def integrations_main() -> str:
         + "\n\n"
         + marquee_section()
         + "\n\n"
-        + page_close()
+        + page_close("integrations")
     )
 
 
@@ -1556,13 +1957,15 @@ def company_main() -> str:
         <div class="reveal">
           <p class="section-label">About Rytera</p>
           <h2>We build underwriting software for underwriters</h2>
-          <p class="section-desc">Rytera Inc. builds underwriting software for underwriters &mdash; at insurance companies, MGAs (teams allowed to write on a company&rsquo;s behalf), mortgage lenders, and commercial lenders.</p>
+          <p class="section-desc">Rytera Inc. builds production underwriting software for the people who say yes or no &mdash; at insurance carriers, MGAs, mortgage lenders, and commercial lenders. We are not a chatbot wrapper around PDFs. We are a workbench that reads the pile, prices from your filed manuals, applies state law, and hands you a memo a licensed human can sign.</p>
         </div>
         <div class="feature-grid reveal">
-          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-users"/></svg></span><h3>Who we build for</h3><p>Commercial &amp; personal lines carriers, MGAs and program administrators, mortgage lenders, and commercial lenders &mdash; one platform for every desk.</p></div>
-          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-refresh"/></svg></span><h3>The pilot model</h3><p>Practice first, issue last. Measure accuracy on your real book before the policy system turns on &mdash; with a clean cutover when you&rsquo;re ready.</p></div>
-          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-shield-check"/></svg></span><h3>Security &amp; compliance</h3><p>Files stored locked. Only the right people in your company can see a file. Names come off before any AI sees a page. Every decision ships in a sealed pack an examiner can open.</p></div>
-          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-mail"/></svg></span><h3>Get in touch</h3><p>Book a walkthrough or email <a class="contact-email" href="mailto:hello@ryterainc.com">hello@ryterainc.com</a> &mdash; our team responds within one business day.</p></div>
+          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-users"/></svg></span><h3>Who we build for</h3><p>Commercial &amp; personal lines carriers, MGAs and program administrators, mortgage lenders, and commercial lenders &mdash; one platform for every desk that binds risk.</p></div>
+          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-refresh"/></svg></span><h3>The pilot model</h3><p>Practice first, issue last. Run on your real book in shadow mode. Measure accuracy and examiner readiness before the policy system turns on.</p></div>
+          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-shield-check"/></svg></span><h3>Security &amp; compliance</h3><p>Files stored locked. Role-based access. Names stripped before AI. Every decision ships in a sealed pack an examiner can open years later.</p></div>
+          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-landmark"/></svg></span><h3>State law built in</h3><p>50 states + DC with line-specific rules: rate filing method, surplus lines, tort model, workers&rsquo; comp funds, and health mandates &mdash; checked on every job.</p></div>
+          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-zap"/></svg></span><h3>Zero Token Architecture</h3><p>Ordinary rules and trained scorers handle ~98% of pipeline steps. Language models are the last resort, counted, and never used to invent a fact.</p></div>
+          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-mail"/></svg></span><h3>Get in touch</h3><p>Book a walkthrough with a real submission or email <a class="contact-email" href="mailto:hello@ryterainc.com">hello@ryterainc.com</a> &mdash; we respond within one business day.</p></div>
         </div>
       </section>"""
 
@@ -1590,7 +1993,7 @@ def company_main() -> str:
         + "\n\n"
         + faq
         + "\n\n"
-        + page_close()
+        + page_close("company")
     )
 
 
@@ -1640,7 +2043,7 @@ def main() -> None:
         ),
         "integrations.html": page(
             "Rytera - Connects to the systems you already use",
-            "Meet the file where it already lives: email, folders, the policy system, and outside data checks. Live, simulated, or auto — never fabricated.",
+            "Meet the file where it already lives: email, folders, the policy system, and outside data checks. Real when connected, honest demo when not.",
             "integrations",
             "Connects to the systems you already use — live, simulated, or auto. Never a fake green light.",
             integrations_main(),
