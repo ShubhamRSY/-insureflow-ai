@@ -9,6 +9,7 @@ import UwWorksheetView from '../components/UwWorksheetView';
 import UwPolicyValidator from '../components/UwPolicyValidator';
 import BindReadinessPanel from '../components/BindReadinessPanel';
 import PdfGroundingViewer from '../components/PdfGroundingViewer';
+import ProvenancePanel from '../components/ProvenancePanel';
 
 export default function InsuranceJobDetail() {
   const { jobId } = useParams();
@@ -316,6 +317,19 @@ export default function InsuranceJobDetail() {
         {!processing && (
           <div className="mt-6 space-y-6">
             <InsuranceMemoView job={job} />
+
+            {/* Provenance: where every number came from */}
+            <div className="rounded-2xl border border-white/10 bg-surface/40 p-5">
+              <ProvenancePanel
+                job={job}
+                onJumpToPage={(page, bbox) => {
+                  const el = document.getElementById('pdf-viewer');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  window.dispatchEvent(new CustomEvent('pdf-jump-to-page', { detail: { page, bbox } }));
+                }}
+              />
+            </div>
+
             <div className="rounded-2xl border border-white/10 bg-surface/40 p-5">
               <PdfGroundingViewer bundleId={jobId} />
             </div>
