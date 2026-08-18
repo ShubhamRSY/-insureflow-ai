@@ -65,6 +65,7 @@ export default function InsuranceSegmentPage() {
   }, [hubLines]);
 
   const sectionLive = useMemo(() => {
+    if (!section) return false;
     if (section.hubKind && hubLines) {
       return hubLines.some((ln) => ln.status === 'live');
     }

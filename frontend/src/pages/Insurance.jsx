@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Shield, ArrowRight, HeartPulse, Stethoscope, Umbrella, Briefcase, Leaf,
-  Landmark, HardHat, Plane, Lock, CloudRain, Scale, ShieldCheck,
+  Landmark, HardHat, Plane, Lock, CloudRain, Scale, ShieldCheck, Trash2,
 } from 'lucide-react';
 import { insuranceLineLabel } from '../lib/insuranceLines';
 import { INSURANCE_SECTIONS, insuranceSectionAccent } from '../lib/insuranceSections';
@@ -11,7 +11,7 @@ const ICONS = {
   HardHat, Plane, Lock, CloudRain, Scale, ShieldCheck,
 };
 
-export default function InsurancePage({ jobs, onRefresh }) {
+export default function InsurancePage({ jobs, onRefresh, onDeleteJob, onDeleteAllJobs }) {
   const navigate = useNavigate();
   const recent = (jobs || []).slice(0, 8);
 
@@ -103,9 +103,24 @@ export default function InsurancePage({ jobs, onRefresh }) {
       <section className="glass-card overflow-hidden">
         <div className="flex items-center justify-between border-b border-white/[0.06] px-5 py-4">
           <h3 className="text-sm font-semibold text-slate-200">Recent insurance jobs</h3>
-          <Link to="/insurance/sections/commercial" className="text-xs text-brand hover:underline">
-            Start a submission →
-          </Link>
+          <div className="flex items-center gap-3">
+            {recent.length > 0 && onDeleteAllJobs && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (!window.confirm(`Delete all ${recent.length} listed job${recent.length === 1 ? '' : 's'}? This cannot be undone.`)) return;
+                  onDeleteAllJobs(recent.map((j) => j.id));
+                }}
+                className="inline-flex items-center gap-1 text-xs text-red-400 hover:text-red-300"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Delete all
+              </button>
+            )}
+            <Link to="/insurance/sections/commercial" className="text-xs text-brand hover:underline">
+              Start a submission →
+            </Link>
+          </div>
         </div>
         {!recent.length ? (
           <p className="px-5 py-8 text-sm text-slate-500">No jobs yet. Open a section and run a package.</p>
@@ -116,12 +131,15 @@ export default function InsurancePage({ jobs, onRefresh }) {
               const company = results.insurance_company_name || j.insurance_company_name;
               const line = results.insurance_line || results.product_line || j.insurance_line || j.product_line || 'commercial';
               return (
-              <button
+              <div
                 key={j.id}
-                type="button"
-                onClick={() => navigate(`/insurance/${j.id}`)}
-                className="flex w-full items-center justify-between gap-3 px-5 py-3 text-left hover:bg-white/[0.02]"
+                className="flex w-full items-center justify-between gap-3 px-5 py-3 hover:bg-white/[0.02]"
               >
+                <button
+                  type="button"
+                  onClick={() => navigate(`/insurance/${j.id}`)}
+                  className="flex min-w-0 flex-1 items-center justify-between gap-3 text-left"
+                >
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-slate-200">{j.name || results.insured_name || j.insured_name || j.id}</p>
                   <p className="text-xs text-slate-500">
@@ -130,7 +148,27 @@ export default function InsurancePage({ jobs, onRefresh }) {
                   </p>
                 </div>
                 <span className="shrink-0 text-xs capitalize text-slate-400">{j.job?.status || j.status || '—'}</span>
-              </button>
+                </button>
+                {onDeleteJob && (
+                  <button
+                    type="button"
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      if (!window.confirm('Delete this job? This cannot be undone.')) return;
+                      try {
+                        await onDeleteJob(j.id);
+                      } catch (err) {
+                        window.alert(err.message || 'Could not delete this job');
+                      }
+                    }}
+                    className="shrink-0 rounded-lg p-1.5 text-red-400 hover:bg-red-500/10"
+                    title="Delete job"
+                    aria-label={`Delete ${j.id}`}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
               );
             })}
           </div>

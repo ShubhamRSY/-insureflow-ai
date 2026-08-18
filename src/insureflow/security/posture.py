@@ -80,6 +80,23 @@ def load_demo_assets(posture: SecurityPosture | None = None) -> bool:
     return not posture.is_hardened
 
 
+def allow_demo_presets(*, signed_in: bool, posture: SecurityPosture | None = None) -> bool:
+    """Whether /api/demo/* sample packs may run.
+
+    ALLOW_DEMO_PRESETS=true|false wins. Otherwise a signed-in desk can run
+    synthetic samples even in production; anonymous access stays off when hardened.
+    """
+    flag = os.getenv("ALLOW_DEMO_PRESETS", "").strip().lower()
+    if flag in {"1", "true", "yes", "on"}:
+        return True
+    if flag in {"0", "false", "no", "off"}:
+        return False
+    if signed_in:
+        return True
+    posture = posture or resolve_security_posture()
+    return not posture.is_hardened
+
+
 def validate_startup_secrets(
     *,
     secret_key: str,

@@ -318,3 +318,19 @@ def test_security_headers_on_health() -> None:
     assert "camera=()" in (resp.headers.get("permissions-policy") or "")
     https = client.get("/health", headers={"x-forwarded-proto": "https"})
     assert "max-age=" in (https.headers.get("strict-transport-security") or "")
+
+
+def test_signed_in_users_can_run_demo_presets_in_production(monkeypatch: MonkeyPatch) -> None:
+    from insureflow.security.posture import allow_demo_presets
+
+    monkeypatch.setenv("BANK_MODE", "true")
+    monkeypatch.delenv("ALLOW_DEMO_PRESETS", raising=False)
+    assert allow_demo_presets(signed_in=True) is True
+    assert allow_demo_presets(signed_in=False) is False
+
+
+def test_allow_demo_presets_explicit_off(monkeypatch: MonkeyPatch) -> None:
+    from insureflow.security.posture import allow_demo_presets
+
+    monkeypatch.setenv("ALLOW_DEMO_PRESETS", "false")
+    assert allow_demo_presets(signed_in=True) is False

@@ -9,6 +9,7 @@ import { fmtCurrency, endpoints } from '../lib/api';
 import { getJourneyContext } from '../lib/pipelineJourney';
 import { insuranceLineLabel } from '../lib/insuranceLines';
 import SimilarPriors from './SimilarPriors';
+import { asList, displayText, fmtFixed, safeLower } from '../lib/safe';
 
 const STATUS_ICON = {
   complete: { Icon: CheckCircle2, cls: 'text-emerald-400' },
@@ -50,10 +51,11 @@ function Section({ title, icon: Icon, children, defaultOpen = true }) {
 }
 
 function PipelineTimeline({ stages, processing, currentStage }) {
+  const list = asList(stages);
   return (
     <div className="overflow-x-auto">
       <div className="flex items-stretch gap-1.5 min-w-max">
-        {stages.map((stage, i) => {
+        {list.map((stage, i) => {
           const status = processing && currentStage === stage.id ? 'active' : stage.status;
           const { Icon, cls } = STATUS_ICON[status] || STATUS_ICON.pending;
           const activeCls = status === 'active' || status === 'complete' ? 'border-brand/20 bg-brand/5' : status === 'failed' ? 'border-red-500/20 bg-red-500/5' : 'border-white/[0.04] bg-surface/30';
@@ -61,10 +63,10 @@ function PipelineTimeline({ stages, processing, currentStage }) {
             <div key={stage.id} className="flex items-stretch gap-0">
               <div className={`flex flex-col items-center gap-1.5 rounded-lg border px-3 py-2 min-w-[110px] ${activeCls}`}>
                 <Icon className={`h-4 w-4 ${cls}`} />
-                <span className="text-sm font-semibold text-slate-200 text-center leading-tight">{stage.label}</span>
-                <span className="text-[11px] text-slate-400 text-center leading-tight">{stage.detail}</span>
+                <span className="text-sm font-semibold text-slate-200 text-center leading-tight">{displayText(stage.label)}</span>
+                <span className="text-[11px] text-slate-400 text-center leading-tight">{displayText(stage.detail)}</span>
               </div>
-              {i < stages.length - 1 && (
+              {i < list.length - 1 && (
                 <div className="flex items-center px-0.5">
                   <div className="h-px w-2 bg-white/[0.08]" />
                 </div>
@@ -91,7 +93,7 @@ const PHASE_DEFS = [
 function groupStagesByPhase(stages = []) {
   return PHASE_DEFS.map((phase) => ({
     label: phase.label,
-    stages: stages.filter((s) => phase.ids.includes(s.id)),
+    stages: asList(stages).filter((s) => phase.ids.includes(s.id)),
   })).filter((phase) => phase.stages.length > 0);
 }
 
@@ -115,8 +117,8 @@ function completenessDisplayPct(raw) {
 }
 
 function SubmissionQuality({ quality, docQuality, onRequestDocs, requesting, brokerRequest, brokerEmail, setBrokerEmail }) {
-  const missing = docQuality?.missing_documents || docQuality?.missing || [];
-  const present = docQuality?.present_documents || docQuality?.present || [];
+  const missing = asList(docQuality?.missing_documents || docQuality?.missing);
+  const present = asList(docQuality?.present_documents || docQuality?.present);
   const pct = completenessDisplayPct(docQuality?.completeness_pct);
   const lob = docQuality?.lob || quality?.lob;
   const pending = quality?.pending || quality?.score == null;
@@ -160,15 +162,15 @@ function SubmissionQuality({ quality, docQuality, onRequestDocs, requesting, bro
           </div>
           {present.length > 0 && (
             <ul className="mt-2 space-y-1">
-              {present.map((d) => (
-                <li key={`p-${d}`} className="text-sm text-emerald-400/90">Present: {d}</li>
+              {present.map((d, i) => (
+                <li key={`p-${displayText(d) || i}`} className="text-sm text-emerald-400/90">Present: {displayText(d)}</li>
               ))}
             </ul>
           )}
           {missing.length > 0 && (
             <ul className="mt-2 space-y-1">
-              {missing.map((d) => (
-                <li key={`m-${d}`} className="text-sm text-red-400/90">Missing: {d}</li>
+              {missing.map((d, i) => (
+                <li key={`m-${displayText(d) || i}`} className="text-sm text-red-400/90">Missing: {displayText(d)}</li>
               ))}
             </ul>
           )}
@@ -223,12 +225,12 @@ function SubmissionQuality({ quality, docQuality, onRequestDocs, requesting, bro
           )}
         </div>
       )}
-      {!pending && quality.issues.length > 0 && (
+      {!pending && asList(quality.issues).length > 0 && (
         <ul className="mt-3 space-y-1 border-t border-white/[0.04] pt-3">
-          {quality.issues.map((issue) => (
-            <li key={issue} className="flex items-start gap-2 text-sm text-slate-400">
+          {asList(quality.issues).map((issue) => (
+            <li key={displayText(issue)} className="flex items-start gap-2 text-sm text-slate-400">
               <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500/80" />
-              {issue}
+              {displayText(issue)}
             </li>
           ))}
         </ul>
@@ -250,7 +252,7 @@ function CopeDeepDive({ cope }) {
         <div key={label} className="rounded-lg bg-black/20 p-3">
           <p className="text-xs uppercase text-slate-400">{label}</p>
           <p className="mt-1 text-sm font-medium capitalize text-slate-200">
-            {data?.class || data?.types?.join(', ') || data?.raw || '—'}
+            {displayText(data?.class) || asList(data?.types).join(', ') || displayText(data?.raw, '—')}
           </p>
           {data?.mod_pct != null && (
             <p className={`text-xs ${data.mod_pct > 0 ? 'text-red-400' : 'text-emerald-400'}`}>
@@ -260,9 +262,9 @@ function CopeDeepDive({ cope }) {
         </div>
       ))}
       <div className="sm:col-span-2 rounded-lg bg-brand/10 px-3 py-2 text-sm text-slate-300">
-        Grade: <strong className="uppercase">{cope.cope_score?.risk_grade || '—'}</strong>
+        Grade: <strong className="uppercase">{displayText(cope.cope_score?.risk_grade, '—')}</strong>
         {' · '}Schedule mod: {cope.cope_score?.schedule_mod_pct > 0 ? '+' : ''}{cope.cope_score?.schedule_mod_pct ?? 0}%
-        {' · '}Score: {cope.cope_score?.total_score?.toFixed(3) ?? '—'}
+        {' · '}Score: {fmtFixed(cope.cope_score?.total_score, 3) || '—'}
       </div>
     </div>
   );
@@ -275,12 +277,12 @@ function LifeMedicalPanel({ job }) {
   const memo = job?.results?.memo || {};
   const face = meta.face_amount || meta.tiv || quote.tiv || 0;
   const decision = (job?.results?.ai_decision || memo.decision || '').toString().replace(/_/g, ' ');
-  const conditions = meta.conditions || memo.conditions || [];
+  const conditions = asList(meta.conditions || memo.conditions);
   return (
     <div className="grid gap-3 sm:grid-cols-2">
       <div className="rounded-lg bg-black/20 p-3">
         <p className="text-xs uppercase text-slate-400">UW Class</p>
-        <p className="mt-1 text-sm font-medium capitalize text-slate-200">{medical.underwriting_class || '—'}</p>
+        <p className="mt-1 text-sm font-medium capitalize text-slate-200">{displayText(medical.underwriting_class, '—')}</p>
       </div>
       <div className="rounded-lg bg-black/20 p-3">
         <p className="text-xs uppercase text-slate-400">Tobacco</p>
@@ -296,7 +298,7 @@ function LifeMedicalPanel({ job }) {
       </div>
       <div className="rounded-lg bg-black/20 p-3">
         <p className="text-xs uppercase text-slate-400">Rate Filing</p>
-        <p className="mt-1 text-sm font-medium text-slate-200">{meta.filing_id || quote.filing_id || '—'}</p>
+        <p className="mt-1 text-sm font-medium text-slate-200">{displayText(meta.filing_id || quote.filing_id, '—')}</p>
       </div>
       <div className="rounded-lg bg-black/20 p-3">
         <p className="text-xs uppercase text-slate-400">Indicated Premium</p>
@@ -304,12 +306,12 @@ function LifeMedicalPanel({ job }) {
       </div>
       {memo.executive_summary && (
         <div className="sm:col-span-2 rounded-lg bg-brand/10 px-3 py-2 text-sm text-slate-300">
-          {memo.executive_summary}
+          {displayText(memo.executive_summary)}
         </div>
       )}
       {conditions.length > 0 && (
         <div className="sm:col-span-2 rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
-          {conditions.map((c) => <div key={c}>• {c}</div>)}
+          {conditions.map((c, i) => <div key={i}>• {displayText(c)}</div>)}
         </div>
       )}
     </div>
@@ -317,22 +319,23 @@ function LifeMedicalPanel({ job }) {
 }
 
 function AgentFindingsPanel({ sections }) {
-  if (!sections.length) return <p className="text-sm text-slate-400">No agent findings yet.</p>;
+  const list = asList(sections);
+  if (!list.length) return <p className="text-sm text-slate-400">No agent findings yet.</p>;
   return (
     <div className="space-y-3">
-      {sections.map((section) => (
+      {list.map((section) => (
         <div key={section.key}>
           <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-slate-400">{section.label}</p>
           <div className="space-y-1.5">
-            {section.findings.slice(0, 3).map((f, i) => {
-              const sev = (f.severity || 'moderate').toLowerCase();
+            {asList(section.findings).slice(0, 3).map((f, i) => {
+              const sev = safeLower(f?.severity, 'moderate');
               return (
                 <div key={f.finding_id || i} className="rounded-lg bg-black/20 p-2.5 text-sm">
                   <div className="flex items-center gap-2">
                     <span className={`rounded px-1.5 py-0.5 text-[11px] uppercase ring-1 ring-inset ${SEV_CLS[sev] || SEV_CLS.moderate}`}>{sev}</span>
-                    <span className="font-medium text-slate-300">{f.title}</span>
+                    <span className="font-medium text-slate-300">{displayText(f.title)}</span>
                   </div>
-                  {f.description && <p className="mt-1 text-slate-500">{f.description}</p>}
+                  {f.description && <p className="mt-1 text-slate-500">{displayText(f.description)}</p>}
                 </div>
               );
             })}
@@ -377,13 +380,14 @@ function ProvenancePanel({ provenance }) {
 }
 
 function HumanCheckpoints({ checkpoints, bundleId, onResolve }) {
-  if (!checkpoints.length) return <p className="text-sm text-emerald-400/90">No pending human checkpoints.</p>;
+  const list = asList(checkpoints);
+  if (!list.length) return <p className="text-sm text-emerald-400/90">No pending human checkpoints.</p>;
   return (
     <div className="space-y-2">
-      {checkpoints.map((cp) => (
+      {list.map((cp) => (
         <div key={cp.id} className="rounded-lg bg-amber-500/10 p-3 ring-1 ring-amber-500/20">
-          <p className="text-sm font-medium text-amber-200">{cp.label}</p>
-          <p className="mt-1 text-sm text-amber-200/70">{cp.reason}</p>
+          <p className="text-sm font-medium text-amber-200">{displayText(cp.label)}</p>
+          <p className="mt-1 text-sm text-amber-200/70">{displayText(cp.reason)}</p>
           {cp.status === 'pending' && onResolve && (
             <div className="mt-2 flex gap-2">
               <button type="button" onClick={() => onResolve(cp.id, 'approve')} className="btn-secondary btn-sm text-sm">Approve</button>
@@ -397,7 +401,7 @@ function HumanCheckpoints({ checkpoints, bundleId, onResolve }) {
 }
 
 function AuditTrailInline({ audit }) {
-  const entries = audit?.audit_trail?.entries || [];
+  const entries = asList(audit?.audit_trail?.entries);
   if (!entries.length) return <p className="text-sm text-slate-400">Audit trail populates as the pipeline runs.</p>;
   return (
     <div className="max-h-48 space-y-1 overflow-y-auto">
@@ -405,8 +409,8 @@ function AuditTrailInline({ audit }) {
         <div key={e.entry_id || i} className="flex gap-2 rounded-lg bg-black/20 p-2 text-sm">
           <FileText className="mt-0.5 h-3 w-3 shrink-0 text-slate-500" />
           <div>
-            <p className="font-medium text-slate-300">{e.event?.replace(/_/g, ' ')}</p>
-            <p className="text-slate-500">{e.message}</p>
+            <p className="font-medium text-slate-300">{displayText(e.event).replace(/_/g, ' ')}</p>
+            <p className="text-slate-500">{displayText(e.message)}</p>
           </div>
         </div>
       ))}
@@ -416,7 +420,7 @@ function AuditTrailInline({ audit }) {
 
 function EnterpriseOpsPanel({ ecosystem, onDispatchLC }) {
   if (!ecosystem) return null;
-      const feeds = ecosystem.oracle_feeds?.feeds || ecosystem.oracle_feeds || [];
+      const feeds = asList(ecosystem.oracle_feeds?.feeds || ecosystem.oracle_feeds);
   return (
     <div className="space-y-3 text-sm">
       <div>
@@ -451,7 +455,7 @@ function EnterpriseOpsPanel({ ecosystem, onDispatchLC }) {
         </div>
         <div className="rounded-lg bg-black/20 p-2">
           <p className="text-xs uppercase text-slate-400">Actuarial loop</p>
-          <p className="text-slate-300">{ecosystem.actuarial_loop?.recommended_action}</p>
+          <p className="text-slate-300">{displayText(ecosystem.actuarial_loop?.recommended_action)}</p>
         </div>
       </div>
       {onDispatchLC && (
@@ -470,9 +474,9 @@ function VerificationCard({ verification }) {
     return (
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div><p className="text-xs uppercase text-slate-400">Path</p><p className="mt-1 text-sm font-semibold">Life medical</p></div>
-        <div><p className="text-xs uppercase text-slate-400">UW Class</p><p className="mt-1 text-sm font-semibold capitalize">{verification.lifeClass || '—'}</p></div>
+        <div><p className="text-xs uppercase text-slate-400">UW Class</p><p className="mt-1 text-sm font-semibold capitalize">{displayText(verification.lifeClass, '—')}</p></div>
         <div><p className="text-xs uppercase text-slate-400">Tobacco</p><p className="mt-1 text-sm font-semibold">{verification.tobacco ? 'Yes' : 'No'}</p></div>
-        <div><p className="text-xs uppercase text-slate-400">Filing</p><p className="mt-1 text-sm font-semibold">{verification.filingId || '—'}</p></div>
+        <div><p className="text-xs uppercase text-slate-400">Filing</p><p className="mt-1 text-sm font-semibold">{displayText(verification.filingId, '—')}</p></div>
       </div>
     );
   }
@@ -487,7 +491,8 @@ function VerificationCard({ verification }) {
 }
 
 function ReconciliationPanel({ reconciliation }) {
-  const { discrepancies, matchRate, matchedFields, totalFields, overallStatus } = reconciliation;
+  const { matchRate, matchedFields, totalFields, overallStatus } = reconciliation || {};
+  const discrepancies = asList(reconciliation?.discrepancies);
   if (!discrepancies.length && matchRate == null) {
     return <p className="text-sm text-slate-400">Reconciliation data not available.</p>;
   }
@@ -524,7 +529,7 @@ function PricingBreakdown({ pricing }) {
   return (
     <div className="divide-y divide-white/[0.04] rounded-lg ring-1 ring-white/[0.04]">
       <div className="flex justify-between px-3 py-2 text-sm"><span className="text-slate-400">Base</span><span>{fmtCurrency(pricing.base)}</span></div>
-      {pricing.premiumMods.map((mod) => (
+      {asList(pricing.premiumMods).map((mod) => (
         <div key={mod.key} className="flex justify-between px-3 py-1.5 text-sm">
           <span className="text-slate-500">{mod.label}</span>
           <span>{mod.pct > 0 ? '+' : ''}{mod.pct}%</span>
@@ -593,10 +598,10 @@ function DeepDivePanel({ available, bundleId }) {
                   <ul className="mt-1 space-y-1">
                     {findings.slice(0, 5).map((f, i) => (
                       <li key={f.finding_id || i} className="text-xs text-slate-400">
-                        <span className={`rounded px-1.5 py-0.5 text-[11px] uppercase ring-1 ring-inset ${SEV_CLS[(f.severity || 'moderate').toLowerCase()] || SEV_CLS.moderate}`}>
-                          {f.severity || 'info'}
+                        <span className={`rounded px-1.5 py-0.5 text-[11px] uppercase ring-1 ring-inset ${SEV_CLS[safeLower(f?.severity, 'moderate')] || SEV_CLS.moderate}`}>
+                          {displayText(f.severity, 'info')}
                         </span>{' '}
-                        {f.title || f.reason || JSON.stringify(f)}
+                        {displayText(f.title || f.reason, JSON.stringify(f))}
                       </li>
                     ))}
                   </ul>
@@ -632,7 +637,7 @@ export default function SubmissionJourney({ job }) {
     if (fromResults && !cancelled) {
       setDocQuality(fromResults);
     }
-    const isLife = (job?.results?.insurance_line || job?.results?.product_line || '').toLowerCase() === 'life';
+    const isLife = safeLower(job?.results?.insurance_line || job?.results?.product_line) === 'life';
     const load = async () => {
       const tasks = [
         endpoints.missingDocuments(ctx.bundleId).then((d) => { if (!cancelled && d) setDocQuality(d); }).catch(() => {}),
@@ -650,10 +655,10 @@ export default function SubmissionJourney({ job }) {
 
   if (ctx.failed) return null;
 
-  const isLifeLine = (job?.results?.insurance_line || job?.results?.product_line || '').toLowerCase() === 'life';
+  const isLifeLine = safeLower(job?.results?.insurance_line || job?.results?.product_line) === 'life';
 
   const handleRequestDocs = async () => {
-    const missingList = docQuality?.missing_documents || docQuality?.missing || [];
+    const missingList = asList(docQuality?.missing_documents || docQuality?.missing);
     if (!ctx.bundleId || !missingList.length) return;
     setRequesting(true);
     try {
@@ -671,7 +676,7 @@ export default function SubmissionJourney({ job }) {
   const handleResolveCheckpoint = async (checkpointId, action) => {
     try {
       await endpoints.resolveCheckpoint(ctx.bundleId, checkpointId, action);
-      setCheckpoints((prev) => prev.map((c) => (c.id === checkpointId ? { ...c, status: action === 'approve' ? 'approved' : 'rejected' } : c)));
+      setCheckpoints((prev) => asList(prev).map((c) => (c.id === checkpointId ? { ...c, status: action === 'approve' ? 'approved' : 'rejected' } : c)));
     } catch (e) {
       alert(e.message);
     }
@@ -696,7 +701,7 @@ export default function SubmissionJourney({ job }) {
         <p className="text-xs font-bold uppercase tracking-widest text-brand-light/80">
           {isLifeLine ? 'Life Submission Journey' : 'Submission Journey'}
         </p>
-        {ctx.insuredName && <p className="mt-0.5 text-base text-slate-300">{ctx.insuredName}</p>}
+        {displayText(ctx.insuredName) && <p className="mt-0.5 text-base text-slate-300">{displayText(ctx.insuredName)}</p>}
       </div>
 
       <SubmissionQuality
@@ -713,7 +718,7 @@ export default function SubmissionJourney({ job }) {
         <PhaseStrip phases={groupStagesByPhase(ctx.stages)} processing={ctx.processing} currentStage={ctx.currentStage} />
       </Section>
 
-      <Section title="Human Checkpoints" icon={Users} defaultOpen={checkpoints.length > 0}>
+      <Section title="Human Checkpoints" icon={Users} defaultOpen={asList(checkpoints).length > 0}>
         <HumanCheckpoints checkpoints={checkpoints} bundleId={ctx.bundleId} onResolve={ctx.bundleId ? handleResolveCheckpoint : null} />
       </Section>
 

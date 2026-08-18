@@ -209,6 +209,24 @@ export default function ConnectAndPull({
     }
   };
 
+  const handleClearAll = async () => {
+    if (!bundleId) return;
+    if (!window.confirm('Delete all pulled files from this package?')) return;
+    try {
+      await endpoints.deleteDraftBundle(bundleId);
+      setBundleId(null);
+      setBundleDocs([]);
+      setBundleTree([]);
+      setConnected(null);
+      setEmails([]);
+      setSelectedEmailIds(new Set());
+      setRelevanceByName({});
+      setWarning('');
+    } catch (e) {
+      setError(e.message);
+    }
+  };
+
   const removeIrrelevant = async () => {
     if (!bundleId) return;
     const bad = bundleDocs.filter((d) => relevanceByName[d.filename] && relevanceByName[d.filename].relevant === false);
@@ -408,6 +426,7 @@ export default function ConnectAndPull({
             tree={bundleTree}
             relevanceByName={relevanceByName}
             onRemove={handleRemoveDoc}
+            onRemoveAll={handleClearAll}
             onRemoveIrrelevant={removeIrrelevant}
           />
           <div className="flex items-center justify-between">

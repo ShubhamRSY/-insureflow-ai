@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import {
-  ChevronDown, ChevronRight, FileText, FolderOpen, Loader2, X, AlertTriangle, Eye,
+  ChevronDown, ChevronRight, FileText, FolderOpen, Loader2, X, AlertTriangle, Eye, Trash2,
 } from 'lucide-react';
 import { endpoints } from '../lib/api';
 import ConnectorLogo from './ConnectorLogo';
@@ -46,6 +46,7 @@ export default function PulledFilesBrowser({
   tree = null,
   relevanceByName = {},
   onRemove,
+  onRemoveAll,
   onRemoveIrrelevant,
 }) {
   const sources = useMemo(
@@ -100,15 +101,27 @@ export default function PulledFilesBrowser({
 
   return (
     <div className="rounded-lg border border-white/[0.06] bg-surface/40 p-2">
-      <div className="mb-1.5 flex items-center justify-between px-1">
+      <div className="mb-1.5 flex items-center justify-between gap-2 px-1">
         <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
           Pulled files · {documents.length || sources.reduce((n, s) => n + s.file_count, 0)} · {sources.length} source{sources.length === 1 ? '' : 's'}
         </p>
-        {irrelevantCount > 0 && onRemoveIrrelevant && (
-          <button type="button" onClick={onRemoveIrrelevant} className="text-[10px] text-amber-400 hover:text-amber-300">
-            Remove irrelevant
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {irrelevantCount > 0 && onRemoveIrrelevant && (
+            <button type="button" onClick={onRemoveIrrelevant} className="text-[11px] text-amber-400 hover:text-amber-300">
+              Remove irrelevant
+            </button>
+          )}
+          {onRemoveAll && (
+            <button
+              type="button"
+              onClick={onRemoveAll}
+              className="inline-flex items-center gap-1 text-[11px] font-medium text-red-400 hover:text-red-300"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Delete all files
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="max-h-72 space-y-1 overflow-y-auto">
@@ -175,10 +188,11 @@ export default function PulledFilesBrowser({
                                     <button
                                       type="button"
                                       onClick={() => onRemove(bundleId, doc.doc_id)}
-                                      className="shrink-0 text-slate-600 opacity-0 transition hover:text-red-400 group-hover:opacity-100"
-                                      title="Remove"
+                                      className="shrink-0 rounded p-0.5 text-red-400 hover:bg-red-500/10"
+                                      title="Delete file"
+                                      aria-label={`Delete ${doc.filename}`}
                                     >
-                                      <X className="h-3 w-3" />
+                                      <Trash2 className="h-3.5 w-3.5" />
                                     </button>
                                   )}
                                 </li>

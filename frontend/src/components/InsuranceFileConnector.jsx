@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { Upload, FileText, X, HelpCircle, FolderOpen } from 'lucide-react';
+import { Upload, FileText, HelpCircle, FolderOpen, Trash2 } from 'lucide-react';
 import {
   DOC_SLOTS,
   detectDocType,
@@ -126,8 +126,8 @@ export default function InsuranceFileConnector({ onSubmit, loading }) {
                     <div className="mt-2 flex items-center gap-2">
                       <FileText className="h-4 w-4 shrink-0 text-insurance" />
                       <span className="truncate text-xs text-slate-300">{slot.file.filename}</span>
-                      <button type="button" onClick={() => removeFile(slot.file.id)} className="ml-auto text-slate-500 hover:text-red-400">
-                        <X className="h-3.5 w-3.5" />
+                      <button type="button" onClick={() => removeFile(slot.file.id)} className="ml-auto rounded p-1 text-red-400 hover:bg-red-500/10" aria-label={`Delete ${slot.file.filename}`}>
+                        <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
                   ) : (
@@ -142,8 +142,18 @@ export default function InsuranceFileConnector({ onSubmit, loading }) {
         {/* All files list with re-tag */}
         {files.length > 0 && (
           <div className="rounded-xl border border-white/[0.06] bg-surface/40">
-            <div className="border-b border-white/[0.06] px-4 py-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Connected files ({files.length})
+            <div className="border-b border-white/[0.06] px-4 py-2 flex items-center justify-between">
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Connected files ({files.length})
+              </span>
+              <button
+                type="button"
+                onClick={() => setFiles([])}
+                className="inline-flex items-center gap-1 text-[11px] font-medium text-red-400 hover:text-red-300"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Delete all files
+              </button>
             </div>
             <ul className="divide-y divide-white/[0.04]">
               {files.map((f) => (
@@ -159,8 +169,8 @@ export default function InsuranceFileConnector({ onSubmit, loading }) {
                       <option key={s.id} value={s.id}>{s.label}</option>
                     ))}
                   </select>
-                  <button type="button" onClick={() => removeFile(f.id)} className="text-slate-500 hover:text-red-400">
-                    <X className="h-4 w-4" />
+                  <button type="button" onClick={() => removeFile(f.id)} className="rounded p-1 text-red-400 hover:bg-red-500/10" aria-label={`Delete ${f.filename}`}>
+                    <Trash2 className="h-4 w-4" />
                   </button>
                 </li>
               ))}

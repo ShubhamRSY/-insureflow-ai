@@ -47,6 +47,7 @@ import StaffUnderwriting from './pages/StaffUnderwriting';
 import RatemakingPage from './pages/Ratemaking';
 import BusinessKPIsPage from './pages/BusinessKPIs';
 import PriorDecisionsPage from './pages/PriorDecisions';
+import ErrorBoundary from './components/ErrorBoundary';
 import { auth, endpoints, AuthError } from './lib/api';
 import { useFreemium } from './lib/useFreemium';
 
@@ -223,32 +224,72 @@ function AppRoutes() {
   const runDemo = async (vertical, presetId) => {
     if (!auth.isLoggedIn) { setLoginOpen(true); return; }
     if (isLimited) { setLoginOpen(true); return; }
-    if (vertical === 'lending') {
-      const res = await endpoints.runLendingDemo(presetId);
-      setLendingDemoResult(res);
-      navigate('/lending');
-      return;
-    }
-    const res = vertical === 'insurance'
-      ? await endpoints.runInsuranceDemo(presetId)
-      : await endpoints.runMortgageDemo(presetId);
-    await refreshAll();
-    if (vertical === 'insurance') {
-      navigate(`/insurance/${res.job_id}`);
-    } else {
-      navigate('/mortgage');
-      openJob('mortgage', res.job_id);
+    try {
+      if (vertical === 'lending') {
+        const res = await endpoints.runLendingDemo(presetId);
+        setLendingDemoResult(res);
+        navigate('/lending');
+        return;
+      }
+      const res = vertical === 'insurance'
+        ? await endpoints.runInsuranceDemo(presetId)
+        : await endpoints.runMortgageDemo(presetId);
+      if (!res?.job_id) throw new Error('Sample run did not return a job id');
+      await refreshAll();
+      if (vertical === 'insurance') {
+        navigate(`/insurance/${res.job_id}`);
+      } else {
+        navigate('/mortgage');
+        openJob('mortgage', res.job_id);
+      }
+    } catch (e) {
+      if (e instanceof AuthError) handleAuthError();
+      throw e;
     }
   };
 
   const submitInsurance = async (body) => {
-    if (body._jobId) {
-      navigate(`/insurance/${body._jobId}`);
-      return;
+    try {
+      if (body._jobId) {
+        navigate(`/insurance/${body._jobId}`);
+        return;
+      }
+      const res = await endpoints.runInsurance(body);
+      await loadInsuranceJobs();
+      navigate(`/insurance/${res.job_id}`);
+    } catch (e) {
+      if (e instanceof AuthError) handleAuthError();
+      throw e;
     }
-    const res = await endpoints.runInsurance(body);
-    await loadInsuranceJobs();
-    navigate(`/insurance/${res.job_id}`);
+  };
+
+  const deleteInsuranceJob = async (jobId) => {
+    setInsuranceJobs((prev) => prev.filter((r) => r.id !== jobId));
+    try {
+      await endpoints.deleteJob(jobId);
+    } catch (e) {
+      if (e instanceof AuthError) {
+        handleAuthError();
+        return;
+      }
+      await loadInsuranceJobs();
+      throw e;
+    }
+  };
+
+  const deleteAllInsuranceJobs = async (ids) => {
+    const list = ids?.length ? ids : insuranceJobs.map((r) => r.id);
+    setInsuranceJobs((prev) => prev.filter((r) => !list.includes(r.id)));
+    try {
+      await Promise.all(list.map((id) => endpoints.deleteJob(id).catch(() => {})));
+      await loadInsuranceJobs();
+    } catch (e) {
+      if (e instanceof AuthError) handleAuthError();
+      else {
+        await loadInsuranceJobs();
+        throw e;
+      }
+    }
   };
 
   const submitMortgage = async (body) => {
@@ -275,16 +316,16 @@ function AppRoutes() {
           <Route path="reference" element={<Navigate to="/reference/commercial" replace />} />
           <Route path="insurance/commercial/guides" element={<Navigate to="/reference/commercial" replace />} />
           <Route path="insurance/commercial/:lobSlug" element={<Protected onLogin={() => setLoginOpen(true)}><CommercialLinePage presets={presets} onRunDemo={runDemo} onSubmit={submitInsurance} /></Protected>} />
-          <Route path="insurance/commercial" element={<Protected onLogin={() => setLoginOpen(true)}><CommercialInsuranceHub presets={presets} onRunDemo={runDemo} onSubmit={submitInsurance} jobs={insuranceJobs} /></Protected>} />
+          <Route path="insurance/commercial" element={<Protected onLogin={() => setLoginOpen(true)}><CommercialInsuranceHub presets={presets} onRunDemo={runDemo} onSubmit={submitInsurance} jobs={insuranceJobs} onDeleteJob={deleteInsuranceJob} onDeleteAllJobs={deleteAllInsuranceJobs} /></Protected>} />
           <Route path="insurance/life/:lobSlug" element={<Protected onLogin={() => setLoginOpen(true)}><LifeLinePage presets={presets} onRunDemo={runDemo} onSubmit={submitInsurance} /></Protected>} />
-          <Route path="insurance/life" element={<Protected onLogin={() => setLoginOpen(true)}><LifeInsuranceHub presets={presets} onRunDemo={runDemo} onSubmit={submitInsurance} jobs={insuranceJobs} /></Protected>} />
+          <Route path="insurance/life" element={<Protected onLogin={() => setLoginOpen(true)}><LifeInsuranceHub presets={presets} onRunDemo={runDemo} onSubmit={submitInsurance} jobs={insuranceJobs} onDeleteJob={deleteInsuranceJob} onDeleteAllJobs={deleteAllInsuranceJobs} /></Protected>} />
           <Route path="insurance/health/:lobSlug" element={<Protected onLogin={() => setLoginOpen(true)}><HealthLinePage presets={presets} onRunDemo={runDemo} onSubmit={submitInsurance} /></Protected>} />
-          <Route path="insurance/health" element={<Protected onLogin={() => setLoginOpen(true)}><HealthInsuranceHub presets={presets} onRunDemo={runDemo} onSubmit={submitInsurance} jobs={insuranceJobs} /></Protected>} />
+          <Route path="insurance/health" element={<Protected onLogin={() => setLoginOpen(true)}><HealthInsuranceHub presets={presets} onRunDemo={runDemo} onSubmit={submitInsurance} jobs={insuranceJobs} onDeleteJob={deleteInsuranceJob} onDeleteAllJobs={deleteAllInsuranceJobs} /></Protected>} />
           <Route path="insurance/general/:lobSlug" element={<Protected onLogin={() => setLoginOpen(true)}><GeneralLinePage presets={presets} onRunDemo={runDemo} onSubmit={submitInsurance} /></Protected>} />
-          <Route path="insurance/general" element={<Protected onLogin={() => setLoginOpen(true)}><GeneralInsuranceHub presets={presets} onRunDemo={runDemo} onSubmit={submitInsurance} jobs={insuranceJobs} /></Protected>} />
+          <Route path="insurance/general" element={<Protected onLogin={() => setLoginOpen(true)}><GeneralInsuranceHub presets={presets} onRunDemo={runDemo} onSubmit={submitInsurance} jobs={insuranceJobs} onDeleteJob={deleteInsuranceJob} onDeleteAllJobs={deleteAllInsuranceJobs} /></Protected>} />
           <Route path="insurance/sections/:sectionId" element={<Protected onLogin={() => setLoginOpen(true)}><InsuranceSegmentPage /></Protected>} />
-          <Route path="insurance/:jobId" element={<Protected onLogin={() => setLoginOpen(true)}><InsuranceJobDetail /></Protected>} />
-          <Route path="insurance" element={<Protected onLogin={() => setLoginOpen(true)}><InsurancePage presets={presets} jobs={insuranceJobs} onRunDemo={runDemo} onOpenJob={openJob} onSubmit={submitInsurance} onRefresh={loadInsuranceJobs} /></Protected>} />
+          <Route path="insurance/:jobId" element={<Protected onLogin={() => setLoginOpen(true)}><InsuranceJobDetail onDeleted={loadInsuranceJobs} onDeleteJob={deleteInsuranceJob} /></Protected>} />
+          <Route path="insurance" element={<Protected onLogin={() => setLoginOpen(true)}><InsurancePage presets={presets} jobs={insuranceJobs} onRunDemo={runDemo} onOpenJob={openJob} onSubmit={submitInsurance} onRefresh={loadInsuranceJobs} onDeleteJob={deleteInsuranceJob} onDeleteAllJobs={deleteAllInsuranceJobs} /></Protected>} />
           <Route path="line-uw" element={<Protected onLogin={() => setLoginOpen(true)}><LineUnderwriting /></Protected>} />
           <Route path="staff-uw" element={<Protected onLogin={() => setLoginOpen(true)}><StaffUnderwriting /></Protected>} />
           <Route path="pilot" element={<Protected onLogin={() => setLoginOpen(true)}><PilotPage /></Protected>} />
@@ -316,7 +357,9 @@ function AppRoutes() {
       </Routes>
 
       <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} onSuccess={(u) => { setUser(u); refreshAll(); }} />
-      <JobDrawer job={drawer.job} vertical={drawer.vertical} jobId={drawer.jobId} onClose={() => setDrawer({ vertical: null, jobId: null, job: null })} />
+      <ErrorBoundary resetKey={drawer.jobId || 'closed'}>
+        <JobDrawer job={drawer.job} vertical={drawer.vertical} jobId={drawer.jobId} onClose={() => setDrawer({ vertical: null, jobId: null, job: null })} />
+      </ErrorBoundary>
     </>
   );
 }

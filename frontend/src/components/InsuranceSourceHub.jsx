@@ -146,6 +146,7 @@ export default function InsuranceSourceHub({ onSubmit, loading }) {
   };
 
   const handleClearAll = async (bid) => {
+    if (!window.confirm('Delete all pulled files from this package?')) return;
     try { await endpoints.deleteDraftBundle(bid); setBundleId(null); setBundleDocs([]); setBundleTree([]); setConnected(null); setActiveSource(null); setEmails([]); setSelectedEmailIds(new Set()); }
     catch (e) { setError(e.message); }
   };
@@ -299,7 +300,9 @@ export default function InsuranceSourceHub({ onSubmit, loading }) {
                 onChange={(e) => setUseLlm(e.target.checked)}
               />
               <button type="button" onClick={() => handleClearAll(bundleId)}
-                className="text-[10px] text-red-400/70 hover:text-red-400">Clear</button>
+                className="inline-flex items-center gap-1 text-[11px] font-medium text-red-400 hover:text-red-300">
+                Delete all files
+              </button>
             </div>
           </div>
 
@@ -309,6 +312,7 @@ export default function InsuranceSourceHub({ onSubmit, loading }) {
               documents={bundleDocs}
               tree={bundleTree}
               onRemove={handleRemoveDoc}
+              onRemoveAll={() => handleClearAll(bundleId)}
             />
           </div>
 

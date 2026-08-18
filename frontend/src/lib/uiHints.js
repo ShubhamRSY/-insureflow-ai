@@ -28,7 +28,7 @@ export const UI_HINTS = {
   tabConnect: 'Pull documents from connected sources (email, storage, demo folders) into a draft bundle.',
   tabSample: 'Run a pre-loaded demo case for the selected product line.',
   removeIrrelevant: 'Remove files flagged as unrelated to underwriting before you run.',
-  clearFiles: 'Remove all uploaded files from the list.',
+  clearFiles: 'Delete every file from this upload list.',
   splitFolders: 'Treat each top-level folder as a separate borrower when importing a directory.',
   complexSubmission: 'Flags manuscript or unusual risks that may need staff UW review or custom forms.',
   requiresCoSign: 'Requires a second licensed underwriter to co-sign before bind on this authority rule.',

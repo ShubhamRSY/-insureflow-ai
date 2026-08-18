@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, FileCheck, ExternalLink, FileText, RefreshCw, Camera, AlertTriangle, MessageSquare } from 'lucide-react';
+import { ArrowLeft, FileCheck, ExternalLink, FileText, RefreshCw, Camera, AlertTriangle, MessageSquare, Trash2 } from 'lucide-react';
 import { endpoints } from '../lib/api';
 import { insuranceLineLabel } from '../lib/insuranceLines';
 import SubmissionJourney from '../components/SubmissionJourney';
@@ -11,8 +11,9 @@ import BindReadinessPanel from '../components/BindReadinessPanel';
 import PdfGroundingViewer from '../components/PdfGroundingViewer';
 import ProvenancePanel from '../components/ProvenancePanel';
 import RateProvenance from '../components/RateProvenance';
+import { asList, displayText } from '../lib/safe';
 
-export default function InsuranceJobDetail() {
+export default function InsuranceJobDetail({ onDeleted, onDeleteJob }) {
   const { jobId } = useParams();
   const navigate = useNavigate();
   const [job, setJob] = useState(null);
@@ -50,7 +51,7 @@ export default function InsuranceJobDetail() {
 
   const processing = job?.status === 'processing';
   const bundleId = job?.results?.bundle_id;
-  const insuredName = job?.results?.insured_name || job?.results?.memo?.insured_name || '';
+  const insuredName = displayText(job?.results?.insured_name || job?.results?.memo?.insured_name);
 
   useEffect(() => {
     if (!bundleId) return;
@@ -114,6 +115,18 @@ export default function InsuranceJobDetail() {
     }
   };
 
+  const handleDeleteJob = async () => {
+    if (!window.confirm('Delete this submission? This cannot be undone.')) return;
+    try {
+      if (onDeleteJob) await onDeleteJob(jobId);
+      else await endpoints.deleteJob(jobId);
+      await onDeleted?.();
+      navigate('/insurance');
+    } catch (e) {
+      alert(e.message || 'Could not delete submission');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-32">
@@ -127,6 +140,17 @@ export default function InsuranceJobDetail() {
     return (
       <div className="py-16 text-center">
         <p className="text-red-400">{error}</p>
+        <button onClick={() => navigate('/insurance')} className="mt-4 text-sm text-slate-400 hover:text-white">
+          Back to Insurance
+        </button>
+      </div>
+    );
+  }
+
+  if (!job) {
+    return (
+      <div className="py-16 text-center">
+        <p className="text-slate-400">Submission not found.</p>
         <button onClick={() => navigate('/insurance')} className="mt-4 text-sm text-slate-400 hover:text-white">
           Back to Insurance
         </button>
@@ -154,7 +178,7 @@ export default function InsuranceJobDetail() {
               {insuredName && <p className="text-xs text-slate-400">{insuredName}</p>}
               {(job?.results?.insurance_company_name || job?.results?.insurance_company_id) && (
                 <p className="text-[11px] text-slate-500">
-                  Company: {job.results.insurance_company_name || job.results.insurance_company_id}
+                  Company: {displayText(job.results.insurance_company_name || job.results.insurance_company_id)}
                 </p>
               )}
             </div>
@@ -179,6 +203,9 @@ export default function InsuranceJobDetail() {
                 </button>
               </>
             )}
+            <button type="button" onClick={handleDeleteJob} className="btn-secondary btn-sm text-xs text-red-400 hover:text-red-300">
+              <Trash2 className="h-3.5 w-3.5" /> Delete
+            </button>
           </div>
         </div>
       </div>
@@ -227,8 +254,8 @@ export default function InsuranceJobDetail() {
                 {!notes.length && <p className="text-xs text-slate-500">No broker/carrier notes yet.</p>}
                 {notes.map((n) => (
                   <div key={n.note_id} className="rounded-lg bg-black/20 px-3 py-2 text-xs">
-                    <p className="text-slate-300">{n.text}</p>
-                    <p className="mt-1 text-[10px] text-slate-600">{n.role} · {n.author} · {n.created_at ? new Date(n.created_at).toLocaleString() : ''}</p>
+                    <p className="text-slate-300">{displayText(n.text)}</p>
+                    <p className="mt-1 text-[10px] text-slate-600">{displayText(n.role)} · {displayText(n.author)} · {n.created_at ? new Date(n.created_at).toLocaleString() : ''}</p>
                   </div>
                 ))}
               </div>
@@ -244,16 +271,16 @@ export default function InsuranceJobDetail() {
               </p>
               {checklist ? (
                 <>
-                  <p className="mb-2 text-sm text-slate-300">{checklist.completeness_pct}% complete</p>
+                  <p className="mb-2 text-sm text-slate-300">{displayText(checklist.completeness_pct, '—')}% complete</p>
                   <p className="text-[10px] uppercase text-slate-500 mb-1">Missing</p>
                   <ul className="mb-3 space-y-1 text-xs text-amber-300/90">
-                    {(checklist.missing || []).length ? checklist.missing.map((m) => <li key={m}>• {m}</li>) : <li className="text-slate-500">None</li>}
+                    {(asList(checklist.missing).length) ? asList(checklist.missing).map((m) => <li key={displayText(m)}>• {displayText(m)}</li>) : <li className="text-slate-500">None</li>}
                   </ul>
                   <p className="text-[10px] uppercase text-slate-500 mb-1">Info requests</p>
                   <ul className="space-y-1 text-xs text-slate-400">
                     {!infoRequests.length && <li>None yet</li>}
                     {infoRequests.map((r) => (
-                      <li key={r.request_id}>{r.status}: {(r.documents || []).join(', ')}</li>
+                      <li key={r.request_id || displayText(r)}>{displayText(r.status)}: {asList(r.documents).map(displayText).join(', ')}</li>
                     ))}
                   </ul>
                 </>
@@ -264,7 +291,7 @@ export default function InsuranceJobDetail() {
           </div>
         )}
 
-        {!processing && job.results?.visual_analysis && (
+        {!processing && job?.results?.visual_analysis && (
           <div className="mt-6 rounded-xl bg-surface-overlay p-5 ring-1 ring-white/[0.04]">
             <div className="flex items-center gap-2 mb-4">
               <Camera className="h-4 w-4 text-brand" />
@@ -275,10 +302,10 @@ export default function InsuranceJobDetail() {
                 job.results.visual_analysis.overall_visual_risk === 'moderate' ? 'bg-yellow-500/20 text-yellow-400' :
                 'bg-green-500/20 text-green-400'
               }`}>
-                Risk: {job.results.visual_analysis.overall_visual_risk}
+                Risk: {displayText(job.results.visual_analysis.overall_visual_risk)}
               </span>
             </div>
-            <p className="text-xs text-slate-400 mb-3">{job.results.visual_analysis.processing_notes}</p>
+            <p className="text-xs text-slate-400 mb-3">{displayText(job.results.visual_analysis.processing_notes)}</p>
             <div className="grid grid-cols-3 gap-3 mb-3">
               <div className="text-center rounded-lg bg-black/20 py-2">
                 <p className="text-[10px] text-slate-500 uppercase">Photos</p>
@@ -290,25 +317,25 @@ export default function InsuranceJobDetail() {
               </div>
               <div className="text-center rounded-lg bg-black/20 py-2">
                 <p className="text-[10px] text-slate-500 uppercase">Quality</p>
-                <p className="text-lg font-bold text-slate-200">{job.results.visual_analysis.overall_quality}</p>
+                <p className="text-lg font-bold text-slate-200">{displayText(job.results.visual_analysis.overall_quality)}</p>
               </div>
             </div>
-            {job.results.visual_analysis.risk_factors?.length > 0 && (
+            {asList(job.results.visual_analysis.risk_factors).length > 0 && (
               <div className="mb-3">
                 <p className="text-xs font-semibold text-slate-500 mb-1">Risk Factors</p>
-                {job.results.visual_analysis.risk_factors.map((f, i) => (
+                {asList(job.results.visual_analysis.risk_factors).map((f, i) => (
                   <div key={i} className="flex items-start gap-1 text-xs text-orange-400/80">
                     <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0" />
-                    {f}
+                    {displayText(f)}
                   </div>
                 ))}
               </div>
             )}
-            {job.results.visual_analysis.recommendations?.length > 0 && (
+            {asList(job.results.visual_analysis.recommendations).length > 0 && (
               <div>
                 <p className="text-xs font-semibold text-slate-500 mb-1">Recommendations</p>
-                {job.results.visual_analysis.recommendations.map((r, i) => (
-                  <p key={i} className="text-xs text-slate-400">&bull; {r}</p>
+                {asList(job.results.visual_analysis.recommendations).map((r, i) => (
+                  <p key={i} className="text-xs text-slate-400">&bull; {displayText(r)}</p>
                 ))}
               </div>
             )}
@@ -322,6 +349,9 @@ export default function InsuranceJobDetail() {
             {/* Rate Source Provenance — where every rate came from */}
             {job?.quote_result?.metadata && (
               <RateProvenance metadata={job.quote_result.metadata} />
+            )}
+            {job?.results?.quote_full?.metadata && !job?.quote_result?.metadata && (
+              <RateProvenance metadata={job.results.quote_full.metadata} />
             )}
 
             {/* Provenance: where every number came from */}

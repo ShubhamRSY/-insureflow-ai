@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FileText, X, Package, Loader2, AlertCircle } from 'lucide-react';
+import { FileText, Package, Loader2, AlertCircle, Trash2 } from 'lucide-react';
 import { UI_HINTS } from '../lib/uiHints';
 import { Hint, HintCheckbox } from './ui';
 
@@ -60,9 +60,10 @@ export default function DocumentAccumulator({
           <button
             type="button"
             onClick={() => onClearAll(bundleId)}
-            className="text-[11px] text-red-400/70 hover:text-red-400 transition"
+            className="inline-flex items-center gap-1 text-[11px] font-medium text-red-400 hover:text-red-300"
           >
-            Clear all
+            <Trash2 className="h-3.5 w-3.5" />
+            Delete all files
           </button>
         )}
       </div>
@@ -90,10 +91,11 @@ export default function DocumentAccumulator({
                     <button
                       type="button"
                       onClick={() => onRemove(bundleId, doc.doc_id)}
-                      className="opacity-0 group-hover:opacity-100 text-slate-600 hover:text-red-400 transition"
-                      title="Remove document"
+                      className="rounded p-1 text-red-400 hover:bg-red-500/10"
+                      title="Delete file"
+                      aria-label={`Delete ${doc.filename}`}
                     >
-                      <X className="h-3.5 w-3.5" />
+                      <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   )}
                 </li>

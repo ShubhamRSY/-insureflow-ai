@@ -1,5 +1,6 @@
 import { Badge } from './ui';
 import { fmtCurrency, extractInsurance } from '../lib/api';
+import { asList, displayText, safeLower } from '../lib/safe';
 
 const SEV = {
   critical: 'bg-red-500/20 text-red-300 ring-red-500/30',
@@ -10,8 +11,8 @@ const SEV = {
 
 function severityCounts(findings) {
   const counts = { critical: 0, high: 0, moderate: 0, low: 0 };
-  (findings || []).forEach((f) => {
-    const s = (f.severity || 'moderate').toLowerCase();
+  asList(findings).forEach((f) => {
+    const s = safeLower(f?.severity, 'moderate');
     if (counts[s] != null) counts[s] += 1;
   });
   return counts;
@@ -20,15 +21,15 @@ function severityCounts(findings) {
 const SEV_ORDER = { critical: 0, high: 1, moderate: 2, low: 3 };
 
 function sortFindings(findings) {
-  return [...(findings || [])].sort((a, b) => {
-    const sa = SEV_ORDER[(a.severity || 'moderate').toLowerCase()] ?? 2;
-    const sb = SEV_ORDER[(b.severity || 'moderate').toLowerCase()] ?? 2;
+  return asList(findings).sort((a, b) => {
+    const sa = SEV_ORDER[safeLower(a?.severity, 'moderate')] ?? 2;
+    const sb = SEV_ORDER[safeLower(b?.severity, 'moderate')] ?? 2;
     return sa - sb;
   });
 }
 
 function FindingRow({ finding }) {
-  const sev = (finding.severity || 'moderate').toLowerCase();
+  const sev = safeLower(finding?.severity, 'moderate');
   return (
     <div className="rounded-xl border border-white/[0.06] bg-surface/60 p-3">
       <div className="flex items-start gap-2">
@@ -36,9 +37,9 @@ function FindingRow({ finding }) {
           {sev}
         </span>
         <div className="min-w-0">
-          <p className="text-sm font-medium text-slate-200">{finding.title}</p>
+          <p className="text-sm font-medium text-slate-200">{displayText(finding.title, 'Finding')}</p>
           {finding.description && (
-            <p className="mt-1 text-xs leading-relaxed text-slate-400">{finding.description}</p>
+            <p className="mt-1 text-xs leading-relaxed text-slate-400">{displayText(finding.description)}</p>
           )}
         </div>
       </div>
@@ -49,9 +50,9 @@ function FindingRow({ finding }) {
 export default function InsuranceMemoView({ job }) {
   const s = extractInsurance(job);
   const memo = s.memoData || {};
-  const allFindings = memo.key_findings || [];
+  const allFindings = asList(memo.key_findings);
   const counts = severityCounts(allFindings);
-  const decision = (s.decision || 'refer').toLowerCase();
+  const decision = safeLower(s.decision, 'refer');
   const decisionStyle = {
     accept: 'from-emerald-600/30 to-emerald-900/10 border-emerald-500/40 text-emerald-300',
     conditional_accept: 'from-amber-600/30 to-amber-900/10 border-amber-500/40 text-amber-300',
@@ -68,13 +69,13 @@ export default function InsuranceMemoView({ job }) {
     ['loss_run_findings', 'Loss Run'],
     ['compliance_findings', 'Compliance'],
     ['fraud_findings', 'Fraud Detection'],
-  ].filter(([key]) => (memo[key] || []).length > 0);
+  ].filter(([key]) => asList(memo[key]).length > 0);
 
   // Prefer key_findings for the main list; skip agent sections that only repeat the same titles.
-  const keyTitles = new Set((allFindings || []).map((f) => (f.title || '').toLowerCase()));
+  const keyTitles = new Set(allFindings.map((f) => safeLower(f?.title)));
   const uniqueAgentSections = agentSections
     .map(([key, label]) => {
-      const unique = (memo[key] || []).filter((f) => !keyTitles.has((f.title || '').toLowerCase()));
+      const unique = asList(memo[key]).filter((f) => !keyTitles.has(safeLower(f?.title)));
       return [key, label, unique];
     })
     .filter(([, , findings]) => findings.length > 0);
@@ -85,7 +86,7 @@ export default function InsuranceMemoView({ job }) {
       <div className={`rounded-2xl border bg-gradient-to-br p-6 ${decisionStyle}`}>
         <p className="text-xs font-semibold uppercase tracking-widest opacity-80">Underwriting Decision</p>
         <p className="mt-1 text-4xl font-bold tracking-tight uppercase">{decision}</p>
-        <p className="mt-2 text-lg font-medium text-white">{s.insuredName}</p>
+        <p className="mt-2 text-lg font-medium text-white">{displayText(s.insuredName)}</p>
         <div className="mt-4 flex flex-wrap gap-4">
           <div>
             <p className="text-xs uppercase opacity-70">Indicated Premium</p>
@@ -100,7 +101,7 @@ export default function InsuranceMemoView({ job }) {
           {memo.overall_risk_severity && (
             <div>
               <p className="text-xs uppercase opacity-70">Severity</p>
-              <p className="text-lg font-semibold capitalize">{memo.overall_risk_severity}</p>
+              <p className="text-lg font-semibold capitalize">{displayText(memo.overall_risk_severity)}</p>
             </div>
           )}
         </div>
@@ -125,7 +126,7 @@ export default function InsuranceMemoView({ job }) {
       {s.memo && (
         <div>
           <h4 className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">Executive Summary</h4>
-          <pre className="whitespace-pre-wrap rounded-xl bg-surface/80 p-4 font-sans text-sm leading-relaxed text-slate-300">{s.memo}</pre>
+          <pre className="whitespace-pre-wrap rounded-xl bg-surface/80 p-4 font-sans text-sm leading-relaxed text-slate-300">{displayText(s.memo)}</pre>
         </div>
       )}
 
@@ -154,13 +155,13 @@ export default function InsuranceMemoView({ job }) {
       ))}
 
       {/* Conditions */}
-      {(memo.conditions || []).length > 0 && (
+      {asList(memo.conditions).length > 0 && (
         <div>
           <h4 className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">Conditions</h4>
           <ul className="space-y-1.5">
-            {memo.conditions.map((c, i) => (
+            {asList(memo.conditions).map((c, i) => (
               <li key={i} className="flex gap-2 text-sm text-slate-300">
-                <span className="text-brand-light">•</span>{c}
+                <span className="text-brand-light">•</span>{displayText(c)}
               </li>
             ))}
           </ul>
@@ -172,7 +173,7 @@ export default function InsuranceMemoView({ job }) {
         {s.quote?.policy_admin_reference && (
           <div className="rounded-xl bg-surface-overlay p-3 ring-1 ring-white/[0.04]">
             <p className="text-[10px] uppercase text-slate-500">Quote Ref</p>
-            <p className="font-mono text-xs">{s.quote.policy_admin_reference}</p>
+            <p className="font-mono text-xs">{displayText(s.quote.policy_admin_reference)}</p>
           </div>
         )}
         {s.workflowState && (
@@ -184,9 +185,9 @@ export default function InsuranceMemoView({ job }) {
         {s.quote?.filing_id && (
           <div className="rounded-xl bg-surface-overlay p-3 ring-1 ring-white/[0.04]">
             <p className="text-[10px] uppercase text-slate-500">Rate filing</p>
-            <p className="font-mono text-xs text-slate-200">{s.quote.filing_id}</p>
+            <p className="font-mono text-xs text-slate-200">{displayText(s.quote.filing_id)}</p>
             {s.quote.rating_engine && (
-              <p className="mt-0.5 text-[10px] text-slate-500">{s.quote.rating_engine}</p>
+              <p className="mt-0.5 text-[10px] text-slate-500">{displayText(s.quote.rating_engine)}</p>
             )}
           </div>
         )}
@@ -205,7 +206,7 @@ export default function InsuranceMemoView({ job }) {
         )}
       </div>
 
-      {(s.quote?.components || []).length > 0 && (
+      {(asList(s.quote?.components).length > 0) && (
         <div>
           <h4 className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">Premium build-up</h4>
           <div className="overflow-hidden rounded-xl border border-white/[0.06]">
@@ -218,11 +219,11 @@ export default function InsuranceMemoView({ job }) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/[0.04]">
-                {s.quote.components.map((c, i) => (
+                {asList(s.quote.components).map((c, i) => (
                   <tr key={i}>
-                    <td className="px-3 py-1.5 text-slate-200">{c.name}</td>
-                    <td className="px-3 py-1.5 text-slate-500">{c.basis || '—'}</td>
-                    <td className="px-3 py-1.5 text-right font-mono text-slate-300">{c.amount}</td>
+                    <td className="px-3 py-1.5 text-slate-200">{displayText(c.name)}</td>
+                    <td className="px-3 py-1.5 text-slate-500">{displayText(c.basis, '—')}</td>
+                    <td className="px-3 py-1.5 text-right font-mono text-slate-300">{displayText(c.amount)}</td>
                   </tr>
                 ))}
               </tbody>

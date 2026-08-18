@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Loader2, Upload, FileText, X, Play, Database, Cable, AlertTriangle } from 'lucide-react';
+import { Loader2, Upload, FileText, Play, Database, Cable, AlertTriangle, Trash2 } from 'lucide-react';
 import { readFileForUpload, buildSubmissionPayload, scoreFileRelevance, validatePackageRelevance } from '../lib/insuranceDocs';
 import { insuranceLineLabel } from '../lib/insuranceLines';
 import { UI_HINTS } from '../lib/uiHints';
@@ -260,7 +260,19 @@ export default function RunSelector({
       setError('Pick a sample data set first');
       return;
     }
-    await onRunDemo?.(vertical, dataId);
+    setRunning(true);
+    try {
+      await onRunDemo?.(vertical, dataId);
+    } catch (e) {
+      const msg = e.message || 'Sample run failed';
+      if (/disabled in BANK_MODE|Sample data is disabled|Sign in to run sample/i.test(msg)) {
+        setError('Sign in as a Rytera underwriter to run this sample pack. If you are already signed in, refresh and try again.');
+      } else {
+        setError(msg);
+      }
+    } finally {
+      setRunning(false);
+    }
   };
 
   return (
@@ -306,7 +318,21 @@ export default function RunSelector({
           </label>
 
           {files.length > 0 && (
-            <div className="max-h-44 space-y-1 overflow-y-auto rounded-lg border border-white/[0.06] bg-surface/40 p-2">
+            <div className="rounded-lg border border-white/[0.06] bg-surface/40 p-2">
+              <div className="mb-1.5 flex items-center justify-between px-1">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                  Files · {files.length}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => { setFiles([]); setWarning(''); }}
+                  className="inline-flex items-center gap-1 text-[11px] font-medium text-red-400 hover:text-red-300"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Delete all files
+                </button>
+              </div>
+              <div className="max-h-44 space-y-1 overflow-y-auto">
               {files.map((f, i) => {
                 const score = fileScores[i];
                 const bad = score && !score.relevant;
@@ -318,12 +344,19 @@ export default function RunSelector({
                       {bad ? 'irrelevant' : (score?.doc_type || f.kind)}
                       {f.size ? ` · ${fmtSize(f.size)}` : ''}
                     </span>
-                    <button type="button" onClick={() => removeFile(i)} className="shrink-0 text-slate-600 transition hover:text-red-400">
-                      <X className="h-3 w-3" />
+                    <button
+                      type="button"
+                      onClick={() => removeFile(i)}
+                      className="shrink-0 rounded p-1 text-red-400 hover:bg-red-500/10"
+                      title={`Delete ${f.filename}`}
+                      aria-label={`Delete ${f.filename}`}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 );
               })}
+              </div>
             </div>
           )}
 
@@ -378,11 +411,6 @@ export default function RunSelector({
                   <button type="button" onClick={removeIrrelevantFiles} className="hint-label cursor-help text-xs text-amber-400/90 transition hover:text-amber-300">
                     Remove irrelevant
                   </button>
-                </Hint>
-              )}
-              {files.length > 0 && (
-                <Hint text={UI_HINTS.clearFiles}>
-                  <button type="button" onClick={() => { setFiles([]); setWarning(''); }} className="hint-label cursor-help text-xs text-red-400/80 transition hover:text-red-400">Clear</button>
                 </Hint>
               )}
               <Hint text={UI_HINTS.runPipeline}>

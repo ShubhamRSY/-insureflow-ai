@@ -245,6 +245,17 @@ def _posture() -> SecurityPosture:
     return resolve_security_posture()
 
 
+def _require_demo_presets(current: TokenData | None) -> None:
+    from insureflow.security.posture import allow_demo_presets
+
+    signed_in = current is not None
+    if allow_demo_presets(signed_in=signed_in):
+        return
+    if not signed_in:
+        raise HTTPException(status_code=401, detail="Sign in to run sample data")
+    raise HTTPException(status_code=403, detail="Sample data is disabled on this deployment")
+
+
 # ── Auth Endpoints ──────────────────────────────────────────────
 
 
@@ -1861,8 +1872,7 @@ async def run_insurance_demo(
     background_tasks: BackgroundTasks,
     current: TokenData | None = Depends(get_current_user_optional),
 ) -> dict[str, Any]:
-    if _posture().is_hardened:
-        raise HTTPException(status_code=403, detail="Demo presets are disabled in BANK_MODE/production")
+    _require_demo_presets(current)
     org_id = current.org_id if current and current.org_id else "demo"
     preset_map: dict[str, tuple[str, Callable[[], SubmissionRequest]]] = {
         "pacific-coast": ("pacific_coast_acord.xml", _load_pacific_coast_submission),
@@ -2572,8 +2582,7 @@ async def run_mortgage_demo(
     background_tasks: BackgroundTasks,
     current: TokenData | None = Depends(get_current_user_optional),
 ) -> dict[str, Any]:
-    if _posture().is_hardened:
-        raise HTTPException(status_code=403, detail="Demo presets are disabled in BANK_MODE/production")
+    _require_demo_presets(current)
     org_id = current.org_id if current and current.org_id else "demo"
     presets = {
         "johnson-residential": (
@@ -2636,8 +2645,7 @@ def run_lending_demo(
     current: TokenData | None = Depends(get_current_user_optional),
 ) -> dict[str, Any]:
     """One-click lending sample data — full document package to underwritten decision."""
-    if _posture().is_hardened:
-        raise HTTPException(status_code=403, detail="Demo presets are disabled in BANK_MODE/production")
+    _require_demo_presets(current)
     org_id = current.org_id if current and current.org_id else "demo"
     presets: dict[str, dict[str, Any]] = {
         "blue-harbor-bakery": {
@@ -3007,10 +3015,10 @@ def list_jobs(
 @app.delete("/pipeline/jobs/{job_id}", status_code=204)
 def delete_job(
     job_id: str,
-    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+    current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> None:
-    if not job_store.delete(INSURANCE_NS, job_id, org_id=current.org_id):
-        raise HTTPException(status_code=404, detail="Job not found")
+    # Idempotent: gone jobs (expired Redis key, already deleted) still 204 so the desk can clean the list.
+    job_store.delete(INSURANCE_NS, job_id, org_id=current.org_id)
 
 
 @app.get("/pipeline/jobs/{job_id}/download")

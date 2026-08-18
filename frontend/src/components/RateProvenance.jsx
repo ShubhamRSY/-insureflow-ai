@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { asList } from '../lib/safe';
 
 const RATE_TYPE_LABELS = {
   loss_cost: 'Filed Loss Cost',
@@ -23,11 +24,11 @@ export default function RateProvenance({ metadata, className = '' }) {
 
   if (!metadata) return null;
 
-  const rateSources = metadata.rate_sources || [];
+  const rateSources = asList(metadata.rate_sources);
   const isFiledRate = metadata._is_filed_rate !== false;
   const rateBookPosture = metadata._rate_book_posture_audit || metadata.rate_book_posture || 'unknown';
-  const filedPremium = metadata._filed_premium || metadata.loss_cost || 0;
-  const adjustedPremium = metadata._adjusted_premium || metadata.adjusted_premium || 0;
+  const filedPremium = Number(metadata._filed_premium || metadata.loss_cost || 0) || 0;
+  const adjustedPremium = Number(metadata._adjusted_premium || metadata.adjusted_premium || 0) || 0;
   const aiMod = metadata._ai_mod_pct || 0;
   const rateBookId = metadata.rate_book_id || '';
   const rateBookGate = metadata.rate_book_gate || '';

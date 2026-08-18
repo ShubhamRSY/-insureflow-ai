@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import {
-  FileUp, FolderOpen, FlaskConical, Cable, Loader2, Home, Building2, Upload, X, FileText, Wallet,
+  FileUp, FolderOpen, FlaskConical, Cable, Loader2, Home, Building2, Upload, FileText, Wallet, Trash2,
 } from 'lucide-react';
 import { readFileForUpload } from '../lib/insuranceDocs';
 import { UI_HINTS } from '../lib/uiHints';
@@ -201,7 +201,19 @@ export default function PackageSourceHub({
             </div>
 
             {fileList.length > 0 && (
-              <ul className="space-y-1.5">
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Files · {fileList.length}</p>
+                  <button
+                    type="button"
+                    onClick={() => setFileList([])}
+                    className="inline-flex items-center gap-1 text-[11px] font-medium text-red-400 hover:text-red-300"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    Delete all files
+                  </button>
+                </div>
+                <ul className="space-y-1.5">
                 {fileList.map((f, i) => (
                   <li
                     key={`${f.name}-${f.size}-${i}`}
@@ -213,14 +225,15 @@ export default function PackageSourceHub({
                     <button
                       type="button"
                       onClick={() => removeFile(i)}
-                      className="shrink-0 rounded p-0.5 text-slate-500 hover:bg-white/10 hover:text-slate-200"
-                      aria-label={`Remove ${f.name}`}
+                      className="shrink-0 rounded p-1 text-red-400 hover:bg-red-500/10"
+                      aria-label={`Delete ${f.name}`}
                     >
-                      <X className="h-3.5 w-3.5" />
+                      <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </li>
                 ))}
-              </ul>
+                </ul>
+              </div>
             )}
           </div>
         )}

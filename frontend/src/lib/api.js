@@ -1,3 +1,5 @@
+import { displayText } from './safe';
+
 const TOKEN_KEY = 'insureflow_token';
 const USER_KEY = 'insureflow_user';
 
@@ -106,7 +108,16 @@ export const endpoints = {
   insuranceJobs: () => api('/pipeline/jobs'),
   insuranceJob: (id) => api(`/pipeline/jobs/${id}`),
   downloadJob: (id) => api(`/pipeline/jobs/${id}/download`),
-  deleteJob: (id) => api(`/pipeline/jobs/${id}`, { method: 'DELETE' }),
+  deleteJob: async (id) => {
+    try {
+      return await api(`/pipeline/jobs/${id}`, { method: 'DELETE' });
+    } catch (e) {
+      const msg = String(e?.message || '');
+      if (e instanceof AuthError) throw e;
+      if (msg.includes('404') || msg.toLowerCase().includes('not found')) return null;
+      throw e;
+    }
+  },
   retryJob: (id) => api(`/pipeline/jobs/${id}/retry`, { method: 'POST' }),
   runInsurance: (body) => api('/pipeline/run', { method: 'POST', body }),
   runInsuranceDemo: (preset) => api(`/api/demo/insurance/${preset}`, { method: 'POST' }),
@@ -435,13 +446,13 @@ export function extractInsurance(job) {
   const memo = r.memo || r.underwriting_memo || {};
   const quote = r.quote || {};
   const rawDecision = r.ai_decision || memo.decision || memo?.recommendation?.action || r.decision;
-  const decision = rawDecision ? String(rawDecision).toLowerCase() : null;
+  const decision = rawDecision ? displayText(rawDecision).toLowerCase() : null;
   return {
     decision,
     premium: quote.adjusted_premium ?? quote.base_premium ?? null,
     bundleId: r.bundle_id,
-    insuredName: r.insured_name || memo.insured_name || '',
-    memo: memo.summary || memo.executive_summary || memo.narrative || '',
+    insuredName: displayText(r.insured_name || memo.insured_name),
+    memo: displayText(memo.summary || memo.executive_summary || memo.narrative),
     memoData: memo,
     quote,
     workflowState: r.workflow_state,

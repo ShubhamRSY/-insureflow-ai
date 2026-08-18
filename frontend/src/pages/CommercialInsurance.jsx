@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, FileText, Shield } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Shield } from 'lucide-react';
 import { endpoints } from '../lib/api';
 import { commercialSelectionLabel, defaultCommercialSelection } from '../lib/commercialTaxonomy';
 import RunSelector from '../components/RunSelector';
+import SubmissionJobsList from '../components/SubmissionJobsList';
 
-export default function CommercialInsuranceHub({ presets, onRunDemo, onSubmit, jobs }) {
-  const navigate = useNavigate();
+export default function CommercialInsuranceHub({ presets, onRunDemo, onSubmit, jobs, onDeleteJob, onDeleteAllJobs }) {
   const [hub, setHub] = useState(null);
   const [error, setError] = useState('');
   const [commercialSelection, setCommercialSelection] = useState(null);
@@ -34,7 +34,6 @@ export default function CommercialInsuranceHub({ presets, onRunDemo, onSubmit, j
     );
   }
 
-  const runs = (jobs || []).slice(0, 10);
   const selectionLabel = commercialSelectionLabel(commercialSelection);
 
   return (
@@ -89,59 +88,19 @@ export default function CommercialInsuranceHub({ presets, onRunDemo, onSubmit, j
         </div>
       </section>
 
-      <section className="glass-card overflow-hidden">
-        <div className="flex items-center justify-between border-b border-white/[0.06] px-5 py-4">
-          <div>
-            <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-100">
-              <FileText className="h-4 w-4 text-slate-500" /> Your submissions
-            </h2>
-            <p className="mt-0.5 text-xs text-slate-500">Open a completed run for memo, quote, and audit trail.</p>
-          </div>
-          <Link to="/insurance" className="text-xs text-brand hover:underline">All jobs →</Link>
-        </div>
-        {!runs.length ? (
-          <div className="px-5 py-10 text-center">
-            <p className="text-sm text-slate-400">No submissions yet.</p>
-            <p className="mt-1 text-xs text-slate-500">
-              Upload files above for{' '}
-              <span className="text-slate-300">{selectionLabel || 'a commercial line'}</span>
-              {' '}to start.
-            </p>
-          </div>
-        ) : (
-          <div className="divide-y divide-white/[0.04]">
-            {runs.map(({ id, job }) => (
-              <button
-                key={id}
-                type="button"
-                onClick={() => navigate(`/insurance/${id}`)}
-                className="flex w-full items-center justify-between gap-3 px-5 py-3.5 text-left transition hover:bg-white/[0.02]"
-              >
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-slate-200">
-                    {job?.name || job?.results?.insured_name || id}
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    {job?.results?.commercial_coverage_name
-                      ? `${job?.results?.commercial_product_name || 'Commercial'} · ${job.results.commercial_coverage_name}`
-                      : (job?.results?.commercial_product_name || job?.results?.insurance_line || 'Commercial')}
-                  </p>
-                </div>
-                <div className="flex shrink-0 items-center gap-3">
-                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium capitalize ${
-                    job?.status === 'completed'
-                      ? 'bg-emerald-500/10 text-emerald-400'
-                      : 'bg-white/[0.06] text-slate-400'
-                  }`}>
-                    {job?.status || '—'}
-                  </span>
-                  <ArrowRight className="h-3.5 w-3.5 text-slate-600" />
-                </div>
-              </button>
-            ))}
-          </div>
-        )}
-      </section>
+      <SubmissionJobsList
+        jobs={jobs}
+        fallbackLine="Commercial"
+        emptyHint={
+          <>
+            Upload files above for{' '}
+            <span className="text-slate-300">{selectionLabel || 'a commercial line'}</span>
+            {' '}to start.
+          </>
+        }
+        onDeleteJob={onDeleteJob}
+        onDeleteAll={onDeleteAllJobs}
+      />
     </div>
   );
 }

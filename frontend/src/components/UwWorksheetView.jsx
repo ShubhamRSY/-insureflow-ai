@@ -1,4 +1,5 @@
 import { fmtCurrency } from '../lib/api';
+import { asList, displayText, fmtFixed } from '../lib/safe';
 
 /** UW-facing rate worksheet — no internal eval scores. */
 export default function UwWorksheetView({ worksheet, validatedTerms }) {
@@ -17,10 +18,10 @@ export default function UwWorksheetView({ worksheet, validatedTerms }) {
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Underwriting worksheet</p>
           <p className="mt-1 text-sm font-medium text-slate-100">
-            {worksheet.product}
-            {worksheet.coverage ? ` · ${worksheet.coverage}` : ''}
+            {displayText(worksheet.product)}
+            {worksheet.coverage ? ` · ${displayText(worksheet.coverage)}` : ''}
           </p>
-          <p className="mt-0.5 text-[11px] text-slate-500">{worksheet.rating_method?.replace(/_/g, ' ')}</p>
+          <p className="mt-0.5 text-[11px] text-slate-500">{displayText(worksheet.rating_method).replace(/_/g, ' ')}</p>
         </div>
         {validated.validated_at && (
           <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-400">
@@ -51,7 +52,7 @@ export default function UwWorksheetView({ worksheet, validatedTerms }) {
         </div>
         <div>
           <p className="font-medium text-slate-400">Rate per $100 exposure</p>
-          <p className="text-slate-200">${(terms.rate_per_100_exposure || 0).toFixed(4)}</p>
+          <p className="text-slate-200">${fmtFixed(terms.rate_per_100_exposure, 4) || '0.0000'}</p>
         </div>
         {worksheet.loss_experience && (
           <>
@@ -60,7 +61,7 @@ export default function UwWorksheetView({ worksheet, validatedTerms }) {
               <p className="text-slate-200">
                 {worksheet.loss_experience.known === false
                   ? 'Unknown — no earned/written premium'
-                  : `${(worksheet.loss_experience.loss_ratio * 100).toFixed(1)}%`}
+                  : `${fmtFixed((worksheet.loss_experience.loss_ratio || 0) * 100, 1) || '0.0'}%`}
               </p>
             </div>
             <div>
@@ -71,7 +72,7 @@ export default function UwWorksheetView({ worksheet, validatedTerms }) {
         )}
       </div>
 
-      {(worksheet.premium_buildup || []).length > 0 && (
+      {(asList(worksheet.premium_buildup).length > 0) && (
         <div>
           <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500">Premium buildup</p>
           <div className="overflow-x-auto">
@@ -85,12 +86,12 @@ export default function UwWorksheetView({ worksheet, validatedTerms }) {
                 </tr>
               </thead>
               <tbody>
-                {worksheet.premium_buildup.map((row) => (
-                  <tr key={row.step} className="border-b border-white/[0.03] text-slate-300">
-                    <td className="py-1.5 pr-2">{row.step}</td>
-                    <td className="py-1.5 pr-2 text-slate-500">{row.basis}</td>
-                    <td className="py-1.5 pr-2">{row.factor}</td>
-                    <td className="py-1.5">{row.modifier_pct ? `${row.modifier_pct.toFixed(1)}%` : '—'}</td>
+                {asList(worksheet.premium_buildup).map((row, i) => (
+                  <tr key={row.step || i} className="border-b border-white/[0.03] text-slate-300">
+                    <td className="py-1.5 pr-2">{displayText(row.step)}</td>
+                    <td className="py-1.5 pr-2 text-slate-500">{displayText(row.basis)}</td>
+                    <td className="py-1.5 pr-2">{displayText(row.factor)}</td>
+                    <td className="py-1.5">{fmtFixed(row.modifier_pct, 1) ? `${fmtFixed(row.modifier_pct, 1)}%` : '—'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -102,7 +103,7 @@ export default function UwWorksheetView({ worksheet, validatedTerms }) {
       {worksheet.uw_focus && (
         <p className="mt-4 text-[11px] leading-relaxed text-slate-500">
           <span className="font-medium text-slate-400">UW focus: </span>
-          {worksheet.uw_focus}
+          {displayText(worksheet.uw_focus)}
         </p>
       )}
     </div>

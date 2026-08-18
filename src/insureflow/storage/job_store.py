@@ -82,9 +82,11 @@ class RedisJobStore(JobStore):
 
     def delete(self, namespace: str, job_id: str, org_id: str = "default") -> bool:
         key = self._key(namespace, job_id, org_id)
+        index = self._index_key(namespace, org_id)
+        in_index = bool(self.client.sismember(index, job_id))
         removed = self.client.delete(key)
-        self.client.srem(self._index_key(namespace, org_id), job_id)
-        return bool(removed)
+        self.client.srem(index, job_id)
+        return bool(removed) or in_index
 
     def list_ids(self, namespace: str, org_id: str = "default") -> list[str]:
         return sorted(cast(set[Any], self.client.smembers(self._index_key(namespace, org_id))))

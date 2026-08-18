@@ -7,8 +7,10 @@ import {
 import { useState } from 'react';
 import { auth } from '../lib/api';
 import { INSURANCE_SECTIONS, INSURANCE_NAV_CHILDREN, insuranceSectionAccent } from '../lib/insuranceSections';
+import { displayText } from '../lib/safe';
 import ThemeToggle from './ThemeToggle';
 import StateSelector from './StateSelector';
+import ErrorBoundary from './ErrorBoundary';
 
 const SECTION_DOT = Object.fromEntries(
   INSURANCE_SECTIONS.map((section) => [section.id, insuranceSectionAccent(section.accent).dot]),
@@ -352,17 +354,17 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
             {health && (
               <div className="mb-3 flex items-center gap-2 rounded-xl bg-surface-overlay px-3 py-2 text-xs text-slate-400">
                 <span className={`h-2 w-2 rounded-full ${health.overall === 'healthy' ? 'bg-emerald-400' : health.overall === 'degraded' ? 'bg-amber-400' : 'bg-red-400'}`} />
-                {health.overall} · {health.llm_mode}
+                {displayText(health.overall)} · {displayText(health.llm_mode)}
               </div>
             )}
             {user ? (
               <div className="flex items-center gap-2">
                 <div className="keep-white flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-brand to-indigo-500 text-xs font-bold text-white">
-                  {user.username?.slice(0, 2).toUpperCase()}
+                  {displayText(user.username)?.slice(0, 2).toUpperCase()}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{user.username}</p>
-                  <p className="truncate text-[10px] text-slate-500">{user.role} · {user.org_id}</p>
+                  <p className="truncate text-sm font-medium">{displayText(user.username)}</p>
+                  <p className="truncate text-[10px] text-slate-500">{displayText(user.role)} · {displayText(user.org_id)}</p>
                 </div>
                 <button type="button" onClick={logout} className="rounded-lg p-1.5 text-slate-500 hover:bg-white/5 hover:text-slate-300">
                   <LogOut className="h-4 w-4" />
@@ -416,7 +418,9 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
               Named insureds and PII are stripped before any LLM API call — every insurance section, mortgage, and lending.
             </div>
           )}
-          <Outlet context={{ user, onLogin }} />
+          <ErrorBoundary resetKey={pathname}>
+            <Outlet context={{ user, onLogin }} />
+          </ErrorBoundary>
         </main>
 
         <footer className="border-t border-white/[0.06] px-6 py-3 text-center text-xs text-slate-400">

@@ -3,6 +3,7 @@ import {
   FileText, MapPin, CheckCircle2, AlertTriangle, XCircle, Eye,
   ChevronDown, ChevronRight, ExternalLink, Copy, Search,
 } from 'lucide-react';
+import { asBBox, asList, displayText, safeLower } from '../lib/safe';
 
 const VERIFICATION_COLORS = {
   verified: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20', icon: CheckCircle2 },
@@ -55,7 +56,7 @@ function SourceBadge({ pageNumber, bbox, sourceRef, sourceText, extractionMethod
         <button
           type="button"
           className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-sky-500/10 text-sky-300 border border-sky-500/20 hover:bg-sky-500/20 transition-colors"
-          title={bbox ? `Page ${pageNumber}, region [${bbox.map((b) => b.toFixed(2)).join(', ')}]` : `Page ${pageNumber}`}
+          title={asBBox(bbox) ? `Page ${pageNumber}, region [${asBBox(bbox).map((b) => b.toFixed(2)).join(', ')}]` : `Page ${pageNumber}`}
         >
           <FileText size={9} />
           p. {pageNumber}
@@ -72,7 +73,7 @@ function SourceBadge({ pageNumber, bbox, sourceRef, sourceText, extractionMethod
 }
 
 function FieldRow({ field, isExpanded, onToggle, onJumpToPage }) {
-  const fieldName = field.field_name || field.name || '';
+  const fieldName = displayText(field.field_name || field.name);
   const value = field.value ?? '';
   const confidence = field.confidence;
   const pageNumber = field.page_number;
@@ -80,9 +81,9 @@ function FieldRow({ field, isExpanded, onToggle, onJumpToPage }) {
   const sourceRef = field.source_ref || '';
   const context = field.context || '';
   const extractionMethod = field.extraction_method || '';
-  const verificationStatus = field.verification_status || '';
+  const verificationStatus = displayText(field.verification_status);
   const sourceText = field.source_text || '';
-  const isCritical = CRITICAL_FIELDS.has(fieldName.toLowerCase());
+  const isCritical = CRITICAL_FIELDS.has(safeLower(fieldName));
 
   const vStyle = VERIFICATION_COLORS[verificationStatus] || VERIFICATION_COLORS.unverified;
   const VIcon = vStyle.icon;
@@ -166,9 +167,9 @@ function FieldRow({ field, isExpanded, onToggle, onJumpToPage }) {
             </p>
           )}
 
-          {bbox && (
+          {asBBox(bbox) && (
             <p className="text-[10px] text-slate-600 font-mono">
-              Bbox: [{bbox.map((b) => b.toFixed(3)).join(', ')}]
+              Bbox: [{asBBox(bbox).map((b) => b.toFixed(3)).join(', ')}]
             </p>
           )}
         </div>
@@ -235,10 +236,12 @@ export default function ProvenancePanel({ job, onJumpToPage }) {
 
   const results = job?.results || {};
   const memo = results.memo || {};
-  const extractedFields = results.extracted_fields || {};
+  const extractedFields = (results.extracted_fields && typeof results.extracted_fields === 'object')
+    ? results.extracted_fields
+    : {};
   const provenance = results.provenance || {};
   const verification = results.verification || {};
-  const citationIssues = verification.citation_issues || [];
+  const citationIssues = asList(verification.citation_issues);
 
   const allFields = useMemo(() => {
     const fields = [];
@@ -267,7 +270,7 @@ export default function ProvenancePanel({ job, onJumpToPage }) {
       }
     });
 
-    if (memo.findings) {
+    if (Array.isArray(memo.findings)) {
       memo.findings.forEach((f, i) => {
         fields.push({
           field_name: f.field_path || `finding_${i}`,
@@ -287,8 +290,8 @@ export default function ProvenancePanel({ job, onJumpToPage }) {
     if (!searchQuery) return allFields;
     const q = searchQuery.toLowerCase();
     return allFields.filter((f) =>
-      f.field_name?.toLowerCase().includes(q) ||
-      String(f.value).toLowerCase().includes(q)
+      safeLower(f.field_name).includes(q) ||
+      displayText(f.value).toLowerCase().includes(q)
     );
   }, [allFields, searchQuery]);
 
@@ -303,7 +306,7 @@ export default function ProvenancePanel({ job, onJumpToPage }) {
     };
 
     filteredFields.forEach((f) => {
-      const name = (f.field_name || '').toLowerCase();
+      const name = safeLower(f.field_name);
       if (CRITICAL_FIELDS.has(name)) {
         groups.critical.push(f);
       } else if (name.includes('premium') || name.includes('rate') || name.includes('cost') || name.includes('fee') || name.includes('tax')) {

@@ -79,12 +79,13 @@ class FileJobStore(JobStore):
     def delete(self, namespace: str, job_id: str, org_id: str = "default") -> bool:
         with self._lock:
             path = self._path(namespace, job_id, org_id)
+            ids = self._read_index(namespace, org_id)
+            was_listed = job_id in ids
             existed = path.exists()
             if existed:
                 path.unlink()
-            ids = [i for i in self._read_index(namespace, org_id) if i != job_id]
-            self._write_index(namespace, org_id, ids)
-            return existed
+            self._write_index(namespace, org_id, [i for i in ids if i != job_id])
+            return existed or was_listed
 
     def list_ids(self, namespace: str, org_id: str = "default") -> list[str]:
         return sorted(self._read_index(namespace, org_id))

@@ -1,4 +1,5 @@
 import { extractInsurance } from './api';
+import { asList, displayText, safeLower } from './safe';
 
 const MOD_LABELS = {
   iso_base_loss_cost: 'ISO base loss cost',
@@ -57,10 +58,10 @@ export function buildPipelineStages(job) {
   const r = job?.results || {};
   const memo = r.memo || {};
   const recon = r.reconciliation || {};
-  const discrepancies = recon.discrepancies || [];
-  const criticalDisc = discrepancies.filter((d) => (d.severity || '').toLowerCase() === 'critical');
+  const discrepancies = asList(recon.discrepancies);
+  const criticalDisc = discrepancies.filter((d) => safeLower(d?.severity) === 'critical');
   const appetiteDecline = r.appetite_filter_passed === false && !r.appetite_needs_uw_referral;
-  const agentFindings = (memo.key_findings || []).filter((f) => f.category !== 'external_oracle');
+  const agentFindings = asList(memo.key_findings).filter((f) => f.category !== 'external_oracle');
 
   const stages = [
     {
@@ -206,14 +207,14 @@ const PROPERTY_FINDING_MARKERS = [
 ];
 
 function isPropertyOnlyFinding(f) {
-  const blob = `${f?.title || ''} ${f?.description || ''}`.toLowerCase();
+  const blob = `${displayText(f?.title)} ${displayText(f?.description)}`.toLowerCase();
   return PROPERTY_FINDING_MARKERS.some((m) => blob.includes(m));
 }
 
 function dedupeFindings(findings) {
   const seen = new Set();
-  return (findings || []).filter((f) => {
-    const key = `${(f.title || '').toLowerCase()}|${(f.severity || '').toLowerCase()}`;
+  return asList(findings).filter((f) => {
+    const key = `${safeLower(f?.title)}|${safeLower(f?.severity)}`;
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
@@ -222,7 +223,7 @@ function dedupeFindings(findings) {
 
 export function buildAgentFindings(job) {
   const memo = job?.results?.memo || {};
-  const line = (job?.results?.insurance_line || job?.results?.product_line || '').toLowerCase();
+  const line = safeLower(job?.results?.insurance_line || job?.results?.product_line);
   const isLife = line === 'life';
   const keep = (f) => f.category !== 'external_oracle' && !(isLife && isPropertyOnlyFinding(f));
   const sections = [
@@ -235,15 +236,15 @@ export function buildAgentFindings(job) {
     .map(([key, label]) => ({
       key,
       label,
-      findings: dedupeFindings((memo[key] || []).filter(keep)),
+      findings: dedupeFindings(asList(memo[key]).filter(keep)),
     }))
     .filter((s) => s.findings.length > 0);
   // Only surface key_findings when agent buckets are empty (avoid duplicates).
-  if (built.length === 0 && (memo.key_findings || []).length > 0) {
+  if (built.length === 0 && asList(memo.key_findings).length > 0) {
     return [{
       key: 'key_findings',
       label: 'Key Findings',
-      findings: dedupeFindings((memo.key_findings || []).filter(keep)),
+      findings: dedupeFindings(asList(memo.key_findings).filter(keep)),
     }];
   }
   return built;
@@ -253,8 +254,8 @@ export function buildProvenanceView(job) {
   const r = job?.results || {};
   const prov = r.provenance || {};
   const summary = r.provenance_summary || {};
-  const nodes = prov.nodes || {};
-  const line = (r.insurance_line || r.product_line || '').toLowerCase();
+  const nodes = (prov.nodes && typeof prov.nodes === 'object' && !Array.isArray(prov.nodes)) ? prov.nodes : {};
+  const line = safeLower(r.insurance_line || r.product_line);
   const fields = Object.entries(nodes).slice(0, 8).map(([field, nodeList]) => {
     const node = (nodeList || [])[0] || {};
     const source = node.source || {};
@@ -277,7 +278,7 @@ export function buildProvenanceView(job) {
 }
 
 export function buildCheckpoints(job) {
-  return job?.results?.human_checkpoints || [];
+  return asList(job?.results?.human_checkpoints);
 }
 
 function formatCompact(n) {
@@ -291,12 +292,12 @@ function formatCompact(n) {
 
 export function buildSubmissionQuality(job) {
   const r = job?.results || {};
-  const status = (job?.status || '').toLowerCase();
+  const status = safeLower(job?.status);
   const recon = r.reconciliation || {};
-  const discrepancies = recon.discrepancies || [];
-  const criticalDisc = discrepancies.filter((d) => (d.severity || '').toLowerCase() === 'critical');
+  const discrepancies = asList(recon.discrepancies);
+  const criticalDisc = discrepancies.filter((d) => safeLower(d?.severity) === 'critical');
   const memo = r.memo || {};
-  const line = (r.insurance_line || r.product_line || '').toLowerCase();
+  const line = safeLower(r.insurance_line || r.product_line);
   const isLife = line === 'life';
   const checklist = r.document_checklist || {};
 
@@ -391,9 +392,9 @@ export function buildVerificationSummary(job) {
   const memo = r.memo || {};
   const quoteFull = r.quote_full || {};
   const meta = quoteFull.metadata || {};
-  const line = (r.insurance_line || r.product_line || '').toLowerCase();
+  const line = safeLower(r.insurance_line || r.product_line);
   const isLife = line === 'life';
-  const oracleFindings = (memo.key_findings || []).filter((f) => f.category === 'external_oracle');
+  const oracleFindings = asList(memo.key_findings).filter((f) => f.category === 'external_oracle');
   const medical = meta.medical || {};
 
   return {
@@ -421,7 +422,7 @@ export function buildPricingBreakdown(job) {
   const meta = quoteFull.metadata || {};
   const base = quote.base_premium ?? quoteFull.base_premium ?? null;
   const adjusted = quote.adjusted_premium ?? quoteFull.adjusted_premium ?? null;
-  const mods = quoteFull.schedule_modifications || [];
+  const mods = asList(quoteFull.schedule_modifications);
 
   const premiumMods = mods
     .filter((m) => m.modifier_pct !== 0 || ['cope_schedule_rating', 'market_cycle_adjustment', 'loss_experience'].includes(m.name))
@@ -466,26 +467,47 @@ export function buildReconciliationView(job) {
     matchedFields: recon.matched_fields ?? 0,
     totalFields: recon.total_fields ?? 0,
     overallStatus: recon.overall_status || 'pending',
-    discrepancies: recon.discrepancies || [],
+    discrepancies: asList(recon.discrepancies),
   };
 }
 
 export function getJourneyContext(job) {
-  const s = extractInsurance(job);
-  return {
-    stages: buildPipelineStages(job),
-    miniStages: buildMiniStripStages(job),
-    quality: buildSubmissionQuality(job),
-    verification: buildVerificationSummary(job),
-    pricing: buildPricingBreakdown(job),
-    reconciliation: buildReconciliationView(job),
-    agentSections: buildAgentFindings(job),
-    provenance: buildProvenanceView(job),
-    checkpoints: buildCheckpoints(job),
-    bundleId: s.bundleId,
-    insuredName: s.insuredName,
-    processing: job?.status === 'processing',
-    failed: job?.status === 'failed',
-    currentStage: job?.progress?.current_stage || null,
-  };
+  try {
+    const s = extractInsurance(job);
+    return {
+      stages: buildPipelineStages(job),
+      miniStages: buildMiniStripStages(job),
+      quality: buildSubmissionQuality(job),
+      verification: buildVerificationSummary(job),
+      pricing: buildPricingBreakdown(job),
+      reconciliation: buildReconciliationView(job),
+      agentSections: buildAgentFindings(job),
+      provenance: buildProvenanceView(job),
+      checkpoints: buildCheckpoints(job),
+      bundleId: s.bundleId,
+      insuredName: s.insuredName,
+      processing: job?.status === 'processing',
+      failed: job?.status === 'failed',
+      currentStage: job?.progress?.current_stage || null,
+    };
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('getJourneyContext failed', err);
+    return {
+      stages: [],
+      miniStages: [],
+      quality: { score: null, grade: '—', gradeColor: 'text-slate-500', issues: [], pending: true, lob: null },
+      verification: { oracleCount: null, copeGrade: null, matchRate: null, isLife: false, lifeClass: null, tobacco: null, filingId: null },
+      pricing: { base: null, adjusted: null, premiumMods: [] },
+      reconciliation: { discrepancies: [], matchRate: null, matchedFields: 0, totalFields: 0, overallStatus: 'pending' },
+      agentSections: [],
+      provenance: { totalFields: 0, verifiedFields: 0, contradictedFields: 0, fields: [], isLife: false },
+      checkpoints: [],
+      bundleId: job?.results?.bundle_id || null,
+      insuredName: '',
+      processing: job?.status === 'processing',
+      failed: job?.status === 'failed',
+      currentStage: null,
+    };
+  }
 }
