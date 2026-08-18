@@ -1,0 +1,131 @@
+metadata:
+  description: "Regulatory source configuration for automated monitoring"
+  last_updated: "2026-08-17"
+  notes: "Free sources only — no commercial APIs required"
+
+sources:
+  naic_content_api:
+    name: "NAIC Content API"
+    type: json_api
+    base_url: "https://content.naic.org/jsonapi"
+    auth: none
+    rate_limit_rpm: 60
+    poll_interval_hours: 24
+    enabled: true
+    endpoints:
+      - path: "/node/article"
+        description: "NAIC newsroom articles — regulatory announcements"
+        filter: "field-topics.name=Insurance"
+      - path: "/node/model_law"
+        description: "NAIC model laws — adoption updates"
+      - path: "/node/committees"
+        description: "Committee meeting notes — regulatory proposals"
+    changelog:
+      - field: "attributes.title"
+        tracks: "regulatory changes"
+      - field: "attributes.changed"
+        tracks: "modification timestamps"
+
+  naic_model_laws:
+    name: "NAIC Model Law Corpus"
+    type: web_scrape
+    base_url: "https://content.naic.org/model-laws"
+    auth: none
+    poll_interval_hours: 168  # weekly
+    enabled: true
+    scrape_method: "static_html"
+    description: "Download model law PDFs and parse state adoption tables"
+    notes: "Each model law page links to a state adoption page PDF"
+
+  texas_tdi:
+    name: "Texas Department of Insurance"
+    type: rss
+    feeds:
+      - url: "https://www.tdi.texas.gov/bulletins/index.rss"
+        name: "TDI Bulletins"
+        description: "Rate filings, form approvals, enforcement actions"
+      - url: "https://www.tdi.texas.gov/news/index.rss"
+        name: "TDI News Releases"
+        description: "Regulatory announcements and policy changes"
+    poll_interval_hours: 12
+    enabled: true
+    auth: none
+
+  nyc_dfs:
+    name: "New York Department of Financial Services"
+    type: govdelivery
+    account: "NYDFS"
+    poll_interval_hours: 24
+    enabled: true
+    url: "https://content.govdelivery.com/accounts/NYDFS/"
+    description: "DFS circular letters, regulations, enforcement"
+
+  florida_oir:
+    name: "Florida Office of Insurance Regulation"
+    type: govdelivery
+    account: "FLOIR"
+    poll_interval_hours: 24
+    enabled: true
+    url: "https://content.govdelivery.com/accounts/FLOIR/"
+    description: "OIR bulletins, emergency orders, rate filings"
+
+  california_cdi:
+    name: "California Department of Insurance"
+    type: web_scrape
+    base_url: "https://www.insurance.ca.gov"
+    auth: none
+    poll_interval_hours: 24
+    enabled: true
+    scrape_method: "html_parser"
+    description: "CDI bulletins, proposed regulations, commissioner orders"
+    subpages:
+      - "/01-consumers/101-help/30-bulletins.cfm"
+      - "/05-about/02-cd/04-statutory-programs.cfm"
+
+  naic_serff:
+    name: "NAIC SERFF Filing System"
+    type: api
+    base_url: "https://naic.org/serff/"
+    auth: api_key
+    auth_source: "api@naic.org"
+    poll_interval_hours: 6
+    enabled: false  # requires contract
+    description: "Rate/form filing status — contract-gated"
+    notes: "Email api@naic.org to request API access"
+
+  federal_register:
+    name: "Federal Register"
+    type: rss
+    feeds:
+      - url: "https://www.federalregister.gov/api/v1/documents.json?conditions%5Btopic%5D%5B%5D=insurance"
+        name: "Federal Insurance Regulations"
+        description: "FIO actions, federal insurance mandates"
+    poll_interval_hours: 24
+    enabled: true
+    auth: none
+
+  insureai_wire:
+    name: "InsureAI Wire"
+    type: rss
+    feeds:
+      - url: "https://insureaiwire.com/rss.xml"
+        name: "AI Insurance Regulation Updates"
+        description: "State AI model bulletin adoption tracker"
+    poll_interval_hours: 48
+    enabled: true
+    auth: none
+
+# Rule freshness thresholds
+freshness:
+  critical_days: 90     # rules older than this need immediate review
+  warning_days: 180     # rules older than this are flagged
+  stale_days: 365       # rules older than this are considered stale
+  # States with known high regulatory activity
+  high_activity_states:
+    - FL  # Hurricane season, tort reform
+    - CA  # Prop 103, privacy, climate
+    - NY  # DFS aggressive enforcement
+    - TX  # TDI active bulletins
+    - IL  # TILA, class action trends
+    - PA  # Workers comp reform
+    - NJ  # Health mandate changes

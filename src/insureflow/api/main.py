@@ -1051,6 +1051,65 @@ async def list_regulatory_lines() -> dict[str, Any]:
     }
 
 
+@app.get("/api/regulatory/health")
+async def regulatory_health() -> dict[str, Any]:
+    """Regulatory freshness dashboard — staleness scores per line/state."""
+    from insureflow.regulatory.monitor import RegulatoryMonitor
+
+    monitor = RegulatoryMonitor()
+    freshness = monitor.compute_freshness()
+    sources = monitor.get_sources()
+    active_sources = [s for s in sources.values() if s["enabled"]]
+
+    total_states = 0
+    total_fresh = 0
+    total_stale = 0
+    total_critical = 0
+    for line_data in freshness.values():
+        total_states += line_data["total_states"]
+        total_fresh += line_data["fresh"]
+        total_stale += line_data["stale"]
+        total_critical += line_data["critical"]
+
+    overall_score = round(total_fresh / max(total_states, 1) * 100, 1)
+
+    return {
+        "overall_freshness_score": overall_score,
+        "total_states": total_states,
+        "fresh": total_fresh,
+        "stale": total_stale,
+        "critical": total_critical,
+        "active_sources": len(active_sources),
+        "sources": sources,
+        "lines": freshness,
+    }
+
+
+@app.get("/api/regulatory/changelog")
+async def regulatory_changelog(
+    state: str = "",
+    line: str = "",
+    since: str = "",
+    unreviewed_only: bool = False,
+) -> dict[str, Any]:
+    """Regulatory change log — tracks all rule modifications with timestamps."""
+    from insureflow.regulatory.monitor import RegulatoryMonitor
+
+    monitor = RegulatoryMonitor()
+    if unreviewed_only:
+        changes = monitor.get_unreviewed_changes()
+    else:
+        changes = monitor.get_changelog(
+            state_code=state,
+            line_of_business=line,
+            since=since,
+        )
+    return {
+        "count": len(changes),
+        "changes": changes,
+    }
+
+
 @app.get("/api/demo/presets")
 async def demo_presets() -> dict[str, Any]:
     """Available one-click demo submissions for the dashboard."""
