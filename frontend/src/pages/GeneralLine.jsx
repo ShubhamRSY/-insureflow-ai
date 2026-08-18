@@ -111,7 +111,7 @@ export default function GeneralLinePage({ presets, onRunDemo, onSubmit }) {
           <span className="text-slate-700">/</span>
           <Link to="/insurance" className="text-slate-600 transition hover:text-slate-300">Insurance</Link>
           <span className="text-slate-700">/</span>
-          <Link to="/insurance/general" className="text-slate-600 transition hover:text-slate-300">General / Non-Life</Link>
+          <Link to="/insurance/general" className="text-slate-600 transition hover:text-slate-300">Personal Lines</Link>
           <span className="text-slate-700">/</span>
           <span className="font-semibold text-slate-200">{line.name}</span>
         </nav>
@@ -120,7 +120,7 @@ export default function GeneralLinePage({ presets, onRunDemo, onSubmit }) {
             <Icon className="h-6 w-6" />
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-sky-400">General / Non-Life</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-sky-400">Personal Lines</p>
             <h1 className="text-3xl font-bold tracking-tight text-slate-100">{line.name}</h1>
             <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">{line.description}</p>
           </div>

@@ -145,9 +145,9 @@ NAV_DESKTOP = """        <nav class="nav-desktop" aria-label="Main">
               <p class="nav-drop-label">Insurance book</p>
               <a href="/dashboard/insurance/sections/life">Life <span class="nav-pill live">Live</span></a>
               <a href="/dashboard/insurance/sections/health">Health <span class="nav-pill">Catalog</span></a>
-              <a href="/dashboard/insurance/sections/general">General / Non-Life</a>
-              <a href="/dashboard/insurance/sections/commercial">Commercial <span class="nav-pill live">Live</span></a>
-              <a href="/dashboard/insurance/sections/specialty">Specialty</a>
+              <a href="/dashboard/insurance/sections/general">Personal Lines</a>
+              <a href="/dashboard/insurance/sections/commercial">Commercial Lines <span class="nav-pill live">Live</span></a>
+              <a href="/dashboard/insurance/sections/specialty">Specialty Lines</a>
               <a href="/underwriting#insurance-book">All 12 sections</a>
               <p class="nav-drop-label">Other desks</p>
               <a href="/underwriting#audience">Mortgage</a>
@@ -209,7 +209,7 @@ NAV_MOBILE = """    <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile">
         <a href="/underwriting#uw-desks">Line &amp; staff desks</a>
         <a href="/dashboard/insurance/sections/life">Life</a>
         <a href="/dashboard/insurance/sections/health">Health</a>
-        <a href="/dashboard/insurance/sections/general">General / Non-Life</a>
+        <a href="/dashboard/insurance/sections/general">Personal Lines</a>
         <a href="/dashboard/insurance/sections/commercial">Commercial</a>
         <a href="/underwriting#insurance-book">All 12 sections</a>
         <a href="/underwriting#audience">Mortgage &amp; lending</a>
@@ -851,7 +851,7 @@ def insurance_book_section() -> str:
         ),
         (
             3,
-            "General / Non-Life",
+            "Personal Lines",
             "Catalog",
             "Motor, home, travel, marine, fire, cyber — visible coverage, honest pricing.",
             [
@@ -863,7 +863,7 @@ def insurance_book_section() -> str:
         ),
         (
             4,
-            "Business / Commercial",
+            "Commercial Lines",
             "Live",
             "The commercial desk most MGAs live in — property, liability, and management lines.",
             [
@@ -875,7 +875,7 @@ def insurance_book_section() -> str:
         ),
         (
             5,
-            "Other / Specialty",
+            "Specialty Lines",
             "Catalog",
             "Crop, livestock, pet, events, title, mortgage guarantee.",
             [
@@ -887,7 +887,7 @@ def insurance_book_section() -> str:
         ),
         (
             6,
-            "By Provider Type",
+            "Admitted, Surplus &amp; Reinsurance",
             "Catalog",
             "Public vs private onboarding and B2B reinsurance structures.",
             [
@@ -899,7 +899,7 @@ def insurance_book_section() -> str:
         ),
         (
             7,
-            "Engineering",
+            "Engineering &amp; Construction",
             "Live",
             "Contractors&rsquo; all risk, erection, machinery breakdown, delay in start-up.",
             [
@@ -923,7 +923,7 @@ def insurance_book_section() -> str:
         ),
         (
             9,
-            "Fidelity &amp; Burglary",
+            "Crime: Fidelity &amp; Burglary",
             "Live",
             "Employee dishonesty and third-party theft covers.",
             [
@@ -947,7 +947,7 @@ def insurance_book_section() -> str:
         ),
         (
             11,
-            "Niche Liability",
+            "Excess &amp; Niche Liability",
             "Live",
             "Umbrella, pollution, K&amp;R, political risk, and terrorism.",
             [
@@ -959,7 +959,7 @@ def insurance_book_section() -> str:
         ),
         (
             12,
-            "Warranty / Financial / Emerging",
+            "Warranty, Surety &amp; Emerging",
             "Live",
             "Surety, credit life, gadget, micro, UBI, and personal cyber.",
             [

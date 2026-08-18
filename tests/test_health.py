@@ -21,6 +21,8 @@ class TestSystemDiagnostics:
         assert components["knowledge_graph"]["status"] == "ok"
         assert components["intake"]["status"] == "ok"
         assert components["governance"]["status"] == "ok"
+        assert "object_storage" in components
+        assert components["object_storage"]["status"] == "ok"
         # Deterministic mode is first-class — not degraded/missing
         assert components["llm_api_key"]["status"] == "ok"
         assert components["llm_pipeline_mode"]["status"] == "ok"

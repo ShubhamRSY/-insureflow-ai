@@ -322,6 +322,16 @@ html.theme-light .nav-link-active {
   color: #1d4ed8;
 }
 
+html.theme-light .bg-gray-900,
+html.theme-light .bg-gray-950 {
+  background-color: #ffffff !important;
+}
+
+html.theme-light .placeholder-white\/30::placeholder,
+html.theme-light .placeholder-white\/40::placeholder {
+  color: #64748b !important;
+}
+
 html.theme-light .hint-bubble {
   background-color: #0f172a !important;
   color: #f8fafc !important;

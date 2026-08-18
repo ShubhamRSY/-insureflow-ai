@@ -5,6 +5,7 @@ export const INSURANCE_SECTIONS = [
     id: 'life',
     n: 1,
     title: 'Life Insurance',
+    navTitle: 'Life Insurance',
     summary: 'Pure protection, cash-value, savings, market-linked, and retirement income.',
     status: 'live',
     hub: '/insurance/life',
@@ -23,6 +24,7 @@ export const INSURANCE_SECTIONS = [
     id: 'health',
     n: 2,
     title: 'Health Insurance',
+    navTitle: 'Health Insurance',
     summary: 'Individual, family, critical illness, senior, group, top-up, PA, and disability.',
     status: 'live',
     hub: '/insurance/health',
@@ -42,8 +44,9 @@ export const INSURANCE_SECTIONS = [
   {
     id: 'general',
     n: 3,
-    title: 'General / Non-Life',
-    summary: 'Motor, home, travel, marine, fire, liability, and cyber — TP vs comprehensive, cargo vs hull.',
+    title: 'Personal Lines (P&C)',
+    navTitle: 'Personal Lines',
+    summary: 'Motor, home, travel, marine, fire, liability, and cyber — third-party vs comprehensive.',
     status: 'live',
     hub: '/insurance/general',
     accent: 'sky',
@@ -63,7 +66,8 @@ export const INSURANCE_SECTIONS = [
   {
     id: 'commercial',
     n: 4,
-    title: 'Business / Commercial',
+    title: 'Commercial Lines',
+    navTitle: 'Commercial Lines',
     summary: 'Property & BI, D&O, workers’ comp, trade credit, E&O, and key person.',
     status: 'live',
     hub: '/insurance/commercial',
@@ -83,8 +87,9 @@ export const INSURANCE_SECTIONS = [
   {
     id: 'specialty',
     n: 5,
-    title: 'Other / Specialty',
-    summary: 'Crop, livestock, pet, events, title, and mortgage — subject-matter docs, not generic KYC alone.',
+    title: 'Specialty Lines',
+    navTitle: 'Specialty Lines',
+    summary: 'Crop, livestock, pet, events, title, and mortgage guarantee — not a catch-all “other” bucket.',
     status: 'live',
     hub: '/insurance/general',
     accent: 'amber',
@@ -103,8 +108,9 @@ export const INSURANCE_SECTIONS = [
   {
     id: 'provider',
     n: 6,
-    title: 'By Provider Type',
-    summary: 'PSU vs private purchase KYC, and B2B reinsurance. Bancassurance is a bank distribution channel.',
+    title: 'Admitted, Surplus & Reinsurance',
+    navTitle: 'Admitted & Reinsurance',
+    summary: 'Admitted vs surplus-lines routing, public vs private carriers, and B2B reinsurance treaties.',
     status: 'live',
     hub: '/insurance/general',
     accent: 'violet',
@@ -121,7 +127,8 @@ export const INSURANCE_SECTIONS = [
   {
     id: 'engineering',
     n: 7,
-    title: 'Engineering Insurance',
+    title: 'Engineering & Construction',
+    navTitle: 'Engineering & Construction',
     summary: 'Construction, erection, machinery, boiler, and advance loss of profit.',
     status: 'live',
     hub: '/insurance/commercial',
@@ -140,7 +147,8 @@ export const INSURANCE_SECTIONS = [
   {
     id: 'aviation',
     n: 8,
-    title: 'Aviation Insurance',
+    title: 'Aviation',
+    navTitle: 'Aviation',
     summary: 'Aircraft hull, liability, and passenger risk.',
     status: 'live',
     hub: '/insurance/commercial/aviation',
@@ -157,7 +165,8 @@ export const INSURANCE_SECTIONS = [
   {
     id: 'fidelity',
     n: 9,
-    title: 'Fidelity & Burglary',
+    title: 'Crime: Fidelity & Burglary',
+    navTitle: 'Crime & Fidelity',
     summary: 'Employee dishonesty / fraud, and burglary / theft of property.',
     status: 'live',
     hub: '/insurance/commercial/crime',
@@ -173,7 +182,8 @@ export const INSURANCE_SECTIONS = [
   {
     id: 'catastrophe',
     n: 10,
-    title: 'Catastrophe / Natural Disaster',
+    title: 'Catastrophe',
+    navTitle: 'Catastrophe',
     summary: 'Flood, earthquake, and parametric / weather-index triggers.',
     status: 'live',
     hub: '/insurance/commercial',
@@ -189,7 +199,8 @@ export const INSURANCE_SECTIONS = [
   {
     id: 'niche-liability',
     n: 11,
-    title: 'Niche Liability Covers',
+    title: 'Excess & Niche Liability',
+    navTitle: 'Excess & Niche Liability',
     summary: 'Umbrella, pollution, K&R, political risk, and terrorism.',
     status: 'live',
     hub: '/insurance/commercial',
@@ -208,7 +219,8 @@ export const INSURANCE_SECTIONS = [
   {
     id: 'warranty-financial-emerging',
     n: 12,
-    title: 'Warranty, Financial & Emerging',
+    title: 'Warranty, Surety & Emerging',
+    navTitle: 'Warranty, Surety & Emerging',
     summary: 'Extended warranty, surety, gadget & jewelry, legal expense, credit life, bancassurance, micro, on-demand, UBI, personal cyber.',
     status: 'live',
     hub: '/insurance/commercial',
@@ -234,6 +246,16 @@ export const INSURANCE_SECTIONS = [
 export function getInsuranceSection(id) {
   return INSURANCE_SECTIONS.find((s) => s.id === id) || null;
 }
+
+export const INSURANCE_NAV_CHILDREN = [
+  { to: '/insurance', label: 'All 12 sections' },
+  ...INSURANCE_SECTIONS.map((section) => ({
+    to: `/insurance/sections/${section.id}`,
+    label: `${section.n}. ${section.navTitle || section.title}`,
+    tag: section.status === 'live' ? 'Live' : 'Catalog',
+    sectionId: section.id,
+  })),
+];
 
 export function insuranceSectionAccent(accent) {
   const map = {

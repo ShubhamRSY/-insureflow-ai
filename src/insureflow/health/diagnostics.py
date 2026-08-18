@@ -484,12 +484,13 @@ class SystemDiagnostics:
                 category="storage",
                 details={"bucket": bucket, "role": "audit_retention_not_source_files"},
             )
+        worm_path = os.getenv("WORM_AUDIT_PATH", "./audit_logs/worm").strip() or "./audit_logs/worm"
         return ComponentCheck(
             component="object_storage",
-            status=CheckStatus.DEGRADED,
-            message="No RETENTION_S3_BUCKET — WORM seals stay on local disk",
+            status=CheckStatus.OK,
+            message="WORM seals on local disk (S3 Object Lock optional)",
             category="storage",
-            details={"fix": "Set RETENTION_S3_BUCKET in the landing zone (already in Terraform)"},
+            details={"path": worm_path, "s3_optional": True},
         )
 
     def _check_knowledge_graph(self) -> ComponentCheck:

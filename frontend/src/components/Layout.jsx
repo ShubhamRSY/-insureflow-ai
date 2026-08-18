@@ -1,13 +1,12 @@
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
-  LayoutDashboard, Shield, Home, Activity, ClipboardCheck, Settings, LogOut, RefreshCw, Menu, X,
-  FileText, Users, BarChart3, BookOpen, Wallet, Layers, Link2, LineChart, Search, Database, FlaskConical,
-  FileCheck, MessagesSquare, Radar, Briefcase, Building2, Calculator, ChevronDown, ChevronRight, Plus,
-  ShieldCheck, Library, History, Lock, Sparkles,
+  LayoutDashboard, Shield, Home, Activity, Settings, LogOut, RefreshCw, Menu, X,
+  BarChart3, Wallet, FileCheck, Briefcase, ChevronDown, ChevronRight, Plus,
+  ShieldCheck, Library, Lock,
 } from 'lucide-react';
 import { useState } from 'react';
 import { auth } from '../lib/api';
-import { INSURANCE_SECTIONS, insuranceSectionAccent } from '../lib/insuranceSections';
+import { INSURANCE_SECTIONS, INSURANCE_NAV_CHILDREN, insuranceSectionAccent } from '../lib/insuranceSections';
 import ThemeToggle from './ThemeToggle';
 import StateSelector from './StateSelector';
 
@@ -25,22 +24,7 @@ const nav = [
     label: 'Insurance',
     color: 'text-insurance',
     defaultOpen: true,
-    scrollChildren: true,
-    children: [
-      { to: '/insurance', label: 'All 12 sections' },
-      { to: '/insurance/sections/life', label: '1. Life', tag: 'Live', sectionId: 'life' },
-      { to: '/insurance/sections/health', label: '2. Health', tag: 'Live', sectionId: 'health' },
-      { to: '/insurance/sections/general', label: '3. General / Non-Life', tag: 'Live', sectionId: 'general' },
-      { to: '/insurance/sections/commercial', label: '4. Business / Commercial', tag: 'Live', sectionId: 'commercial' },
-      { to: '/insurance/sections/specialty', label: '5. Other / Specialty', tag: 'Live', sectionId: 'specialty' },
-      { to: '/insurance/sections/provider', label: '6. By Provider Type', tag: 'Live', sectionId: 'provider' },
-      { to: '/insurance/sections/engineering', label: '7. Engineering', tag: 'Live', sectionId: 'engineering' },
-      { to: '/insurance/sections/aviation', label: '8. Aviation', tag: 'Live', sectionId: 'aviation' },
-      { to: '/insurance/sections/fidelity', label: '9. Fidelity & Burglary', tag: 'Live', sectionId: 'fidelity' },
-      { to: '/insurance/sections/catastrophe', label: '10. Catastrophe', tag: 'Live', sectionId: 'catastrophe' },
-      { to: '/insurance/sections/niche-liability', label: '11. Niche Liability', tag: 'Live', sectionId: 'niche-liability' },
-      { to: '/insurance/sections/warranty-financial-emerging', label: '12. Warranty / Financial / Emerging', tag: 'Live', sectionId: 'warranty-financial-emerging' },
-    ],
+    children: INSURANCE_NAV_CHILDREN,
   },
   { section: 'Reference' },
   {
@@ -57,32 +41,68 @@ const nav = [
   { to: '/mortgage', icon: Home, label: 'Mortgage', color: 'text-mortgage' },
   { to: '/lending', icon: Wallet, label: 'Lending', color: 'text-lending' },
   { section: 'UW Operations' },
-  { to: '/line-uw', icon: Briefcase, label: 'Line UW Desk', color: 'text-sky-400' },
-  { to: '/staff-uw', icon: Building2, label: 'Staff UW Desk', color: 'text-violet-400' },
-  { to: '/uw-dashboard', icon: Sparkles, label: 'UW Dashboard', color: 'text-brand', tag: 'New' },
-  { to: '/workflow', icon: ClipboardCheck, label: 'UW Sign-off', badge: true },
-  { to: '/uw-workbench', icon: ShieldCheck, label: 'UW Workbench', color: 'text-teal-400' },
-  { to: '/prior-decisions', icon: History, label: 'Prior decisions', color: 'text-slate-300' },
-  { to: '/queue', icon: Search, label: 'Queue' },
+  {
+    to: '/uw-dashboard',
+    icon: Briefcase,
+    label: 'UW Operations',
+    color: 'text-sky-400',
+    defaultOpen: true,
+    children: [
+      { to: '/line-uw', label: 'Line UW Desk' },
+      { to: '/staff-uw', label: 'Staff UW Desk' },
+      { to: '/uw-dashboard', label: 'UW Dashboard' },
+      { to: '/workflow', label: 'UW Sign-off', badge: true },
+      { to: '/uw-workbench', label: 'UW Workbench' },
+      { to: '/prior-decisions', label: 'Prior decisions' },
+      { to: '/queue', label: 'Queue' },
+    ],
+  },
   { section: 'Post-Decision' },
-  { to: '/issuance', icon: FileCheck, label: 'Issuance', color: 'text-emerald-400' },
-  { to: '/monitoring', icon: Radar, label: 'Policy Monitoring', color: 'text-violet-400' },
-  { to: '/producer-comms', icon: MessagesSquare, label: 'Producer Comms', color: 'text-sky-400' },
+  {
+    to: '/issuance',
+    icon: FileCheck,
+    label: 'Post-Decision',
+    color: 'text-emerald-400',
+    defaultOpen: true,
+    children: [
+      { to: '/issuance', label: 'Issuance' },
+      { to: '/monitoring', label: 'Policy Monitoring' },
+      { to: '/producer-comms', label: 'Producer Comms' },
+    ],
+  },
   { section: 'Analytics' },
-  { to: '/renewals', icon: FileText, label: 'Renewals' },
-  { to: '/overrides', icon: LineChart, label: 'Override Analytics' },
-  { to: '/business-kpis', icon: BarChart3, label: 'ROI & KPIs', color: 'text-brand' },
-  { to: '/eval-trends', icon: Activity, label: 'Eval Trends' },
-  { to: '/portfolio', icon: Layers, label: 'Portfolio' },
-  { to: '/ratemaking', icon: Calculator, label: 'Ratemaking & Pricing', color: 'text-brand' },
-  { to: '/authority', icon: Users, label: 'Authority Matrix' },
-  { to: '/market', icon: BarChart3, label: 'Market Cycle' },
+  {
+    to: '/portfolio',
+    icon: BarChart3,
+    label: 'Analytics',
+    color: 'text-brand',
+    defaultOpen: true,
+    children: [
+      { to: '/renewals', label: 'Renewals' },
+      { to: '/overrides', label: 'Override Analytics' },
+      { to: '/business-kpis', label: 'ROI & KPIs' },
+      { to: '/eval-trends', label: 'Eval Trends' },
+      { to: '/portfolio', label: 'Portfolio' },
+      { to: '/ratemaking', label: 'Ratemaking & Pricing' },
+      { to: '/authority', label: 'Authority Matrix' },
+      { to: '/market', label: 'Market Cycle' },
+    ],
+  },
   { section: 'Governance' },
-  { to: '/pilot', icon: FlaskConical, label: 'Pilot Lab', color: 'text-amber-400' },
-  { to: '/registry', icon: BookOpen, label: 'Model Registry' },
-  { to: '/regulatory-review', icon: ShieldCheck, label: 'Regulatory Review', color: 'text-emerald-400' },
-  { to: '/integrations', icon: Link2, label: 'Integrations' },
-  { to: '/webhooks', icon: Database, label: 'Webhooks' },
+  {
+    to: '/regulatory-review',
+    icon: ShieldCheck,
+    label: 'Governance',
+    color: 'text-emerald-400',
+    defaultOpen: true,
+    children: [
+      { to: '/pilot', label: 'Pilot Lab' },
+      { to: '/registry', label: 'Model Registry' },
+      { to: '/regulatory-review', label: 'Regulatory Review' },
+      { to: '/integrations', label: 'Integrations' },
+      { to: '/webhooks', label: 'Webhooks' },
+    ],
+  },
   { section: 'Account' },
   { to: '/settings', icon: Settings, label: 'Settings' },
 ];
@@ -91,10 +111,10 @@ const CRUMBS = [
   { prefix: '/reference/commercial', labels: ['Reference', 'Commercial insurance'] },
   { prefix: '/reference', labels: ['Reference', 'Notebooks'] },
   { prefix: '/insurance/sections', labels: ['Insurance', 'Section'] },
-  { prefix: '/insurance/general', labels: ['Insurance', 'General / Non-Life'] },
+  { prefix: '/insurance/general', labels: ['Insurance', 'Personal Lines'] },
   { prefix: '/insurance/health', labels: ['Insurance', 'Health Insurance'] },
   { prefix: '/insurance/life', labels: ['Insurance', 'Life Insurance'] },
-  { prefix: '/insurance/commercial', labels: ['Insurance', 'Business & Commercial'] },
+  { prefix: '/insurance/commercial', labels: ['Insurance', 'Commercial Lines'] },
   { prefix: '/insurance/', labels: ['Insurance'] },
   { prefix: '/insurance', labels: ['Insurance'] },
   { prefix: '/line-uw', labels: ['UW Operations', 'Line UW Desk'] },
@@ -198,13 +218,7 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
             </button>
           </div>
           {isOpen && (
-            <div
-              className={`ml-4 mt-0.5 border-l border-white/[0.07] pl-2 ${
-                item.scrollChildren
-                  ? 'max-h-[11.25rem] overflow-y-auto overscroll-contain pr-1 [scrollbar-width:thin] [scrollbar-color:rgba(148,163,184,0.45)_transparent]'
-                  : ''
-              }`}
-            >
+            <div className="ml-4 mt-0.5 border-l border-white/[0.07] pl-2">
               {item.children.map((child) => {
                 if (child.soon) {
                   return (
@@ -225,7 +239,8 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
                   <NavLink
                     key={child.to}
                     to={child.to}
-                    end={child.to === '/insurance'}
+                    end={child.to === item.to || child.to === '/insurance'}
+                    onClick={() => setMobileOpen(false)}
                     className={({ isActive }) => `nav-link ${isActive ? 'nav-link-active' : ''}`}
                   >
                     <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${
@@ -241,6 +256,11 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
                           : 'bg-amber-500/15 text-amber-400'
                       }`}>
                         {child.tag}
+                      </span>
+                    )}
+                    {!sidebarCollapsed && child.badge && pendingCount > 0 && (
+                      <span className="rounded-full bg-red-500/20 px-2 py-0.5 text-[10px] font-bold text-red-400">
+                        {pendingCount}
                       </span>
                     )}
                   </NavLink>
@@ -352,7 +372,7 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
 
       {/* Main */}
       <div className={`flex min-w-0 flex-1 flex-col transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-[64px]' : 'lg:ml-[272px]'}`}>
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-3 border-b border-white/[0.06] bg-surface/80 px-6 backdrop-blur-xl">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-3 overflow-visible border-b border-white/[0.06] bg-surface/80 px-6 backdrop-blur-xl">
           <div className="flex min-w-0 items-center gap-3">
             <button type="button" className="rounded-lg p-2 lg:hidden" onClick={() => setMobileOpen(true)}>
               <Menu className="h-5 w-5" />

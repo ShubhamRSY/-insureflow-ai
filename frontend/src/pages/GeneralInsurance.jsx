@@ -45,7 +45,7 @@ export default function GeneralInsuranceHub({ presets, onRunDemo, onSubmit, jobs
           <span className="text-slate-700">/</span>
           <Link to="/insurance" className="transition hover:text-slate-300">Insurance</Link>
           <span className="text-slate-700">/</span>
-          <span className="font-semibold text-slate-200">General / Non-Life</span>
+          <span className="font-semibold text-slate-200">Personal Lines</span>
         </nav>
         <div className="mt-3 flex items-start gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-sky-500/15 text-sky-400">

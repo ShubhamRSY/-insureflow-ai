@@ -74,7 +74,7 @@ export const INSURANCE_LINE_NAMES = {
   personal_auto: 'Personal Auto',
   life: 'Life Insurance',
   health: 'Health Insurance',
-  general: 'General / Non-Life Insurance',
+  general: 'Personal Lines (P&C)',
   mediclaim: 'Health Insurance',
   family_floater: 'Family Floater Health',
   critical_illness: 'Critical Illness Insurance',
