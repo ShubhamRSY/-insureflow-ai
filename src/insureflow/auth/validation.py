@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import re
 from dataclasses import dataclass
 
@@ -36,6 +37,27 @@ def validate_email(email: str) -> ValidationResult:
     elif not _EMAIL_RE.match(email):
         errors.append("Invalid email format")
     return ValidationResult(valid=len(errors) == 0, errors=errors)
+
+
+def registration_email_domains() -> list[str]:
+    raw = os.getenv("REGISTRATION_EMAIL_DOMAINS", "ryterainc.com")
+    return [part.strip().lower().lstrip("@") for part in raw.split(",") if part.strip()]
+
+
+def validate_company_email(email: str) -> ValidationResult:
+    """Self-registration must use an approved company email domain."""
+    base = validate_email(email)
+    if not base.valid:
+        return base
+    allowed = registration_email_domains()
+    if not allowed:
+        return ValidationResult(valid=True, errors=[])
+    domain = email.strip().rsplit("@", 1)[-1].lower()
+    if domain not in allowed:
+        allowed_label = ", ".join(f"@{d}" for d in allowed)
+        errors = [f"Registration requires a company email ({allowed_label})"]
+        return ValidationResult(valid=False, errors=errors)
+    return ValidationResult(valid=True, errors=[])
 
 
 def validate_password(password: str, min_length: int = 8) -> ValidationResult:
@@ -79,6 +101,7 @@ def validate_registration(
     for result in [
         validate_username(username),
         validate_email(email),
+        validate_company_email(email),
         validate_password(password, min_length=min_password_length),
         validate_company_name(company_name),
     ]:
