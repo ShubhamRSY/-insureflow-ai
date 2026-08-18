@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useParams } from 'react-router-dom';
+import { StateProvider } from './lib/useStateContext';
 import Layout from './components/Layout';
 import LoginModal from './components/LoginModal';
 import JobDrawer from './components/JobDrawer';
@@ -320,8 +321,10 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <BrowserRouter basename="/dashboard">
-      <AppRoutes />
-    </BrowserRouter>
+    <StateProvider>
+      <BrowserRouter basename="/dashboard">
+        <AppRoutes />
+      </BrowserRouter>
+    </StateProvider>
   );
 }

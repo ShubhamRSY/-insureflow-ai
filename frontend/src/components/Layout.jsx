@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { auth } from '../lib/api';
 import { INSURANCE_SECTIONS, insuranceSectionAccent } from '../lib/insuranceSections';
 import ThemeToggle from './ThemeToggle';
+import StateSelector from './StateSelector';
 
 const SECTION_DOT = Object.fromEntries(
   INSURANCE_SECTIONS.map((section) => [section.id, insuranceSectionAccent(section.accent).dot]),
@@ -372,6 +373,7 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
             </nav>
           </div>
           <div className="flex shrink-0 items-center gap-2">
+            <StateSelector compact />
             <ThemeToggle compact />
             <button type="button" onClick={onRefresh} className="btn-secondary btn-sm shrink-0 text-xs">
               <RefreshCw className="h-3.5 w-3.5" /> Refresh

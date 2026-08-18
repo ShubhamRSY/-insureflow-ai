@@ -4,6 +4,7 @@ import {
   AlertTriangle, Leaf, ChevronDown, ExternalLink,
 } from 'lucide-react';
 import { Badge, EmptyState } from '../components/ui';
+import StateRegulatoryPanel from '../components/StateRegulatoryPanel';
 import { api } from '../lib/api';
 
 function fmtDate(value) {
@@ -103,6 +104,8 @@ export default function RegulatoryReview() {
       </div>
 
       {error && <div className="rounded-xl bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</div>}
+
+      <StateRegulatoryPanel />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="glass-card group relative overflow-hidden p-5 animate-slide-up">

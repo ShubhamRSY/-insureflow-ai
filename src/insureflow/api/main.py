@@ -1051,6 +1051,61 @@ async def list_regulatory_lines() -> dict[str, Any]:
     }
 
 
+@app.get("/api/regulatory/state-detail")
+async def regulatory_state_detail(state: str = "") -> dict[str, Any]:
+    """Full regulatory rules for one state across ALL lines of business."""
+    from insureflow.regulatory.state_rules import StateRegulatoryEngine
+
+    if not state:
+        raise HTTPException(status_code=400, detail="state parameter required")
+
+    code = state.upper().strip()
+    engine = StateRegulatoryEngine()
+    rule = engine.get_rule(code)
+    if rule is None:
+        raise HTTPException(status_code=404, detail=f"No rules for state '{code}'")
+
+    lines = engine.get_available_lines()
+    line_rules: dict[str, Any] = {}
+    for line in lines:
+        lr = engine.get_line_rule(code, line)
+        if lr is not None:
+            line_rules[line] = lr.model_dump(mode="json")
+
+    return {
+        "state_code": code,
+        "state_name": rule.state_name,
+        "general_rule": rule.model_dump(mode="json"),
+        "line_rules": line_rules,
+        "lines_available": lines,
+        "compliance_summary": engine.evaluate(code).model_dump(mode="json"),
+    }
+
+
+@app.get("/api/regulatory/state-compliance-all")
+async def regulatory_state_compliance_all(state: str = "") -> dict[str, Any]:
+    """Compliance flags for one state across ALL lines of business."""
+    from insureflow.regulatory.state_rules import StateRegulatoryEngine
+
+    if not state:
+        raise HTTPException(status_code=400, detail="state parameter required")
+
+    code = state.upper().strip()
+    engine = StateRegulatoryEngine()
+    lines = engine.get_available_lines()
+    results: dict[str, Any] = {}
+    for line in lines:
+        result = engine.evaluate(code, line_of_business=line)
+        results[line] = {
+            "flags": [f.model_dump(mode="json") for f in result.flags if f.line_of_business == line],
+            "summary": result.summary,
+        }
+    return {
+        "state_code": code,
+        "lines": results,
+    }
+
+
 @app.get("/api/regulatory/health")
 async def regulatory_health() -> dict[str, Any]:
     """Regulatory freshness dashboard — staleness scores per line/state."""
