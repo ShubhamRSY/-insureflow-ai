@@ -8139,6 +8139,102 @@ def ml_score_submission(submission_data: dict[str, Any], current: TokenData = De
     ).model_dump()
 
 
+# ── Health Insurance Compliance ──────────────────────────────────────────
+
+
+@app.get("/health-compliance/{state_code}")
+def health_compliance_check(state_code: str, current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
+    """Check health insurance regulatory compliance for a state (ACA + state mandates)."""
+    from insureflow.regulatory.health_compliance import HealthComplianceChecker
+
+    checker = HealthComplianceChecker()
+    return checker.check(state_code).model_dump()
+
+
+@app.get("/health-compliance/{state_code}/requirements")
+def health_compliance_requirements(state_code: str, current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
+    """Get full health insurance regulatory requirements for a state."""
+    from insureflow.regulatory.health_compliance import HealthComplianceChecker
+
+    return HealthComplianceChecker().get_all_state_requirements(state_code)
+
+
+@app.get("/health-compliance/states/all")
+def health_compliance_all_states(current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
+    """List all states with health insurance regulatory data."""
+    from insureflow.regulatory.health_compliance import _load_health_data
+
+    data = _load_health_data()
+    states = data.get("states", {})
+    return {
+        "states": {
+            code: {
+                "name": s.get("name", ""),
+                "rate_filing": s.get("rate_filing", ""),
+                "exchange_type": s.get("state_exchange_type", ""),
+                "individual_mandate": s.get("state_individual_mandate", False),
+                "community_rating": s.get("community_rating", False),
+            }
+            for code, s in states.items()
+        },
+        "total": len(states),
+    }
+
+
+# ── Surplus Lines / E&S Compliance ──────────────────────────────────────
+
+
+@app.get("/surplus-lines-compliance/{state_code}")
+def surplus_lines_compliance_check(
+    state_code: str,
+    premium: float = 0.0,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Check surplus lines regulatory compliance for a state (diligent search, stamping, tax)."""
+    from insureflow.regulatory.surplus_lines_compliance import SurplusLinesComplianceChecker
+
+    checker = SurplusLinesComplianceChecker()
+    return checker.check(state_code, premium=premium).model_dump()
+
+
+@app.get("/surplus-lines-compliance/{state_code}/requirements")
+def surplus_lines_requirements(state_code: str, current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
+    """Get full surplus lines regulatory requirements for a state."""
+    from insureflow.regulatory.surplus_lines_compliance import SurplusLinesComplianceChecker
+
+    return SurplusLinesComplianceChecker().get_all_state_requirements(state_code)
+
+
+@app.get("/surplus-lines-compliance/{state_code}/fees")
+def surplus_lines_fees(state_code: str, premium: float, current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
+    """Calculate surplus lines fees (tax + stamping + export) for a state and premium."""
+    from insureflow.regulatory.surplus_lines_compliance import SurplusLinesComplianceChecker
+
+    return SurplusLinesComplianceChecker().calculate_fees(state_code, premium)
+
+
+@app.get("/surplus-lines-compliance/states/all")
+def surplus_lines_all_states(current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
+    """List all states with surplus lines regulatory data."""
+    from insureflow.regulatory.surplus_lines_compliance import _load_sl_data
+
+    data = _load_sl_data()
+    states = data.get("states", {})
+    return {
+        "states": {
+            code: {
+                "name": s.get("name", ""),
+                "tax_rate": s.get("surplus_lines_tax_rate", 0),
+                "stamping_office": s.get("stamping_office", False),
+                "diligent_search_required": s.get("diligent_search_required", False),
+                "diligent_search_carriers": s.get("diligent_search_carriers", 3),
+            }
+            for code, s in states.items()
+        },
+        "total": len(states),
+    }
+
+
 @app.get("/ml/models")
 def ml_list_models(current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
     """List all registered ML models with status and metrics."""
