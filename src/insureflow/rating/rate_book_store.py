@@ -326,7 +326,7 @@ class RateBookResolver:
             rate_book_id=book.get("book_id", ""),
             rate_book_version=book.get("version", ""),
             rate_book_posture=book.get("posture", ""),
-            isFiledRate=True,
+            is_filed_rate=True,
         )
 
         self._store.record(entry)

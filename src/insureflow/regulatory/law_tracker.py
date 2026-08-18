@@ -500,8 +500,8 @@ class LawTracker:
         self._store.save_subscription(subscription)
         return {
             "org_id": subscription.org_id,
-            "states": subscription.states,
-            "lines": subscription.lines,
+            "states": ",".join(subscription.states),
+            "lines": ",".join(subscription.lines),
             "message": f"Subscribed to alerts for {len(subscription.states)} states, {len(subscription.lines)} lines",
         }
 
