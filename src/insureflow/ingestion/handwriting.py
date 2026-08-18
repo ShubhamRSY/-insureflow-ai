@@ -150,7 +150,9 @@ class HandwritingDetector:
                 densities.append(float(block.mean()))
 
         if densities:
-            density_cv = float(np.std(densities) / max(np.mean(densities), 1e-6))
+            mean_density = float(np.mean(densities))
+            std_density = float(np.std(densities))
+            density_cv = std_density / max(mean_density, 1e-6)
             density_score = min(density_cv / 2.0, 1.0)
         else:
             density_score = 0.0
@@ -165,7 +167,9 @@ class HandwritingDetector:
                 component = labeled == feat_id
                 sizes.append(float(component.sum()))
             if sizes:
-                size_cv = float(np.std(sizes) / max(np.mean(sizes), 1e-6))
+                mean_size = float(np.mean(sizes))
+                std_size = float(np.std(sizes))
+                size_cv = std_size / max(mean_size, 1e-6)
                 irregularity_score = min(size_cv / 3.0, 1.0)
             else:
                 irregularity_score = 0.0

@@ -84,8 +84,9 @@ def _load_health_data() -> dict[str, Any]:
 
 def _get_state_health_rule(state_code: str) -> dict[str, Any]:
     data = _load_health_data()
-    states = data.get("states", {})
-    return states.get(state_code.upper(), {})
+    states: dict[str, Any] = data.get("states", {})
+    result: dict[str, Any] = states.get(state_code.upper(), {})
+    return result
 
 
 # ---------------------------------------------------------------------------

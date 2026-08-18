@@ -285,8 +285,11 @@ class PricingStore:
 
     def get_subscription(self, org_id: str) -> str:
         with self._lock:
-            sub = self._data.get("subscriptions", {}).get(org_id)
-            return sub.get("tier", "free") if sub else "free"
+            sub: dict[str, Any] | None = self._data.get("subscriptions", {}).get(org_id)
+            if sub is None:
+                return "free"
+            tier: str = sub.get("tier", "free")
+            return tier
 
     # -- Usage Tracking --
 
