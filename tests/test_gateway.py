@@ -141,7 +141,8 @@ def test_landing_page_html() -> None:
     assert "Rytera" in resp.text
     assert "Stop hunting" in resp.text
     assert "decision-ready memo" in resp.text.lower() or "decision memo" in resp.text.lower() or "memo" in resp.text.lower()
-    assert "Named insureds never leave the gate" in resp.text
+    assert "Named insureds never leave the gate" not in resp.text
+    assert "Names and private details come off before any AI sees a page" in resp.text
     assert "Grounded Risk Intelligence" in resp.text or "Zero Black Boxes" in resp.text
     assert "Unified Underwriting" in resp.text
     assert "Extraction Fidelity" in resp.text
@@ -178,17 +179,38 @@ def test_landing_subpages_html() -> None:
         "platform": [
             "Platform capabilities",
             "Human-in-the-loop by design",
-            "Named insureds never leave the gate",
+            "Names come off first",
             "Choose the insurance company",
             "How we catch a wrong number",
             "A photo can lie",
             "EXIF / ELA",
         ],
-        "technology": ["Zero Token Architecture", "Every decision defensible", "Named insureds never leave the gate"],
-        "underwriting": ["Built for the desks that decide", "Rates built like an actuary builds them", "Named insureds never leave the gate"],
-        "integrations": ["Connects to the systems you already use", "Live, simulated, or auto", "Named insureds never leave the gate"],
-        "company": ["About Rytera", "Frequently asked questions", "Named insureds never leave the gate"],
-        "pricing": ["They will not buy if", "Your SERFF / carrier leaf filings", "no re-key", "Named insureds never leave the gate"],
+        "technology": [
+            "Zero Token Architecture",
+            "Every decision defensible",
+            "Private customer details never go to the AI.",
+        ],
+        "underwriting": [
+            "Built for the desks that decide",
+            "Rates built like an actuary builds them",
+            "Names and private details come off before any AI sees a page",
+        ],
+        "integrations": [
+            "Connects to the systems you already use",
+            "Real when connected. Demo when not. Nothing invented.",
+            "Names and private details come off before any AI sees a page",
+        ],
+        "company": [
+            "About Rytera",
+            "Frequently asked questions",
+            "Names and private details come off before any AI sees a page",
+        ],
+        "pricing": [
+            "They will not buy if",
+            "Your SERFF / carrier leaf filings",
+            "no re-key",
+            "Names and private details come off before any AI sees a page",
+        ],
     }
     for slug, markers in landing_pages.items():
         resp = client.get(f"/{slug}", headers={"Accept": "text/html"})

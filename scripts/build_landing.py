@@ -366,19 +366,12 @@ MODAL = """  <div class="modal-overlay" id="demo-modal" role="dialog" aria-modal
   </div>"""
 
 
-THEME_BOOTSTRAP = (
-    '  <script>\n'
-    '(function(){var t=new Date(),h=t.getHours()+t.getMinutes()/60;'
-    'document.documentElement.setAttribute("data-theme",h>=6.5&&h<19.5?"day":"night");})();\n'
-    '  </script>\n'
-)
+THEME_BOOTSTRAP = '  <script>\n(function(){var t=new Date(),h=t.getHours()+t.getMinutes()/60;document.documentElement.setAttribute("data-theme",h>=6.5&&h<19.5?"day":"night");})();\n  </script>\n'
 
 
 def head(title: str, desc: str, canonical: str, og_desc: str) -> str:
     return (
-        '  <meta charset="UTF-8" />\n'
-        + THEME_BOOTSTRAP
-        + '  <meta name="viewport" content="width=device-width, initial-scale=1.0" />\n'
+        '  <meta charset="UTF-8" />\n' + THEME_BOOTSTRAP + '  <meta name="viewport" content="width=device-width, initial-scale=1.0" />\n'
         f"  <title>{title}</title>\n"
         f'  <meta name="description" content="{desc}" />\n'
         f'  <link rel="canonical" href="https://ryterainc.com/{canonical}" />\n'
@@ -832,66 +825,150 @@ def lob_card(n: int, title: str, status: str, desc: str, items: list[str], href:
 
 def insurance_book_section() -> str:
     sections = [
-        (1, "Life", "Live", "Term priced from your filed manual today. Permanent and annuity products wait for their rate tables.", [
-            "Term life — indication from SERFF-filed rates",
-            "Whole / universal / variable UL — catalog until loaded",
-            "Paramed &amp; mortality scoring from your life guide",
-        ], "/dashboard/insurance/sections/life"),
-        (2, "Health", "Live", "Individual through disability when your health rates are in the workbench.", [
-            "Individual &amp; group medical — outpatient vs inpatient split",
-            "Critical illness &amp; disability — separate checklists",
-            "ACA &amp; state mandate rules applied per jurisdiction",
-        ], "/dashboard/insurance/sections/health"),
-        (3, "General / Non-Life", "Catalog", "Motor, home, travel, marine, fire, cyber — visible coverage, honest pricing.", [
-            "Personal auto &amp; homeowners — catalog until filed rates load",
-            "Travel, marine hull, fire — each with its own SOV / ACORD pack",
-            "Cyber — questionnaire vs live scan when connected",
-        ], "/dashboard/insurance/sections/general"),
-        (4, "Business / Commercial", "Live", "The commercial desk most MGAs live in — property, liability, and management lines.", [
-            "Property &amp; business interruption with COPE scoring",
-            "Directors &amp; officers, E&amp;O, workers&rsquo; comp, trade credit",
-            "Key person &amp; package policies from your appointed panel",
-        ], "/dashboard/insurance/sections/commercial"),
-        (5, "Other / Specialty", "Catalog", "Crop, livestock, pet, events, title, mortgage guarantee.", [
-            "Event cancellation &amp; weather-index triggers",
-            "Title &amp; mortgage guarantee — catalog until contracted",
-            "Pet &amp; livestock — species-specific appetite gates",
-        ], "/dashboard/insurance/sections/specialty"),
-        (6, "By Provider Type", "Catalog", "Public vs private onboarding and B2B reinsurance structures.", [
-            "Admitted vs surplus-lines routing by state",
-            "Reinsurance treaties &amp; fronting arrangements",
-            "Provider onboarding checklists — catalog until contracted",
-        ], "/dashboard/insurance/sections/provider"),
-        (7, "Engineering", "Live", "Contractors&rsquo; all risk, erection, machinery breakdown, delay in start-up.", [
-            "CAR / EAR with project schedule &amp; sub limits",
-            "Boiler &amp; machinery — inspection history required",
-            "DSU tied to critical path milestones",
-        ], "/dashboard/insurance/sections/engineering"),
-        (8, "Aviation", "Live", "Hull, liability, and passenger exposure for fixed- and rotary-wing.", [
-            "Hull values vs bluebook / agreed value",
-            "Passenger liability &amp; war-risk routing",
-            "Pilot hours, ratings, and loss history",
-        ], "/dashboard/insurance/sections/aviation"),
-        (9, "Fidelity &amp; Burglary", "Live", "Employee dishonesty and third-party theft covers.", [
-            "Fidelity bond limits vs payroll &amp; headcount",
-            "Burglary / theft with alarm &amp; guard credits",
-            "ERISA fidelity where employee benefit plans apply",
-        ], "/dashboard/insurance/sections/fidelity"),
-        (10, "Catastrophe", "Live", "Flood, earthquake, and weather-index covers with honest CAT data.", [
-            "Flood zones from FEMA / private flood models",
-            "Earthquake deductibles &amp; retrofit credits",
-            "Parametric weather-index triggers",
-        ], "/dashboard/insurance/sections/catastrophe"),
-        (11, "Niche Liability", "Live", "Umbrella, pollution, K&amp;R, political risk, and terrorism.", [
-            "Umbrella follow-form &amp; underlying schedule",
-            "Pollution gradual vs sudden &amp; accidental",
-            "K&amp;R, political risk, TRIA terrorism routing",
-        ], "/dashboard/insurance/sections/niche-liability"),
-        (12, "Warranty / Financial / Emerging", "Live", "Surety, credit life, gadget, micro, UBI, and personal cyber.", [
-            "Surety bond capacity &amp; indemnity review",
-            "Usage-based auto — telematics when live",
-            "Micro-insurance &amp; gadget cover — catalog until rates in",
-        ], "/dashboard/insurance/sections/warranty-financial-emerging"),
+        (
+            1,
+            "Life",
+            "Live",
+            "Term priced from your filed manual today. Permanent and annuity products wait for their rate tables.",
+            [
+                "Term life — indication from SERFF-filed rates",
+                "Whole / universal / variable UL — catalog until loaded",
+                "Paramed &amp; mortality scoring from your life guide",
+            ],
+            "/dashboard/insurance/sections/life",
+        ),
+        (
+            2,
+            "Health",
+            "Live",
+            "Individual through disability when your health rates are in the workbench.",
+            [
+                "Individual &amp; group medical — outpatient vs inpatient split",
+                "Critical illness &amp; disability — separate checklists",
+                "ACA &amp; state mandate rules applied per jurisdiction",
+            ],
+            "/dashboard/insurance/sections/health",
+        ),
+        (
+            3,
+            "General / Non-Life",
+            "Catalog",
+            "Motor, home, travel, marine, fire, cyber — visible coverage, honest pricing.",
+            [
+                "Personal auto &amp; homeowners — catalog until filed rates load",
+                "Travel, marine hull, fire — each with its own SOV / ACORD pack",
+                "Cyber — questionnaire vs live scan when connected",
+            ],
+            "/dashboard/insurance/sections/general",
+        ),
+        (
+            4,
+            "Business / Commercial",
+            "Live",
+            "The commercial desk most MGAs live in — property, liability, and management lines.",
+            [
+                "Property &amp; business interruption with COPE scoring",
+                "Directors &amp; officers, E&amp;O, workers&rsquo; comp, trade credit",
+                "Key person &amp; package policies from your appointed panel",
+            ],
+            "/dashboard/insurance/sections/commercial",
+        ),
+        (
+            5,
+            "Other / Specialty",
+            "Catalog",
+            "Crop, livestock, pet, events, title, mortgage guarantee.",
+            [
+                "Event cancellation &amp; weather-index triggers",
+                "Title &amp; mortgage guarantee — catalog until contracted",
+                "Pet &amp; livestock — species-specific appetite gates",
+            ],
+            "/dashboard/insurance/sections/specialty",
+        ),
+        (
+            6,
+            "By Provider Type",
+            "Catalog",
+            "Public vs private onboarding and B2B reinsurance structures.",
+            [
+                "Admitted vs surplus-lines routing by state",
+                "Reinsurance treaties &amp; fronting arrangements",
+                "Provider onboarding checklists — catalog until contracted",
+            ],
+            "/dashboard/insurance/sections/provider",
+        ),
+        (
+            7,
+            "Engineering",
+            "Live",
+            "Contractors&rsquo; all risk, erection, machinery breakdown, delay in start-up.",
+            [
+                "CAR / EAR with project schedule &amp; sub limits",
+                "Boiler &amp; machinery — inspection history required",
+                "DSU tied to critical path milestones",
+            ],
+            "/dashboard/insurance/sections/engineering",
+        ),
+        (
+            8,
+            "Aviation",
+            "Live",
+            "Hull, liability, and passenger exposure for fixed- and rotary-wing.",
+            [
+                "Hull values vs bluebook / agreed value",
+                "Passenger liability &amp; war-risk routing",
+                "Pilot hours, ratings, and loss history",
+            ],
+            "/dashboard/insurance/sections/aviation",
+        ),
+        (
+            9,
+            "Fidelity &amp; Burglary",
+            "Live",
+            "Employee dishonesty and third-party theft covers.",
+            [
+                "Fidelity bond limits vs payroll &amp; headcount",
+                "Burglary / theft with alarm &amp; guard credits",
+                "ERISA fidelity where employee benefit plans apply",
+            ],
+            "/dashboard/insurance/sections/fidelity",
+        ),
+        (
+            10,
+            "Catastrophe",
+            "Live",
+            "Flood, earthquake, and weather-index covers with honest CAT data.",
+            [
+                "Flood zones from FEMA / private flood models",
+                "Earthquake deductibles &amp; retrofit credits",
+                "Parametric weather-index triggers",
+            ],
+            "/dashboard/insurance/sections/catastrophe",
+        ),
+        (
+            11,
+            "Niche Liability",
+            "Live",
+            "Umbrella, pollution, K&amp;R, political risk, and terrorism.",
+            [
+                "Umbrella follow-form &amp; underlying schedule",
+                "Pollution gradual vs sudden &amp; accidental",
+                "K&amp;R, political risk, TRIA terrorism routing",
+            ],
+            "/dashboard/insurance/sections/niche-liability",
+        ),
+        (
+            12,
+            "Warranty / Financial / Emerging",
+            "Live",
+            "Surety, credit life, gadget, micro, UBI, and personal cyber.",
+            [
+                "Surety bond capacity &amp; indemnity review",
+                "Usage-based auto — telematics when live",
+                "Micro-insurance &amp; gadget cover — catalog until rates in",
+            ],
+            "/dashboard/insurance/sections/warranty-financial-emerging",
+        ),
     ]
     cards = "\n".join(lob_card(n, t, s, d, items, href) for n, t, s, d, items, href in sections)
     return f"""      <section id="insurance-book">
