@@ -1229,6 +1229,43 @@ async def regulatory_review_history(limit: int = 100) -> dict[str, Any]:
     return {"history": service.get_review_history(limit=limit)}
 
 
+@app.post("/api/doc-quality/check")
+async def doc_quality_check(documents: list[dict[str, Any]]) -> dict[str, Any]:
+    """Check document quality before ingestion. Returns per-doc scores and batch decision."""
+    from insureflow.ingestion.quality_gate import DocQualityGate
+
+    gate = DocQualityGate()
+    return gate.evaluate(documents)
+
+
+@app.get("/api/resubmit/pending")
+async def resubmit_pending(bundle_id: str = "") -> dict[str, Any]:
+    """Get pending resubmit requests, optionally filtered by bundle."""
+    from insureflow.ingestion.resubmit import ResubmitManager
+
+    manager = ResubmitManager()
+    return {"pending": manager.get_pending(bundle_id=bundle_id)}
+
+
+@app.post("/api/resubmit/{bundle_id}/waive")
+async def resubmit_waive(bundle_id: str, filename: str, reason: str = "") -> dict[str, Any]:
+    """Waive a resubmit request — UW decides to proceed without the document."""
+    from insureflow.ingestion.resubmit import ResubmitManager
+
+    manager = ResubmitManager()
+    success = manager.mark_waived(bundle_id, filename, reason)
+    return {"success": success, "bundle_id": bundle_id, "filename": filename}
+
+
+@app.get("/api/resubmit/{bundle_id}/summary")
+async def resubmit_summary(bundle_id: str) -> dict[str, Any]:
+    """Resubmit status summary for a bundle."""
+    from insureflow.ingestion.resubmit import ResubmitManager
+
+    manager = ResubmitManager()
+    return manager.get_resubmit_summary(bundle_id)
+
+
 @app.get("/api/demo/presets")
 async def demo_presets() -> dict[str, Any]:
     """Available one-click demo submissions for the dashboard."""

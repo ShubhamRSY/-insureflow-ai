@@ -428,6 +428,53 @@ class InsurancePipeline:
             findings=ocr_count,
         )
 
+        # ── 2a. DOCUMENT QUALITY GATE (block STP on poor-quality docs) ──
+        doc_quality_result: dict[str, Any] = {}
+        try:
+            from insureflow.ingestion.quality_gate import DocQualityGate
+
+            quality_gate = DocQualityGate()
+            doc_quality_result = quality_gate.evaluate(documents or [])
+
+            if doc_quality_result["decision"] == "block":
+                logger.warning(
+                    "Document quality gate BLOCKED: %d issue(s), score=%.2f",
+                    len(doc_quality_result["issues"]),
+                    doc_quality_result["score"],
+                )
+                audit.log(
+                    PipelineEvent.STRUCTURED_PARSE_COMPLETE,
+                    f"Doc quality gate: BLOCKED — {len(doc_quality_result['resubmit_required'])} doc(s) need resubmission",
+                    metadata={
+                        "doc_quality_decision": "block",
+                        "doc_quality_score": doc_quality_result["score"],
+                        "resubmit_required": doc_quality_result["resubmit_required"],
+                    },
+                )
+            elif doc_quality_result["decision"] == "warn":
+                logger.info(
+                    "Document quality gate WARN: score=%.2f, %d issue(s)",
+                    doc_quality_result["score"],
+                    len(doc_quality_result["issues"]),
+                )
+                audit.log(
+                    PipelineEvent.STRUCTURED_PARSE_COMPLETE,
+                    f"Doc quality gate: WARN — score {doc_quality_result['score']:.2f}",
+                    metadata={
+                        "doc_quality_decision": "warn",
+                        "doc_quality_score": doc_quality_result["score"],
+                    },
+                )
+            else:
+                logger.debug(
+                    "Document quality gate PASSED: score=%.2f",
+                    doc_quality_result["score"],
+                )
+
+        except Exception as exc:
+            logger.warning("Document quality gate failed (non-blocking): %s", exc)
+            doc_quality_result = {"decision": "error", "error": str(exc)}
+
         # ── 2b. RE-SCORE DOCUMENT CHECKLIST on fully-ingested bundle ──
         line_hint = resolved_line.value if resolved_line else insurance_line
         triage_result = self.triage.score_submission(
@@ -912,6 +959,27 @@ class InsurancePipeline:
             skip_ml_fraud=funnel,
             insurance_line=resolved_line.value if resolved_line else insurance_line,
         )
+
+        # ── 6b. Apply document quality gate results to memo ──
+        if doc_quality_result and doc_quality_result.get("decision") == "block":
+            from insureflow.models.agents import Finding, RiskSeverity, UWDecision
+
+            memo.human_review_required = True
+            memo.human_review_reasons.append(f"Document quality gate blocked: {len(doc_quality_result.get('resubmit_required', []))} document(s) failed quality check")
+            for resubmit_file in doc_quality_result.get("resubmit_required", []):
+                memo.key_findings.append(
+                    Finding(
+                        title=f"Low-quality document: {resubmit_file}",
+                        description="Document failed quality gate — resubmit required before STP processing can proceed.",
+                        severity=RiskSeverity.HIGH,
+                        category="data_quality",
+                    )
+                )
+            if memo.decision not in (UWDecision.DECLINE, UWDecision.REFER):
+                memo.decision = UWDecision.REFER
+        elif doc_quality_result and doc_quality_result.get("decision") == "warn":
+            memo.human_review_required = True
+            memo.human_review_reasons.append(f"Document quality warning: batch score {doc_quality_result['score']:.2f}")
 
         if provenance_failed or reconciliation_failed:
             from insureflow.models.agents import Finding, RiskSeverity, UWDecision
@@ -1797,6 +1865,7 @@ class InsurancePipeline:
             "document_count": len(bundle.unstructured) + (1 if bundle.structured else 0),
             "document_checklist": triage_result.document_checklist.to_summary_dict(),
             "reconciliation_discrepancies": len(reconciliation.discrepancies),
+            "doc_quality": doc_quality_result,
             "extraction_issues": extraction_issues,
             "extraction_issue_summary": {
                 "total": len(extraction_issues),
