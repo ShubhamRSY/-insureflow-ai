@@ -8235,6 +8235,123 @@ def surplus_lines_all_states(current: TokenData = Depends(require_role(Role.VIEW
     }
 
 
+# ── Per-Submission Pricing & Billing ─────────────────────────────────────
+
+
+@app.get("/pricing/plans")
+def pricing_plans(current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
+    """List all available pricing plans."""
+    from insureflow.pricing.engine import PricingEngine
+
+    return PricingEngine().get_pricing_plans()
+
+
+@app.get("/pricing/billing")
+def pricing_billing(current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
+    """Get billing summary for the current org."""
+    from insureflow.pricing.engine import PricingEngine
+
+    return PricingEngine().get_billing_summary(current.org_id).model_dump()
+
+
+@app.get("/pricing/usage")
+def pricing_usage(current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
+    """Get current period usage summary."""
+    from insureflow.pricing.engine import PricingEngine
+
+    return PricingEngine().get_usage_summary(current.org_id).model_dump()
+
+
+@app.post("/pricing/upgrade")
+def pricing_upgrade(body: dict[str, Any], current: TokenData = Depends(require_role(Role.ADMIN))) -> dict[str, Any]:
+    """Upgrade pricing tier (admin only)."""
+    from insureflow.pricing.engine import PricingEngine
+
+    new_tier = body.get("tier", "")
+    return PricingEngine().upgrade_tier(current.org_id, new_tier)
+
+
+@app.post("/pricing/api-keys")
+def pricing_create_api_key(
+    body: dict[str, Any],
+    current: TokenData = Depends(require_role(Role.ADMIN)),
+) -> dict[str, Any]:
+    """Create a new API key for the org (admin only)."""
+    from insureflow.pricing.engine import PricingEngine
+
+    label = body.get("label", "")
+    tier = body.get("tier", "free")
+    raw_key, api_key = PricingEngine().create_api_key(current.org_id, tier, label)
+    return {
+        "api_key": raw_key,
+        "key_id": api_key.key_id,
+        "tier": api_key.tier,
+        "label": api_key.label,
+        "message": "Save this key — it will not be shown again",
+    }
+
+
+@app.get("/pricing/api-keys")
+def pricing_list_api_keys(current: TokenData = Depends(require_role(Role.ADMIN))) -> dict[str, Any]:
+    """List API keys for the org (admin only)."""
+    from insureflow.pricing.engine import PricingEngine
+
+    keys = PricingEngine().list_api_keys(current.org_id)
+    return {
+        "keys": [
+            {
+                "key_id": k.key_id,
+                "tier": k.tier,
+                "label": k.label,
+                "created_at": k.created_at.isoformat(),
+                "last_used_at": k.last_used_at.isoformat() if k.last_used_at else None,
+                "disabled": k.disabled,
+            }
+            for k in keys
+        ],
+        "total": len(keys),
+    }
+
+
+@app.delete("/pricing/api-keys/{key_id}")
+def pricing_disable_api_key(
+    key_id: str,
+    current: TokenData = Depends(require_role(Role.ADMIN)),
+) -> dict[str, Any]:
+    """Disable an API key (admin only)."""
+    from insureflow.pricing.engine import PricingEngine
+
+    engine = PricingEngine()
+    keys = engine.list_api_keys(current.org_id)
+    for k in keys:
+        if k.key_id == key_id:
+            engine.disable_api_key(k.key_hash)
+            return {"message": f"API key {key_id} disabled", "key_id": key_id}
+    raise HTTPException(status_code=404, detail=f"API key {key_id} not found")
+
+
+@app.post("/pricing/record")
+def pricing_record_submission(
+    body: dict[str, Any],
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Record a submission and return updated usage (called automatically by pipeline)."""
+    from insureflow.pricing.engine import PricingEngine
+
+    engine = PricingEngine()
+    allowed, reason = engine.check_rate_limit(current.org_id)
+    if not allowed:
+        raise HTTPException(status_code=429, detail=reason)
+
+    summary = engine.record_and_bill(
+        org_id=current.org_id,
+        submission_id=body.get("submission_id", ""),
+        line_of_business=body.get("line_of_business", ""),
+        state_code=body.get("state_code", ""),
+    )
+    return summary.model_dump()
+
+
 @app.get("/ml/models")
 def ml_list_models(current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
     """List all registered ML models with status and metrics."""
