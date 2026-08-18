@@ -123,6 +123,26 @@ class OCRProcessor:
         if ml_text and ml_text.strip():
             return ml_text, "vision_ml", {}
 
+        # 0.7. Handwriting detection + TrOCR recognition
+        try:
+            from insureflow.ingestion.handwriting import HandwritingDetector, HandwritingRecognizer
+
+            detector = HandwritingDetector()
+            from PIL import Image as _PilImage
+
+            img = _PilImage.open(file_path)
+            detection = detector.detect(img)
+            if detection.get("has_handwriting") and detection.get("confidence", 0) > 0.4:
+                recognizer = HandwritingRecognizer()
+                htr_result = recognizer.recognize(img)
+                if htr_result.get("text") and htr_result["text"].strip():
+                    htr_text = htr_result["text"]
+                    htr_conf = htr_result.get("confidence", 0)
+                    logger.info("HTR extracted %d chars (confidence=%.2f)", len(htr_text), htr_conf)
+                    return htr_text, f"trocr(h={htr_conf:.2f})", {}
+        except Exception as exc:
+            logger.debug("HTR pipeline skipped: %s", exc)
+
         # 1. Tesseract OCR (best for scans/handwriting)
         if self.engine in ("auto", "tesseract"):
             try:
@@ -261,6 +281,23 @@ class OCRProcessor:
                 ocr_parts = [pytesseract.image_to_string(page) for page in pages]
                 combined = "\n\n".join(p for p in ocr_parts if p.strip())
                 if combined.strip():
+                    # Check if pages contain handwriting — if so, enhance with HTR
+                    try:
+                        from insureflow.ingestion.handwriting import HandwritingDetector, HandwritingRecognizer
+
+                        detector = HandwritingDetector()
+                        recognizer = HandwritingRecognizer()
+                        htr_parts: list[str] = []
+                        for page_img in pages:
+                            detection = detector.detect(page_img)
+                            if detection.get("has_handwriting") and detection.get("confidence", 0) > 0.4:
+                                htr_result = recognizer.recognize(page_img)
+                                if htr_result.get("text") and htr_result["text"].strip():
+                                    htr_parts.append(htr_result["text"])
+                        if htr_parts:
+                            combined = combined + "\n\n--- Handwriting (HTR) ---\n" + "\n".join(htr_parts)
+                    except Exception as exc:
+                        logger.debug("HTR enhancement skipped for scanned PDF: %s", exc)
                     return combined
             except ImportError:
                 logger.debug("pdf2image/pytesseract not available for scanned PDF OCR")
