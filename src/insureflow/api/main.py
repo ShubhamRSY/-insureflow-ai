@@ -8352,6 +8352,124 @@ def pricing_record_submission(
     return summary.model_dump()
 
 
+# ── Automated Law Tracking & Regulatory Alerts ────────────────────────────
+
+
+@app.post("/law-tracker/scan")
+def law_tracker_scan(current: TokenData = Depends(require_role(Role.ADMIN))) -> dict[str, Any]:
+    """Run a full scan of all regulatory sources and generate alerts."""
+    from insureflow.regulatory.law_tracker import LawTracker
+
+    return LawTracker().run_scan().model_dump()
+
+
+@app.get("/law-tracker/alerts")
+def law_tracker_alerts(
+    state_code: str = "",
+    severity: str = "",
+    reviewed: bool | None = None,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Get regulatory alerts with optional filters."""
+    from insureflow.regulatory.law_tracker import LawTracker
+
+    alerts = LawTracker().get_alerts(
+        org_id=current.org_id,
+        state_code=state_code,
+        severity=severity,
+        reviewed=reviewed,
+    )
+    return {
+        "alerts": [a.model_dump() for a in alerts],
+        "total": len(alerts),
+    }
+
+
+@app.get("/law-tracker/alerts/subscription")
+def law_tracker_subscription_alerts(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Get all alerts matching the org's subscription filters."""
+    from insureflow.regulatory.law_tracker import LawTracker
+
+    alerts = LawTracker().get_subscription_alerts(current.org_id)
+    return {
+        "alerts": [a.model_dump() for a in alerts],
+        "total": len(alerts),
+    }
+
+
+@app.post("/law-tracker/alerts/{alert_id}/review")
+def law_tracker_review_alert(
+    alert_id: str,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Mark an alert as reviewed."""
+    from insureflow.regulatory.law_tracker import LawTracker
+
+    success = LawTracker().review_alert(alert_id)
+    if not success:
+        raise HTTPException(status_code=404, detail=f"Alert {alert_id} not found")
+    return {"message": f"Alert {alert_id} marked as reviewed", "alert_id": alert_id}
+
+
+@app.get("/law-tracker/states/{state_code}")
+def law_tracker_state_summary(
+    state_code: str,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Get summary of all tracked changes for a specific state."""
+    from insureflow.regulatory.law_tracker import LawTracker
+
+    return LawTracker().get_state_change_summary(state_code.upper())
+
+
+@app.post("/law-tracker/subscribe")
+def law_tracker_subscribe(
+    body: dict[str, Any],
+    current: TokenData = Depends(require_role(Role.ADMIN)),
+) -> dict[str, Any]:
+    """Create or update alert subscription for the org."""
+    from insureflow.regulatory.law_tracker import AlertSubscription, LawTracker
+
+    sub = AlertSubscription(
+        org_id=current.org_id,
+        states=[s.upper() for s in body.get("states", [])],
+        lines=body.get("lines", []),
+        alert_types=body.get("alert_types", []),
+        severity_threshold=body.get("severity_threshold", "warning"),
+        webhook_url=body.get("webhook_url", ""),
+        email_digest=body.get("email_digest", "daily"),
+    )
+    return LawTracker().subscribe(sub)
+
+
+@app.get("/law-tracker/subscription")
+def law_tracker_get_subscription(
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Get the org's alert subscription."""
+    from insureflow.regulatory.law_tracker import LawTracker
+
+    sub = LawTracker().get_subscription(current.org_id)
+    if sub is None:
+        return {"subscribed": False, "message": "No active subscription"}
+    return {"subscribed": True, **sub.model_dump()}
+
+
+@app.delete("/law-tracker/subscription")
+def law_tracker_unsubscribe(
+    current: TokenData = Depends(require_role(Role.ADMIN)),
+) -> dict[str, Any]:
+    """Cancel alert subscription for the org."""
+    from insureflow.regulatory.law_tracker import LawTracker
+
+    success = LawTracker().unsubscribe(current.org_id)
+    if not success:
+        return {"message": "No active subscription to cancel"}
+    return {"message": "Subscription cancelled", "org_id": current.org_id}
+
+
 @app.get("/ml/models")
 def ml_list_models(current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
     """List all registered ML models with status and metrics."""
