@@ -1,0 +1,8 @@
+{"timestamp": "2026-08-18T02:45:47.862312+00:00", "source": "naic_content_api", "items_collected": 50, "error": ""}
+{"timestamp": "2026-08-18T02:45:47.871831+00:00", "source": "naic_model_laws", "items_collected": 0, "error": ""}
+{"timestamp": "2026-08-18T02:45:48.918161+00:00", "source": "texas_tdi", "items_collected": 100, "error": ""}
+{"timestamp": "2026-08-18T02:45:49.409645+00:00", "source": "nyc_dfs", "items_collected": 0, "error": ""}
+{"timestamp": "2026-08-18T02:45:49.611583+00:00", "source": "florida_oir", "items_collected": 0, "error": ""}
+{"timestamp": "2026-08-18T02:45:50.952886+00:00", "source": "california_cdi", "items_collected": 152, "error": ""}
+{"timestamp": "2026-08-18T02:45:51.152843+00:00", "source": "federal_register", "items_collected": 0, "error": ""}
+{"timestamp": "2026-08-18T02:45:51.668779+00:00", "source": "insureai_wire", "items_collected": 90, "error": ""}

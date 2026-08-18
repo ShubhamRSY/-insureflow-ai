@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Commercial Underwriting ROI — One-Page Summary</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  @page { size: letter landscape; margin: 0.45in; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "IBM Plex Sans", sans-serif;
+    font-size: 8.2pt;
+    line-height: 1.35;
+    color: #0b1524;
+    margin: 0;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .page {
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    grid-template-rows: auto auto 1fr auto;
+    gap: 10px 14px;
+    height: 100%;
+  }
+  header {
+    grid-column: 1 / -1;
+    border-bottom: 2px solid #1a6f86;
+    padding-bottom: 8px;
+  }
+  h1 {
+    font-size: 17pt;
+    margin: 0 0 4px;
+    letter-spacing: -0.02em;
+  }
+  .tagline { color: #5a6b7d; font-size: 9pt; margin: 0; }
+  .meta { float: right; text-align: right; font-size: 7.5pt; color: #5a6b7d; }
+  h2 {
+    font-size: 9.5pt;
+    margin: 0 0 5px;
+    color: #0e4a5c;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .box {
+    background: #f3f6f9;
+    border: 1px solid #d0dae6;
+    border-radius: 6px;
+    padding: 8px 10px;
+  }
+  .explain {
+    background: #e8f4f8;
+    border-left: 3px solid #1a6f86;
+    padding: 6px 10px;
+    font-size: 7.8pt;
+    color: #1e3044;
+    margin-bottom: 6px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 7.6pt;
+  }
+  th, td {
+    border: 1px solid #d0dae6;
+    padding: 4px 6px;
+    text-align: left;
+  }
+  th { background: #0e4a5c; color: #fff; font-weight: 600; }
+  tr:nth-child(even) td { background: #fff; }
+  tr:nth-child(odd) td { background: #f8fafc; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .roi { font-weight: 700; color: #0d7a52; }
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin: 6px 0;
+  }
+  .stat {
+    background: #fff;
+    border: 1px solid #d0dae6;
+    border-radius: 5px;
+    padding: 6px;
+    text-align: center;
+  }
+  .stat b { display: block; font-size: 11pt; color: #0e4a5c; }
+  .stat span { font-size: 6.8pt; color: #5a6b7d; }
+  ul { margin: 4px 0; padding-left: 14px; }
+  li { margin-bottom: 2px; }
+  footer {
+    grid-column: 1 / -1;
+    font-size: 7pt;
+    color: #5a6b7d;
+    border-top: 1px solid #d0dae6;
+    padding-top: 6px;
+  }
+  .pill {
+    display: inline-block;
+    background: #0e4a5c;
+    color: #fff;
+    font-size: 6.5pt;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-right: 4px;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <div class="meta">August 2026<br/>Confidential · Planning model labeled</div>
+    <h1>Commercial underwriting that pays for itself</h1>
+    <p class="tagline">B2B enterprise SaaS · Property · D&O · WC · Trade credit · E&O · Key person · Priced per bind-ready memo</p>
+  </header>
+
+  <section>
+    <h2>What we are</h2>
+    <div class="explain">
+      <strong>Not B2C. Not premium share.</strong> Cloud workbench for carriers &amp; MGAs: broker package in →
+      decision + quote worksheet + audit trail out. Licensed underwriter still signs. Bind optional in shadow pilot.
+    </div>
+    <div class="box">
+      <p><span class="pill">B2B</span><span class="pill">Enterprise SaaS</span><span class="pill">Full-stack</span></p>
+      <ul>
+        <li><strong>Six live lines</strong> — each with correct exposure base (limit vs payroll vs TIV)</li>
+        <li><strong>Fail closed</strong> — no fake CLUE/NCCI; their SERFF book on Desk+; Guidewire bind or refused</li>
+        <li><strong>Pricing</strong> — Pilot $0 · Desk $799/mo · Book $2,490/mo · Enterprise from $6,500/mo</li>
+      </ul>
+    </div>
+    <h2 style="margin-top:8px">Status quo cost (why they buy)</h2>
+    <div class="stats">
+      <div class="stat"><b>120 min</b><span>Baseline first pass / file</span></div>
+      <div class="stat"><b>$175/hr</b><span>Loaded UW cost</span></div>
+      <div class="stat"><b>40 / mo</b><span>Typical desk volume</span></div>
+      <div class="stat"><b>$14,000</b><span>Monthly first-pass labor</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Customer ROI — by quarter (year one)</h2>
+    <div class="explain">
+      <strong>Net/mo</strong> = (minutes saved × files × $175/hr) − software bill.
+      <strong>ROI</strong> = net ÷ software cost. Planning model — replace with pilot KPIs at day 30.
+    </div>
+    <table>
+      <thead>
+        <tr><th>Q</th><th>Phase</th><th>Files</th><th>Saved</th><th>Net / mo</th><th>ROI</th></tr>
+      </thead>
+      <tbody><tr><td>Q1</td><td>Shadow pilot</td><td class='num'>20</td><td class='num'>30 min</td><td class='num'>$1,400</td><td class='num roi'>400%</td></tr><tr><td>Q2</td><td>Desk live</td><td class='num'>35</td><td class='num'>60 min</td><td class='num'>$4,776</td><td class='num roi'>354%</td></tr><tr><td>Q3</td><td>Scale + STP</td><td class='num'>45</td><td class='num'>75 min</td><td class='num'>$7,945</td><td class='num roi'>418%</td></tr><tr><td>Q4</td><td>Book tier</td><td class='num'>55</td><td class='num'>90 min</td><td class='num'>$11,948</td><td class='num roi'>480%</td></tr></tbody>
+    </table>
+    <div class="stats" style="margin-top:8px">
+      <div class="stat"><b>439%</b><span>FY1 ROI on Desk</span></div>
+      <div class="stat"><b>$85,512</b><span>FY1 net profit to buyer</span></div>
+      <div class="stat"><b>$11,948</b><span>Q4 net / mo</span></div>
+      <div class="stat"><b>&lt; 25%</b><span>Override target d30</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>How ROI is calculated</h2>
+    <div class="box">
+      <table>
+        <tr><th>Line</th><th>Formula</th></tr>
+        <tr><td>Labor value</td><td>min saved ÷ 60 × files/mo × $175/hr × 12</td></tr>
+        <tr><td>Software cost</td><td>Monthly plan + overage × 12</td></tr>
+        <tr><td>Net profit</td><td>Labor value − software cost</td></tr>
+        <tr><td>ROI %</td><td>Net profit ÷ software cost × 100</td></tr>
+      </table>
+    </div>
+    <h2 style="margin-top:8px">Pilot success criteria</h2>
+    <ul>
+      <li>p95 first-pass cycle ≤ <strong>15 minutes</strong></li>
+      <li>Override rate &lt; <strong>25%</strong> by day 30</li>
+      <li>Missing-doc / conflict catch ≥ <strong>90%</strong></li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Company plan (investor — illustrative)</h2>
+    <div class="explain">Replace with live pipeline when fundraising. Recurring SaaS + $15–40K onboarding.</div>
+    <table>
+      <thead><tr><th>FY</th><th>Customers</th><th>ARR</th><th>Gross margin</th></tr></thead>
+      <tbody>
+        <tr><td>FY1</td><td class="num">8</td><td class="num">$211,200</td><td class="num">72%</td></tr>
+        <tr><td>FY2</td><td class="num">22</td><td class="num">$739,200</td><td class="num">78%</td></tr>
+        <tr><td>FY3</td><td class="num">48</td><td class="num">$1,958,400</td><td class="num">82%</td></tr>
+      </tbody>
+    </table>
+    <h2 style="margin-top:8px">Next step</h2>
+    <div class="box">
+      <strong>Buyer:</strong> 30-day shadow pilot · your book · bind off · measured ROI<br/>
+      <strong>Investor:</strong> 10-slide cut + full deck available<br/>
+      <strong>Contact:</strong> hello@ryterainc.com · ryterainc.com/dashboard
+    </div>
+  </section>
+
+  <footer>
+    All ROI figures use planning assumptions (120-min baseline, $175/hr loaded UW, published list pricing).
+    Not a customer guarantee. Full deck: Rytera_CSuite_Investor_Deck.pptx
+  </footer>
+</div>
+</body>
+</html>
