@@ -8470,6 +8470,75 @@ def law_tracker_unsubscribe(
     return {"message": "Subscription cancelled", "org_id": current.org_id}
 
 
+# ── Rate Book Audit Trail ────────────────────────────────────────────────
+
+
+@app.get("/rate-book/info")
+def rate_book_info(current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
+    """Get current rate book metadata — carrier, version, effective date, products covered."""
+    from insureflow.rating.rate_book_store import RateBookResolver
+
+    return RateBookResolver().get_rate_book_info()
+
+
+@app.get("/rate-book/sources/{product_id}")
+def rate_book_sources(
+    product_id: str,
+    state_code: str = "",
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Get all filed rate sources for a product in a state (loss cost, LCM, relativity, min premium)."""
+    from insureflow.rating.rate_book_store import RateBookResolver
+
+    sources = RateBookResolver().get_rate_sources(product_id, state_code)
+    return {
+        "product_id": product_id,
+        "state_code": state_code,
+        "sources": [s.model_dump() for s in sources],
+        "total": len(sources),
+    }
+
+
+@app.get("/rate-book/audit/{bundle_id}")
+def rate_book_audit(
+    bundle_id: str,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Get complete rate audit trail for a submission — every rate used, with source citations."""
+    from insureflow.rating.rate_book_store import RateBookResolver
+
+    trail = RateBookResolver().get_trail(bundle_id)
+    return trail.model_dump()
+
+
+@app.get("/rate-book/audit/state/{state_code}")
+def rate_book_audit_by_state(
+    state_code: str,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Get rate audit entries for a specific state."""
+    from insureflow.rating.rate_book_store import get_audit_store
+
+    entries = get_audit_store().get_entries_by_state(state_code)
+    return {
+        "state_code": state_code,
+        "entries": [e.model_dump() for e in entries],
+        "total": len(entries),
+    }
+
+
+@app.get("/rate-book/has-filed-rates")
+def rate_book_has_filed(current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
+    """Check if a production/carrier-imported rate book is loaded (required for binding)."""
+    from insureflow.rating.rate_book_store import RateBookResolver
+
+    resolver = RateBookResolver()
+    return {
+        "has_filed_rate_book": resolver.has_filed_rate_book(),
+        "rate_book_info": resolver.get_rate_book_info(),
+    }
+
+
 @app.get("/ml/models")
 def ml_list_models(current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, Any]:
     """List all registered ML models with status and metrics."""
