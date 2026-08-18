@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Shield, Home, Activity, ClipboardCheck, Settings, LogOut, RefreshCw, Menu, X,
   FileText, Users, BarChart3, BookOpen, Wallet, Layers, Link2, LineChart, Search, Database, FlaskConical,
   FileCheck, MessagesSquare, Radar, Briefcase, Building2, Calculator, ChevronDown, ChevronRight, Plus,
-  ShieldCheck, Library, History, Lock,
+  ShieldCheck, Library, History, Lock, Sparkles,
 } from 'lucide-react';
 import { useState } from 'react';
 import { auth } from '../lib/api';
@@ -59,6 +59,7 @@ const nav = [
   { section: 'UW Operations' },
   { to: '/line-uw', icon: Briefcase, label: 'Line UW Desk', color: 'text-sky-400' },
   { to: '/staff-uw', icon: Building2, label: 'Staff UW Desk', color: 'text-violet-400' },
+  { to: '/uw-dashboard', icon: Sparkles, label: 'UW Dashboard', color: 'text-brand', tag: 'New' },
   { to: '/workflow', icon: ClipboardCheck, label: 'UW Sign-off', badge: true },
   { to: '/uw-workbench', icon: ShieldCheck, label: 'UW Workbench', color: 'text-teal-400' },
   { to: '/prior-decisions', icon: History, label: 'Prior decisions', color: 'text-slate-300' },
@@ -99,6 +100,7 @@ const CRUMBS = [
   { prefix: '/line-uw', labels: ['UW Operations', 'Line UW Desk'] },
   { prefix: '/staff-uw', labels: ['UW Operations', 'Staff UW Desk'] },
   { prefix: '/uw-workbench', labels: ['UW Operations', 'UW Workbench'] },
+  { prefix: '/uw-dashboard', labels: ['UW Operations', 'UW Dashboard'] },
   { prefix: '/prior-decisions', labels: ['UW Operations', 'Prior decisions'] },
   { prefix: '/mortgage', labels: ['Mortgage & Lending', 'Mortgage'] },
   { prefix: '/lending', labels: ['Mortgage & Lending', 'Lending'] },
