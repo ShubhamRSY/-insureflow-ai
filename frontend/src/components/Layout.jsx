@@ -24,6 +24,7 @@ const nav = [
     label: 'Insurance',
     color: 'text-insurance',
     defaultOpen: true,
+    scrollChildren: true,
     children: INSURANCE_NAV_CHILDREN,
   },
   { section: 'Reference' },
@@ -218,7 +219,13 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
             </button>
           </div>
           {isOpen && (
-            <div className="ml-4 mt-0.5 border-l border-white/[0.07] pl-2">
+            <div
+              className={`ml-4 mt-0.5 border-l border-white/[0.07] pl-2 ${
+                item.scrollChildren
+                  ? 'max-h-[11.25rem] overflow-y-auto overscroll-contain pr-1 [scrollbar-width:thin] [scrollbar-color:rgba(148,163,184,0.45)_transparent]'
+                  : ''
+              }`}
+            >
               {item.children.map((child) => {
                 if (child.soon) {
                   return (
