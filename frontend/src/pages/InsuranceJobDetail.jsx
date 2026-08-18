@@ -10,6 +10,7 @@ import UwPolicyValidator from '../components/UwPolicyValidator';
 import BindReadinessPanel from '../components/BindReadinessPanel';
 import PdfGroundingViewer from '../components/PdfGroundingViewer';
 import ProvenancePanel from '../components/ProvenancePanel';
+import RateProvenance from '../components/RateProvenance';
 
 export default function InsuranceJobDetail() {
   const { jobId } = useParams();
@@ -317,6 +318,11 @@ export default function InsuranceJobDetail() {
         {!processing && (
           <div className="mt-6 space-y-6">
             <InsuranceMemoView job={job} />
+
+            {/* Rate Source Provenance — where every rate came from */}
+            {job?.quote_result?.metadata && (
+              <RateProvenance metadata={job.quote_result.metadata} />
+            )}
 
             {/* Provenance: where every number came from */}
             <div className="rounded-2xl border border-white/10 bg-surface/40 p-5">

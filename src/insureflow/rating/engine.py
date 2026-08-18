@@ -604,7 +604,10 @@ class InsuranceRatingEngine:
         return None
 
     def _finalize_quote(self, result: QuoteResult) -> QuoteResult:
-        """Desk+ refuses pilot manuals — rating must be the carrier's SERFF book."""
+        """Desk+ refuses pilot manuals — rating must be the carrier's SERFF book.
+
+        Records full rate audit trail with filed rate source citations.
+        """
         from insureflow.billing.plan import current_plan, is_customer_rate_book
         from insureflow.rating.iso_forms import attach_iso_forms
         from insureflow.rating.leaf_filings import carrier_book_status
@@ -630,6 +633,97 @@ class InsuranceRatingEngine:
             meta["rate_book_gate"] = "blocked_demo_book"
         else:
             meta["rate_book_gate"] = "ok"
+
+        # ── Record rate audit trail ──────────────────────────────────────
+        try:
+            from insureflow.rating.rate_book_store import RateBookResolver
+
+            resolver = RateBookResolver()
+            state_code = str(meta.get("state") or "")
+            product_id = str(meta.get("product_id") or result.line.value)
+            bundle_id = result.bundle_id
+
+            # Gather rate sources from metadata (set by rating engine)
+            rate_sources = list(meta.get("_rate_sources", []))
+
+            # If no rate sources were pre-populated, resolve them now
+            if not rate_sources and product_id and state_code:
+                rate_sources = resolver.get_rate_sources(product_id, state_code)
+
+            # Convert to RateSource objects if needed
+            from insureflow.rating.rate_book_store import RateSource
+
+            typed_sources: list[RateSource] = []
+            for s in rate_sources:
+                if isinstance(s, RateSource):
+                    typed_sources.append(s)
+                elif isinstance(s, dict):
+                    typed_sources.append(RateSource(**s))
+
+            # Record the audit entry
+            exposure = float(meta.get("tiv") or meta.get("exposure") or 0.0)
+            exposure_basis = "tiv"
+            loss_cost_val = float(meta.get("iso_base_loss_cost") or meta.get("loss_cost") or 0.0)
+            lcm_val = float(meta.get("lcm") or 0.0)
+            state_rel = float(meta.get("territory_relativity") or meta.get("state_relativity") or 1.0)
+            base = float(result.base_premium)
+            adjusted = float(result.adjusted_premium)
+
+            # Extract AI schedule mod (advisory only)
+            ai_mod = 0.0
+            for comp in result.schedule_modifications or []:
+                if comp.name == "uw_schedule_modification":
+                    ai_mod = float(comp.modifier_pct or 0.0)
+                    break
+
+            entry = resolver.record_quote(
+                bundle_id=bundle_id,
+                state_code=state_code,
+                line_of_business=result.line.value,
+                product_id=product_id,
+                exposure=exposure,
+                exposure_basis=exposure_basis,
+                loss_cost=loss_cost_val,
+                lcm=lcm_val,
+                state_relativity=state_rel,
+                base_premium=base,
+                adjusted_premium=adjusted,
+                rate_sources=typed_sources,
+                ai_suggested_mod_pct=ai_mod,
+                ai_mod_applied=ai_mod != 0.0,
+                final_premium=adjusted,
+            )
+
+            # Attach audit trail metadata to the quote
+            meta["_rate_audit_timestamp"] = entry.timestamp.isoformat()
+            meta["_rate_audit_bundle_id"] = entry.bundle_id
+            meta["_is_filed_rate"] = entry.is_filed_rate
+            meta["_rate_book_posture_audit"] = entry.rate_book_posture
+            meta["_filed_premium"] = round(base, 2)
+            meta["_adjusted_premium"] = round(adjusted, 2)
+            meta["_ai_mod_pct"] = ai_mod
+
+            # Attach rate sources directly (for frontend rendering)
+            meta["rate_sources"] = [
+                {
+                    "rate_type": s.rate_type,
+                    "value": s.value,
+                    "source_file": s.source_file,
+                    "filing_id": s.filing_id,
+                    "effective_date": s.effective_date,
+                    "carrier": s.carrier,
+                    "state": s.state,
+                    "product_id": s.product_id,
+                    "version": s.version,
+                    "notes": s.notes,
+                }
+                for s in typed_sources
+            ]
+
+        except Exception:
+            # Audit trail failure must never block quoting
+            meta["_rate_audit_error"] = True
+
         result.metadata = meta
         return result
 
