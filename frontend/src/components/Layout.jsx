@@ -224,7 +224,7 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
             <div
               className={`ml-4 mt-0.5 border-l border-white/[0.07] pl-2 ${
                 item.scrollChildren
-                  ? 'max-h-[11.25rem] overflow-y-auto overscroll-contain pr-1 [scrollbar-width:thin] [scrollbar-color:rgba(148,163,184,0.45)_transparent]'
+                  ? 'max-h-96 overflow-y-auto overscroll-contain pr-1 [scrollbar-width:thin] [scrollbar-color:rgba(148,163,184,0.45)_transparent]'
                   : ''
               }`}
             >

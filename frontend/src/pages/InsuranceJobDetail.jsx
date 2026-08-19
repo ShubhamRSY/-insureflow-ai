@@ -221,6 +221,30 @@ export default function InsuranceJobDetail({ onDeleted, onDeleteJob }) {
 
       {/* Content */}
       <div className="mx-auto max-w-7xl px-6 py-6">
+        {!processing && !job?.results?.uw_worksheet && !job?.results?.memo && (
+          <div className="mb-6 rounded-xl border border-amber-500/20 bg-amber-500/5 p-6 text-center">
+            <AlertTriangle className="mx-auto mb-3 h-8 w-8 text-amber-400" />
+            <p className="text-sm font-semibold text-amber-200">Pipeline has not run yet</p>
+            <p className="mt-1 text-xs text-slate-400">
+              This submission was uploaded but the analysis pipeline hasn't processed it.
+              Run the pipeline to extract data, generate a memo, and get AI-indicated terms.
+            </p>
+            <button
+              onClick={async () => {
+                try {
+                  await endpoints.retryJob(jobId);
+                  fetchJob();
+                } catch (e) {
+                  alert(e.message || 'Could not start pipeline');
+                }
+              }}
+              className="mt-4 inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2 text-xs font-semibold text-white hover:bg-brand-light transition"
+            >
+              <RefreshCw className="h-3.5 w-3.5" /> Run Pipeline
+            </button>
+          </div>
+        )}
+
         {job?.results?.uw_worksheet && (
           <div className="mb-6 space-y-4">
             <UwWorksheetView worksheet={job.results.uw_worksheet} validatedTerms={validatedTerms} />

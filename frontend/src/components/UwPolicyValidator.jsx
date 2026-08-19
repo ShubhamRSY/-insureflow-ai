@@ -90,7 +90,16 @@ export default function UwPolicyValidator({ bundleId, worksheet, validatedTerms,
           Validate terms
         </button>
       </div>
-      {error && <p className="mt-2 text-xs text-red-300">{error}</p>}
+      {error && (
+        <div className="mt-3 rounded-lg bg-red-500/10 px-3 py-2 text-xs text-red-300">
+          <p className="font-medium">{error.includes('not found') ? 'Workflow not available' : 'Validation failed'}</p>
+          <p className="mt-0.5 text-red-400/80">
+            {error.includes('not found')
+              ? 'The pipeline has not generated a workflow for this submission yet. Run the pipeline first, then return here to validate terms.'
+              : error}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
