@@ -31,8 +31,8 @@ class ISORatingAdapter(RatingAdapter):
 
     @property
     def _use_live(self) -> bool:
-        from insureflow.oracles._live import resolve_integration_mode
         from insureflow.integrations.http_client import IntegrationHTTPClient
+        from insureflow.oracles._live import resolve_integration_mode
 
         if self._guidewire_key:
             http = IntegrationHTTPClient(api_key=self._guidewire_key, base_url=self._guidewire_url)

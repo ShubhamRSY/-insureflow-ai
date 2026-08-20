@@ -979,8 +979,8 @@ async def health() -> dict[str, Any]:
 
     # Oracle connectivity — ping each configured oracle endpoint
     try:
-        import urllib.request as _req
         import urllib.error as _err
+        import urllib.request as _req
 
         for name in ("CLUE", "NCCI", "A-PLUS", "CAT"):
             key = f"{name}_API_KEY"
@@ -1010,8 +1010,8 @@ async def health() -> dict[str, Any]:
 
     # PAS check — verify endpoint reachability when key is present
     try:
-        import urllib.request as _req
         import urllib.error as _err
+        import urllib.request as _req
 
         gw_key = os.environ.get("GUIDEWIRE_API_KEY", "")
         bc_key = os.environ.get("BRITECORE_API_KEY", "")

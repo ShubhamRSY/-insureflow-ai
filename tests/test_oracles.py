@@ -1,18 +1,17 @@
 from __future__ import annotations
 
+from datetime import date
 from unittest.mock import MagicMock, patch
 
 from insureflow.integrations.parsers import parse_bureau_response, parse_osha_response, parse_public_records_response, parse_rating_agency_response
 from insureflow.oracles.aplus_client import APlusClient, APlusResult, PropertyClaimType
-from insureflow.oracles.bureau_client import CreditBureauClient, BureauResult, TradeCreditRecord
+from insureflow.oracles.bureau_client import BureauResult, CreditBureauClient, TradeCreditRecord
 from insureflow.oracles.clue_client import CLUEClient, CLUEResult
 from insureflow.oracles.ncci_client import NCCIClient, NCCIExperienceMod, NCCIResult
 from insureflow.oracles.ncci_codes import NCCI_CLASS_CODES, get_ncci_description, get_ncci_risk_level, is_high_risk_ncci_class
 from insureflow.oracles.osha_client import OSHAClient, OSHAInspectionResult, OSHAViolation
-from insureflow.oracles.public_records_client import PublicRecordsClient, PublicRecordsResult, PublicRecord
+from insureflow.oracles.public_records_client import PublicRecord, PublicRecordsClient, PublicRecordsResult
 from insureflow.oracles.rating_agency_client import CreditRatingAgencyClient, CreditRatingResult
-
-from datetime import date
 
 
 class TestCLUEClient:
@@ -114,6 +113,7 @@ class TestNCCIClient:
                 NCCIExperienceMod(mod_factor=1.35, class_code="5221"),
             ],
         )
+        assert result.worst_mod is not None
         assert result.worst_mod.class_code == "5221"
         assert result.worst_mod.mod_factor == 1.35
 
@@ -524,8 +524,8 @@ class TestOracleFailurePropagation:
         assert failure.timestamp is not None
 
     def test_clue_failure_records_failure(self) -> None:
-        from insureflow.oracles.oracle_agent import OracleAgent
         from insureflow.models.submissions import SubmissionBundle
+        from insureflow.oracles.oracle_agent import OracleAgent
 
         agent = OracleAgent()
         mock_bundle = MagicMock(spec=SubmissionBundle)
@@ -543,7 +543,7 @@ class TestOracleFailurePropagation:
             mock_result.mode = "live"
             mock_clue.return_value = mock_result
 
-            findings = agent._query_clue(mock_bundle)
+            agent._query_clue(mock_bundle)
 
             assert len(agent._oracle_failures) == 1
             assert agent._oracle_failures[0].oracle_name == "CLUE"
@@ -551,8 +551,8 @@ class TestOracleFailurePropagation:
             assert agent._oracle_failures[0].error_code == "CLUE_QUERY_FAILED"
 
     def test_critical_oracle_failures_collected(self) -> None:
-        from insureflow.oracles.oracle_agent import OracleAgent
         from insureflow.models.submissions import SubmissionBundle
+        from insureflow.oracles.oracle_agent import OracleAgent
 
         agent = OracleAgent()
         mock_bundle = MagicMock(spec=SubmissionBundle)
@@ -599,8 +599,8 @@ class TestOracleFailurePropagation:
             assert critical_failures[2].oracle_name == "NCCI"
 
     def test_misconfigured_oracles_recorded_as_failures(self) -> None:
-        from insureflow.oracles.oracle_agent import OracleAgent
         from insureflow.models.submissions import SubmissionBundle
+        from insureflow.oracles.oracle_agent import OracleAgent
 
         agent = OracleAgent()
         mock_bundle = MagicMock(spec=SubmissionBundle)

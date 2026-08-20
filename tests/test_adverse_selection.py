@@ -198,7 +198,7 @@ def test_agent_flags_when_cat_model_is_misconfigured() -> None:
 
     agent = AdverseSelectionAgent(cat_model=CatastropheModelClient())
     bundle = _bundle("FL", "33101", ["flood"])
-    result = agent.run(bundle, org_id="default")
+    agent.run(bundle, org_id="default")
     assert agent.last_assessment is not None
     assert agent.last_assessment.status in {"high", "flagged"}
 

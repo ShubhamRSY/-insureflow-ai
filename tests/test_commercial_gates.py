@@ -124,7 +124,7 @@ def test_resolved_mode_for_configured_urls() -> None:
 
 def test_configured_pas_url_is_treated_as_live(monkeypatch: pytest.MonkeyPatch) -> None:
     from insureflow.integration.guidewire_adapter import GuidewireAdapter
-    from insureflow.pilot.sandbox_readiness import bind_is_allowed, is_shadow_mode
+    from insureflow.pilot.sandbox_readiness import is_shadow_mode
 
     monkeypatch.setenv("GUIDEWIRE_API_KEY", "live-key-not-dev-placeholder-xxxxxx")
     monkeypatch.setenv("GUIDEWIRE_API_URL", "https://integrations.rytera.ai/policy/guidewire/v1")

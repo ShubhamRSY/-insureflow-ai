@@ -217,8 +217,9 @@ class TestPlanAlignment:
 
 class TestDevModeDefaults:
     def test_dev_allows_open_registration(self) -> None:
-        from insureflow.security.posture import resolve_security_posture
         import os
+
+        from insureflow.security.posture import resolve_security_posture
         old_env = {k: os.environ.get(k) for k in ("ENVIRONMENT", "BANK_MODE", "ALLOW_OPEN_REGISTRATION")}
         os.environ["ENVIRONMENT"] = "development"
         os.environ["BANK_MODE"] = "false"
@@ -235,8 +236,9 @@ class TestDevModeDefaults:
                     os.environ[k] = v
 
     def test_bank_mode_blocks_open_registration(self) -> None:
-        from insureflow.security.posture import resolve_security_posture
         import os
+
+        from insureflow.security.posture import resolve_security_posture
         old = {k: os.environ.get(k) for k in ("BANK_MODE", "ALLOW_OPEN_REGISTRATION")}
         os.environ["BANK_MODE"] = "true"
         os.environ.pop("ALLOW_OPEN_REGISTRATION", None)
@@ -251,8 +253,9 @@ class TestDevModeDefaults:
                     os.environ[k] = v
 
     def test_email_domain_default_allows_all(self) -> None:
-        from insureflow.auth.validation import validate_company_email
         import os
+
+        from insureflow.auth.validation import validate_company_email
         old = os.environ.get("REGISTRATION_EMAIL_DOMAINS")
         os.environ.pop("REGISTRATION_EMAIL_DOMAINS", None)
         try:
@@ -263,8 +266,9 @@ class TestDevModeDefaults:
                 os.environ["REGISTRATION_EMAIL_DOMAINS"] = old
 
     def test_email_domain_can_restrict(self) -> None:
-        from insureflow.auth.validation import validate_company_email
         import os
+
+        from insureflow.auth.validation import validate_company_email
         old = os.environ.get("REGISTRATION_EMAIL_DOMAINS")
         os.environ["REGISTRATION_EMAIL_DOMAINS"] = "acme.com"
         try:
