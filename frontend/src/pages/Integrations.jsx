@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useParams } from 'react-router-dom';
 import { Link2, RefreshCw, CheckCircle2, XCircle, Cable, Loader2, Unplug, ArrowUpRight } from 'lucide-react';
 import { EmptyState } from '../components/ui';
 import { endpoints } from '../lib/api';
@@ -6,6 +7,7 @@ import ConnectorLogo from '../components/ConnectorLogo';
 import { groupSourcesByCategory } from '../lib/connectorBrands';
 
 export default function IntegrationsPage() {
+  const { sourceId } = useParams();
   const [adapters, setAdapters] = useState([]);
   const [systems, setSystems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -29,6 +31,13 @@ export default function IntegrationsPage() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    if (sourceId && adapters.length > 0 && !activeId) {
+      const match = adapters.find((a) => a.id === sourceId);
+      if (match) setActiveId(sourceId);
+    }
+  }, [sourceId, adapters, activeId]);
 
   const sections = groupSourcesByCategory(adapters.map((a) => ({ ...a, status: a.connected ? 'connected' : 'ready' })));
 

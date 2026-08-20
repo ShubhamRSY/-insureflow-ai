@@ -20,7 +20,7 @@ const SOLUTIONS = [
   {
     id: 'insurance',
     label: 'Insurance',
-    blurb: 'Commercial P&C and personal lines — from broker package to bind-ready memo.',
+    blurb: 'All insurance lines — life, health, personal, commercial, specialty — from broker package to bind-ready memo.',
     path: '/insurance',
     points: ['Loss run & SOV intake', 'Financials & floor-plan review', 'COPE / life medical UW', 'Indicated premium & decision'],
   },

@@ -349,6 +349,7 @@ function AppRoutes() {
           <Route path="queue" element={<Protected onLogin={() => setLoginOpen(true)}><QueuePage queueStats={queueStats} insuranceJobs={insuranceJobs} onOpenJob={openJob} onRefresh={loadQueueStats} /></Protected>} />
           <Route path="registry" element={<Protected onLogin={() => setLoginOpen(true)}><RegistryPage /></Protected>} />
           <Route path="integrations" element={<Protected onLogin={() => setLoginOpen(true)}><IntegrationsPage /></Protected>} />
+          <Route path="integrations/:sourceId" element={<Protected onLogin={() => setLoginOpen(true)}><IntegrationsPage /></Protected>} />
           <Route path="webhooks" element={<Protected onLogin={() => setLoginOpen(true)}><WebhooksPage /></Protected>} />
           <Route path="authority" element={<Protected onLogin={() => setLoginOpen(true)}><AuthorityMatrix /></Protected>} />
           <Route path="market" element={<Protected onLogin={() => setLoginOpen(true)}><MarketAdmin /></Protected>} />
