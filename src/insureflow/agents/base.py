@@ -41,7 +41,7 @@ class BaseAgent:
             processing_time_ms=round(elapsed, 1),
             success=len(self._errors) == 0,
             data_sources_used=self._get_sources(bundle),
-            oracle_failures=self._oracle_failures if hasattr(self, '_oracle_failures') else [],
+            oracle_failures=self._oracle_failures if hasattr(self, "_oracle_failures") else [],
         )
 
     def _analyze(self, bundle: SubmissionBundle, **kwargs: Any) -> None:

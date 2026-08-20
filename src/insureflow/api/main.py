@@ -607,6 +607,7 @@ def signup_user(req: SignupRequest, request: Request) -> dict[str, Any]:
     # Set plan in pricing store
     plan = req.plan.strip().lower() or "free"
     from insureflow.pricing.engine import get_pricing_store
+
     pricing = get_pricing_store()
     pricing.set_subscription(org_id, plan)
 
@@ -952,6 +953,7 @@ async def health() -> dict[str, Any]:
     # Redis check
     try:
         from insureflow.storage.job_store import get_job_store
+
         js = get_job_store()
         redis_client = getattr(js, "client", None) or getattr(js, "_client", None)
         if redis_client is not None:
@@ -968,6 +970,7 @@ async def health() -> dict[str, Any]:
     try:
         if os.environ.get("DATABASE_URL"):
             import psycopg2
+
             conn = psycopg2.connect(os.environ["DATABASE_URL"], connect_timeout=3)
             conn.close()
             checks["postgres"] = "ok"

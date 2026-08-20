@@ -509,6 +509,7 @@ class TestNCCICodes:
 class TestOracleFailurePropagation:
     def test_oracle_failure_model(self) -> None:
         from insureflow.models.agents import OracleFailure
+
         failure = OracleFailure(
             oracle_name="CLUE",
             status="error",
@@ -536,7 +537,7 @@ class TestOracleFailurePropagation:
         mock_bundle.structured.named_insured.legal_name = "Test Corp"
         mock_bundle.structured.locations = []
 
-        with patch.object(agent.clue, 'query_by_name_and_address') as mock_clue:
+        with patch.object(agent.clue, "query_by_name_and_address") as mock_clue:
             mock_result = MagicMock()
             mock_result.error = "CLUE API timeout"
             mock_result.query_completed = False
@@ -566,10 +567,7 @@ class TestOracleFailurePropagation:
         mock_bundle.structured.risk_profile.naics_code = "332710"
         mock_bundle.structured.risk_profile.naics_description = "Machine Shops"
 
-        with patch.object(agent.clue, 'query_by_name_and_address') as mock_clue, \
-             patch.object(agent.aplus, 'query_by_property') as mock_aplus, \
-             patch.object(agent.ncci, 'query_by_fein') as mock_ncci:
-
+        with patch.object(agent.clue, "query_by_name_and_address") as mock_clue, patch.object(agent.aplus, "query_by_property") as mock_aplus, patch.object(agent.ncci, "query_by_fein") as mock_ncci:
             mock_clue_result = MagicMock()
             mock_clue_result.error = "CLUE API timeout"
             mock_clue_result.query_completed = False
@@ -611,9 +609,7 @@ class TestOracleFailurePropagation:
         mock_bundle.structured.named_insured.legal_name = "Test Corp"
         mock_bundle.structured.locations = []
 
-        with patch.object(agent.clue, 'query_by_name_and_address') as mock_clue, \
-             patch.object(agent.clue, '_resolved_mode', return_value='misconfigured'):
-
+        with patch.object(agent.clue, "query_by_name_and_address") as mock_clue, patch.object(agent.clue, "_resolved_mode", return_value="misconfigured"):
             mock_result = MagicMock()
             mock_result.error = "CLUE requires CLUE_API_KEY"
             mock_result.query_completed = False

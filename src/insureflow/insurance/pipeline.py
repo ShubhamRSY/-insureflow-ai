@@ -872,6 +872,7 @@ class InsurancePipeline:
             progress.start("verify", "Verified", "Running external oracle checks")
             if not skip_oracles:
                 from insureflow.models.agents import Finding, RiskSeverity
+
                 bundle.status = SubmissionStatus.EXTERNAL_ORACLE_CHECK
                 oracle_result = self.oracle_agent.run(
                     bundle,

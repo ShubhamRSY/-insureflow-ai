@@ -133,27 +133,41 @@ class CatastropheModelClient:
                 zip_code=zip_code,
             )
 
-        return self._call_live_model([{
-            "address": address,
-            "city": city,
-            "state": state,
-            "zip_code": zip_code,
-            "building_value": tiv,
-            "contents_value": 0,
-            "bi_value": 0,
-        }], tiv).exposures[0] if self._call_live_model([{
-            "address": address,
-            "city": city,
-            "state": state,
-            "zip_code": zip_code,
-            "building_value": tiv,
-            "contents_value": 0,
-            "bi_value": 0,
-        }], tiv).exposures else CATExposureResult(
-            address=address,
-            city=city,
-            state=state,
-            zip_code=zip_code,
+        return (
+            self._call_live_model(
+                [
+                    {
+                        "address": address,
+                        "city": city,
+                        "state": state,
+                        "zip_code": zip_code,
+                        "building_value": tiv,
+                        "contents_value": 0,
+                        "bi_value": 0,
+                    }
+                ],
+                tiv,
+            ).exposures[0]
+            if self._call_live_model(
+                [
+                    {
+                        "address": address,
+                        "city": city,
+                        "state": state,
+                        "zip_code": zip_code,
+                        "building_value": tiv,
+                        "contents_value": 0,
+                        "bi_value": 0,
+                    }
+                ],
+                tiv,
+            ).exposures
+            else CATExposureResult(
+                address=address,
+                city=city,
+                state=state,
+                zip_code=zip_code,
+            )
         )
 
     def model_submission(
