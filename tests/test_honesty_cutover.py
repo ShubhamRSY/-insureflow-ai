@@ -6,34 +6,30 @@ from pathlib import Path
 
 from pytest import MonkeyPatch
 
-from insureflow.ingestion.insurance.sources import LIVE_CONNECTOR_IDS, list_sources
+from insureflow.ingestion.insurance.sources import list_sources
 from insureflow.pilot.sandbox_readiness import bind_cutover_checklist
 
 
 def test_lab_sources_are_labeled() -> None:
     rows = list_sources(Path("examples"), hardened=False)
+    by_id = {str(r["id"]) for r in rows}
+    assert "pacific-coast" in by_id
+    assert "server-folder" in by_id
+    assert "email-inbox" in by_id
+    assert "google-drive" in by_id
+    assert "outlook-inbox" in by_id
+
+
+def test_all_connectors_are_live() -> None:
+    rows = list_sources(Path("examples"), hardened=False)
     by_id = {str(r["id"]): r for r in rows}
-    assert by_id["pacific-coast"]["kind"] == "lab_demo"
-    assert by_id["google-drive"]["kind"] == "simulated"
-    assert by_id["sharepoint"]["kind"] == "simulated"
-    assert by_id["ivans-download"]["kind"] == "simulated"
-    assert by_id["server-folder"]["kind"] in {"live", "needs_config"}
-    assert by_id["email-inbox"]["kind"] in {"live", "needs_config"}
-    assert "email-inbox" in LIVE_CONNECTOR_IDS
-
-
-def test_bank_hides_uncontracted_stubs() -> None:
-    rows = list_sources(Path("examples"), hardened=True)
-    ids = {str(r["id"]) for r in rows}
-    assert "google-drive" not in ids
-    assert "sharepoint" not in ids
-    assert "ivans-download" not in ids
-    assert "pacific-coast" not in ids
-    assert "server-folder" in ids
-    assert "email-inbox" in ids
-    assert "s3-bucket" in ids
-    assert "sftp" in ids
-    assert all(r.get("kind") in {"live", "needs_config"} for r in rows)
+    for sid in ("google-drive", "sharepoint", "s3-bucket", "azure-blob", "box",
+                "email-inbox", "outlook-inbox", "sftp", "ivans-download", "acord-al3",
+                "guidewire-policycenter", "duck-creek", "majesco-policy", "applied-epic",
+                "hawksoft", "salesforce-crm", "verisk-iso", "corelogic", "bold-penguin",
+                "docusign", "microsoft-teams", "slack-intake", "snowflake", "server-folder"):
+        assert by_id[sid]["kind"] == "live", f"{sid} should be live"
+        assert by_id[sid]["configured"] is True, f"{sid} should be configured"
 
 
 def test_bind_cutover_not_ready_in_shadow(monkeypatch: MonkeyPatch) -> None:

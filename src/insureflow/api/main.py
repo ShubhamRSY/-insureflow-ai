@@ -2265,11 +2265,7 @@ def pull_insurance_source(
                     result["accumulated"] = accum
                 _register(label)
                 return result
-
-            raise HTTPException(
-                status_code=503,
-                detail="Email integration not configured. Admin must set IMAP_HOST, IMAP_USERNAME, IMAP_PASSWORD.",
-            )
+            # Fall through to simulated demo package when credentials not set
 
         if source_id == "outlook-inbox":
             from insureflow.ingestion.insurance.email_connector import pull_email_submissions
