@@ -23,11 +23,32 @@ def test_lab_sources_are_labeled() -> None:
 def test_all_connectors_are_live() -> None:
     rows = list_sources(Path("examples"), hardened=False)
     by_id = {str(r["id"]): r for r in rows}
-    for sid in ("google-drive", "sharepoint", "s3-bucket", "azure-blob", "box",
-                "email-inbox", "outlook-inbox", "sftp", "ivans-download", "acord-al3",
-                "guidewire-policycenter", "duck-creek", "majesco-policy", "applied-epic",
-                "hawksoft", "salesforce-crm", "verisk-iso", "corelogic", "bold-penguin",
-                "docusign", "microsoft-teams", "slack-intake", "snowflake", "server-folder"):
+    for sid in (
+        "google-drive",
+        "sharepoint",
+        "s3-bucket",
+        "azure-blob",
+        "box",
+        "email-inbox",
+        "outlook-inbox",
+        "sftp",
+        "ivans-download",
+        "acord-al3",
+        "guidewire-policycenter",
+        "duck-creek",
+        "majesco-policy",
+        "applied-epic",
+        "hawksoft",
+        "salesforce-crm",
+        "verisk-iso",
+        "corelogic",
+        "bold-penguin",
+        "docusign",
+        "microsoft-teams",
+        "slack-intake",
+        "snowflake",
+        "server-folder",
+    ):
         assert by_id[sid]["kind"] == "live", f"{sid} should be live"
         assert by_id[sid]["configured"] is True, f"{sid} should be configured"
 
