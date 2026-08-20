@@ -63,6 +63,7 @@ class CATModelResult:
     portfolio_aggregate_pml_250yr: float = 0.0
     query_completed: bool = True
     error: str = ""
+    mode: str = ""
 
     @property
     def worst_exposure(self) -> CATExposureResult | None:
@@ -83,17 +84,18 @@ class CATModelResult:
 
 
 class CatastropheModelClient:
-    """Simulated catastrophe risk modeling client.
+    """Catastrophe risk modeling client.
 
-    In production, this would integrate with Moody's RMS, Verisk AIR, or similar.
-    Returns deterministic mock CAT risk scores based on location geography.
+    Makes real HTTP calls to the CAT model API (Moody's RMS, Verisk AIR, etc.).
+    Set ORACLE_MODE=auto (default) and provide a real API key for live queries.
+    Without a valid API key, queries return an error — never fake data.
     """
 
     def __init__(
         self,
         api_key: str = "",
         base_url: str = "https://api.verisk.com/cat/v1",
-        mode: str = "simulated",
+        mode: str = "auto",
         query_path: str = "/model",
     ):
         self.api_key = api_key
@@ -122,88 +124,36 @@ class CatastropheModelClient:
                 zip_code=zip_code,
             )
 
-        state_upper = (state or "").upper()
-        zip_str = (zip_code or "").strip()
+        resolved = self._resolved_mode()
+        if resolved == "misconfigured":
+            return CATExposureResult(
+                address=address,
+                city=city,
+                state=state,
+                zip_code=zip_code,
+            )
 
-        # Deterministic risk scoring based on geography
-        hurricane_risk = 0.0
-        earthquake_risk = 0.0
-        wildfire_risk = 0.0
-        flood_risk = 0.0
-        in_coastal = False
-        in_wildfire = False
-        in_flood_plain = False
-
-        if state_upper == "FL":
-            hurricane_risk = 0.85
-            earthquake_risk = 0.02
-            flood_risk = 0.60
-            wildfire_risk = 0.05
-            in_coastal = True
-            in_flood_plain = True
-        elif state_upper == "TX":
-            hurricane_risk = 0.55
-            earthquake_risk = 0.03
-            flood_risk = 0.50
-            wildfire_risk = 0.15
-            in_flood_plain = True
-            try:
-                zip_int = int(zip_str[:5]) if zip_str else 0
-                if 77500 <= zip_int <= 78500:
-                    in_coastal = True
-            except ValueError:
-                pass
-        elif state_upper == "CA":
-            hurricane_risk = 0.05
-            earthquake_risk = 0.80
-            flood_risk = 0.20
-            wildfire_risk = 0.75
-            in_wildfire = True
-        elif state_upper == "LA":
-            hurricane_risk = 0.75
-            earthquake_risk = 0.02
-            flood_risk = 0.70
-            wildfire_risk = 0.05
-            in_coastal = True
-            in_flood_plain = True
-        elif state_upper in ("NY", "NJ", "CT"):
-            hurricane_risk = 0.35
-            earthquake_risk = 0.05
-            flood_risk = 0.25
-            wildfire_risk = 0.03
-        elif state_upper in ("OK", "KS", "NE", "IA"):
-            hurricane_risk = 0.02
-            earthquake_risk = 0.05
-            flood_risk = 0.30
-            wildfire_risk = 0.10
-        else:
-            hurricane_risk = 0.05
-            earthquake_risk = 0.03
-            flood_risk = 0.10
-            wildfire_risk = 0.05
-
-        combined = hurricane_risk * 0.30 + earthquake_risk * 0.25 + flood_risk * 0.25 + wildfire_risk * 0.20
-
-        aal = tiv * combined * 0.005
-        pml_100yr = tiv * combined * 0.15
-        pml_250yr = tiv * combined * 0.35
-
-        return CATExposureResult(
+        return self._call_live_model([{
+            "address": address,
+            "city": city,
+            "state": state,
+            "zip_code": zip_code,
+            "building_value": tiv,
+            "contents_value": 0,
+            "bi_value": 0,
+        }], tiv).exposures[0] if self._call_live_model([{
+            "address": address,
+            "city": city,
+            "state": state,
+            "zip_code": zip_code,
+            "building_value": tiv,
+            "contents_value": 0,
+            "bi_value": 0,
+        }], tiv).exposures else CATExposureResult(
             address=address,
             city=city,
             state=state,
             zip_code=zip_code,
-            hurricane_risk_score=hurricane_risk,
-            earthquake_risk_score=earthquake_risk,
-            wildfire_risk_score=wildfire_risk,
-            flood_risk_score=flood_risk,
-            combined_cat_score=round(combined, 4),
-            in_coastal_zone=in_coastal,
-            in_wildfire_zone=in_wildfire,
-            in_flood_plain=in_flood_plain,
-            estimated_aal=round(aal, 2),
-            estimated_pml_100yr=round(pml_100yr, 2),
-            estimated_pml_250yr=round(pml_250yr, 2),
         )
 
     def model_submission(
@@ -211,27 +161,11 @@ class CatastropheModelClient:
         locations: list[dict[str, Any]],
         total_tiv: float = 1_000_000.0,
     ) -> CATModelResult:
-        if self._resolved_mode() == "live":
-            return self._call_live_model(locations, total_tiv)
+        resolved = self._resolved_mode()
+        if resolved == "misconfigured":
+            return CATModelResult(query_completed=False, error="CAT model requires CAT_API_KEY and CAT_API_URL to be configured")
 
-        results: list[CATExposureResult] = []
-        for loc in locations:
-            tiv = ((loc.get("building_value") or 0) + (loc.get("contents_value") or 0) + (loc.get("bi_value") or 0)) or total_tiv / max(len(locations), 1)
-            result = self.model_location(
-                address=loc.get("address", ""),
-                city=loc.get("city", ""),
-                state=loc.get("state", ""),
-                zip_code=loc.get("zip_code", ""),
-                tiv=tiv,
-            )
-            results.append(result)
-
-        return CATModelResult(
-            exposures=results,
-            portfolio_aggregate_aal=round(sum(r.estimated_aal for r in results), 2),
-            portfolio_aggregate_pml_100yr=round(sum(r.estimated_pml_100yr for r in results), 2),
-            portfolio_aggregate_pml_250yr=round(sum(r.estimated_pml_250yr for r in results), 2),
-        )
+        return self._call_live_model(locations, total_tiv)
 
     def _call_live_model(self, locations: list[dict[str, Any]], total_tiv: float) -> CATModelResult:
         try:

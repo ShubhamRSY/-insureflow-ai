@@ -39,6 +39,23 @@ class UWDecision(str, Enum):
     DECLINE = "decline"
 
 
+class OracleFailure(BaseModel):
+    """Structured record of an oracle query failure or unavailability.
+
+    Captures per-oracle status for pipeline REFER decisions and audit logging.
+    """
+
+    oracle_name: str
+    status: str = "unavailable"  # available | unavailable | error | synthetic | misconfigured
+    error_code: str = ""
+    error_message: str = ""
+    timestamp: datetime = Field(default_factory=datetime.now)
+    query_completed: bool = False
+    mode: str = ""  # live | simulated | gateway_synthetic | misconfigured | unknown
+    is_critical: bool = True  # CLUE, NCCI, A-PLUS are critical; others are not
+    retry_count: int = 0
+
+
 class Finding(BaseModel):
     finding_id: str = ""
     title: str
@@ -117,6 +134,7 @@ class AgentResult(BaseModel):
     errors: list[str] = Field(default_factory=list)
     processing_time_ms: float = 0.0
     data_sources_used: list[str] = Field(default_factory=list)
+    oracle_failures: list[OracleFailure] = Field(default_factory=list)
 
 
 class AgentMessage(BaseModel):

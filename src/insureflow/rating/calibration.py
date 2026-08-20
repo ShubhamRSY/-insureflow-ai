@@ -1,4 +1,10 @@
-"""Load ISO/Verisk-style rate curves from file or HTTP for pricing calibration."""
+"""Load ISO/Verisk-style rate curves from file or HTTP for pricing calibration.
+
+When no real rate curves are configured (RATE_CURVES_URL or RATE_CURVES_PATH),
+the module marks rates as synthetic and provides provenance metadata so the
+rating engine can track whether a quote used real filed rates or built-in
+representative values.
+"""
 
 from __future__ import annotations
 
@@ -18,7 +24,13 @@ def default_curve_path() -> Path:
 
 
 def load_rate_curves(*, force: bool = False) -> dict[str, Any]:
-    """Return calibrated loss costs / LCMs / territory relativities when present."""
+    """Return calibrated loss costs / LCMs / territory relativities when present.
+
+    Returns a dict with:
+        - "source": where the curves came from
+        - "synthetic": True if no real curves are configured
+        - "loss_costs", "lcm", "territory_relativities": the rate data (if real)
+    """
     global _CACHE
     if _CACHE is not None and not force:
         return _CACHE
@@ -48,6 +60,24 @@ def load_rate_curves(*, force: bool = False) -> dict[str, Any]:
 
     _CACHE = payload
     return payload
+
+
+def is_rate_curves_synthetic() -> bool:
+    """True when no real rate curves are configured — rates are built-in representative values."""
+    curves = load_rate_curves()
+    return bool(curves.get("synthetic", True))
+
+
+def rate_curves_provenance() -> dict[str, Any]:
+    """Return provenance metadata for the current rate curves configuration."""
+    curves = load_rate_curves()
+    return {
+        "source": curves.get("source", "builtin"),
+        "synthetic": bool(curves.get("synthetic", True)),
+        "has_loss_costs": bool(curves.get("loss_costs")),
+        "has_lcm": bool(curves.get("lcm")),
+        "has_territory": bool(curves.get("territory_relativities")),
+    }
 
 
 def calibrated_loss_costs(builtin: dict[Any, float]) -> dict[Any, float]:

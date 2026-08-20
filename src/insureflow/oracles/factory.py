@@ -15,7 +15,7 @@ from insureflow.oracles.telematics_client import CyberScanClient, TelematicsClie
 
 
 def _oracle_mode() -> str:
-    return (settings.oracle_mode or "simulated").lower()
+    return (settings.oracle_mode or "auto").lower()
 
 
 def build_clue_client() -> CLUEClient:

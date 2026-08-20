@@ -1,8 +1,7 @@
 """Connected-car / IoT telematics and cyber-scan oracles.
 
-Simulated on Pilot: never invent a clean driving or security score.
-Desk+ live mode compares the questionnaire to the feed. Missing keys fail
-closed for that check — they do not paint a green history.
+All queries make real HTTP calls to the telematics/cyber-scan APIs. Without a
+valid API key, queries return a clear error — never fake/simulated data.
 """
 
 from __future__ import annotations
@@ -69,7 +68,7 @@ class TelematicsClient:
         self,
         api_key: str = "",
         base_url: str = "https://integrations.rytera.ai/oracles/telematics/v1",
-        mode: str = "simulated",
+        mode: str = "auto",
         query_path: str = "/vehicles",
     ) -> None:
         self.api_key = api_key
@@ -84,11 +83,9 @@ class TelematicsClient:
     def query_vehicle(self, vin: str, *, stated_mileage: float | None = None) -> TelematicsResult:
         resolved = self._resolved_mode()
         vin = (vin or "").strip().upper()
-        if resolved == "live":
-            return self._call_live(vin, stated_mileage)
         if resolved == "misconfigured":
-            return TelematicsResult(vin=vin, query_completed=False, error="Telematics API not configured", mode=resolved)
-        return TelematicsResult(vin=vin, query_completed=True, synthetic=True, mode=resolved)
+            return TelematicsResult(vin=vin, query_completed=False, error="Telematics requires TELEMATICS_API_KEY and TELEMATICS_API_URL to be configured", mode=resolved)
+        return self._call_live(vin, stated_mileage)
 
     def _call_live(self, vin: str, stated_mileage: float | None) -> TelematicsResult:
         try:
@@ -120,7 +117,7 @@ class CyberScanClient:
         self,
         api_key: str = "",
         base_url: str = "https://integrations.rytera.ai/oracles/cyber-scan/v1",
-        mode: str = "simulated",
+        mode: str = "auto",
         query_path: str = "/scans",
     ) -> None:
         self.api_key = api_key
@@ -135,11 +132,9 @@ class CyberScanClient:
     def query_domain(self, domain: str) -> CyberScanResult:
         resolved = self._resolved_mode()
         domain = (domain or "").strip().lower()
-        if resolved == "live":
-            return self._call_live(domain)
         if resolved == "misconfigured":
-            return CyberScanResult(domain=domain, query_completed=False, error="Cyber scan API not configured", mode=resolved)
-        return CyberScanResult(domain=domain, query_completed=True, synthetic=True, mode=resolved)
+            return CyberScanResult(domain=domain, query_completed=False, error="Cyber scan requires CYBERSCAN_API_KEY and CYBERSCAN_API_URL to be configured", mode=resolved)
+        return self._call_live(domain)
 
     def _call_live(self, domain: str) -> CyberScanResult:
         try:

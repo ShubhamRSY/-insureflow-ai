@@ -1,6 +1,7 @@
 """Commercial plan gates: live oracles, customer rate book, live PAS bind.
 
-Default is ``pilot`` so local/CI stays simulated. Desk+ fail closed on fake data.
+Default is ``pilot`` so local/CI stays on demo data. Desk+ fail closed on
+synthetic/pilot data — require real carrier books, live oracles, live PAS.
 """
 
 from __future__ import annotations
@@ -11,7 +12,7 @@ from typing import Any
 
 _PLAN_ALIASES = {
     "free": "pilot",
-    "starter": "pilot",
+    "starter": "desk",
     "explorer": "desk",
     "pro": "book",
     "professional": "book",

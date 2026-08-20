@@ -2,8 +2,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from datetime import date, timedelta
-from uuid import uuid4
+from datetime import date
 
 from insureflow.integrations.http_client import IntegrationHTTPError
 from insureflow.integrations.parsers import parse_clue_response
@@ -47,23 +46,24 @@ class CLUEResult:
             parts.append("Prior litigation detected")
         if self.has_prior_cancellation:
             parts.append("Prior cancellation/non-renewal detected")
-        if self.synthetic or self.mode in {"simulated", "gateway_synthetic"}:
+        if self.synthetic:
             parts.append("SYNTHETIC/UNVERIFIED")
         return " | ".join(parts)
 
 
 class CLUEClient:
-    """Simulated CLUE (Comprehensive Loss Underwriting Exchange) client.
+    """CLUE (Comprehensive Loss Underwriting Exchange) client.
 
-    In production this would integrate with the LexisNexis CLUE API.
-    Set ORACLE_MODE=live and provide a real API key for production use.
+    Makes real HTTP calls to the LexisNexis CLUE API.
+    Set ORACLE_MODE=auto (default) and provide a real API key for live queries.
+    Without a valid API key, queries return an error — never fake data.
     """
 
     def __init__(
         self,
         api_key: str = "",
         base_url: str = "https://api.lexisnexis.com/clue/v2",
-        mode: str = "simulated",
+        mode: str = "auto",
         query_path: str = "/queries",
     ):
         self.api_key = api_key
@@ -91,74 +91,16 @@ class CLUEClient:
                 error="CLUE API not configured",
             )
 
-        if self._resolved_mode() == "live":
-            return self._call_live_api(legal_name, address, tax_id, years_back)
-        if self._resolved_mode() == "misconfigured":
+        resolved = self._resolved_mode()
+        if resolved == "misconfigured":
             return CLUEResult(
                 subject_name=legal_name,
                 subject_address=address,
                 query_completed=False,
-                error="CLUE live mode requires CLUE_API_KEY and CLUE_API_URL",
+                error="CLUE requires CLUE_API_KEY and CLUE_API_URL to be configured",
             )
 
-        # Simulated response
-        today = date.today()
-        name_lower = (legal_name or "").lower()
-
-        records: list[CLUERecord] = []
-        # Simulate some known scenarios
-        if "pacific" in name_lower or "marine" in name_lower:
-            records.append(
-                CLUERecord(
-                    claim_id=f"CLUE-{uuid4().hex[:8].upper()}",
-                    date_of_loss=today - timedelta(days=365 * 2),
-                    loss_type="general_liability",
-                    paid_amount=15_000.0,
-                    current_status="closed",
-                    policy_type="CGL",
-                    claimant_name="Third Party Vendor",
-                    description="Slip and fall at insured premises — settled",
-                )
-            )
-            records.append(
-                CLUERecord(
-                    claim_id=f"CLUE-{uuid4().hex[:8].upper()}",
-                    date_of_loss=today - timedelta(days=365 * 4),
-                    loss_type="property",
-                    paid_amount=42_000.0,
-                    current_status="closed",
-                    policy_type="CPP",
-                    claimant_name=legal_name,
-                    description="Water damage from burst pipe",
-                )
-            )
-
-        if "veririsk" in name_lower or "construction" in name_lower:
-            records.append(
-                CLUERecord(
-                    claim_id=f"CLUE-{uuid4().hex[:8].upper()}",
-                    date_of_loss=today - timedelta(days=180),
-                    loss_type="workers_comp",
-                    paid_amount=85_000.0,
-                    current_status="open",
-                    policy_type="WC",
-                    claimant_name="Employee",
-                    description="Back injury on job site",
-                )
-            )
-
-        total_paid = sum(r.paid_amount for r in records)
-        return CLUEResult(
-            subject_name=legal_name,
-            subject_address=address,
-            records=records,
-            total_claims_found=len(records),
-            total_paid=total_paid,
-            has_prior_litigation=any("litigation" in r.description.lower() or "lawsuit" in r.description.lower() for r in records),
-            has_prior_cancellation=False,
-            synthetic=True,
-            mode="simulated",
-        )
+        return self._call_live_api(legal_name, address, tax_id, years_back)
 
     def query_by_tax_id(self, tax_id: str, years_back: int = 7) -> CLUEResult:
         name_lower = tax_id.lower()

@@ -2,8 +2,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from datetime import date, timedelta
-from uuid import uuid4
+from datetime import date
 
 from insureflow.integrations.http_client import IntegrationHTTPError
 from insureflow.integrations.parsers import parse_osha_response
@@ -69,23 +68,24 @@ class OSHAInspectionResult:
             parts.append("REPEAT")
         if self.has_open_inspection:
             parts.append("OPEN INSPECTION")
-        if self.synthetic or self.mode in {"simulated", "gateway_synthetic"}:
+        if self.synthetic:
             parts.append("SYNTHETIC/UNVERIFIED")
         return " | ".join(parts)
 
 
 class OSHAClient:
-    """Simulated OSHA (Occupational Safety and Health Administration) client.
+    """OSHA (Occupational Safety and Health Administration) client.
 
-    In production this would call the OSHA Establishment Search / OnSite API.
-    Set ORACLE_MODE=live and provide a real API key.
+    Makes real HTTP calls to the OSHA Establishment Search / OnSite API.
+    Set ORACLE_MODE=auto (default) and provide a real API key for live queries.
+    Without a valid API key, queries return an error — never fake data.
     """
 
     def __init__(
         self,
         api_key: str = "",
         base_url: str = "https://api.osha.gov/inspections/v1",
-        mode: str = "simulated",
+        mode: str = "auto",
         query_path: str = "/searches",
     ):
         self.api_key = api_key
@@ -108,118 +108,15 @@ class OSHAClient:
             )
 
         resolved = self._resolved_mode()
-        if resolved == "live":
-            return self._call_live_api(legal_name, tax_id, naics_code)
         if resolved == "misconfigured":
             return OSHAInspectionResult(
                 subject_name=legal_name,
                 tax_id=tax_id,
                 query_completed=False,
-                error="OSHA live mode requires OSHA_API_KEY and OSHA_API_URL",
+                error="OSHA requires OSHA_API_KEY and OSHA_API_URL to be configured",
             )
 
-        return self._simulate(legal_name, tax_id)
-
-    def _simulate(self, legal_name: str, tax_id: str) -> OSHAInspectionResult:
-        today = date.today()
-        name_lower = (legal_name or "").lower()
-        violations: list[OSHAViolation] = []
-
-        if "veririsk" in name_lower or "construction" in name_lower:
-            violations = [
-                OSHAViolation(
-                    violation_id=f"VIO-{uuid4().hex[:8].upper()}",
-                    inspection_number=f"INSP-{uuid4().hex[:8].upper()}",
-                    inspection_type="accident",
-                    violation_type="willful",
-                    description="Failure to provide fall protection on elevated work platform — fatality exposure",
-                    penalty=72_000.0,
-                    inspected_at=today - timedelta(days=210),
-                    closed=False,
-                    items=3,
-                    serious=True,
-                ),
-                OSHAViolation(
-                    violation_id=f"VIO-{uuid4().hex[:8].upper()}",
-                    inspection_number=f"INSP-{uuid4().hex[:8].upper()}",
-                    inspection_type="complaint",
-                    violation_type="repeat",
-                    description="Lockout/tagout procedures not followed on machinery",
-                    penalty=24_000.0,
-                    inspected_at=today - timedelta(days=90),
-                    closed=False,
-                    items=2,
-                    serious=True,
-                ),
-                OSHAViolation(
-                    violation_id=f"VIO-{uuid4().hex[:8].upper()}",
-                    inspection_number=f"INSP-{uuid4().hex[:8].upper()}",
-                    inspection_type="programmed",
-                    violation_type="serious",
-                    description="Inadequate hazard communication program",
-                    penalty=9_000.0,
-                    inspected_at=today - timedelta(days=400),
-                    closed=True,
-                    items=1,
-                    serious=True,
-                ),
-            ]
-            return OSHAInspectionResult(
-                subject_name=legal_name,
-                tax_id=tax_id,
-                violations=violations,
-                total_violations=len(violations),
-                total_penalty=sum(v.penalty for v in violations),
-                has_willful_violation=True,
-                has_repeat_violation=True,
-                has_open_inspection=True,
-                safety_rating="critical",
-                synthetic=True,
-                mode="simulated",
-            )
-
-        if "pacific" in name_lower or "marine" in name_lower:
-            violations = [
-                OSHAViolation(
-                    violation_id=f"VIO-{uuid4().hex[:8].upper()}",
-                    inspection_number=f"INSP-{uuid4().hex[:8].upper()}",
-                    inspection_type="complaint",
-                    violation_type="serious",
-                    description="Blocked exit route in cold-storage facility",
-                    penalty=11_000.0,
-                    inspected_at=today - timedelta(days=160),
-                    closed=True,
-                    items=1,
-                    serious=True,
-                )
-            ]
-            return OSHAInspectionResult(
-                subject_name=legal_name,
-                tax_id=tax_id,
-                violations=violations,
-                total_violations=len(violations),
-                total_penalty=11_000.0,
-                has_willful_violation=False,
-                has_repeat_violation=False,
-                has_open_inspection=False,
-                safety_rating="moderate",
-                synthetic=True,
-                mode="simulated",
-            )
-
-        return OSHAInspectionResult(
-            subject_name=legal_name,
-            tax_id=tax_id,
-            violations=[],
-            total_violations=0,
-            total_penalty=0.0,
-            has_willful_violation=False,
-            has_repeat_violation=False,
-            has_open_inspection=False,
-            safety_rating="low",
-            synthetic=True,
-            mode="simulated",
-        )
+        return self._call_live_api(legal_name, tax_id, naics_code)
 
     def _call_live_api(self, legal_name: str, tax_id: str, naics_code: str) -> OSHAInspectionResult:
         try:

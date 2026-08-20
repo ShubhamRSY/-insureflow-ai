@@ -21,7 +21,7 @@ from slowapi.util import get_remote_address
 from insureflow.auth import Role
 from insureflow.auth.dependencies import clear_user_store, get_current_user, get_current_user_optional, get_user_store, require_role, require_staff_desk
 from insureflow.auth.jwt import create_access_token, hash_password, verify_password
-from insureflow.auth.models import LoginRequest, PasswordResetConfirm, PasswordResetRequest, Token, TokenData, User, UserCreateRequest
+from insureflow.auth.models import LoginRequest, PasswordResetConfirm, PasswordResetRequest, SignupRequest, Token, TokenData, User, UserCreateRequest
 from insureflow.auth.store import PostgresUserStore
 from insureflow.auth.validation import validate_registration
 from insureflow.insurance.pipeline import InsurancePipeline
@@ -557,6 +557,75 @@ def register_user(req: UserCreateRequest, request: Request) -> dict[str, str]:
     return {"message": f"User '{username}' created with role '{role.value}' in org '{company_name or org_id}'"}
 
 
+@app.post("/auth/signup", status_code=201)
+@limiter.limit("3/hour")
+def signup_user(req: SignupRequest, request: Request) -> dict[str, Any]:
+    """Full self-serve signup: create user, org, set plan, issue API key."""
+    posture = _posture()
+    if not posture.allow_open_registration:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Open registration is disabled. An admin must create users via /auth/users or SSO.",
+        )
+
+    username = req.username.strip()
+    email = req.email.strip()
+    company_name = req.company_name.strip()
+
+    validation = validate_registration(
+        username=username,
+        email=email,
+        password=req.password,
+        company_name=company_name,
+        min_password_length=posture.min_password_length,
+    )
+    if not validation.valid:
+        raise HTTPException(status_code=400, detail="; ".join(validation.errors))
+
+    store = get_user_store()
+    if username in store:
+        raise HTTPException(status_code=409, detail="Username already exists")
+
+    # Create org (Postgres) or use company_name as org_id
+    org_id = "default"
+    if isinstance(store, PostgresUserStore):
+        org_id = store.get_or_create_org(company_name)
+    else:
+        org_id = company_name.lower().replace(" ", "_") or "default"
+
+    # Create user as admin of their org
+    store[username] = User(
+        username=username,
+        email=email,
+        hashed_password=hash_password(req.password),
+        role=Role.ADMIN,
+        full_name=req.full_name.strip() or username,
+        org_id=org_id,
+        company_name=company_name,
+    )
+
+    # Set plan in pricing store
+    plan = req.plan.strip().lower() or "free"
+    from insureflow.pricing.engine import get_pricing_store
+    pricing = get_pricing_store()
+    pricing.set_subscription(org_id, plan)
+
+    # Issue API key
+    raw_key, api_key = pricing.create_api_key(org_id, tier=plan, label=f"{company_name}-default")
+
+    # Issue JWT
+    token = create_access_token(data={"sub": username, "org_id": org_id})
+
+    return {
+        "message": f"Account created for '{username}' in '{company_name}'",
+        "token": token,
+        "org_id": org_id,
+        "plan": plan,
+        "api_key": raw_key,
+        "role": "admin",
+    }
+
+
 @app.post("/auth/forgot-password", status_code=200)
 @limiter.limit("5/hour")
 def forgot_password(req: PasswordResetRequest, request: Request) -> dict[str, str]:
@@ -875,8 +944,112 @@ class InsuranceSourcePullRequest(BaseModel):
 
 
 @app.get("/health")
-async def health() -> dict[str, str]:
-    return {"status": "ok", "version": "0.3.1"}
+async def health() -> dict[str, Any]:
+    """Health check that tells the truth — checks Redis, DB, and oracle connectivity."""
+    checks: dict[str, str] = {}
+    overall = "ok"
+
+    # Redis check
+    try:
+        from insureflow.storage.job_store import get_job_store
+        js = get_job_store()
+        redis_client = getattr(js, "client", None) or getattr(js, "_client", None)
+        if redis_client is not None:
+            redis_client.ping()
+            checks["redis"] = "ok"
+        else:
+            store_type = type(js).__name__
+            checks["redis"] = store_type.lower().replace("jobstore", "").replace("_", " ") or "file_backed"
+    except Exception:
+        checks["redis"] = "error"
+        overall = "degraded"
+
+    # Postgres check
+    try:
+        if os.environ.get("DATABASE_URL"):
+            import psycopg2
+            conn = psycopg2.connect(os.environ["DATABASE_URL"], connect_timeout=3)
+            conn.close()
+            checks["postgres"] = "ok"
+        else:
+            checks["postgres"] = "not_configured"
+    except Exception:
+        checks["postgres"] = "error"
+        overall = "degraded"
+
+    # Oracle connectivity — ping each configured oracle endpoint
+    try:
+        import urllib.request as _req
+        import urllib.error as _err
+
+        for name in ("CLUE", "NCCI", "A-PLUS", "CAT"):
+            key = f"{name}_API_KEY"
+            api_key = os.environ.get(key, "")
+            if not api_key:
+                checks[f"oracle_{name.lower().replace('-', '_')}"] = "not_configured"
+                continue
+            url = os.environ.get(f"{name}_API_URL", "")
+            if not url:
+                checks[f"oracle_{name.lower().replace('-', '_')}"] = "configured_no_url"
+                continue
+            try:
+                ping_req = _req.Request(url, method="HEAD", headers={"User-Agent": "Rytera-HealthCheck/1.0"})
+                with _req.urlopen(ping_req, timeout=5) as resp:
+                    checks[f"oracle_{name.lower().replace('-', '_')}"] = "reachable" if resp.status < 400 else "error"
+            except _err.HTTPError as exc:
+                if exc.code < 500:
+                    checks[f"oracle_{name.lower().replace('-', '_')}"] = "reachable"
+                else:
+                    checks[f"oracle_{name.lower().replace('-', '_')}"] = "error"
+                    overall = "degraded"
+            except Exception:
+                checks[f"oracle_{name.lower().replace('-', '_')}"] = "unreachable"
+                overall = "degraded"
+    except Exception:
+        checks["oracles"] = "error"
+
+    # PAS check — verify endpoint reachability when key is present
+    try:
+        import urllib.request as _req
+        import urllib.error as _err
+
+        gw_key = os.environ.get("GUIDEWIRE_API_KEY", "")
+        bc_key = os.environ.get("BRITECORE_API_KEY", "")
+        gw_url = os.environ.get("GUIDEWIRE_API_URL", "")
+        bc_url = os.environ.get("BRITECORE_API_URL", "")
+
+        if gw_key and gw_key != "rytera-dev-gateway-key-change-in-production":
+            if gw_url:
+                try:
+                    ping_req = _req.Request(gw_url, method="HEAD", headers={"User-Agent": "Rytera-HealthCheck/1.0"})
+                    with _req.urlopen(ping_req, timeout=5) as resp:
+                        checks["pas_guidewire"] = "reachable" if resp.status < 400 else "error"
+                except _err.HTTPError as exc:
+                    checks["pas_guidewire"] = "reachable" if exc.code < 500 else "error"
+                except Exception:
+                    checks["pas_guidewire"] = "unreachable"
+                    overall = "degraded"
+            else:
+                checks["pas_guidewire"] = "configured_no_url"
+        elif bc_key:
+            if bc_url:
+                try:
+                    ping_req = _req.Request(bc_url, method="HEAD", headers={"User-Agent": "Rytera-HealthCheck/1.0"})
+                    with _req.urlopen(ping_req, timeout=5) as resp:
+                        checks["pas_britecore"] = "reachable" if resp.status < 400 else "error"
+                except _err.HTTPError as exc:
+                    checks["pas_britecore"] = "reachable" if exc.code < 500 else "error"
+                except Exception:
+                    checks["pas_britecore"] = "unreachable"
+                    overall = "degraded"
+            else:
+                checks["pas_britecore"] = "configured_no_url"
+        else:
+            checks["pas"] = "not_configured"
+    except Exception:
+        checks["pas"] = "error"
+
+    return {"status": overall, "version": "0.3.1", "checks": checks}
 
 
 @app.get("/metrics")
@@ -2907,6 +3080,10 @@ def _run_pipeline_task(job_id: str, request: SubmissionRequest, org_id: str) -> 
                     {"status": "processing", "progress": data},
                     org_id=org_id,
                 )
+                try:
+                    _notify_job_subscribers(job_id, {"type": "progress", **data})
+                except Exception:
+                    pass
 
             result = pipeline.run(
                 acord_xml=request.acord_xml,
@@ -6442,6 +6619,10 @@ def _run_mortgage_task(job_id: str, request: MortgageSubmissionRequest, org_id: 
             {"status": "processing", "progress": data},
             org_id=org_id,
         )
+        try:
+            _notify_job_subscribers(job_id, {"type": "progress", **data})
+        except Exception:
+            pass
 
     pipeline = MortgagePipeline(use_llm=request.use_llm, org_id=org_id)
     try:
@@ -6479,7 +6660,7 @@ def _run_mortgage_task(job_id: str, request: MortgageSubmissionRequest, org_id: 
                 },
                 org_id=org_id,
             )
-            webhook_dispatcher.dispatch("mortgage.failed", org_id, {"job_id": job_id, "error": "no input"})
+            webhook_dispatcher.dispatch_async("mortgage.failed", org_id, {"job_id": job_id, "error": "no input"})
             return
 
         job_store.set(MORTGAGE_NS, job_id, {"status": "completed", "results": result}, org_id=org_id)
@@ -6488,7 +6669,7 @@ def _run_mortgage_task(job_id: str, request: MortgageSubmissionRequest, org_id: 
         job_store.set(MORTGAGE_NS, job_id, {"status": "failed", "error": str(exc)}, org_id=org_id)
         from insureflow.mortgage.webhooks import webhook_dispatcher
 
-        webhook_dispatcher.dispatch("mortgage.failed", org_id, {"job_id": job_id, "error": str(exc)})
+        webhook_dispatcher.dispatch_async("mortgage.failed", org_id, {"job_id": job_id, "error": str(exc)})
 
 
 def _finalize_celery_mortgage_job(job_id: str, org_id: str, job: dict[str, Any]) -> dict[str, Any]:
@@ -6517,7 +6698,7 @@ def _finalize_celery_mortgage_job(job_id: str, org_id: str, job: dict[str, Any])
             "celery_task_id": task_id,
         }
         job_store.set(MORTGAGE_NS, job_id, updated, org_id=org_id)
-        webhook_dispatcher.dispatch("mortgage.completed", org_id, {"job_id": job_id, "results": result})
+        webhook_dispatcher.dispatch_async("mortgage.completed", org_id, {"job_id": job_id, "results": result})
         return updated
 
     error = str(async_result.result) if async_result.failed() else "Celery task failed"
@@ -6528,7 +6709,7 @@ def _finalize_celery_mortgage_job(job_id: str, org_id: str, job: dict[str, Any])
         "celery_task_id": task_id,
     }
     job_store.set(MORTGAGE_NS, job_id, updated, org_id=org_id)
-    webhook_dispatcher.dispatch("mortgage.failed", org_id, {"job_id": job_id, "error": error})
+    webhook_dispatcher.dispatch_async("mortgage.failed", org_id, {"job_id": job_id, "error": error})
     return updated
 
 
@@ -7015,20 +7196,21 @@ def integration_status(
             }
         )
 
-    from insureflow.oracles._live import is_bundled_gateway_url
+    from insureflow.integrations.http_client import IntegrationHTTPClient
+    from insureflow.oracles._live import resolve_integration_mode
 
     gw_key = os.getenv("GUIDEWIRE_API_KEY", "")
     gw_url = os.getenv("GUIDEWIRE_API_URL", "")
     bc_key = os.getenv("BRITECORE_API_KEY", "")
     bc_url = os.getenv("BRITECORE_API_URL", "")
-    _dev = "rytera-dev-gateway-key-change-in-production"
 
     def _pas_live(key: str, url: str) -> bool:
         k = (key or "").strip()
         u = (url or "").strip()
-        if not k or k == _dev or not u:
+        if not k or not u:
             return False
-        return not is_bundled_gateway_url(u, k)
+        http = IntegrationHTTPClient(api_key=k, base_url=u)
+        return resolve_integration_mode("auto", http) == "live"
 
     gw_live = _pas_live(gw_key, gw_url)
     bc_live = _pas_live(bc_key, bc_url)

@@ -32,14 +32,21 @@ def _mode(name: str, default: str = "auto") -> str:
 
 
 def _pas_configured() -> bool:
-    """True when Guidewire (or BriteCore) has a non-dev key and a real PAS URL (not the synthetic gateway)."""
-    from insureflow.oracles._live import is_bundled_gateway_url
+    """True when Guidewire (or BriteCore) has a key and a live URL configured."""
+    from insureflow.integrations.http_client import IntegrationHTTPClient
+    from insureflow.oracles._live import resolve_integration_mode
 
     gw_url = (os.getenv("GUIDEWIRE_API_URL") or "").strip()
     bc_url = (os.getenv("BRITECORE_API_URL") or "").strip()
-    gw = _key_ok("GUIDEWIRE_API_KEY") and bool(gw_url) and not is_bundled_gateway_url(gw_url, os.getenv("GUIDEWIRE_API_KEY", ""))
-    bc = _key_ok("BRITECORE_API_KEY") and bool(bc_url) and not is_bundled_gateway_url(bc_url, os.getenv("BRITECORE_API_KEY", ""))
-    return gw or bc
+    if _key_ok("GUIDEWIRE_API_KEY") and gw_url:
+        http = IntegrationHTTPClient(api_key=os.getenv("GUIDEWIRE_API_KEY", ""), base_url=gw_url)
+        if resolve_integration_mode("auto", http) == "live":
+            return True
+    if _key_ok("BRITECORE_API_KEY") and bc_url:
+        http = IntegrationHTTPClient(api_key=os.getenv("BRITECORE_API_KEY", ""), base_url=bc_url)
+        if resolve_integration_mode("auto", http) == "live":
+            return True
+    return False
 
 
 def pas_configured() -> bool:

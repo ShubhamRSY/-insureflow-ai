@@ -132,7 +132,7 @@ class MortgagePipeline:
             "borrower_count": len(results),
             "packages": results,
         }
-        webhook_dispatcher.dispatch("mortgage.batch.completed", self.org_id, batch_result)
+        webhook_dispatcher.dispatch_async("mortgage.batch.completed", self.org_id, batch_result)
         return batch_result
 
     def run_documents(
@@ -185,7 +185,7 @@ class MortgagePipeline:
                 "fail_closed": True,
                 "pipeline_stages": progress.stages,
             }
-            webhook_dispatcher.dispatch("mortgage.failed", self.org_id, fail_summary)
+            webhook_dispatcher.dispatch_async("mortgage.failed", self.org_id, fail_summary)
             return fail_summary
 
     def _run_documents_inner(
@@ -332,7 +332,7 @@ class MortgagePipeline:
             "audit_paths": audit_paths,
         }
 
-        webhook_dispatcher.dispatch("mortgage.completed", self.org_id, result)
+        webhook_dispatcher.dispatch_async("mortgage.completed", self.org_id, result)
         return result
 
     @staticmethod

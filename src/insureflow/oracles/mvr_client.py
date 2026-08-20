@@ -1,7 +1,7 @@
 """Motor vehicle record (MVR) oracle — commercial auto / fleet drivers.
 
-Simulated on Pilot. Desk+ fail-closes unless ORACLE_MODE=live against a vendor
-sandbox (not integrations.rytera.ai).
+Makes real HTTP calls to the MVR API. Without a valid API key, queries return
+an error — never fake data.
 """
 
 from __future__ import annotations
@@ -60,11 +60,18 @@ class MVRResult:
 
 
 class MVRClient:
+    """Motor vehicle record (MVR) client.
+
+    Makes real HTTP calls to the MVR API.
+    Set ORACLE_MODE=auto (default) and provide a real API key for live queries.
+    Without a valid API key, queries return an error — never fake data.
+    """
+
     def __init__(
         self,
         api_key: str = "",
         base_url: str = "https://integrations.rytera.ai/oracles/mvr/v1",
-        mode: str = "simulated",
+        mode: str = "auto",
         query_path: str = "/records",
     ):
         self.api_key = api_key
@@ -78,19 +85,15 @@ class MVRClient:
 
     def query_driver(self, driver_name: str, *, license_state: str = "", license_number: str = "") -> MVRResult:
         resolved = self._resolved_mode()
-        if resolved == "live":
-            return self._call_live(driver_name, license_state, license_number)
         if resolved == "misconfigured":
-            return MVRResult(driver_name=driver_name, license_state=license_state, query_completed=False, error="MVR API not configured", mode=resolved)
-        # Simulated — never invent a clean MVR. Return unverified placeholder.
-        return MVRResult(
-            driver_name=driver_name or "unknown",
-            license_state=license_state,
-            query_completed=True,
-            synthetic=True,
-            mode=resolved,
-            error="" if resolved != "gateway_synthetic" else "",
-        )
+            return MVRResult(
+                driver_name=driver_name or "unknown",
+                license_state=license_state,
+                query_completed=False,
+                error="MVR requires MVR_API_KEY and MVR_API_URL to be configured",
+                mode=resolved,
+            )
+        return self._call_live(driver_name, license_state, license_number)
 
     def _call_live(self, driver_name: str, license_state: str, license_number: str) -> MVRResult:
         try:

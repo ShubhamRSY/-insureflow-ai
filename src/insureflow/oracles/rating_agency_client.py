@@ -83,23 +83,24 @@ class CreditRatingResult:
         parts = [f"{self.subject_name}: {self.issuer_rating} ({self.outlook})"]
         if self.watch:
             parts.append(self.watch)
-        if self.synthetic or self.mode in {"simulated", "gateway_synthetic"}:
+        if self.synthetic:
             parts.append("SYNTHETIC/UNVERIFIED")
         return " | ".join(parts)
 
 
 class CreditRatingAgencyClient:
-    """Simulated credit-rating-agency client (Moody's / S&P style).
+    """Credit-rating-agency client (Moody's / S&P style).
 
-    In production this would integrate with the Moody's or S&P Global Ratings
-    API. Set ORACLE_MODE=live and provide a real API key.
+    Makes real HTTP calls to the rating agency API.
+    Set ORACLE_MODE=auto (default) and provide a real API key for live queries.
+    Without a valid API key, queries return an error — never fake data.
     """
 
     def __init__(
         self,
         api_key: str = "",
         base_url: str = "https://api.spglobal.com/ratings/v2",
-        mode: str = "simulated",
+        mode: str = "auto",
         query_path: str = "/entities",
     ):
         self.api_key = api_key
@@ -122,59 +123,15 @@ class CreditRatingAgencyClient:
             )
 
         resolved = self._resolved_mode()
-        if resolved == "live":
-            return self._call_live_api(legal_name, tax_id)
         if resolved == "misconfigured":
             return CreditRatingResult(
                 subject_name=legal_name,
                 tax_id=tax_id,
                 query_completed=False,
-                error="Rating agency live mode requires RATING_AGENCY_API_KEY and RATING_AGENCY_API_URL",
+                error="Rating agency requires RATING_AGENCY_API_KEY and RATING_AGENCY_API_URL to be configured",
             )
 
-        return self._simulate(legal_name, tax_id)
-
-    def _simulate(self, legal_name: str, tax_id: str) -> CreditRatingResult:
-        name_lower = (legal_name or "").lower()
-        if "veririsk" in name_lower or "construction" in name_lower:
-            return CreditRatingResult(
-                subject_name=legal_name,
-                tax_id=tax_id,
-                issuer_rating="B",
-                outlook="negative",
-                watch="on-watch",
-                agency="S&P Global",
-                synthetic=True,
-                mode="simulated",
-            )
-        if "pacific" in name_lower or "marine" in name_lower:
-            return CreditRatingResult(
-                subject_name=legal_name,
-                tax_id=tax_id,
-                issuer_rating="BB+",
-                outlook="stable",
-                agency="S&P Global",
-                synthetic=True,
-                mode="simulated",
-            )
-        if "northwind" in name_lower or "trading" in name_lower:
-            return CreditRatingResult(
-                subject_name=legal_name,
-                tax_id=tax_id,
-                issuer_rating="A-",
-                outlook="stable",
-                agency="Moody's",
-                synthetic=True,
-                mode="simulated",
-            )
-        return CreditRatingResult(
-            subject_name=legal_name,
-            tax_id=tax_id,
-            not_rated=True,
-            agency="S&P Global",
-            synthetic=True,
-            mode="simulated",
-        )
+        return self._call_live_api(legal_name, tax_id)
 
     def _call_live_api(self, legal_name: str, tax_id: str) -> CreditRatingResult:
         try:

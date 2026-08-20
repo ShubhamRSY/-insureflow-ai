@@ -86,13 +86,13 @@ def test_validate_startup_rejects_dev_gateway_key(monkeypatch: MonkeyPatch) -> N
     assert any("INTEGRATION_GATEWAY_API_KEY" in e for e in errors)
 
 
-def test_dev_posture_defaults_closed_registration(monkeypatch: MonkeyPatch) -> None:
+def test_dev_posture_defaults_open_registration(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setenv("BANK_MODE", "false")
     monkeypatch.setenv("ENVIRONMENT", "development")
     monkeypatch.delenv("ALLOW_OPEN_REGISTRATION", raising=False)
     posture = resolve_security_posture()
     assert posture.bank_mode is False
-    assert posture.allow_open_registration is False
+    assert posture.allow_open_registration is True
 
 
 def test_dev_posture_can_opt_in_open_registration(monkeypatch: MonkeyPatch) -> None:

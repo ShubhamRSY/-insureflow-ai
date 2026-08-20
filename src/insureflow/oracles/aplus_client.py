@@ -2,9 +2,8 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from datetime import date, timedelta
+from datetime import date
 from enum import Enum
-from uuid import uuid4
 
 from insureflow.integrations.http_client import IntegrationHTTPError
 from insureflow.integrations.parsers import parse_aplus_response
@@ -47,6 +46,7 @@ class APlusResult:
     has_arson_or_fraud_flag: bool = False
     query_completed: bool = True
     error: str = ""
+    mode: str = ""
 
     @property
     def summary(self) -> str:
@@ -61,17 +61,18 @@ class APlusResult:
 
 
 class APlusClient:
-    """Simulated A-PLUS (Automated Property Loss Underwriting System) client.
+    """A-PLUS (Automated Property Loss Underwriting System) client.
 
-    In production this would integrate with the Verisk A-PLUS API.
-    Returns deterministic mock property loss data matching the submission.
+    Makes real HTTP calls to the Verisk A-PLUS API.
+    Set ORACLE_MODE=auto (default) and provide a real API key for live queries.
+    Without a valid API key, queries return an error — never fake data.
     """
 
     def __init__(
         self,
         api_key: str = "",
         base_url: str = "https://api.verisk.com/aplus/v2",
-        mode: str = "simulated",
+        mode: str = "auto",
         query_path: str = "/queries",
     ):
         self.api_key = api_key
@@ -100,17 +101,15 @@ class APlusClient:
             )
 
         resolved = self._resolved_mode()
-        if resolved == "live":
-            return self._call_live_api(legal_name, property_address, tax_id, years_back)
         if resolved == "misconfigured":
             return APlusResult(
                 subject_name=legal_name,
                 subject_address=property_address,
                 query_completed=False,
-                error="A-PLUS live mode requires APLUS_API_KEY or VERISK_API_KEY and APLUS_API_URL",
+                error="A-PLUS requires APLUS_API_KEY or VERISK_API_KEY and APLUS_API_URL to be configured",
             )
 
-        return self._simulated_query(legal_name, property_address, tax_id, years_back)
+        return self._call_live_api(legal_name, property_address, tax_id, years_back)
 
     def _call_live_api(self, legal_name: str, property_address: str, tax_id: str, years_back: int) -> APlusResult:
         try:
@@ -169,89 +168,3 @@ class APlusClient:
                 query_completed=False,
                 error=str(exc),
             )
-
-    def _simulated_query(self, legal_name: str, property_address: str, tax_id: str, years_back: int) -> APlusResult:
-        today = date.today()
-        name_lower = (legal_name or "").lower()
-        addr_lower = (property_address or "").lower()
-
-        records: list[APlusRecord] = []
-
-        if "pacific" in name_lower or "marine" in name_lower:
-            records.append(
-                APlusRecord(
-                    claim_id=f"APLUS-{uuid4().hex[:8].upper()}",
-                    property_address=property_address or "123 Harbor Blvd",
-                    date_of_loss=today - timedelta(days=365 * 3),
-                    claim_type=PropertyClaimType.WATER_DAMAGE,
-                    paid_amount=28_000.0,
-                    current_status="closed",
-                    policy_type="CPP",
-                    description="Pipe burst in warehouse — water damage to inventory",
-                )
-            )
-
-        if "veririsk" in name_lower or "construction" in name_lower:
-            records.append(
-                APlusRecord(
-                    claim_id=f"APLUS-{uuid4().hex[:8].upper()}",
-                    property_address=property_address or "456 Industrial Dr",
-                    date_of_loss=today - timedelta(days=90),
-                    claim_type=PropertyClaimType.FIRE,
-                    paid_amount=320_000.0,
-                    current_status="open",
-                    policy_type="CPP",
-                    description="Electrical fire in workshop — building and contents damaged",
-                )
-            )
-            records.append(
-                APlusRecord(
-                    claim_id=f"APLUS-{uuid4().hex[:8].upper()}",
-                    property_address=property_address or "456 Industrial Dr",
-                    date_of_loss=today - timedelta(days=365 * 2),
-                    claim_type=PropertyClaimType.THEFT,
-                    paid_amount=12_000.0,
-                    current_status="closed",
-                    policy_type="CPP",
-                    description="Tools and equipment stolen from job site",
-                )
-            )
-
-        if "northwind" in name_lower:
-            records.append(
-                APlusRecord(
-                    claim_id=f"APLUS-{uuid4().hex[:8].upper()}",
-                    property_address=property_address or "789 Main St",
-                    date_of_loss=today - timedelta(days=365 * 5),
-                    claim_type=PropertyClaimType.HAIL,
-                    paid_amount=18_500.0,
-                    current_status="closed",
-                    policy_type="CPP",
-                    description="Hail damage to roof — replaced",
-                )
-            )
-
-        if "coastal" in addr_lower or "beach" in addr_lower:
-            records.append(
-                APlusRecord(
-                    claim_id=f"APLUS-{uuid4().hex[:8].upper()}",
-                    property_address=property_address,
-                    date_of_loss=today - timedelta(days=365),
-                    claim_type=PropertyClaimType.WIND,
-                    paid_amount=95_000.0,
-                    current_status="closed",
-                    policy_type="CPP",
-                    description="Wind damage from tropical storm — roof and awning",
-                )
-            )
-
-        total_paid = sum(r.paid_amount for r in records)
-        return APlusResult(
-            subject_name=legal_name,
-            subject_address=property_address,
-            records=records,
-            total_claims_found=len(records),
-            total_paid=total_paid,
-            has_repeated_property_claims=len(records) >= 2,
-            has_arson_or_fraud_flag="arson" in str(records).lower() or "fraud" in str(records).lower(),
-        )

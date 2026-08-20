@@ -52,6 +52,7 @@ class NCCIResult:
     total_actual_losses: float = 0.0
     query_completed: bool = True
     error: str = ""
+    mode: str = ""
 
     @property
     def worst_mod(self) -> NCCIExperienceMod | None:
@@ -70,17 +71,18 @@ class NCCIResult:
 
 
 class NCCIClient:
-    """Simulated NCCI (National Council on Compensation Insurance) client.
+    """NCCI (National Council on Compensation Insurance) client.
 
-    In production, this would call the NCCI Experience Rating API.
-    Set ORACLE_MODE=live and provide a real API key for production use.
+    Makes real HTTP calls to the NCCI Experience Rating API.
+    Set ORACLE_MODE=auto (default) and provide a real API key for live queries.
+    Without a valid API key, queries return an error — never fake data.
     """
 
     def __init__(
         self,
         api_key: str = "",
         base_url: str = "https://api.ncci.com/experience/v2",
-        mode: str = "simulated",
+        mode: str = "auto",
         query_path: str = "/experience",
     ):
         self.api_key = api_key
@@ -103,79 +105,15 @@ class NCCIClient:
             )
 
         resolved = self._resolved_mode()
-        if resolved == "live":
-            return self._call_live_api(fein, legal_name)
         if resolved == "misconfigured":
             return NCCIResult(
                 employer_name=legal_name,
                 fein=fein,
                 query_completed=False,
-                error="NCCI live mode requires NCCI_API_KEY or VERISK_API_KEY and NCCI_API_URL",
+                error="NCCI requires NCCI_API_KEY or VERISK_API_KEY and NCCI_API_URL to be configured",
             )
 
-        name_lower = (legal_name or "").lower()
-        mods: list[NCCIExperienceMod] = []
-
-        if "pacific" in name_lower or "marine" in name_lower:
-            mods.append(
-                NCCIExperienceMod(
-                    mod_factor=1.12,
-                    class_code="8380",
-                    class_code_description="Marine Cargo Handling",
-                    expected_losses=120_000.0,
-                    actual_losses=134_400.0,
-                    primary_losses=45_000.0,
-                    excess_losses=89_400.0,
-                    payroll=3_200_000.0,
-                )
-            )
-        elif "construction" in name_lower or "veririsk" in name_lower:
-            mods.append(
-                NCCIExperienceMod(
-                    mod_factor=1.35,
-                    class_code="5221",
-                    class_code_description="Concrete or Cement Work",
-                    expected_losses=180_000.0,
-                    actual_losses=243_000.0,
-                    primary_losses=68_000.0,
-                    excess_losses=175_000.0,
-                    payroll=4_500_000.0,
-                )
-            )
-        elif "northwind" in name_lower:
-            mods.append(
-                NCCIExperienceMod(
-                    mod_factor=0.88,
-                    class_code="8810",
-                    class_code_description="Clerical Office",
-                    expected_losses=45_000.0,
-                    actual_losses=39_600.0,
-                    primary_losses=12_000.0,
-                    excess_losses=27_600.0,
-                    payroll=1_800_000.0,
-                )
-            )
-        else:
-            mods.append(
-                NCCIExperienceMod(
-                    mod_factor=1.00,
-                    class_code="5555",
-                    class_code_description="General Classification",
-                    expected_losses=50_000.0,
-                    actual_losses=50_000.0,
-                    primary_losses=15_000.0,
-                    excess_losses=35_000.0,
-                    payroll=1_000_000.0,
-                )
-            )
-
-        return NCCIResult(
-            employer_name=legal_name or fein,
-            fein=fein,
-            experience_mods=mods,
-            total_expected_losses=sum(m.expected_losses for m in mods),
-            total_actual_losses=sum(m.actual_losses for m in mods),
-        )
+        return self._call_live_api(fein, legal_name)
 
     def _call_live_api(self, fein: str, legal_name: str) -> NCCIResult:
         try:

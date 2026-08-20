@@ -58,6 +58,15 @@ class UserCreateRequest(BaseModel):
     office_location: str = ""
 
 
+class SignupRequest(BaseModel):
+    username: str
+    email: str
+    password: str
+    company_name: str
+    full_name: str = ""
+    plan: str = "free"
+
+
 class PasswordResetRequest(BaseModel):
     username: str
     email: str

@@ -4,6 +4,8 @@ import hashlib
 import hmac
 import json
 import logging
+import threading
+import time
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any
@@ -16,6 +18,8 @@ logger = logging.getLogger(__name__)
 
 BROKER_SHARE_NS = "broker_shares"
 BROKER_SHARE_ORG = "_public"
+DELIVERY_LOG_NS = "webhook_deliveries"
+_MAX_DELIVERY_LOG_ENTRIES = 200
 
 
 @dataclass
@@ -27,6 +31,51 @@ class WebhookSubscription:
     secret: str = ""
     active: bool = True
     label: str = ""
+
+
+@dataclass
+class DeliveryAttempt:
+    attempt: int
+    timestamp: str
+    status: str
+    http_status: int = 0
+    error: str = ""
+    duration_ms: float = 0.0
+
+
+@dataclass
+class DeliveryRecord:
+    delivery_id: str
+    subscription_id: str
+    event: str
+    url: str
+    org_id: str
+    final_status: str
+    attempts: list[dict[str, Any]] = field(default_factory=list)
+    created_at: str = field(default_factory=lambda: datetime.now(tz=timezone.utc).isoformat())
+    completed_at: str = ""
+
+    def to_store(self) -> dict[str, Any]:
+        return asdict(self)
+
+    @classmethod
+    def from_store(cls, data: dict[str, Any] | None) -> DeliveryRecord | None:
+        if not data or not data.get("delivery_id"):
+            return None
+        try:
+            return cls(
+                delivery_id=str(data["delivery_id"]),
+                subscription_id=str(data.get("subscription_id") or ""),
+                event=str(data.get("event") or ""),
+                url=str(data.get("url") or ""),
+                org_id=str(data.get("org_id") or ""),
+                final_status=str(data.get("final_status") or "unknown"),
+                attempts=data.get("attempts") or [],
+                created_at=str(data.get("created_at") or ""),
+                completed_at=str(data.get("completed_at") or ""),
+            )
+        except (TypeError, KeyError, ValueError):
+            return None
 
 
 @dataclass
@@ -122,9 +171,71 @@ class WebhookDispatcher:
         for sub in self.list_for_org(org_id):
             if event not in sub.events and "*" not in sub.events:
                 continue
-            result = self._deliver(sub, body, envelope)
+            result = self._deliver_with_retry(sub, body, envelope)
             results.append(result)
         return results
+
+    def dispatch_async(self, event: str, org_id: str, payload: dict[str, Any]) -> None:
+        """Fire-and-forget dispatch in a background thread so the pipeline is never blocked."""
+        t = threading.Thread(target=self.dispatch, args=(event, org_id, payload), daemon=True)
+        t.start()
+
+    def _deliver_with_retry(
+        self,
+        sub: WebhookSubscription,
+        body: str,
+        envelope: dict[str, Any],
+        max_retries: int = 3,
+        base_delay: float = 1.0,
+    ) -> dict[str, Any]:
+        delivery = DeliveryRecord(
+            delivery_id=f"dlv-{uuid4().hex[:12]}",
+            subscription_id=sub.subscription_id,
+            event=envelope["event"],
+            url=sub.url,
+            org_id=sub.org_id,
+            final_status="pending",
+        )
+
+        last_result: dict[str, Any] = {}
+        for attempt in range(max_retries + 1):
+            if attempt > 0:
+                delay = base_delay * (2 ** (attempt - 1))
+                time.sleep(delay)
+
+            t0 = time.monotonic()
+            result = self._deliver(sub, body, envelope)
+            duration = (time.monotonic() - t0) * 1000
+
+            attempt_record = {
+                "attempt": attempt + 1,
+                "timestamp": datetime.now(tz=timezone.utc).isoformat(),
+                "status": result.get("status", "failed"),
+                "http_status": result.get("http_status", 0),
+                "error": result.get("error", ""),
+                "duration_ms": round(duration, 1),
+            }
+            delivery.attempts.append(attempt_record)
+            last_result = result
+
+            if result.get("status") == "delivered":
+                delivery.final_status = "delivered"
+                break
+
+            http_status = result.get("http_status", 0)
+            if http_status and 400 <= http_status < 500 and http_status != 429:
+                delivery.final_status = "failed"
+                break
+        else:
+            delivery.final_status = "failed"
+
+        delivery.completed_at = datetime.now(tz=timezone.utc).isoformat()
+        self._log_delivery(delivery)
+
+        last_result["delivery_id"] = delivery.delivery_id
+        last_result["attempts"] = len(delivery.attempts)
+        last_result["final_status"] = delivery.final_status
+        return last_result
 
     def _deliver(
         self,
@@ -168,6 +279,46 @@ class WebhookDispatcher:
                 "error": str(exc),
             }
 
+    def _log_delivery(self, record: DeliveryRecord) -> None:
+        store = _share_store()
+        if store is None:
+            return
+        try:
+            store.set(
+                DELIVERY_LOG_NS,
+                record.delivery_id,
+                record.to_store(),
+                org_id=record.org_id,
+            )
+        except Exception:
+            logger.debug("Failed to persist delivery log %s", record.delivery_id, exc_info=True)
+
+    def get_delivery(self, delivery_id: str, org_id: str) -> DeliveryRecord | None:
+        store = _share_store()
+        if store is None:
+            return None
+        try:
+            raw = store.get(DELIVERY_LOG_NS, delivery_id, org_id=org_id)
+            return DeliveryRecord.from_store(raw)
+        except Exception:
+            return None
+
+    def list_deliveries(self, org_id: str, limit: int = 50) -> list[DeliveryRecord]:
+        store = _share_store()
+        if store is None:
+            return []
+        try:
+            ids = store.list_ids(DELIVERY_LOG_NS, org_id)
+            records: list[DeliveryRecord] = []
+            for did in ids[-limit:]:
+                raw = store.get(DELIVERY_LOG_NS, did, org_id=org_id)
+                rec = DeliveryRecord.from_store(raw)
+                if rec:
+                    records.append(rec)
+            return sorted(records, key=lambda r: r.created_at, reverse=True)
+        except Exception:
+            return []
+
     # ── Broker Status Share (unauthenticated submission tracking) ──
 
     def create_broker_share(
@@ -196,7 +347,6 @@ class WebhookDispatcher:
         store = _share_store()
         if store is not None:
             try:
-                # Nest under "share" — FileJobStore overwrites top-level org_id with the store scope
                 store.set(BROKER_SHARE_NS, token, {"share": share.to_store()}, org_id=BROKER_SHARE_ORG)
             except Exception:
                 logger.warning("Failed to persist broker share %s", token, exc_info=True)

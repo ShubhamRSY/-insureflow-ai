@@ -165,6 +165,17 @@ class PostgresUserStore:
     def __setitem__(self, username: str, user: User) -> None:
         session = self._session()
         try:
+            if user.org_id and user.org_id != "default":
+                org = session.execute(select(self._OrgRow).where(self._OrgRow.id == user.org_id)).scalar_one_or_none()
+                if org is None:
+                    org = session.execute(select(self._OrgRow).where(self._OrgRow.name == user.org_id)).scalar_one_or_none()
+                    if org is None:
+                        new_org = self._OrgRow(name=user.org_id)
+                        session.add(new_org)
+                        session.flush()
+                        user.org_id = str(new_org.id)
+                    else:
+                        user.org_id = str(org.id)
             existing = session.execute(select(self._UserRow).where(self._UserRow.username == username)).scalar_one_or_none()
             if existing:
                 existing.email = user.email

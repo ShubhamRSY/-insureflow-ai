@@ -14,15 +14,15 @@ def test_validate_company_email_accepts_ryterainc(monkeypatch: pytest.MonkeyPatc
     assert result.valid is True
 
 
-def test_validate_company_email_rejects_personal_domains(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("REGISTRATION_EMAIL_DOMAINS", raising=False)
+def test_validate_company_email_rejects_personal_domains_when_restricted(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("REGISTRATION_EMAIL_DOMAINS", "ryterainc.com")
     result = validate_company_email("user@gmail.com")
     assert result.valid is False
     assert "company email" in result.errors[0].lower()
 
 
-def test_validate_registration_enforces_company_email(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("REGISTRATION_EMAIL_DOMAINS", raising=False)
+def test_validate_registration_enforces_company_email_when_restricted(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("REGISTRATION_EMAIL_DOMAINS", "ryterainc.com")
     result = validate_registration(
         username="newuser",
         email="user@gmail.com",

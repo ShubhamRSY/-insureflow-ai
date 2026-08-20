@@ -107,7 +107,7 @@ def build() -> Path:
     s.background.fill.fore_color.rgb = NAVY
     _bar(s)
     _textbox(s, Inches(0.7), Inches(1.55), Inches(11), Inches(0.35), "PRODUCT DEMO  ·  12 MINUTES", size=13, color=BRAND_LT, bold=True)
-    _textbox(s, Inches(0.7), Inches(2.05), Inches(12), Inches(1.3), "Stop hunting PDFs.\nStart underwriting.", size=40, color=WHITE, bold=True, name="Calibri")
+    _textbox(s, Inches(0.7), Inches(2.05), Inches(12), Inches(1.3), "AI underwriting you can\nactually trust.", size=40, color=WHITE, bold=True, name="Calibri")
     _textbox(
         s,
         Inches(0.7),

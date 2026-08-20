@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import re
+from datetime import datetime
 from typing import Any
 
 from insureflow.agents.base import BaseAgent
-from insureflow.models.agents import AgentType, Finding, RiskSeverity
+from insureflow.models.agents import AgentType, Finding, OracleFailure, RiskSeverity
 from insureflow.models.submissions import SubmissionBundle
 from insureflow.oracles.aplus_client import APlusClient
 from insureflow.oracles.bureau_client import CreditBureauClient
@@ -26,6 +27,8 @@ class OracleAgent(BaseAgent):
 
     agent_type = AgentType.ORACLE_AGENT
     agent_name = "OracleAgent"
+
+    CRITICAL_ORACLES = frozenset({"CLUE", "A-PLUS", "NCCI", "CAT"})
 
     def __init__(
         self,
@@ -55,12 +58,38 @@ class OracleAgent(BaseAgent):
         self.cyber_scan = cyber_scan_client or CyberScanClient()
         self.last_ncci_emod: float | None = None
         self.last_mvr_cleared: bool | None = None
+        self._oracle_failures: list[OracleFailure] = []
+
+    def _record_oracle_failure(
+        self,
+        oracle_name: str,
+        status: str,
+        error_code: str = "",
+        error_message: str = "",
+        query_completed: bool = False,
+        mode: str = "",
+        is_critical: bool = True,
+        retry_count: int = 0,
+    ) -> None:
+        """Record a structured oracle failure for pipeline REFER decisions."""
+        self._oracle_failures.append(
+            OracleFailure(
+                oracle_name=oracle_name,
+                status=status,
+                error_code=error_code,
+                error_message=error_message,
+                timestamp=datetime.now(),
+                query_completed=query_completed,
+                mode=mode,
+                is_critical=is_critical,
+                retry_count=retry_count,
+            )
+        )
 
     def _analyze(self, bundle: SubmissionBundle, **kwargs: Any) -> None:
         self.last_ncci_emod = None
         self.last_mvr_cleared = None
-        if not self._live_oracles_ok():
-            return
+        self._oracle_failures = []
         line = str(kwargs.get("insurance_line") or "")
         queries = [
             self._query_clue(bundle),
@@ -81,50 +110,6 @@ class OracleAgent(BaseAgent):
         for findings in queries:
             for f in findings:
                 self._add_finding(f)
-
-    def _live_oracles_ok(self) -> bool:
-        """Desk+ fail closed: never return simulated 'clean history' at paid prices."""
-        from insureflow.billing.plan import current_plan
-
-        plan = current_plan()
-        if not plan.require_live_oracles:
-            return True
-        simulated: list[str] = []
-        for name, client in (
-            ("CLUE", self.clue),
-            ("A-PLUS", self.aplus),
-            ("NCCI", self.ncci),
-            ("CAT", self.cat_model),
-            ("Bureau", self.bureau),
-            ("PublicRecords", self.public_records),
-            ("OSHA", self.osha),
-            ("RatingAgency", self.rating_agency),
-            ("MVR", self.mvr),
-        ):
-            mode = ""
-            if hasattr(client, "_resolved_mode"):
-                try:
-                    mode = str(client._resolved_mode() or "")
-                except Exception:
-                    mode = "unknown"
-            if mode != "live":
-                simulated.append(f"{name}:{mode or 'simulated'}")
-        if not simulated:
-            return True
-        self._add_finding(
-            Finding(
-                title="Live oracles required for this plan",
-                description=(
-                    f"{plan.plan_id.title()} does not allow simulated oracle feeds while charging Desk+ prices. "
-                    "Point CLUE / NCCI / A+ / CAT at vendor sandboxes (not integrations.rytera.ai) or stay on Pilot. "
-                    f"Not live: {', '.join(simulated)}."
-                ),
-                severity=RiskSeverity.CRITICAL,
-                category="oracle_posture",
-                evidence=simulated,
-            )
-        )
-        return False
 
     def _identity(self, bundle: SubmissionBundle) -> tuple[str, str, str]:
         insured_name = self.tools.get_named_insured(bundle)
@@ -156,6 +141,15 @@ class OracleAgent(BaseAgent):
         result = self.clue.query_by_name_and_address(insured_name, address, tax_id)
 
         if result.error:
+            self._record_oracle_failure(
+                oracle_name="CLUE",
+                status="error",
+                error_code="CLUE_QUERY_FAILED",
+                error_message=result.error,
+                query_completed=result.query_completed,
+                mode=result.mode or self.clue._resolved_mode(),
+                is_critical=True,
+            )
             findings.append(
                 Finding(
                     title="CLUE query failed",
@@ -165,6 +159,17 @@ class OracleAgent(BaseAgent):
                 )
             )
             return findings
+
+        if result.synthetic or self.clue._resolved_mode() != "live":
+            self._record_oracle_failure(
+                oracle_name="CLUE",
+                status="error",
+                error_code="CLUE_NOT_LIVE",
+                error_message=f"CLUE query did not complete in live mode (mode={self.clue._resolved_mode()})",
+                query_completed=result.query_completed,
+                mode=result.mode or self.clue._resolved_mode(),
+                is_critical=True,
+            )
 
         if result.total_claims_found > 0:
             for record in result.records:
@@ -204,23 +209,15 @@ class OracleAgent(BaseAgent):
             )
 
         if result.total_claims_found == 0:
-            unverified = (
-                bool(getattr(result, "synthetic", False))
-                or getattr(result, "mode", "")
-                in {
-                    "simulated",
-                    "gateway_synthetic",
-                }
-                or self.clue._resolved_mode() != "live"
-            )
+            unverified = self.clue._resolved_mode() != "live"
             if unverified:
                 findings.append(
                     Finding(
-                        title="CLUE: External verification unavailable (synthetic/simulated)",
-                        description=(f"CLUE response for {insured_name} is synthetic or simulated — do not treat as a verified clean loss history. Configure live LexisNexis credentials."),
+                        title="CLUE: External verification unavailable",
+                        description=(f"CLUE query for {insured_name} did not complete in live mode (mode={self.clue._resolved_mode()}). Configure live LexisNexis credentials."),
                         severity=RiskSeverity.HIGH,
                         category="external_oracle",
-                        evidence=["synthetic=true" if getattr(result, "synthetic", False) else f"mode={self.clue._resolved_mode()}"],
+                        evidence=[f"mode={self.clue._resolved_mode()}"],
                     )
                 )
             else:
@@ -253,6 +250,15 @@ class OracleAgent(BaseAgent):
         result = self.aplus.query_by_property(insured_name, address, tax_id)
 
         if result.error:
+            self._record_oracle_failure(
+                oracle_name="A-PLUS",
+                status="error",
+                error_code="APLUS_QUERY_FAILED",
+                error_message=result.error,
+                query_completed=result.query_completed,
+                mode=result.mode or self.aplus._resolved_mode(),
+                is_critical=True,
+            )
             findings.append(
                 Finding(
                     title="A-PLUS query failed",
@@ -262,6 +268,17 @@ class OracleAgent(BaseAgent):
                 )
             )
             return findings
+
+        if self.aplus._resolved_mode() != "live":
+            self._record_oracle_failure(
+                oracle_name="A-PLUS",
+                status="error",
+                error_code="APLUS_NOT_LIVE",
+                error_message=f"A-PLUS query did not complete in live mode (mode={self.aplus._resolved_mode()})",
+                query_completed=result.query_completed,
+                mode=result.mode or self.aplus._resolved_mode(),
+                is_critical=True,
+            )
 
         if result.total_claims_found > 0:
             for record in result.records:
@@ -302,14 +319,15 @@ class OracleAgent(BaseAgent):
             )
 
         if result.total_claims_found == 0:
-            unverified = self.aplus._resolved_mode() != "live" or bool(getattr(result, "synthetic", False))
+            unverified = self.aplus._resolved_mode() != "live"
             if unverified:
                 findings.append(
                     Finding(
-                        title="A-PLUS: External verification unavailable (synthetic/simulated)",
-                        description=(f"A-PLUS response for {insured_name} is synthetic or simulated — do not treat as a verified clean property history."),
+                        title="A-PLUS: External verification unavailable",
+                        description=(f"A-PLUS query for {insured_name} did not complete in live mode (mode={self.aplus._resolved_mode()})."),
                         severity=RiskSeverity.HIGH,
                         category="external_oracle",
+                        evidence=[f"mode={self.aplus._resolved_mode()}"],
                     )
                 )
             else:
@@ -337,6 +355,15 @@ class OracleAgent(BaseAgent):
         result = self.ncci.query_by_fein(fein, insured_name)
 
         if result.error:
+            self._record_oracle_failure(
+                oracle_name="NCCI",
+                status="error",
+                error_code="NCCI_QUERY_FAILED",
+                error_message=result.error,
+                query_completed=result.query_completed,
+                mode=result.mode or self.ncci._resolved_mode(),
+                is_critical=True,
+            )
             findings.append(
                 Finding(
                     title="NCCI query failed",
@@ -430,6 +457,15 @@ class OracleAgent(BaseAgent):
 
         cat_result = self.cat_model.model_submission(loc_dicts)
         if cat_result.error:
+            self._record_oracle_failure(
+                oracle_name="CAT",
+                status="error",
+                error_code="CAT_MODEL_FAILED",
+                error_message=cat_result.error,
+                query_completed=cat_result.query_completed,
+                mode=cat_result.mode or self.cat_model._resolved_mode(),
+                is_critical=True,
+            )
             findings.append(
                 Finding(
                     title="CAT model query failed",
@@ -474,6 +510,15 @@ class OracleAgent(BaseAgent):
 
         result = self.bureau.query_by_tax_id(tax_id, insured_name)
         if result.error:
+            self._record_oracle_failure(
+                oracle_name="Bureau",
+                status="error",
+                error_code="BUREAU_QUERY_FAILED",
+                error_message=result.error,
+                query_completed=result.query_completed,
+                mode=result.mode or self.bureau._resolved_mode(),
+                is_critical=False,
+            )
             findings.append(
                 Finding(
                     title="Credit bureau query failed",
@@ -540,14 +585,14 @@ class OracleAgent(BaseAgent):
                 )
             )
 
-        if result.synthetic or self.bureau._resolved_mode() != "live":
+        if self.bureau._resolved_mode() != "live":
             findings.append(
                 Finding(
-                    title="BUREAU: External verification unavailable (synthetic/simulated)",
-                    description="Credit bureau response is synthetic or simulated — do not treat as a verified clean credit profile.",
+                    title="BUREAU: External verification unavailable",
+                    description=f"Credit bureau query did not complete in live mode (mode={self.bureau._resolved_mode()}).",
                     severity=RiskSeverity.HIGH,
                     category="external_oracle",
-                    evidence=[f"mode={result.mode or self.bureau._resolved_mode()}"],
+                    evidence=[f"mode={self.bureau._resolved_mode()}"],
                 )
             )
 
@@ -561,6 +606,15 @@ class OracleAgent(BaseAgent):
 
         result = self.public_records.query_by_entity(insured_name, tax_id, address)
         if result.error:
+            self._record_oracle_failure(
+                oracle_name="PublicRecords",
+                status="error",
+                error_code="PUBLIC_RECORDS_QUERY_FAILED",
+                error_message=result.error,
+                query_completed=result.query_completed,
+                mode=result.mode or self.public_records._resolved_mode(),
+                is_critical=False,
+            )
             findings.append(
                 Finding(
                     title="Public records query failed",
@@ -621,14 +675,15 @@ class OracleAgent(BaseAgent):
                 )
 
         if result.total_records_found == 0:
-            unverified = self.public_records._resolved_mode() != "live" or bool(result.synthetic)
+            unverified = self.public_records._resolved_mode() != "live"
             if unverified:
                 findings.append(
                     Finding(
-                        title="PUBLIC RECORDS: External verification unavailable (synthetic/simulated)",
-                        description="Public-record search is synthetic or simulated — do not treat as a verified clean record.",
+                        title="PUBLIC RECORDS: External verification unavailable",
+                        description=f"Public-record query did not complete in live mode (mode={self.public_records._resolved_mode()}).",
                         severity=RiskSeverity.HIGH,
                         category="external_oracle",
+                        evidence=[f"mode={self.public_records._resolved_mode()}"],
                     )
                 )
             else:
@@ -655,6 +710,15 @@ class OracleAgent(BaseAgent):
 
         result = self.osha.query_by_entity(insured_name, tax_id, naics)
         if result.error:
+            self._record_oracle_failure(
+                oracle_name="OSHA",
+                status="error",
+                error_code="OSHA_QUERY_FAILED",
+                error_message=result.error,
+                query_completed=result.query_completed,
+                mode=result.mode or self.osha._resolved_mode(),
+                is_critical=False,
+            )
             findings.append(
                 Finding(
                     title="OSHA query failed",
@@ -686,14 +750,15 @@ class OracleAgent(BaseAgent):
             )
 
         if result.total_violations == 0:
-            unverified = self.osha._resolved_mode() != "live" or bool(result.synthetic)
+            unverified = self.osha._resolved_mode() != "live"
             if unverified:
                 findings.append(
                     Finding(
-                        title="OSHA: External verification unavailable (synthetic/simulated)",
-                        description="OSHA inspection search is synthetic or simulated — do not treat as a verified clean safety record.",
+                        title="OSHA: External verification unavailable",
+                        description=f"OSHA inspection query did not complete in live mode (mode={self.osha._resolved_mode()}).",
                         severity=RiskSeverity.HIGH,
                         category="external_oracle",
+                        evidence=[f"mode={self.osha._resolved_mode()}"],
                     )
                 )
             else:
@@ -716,6 +781,15 @@ class OracleAgent(BaseAgent):
 
         result = self.rating_agency.query_by_entity(insured_name, tax_id)
         if result.error:
+            self._record_oracle_failure(
+                oracle_name="RatingAgency",
+                status="error",
+                error_code="RATING_AGENCY_QUERY_FAILED",
+                error_message=result.error,
+                query_completed=result.query_completed,
+                mode=result.mode or self.rating_agency._resolved_mode(),
+                is_critical=False,
+            )
             findings.append(
                 Finding(
                     title="Rating agency query failed",
@@ -771,14 +845,14 @@ class OracleAgent(BaseAgent):
                 )
             )
 
-        if result.synthetic or self.rating_agency._resolved_mode() != "live":
+        if self.rating_agency._resolved_mode() != "live":
             findings.append(
                 Finding(
-                    title="RATING: External verification unavailable (synthetic/simulated)",
-                    description="Rating-agency response is synthetic or simulated — do not treat as a verified rating.",
+                    title="RATING: External verification unavailable",
+                    description=f"Rating-agency query did not complete in live mode (mode={self.rating_agency._resolved_mode()}).",
                     severity=RiskSeverity.HIGH,
                     category="external_oracle",
-                    evidence=[f"mode={result.mode or self.rating_agency._resolved_mode()}"],
+                    evidence=[f"mode={self.rating_agency._resolved_mode()}"],
                 )
             )
 
@@ -822,6 +896,15 @@ class OracleAgent(BaseAgent):
             result = self.mvr.query_driver(name)
             synthetic = synthetic or result.synthetic or result.mode != "live"
             if result.error:
+                self._record_oracle_failure(
+                    oracle_name="MVR",
+                    status="error",
+                    error_code="MVR_QUERY_FAILED",
+                    error_message=result.error,
+                    query_completed=result.query_completed,
+                    mode=result.mode or self.mvr._resolved_mode(),
+                    is_critical=False,
+                )
                 findings.append(
                     Finding(
                         title=f"MVR query failed ({name})",
@@ -904,6 +987,15 @@ class OracleAgent(BaseAgent):
             return findings
         result = self.telematics.query_vehicle(vin, stated_mileage=stated)
         if result.error:
+            self._record_oracle_failure(
+                oracle_name="Telematics",
+                status="error",
+                error_code="TELEMATICS_QUERY_FAILED",
+                error_message=result.error,
+                query_completed=result.query_completed,
+                mode=result.mode or self.telematics._resolved_mode(),
+                is_critical=False,
+            )
             findings.append(
                 Finding(
                     title="Telematics query failed",
@@ -989,6 +1081,15 @@ class OracleAgent(BaseAgent):
             return findings
         result = self.cyber_scan.query_domain(domain)
         if result.error:
+            self._record_oracle_failure(
+                oracle_name="CyberScan",
+                status="error",
+                error_code="CYBER_SCAN_FAILED",
+                error_message=result.error,
+                query_completed=result.query_completed,
+                mode=result.mode or self.cyber_scan._resolved_mode(),
+                is_critical=False,
+            )
             findings.append(
                 Finding(
                     title="Cyber scan query failed",

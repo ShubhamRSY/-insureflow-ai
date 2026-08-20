@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 
 from insureflow.api import app
 from insureflow.config import settings
+from scripts.build_landing import home_main, page
 
 client = TestClient(app)
 GATEWAY_KEY = settings.integration_gateway_api_key
@@ -139,12 +140,12 @@ def test_landing_page_html() -> None:
     resp = client.get("/", headers={"Accept": "text/html"})
     assert resp.status_code == 200
     assert "Rytera" in resp.text
-    assert "Stop hunting" in resp.text
+    assert "actually trust" in resp.text
     assert "decision-ready memo" in resp.text.lower() or "decision memo" in resp.text.lower() or "memo" in resp.text.lower()
     assert "Named insureds never leave the gate" not in resp.text
     assert "Names and private details come off before any AI sees a page" in resp.text
-    assert "Grounded Risk Intelligence" in resp.text or "Zero Black Boxes" in resp.text
-    assert "Unified Underwriting" in resp.text
+    assert "Production Underwriting Needs More Than a Model Score" in resp.text or "Zero Black Boxes" in resp.text
+    assert "One Desk for Every Submission" in resp.text
     assert "Extraction Fidelity" in resp.text
     assert "Licensed Underwriter Sign-Off" in resp.text
     assert "Continuously Evolving" in resp.text or "Continuous Innovation" in resp.text
@@ -252,3 +253,207 @@ def test_landing_pages_reference_existing_anchors() -> None:
             ids.add(m.group(1))
         for href in re.findall(r'href="#([^"]+)"', html):
             assert href in ids, f"{path}: missing anchor #{href}"
+
+
+# ---------------------------------------------------------------------------
+# Landing page layout & copy edge-case tests
+# ---------------------------------------------------------------------------
+
+
+def test_landing_bento_layout_present() -> None:
+    """Desks section uses bento-layout, not old audience-grid cards."""
+    html = client.get("/", headers={"Accept": "text/html"}).text
+    assert "bento-layout" in html
+    assert "bento-item" in html
+    assert "bento-tag" in html
+    assert "bento-wide" in html
+
+
+def test_landing_pillars_grid_present() -> None:
+    """Trust section uses pillars-grid with horizontal pillar-rows."""
+    html = client.get("/", headers={"Accept": "text/html"}).text
+    assert "pillars-grid" in html
+    assert "pillar-row" in html
+    assert "pillar-label" in html
+    assert "pillar-body" in html
+    assert "pillar-title" in html
+    assert "pillar-wide" in html
+
+
+def test_landing_timeline_list_present() -> None:
+    """Evolution section uses a numbered timeline-list."""
+    html = client.get("/", headers={"Accept": "text/html"}).text
+    assert "timeline-list" in html
+    assert "timeline-item" in html
+    assert "timeline-num" in html
+    assert "timeline-tag" in html
+
+
+def test_landing_trust_pillar_content() -> None:
+    """All 11 trust pillars from the new copy are present."""
+    html = client.get("/", headers={"Accept": "text/html"}).text
+    pillars = [
+        "Governance",
+        "Privacy",
+        "Intake",
+        "Operations",
+        "Compliance",
+        "Outside Data",
+        "Reliability",
+        "Renewals",
+        "Portfolio",
+        "Model Intelligence",
+        "State Regulatory Engine",
+    ]
+    for p in pillars:
+        assert p in html, f"Trust pillar {p!r} missing from landing page"
+
+
+def test_landing_trust_pillar_details() -> None:
+    """Key bullet points from the user-supplied trust copy are present."""
+    html = client.get("/", headers={"Accept": "text/html"}).text
+    checks = [
+        "Licensed underwriter signs every bind-ready memo",
+        "SSN, tax ID, and DOB stripped before any AI sees the page",
+        "Email, cloud folder, secure drop, or local watch folder",
+        "Ranked by appetite fit, severity, and premium at risk",
+        "Locked zip: every decision, override, and oracle check",
+        "Prior claims, workers-comp, catastrophe when connected",
+        "Work persisted",
+        "Pre-renewal tracking and loss feedback loops",
+        "Concentration by geography, class, and limit",
+        "Speed, quality, and cost tracked per job",
+        "State-filed rate manuals and SERFF schedules loaded directly",
+    ]
+    for c in checks:
+        assert c in html, f"Trust detail {c!r} missing"
+
+
+def test_landing_new_svg_icons_exist() -> None:
+    """New SVG icons added for trust section are defined in the sprite."""
+    html = client.get("/", headers={"Accept": "text/html"}).text
+    icons = ["i-list", "i-clock", "i-bar-chart"]
+    for icon in icons:
+        assert f'id="{icon}"' in html, f"SVG icon {icon!r} not in sprite"
+
+
+def test_landing_hero_copy() -> None:
+    """Hero uses 'AI underwriting you can actually trust' headline."""
+    html = client.get("/", headers={"Accept": "text/html"}).text
+    assert "AI underwriting you can" in html
+    assert "actually trust" in html
+    assert "decision-ready memo" in html.lower() or "decision memo" in html.lower()
+    assert "Built for Decisions" in html
+
+
+def test_landing_desks_copy() -> None:
+    """Desks section uses new copy, not old 'Unified Underwriting'."""
+    html = client.get("/", headers={"Accept": "text/html"}).text
+    assert "One Desk for Every Submission" in html
+    assert "Pick the carrier, drop the file, and underwrite" in html
+
+
+def test_landing_trust_section_headline() -> None:
+    """Trust section headline is the new copy."""
+    html = client.get("/", headers={"Accept": "text/html"}).text
+    assert "Production Underwriting Needs More Than a Model Score" in html
+    assert "Controls, Intake, and a Paper Trail You Can Defend" in html
+
+
+def test_landing_evolution_section_headline() -> None:
+    """Evolution section uses 'What We Ship This Week'."""
+    html = client.get("/", headers={"Accept": "text/html"}).text
+    assert "What We Ship This Week" in html
+
+
+def test_landing_how_it_works_copy() -> None:
+    """How it works section references 'Sort the queue' not 'Triage'."""
+    html = client.get("/", headers={"Accept": "text/html"}).text
+    assert "Sort the queue" in html
+    assert "Check &amp; Price" in html
+    assert "You Decide" in html
+
+
+def test_landing_css_contains_new_layouts() -> None:
+    """Static CSS file contains styles for all new layout types."""
+    css = client.get("/static/landing.css").text
+    selectors = [
+        ".bento-layout",
+        ".bento-item",
+        ".bento-tag",
+        ".bento-wide",
+        ".pillars-grid",
+        ".pillar-row",
+        ".pillar-label",
+        ".pillar-body",
+        ".pillar-title",
+        ".pillar-wide",
+        ".timeline-list",
+        ".timeline-item",
+        ".timeline-num",
+        ".timeline-tag",
+        ".tag-ship",
+        ".tag-core",
+    ]
+    for s in selectors:
+        assert s in css, f"CSS selector {s!r} missing from landing.css"
+
+
+def test_landing_css_responsive_new_layouts() -> None:
+    """Responsive breakpoints collapse new layouts to single column."""
+    css = client.get("/static/landing.css").text
+    assert ".bento-layout" in css and "1fr" in css
+    assert ".pillars-grid" in css
+    assert ".timeline-item" in css
+
+
+def test_landing_js_interactive_features() -> None:
+    """JS file still has all interactive features (tilt, glow, scramble, etc.)."""
+    js = client.get("/static/landing.js").text
+    features = [
+        "IntersectionObserver",
+        "tilt",
+        "glow-follower",
+        "scramble",
+        "ripple",
+        "particle",
+        "parallax",
+    ]
+    for f in features:
+        assert f in js, f"JS feature {f!r} missing from landing.js"
+
+
+def test_landing_build_matches_html() -> None:
+    """build_landing.py generates output matching the served HTML structure."""
+    full = page("Rytera", "AI underwriting", "/", "desc", home_main())
+    structural = [
+        "bento-layout",
+        "pillars-grid",
+        "pillar-row",
+        "timeline-list",
+        "timeline-item",
+        "Governance",
+        "State Regulatory Engine",
+        "i-list",
+        "i-clock",
+        "i-bar-chart",
+        "One Desk for Every Submission",
+        "Production Underwriting Needs More Than a Model Score",
+        "What We Ship This Week",
+        "actually trust",
+        "Built for Decisions",
+    ]
+    for s in structural:
+        assert s in full, f"build_landing.py output missing {s!r}"
+
+
+def test_landing_no_old_card_patterns_in_desks() -> None:
+    """Old audience-card pattern is gone from desks section."""
+    html = client.get("/", headers={"Accept": "text/html"}).text
+    # audience-card should NOT appear inside the desks section
+    desks_start = html.find('id="desks"')
+    trust_start = html.find('id="trust"')
+    if desks_start != -1 and trust_start != -1:
+        desks_html = html[desks_start:trust_start]
+        assert "audience-card" not in desks_html, "Old audience-card still in desks section"
+        assert "Unified Underwriting" not in desks_html, "Old headline still in desks section"

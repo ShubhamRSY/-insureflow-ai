@@ -31,12 +31,17 @@ class ISORatingAdapter(RatingAdapter):
 
     @property
     def _use_live(self) -> bool:
-        from insureflow.oracles._live import is_bundled_gateway_url
+        from insureflow.oracles._live import resolve_integration_mode
+        from insureflow.integrations.http_client import IntegrationHTTPClient
 
-        if self._guidewire_key and not is_bundled_gateway_url(self._guidewire_url, self._guidewire_key):
-            return True
-        if self._iso_key and not is_bundled_gateway_url(self._iso_url, self._iso_key):
-            return True
+        if self._guidewire_key:
+            http = IntegrationHTTPClient(api_key=self._guidewire_key, base_url=self._guidewire_url)
+            if resolve_integration_mode("auto", http) == "live":
+                return True
+        if self._iso_key:
+            http = IntegrationHTTPClient(api_key=self._iso_key, base_url=self._iso_url)
+            if resolve_integration_mode("auto", http) == "live":
+                return True
         return False
 
     def submit_quote(self, request: QuoteRequest, memo: UnderwritingMemo, bundle: SubmissionBundle) -> QuoteResult:

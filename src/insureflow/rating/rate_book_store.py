@@ -307,6 +307,9 @@ class RateBookResolver:
 
         book = load_carrier_book()
 
+        posture = book.get("posture", "")
+        is_filed = posture in ("carrier_imported", "serff", "filed", "production")
+
         entry = RateAuditEntry(
             bundle_id=bundle_id,
             state_code=state_code,
@@ -325,8 +328,8 @@ class RateBookResolver:
             final_premium=final_premium,
             rate_book_id=book.get("book_id", ""),
             rate_book_version=book.get("version", ""),
-            rate_book_posture=book.get("posture", ""),
-            is_filed_rate=True,
+            rate_book_posture=posture,
+            is_filed_rate=is_filed,
         )
 
         self._store.record(entry)

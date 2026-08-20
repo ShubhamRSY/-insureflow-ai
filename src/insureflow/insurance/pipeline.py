@@ -270,6 +270,7 @@ class InsurancePipeline:
 
         # Deferred stages in funnel mode are re-run on demand via deep_dive().
         deferred_stages: list[str] = []
+        pending_oracle_failures: list[Any] = []
         if funnel:
             deferred_stages = ["oracles", "portfolio", "selection_standards", "producer_experience", "adverse_selection", "moral_hazard", "reinsurance", "fraud_ml"]
 
@@ -870,6 +871,7 @@ class InsurancePipeline:
         else:
             progress.start("verify", "Verified", "Running external oracle checks")
             if not skip_oracles:
+                from insureflow.models.agents import Finding, RiskSeverity
                 bundle.status = SubmissionStatus.EXTERNAL_ORACLE_CHECK
                 oracle_result = self.oracle_agent.run(
                     bundle,
@@ -877,12 +879,18 @@ class InsurancePipeline:
                     insurance_line=insurance_line or (resolved_line.value if resolved_line else "") or "",
                 )
                 oracle_findings = list(oracle_result.findings)
+                oracle_failures = oracle_result.oracle_failures
+                critical_oracle_failures = [f for f in oracle_failures if f.is_critical and f.status in ("error", "unavailable")]
+                if critical_oracle_failures:
+                    pending_oracle_failures.extend(critical_oracle_failures)
                 audit.log(
                     PipelineEvent.VERIFICATION_COMPLETE,
                     f"Oracle queries: {len(oracle_findings)} findings from CLUE, NCCI, CAT models",
                     metadata={
                         "oracle_success": oracle_result.success,
                         "oracle_findings": len(oracle_findings),
+                        "oracle_failures": len(oracle_failures),
+                        "critical_oracle_failures": len(critical_oracle_failures),
                     },
                 )
             from insureflow.underwriting.sanctions_gate import screen_submission
@@ -959,6 +967,34 @@ class InsurancePipeline:
             skip_ml_fraud=funnel,
             insurance_line=resolved_line.value if resolved_line else insurance_line,
         )
+
+        # ── 6a. Apply deferred critical oracle failures to memo ──
+        if pending_oracle_failures:
+            from insureflow.models.agents import Finding, RiskSeverity, UWDecision
+
+            memo.human_review_required = True
+            memo.human_review_reasons.append(f"Critical oracle(s) unavailable: {', '.join(f.oracle_name for f in pending_oracle_failures)}")
+            if memo.decision not in (UWDecision.DECLINE, UWDecision.REFER):
+                memo.decision = UWDecision.REFER
+            for failure in pending_oracle_failures:
+                memo.key_findings.append(
+                    Finding(
+                        title=f"CRITICAL: {failure.oracle_name} oracle unavailable",
+                        description=(
+                            f"{failure.oracle_name} returned status '{failure.status}' ({failure.error_code}): {failure.error_message}. "
+                            "Decision forced to REFER — do not treat missing external data as clean."
+                        ),
+                        severity=RiskSeverity.CRITICAL,
+                        category="oracle_failure",
+                        evidence=[
+                            f"oracle={failure.oracle_name}",
+                            f"status={failure.status}",
+                            f"error_code={failure.error_code}",
+                            f"mode={failure.mode}",
+                            f"timestamp={failure.timestamp.isoformat()}",
+                        ],
+                    )
+                )
 
         # ── 6b. Apply document quality gate results to memo ──
         if doc_quality_result and doc_quality_result.get("decision") == "block":
@@ -1733,7 +1769,7 @@ class InsurancePipeline:
             logger.debug("Business KPI capture failed: %s", exc)
 
         # ── 14. Dispatch status webhooks for broker visibility ──
-        webhook_dispatcher.dispatch(
+        webhook_dispatcher.dispatch_async(
             "insurance.completed",
             self.org_id,
             {
@@ -2145,6 +2181,7 @@ class InsurancePipeline:
             oracle_result = self.oracle_agent.run(bundle, org_id=scope)
             results["completed"].append("oracles")
             results["findings"]["oracles"] = [f.model_dump() for f in oracle_result.findings]
+            results["oracle_failures"] = [f.model_dump() for f in oracle_result.oracle_failures]
 
         if "portfolio" in include:
             portfolio_result = self.portfolio_risk.run(bundle, org_id=scope)
@@ -2368,7 +2405,7 @@ class InsurancePipeline:
         }
         audit.persist(None, None, extra=result)
         result["audit_trail_entries"] = len(audit.trail.entries) if audit.trail else 0
-        webhook_dispatcher.dispatch(
+        webhook_dispatcher.dispatch_async(
             "insurance.declined",
             self.org_id,
             {

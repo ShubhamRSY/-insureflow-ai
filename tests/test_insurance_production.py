@@ -67,7 +67,7 @@ class TestInsuranceRating:
         quote = InsuranceRatingEngine().quote(bundle, memo)
         assert quote.adjusted_premium > 0
         assert quote.eligible is True
-        assert quote.policy_admin_reference.startswith(("PA-", "ISO-"))
+        assert quote.policy_admin_reference.startswith(("PA-", "ISO-", "GU-"))
 
     def test_quote_without_tiv_is_ineligible(self) -> None:
         bundle = SubmissionBundle(bundle_id="rate-empty")

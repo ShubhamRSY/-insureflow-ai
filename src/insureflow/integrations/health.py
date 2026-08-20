@@ -29,7 +29,7 @@ def effective_mode(service_mode: str, client: IntegrationHTTPClient) -> str:
     if health.get("reachable"):
         return "live"
     mode = (service_mode or "auto").lower()
-    return "simulated" if mode == "auto" else "degraded"
+    return "misconfigured" if mode == "auto" else "degraded"
 
 
 class IntegrationHealthService:

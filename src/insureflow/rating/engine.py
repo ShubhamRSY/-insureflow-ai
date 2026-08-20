@@ -607,8 +607,11 @@ class InsuranceRatingEngine:
         """Desk+ refuses pilot manuals — rating must be the carrier's SERFF book.
 
         Records full rate audit trail with filed rate source citations.
+        Every quote carries provenance metadata so consumers know whether
+        the premium came from a real filed rate book or built-in representative values.
         """
         from insureflow.billing.plan import current_plan, is_customer_rate_book
+        from insureflow.rating.calibration import is_rate_curves_synthetic, rate_curves_provenance
         from insureflow.rating.iso_forms import attach_iso_forms
         from insureflow.rating.leaf_filings import carrier_book_status
 
@@ -619,13 +622,22 @@ class InsuranceRatingEngine:
         meta["rate_book_posture"] = status.get("posture")
         meta["rate_book_id"] = status.get("book_id")
         meta["is_customer_book"] = is_customer_rate_book(status)
+
+        # Provenance: is this a real filed rate book or pilot/synthetic data?
+        is_customer = is_customer_rate_book(status)
+        curves_synthetic = is_rate_curves_synthetic()
+        is_filed_rate = is_customer and not curves_synthetic
+        meta["is_filed_rate"] = is_filed_rate
+        meta["rate_curves_synthetic"] = curves_synthetic
+        meta["rate_curves_provenance"] = rate_curves_provenance()
+
         meta = attach_iso_forms(
             meta,
             result.line,
             coverage_id=str(meta.get("life_coverage_id") or meta.get("coverage_id") or ""),
             product_id=str(meta.get("product_id") or ""),
         )
-        if plan.require_carrier_book and not is_customer_rate_book(status):
+        if plan.require_carrier_book and not is_customer:
             result.eligible = False
             reason = "Pilot manuals are not your SERFF filing. Import your carrier rate book before Desk+ quoting (POST /rating/carrier-book or CARRIER_BOOK_PATH)."
             if reason not in result.ineligibility_reasons:

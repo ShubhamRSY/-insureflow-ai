@@ -53,8 +53,8 @@ def resolve_security_posture(
     return SecurityPosture(
         environment=env,
         bank_mode=False,
-        allow_open_registration=os.getenv("ALLOW_OPEN_REGISTRATION", "false").lower() in {"1", "true", "yes"},
-        allow_auth_reset=os.getenv("ALLOW_AUTH_RESET", "false").lower() in {"1", "true", "yes"},
+        allow_open_registration=os.getenv("ALLOW_OPEN_REGISTRATION", "true").lower() in {"1", "true", "yes"},
+        allow_auth_reset=os.getenv("ALLOW_AUTH_RESET", "true").lower() in {"1", "true", "yes"},
         require_encryption=os.getenv("REQUIRE_ENCRYPTION", "false").lower() in {"1", "true", "yes"},
         require_strong_secret=False,
         min_password_length=int(os.getenv("MIN_PASSWORD_LENGTH", "12")),

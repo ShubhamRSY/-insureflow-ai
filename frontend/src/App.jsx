@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useNavigate, useParams } from '
 import { StateProvider } from './lib/useStateContext';
 import Layout from './components/Layout';
 import LoginModal from './components/LoginModal';
+import SignupPage from './pages/SignupPage';
 import JobDrawer from './components/JobDrawer';
 import FreemiumBanner from './components/FreemiumBanner';
 import Overview from './pages/Overview';
@@ -308,6 +309,7 @@ function AppRoutes() {
       <FreemiumBanner remaining={remaining} DAILY_LIMIT={DAILY_LIMIT} onLogin={() => setLoginOpen(true)} isLoggedIn={auth.isLoggedIn} />
       <Routes>
         <Route path="broker/status/:token" element={<BrokerStatusPage />} />
+        <Route path="signup" element={<SignupPage />} />
         <Route path="sso/callback" element={<SsoCallback />} />
         <Route element={<Layout health={health} pendingCount={pending.length} onRefresh={refreshAll} onLogin={() => setLoginOpen(true)} user={user} setUser={setUser} isLimited={isLimited} />}>
           <Route index element={<Overview overview={overview} health={health} presets={presets} onRunDemo={runDemo} onOpenJob={openJob} onLogin={() => setLoginOpen(true)} marketCycle={marketCycle} queueStats={queueStats} insuranceJobs={insuranceJobs} isLimited={isLimited} remaining={remaining} trackView={trackView} />} />

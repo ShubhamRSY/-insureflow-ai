@@ -40,7 +40,7 @@ def validate_email(email: str) -> ValidationResult:
 
 
 def registration_email_domains() -> list[str]:
-    raw = os.getenv("REGISTRATION_EMAIL_DOMAINS", "ryterainc.com")
+    raw = os.getenv("REGISTRATION_EMAIL_DOMAINS", "")
     return [part.strip().lower().lstrip("@") for part in raw.split(",") if part.strip()]
 
 

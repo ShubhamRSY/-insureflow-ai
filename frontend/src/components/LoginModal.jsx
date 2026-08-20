@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { endpoints, auth } from '../lib/api';
 import PasswordInput from './PasswordInput';
 
 export default function LoginModal({ open, onClose, onSuccess }) {
+  const navigate = useNavigate();
   const [mode, setMode] = useState('login');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -122,6 +124,25 @@ export default function LoginModal({ open, onClose, onSuccess }) {
     }
   };
 
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    setSuccess('');
+    try {
+      const fd = new FormData(e.target);
+      const username = String(fd.get('username') || '').trim();
+      const email = String(fd.get('email') || '').trim();
+      const data = await endpoints.forgotPassword({ username, email });
+      setSuccess(data.message || 'If the account exists, a reset link has been sent.');
+      setTimeout(() => setMode('login'), 2000);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm animate-fade-in">
       <div className="glass-card relative w-full max-w-md p-8 animate-slide-up">
@@ -184,6 +205,21 @@ export default function LoginModal({ open, onClose, onSuccess }) {
               <button type="button" onClick={() => { setMode('login'); setError(''); setSuccess(''); }} className="text-brand-light underline">Sign In</button>
             </p>
           </>
+        ) : mode === 'forgot' ? (
+          <>
+            <h2 className="text-2xl font-bold tracking-tight">Reset Password</h2>
+            <p className="mt-1 text-sm text-slate-400">Enter your username and email to receive a reset link</p>
+            {error && <p className="mt-4 rounded-xl bg-red-500/10 px-3 py-2 text-sm text-red-400">{error}</p>}
+            {success && <p className="mt-4 rounded-xl bg-emerald-500/10 px-3 py-2 text-sm text-emerald-400">{success}</p>}
+            <form onSubmit={handleForgotPassword} className="mt-6 space-y-4">
+              <input name="username" placeholder="Username" required className="input-field" autoComplete="username" />
+              <input name="email" type="email" placeholder="Email address" required className="input-field" autoComplete="email" />
+              <button type="submit" disabled={loading} className="btn-primary w-full">{loading ? 'Sending…' : 'Send Reset Link'}</button>
+            </form>
+            <p className="mt-4 text-center text-xs text-slate-500">
+              <button type="button" onClick={() => { setMode('login'); setError(''); setSuccess(''); }} className="text-brand-light underline">Back to Sign In</button>
+            </p>
+          </>
         ) : (
           <>
             <h2 className="text-2xl font-bold tracking-tight">Welcome back</h2>
@@ -220,13 +256,16 @@ export default function LoginModal({ open, onClose, onSuccess }) {
                 <PasswordInput id="login-password" autoComplete="current-password" placeholder="" />
               </div>
               <button type="submit" disabled={loading} className="btn-primary w-full">{loading ? 'Signing in…' : 'Sign In'}</button>
+              <p className="text-center text-xs text-slate-500">
+                <button type="button" onClick={() => { setMode('forgot'); setError(''); setSuccess(''); }} className="text-slate-400 hover:text-slate-300 underline">Forgot password?</button>
+              </p>
             </form>
             )}
 
             {allowRegister && (
             <p className="mt-4 text-center text-xs text-slate-500">
               No account?{' '}
-              <button type="button" onClick={() => { setMode('register'); setError(''); setSuccess(''); }} className="text-brand-light underline">Create one</button>
+              <button type="button" onClick={() => { onClose(); navigate('/dashboard/signup'); }} className="text-brand-light underline">Sign up free</button>
             </p>
             )}
           </>

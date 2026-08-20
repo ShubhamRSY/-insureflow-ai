@@ -6,21 +6,21 @@
 (function(){var t=new Date(),h=t.getHours()+t.getMinutes()/60;document.documentElement.setAttribute("data-theme",h>=6.5&&h<19.5?"day":"night");})();
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Rytera - Stop hunting PDFs. Start underwriting.</title>
-  <meta name="description" content="Rytera for underwriters who are tired of hunting PDFs. We read the pile. You still sign. We never invent a price." />
+  <title>Rytera - AI underwriting you can actually trust.</title>
+  <meta name="description" content="AI underwriting for insurance, mortgage, and lending. Rytera reads your submissions, runs the numbers, and hands you a decision-ready memo with every source cited." />
   <link rel="canonical" href="https://ryterainc.com/" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://ryterainc.com/" />
-  <meta property="og:title" content="Rytera - Stop hunting PDFs. Start underwriting." />
-  <meta property="og:description" content="You didn't take this job to hunt PDFs. We read the pile. You still sign. Practice first. No invented prices." />
+  <meta property="og:title" content="Rytera - AI underwriting you can actually trust." />
+  <meta property="og:description" content="AI underwriting for insurance, mortgage, and lending. Every source cited. Every rate verified. A licensed underwriter still signs." />
   <meta property="og:site_name" content="Rytera" />
   <meta property="og:image" content="https://ryterainc.com/og-image.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:image:alt" content="Rytera - AI underwriting platform" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Rytera - Stop hunting PDFs. Start underwriting." />
-  <meta name="twitter:description" content="You didn't take this job to hunt PDFs. We read the pile. You still sign. Practice first. No invented prices." />
+  <meta name="twitter:title" content="Rytera - AI underwriting you can actually trust." />
+  <meta name="twitter:description" content="AI underwriting for insurance, mortgage, and lending. Every source cited. Every rate verified. A licensed underwriter still signs." />
   <meta name="twitter:image" content="https://ryterainc.com/og-image.png" />
   <link rel="icon" href="/favicon.ico" sizes="any" />
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
@@ -94,6 +94,9 @@
     <symbol id="i-book" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></symbol>
     <symbol id="i-star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></symbol>
     <symbol id="i-key" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6M15.5 7.5l3 3L22 7l-3-3"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+    <symbol id="i-bar-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/></symbol>
   </svg>
   <div class="bg-canvas" aria-hidden="true">
     <div class="bg-grid"></div>
@@ -104,6 +107,7 @@
   </div>
   <div class="bg-noise" aria-hidden="true"></div>
   <div id="scroll-progress" aria-hidden="true"></div>
+  <div class="glow-follower" aria-hidden="true"></div>
   <div class="page">
     <header id="header">
       <div class="nav-inner">
@@ -257,17 +261,18 @@
     </nav>
 
     <main>
-      <section class="hero" id="top">
+      <section class="hero parallax-wrap" id="top">
+        <div class="particle-field" aria-hidden="true"></div>
         <div class="hero-grid">
           <div class="reveal">
             <div class="hero-badge">
               <span class="dot"></span>
-              AI Underwriting &amp; Risk Intelligence &middot; Production Ready
+              AI Underwriting &amp; Risk Intelligence &middot; Built for Decisions
             </div>
-            <h1>Stop hunting submissions.<br /><span class="gradient">Start underwriting.</span></h1>
+            <h1><span class="scramble-text" data-text="AI underwriting you can">AI underwriting you can</span><br /><span class="gradient">actually trust.</span></h1>
             <p class="lead">
-              You didn&rsquo;t take this job to hunt through messy broker dumps and Excel tables at midnight.
-              Rytera extracts data, verifies calculations, and prices from state-filed manuals to deliver a <strong>decision-ready memo you can actually sign</strong>.
+              Rytera reads your submissions, pulls external data, runs the numbers from state-filed rate manuals, and hands you a <strong>decision-ready memo with every source cited</strong>.
+              We didn't build this to collect submissions. We built it to help you underwrite them &mdash; fast, grounded, and defensible.
             </p>
             <p class="brand-line">Every fact grounded with provenance. Zero invented rates. A licensed underwriter still signs.</p>
             <div class="punch-row" aria-hidden="true">
@@ -294,7 +299,7 @@
               <span class="audience-pill"><svg class="ico sm"><use href="#i-banknote"/></svg> Credit &amp; Lending</span>
             </div>
           </div>
-          <div class="hero-media reveal">
+          <div class="hero-media reveal parallax-layer" data-speed="0.15">
             <div class="hero-halo" aria-hidden="true"></div>
             <div class="mockup" aria-hidden="true">
               <div class="mock-bar">
@@ -363,13 +368,17 @@
           <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> Bidirectional citation grounding on every number</span>
           <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> Fernet-encrypted audit manifest</span>
         </div>
-        <div class="stats reveal" aria-label="Key Performance Indicators">
+        <div class="stats reveal stagger-reveal" aria-label="Key Performance Indicators">
           <div class="stat"><span class="num" data-target="99.8" data-decimals="1" data-suffix="%">99.8%</span><span>Extraction Fidelity &amp; Grounding</span></div>
           <div class="stat"><span class="num" data-target="85" data-suffix="%+">85%+</span><span>Faster Submission Turnaround</span></div>
           <div class="stat"><span class="num" data-target="0" data-suffix="%">0%</span><span>Invented Prices or Hallucinated Facts</span></div>
           <div class="stat"><span class="num" data-target="100" data-suffix="%">100%</span><span>Licensed Underwriter Sign-Off</span></div>
         </div>
       </section>
+
+      <div class="section-divider" aria-hidden="true">
+        <svg viewBox="0 0 1440 60" preserveAspectRatio="none"><path fill="var(--bg-2)" fill-opacity=".4" d="M0,20 C360,60 720,0 1080,40 C1260,55 1380,10 1440,20 L1440,60 L0,60Z"/><path fill="var(--bg)" fill-opacity=".6" d="M0,35 C320,5 640,55 960,25 C1200,5 1360,45 1440,30 L1440,60 L0,60Z"/></svg>
+      </div>
 
       <section id="marquee" style="padding-top:0;padding-bottom:3.5rem;border-bottom:none;">
         <p class="section-label reveal" style="justify-content:center;margin-left:auto;margin-right:auto;">Seamlessly connecting with your core systems, rate filings, and external data oracles.</p>
@@ -380,47 +389,43 @@
 
       <section id="desks">
         <div class="reveal">
-          <p class="section-label">Unified Platform</p>
-          <h2>Unified Underwriting Across Insurance, Mortgage, and Lending</h2>
-          <p class="section-desc">One consistent, auditable workbench across all your risk desks. We extract the submission, verify the data, and rate from your official state-filed manuals. Software proposes &mdash; licensed professionals decide.</p>
+          <p class="section-label">One Workbench</p>
+          <h2>One Desk for Every Submission</h2>
+          <p class="section-desc">We didn't build a separate tool for each line of business. One workbench, one paper trail, one queue &mdash; whether it's a property package, a mortgage file, or a commercial loan application. Pick the carrier, drop the file, and underwrite.</p>
         </div>
-        <div class="audience-grid reveal" style="grid-template-columns:repeat(2,minmax(0,1fr))">
-          <article class="audience-card ac-blue">
-            <span class="ac-ico"><svg class="ico" aria-hidden="true"><use href="#i-building"/></svg></span>
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem">
-              <p class="who" style="margin:0">Commercial Lines</p>
-              <span class="lob-tag live">Live Rating</span>
+        <div class="bento-layout reveal stagger-reveal">
+          <div class="bento-item bento-wide bento-blue">
+            <span class="bento-icon"><svg class="ico" aria-hidden="true"><use href="#i-building"/></svg></span>
+            <div>
+              <p class="bento-tag">Live Rating</p>
+              <h3>Commercial P&amp;C &amp; Specialty</h3>
+              <p>ACORD XML, broker PDFs, loss runs, SOVs &mdash; ingested into ISO-style rating build-ups. Property, casualty, GL, workers' comp, D&amp;O, and specialty lines.</p>
             </div>
-            <h3>Commercial P&amp;C &amp; Specialty</h3>
-            <p>Property, casualty, GL, workers' comp, commercial auto, D&amp;O, and specialty lines. Ingests ACORD XML, broker PDFs, loss runs, and SOVs into ISO-style rating build-ups.</p>
-          </article>
-          <article class="audience-card ac-green">
-            <span class="ac-ico"><svg class="ico" aria-hidden="true"><use href="#i-home"/></svg></span>
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem">
-              <p class="who" style="margin:0">Residential &amp; Commercial</p>
-              <span class="lob-tag live">GSE Compliant</span>
+          </div>
+          <div class="bento-item bento-tall bento-green">
+            <span class="bento-icon"><svg class="ico" aria-hidden="true"><use href="#i-home"/></svg></span>
+            <div>
+              <p class="bento-tag">GSE Compliant</p>
+              <h3>Mortgage</h3>
+              <p>1040/W-2 packs, bank statements, appraisals. DTI/LTV and Fannie/Freddie guidelines with strict cross-field reconciliation.</p>
             </div>
-            <h3>Mortgage Underwriting</h3>
-            <p>Income, assets, 1040/W-2 tax packs, bank statements, and appraisals. Evaluates DTI/LTV and Fannie/Freddie guidelines with strict cross-field reconciliation.</p>
-          </article>
-          <article class="audience-card ac-amber">
-            <span class="ac-ico"><svg class="ico" aria-hidden="true"><use href="#i-banknote"/></svg></span>
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem">
-              <p class="who" style="margin:0">Credit &amp; Working Capital</p>
-              <span class="lob-tag live">Risk Pricing</span>
+          </div>
+          <div class="bento-item bento-amber">
+            <span class="bento-icon"><svg class="ico" aria-hidden="true"><use href="#i-banknote"/></svg></span>
+            <div>
+              <p class="bento-tag">Risk Pricing</p>
+              <h3>Lending</h3>
+              <p>Loan apps, credit pulls, balance sheets. Missing history gets flagged &mdash; not assumed clean.</p>
             </div>
-            <h3>Consumer &amp; Commercial Lending</h3>
-            <p>Business loan applications, credit pulls, and balance sheets. If required historical data is missing, we flag a refer instead of assuming clean credit.</p>
-          </article>
-          <article class="audience-card ac-violet">
-            <span class="ac-ico"><svg class="ico" aria-hidden="true"><use href="#i-shield-check"/></svg></span>
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem">
-              <p class="who" style="margin:0">Governance &amp; Delegation</p>
-              <span class="lob-tag live">Authority Matrix</span>
+          </div>
+          <div class="bento-item bento-violet">
+            <span class="bento-icon"><svg class="ico" aria-hidden="true"><use href="#i-shield-check"/></svg></span>
+            <div>
+              <p class="bento-tag">Authority Matrix</p>
+              <h3>Writing Panels</h3>
+              <p>Enforce delegation limits before files run. No fabricated appointments or unapproved paper.</p>
             </div>
-            <h3>Appointed Writing Panels</h3>
-            <p>Select writing companies and enforce delegation-of-authority limits before files run. Rytera never fabricates market appointments or unapproved paper.</p>
-          </article>
+          </div>
         </div>
         <div class="cta reveal" style="margin-top:2rem">
           <a class="btn btn-primary btn-sm" href="/underwriting">Explore All Lines &amp; Desks <svg class="ico sm" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
@@ -428,52 +433,172 @@
         </div>
       </section>
 
+      <div class="section-divider" aria-hidden="true">
+        <svg viewBox="0 0 1440 50" preserveAspectRatio="none"><path fill="var(--border)" fill-opacity=".15" d="M0,25 C480,50 960,0 1440,25 L1440,50 L0,50Z"/></svg>
+      </div>
+
       <section id="trust">
+        <div class="particle-field" aria-hidden="true"></div>
         <div class="reveal">
-          <p class="section-label">Trust &amp; Governance Architecture</p>
-          <h2>Grounded Risk Intelligence. Built for Regulated Trust.</h2>
-          <p class="section-desc">Underwriters operate in high-liability, heavily audited environments where hallucinations mean catastrophic risk. Rytera is engineered around 5 uncompromising trust pillars &mdash; ensuring every decision is transparent, deterministic, auditable, and human-supervised.</p>
+          <p class="section-label">Controls, Intake, and a Paper Trail You Can Defend</p>
+          <h2>Production Underwriting Needs More Than a Model Score</h2>
+          <p class="section-desc">Who decides, names coming off, how files arrive, how the queue is sorted, and a pack an examiner can read &mdash; those are the product. Not extras.</p>
         </div>
-        <div class="feature-grid reveal" style="grid-template-columns:repeat(3,minmax(0,1fr))">
-          <div class="feature-card">
-            <span class="icon sky"><svg class="ico" aria-hidden="true"><use href="#i-search"/></svg></span>
-            <span class="pillar-tag">Pillar 1 &middot; Explainability</span>
-            <h3>"Show Your Work" Reasoning</h3>
-            <p><strong>Verbatim Source Attribution:</strong> Every extracted figure and policy clause links directly to its original page number and bounding box.</p>
-            <p><strong>Chain-of-Thought Auditing:</strong> Multi-agent step-by-step reasoning explains exactly why a score was assigned.</p>
-            <p><strong>Field-Level Confidence:</strong> Individual metrics per data point &mdash; low-confidence cells route automatically to human review.</p>
+        <div class="pillars-grid reveal stagger-reveal">
+          <div class="pillar-row">
+            <div class="pillar-label">
+              <span class="icon green"><svg class="ico" aria-hidden="true"><use href="#i-users"/></svg></span>
+              <h3>Governance</h3>
+            </div>
+            <div class="pillar-body">
+              <p class="pillar-title">Human-in-the-loop by design</p>
+              <ul>
+                <li>Licensed underwriter signs every bind-ready memo</li>
+                <li>Authority matrix limits who can sign what size of risk</li>
+                <li>Referral queue for files that need a human before bind</li>
+                <li>Practice mode blocks policy issue until you cut over</li>
+              </ul>
+            </div>
           </div>
-          <div class="feature-card">
-            <span class="icon green"><svg class="ico" aria-hidden="true"><use href="#i-users"/></svg></span>
-            <span class="pillar-tag">Pillar 2 &middot; Control</span>
-            <h3>Human-in-the-Loop &amp; Overrides</h3>
-            <p><strong>Pre-Decision Review:</strong> Software synthesizes evidence and proposes &mdash; licensed underwriters retain 100% binding authority.</p>
-            <p><strong>Frictionless 1-Click Overrides:</strong> Change any recommendation instantly with mandatory drop-down reason logging.</p>
-            <p><strong>Active Learning Loops:</strong> Overrides feed continuous local model calibration to eliminate recurring false flags.</p>
+          <div class="pillar-row">
+            <div class="pillar-label">
+              <span class="icon sky"><svg class="ico" aria-hidden="true"><use href="#i-shield"/></svg></span>
+              <h3>Privacy</h3>
+            </div>
+            <div class="pillar-body">
+              <p class="pillar-title">Names come off first</p>
+              <ul>
+                <li>SSN, tax ID, and DOB stripped before any AI sees the page</li>
+                <li>Underwriters still view the full, real submission</li>
+                <li>De-identified facts only in model context</li>
+              </ul>
+            </div>
           </div>
-          <div class="feature-card">
-            <span class="icon violet"><svg class="ico" aria-hidden="true"><use href="#i-scale"/></svg></span>
-            <span class="pillar-tag">Pillar 3 &middot; Guardrails</span>
-            <h3>Deterministic Rule Enforcement</h3>
-            <p><strong>Hard-Coded UWGs:</strong> Compliance limits, class prohibitions, and statutory rules execute in deterministic code &mdash; never LLM guesswork.</p>
-            <p><strong>Instant Appetite Pre-Check:</strong> Automated pre-filters screen submissions against your guidelines before deep compute begins.</p>
-            <p><strong>State-Filed Rate Books:</strong> Pricing is derived strictly from filed actuarial manuals and SERFF schedules &mdash; zero synthetic rates.</p>
+          <div class="pillar-row">
+            <div class="pillar-label">
+              <span class="icon amber"><svg class="ico" aria-hidden="true"><use href="#i-inbox"/></svg></span>
+              <h3>Intake</h3>
+            </div>
+            <div class="pillar-body">
+              <p class="pillar-title">Meet the file where it lives</p>
+              <ul>
+                <li>Email, cloud folder, secure drop, or local watch folder</li>
+                <li>SharePoint, Drive, IVANS &mdash; wait until you contract them</li>
+                <li>One Connect &amp; pull hub across insurance, mortgage, lending</li>
+              </ul>
+            </div>
           </div>
-          <div class="feature-card">
-            <span class="icon sky"><svg class="ico" aria-hidden="true"><use href="#i-shield-check"/></svg></span>
-            <span class="pillar-tag">Pillar 4 &middot; Compliance</span>
-            <h3>Immutable Audit &amp; Reproducibility</h3>
-            <p><strong>Cryptographic Decision Logs:</strong> Timestamped SHA-256 ledger recording prompts, doc versions, agent states, and human sign-offs.</p>
-            <p><strong>Multi-Year Reconstitution:</strong> Reconstruct the exact data state and reasoning trail for state market-conduct exams 3+ years later.</p>
-            <p><strong>Fair Lending &amp; Bias Auditing:</strong> Built-in monitoring dashboards track decisions to prevent algorithmic bias or disparate impact.</p>
+          <div class="pillar-row">
+            <div class="pillar-label">
+              <span class="icon violet"><svg class="ico" aria-hidden="true"><use href="#i-list"/></svg></span>
+              <h3>Operations</h3>
+            </div>
+            <div class="pillar-body">
+              <p class="pillar-title">The queue, sorted</p>
+              <ul>
+                <li>Ranked by appetite fit, severity, and premium at risk</li>
+                <li>Renewals and large accounts rise before routine traffic</li>
+                <li>Not whoever emailed last</li>
+              </ul>
+            </div>
           </div>
-          <div class="feature-card" style="grid-column:span 2">
-            <span class="icon green"><svg class="ico" aria-hidden="true"><use href="#i-shield"/></svg></span>
-            <span class="pillar-tag">Pillar 5 &middot; Uncertainty Handling</span>
-            <h3>Graceful Degradation &amp; Fail-Closed Safety</h3>
-            <p><strong>Zero Silent Failures:</strong> Blurry scans, corrupted tables, or third-party oracle timeouts cleanly halt and request human intervention rather than inventing data.</p>
-            <p><strong>Explicit "Insufficient Data" Output:</strong> Agents are strictly trained to output "Insufficient Data" when information is missing from the submission pack &mdash; zero synthetic financial interpolation.</p>
-            <p><strong>Zero PII Exposure:</strong> Insured names, SSNs, and tax IDs are stripped before model processing &mdash; underwriters see the real file; models see de-identified facts.</p>
+          <div class="pillar-row">
+            <div class="pillar-label">
+              <span class="icon sky"><svg class="ico" aria-hidden="true"><use href="#i-shield-check"/></svg></span>
+              <h3>Compliance</h3>
+            </div>
+            <div class="pillar-body">
+              <p class="pillar-title">A sealed exam pack</p>
+              <ul>
+                <li>Locked zip: every decision, override, and oracle check</li>
+                <li>SHA-256 manifest &mdash; nothing quietly rewritten</li>
+                <li>Reconstructible years later for market-conduct exams</li>
+              </ul>
+            </div>
+          </div>
+          <div class="pillar-row">
+            <div class="pillar-label">
+              <span class="icon green"><svg class="ico" aria-hidden="true"><use href="#i-search"/></svg></span>
+              <h3>Outside Data</h3>
+            </div>
+            <div class="pillar-body">
+              <p class="pillar-title">Real claim history &mdash; or a flag</p>
+              <ul>
+                <li>Prior claims, workers-comp, catastrophe when connected</li>
+                <li>Missing accounts become a finding, not a green screen</li>
+                <li>Never a fabricated clean loss run</li>
+              </ul>
+            </div>
+          </div>
+          <div class="pillar-row">
+            <div class="pillar-label">
+              <span class="icon green"><svg class="ico" aria-hidden="true"><use href="#i-refresh"/></svg></span>
+              <h3>Reliability</h3>
+            </div>
+            <div class="pillar-body">
+              <p class="pillar-title">Jobs that survive a restart</p>
+              <ul>
+                <li>Work persisted &mdash; not held only in memory</li>
+                <li>Restart does not silently lose the file you were in</li>
+                <li>Queue state survives deploys and failovers</li>
+              </ul>
+            </div>
+          </div>
+          <div class="pillar-row">
+            <div class="pillar-label">
+              <span class="icon amber"><svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg></span>
+              <h3>Renewals</h3>
+            </div>
+            <div class="pillar-body">
+              <p class="pillar-title">Renewal &amp; premium audit</p>
+              <ul>
+                <li>Pre-renewal tracking and loss feedback loops</li>
+                <li>Premium audit hooks for payroll and exposure drift</li>
+                <li>Book health between cycles, not only at bind</li>
+              </ul>
+            </div>
+          </div>
+          <div class="pillar-row">
+            <div class="pillar-label">
+              <span class="icon violet"><svg class="ico" aria-hidden="true"><use href="#i-bar-chart"/></svg></span>
+              <h3>Portfolio</h3>
+            </div>
+            <div class="pillar-body">
+              <p class="pillar-title">The book, not only the file</p>
+              <ul>
+                <li>Concentration by geography, class, and limit</li>
+                <li>Top lines of business vs appetite</li>
+                <li>Market-cycle context on large accounts</li>
+              </ul>
+            </div>
+          </div>
+          <div class="pillar-row">
+            <div class="pillar-label">
+              <span class="icon sky"><svg class="ico" aria-hidden="true"><use href="#i-cpu"/></svg></span>
+              <h3>Model Intelligence</h3>
+            </div>
+            <div class="pillar-body">
+              <p class="pillar-title">AI quality, watched</p>
+              <ul>
+                <li>Speed, quality, and cost tracked per job</li>
+                <li>Quality drop triggers refer &mdash; not silent memo churn</li>
+                <li>Token spend visible on every language-model step</li>
+              </ul>
+            </div>
+          </div>
+          <div class="pillar-row pillar-wide">
+            <div class="pillar-label">
+              <span class="icon violet"><svg class="ico" aria-hidden="true"><use href="#i-scale"/></svg></span>
+              <h3>State Regulatory Engine</h3>
+            </div>
+            <div class="pillar-body">
+              <p class="pillar-title">Filed rules, not suggestions</p>
+              <ul>
+                <li>State-filed rate manuals and SERFF schedules loaded directly</li>
+                <li>Rate derivation is deterministic &mdash; zero synthetic pricing</li>
+                <li>Compliance limits, class prohibitions, and statutory rules in code</li>
+              </ul>
+            </div>
           </div>
         </div>
       </section>
@@ -482,7 +607,7 @@
         <div class="reveal">
           <p class="section-label">How it works</p>
           <h2>From Messy Documents to a Decision You Can Sign</h2>
-          <p class="section-desc">Click each stage to see how Rytera processes files: <strong>Triage</strong> sorts the queue, <strong>Risk &amp; Price</strong> verifies math and rates from your manuals, and <strong>Decision</strong> prepares a recommendation ready for licensed sign-off.</p>
+          <p class="section-desc">Click each stage to see how Rytera turns a submission into a decision: <strong>Sort the queue</strong> ranks files by appetite and severity, <strong>Check &amp; Price</strong> verifies math and rates from your manuals, and <strong>You Decide</strong> prepares a recommendation ready for licensed sign-off.</p>
         </div>
         <div class="pipeline-wrap reveal">
           <div class="pipeline-steps" role="tablist" aria-label="Pipeline stages">
@@ -509,31 +634,43 @@
       <section id="evolution">
         <div class="reveal">
           <p class="section-label">Continuous Innovation</p>
-          <h2>Continuously Evolving with Modern Risk Technology</h2>
+          <h2>What We Ship This Week</h2>
           <p class="section-desc">Underwriting technology moves fast. We ship weekly refinements to handle the real-world friction underwriters face every day &mdash; messy documents, forensic photo checks, and cross-file discrepancies.</p>
         </div>
-        <div class="feature-grid reveal">
-          <div class="feature-card">
-            <span class="new-tag">Weekly Shipping</span>
-            <h3>Multi-Format Ingestion</h3>
-            <p>Native parsing for complex broker spreadsheets, multi-tab schedules of values (SOVs), Word slips, and scanned loss-run tables with zero data loss.</p>
-          </div>
-          <div class="feature-card">
-            <span class="new-tag">Weekly Shipping</span>
-            <h3>Cross-Field Math Reconciliation</h3>
-            <p>Automated checks ensure payroll matches headcount, asset values match square footage, and loss-run totals equal detailed claim listings.</p>
-          </div>
-          <div class="feature-card">
-            <span class="new-tag">Weekly Shipping</span>
-            <h3>Photo &amp; Forensic Analysis</h3>
-            <p>EXIF camera verification and Error Level Analysis (ELA) flag altered inspection photos or stripped metadata before property risk is rated.</p>
-          </div>
-          <div class="feature-card">
-            <span class="new-tag">Core Engine</span>
-            <h3>Adaptive Appetite Filters</h3>
-            <p>Instant pre-filtering matches incoming submissions against your carrier guidelines, routing out-of-appetite files in seconds.</p>
-          </div>
-        </div>
+        <ol class="timeline-list reveal stagger-reveal">
+          <li class="timeline-item">
+            <span class="timeline-num">01</span>
+            <div class="timeline-content">
+              <span class="timeline-tag tag-ship">Weekly Shipping</span>
+              <h3>Multi-Format Ingestion</h3>
+              <p>Native parsing for complex broker spreadsheets, multi-tab schedules of values (SOVs), Word slips, and scanned loss-run tables with zero data loss.</p>
+            </div>
+          </li>
+          <li class="timeline-item">
+            <span class="timeline-num">02</span>
+            <div class="timeline-content">
+              <span class="timeline-tag tag-ship">Weekly Shipping</span>
+              <h3>Cross-Field Math Reconciliation</h3>
+              <p>Automated checks ensure payroll matches headcount, asset values match square footage, and loss-run totals equal detailed claim listings.</p>
+            </div>
+          </li>
+          <li class="timeline-item">
+            <span class="timeline-num">03</span>
+            <div class="timeline-content">
+              <span class="timeline-tag tag-ship">Weekly Shipping</span>
+              <h3>Photo &amp; Forensic Analysis</h3>
+              <p>EXIF camera verification and Error Level Analysis (ELA) flag altered inspection photos or stripped metadata before property risk is rated.</p>
+            </div>
+          </li>
+          <li class="timeline-item">
+            <span class="timeline-num">04</span>
+            <div class="timeline-content">
+              <span class="timeline-tag tag-core">Core Engine</span>
+              <h3>Adaptive Appetite Filters</h3>
+              <p>Instant pre-filtering matches incoming submissions against your carrier guidelines, routing out-of-appetite files in seconds.</p>
+            </div>
+          </li>
+        </ol>
       </section>
 
       <section id="glossary-preview">
@@ -581,7 +718,7 @@
           <h2>They got their judgment back.</h2>
           <p class="section-desc">Tried on real files in practice shadow mode. Nothing went live until underwriting approved.</p>
         </div>
-        <div class="testimonial-grid reveal">
+        <div class="testimonial-grid reveal stagger-reveal">
           <div class="testimonial-card">
             <div class="testimonial-stars">
               <svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg>
@@ -621,6 +758,10 @@
           <footer>&mdash; Warren Buffett<span style="display:block;margin-top:.35rem;font-size:.78rem;color:var(--muted-2)">On preparing for risk before it arrives</span></footer>
         </blockquote>
       </section>
+
+      <div class="glow-orb-divider" aria-hidden="true">
+        <div class="glow-orb"></div>
+      </div>
 
       <section id="contact">
         <div class="contact-box reveal">

@@ -2,8 +2,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from datetime import date, timedelta
-from uuid import uuid4
+from datetime import date
 
 from insureflow.integrations.http_client import IntegrationHTTPError
 from insureflow.integrations.parsers import parse_public_records_response
@@ -72,24 +71,24 @@ class PublicRecordsResult:
             parts.append("ACTIVE LIEN")
         if self.has_ucc_filing:
             parts.append("UCC filing")
-        if self.synthetic or self.mode in {"simulated", "gateway_synthetic"}:
+        if self.synthetic:
             parts.append("SYNTHETIC/UNVERIFIED")
         return " | ".join(parts)
 
 
 class PublicRecordsClient:
-    """Simulated public-record client (judgments, liens, UCC filings, bankruptcy).
+    """Public-record client (judgments, liens, UCC filings, bankruptcy).
 
-    In production this would integrate with LexisNexis Public Records, Courthouse
-    Direct, or a similar court/UCC database. Set ORACLE_MODE=live and provide a
-    real API key.
+    Makes real HTTP calls to the public records API.
+    Set ORACLE_MODE=auto (default) and provide a real API key for live queries.
+    Without a valid API key, queries return an error — never fake data.
     """
 
     def __init__(
         self,
         api_key: str = "",
         base_url: str = "https://api.lexisnexis.com/publicrecords/v2",
-        mode: str = "simulated",
+        mode: str = "auto",
         query_path: str = "/queries",
     ):
         self.api_key = api_key
@@ -112,108 +111,15 @@ class PublicRecordsClient:
             )
 
         resolved = self._resolved_mode()
-        if resolved == "live":
-            return self._call_live_api(legal_name, tax_id, address)
         if resolved == "misconfigured":
             return PublicRecordsResult(
                 subject_name=legal_name,
                 tax_id=tax_id,
                 query_completed=False,
-                error="Public records live mode requires PUBLIC_RECORDS_API_KEY and PUBLIC_RECORDS_API_URL",
+                error="Public records requires PUBLIC_RECORDS_API_KEY and PUBLIC_RECORDS_API_URL to be configured",
             )
 
-        return self._simulate(legal_name, tax_id, address)
-
-    def _simulate(self, legal_name: str, tax_id: str, address: str) -> PublicRecordsResult:
-        today = date.today()
-        name_lower = (legal_name or "").lower()
-        records: list[PublicRecord] = []
-
-        if "veririsk" in name_lower or "construction" in name_lower:
-            records = [
-                PublicRecord(
-                    record_id=f"JUD-{uuid4().hex[:8].upper()}",
-                    record_type="judgment",
-                    jurisdiction="CA Superior Court, Alameda",
-                    amount=125_000.0,
-                    filed_at=today - timedelta(days=180),
-                    status="open",
-                    plaintiff="Subcontractor Trust",
-                    defendant=legal_name,
-                    description="Unpaid subcontractor judgment",
-                ),
-                PublicRecord(
-                    record_id=f"UCC-{uuid4().hex[:8].upper()}",
-                    record_type="ucc",
-                    jurisdiction="California SOS",
-                    amount=420_000.0,
-                    filed_at=today - timedelta(days=120),
-                    status="open",
-                    description="Security interest — heavy equipment financing",
-                ),
-                PublicRecord(
-                    record_id=f"LIE-{uuid4().hex[:8].upper()}",
-                    record_type="lien",
-                    jurisdiction="Internal Revenue Service",
-                    amount=88_000.0,
-                    filed_at=today - timedelta(days=90),
-                    status="open",
-                    description="Federal tax lien",
-                ),
-            ]
-            return PublicRecordsResult(
-                subject_name=legal_name,
-                tax_id=tax_id,
-                records=records,
-                total_records_found=len(records),
-                total_judgment_amount=125_000.0,
-                has_bankruptcy=True,
-                has_active_judgment=True,
-                has_ucc_filing=True,
-                has_active_lien=True,
-                synthetic=True,
-                mode="simulated",
-            )
-
-        if "pacific" in name_lower or "marine" in name_lower:
-            records = [
-                PublicRecord(
-                    record_id=f"UCC-{uuid4().hex[:8].upper()}",
-                    record_type="ucc",
-                    jurisdiction="California SOS",
-                    amount=310_000.0,
-                    filed_at=today - timedelta(days=60),
-                    status="open",
-                    description="Security interest — fleet financing",
-                )
-            ]
-            return PublicRecordsResult(
-                subject_name=legal_name,
-                tax_id=tax_id,
-                records=records,
-                total_records_found=len(records),
-                total_judgment_amount=0.0,
-                has_bankruptcy=False,
-                has_active_judgment=False,
-                has_ucc_filing=True,
-                has_active_lien=False,
-                synthetic=True,
-                mode="simulated",
-            )
-
-        return PublicRecordsResult(
-            subject_name=legal_name,
-            tax_id=tax_id,
-            records=[],
-            total_records_found=0,
-            total_judgment_amount=0.0,
-            has_bankruptcy=False,
-            has_active_judgment=False,
-            has_ucc_filing=False,
-            has_active_lien=False,
-            synthetic=True,
-            mode="simulated",
-        )
+        return self._call_live_api(legal_name, tax_id, address)
 
     def _call_live_api(self, legal_name: str, tax_id: str, address: str) -> PublicRecordsResult:
         try:

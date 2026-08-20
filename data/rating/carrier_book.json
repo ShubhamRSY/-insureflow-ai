@@ -2,9 +2,9 @@
   "book_id": "insureflow_pilot_carrier_book_v2",
   "carrier": "InsureFlow Pilot Carrier",
   "version": "2.0.0",
-  "posture": "pilot_production",
+  "posture": "pilot_synthetic",
   "effective_date": "2026-01-01",
-  "description": "Pilot-production leaf filings for all 59 commercial products. Calibrated ISO/NCCI-style loss costs with unique SERFF tracking IDs. Replace individual loss_cost/lcm values with your filed rates, or point CARRIER_BOOK_PATH at your export.",
+  "description": "SYNTHETIC pilot rate book — representative values for demo/development only. NOT a filed SERFF rate book. Import your carrier rates via POST /rating/carrier-book or set CARRIER_BOOK_PATH.",
   "product_count": 59,
   "filings": {
     "property_bi": {

@@ -637,8 +637,8 @@ def bootstrap_business_kpis(*, org_id: str = "kpi-lab") -> dict[str, Any]:
     from insureflow.analytics.metrics import get_pipeline_metrics
     from insureflow.testing.realworld_scenarios import build_all_scenarios, evaluate_result, run_scenario
 
-    # Force simulated oracles so bootstrap works offline
-    os.environ.setdefault("ORACLE_MODE", "simulated")
+    # Default oracles to auto; queries return errors when API keys are missing
+    os.environ.setdefault("ORACLE_MODE", "auto")
     for k in ("CLUE_API_KEY", "APLUS_API_KEY", "NCCI_API_KEY", "CAT_API_KEY"):
         os.environ.pop(k, None)
 

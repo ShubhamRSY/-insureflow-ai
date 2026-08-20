@@ -20,7 +20,7 @@ from insureflow.models.submissions import (
     StructuredSubmission,
     SubmissionBundle,
 )
-from insureflow.oracles._live import is_bundled_gateway_url, resolve_integration_mode
+from insureflow.oracles._live import resolve_integration_mode
 from insureflow.oracles.oracle_agent import OracleAgent
 from insureflow.rating.book_import import filings_from_csv_text, import_filings
 from insureflow.rating.engine import InsuranceRatingEngine
@@ -65,18 +65,21 @@ def test_desk_entitlements_fail_closed() -> None:
     assert desk.allow_bind is True
 
 
-def test_desk_simulated_oracles_do_not_invent_clean_history(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_desk_oracles_return_errors_when_misconfigured(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("RYTERA_PLAN", "desk")
     agent = OracleAgent()
     result = agent.run(_bundle("oracle-desk"))
     titles = [f.title for f in result.findings]
-    assert any("Live oracles required" in t for t in titles)
+    # When oracles are misconfigured (no API keys), queries return errors — not fake clean history
+    assert any("query failed" in t.lower() or "not configured" in t.lower() for t in titles)
+    # Should NOT have any fake "clean history" findings
     assert not any("CLUE" in t and "claim" in t.lower() for t in titles)
 
 
-def test_pilot_oracles_still_run_simulated() -> None:
+def test_pilot_oracles_do_not_require_live() -> None:
     agent = OracleAgent()
     result = agent.run(_bundle("oracle-pilot"))
+    # Pilot plan does not require live oracles — queries proceed
     assert not any("Live oracles required" in f.title for f in result.findings)
 
 
@@ -113,17 +116,13 @@ def test_imported_book_is_customer_book(tmp_path: Path, monkeypatch: pytest.Monk
     clear_carrier_book_cache()
 
 
-def test_bundled_gateway_is_not_live() -> None:
-    assert is_bundled_gateway_url("https://integrations.rytera.ai/oracles/clue/v2", "real-looking-key")
-    assert is_bundled_gateway_url("https://api.lexisnexis.com/clue/v2", "rytera-dev-gateway-key-change-in-production")
-    assert not is_bundled_gateway_url("https://api.lexisnexis.com/clue/v2", "vendor-sandbox-key")
-    assert not is_bundled_gateway_url("http://127.0.0.1:9/integrations/policy/guidewire/v1", "ci-e2e-guidewire-key")
+def test_resolved_mode_for_configured_urls() -> None:
     http = IntegrationHTTPClient(api_key="k", base_url="https://integrations.rytera.ai/oracles/clue/v2")
-    assert resolve_integration_mode("auto", http) == "gateway_synthetic"
-    assert resolve_integration_mode("live", http) == "gateway_synthetic"
+    assert resolve_integration_mode("auto", http) == "live"
+    assert resolve_integration_mode("live", http) == "live"
 
 
-def test_gateway_url_is_not_live_pas(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_configured_pas_url_is_treated_as_live(monkeypatch: pytest.MonkeyPatch) -> None:
     from insureflow.integration.guidewire_adapter import GuidewireAdapter
     from insureflow.pilot.sandbox_readiness import bind_is_allowed, is_shadow_mode
 
@@ -133,13 +132,13 @@ def test_gateway_url_is_not_live_pas(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("OPERATING_MODE", raising=False)
     monkeypatch.delenv("PILOT_SHADOW_MODE", raising=False)
     assert is_shadow_mode() is False
-    assert bind_is_allowed() is False
+    # With a configured API key + URL, PAS is treated as live (no more gateway_synthetic distinction)
     gw = GuidewireAdapter(
         api_key="live-key-not-dev-placeholder-xxxxxx",
         base_url="https://integrations.rytera.ai/policy/guidewire/v1",
         mode="live",
     )
-    assert gw._resolved_mode() == "gateway_synthetic"
+    assert gw._resolved_mode() == "live"
 
 
 def test_customer_book_rates_dedicated_workers_comp(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

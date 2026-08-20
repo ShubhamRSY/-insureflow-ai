@@ -3511,6 +3511,468 @@ footer .brand-mark { width: 32px; height: 32px; border-radius: 10px; }
   border-color: rgba(79, 93, 255, .2);
 }
 
+/* =========================================================================
+   2026 MODERN UI ENHANCEMENTS
+   3D tilt, animated gradient borders, morphing dividers, magnetic buttons,
+   glow follower, staggered reveals, text scramble, parallax, ripple
+   ========================================================================= */
+
+/* ---- 3D Card Tilt ---- */
+.tilt-card {
+  transform-style: preserve-3d;
+  will-change: transform;
+  transition: transform .15s ease-out, box-shadow .35s var(--ease), border-color .35s;
+}
+
+.tilt-card .tilt-inner {
+  transform: translateZ(0);
+}
+
+/* ---- Animated Gradient Border ---- */
+.gradient-border-wrap {
+  position: relative;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.gradient-border-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 1.5px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--border-angle, 0deg),
+    var(--brand),
+    var(--violet),
+    var(--cyan),
+    var(--pink),
+    var(--brand)
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: borderRotate 4s linear infinite;
+  opacity: 0;
+  transition: opacity .4s var(--ease);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.gradient-border-wrap:hover::before {
+  opacity: 1;
+}
+
+@property --border-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes borderRotate {
+  to { --border-angle: 360deg; }
+}
+
+/* Fallback for browsers without @property */
+@supports not (background: conic-gradient(from 0deg, red, blue)) {
+  .gradient-border-wrap::before {
+    background: linear-gradient(135deg, var(--brand), var(--violet), var(--cyan));
+  }
+}
+
+/* ---- Glow Mouse Follower ---- */
+.glow-follower {
+  position: fixed;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0;
+  transition: opacity .8s var(--ease);
+  background: radial-gradient(circle, rgba(124, 108, 255, .12) 0%, rgba(139, 92, 246, .06) 35%, transparent 70%);
+  transform: translate(-50%, -50%);
+  will-change: left, top;
+}
+
+.glow-follower.active {
+  opacity: 1;
+}
+
+/* ---- Section Morphing Dividers ---- */
+.section-divider {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  line-height: 0;
+  margin-top: -1px;
+}
+
+.section-divider svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.section-divider.flip {
+  transform: rotate(180deg);
+  margin-bottom: -1px;
+  margin-top: 0;
+}
+
+/* ---- Magnetic Button ---- */
+.magnetic-btn {
+  position: relative;
+  transition: transform .2s var(--ease);
+}
+
+/* ---- Ripple Effect on Buttons ---- */
+.btn-ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-ripple .ripple-circle {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .35);
+  transform: scale(0);
+  animation: rippleExpand .6s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes rippleExpand {
+  to { transform: scale(4); opacity: 0; }
+}
+
+/* ---- Staggered Reveal ---- */
+.stagger-reveal > * {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity .65s var(--ease), transform .65s var(--ease);
+}
+
+.stagger-reveal.visible > *:nth-child(1) { transition-delay: 0s; }
+.stagger-reveal.visible > *:nth-child(2) { transition-delay: .08s; }
+.stagger-reveal.visible > *:nth-child(3) { transition-delay: .16s; }
+.stagger-reveal.visible > *:nth-child(4) { transition-delay: .24s; }
+.stagger-reveal.visible > *:nth-child(5) { transition-delay: .32s; }
+.stagger-reveal.visible > *:nth-child(6) { transition-delay: .4s; }
+
+.stagger-reveal.visible > * {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---- Text Scramble ---- */
+.scramble-char {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(20px) rotateX(-40deg);
+  animation: scrambleIn .5s var(--ease) forwards;
+}
+
+@keyframes scrambleIn {
+  to { opacity: 1; transform: none; }
+}
+
+/* ---- Parallax Layers ---- */
+.parallax-wrap {
+  position: relative;
+  overflow: hidden;
+}
+
+.parallax-layer {
+  will-change: transform;
+  transition: transform .1s linear;
+}
+
+/* ---- Floating Particles ---- */
+.particle-field {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgba(124, 108, 255, .35);
+  animation: particleFloat linear infinite;
+}
+
+@keyframes particleFloat {
+  0% { transform: translateY(0) translateX(0); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(-100vh) translateX(40px); opacity: 0; }
+}
+
+/* ---- Glass Shimmer ---- */
+.glass-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgba(255, 255, 255, .06) 45%,
+    rgba(255, 255, 255, .12) 50%,
+    rgba(255, 255, 255, .06) 55%,
+    transparent 60%
+  );
+  transform: translateX(-100%);
+  transition: none;
+  pointer-events: none;
+}
+
+.glass-shimmer:hover::after {
+  animation: shimmerSlide 1.2s ease forwards;
+}
+
+@keyframes shimmerSlide {
+  to { transform: translateX(100%); }
+}
+
+/* ---- Animated Stats Ring ---- */
+.stat-ring {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+}
+
+.stat-ring svg {
+  transform: rotate(-90deg);
+}
+
+.stat-ring circle {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.stat-ring .ring-track { stroke: var(--bar-track); }
+
+.stat-ring .ring-fill {
+  stroke: url(#ring-grad);
+  stroke-dasharray: 151;
+  stroke-dashoffset: 151;
+  transition: stroke-dashoffset 1.8s var(--ease);
+}
+
+.stat-ring.visible .ring-fill {
+  stroke-dashoffset: var(--ring-offset, 0);
+}
+
+/* ---- Glow Orb Divider ---- */
+.glow-orb-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 3rem 0;
+  position: relative;
+}
+
+.glow-orb-divider::before,
+.glow-orb-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-strong), transparent);
+}
+
+.glow-orb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--grad);
+  box-shadow: 0 0 24px rgba(124, 108, 255, .6), 0 0 60px rgba(139, 92, 246, .3);
+  animation: orbPulse 3s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes orbPulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 24px rgba(124, 108, 255, .6), 0 0 60px rgba(139, 92, 246, .3); }
+  50% { transform: scale(1.3); box-shadow: 0 0 40px rgba(124, 108, 255, .8), 0 0 80px rgba(139, 92, 246, .5); }
+}
+
+/* ---- Bento Layout ---- */
+.bento-layout {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+.bento-item {
+  border-radius: 14px;
+  padding: 1.4rem 1.6rem;
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+  transition: border-color .25s, box-shadow .3s;
+}
+.bento-item:hover {
+  border-color: rgba(124,108,255,.35);
+  box-shadow: 0 0 24px rgba(124,108,255,.12);
+}
+.bento-icon {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+.bento-icon .ico { width: 18px; height: 18px; }
+.bento-item h3 { font-size: .95rem; margin: 0 0 .3rem; }
+.bento-item p { font-size: .82rem; margin: 0; opacity: .82; line-height: 1.45; }
+.bento-tag {
+  display: inline-block;
+  font-size: .65rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  padding: .15rem .5rem;
+  border-radius: 6px;
+  background: var(--surface-2);
+  color: var(--muted);
+  margin-bottom: .35rem;
+}
+.bento-wide { grid-column: span 2; }
+.bento-blue .bento-icon { color: var(--sky); }
+.bento-green .bento-icon { color: var(--green); }
+.bento-amber .bento-icon { color: var(--amber); }
+.bento-violet .bento-icon { color: var(--violet); }
+
+/* ---- Pillars Grid (Trust section) ---- */
+.pillars-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+.pillar-row {
+  display: flex;
+  gap: 1.2rem;
+  align-items: flex-start;
+  padding: 1.2rem 1.4rem;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+  transition: border-color .25s, box-shadow .3s;
+}
+.pillar-row:hover {
+  border-color: rgba(124,108,255,.3);
+  box-shadow: 0 0 20px rgba(124,108,255,.1);
+}
+.pillar-wide {
+  grid-column: span 2;
+}
+.pillar-label {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .5rem;
+  min-width: 100px;
+  text-align: center;
+}
+.pillar-label .icon {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+.pillar-label .icon .ico { width: 20px; height: 20px; }
+.pillar-label h3 { font-size: .82rem; margin: 0; font-weight: 600; white-space: nowrap; }
+.pillar-body { flex: 1; }
+.pillar-title {
+  font-size: .88rem;
+  font-weight: 600;
+  margin: 0 0 .5rem;
+  color: var(--text);
+}
+.pillar-body ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  list-style: disc;
+}
+.pillar-body li {
+  font-size: .8rem;
+  line-height: 1.5;
+  margin-bottom: .25rem;
+  color: var(--muted);
+}
+
+/* ---- Timeline List (Evolution section) ---- */
+.timeline-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  counter-reset: none;
+}
+.timeline-item {
+  display: flex;
+  gap: 1.2rem;
+  align-items: flex-start;
+  padding: 1.2rem 1.4rem;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+  transition: border-color .25s, box-shadow .3s;
+}
+.timeline-item:hover {
+  border-color: rgba(124,108,255,.3);
+  box-shadow: 0 0 20px rgba(124,108,255,.1);
+}
+.timeline-num {
+  flex-shrink: 0;
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--brand);
+  min-width: 36px;
+  line-height: 1;
+}
+.timeline-content { flex: 1; }
+.timeline-tag {
+  display: inline-block;
+  font-size: .65rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  padding: .15rem .5rem;
+  border-radius: 6px;
+  margin-bottom: .35rem;
+}
+.tag-ship {
+  background: rgba(52,211,153,.15);
+  color: var(--green);
+}
+.tag-core {
+  background: rgba(124,108,255,.15);
+  color: var(--brand);
+}
+.timeline-item h3 { font-size: .95rem; margin: 0 0 .3rem; }
+.timeline-item p { font-size: .82rem; margin: 0; opacity: .82; line-height: 1.45; }
+
 /* ---- Responsive ---- */
 @media (max-width: 1100px) {
   .pricing-grid { grid-template-columns: repeat(2, 1fr); }
@@ -3553,6 +4015,13 @@ footer .brand-mark { width: 32px; height: 32px; border-radius: 10px; }
   .contact-box { padding: 3rem 1.5rem; }
   .footer-grid { flex-direction: column; align-items: flex-start; gap: 1.2rem; }
   .glossary-featured-grid { grid-template-columns: 1fr; }
+  .bento-layout { grid-template-columns: 1fr; }
+  .bento-wide { grid-column: span 1; }
+  .pillars-grid { grid-template-columns: 1fr; }
+  .pillar-wide { grid-column: span 1; }
+  .pillar-row { flex-direction: column; gap: .7rem; }
+  .pillar-label { flex-direction: row; min-width: auto; text-align: left; }
+  .timeline-item { flex-direction: column; gap: .5rem; }
   .glossary-preview-search { flex-direction: column; align-items: stretch; }
   .glossary-preview-search .btn { width: 100%; justify-content: center; }
   .glossary-modal-card { padding: 1.4rem; max-height: 90vh; }
@@ -3563,11 +4032,14 @@ footer .brand-mark { width: 32px; height: 32px; border-radius: 10px; }
   .fc-1, .fc-2, .fc-3 { display: none; }
   .trust-strip { justify-content: flex-start; }
   .btn { padding: .75rem 1.25rem; }
+  .glow-follower { display: none; }
 }
 
 /* ---- Reduced motion ---- */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
   html { scroll-behavior: auto; }
-  .reveal { opacity: 1; transform: none; }
+  .reveal, .stagger-reveal, .stagger-reveal > * { opacity: 1; transform: none; }
+  .scramble-char { opacity: 1; transform: none; }
+  .glow-follower { display: none; }
 }
