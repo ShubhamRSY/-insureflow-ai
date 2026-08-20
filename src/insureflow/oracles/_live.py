@@ -6,6 +6,8 @@ from insureflow.integrations.http_client import IntegrationHTTPClient
 
 def resolve_integration_mode(mode: str, http: IntegrationHTTPClient) -> str:
     normalized = (mode or "auto").lower()
+    if normalized == "simulated":
+        return "simulated"
     if not http.configured:
         return "misconfigured"
     if normalized in ("live", "auto"):

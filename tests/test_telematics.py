@@ -53,7 +53,7 @@ def test_live_telematics_without_key_fails_closed() -> None:
 
 
 def test_bundled_gateway_telematics_is_not_a_clean_score() -> None:
-    result = TelematicsClient(mode="live").query_vehicle(_VIN, stated_mileage=8000)
+    result = TelematicsClient(mode="simulated").query_vehicle(_VIN, stated_mileage=8000)
     assert result.synthetic is True
     assert result.annual_mileage is None
 

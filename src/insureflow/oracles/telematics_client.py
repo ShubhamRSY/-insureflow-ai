@@ -83,6 +83,8 @@ class TelematicsClient:
     def query_vehicle(self, vin: str, *, stated_mileage: float | None = None) -> TelematicsResult:
         resolved = self._resolved_mode()
         vin = (vin or "").strip().upper()
+        if resolved == "simulated":
+            return TelematicsResult(vin=vin, query_completed=True, synthetic=True, mode="simulated")
         if resolved == "misconfigured":
             return TelematicsResult(vin=vin, query_completed=False, error="Telematics requires TELEMATICS_API_KEY and TELEMATICS_API_URL to be configured", mode=resolved)
         return self._call_live(vin, stated_mileage)
@@ -132,6 +134,8 @@ class CyberScanClient:
     def query_domain(self, domain: str) -> CyberScanResult:
         resolved = self._resolved_mode()
         domain = (domain or "").strip().lower()
+        if resolved == "simulated":
+            return CyberScanResult(domain=domain, query_completed=True, synthetic=True, mode="simulated")
         if resolved == "misconfigured":
             return CyberScanResult(domain=domain, query_completed=False, error="Cyber scan requires CYBERSCAN_API_KEY and CYBERSCAN_API_URL to be configured", mode=resolved)
         return self._call_live(domain)

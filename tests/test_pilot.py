@@ -12,7 +12,7 @@ from insureflow.pilot.sandbox_readiness import assess_sandbox_readiness, bind_is
 
 def test_sandbox_readiness_report_structure(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.delenv("CLUE_API_KEY", raising=False)
-    monkeypatch.delenv("GUIDEWIRE_API_KEY", raising=False)
+    monkeypatch.setenv("GUIDEWIRE_API_KEY", "")
     monkeypatch.setenv("OPERATING_MODE", "shadow")
     monkeypatch.setenv("PILOT_SHADOW_MODE", "true")
     report = assess_sandbox_readiness(ping=False)
@@ -45,10 +45,10 @@ def test_infra_ready_marks_shadow_ready(monkeypatch: MonkeyPatch, tmp_path: Path
 def test_ready_mode_defaults_and_bind_gate(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.delenv("OPERATING_MODE", raising=False)
     monkeypatch.delenv("PILOT_SHADOW_MODE", raising=False)
-    monkeypatch.delenv("GUIDEWIRE_API_KEY", raising=False)
-    monkeypatch.delenv("GUIDEWIRE_API_URL", raising=False)
-    monkeypatch.delenv("BRITECORE_API_KEY", raising=False)
-    monkeypatch.delenv("BRITECORE_API_URL", raising=False)
+    monkeypatch.setenv("GUIDEWIRE_API_KEY", "")
+    monkeypatch.setenv("GUIDEWIRE_API_URL", "")
+    monkeypatch.setenv("BRITECORE_API_KEY", "")
+    monkeypatch.setenv("BRITECORE_API_URL", "")
     assert operating_mode() == "ready"
     assert is_ready_mode() is True
     assert is_shadow_mode() is False

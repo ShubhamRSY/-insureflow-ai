@@ -128,7 +128,7 @@ def test_configured_pas_url_is_treated_as_live(monkeypatch: pytest.MonkeyPatch) 
 
     monkeypatch.setenv("GUIDEWIRE_API_KEY", "live-key-not-dev-placeholder-xxxxxx")
     monkeypatch.setenv("GUIDEWIRE_API_URL", "https://integrations.rytera.ai/policy/guidewire/v1")
-    monkeypatch.delenv("BRITECORE_API_KEY", raising=False)
+    monkeypatch.setenv("BRITECORE_API_KEY", "")
     monkeypatch.delenv("OPERATING_MODE", raising=False)
     monkeypatch.delenv("PILOT_SHADOW_MODE", raising=False)
     assert is_shadow_mode() is False

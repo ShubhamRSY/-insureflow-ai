@@ -38,9 +38,9 @@ def test_bank_hides_uncontracted_stubs() -> None:
 
 def test_bind_cutover_not_ready_in_shadow(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setenv("OPERATING_MODE", "shadow")
-    monkeypatch.delenv("GUIDEWIRE_API_KEY", raising=False)
-    monkeypatch.delenv("GUIDEWIRE_API_URL", raising=False)
-    monkeypatch.delenv("BRITECORE_API_KEY", raising=False)
+    monkeypatch.setenv("GUIDEWIRE_API_KEY", "")
+    monkeypatch.setenv("GUIDEWIRE_API_URL", "")
+    monkeypatch.setenv("BRITECORE_API_KEY", "")
     monkeypatch.delenv("ENCRYPTION_KEY", raising=False)
     cut = bind_cutover_checklist()
     assert cut["bind_allowed"] is False

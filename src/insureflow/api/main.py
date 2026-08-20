@@ -1031,7 +1031,6 @@ async def health() -> dict[str, Any]:
                     checks["pas_guidewire"] = "reachable" if exc.code < 500 else "error"
                 except Exception:
                     checks["pas_guidewire"] = "unreachable"
-                    overall = "degraded"
             else:
                 checks["pas_guidewire"] = "configured_no_url"
         elif bc_key:
@@ -1044,7 +1043,6 @@ async def health() -> dict[str, Any]:
                     checks["pas_britecore"] = "reachable" if exc.code < 500 else "error"
                 except Exception:
                     checks["pas_britecore"] = "unreachable"
-                    overall = "degraded"
             else:
                 checks["pas_britecore"] = "configured_no_url"
         else:

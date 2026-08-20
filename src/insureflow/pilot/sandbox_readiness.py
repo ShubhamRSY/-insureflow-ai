@@ -36,13 +36,18 @@ def _pas_configured() -> bool:
     from insureflow.integrations.http_client import IntegrationHTTPClient
     from insureflow.oracles._live import resolve_integration_mode
 
+    _dev_gateways = ("integrations.rytera.ai", "127.0.0.1", "localhost")
     gw_url = (os.getenv("GUIDEWIRE_API_URL") or "").strip()
     bc_url = (os.getenv("BRITECORE_API_URL") or "").strip()
     if _key_ok("GUIDEWIRE_API_KEY") and gw_url:
+        if any(d in gw_url for d in _dev_gateways):
+            return False
         http = IntegrationHTTPClient(api_key=os.getenv("GUIDEWIRE_API_KEY", ""), base_url=gw_url)
         if resolve_integration_mode("auto", http) == "live":
             return True
     if _key_ok("BRITECORE_API_KEY") and bc_url:
+        if any(d in bc_url for d in _dev_gateways):
+            return False
         http = IntegrationHTTPClient(api_key=os.getenv("BRITECORE_API_KEY", ""), base_url=bc_url)
         if resolve_integration_mode("auto", http) == "live":
             return True
