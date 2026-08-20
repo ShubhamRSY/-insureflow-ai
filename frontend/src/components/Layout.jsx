@@ -2,7 +2,7 @@ import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Shield, Home, Activity, Settings, LogOut, RefreshCw, Menu, X,
   BarChart3, Wallet, FileCheck, Briefcase, ChevronDown, ChevronRight, Plus,
-  ShieldCheck, Library, Lock, Cable,
+  ShieldCheck, Library, Lock, Cable, HandCoins,
 } from 'lucide-react';
 import { useState } from 'react';
 import { auth } from '../lib/api';
@@ -86,7 +86,6 @@ const nav = [
       { to: '/business-kpis', label: 'ROI & KPIs' },
       { to: '/eval-trends', label: 'Eval Trends' },
       { to: '/portfolio', label: 'Portfolio' },
-      { to: '/ratemaking', label: 'Ratemaking & Pricing' },
       { to: '/authority', label: 'Authority Matrix' },
       { to: '/market', label: 'Market Cycle' },
     ],
@@ -141,6 +140,7 @@ const nav = [
     ],
   },
   { section: 'Account' },
+  { to: '/ratemaking', icon: HandCoins, label: 'Ratemaking & Pricing', color: 'text-brand' },
   { to: '/settings', icon: Settings, label: 'Settings' },
 ];
 
