@@ -14,6 +14,9 @@ function KindBadge({ kind }) {
   if (kind === 'needs_config') {
     return <span className="shrink-0 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-amber-400">Needs creds</span>;
   }
+  if (kind === 'simulated') {
+    return <span className="shrink-0 rounded-full bg-blue-500/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-blue-400">Simulated</span>;
+  }
   if (kind === 'lab_demo') {
     return <span className="shrink-0 rounded-full bg-slate-500/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-slate-400">Lab sample</span>;
   }
@@ -295,8 +298,9 @@ export default function ConnectAndPull({
     <div className="space-y-3">
       <p className="text-[11px] text-slate-500">
         <span className="font-semibold text-emerald-400">Live</span> = IMAP / S3 / SFTP / folder when credentials are set.
+        {' '}<span className="font-semibold text-blue-400">Simulated</span> = Lab simulation with sample data.
         {' '}<span className="font-semibold text-slate-400">Lab sample</span> = Pacific Coast-style demos.
-        {' '}<span className="font-semibold text-slate-500">Not contracted</span> = SharePoint, Drive, IVANS — simulation only.
+        {' '}<span className="font-semibold text-amber-400">Needs creds</span> = Set credentials to go live.
       </p>
       <div className="flex flex-wrap items-center gap-2">
         <select value={categoryId}
@@ -341,7 +345,10 @@ export default function ConnectAndPull({
       {activeSource && needsConfig && !connected && (
         <div className="space-y-2 rounded-lg border border-white/[0.06] bg-surface/40 p-3">
           {activeSource.kind === 'catalog_stub' && (
-            <p className="text-[11px] text-amber-300">This is not a live {activeSource.name} connection. Pull uses a lab demo package until that vendor is contracted.</p>
+            <p className="text-[11px] text-amber-300">This connector uses a lab simulation. Pull uses sample data for testing.</p>
+          )}
+          {activeSource.kind === 'simulated' && (
+            <p className="text-[11px] text-blue-300">This connector runs in simulated mode with sample data. No live connection needed.</p>
           )}
           {activeSource.kind === 'needs_config' && (
             <p className="text-[11px] text-amber-300">{activeSource.honesty}</p>

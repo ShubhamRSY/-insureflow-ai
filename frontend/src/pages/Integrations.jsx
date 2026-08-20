@@ -119,6 +119,9 @@ export default function IntegrationsPage() {
                         {src.kind === 'catalog_stub' && (
                           <span className="shrink-0 rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Not contracted</span>
                         )}
+                        {src.kind === 'simulated' && (
+                          <span className="shrink-0 rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-blue-400">Simulated</span>
+                        )}
                         {src.kind === 'live' && (
                           <span className="shrink-0 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-400">Live</span>
                         )}

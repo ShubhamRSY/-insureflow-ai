@@ -2271,6 +2271,51 @@ def pull_insurance_source(
                 detail="Email integration not configured. Admin must set IMAP_HOST, IMAP_USERNAME, IMAP_PASSWORD.",
             )
 
+        if source_id == "outlook-inbox":
+            from insureflow.ingestion.insurance.email_connector import pull_email_submissions
+
+            outlook_host = os.getenv("OUTLOOK_HOST") or os.getenv("IMAP_HOST", "")
+            outlook_user = os.getenv("OUTLOOK_USERNAME") or os.getenv("IMAP_USERNAME", "")
+            outlook_pass = os.getenv("OUTLOOK_PASSWORD") or os.getenv("IMAP_PASSWORD", "")
+            if outlook_host and outlook_user and outlook_pass:
+                orig_host = os.getenv("IMAP_HOST")
+                orig_user = os.getenv("IMAP_USERNAME")
+                orig_pass = os.getenv("IMAP_PASSWORD")
+                try:
+                    os.environ["IMAP_HOST"] = outlook_host
+                    os.environ["IMAP_USERNAME"] = outlook_user
+                    os.environ["IMAP_PASSWORD"] = outlook_pass
+                    pull_result = pull_email_submissions()
+                    label = f"Outlook › {outlook_user}"
+                    result = {
+                        "source_id": source_id,
+                        "simulated": False,
+                        "connection_label": label,
+                        "emails": pull_result["emails"],
+                        "documents": pull_result["documents"],
+                        "file_count": pull_result["documents_found"],
+                        "emails_found": pull_result["emails_found"],
+                    }
+                    accum = _accumulate(pull_result["documents"], source_id, label)
+                    if accum:
+                        result["accumulated"] = accum
+                    _register(label)
+                    return result
+                finally:
+                    if orig_host is not None:
+                        os.environ["IMAP_HOST"] = orig_host
+                    elif "IMAP_HOST" in os.environ:
+                        del os.environ["IMAP_HOST"]
+                    if orig_user is not None:
+                        os.environ["IMAP_USERNAME"] = orig_user
+                    elif "IMAP_USERNAME" in os.environ:
+                        del os.environ["IMAP_USERNAME"]
+                    if orig_pass is not None:
+                        os.environ["IMAP_PASSWORD"] = orig_pass
+                    elif "IMAP_PASSWORD" in os.environ:
+                        del os.environ["IMAP_PASSWORD"]
+            # Fall through to simulated demo package when credentials not set
+
         # Live S3 / SFTP before DEMO_CONNECTORS — those ids are also listed as lab stubs.
         if source_id == "s3-bucket":
             from insureflow.ingestion.insurance.s3_connector import pull_s3_submissions, s3_configured

@@ -2,7 +2,7 @@ import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Shield, Home, Activity, Settings, LogOut, RefreshCw, Menu, X,
   BarChart3, Wallet, FileCheck, Briefcase, ChevronDown, ChevronRight, Plus,
-  ShieldCheck, Library, Lock,
+  ShieldCheck, Library, Lock, Cable,
 } from 'lucide-react';
 import { useState } from 'react';
 import { auth } from '../lib/api';
@@ -102,9 +102,15 @@ const nav = [
       { to: '/pilot', label: 'Pilot Lab' },
       { to: '/registry', label: 'Model Registry' },
       { to: '/regulatory-review', label: 'Regulatory Review' },
-      { to: '/integrations', label: 'Integrations' },
       { to: '/webhooks', label: 'Webhooks' },
     ],
+  },
+  { section: 'Integrations' },
+  {
+    to: '/integrations',
+    icon: Cable,
+    label: 'Integrations',
+    color: 'text-blue-400',
   },
   { section: 'Account' },
   { to: '/settings', icon: Settings, label: 'Settings' },
@@ -142,7 +148,7 @@ const CRUMBS = [
   { prefix: '/market', labels: ['Analytics', 'Market Cycle'] },
   { prefix: '/pilot', labels: ['Governance', 'Pilot Lab'] },
   { prefix: '/registry', labels: ['Governance', 'Model Registry'] },
-  { prefix: '/integrations', labels: ['Governance', 'Integrations'] },
+  { prefix: '/integrations', labels: ['Integrations'] },
   { prefix: '/webhooks', labels: ['Governance', 'Webhooks'] },
   { prefix: '/settings', labels: ['Account', 'Settings'] },
   { prefix: '/system', labels: ['System Health'] },

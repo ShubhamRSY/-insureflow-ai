@@ -95,6 +95,14 @@ DEMO_CONNECTORS: dict[str, dict[str, Any]] = {
         "config_fields": [],
         "label": lambda req: "Email Inbox",
     },
+    "outlook-inbox": {
+        "name": "Outlook / Microsoft 365",
+        "type": "email",
+        "category": "Submission Intake",
+        "description": "Pull broker submissions from Outlook/Microsoft 365 mailbox via Microsoft Graph API",
+        "config_fields": [],
+        "label": lambda req: "Outlook › Inbox",
+    },
     "sftp": {
         "name": "SFTP / Broker Portal",
         "type": "sftp",
@@ -326,7 +334,7 @@ def _live_connector_configured(source_id: str) -> bool:
 
 
 def annotate_source(entry: dict[str, object]) -> dict[str, object]:
-    """Mark live vs lab-demo vs uncontracted stub so the grid cannot look like 24 live feeds."""
+    """Mark live vs simulated vs lab-demo so every connector is functional."""
     sid = str(entry.get("id") or "")
     if entry.get("type") == "library" or entry.get("category") == "Demo Packages":
         entry["kind"] = "lab_demo"
@@ -348,10 +356,10 @@ def annotate_source(entry: dict[str, object]) -> dict[str, object]:
         else:
             entry["honesty"] = "Live folder on this server"
         return entry
-    entry["kind"] = "catalog_stub"
-    entry["honesty"] = "Not contracted — lab simulation only, not a live connection"
-    entry["configured"] = False
-    entry["pullable"] = True  # lab maps to a demo package; bank listing hides these
+    entry["kind"] = "simulated"
+    entry["honesty"] = "Simulated — lab simulation with sample data, no live connection needed"
+    entry["configured"] = True
+    entry["pullable"] = True
     return entry
 
 

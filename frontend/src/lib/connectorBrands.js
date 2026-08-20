@@ -79,6 +79,7 @@ export const CONNECTOR_BRANDS = {
   'azure-blob': { slug: 'microsoftazure', color: '0078D4' },
   box: { slug: 'box', color: '0061D5' },
   'email-inbox': { slug: 'gmail', color: 'EA4335' },
+  'outlook-inbox': { slug: 'microsoftoutlook', color: '0078D4' },
   sftp: { slug: 'openssh', color: 'FFFFFF' },
   'ivans-download': { initials: 'IV', color: 'FFFFFF', bg: '1e40af' },
   'acord-al3': { initials: 'AC', color: 'FFFFFF', bg: 'b45309' },

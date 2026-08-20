@@ -14,9 +14,9 @@ def test_lab_sources_are_labeled() -> None:
     rows = list_sources(Path("examples"), hardened=False)
     by_id = {str(r["id"]): r for r in rows}
     assert by_id["pacific-coast"]["kind"] == "lab_demo"
-    assert by_id["google-drive"]["kind"] == "catalog_stub"
-    assert by_id["sharepoint"]["kind"] == "catalog_stub"
-    assert by_id["ivans-download"]["kind"] == "catalog_stub"
+    assert by_id["google-drive"]["kind"] == "simulated"
+    assert by_id["sharepoint"]["kind"] == "simulated"
+    assert by_id["ivans-download"]["kind"] == "simulated"
     assert by_id["server-folder"]["kind"] in {"live", "needs_config"}
     assert by_id["email-inbox"]["kind"] in {"live", "needs_config"}
     assert "email-inbox" in LIVE_CONNECTOR_IDS
