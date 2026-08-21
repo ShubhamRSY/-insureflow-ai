@@ -79,6 +79,7 @@ function AppRoutes() {
   const [authorityData, setAuthorityData] = useState(null);
   const [lendingDemoResult, setLendingDemoResult] = useState(null);
   const [drawer, setDrawer] = useState({ vertical: null, jobId: null, job: null });
+  const [welcomeMessage, setWelcomeMessage] = useState('');
   const { remaining, isLimited, trackView, DAILY_LIMIT } = useFreemium(auth.isLoggedIn);
 
   const loadHealth = useCallback(async () => {
@@ -311,7 +312,7 @@ function AppRoutes() {
         <Route path="broker/status/:token" element={<BrokerStatusPage />} />
         <Route path="signup" element={<SignupPage />} />
         <Route path="sso/callback" element={<SsoCallback />} />
-        <Route element={<Layout health={health} pendingCount={pending.length} onRefresh={refreshAll} onLogin={() => setLoginOpen(true)} user={user} setUser={setUser} isLimited={isLimited} />}>
+          <Route element={<Layout health={health} pendingCount={pending.length} onRefresh={refreshAll} onLogin={() => setLoginOpen(true)} user={user} setUser={setUser} isLimited={isLimited} welcomeMessage={welcomeMessage} onDismissWelcome={() => setWelcomeMessage('')} />}>
           <Route index element={<Overview overview={overview} health={health} presets={presets} onRunDemo={runDemo} onOpenJob={openJob} onLogin={() => setLoginOpen(true)} marketCycle={marketCycle} queueStats={queueStats} insuranceJobs={insuranceJobs} isLimited={isLimited} remaining={remaining} trackView={trackView} />} />
           <Route path="system" element={<SystemPage health={health} />} />
           <Route path="reference/commercial" element={<Protected onLogin={() => setLoginOpen(true)}><CommercialReference /></Protected>} />
@@ -359,7 +360,14 @@ function AppRoutes() {
         </Route>
       </Routes>
 
-      <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} onSuccess={(u) => { setUser(u); refreshAll(); }} />
+      <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} onSuccess={(u) => {
+        setUser(u);
+        refreshAll();
+        const h = new Date().getHours();
+        const greet = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+        setWelcomeMessage(`${greet}, ${u.username || 'there'}! Make sure you've selected the right states before proceeding — our servers are USA-based.`);
+        setTimeout(() => setWelcomeMessage(''), 8000);
+      }} />
       <ErrorBoundary resetKey={drawer.jobId || 'closed'}>
         <JobDrawer job={drawer.job} vertical={drawer.vertical} jobId={drawer.jobId} onClose={() => setDrawer({ vertical: null, jobId: null, job: null })} />
       </ErrorBoundary>

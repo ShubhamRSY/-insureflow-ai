@@ -77,9 +77,9 @@ export default function IntegrationsPage() {
             <Link2 className="h-6 w-6 text-cyan-400" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Integrations</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Configurations</h1>
             <p className="mt-1 text-slate-400">
-              Live drops: IMAP, S3, SFTP, folder. SharePoint / Drive / IVANS stay dark until contracted — they are not live feeds.
+              Connect data sources, set credentials, and pull documents into Insurance, Mortgage, and Lending.
             </p>
           </div>
         </div>
@@ -91,7 +91,7 @@ export default function IntegrationsPage() {
       {error && <div className="rounded-xl bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</div>}
 
       <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 px-4 py-3 text-xs text-cyan-300">
-        Connecting a service here registers it for the <span className="font-semibold">Connect &amp; pull</span> tab in
+        Configuring a source here registers it for <span className="font-semibold">Connect &amp; pull</span> in
         Insurance, Mortgage, and Lending — pull documents from it in any vertical.
       </div>
 
@@ -162,7 +162,7 @@ export default function IntegrationsPage() {
                       {isActive && !src.connected && (
                         <div className="mt-3 space-y-2 rounded-lg border border-white/[0.06] bg-surface/40 p-3 pl-12">
                           {(src.config_fields || []).length === 0 ? (
-                            <p className="text-[11px] text-slate-500">No configuration needed — connects with defaults.</p>
+                            <p className="text-[11px] text-cyan-400/80">No configuration needed — this source is ready to use. Click Connect to activate.</p>
                           ) : (
                             (src.config_fields || []).map((f) => (
                               <div key={f.key}>
@@ -176,7 +176,7 @@ export default function IntegrationsPage() {
                           <button type="button" onClick={() => connect(src)} disabled={connectingId === src.id}
                             className="btn-primary btn-sm w-full text-xs disabled:opacity-40">
                             {connectingId === src.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Cable className="h-3 w-3" />}
-                            Connect to {src.name}
+                            Configure to {src.name}
                           </button>
                         </div>
                       )}

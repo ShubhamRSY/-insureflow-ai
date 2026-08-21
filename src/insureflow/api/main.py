@@ -2427,7 +2427,7 @@ def pull_insurance_source(
             except OSError as exc:
                 raise HTTPException(status_code=400, detail=f"Invalid path: {exc}") from exc
             if not directory.is_relative_to(root):
-                raise HTTPException(status_code=400, detail="Path must be under project root")
+                raise HTTPException(status_code=400, detail=f"Path must be under project root ({root}). Use a relative path like 'examples' or 'simulated_documents'.")
             documents = load_directory(directory)
             label = str(directory)
             result = {

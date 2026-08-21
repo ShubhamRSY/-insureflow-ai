@@ -108,7 +108,7 @@ const nav = [
   {
     to: '/integrations',
     icon: Cable,
-    label: 'Integrations',
+    label: 'Configurations',
     color: 'text-blue-400',
     defaultOpen: true,
     scrollChildren: true,
@@ -190,7 +190,7 @@ function crumbsFor(pathname) {
   return [];
 }
 
-export default function Layout({ health, pendingCount, onRefresh, onLogin, user, setUser, isLimited }) {
+export default function Layout({ health, pendingCount, onRefresh, onLogin, user, setUser, isLimited, welcomeMessage, onDismissWelcome }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [openGroups, setOpenGroups] = useState(() => {
@@ -450,6 +450,15 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
           {(pathname.startsWith('/insurance') || pathname.startsWith('/mortgage') || pathname.startsWith('/lending')) && (
             <div className="pii-banner mb-4 rounded-xl px-4 py-2.5 text-sm leading-relaxed">
               Named insureds and PII are stripped before any LLM API call — every insurance section, mortgage, and lending.
+            </div>
+          )}
+          {welcomeMessage && (
+            <div className="mb-4 flex items-start gap-3 rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+              <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+              <span className="flex-1">{welcomeMessage}</span>
+              <button type="button" onClick={onDismissWelcome} className="shrink-0 rounded-lg p-1 text-amber-400/60 hover:text-amber-200">
+                <X className="h-3.5 w-3.5" />
+              </button>
             </div>
           )}
           <ErrorBoundary resetKey={pathname}>
