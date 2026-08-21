@@ -1,8 +1,8 @@
 """Comprehensive Underwriting Memo Template Generator.
 
-Generates a production-ready underwriting evaluation memo for Level Term
-Life Insurance submissions (ACORD 100 package), covering all 6 sections
-plus legal safeguards and reinstatement rules.
+Generates a production-ready underwriting evaluation memo for Life Insurance
+submissions, covering all 6 sections plus actuarial pricing, legal safeguards,
+and reinstatement rules.
 """
 
 from __future__ import annotations
@@ -74,6 +74,12 @@ def generate_memo(
         if v.get("a1c"):
             vitals_section.append(f"  A1C: {v['a1c']:.1f}%")
 
+    # Actuarial section
+    actuarial = kwargs.get("actuarial")
+    base_q_x = kwargs.get("base_q_x")
+    risk_q_x = kwargs.get("risk_adjusted_q_x")
+    mortality_table = kwargs.get("mortality_table", "CSO 2017 VBT")
+
     # Decision section
     disp_map = {
         UWDecision.ACCEPT: "[X] ISSUE AS APPLIED",
@@ -94,6 +100,45 @@ def generate_memo(
     contestability_years = state_rules.get("contestability_period_years", 2)
     suicide_years = state_rules.get("suicide_period_years", 2)
     free_look_days = state_rules.get("free_look_days", 10)
+
+    # Build actuarial section if data present
+    actuarial_section = ""
+    if actuarial and not actuarial.get("error"):
+        prem = actuarial.get("level_net_premium") or actuarial.get("level_premium") or 0
+        gross = actuarial.get("gross_premium") or 0
+        nsp = actuarial.get("nsp") or actuarial.get("pv_whole_life_benefits") or 0
+        annuity = actuarial.get("present_value_premiums") or actuarial.get("whole_life_annuity_due") or 0
+        reserves = actuarial.get("reserves")
+        final_reserve = reserves[-1] if isinstance(reserves, list) and reserves else 0
+
+        actuarial_section = f"""
+  Mortality Table: {mortality_table}
+  Base q_x (age {age}): {f"{base_q_x:.6f}" if base_q_x else "N/A"}
+  Risk-Adjusted q_x: {f"{risk_q_x:.6f}" if risk_q_x else "N/A"}
+  Net Single Premium (NSP): ${nsp:,.2f}
+  Actuarial PV of Annuity: ${annuity:,.2f}
+  Level Net Premium: ${prem:,.2f}
+  Gross Premium (with loading): ${gross:,.2f}
+  Terminal Reserve (final year): ${final_reserve:,.2f}"""
+
+        # Product-specific fields
+        if actuarial.get("variant") == "decreasing_term":
+            actuarial_section += f"\n  Reduction Method: {'Mortgage Amortization' if actuarial.get('amortize') else 'Linear'}"
+        elif actuarial.get("variant") == "increasing_term":
+            actuarial_section += f"\n  Annual Increase: {actuarial.get('annual_increase_pct', 0):.1f}%"
+            if actuarial.get("use_coli"):
+                actuarial_section += f" (COLI-linked, {actuarial.get('coli_rate', 0):.1f}%)"
+        elif actuarial.get("variant") == "convertible_term":
+            actuarial_section += f"\n  Convertible To: {actuarial.get('convert_to', 'whole_life').replace('_', ' ').title()}"
+            actuarial_section += f"\n  Convert By Age: {actuarial.get('convert_by_age', 65)}"
+            actuarial_section += f"\n  No Evidence Required: {'Yes' if actuarial.get('no_evidence') else 'No'}"
+            actuarial_section += f"\n  Estimated Converted Premium: ${actuarial.get('converted_premium', 0):,.2f}/yr"
+        elif actuarial.get("variant") == "renewable_term":
+            renewals = actuarial.get("renewal_periods", [])
+            actuarial_section += f"\n  Renewal Periods: {len(renewals)}"
+            if renewals:
+                first = renewals[0]
+                actuarial_section += f"\n  First Period: Age {first.get('start_age', '')}-{first.get('end_age', '')}, ${first.get('annual_premium', 0):,.2f}/yr"
 
     memo = f"""
 ================================================================================
@@ -124,12 +169,12 @@ STATE: {state_code or "N/A"}
   Table Rating: {"Table " + chr(ord("A") + table_index - 1) + f" ({(0.25 * table_index * 100):.0f}% surcharge)" if table_index > 0 else "Standard Base (No Surcharge)"}
   Flat Extra: {f"${flat_extras:.0f}/1,000" if flat_extras > 0 else "None required"}
 
-4. UNDERWRITING CLASSIFICATION & PRICING
+4. UNDERWRITING CLASSIFICATION & ACTUARIAL PRICING
 --------------------------------------------------------------------------------
   Assigned Underwriting Class: {uw_class.replace("_", " ").upper()}
   Final Premium Multiplier: {(1 + 0.25 * table_index):.2f}× standard
-  {"Table Rating / Surcharge: Table " + chr(ord('A') + table_index - 1) + f" / {(0.25 * table_index * 100):.0f}% surcharge" if table_index > 0 else "Table Rating / Surcharge: Standard Base"}
-  Flat Extra: {f"${flat_extras:.0f}/1,000" if flat_extras > 0 else "None required"}
+  {"Table Rating / Surcharge: Table " + chr(ord("A") + table_index - 1) + f" / {(0.25 * table_index * 100):.0f}% surcharge" if table_index > 0 else "Table Rating / Surcharge: Standard Base"}
+  Flat Extra: {f"${flat_extras:.0f}/1,000" if flat_extras > 0 else "None required"}{actuarial_section}
 
 5. RETENTION & REINSURANCE MANAGEMENT
 --------------------------------------------------------------------------------
@@ -201,6 +246,22 @@ Net Worth Multiple (Estate Cases):
 
 Facultative Cession:
   Facultative Cession = Requested Face Amount − Company Retention Limit
+
+Term Life Actuarial Formulas (Equivalence Principle):
+  v = 1/(1+i)                          — Discount Factor
+  _k p_x = ∏(1−q_{{x+j}})               — Survival Probability (k years)
+  _k|q_x = _k p_x × q_{{x+k}}           — Deferred Mortality Probability
+  A_{{x:n}}^1 = Σ v^{{k+1}} × _k|q_x  — PV of Benefits
+  ä_{{x:n}} = Σ v^k × _k p_x           — PV of Annuity-Due
+  P = A_{{x:n}}^1 / ä_{{x:n}}          — Level Net Premium (Equivalence Principle)
+  _tV = A_{{x+t:n-t}}^1 − P × ä_{{x+t:n-t}}  — Prospective Reserve
+
+Whole Life Actuarial Formulas:
+  A_x = Σ_{{k=0}}^{{ω-x-1}} v^{{k+1}} × _k|q_x  — PV Whole Life Benefits
+  ä_x = Σ_{{k=0}}^{{ω-x-1}} v^k × _k p_x           — Whole Life Annuity-Due
+  P_x = A_x / ä_x                                   — Level Net Premium (Lifetime)
+  _tV = A_{{x+t}} − P × ä_{{x+t}}                  — Prospective Reserve
+  CSV = PV(Future Benefits) − PV(Future Adjusted Premiums)  — Nonforfeiture Value
 
 ================================================================================
 """
