@@ -265,7 +265,7 @@ def _run_actuarial_pricing(
         if actuarial_type == "term":
             from .term_formulas import compute_full_quote
 
-            q = compute_full_quote(
+            q_term = compute_full_quote(
                 age=age,
                 sex=sex,
                 smoker=smoker,
@@ -274,14 +274,14 @@ def _run_actuarial_pricing(
                 interest_rate=interest_rate,
             )
             if uw_factors and uw_factors.premium_multiplier > 0:
-                q.level_net_premium = round(q.level_net_premium * uw_factors.premium_multiplier, 2)
-                q.gross_premium = round(q.gross_premium * uw_factors.premium_multiplier, 2)
-            result_dict = q.to_metadata()
+                q_term.level_net_premium = round(q_term.level_net_premium * uw_factors.premium_multiplier, 2)
+                q_term.gross_premium = round(q_term.gross_premium * uw_factors.premium_multiplier, 2)
+            result_dict = q_term.to_metadata()
 
         elif actuarial_type == "whole_life":
             from .whole_life_formulas import compute_full_whole_life_quote
 
-            q = compute_full_whole_life_quote(
+            q_wl = compute_full_whole_life_quote(
                 age=age,
                 sex=sex,
                 smoker=smoker,
@@ -289,14 +289,14 @@ def _run_actuarial_pricing(
                 interest_rate=interest_rate,
             )
             if uw_factors and uw_factors.premium_multiplier > 0:
-                q.level_net_premium = round(q.level_net_premium * uw_factors.premium_multiplier, 2)
-                q.gross_premium = round(q.gross_premium * uw_factors.premium_multiplier, 2)
-            result_dict = q.to_metadata()
+                q_wl.level_net_premium = round(q_wl.level_net_premium * uw_factors.premium_multiplier, 2)
+                q_wl.gross_premium = round(q_wl.gross_premium * uw_factors.premium_multiplier, 2)
+            result_dict = q_wl.to_metadata()
 
         elif actuarial_type == "decreasing_term":
             from .product_variants import compute_decreasing_term
 
-            q = compute_decreasing_term(
+            q_dt = compute_decreasing_term(
                 age=age,
                 sex=sex,
                 smoker=smoker,
@@ -306,13 +306,13 @@ def _run_actuarial_pricing(
                 amortize=True,
             )
             if uw_factors and uw_factors.premium_multiplier > 0:
-                q.level_premium = round(q.level_premium * uw_factors.premium_multiplier, 2)
-            result_dict = q.to_metadata()
+                q_dt.level_premium = round(q_dt.level_premium * uw_factors.premium_multiplier, 2)
+            result_dict = q_dt.to_metadata()
 
         elif actuarial_type == "increasing_term":
             from .product_variants import compute_increasing_term
 
-            q = compute_increasing_term(
+            q_it = compute_increasing_term(
                 age=age,
                 sex=sex,
                 smoker=smoker,
@@ -321,13 +321,13 @@ def _run_actuarial_pricing(
                 interest_rate=interest_rate,
             )
             if uw_factors and uw_factors.premium_multiplier > 0:
-                q.level_premium = round(q.level_premium * uw_factors.premium_multiplier, 2)
-            result_dict = q.to_metadata()
+                q_it.level_premium = round(q_it.level_premium * uw_factors.premium_multiplier, 2)
+            result_dict = q_it.to_metadata()
 
         elif actuarial_type == "convertible_term":
             from .product_variants import compute_convertible_term
 
-            q = compute_convertible_term(
+            q_ct = compute_convertible_term(
                 age=age,
                 sex=sex,
                 smoker=smoker,
@@ -336,21 +336,21 @@ def _run_actuarial_pricing(
                 interest_rate=interest_rate,
             )
             if uw_factors and uw_factors.premium_multiplier > 0:
-                q.level_premium = round(q.level_premium * uw_factors.premium_multiplier, 2)
-                q.converted_premium = round(q.converted_premium * uw_factors.premium_multiplier, 2)
-            result_dict = q.to_metadata()
+                q_ct.level_premium = round(q_ct.level_premium * uw_factors.premium_multiplier, 2)
+                q_ct.converted_premium = round(q_ct.converted_premium * uw_factors.premium_multiplier, 2)
+            result_dict = q_ct.to_metadata()
 
         elif actuarial_type == "renewable_term":
             from .product_variants import compute_renewable_term
 
-            q = compute_renewable_term(
+            q_rt = compute_renewable_term(
                 age=age,
                 sex=sex,
                 smoker=smoker,
                 face_amount=face_amount,
                 interest_rate=interest_rate,
             )
-            result_dict = q.to_metadata()
+            result_dict = q_rt.to_metadata()
 
         return result_dict
 
