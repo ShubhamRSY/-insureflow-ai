@@ -116,6 +116,7 @@ PRODUCT_FAMILY_REQUIREMENTS: dict[str, dict[str, Any]] = {
         "requires_medical": True,
         "requires_financial": True,
         "requires_actuarial": True,
+        "requires_product_uw": True,
         "requires_paramed_above": 100_000,
         "contestability_years": 2,
         "suicide_years": 2,
@@ -126,6 +127,7 @@ PRODUCT_FAMILY_REQUIREMENTS: dict[str, dict[str, Any]] = {
         "requires_medical": True,
         "requires_financial": True,
         "requires_actuarial": False,  # investment-linked, not actuarial
+        "requires_product_uw": True,
         "requires_suitability": True,
         "requires_paramed_above": 250_000,
         "contestability_years": 2,
@@ -137,6 +139,7 @@ PRODUCT_FAMILY_REQUIREMENTS: dict[str, dict[str, Any]] = {
         "requires_medical": True,
         "requires_financial": True,
         "requires_actuarial": False,  # simplified pricing
+        "requires_product_uw": True,
         "requires_paramed_above": 100_000,
         "contestability_years": 2,
         "suicide_years": 2,
@@ -147,6 +150,7 @@ PRODUCT_FAMILY_REQUIREMENTS: dict[str, dict[str, Any]] = {
         "requires_medical": False,
         "requires_financial": True,
         "requires_actuarial": False,
+        "requires_product_uw": True,
         "requires_suitability": True,
         "requires_paramed_above": 0,
         "contestability_years": 0,
@@ -203,6 +207,8 @@ class LifePipelineResult:
 
     # Actuarial output
     actuarial_quote: dict[str, Any] | None = None
+    # Product-specific UW (endowment, ULIP, money-back, annuity)
+    product_uw: dict[str, Any] | None = None
     mortality_table_used: str = "CSO 2017 VBT (illustrative)"
     interest_rate_used: float = 0.04
 
@@ -225,6 +231,7 @@ class LifePipelineResult:
             "uw_factors": self.uw_factors.to_metadata() if self.uw_factors else None,
             "financial": self.financial.to_metadata() if self.financial else None,
             "actuarial_quote": self.actuarial_quote,
+            "product_uw": self.product_uw,
             "mortality_table": self.mortality_table_used,
             "interest_rate": self.interest_rate_used,
             "final_decision": self.final_decision.to_metadata() if self.final_decision else None,
@@ -359,6 +366,108 @@ def _run_actuarial_pricing(
         return {"error": str(exc)}
 
     return None
+
+
+def _run_product_specific_uw(
+    family: str,
+    factors: Any,
+    age: int,
+    sex: str,
+    smoker: bool,
+    face_amount: float,
+    term_years: int,
+    income: float,
+    net_worth: float,
+    medical_hist: Any,
+) -> dict[str, Any] | None:
+    """Run product-specific underwriting for endowment, ULIP, money-back, annuity."""
+    try:
+        if family == "endowment":
+            from .endowment_uw import run_endowment_uw
+
+            r = run_endowment_uw(
+                age=age,
+                sex=sex,
+                smoker=smoker,
+                face_amount=face_amount,
+                annual_premium=float(getattr(factors, "annual_premium", 0) or 0),
+                term_years=term_years,
+                income=income,
+                net_worth=net_worth,
+                existing_premiums=float(getattr(factors, "existing_premiums", 0) or 0),
+                purpose=getattr(factors, "purpose", "") or "",
+                expected_maturity_value=float(getattr(factors, "expected_maturity_value", 0) or 0),
+            )
+            return r.to_metadata()
+
+        if family == "ulip":
+            from .ulip_uw import run_ulip_uw
+
+            r = run_ulip_uw(
+                age=age,
+                sex=sex,
+                smoker=smoker,
+                face_amount=face_amount,
+                annual_premium=float(getattr(factors, "annual_premium", 0) or 0),
+                income=income,
+                net_worth=net_worth,
+                equity_pct=float(getattr(factors, "equity_pct", 60) or 60),
+                debt_pct=float(getattr(factors, "debt_pct", 30) or 30),
+                balanced_pct=float(getattr(factors, "balanced_pct", 10) or 10),
+                investment_horizon_years=int(getattr(factors, "investment_horizon_years", 10) or 10),
+                risk_appetite=getattr(factors, "risk_appetite", "moderate") or "moderate",
+                loss_tolerance_pct=float(getattr(factors, "loss_tolerance_pct", 20) or 20),
+                financial_dependents=int(getattr(factors, "dependents", 0) or 0),
+                emergency_fund_months=int(getattr(factors, "emergency_fund_months", 0) or 0),
+                existing_market_exposure=float(getattr(factors, "existing_market_exposure", 0) or 0),
+                disclosures_complete=bool(getattr(factors, "disclosures_complete", False) or False),
+            )
+            return r.to_metadata()
+
+        if family == "money_back":
+            from .money_back_uw import run_money_back_uw
+
+            r = run_money_back_uw(
+                age=age,
+                sex=sex,
+                smoker=smoker,
+                face_amount=face_amount,
+                annual_premium=float(getattr(factors, "annual_premium", 0) or 0),
+                term_years=term_years,
+                income=income,
+                payout_schedule=getattr(factors, "payout_schedule", "every_5_years") or "every_5_years",
+                survival_benefit_pct=float(getattr(factors, "survival_benefit_pct", 20) or 20),
+                existing_liabilities=float(getattr(factors, "existing_liabilities", 0) or 0),
+                purpose=getattr(factors, "purpose", "") or "",
+            )
+            return r.to_metadata()
+
+        if family == "annuity":
+            from .annuity_uw import run_annuity_uw
+
+            r = run_annuity_uw(
+                age=age,
+                sex=sex,
+                smoker=smoker,
+                purchase_price=float(getattr(factors, "purchase_price", face_amount) or face_amount),
+                annuity_type=getattr(factors, "annuity_type", "immediate") or "immediate",
+                payout_frequency=getattr(factors, "payout_frequency", "monthly") or "monthly",
+                guaranteed_period=int(getattr(factors, "guaranteed_period", 10) or 10),
+                deferral_period=int(getattr(factors, "deferral_period", 0) or 0),
+                income=income,
+                net_worth=net_worth,
+                parent_ages_at_death=getattr(factors, "parent_ages_at_death", None) or (medical_hist.parent_ages_at_death if medical_hist and hasattr(medical_hist, "parent_ages_at_death") else []),
+                has_heart_disease="heart" in str(getattr(factors, "personal_conditions", []) or []),
+                has_cancer_history="cancer" in str(getattr(factors, "personal_conditions", []) or []),
+                has_diabetes="diabetes" in str(getattr(factors, "personal_conditions", []) or []),
+            )
+            return r.to_metadata()
+
+        return None
+
+    except Exception as exc:
+        logger.warning("Product-specific UW failed for %s: %s", family, exc)
+        return {"error": str(exc)}
 
 
 def run_life_pipeline(
@@ -550,6 +659,42 @@ def run_life_pipeline(
         )
         result.actuarial_quote = actuarial
 
+    # ── Step 4.6: Product-Specific Underwriting ───────────────────
+    if family_req.get("requires_product_uw", False):
+        product_uw = _run_product_specific_uw(
+            family=family,
+            factors=factors,
+            age=age,
+            sex=sex,
+            smoker=smoker,
+            face_amount=face_amount,
+            term_years=term_years,
+            income=float(factors.income or 0),
+            net_worth=float(getattr(factors, "net_worth", 0) or 0),
+            medical_hist=medical_hist if family == "annuity" else None,
+        )
+        result.product_uw = product_uw
+        if product_uw:
+            for finding_text in product_uw.get("findings", []):
+                severity = RiskSeverity.MODERATE
+                if "critical" in finding_text.lower() or "decline" in finding_text.lower():
+                    severity = RiskSeverity.CRITICAL
+                elif "warning" in finding_text.lower() or "risk" in finding_text.lower():
+                    severity = RiskSeverity.HIGH
+                result.findings.append(
+                    Finding(
+                        title="Product UW",
+                        description=finding_text,
+                        severity=severity,
+                        category=f"life_{family}_uw",
+                    )
+                )
+            if product_uw.get("decision") == "DECLINE":
+                result.decision = UWDecision.DECLINE
+            elif product_uw.get("decision") == "REFER" and result.decision != UWDecision.DECLINE:
+                result.decision = UWDecision.REFER
+                result.human_review_required = True
+
     # ── Final Decision Matrix ────────────────────────────────────
     uw_class = uw_factors.uw_class if uw_factors else "standard"
     table_index = 0
@@ -596,6 +741,8 @@ def run_life_pipeline(
         memo_kwargs["risk_adjusted_q_x"] = uw_factors.risk_adjusted_q_x
     if result.actuarial_quote:
         memo_kwargs["actuarial"] = result.actuarial_quote
+    if result.product_uw:
+        memo_kwargs["product_uw"] = result.product_uw
 
     result.memo_text = generate_memo(**memo_kwargs)
 

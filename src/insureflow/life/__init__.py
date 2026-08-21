@@ -6,6 +6,10 @@ Modules:
   whole_life_formulas — Whole life: A_x, ä_x, P_x, cash value, nonforfeiture CSV
   product_variants — Decreasing/increasing term, convertible, renewable
   underwriting_factors — Health, medical, lifestyle, financial, persistency models
+  endowment_uw     — Endowment plan: premium capacity, savings ratio, parking detection
+  ulip_uw          — ULIP: investor profiling, suitability, risk appetite, fund allocation
+  money_back_uw    — Money-back: cash-flow matching, persistency, lapse risk
+  annuity_uw       — Annuity/pension: longevity risk, family history, payout risk
   checklist        — 10-point compliance checklist
   screening        — SSN, MIB, Rx, OFAC screening
   medical_eval     — BMI, vitals, paramedical, class assignment
@@ -15,6 +19,9 @@ Modules:
   pipeline         — 4-step orchestrator
 """
 
+from .annuity_uw import AnnuityUWResult, run_annuity_uw
+from .endowment_uw import EndowmentUWResult, run_endowment_uw
+from .money_back_uw import MoneyBackUWResult, run_money_back_uw
 from .mortality import LIMITING_AGE, discount_factor, k_p_x, k_q_x, p_x, q_x, v_k
 from .product_variants import (
     ConvertibleTermQuote,
@@ -37,6 +44,7 @@ from .term_formulas import (
     prospective_reserve,
     recursive_reserve,
 )
+from .ulip_uw import InvestorProfile, ULIPUWResult, run_ulip_uw
 from .underwriting_factors import (
     FinancialJustification,
     HealthAssessment,
@@ -120,4 +128,17 @@ __all__ = [
     "assess_financial",
     "assess_persistency",
     "classify_uw_risk",
+    # Endowment UW
+    "EndowmentUWResult",
+    "run_endowment_uw",
+    # ULIP UW
+    "InvestorProfile",
+    "ULIPUWResult",
+    "run_ulip_uw",
+    # Money-Back UW
+    "MoneyBackUWResult",
+    "run_money_back_uw",
+    # Annuity UW
+    "AnnuityUWResult",
+    "run_annuity_uw",
 ]
