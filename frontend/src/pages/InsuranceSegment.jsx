@@ -116,6 +116,11 @@ export default function InsuranceSegmentPage() {
               </span>
             </div>
             <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">{section.summary}</p>
+            {section.hub && section.hub !== `/insurance/sections/${section.id}` ? (
+              <Link to={section.hub} className={`mt-3 inline-flex items-center gap-1 text-sm font-medium ${accent.tag}`}>
+                Open full hub <ArrowRight className="h-4 w-4" />
+              </Link>
+            ) : null}
           </div>
         </div>
       </div>
