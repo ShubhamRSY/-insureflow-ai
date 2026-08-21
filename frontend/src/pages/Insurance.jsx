@@ -20,7 +20,7 @@ export default function InsurancePage({ jobs, onRefresh, onDeleteJob, onDeleteAl
 
   const activeSections = INSURANCE_SECTIONS.filter((s) => !s.disabled);
   const disabledSections = INSURANCE_SECTIONS.filter((s) => s.disabled);
-  const visibleSections = showAll ? activeSections : activeSections.slice(0, 3);
+  const visibleSections = showAll ? activeSections : activeSections.slice(0, 4);
 
   return (
     <div className="mx-auto w-full max-w-[1600px] space-y-8 animate-fade-in pb-12">
@@ -106,7 +106,7 @@ export default function InsurancePage({ jobs, onRefresh, onDeleteJob, onDeleteAl
             );
           })}
         </div>
-        {activeSections.length > 3 && !showAll && (
+        {activeSections.length > 4 && !showAll && (
           <button
             type="button"
             onClick={() => setShowAll(true)}
@@ -116,7 +116,7 @@ export default function InsurancePage({ jobs, onRefresh, onDeleteJob, onDeleteAl
             Show all {activeSections.length} active sections
           </button>
         )}
-        {showAll && activeSections.length > 3 && (
+        {showAll && activeSections.length > 4 && (
           <button
             type="button"
             onClick={() => setShowAll(false)}
