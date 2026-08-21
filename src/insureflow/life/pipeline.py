@@ -382,6 +382,8 @@ def _run_product_specific_uw(
 ) -> dict[str, Any] | None:
     """Run product-specific underwriting for endowment, ULIP, money-back, annuity."""
     try:
+        result_dict: dict[str, Any] | None = None
+
         if family == "endowment":
             from .endowment_uw import run_endowment_uw
 
@@ -398,12 +400,12 @@ def _run_product_specific_uw(
                 purpose=getattr(factors, "purpose", "") or "",
                 expected_maturity_value=float(getattr(factors, "expected_maturity_value", 0) or 0),
             )
-            return r.to_metadata()
+            result_dict = r.to_metadata()
 
-        if family == "ulip":
+        elif family == "ulip":
             from .ulip_uw import run_ulip_uw
 
-            r = run_ulip_uw(
+            r_ulip = run_ulip_uw(
                 age=age,
                 sex=sex,
                 smoker=smoker,
@@ -422,12 +424,12 @@ def _run_product_specific_uw(
                 existing_market_exposure=float(getattr(factors, "existing_market_exposure", 0) or 0),
                 disclosures_complete=bool(getattr(factors, "disclosures_complete", False) or False),
             )
-            return r.to_metadata()
+            result_dict = r_ulip.to_metadata()
 
-        if family == "money_back":
+        elif family == "money_back":
             from .money_back_uw import run_money_back_uw
 
-            r = run_money_back_uw(
+            r_mb = run_money_back_uw(
                 age=age,
                 sex=sex,
                 smoker=smoker,
@@ -440,12 +442,12 @@ def _run_product_specific_uw(
                 existing_liabilities=float(getattr(factors, "existing_liabilities", 0) or 0),
                 purpose=getattr(factors, "purpose", "") or "",
             )
-            return r.to_metadata()
+            result_dict = r_mb.to_metadata()
 
-        if family == "annuity":
+        elif family == "annuity":
             from .annuity_uw import run_annuity_uw
 
-            r = run_annuity_uw(
+            r_ann = run_annuity_uw(
                 age=age,
                 sex=sex,
                 smoker=smoker,
@@ -461,9 +463,9 @@ def _run_product_specific_uw(
                 has_cancer_history="cancer" in str(getattr(factors, "personal_conditions", []) or []),
                 has_diabetes="diabetes" in str(getattr(factors, "personal_conditions", []) or []),
             )
-            return r.to_metadata()
+            result_dict = r_ann.to_metadata()
 
-        return None
+        return result_dict
 
     except Exception as exc:
         logger.warning("Product-specific UW failed for %s: %s", family, exc)
