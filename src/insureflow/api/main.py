@@ -2740,7 +2740,7 @@ def run_draft_bundle(
             documents=[MortgageDocumentPayload(**d) for d in docs],
             use_llm=use_llm,
             bundle_id=job_id,
-            state_code=request.state_code,
+            state_code=state_code or None,
         )
         background_tasks.add_task(_run_mortgage_task, job_id, mortgage_req, current.org_id)
         if bundle:
