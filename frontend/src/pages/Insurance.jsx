@@ -85,8 +85,8 @@ export default function InsurancePage({ jobs, onRefresh, onDeleteJob, onDeleteAl
                     <p className="mt-1.5 text-xs leading-relaxed text-slate-400">{section.summary}</p>
                   </div>
                 </div>
-                <ul className="mt-4 space-y-1 border-t border-white/[0.04] pt-3">
-                  {section.products.slice(0, 6).map((p) => (
+                <ul className="mt-4 max-h-[140px] space-y-1 overflow-y-auto border-t border-white/[0.04] pt-3">
+                  {section.products.map((p) => (
                     <li key={p.name} className="flex gap-2 text-xs text-slate-300">
                       <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-slate-600" />
                       <span>
@@ -95,9 +95,6 @@ export default function InsurancePage({ jobs, onRefresh, onDeleteJob, onDeleteAl
                       </span>
                     </li>
                   ))}
-                  {section.products.length > 6 ? (
-                    <li className="pl-3 text-[11px] text-slate-500">+{section.products.length - 6} more</li>
-                  ) : null}
                 </ul>
                 <p className={`mt-4 inline-flex items-center gap-1 text-sm font-medium ${accent.tag} group-hover:gap-2`}>
                   {section.disabled ? 'Coming soon' : <>Open section <ArrowRight className="h-4 w-4" /></>}
