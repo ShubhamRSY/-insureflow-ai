@@ -380,7 +380,7 @@ def compute_renewable_term(
         interest_rate=interest_rate,
     )
 
-    renewals = []
+    renewals: list[dict[str, Any]] = []
     current_age = age
 
     while current_age < max_renewal_age:

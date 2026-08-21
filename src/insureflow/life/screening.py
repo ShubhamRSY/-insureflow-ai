@@ -10,7 +10,7 @@ from typing import Any
 
 from insureflow.models.agents import Finding, RiskSeverity, UWDecision
 from insureflow.models.submissions import SubmissionBundle
-from insureflow.underwriting.personal_lines import _blob, extract_life_factors
+from insureflow.underwriting.personal_lines import _blob
 
 
 @dataclass
@@ -41,7 +41,6 @@ class ScreeningResult:
 
 def run_screening(bundle: SubmissionBundle) -> ScreeningResult:
     blob = _blob(bundle)
-    factors = extract_life_factors(bundle)
     result = ScreeningResult()
 
     # SSN verification
@@ -49,9 +48,6 @@ def run_screening(bundle: SubmissionBundle) -> ScreeningResult:
 
     ssn_match = re.search(r"\b\d{3}[- ]?\d{2}[- ]?\d{4}\b", blob)
     if ssn_match:
-        result.ssn_verified = True
-        result.ssn_status = "verified"
-    elif factors.ssn_present:
         result.ssn_verified = True
         result.ssn_status = "verified"
     else:
