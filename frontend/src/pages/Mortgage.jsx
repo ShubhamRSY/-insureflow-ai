@@ -40,7 +40,7 @@ export default function MortgagePage({ presets, jobs, onRunDemo, onOpenJob, onRu
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Mortgage Underwriting</h1>
           <p className="mt-2 max-w-xl text-sm text-slate-400">
-            Income, credit, and property → decision + rate. Named insureds and PII are stripped before any LLM API call.
+            Income, credit, and property → decision + rate.
           </p>
         </div>
         <button type="button" onClick={loadMortgageProducts} className="btn-secondary btn-sm text-xs">

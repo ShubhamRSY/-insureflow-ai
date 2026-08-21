@@ -102,7 +102,6 @@ export default function LendingPage({ presets, demoResult, onRunDemo }) {
             <h1 className="text-2xl font-bold tracking-tight">Lending Underwriting</h1>
             <p className="mt-1 max-w-xl text-slate-400">
               Load one package, then run underwriting — application, P&amp;L, balance sheet, bank, credit, tax.
-              Named insureds and PII are stripped before any LLM API call.
             </p>
           </div>
         </div>

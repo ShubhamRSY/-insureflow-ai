@@ -39,7 +39,7 @@ export default function InsurancePage({ jobs, onRefresh, onDeleteJob, onDeleteAl
               <h1 className="text-3xl font-bold tracking-tight text-slate-100">Insurance</h1>
               <p className="mt-1 max-w-2xl text-sm text-slate-400">
                 {activeSections.length} active sections — life, health, personal, and commercial lines.
-                Additional sections coming soon. Named insureds and PII are stripped before any LLM API call.
+                Additional sections coming soon.
               </p>
             </div>
           </div>
