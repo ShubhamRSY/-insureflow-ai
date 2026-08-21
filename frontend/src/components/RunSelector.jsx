@@ -3,6 +3,7 @@ import { Loader2, Upload, FileText, Play, Database, Cable, AlertTriangle, Trash2
 import { readFileForUpload, buildSubmissionPayload, scoreFileRelevance, validatePackageRelevance } from '../lib/insuranceDocs';
 import { insuranceLineLabel } from '../lib/insuranceLines';
 import { UI_HINTS } from '../lib/uiHints';
+import { useStateContext } from '../lib/useStateContext';
 import { endpoints } from '../lib/api';
 import ConnectAndPull from './ConnectAndPull';
 import CommercialLinePicker from './CommercialLinePicker';
@@ -74,6 +75,7 @@ export default function RunSelector({
   const [strictRelevance, setStrictRelevance] = useState(true);
   const [companyId, setCompanyId] = useState('');
   const [companyName, setCompanyName] = useState('');
+  const { selectedState } = useStateContext();
 
   const useCommercialPicker = Array.isArray(commercialTaxonomy) && commercialTaxonomy.length > 0;
 
@@ -231,6 +233,7 @@ export default function RunSelector({
           const body = applyLineFields(buildSubmissionPayload(kept, useLlm));
           if (includePurpose) body.purpose = purpose;
           body.require_documents = true;
+          if (selectedState) body.state_code = selectedState;
           await onSubmit?.(body);
         } catch (e) {
           setError(e.message);
@@ -246,6 +249,7 @@ export default function RunSelector({
       const body = applyLineFields(buildSubmissionPayload(files, useLlm));
       if (includePurpose) body.purpose = purpose;
       body.require_documents = true;
+      if (selectedState) body.state_code = selectedState;
       await onSubmit?.(body);
     } catch (e) {
       setError(e.message);

@@ -877,6 +877,7 @@ class SubmissionRequest(BaseModel):
     commercial_category_id: Optional[str] = None
     insurance_company_id: Optional[str] = None
     insurance_company_name: Optional[str] = None
+    state_code: Optional[str] = None
     use_llm: bool = True
     use_legacy_pipeline: bool = False
     use_celery: bool = False
@@ -2698,6 +2699,7 @@ def run_draft_bundle(
     insurance_company_id: str = "",
     insurance_company_name: str = "",
     strict_relevance: bool = False,
+    state_code: str = "",
 ) -> dict[str, Any]:
     """Execute the pipeline using all accumulated documents in a draft bundle.
 
@@ -2738,6 +2740,7 @@ def run_draft_bundle(
             documents=[MortgageDocumentPayload(**d) for d in docs],
             use_llm=use_llm,
             bundle_id=job_id,
+            state_code=request.state_code,
         )
         background_tasks.add_task(_run_mortgage_task, job_id, mortgage_req, current.org_id)
         if bundle:
@@ -2751,6 +2754,7 @@ def run_draft_bundle(
             LendingSubmissionRequest(
                 documents=[InsuranceDocumentPayload(**d) for d in docs],
                 require_documents=True,
+                state_code=state_code or None,
             ),
             current=current,
         )
@@ -2779,6 +2783,7 @@ def run_draft_bundle(
         commercial_category_id=commercial_category_id or None,
         insurance_company_id=insurance_company_id or None,
         insurance_company_name=insurance_company_name or None,
+        state_code=state_code or None,
     )
     background_tasks.add_task(_run_pipeline_task, job_id, req, current.org_id)
 
@@ -3153,7 +3158,7 @@ def _run_pipeline_task(job_id: str, request: SubmissionRequest, org_id: str) -> 
                 insurance_company_name=request.insurance_company_name,
                 progress_callback=on_progress,
             )
-        job_store.set(INSURANCE_NS, job_id, {"status": "completed", "results": result}, org_id=org_id)
+        job_store.set(INSURANCE_NS, job_id, {"status": "completed", "results": result, "state_code": request.state_code}, org_id=org_id)
     except Exception as exc:
         logger.exception("Pipeline run failed")
         job_store.set(INSURANCE_NS, job_id, {"status": "failed", "error": str(exc)}, org_id=org_id)
@@ -6597,6 +6602,7 @@ class MortgageSubmissionRequest(BaseModel):
     use_llm: bool = True
     per_borrower: bool = False
     use_celery: bool = False
+    state_code: Optional[str] = None
 
 
 class LendingSubmissionRequest(BaseModel):
@@ -6626,6 +6632,7 @@ class LendingSubmissionRequest(BaseModel):
     documents: Optional[list[InsuranceDocumentPayload]] = None
     directory: Optional[str] = None
     require_documents: bool = False
+    state_code: Optional[str] = None
 
 
 class WebhookRegisterRequest(BaseModel):
@@ -6705,7 +6712,7 @@ def _run_mortgage_task(job_id: str, request: MortgageSubmissionRequest, org_id: 
             webhook_dispatcher.dispatch_async("mortgage.failed", org_id, {"job_id": job_id, "error": "no input"})
             return
 
-        job_store.set(MORTGAGE_NS, job_id, {"status": "completed", "results": result}, org_id=org_id)
+        job_store.set(MORTGAGE_NS, job_id, {"status": "completed", "results": result, "state_code": request.state_code}, org_id=org_id)
     except Exception as exc:
         logger.exception("Mortgage pipeline run failed")
         job_store.set(MORTGAGE_NS, job_id, {"status": "failed", "error": str(exc)}, org_id=org_id)

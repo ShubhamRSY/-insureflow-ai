@@ -4,6 +4,7 @@ import { Badge, EmptyState } from '../components/ui';
 import { endpoints, fmtCurrency } from '../lib/api';
 import StageStrip, { stagesFromProgress } from '../components/StageStrip';
 import RunSelector from '../components/RunSelector';
+import { useStateContext } from '../lib/useStateContext';
 
 function sampleResult(res) {
   return {
@@ -26,6 +27,7 @@ export default function LendingPage({ presets, demoResult, onRunDemo }) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const { selectedState } = useStateContext();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -73,6 +75,7 @@ export default function LendingPage({ presets, demoResult, onRunDemo }) {
     setError('');
     setMessage('');
     try {
+      if (selectedState) body.state_code = selectedState;
       const res = await endpoints.runLending(body);
       addResult(res, 'Underwrite');
     } catch (err) {
@@ -144,7 +147,6 @@ export default function LendingPage({ presets, demoResult, onRunDemo }) {
             { id: 'sba_7a', label: 'SBA 7A' },
             { id: 'cre', label: 'Commercial RE' },
             { id: 'personal_term', label: 'Personal' },
-            { id: 'auto', label: 'Auto' },
           ]}
           productDefault="business_term_loan"
           includePurpose
@@ -160,6 +162,14 @@ export default function LendingPage({ presets, demoResult, onRunDemo }) {
           onRunDemo={onRunDemo}
           onRunResult={handleConnectResult}
         />
+
+        <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3">
+          <p className="text-sm text-amber-200">
+            <span className="font-semibold">Customized panels available.</span>{' '}
+            Need Auto, Boat, Home Equity, SBA 504, Equipment Financing, or Invoice Financing?{' '}
+            <span className="text-amber-300 underline">Request access</span> and we'll activate them for your account.
+          </p>
+        </div>
 
         {results.length > 0 ? (
             <div className="glass-card overflow-hidden">

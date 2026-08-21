@@ -4,12 +4,14 @@ import { extractMortgage, endpoints, fmtCurrency } from '../lib/api';
 import RunSelector from '../components/RunSelector';
 import StageStrip, { stagesFromProgress } from '../components/StageStrip';
 import { Home, Package, FileText, Building2 } from 'lucide-react';
+import { useStateContext } from '../lib/useStateContext';
 
 export default function MortgagePage({ presets, jobs, onRunDemo, onOpenJob, onRunConnect, onSubmit }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [mortgageProducts, setMortgageProducts] = useState(null);
   const [mortgageAudit, setMortgageAudit] = useState(null);
+  const { selectedState } = useStateContext();
 
   const loadMortgageProducts = async () => {
     try { setMortgageProducts(await endpoints.mortgageProducts()); } catch (e) { alert(e.message); }
@@ -23,6 +25,7 @@ export default function MortgagePage({ presets, jobs, onRunDemo, onOpenJob, onRu
     setLoading(true);
     setError('');
     try {
+      if (selectedState) body.state_code = selectedState;
       await onSubmit(body);
     } catch (err) {
       setError(err.message || String(err));
@@ -93,6 +96,14 @@ export default function MortgagePage({ presets, jobs, onRunDemo, onOpenJob, onRu
           onRunDemo={onRunDemo}
           onRunJob={onRunConnect}
         />
+
+        <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3">
+          <p className="text-sm text-amber-200">
+            <span className="font-semibold">Customized panels available.</span>{' '}
+            Need FHA, VA, USDA, Jumbo, or ARM products?{' '}
+            <span className="text-amber-300 underline">Request access</span> and we'll activate them for your account.
+          </p>
+        </div>
 
         <div className="glass-card overflow-hidden">
         <div className="border-b border-white/[0.06] px-6 py-4">

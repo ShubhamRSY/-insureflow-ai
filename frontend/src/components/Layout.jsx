@@ -263,7 +263,7 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
               }`}
             >
               {item.children.map((child) => {
-                if (child.soon) {
+                if (child.soon || child.disabled) {
                   return (
                     <div
                       key={child.label}

@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Shield, ArrowRight, HeartPulse, Stethoscope, Umbrella, Briefcase, Leaf,
   Landmark, HardHat, Plane, Lock, CloudRain, Scale, ShieldCheck, Trash2,
+  ChevronDown, ChevronUp,
 } from 'lucide-react';
 import { insuranceLineLabel } from '../lib/insuranceLines';
 import { INSURANCE_SECTIONS, insuranceSectionAccent } from '../lib/insuranceSections';
@@ -14,6 +16,11 @@ const ICONS = {
 export default function InsurancePage({ jobs, onRefresh, onDeleteJob, onDeleteAllJobs }) {
   const navigate = useNavigate();
   const recent = (jobs || []).slice(0, 8);
+  const [showAll, setShowAll] = useState(false);
+
+  const activeSections = INSURANCE_SECTIONS.filter((s) => !s.disabled);
+  const disabledSections = INSURANCE_SECTIONS.filter((s) => s.disabled);
+  const visibleSections = showAll ? activeSections : activeSections.slice(0, 3);
 
   return (
     <div className="mx-auto w-full max-w-[1600px] space-y-8 animate-fade-in pb-12">
@@ -31,9 +38,8 @@ export default function InsurancePage({ jobs, onRefresh, onDeleteJob, onDeleteAl
             <div>
               <h1 className="text-3xl font-bold tracking-tight text-slate-100">Insurance</h1>
               <p className="mt-1 max-w-2xl text-sm text-slate-400">
-                Twelve sections — life, health, general, commercial, specialty, provider type,
-                engineering, aviation, fidelity, catastrophe, niche liability, and warranty / financial / emerging.
-                Named insureds and PII are stripped before any LLM API call on every section.
+                {activeSections.length} active sections — life, health, personal, and commercial lines.
+                Additional sections coming soon. Named insureds and PII are stripped before any LLM API call.
               </p>
             </div>
           </div>
@@ -45,18 +51,20 @@ export default function InsurancePage({ jobs, onRefresh, onDeleteJob, onDeleteAl
 
       <section>
         <div className="flex items-end justify-between gap-3">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400">12 sections</h2>
-          <p className="text-xs text-slate-500">{INSURANCE_SECTIONS.length} families · pick a section to underwrite</p>
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
+            {activeSections.length} active sections
+          </h2>
+          <p className="text-xs text-slate-500">{activeSections.length} active · pick a section to underwrite</p>
         </div>
         <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {INSURANCE_SECTIONS.map((section) => {
+          {visibleSections.map((section) => {
             const Icon = ICONS[section.icon] || Shield;
             const accent = insuranceSectionAccent(section.accent);
             return (
               <Link
                 key={section.id}
-                to={`/insurance/sections/${section.id}`}
-                className={`group glass-card block p-5 transition hover:ring-1 ${accent.ring}`}
+                to={section.disabled ? undefined : `/insurance/sections/${section.id}`}
+                className={`group glass-card block p-5 transition ${section.disabled ? 'pointer-events-none opacity-50' : `hover:ring-1 ${accent.ring}`}`}
               >
                 <div className="flex items-start gap-3">
                   <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${accent.iconBg}`}>
@@ -71,7 +79,7 @@ export default function InsurancePage({ jobs, onRefresh, onDeleteJob, onDeleteAl
                           ? 'bg-emerald-500/15 text-emerald-400'
                           : 'bg-amber-500/15 text-amber-400'
                       }`}>
-                        {section.status === 'live' ? 'Live' : 'Catalog'}
+                        {section.disabled ? 'Coming soon' : section.status === 'live' ? 'Live' : 'Catalog'}
                       </span>
                     </div>
                     <p className="mt-1.5 text-xs leading-relaxed text-slate-400">{section.summary}</p>
@@ -92,13 +100,43 @@ export default function InsurancePage({ jobs, onRefresh, onDeleteJob, onDeleteAl
                   ) : null}
                 </ul>
                 <p className={`mt-4 inline-flex items-center gap-1 text-sm font-medium ${accent.tag} group-hover:gap-2`}>
-                  Open section <ArrowRight className="h-4 w-4" />
+                  {section.disabled ? 'Coming soon' : <>Open section <ArrowRight className="h-4 w-4" /></>}
                 </p>
               </Link>
             );
           })}
         </div>
+        {activeSections.length > 3 && !showAll && (
+          <button
+            type="button"
+            onClick={() => setShowAll(true)}
+            className="mt-4 flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-200 transition"
+          >
+            <ChevronDown className="h-3.5 w-3.5" />
+            Show all {activeSections.length} active sections
+          </button>
+        )}
+        {showAll && activeSections.length > 3 && (
+          <button
+            type="button"
+            onClick={() => setShowAll(false)}
+            className="mt-4 flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-200 transition"
+          >
+            <ChevronUp className="h-3.5 w-3.5" />
+            Show fewer
+          </button>
+        )}
       </section>
+
+      {disabledSections.length > 0 && (
+        <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3">
+          <p className="text-sm text-amber-200">
+            <span className="font-semibold">Customized panels available.</span>{' '}
+            {disabledSections.length} additional sections are coming soon. Need a specific line now?{' '}
+            <span className="text-amber-300 underline">Request access</span> and we'll activate it for your account.
+          </p>
+        </div>
+      )}
 
       <section className="glass-card overflow-hidden">
         <div className="flex items-center justify-between border-b border-white/[0.06] px-5 py-4">
