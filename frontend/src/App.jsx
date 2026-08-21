@@ -332,8 +332,8 @@ function AppRoutes() {
           <Route path="line-uw" element={<Protected onLogin={() => setLoginOpen(true)}><LineUnderwriting /></Protected>} />
           <Route path="staff-uw" element={<Protected onLogin={() => setLoginOpen(true)}><StaffUnderwriting /></Protected>} />
           <Route path="pilot" element={<Protected onLogin={() => setLoginOpen(true)}><PilotPage /></Protected>} />
-          <Route path="mortgage" element={<Protected onLogin={() => setLoginOpen(true)}><MortgagePage presets={presets} jobs={mortgageJobs} onRunDemo={runDemo} onOpenJob={openJob} onRunConnect={runMortgageConnect} onSubmit={submitMortgage} /></Protected>} />
-          <Route path="lending" element={<Protected onLogin={() => setLoginOpen(true)}><LendingPage presets={presets} demoResult={lendingDemoResult} onRunDemo={runDemo} /></Protected>} />
+          <Route path="mortgage" element={<Navigate to="/" replace />} />
+          <Route path="lending" element={<Navigate to="/" replace />} />
           <Route path="workflow" element={<Protected onLogin={() => setLoginOpen(true)}><WorkflowPage pending={pending} onRefresh={loadOverview} onOpenJob={openJob} authorityData={authorityData} /></Protected>} />
           <Route path="uw-workbench" element={<Protected onLogin={() => setLoginOpen(true)}><UWWorkbench onOpenJob={openJob} authorityData={authorityData} onRefresh={refreshAll} /></Protected>} />
           <Route path="uw-dashboard" element={<Protected onLogin={() => setLoginOpen(true)}><UWDashboard onOpenJob={openJob} /></Protected>} />

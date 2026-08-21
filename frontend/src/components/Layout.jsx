@@ -41,8 +41,8 @@ const nav = [
     ],
   },
   { section: 'Mortgage & Lending' },
-  { to: '/mortgage', icon: Home, label: 'Mortgage', color: 'text-mortgage' },
-  { to: '/lending', icon: Wallet, label: 'Lending', color: 'text-lending' },
+  { to: '/mortgage', icon: Home, label: 'Mortgage', color: 'text-mortgage', disabled: true, tag: 'Soon' },
+  { to: '/lending', icon: Wallet, label: 'Lending', color: 'text-lending', disabled: true, tag: 'Soon' },
   { section: 'UW Operations' },
   {
     to: '/uw-dashboard',
@@ -317,6 +317,23 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
 
     const Icon = item.icon;
     const isProtected = item.to !== '/' && item.to !== '/system' && !user;
+    if (item.disabled) {
+      return (
+        <div
+          key={item.to}
+          className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-slate-600 opacity-50 pointer-events-none"
+          title="Coming soon"
+        >
+          <Icon className={`h-[18px] w-[18px] ${item.color || ''}`} />
+          <span className="flex-1">{item.label}</span>
+          {item.tag && (
+            <span className="rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-amber-500/60">
+              {item.tag}
+            </span>
+          )}
+        </div>
+      );
+    }
     return (
       <NavLink
         key={item.to}
