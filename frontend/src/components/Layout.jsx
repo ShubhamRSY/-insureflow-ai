@@ -13,10 +13,6 @@ import ThemeToggle from './ThemeToggle';
 import StateSelector from './StateSelector';
 import ErrorBoundary from './ErrorBoundary';
 
-const SECTION_DOT = Object.fromEntries(
-  INSURANCE_SECTIONS.map((section) => [section.id, insuranceSectionAccent(section.accent).dot]),
-);
-
 const nav = [
   { to: '/', icon: LayoutDashboard, label: 'Overview' },
   { to: '/system', icon: Activity, label: 'System Health' },
@@ -151,7 +147,7 @@ const CRUMBS = [
   { prefix: '/insurance/sections', labels: [{ text: 'Insurance', to: '/insurance' }, 'Section'] },
   { prefix: '/insurance/general', labels: [{ text: 'Insurance', to: '/insurance' }, 'Personal Lines'] },
   { prefix: '/insurance/health', labels: [{ text: 'Insurance', to: '/insurance' }, 'Health Insurance'] },
-  { prefix: '/insurance/life', labels: ['Life Insurance'] },
+  { prefix: '/insurance/life', labels: [{ text: 'Insurance', to: '/insurance' }, 'Life Insurance'] },
   { prefix: '/insurance/commercial', labels: [{ text: 'Insurance', to: '/insurance' }, 'Commercial Lines'] },
   { prefix: '/insurance/', labels: [{ text: 'Insurance', to: '/insurance' }] },
   { prefix: '/insurance', labels: ['Insurance'] },
@@ -288,11 +284,6 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
                     onClick={() => setMobileOpen(false)}
                     className={({ isActive }) => `nav-link ${isActive ? 'nav-link-active' : ''}`}
                   >
-                    <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${
-                      child.sectionId
-                        ? SECTION_DOT[child.sectionId]
-                        : ((child.to === '/insurance' ? pathname === '/insurance' : pathname.startsWith(child.to)) ? 'bg-brand' : 'bg-slate-600')
-                    }`} />
                     <span className={`flex-1 ${child.sectionId ? insuranceSectionAccent(INSURANCE_SECTIONS.find((s) => s.id === child.sectionId)?.accent).tag : ''}`}>{child.label}</span>
                     {child.tag && (
                       <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
