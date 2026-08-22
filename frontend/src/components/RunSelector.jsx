@@ -342,7 +342,7 @@ export default function RunSelector({
   const companySelected = companyId || companyName;
   const lineSelected = useCommercialPicker
     ? isCommercialSelectionComplete(commercialSelection)
-    : !!activeProduct;
+    : !!activeProduct || (tab === 'sample' && !!dataId);
 
   const confirmationText = `${companyName || companyId || 'Any company'} · ${useCommercialPicker ? (commercialSelection?.insurance_line || commercialSelection?.productName || 'Any line') : (activeProduct || 'Any line')}`;
 
@@ -403,7 +403,7 @@ export default function RunSelector({
             {guidedStep === 2 ? (
               <div className="space-y-3">
                 <div className="flex gap-1 rounded-lg bg-surface/60 p-0.5">
-                  {visibleTabs.filter((t) => t.id !== 'sample').map((t) => (
+                  {visibleTabs.map((t) => (
                     <button key={t.id} type="button" onClick={() => { setTab(t.id); setError(''); setWarning(''); }}
                       className={`rounded-md px-3 py-1.5 text-xs font-medium transition ${
                         tab === t.id ? 'bg-brand/15 text-brand ring-1 ring-brand/25' : 'text-slate-500 hover:text-slate-300'
@@ -440,6 +440,40 @@ export default function RunSelector({
                   />
                 )}
 
+                {tab === 'sample' && (
+                  <div className="space-y-3">
+                    {sampleList.length === 0 ? (
+                      <div className="rounded-xl border border-dashed border-white/[0.12] bg-surface/30 px-4 py-5 text-center">
+                        <p className="text-sm font-medium text-slate-300">
+                          {vertical === 'insurance' ? `No demo case for ${insuranceLineLabel(activeProduct)} yet — coming soon.` : 'No sample data sets available.'}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-400">Upload files in the Files tab or connect a source above.</p>
+                      </div>
+                    ) : (
+                      <>
+                        <select value={dataId} onChange={(e) => setDataId(e.target.value)} className="input-field w-full text-xs">
+                          <option value="">Choose a sample data set…</option>
+                          {sampleList.map((s) => (
+                            <option key={s.id} value={s.id}>
+                              {s.name} — {insuranceLineLabel(s.insurance_line || s.product_line || s.product_type || 'commercial')}
+                            </option>
+                          ))}
+                        </select>
+                        {dataId && <p className="text-xs text-slate-400">{sampleList.find((s) => s.id === dataId)?.description}</p>}
+                        <div className="flex justify-end">
+                          <Hint text={UI_HINTS.runSample}>
+                            <button type="button" onClick={runSample} disabled={running || !dataId}
+                              className="btn-primary btn-sm text-xs disabled:opacity-40">
+                              {running ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3 w-3" />}
+                              Run sample
+                            </button>
+                          </Hint>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+
                 {useCommercialPicker ? (
                   <CommercialLinePicker
                     taxonomy={commercialTaxonomy}
@@ -473,10 +507,10 @@ export default function RunSelector({
           <div className={`rounded-xl border p-4 transition-colors ${guidedStep === 3 ? 'border-brand/30 bg-brand/5' : 'border-white/[0.06] bg-surface/30'}`}>
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">3. Run pipeline</p>
             <p className="text-xs text-slate-300 mb-3">Pipeline will run as <span className="font-medium text-white">{confirmationText}</span></p>
-            {files.length === 0 && (
+            {files.length === 0 && tab !== 'sample' && (
               <div className="mb-3 flex items-center gap-2 rounded-lg bg-amber-500/10 border border-amber-500/20 px-3 py-2.5">
                 <AlertTriangle className="h-4 w-4 shrink-0 text-amber-400" />
-                <p className="text-xs text-amber-200">No files attached. Go back to step 2 to upload files or connect a data source before running the pipeline.</p>
+                <p className="text-xs text-amber-200">No files attached. Go back to step 2 to upload files, connect a data source, or pick a sample dataset.</p>
               </div>
             )}
             <div className="flex items-center justify-between">
@@ -484,10 +518,10 @@ export default function RunSelector({
                 <HintCheckbox hint={UI_HINTS.llmExtraction} label="LLM extraction" checked={useLlm} onChange={(e) => setUseLlm(e.target.checked)} />
               </div>
               <Hint text={UI_HINTS.runPipeline}>
-                <button type="button" onClick={runFiles} disabled={running || !files.length}
+                <button type="button" onClick={tab === 'sample' && dataId ? runSample : runFiles} disabled={running || (tab !== 'sample' && !files.length) || (tab === 'sample' && !dataId)}
                   className="btn-primary btn-sm text-xs disabled:opacity-40">
                   {running ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3 w-3" />}
-                  Run pipeline{files.length ? ` (${files.length})` : ''}
+                  {tab === 'sample' ? 'Run sample' : `Run pipeline${files.length ? ` (${files.length})` : ''}`}
                 </button>
               </Hint>
             </div>
