@@ -69,14 +69,14 @@ export function Collapsible({ title, defaultOpen = false, children, badge }) {
 function FindingCard({ finding, compact = false }) {
   const sev = safeLower(finding?.severity, 'moderate');
   return (
-    <div className={`flex items-start gap-2.5 rounded-lg border border-white/[0.04] bg-surface/40 ${compact ? 'p-2' : 'p-3'}`}>
+    <div className={`flex items-start gap-2.5 rounded-lg border border-white/[0.04] bg-surface/40 p-3`}>
       <span className={`mt-0.5 shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ring-1 ring-inset ${SEV_COLORS[sev] || SEV_COLORS.moderate}`}>
         {sev}
       </span>
-      <div className="min-w-0">
-        <p className={`font-medium text-slate-200 ${compact ? 'text-xs' : 'text-sm'}`}>{displayText(finding?.title, 'Finding')}</p>
-        {finding?.description && !compact && (
-          <p className="mt-0.5 text-xs leading-relaxed text-slate-400">{displayText(finding.description)}</p>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-medium text-slate-200">{displayText(finding?.title, 'Finding')}</p>
+        {finding?.description && (
+          <p className="mt-1 text-xs leading-relaxed text-slate-400">{displayText(finding.description)}</p>
         )}
       </div>
     </div>
@@ -97,13 +97,21 @@ function InlineFindings({ findings, maxShow = 4 }) {
   return (
     <div className="space-y-2">
       {shown.map((f, i) => (
-        <FindingCard key={f.finding_id || i} finding={f} compact />
+        <FindingCard key={f.finding_id || i} finding={f} />
       ))}
       {remaining > 0 && (
-        <p className="text-xs text-slate-500">+ {remaining} more finding{remaining > 1 ? 's' : ''}</p>
+        <p className="text-xs text-slate-500">+ {remaining} more finding{remaining > 1 ? 's' : ''} — see All Key Findings below</p>
       )}
     </div>
   );
+}
+
+function cleanMemoText(text) {
+  if (!text) return '';
+  return text
+    .replace(/\[(?:CRITICAL|HIGH|MODERATE|LOW|INFO)\]\s*/g, '')
+    .replace(/Risk score:\s*\d+\/100\s*·\s*\d+ findings?\s*\([^)]*\)\s*/g, '')
+    .trim();
 }
 
 export default function MemoReportView({ job }) {
@@ -226,11 +234,11 @@ export default function MemoReportView({ job }) {
         </div>
       )}
 
-      {/* Memo Text — clean version without the inline findings we already showed */}
+      {/* Memo Text — clean version */}
       {memoText ? (
         <Collapsible title="Full Memo" badge="text">
           <div className="rounded-lg border border-white/[0.04] bg-black/20 p-4">
-            <pre className="whitespace-pre-wrap font-sans text-[13px] leading-relaxed text-slate-300">{String(memoText)}</pre>
+            <pre className="whitespace-pre-wrap font-sans text-[13px] leading-relaxed text-slate-300">{cleanMemoText(memoText)}</pre>
           </div>
         </Collapsible>
       ) : null}

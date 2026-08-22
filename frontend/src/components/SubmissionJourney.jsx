@@ -50,8 +50,105 @@ function Section({ title, icon: Icon, children, defaultOpen = true }) {
   );
 }
 
-function PipelineTimeline({ stages, processing, currentStage, expandedStage, onToggleStage }) {
+function PipelineTimeline({ stages, processing, currentStage, expandedStage, onToggleStage, job }) {
   const list = asList(stages);
+  const r = job?.results || {};
+  const memo = r.memo || {};
+
+  function getStageDetail(stageId) {
+    const docs = asList(job?.documents || r.documents || []);
+    const filenames = docs.map((d) => d.filename || d.name || '').filter(Boolean);
+    switch (stageId) {
+      case 'intake':
+        return {
+          title: 'Intake — Documents Received',
+          lines: [
+            `${r.document_count ?? filenames.length ?? 0} document(s) ingested`,
+            r.ocr_documents ? `${r.ocr_documents} document(s) OCR-processed` : null,
+            filenames.length > 0 ? `Files: ${filenames.join(', ')}` : null,
+            `Bundle: ${r.bundle_id || '—'}`,
+          ].filter(Boolean),
+        };
+      case 'triage':
+        return {
+          title: 'Triage — Priority Scoring',
+          lines: [
+            `Priority score: ${r.triage_score != null ? `${Number(r.triage_score).toFixed(0)}/100` : '—'}`,
+            `Priority level: ${r.triage_priority || '—'}`,
+            r.document_checklist?.lob ? `Line of business: ${r.document_checklist.lob}` : null,
+            r.document_checklist?.completeness_pct != null ? `Package completeness: ${Math.round(r.document_checklist.completeness_pct > 1 ? r.document_checklist.completeness_pct : r.document_checklist.completeness_pct * 100)}%` : null,
+            (r.document_checklist?.missing_documents || []).length > 0 ? `Missing: ${(r.document_checklist.missing_documents || []).join(', ')}` : null,
+          ].filter(Boolean),
+        };
+      case 'appetite':
+        return {
+          title: 'Appetite Filter',
+          lines: [
+            `Result: ${r.appetite_filter_passed === false ? 'Outside appetite' : r.appetite_needs_uw_referral ? 'Referral required' : 'Within appetite'}`,
+            r.appetite_reason ? `Reason: ${r.appetite_reason}` : null,
+          ].filter(Boolean),
+        };
+      case 'parse':
+        return {
+          title: 'Document Parsing',
+          lines: [
+            `${r.document_count ?? 0} document(s) parsed`,
+            r.ocr_documents ? `${r.ocr_documents} OCR-processed` : null,
+            `Structured data: ${r.structured_fields_extracted ?? 'extracted'}`,
+            memo.insured_name ? `Insured: ${memo.insured_name}` : null,
+          ].filter(Boolean),
+        };
+      case 'verify':
+        return {
+          title: 'Verification & Oracle Checks',
+          lines: [
+            `${r.oracle_findings_count ?? 0} oracle check(s)`,
+            r.ofac_cleared ? `OFAC: ${r.ofac_cleared ? 'Cleared' : 'Flagged'}` : null,
+            memo.insured_name ? `Insured identity: ${memo.insured_name}` : null,
+            r.life_bureau_findings ? `Bureau findings: ${r.life_bureau_findings}` : null,
+          ].filter(Boolean),
+        };
+      case 'reconcile':
+        return {
+          title: 'Reconciliation',
+          lines: [
+            r.reconciliation?.match_rate != null ? `Match rate: ${Math.round(r.reconciliation.match_rate * 100)}%` : null,
+            `${r.reconciliation_discrepancies ?? 0} conflict(s)`,
+            r.reconciliation?.overall_status ? `Status: ${r.reconciliation.overall_status}` : null,
+          ].filter(Boolean),
+        };
+      case 'analyze':
+        return {
+          title: 'Risk Analysis & Scoring',
+          lines: [
+            memo.overall_risk_score != null ? `Risk score: ${Math.round(Number(memo.overall_risk_score) * 100)}/100` : null,
+            memo.overall_risk_severity ? `Severity: ${memo.overall_risk_severity}` : null,
+            `${(memo.key_findings || []).length} key finding(s)`,
+            memo.decision ? `Decision: ${memo.decision}` : null,
+          ].filter(Boolean),
+        };
+      case 'price':
+        return {
+          title: 'Pricing',
+          lines: [
+            r.quote?.adjusted_premium != null ? `Indicated premium: $${Math.round(r.quote.adjusted_premium).toLocaleString()}` : null,
+            r.quote?.base_premium != null ? `Base premium: $${Math.round(r.quote.base_premium).toLocaleString()}` : null,
+            r.insurance_line ? `Line: ${r.insurance_line}` : null,
+          ].filter(Boolean),
+        };
+      case 'decision':
+        return {
+          title: 'Final Decision',
+          lines: [
+            `Decision: ${(r.ai_decision || memo.decision || 'pending').toString().toUpperCase()}`,
+            memo.human_review_required ? 'Human review required' : null,
+            ...(memo.human_review_reasons || []).slice(0, 5).map((r) => `Reason: ${r}`),
+          ].filter(Boolean),
+        };
+      default:
+        return { title: stageId, lines: [stage.detail || 'No details available'] };
+    }
+  }
   return (
     <div className="space-y-2">
       <div className="overflow-x-auto">
@@ -89,15 +186,23 @@ function PipelineTimeline({ stages, processing, currentStage, expandedStage, onT
       {expandedStage && (() => {
         const stage = list.find((s) => s.id === expandedStage);
         if (!stage) return null;
+        const detail = getStageDetail(expandedStage);
         return (
           <div className="rounded-lg border border-brand/20 bg-brand/5 p-4 mt-1">
-            <div className="flex items-center justify-between mb-2">
-              <h4 className="text-sm font-semibold text-slate-200">{displayText(stage.label)}</h4>
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-sm font-semibold text-slate-200">{detail.title}</h4>
               <button type="button" onClick={() => onToggleStage(null)} className="text-xs text-slate-500 hover:text-slate-300">Close</button>
             </div>
-            <p className="text-sm text-slate-400">{displayText(stage.detail, 'No additional details')}</p>
+            <div className="space-y-1.5">
+              {detail.lines.map((line, i) => (
+                <div key={i} className="flex items-start gap-2 text-sm">
+                  <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-brand/60" />
+                  <span className="text-slate-300">{line}</span>
+                </div>
+              ))}
+            </div>
             {stage.findings > 0 && (
-              <p className="mt-1 text-xs text-slate-500">{stage.findings} finding{stage.findings > 1 ? 's' : ''} identified</p>
+              <p className="mt-3 text-xs text-slate-500 border-t border-white/[0.04] pt-2">{stage.findings} finding{stage.findings > 1 ? 's' : ''} identified in this stage</p>
             )}
             {stage.duration && (
               <p className="mt-1 text-xs text-slate-500">Completed in {stage.duration}</p>
@@ -127,13 +232,13 @@ function groupStagesByPhase(stages = []) {
   })).filter((phase) => phase.stages.length > 0);
 }
 
-function PhaseStrip({ phases, processing, currentStage, expandedStage, onToggleStage }) {
+function PhaseStrip({ phases, processing, currentStage, expandedStage, onToggleStage, job }) {
   return (
     <div className="space-y-3">
       {phases.map((phase) => (
         <div key={phase.label}>
           <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-slate-400">{phase.label}</p>
-          <PipelineTimeline stages={phase.stages} processing={processing} currentStage={currentStage} expandedStage={expandedStage} onToggleStage={onToggleStage} />
+          <PipelineTimeline stages={phase.stages} processing={processing} currentStage={currentStage} expandedStage={expandedStage} onToggleStage={onToggleStage} job={job} />
         </div>
       ))}
     </div>
@@ -776,7 +881,7 @@ export default function SubmissionJourney({ job }) {
       />
 
       <Section title="Pipeline" icon={ClipboardCheck}>
-        <PhaseStrip phases={groupStagesByPhase(ctx.stages)} processing={ctx.processing} currentStage={ctx.currentStage} expandedStage={expandedStage} onToggleStage={(id) => setExpandedStage((prev) => prev === id ? null : id)} />
+        <PhaseStrip phases={groupStagesByPhase(ctx.stages)} processing={ctx.processing} currentStage={ctx.currentStage} expandedStage={expandedStage} onToggleStage={(id) => setExpandedStage((prev) => prev === id ? null : id)} job={job} />
       </Section>
 
       <Section title="Human Checkpoints" icon={Users} defaultOpen={asList(checkpoints).length > 0}>
