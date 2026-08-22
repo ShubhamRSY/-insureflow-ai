@@ -85,46 +85,58 @@ function FindingCard({ finding }) {
 
 export default function MemoReportView({ job }) {
   const results = job?.results || {};
+  
+  // results.memo is memo.model_dump() — has summary, key_findings, conditions, etc.
   const memoObj = results.memo && typeof results.memo === 'object' ? results.memo : {};
-  const memoText = results.memo_text || (typeof results.memo === 'string' ? results.memo : '') || '';
+  
+  // Memo text: prefer memo.summary (InsurancePipeline), fallback to results.memo_text (life pipeline), then memo_text string
+  const memoText = memoObj.summary || results.memo_text || (typeof results.memo === 'string' ? results.memo : '');
+  
+  // Quote and worksheet data
   const quote = results.quote_full || {};
   const worksheet = results.uw_worksheet || {};
-  const decision = safeLower(results.decision || memoObj.decision, 'refer');
+  
+  // Decision and name from memo object
+  const decision = safeLower(results.ai_decision || results.outcome || memoObj.decision, 'refer');
   const insuredName = displayText(results.insured_name || memoObj.insured_name);
   const bundleId = results.bundle_id || job?.bundle_id || '';
-
-  // Face amount from multiple sources
-  const faceAmount = results.face_amount || memoObj.face_amount || worksheet.face_amount || 0;
-
+  
+  // Face amount / TIV from multiple sources
+  const faceAmount = results.tiv || results.face_amount || memoObj.face_amount || (quote.indicated_terms || {}).limit || 0;
+  
   // Premium from quote or worksheet
-  const premium = quote.indicated_premium || worksheet.indicated_premium || 0;
-
-  // UW class from quote
-  const uwClass = quote.medical?.underwriting_class || worksheet.uw_class || '';
-
+  const premium = (quote.indicated_terms || {}).premium || quote.adjusted_premium || worksheet.indicated_terms?.premium || 0;
+  
+  // UW class from medical metadata
+  const uwClass = (quote.medical || {}).underwriting_class || worksheet.uw_class || '';
+  
   // Premium buildup from worksheet
-  const buildup = worksheet.premium_buildup || quote.components || [];
-
-  // Sort findings by severity
+  const buildup = worksheet.premium_buildup || [];
+  
+  // Fallback: if no worksheet buildup, try quote_full.metadata.components
+  const quoteComponents = (quote.metadata || {}).components || [];
+  const premiumSteps = buildup.length > 0 ? buildup : quoteComponents;
+  
+  // Sort findings by severity (critical → high → moderate → low)
   const allFindings = Array.isArray(memoObj.key_findings) ? memoObj.key_findings : [];
   const sortedFindings = [...allFindings].sort((a, b) => {
     const sa = SEV_ORDER[safeLower(a?.severity, 'moderate')] ?? 2;
     const sb = SEV_ORDER[safeLower(b?.severity, 'moderate')] ?? 2;
     return sa - sb;
   });
-
+  
   const counts = { critical: 0, high: 0, moderate: 0, low: 0 };
   allFindings.forEach((f) => {
     const s = safeLower(f?.severity, 'moderate');
     if (counts[s] != null) counts[s] += 1;
   });
-
+  
   const riskPct = memoObj.overall_risk_score != null
     ? Math.round(Number(memoObj.overall_risk_score) * 100)
     : null;
-
+  
   const conditions = memoObj.conditions || [];
-
+  
   return (
     <div className="space-y-5">
       {/* Decision Hero */}
@@ -161,7 +173,7 @@ export default function MemoReportView({ job }) {
           )}
         </div>
       </div>
-
+      
       {/* Findings Summary Badges */}
       {allFindings.length > 0 && (
         <div className="flex items-center gap-3">
@@ -174,7 +186,7 @@ export default function MemoReportView({ job }) {
           </div>
         </div>
       )}
-
+      
       {/* Memo Text */}
       {memoText ? (
         <div className="rounded-2xl border border-white/[0.08] bg-surface/80 p-5">
@@ -192,7 +204,7 @@ export default function MemoReportView({ job }) {
           <p className="text-sm text-slate-500">Memo not available.</p>
         </div>
       )}
-
+      
       {/* Conditions */}
       {conditions.length > 0 && (
         <div className="rounded-xl border border-white/[0.06] bg-surface/60 p-4">
@@ -206,10 +218,10 @@ export default function MemoReportView({ job }) {
           </ul>
         </div>
       )}
-
-      {/* Premium Buildup */}
-      {buildup.length > 0 && (
-        <Collapsible title="Premium Build-up" badge={`${buildup.length} steps`}>
+      
+      {/* Premium Build-up */}
+      {premiumSteps.length > 0 && (
+        <Collapsible title="Premium Build-up" badge={`${premiumSteps.length} steps`}>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-[11px]">
               <thead>
@@ -221,7 +233,7 @@ export default function MemoReportView({ job }) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/[0.03]">
-                {buildup.map((row, i) => (
+                {premiumSteps.map((row, i) => (
                   <tr key={row.step || row.name || i} className="text-slate-300">
                     <td className="py-1.5 pr-3">{displayText(row.step || row.name)}</td>
                     <td className="py-1.5 pr-3 text-slate-500">{displayText(row.basis)}</td>
@@ -234,7 +246,7 @@ export default function MemoReportView({ job }) {
           </div>
         </Collapsible>
       )}
-
+      
       {/* Key Findings */}
       {sortedFindings.length > 0 && (
         <Collapsible title="Key Findings" badge={allFindings.length}>
