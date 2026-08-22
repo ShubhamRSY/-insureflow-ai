@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight, Info } from 'lucide-react';
 import { displayText, safeLower } from '../lib/safe';
 
 const SEV_COLORS = {
@@ -66,16 +66,16 @@ export function Collapsible({ title, defaultOpen = false, children, badge }) {
   );
 }
 
-function FindingCard({ finding }) {
+function FindingCard({ finding, compact = false }) {
   const sev = safeLower(finding?.severity, 'moderate');
   return (
-    <div className="flex items-start gap-2.5 rounded-lg border border-white/[0.04] bg-surface/40 p-3">
+    <div className={`flex items-start gap-2.5 rounded-lg border border-white/[0.04] bg-surface/40 ${compact ? 'p-2' : 'p-3'}`}>
       <span className={`mt-0.5 shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ring-1 ring-inset ${SEV_COLORS[sev] || SEV_COLORS.moderate}`}>
         {sev}
       </span>
       <div className="min-w-0">
-        <p className="text-sm font-medium text-slate-200">{displayText(finding?.title, 'Finding')}</p>
-        {finding?.description && (
+        <p className={`font-medium text-slate-200 ${compact ? 'text-xs' : 'text-sm'}`}>{displayText(finding?.title, 'Finding')}</p>
+        {finding?.description && !compact && (
           <p className="mt-0.5 text-xs leading-relaxed text-slate-400">{displayText(finding.description)}</p>
         )}
       </div>
@@ -83,60 +83,73 @@ function FindingCard({ finding }) {
   );
 }
 
+function InlineFindings({ findings, maxShow = 4 }) {
+  const sorted = [...findings].sort((a, b) => {
+    const sa = SEV_ORDER[safeLower(a?.severity, 'moderate')] ?? 2;
+    const sb = SEV_ORDER[safeLower(b?.severity, 'moderate')] ?? 2;
+    return sa - sb;
+  });
+  const shown = sorted.slice(0, maxShow);
+  const remaining = sorted.length - maxShow;
+
+  if (!shown.length) return null;
+
+  return (
+    <div className="space-y-2">
+      {shown.map((f, i) => (
+        <FindingCard key={f.finding_id || i} finding={f} compact />
+      ))}
+      {remaining > 0 && (
+        <p className="text-xs text-slate-500">+ {remaining} more finding{remaining > 1 ? 's' : ''}</p>
+      )}
+    </div>
+  );
+}
+
 export default function MemoReportView({ job }) {
   const results = job?.results || {};
-  
-  // results.memo is memo.model_dump() — has summary, key_findings, conditions, etc.
   const memoObj = results.memo && typeof results.memo === 'object' ? results.memo : {};
-  
-  // Memo text: prefer memo.summary (InsurancePipeline), fallback to results.memo_text (life pipeline), then memo_text string
-  const memoText = memoObj.summary || results.memo_text || (typeof results.memo === 'string' ? results.memo : '');
-  
-  // Quote and worksheet data
+  const memoText = memoObj.summary || results.memo_text || '';
   const quote = results.quote_full || {};
   const worksheet = results.uw_worksheet || {};
-  
-  // Decision and name from memo object
+
   const decision = safeLower(results.ai_decision || results.outcome || memoObj.decision, 'refer');
   const insuredName = displayText(results.insured_name || memoObj.insured_name);
   const bundleId = results.bundle_id || job?.bundle_id || '';
-  
-  // Face amount / TIV from multiple sources
+
   const faceAmount = results.tiv || results.face_amount || memoObj.face_amount || (quote.indicated_terms || {}).limit || 0;
-  
-  // Premium from quote or worksheet
   const premium = (quote.indicated_terms || {}).premium || quote.adjusted_premium || worksheet.indicated_terms?.premium || 0;
-  
-  // UW class from medical metadata
   const uwClass = (quote.medical || {}).underwriting_class || worksheet.uw_class || '';
-  
-  // Premium buildup from worksheet
+
   const buildup = worksheet.premium_buildup || [];
-  
-  // Fallback: if no worksheet buildup, try quote_full.metadata.components
   const quoteComponents = (quote.metadata || {}).components || [];
   const premiumSteps = buildup.length > 0 ? buildup : quoteComponents;
-  
-  // Sort findings by severity (critical → high → moderate → low)
+
   const allFindings = Array.isArray(memoObj.key_findings) ? memoObj.key_findings : [];
   const sortedFindings = [...allFindings].sort((a, b) => {
     const sa = SEV_ORDER[safeLower(a?.severity, 'moderate')] ?? 2;
     const sb = SEV_ORDER[safeLower(b?.severity, 'moderate')] ?? 2;
     return sa - sb;
   });
-  
+
   const counts = { critical: 0, high: 0, moderate: 0, low: 0 };
   allFindings.forEach((f) => {
     const s = safeLower(f?.severity, 'moderate');
     if (counts[s] != null) counts[s] += 1;
   });
-  
+
   const riskPct = memoObj.overall_risk_score != null
     ? Math.round(Number(memoObj.overall_risk_score) * 100)
     : null;
-  
+
   const conditions = memoObj.conditions || [];
-  
+
+  // Extract "What to do next" from memo text (lines starting with digits)
+  const memoLines = memoText.split('\n');
+  const whyDecisionIdx = memoLines.findIndex((l) => l.trim() === 'Why this decision');
+  const whatToDoIdx = memoLines.findIndex((l) => l.trim() === 'What to do next');
+  const nextSteps = whatToDoIdx >= 0 ? memoLines.slice(whatToDoIdx).join('\n') : '';
+
   return (
     <div className="space-y-5">
       {/* Decision Hero */}
@@ -173,52 +186,55 @@ export default function MemoReportView({ job }) {
           )}
         </div>
       </div>
-      
-      {/* Findings Summary Badges */}
+
+      {/* Why This Decision — colored findings */}
       {allFindings.length > 0 && (
-        <div className="flex items-center gap-3">
-          <div className="flex gap-2">
-            {Object.entries(counts).map(([sev, n]) => n > 0 && (
-              <span key={sev} className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase ring-1 ring-inset ${SEV_COLORS[sev]}`}>
-                {n} {sev}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-      
-      {/* Memo Text */}
-      {memoText ? (
         <div className="rounded-2xl border border-white/[0.08] bg-surface/80 p-5">
-          <div className="mb-3 border-b border-white/[0.06] pb-3">
-            <h2 className="text-base font-bold tracking-tight text-slate-100">Underwriting Evaluation Memo</h2>
-            <div className="mt-1.5 flex flex-wrap gap-x-5 text-[11px] text-slate-500">
-              <span>Case: <span className="font-mono font-semibold text-slate-300">{bundleId}</span></span>
-              {faceAmount > 0 && <span>Face: <span className="font-semibold text-slate-300">{fmtCurrency(faceAmount)}</span></span>}
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-base font-bold tracking-tight text-slate-100">Why This Decision</h2>
+            <div className="flex gap-2">
+              {Object.entries(counts).map(([sev, n]) => n > 0 && (
+                <span key={sev} className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ring-1 ring-inset ${SEV_COLORS[sev]}`}>
+                  {n} {sev}
+                </span>
+              ))}
             </div>
           </div>
-          <pre className="whitespace-pre-wrap font-sans text-[13px] leading-relaxed text-slate-300">{String(memoText)}</pre>
-        </div>
-      ) : (
-        <div className="rounded-2xl border border-white/[0.08] bg-surface/80 p-6 text-center">
-          <p className="text-sm text-slate-500">Memo not available.</p>
+          <InlineFindings findings={allFindings} />
         </div>
       )}
-      
+
+      {/* Next Steps — from memo text */}
+      {nextSteps && (
+        <div className="rounded-xl border border-sky-500/20 bg-sky-500/5 p-4">
+          <h4 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-sky-400">What To Do Next</h4>
+          <pre className="whitespace-pre-wrap font-sans text-[13px] leading-relaxed text-slate-300">{nextSteps}</pre>
+        </div>
+      )}
+
       {/* Conditions */}
       {conditions.length > 0 && (
-        <div className="rounded-xl border border-white/[0.06] bg-surface/60 p-4">
-          <h4 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">Conditions</h4>
+        <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+          <h4 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-amber-400">Conditions</h4>
           <ul className="space-y-1.5">
             {conditions.map((c, i) => (
               <li key={i} className="flex gap-2 text-sm text-slate-300">
-                <span className="text-brand shrink-0">•</span>{displayText(c)}
+                <span className="text-amber-400 shrink-0">•</span>{displayText(c)}
               </li>
             ))}
           </ul>
         </div>
       )}
-      
+
+      {/* Memo Text — clean version without the inline findings we already showed */}
+      {memoText ? (
+        <Collapsible title="Full Memo" badge="text">
+          <div className="rounded-lg border border-white/[0.04] bg-black/20 p-4">
+            <pre className="whitespace-pre-wrap font-sans text-[13px] leading-relaxed text-slate-300">{String(memoText)}</pre>
+          </div>
+        </Collapsible>
+      ) : null}
+
       {/* Premium Build-up */}
       {premiumSteps.length > 0 && (
         <Collapsible title="Premium Build-up" badge={`${premiumSteps.length} steps`}>
@@ -246,10 +262,10 @@ export default function MemoReportView({ job }) {
           </div>
         </Collapsible>
       )}
-      
-      {/* Key Findings */}
+
+      {/* All Key Findings */}
       {sortedFindings.length > 0 && (
-        <Collapsible title="Key Findings" badge={allFindings.length}>
+        <Collapsible title="All Key Findings" badge={allFindings.length}>
           <div className="space-y-2">
             {sortedFindings.map((f, i) => (
               <FindingCard key={f.finding_id || i} finding={f} />

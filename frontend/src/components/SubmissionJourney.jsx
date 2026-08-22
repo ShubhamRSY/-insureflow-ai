@@ -50,31 +50,61 @@ function Section({ title, icon: Icon, children, defaultOpen = true }) {
   );
 }
 
-function PipelineTimeline({ stages, processing, currentStage }) {
+function PipelineTimeline({ stages, processing, currentStage, expandedStage, onToggleStage }) {
   const list = asList(stages);
   return (
-    <div className="overflow-x-auto">
-      <div className="flex items-stretch gap-1.5 min-w-max">
-        {list.map((stage, i) => {
-          const status = processing && currentStage === stage.id ? 'active' : stage.status;
-          const { Icon, cls } = STATUS_ICON[status] || STATUS_ICON.pending;
-          const activeCls = status === 'active' || status === 'complete' ? 'border-brand/20 bg-brand/5' : status === 'failed' ? 'border-red-500/20 bg-red-500/5' : 'border-white/[0.04] bg-surface/30';
-          return (
-            <div key={stage.id} className="flex items-stretch gap-0">
-              <div className={`flex flex-col items-center gap-1.5 rounded-lg border px-3 py-2 min-w-[110px] ${activeCls}`}>
-                <Icon className={`h-4 w-4 ${cls}`} />
-                <span className="text-sm font-semibold text-slate-200 text-center leading-tight">{displayText(stage.label)}</span>
-                <span className="text-[11px] text-slate-400 text-center leading-tight">{displayText(stage.detail)}</span>
+    <div className="space-y-2">
+      <div className="overflow-x-auto">
+        <div className="flex items-stretch gap-1.5 min-w-max">
+          {list.map((stage, i) => {
+            const status = processing && currentStage === stage.id ? 'active' : stage.status;
+            const { Icon, cls } = STATUS_ICON[status] || STATUS_ICON.pending;
+            const activeCls = status === 'active' || status === 'complete' ? 'border-brand/20 bg-brand/5' : status === 'failed' ? 'border-red-500/20 bg-red-500/5' : 'border-white/[0.04] bg-surface/30';
+            const isExpanded = expandedStage === stage.id;
+            return (
+              <div key={stage.id} className="flex items-stretch gap-0">
+                <button
+                  type="button"
+                  onClick={() => onToggleStage(stage.id)}
+                  className={`flex flex-col items-center gap-1.5 rounded-lg border px-3 py-2 min-w-[110px] text-left transition-all hover:border-brand/30 hover:bg-brand/5 cursor-pointer ${activeCls} ${isExpanded ? 'ring-1 ring-brand/40' : ''}`}
+                >
+                  <Icon className={`h-4 w-4 ${cls}`} />
+                  <span className="text-sm font-semibold text-slate-200 text-center leading-tight">{displayText(stage.label)}</span>
+                  <span className="text-[11px] text-slate-400 text-center leading-tight">{displayText(stage.detail)}</span>
+                  {stage.findings > 0 && (
+                    <span className="text-[10px] text-slate-500">{stage.findings} finding{stage.findings > 1 ? 's' : ''}</span>
+                  )}
+                </button>
+                {i < list.length - 1 && (
+                  <div className="flex items-center px-0.5">
+                    <div className="h-px w-2 bg-white/[0.08]" />
+                  </div>
+                )}
               </div>
-              {i < list.length - 1 && (
-                <div className="flex items-center px-0.5">
-                  <div className="h-px w-2 bg-white/[0.08]" />
-                </div>
-              )}
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
+      {/* Expanded stage details */}
+      {expandedStage && (() => {
+        const stage = list.find((s) => s.id === expandedStage);
+        if (!stage) return null;
+        return (
+          <div className="rounded-lg border border-brand/20 bg-brand/5 p-4 mt-1">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-sm font-semibold text-slate-200">{displayText(stage.label)}</h4>
+              <button type="button" onClick={() => onToggleStage(null)} className="text-xs text-slate-500 hover:text-slate-300">Close</button>
+            </div>
+            <p className="text-sm text-slate-400">{displayText(stage.detail, 'No additional details')}</p>
+            {stage.findings > 0 && (
+              <p className="mt-1 text-xs text-slate-500">{stage.findings} finding{stage.findings > 1 ? 's' : ''} identified</p>
+            )}
+            {stage.duration && (
+              <p className="mt-1 text-xs text-slate-500">Completed in {stage.duration}</p>
+            )}
+          </div>
+        );
+      })()}
       {processing && (
         <p className="pipeline-live mt-2 text-sm font-semibold text-brand-light">Live — {currentStage ? `Running ${currentStage}` : 'pipeline in progress'}</p>
       )}
@@ -97,13 +127,13 @@ function groupStagesByPhase(stages = []) {
   })).filter((phase) => phase.stages.length > 0);
 }
 
-function PhaseStrip({ phases, processing, currentStage }) {
+function PhaseStrip({ phases, processing, currentStage, expandedStage, onToggleStage }) {
   return (
     <div className="space-y-3">
       {phases.map((phase) => (
         <div key={phase.label}>
           <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-slate-400">{phase.label}</p>
-          <PipelineTimeline stages={phase.stages} processing={processing} currentStage={currentStage} />
+          <PipelineTimeline stages={phase.stages} processing={processing} currentStage={currentStage} expandedStage={expandedStage} onToggleStage={onToggleStage} />
         </div>
       ))}
     </div>
@@ -117,15 +147,17 @@ function completenessDisplayPct(raw) {
 }
 
 function SubmissionQuality({ quality, docQuality, onRequestDocs, requesting, brokerRequest, brokerEmail, setBrokerEmail }) {
+  const [showScoreDetail, setShowScoreDetail] = useState(false);
   const missing = asList(docQuality?.missing_documents || docQuality?.missing);
   const present = asList(docQuality?.present_documents || docQuality?.present);
   const pct = completenessDisplayPct(docQuality?.completeness_pct);
   const lob = docQuality?.lob || quality?.lob;
-  const pending = quality?.pending || quality?.score == null;
+  const pending = quality?.pending || quality.score == null;
   const shareLink = brokerRequest?.broker_status_url
     || (brokerRequest?.broker_share_token
       ? `${typeof window !== 'undefined' ? window.location.origin : ''}/dashboard/broker/status/${brokerRequest.broker_share_token}`
       : '');
+  const issues = asList(quality?.issues);
   return (
     <div className="rounded-xl bg-surface-overlay p-4 ring-1 ring-white/[0.04]">
       <div className="flex items-center justify-between gap-4">
@@ -137,7 +169,7 @@ function SubmissionQuality({ quality, docQuality, onRequestDocs, requesting, bro
               : `${lob ? `${insuranceLineLabel(lob)} package · ` : ''}Completeness, appetite fit, and data trust`}
           </p>
         </div>
-        <div className="text-right">
+        <div className="text-right relative">
           {pending ? (
             <>
               <p className="text-3xl font-bold text-slate-500">—</p>
@@ -145,8 +177,36 @@ function SubmissionQuality({ quality, docQuality, onRequestDocs, requesting, bro
             </>
           ) : (
             <>
-              <p className={`text-3xl font-bold ${quality.gradeColor}`}>{quality.grade}</p>
-              <p className="text-sm text-slate-400">{quality.score}/100</p>
+              <button
+                type="button"
+                onClick={() => setShowScoreDetail(!showScoreDetail)}
+                className="text-right group cursor-pointer"
+              >
+                <p className={`text-3xl font-bold ${quality.gradeColor} transition group-hover:opacity-80`}>{quality.grade}</p>
+                <p className="text-sm text-slate-400 group-hover:text-slate-300 transition">{quality.score}/100</p>
+              </button>
+              {showScoreDetail && (
+                <div className="absolute right-0 top-full z-50 mt-2 w-72 rounded-xl border border-white/[0.1] bg-surface-overlay p-4 shadow-xl">
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Score Breakdown</p>
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-400">Base score</span>
+                      <span className="text-slate-200">100</span>
+                    </div>
+                    {issues.map((issue, i) => (
+                      <div key={i} className="flex justify-between text-sm">
+                        <span className="text-amber-400/80 truncate max-w-[200px]">{issue}</span>
+                        <span className="text-red-400 shrink-0">−</span>
+                      </div>
+                    ))}
+                    <div className="border-t border-white/[0.06] pt-1.5 flex justify-between text-sm font-semibold">
+                      <span className="text-slate-300">Final</span>
+                      <span className={quality.gradeColor}>{quality.score}/100</span>
+                    </div>
+                  </div>
+                  <button type="button" onClick={() => setShowScoreDetail(false)} className="mt-2 text-xs text-slate-500 hover:text-slate-300">Close</button>
+                </div>
+              )}
             </>
           )}
         </div>
@@ -625,6 +685,7 @@ export default function SubmissionJourney({ job }) {
   const [brokerEmail, setBrokerEmail] = useState('');
   const [brokerRequest, setBrokerRequest] = useState(null);
   const [checkpoints, setCheckpoints] = useState(ctx.checkpoints);
+  const [expandedStage, setExpandedStage] = useState(null);
 
   useEffect(() => {
     setCheckpoints(ctx.checkpoints);
@@ -715,7 +776,7 @@ export default function SubmissionJourney({ job }) {
       />
 
       <Section title="Pipeline" icon={ClipboardCheck}>
-        <PhaseStrip phases={groupStagesByPhase(ctx.stages)} processing={ctx.processing} currentStage={ctx.currentStage} />
+        <PhaseStrip phases={groupStagesByPhase(ctx.stages)} processing={ctx.processing} currentStage={ctx.currentStage} expandedStage={expandedStage} onToggleStage={(id) => setExpandedStage((prev) => prev === id ? null : id)} />
       </Section>
 
       <Section title="Human Checkpoints" icon={Users} defaultOpen={asList(checkpoints).length > 0}>
