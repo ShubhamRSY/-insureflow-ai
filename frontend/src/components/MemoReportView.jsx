@@ -9,6 +9,8 @@ const SEV_COLORS = {
   low: 'bg-slate-500/15 text-slate-400 ring-slate-500/30',
 };
 
+const SEV_ORDER = { critical: 0, high: 1, moderate: 2, low: 3 };
+
 const DECISION_COLORS = {
   accept: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400',
   conditional_accept: 'border-amber-500/40 bg-amber-500/10 text-amber-400',
@@ -16,7 +18,33 @@ const DECISION_COLORS = {
   decline: 'border-red-500/40 bg-red-500/10 text-red-400',
 };
 
-export function Collapsible({ title, defaultOpen = false, children }) {
+const DECISION_LABELS = {
+  accept: 'Issue as Applied',
+  conditional_accept: 'Issue with Amendments',
+  refer: 'Refer for Review',
+  decline: 'Decline',
+};
+
+function fmtCurrency(v) {
+  if (!v || v === 0) return '—';
+  return `$${Math.round(v).toLocaleString()}`;
+}
+
+function fmtFactor(v) {
+  if (v == null || v === '') return '—';
+  const n = Number(v);
+  if (isNaN(n)) return String(v);
+  return n.toFixed(2);
+}
+
+function fmtPct(v) {
+  if (v == null || v === '' || v === 0) return '0.0%';
+  const n = Number(v);
+  if (isNaN(n)) return String(v);
+  return `${n.toFixed(1)}%`;
+}
+
+export function Collapsible({ title, defaultOpen = false, children, badge }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div className="rounded-xl border border-white/[0.06] bg-surface/60">
@@ -25,7 +53,12 @@ export function Collapsible({ title, defaultOpen = false, children }) {
         onClick={() => setOpen(!open)}
         className="flex w-full items-center justify-between px-4 py-3 text-left transition hover:bg-white/[0.02]"
       >
-        <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">{title}</span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">{title}</span>
+          {badge != null && (
+            <span className="rounded-full bg-brand/15 px-1.5 py-0.5 text-[9px] font-bold text-brand">{badge}</span>
+          )}
+        </div>
         {open ? <ChevronDown className="h-4 w-4 text-slate-500" /> : <ChevronRight className="h-4 w-4 text-slate-500" />}
       </button>
       {open && <div className="border-t border-white/[0.04] px-4 pb-4 pt-3">{children}</div>}
@@ -33,79 +66,19 @@ export function Collapsible({ title, defaultOpen = false, children }) {
   );
 }
 
-function MemoSection({ number, title, children }) {
+function FindingCard({ finding }) {
+  const sev = safeLower(finding?.severity, 'moderate');
   return (
-    <div className="space-y-2">
-      <h3 className="flex items-center gap-2 text-sm font-bold text-slate-100">
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand/15 text-[11px] font-bold text-brand">
-          {number}
-        </span>
-        {title}
-      </h3>
-      <div className="ml-8 space-y-1 text-sm leading-relaxed text-slate-300">{children}</div>
-    </div>
-  );
-}
-
-function MemoField({ label, value }) {
-  if (!value && value !== 0) return null;
-  return (
-    <div className="flex flex-wrap items-baseline gap-x-2">
-      <span className="text-xs font-semibold text-slate-400">{label}:</span>
-      <span className="text-sm text-slate-200">{value}</span>
-    </div>
-  );
-}
-
-function MemoRow({ children }) {
-  return <div className="flex flex-wrap gap-x-6 gap-y-1">{children}</div>;
-}
-
-function CheckItem({ checked, label }) {
-  return (
-    <div className="flex items-center gap-2">
-      <span className={`text-xs font-bold ${checked ? 'text-emerald-400' : 'text-red-400'}`}>
-        {checked ? '[X]' : '[ ]'}
+    <div className="flex items-start gap-2.5 rounded-lg border border-white/[0.04] bg-surface/40 p-3">
+      <span className={`mt-0.5 shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ring-1 ring-inset ${SEV_COLORS[sev] || SEV_COLORS.moderate}`}>
+        {sev}
       </span>
-      <span className={`text-sm ${checked ? 'text-slate-300' : 'text-slate-500'}`}>{label}</span>
-    </div>
-  );
-}
-
-function DecisionCheckboxes({ decision }) {
-  const d = safeLower(decision, 'refer');
-  return (
-    <div className="space-y-1.5">
-      <CheckItem checked={d === 'accept' || d === 'conditional_accept'} label="ISSUE AS APPLIED" />
-      <CheckItem checked={d === 'conditional_accept'} label="ISSUE WITH AMENDMENTS / RATED" />
-      <CheckItem checked={d === 'refer'} label="POSTPONE / PENDING REQUIREMENTS" />
-      <CheckItem checked={d === 'decline'} label="DECLINE" />
-    </div>
-  );
-}
-
-function PremiumTable({ components }) {
-  if (!components || !components.length) return null;
-  return (
-    <div className="overflow-hidden rounded-lg border border-white/[0.06]">
-      <table className="w-full text-xs">
-        <thead>
-          <tr className="border-b border-white/[0.06] bg-surface-overlay text-left text-[10px] uppercase tracking-wider text-slate-500">
-            <th className="px-3 py-2">Component</th>
-            <th className="px-3 py-2">Basis</th>
-            <th className="px-3 py-2 text-right">Amount</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-white/[0.04]">
-          {components.map((c, i) => (
-            <tr key={i}>
-              <td className="px-3 py-1.5 text-slate-300">{displayText(c.name)}</td>
-              <td className="px-3 py-1.5 text-slate-500">{displayText(c.basis, '—')}</td>
-              <td className="px-3 py-1.5 text-right font-mono text-slate-300">{displayText(c.amount)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="min-w-0">
+        <p className="text-sm font-medium text-slate-200">{displayText(finding?.title, 'Finding')}</p>
+        {finding?.description && (
+          <p className="mt-0.5 text-xs leading-relaxed text-slate-400">{displayText(finding.description)}</p>
+        )}
+      </div>
     </div>
   );
 }
@@ -113,13 +86,33 @@ function PremiumTable({ components }) {
 export default function MemoReportView({ job }) {
   const results = job?.results || {};
   const memoObj = results.memo && typeof results.memo === 'object' ? results.memo : {};
-  const memoText = results.memo_text || (typeof results.memo === 'string' ? results.memo : '') || memoObj.summary || '';
+  const memoText = results.memo_text || (typeof results.memo === 'string' ? results.memo : '') || '';
   const quote = results.quote_full || {};
+  const worksheet = results.uw_worksheet || {};
   const decision = safeLower(results.decision || memoObj.decision, 'refer');
   const insuredName = displayText(results.insured_name || memoObj.insured_name);
   const bundleId = results.bundle_id || job?.bundle_id || '';
 
+  // Face amount from multiple sources
+  const faceAmount = results.face_amount || memoObj.face_amount || worksheet.face_amount || 0;
+
+  // Premium from quote or worksheet
+  const premium = quote.indicated_premium || worksheet.indicated_premium || 0;
+
+  // UW class from quote
+  const uwClass = quote.medical?.underwriting_class || worksheet.uw_class || '';
+
+  // Premium buildup from worksheet
+  const buildup = worksheet.premium_buildup || quote.components || [];
+
+  // Sort findings by severity
   const allFindings = Array.isArray(memoObj.key_findings) ? memoObj.key_findings : [];
+  const sortedFindings = [...allFindings].sort((a, b) => {
+    const sa = SEV_ORDER[safeLower(a?.severity, 'moderate')] ?? 2;
+    const sb = SEV_ORDER[safeLower(b?.severity, 'moderate')] ?? 2;
+    return sa - sb;
+  });
+
   const counts = { critical: 0, high: 0, moderate: 0, low: 0 };
   allFindings.forEach((f) => {
     const s = safeLower(f?.severity, 'moderate');
@@ -130,47 +123,51 @@ export default function MemoReportView({ job }) {
     ? Math.round(Number(memoObj.overall_risk_score) * 100)
     : null;
 
-  const uwClass = quote?.medical?.underwriting_class || '';
-  const premium = quote?.indicated_premium || quote?.gross_premium || 0;
-  const components = quote?.components || [];
   const conditions = memoObj.conditions || [];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Decision Hero */}
-      <div className={`rounded-2xl border-2 p-6 ${DECISION_COLORS[decision] || DECISION_COLORS.refer}`}>
-        <p className="text-xs font-semibold uppercase tracking-widest opacity-80">Underwriting Decision</p>
-        <p className="mt-1 text-3xl font-bold tracking-tight uppercase">{decision.replace('_', ' ')}</p>
-        {insuredName && <p className="mt-1 text-lg font-medium text-white">{insuredName}</p>}
-        <div className="mt-4 flex flex-wrap gap-6">
-          {premium > 0 && (
-            <div>
-              <p className="text-xs uppercase opacity-70">Indicated Premium</p>
-              <p className="text-2xl font-bold text-white">${Math.round(premium).toLocaleString()}</p>
-            </div>
-          )}
-          {riskPct != null && (
-            <div>
-              <p className="text-xs uppercase opacity-70">Risk Score</p>
-              <p className="text-2xl font-bold">{riskPct}<span className="text-sm font-normal opacity-70">/100</span></p>
-            </div>
-          )}
+      <div className={`rounded-2xl border-2 p-5 ${DECISION_COLORS[decision] || DECISION_COLORS.refer}`}>
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest opacity-70">Underwriting Decision</p>
+            <p className="mt-1 text-3xl font-bold tracking-tight uppercase">{DECISION_LABELS[decision] || decision.replace('_', ' ')}</p>
+            {insuredName && <p className="mt-1 text-base font-medium text-white">{insuredName}</p>}
+          </div>
+          <div className="text-right">
+            {riskPct != null && (
+              <div>
+                <p className="text-[10px] uppercase opacity-70">Risk Score</p>
+                <p className="text-3xl font-bold">{riskPct}<span className="text-sm font-normal opacity-60">/100</span></p>
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="mt-4 flex flex-wrap gap-6 border-t border-white/10 pt-4">
+          <div>
+            <p className="text-[10px] uppercase opacity-70">Face Amount</p>
+            <p className="text-xl font-bold text-white">{fmtCurrency(faceAmount)}</p>
+          </div>
+          <div>
+            <p className="text-[10px] uppercase opacity-70">Indicated Premium</p>
+            <p className="text-xl font-bold text-white">{fmtCurrency(premium)}</p>
+          </div>
           {uwClass && (
             <div>
-              <p className="text-xs uppercase opacity-70">UW Class</p>
+              <p className="text-[10px] uppercase opacity-70">UW Class</p>
               <p className="text-lg font-semibold capitalize">{uwClass.replace(/_/g, ' ')}</p>
             </div>
           )}
         </div>
       </div>
 
-      {/* Findings Summary */}
+      {/* Findings Summary Badges */}
       {allFindings.length > 0 && (
         <div className="flex items-center gap-3">
-          <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500">Findings</h4>
           <div className="flex gap-2">
             {Object.entries(counts).map(([sev, n]) => n > 0 && (
-              <span key={sev} className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ring-1 ring-inset ${SEV_COLORS[sev]}`}>
+              <span key={sev} className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase ring-1 ring-inset ${SEV_COLORS[sev]}`}>
                 {n} {sev}
               </span>
             ))}
@@ -178,63 +175,76 @@ export default function MemoReportView({ job }) {
         </div>
       )}
 
-      {/* Clean Memo */}
+      {/* Memo Text */}
       {memoText ? (
-        <div className="rounded-2xl border border-white/[0.08] bg-surface/80 p-6">
-          <div className="mb-4 border-b border-white/[0.06] pb-4">
-            <h2 className="text-lg font-bold tracking-tight text-slate-100">Underwriting Evaluation Memo</h2>
-            <div className="mt-2 flex flex-wrap gap-x-6 text-xs text-slate-400">
-              <span>Case: <span className="font-mono font-semibold text-slate-200">{bundleId}</span></span>
-              <span>Product: <span className="font-semibold text-slate-200">{displayText(results.product_line || results.insurance_line)}</span></span>
-              <span>Face: <span className="font-semibold text-slate-200">${Number(results.face_amount || 0).toLocaleString()}</span></span>
+        <div className="rounded-2xl border border-white/[0.08] bg-surface/80 p-5">
+          <div className="mb-3 border-b border-white/[0.06] pb-3">
+            <h2 className="text-base font-bold tracking-tight text-slate-100">Underwriting Evaluation Memo</h2>
+            <div className="mt-1.5 flex flex-wrap gap-x-5 text-[11px] text-slate-500">
+              <span>Case: <span className="font-mono font-semibold text-slate-300">{bundleId}</span></span>
+              {faceAmount > 0 && <span>Face: <span className="font-semibold text-slate-300">{fmtCurrency(faceAmount)}</span></span>}
             </div>
           </div>
-          <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-slate-300">{String(memoText)}</pre>
+          <pre className="whitespace-pre-wrap font-sans text-[13px] leading-relaxed text-slate-300">{String(memoText)}</pre>
         </div>
       ) : (
-        <div className="rounded-2xl border border-white/[0.08] bg-surface/80 p-6">
-          <p className="text-sm text-slate-400">Memo not available for this submission.</p>
+        <div className="rounded-2xl border border-white/[0.08] bg-surface/80 p-6 text-center">
+          <p className="text-sm text-slate-500">Memo not available.</p>
         </div>
       )}
 
       {/* Conditions */}
       {conditions.length > 0 && (
-        <div>
-          <h4 className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">Conditions</h4>
+        <div className="rounded-xl border border-white/[0.06] bg-surface/60 p-4">
+          <h4 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">Conditions</h4>
           <ul className="space-y-1.5">
             {conditions.map((c, i) => (
               <li key={i} className="flex gap-2 text-sm text-slate-300">
-                <span className="text-brand">•</span>{displayText(c)}
+                <span className="text-brand shrink-0">•</span>{displayText(c)}
               </li>
             ))}
           </ul>
         </div>
       )}
 
-      {/* Technical Details — collapsed */}
-      <Collapsible title="Premium Build-up" defaultOpen={components.length > 0}>
-        <PremiumTable components={components} />
-      </Collapsible>
+      {/* Premium Buildup */}
+      {buildup.length > 0 && (
+        <Collapsible title="Premium Build-up" badge={`${buildup.length} steps`}>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-[11px]">
+              <thead>
+                <tr className="border-b border-white/[0.06] text-slate-500">
+                  <th className="py-1.5 pr-3 font-medium">Step</th>
+                  <th className="py-1.5 pr-3 font-medium">Basis</th>
+                  <th className="py-1.5 pr-3 font-medium">Factor</th>
+                  <th className="py-1.5 font-medium">Mod %</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/[0.03]">
+                {buildup.map((row, i) => (
+                  <tr key={row.step || row.name || i} className="text-slate-300">
+                    <td className="py-1.5 pr-3">{displayText(row.step || row.name)}</td>
+                    <td className="py-1.5 pr-3 text-slate-500">{displayText(row.basis)}</td>
+                    <td className="py-1.5 pr-3 font-mono">{fmtFactor(row.factor || row.amount)}</td>
+                    <td className="py-1.5 font-mono">{row.modifier_pct != null ? fmtPct(row.modifier_pct) : '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Collapsible>
+      )}
 
-      <Collapsible title="Key Findings">
-        {allFindings.length === 0 ? (
-          <p className="text-xs text-slate-500">No findings.</p>
-        ) : (
+      {/* Key Findings */}
+      {sortedFindings.length > 0 && (
+        <Collapsible title="Key Findings" badge={allFindings.length}>
           <div className="space-y-2">
-            {allFindings.map((f, i) => (
-              <div key={i} className="flex items-start gap-2">
-                <span className={`mt-0.5 shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ring-1 ring-inset ${SEV_COLORS[safeLower(f?.severity, 'moderate')] || SEV_COLORS.moderate}`}>
-                  {safeLower(f?.severity, 'moderate')}
-                </span>
-                <div>
-                  <p className="text-sm font-medium text-slate-200">{displayText(f?.title, 'Finding')}</p>
-                  {f?.description && <p className="mt-0.5 text-xs text-slate-400">{displayText(f.description)}</p>}
-                </div>
-              </div>
+            {sortedFindings.map((f, i) => (
+              <FindingCard key={f.finding_id || i} finding={f} />
             ))}
           </div>
-        )}
-      </Collapsible>
+        </Collapsible>
+      )}
     </div>
   );
 }

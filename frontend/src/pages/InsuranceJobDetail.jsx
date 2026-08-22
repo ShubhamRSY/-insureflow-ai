@@ -7,8 +7,6 @@ import MemoReportView, { Collapsible } from '../components/MemoReportView';
 import SubmissionJourney from '../components/SubmissionJourney';
 import UwWorksheetView from '../components/UwWorksheetView';
 import UwPolicyValidator from '../components/UwPolicyValidator';
-import PdfGroundingViewer from '../components/PdfGroundingViewer';
-import ProvenancePanel from '../components/ProvenancePanel';
 import RateProvenance from '../components/RateProvenance';
 
 export default function InsuranceJobDetail({ onDeleted, onDeleteJob }) {
@@ -205,30 +203,11 @@ export default function InsuranceJobDetail({ onDeleted, onDeleteJob }) {
             <SubmissionJourney job={job} />
           </Collapsible>
 
-          <Collapsible title="Rate Provenance" defaultOpen={false}>
-            {job?.quote_result?.metadata ? (
-              <RateProvenance metadata={job.quote_result.metadata} />
-            ) : job?.results?.quote_full?.metadata ? (
-              <RateProvenance metadata={job.results.quote_full.metadata} />
-            ) : (
-              <p className="text-xs text-slate-500">No rate provenance available.</p>
-            )}
-          </Collapsible>
-
-          <Collapsible title="Field Provenance" defaultOpen={false}>
-            <ProvenancePanel
-              job={job}
-              onJumpToPage={(page, bbox) => {
-                const el = document.getElementById('pdf-viewer');
-                if (el) el.scrollIntoView({ behavior: 'smooth' });
-                window.dispatchEvent(new CustomEvent('pdf-jump-to-page', { detail: { page, bbox } }));
-              }}
-            />
-          </Collapsible>
-
-          <Collapsible title="PDF Grounding Viewer" defaultOpen={false}>
-            <PdfGroundingViewer bundleId={jobId} />
-          </Collapsible>
+          {(job?.quote_result?.metadata || job?.results?.quote_full?.metadata) && (
+            <Collapsible title="Rate Provenance" defaultOpen={false}>
+              <RateProvenance metadata={job.quote_result?.metadata || job.results.quote_full.metadata} />
+            </Collapsible>
+          )}
         </div>
       </div>
     </div>
