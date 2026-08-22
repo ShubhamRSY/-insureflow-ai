@@ -260,6 +260,7 @@ export const INSURANCE_NAV_CHILDREN = [
   { to: '/insurance', label: 'All active sections' },
   ...INSURANCE_SECTIONS.map((section) => ({
     to: section.disabled ? undefined : `/insurance/sections/${section.id}`,
+    hub: section.hub || null,
     label: `${section.n}. ${section.navTitle || section.title}`,
     tag: section.disabled ? 'Soon' : section.status === 'live' ? 'Live' : 'Catalog',
     sectionId: section.id,

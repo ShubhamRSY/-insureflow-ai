@@ -282,7 +282,10 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
                     to={child.to}
                     end={child.to === item.to || child.to === '/insurance'}
                     onClick={() => setMobileOpen(false)}
-                    className={({ isActive }) => `nav-link ${isActive ? 'nav-link-active' : ''}`}
+                    className={({ isActive }) => {
+                      const hubMatch = child.hub && pathname.startsWith(child.hub);
+                      return `nav-link ${isActive || hubMatch ? 'nav-link-active' : ''}`;
+                    }}
                   >
                     <span className={`flex-1 ${child.sectionId ? insuranceSectionAccent(INSURANCE_SECTIONS.find((s) => s.id === child.sectionId)?.accent).tag : ''}`}>{child.label}</span>
                     {child.tag && (

@@ -25,12 +25,7 @@ export default function InsurancePage({ jobs, onRefresh, onDeleteJob, onDeleteAl
   return (
     <div className="mx-auto w-full max-w-[1600px] space-y-8 animate-fade-in pb-12">
       <div>
-        <nav className="flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
-          <Link to="/" className="transition hover:text-slate-300">Dashboard</Link>
-          <span className="text-slate-700">/</span>
-          <span className="font-semibold text-slate-200">Insurance</span>
-        </nav>
-        <div className="mt-3 flex flex-wrap items-start justify-between gap-4">
+        <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex items-start gap-4">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-insurance/15 text-insurance">
               <Shield className="h-6 w-6" />

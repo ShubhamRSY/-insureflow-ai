@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { Stethoscope } from 'lucide-react';
 import { endpoints } from '../lib/api';
 import { commercialSelectionLabel, defaultCommercialSelection } from '../lib/commercialTaxonomy';
@@ -39,14 +38,7 @@ export default function HealthInsuranceHub({ presets, onRunDemo, onSubmit, jobs,
   return (
     <div className="mx-auto w-full max-w-[1600px] animate-fade-in space-y-6 pb-12">
       <div>
-        <nav className="flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
-          <Link to="/insurance" className="transition hover:text-slate-300">Insurance</Link>
-          <span className="text-slate-700">/</span>
-          <Link to="/insurance" className="transition hover:text-slate-300">Insurance</Link>
-          <span className="text-slate-700">/</span>
-          <span className="font-semibold text-slate-200">Health Insurance</span>
-        </nav>
-        <div className="mt-3 flex items-start gap-3">
+        <div className="flex items-start gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-teal-500/15 text-teal-400">
             <Stethoscope className="h-5 w-5" />
           </div>

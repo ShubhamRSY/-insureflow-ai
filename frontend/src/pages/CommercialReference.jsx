@@ -110,12 +110,7 @@ export default function CommercialReference() {
   return (
     <div className="mx-auto max-w-3xl animate-fade-in space-y-6 pb-12">
       <div>
-        <nav className="flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
-          <Link to="/reference/commercial" className="transition hover:text-slate-300">Reference</Link>
-          <span className="text-slate-700">/</span>
-          <span className="font-semibold text-slate-200">Commercial insurance</span>
-        </nav>
-        <div className="mt-3 flex items-start gap-3">
+        <div className="flex items-start gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand/15 text-brand">
             <BookOpen className="h-5 w-5" />
           </div>

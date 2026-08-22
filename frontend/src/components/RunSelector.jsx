@@ -473,6 +473,12 @@ export default function RunSelector({
           <div className={`rounded-xl border p-4 transition-colors ${guidedStep === 3 ? 'border-brand/30 bg-brand/5' : 'border-white/[0.06] bg-surface/30'}`}>
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">3. Run pipeline</p>
             <p className="text-xs text-slate-300 mb-3">Pipeline will run as <span className="font-medium text-white">{confirmationText}</span></p>
+            {files.length === 0 && (
+              <div className="mb-3 flex items-center gap-2 rounded-lg bg-amber-500/10 border border-amber-500/20 px-3 py-2.5">
+                <AlertTriangle className="h-4 w-4 shrink-0 text-amber-400" />
+                <p className="text-xs text-amber-200">No files attached. Go back to step 2 to upload files or connect a data source before running the pipeline.</p>
+              </div>
+            )}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <HintCheckbox hint={UI_HINTS.llmExtraction} label="LLM extraction" checked={useLlm} onChange={(e) => setUseLlm(e.target.checked)} />
