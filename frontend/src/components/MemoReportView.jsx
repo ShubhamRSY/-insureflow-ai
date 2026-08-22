@@ -112,28 +112,28 @@ function PremiumTable({ components }) {
 
 export default function MemoReportView({ job }) {
   const results = job?.results || {};
-  const memo = results.memo || '';
-  const memoData = results.memo_data || {};
+  const memoObj = results.memo && typeof results.memo === 'object' ? results.memo : {};
+  const memoText = results.memo_text || (typeof results.memo === 'string' ? results.memo : '') || memoObj.summary || '';
   const quote = results.quote_full || {};
-  const decision = safeLower(results.decision, 'refer');
-  const insuredName = displayText(results.insured_name || memoData.insured_name);
+  const decision = safeLower(results.decision || memoObj.decision, 'refer');
+  const insuredName = displayText(results.insured_name || memoObj.insured_name);
   const bundleId = results.bundle_id || job?.bundle_id || '';
 
-  const allFindings = Array.isArray(memoData.key_findings) ? memoData.key_findings : [];
+  const allFindings = Array.isArray(memoObj.key_findings) ? memoObj.key_findings : [];
   const counts = { critical: 0, high: 0, moderate: 0, low: 0 };
   allFindings.forEach((f) => {
     const s = safeLower(f?.severity, 'moderate');
     if (counts[s] != null) counts[s] += 1;
   });
 
-  const riskPct = memoData.overall_risk_score != null
-    ? Math.round(Number(memoData.overall_risk_score) * 100)
+  const riskPct = memoObj.overall_risk_score != null
+    ? Math.round(Number(memoObj.overall_risk_score) * 100)
     : null;
 
   const uwClass = quote?.medical?.underwriting_class || '';
   const premium = quote?.indicated_premium || quote?.gross_premium || 0;
   const components = quote?.components || [];
-  const conditions = memoData.conditions || [];
+  const conditions = memoObj.conditions || [];
 
   return (
     <div className="space-y-6">
@@ -179,7 +179,7 @@ export default function MemoReportView({ job }) {
       )}
 
       {/* Clean Memo */}
-      {memo ? (
+      {memoText ? (
         <div className="rounded-2xl border border-white/[0.08] bg-surface/80 p-6">
           <div className="mb-4 border-b border-white/[0.06] pb-4">
             <h2 className="text-lg font-bold tracking-tight text-slate-100">Underwriting Evaluation Memo</h2>
@@ -189,7 +189,7 @@ export default function MemoReportView({ job }) {
               <span>Face: <span className="font-semibold text-slate-200">${Number(results.face_amount || 0).toLocaleString()}</span></span>
             </div>
           </div>
-          <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-slate-300">{memo}</pre>
+          <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-slate-300">{String(memoText)}</pre>
         </div>
       ) : (
         <div className="rounded-2xl border border-white/[0.08] bg-surface/80 p-6">
