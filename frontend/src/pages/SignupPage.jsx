@@ -17,6 +17,7 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState('free');
   const [result, setResult] = useState(null);
+  const [formData, setFormData] = useState({ company_name: '', full_name: '', username: '', email: '', password: '' });
 
   useEffect(() => {
     if (auth.isLoggedIn) {
@@ -24,18 +25,21 @@ export default function SignupPage() {
     }
   }, [navigate]);
 
+  const updateField = (field) => (e) => {
+    setFormData((prev) => ({ ...prev, [field]: e.target.value }));
+  };
+
   const handleAccountSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
-      const fd = new FormData(e.target);
       const body = {
-        username: String(fd.get('username') || '').trim(),
-        email: String(fd.get('email') || '').trim(),
-        password: String(fd.get('password') || ''),
-        company_name: String(fd.get('company_name') || '').trim(),
-        full_name: String(fd.get('full_name') || '').trim(),
+        username: formData.username.trim(),
+        email: formData.email.trim(),
+        password: formData.password,
+        company_name: formData.company_name.trim(),
+        full_name: formData.full_name.trim(),
         plan: selectedPlan,
       };
       if (!body.username || !body.email || !body.password || !body.company_name) {
@@ -81,7 +85,7 @@ export default function SignupPage() {
           <Link to="/dashboard" className="text-2xl font-bold text-white hover:text-brand-light transition-colors">
             InsureFlow
           </Link>
-          <p className="mt-2 text-slate-400">Create your account</p>
+          <p className="mt-2 text-sm text-slate-300">Create your account</p>
         </div>
 
         {/* Step indicators */}
@@ -89,9 +93,9 @@ export default function SignupPage() {
           {[1, 2, 3].map((s) => (
             <div key={s} className="flex items-center gap-2">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
-                step >= s ? 'bg-brand-light text-slate-950' : 'bg-slate-800 text-slate-500'
+                step >= s ? 'bg-brand-light text-slate-950' : 'bg-slate-600 text-white'
               }`}>{s}</div>
-              {s < 3 && <div className={`w-12 h-0.5 ${step > s ? 'bg-brand-light' : 'bg-slate-800'}`} />}
+              {s < 3 && <div className={`w-12 h-0.5 ${step > s ? 'bg-brand-light' : 'bg-slate-600'}`} />}
             </div>
           ))}
         </div>
@@ -102,13 +106,13 @@ export default function SignupPage() {
           {step === 1 && (
             <>
               <h2 className="text-xl font-bold text-white mb-1">Account Details</h2>
-              <p className="text-sm text-slate-400 mb-6">Tell us about your organization</p>
+              <p className="text-sm text-slate-300 mb-6">Tell us about your organization</p>
               <form onSubmit={handleAccountSubmit} className="space-y-4">
-                <input name="company_name" placeholder="Company / Organization name" required className="input-field" />
-                <input name="full_name" placeholder="Your full name (optional)" className="input-field" />
-                <input name="username" placeholder="Username" required minLength={3} className="input-field" autoComplete="username" />
-                <input name="email" type="email" placeholder="Work email" required className="input-field" autoComplete="email" />
-                <PasswordInput placeholder="Password (min 8 chars, upper + lower + digit + special)" autoComplete="new-password" />
+                <input name="company_name" placeholder="Company / Organization name" required className="input-field" value={formData.company_name} onChange={updateField('company_name')} />
+                <input name="full_name" placeholder="Your full name (optional)" className="input-field" value={formData.full_name} onChange={updateField('full_name')} />
+                <input name="username" placeholder="Username" required minLength={3} className="input-field" autoComplete="username" value={formData.username} onChange={updateField('username')} />
+                <input name="email" type="email" placeholder="Work email" required className="input-field" autoComplete="email" value={formData.email} onChange={updateField('email')} />
+                <PasswordInput placeholder="Password (min 8 chars, upper + lower + digit + special)" autoComplete="new-password" value={formData.password} onChange={updateField('password')} />
                 <button type="submit" disabled={loading} className="btn-primary w-full">
                   {loading ? 'Validating...' : 'Continue'}
                 </button>
@@ -119,7 +123,7 @@ export default function SignupPage() {
           {step === 2 && (
             <>
               <h2 className="text-xl font-bold text-white mb-1">Choose Your Plan</h2>
-              <p className="text-sm text-slate-400 mb-6">You can change plans anytime from settings</p>
+              <p className="text-sm text-slate-300 mb-6">You can change plans anytime from settings</p>
               <div className="space-y-3 mb-6">
                 {PLANS.map((plan) => (
                   <button
@@ -129,29 +133,29 @@ export default function SignupPage() {
                     className={`w-full text-left p-4 rounded-xl border transition-all ${
                       selectedPlan === plan.id
                         ? 'border-brand-light bg-brand-light/10'
-                        : 'border-slate-700 bg-slate-800/50 hover:border-slate-600'
+                        : 'border-white/10 bg-white/[0.03] hover:border-white/20'
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <div>
                         <span className="font-medium text-white">{plan.name}</span>
-                        <span className="ml-3 text-sm text-slate-400">{plan.description}</span>
+                        <span className="ml-3 text-sm text-slate-300">{plan.description}</span>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right shrink-0 ml-3">
                         <span className="text-lg font-bold text-white">{plan.price}</span>
-                        <span className="text-sm text-slate-400">{plan.period}</span>
+                        <span className="text-sm text-slate-300">{plan.period}</span>
                       </div>
                     </div>
                     <div className="mt-2 flex flex-wrap gap-2">
                       {plan.features.map((f) => (
-                        <span key={f} className="text-xs bg-slate-800 text-slate-400 rounded px-2 py-0.5">{f}</span>
+                        <span key={f} className="text-xs bg-white/10 text-slate-200 rounded px-2 py-0.5">{f}</span>
                       ))}
                     </div>
                   </button>
                 ))}
               </div>
               <div className="flex gap-3">
-                <button type="button" onClick={() => setStep(1)} className="flex-1 rounded-xl border border-slate-700 px-4 py-2.5 text-sm text-slate-300 hover:border-slate-500 transition-colors">
+                <button type="button" onClick={() => setStep(1)} className="flex-1 rounded-xl border border-white/15 px-4 py-2.5 text-sm text-slate-200 hover:border-white/30 transition-colors">
                   Back
                 </button>
                 <button type="button" onClick={handleConfirm} disabled={loading} className="btn-primary flex-1">
@@ -169,11 +173,11 @@ export default function SignupPage() {
                 </svg>
               </div>
               <h2 className="text-xl font-bold text-white mb-2">Welcome to InsureFlow!</h2>
-              <p className="text-sm text-slate-400 mb-6">Your account is ready. Save your API key — it won't be shown again.</p>
+              <p className="text-sm text-slate-300 mb-6">Your account is ready. Save your API key — it won't be shown again.</p>
 
               {result.api_key && (
                 <div className="mb-6">
-                  <label className="mb-1.5 block text-xs font-medium text-slate-400">API Key</label>
+                  <label className="mb-1.5 block text-xs font-medium text-slate-300">API Key</label>
                   <div className="flex items-center gap-2">
                     <input
                       readOnly
@@ -184,7 +188,7 @@ export default function SignupPage() {
                     <button
                       type="button"
                       onClick={() => navigator.clipboard.writeText(result.api_key)}
-                      className="rounded-xl border border-slate-700 px-3 py-2 text-sm text-slate-300 hover:border-brand-light hover:text-brand-light transition-colors"
+                      className="rounded-xl border border-white/15 px-3 py-2 text-sm text-slate-200 hover:border-brand-light hover:text-brand-light transition-colors"
                     >
                       Copy
                     </button>
@@ -199,7 +203,7 @@ export default function SignupPage() {
           )}
         </div>
 
-        <p className="mt-6 text-center text-sm text-slate-500">
+        <p className="mt-6 text-center text-sm text-slate-400">
           Already have an account?{' '}
           <Link to="/dashboard" className="text-brand-light hover:underline">Sign in</Link>
         </p>

@@ -7,6 +7,8 @@ export default function PasswordInput({
   placeholder = 'Password',
   required = true,
   autoComplete = 'current-password',
+  value,
+  onChange,
 }) {
   const [show, setShow] = useState(false);
   return (
@@ -19,6 +21,8 @@ export default function PasswordInput({
         placeholder={placeholder}
         autoComplete={autoComplete}
         className="input-field pr-10"
+        value={value}
+        onChange={onChange}
       />
       <button
         type="button"
