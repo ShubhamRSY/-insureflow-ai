@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Cable, Check, CheckCircle2, Loader2, Play } from 'lucide-react';
+import { Cable, Check, CheckCircle2, Loader2, Play, ChevronDown, ChevronUp } from 'lucide-react';
 import { endpoints } from '../lib/api';
 import ConnectorLogo from './ConnectorLogo';
 import PulledFilesBrowser from './PulledFilesBrowser';
@@ -72,6 +72,7 @@ export default function ConnectAndPull({
   const [running, setRunning] = useState(false);
   const [error, setError] = useState('');
   const [warning, setWarning] = useState('');
+  const [showAllSources, setShowAllSources] = useState(false);
 
   useEffect(() => {
     endpoints.insuranceSources(vertical)
@@ -321,7 +322,7 @@ export default function ConnectAndPull({
       </div>
 
       <div className="flex flex-col gap-1.5">
-        {(activeSection?.sources || []).map((src) => {
+        {(activeSection?.sources || []).slice(0, showAllSources ? undefined : 4).map((src) => {
           const sel = activeSource?.id === src.id;
           return (
             <button key={src.id} type="button"
@@ -340,6 +341,13 @@ export default function ConnectAndPull({
             </button>
           );
         })}
+        {(activeSection?.sources || []).length > 4 && (
+          <button type="button" onClick={() => setShowAllSources((v) => !v)}
+            className="flex items-center justify-center gap-1.5 rounded-lg border border-dashed border-white/[0.08] px-2.5 py-2 text-xs text-slate-400 hover:border-white/15 hover:text-slate-300 transition">
+            {showAllSources ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+            {showAllSources ? 'Show fewer' : `Show all ${(activeSection?.sources || []).length} sources`}
+          </button>
+        )}
       </div>
 
       {activeSource && needsConfig && !connected && (

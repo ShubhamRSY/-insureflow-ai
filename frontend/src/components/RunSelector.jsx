@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Loader2, Upload, FileText, Play, Database, Cable, AlertTriangle, Trash2 } from 'lucide-react';
+import { Loader2, Upload, FileText, Play, Database, Cable, AlertTriangle, Trash2, ChevronRight } from 'lucide-react';
 import { readFileForUpload, buildSubmissionPayload, scoreFileRelevance, validatePackageRelevance } from '../lib/insuranceDocs';
 import { insuranceLineLabel } from '../lib/insuranceLines';
 import { UI_HINTS } from '../lib/uiHints';
@@ -30,7 +30,6 @@ function insuranceSampleMatches(sample, selection) {
 const TABS = [
   { id: 'files', label: 'Files', icon: Upload, hint: UI_HINTS.tabFiles },
   { id: 'connect', label: 'Connect & pull', icon: Cable, hint: UI_HINTS.tabConnect },
-  { id: 'sample', label: 'Sample data', icon: Database, hint: UI_HINTS.tabSample },
 ];
 
 const fmtSize = (bytes) => {
@@ -59,6 +58,7 @@ export default function RunSelector({
   isLifeProductPicker = false,
   isHealthProductPicker = false,
   isGeneralProductPicker = false,
+  guidedFlow = false,
   includePurpose = false,
   purposeOptions = [],
   purposeDefault = '',
@@ -75,6 +75,7 @@ export default function RunSelector({
   const [strictRelevance, setStrictRelevance] = useState(true);
   const [companyId, setCompanyId] = useState('');
   const [companyName, setCompanyName] = useState('');
+  const [guidedStep, setGuidedStep] = useState(1);
   const { selectedState } = useStateContext();
 
   const useCommercialPicker = Array.isArray(commercialTaxonomy) && commercialTaxonomy.length > 0;
@@ -340,7 +341,198 @@ export default function RunSelector({
               {files.map((f, i) => {
                 const score = fileScores[i];
                 const bad = score && !score.relevant;
-                return (
+  const companySelected = companyId || companyName;
+  const lineSelected = useCommercialPicker
+    ? isCommercialSelectionComplete(commercialSelection)
+    : !!activeProduct;
+
+  const guidedCanStep2 = guidedFlow && guidedStep >= 2;
+  const guidedCanStep3 = guidedFlow && guidedStep >= 3 && lineSelected;
+
+  const confirmationText = useMemo(() => {
+    const company = companyName || companyId || 'Any company';
+    const line = useCommercialPicker
+      ? (commercialSelection?.insurance_line || commercialSelection?.productName || 'Any line')
+      : (activeProduct || 'Any line');
+    return `${company} · ${line}`;
+  }, [companyName, companyId, useCommercialPicker, commercialSelection, activeProduct]);
+
+  if (guidedFlow) {
+    return (
+      <div className="space-y-5">
+        <div className="flex items-center gap-3">
+          {[1, 2, 3].map((s) => (
+            <div key={s} className="flex items-center gap-2">
+              <div className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold transition-colors ${
+                guidedStep >= s ? 'bg-brand text-white' : 'bg-slate-700 text-slate-400'
+              }`}>{s}</div>
+              <span className={`text-xs font-medium ${guidedStep >= s ? 'text-slate-200' : 'text-slate-500'}`}>
+                {s === 1 ? 'Company' : s === 2 ? 'Source & Line' : 'Run'}
+              </span>
+              {s < 3 && <ChevronRight className="h-3 w-3 text-slate-600" />}
+            </div>
+          ))}
+        </div>
+
+        {/* Step 1: Company */}
+        <div className={`rounded-xl border p-4 transition-colors ${guidedStep === 1 ? 'border-brand/30 bg-brand/5' : 'border-white/[0.06] bg-surface/30'}`}>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">1. Select company / person</p>
+            {companySelected && guidedStep > 1 && (
+              <button type="button" onClick={() => setGuidedStep(1)} className="text-[11px] text-brand hover:underline">Edit</button>
+            )}
+          </div>
+          {guidedStep === 1 ? (
+            <>
+              {vertical === 'insurance' && (
+                <CompanyPicker
+                  value={companyId}
+                  name={companyName}
+                  disabled={running}
+                  onChange={(c) => { setCompanyId(c.id || ''); setCompanyName(c.name || ''); }}
+                />
+              )}
+              <div className="mt-3 flex justify-end">
+                <button type="button" onClick={() => setGuidedStep(2)}
+                  className="btn-primary btn-sm text-xs">
+                  Continue <ChevronRight className="h-3 w-3" />
+                </button>
+              </div>
+            </>
+          ) : (
+            <p className="text-sm text-slate-300">{companyName || companyId || 'No company selected'}</p>
+          )}
+        </div>
+
+        {/* Step 2: Source & Line */}
+        {guidedCanStep2 && (
+          <div className={`rounded-xl border p-4 transition-colors ${guidedStep === 2 ? 'border-brand/30 bg-brand/5' : 'border-white/[0.06] bg-surface/30'}`}>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">2. Select source & line of business</p>
+              {lineSelected && guidedStep > 2 && (
+                <button type="button" onClick={() => setGuidedStep(2)} className="text-[11px] text-brand hover:underline">Edit</button>
+              )}
+            </div>
+            {guidedStep === 2 ? (
+              <div className="space-y-3">
+                <div className="flex gap-1 rounded-lg bg-surface/60 p-0.5">
+                  {visibleTabs.filter((t) => t.id !== 'sample').map((t) => (
+                    <button key={t.id} type="button" onClick={() => { setTab(t.id); setError(''); setWarning(''); }}
+                      className={`rounded-md px-3 py-1.5 text-xs font-medium transition ${
+                        tab === t.id ? 'bg-brand/15 text-brand ring-1 ring-brand/25' : 'text-slate-500 hover:text-slate-300'
+                      }`}>
+                      <span className="inline-flex items-center gap-1"><t.icon className="h-3 w-3" /> {t.label}</span>
+                    </button>
+                  ))}
+                </div>
+
+                {tab === 'files' && (
+                  <div className="space-y-3">
+                    <label onDrop={handleDrop} onDragOver={(e) => e.preventDefault()}
+                      className="flex w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-white/[0.12] bg-surface/30 px-4 py-5 text-center transition hover:border-brand/40 hover:bg-brand/5">
+                      <Upload className="h-5 w-5 text-slate-500" />
+                      <span className="text-sm font-medium text-slate-200">Drop files here or click to browse</span>
+                      <span className="text-xs text-slate-400">.pdf .xml .json .txt .md .xlsx .docx .eml</span>
+                      <input type="file" multiple className="hidden" accept=".xml,.json,.pdf,.txt,.md,.csv,.xlsx,.xls,.docx,.doc,.eml,.html,.png,.jpg,.jpeg,.tiff,.tif,.bmp"
+                        onChange={(e) => { addFiles(e.target.files); e.target.value = ''; }} />
+                    </label>
+                    {files.length > 0 && (
+                      <div className="rounded-lg border border-white/[0.06] bg-surface/40 p-2">
+                        <p className="mb-1.5 px-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500">Files · {files.length}</p>
+                        <div className="max-h-32 space-y-1 overflow-y-auto">
+                          {files.map((f, i) => (
+                            <div key={`${f.filename}-${i}`} className="flex items-center gap-2 rounded-md px-2 py-1 text-[11px] text-slate-300">
+                              <FileText className="h-3 w-3 shrink-0 text-insurance" />
+                              <span className="min-w-0 flex-1 truncate">{f.filename}</span>
+                              <button type="button" onClick={() => removeFile(i)} className="shrink-0 rounded p-0.5 text-red-400 hover:bg-red-500/10">
+                                <Trash2 className="h-3 w-3" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {tab === 'connect' && (
+                  <ConnectAndPull
+                    vertical={vertical}
+                    insuranceLine={activeProduct || ''}
+                    lifeProductId={isLifeProductPicker ? (commercialSelection?.checklist_lob || commercialSelection?.productId || '') : ''}
+                    lifeCoverageId={isLifeProductPicker ? (commercialSelection?.coverageId || '') : ''}
+                    healthProductId={isHealthProductPicker ? (commercialSelection?.checklist_lob || commercialSelection?.productId || '') : ''}
+                    healthCoverageId={isHealthProductPicker ? (commercialSelection?.coverageId || '') : ''}
+                    generalProductId={isGeneralProductPicker ? (commercialSelection?.checklist_lob || commercialSelection?.productId || '') : ''}
+                    generalCoverageId={isGeneralProductPicker ? (commercialSelection?.coverageId || '') : ''}
+                    commercialProductId={(!isLifeProductPicker && !isHealthProductPicker && !isGeneralProductPicker) ? (commercialSelection?.productId || '') : ''}
+                    coverageId={commercialSelection?.coverageId || ''}
+                    productName={commercialSelection?.productName || ''}
+                    coverageName={commercialSelection?.coverageName || ''}
+                    commercialCategoryId={commercialSelection?.categoryId || ''}
+                    insuranceCompanyId={companyId}
+                    insuranceCompanyName={companyName}
+                    strictRelevance={strictRelevance}
+                    onRunJob={onRunJob || (onSubmit ? (jobId) => onSubmit?.({ _jobId: jobId }) : undefined)}
+                    onRunResult={onRunResult}
+                  />
+                )}
+
+                {useCommercialPicker ? (
+                  <CommercialLinePicker
+                    taxonomy={commercialTaxonomy}
+                    value={commercialSelection}
+                    onChange={onCommercialSelectionChange}
+                    disabled={running}
+                  />
+                ) : normalizedOptions.length > 0 && (
+                  <select value={activeProduct} onChange={(e) => pickProduct(e.target.value)}
+                    className="input-field w-full text-xs" aria-label="Line of business">
+                    {normalizedOptions.map((opt) => (
+                      <option key={opt.id} value={opt.id}>{opt.label}</option>
+                    ))}
+                  </select>
+                )}
+
+                <div className="flex justify-end">
+                  <button type="button" onClick={() => setGuidedStep(3)} disabled={!lineSelected}
+                    className="btn-primary btn-sm text-xs disabled:opacity-40">
+                    Continue <ChevronRight className="h-3 w-3" />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-slate-300">{confirmationText}</p>
+            )}
+          </div>
+        )}
+
+        {/* Step 3: Run */}
+        {guidedCanStep3 && (
+          <div className={`rounded-xl border p-4 transition-colors ${guidedStep === 3 ? 'border-brand/30 bg-brand/5' : 'border-white/[0.06] bg-surface/30'}`}>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">3. Run pipeline</p>
+            <p className="text-xs text-slate-300 mb-3">Pipeline will run as <span className="font-medium text-white">{confirmationText}</span></p>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <HintCheckbox hint={UI_HINTS.llmExtraction} label="LLM extraction" checked={useLlm} onChange={(e) => setUseLlm(e.target.checked)} />
+              </div>
+              <Hint text={UI_HINTS.runPipeline}>
+                <button type="button" onClick={tab === 'files' ? runFiles : undefined} disabled={running || (tab === 'files' && !files.length)}
+                  className="btn-primary btn-sm text-xs disabled:opacity-40">
+                  {running ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3 w-3" />}
+                  Run pipeline{files.length ? ` (${files.length})` : ''}
+                </button>
+              </Hint>
+            </div>
+            {warning && <p className="mt-2 rounded-lg bg-amber-500/10 px-3 py-1.5 text-xs text-amber-200">{warning}</p>}
+            {error && <p className="mt-2 rounded-lg bg-red-500/10 px-3 py-1.5 text-xs text-red-300">{error}</p>}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
                   <div key={`${f.filename}-${i}`} className={`group flex items-center gap-2 rounded-md px-2 py-1.5 transition hover:bg-white/[0.03] ${bad ? 'bg-amber-500/10' : ''}`}>
                     {bad ? <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-400" /> : <FileText className="h-3.5 w-3.5 shrink-0 text-insurance" />}
                     <span className="min-w-0 flex-1 truncate text-[11px] text-slate-300" title={score?.reason || ''}>{f.filename}</span>

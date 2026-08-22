@@ -39,11 +39,11 @@ export default function LifeInsuranceHub({ presets, onRunDemo, onSubmit, jobs, o
   return (
     <div className="mx-auto w-full max-w-[1600px] animate-fade-in space-y-6 pb-12">
       <div>
-        <nav className="flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
-          <Link to="/insurance" className="transition hover:text-slate-300">Insurance</Link>
-          <span className="text-slate-700">/</span>
-          <span className="font-semibold text-slate-200">Life Insurance</span>
-        </nav>
+          <nav className="flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
+            <Link to="/insurance" className="transition hover:text-slate-300">Dashboard</Link>
+            <span className="text-slate-700">/</span>
+            <span className="font-semibold text-slate-200">Life Insurance</span>
+          </nav>
         <div className="mt-3 flex items-start gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-rose-500/15 text-rose-400">
             <HeartPulse className="h-5 w-5" />
@@ -68,17 +68,18 @@ export default function LifeInsuranceHub({ presets, onRunDemo, onSubmit, jobs, o
           </p>
         </div>
         <div className="p-5">
-          <RunSelector
-            presets={presets}
-            vertical="insurance"
-            productField="insurance_line"
-            commercialTaxonomy={hub.taxonomy}
-            commercialSelection={selection}
-            onCommercialSelectionChange={setSelection}
-            isLifeProductPicker
-            onRunDemo={onRunDemo}
-            onSubmit={onSubmit}
-          />
+            <RunSelector
+              presets={presets}
+              vertical="insurance"
+              productField="insurance_line"
+              commercialTaxonomy={hub.taxonomy}
+              commercialSelection={selection}
+              onCommercialSelectionChange={setSelection}
+              isLifeProductPicker
+              guidedFlow
+              onRunDemo={onRunDemo}
+              onSubmit={onSubmit}
+            />
         </div>
       </section>
 

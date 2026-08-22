@@ -98,7 +98,7 @@ html.theme-light {
   }
 
   .nav-link-active {
-    @apply bg-gradient-to-r from-brand/15 to-transparent text-brand-light border-l-2 border-brand;
+    @apply bg-gradient-to-r from-brand/15 to-transparent text-brand-light border-l-2 border-brand shadow-[inset_2px_0_8px_-2px_rgba(99,102,241,0.3)];
   }
 
   .hint-anchor {

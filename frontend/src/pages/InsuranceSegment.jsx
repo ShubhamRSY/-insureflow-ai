@@ -92,19 +92,18 @@ export default function InsuranceSegmentPage() {
   return (
     <div className="mx-auto w-full max-w-[1600px] space-y-8 animate-fade-in pb-12">
       <div>
-        <nav className="flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
-          <Link to="/insurance" className="transition hover:text-slate-300">Insurance</Link>
-          <span className="text-slate-700">/</span>
-          <span className="font-semibold text-slate-200">{section.title}</span>
-        </nav>
+          <nav className="flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
+            <Link to="/" className="transition hover:text-slate-300">Dashboard</Link>
+            <span className="text-slate-700">/</span>
+            <Link to="/insurance" className="transition hover:text-slate-300">Insurance</Link>
+            <span className="text-slate-700">/</span>
+            <span className="font-semibold text-slate-200">{section.title}</span>
+          </nav>
         <div className="mt-3 flex items-start gap-4">
           <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${accent.iconBg}`}>
             <Icon className="h-6 w-6" />
           </div>
-          <div>
-            <p className={`text-xs font-semibold uppercase tracking-wider ${accent.tag}`}>
-              Section {String(section.n).padStart(2, '0')} of 12
-            </p>
+           <div>
             <div className="mt-1 flex flex-wrap items-center gap-2">
               <h1 className="text-3xl font-bold tracking-tight text-slate-100">{section.title}</h1>
               <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${

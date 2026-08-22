@@ -146,14 +146,14 @@ const nav = [
 ];
 
 const CRUMBS = [
-  { prefix: '/reference/commercial', labels: ['Reference', 'Commercial insurance'] },
+  { prefix: '/reference/commercial', labels: [{ text: 'Reference', to: '/reference' }, 'Commercial insurance'] },
   { prefix: '/reference', labels: ['Reference', 'Notebooks'] },
-  { prefix: '/insurance/sections', labels: ['Insurance', 'Section'] },
-  { prefix: '/insurance/general', labels: ['Insurance', 'Personal Lines'] },
-  { prefix: '/insurance/health', labels: ['Insurance', 'Health Insurance'] },
-  { prefix: '/insurance/life', labels: ['Insurance', 'Life Insurance'] },
-  { prefix: '/insurance/commercial', labels: ['Insurance', 'Commercial Lines'] },
-  { prefix: '/insurance/', labels: ['Insurance'] },
+  { prefix: '/insurance/sections', labels: [{ text: 'Insurance', to: '/insurance' }, 'Section'] },
+  { prefix: '/insurance/general', labels: [{ text: 'Insurance', to: '/insurance' }, 'Personal Lines'] },
+  { prefix: '/insurance/health', labels: [{ text: 'Insurance', to: '/insurance' }, 'Health Insurance'] },
+  { prefix: '/insurance/life', labels: ['Life Insurance'] },
+  { prefix: '/insurance/commercial', labels: [{ text: 'Insurance', to: '/insurance' }, 'Commercial Lines'] },
+  { prefix: '/insurance/', labels: [{ text: 'Insurance', to: '/insurance' }] },
   { prefix: '/insurance', labels: ['Insurance'] },
   { prefix: '/line-uw', labels: ['UW Operations', 'Line UW Desk'] },
   { prefix: '/staff-uw', labels: ['UW Operations', 'Staff UW Desk'] },
@@ -448,12 +448,24 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
               <Menu className="h-5 w-5" />
             </button>
             <nav className="hidden min-w-0 items-center gap-1.5 text-sm text-slate-400 md:flex" aria-label="Breadcrumb">
-              {crumbs.map((c, i) => (
-                <span key={`${c}-${i}`} className="flex items-center gap-1.5 whitespace-nowrap">
-                  {i > 0 && <span className="text-slate-700">/</span>}
-                  <span className={i === crumbs.length - 1 ? 'font-semibold text-slate-200' : ''}>{c}</span>
-                </span>
-              ))}
+              <span className="flex items-center gap-1.5">
+                <NavLink to="/" className="transition hover:text-slate-200">Dashboard</NavLink>
+              </span>
+              {crumbs.map((c, i) => {
+                const isLast = i === crumbs.length - 1;
+                const text = typeof c === 'object' ? c.text : c;
+                const link = typeof c === 'object' ? c.to : null;
+                return (
+                  <span key={`${text}-${i}`} className="flex items-center gap-1.5 whitespace-nowrap">
+                    <span className="text-slate-700">/</span>
+                    {link && !isLast ? (
+                      <NavLink to={link} className="transition hover:text-slate-200">{text}</NavLink>
+                    ) : (
+                      <span className={isLast ? 'font-semibold text-slate-200' : ''}>{text}</span>
+                    )}
+                  </span>
+                );
+              })}
             </nav>
           </div>
           <div className="flex shrink-0 items-center gap-2">
@@ -467,14 +479,26 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
 
         <main className="flex-1 p-6 lg:p-8">
           {!selectedState && (
-            <div className="mb-4 flex items-start gap-3 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-400" />
-              <div className="flex-1">
-                <span className="font-semibold">Please confirm your operating state.</span>{' '}
-                Our servers are based in the USA. State selection affects compliance and data handling rules.
-                Use the state selector in the top-right corner to choose your state before proceeding.
+            <div className="fixed right-6 top-20 z-50 w-[380px] rounded-2xl border border-white/10 bg-slate-900 shadow-2xl shadow-black/40">
+              <div className="flex items-center gap-3 border-b border-white/[0.08] px-5 py-4">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-red-500/15">
+                  <AlertTriangle className="h-4.5 w-4.5 text-red-400" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-white">Confirm your operating state</p>
+                  <p className="text-xs text-slate-400">Required before running a pipeline</p>
+                </div>
+                <button type="button" onClick={() => {}} className="text-slate-500 hover:text-slate-300" title="Dismiss after selecting">
+                  <X className="h-4 w-4" />
+                </button>
               </div>
-              <StateSelector compact />
+              <div className="px-5 py-4 space-y-3">
+                <p className="text-xs leading-relaxed text-slate-300">
+                  Our servers are based in the USA. State selection affects compliance and data handling rules.
+                  Choose your state before proceeding.
+                </p>
+                <StateSelector compact />
+              </div>
             </div>
           )}
           {welcomeMessage && (

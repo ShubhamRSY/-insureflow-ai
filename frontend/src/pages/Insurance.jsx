@@ -26,9 +26,9 @@ export default function InsurancePage({ jobs, onRefresh, onDeleteJob, onDeleteAl
     <div className="mx-auto w-full max-w-[1600px] space-y-8 animate-fade-in pb-12">
       <div>
         <nav className="flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
-          <span className="text-slate-600">Insurance</span>
+          <Link to="/" className="transition hover:text-slate-300">Dashboard</Link>
           <span className="text-slate-700">/</span>
-          <span className="font-semibold text-slate-200">All sections</span>
+          <span className="font-semibold text-slate-200">Insurance</span>
         </nav>
         <div className="mt-3 flex flex-wrap items-start justify-between gap-4">
           <div className="flex items-start gap-4">
@@ -85,9 +85,9 @@ export default function InsurancePage({ jobs, onRefresh, onDeleteJob, onDeleteAl
                   </div>
                 </div>
                 <ul className="mt-4 max-h-[140px] space-y-1 overflow-y-auto border-t border-white/[0.04] pt-3">
-                  {section.products.map((p) => (
+                  {section.products.map((p, idx) => (
                     <li key={p.name} className="flex gap-2 text-xs text-slate-300">
-                      <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-slate-600" />
+                      <span className="mt-0.5 text-[10px] font-semibold tabular-nums text-slate-500">{idx + 1}.</span>
                       <span>
                         <span className="font-medium text-slate-200">{p.name}</span>
                         {p.hint ? <span className="text-slate-500"> — {p.hint}</span> : null}
