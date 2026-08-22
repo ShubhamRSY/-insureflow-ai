@@ -1,17 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, FileCheck, ExternalLink, FileText, RefreshCw, Camera, AlertTriangle, MessageSquare, Trash2 } from 'lucide-react';
+import { ArrowLeft, FileCheck, ExternalLink, FileText, RefreshCw, AlertTriangle, Trash2 } from 'lucide-react';
 import { endpoints } from '../lib/api';
-import { insuranceLineLabel } from '../lib/insuranceLines';
+import { displayText } from '../lib/safe';
+import MemoReportView, { Collapsible } from '../components/MemoReportView';
 import SubmissionJourney from '../components/SubmissionJourney';
-import InsuranceMemoView from '../components/InsuranceMemoView';
 import UwWorksheetView from '../components/UwWorksheetView';
 import UwPolicyValidator from '../components/UwPolicyValidator';
-import BindReadinessPanel from '../components/BindReadinessPanel';
 import PdfGroundingViewer from '../components/PdfGroundingViewer';
 import ProvenancePanel from '../components/ProvenancePanel';
 import RateProvenance from '../components/RateProvenance';
-import { asList, displayText } from '../lib/safe';
 
 export default function InsuranceJobDetail({ onDeleted, onDeleteJob }) {
   const { jobId } = useParams();
@@ -20,10 +18,6 @@ export default function InsuranceJobDetail({ onDeleted, onDeleteJob }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
-  const [notes, setNotes] = useState([]);
-  const [noteText, setNoteText] = useState('');
-  const [checklist, setChecklist] = useState(null);
-  const [infoRequests, setInfoRequests] = useState([]);
   const [validatedTerms, setValidatedTerms] = useState(null);
 
   const fetchJob = async () => {
@@ -38,11 +32,7 @@ export default function InsuranceJobDetail({ onDeleted, onDeleteJob }) {
     }
   };
 
-  useEffect(() => {
-    fetchJob();
-  }, [jobId]);
-
-  // Auto-refresh while processing
+  useEffect(() => { fetchJob(); }, [jobId]);
   useEffect(() => {
     if (job?.status !== 'processing') return;
     const iv = setInterval(fetchJob, 3000);
@@ -55,36 +45,17 @@ export default function InsuranceJobDetail({ onDeleted, onDeleteJob }) {
 
   useEffect(() => {
     if (!bundleId) return;
-    const lob = job?.results?.insurance_line || job?.results?.product_line || '';
-    endpoints.relationshipNotes(bundleId).then((r) => setNotes(r.notes || [])).catch(() => {});
-    endpoints.packageChecklist(bundleId, lob).then(setChecklist).catch(() => {});
-    endpoints.infoRequests(bundleId).then((r) => setInfoRequests(r.requests || [])).catch(() => {});
     setValidatedTerms(job?.results?.validated_terms || null);
-  }, [bundleId, job?.results?.insurance_line, job?.results?.product_line, job?.results?.validated_terms]);
-
-  const handleAddNote = async () => {
-    if (!bundleId || !noteText.trim()) return;
-    try {
-      const n = await endpoints.addRelationshipNote(bundleId, { text: noteText, role: 'uw' });
-      setNotes((prev) => [...prev, n]);
-      setNoteText('');
-    } catch (e) {
-      alert(e.message);
-    }
-  };
+  }, [bundleId, job?.results?.validated_terms]);
 
   const handleReport = async () => {
     try {
       const { blob, filename } = await endpoints.insuranceReport(jobId);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      a.click();
+      a.href = url; a.download = filename; a.click();
       URL.revokeObjectURL(url);
-    } catch (e) {
-      alert(e.message);
-    }
+    } catch (e) { alert(e.message); }
   };
 
   const handleQuote = async () => {
@@ -93,15 +64,10 @@ export default function InsuranceJobDetail({ onDeleted, onDeleteJob }) {
       const { blob, filename } = await endpoints.insuranceQuote(jobId);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      a.click();
+      a.href = url; a.download = filename; a.click();
       URL.revokeObjectURL(url);
-    } catch (e) {
-      alert(e.message || 'Quote not available');
-    } finally {
-      setQuoteLoading(false);
-    }
+    } catch (e) { alert(e.message || 'Quote not available'); }
+    finally { setQuoteLoading(false); }
   };
 
   const handleBrokerShare = async () => {
@@ -110,9 +76,7 @@ export default function InsuranceJobDetail({ onDeleted, onDeleteJob }) {
       const link = `${window.location.origin}/dashboard/broker/status/${r.token}`;
       await navigator.clipboard?.writeText(link);
       alert(`Share link copied!\n${link}`);
-    } catch (e) {
-      alert(e.message);
-    }
+    } catch (e) { alert(e.message); }
   };
 
   const handleDeleteJob = async () => {
@@ -122,9 +86,7 @@ export default function InsuranceJobDetail({ onDeleted, onDeleteJob }) {
       else await endpoints.deleteJob(jobId);
       await onDeleted?.();
       navigate('/insurance');
-    } catch (e) {
-      alert(e.message || 'Could not delete submission');
-    }
+    } catch (e) { alert(e.message || 'Could not delete submission'); }
   };
 
   if (loading) {
@@ -140,9 +102,7 @@ export default function InsuranceJobDetail({ onDeleted, onDeleteJob }) {
     return (
       <div className="py-16 text-center">
         <p className="text-red-400">{error}</p>
-        <button onClick={() => navigate('/insurance')} className="mt-4 text-sm text-slate-400 hover:text-white">
-          Back to Insurance
-        </button>
+        <button onClick={() => navigate('/insurance')} className="mt-4 text-sm text-slate-400 hover:text-white">Back to Insurance</button>
       </div>
     );
   }
@@ -151,9 +111,7 @@ export default function InsuranceJobDetail({ onDeleted, onDeleteJob }) {
     return (
       <div className="py-16 text-center">
         <p className="text-slate-400">Submission not found.</p>
-        <button onClick={() => navigate('/insurance')} className="mt-4 text-sm text-slate-400 hover:text-white">
-          Back to Insurance
-        </button>
+        <button onClick={() => navigate('/insurance')} className="mt-4 text-sm text-slate-400 hover:text-white">Back to Insurance</button>
       </div>
     );
   }
@@ -164,30 +122,21 @@ export default function InsuranceJobDetail({ onDeleted, onDeleteJob }) {
       <div className="sticky top-0 z-10 border-b border-white/[0.06] bg-surface-raised/80 backdrop-blur-xl">
         <div className="flex items-center justify-between px-6 py-3">
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => navigate('/insurance')}
-              className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-slate-400 hover:bg-white/5 hover:text-white transition"
-            >
-              <ArrowLeft className="h-3.5 w-3.5" />
-              Back
+            <button onClick={() => navigate('/insurance')}
+              className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-slate-400 hover:bg-white/5 hover:text-white transition">
+              <ArrowLeft className="h-3.5 w-3.5" /> Back
             </button>
             <div className="h-4 w-px bg-white/[0.06]" />
             <div>
               <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Insurance Submission</p>
               <p className="font-mono text-sm font-semibold">{jobId}</p>
               {insuredName && <p className="text-xs text-slate-400">{insuredName}</p>}
-              {(job?.results?.insurance_company_name || job?.results?.insurance_company_id) && (
-                <p className="text-[11px] text-slate-500">
-                  Company: {displayText(job.results.insurance_company_name || job.results.insurance_company_id)}
-                </p>
-              )}
             </div>
           </div>
           <div className="flex items-center gap-2">
             {processing && (
               <span className="flex items-center gap-1.5 text-xs text-slate-500">
-                <RefreshCw className="h-3 w-3 animate-spin" />
-                Processing…
+                <RefreshCw className="h-3 w-3 animate-spin" /> Processing…
               </span>
             )}
             {bundleId && (
@@ -212,189 +161,75 @@ export default function InsuranceJobDetail({ onDeleted, onDeleteJob }) {
 
       {job?.archived && (
         <div className="border-b border-amber-500/20 bg-amber-500/10 px-6 py-2 text-sm text-amber-200">
-          Archived from the landing-zone disk (Redis job expired). Memo and decision are here.
-          {job.source_docs_retained === false
-            ? ' Raw source files were not stored — pull those from the carrier PAS.'
-            : ''}
+          Archived from the landing-zone disk. Memo and decision are here.
         </div>
       )}
 
       {/* Content */}
-      <div className="mx-auto max-w-7xl px-6 py-6">
-        {!processing && !job?.results?.uw_worksheet && !job?.results?.memo && (
+      <div className="mx-auto max-w-4xl px-6 py-6">
+        {!processing && !job?.results?.memo && !job?.results?.uw_worksheet && (
           <div className="mb-6 rounded-xl border border-amber-500/20 bg-amber-500/5 p-6 text-center">
             <AlertTriangle className="mx-auto mb-3 h-8 w-8 text-amber-400" />
             <p className="text-sm font-semibold text-amber-200">Pipeline has not run yet</p>
-            <p className="mt-1 text-xs text-slate-400">
-              This submission was uploaded but the analysis pipeline hasn't processed it.
-              Run the pipeline to extract data, generate a memo, and get AI-indicated terms.
-            </p>
-            <button
-              onClick={async () => {
-                try {
-                  await endpoints.retryJob(jobId);
-                  fetchJob();
-                } catch (e) {
-                  alert(e.message || 'Could not start pipeline');
-                }
-              }}
-              className="mt-4 inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2 text-xs font-semibold text-white hover:bg-brand-light transition"
-            >
+            <p className="mt-1 text-xs text-slate-400">Run the pipeline to extract data and generate the underwriting memo.</p>
+            <button onClick={async () => {
+              try { await endpoints.retryJob(jobId); fetchJob(); } catch (e) { alert(e.message || 'Could not start pipeline'); }
+            }} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2 text-xs font-semibold text-white hover:bg-brand-light transition">
               <RefreshCw className="h-3.5 w-3.5" /> Run Pipeline
             </button>
           </div>
         )}
 
-        {job?.results?.uw_worksheet && (
-          <div className="mb-6 space-y-4">
-            <UwWorksheetView worksheet={job.results.uw_worksheet} validatedTerms={validatedTerms} />
-            <UwPolicyValidator
-              bundleId={bundleId}
-              worksheet={job.results.uw_worksheet}
-              validatedTerms={validatedTerms}
-              onValidated={(v) => {
-                setValidatedTerms(v);
-                fetchJob();
+        {/* Primary: Memo Report */}
+        {!processing && <MemoReportView job={job} />}
+
+        {/* Technical Details — collapsed by default */}
+        <div className="mt-8 space-y-4">
+          <Collapsible title="Underwriting Worksheet" defaultOpen={false}>
+            {job?.results?.uw_worksheet ? (
+              <div className="space-y-3">
+                <UwWorksheetView worksheet={job.results.uw_worksheet} validatedTerms={validatedTerms} />
+                <UwPolicyValidator
+                  bundleId={bundleId}
+                  worksheet={job.results.uw_worksheet}
+                  validatedTerms={validatedTerms}
+                  onValidated={(v) => { setValidatedTerms(v); fetchJob(); }}
+                />
+              </div>
+            ) : (
+              <p className="text-xs text-slate-500">No worksheet available.</p>
+            )}
+          </Collapsible>
+
+          <Collapsible title="Pipeline Journey" defaultOpen={false}>
+            <SubmissionJourney job={job} />
+          </Collapsible>
+
+          <Collapsible title="Rate Provenance" defaultOpen={false}>
+            {job?.quote_result?.metadata ? (
+              <RateProvenance metadata={job.quote_result.metadata} />
+            ) : job?.results?.quote_full?.metadata ? (
+              <RateProvenance metadata={job.results.quote_full.metadata} />
+            ) : (
+              <p className="text-xs text-slate-500">No rate provenance available.</p>
+            )}
+          </Collapsible>
+
+          <Collapsible title="Field Provenance" defaultOpen={false}>
+            <ProvenancePanel
+              job={job}
+              onJumpToPage={(page, bbox) => {
+                const el = document.getElementById('pdf-viewer');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+                window.dispatchEvent(new CustomEvent('pdf-jump-to-page', { detail: { page, bbox } }));
               }}
             />
-          </div>
-        )}
-        {bundleId && job?.results && (
-          <div className="mb-6">
-            <BindReadinessPanel bundleId={bundleId} onChanged={fetchJob} />
-          </div>
-        )}
+          </Collapsible>
 
-        <SubmissionJourney job={job} />
-
-        {bundleId && (
-          <div className="mt-6 grid gap-4 lg:grid-cols-2">
-            <div className="rounded-xl bg-surface-overlay p-5 ring-1 ring-white/[0.04]">
-              <div className="mb-3 flex items-center gap-2">
-                <MessageSquare className="h-4 w-4 text-brand" />
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Relationship notes</p>
-              </div>
-              <div className="mb-3 max-h-40 space-y-2 overflow-y-auto">
-                {!notes.length && <p className="text-xs text-slate-500">No broker/carrier notes yet.</p>}
-                {notes.map((n) => (
-                  <div key={n.note_id} className="rounded-lg bg-black/20 px-3 py-2 text-xs">
-                    <p className="text-slate-300">{displayText(n.text)}</p>
-                    <p className="mt-1 text-[10px] text-slate-600">{displayText(n.role)} · {displayText(n.author)} · {n.created_at ? new Date(n.created_at).toLocaleString() : ''}</p>
-                  </div>
-                ))}
-              </div>
-              <div className="flex gap-2">
-                <input className="input-field flex-1 text-xs" placeholder="Add UW / broker context…" value={noteText} onChange={(e) => setNoteText(e.target.value)} />
-                <button type="button" onClick={handleAddNote} className="btn-secondary btn-sm text-xs">Add</button>
-              </div>
-            </div>
-
-            <div className="rounded-xl bg-surface-overlay p-5 ring-1 ring-white/[0.04]">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Package checklist {checklist?.lob ? `(${insuranceLineLabel(checklist.lob)})` : ''}
-              </p>
-              {checklist ? (
-                <>
-                  <p className="mb-2 text-sm text-slate-300">{displayText(checklist.completeness_pct, '—')}% complete</p>
-                  <p className="text-[10px] uppercase text-slate-500 mb-1">Missing</p>
-                  <ul className="mb-3 space-y-1 text-xs text-amber-300/90">
-                    {(asList(checklist.missing).length) ? asList(checklist.missing).map((m) => <li key={displayText(m)}>• {displayText(m)}</li>) : <li className="text-slate-500">None</li>}
-                  </ul>
-                  <p className="text-[10px] uppercase text-slate-500 mb-1">Info requests</p>
-                  <ul className="space-y-1 text-xs text-slate-400">
-                    {!infoRequests.length && <li>None yet</li>}
-                    {infoRequests.map((r) => (
-                      <li key={r.request_id || displayText(r)}>{displayText(r.status)}: {asList(r.documents).map(displayText).join(', ')}</li>
-                    ))}
-                  </ul>
-                </>
-              ) : (
-                <p className="text-xs text-slate-500">Checklist unavailable for this job.</p>
-              )}
-            </div>
-          </div>
-        )}
-
-        {!processing && job?.results?.visual_analysis && (
-          <div className="mt-6 rounded-xl bg-surface-overlay p-5 ring-1 ring-white/[0.04]">
-            <div className="flex items-center gap-2 mb-4">
-              <Camera className="h-4 w-4 text-brand" />
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Visual Analysis</p>
-              <span className={`ml-auto text-xs px-2 py-0.5 rounded-full ${
-                job.results.visual_analysis.overall_visual_risk === 'critical' ? 'bg-red-500/20 text-red-400' :
-                job.results.visual_analysis.overall_visual_risk === 'high' ? 'bg-orange-500/20 text-orange-400' :
-                job.results.visual_analysis.overall_visual_risk === 'moderate' ? 'bg-yellow-500/20 text-yellow-400' :
-                'bg-green-500/20 text-green-400'
-              }`}>
-                Risk: {displayText(job.results.visual_analysis.overall_visual_risk)}
-              </span>
-            </div>
-            <p className="text-xs text-slate-400 mb-3">{displayText(job.results.visual_analysis.processing_notes)}</p>
-            <div className="grid grid-cols-3 gap-3 mb-3">
-              <div className="text-center rounded-lg bg-black/20 py-2">
-                <p className="text-[10px] text-slate-500 uppercase">Photos</p>
-                <p className="text-lg font-bold text-slate-200">{job.results.visual_analysis.analyzed_photos}/{job.results.visual_analysis.total_photos}</p>
-              </div>
-              <div className="text-center rounded-lg bg-black/20 py-2">
-                <p className="text-[10px] text-slate-500 uppercase">Damage</p>
-                <p className="text-lg font-bold text-slate-200">{job.results.visual_analysis.damage_count}</p>
-              </div>
-              <div className="text-center rounded-lg bg-black/20 py-2">
-                <p className="text-[10px] text-slate-500 uppercase">Quality</p>
-                <p className="text-lg font-bold text-slate-200">{displayText(job.results.visual_analysis.overall_quality)}</p>
-              </div>
-            </div>
-            {asList(job.results.visual_analysis.risk_factors).length > 0 && (
-              <div className="mb-3">
-                <p className="text-xs font-semibold text-slate-500 mb-1">Risk Factors</p>
-                {asList(job.results.visual_analysis.risk_factors).map((f, i) => (
-                  <div key={i} className="flex items-start gap-1 text-xs text-orange-400/80">
-                    <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0" />
-                    {displayText(f)}
-                  </div>
-                ))}
-              </div>
-            )}
-            {asList(job.results.visual_analysis.recommendations).length > 0 && (
-              <div>
-                <p className="text-xs font-semibold text-slate-500 mb-1">Recommendations</p>
-                {asList(job.results.visual_analysis.recommendations).map((r, i) => (
-                  <p key={i} className="text-xs text-slate-400">&bull; {displayText(r)}</p>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {!processing && (
-          <div className="mt-6 space-y-6">
-            <InsuranceMemoView job={job} />
-
-            {/* Rate Source Provenance — where every rate came from */}
-            {job?.quote_result?.metadata && (
-              <RateProvenance metadata={job.quote_result.metadata} />
-            )}
-            {job?.results?.quote_full?.metadata && !job?.quote_result?.metadata && (
-              <RateProvenance metadata={job.results.quote_full.metadata} />
-            )}
-
-            {/* Provenance: where every number came from */}
-            <div className="rounded-2xl border border-white/10 bg-surface/40 p-5">
-              <ProvenancePanel
-                job={job}
-                onJumpToPage={(page, bbox) => {
-                  const el = document.getElementById('pdf-viewer');
-                  if (el) el.scrollIntoView({ behavior: 'smooth' });
-                  window.dispatchEvent(new CustomEvent('pdf-jump-to-page', { detail: { page, bbox } }));
-                }}
-              />
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-surface/40 p-5">
-              <PdfGroundingViewer bundleId={jobId} />
-            </div>
-          </div>
-        )}
+          <Collapsible title="PDF Grounding Viewer" defaultOpen={false}>
+            <PdfGroundingViewer bundleId={jobId} />
+          </Collapsible>
+        </div>
       </div>
     </div>
   );
