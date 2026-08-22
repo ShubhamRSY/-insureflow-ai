@@ -263,10 +263,15 @@ export default function LoginModal({ open, onClose, onSuccess }) {
             )}
 
             {allowRegister && (
-            <p className="mt-4 text-center text-xs text-slate-500">
-              No account?{' '}
-              <button type="button" onClick={() => { onClose(); navigate('/dashboard/signup'); }} className="text-brand-light underline">Sign up free</button>
-            </p>
+            <div className="mt-5 border-t border-white/[0.06] pt-4">
+              <button
+                type="button"
+                onClick={() => { onClose(); navigate('/signup'); }}
+                className="w-full rounded-xl border border-brand/40 bg-brand/10 px-4 py-2.5 text-sm font-medium text-brand-light transition-colors hover:bg-brand/20"
+              >
+                Create a new account
+              </button>
+            </div>
             )}
           </>
         )}
