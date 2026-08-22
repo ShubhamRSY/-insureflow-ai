@@ -2,12 +2,13 @@ import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Shield, Home, Activity, Settings, LogOut, RefreshCw, Menu, X,
   BarChart3, Wallet, FileCheck, Briefcase, ChevronDown, ChevronRight, Plus,
-  ShieldCheck, Library, Lock, Cable, HandCoins,
+  ShieldCheck, Library, Lock, Cable, HandCoins, AlertTriangle,
 } from 'lucide-react';
 import { useState } from 'react';
 import { auth } from '../lib/api';
 import { INSURANCE_SECTIONS, INSURANCE_NAV_CHILDREN, insuranceSectionAccent } from '../lib/insuranceSections';
 import { displayText } from '../lib/safe';
+import { useStateContext } from '../lib/useStateContext';
 import ThemeToggle from './ThemeToggle';
 import StateSelector from './StateSelector';
 import ErrorBoundary from './ErrorBoundary';
@@ -200,6 +201,7 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
   });
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const { selectedState } = useStateContext();
   const crumbs = crumbsFor(pathname);
 
   const logout = () => {
@@ -464,6 +466,17 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
         </header>
 
         <main className="flex-1 p-6 lg:p-8">
+          {!selectedState && (
+            <div className="mb-4 flex items-start gap-3 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-400" />
+              <div className="flex-1">
+                <span className="font-semibold">Please confirm your operating state.</span>{' '}
+                Our servers are based in the USA. State selection affects compliance and data handling rules.
+                Use the state selector in the top-right corner to choose your state before proceeding.
+              </div>
+              <StateSelector compact />
+            </div>
+          )}
           {welcomeMessage && (
             <div className="mb-4 flex items-start gap-3 rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
               <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />

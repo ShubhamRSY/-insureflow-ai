@@ -38,8 +38,7 @@ export default function InsurancePage({ jobs, onRefresh, onDeleteJob, onDeleteAl
             <div>
               <h1 className="text-3xl font-bold tracking-tight text-slate-100">Insurance</h1>
               <p className="mt-1 max-w-2xl text-sm text-slate-400">
-                {activeSections.length} active sections — life, health, personal, and commercial lines.
-                Additional sections coming soon.
+                {activeSections.length} active areas of coverage. Pick a section to start underwriting.
               </p>
             </div>
           </div>
@@ -54,7 +53,7 @@ export default function InsurancePage({ jobs, onRefresh, onDeleteJob, onDeleteAl
           <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
             {activeSections.length} active sections
           </h2>
-          <p className="text-xs text-slate-500">{activeSections.length} active · pick a section to underwrite</p>
+          <p className="text-xs text-slate-500">{activeSections.length} active · pick an area to underwrite</p>
         </div>
         <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {visibleSections.map((section) => {
@@ -129,11 +128,20 @@ export default function InsurancePage({ jobs, onRefresh, onDeleteJob, onDeleteAl
         <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3">
           <p className="text-sm text-amber-200">
             <span className="font-semibold">Customized panels available.</span>{' '}
-            {disabledSections.length} additional sections are coming soon. Need a specific line now?{' '}
+            {disabledSections.length} additional areas are coming soon. Need a specific line now?{' '}
             <span className="text-amber-300 underline">Request access</span> and we'll activate it for your account.
           </p>
         </div>
       )}
+
+      <div className="rounded-xl border border-white/[0.06] bg-surface-overlay/40 px-4 py-3">
+        <p className="text-xs leading-relaxed text-slate-500">
+          <span className="font-semibold text-slate-400">How your data is handled:</span>{' '}
+          When you upload documents, this system reads and extracts key fields (names, policy numbers, dates, coverage amounts)
+          to pre-fill the underwriting form. Named insureds and personal identifiers are stripped before any AI processing.
+          Your files are stored securely and never shared with third parties.
+        </p>
+      </div>
 
       <section className="glass-card overflow-hidden">
         <div className="flex items-center justify-between border-b border-white/[0.06] px-5 py-4">

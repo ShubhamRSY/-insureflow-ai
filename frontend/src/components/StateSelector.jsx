@@ -87,9 +87,9 @@ export default function StateSelector({ compact = false }) {
 
   return (
     <div className="glass-card p-6">
-      <h3 className="mb-4 text-lg font-semibold text-slate-100">Select Operating State</h3>
+      <h3 className="mb-4 text-lg font-semibold text-slate-100">Select Your Operating State</h3>
       <p className="mb-4 text-sm text-slate-400">
-        Choose a state to enforce only that jurisdiction&apos;s insurance laws. Like AWS regions, but for state regulatory compliance.
+        Choose a state so we apply the correct insurance regulations and compliance rules for that jurisdiction.
       </p>
       <div className="grid max-h-96 grid-cols-2 gap-2 overflow-y-auto sm:grid-cols-3 md:grid-cols-4">
         <button

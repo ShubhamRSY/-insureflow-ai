@@ -62,9 +62,9 @@ export default function LifeInsuranceHub({ presets, onRunDemo, onSubmit, jobs, o
 
       <section className="glass-card">
         <div className="border-b border-white/[0.06] px-5 py-4">
-          <h2 className="text-sm font-semibold text-slate-100">New submission</h2>
+          <h2 className="text-sm font-semibold text-slate-100">Start a New Review</h2>
           <p className="mt-0.5 text-sm text-slate-400">
-            Choose category → product → coverage, then upload the life package. Medical / financial UW and rating follow automatically.
+            Upload your life insurance package — we'll extract the key details, run medical and financial checks, and produce an underwriting recommendation.
           </p>
         </div>
         <div className="p-5">

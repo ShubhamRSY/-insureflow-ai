@@ -157,10 +157,10 @@ export default function InsuranceSegmentPage() {
       {liveLines.length > 0 ? (
         <section>
           <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
-            Underwriting lines
+            Coverage Options
           </h2>
           <p className="mt-1 text-xs text-slate-500">
-            Existing checklists and UW for this section. Catalog leaves do not invent premium.
+            Ready-to-use underwriting workflows for this section. Select one to start a review.
           </p>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {liveLines.map((line) => (
