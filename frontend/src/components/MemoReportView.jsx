@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { ChevronDown, ChevronRight, Eye, FileText, Loader2 } from 'lucide-react';
 import { displayText, safeLower } from '../lib/safe';
 import { endpoints } from '../lib/api';
-import { uwFinding } from '../lib/uwLanguage';
+import { uwFinding, uwMemoText } from '../lib/uwLanguage';
 
 const SEV_COLORS = {
   critical: 'bg-red-500/15 text-red-400 ring-red-500/30',
@@ -198,10 +198,7 @@ function IngestedDocuments({ job }) {
 
 function cleanMemoText(text) {
   if (!text) return '';
-  return text
-    .replace(/\[(?:CRITICAL|HIGH|MODERATE|LOW|INFO)\]\s*/g, '')
-    .replace(/Risk score:\s*\d+\/100\s*·\s*\d+ findings?\s*\([^)]*\)\s*\.?\s*/g, '')
-    .trim();
+  return uwMemoText(text).trim();
 }
 
 export default function MemoReportView({ job }) {
@@ -244,7 +241,7 @@ export default function MemoReportView({ job }) {
   // Extract "What to do next" from memo text (lines starting with digits)
   const memoLines = memoText.split('\n');
   const whatToDoIdx = memoLines.findIndex((l) => l.trim() === 'What to do next');
-  const nextSteps = whatToDoIdx >= 0 ? memoLines.slice(whatToDoIdx).join('\n') : '';
+  const nextSteps = whatToDoIdx >= 0 ? uwMemoText(memoLines.slice(whatToDoIdx).join('\n')) : '';
 
   return (
     <div className="space-y-5">

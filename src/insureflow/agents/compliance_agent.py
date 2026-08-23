@@ -17,8 +17,12 @@ class ComplianceAgent(ReActAgent):
         if not coverages:
             self._add_finding(
                 Finding(
-                    title="No coverage data available",
-                    description="Cannot verify coverage adequacy without coverage data",
+                    title="No coverage schedule on file — adequacy unverified",
+                    description=(
+                        "The package does not show current coverages or limits, so coverage "
+                        "adequacy cannot be verified. Request the declarations page or a "
+                        "current schedule of insurance from the producer."
+                    ),
                     severity=RiskSeverity.HIGH,
                     category="data_quality",
                 )

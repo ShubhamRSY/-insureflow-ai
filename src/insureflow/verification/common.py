@@ -21,6 +21,13 @@ def verification_enabled() -> bool:
     return raw not in {"0", "false", "off", "no", "none"}
 
 
+def uw_field(field: str) -> str:
+    """Humanize an internal field key ('spacy.amount' → 'stated amount')."""
+    name = str(field or "").strip()
+    name = re.sub(r"^(spacy|regex|llm|layoutlm|ocr)\.", "", name, flags=re.I)
+    return name.replace("_", " ").strip() or "the value"
+
+
 def to_number(value: str) -> float | None:
     """Loose currency/number parse; returns None when not numeric."""
     cleaned = re.sub(r"[^0-9.\-]", "", str(value))

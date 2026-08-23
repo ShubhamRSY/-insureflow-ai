@@ -17,8 +17,12 @@ class LossRunAnalystAgent(ReActAgent):
         if not loss_run or not loss_run.claims:
             self._add_finding(
                 Finding(
-                    title="No loss run data available",
-                    description="Cannot analyze claims history — loss run not provided or empty",
+                    title="No loss runs on file — claims history unverified",
+                    description=(
+                        "No loss run report was included in the package (or the one provided was empty). "
+                        "Claims history cannot be analyzed — request a 5-year loss run from the producer "
+                        "before finalizing the risk assessment."
+                    ),
                     severity=RiskSeverity.HIGH,
                     category="data_quality",
                 )

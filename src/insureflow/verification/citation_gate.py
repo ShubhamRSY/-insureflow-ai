@@ -12,7 +12,7 @@ import re
 from typing import Any, Iterable, Mapping
 
 from insureflow.models.submissions import ExtractedField, VerificationIssue
-from insureflow.verification.common import SEVERITY_ERROR, SEVERITY_WARNING
+from insureflow.verification.common import SEVERITY_ERROR, SEVERITY_WARNING, uw_field
 
 _CRITICAL_TERMS = (
     "total",
@@ -88,7 +88,7 @@ def citation_issues(
                 code="uncited_claim" if critical else "ungrounded_field",
                 severity=SEVERITY_ERROR if critical else SEVERITY_WARNING,
                 message=(
-                    f"{key} of {value} cannot be traced to a page in the submitted documents — "
+                    f"{uw_field(key)} of {value} cannot be traced to a page in the submitted documents — "
                     + ("do not rely on this figure until supporting paperwork is received and matched" if critical else "route to manual review")
                 ),
                 field_name=key,

@@ -19,7 +19,7 @@ from collections import defaultdict
 from typing import Any, Callable, Mapping, Sequence
 
 from insureflow.models.submissions import VerificationIssue
-from insureflow.verification.common import SEVERITY_WARNING
+from insureflow.verification.common import SEVERITY_WARNING, uw_field
 
 _DEFAULT_N_PASSES = 3
 _DEFAULT_CV_THRESHOLD = 0.05  # 5% coefficient of variation
@@ -110,7 +110,9 @@ def uncertainty_issues(
             VerificationIssue(
                 code="epistemic_variance",
                 severity=SEVERITY_WARNING,
-                message=(f"{field} varied with CV {cv_map[field]:.3f} across extraction passes (> {cv_threshold:.2f}); unstable value — route to human review"),
+                message=(
+                    f"{uw_field(field)} did not read consistently on repeated verification passes (values varied by roughly {cv_map[field] * 100:.0f}%) — figure is unreliable, route to manual review"
+                ),
                 field_name=field,
             )
         )
