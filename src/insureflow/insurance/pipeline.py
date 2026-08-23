@@ -854,8 +854,12 @@ class InsurancePipeline:
             elif mib_report.no_hit:
                 oracle_findings.append(
                     Finding(
-                        title="MIB no-hit (uploaded codes absent)",
-                        description="No MIB codes on the package — authorization alone is not a query.",
+                        title="MIB check not performed — order bureau report",
+                        description=(
+                            "The MIB authorization is signed, but no MIB report or codes were included "
+                            "with the application. A signed authorization alone is not a bureau search — "
+                            "order an MIB report before finalizing the underwriting class."
+                        ),
                         severity=RiskSeverity.HIGH,
                         category="mib",
                     )

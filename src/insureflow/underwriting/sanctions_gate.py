@@ -69,8 +69,12 @@ def screen_submission(bundle: SubmissionBundle) -> InsuranceSanctionsResult:
     if not subjects:
         findings.append(
             Finding(
-                title="OFAC: no named insured to screen",
-                description="Cannot run sanctions screening without a named insured / applicant.",
+                title="Sanctions screening incomplete — no named insured on file",
+                description=(
+                    "OFAC / AML screening could not be run because the application does not show a "
+                    "named insured or applicant. Obtain the applicant's full legal name and re-run "
+                    "the screening before proceeding."
+                ),
                 severity=RiskSeverity.HIGH,
                 category="sanctions",
             )

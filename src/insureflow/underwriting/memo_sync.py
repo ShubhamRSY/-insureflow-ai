@@ -61,8 +61,16 @@ def build_memo_summary(decision: UWDecision | str, score: float, findings: list[
             step = f"Collect outstanding package item: {title}"
         elif "limit" in title_l or "coverage" in title_l:
             step = f"Resolve coverage / limit issue: {title}"
-        elif "oracle" in title_l or "clue" in title_l or "a-plus" in title_l or "verification" in title_l:
-            step = f"Verify external data or document synthetic/unavailable check: {title}"
+        elif "oracle" in title_l or "clue" in title_l or "a-plus" in title_l:
+            step = "Confirm the external record (CLUE / A-PLUS / bureau) was checked, or document why it was unavailable"
+        elif "verification" in title_l:
+            step = f"Verify against source paperwork: {title}"
+        elif "mib" in title_l:
+            step = "Order an MIB report — a signed authorization alone is not a search"
+        elif "sanctions" in title_l or "ofac" in title_l:
+            step = "Obtain the applicant's full legal name and re-run sanctions screening"
+        elif "unverified figure" in title_l or "could not be verified" in title_l.lower():
+            step = "Match the flagged figure to supporting paperwork before relying on it"
         elif "decline" in title_l:
             step = f"Address hard stop: {title}"
         else:
@@ -73,7 +81,7 @@ def build_memo_summary(decision: UWDecision | str, score: float, findings: list[
     lines = [
         headline,
         "",
-        f"Risk score: {pct}/100 · {len(findings)} findings ({len(critical)} critical, {len(high)} high).",
+        f"Risk score: {pct}/100 · {len(findings)} findings ({len(critical)} critical, {len(high)} high)",
         "",
         "Why this decision",
     ]

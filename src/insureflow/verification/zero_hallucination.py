@@ -56,13 +56,32 @@ class HallucinationHit:
 
     def to_finding(self) -> Finding:
         return Finding(
-            title="Hallucination blocked — uncited claim",
-            description=self.message,
+            title="Unverified figure — supporting documentation required",
+            description=self.uw_message(),
             severity=RiskSeverity.CRITICAL,
             category="hallucination",
             field_path=self.field_name,
             confidence=1.0,
             evidence=[self.claim_text] if self.claim_text else [],
+        )
+
+    def uw_message(self) -> str:
+        """Translate internal QA language into desk-ready wording."""
+        msg = self.message or ""
+        field = self.field_name or "A figure"
+        if self.code in {"uncited_claim", "memo_uncited_claim", "debate_challenger_win"}:
+            return (
+                f"{field} shown on the file could not be matched to the application paperwork. "
+                "Do not rely on this figure until supporting documentation is received and checked."
+            )
+        if "guideline" in msg.lower():
+            return (
+                f"{field} cites a rating guideline that is not in the filed rule set. "
+                "Confirm the manual reference before using it in the classification."
+            )
+        return (
+            f"{field} could not be confirmed against the submitted documents "
+            f"({msg[:160]}). Verify the figure manually before relying on it."
         )
 
 

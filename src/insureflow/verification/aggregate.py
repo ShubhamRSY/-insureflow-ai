@@ -90,19 +90,19 @@ def verification_findings(
     """Underwriting-ready findings (title/description/severity) for flagged docs."""
     findings: list[dict[str, Any]] = []
     summary = aggregate_verification(bundle)
-    issues_by_code = summary["issues_by_code"]
-    top_codes = ", ".join(f"{code} × {count}" for code, count in list(issues_by_code.items())[:5])
     for doc in bundle.unstructured:
         report = _report(doc)
         if report is None or not report.flagged_for_review:
             continue
+        unverified = sum(c for c in summary["issues_by_code"].values())
         findings.append(
             {
-                "title": "Extraction verification failed — human review required",
+                "title": "Application data could not be fully verified — manual review required",
                 "description": (
-                    f"{doc.document_type} ({doc.submission_id}) failed layered extraction "
-                    f"verification with {len(report.errors)} error(s), {len(report.warnings)} warning(s). "
-                    f"Top issue codes: {top_codes or 'none'}. Do not rely on extracted figures without review."
+                    f"{doc.document_type.replace('_', ' ').title()} ({len(report.errors)} error(s), "
+                    f"{len(report.warnings)} warning(s)): {unverified} item(s) on this document could not be "
+                    "traced back to the source pages. Review the application against the original paperwork "
+                    "before relying on any extracted figure."
                 ),
                 "severity": "high",
                 "category": "data_quality",

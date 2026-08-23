@@ -2,10 +2,187 @@
 
 from __future__ import annotations
 
+import html as _html
+import re
 from datetime import datetime, timezone
 from typing import Any
 
 from insureflow.rating.models import line_display_name
+
+
+# ── Underwriter-language translation ──────────────────────────────────────────
+# The verification stack speaks in engineering terms (hallucination, bbox,
+# citation gate). Underwriters don't. Translate at the reporting boundary.
+
+_FINDING_REWRITES: tuple[tuple[str, str], ...] = (
+    ("Hallucination blocked — uncited claim", "Unverified figure — supporting documentation required"),
+    ("Extraction verification failed — human review required", "Application data could not be fully verified — manual review required"),
+    ("MIB no-hit (uploaded codes absent)", "MIB check not performed — order bureau report"),
+    ("OFAC: no named insured to screen", "Sanctions screening incomplete — no named insured on file"),
+)
+
+_FINDING_DESC_SUBS: tuple[tuple[str, str], ...] = (
+    ("has no page/bbox/source citation — blocks STP; treat as hypothesis until grounded",
+     "cannot be traced to a page in the submitted documents — do not rely on this figure until supporting paperwork is received"),
+    ("failed layered extraction verification with",
+     "could not be fully verified against source pages ("),
+    ("Top issue codes:", "Unverified items:"),
+    ("Do not rely on extracted figures without review.",
+     "Review against the original paperwork before relying on any figure."),
+    ("authorization alone is not a query",
+     "a signed authorization alone is not a bureau search — order an MIB report before finalizing the class"),
+    ("Cannot run sanctions screening without a named insured / applicant.",
+     "OFAC / AML screening could not be run because no named insured appears on the application. Obtain the full legal name and re-run screening."),
+)
+
+
+def uw_finding_title(title: str) -> str:
+    t = title or ""
+    for old, new in _FINDING_REWRITES:
+        if old.lower() in t.lower():
+            return new
+    return t
+
+
+def uw_finding_description(description: str) -> str:
+    d = description or ""
+    for old, new in _FINDING_DESC_SUBS:
+        d = d.replace(old, new)
+    return d
+
+
+def _esc(value: Any) -> str:
+    return _html.escape(str(value if value is not None else ""))
+
+
+# ── Memo-document rendering ───────────────────────────────────────────────────
+
+_MEMO_SECTION_RE = re.compile(r"^\s*(\d{1,2})\.\s+(\S.*?)\s*$")
+
+
+def _is_rule(line: str, char: str) -> bool:
+    return bool(line.strip()) and set(line.strip()) == {char} and len(line.strip()) >= 4
+
+
+def _parse_memo_sections(memo_text: str) -> tuple[list[str], list[tuple[str, list[str]]]]:
+    """Split memo text into (header lines, [(section title, body lines)])."""
+    header: list[str] = []
+    sections: list[tuple[str, list[str]]] = []
+    current: tuple[str, list[str]] | None = None
+    for raw in (memo_text or "").splitlines():
+        line = raw.rstrip()
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if _is_rule(stripped, "=") or _is_rule(stripped, "-"):
+            continue
+        m = _MEMO_SECTION_RE.match(stripped)
+        if m:
+            letters = [c for c in m.group(2) if c.isalpha()]
+            # Numbered headings are mostly-uppercase section titles
+            if letters and sum(c.isupper() for c in letters) / len(letters) > 0.6:
+                current = (f"{m.group(1)}. {m.group(2)}", [])
+                sections.append(current)
+                continue
+        if current is None:
+            header.append(stripped)
+        else:
+            current[1].append(stripped)
+    return header, sections
+
+
+def _memo_header_rows(header_lines: list[str]) -> str:
+    """Render 'LABEL: value              LABEL: value' header lines as aligned rows."""
+    rows = ""
+    for line in header_lines:
+        chunks = [c.strip() for c in re.split(r"\s{2,}", line) if c.strip()]
+        cells = ""
+        for chunk in chunks:
+            if ":" in chunk:
+                label, _, value = chunk.partition(":")
+                cells += (
+                    f'<td style="padding:3px 18px 3px 0;font-size:10.5px;white-space:nowrap;">'
+                    f'<span style="color:#334155;">{_esc(label.strip())}:</span> '
+                    f"<strong>{_esc(value.strip())}</strong></td>"
+                )
+            else:
+                cells += f'<td colspan="3" style="padding:3px 0;font-size:10.5px;">{_esc(chunk)}</td>'
+        rows += f"<tr>{cells}</tr>"
+    return f'<table style="border-collapse:collapse;margin:0 auto;">{rows}</table>'
+
+
+def generate_memo_report_html(results: dict[str, Any], job_id: str, now: str) -> str | None:
+    """Render ``results.memo_text`` (the UNDERWRITING EVALUATION MEMO) as the PDF body.
+
+    Returns None when the job has no memo text, letting callers fall back to the
+    structured commercial-lines report.
+    """
+    memo_text = (results.get("memo_text") or "").strip()
+    if not memo_text or "UNDERWRITING EVALUATION MEMO" not in memo_text.upper():
+        return None
+
+    header_lines, sections = _parse_memo_sections(memo_text)
+
+    def _body_html(lines: list[str]) -> str:
+        out = ""
+        for line in lines:
+            polished = _esc(line).replace("[X]", "&#9745;").replace("[x]", "&#9745;").replace("[ ]", "&#9744;")
+            indent = len(line) - len(line.lstrip(" "))
+            out += f'<div style="padding-left:{indent * 7}px;text-indent:-14px;margin-left:14px;">{polished}</div>'
+        return f'<div style="font-family:\'SF Mono\',Menlo,Consolas,\'Liberation Mono\',monospace;font-size:10px;line-height:1.65;color:#1e293b;">{out}</div>'
+
+    sections_html = ""
+    for title, lines in sections:
+        sections_html += f"""
+  <div style="margin-top:16px;">
+    <div style="font-size:11px;font-weight:700;color:#0f172a;text-transform:uppercase;letter-spacing:0.04em;padding-bottom:4px;border-bottom:1px solid #cbd5e1;">{_esc(title)}</div>
+    <div style="padding-top:8px;">{_body_html(lines)}</div>
+  </div>"""
+
+    header_html = _memo_header_rows(header_lines)
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Underwriting Evaluation Memo</title>
+<style>
+  @page {{
+    size: A4;
+    margin: 18mm 16mm 20mm 16mm;
+    @bottom-center {{
+      content: "Page " counter(page) " of " counter(pages);
+      font-size: 9px;
+      color: #94a3b8;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }}
+  }}
+  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  body {{
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    color: #1e293b; font-size: 12px; line-height: 1.55; background: white;
+    -webkit-font-smoothing: antialiased;
+  }}
+</style>
+</head>
+<body>
+
+  <div style="text-align:center;border-bottom:2px solid #0f172a;padding-bottom:12px;margin-bottom:14px;">
+    <div style="font-size:17px;font-weight:700;letter-spacing:0.22em;color:#0f172a;text-transform:uppercase;">Underwriting Evaluation Memo</div>
+  </div>
+
+  {header_html}
+
+  <div style="border-top:2px solid #0f172a;margin-top:10px;"></div>
+{sections_html}
+
+  <div style="margin-top:26px;padding-top:10px;border-top:1px solid #e2e8f0;text-align:center;font-size:9px;color:#94a3b8;">
+    <p>This evaluation memo is generated by the Rytera AI Underwriting Platform for internal underwriting use.</p>
+    <p>It does not constitute a binder of insurance or a binding agreement.</p>
+  </div>
+
+</body>
+</html>"""
 
 
 def _render_conditions(conditions: list[str]) -> str:
@@ -21,11 +198,21 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
 
     Works with the raw dict stored in the job store (not model objects)
     so it can render any completed job without re-running the pipeline.
+
+    Life submissions carry a full ``memo_text`` UNDERWRITING EVALUATION MEMO —
+    that memo IS the report. Everything else uses the structured layout.
     """
     r = results
     memo = r.get("memo") or {}
+    now = datetime.now(tz=timezone.utc).strftime("%B %d, %Y at %H:%M UTC")
+
+    memo_doc = generate_memo_report_html(r, job_id, now)
+    if memo_doc:
+        return memo_doc
+
     quote_full = r.get("quote_full") or {}
     quote = r.get("quote") or {}
+    recon = r.get("reconciliation") or {}
     recon = r.get("reconciliation") or {}
     now = datetime.now(tz=timezone.utc).strftime("%B %d, %Y at %H:%M UTC")
 
@@ -137,10 +324,14 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
         for f in findings:
             sev = (f.get("severity") or "moderate").lower()
             sc = sev_colors.get(sev, "#64748b")
+            title = uw_finding_title(f.get("title", ""))
+            desc = uw_finding_description(f.get("description", ""))
+            if cat == "hallucination":
+                label = "Unverified Figures"
             findings_html += f"""
             <div class="finding-item" style="border-left-color:{sc};">
-              <div class="finding-title">{f.get("title", "Finding")}</div>
-              <div class="finding-desc">{f.get("description", "")}</div>
+              <div class="finding-title">{_esc(title) or "Finding"}</div>
+              <div class="finding-desc">{_esc(desc)}</div>
               <div class="finding-severity" style="color:{sc};">{sev.upper()}</div>
             </div>"""
 
@@ -219,7 +410,7 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
 <div class="card"><p style="font-size:13px;color:#0f172a;line-height:1.6;white-space:pre-wrap;">{executive_summary}</p></div>
 """
 
-    review_reasons = memo.get("human_review_reasons") or []
+    review_reasons = [uw_finding_title(str(x)) for x in (memo.get("human_review_reasons") or [])]
     review_block = ""
     if review_reasons:
         items = "".join(f"<li style='padding:3px 0;color:#0f172a;font-size:12px;'>&mdash; {r}</li>" for r in review_reasons[:15])
@@ -644,7 +835,7 @@ def _findings_html(findings: list[dict[str, Any]]) -> str:
             '<div class="finding-desc">%s</div>'
             '<div class="finding-severity" style="color:%s;">%s</div>'
             "</div>"
-        ) % (sc, f.get("title", "Finding"), f.get("description", ""), sc, sev.upper())
+        ) % (sc, uw_finding_title(f.get("title", "")) or "Finding", uw_finding_description(f.get("description", "")), sc, sev.upper())
     if not out:
         out = '<p style="color:#94a3b8;font-size:12px;padding:8px 0;">No findings recorded.</p>'
     return out

@@ -87,7 +87,14 @@ def citation_issues(
             VerificationIssue(
                 code="uncited_claim" if critical else "ungrounded_field",
                 severity=SEVERITY_ERROR if critical else SEVERITY_WARNING,
-                message=(f"{key}={value!r} has no page/bbox/source citation — " + ("blocks STP; treat as hypothesis until grounded" if critical else "route to human review")),
+                message=(
+                    f"{key} of {value} cannot be traced to a page in the submitted documents — "
+                    + (
+                        "do not rely on this figure until supporting paperwork is received and matched"
+                        if critical
+                        else "route to manual review"
+                    )
+                ),
                 field_name=key,
                 page_number=field.page_number,
                 bbox=field.bbox,

@@ -1,6 +1,8 @@
-import { useState } from 'react';
-import { ChevronDown, ChevronRight, Info } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ChevronDown, ChevronRight, Eye, FileText, Loader2 } from 'lucide-react';
 import { displayText, safeLower } from '../lib/safe';
+import { endpoints } from '../lib/api';
+import { uwFinding } from '../lib/uwLanguage';
 
 const SEV_COLORS = {
   critical: 'bg-red-500/15 text-red-400 ring-red-500/30',
@@ -66,42 +68,130 @@ export function Collapsible({ title, defaultOpen = false, children, badge }) {
   );
 }
 
-function FindingCard({ finding, compact = false }) {
-  const sev = safeLower(finding?.severity, 'moderate');
+function FindingCard({ finding }) {
+  const f = uwFinding(finding);
+  const sev = safeLower(f?.severity, 'moderate');
   return (
     <div className={`flex items-start gap-2.5 rounded-lg border border-white/[0.04] bg-surface/40 p-3`}>
       <span className={`mt-0.5 shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ring-1 ring-inset ${SEV_COLORS[sev] || SEV_COLORS.moderate}`}>
         {sev}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium text-slate-200">{displayText(finding?.title, 'Finding')}</p>
-        {finding?.description && (
-          <p className="mt-1 text-xs leading-relaxed text-slate-400">{displayText(finding.description)}</p>
+        <p className="text-sm font-medium text-slate-200">{displayText(f?.title, 'Finding')}</p>
+        {f?.description && (
+          <p className="mt-1 text-xs leading-relaxed text-slate-400">{displayText(f.description)}</p>
         )}
       </div>
     </div>
   );
 }
 
-function InlineFindings({ findings, maxShow = 4 }) {
-  const sorted = [...findings].sort((a, b) => {
-    const sa = SEV_ORDER[safeLower(a?.severity, 'moderate')] ?? 2;
-    const sb = SEV_ORDER[safeLower(b?.severity, 'moderate')] ?? 2;
-    return sa - sb;
-  });
-  const shown = sorted.slice(0, maxShow);
-  const remaining = sorted.length - maxShow;
+// ── Document transparency ─────────────────────────────────────────────────────
 
-  if (!shown.length) return null;
+function DocumentPreviewModal({ doc, onClose }) {
+  const [preview, setPreview] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const bundleId = doc.bundleId;
+    const docId = doc.id;
+    if (!bundleId || !docId) {
+      setLoading(false);
+      setError('Full document preview is not available for this file.');
+      return () => {};
+    }
+    endpoints
+      .previewDraftDocument(bundleId, docId)
+      .then((d) => { if (!cancelled) setPreview(d); })
+      .catch((e) => { if (!cancelled) setError(e.message || 'Could not load preview.'); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [doc]);
 
   return (
-    <div className="space-y-2">
-      {shown.map((f, i) => (
-        <FindingCard key={f.finding_id || i} finding={f} />
-      ))}
-      {remaining > 0 && (
-        <p className="text-xs text-slate-500">+ {remaining} more finding{remaining > 1 ? 's' : ''} — see All Key Findings below</p>
-      )}
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-6" onClick={onClose}>
+      <div
+        className="max-h-[80vh] w-full max-w-2xl overflow-hidden rounded-2xl border border-white/[0.08] bg-surface-raised shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b border-white/[0.06] px-5 py-3">
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-slate-200">{doc.filename || 'Document'}</p>
+            {doc.type && <p className="text-xs text-slate-500">{displayText(doc.type).replace(/_/g, ' ')}</p>}
+          </div>
+          <button type="button" onClick={onClose} className="rounded-lg px-2 py-1 text-xs text-slate-400 hover:bg-white/5 hover:text-white">Close</button>
+        </div>
+        <div className="max-h-[64vh] overflow-y-auto px-5 py-4">
+          {loading && (
+            <p className="flex items-center gap-2 text-sm text-slate-400"><Loader2 className="h-4 w-4 animate-spin" /> Loading preview…</p>
+          )}
+          {!loading && error && <p className="text-sm text-amber-300/90">{error}</p>}
+          {!loading && !error && (
+            <pre className="whitespace-pre-wrap break-words font-mono text-[11px] leading-relaxed text-slate-300">
+              {typeof preview === 'string' ? preview : displayText(preview?.content || preview?.text || preview?.snippet, 'No readable content available — file is stored as binary (PDF/image).')}
+            </pre>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function IngestedDocuments({ job }) {
+  const results = job?.results || {};
+  const docs = [
+    ...(Array.isArray(job?.documents) ? job.documents : []),
+    ...(Array.isArray(results.documents) ? results.documents : []),
+  ].filter((d) => d && typeof d === 'object' && (d.filename || d.name || d.document_type || d.type));
+  const list = [];
+  const seen = new Set();
+  for (const d of docs) {
+    const key = `${d.document_id || d.submission_id || d.id || ''}|${d.filename || d.name || ''}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    list.push(d);
+  }
+  const [viewing, setViewing] = useState(null);
+
+  if (!list.length) return null;
+
+  const bundleId = results.bundle_id || job?.bundle_id;
+
+  return (
+    <div className="rounded-xl border border-white/[0.06] bg-surface/60 p-5">
+      <h2 className="text-base font-bold tracking-tight text-slate-100">Documents On File</h2>
+      <p className="mb-3 mt-1 text-xs text-slate-500">
+        {list.length} document{list.length > 1 ? 's' : ''} received and reviewed for this submission.
+      </p>
+      <ul className="divide-y divide-white/[0.04]">
+        {list.map((d, i) => {
+          const name = d.filename || d.name || `Document ${i + 1}`;
+          const id = d.document_id || d.submission_id || d.id || '';
+          return (
+            <li key={`${id}-${i}`} className="flex items-center justify-between gap-3 py-2.5">
+              <div className="flex min-w-0 items-center gap-2.5">
+                <FileText className="h-4 w-4 shrink-0 text-slate-500" />
+                <div className="min-w-0">
+                  <p className="truncate text-sm text-slate-200">{name}</p>
+                  {(d.document_type || d.type) && (
+                    <p className="text-[11px] capitalize text-slate-500">{displayText(d.document_type || d.type).replace(/_/g, ' ')}</p>
+                  )}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setViewing({ ...d, id, bundleId })}
+                className="btn-secondary btn-sm shrink-0 text-xs"
+              >
+                <Eye className="h-3.5 w-3.5" /> View
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+      {viewing && <DocumentPreviewModal doc={viewing} onClose={() => setViewing(null)} />}
     </div>
   );
 }
@@ -110,7 +200,7 @@ function cleanMemoText(text) {
   if (!text) return '';
   return text
     .replace(/\[(?:CRITICAL|HIGH|MODERATE|LOW|INFO)\]\s*/g, '')
-    .replace(/Risk score:\s*\d+\/100\s*·\s*\d+ findings?\s*\([^)]*\)\s*/g, '')
+    .replace(/Risk score:\s*\d+\/100\s*·\s*\d+ findings?\s*\([^)]*\)\s*\.?\s*/g, '')
     .trim();
 }
 
@@ -123,7 +213,6 @@ export default function MemoReportView({ job }) {
 
   const decision = safeLower(results.ai_decision || results.outcome || memoObj.decision, 'refer');
   const insuredName = displayText(results.insured_name || memoObj.insured_name);
-  const bundleId = results.bundle_id || job?.bundle_id || '';
 
   const faceAmount = results.tiv || results.face_amount || memoObj.face_amount || (quote.indicated_terms || {}).limit || 0;
   const premium = (quote.indicated_terms || {}).premium || quote.adjusted_premium || worksheet.indicated_terms?.premium || 0;
@@ -154,7 +243,6 @@ export default function MemoReportView({ job }) {
 
   // Extract "What to do next" from memo text (lines starting with digits)
   const memoLines = memoText.split('\n');
-  const whyDecisionIdx = memoLines.findIndex((l) => l.trim() === 'Why this decision');
   const whatToDoIdx = memoLines.findIndex((l) => l.trim() === 'What to do next');
   const nextSteps = whatToDoIdx >= 0 ? memoLines.slice(whatToDoIdx).join('\n') : '';
 
@@ -195,8 +283,8 @@ export default function MemoReportView({ job }) {
         </div>
       </div>
 
-      {/* Why This Decision — colored findings */}
-      {allFindings.length > 0 && (
+      {/* Why This Decision — every finding, scrollable */}
+      {sortedFindings.length > 0 && (
         <div className="rounded-2xl border border-white/[0.08] bg-surface/80 p-5">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-base font-bold tracking-tight text-slate-100">Why This Decision</h2>
@@ -208,7 +296,11 @@ export default function MemoReportView({ job }) {
               ))}
             </div>
           </div>
-          <InlineFindings findings={allFindings} />
+          <div className="max-h-[26rem] space-y-2 overflow-y-auto pr-1">
+            {sortedFindings.map((f, i) => (
+              <FindingCard key={f.finding_id || i} finding={f} />
+            ))}
+          </div>
         </div>
       )}
 
@@ -234,7 +326,10 @@ export default function MemoReportView({ job }) {
         </div>
       )}
 
-      {/* Memo Text — clean version */}
+      {/* Documents on file — full transparency */}
+      <IngestedDocuments job={job} />
+
+      {/* Full Memo — signed evaluation memo text */}
       {memoText ? (
         <Collapsible title="Full Memo" badge="text">
           <div className="rounded-lg border border-white/[0.04] bg-black/20 p-4">
@@ -267,17 +362,6 @@ export default function MemoReportView({ job }) {
                 ))}
               </tbody>
             </table>
-          </div>
-        </Collapsible>
-      )}
-
-      {/* All Key Findings */}
-      {sortedFindings.length > 0 && (
-        <Collapsible title="All Key Findings" badge={allFindings.length}>
-          <div className="space-y-2">
-            {sortedFindings.map((f, i) => (
-              <FindingCard key={f.finding_id || i} finding={f} />
-            ))}
           </div>
         </Collapsible>
       )}

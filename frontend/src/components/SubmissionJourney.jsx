@@ -50,10 +50,57 @@ function Section({ title, icon: Icon, children, defaultOpen = true }) {
   );
 }
 
+function DocPreviewModal({ doc, onClose }) {
+  const [preview, setPreview] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!doc.bundleId || !doc.id) {
+      setLoading(false);
+      setError('Full document preview is not available for this file.');
+      return () => {};
+    }
+    endpoints
+      .previewDraftDocument(doc.bundleId, doc.id)
+      .then((d) => { if (!cancelled) setPreview(d); })
+      .catch((e) => { if (!cancelled) setError(e.message || 'Could not load preview.'); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [doc]);
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-6" onClick={onClose}>
+      <div
+        className="max-h-[80vh] w-full max-w-2xl overflow-hidden rounded-2xl border border-white/[0.08] bg-surface-raised shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b border-white/[0.06] px-5 py-3">
+          <p className="min-w-0 truncate text-sm font-semibold text-slate-200">{doc.filename || doc.name || 'Document'}</p>
+          <button type="button" onClick={onClose} className="rounded-lg px-2 py-1 text-xs text-slate-400 hover:bg-white/5 hover:text-white">Close</button>
+        </div>
+        <div className="max-h-[64vh] overflow-y-auto px-5 py-4">
+          {loading && (
+            <p className="flex items-center gap-2 text-sm text-slate-400"><Loader2 className="h-4 w-4 animate-spin" /> Loading preview…</p>
+          )}
+          {!loading && error && <p className="text-sm text-amber-300/90">{error}</p>}
+          {!loading && !error && (
+            <pre className="whitespace-pre-wrap break-words font-mono text-[11px] leading-relaxed text-slate-300">
+              {typeof preview === 'string' ? preview : displayText(preview?.content || preview?.text || preview?.snippet, 'No readable content available — file is stored as binary (PDF/image).')}
+            </pre>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function PipelineTimeline({ stages, processing, currentStage, expandedStage, onToggleStage, job }) {
   const list = asList(stages);
   const r = job?.results || {};
   const memo = r.memo || {};
+  const [viewingDoc, setViewingDoc] = useState(null);
 
   function getStageDetail(stageId) {
     const docs = asList(job?.documents || r.documents || []);
@@ -63,11 +110,11 @@ function PipelineTimeline({ stages, processing, currentStage, expandedStage, onT
         return {
           title: 'Intake — Documents Received',
           lines: [
-            `${r.document_count ?? filenames.length ?? 0} document(s) ingested`,
-            r.ocr_documents ? `${r.ocr_documents} document(s) OCR-processed` : null,
-            filenames.length > 0 ? `Files: ${filenames.join(', ')}` : null,
+            `${r.document_count ?? filenames.length ?? 0} document(s) received`,
+            r.ocr_documents ? `${r.ocr_documents} document(s) read (OCR)` : null,
             `Bundle: ${r.bundle_id || '—'}`,
           ].filter(Boolean),
+          docs,
         };
       case 'triage':
         return {
@@ -77,7 +124,7 @@ function PipelineTimeline({ stages, processing, currentStage, expandedStage, onT
             `Priority level: ${r.triage_priority || '—'}`,
             r.document_checklist?.lob ? `Line of business: ${r.document_checklist.lob}` : null,
             r.document_checklist?.completeness_pct != null ? `Package completeness: ${Math.round(r.document_checklist.completeness_pct > 1 ? r.document_checklist.completeness_pct : r.document_checklist.completeness_pct * 100)}%` : null,
-            (r.document_checklist?.missing_documents || []).length > 0 ? `Missing: ${(r.document_checklist.missing_documents || []).join(', ')}` : null,
+            (r.document_checklist?.missing_documents || []).length > 0 ? `Still outstanding from broker: ${(r.document_checklist.missing_documents || []).join(', ')}` : null,
           ].filter(Boolean),
         };
       case 'appetite':
@@ -92,28 +139,27 @@ function PipelineTimeline({ stages, processing, currentStage, expandedStage, onT
         return {
           title: 'Document Parsing',
           lines: [
-            `${r.document_count ?? 0} document(s) parsed`,
-            r.ocr_documents ? `${r.ocr_documents} OCR-processed` : null,
-            `Structured data: ${r.structured_fields_extracted ?? 'extracted'}`,
+            `${r.document_count ?? 0} document(s) reviewed`,
+            r.ocr_documents ? `${r.ocr_documents} read via OCR` : null,
             memo.insured_name ? `Insured: ${memo.insured_name}` : null,
           ].filter(Boolean),
         };
       case 'verify':
         return {
-          title: 'Verification & Oracle Checks',
+          title: 'Verification & External Records',
           lines: [
-            `${r.oracle_findings_count ?? 0} oracle check(s)`,
-            r.ofac_cleared ? `OFAC: ${r.ofac_cleared ? 'Cleared' : 'Flagged'}` : null,
+            `${r.oracle_findings_count ?? 0} external record check(s) run`,
+            r.ofac_cleared != null ? `OFAC / sanctions: ${r.ofac_cleared ? 'Cleared' : 'Flagged'}` : null,
             memo.insured_name ? `Insured identity: ${memo.insured_name}` : null,
             r.life_bureau_findings ? `Bureau findings: ${r.life_bureau_findings}` : null,
           ].filter(Boolean),
         };
       case 'reconcile':
         return {
-          title: 'Reconciliation',
+          title: 'Cross-Document Reconciliation',
           lines: [
-            r.reconciliation?.match_rate != null ? `Match rate: ${Math.round(r.reconciliation.match_rate * 100)}%` : null,
-            `${r.reconciliation_discrepancies ?? 0} conflict(s)`,
+            r.reconciliation?.match_rate != null ? `Field match rate: ${Math.round(r.reconciliation.match_rate * 100)}%` : null,
+            `${r.reconciliation_discrepancies ?? 0} conflicting value(s) across documents`,
             r.reconciliation?.overall_status ? `Status: ${r.reconciliation.overall_status}` : null,
           ].filter(Boolean),
         };
@@ -123,7 +169,7 @@ function PipelineTimeline({ stages, processing, currentStage, expandedStage, onT
           lines: [
             memo.overall_risk_score != null ? `Risk score: ${Math.round(Number(memo.overall_risk_score) * 100)}/100` : null,
             memo.overall_risk_severity ? `Severity: ${memo.overall_risk_severity}` : null,
-            `${(memo.key_findings || []).length} key finding(s)`,
+            `${(memo.key_findings || []).length} finding(s) on file`,
             memo.decision ? `Decision: ${memo.decision}` : null,
           ].filter(Boolean),
         };
@@ -141,8 +187,8 @@ function PipelineTimeline({ stages, processing, currentStage, expandedStage, onT
           title: 'Final Decision',
           lines: [
             `Decision: ${(r.ai_decision || memo.decision || 'pending').toString().toUpperCase()}`,
-            memo.human_review_required ? 'Human review required' : null,
-            ...(memo.human_review_reasons || []).slice(0, 5).map((r) => `Reason: ${r}`),
+            memo.human_review_required ? 'Underwriter review required before bind' : null,
+            ...(memo.human_review_reasons || []).slice(0, 5).map((rr) => `Reason: ${rr}`),
           ].filter(Boolean),
         };
       default:
@@ -187,6 +233,7 @@ function PipelineTimeline({ stages, processing, currentStage, expandedStage, onT
         const stage = list.find((s) => s.id === expandedStage);
         if (!stage) return null;
         const detail = getStageDetail(expandedStage);
+        const bundleId = r.bundle_id || job?.bundle_id;
         return (
           <div className="rounded-lg border border-brand/20 bg-brand/5 p-4 mt-1">
             <div className="flex items-center justify-between mb-3">
@@ -201,6 +248,29 @@ function PipelineTimeline({ stages, processing, currentStage, expandedStage, onT
                 </div>
               ))}
             </div>
+            {asList(detail.docs).length > 0 && (
+              <div className="mt-3 border-t border-white/[0.06] pt-3">
+                <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-slate-400">Documents on file</p>
+                <ul className="divide-y divide-white/[0.04]">
+                  {asList(detail.docs).map((d, i) => {
+                    const name = d.filename || d.name || `Document ${i + 1}`;
+                    const id = d.document_id || d.submission_id || d.id || '';
+                    return (
+                      <li key={`${id}-${i}`} className="flex items-center justify-between gap-3 py-2">
+                        <span className="min-w-0 truncate text-sm text-slate-300"><FileText className="mr-2 inline h-3.5 w-3.5 text-slate-500" />{name}</span>
+                        <button
+                          type="button"
+                          className="btn-secondary btn-sm shrink-0 text-xs"
+                          onClick={() => setViewingDoc({ ...d, id, bundleId })}
+                        >
+                          View
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
             {stage.findings > 0 && (
               <p className="mt-3 text-xs text-slate-500 border-t border-white/[0.04] pt-2">{stage.findings} finding{stage.findings > 1 ? 's' : ''} identified in this stage</p>
             )}
@@ -210,6 +280,7 @@ function PipelineTimeline({ stages, processing, currentStage, expandedStage, onT
           </div>
         );
       })()}
+      {viewingDoc && <DocPreviewModal doc={viewingDoc} onClose={() => setViewingDoc(null)} />}
       {processing && (
         <p className="pipeline-live mt-2 text-sm font-semibold text-brand-light">Live — {currentStage ? `Running ${currentStage}` : 'pipeline in progress'}</p>
       )}
