@@ -89,11 +89,7 @@ def citation_issues(
                 severity=SEVERITY_ERROR if critical else SEVERITY_WARNING,
                 message=(
                     f"{key} of {value} cannot be traced to a page in the submitted documents — "
-                    + (
-                        "do not rely on this figure until supporting paperwork is received and matched"
-                        if critical
-                        else "route to manual review"
-                    )
+                    + ("do not rely on this figure until supporting paperwork is received and matched" if critical else "route to manual review")
                 ),
                 field_name=key,
                 page_number=field.page_number,

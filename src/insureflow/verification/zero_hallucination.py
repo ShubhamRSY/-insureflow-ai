@@ -70,19 +70,10 @@ class HallucinationHit:
         msg = self.message or ""
         field = self.field_name or "A figure"
         if self.code in {"uncited_claim", "memo_uncited_claim", "debate_challenger_win"}:
-            return (
-                f"{field} shown on the file could not be matched to the application paperwork. "
-                "Do not rely on this figure until supporting documentation is received and checked."
-            )
+            return f"{field} shown on the file could not be matched to the application paperwork. Do not rely on this figure until supporting documentation is received and checked."
         if "guideline" in msg.lower():
-            return (
-                f"{field} cites a rating guideline that is not in the filed rule set. "
-                "Confirm the manual reference before using it in the classification."
-            )
-        return (
-            f"{field} could not be confirmed against the submitted documents "
-            f"({msg[:160]}). Verify the figure manually before relying on it."
-        )
+            return f"{field} cites a rating guideline that is not in the filed rule set. Confirm the manual reference before using it in the classification."
+        return f"{field} could not be confirmed against the submitted documents ({msg[:160]}). Verify the figure manually before relying on it."
 
 
 @dataclass

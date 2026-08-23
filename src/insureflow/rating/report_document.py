@@ -21,17 +21,18 @@ _FINDING_REWRITES: tuple[tuple[str, str], ...] = (
 )
 
 _FINDING_DESC_SUBS: tuple[tuple[str, str], ...] = (
-    ("has no page/bbox/source citation — blocks STP; treat as hypothesis until grounded",
-     "cannot be traced to a page in the submitted documents — do not rely on this figure until supporting paperwork is received"),
-    ("failed layered extraction verification with",
-     "could not be fully verified against source pages ("),
+    (
+        "has no page/bbox/source citation — blocks STP; treat as hypothesis until grounded",
+        "cannot be traced to a page in the submitted documents — do not rely on this figure until supporting paperwork is received",
+    ),
+    ("failed layered extraction verification with", "could not be fully verified against source pages ("),
     ("Top issue codes:", "Unverified items:"),
-    ("Do not rely on extracted figures without review.",
-     "Review against the original paperwork before relying on any figure."),
-    ("authorization alone is not a query",
-     "a signed authorization alone is not a bureau search — order an MIB report before finalizing the class"),
-    ("Cannot run sanctions screening without a named insured / applicant.",
-     "OFAC / AML screening could not be run because no named insured appears on the application. Obtain the full legal name and re-run screening."),
+    ("Do not rely on extracted figures without review.", "Review against the original paperwork before relying on any figure."),
+    ("authorization alone is not a query", "a signed authorization alone is not a bureau search — order an MIB report before finalizing the class"),
+    (
+        "Cannot run sanctions screening without a named insured / applicant.",
+        "OFAC / AML screening could not be run because no named insured appears on the application. Obtain the full legal name and re-run screening.",
+    ),
 )
 
 
@@ -100,9 +101,7 @@ def _memo_header_rows(header_lines: list[str]) -> str:
             if ":" in chunk:
                 label, _, value = chunk.partition(":")
                 cells += (
-                    f'<td style="padding:3px 18px 3px 0;font-size:10.5px;white-space:nowrap;">'
-                    f'<span style="color:#334155;">{_esc(label.strip())}:</span> '
-                    f"<strong>{_esc(value.strip())}</strong></td>"
+                    f'<td style="padding:3px 18px 3px 0;font-size:10.5px;white-space:nowrap;"><span style="color:#334155;">{_esc(label.strip())}:</span> <strong>{_esc(value.strip())}</strong></td>'
                 )
             else:
                 cells += f'<td colspan="3" style="padding:3px 0;font-size:10.5px;">{_esc(chunk)}</td>'
@@ -128,7 +127,7 @@ def generate_memo_report_html(results: dict[str, Any], job_id: str, now: str) ->
             polished = _esc(line).replace("[X]", "&#9745;").replace("[x]", "&#9745;").replace("[ ]", "&#9744;")
             indent = len(line) - len(line.lstrip(" "))
             out += f'<div style="padding-left:{indent * 7}px;text-indent:-14px;margin-left:14px;">{polished}</div>'
-        return f'<div style="font-family:\'SF Mono\',Menlo,Consolas,\'Liberation Mono\',monospace;font-size:10px;line-height:1.65;color:#1e293b;">{out}</div>'
+        return f"<div style=\"font-family:'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;font-size:10px;line-height:1.65;color:#1e293b;\">{out}</div>"
 
     sections_html = ""
     for title, lines in sections:
