@@ -30,6 +30,17 @@ function stageStatus(done, warn, fail, skipped) {
   return 'pending';
 }
 
+function isLifeStage(r) {
+  return safeLower(r?.insurance_line || r?.product_line) === 'life';
+}
+
+function riskBand(score) {
+  const s = Number(score) * 100;
+  if (s >= 80) return 'high';
+  if (s >= 50) return 'moderate';
+  return 'low';
+}
+
 function formatDuration(ms) {
   if (ms == null) return null;
   if (ms < 1000) return `${ms}ms`;
@@ -102,20 +113,24 @@ export function buildPipelineStages(job) {
     {
       id: 'parse',
       label: 'Parsed',
-      detail: r.ocr_documents
-        ? `${r.ocr_documents} OCR · structured extract`
-        : 'Structured + unstructured parse',
+      detail: (r.document_count || r.ocr_documents)
+        ? `${r.document_count ?? r.ocr_documents} document(s) read`
+        : 'Documents read & structured',
       status: processing
         ? 'pending'
         : appetiteDecline
           ? 'skipped'
           : stageStatus((r.document_count || 0) > 0 || !!memo.insured_name),
-      findings: r.ocr_documents || 0,
+      findings: r.document_count ?? r.ocr_documents ?? 0,
     },
     {
       id: 'verify',
       label: 'Verified',
-      detail: `${r.oracle_findings_count ?? 0} oracle check(s)`,
+      detail: isLifeStage(r)
+        ? 'Medical & bureau checks run'
+        : (r.oracle_findings_count ?? 0) > 0
+          ? `${r.oracle_findings_count} external record(s) checked`
+          : 'External records checked',
       status: processing
         ? 'pending'
         : appetiteDecline
@@ -144,8 +159,8 @@ export function buildPipelineStages(job) {
       id: 'analyze',
       label: 'Scored',
       detail: memo.overall_risk_score != null
-        ? `Risk ${Math.round(Number(memo.overall_risk_score) * 100)}/100`
-        : `${agentFindings.length} agent finding(s)`,
+        ? `Overall risk: ${riskBand(memo.overall_risk_score)}`
+        : `${agentFindings.length} underwriting item(s) noted`,
       status: processing
         ? 'pending'
         : appetiteDecline

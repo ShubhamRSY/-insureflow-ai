@@ -2,7 +2,28 @@ import { useEffect, useState } from 'react';
 import { ChevronDown, ChevronRight, Eye, FileText, Loader2 } from 'lucide-react';
 import { displayText, safeLower } from '../lib/safe';
 import { endpoints } from '../lib/api';
-import { uwFinding, uwMemoText } from '../lib/uwLanguage';
+import { uwFinding, uwMemoText, premiumStepLabel } from '../lib/uwLanguage';
+
+const BASIS_LABELS = {
+  per_100_tiv: 'per $100 of insured value',
+  payroll: 'per payroll',
+  gross_sales: 'per gross sales',
+  tiv: 'per insured value',
+  expense_profit: 'expense & profit load',
+  state: 'by state filing',
+  schedule: 'property schedule',
+  market: 'market conditions',
+  deductible: 'deductible level',
+  loss_ratio: 'claims history',
+  tenure: 'years in business',
+  uw_discretion: 'underwriter judgment',
+};
+
+function premiumBasisLabel(basis) {
+  const b = String(basis || '').trim();
+  if (!b) return '—';
+  return BASIS_LABELS[b.toLowerCase()] || b.replace(/_/g, ' ');
+}
 
 const SEV_COLORS = {
   critical: 'bg-red-500/15 text-red-400 ring-red-500/30',
@@ -337,22 +358,22 @@ export default function MemoReportView({ job }) {
 
       {/* Premium Build-up */}
       {premiumSteps.length > 0 && (
-        <Collapsible title="Premium Build-up" badge={`${premiumSteps.length} steps`}>
+        <Collapsible title="Premium Build-up" badge={`${premiumSteps.length} rating components`}>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-[11px]">
               <thead>
                 <tr className="border-b border-white/[0.06] text-slate-500">
-                  <th className="py-1.5 pr-3 font-medium">Step</th>
-                  <th className="py-1.5 pr-3 font-medium">Basis</th>
+                  <th className="py-1.5 pr-3 font-medium">Rating component</th>
+                  <th className="py-1.5 pr-3 font-medium">Applied to</th>
                   <th className="py-1.5 pr-3 font-medium">Factor</th>
-                  <th className="py-1.5 font-medium">Mod %</th>
+                  <th className="py-1.5 font-medium">Adjustment</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/[0.03]">
                 {premiumSteps.map((row, i) => (
                   <tr key={row.step || row.name || i} className="text-slate-300">
-                    <td className="py-1.5 pr-3">{displayText(row.step || row.name)}</td>
-                    <td className="py-1.5 pr-3 text-slate-500">{displayText(row.basis)}</td>
+                    <td className="py-1.5 pr-3">{premiumStepLabel(row.step || row.name)}</td>
+                    <td className="py-1.5 pr-3 text-slate-500">{premiumBasisLabel(displayText(row.basis))}</td>
                     <td className="py-1.5 pr-3 font-mono">{fmtFactor(row.factor || row.amount)}</td>
                     <td className="py-1.5 font-mono">{row.modifier_pct != null ? fmtPct(row.modifier_pct) : '—'}</td>
                   </tr>

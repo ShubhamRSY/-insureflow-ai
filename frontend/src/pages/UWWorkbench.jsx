@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Badge, EmptyState, StatCard } from '../components/ui';
 import { endpoints, fmtCurrency, AuthError } from '../lib/api';
+import { uwReasons } from '../lib/uwLanguage';
 import { insuranceLineLabel } from '../lib/insuranceLines';
 import {
   ShieldCheck, Inbox, FileCheck, History, Search, Loader2, Layers, AlertTriangle, GitCompare, UserCheck, CircleCheck, HandCoins,
@@ -336,8 +337,8 @@ export default function UWWorkbench({ onOpenJob, authorityData, onRefresh }) {
 
                   {(c.human_review_reasons || []).length > 0 && (
                     <ul className="mt-3 space-y-1">
-                      {(c.human_review_reasons || []).map((r, i) => (
-                        <li key={i} className="text-xs text-amber-400/90">· {typeof r === 'string' ? r : r.reason || JSON.stringify(r)}</li>
+                      {uwReasons((c.human_review_reasons || []).map((r) => (typeof r === 'string' ? r : r.reason || JSON.stringify(r)))).map((r, i) => (
+                        <li key={i} className="text-xs text-amber-400/90">· {r}</li>
                       ))}
                     </ul>
                   )}

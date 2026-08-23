@@ -6,6 +6,7 @@ import {
   ChevronDown, ChevronRight,
 } from 'lucide-react';
 import { fmtCurrency, endpoints } from '../lib/api';
+import { uwReasons } from '../lib/uwLanguage';
 import { getJourneyContext } from '../lib/pipelineJourney';
 import { insuranceLineLabel } from '../lib/insuranceLines';
 import SimilarPriors from './SimilarPriors';
@@ -101,9 +102,31 @@ function PipelineTimeline({ stages, processing, currentStage, expandedStage, onT
   const r = job?.results || {};
   const memo = r.memo || {};
   const [viewingDoc, setViewingDoc] = useState(null);
+  const bundleId = r.bundle_id || job?.bundle_id || '';
+  const jobDocs = asList(job?.documents || r.documents || []).map((d) => ({
+    id: d.document_id || d.doc_id || d.id,
+    filename: d.filename || d.name,
+  }));
+  const [bundleDocs, setBundleDocs] = useState([]);
+  const docsForIntake = jobDocs.length > 0 ? jobDocs : bundleDocs;
+
+  // Older jobs don't carry a documents list — pull it from the draft bundle
+  // the first time the Intake stage is expanded so View buttons appear.
+  useEffect(() => {
+    if (expandedStage !== 'intake' || docsForIntake.length > 0 || !bundleId) return undefined;
+    let cancelled = false;
+    endpoints.getDraftBundle(bundleId)
+      .then((b) => {
+        if (cancelled) return;
+        setBundleDocs(asList(b?.documents).map((d) => ({ id: d.doc_id, filename: d.filename })));
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expandedStage]);
 
   function getStageDetail(stageId) {
-    const docs = asList(job?.documents || r.documents || []);
+    const docs = docsForIntake;
     const filenames = docs.map((d) => d.filename || d.name || '').filter(Boolean);
     switch (stageId) {
       case 'intake':
@@ -188,7 +211,7 @@ function PipelineTimeline({ stages, processing, currentStage, expandedStage, onT
           lines: [
             `Decision: ${(r.ai_decision || memo.decision || 'pending').toString().toUpperCase()}`,
             memo.human_review_required ? 'Underwriter review required before bind' : null,
-            ...(memo.human_review_reasons || []).slice(0, 5).map((rr) => `Reason: ${rr}`),
+            ...uwReasons(memo.human_review_reasons).slice(0, 5).map((rr) => rr),
           ].filter(Boolean),
         };
       default:
@@ -197,8 +220,8 @@ function PipelineTimeline({ stages, processing, currentStage, expandedStage, onT
   }
   return (
     <div className="space-y-2">
-      <div className="overflow-x-auto">
-        <div className="flex items-stretch gap-1.5 min-w-max">
+      <div>
+        <div className="flex flex-wrap items-stretch gap-1.5">
           {list.map((stage, i) => {
             const status = processing && currentStage === stage.id ? 'active' : stage.status;
             const { Icon, cls } = STATUS_ICON[status] || STATUS_ICON.pending;

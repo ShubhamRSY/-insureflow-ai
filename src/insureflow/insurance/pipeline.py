@@ -425,7 +425,7 @@ class InsurancePipeline:
         )
         progress.complete(
             "parse",
-            detail=f"{len(bundle.unstructured)} docs · OCR {ocr_count}",
+            detail=f"{len(bundle.unstructured)} document(s) read",
             findings=ocr_count,
         )
 
@@ -868,7 +868,7 @@ class InsurancePipeline:
             oracle_findings.extend(ofac_result.findings)
             progress.complete(
                 "verify",
-                detail=f"{len(oracle_findings)} life bureau/OFAC finding(s)",
+                detail=f"{len(oracle_findings)} external record(s) need attention" if oracle_findings else "Medical & bureau checks clear",
                 findings=len(oracle_findings),
                 status="warning" if oracle_findings else "complete",
             )
@@ -1066,7 +1066,7 @@ class InsurancePipeline:
             for finding in verification_findings(bundle):
                 memo.key_findings.append(Finding(**finding))
             memo.human_review_required = True
-            memo.human_review_reasons.append(f"Extraction verification flagged {verification_meta['flagged_doc_count']} document(s)")
+            memo.human_review_reasons.append(f"{verification_meta['flagged_doc_count']} document(s) could not be fully verified against source pages")
             if memo.decision not in (UWDecision.DECLINE, UWDecision.REFER):
                 memo.decision = UWDecision.REFER
             audit.log(
@@ -1172,7 +1172,11 @@ class InsurancePipeline:
         agent_findings = len(memo.key_findings) - len(oracle_findings) - len(validation_findings)
         progress.complete(
             "analyze",
-            detail=f"Risk {memo.overall_risk_score:.0%}" if memo.overall_risk_score else f"{agent_findings} agent finding(s)",
+            detail=(
+                f"Overall risk: {'high' if memo.overall_risk_score >= 0.8 else 'moderate' if memo.overall_risk_score >= 0.5 else 'low'}"
+                if memo.overall_risk_score
+                else f"{agent_findings} underwriting item(s) noted"
+            ),
             findings=max(agent_findings, 0),
             status="warning" if memo.human_review_required else "complete",
         )

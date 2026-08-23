@@ -205,6 +205,17 @@ def enforce_decision_consistency(memo: UnderwritingMemo) -> UnderwritingMemo:
             if t not in memo.human_review_reasons:
                 memo.human_review_reasons.append(t)
 
+    # Collapse duplicate review reasons so the decision panel stays readable
+    if memo.human_review_reasons:
+        seen: set[str] = set()
+        deduped: list[str] = []
+        for r in memo.human_review_reasons:
+            key = str(r).strip().lower()
+            if key and key not in seen:
+                seen.add(key)
+                deduped.append(r)
+        memo.human_review_reasons = deduped
+
     # Refresh severity from findings so UI matches the gate
     if memo.key_findings:
         rank = {"low": 1, "moderate": 2, "high": 3, "critical": 4}
