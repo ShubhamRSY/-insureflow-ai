@@ -25,7 +25,10 @@ def uw_field(field: str) -> str:
     """Humanize an internal field key ('spacy.amount' → 'stated amount')."""
     name = str(field or "").strip()
     name = re.sub(r"^(spacy|regex|llm|layoutlm|ocr)\.", "", name, flags=re.I)
-    return name.replace("_", " ").strip() or "the value"
+    name = name.replace("_", " ").strip()
+    if name == "amount":
+        return "stated amount"
+    return name or "the value"
 
 
 def to_number(value: str) -> float | None:
