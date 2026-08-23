@@ -240,6 +240,7 @@ class InsurancePipeline:
         commercial_category_id: str | None = None,
         insurance_company_id: str | None = None,
         insurance_company_name: str | None = None,
+        state_code: str = "",
         skip_appetite_filter: bool = False,
         skip_oracles: bool = False,
         skip_portfolio: bool = False,
@@ -1427,6 +1428,7 @@ class InsurancePipeline:
             commercial_product_id=commercial_product_id or life_product_id or health_product_id or general_product_id,
             commercial_coverage_id=selected_coverage_id,
             experience_mod=experience_mod,
+            state_override=state_code,
         )
         qmeta = dict(quote.metadata or {})
         if ofac_meta:
@@ -1457,7 +1459,7 @@ class InsurancePipeline:
             sl = classify_surplus_lines(
                 bundle,
                 line=line_for_quote,
-                state=self.rating._primary_state(bundle) if hasattr(self.rating, "_primary_state") else "",
+                state=state_code or (self.rating._primary_state(bundle) if hasattr(self.rating, "_primary_state") else ""),
                 product_id=commercial_product_id or "",
             )
             qmeta["surplus_lines"] = sl.to_metadata()
@@ -1801,18 +1803,23 @@ class InsurancePipeline:
             estimated_tiv = (loc0.building_value or 0) + (loc0.contents_value or 0) + (loc0.bi_value or 0)
 
         state_compliance = None
-        if primary_state:
+        issue_state_for_compliance = (state_code or "").strip().upper()
+        if not issue_state_for_compliance and primary_state:
             try:
                 reg_engine = StateRegulatoryEngine()
                 loc_dicts = [{"state": loc.state, "city": loc.city, "address": loc.address} for loc in (bundle.structured.locations if bundle.structured else [])]
-                detected = reg_engine.detect_state(loc_dicts) or primary_state
+                issue_state_for_compliance = reg_engine.detect_state(loc_dicts) or primary_state
+            except Exception as exc:
+                logger.warning("State compliance check failed: %s", exc)
+        if issue_state_for_compliance:
+            try:
                 is_surplus = bool((quote.metadata or {}).get("surplus_lines"))
                 line_hint = resolved_line.value if resolved_line else ""
-                state_compliance = reg_engine.evaluate(
-                    detected,
+                state_compliance = StateRegulatoryEngine().evaluate(
+                    issue_state_for_compliance,
                     line_of_business=line_hint,
                     is_surplus_lines=is_surplus,
-                    is_windstorm_zone=detected in ("FL", "TX", "LA", "NC", "SC", "NJ", "NY"),
+                    is_windstorm_zone=issue_state_for_compliance in ("FL", "TX", "LA", "NC", "SC", "NJ", "NY"),
                     has_oral_binder=False,
                 )
             except Exception as exc:
@@ -1869,6 +1876,7 @@ class InsurancePipeline:
             "insured_name": memo.insured_name,
             "broker_name": broker_name,
             "primary_state": primary_state,
+            "issue_state": issue_state_for_compliance or "",
             "state_compliance": state_compliance.model_dump(mode="json") if state_compliance else None,
             "tiv": estimated_tiv,
             "triage_priority": triage_result.priority.value,

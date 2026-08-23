@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import re
 from typing import Any
 
@@ -14,6 +15,12 @@ from insureflow.underwriting.life_medical import underwrite_life
 from insureflow.underwriting.life_product import classify_life_family, is_filed_term_product
 from insureflow.underwriting.life_reinsurance import evaluate_life_reinsurance
 from insureflow.underwriting.personal_lines import _blob, extract_life_factors
+
+logger = logging.getLogger(__name__)
+
+# Permanent products price via whole-life actuarial equivalence (A_x / ä_x)
+# instead of a flat family multiplier on one-year term mortality.
+PERMANENT_ACTUARIAL_FAMILIES = {"whole_life", "universal", "variable_universal"}
 
 
 def _term_duration_years(coverage_id: str | None, coverage_name: str | None = None) -> int | None:
@@ -129,6 +136,33 @@ def rate_life(
     product_families = manual.get("product_families") or {}
     product_f = float(product_families.get(family) or 1.0) if family != "term" else 1.0
 
+    # ── Permanent products: actuarial whole-life pricing ──────────────
+    # Net level premium P_x = A_x / ä_x at the manual's interest rate, with
+    # expense loading; sex/tobacco are already inside the sex/smoker mortality
+    # so only the UW class, band, and state factors apply on top.
+    wl_interest = float(manual.get("whole_life_interest_rate", 0.04))
+    wl_loading = float(manual.get("whole_life_expense_loading", 0.30))
+    actuarial: dict[str, Any] | None = None
+    if family in PERMANENT_ACTUARIAL_FAMILIES:
+        try:
+            from insureflow.life.whole_life_formulas import compute_full_whole_life_quote
+
+            wl_quote = compute_full_whole_life_quote(
+                age=age,
+                sex=sex_key,
+                smoker=bool(medical.tobacco),
+                face_amount=face,
+                interest_rate=wl_interest,
+                expense_loading_pct=wl_loading,
+                policy_fee=0.0,  # manual policy fee applied once below
+            )
+            actuarial = wl_quote.to_metadata()
+            actuarial["interest_rate"] = wl_interest
+            actuarial["expense_loading_pct"] = wl_loading
+        except Exception as exc:
+            logger.warning("Whole life actuarial pricing failed: %s", exc)
+            actuarial = None
+
     blob = _blob(bundle)
     modal = _modal_from_blob(blob)
     modal_f = float((manual.get("modal_factors") or {}).get(modal) or 1.0)
@@ -136,8 +170,12 @@ def rate_life(
     filing_state = str(manual.get("state_of_filing") or "IL").upper()
     state_filed = (not issue_state) or issue_state == filing_state or issue_state in (manual.get("state_relativities") or {})
 
-    base_premium = (face / 1000.0) * q
-    adjusted = base_premium * class_f * sex_f * tobacco_f * band_f * term_f * product_f * state_rel
+    if actuarial and float(actuarial.get("gross_premium") or 0) > 0:
+        base_premium = float(actuarial["gross_premium"])
+        adjusted = base_premium * class_f * band_f * state_rel
+    else:
+        base_premium = (face / 1000.0) * q
+        adjusted = base_premium * class_f * sex_f * tobacco_f * band_f * term_f * product_f * state_rel
     adjusted += (face / 1000.0) * medical.flat_extras_per_1000
     adjusted += (face / 1000.0) * financial.rider_load_per_1000
     annual = adjusted + float(manual.get("policy_fee", 60.0))
@@ -151,30 +189,51 @@ def rate_life(
 
     if not filed_term:
         eligible = False
-        reasons.append(f"{family.replace('_', ' ')} has no filed rates — illustrative load only, not an issueable premium")
+        if actuarial:
+            reasons.append(
+                f"{family.replace('_', ' ')} priced on actuarial equivalence (A_x / ä_x) — illustrative only, no {filing_state}-filed permanent rates"
+            )
+        else:
+            reasons.append(f"{family.replace('_', ' ')} has no filed rates — illustrative load only, not an issueable premium")
     if issue_state and issue_state != filing_state:
         reasons.append(f"IL pilot exhibit applied — not a {issue_state} state-of-issue filing")
         if not state_filed:
             eligible = False
 
-    components = [
-        RateComponent(name="mortality_per_1000", amount=q, basis=f"age={age}/{sex_key}"),
-        RateComponent(name="underwriting_class", amount=class_f, basis=medical.underwriting_class),
-        RateComponent(name="sex_factor", amount=sex_f, basis=sex),
-        RateComponent(name="tobacco_factor", amount=tobacco_f, basis="tobacco" if medical.tobacco else "non_tobacco"),
-        RateComponent(name="band_discount", amount=band_f, basis=f"face={face}"),
-        RateComponent(name="term_duration", amount=term_f, basis=f"{term_years}yr" if term_years else "default"),
-        RateComponent(name="product_family", amount=product_f, basis=family),
-        RateComponent(name="state_relativity", amount=state_rel, basis=issue_state or filing_state),
-        RateComponent(name="modal_factor", amount=modal_f, basis=modal),
-        RateComponent(name="flat_extras", amount=medical.flat_extras_per_1000, basis="per_1000"),
-        RateComponent(name="riders", amount=financial.rider_load_per_1000, basis="per_1000"),
-        RateComponent(name="policy_fee", amount=float(manual.get("policy_fee", 60.0)), basis="policy"),
-    ]
+    if actuarial:
+        net_prem = float(actuarial.get("level_net_premium") or 0.0)
+        components = [
+            RateComponent(name="whole_life_net_premium", amount=round(net_prem, 2), basis=f"A_x/ä_x @ {wl_interest:.0%} age={age}/{sex_key}"),
+            RateComponent(name="expense_loading", amount=round(base_premium - net_prem, 2), basis=f"{float(actuarial.get('expense_loading_pct', 0) or 0):.0%} of net"),
+            RateComponent(name="underwriting_class", amount=class_f, basis=medical.underwriting_class),
+            RateComponent(name="band_discount", amount=band_f, basis=f"face={face}"),
+            RateComponent(name="state_relativity", amount=state_rel, basis=issue_state or filing_state),
+            RateComponent(name="modal_factor", amount=modal_f, basis=modal),
+            RateComponent(name="flat_extras", amount=medical.flat_extras_per_1000, basis="per_1000"),
+            RateComponent(name="riders", amount=financial.rider_load_per_1000, basis="per_1000"),
+            RateComponent(name="policy_fee", amount=float(manual.get("policy_fee", 60.0)), basis="policy"),
+        ]
+    else:
+        components = [
+            RateComponent(name="mortality_per_1000", amount=q, basis=f"age={age}/{sex_key}"),
+            RateComponent(name="underwriting_class", amount=class_f, basis=medical.underwriting_class),
+            RateComponent(name="sex_factor", amount=sex_f, basis=sex),
+            RateComponent(name="tobacco_factor", amount=tobacco_f, basis="tobacco" if medical.tobacco else "non_tobacco"),
+            RateComponent(name="band_discount", amount=band_f, basis=f"face={face}"),
+            RateComponent(name="term_duration", amount=term_f, basis=f"{term_years}yr" if term_years else "default"),
+            RateComponent(name="product_family", amount=product_f, basis=family),
+            RateComponent(name="state_relativity", amount=state_rel, basis=issue_state or filing_state),
+            RateComponent(name="modal_factor", amount=modal_f, basis=modal),
+            RateComponent(name="flat_extras", amount=medical.flat_extras_per_1000, basis="per_1000"),
+            RateComponent(name="riders", amount=financial.rider_load_per_1000, basis="per_1000"),
+            RateComponent(name="policy_fee", amount=float(manual.get("policy_fee", 60.0)), basis="policy"),
+        ]
 
     product_label = manual.get("product")
     if filed_term and term_years:
         product_label = f"{term_years}-Year Level Term"
+    elif actuarial:
+        product_label = f"Illustrative {family.replace('_', ' ').title()} — Actuarial Basis (not filed)"
     elif not filed_term:
         product_label = f"Illustrative {family.replace('_', ' ')} (not filed)"
 
@@ -192,7 +251,8 @@ def rate_life(
         "issue_state": issue_state,
         "state_of_filing": filing_state,
         "serff_tracking": manual.get("serff_tracking"),
-        "rating_engine": "life_filing" if filed_term else "catalog_only",
+        "rating_engine": "life_whole_life_actuarial" if actuarial else ("life_filing" if filed_term else "catalog_only"),
+        "actuarial": actuarial,
         "face_amount": face,
         "medical": medical.to_metadata(),
         "financial": financial.to_metadata(),

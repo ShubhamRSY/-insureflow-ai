@@ -224,6 +224,7 @@ class InsuranceRatingEngine:
         commercial_product_id: str | None = None,
         commercial_coverage_id: str | None = None,
         experience_mod: float | None = None,
+        state_override: str = "",
     ) -> QuoteResult:
         personal = line in PERSONAL_LINES
         catalog_block = self._catalog_only_quote(bundle, line, commercial_product_id, commercial_coverage_id)
@@ -233,7 +234,8 @@ class InsuranceRatingEngine:
             from insureflow.rating.personal import rate_personal_line
             from insureflow.underwriting.personal_lines import _blob, _state_from_blob
 
-            state = self._primary_state(bundle) or _state_from_blob(_blob(bundle))
+            # Explicit issue-state (UI picker / API field) wins over document-derived state.
+            state = (state_override or "").strip().upper() or self._primary_state(bundle) or _state_from_blob(_blob(bundle))
             deductible = 0.0 if line in {InsuranceLine.LIFE, InsuranceLine.HEALTH, InsuranceLine.GENERAL} else self._estimate_deductible(bundle)
             if deductible <= 0 and line == InsuranceLine.PERSONAL_HOMEOWNERS:
                 deductible = 1000.0

@@ -3156,6 +3156,7 @@ def _run_pipeline_task(job_id: str, request: SubmissionRequest, org_id: str) -> 
                 commercial_category_id=request.commercial_category_id,
                 insurance_company_id=request.insurance_company_id,
                 insurance_company_name=request.insurance_company_name,
+                state_code=request.state_code or "",
                 progress_callback=on_progress,
             )
         job_store.set(INSURANCE_NS, job_id, {"status": "completed", "results": result, "state_code": request.state_code}, org_id=org_id)
@@ -3682,6 +3683,24 @@ def licensed_uw_sign_off(
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    # Stamp the licensed-UW sign-off onto job results so reports / quotes
+    # regenerate with the signature block and validated terms.
+    latest_sign_off = record.sign_offs[-1] if record.sign_offs else None
+    uw_sign_off = {
+        "action": action.value,
+        "signed_by": current.username or "",
+        "license_number": req.license_number,
+        "notes": req.notes,
+        "final_decision": record.final_decision or "",
+        "signed_at": (latest_sign_off.signed_at.isoformat() if latest_sign_off and latest_sign_off.signed_at else ""),
+        "workflow_state": record.state.value,
+    }
+    job = job_store.get(INSURANCE_NS, bundle_id, org_id=current.org_id)
+    if job and isinstance(job.get("results"), dict):
+        results = dict(job["results"])
+        results["uw_sign_off"] = uw_sign_off
+        job_store.set(INSURANCE_NS, bundle_id, {**job, "results": results}, org_id=current.org_id)
 
     # Capture structured override analytics when UW decision differs from AI or terms adjusted
     if (req.override_reason or req.uw_indicated_premium) and record.ai_decision and record.final_decision:
