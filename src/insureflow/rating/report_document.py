@@ -9,7 +9,6 @@ from typing import Any
 
 from insureflow.rating.models import line_display_name
 
-
 # ── Underwriter-language translation ──────────────────────────────────────────
 # The verification stack speaks in engineering terms (hallucination, bbox,
 # citation gate). Underwriters don't. Translate at the reporting boundary.
