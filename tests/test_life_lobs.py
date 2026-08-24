@@ -32,6 +32,7 @@ def _bundle(
 
 def test_all_term_and_whole_products_have_dedicated_paths() -> None:
     expected = {
+        # LOB 1 — Term Life (9)
         "level_term",
         "decreasing_term",
         "mortgage_life",
@@ -41,6 +42,7 @@ def test_all_term_and_whole_products_have_dedicated_paths() -> None:
         "rop_term",
         "group_term_life",
         "credit_life",
+        # LOB 2 — Whole Life (7)
         "traditional_whole_life",
         "limited_pay_whole_life",
         "single_premium_whole_life",
@@ -48,7 +50,38 @@ def test_all_term_and_whole_products_have_dedicated_paths() -> None:
         "non_participating_whole_life",
         "modified_whole_life",
         "graded_guaranteed_issue_whole_life",
+        # LOB 3 — Universal Life (4)
+        "guaranteed_universal_life",
+        "indexed_universal_life",
+        "variable_universal_life",
+        "current_assumption_universal_life",
+        # LOB 4 — Endowment (3)
+        "pure_endowment",
+        "full_endowment",
+        "guaranteed_fixed_endowment",
+        # LOB 5 — ULIP (6)
+        "single_premium_ulip",
+        "regular_premium_ulip",
+        "ulip_type_i",
+        "ulip_type_ii",
+        "pension_ulip",
+        "child_ulip",
+        # LOB 6 — Money-Back (3)
+        "traditional_money_back",
+        "with_profit_money_back",
+        "children_money_back",
+        # LOB 7 — Annuity (9)
+        "immediate_annuity",
+        "deferred_annuity",
+        "fixed_annuity",
+        "variable_annuity",
+        "indexed_annuity",
+        "life_annuity",
+        "joint_survivor_annuity",
+        "qlac",
+        "structured_settlement_annuity",
     }
+    assert len(PRODUCT_LOGIC_PATHS) == 41
     assert expected == set(PRODUCT_LOGIC_PATHS.keys())
 
 
@@ -57,12 +90,25 @@ def test_catalog_nodes_stamped_with_logic_path() -> None:
     assert stamped == set(PRODUCT_LOGIC_PATHS.keys())
     level = next(ln for ln in LIFE_LINES if ln["id"] == "level_term")
     assert {c["id"] for c in level["coverages"]} >= {"level_term_10", "level_term_15", "level_term_20", "level_term_25", "level_term_30"}
+    annuity = next(ln for ln in LIFE_LINES if ln["id"] == "qlac")
+    assert all(c.get("logic_path", "").endswith(".annuity.qlac") for c in annuity["coverages"])
 
 
 def test_resolution_by_product_and_by_coverage_hint() -> None:
     assert resolve_logic_path("level_term") == "insureflow.life.lobs.term_life.level_term"
     assert resolve_logic_path(None, "ten_pay") == "insureflow.life.lobs.whole_life.limited_pay"
     assert resolve_logic_path(None, None, "Graded Benefit Whole Life").endswith("whole_life.graded")
+    assert resolve_logic_path(None, "no_lapse") == "insureflow.life.lobs.universal_life.guaranteed_universal_life"
+    assert resolve_logic_path(None, "gmdb") == "insureflow.life.lobs.universal_life.variable_universal_life"
+    assert resolve_logic_path(None, "pure_maturity") == "insureflow.life.lobs.endowment.pure_endowment"
+    assert resolve_logic_path(None, "type_ii") == "insureflow.life.lobs.ulip.ulip_type_ii"
+    assert resolve_logic_path(None, "with_profit_mb") == "insureflow.life.lobs.money_back.with_profit_money_back"
+    assert resolve_logic_path(None, "qlac_deferred") == "insureflow.life.lobs.annuity.qlac"
+    assert resolve_logic_path(None, "structured_lump") == "insureflow.life.lobs.annuity.structured_settlement_annuity"
+    assert resolve_logic_path(None, "joint_50") == "insureflow.life.lobs.annuity.joint_survivor_annuity"
+    assert resolve_logic_path(None, "life_refund") == "insureflow.life.lobs.annuity.life_annuity"
+    assert resolve_logic_path(None, "period_certain") == "insureflow.life.lobs.annuity.immediate_annuity"
+    assert resolve_logic_path(None, None, "Single Premium ULIP").endswith("ulip.single_premium_ulip")
     assert resolve_logic_path("cyber_liability") is None
 
 
@@ -263,3 +309,261 @@ def test_unregistered_coverage_falls_back_to_generic_path() -> None:
     generic = rate_life(_bundle())  # no product/coverage hints at all
     assert "lob_logic_path" not in generic.metadata
     assert generic.metadata["filing_id"]
+
+
+def test_unregistered_annuity_text_falls_back_to_generic_illustration() -> None:
+    generic = rate_life(_bundle("Purchase price: $300000. Immediate annuity for retirement."))
+    assert "lob_logic_path" not in generic.metadata
+    assert generic.metadata["product_family"] == "annuity"
+    assert generic.adjusted_premium == 0.0
+
+
+# ---------------------------------------------------------------------------
+# LOB 3 — Universal Life sub-product paths
+# ---------------------------------------------------------------------------
+
+
+def test_gul_no_lapse_guarantee_and_projection() -> None:
+    gul = rate_life(_bundle(), coverage_id="no_lapse", product_id="guaranteed_universal_life")
+    to120 = rate_life(_bundle(), coverage_id="gul_to_120", product_id="guaranteed_universal_life")
+    assert gul.metadata["guarantee_to_age"] == 120
+    assert to120.metadata["guarantee_to_age"] == 121
+    proj = gul.metadata["account_value_projection_guaranteed_basis"]
+    assert set(proj) == {"av_year_5", "av_year_10", "av_year_20"}
+    assert any("no-lapse" in c.lower() for c in gul.metadata["conditions"])
+    assert gul.metadata["rating_engine"].startswith("life_")
+    assert "universal life priced on actuarial equivalence" in " ".join(gul.ineligibility_reasons)
+
+
+def test_ul_charge_load_ordering_gul_lt_iul_lt_vul() -> None:
+    gul = rate_life(_bundle(), coverage_id="no_lapse", product_id="guaranteed_universal_life")
+    iul = rate_life(_bundle(), coverage_id="indexed_account", product_id="indexed_universal_life")
+    vul = rate_life(_bundle(), coverage_id="gmdb", product_id="variable_universal_life")
+    caul = rate_life(_bundle(), coverage_id="current_rate", product_id="current_assumption_universal_life")
+    assert gul.adjusted_premium < iul.adjusted_premium < vul.adjusted_premium
+    assert caul.adjusted_premium < gul.adjusted_premium  # lowest flexibility load
+
+
+def test_iul_crediting_scenarios_cap_and_floor() -> None:
+    iul = rate_life(_bundle(), coverage_id="indexed_account", product_id="indexed_universal_life")
+    scenarios = iul.metadata["credited_rate_scenarios"]
+    assert scenarios["index_gain_-10pct"] == 0.0  # floor
+    assert scenarios["index_gain_15pct"] == round(iul.metadata["index_cap"], 6)  # cap binds
+    assert iul.metadata["index_floor"] == 0.0
+
+
+def test_vul_finra_gate_and_gmdb_rider() -> None:
+    finra = rate_life(_bundle(), coverage_id="finra_suitability", product_id="variable_universal_life")
+    plain = rate_life(_bundle(), coverage_id="vx_account", product_id="variable_universal_life")
+    gmdb = rate_life(_bundle(), coverage_id="gmdb", product_id="variable_universal_life")
+    assert any("FINRA suitability review REQUIRED" in c for c in finra.metadata["conditions"])
+    assert any("Prospectus delivery receipt" in c for c in plain.metadata["conditions"])
+    assert gmdb.metadata["gmdb_rider"] is True
+    assert gmdb.adjusted_premium > plain.adjusted_premium  # rider costs extra
+
+
+def test_caul_two_crediting_columns() -> None:
+    caul = rate_life(_bundle(), coverage_id="adjustable", product_id="current_assumption_universal_life")
+    cols = caul.metadata["av_projection_columns"]
+    assert cols["current_rate"]["av_year_20"] > cols["guaranteed_min"]["av_year_20"]
+    assert caul.metadata["current_credit_rate"] > caul.metadata["guaranteed_minimum_rate"]
+
+
+# ---------------------------------------------------------------------------
+# LOB 4 — Endowment sub-product paths
+# ---------------------------------------------------------------------------
+
+
+def test_endowment_ordering_pure_lt_with_profit_lt_fixed() -> None:
+    pure = rate_life(_bundle(), coverage_id="pure_maturity", product_id="pure_endowment")
+    full = rate_life(_bundle(), coverage_id="with_profit", product_id="full_endowment")
+    fixed = rate_life(_bundle(), coverage_id="fixed_endowment", product_id="guaranteed_fixed_endowment")
+    # No death benefit → cheapest; guaranteed-all-values → most expensive.
+    assert pure.adjusted_premium < full.adjusted_premium < fixed.adjusted_premium
+    assert pure.metadata["death_benefit"] == 0.0
+    assert fixed.metadata["actuarial"]["basis"].endswith("fully guaranteed")
+
+
+def test_full_endowment_bonus_illustrated_not_in_premium() -> None:
+    full = rate_life(_bundle(), coverage_id="with_profit", product_id="full_endowment")
+    assert full.metadata["illustrated_bonus_maturity_value"] > full.metadata["guaranteed_maturity_value"]
+    assert any("NOT guaranteed" in c for c in full.metadata["conditions"])
+    assert full.metadata["endowment_uw"]["product"] == "endowment"
+
+
+def test_pure_endowment_no_death_benefit_disclosure_and_uw() -> None:
+    poor_income = _bundle("Face amount: $400000. Annual income: 20000. Applicant age: 35.")
+    pe = rate_life(poor_income, coverage_id="pure_maturity", product_id="pure_endowment")
+    assert any("nothing is payable if the insured dies" in c.lower() or "PURE ENDOWMENT" in c for c in pe.metadata["conditions"])
+    assert pe.metadata["maturity_value"] == 400000.0
+
+
+# ---------------------------------------------------------------------------
+# LOB 5 — ULIP sub-product paths
+# ---------------------------------------------------------------------------
+
+
+def test_ulip_type_i_vs_type_ii_db_formula_and_cost() -> None:
+    t1 = rate_life(_bundle(), coverage_id="type_i", product_id="ulip_type_i")
+    t2 = rate_life(_bundle(), coverage_id="type_ii", product_id="ulip_type_ii")
+    assert t1.metadata["db_formula"] == "max(SA, FV)"
+    assert t2.metadata["db_formula"] == "SA + FV"
+    assert t2.metadata["type_ii_extra_mortality_load"] > 1.0
+    assert t2.metadata["mortality_charge_year1"] > t1.metadata["mortality_charge_year1"]
+
+
+def test_ulip_sa_multiple_rule_by_age() -> None:
+    young = rate_life(_bundle("Applicant age: 40. Face amount: $500000."), coverage_id="rp_ulip", product_id="regular_premium_ulip")
+    older = rate_life(_bundle("Applicant age: 55. Face amount: $500000."), coverage_id="rp_ulip", product_id="regular_premium_ulip")
+    assert young.metadata["annual_premium"] * 10 == pytest.approx(young.metadata["sum_assured"], rel=0.01)
+    assert older.metadata["annual_premium"] * 7 == pytest.approx(older.metadata["sum_assured"], rel=0.01)
+
+
+def test_single_premium_ulip_zero_recurring_premium() -> None:
+    sp = rate_life(_bundle(), coverage_id="sp_ulip", product_id="single_premium_ulip")
+    assert sp.adjusted_premium == 0.0  # no recurring premium — single contribution
+    assert sp.metadata["single_premium"] == 500000.0
+    assert sp.metadata["lock_in_years"] == 5
+    assert sp.metadata["fund_value_projection"] > sp.metadata["single_premium"]  # growth at assumed rate
+
+
+def test_pension_ulip_annuitization_requirement() -> None:
+    pension = rate_life(_bundle(), coverage_id="pension_ulip", product_id="pension_ulip")
+    assert pension.metadata["vesting_age"] == 60
+    assert pension.metadata["minimum_annuitization_amount"] == pytest.approx(pension.metadata["fund_value_at_vesting"] * 2 / 3, rel=0.01)
+    senior = rate_life(_bundle("Applicant age: 62."), coverage_id="pension_ulip", product_id="pension_ulip")
+    assert senior.eligible is False  # entry age gate
+
+
+def test_child_ulip_waiver_of_premium_and_proposer_gate() -> None:
+    child = rate_life(_bundle("Applicant age: 35."), coverage_id="child_ulip", product_id="child_ulip")
+    assert child.metadata["waiver_of_premium_included"] is True
+    assert child.metadata["milestone_ages"] == [18, 20, 22, 25]
+    old_proposer = rate_life(_bundle("Applicant age: 61."), coverage_id="child_ulip", product_id="child_ulip")
+    assert old_proposer.eligible is False
+
+
+# ---------------------------------------------------------------------------
+# LOB 6 — Money-Back sub-product paths
+# ---------------------------------------------------------------------------
+
+
+def test_money_back_survival_schedule_totals() -> None:
+    mb = rate_life(_bundle(), coverage_id="traditional_mb", product_id="traditional_money_back")
+    schedule = mb.metadata["survival_benefit_schedule"]
+    assert [s["year"] for s in schedule] == [5, 10, 15, 20]
+    total_pct = sum(s["pct_of_sa"] for s in schedule)
+    assert total_pct == pytest.approx(1.0)  # 20+20+20+40% fully returned while living
+    assert mb.metadata["death_benefit"] == 500000.0  # full SA on death throughout
+
+
+def test_with_profit_money_back_bonuses_on_top() -> None:
+    wp = rate_life(_bundle(), coverage_id="with_profit_mb", product_id="with_profit_money_back")
+    trad = rate_life(_bundle(), coverage_id="traditional_mb", product_id="traditional_money_back")
+    assert wp.adjusted_premium == pytest.approx(trad.adjusted_premium, rel=1e-9)  # same guaranteed basis
+    assert wp.metadata["illustrated_bonus_pv"] > 0
+    assert any("NOT guaranteed" in c for c in wp.metadata["conditions"])
+
+
+def test_children_money_back_milestones_and_wp() -> None:
+    cmb = rate_life(_bundle("Applicant age: 34."), coverage_id="children_mb", product_id="children_money_back")
+    sched = cmb.metadata["payout_schedule"]
+    assert [s["child_age"] for s in sched] == [18, 20, 22, 25]
+    assert cmb.metadata["waiver_of_premium_included"] is True
+    young_parent = rate_life(_bundle("Applicant age: 19."), coverage_id="children_mb", product_id="children_money_back")
+    assert young_parent.eligible is False
+
+
+# ---------------------------------------------------------------------------
+# LOB 7 — Annuity sub-product paths (illustration only)
+# ---------------------------------------------------------------------------
+
+
+ANN_TEXT = "Purchase price: $500000. Applicant age: 65. Sex: male."
+
+
+def _ann(text: str = ANN_TEXT):
+    return _bundle(text)
+
+
+def test_all_annuity_paths_are_illustrations_only() -> None:
+    cases = [
+        ("immediate_annuity", "life_income"),
+        ("deferred_annuity", "deferred_income"),
+        ("fixed_annuity", "fixed_accum"),
+        ("variable_annuity", "var_annuity"),
+        ("indexed_annuity", "indexed_crediting"),
+        ("life_annuity", "single_life_income"),
+        ("joint_survivor_annuity", "joint_100"),
+        ("qlac", "qlac_lifetime"),
+        ("structured_settlement_annuity", "structured_payments"),
+    ]
+    for pid, cid in cases:
+        q = rate_life(_ann(), coverage_id=cid, product_id=pid, state="IL")
+        assert q.eligible is False, pid
+        assert q.adjusted_premium == 0.0, pid
+        assert q.metadata["state_rules_applied"]["issue_state"] == "IL", pid
+
+
+def test_immediate_vs_period_certain_vs_refund_payout_ordering() -> None:
+    life_only = rate_life(_ann(), coverage_id="life_income", product_id="immediate_annuity")
+    certain = rate_life(_ann(), coverage_id="period_certain", product_id="immediate_annuity")
+    refund = rate_life(_ann(ANN_TEXT), coverage_id="life_refund", product_id="life_annuity")
+    plain_life = rate_life(_ann(), coverage_id="single_life_income", product_id="life_annuity")
+    # Certain-and-life pays less than pure life; refund guarantee costs ~3%.
+    assert life_only.metadata["annual_payout"] > certain.metadata["annual_payout"]
+    assert plain_life.metadata["annual_payout"] > refund.metadata["annual_payout"]
+    assert refund.metadata["breakeven_years"] == pytest.approx(500000 / refund.metadata["annual_payout"], abs=0.2)
+
+
+def test_joint_survivor_continuation_costs_income() -> None:
+    j100 = rate_life(_ann(), coverage_id="joint_100", product_id="joint_survivor_annuity")
+    j50 = rate_life(_ann(), coverage_id="joint_50", product_id="joint_survivor_annuity")
+    single = rate_life(_ann(), coverage_id="single_life_income", product_id="life_annuity")
+    single_payout = single.metadata["annual_payout"]
+    # Richer continuation = lower starting payout, but far from zero.
+    assert single_payout > j50.metadata["annual_payout"] > j100.metadata["annual_payout"]
+    assert j100.metadata["annual_payout"] > single_payout * 0.6
+    assert j100.metadata["continuation_pct"] == 1.0
+    assert j100.metadata["assumed_spouse_age"] == 62  # explicit −3 offset assumption
+
+
+def test_deferred_accumulates_then_annuitizes_at_vesting() -> None:
+    d = rate_life(_ann("Purchase price: $500000. Applicant age: 55. Sex: male."), coverage_id="deferred_income", product_id="deferred_annuity")
+    assert d.metadata["vesting_age"] == 65
+    fv = d.metadata["fund_value_at_vesting"]
+    assert fv > 500000  # credited growth over 10 years
+    payout = d.metadata["annual_payout_at_vesting"]
+    factor = d.metadata["annuitization_factor_at_vesting"]
+    assert payout == pytest.approx(fv / factor, rel=0.01)
+
+
+def test_qlac_irs_cap_enforced_inside_path() -> None:
+    within = rate_life(_ann("Purchase price: $200000. Applicant age: 60. Sex: male."), coverage_id="qlac_lifetime", product_id="qlac")
+    over = rate_life(_ann("Purchase price: $400000. Applicant age: 60. Sex: male."), coverage_id="qlac_lifetime", product_id="qlac")
+    assert within.eligible is False  # illustration only regardless
+    assert over.metadata["purchase_price"] == over.metadata["irs_cap"] == 210000.0
+    assert "IRS QLAC cap" in " ".join(over.ineligibility_reasons)
+    assert over.metadata["rmd_excluded_until_income_starts"] is True
+    assert over.metadata["income_start_age"] <= 75
+
+
+def test_structured_settlement_prices_schedule_pv() -> None:
+    text = "$2500 per month for 20 years settlement."
+    q = rate_life(_ann(text), coverage_id="structured_payments", product_id="structured_settlement_annuity")
+    meta = q.metadata
+    expected_pv = 2500 * ((1 - (1 / (1 + 0.04 / 12)) ** 240) / (0.04 / 12))
+    assert meta["present_value_of_settlement"] == pytest.approx(expected_pv, rel=0.001)
+    assert meta["total_nominal_payouts"] == 600000.0
+    lump = rate_life(_ann(text), coverage_id="structured_lump", product_id="structured_settlement_annuity")
+    assert lump.metadata["commuted_lump_pv"] == pytest.approx(expected_pv, rel=0.001)
+
+
+def test_variable_indexed_annuity_riders_and_scenarios() -> None:
+    va = rate_life(_ann(), coverage_id="var_gmwb", product_id="variable_annuity")
+    assert va.metadata["gmwb_rider"] is True
+    assert va.metadata["gmwb_rider_fee_pct"] == 0.0115
+    ia = rate_life(_ann(), coverage_id="indexed_crediting", product_id="indexed_annuity")
+    sc = ia.metadata["credited_rate_scenarios"]
+    assert sc["index_gain_-15pct"] == 0.0
+    assert sc["index_gain_20pct"] == ia.metadata["index_cap"]

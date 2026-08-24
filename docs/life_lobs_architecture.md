@@ -12,11 +12,12 @@ CT compliance together, in one pass).
 This mirrors how underwriters actually work and keeps every decision
 traceable to code a reviewer can read top-to-bottom.
 
-## Reference implementation (LOB 1 + LOB 2) — complete
+## Reference implementation (LOB 1–7) — complete
 
 ```
 src/insureflow/life/lobs/
 ├── base.py                     # plumbing ONLY: context, outcome, QuoteResult conversion
+├── actuarial.py                # rule-free math: ä_{x:n}, A^1, endowments, J&S factors
 ├── term_life/                  # LOB 1 — 9 product paths
 │   ├── level_term.py           #   10/15/20/25/30-Year Level Term
 │   ├── decreasing_term.py      #   Mortgage Protection Term · Debt-Reducing Term
@@ -27,14 +28,44 @@ src/insureflow/life/lobs/
 │   ├── rop_term.py             #   Full Return of Premium · Partial Return
 │   ├── group_term.py           #   Basic · Supplemental · Dependent Group Life
 │   └── credit_life.py          #   Outstanding Balance · Simplified Issue Credit Life
-└── whole_life/                 # LOB 2 — 7 sub-product paths
-    ├── ordinary_whole.py       #   Guaranteed / Ordinary Whole Life  (A_x/ä_x)
-    ├── limited_pay.py          #   10-Pay · 20-Pay · Paid-Up-at-65   (ä_{x:n})
-    ├── single_premium.py       #   Lump-Sum · Immediate Cash Value   (NSP = A_x)
-    ├── participating.py        #   Dividend Cash Option · PUA        (+dividend load)
-    ├── non_participating.py    #   Non-Par Whole Life · Paid-Up at 65
-    ├── modified.py             #   Modified Step-Up · Modified 5/10  (premium schedule)
-    └── graded.py               #   Graded Benefit · Guaranteed Issue (no-exam GI gates)
+├── whole_life/                 # LOB 2 — 7 sub-product paths
+│   ├── ordinary_whole.py       #   Guaranteed / Ordinary Whole Life  (A_x/ä_x)
+│   ├── limited_pay.py          #   10-Pay · 20-Pay · Paid-Up-at-65   (ä_{x:n})
+│   ├── single_premium.py       #   Lump-Sum · Immediate Cash Value   (NSP = A_x)
+│   ├── participating.py        #   Dividend Cash Option · PUA        (+dividend load)
+│   ├── non_participating.py    #   Non-Par Whole Life · Paid-Up at 65
+│   ├── modified.py             #   Modified Step-Up · Modified 5/10  (premium schedule)
+│   └── graded.py               #   Graded Benefit · Guaranteed Issue (no-exam GI gates)
+├── universal_life/             # LOB 3 — 4 sub-product paths (actuarial basis)
+│   ├── guaranteed_universal_life.py   # No-Lapse Guarantee · GUL-to-120 (AV projection)
+│   ├── indexed_universal_life.py      # Indexed/Fixed/Blend (floor-cap-participation)
+│   ├── variable_universal_life.py     # Vx Account · FINRA gate · GMDB rider load
+│   └── current_assumption_universal_life.py  # current vs guaranteed crediting columns
+├── endowment/                  # LOB 4 — 3 product paths
+│   ├── pure_endowment.py       #   v^n·npx maturity only, NO death benefit
+│   ├── full_endowment.py       #   mixed endowment + illustrated reversionary bonus
+│   └── guaranteed_fixed_endowment.py # fully guaranteed values, carrier bears risk
+├── ulip/                       # LOB 5 — 6 product paths (unit-linked)
+│   ├── single_premium_ulip.py  #   statutory SA multiple, 5-year lock-in
+│   ├── regular_premium_ulip.py #   10×/7× multiple rule + dual-track suitability UW
+│   ├── ulip_type_i.py          #   DB = max(SA, FV) — COI on nominal SA
+│   ├── ulip_type_ii.py         #   DB = SA + FV — extra mortality load
+│   ├── pension_ulip.py         #   vesting age + mandatory ≥2/3 annuitization
+│   └── child_ulip.py           #   proposer-owned, WP rider, milestone vesting
+├── money_back/                 # LOB 6 — 3 product paths
+│   ├── traditional_money_back.py     # survival coupons + full SA death cover
+│   ├── with_profit_money_back.py     # same skeleton + illustrated bonuses
+│   └── children_money_back.py        # milestone payouts, WP on proposer death
+└── annuity/                    # LOB 7 — 9 payout paths (illustration only)
+    ├── immediate_annuity.py    #   life income · 10-yr certain & life
+    ├── deferred_annuity.py     #   accumulate → annuitize at vesting age
+    ├── fixed_annuity.py        #   declared rate + surrender charge schedule
+    ├── variable_annuity.py     #   AIR illustration + GMWB rider fee
+    ├── indexed_annuity.py      #   participation/cap/floor crediting ladder
+    ├── life_annuity.py         #   single life · cash-refund guarantee load
+    ├── joint_survivor_annuity.py # J&S priced on joint survival (not flat %)
+    ├── qlac.py                 #   IRS premium cap enforced inside the path
+    └── structured_settlement_annuity.py  # schedule PV · qualified assignment
 ```
 
 ### What "own logic path" means per module
@@ -88,10 +119,10 @@ the reason recorded on the quote itself.
 - The catalog (`insurance/life_lobs.py`) is now self-describing: every Term/Whole
   product node and coverage node carries its `logic_path`.
 
-## Replicating for LOB 3–7
+## Replicating the pattern (done for LOB 3–7)
 
-When Universal Life / Endowment / ULIP / Money-Back / Annuity taxonomies are
-defined, follow exactly this recipe:
+LOB 3–7 followed exactly this recipe, so it remains the template for any new
+Life product family:
 
 1. Create `src/insureflow/life/lobs/<lob>/__init__.py` exporting `<LOB>_LOGIC_PATHS`.
 2. One module per product: constants → `DEFAULT_STATE_RULES`/`STATE_RULES` →
@@ -100,6 +131,18 @@ defined, follow exactly this recipe:
 4. Add tests mirroring `tests/test_life_lobs.py`: one ordering/economics test,
    one state-rules-inside-path test, one eligibility-gate test per product.
 5. Stamp catalog entries automatically (already handled by the registry loop).
+
+Family-specific conventions established during the LOB 3–7 build:
+
+- **Universal Life / Endowment / Money-Back**: priced on actuarial equivalence
+  (`compute_full_whole_life_quote`, `endowment_insurance_nsp`, coupon PVs) —
+  every path ends `eligible = False` ("illustrative only, no filed rates").
+- **ULIP**: `finish_quote(..., apply_minimum_premium=False)`; SA-multiple and
+  lock-in rules enforced inside each module.
+- **Annuity**: consideration-based (`purchase_price(ctx)`), `adjusted_premium = 0`,
+  payouts live in metadata; `rate_life` moved its face-amount gate BELOW the LOB
+  dispatch so annuity paths own their gates. Unregistered annuity text falls back
+  to the generic illustration (`annuity_rating.rate_annuity`).
 
 ## Why this beats the two extremes (record for future reviewers)
 

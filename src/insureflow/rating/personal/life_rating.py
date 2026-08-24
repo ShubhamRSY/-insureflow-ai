@@ -58,6 +58,13 @@ def rate_life(
     financial = evaluate_life_financial(bundle, factors=factors, product_id=product_id, coverage_id=coverage_id, coverage_name=coverage_name)
     reinsurance = evaluate_life_reinsurance(bundle, face_amount=factors.face_amount)
     family = classify_life_family(product_id, coverage_id, coverage_name)
+    if family == "unknown" and not product_id and not coverage_id and not coverage_name:
+        # No explicit product selection — sniff the submission text so
+        # consideration-based products (annuities) reach their paths.
+        import re as _re
+
+        if _re.search(r"\bannuit", _blob(bundle), _re.I):
+            family = "annuity"
     term_years_hint = _term_duration_years(coverage_id, coverage_name)
     if term_years_hint and family in {"unknown", "term"}:
         family = "term"
@@ -65,16 +72,6 @@ def rate_life(
 
     face = factors.face_amount
     reasons: list[str] = []
-    if face <= 0:
-        return QuoteResult(
-            bundle_id=bundle.bundle_id,
-            line=InsuranceLine.LIFE,
-            base_premium=0.0,
-            adjusted_premium=0.0,
-            eligible=False,
-            ineligibility_reasons=["Face amount missing — cannot rate"],
-            metadata={"filing_id": manual.get("filing_id"), "tiv_unknown": True, "medical": medical.to_metadata()},
-        )
 
     if family == "annuity":
         annuity_meta: dict[str, Any] = {
@@ -99,15 +96,7 @@ def rate_life(
             annuity_meta["annuity_subtype"] = illustration.metadata.get("annuity_subtype", "fixed")
         except Exception:
             pass
-        return QuoteResult(
-            bundle_id=bundle.bundle_id,
-            line=InsuranceLine.LIFE,
-            base_premium=0.0,
-            adjusted_premium=0.0,
-            eligible=False,
-            ineligibility_reasons=["Annuity requires payout / consideration factors — not rated on term mortality"],
-            metadata=annuity_meta,
-        )
+        generic_annuity_meta = annuity_meta  # returned AFTER the LOB dispatch below
 
     age = factors.age or 40
     sex = factors.sex if factors.sex in ("male", "female") else "unknown"
@@ -200,6 +189,31 @@ def rate_life(
             return lob_result
     except Exception as exc:
         logger.warning("LOB logic path failed for %s/%s: %s", product_id, coverage_id, exc)
+
+    # Unregistered annuity combos fall back to the generic illustration.
+    if family == "annuity":
+        return QuoteResult(
+            bundle_id=bundle.bundle_id,
+            line=InsuranceLine.LIFE,
+            base_premium=0.0,
+            adjusted_premium=0.0,
+            eligible=False,
+            ineligibility_reasons=["Annuity requires payout / consideration factors — not rated on term mortality"],
+            metadata=generic_annuity_meta,
+        )
+
+    # Face-driven products: without a face amount nothing can be rated.
+    # (Annuity paths above read the purchase price / consideration instead.)
+    if face <= 0:
+        return QuoteResult(
+            bundle_id=bundle.bundle_id,
+            line=InsuranceLine.LIFE,
+            base_premium=0.0,
+            adjusted_premium=0.0,
+            eligible=False,
+            ineligibility_reasons=["Face amount missing — cannot rate"],
+            metadata={"filing_id": manual.get("filing_id"), "tiv_unknown": True, "medical": medical.to_metadata()},
+        )
 
     if actuarial and float(actuarial.get("gross_premium") or 0) > 0:
         base_premium = float(actuarial["gross_premium"])

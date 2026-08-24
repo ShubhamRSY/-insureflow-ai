@@ -123,11 +123,15 @@ def finish_quote(
     family: str,
     rating_engine: str | None = None,
     extra_meta: dict[str, Any] | None = None,
+    apply_minimum_premium: bool = True,
 ) -> QuoteResult:
     """Convert a LobOutcome into the platform QuoteResult contract."""
     manual = ctx.manual or {}
     minimum_premium = float(manual.get("minimum_premium", 250.0))
-    adjusted = round(max(outcome.annual_premium, minimum_premium), 2)
+    annual_value = outcome.annual_premium
+    if apply_minimum_premium:
+        annual_value = max(annual_value, minimum_premium)
+    adjusted = round(max(annual_value, 0.0), 2)
     modal_premium = round(adjusted * ctx.modal_f, 2) if ctx.modal != "annual" else adjusted
 
     meta: dict[str, Any] = {
@@ -229,6 +233,26 @@ def add_common_loads(ctx: LifeProductContext, premium: float) -> float:
     loaded += (ctx.face / 1000.0) * ctx.medical.flat_extras_per_1000
     loaded += (ctx.face / 1000.0) * ctx.financial.rider_load_per_1000
     return loaded + policy_fee(ctx)
+
+
+def purchase_price(ctx: LifeProductContext) -> float:
+    """Consideration for payout products (annuities): face → parsed principal → default.
+
+    Annuity buyers state a "purchase price"/"principal", not a "face amount";
+    this keeps every annuity path reading the same consideration consistently.
+    """
+    import re
+
+    from insureflow.underwriting.personal_lines import _blob
+
+    if ctx.face > 0:
+        return float(ctx.face)
+    blob = _blob(ctx.bundle)
+    match = re.search(r"(?:principal|consideration|purchase price|premium)\s*[:=]?\s*\$?\s*([\d,]+(?:\.\d+)?)", blob, re.I)
+    if match:
+        return float(match.group(1).replace(",", ""))
+    income = getattr(ctx.factors, "income", 0.0) or 0.0
+    return round(income * 10.0, 2) if income else 500_000.0
 
 
 HandlerFn = Callable[[LifeProductContext], LobOutcome]
