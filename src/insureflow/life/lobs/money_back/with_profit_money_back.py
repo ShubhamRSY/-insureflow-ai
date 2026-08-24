@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from insureflow.life.lobs.actuarial import discount_factor, endowment_insurance_nsp, temporary_annuity_due
+from insureflow.life.lobs.actuarial import endowment_insurance_nsp, temporary_annuity_due
 from insureflow.life.lobs.base import (
     LifeProductContext,
     LobOutcome,
@@ -28,7 +28,7 @@ from insureflow.life.lobs.money_back.traditional_money_back import (
     TERM_YEARS,
     _coupon_pv,
 )
-from insureflow.life.mortality import k_p_x
+from insureflow.life.mortality import discount_factor, k_p_x
 from insureflow.rating.models import RateComponent
 
 PRODUCT_ID = "with_profit_money_back"

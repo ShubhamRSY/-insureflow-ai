@@ -12,7 +12,8 @@ from dataclasses import dataclass, field
 from typing import Any, Callable
 
 from insureflow.models.submissions import SubmissionBundle
-from insureflow.rating.models import InsuranceLine, QuoteResult, RateComponent
+from insureflow.rating.models import InsuranceLine, RateComponent
+from insureflow.rating.models import QuoteResult as QuoteResult
 from insureflow.underwriting.life_financial import LifeFinancialResult
 from insureflow.underwriting.life_medical import LifeMedicalDecision
 

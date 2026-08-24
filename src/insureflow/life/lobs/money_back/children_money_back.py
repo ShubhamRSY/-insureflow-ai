@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from insureflow.life.lobs.actuarial import discount_factor, endowment_insurance_nsp, temporary_annuity_due
+from insureflow.life.lobs.actuarial import endowment_insurance_nsp, temporary_annuity_due
 from insureflow.life.lobs.base import (
     LifeProductContext,
     LobOutcome,
@@ -20,7 +20,7 @@ from insureflow.life.lobs.base import (
     merge_state_rules,
     state_relativity,
 )
-from insureflow.life.mortality import k_p_x
+from insureflow.life.mortality import discount_factor, k_p_x
 from insureflow.rating.models import RateComponent
 
 PRODUCT_ID = "children_money_back"

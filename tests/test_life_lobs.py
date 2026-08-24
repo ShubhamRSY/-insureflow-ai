@@ -97,7 +97,7 @@ def test_catalog_nodes_stamped_with_logic_path() -> None:
 def test_resolution_by_product_and_by_coverage_hint() -> None:
     assert resolve_logic_path("level_term") == "insureflow.life.lobs.term_life.level_term"
     assert resolve_logic_path(None, "ten_pay") == "insureflow.life.lobs.whole_life.limited_pay"
-    assert resolve_logic_path(None, None, "Graded Benefit Whole Life").endswith("whole_life.graded")
+    assert (resolve_logic_path(None, None, "Graded Benefit Whole Life") or "").endswith("whole_life.graded")
     assert resolve_logic_path(None, "no_lapse") == "insureflow.life.lobs.universal_life.guaranteed_universal_life"
     assert resolve_logic_path(None, "gmdb") == "insureflow.life.lobs.universal_life.variable_universal_life"
     assert resolve_logic_path(None, "pure_maturity") == "insureflow.life.lobs.endowment.pure_endowment"
@@ -108,7 +108,7 @@ def test_resolution_by_product_and_by_coverage_hint() -> None:
     assert resolve_logic_path(None, "joint_50") == "insureflow.life.lobs.annuity.joint_survivor_annuity"
     assert resolve_logic_path(None, "life_refund") == "insureflow.life.lobs.annuity.life_annuity"
     assert resolve_logic_path(None, "period_certain") == "insureflow.life.lobs.annuity.immediate_annuity"
-    assert resolve_logic_path(None, None, "Single Premium ULIP").endswith("ulip.single_premium_ulip")
+    assert (resolve_logic_path(None, None, "Single Premium ULIP") or "").endswith("ulip.single_premium_ulip")
     assert resolve_logic_path("cyber_liability") is None
 
 

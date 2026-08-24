@@ -13,11 +13,12 @@ from __future__ import annotations
 
 import re
 from functools import lru_cache
-from typing import Any, Callable
+from typing import Any, Callable, cast
 
 from insureflow.life.lobs.annuity import ANNUITY_LOGIC_PATHS
-from insureflow.life.lobs.base import LifeProductContext  # re-export
+from insureflow.life.lobs.base import LifeProductContext as LifeProductContext  # explicit re-export
 from insureflow.life.lobs.base import LobOutcome as LobOutcome
+from insureflow.life.lobs.base import QuoteResult as QuoteResult
 from insureflow.life.lobs.endowment import ENDOWMENT_LOGIC_PATHS
 from insureflow.life.lobs.money_back import MONEY_BACK_LOGIC_PATHS
 from insureflow.life.lobs.term_life import TERM_LIFE_LOGIC_PATHS
@@ -119,7 +120,7 @@ def resolve_logic_path(product_id: str | None, coverage_id: str | None = None, c
     return PRODUCT_LOGIC_PATHS.get(resolved or "")
 
 
-def run_product_logic(ctx: LifeProductContext) -> Any:
+def run_product_logic(ctx: LifeProductContext) -> QuoteResult | None:
     """Execute the owning product path; None when no dedicated path exists.
 
     Each product module exposes ``build_quote(ctx) -> QuoteResult`` — the
@@ -133,4 +134,4 @@ def run_product_logic(ctx: LifeProductContext) -> Any:
     if builder is None:
         return None
     ctx.product_id = ctx.product_id or resolved
-    return builder(ctx)
+    return cast(QuoteResult, builder(ctx))
