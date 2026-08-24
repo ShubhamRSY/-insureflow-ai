@@ -85,10 +85,22 @@ def merge_state_rules(
     decision record shows exactly which state rules fired.
     """
     merged = dict(default_rules or {})
+    from insureflow.life.lobs.state_law import canonical_state_row
+
+    law_row = canonical_state_row(ctx.issue_state)
+    merged.update(law_row)
     state_row = (state_rules or {}).get(ctx.issue_state) or {}
     merged.update(state_row)
     merged["issue_state"] = ctx.issue_state
-    merged["source"] = "state_table" if state_row else "carrier_default"
+    if state_row:
+        merged["source"] = "state_table"
+        merged["rule_layer"] = "module"
+    elif law_row:
+        merged["source"] = "state_table"
+        merged["rule_layer"] = "platform"
+    else:
+        merged["source"] = "carrier_default"
+        merged["rule_layer"] = "default"
     return merged
 
 

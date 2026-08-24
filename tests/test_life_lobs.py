@@ -289,11 +289,47 @@ def test_state_rules_inside_path_connecticut() -> None:
 
 
 def test_state_rules_carrier_default_when_state_unknown() -> None:
+    # TX has no module row, but the canonical platform state-law table
+    # supplies its free look — only truly unknown codes fall to defaults.
     tx = rate_life(_bundle(), coverage_id="level_term_20", product_id="level_term", state="TX")
     rules = tx.metadata["state_rules_applied"]
     assert rules["issue_state"] == "TX"
-    assert rules["source"] == "carrier_default"
+    assert rules["source"] == "state_table"
+    assert rules["rule_layer"] == "platform"
     assert rules["free_look_days"] == 10
+
+
+def test_all_us_jurisdictions_get_state_law_row_in_every_family() -> None:
+    from insureflow.life.lobs.state_law import COMMUNITY_PROPERTY_STATES, FREE_LOOK_DAYS
+
+    assert len(FREE_LOOK_DAYS) == 51  # 50 states + DC
+    # Products without hand-tuned rows inherit the platform table verbatim.
+    # (Annuity paths carry their own module rows — covered by the CP loop below.)
+    families = [
+        ("level_term", "twenty_year_level"),
+        ("ordinary_whole_life", "guaranteed_whole_life"),
+        ("guaranteed_universal_life", "no_lapse"),
+        ("pure_endowment", "pure_maturity"),
+        ("regular_premium_ulip", "rp_ulip"),
+        ("traditional_money_back", "traditional_mb"),
+    ]
+    for state in FREE_LOOK_DAYS:
+        pid, cid = families[hash(state) % len(families)]
+        q = rate_life(_bundle(), coverage_id=cid, product_id=pid, state=state)
+        rules = q.metadata["state_rules_applied"]
+        assert rules["source"] == "state_table", (state, pid)
+        assert rules["free_look_days"] == FREE_LOOK_DAYS[state], (state, pid)
+    # Distinctive statutory values survive the merge chain.
+    ct = rate_life(_bundle(), coverage_id="twenty_year_level", product_id="level_term", state="CT")
+    assert ct.metadata["state_rules_applied"]["rule_layer"] == "module"  # hand-tuned row wins
+    ny = rate_life(_bundle(), coverage_id="ten_pay", product_id=None, state="NY")
+    ny = rate_life(_bundle(), coverage_id="ten_pay", product_id="limited_pay", state="NY")
+    assert ny.metadata["state_rules_applied"]["free_look_days"] == 20
+    # Community-property consent rows fire on annuity paths in all 9 states.
+    for state in COMMUNITY_PROPERTY_STATES:
+        a = rate_life(_bundle("Purchase price: $500000. Applicant age: 65. Sex: male."), coverage_id="life_income", product_id="immediate_annuity", state=state)
+        ra = a.metadata["state_rules_applied"]
+        assert ra.get("spousal_consent_required") is True, state
 
 
 def test_florida_free_look_stamped_across_all_families() -> None:
