@@ -171,7 +171,9 @@ LIFE_LINES: list[dict[str, Any]] = [
         additional_documents=[],
         coverages=[
             _coverage("level_term_10", "10-Year Level Term", "Completed life insurance application", "Beneficiary's full name, DOB, SSN, and relationship to insured"),
+            _coverage("level_term_15", "15-Year Level Term", "Completed life insurance application", "Income proof (pay stubs, W-2, or tax returns) — required above coverage thresholds"),
             _coverage("level_term_20", "20-Year Level Term", "Completed life insurance application", "Income proof (pay stubs, W-2, or tax returns) — required above coverage thresholds"),
+            _coverage("level_term_25", "25-Year Level Term", "Paramedical exam report (required above ~$100K–$250K)", "Completed life insurance application"),
             _coverage("level_term_30", "30-Year Level Term", "Paramedical exam report (required above ~$100K–$250K)", "Completed life insurance application"),
         ],
     ),
@@ -979,6 +981,30 @@ LIFE_LINES: list[dict[str, Any]] = [
 # a permanent/annuity filing is imported — they must not look "live" as 20-year term.
 for _ln in LIFE_LINES:
     _ln["status"] = "live" if _ln["id"] in LIVE_TERM_PRODUCT_IDS else "catalog"
+
+
+# ---------------------------------------------------------------------------
+# Smart-lines: each product node knows which dedicated logic path owns it
+# (insureflow.life.lobs). LOB 3–7 products get paths as their taxonomies
+# are defined; until then they route through family classification.
+# ---------------------------------------------------------------------------
+
+
+def _logic_paths() -> dict[str, str]:
+    try:
+        from insureflow.life.lobs import PRODUCT_LOGIC_PATHS
+
+        return dict(PRODUCT_LOGIC_PATHS)
+    except Exception:  # pragma: no cover — catalog must never fail to load
+        return {}
+
+
+_LOGIC_PATHS = _logic_paths()
+for _ln in LIFE_LINES:
+    if _ln["id"] in _LOGIC_PATHS:
+        _ln["logic_path"] = _LOGIC_PATHS[_ln["id"]]
+        for _cov in _ln.get("coverages") or []:
+            _cov["logic_path"] = _LOGIC_PATHS[_ln["id"]]
 
 
 # ---------------------------------------------------------------------------

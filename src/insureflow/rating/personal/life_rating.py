@@ -170,6 +170,37 @@ def rate_life(
     filing_state = str(manual.get("state_of_filing") or "IL").upper()
     state_filed = (not issue_state) or issue_state == filing_state or issue_state in (manual.get("state_relativities") or {})
 
+    # ── Dedicated LOB/Product/Coverage logic paths ────────────────────
+    # Each registered product owns its own underwriting rules, rating math,
+    # and state-rule table (see insureflow.life.lobs). Unregistered combos
+    # fall through to the generic family pricing below.
+    try:
+        from insureflow.life.lobs import LifeProductContext, run_product_logic
+
+        lob_ctx = LifeProductContext(
+            bundle=bundle,
+            state_code=issue_state,
+            product_id=product_id or "",
+            coverage_id=coverage_id or "",
+            coverage_name=coverage_name or "",
+            manual=manual,
+            factors=factors,
+            medical=medical,
+            financial=financial,
+            reinsurance=reinsurance,
+            age=age,
+            sex_key=sex_key,
+            unisex_forced=(sex == "unisex"),
+            face=face,
+            modal=modal,
+            modal_f=modal_f,
+        )
+        lob_result = run_product_logic(lob_ctx)
+        if lob_result is not None:
+            return lob_result
+    except Exception as exc:
+        logger.warning("LOB logic path failed for %s/%s: %s", product_id, coverage_id, exc)
+
     if actuarial and float(actuarial.get("gross_premium") or 0) > 0:
         base_premium = float(actuarial["gross_premium"])
         adjusted = base_premium * class_f * band_f * state_rel
