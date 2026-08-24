@@ -33,15 +33,13 @@ DEFAULT_STATE_RULES: dict[str, Any] = {
     ],
 }
 STATE_RULES: dict[str, dict[str, Any]] = {
-    "AZ": {"free_look_days": 30, "spousal_consent_required": True},
-    "ID": {"free_look_days": 30, "spousal_consent_required": True},
-    "LA": {"free_look_days": 30, "spousal_consent_required": True},
-    "NV": {"free_look_days": 30, "spousal_consent_required": True},
-    "NM": {"free_look_days": 30, "spousal_consent_required": True},
-    "WA": {"free_look_days": 30, "spousal_consent_required": True},
-    "WI": {"free_look_days": 30, "spousal_consent_required": True},
-    "FL": {"free_look_days": 14},
-    "CT": {"free_look_days": 30},
+    "AZ": {"spousal_consent_required": True},
+    "ID": {"spousal_consent_required": True},
+    "LA": {"spousal_consent_required": True},
+    "NV": {"spousal_consent_required": True},
+    "NM": {"spousal_consent_required": True},
+    "WA": {"spousal_consent_required": True},
+    "WI": {"spousal_consent_required": True},
 }
 
 MIN_PURCHASE_PRICE = 5_000.0

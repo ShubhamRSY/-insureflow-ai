@@ -37,7 +37,6 @@ DEFAULT_STATE_RULES: dict[str, Any] = {
 }
 STATE_RULES: dict[str, dict[str, Any]] = {
     "FL": {"free_look_days": 14},
-    "CT": {"free_look_days": 30},
 }
 
 MIN_PROPOSER_AGE = 21

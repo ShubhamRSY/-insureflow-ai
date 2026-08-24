@@ -8,6 +8,8 @@ family pricing.
 
 from __future__ import annotations
 
+import json
+
 import pytest
 
 from insureflow.insurance.life_lobs import LIFE_LINES
@@ -279,8 +281,8 @@ def test_state_rules_inside_path_connecticut() -> None:
     ct = rate_life(_bundle(), coverage_id="level_term_20", product_id="level_term", state="CT")
     rules = ct.metadata["state_rules_applied"]
     assert rules["issue_state"] == "CT"
-    assert rules["free_look_days"] == 30
-    assert rules["paramed_face_threshold"] == 100000.0
+    assert rules["free_look_days"] == 10  # CT Gen. Stat. 38a-436 — platform table
+    assert rules["paramed_face_threshold"] == 100000.0  # carrier override, module layer
     assert rules["source"] == "state_table"
     assert any("free-look" in c for c in ct.metadata["conditions"])
     # CT has no filed rates → filing gate fires inside this path
@@ -300,12 +302,16 @@ def test_state_rules_carrier_default_when_state_unknown() -> None:
 
 
 def test_all_us_jurisdictions_get_state_law_row_in_every_family() -> None:
-    from insureflow.life.lobs.state_law import COMMUNITY_PROPERTY_STATES, FREE_LOOK_DAYS
+    from insureflow.life.lobs.state_law import (
+        ANNUITY_FREE_LOOK_DAYS,
+        COMMUNITY_PROPERTY_STATES,
+        LIFE_FREE_LOOK_DAYS,
+    )
 
-    assert len(FREE_LOOK_DAYS) == 51  # 50 states + DC
+    assert len(LIFE_FREE_LOOK_DAYS) == 51  # 50 states + DC
+    assert len(ANNUITY_FREE_LOOK_DAYS) == 51
     # Products without hand-tuned rows inherit the platform table verbatim.
-    # (Annuity paths carry their own module rows — covered by the CP loop below.)
-    families = [
+    life_families = [
         ("level_term", "twenty_year_level"),
         ("ordinary_whole_life", "guaranteed_whole_life"),
         ("guaranteed_universal_life", "no_lapse"),
@@ -313,43 +319,138 @@ def test_all_us_jurisdictions_get_state_law_row_in_every_family() -> None:
         ("regular_premium_ulip", "rp_ulip"),
         ("traditional_money_back", "traditional_mb"),
     ]
-    for state in FREE_LOOK_DAYS:
-        pid, cid = families[hash(state) % len(families)]
+    for state in LIFE_FREE_LOOK_DAYS:
+        pid, cid = life_families[hash(state) % len(life_families)]
         q = rate_life(_bundle(), coverage_id=cid, product_id=pid, state=state)
         rules = q.metadata["state_rules_applied"]
         assert rules["source"] == "state_table", (state, pid)
-        assert rules["free_look_days"] == FREE_LOOK_DAYS[state], (state, pid)
+        assert rules["free_look_days"] == LIFE_FREE_LOOK_DAYS[state], (state, pid)
+    for state in ANNUITY_FREE_LOOK_DAYS:
+        a = rate_life(_bundle("Purchase price: $500000. Applicant age: 65. Sex: male."), coverage_id="life_income", product_id="immediate_annuity", state=state)
+        ra = a.metadata["state_rules_applied"]
+        assert ra["free_look_days"] == ANNUITY_FREE_LOOK_DAYS[state], (state, "annuity")
+    # Annuity statutes differ from life statutes in the same state.
+    fl_life = rate_life(_bundle(), coverage_id="twenty_year_level", product_id="level_term", state="FL")
+    fl_ann = rate_life(_bundle("Purchase price: $500000. Applicant age: 65. Sex: male."), coverage_id="life_income", product_id="immediate_annuity", state="FL")
+    assert fl_life.metadata["state_rules_applied"]["free_look_days"] == 14
+    assert fl_ann.metadata["state_rules_applied"]["free_look_days"] == 21
+    tx_ann = rate_life(_bundle("Purchase price: $500000. Applicant age: 65. Sex: male."), coverage_id="life_income", product_id="immediate_annuity", state="TX")
+    rtx = tx_ann.metadata["state_rules_applied"]
+    assert rtx["free_look_days"] == 20 and rtx["replacement_free_look_days"] == 30
     # Distinctive statutory values survive the merge chain.
-    ct = rate_life(_bundle(), coverage_id="twenty_year_level", product_id="level_term", state="CT")
-    assert ct.metadata["state_rules_applied"]["rule_layer"] == "module"  # hand-tuned row wins
     ny = rate_life(_bundle(), coverage_id="ten_pay", product_id=None, state="NY")
     ny = rate_life(_bundle(), coverage_id="ten_pay", product_id="limited_pay", state="NY")
     assert ny.metadata["state_rules_applied"]["free_look_days"] == 20
+    wy = rate_life(_bundle(), coverage_id="twenty_year_level", product_id="level_term", state="WY")
+    assert wy.metadata["state_rules_applied"]["free_look_days"] == 30  # WY Admin Code Ins Gen Ch 12 s4
+    # Senior extensions stamped on annuity paths (Cal. Ins. Code 10127.10).
+    ca_ann = rate_life(_bundle("Purchase price: $500000. Applicant age: 65. Sex: male."), coverage_id="life_income", product_id="immediate_annuity", state="CA")
+    rca = ca_ann.metadata["state_rules_applied"]
+    assert rca["senior_free_look_days"] == 30 and rca["senior_free_look_min_age"] == 60
     # Community-property consent rows fire on annuity paths in all 9 states.
     for state in COMMUNITY_PROPERTY_STATES:
-        a = rate_life(_bundle("Purchase price: $500000. Applicant age: 65. Sex: male."), coverage_id="life_income", product_id="immediate_annuity", state=state)
-        ra = a.metadata["state_rules_applied"]
-        assert ra.get("spousal_consent_required") is True, state
+        cp = rate_life(_bundle("Purchase price: $500000. Applicant age: 65. Sex: male."), coverage_id="life_income", product_id="immediate_annuity", state=state)
+        assert cp.metadata["state_rules_applied"].get("spousal_consent_required") is True, state
+
+
+def test_guaranty_caps_and_grace_and_claims_stamped_by_state() -> None:
+    # Guaranty caps: NAIC defaults vs high-cap states.
+    il = rate_life(_bundle(), coverage_id="twenty_year_level", product_id="level_term", state="IL")
+    g = il.metadata["state_rules_applied"]["guaranty"]
+    assert g["death_cap"] == 300000.0 and g["cash_value_cap"] == 100000.0 and g["aggregate_cap"] == 300000.0
+    ny = rate_life(_bundle(), coverage_id="twenty_year_level", product_id="level_term", state="NY")
+    gn = ny.metadata["state_rules_applied"]["guaranty"]
+    assert gn["death_cap"] == 500000.0 and gn["cash_value_cap"] == 500000.0
+    ca = rate_life(_bundle(), coverage_id="guaranteed_whole_life", product_id="ordinary_whole_life", state="CA")
+    gc = ca.metadata["state_rules_applied"]["guaranty"]
+    assert gc["coinsurance_pct"] == 80.0  # CA pays 80% of covered value up to cap
+    ann = rate_life(_bundle("Purchase price: $500000. Applicant age: 65. Sex: male."), coverage_id="life_income", product_id="immediate_annuity", state="WA")
+    assert ann.metadata["state_rules_applied"]["guaranty"]["annuity_pv_cap"] == 500000.0
+    # Grace periods: CA's 60-day statute (Ins. Code 10113.71) vs default 31.
+    assert ca.metadata["state_rules_applied"]["grace_period_days"] == 60
+    assert il.metadata["state_rules_applied"]["grace_period_days"] == 31
+    # Claims-settlement interest anchors differ by state.
+    assert il.metadata["state_rules_applied"]["claims_settlement"]["accrues_from"] == "proof_of_death"
+    ct = rate_life(_bundle(), coverage_id="twenty_year_level", product_id="level_term", state="CT")
+    ct_claims = ct.metadata["state_rules_applied"]["claims_settlement"]
+    assert ct_claims["accrues_from"] == "date_of_death" and ct_claims["offset_days"] == 10
+
+
+def test_ny_reg187_documented_suitability_on_life_paths() -> None:
+    q = rate_life(_bundle(), coverage_id="level_term_20", product_id="level_term", state="NY")
+    regime = q.metadata.get("suitability_regime")
+    assert regime and regime["regime"] == "NY Reg 187" and regime["citation"] == "11 NYCRR 224"
+    assert any("documented suitability analysis REQUIRED" in c for c in q.metadata["conditions"])
+    # Same regime governs NY annuities (instead of Model #275).
+    a = rate_life(_bundle("Purchase price: $500000. Applicant age: 65. Sex: male."), coverage_id="life_income", product_id="immediate_annuity", state="NY")
+    assert a.metadata["suitability_regime"]["regime"] == "NY Reg 187"
+
+
+def test_best_interest_obligations_on_annuity_paths() -> None:
+    tx = rate_life(_bundle("Purchase price: $500000. Applicant age: 65. Sex: male."), coverage_id="life_income", product_id="immediate_annuity", state="TX")
+    regime = tx.metadata.get("suitability_regime")
+    assert regime is not None and regime["regime"].startswith("NAIC Model #275")
+    assert set(regime["obligations"]) == {"care", "disclosure", "conflict_of_interest", "documentation"}
+    assert any("Best Interest" in c for c in tx.metadata["conditions"])
+    # Life products outside NY carry no special sales-regime burden.
+    life = rate_life(_bundle(), coverage_id="twenty_year_level", product_id="level_term", state="TX")
+    assert life.metadata.get("suitability_regime") is None or "Best Interest" not in str(life.metadata.get("suitability_regime"))
+
+
+def test_annuity_premium_tax_embedded_in_quote() -> None:
+    annuity_text = "Purchase price: $500000. Applicant age: 65. Sex: male."
+    ca = rate_life(_bundle(annuity_text), coverage_id="life_income", product_id="immediate_annuity", state="CA")
+    tax = ca.metadata.get("premium_tax")
+    assert tax and tax["rate"] == 0.0235 and tax["amount"] == 11750.0 and tax["insurer_paid"] is True
+    nv = rate_life(_bundle(annuity_text), coverage_id="life_income", product_id="immediate_annuity", state="NV")
+    assert nv.metadata["premium_tax"]["rate"] == 0.035
+    # SD tiers: 1.25% on first $500k, 0.08% above — on $600k that's 6250 + 80.
+    sd = rate_life(
+        _bundle("Purchase price: $600000. Applicant age: 65. Sex: male."),
+        coverage_id="life_income",
+        product_id="immediate_annuity",
+        state="SD",
+    )
+    assert sd.metadata["premium_tax"]["amount"] == round(500000 * 0.0125 + 100000 * 0.0008, 2)
+    # Untaxed states carry no premium-tax block at all.
+    il = rate_life(_bundle(annuity_text), coverage_id="life_income", product_id="immediate_annuity", state="IL")
+    assert "premium_tax" not in il.metadata or il.metadata.get("premium_tax") is None
+    fl = rate_life(_bundle(annuity_text), coverage_id="life_income", product_id="immediate_annuity", state="FL")
+    assert fl.metadata["premium_tax"]["pass_through_credit"] is True
+
+
+def test_pricing_relativity_basis_explicit_for_all_states() -> None:
+    manual = json.load(open("src/insureflow/rating/personal/filings/life_rate_manual.json"))
+    basis = manual["relativity_basis"]
+    assert len(basis) == 51  # every jurisdiction has an explicit filing status
+    filed = {st for st, b in basis.items() if b == "filed_exhibit"}
+    assert filed == {"IL", "CA", "NY", "TX", "FL", "MT"}
+    # Only filed states appear in the relativity table — presence drives
+    # the state-of-filing gate and must stay truthful.
+    assert set(manual["state_relativities"]) == filed
+    assert basis["CT"] == "no_state_filing_generic_engine_only"
 
 
 def test_florida_free_look_stamped_across_all_families() -> None:
-    # FL has a state-table row in every product path: 14-day free look,
-    # everything else inherited from carrier defaults via merge_state_rules.
+    # FL: 14-day free look for life products, 21-day for annuities (statute) —
+    # the platform table serves the family-correct value to every path.
     families = [
-        ("level_term", "twenty_year_level"),
-        ("ordinary_whole_life", "guaranteed_whole_life"),
-        ("guaranteed_universal_life", "no_lapse"),
-        ("pure_endowment", "pure_maturity"),
-        ("regular_premium_ulip", "rp_ulip"),
-        ("traditional_money_back", "traditional_mb"),
-        ("immediate_annuity", "life_income"),
-        ("with_profit_money_back", "with_profit_mb"),  # inherits table from traditional
+        ("level_term", "twenty_year_level", 14),
+        ("ordinary_whole_life", "guaranteed_whole_life", 14),
+        ("guaranteed_universal_life", "no_lapse", 14),
+        ("pure_endowment", "pure_maturity", 14),
+        ("regular_premium_ulip", "rp_ulip", 14),
+        ("traditional_money_back", "traditional_mb", 14),
+        ("immediate_annuity", "life_income", 21),
+        ("with_profit_money_back", "with_profit_mb", 14),  # inherits table from traditional
     ]
-    for pid, cid in families:
-        q = rate_life(_bundle(), coverage_id=cid, product_id=pid, state="FL")
+    for pid, cid, expected_days in families:
+        is_annuity = expected_days == 21
+        bundle = _bundle("Purchase price: $500000. Applicant age: 65. Sex: male.") if is_annuity else _bundle()
+        q = rate_life(bundle, coverage_id=cid, product_id=pid, state="FL")
         rules = q.metadata["state_rules_applied"]
         assert rules["issue_state"] == "FL", pid
-        assert rules["free_look_days"] == 14, pid
+        assert rules["free_look_days"] == expected_days, pid
         assert rules["source"] == "state_table", pid
     # FL pricing relativity (1.05) still applies on top of the rule row.
     fl = rate_life(_bundle(), coverage_id="twenty_year_level", product_id="level_term", state="FL")

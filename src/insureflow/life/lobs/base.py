@@ -85,9 +85,12 @@ def merge_state_rules(
     decision record shows exactly which state rules fired.
     """
     merged = dict(default_rules or {})
-    from insureflow.life.lobs.state_law import canonical_state_row
+    from insureflow.life.lobs.state_law import canonical_state_row, is_annuity_context
 
-    law_row = canonical_state_row(ctx.issue_state)
+    law_row = canonical_state_row(
+        ctx.issue_state,
+        annuity=is_annuity_context(ctx.product_id, ctx.coverage_id, ctx.coverage_name),
+    )
     merged.update(law_row)
     state_row = (state_rules or {}).get(ctx.issue_state) or {}
     merged.update(state_row)
@@ -177,6 +180,10 @@ def finish_quote(
         **outcome.metadata,
     }
     meta["conditions"] = list(outcome.conditions)
+    apply_platform_state_law(ctx, outcome, family=family)
+    meta["conditions"] = list(outcome.conditions)  # re-read after platform layer
+    meta.setdefault("suitability_regime", outcome.metadata.get("suitability_regime"))
+    meta.setdefault("premium_tax", outcome.metadata.get("premium_tax"))
 
     ineligibility = [r for r in outcome.reasons if r] if not outcome.eligible else []
     return QuoteResult(
@@ -190,6 +197,34 @@ def finish_quote(
         ineligibility_reasons=ineligibility,
         metadata=meta,
     )
+
+
+def apply_platform_state_law(ctx: LifeProductContext, outcome: LobOutcome, *, family: str) -> None:
+    """State sales-process law enforced at the platform layer.
+
+    Reg 187 (NY, life + annuity) and NAIC #275 Best Interest (annuities,
+    49 adopting jurisdictions) are process obligations shared by every
+    product path — implemented once here so no path can forget them.
+    """
+    from insureflow.life.lobs.state_law import is_annuity_context, premium_tax_on_consideration, suitability_regime
+
+    annuity = family == "annuity" or is_annuity_context(ctx.product_id, ctx.coverage_id, ctx.coverage_name)
+    regime = suitability_regime(ctx.issue_state, annuity=annuity)
+    if regime["regime"] == "NY Reg 187":
+        outcome.add_condition("NY Reg 187: documented suitability analysis REQUIRED before recommendation")
+        outcome.add_condition("Reg 187: consumer-facing document delivered; producer statement signed; carrier reviews before issue")
+        outcome.metadata["suitability_regime"] = regime
+    elif annuity:
+        outcome.metadata["suitability_regime"] = regime
+        if "obligations" in regime:
+            outcome.add_condition(f"Best Interest ({regime['regime']}): {', '.join(regime['obligations'])} obligations documented at point of sale")
+
+    consideration = float(outcome.metadata.get("purchase_price") or 0.0)
+    tax = premium_tax_on_consideration(ctx.issue_state, consideration, qualified=False)
+    if tax and tax["amount"] > 0:
+        outcome.metadata["premium_tax"] = tax
+        note = "; FL pass-through credit may offset when savings returned to policyholders" if tax["pass_through_credit"] else "insurer-paid, embedded in economics"
+        outcome.add_condition(f"{ctx.issue_state} annuity premium tax {tax['rate']:.2%} ≈ ${tax['amount']:,.0f} on ${consideration:,.0f} ({note})")
 
 
 def medical_class_factor(ctx: LifeProductContext, cap: float | None = None) -> float:

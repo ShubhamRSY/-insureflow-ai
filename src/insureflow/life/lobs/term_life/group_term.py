@@ -42,7 +42,6 @@ COVERAGE_FACTORS: dict[str, dict[str, Any]] = {
 
 STATE_RULES: dict[str, dict[str, Any]] = {
     "FL": {"free_look_days": 14},
-    "CT": {"free_look_days": 30},
     "NY": {"free_look_days": 20},
 }
 

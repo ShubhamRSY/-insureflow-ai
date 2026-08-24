@@ -38,7 +38,6 @@ DEFAULT_STATE_RULES: dict[str, Any] = {
 STATE_RULES: dict[str, dict[str, Any]] = {
     "FL": {"free_look_days": 14},
     "CT": {
-        "free_look_days": 30,
         "paramed_face_threshold": 100_000.0,
         "disclosures": [
             "Replacement notice (state-mandated when replacing in-force coverage)",
@@ -46,7 +45,7 @@ STATE_RULES: dict[str, dict[str, Any]] = {
         ],
     },
     "NY": {"free_look_days": 20, "paramed_face_threshold": 500_000.0},
-    "CA": {"free_look_days": 10, "paramed_face_threshold": 250_000.0},
+    "CA": {"paramed_face_threshold": 250_000.0},
     "IL": {"free_look_days": 10, "paramed_face_threshold": 150_000.0},
 }
 

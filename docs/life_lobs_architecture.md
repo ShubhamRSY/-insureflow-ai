@@ -154,3 +154,34 @@ Family-specific conventions established during the LOB 3–7 build:
 - **This model**: shared *plumbing* only; every rule lives visibly in the one
   place that owns it. Adding a coverage = adding an explicit branch in its
   product module, never touching other products.
+
+## Platform state-law layer (51 jurisdictions)
+
+`lobs/state_law.py` is the single source of truth for state consumer-protection
+and sales-process law; `merge_state_rules` (base.py) layers it into every
+product path: carrier `DEFAULT_STATE_RULES` ← canonical law row ← module
+`STATE_RULES`. Each merged row stamps `source` and `rule_layer` so reviewers
+can see which level set each value.
+
+- **Free look**: separate life and annuity tables with real statutory values
+  (e.g. CA 30d life / 30d annuity, FL 14d life / 21d annuity, CT 10d statute
+  §38a-436); annuity replacement extensions and senior extensions
+  (AZ 65+, CA 60+ per §10127.10) layered on top.
+- **Community property**: spousal consent required on annuity elections in all
+  nine CP states (module-layer rows).
+- **Sales-process regimes** (`apply_platform_state_law`, called from
+  `finish_quote` so no path can forget them): NY Reg 187 documented-suitability
+  conditions on ALL NY life/annuity quotes; NAIC Model #275 Best Interest
+  four-obligation condition on annuities in the 49 adopting states (NY, DC are
+  legacy-suitability holdouts).
+- **Guaranty-fund caps**: death/cash-value/annuity-PV/aggregate caps per state
+  incl. CA 80% coinsurance — stamped as `metadata["guaranty_protection"]`
+  family-appropriately.
+- **Grace period & claims settlement interest**: per-state days and
+  accrual-anchor rules stamped in metadata.
+- **Annuity premium tax**: computed against purchase consideration for taxed
+  states (CA 2.35%, NV 3.5%, SD tiered, FL 1% pass-through credit, …) —
+  `metadata["premium_tax"]`.
+- **Pricing relativities** stay in `life_rate_manual.json`: only genuinely
+  filed states appear in `state_relativities` (presence there drives the
+  state-of-filing gate); `relativity_basis` records filing status for all 51.
