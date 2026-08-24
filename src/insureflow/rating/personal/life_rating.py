@@ -190,9 +190,7 @@ def rate_life(
     if not filed_term:
         eligible = False
         if actuarial:
-            reasons.append(
-                f"{family.replace('_', ' ')} priced on actuarial equivalence (A_x / ä_x) — illustrative only, no {filing_state}-filed permanent rates"
-            )
+            reasons.append(f"{family.replace('_', ' ')} priced on actuarial equivalence (A_x / ä_x) — illustrative only, no {filing_state}-filed permanent rates")
         else:
             reasons.append(f"{family.replace('_', ' ')} has no filed rates — illustrative load only, not an issueable premium")
     if issue_state and issue_state != filing_state:
