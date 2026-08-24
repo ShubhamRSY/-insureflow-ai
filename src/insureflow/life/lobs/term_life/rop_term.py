@@ -36,6 +36,7 @@ DEFAULT_STATE_RULES: dict[str, Any] = {
     "disclosures": ["Refund schedule illustration must be acknowledged — lapse forfeits return of premium"],
 }
 STATE_RULES: dict[str, dict[str, Any]] = {
+    "FL": {"free_look_days": 14},
     "CT": {"free_look_days": 30},
     "NY": {"free_look_days": 20},
 }

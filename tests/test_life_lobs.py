@@ -296,6 +296,31 @@ def test_state_rules_carrier_default_when_state_unknown() -> None:
     assert rules["free_look_days"] == 10
 
 
+def test_florida_free_look_stamped_across_all_families() -> None:
+    # FL has a state-table row in every product path: 14-day free look,
+    # everything else inherited from carrier defaults via merge_state_rules.
+    families = [
+        ("level_term", "twenty_year_level"),
+        ("ordinary_whole_life", "guaranteed_whole_life"),
+        ("guaranteed_universal_life", "no_lapse"),
+        ("pure_endowment", "pure_maturity"),
+        ("regular_premium_ulip", "rp_ulip"),
+        ("traditional_money_back", "traditional_mb"),
+        ("immediate_annuity", "life_income"),
+        ("with_profit_money_back", "with_profit_mb"),  # inherits table from traditional
+    ]
+    for pid, cid in families:
+        q = rate_life(_bundle(), coverage_id=cid, product_id=pid, state="FL")
+        rules = q.metadata["state_rules_applied"]
+        assert rules["issue_state"] == "FL", pid
+        assert rules["free_look_days"] == 14, pid
+        assert rules["source"] == "state_table", pid
+    # FL pricing relativity (1.05) still applies on top of the rule row.
+    fl = rate_life(_bundle(), coverage_id="twenty_year_level", product_id="level_term", state="FL")
+    il = rate_life(_bundle(), coverage_id="twenty_year_level", product_id="level_term", state="IL")
+    assert fl.adjusted_premium > il.adjusted_premium
+
+
 def test_unisex_state_forces_one_sex_table() -> None:
     # Within a unisex state, a female and a male applicant price identically.
     female = _bundle("Term life application. Applicant age: 42. Sex: female. Face amount: $500000. Annual income: 145000. Non-smoker. Preferred.")

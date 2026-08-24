@@ -28,6 +28,9 @@ from insureflow.life.lobs.money_back.traditional_money_back import (
     TERM_YEARS,
     _coupon_pv,
 )
+from insureflow.life.lobs.money_back.traditional_money_back import (
+    STATE_RULES as _TRADITIONAL_STATE_TABLE,
+)
 from insureflow.life.mortality import discount_factor, k_p_x
 from insureflow.rating.models import RateComponent
 
@@ -54,7 +57,7 @@ def underwrite_with_profit_money_back(ctx: LifeProductContext) -> LobOutcome:
         outcome.eligible = False
         outcome.add_reason(f"With-profit money-back issue age {ctx.age} outside {MIN_ISSUE_AGE}-{MAX_ISSUE_AGE}")
 
-    state_rules = merge_state_rules(ctx, DEFAULT_STATE_RULES, {})
+    state_rules = merge_state_rules(ctx, DEFAULT_STATE_RULES, _TRADITIONAL_STATE_TABLE)
     interest = float(state_rules["interest_rate"])
     loading = float(state_rules["expense_loading_pct"])
     sb_pct = float(state_rules["survival_benefit_pct"])

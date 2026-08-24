@@ -35,6 +35,7 @@ DEFAULT_STATE_RULES: dict[str, Any] = {
     "disclosures": ["Renewal premium schedule at attained ages must be disclosed at issue"],
 }
 STATE_RULES: dict[str, dict[str, Any]] = {
+    "FL": {"free_look_days": 14},
     "CT": {"free_look_days": 30},
     "NY": {"free_look_days": 20, "max_renewal_age": 70},
 }

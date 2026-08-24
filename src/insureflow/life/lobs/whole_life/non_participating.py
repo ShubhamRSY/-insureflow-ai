@@ -34,6 +34,7 @@ DEFAULT_STATE_RULES: dict[str, Any] = {
     "disclosures": ["All values guaranteed — no dividend participation"],
 }
 STATE_RULES: dict[str, dict[str, Any]] = {
+    "FL": {"free_look_days": 14},
     "CT": {"free_look_days": 30},
     "NY": {"free_look_days": 20},
 }
