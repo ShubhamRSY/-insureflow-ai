@@ -16,6 +16,7 @@ from insureflow.rating.models import InsuranceLine, RateComponent
 from insureflow.rating.models import QuoteResult as QuoteResult
 from insureflow.underwriting.life_financial import LifeFinancialResult
 from insureflow.underwriting.life_medical import LifeMedicalDecision
+from insureflow.underwriting.personal_lines import _blob
 
 
 @dataclass
@@ -131,6 +132,84 @@ def apply_state_filing_gate(
             outcome.eligible = False
 
 
+_FACE_DRIVEN_FAMILIES = {"term", "whole_life", "universal", "variable_universal", "endowment", "money_back"}
+_CONSIDERATION_KEYS = ("purchase_price", "single_premium", "single_premium_amount")
+
+
+def _has_evidence(blob: str, pattern: str, bundle_types: set[str], doc_type: str) -> bool:
+    import re as _re
+
+    return doc_type in bundle_types or bool(_re.search(pattern, blob or "", _re.I))
+
+
+def apply_binding_gates(ctx: LifeProductContext, outcome: LobOutcome, *, family: str) -> None:
+    """Platform binding gates shared by every dedicated LOB path.
+
+    Mirrors the generic-path behavior so a product registered on a dedicated
+    logic path can never bypass: medical declines/referals, evidence orders
+    (APS/paramed), riders, facultative/jumbo reinsurance placement, and the
+    refusal to price a face-driven product without a face amount.
+    """
+    from insureflow.models.agents import UWDecision
+
+    consideration_driven = any(k in outcome.metadata for k in _CONSIDERATION_KEYS)
+
+    # Zero face on a face-driven product is not rateable — never manufacture a
+    # minimum-premium quote for it.
+    if family in _FACE_DRIVEN_FAMILIES and not consideration_driven and ctx.face <= 0:
+        outcome.eligible = False
+        outcome.add_reason("Face amount missing — cannot rate a face-driven product without a coverage amount")
+        outcome.metadata["_zero_face"] = True
+
+    # Medical decision propagation.
+    if ctx.medical.decision == UWDecision.DECLINE:
+        outcome.eligible = False
+        for r in ctx.medical.reasons:
+            outcome.add_reason(r)
+        outcome.metadata["_outcome"] = "decline"
+    elif ctx.medical.decision == UWDecision.REFER:
+        outcome.add_condition("Medical referral — underwriter review required before issue")
+        outcome.metadata["_outcome"] = "refer"
+
+    # Financial underwriting findings ride along as pre-issue conditions.
+    fin_reasons = [str(r) for r in (ctx.financial.reasons or []) if r]
+    if fin_reasons:
+        for r in fin_reasons:
+            outcome.add_condition(r)
+        if ctx.medical.decision == UWDecision.ACCEPT:
+            outcome.add_condition("Financial underwriting review required before issue")
+            outcome.metadata.setdefault("_outcome", "accept")
+            if outcome.metadata.get("_outcome") == "accept":
+                outcome.metadata["_outcome"] = "refer"
+
+    # Evidence & reinsurance placement gates (not applicable to annuity-style
+    # consideration products or investment-linked wrappers).
+    if family in _FACE_DRIVEN_FAMILIES and ctx.face > 0:
+        types = {str(getattr(d, "document_type", "") or "").lower() for d in list(ctx.bundle.unstructured or []) + list(ctx.bundle.supplemental or [])}
+        blob_l = _blob(ctx.bundle) or ""
+        if ctx.reinsurance.facultative_required:
+            outcome.add_condition("Facultative reinsurance must be placed and accepted by the reinsurer before issue")
+        elif ctx.reinsurance.jumbo:
+            outcome.add_condition("Confirm automatic reinsurance treaty capacity before issue")
+        if ctx.medical.require_aps and not _has_evidence(
+            blob_l,
+            r"aps\s+(?:received|complete|on file)|attending physician statement\s+(?:received|attached)|\baps\b|attending physician",
+            types,
+            "aps_records",
+        ):
+            outcome.add_condition("APS required before bind — not on file (flag is not an order)")
+        if ctx.medical.require_paramed and not _has_evidence(
+            blob_l,
+            r"paramed(?:ical)?\s+(?:complete|received|done)|examone\s+complete|paramedic",
+            types,
+            "medical_exam",
+        ):
+            if not any("paramed" in c.lower() for c in outcome.conditions):
+                outcome.add_condition("Paramedical exam required before bind — not fulfilled")
+        if ctx.financial.riders and not any(c.lower().startswith("riders:") for c in outcome.conditions):
+            outcome.add_condition("Riders: " + ", ".join(ctx.financial.riders))
+
+
 def finish_quote(
     ctx: LifeProductContext,
     outcome: LobOutcome,
@@ -142,11 +221,14 @@ def finish_quote(
     apply_minimum_premium: bool = True,
 ) -> QuoteResult:
     """Convert a LobOutcome into the platform QuoteResult contract."""
+    apply_binding_gates(ctx, outcome, family=family)
     manual = ctx.manual or {}
     minimum_premium = float(manual.get("minimum_premium", 250.0))
     annual_value = outcome.annual_premium
     if apply_minimum_premium:
         annual_value = max(annual_value, minimum_premium)
+    if outcome.metadata.pop("_zero_face", False):
+        annual_value = 0.0
     adjusted = round(max(annual_value, 0.0), 2)
     modal_premium = round(adjusted * ctx.modal_f, 2) if ctx.modal != "annual" else adjusted
 

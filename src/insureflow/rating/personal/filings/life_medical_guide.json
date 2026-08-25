@@ -12,7 +12,7 @@
     },
     {
       "id": "KO-HIV",
-      "pattern": "hiv positive|aids diagnosis",
+      "pattern": "hiv positive|hiv\\+|\\baids\\b|aids diagnosis",
       "action": "decline",
       "reason": "HIV/AIDS \u2014 outside standard issue"
     },
@@ -44,13 +44,13 @@
   "referrals": [
     {
       "id": "RF-CAD",
-      "pattern": "(?<!no )(?<!without )(?:coronary artery|heart attack|myocardial infarction|coronary stent|bypass surgery)",
+      "pattern": "(?<!no )(?<!without )(?:coronary artery|heart attack|myocardial infarction|coronary stent|\\bstent\\b|bypass surgery|\\bcabg\\b|angina(?: pectoris)?|heart failure|congestive heart|\\bchf\\b|atrial fibrillation|a-fib|afib)",
       "action": "refer",
       "reason": "Cardiac history \u2014 medical director review"
     },
     {
       "id": "RF-DIABETES",
-      "pattern": "(?<!no )\\bdiabetes\\b|insulin dependent|a1c\\s*[:=]?\\s*[7-9]",
+      "pattern": "(?<!no )\\bdiabet(?:es|ic)\\b|insulin dependent|a1c\\s*[:=]?\\s*(?:[7-9]|1\\d|2\\d)(?:\\.\\d+)?",
       "action": "refer",
       "reason": "Diabetes \u2014 labs and control review"
     },

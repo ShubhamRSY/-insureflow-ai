@@ -10,7 +10,7 @@ from insureflow.models.agents import Finding, RiskSeverity, UWDecision
 from insureflow.models.submissions import SubmissionBundle
 from insureflow.rating.personal.manuals import life_manual
 from insureflow.underwriting.life_product import classify_life_family
-from insureflow.underwriting.personal_lines import LifeFactors, _blob, extract_life_factors
+from insureflow.underwriting.personal_lines import LifeFactors, _blob, extract_life_factors, strip_negated_clauses
 
 
 def income_multiple_for_age(age: int | None) -> float:
@@ -75,7 +75,7 @@ def evaluate_life_financial(
     coverage_name: str | None = None,
 ) -> LifeFinancialResult:
     factors = factors or extract_life_factors(bundle)
-    blob = _blob(bundle)
+    blob = strip_negated_clauses(_blob(bundle))
     manual = life_manual()
     elig = manual.get("eligibility") or {}
     family = classify_life_family(product_id, coverage_id, coverage_name)

@@ -9,7 +9,7 @@ from typing import Any
 from insureflow.models.agents import Finding, RiskSeverity, UWDecision
 from insureflow.models.submissions import SubmissionBundle
 from insureflow.rating.personal.manuals import life_manual, life_medical_guide
-from insureflow.underwriting.personal_lines import _blob, _int_field, _money, extract_life_factors
+from insureflow.underwriting.personal_lines import _blob, _int_field, _money, extract_life_factors, strip_negated_clauses
 
 
 @dataclass
@@ -91,13 +91,14 @@ def underwrite_life(bundle: SubmissionBundle) -> LifeMedicalDecision:
     rate = life_manual()
     factors = extract_life_factors(bundle)
     blob = _blob(bundle)
+    uw_blob = strip_negated_clauses(blob)
     vitals = _parse_vitals(blob)
     findings: list[Finding] = list(factors.findings)
     reasons: list[str] = []
 
-    # Knockouts
+    # Knockouts — affirmative disclosures only (negated histories stripped).
     for ko in guide.get("knockouts") or []:
-        if re.search(ko.get("pattern", ""), blob, re.I):
+        if re.search(ko.get("pattern", ""), uw_blob, re.I):
             findings.append(
                 Finding(
                     title=ko.get("reason") or ko.get("id", "Knockout"),
@@ -125,7 +126,7 @@ def underwrite_life(bundle: SubmissionBundle) -> LifeMedicalDecision:
 
     # Class rules from patterns
     for rule in guide.get("class_rules") or []:
-        if not re.search(rule.get("pattern", ""), blob, re.I):
+        if not re.search(rule.get("pattern", ""), uw_blob, re.I):
             continue
         if rule.get("tobacco"):
             tobacco = True
@@ -200,7 +201,7 @@ def underwrite_life(bundle: SubmissionBundle) -> LifeMedicalDecision:
     # Referrals
     decision = UWDecision.ACCEPT
     for rf in guide.get("referrals") or []:
-        if re.search(rf.get("pattern", ""), blob, re.I):
+        if re.search(rf.get("pattern", ""), uw_blob, re.I):
             decision = UWDecision.REFER
             reasons.append(rf.get("reason") or rf.get("id", "refer"))
             findings.append(

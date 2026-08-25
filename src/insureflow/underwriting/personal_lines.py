@@ -10,6 +10,8 @@ from insureflow.models.agents import Finding, RiskSeverity
 from insureflow.models.submissions import SubmissionBundle
 from insureflow.rating.models import PERSONAL_LINES, InsuranceLine
 
+_DOC_SEP = "\n#\n"
+
 
 def _blob(bundle: SubmissionBundle) -> str:
     parts: list[str] = []
@@ -21,7 +23,65 @@ def _blob(bundle: SubmissionBundle) -> str:
         ef = getattr(doc, "extracted_fields", None) or {}
         if isinstance(ef, dict):
             parts.append(str(ef))
-    return "\n".join(parts).lower()
+    return _DOC_SEP.join(parts).lower()
+
+
+_NEGATION_STARTERS = (
+    "no",
+    "not",
+    "non ",
+    "none",
+    "never",
+    "without",
+    "denies",
+    "denied",
+    "deny",
+    "negative",
+    "free of",
+    "ruled out",
+    "r/o",
+)
+
+_NEGATION_SEGMENT_RE = re.compile(
+    r"(?:^|(?<=[.;!?\n#]))\s*(" + "|".join(re.escape(s) for s in _NEGATION_STARTERS) + r")\b[^\n.;!?#]*",
+    re.I,
+)
+
+
+def strip_negated_clauses(text: str) -> str:
+    """Remove self-negated segments ('no prior X', 'denies Y') from a blob.
+
+    Underwriting knockouts/referrals must fire on AFFIRMATIVE disclosures only;
+    negated histories are the classic false-decline source. Segment boundaries
+    are sentence punctuation and newlines so a negation never reaches across
+    documents or fields.
+    """
+    return _NEGATION_SEGMENT_RE.sub("", text)
+
+
+_MONEY_SUFFIX_MULT = {"k": 1_000.0, "m": 1_000_000.0, "mm": 1_000_000.0, "bn": 1_000_000_000.0, "b": 1_000_000_000.0}
+_MONEY_WORD_MULT = {"thousand": 1_000.0, "million": 1_000_000.0, "billion": 1_000_000_000.0}
+
+
+def _money(blob: str, *labels: str) -> float:
+    for label in labels:
+        m = re.search(
+            rf"{re.escape(label)}\s*[:=]?\s*(?:usd|eur|gbp|cad)?\s*\$?\s*"
+            rf"([\d,]+(?:\.\d+)?)"
+            rf"(?:\s*(?P<sym>k|mm|bn|b|m)(?![a-z])|\s*(?P<word>thousand|million|billion)\b)?",
+            blob,
+            re.I,
+        )
+        if m:
+            try:
+                value = float(m.group(1).replace(",", ""))
+            except ValueError:
+                continue
+            mult = _MONEY_SUFFIX_MULT.get((m.group("sym") or "").lower())
+            if mult is None:
+                mult = _MONEY_WORD_MULT.get((m.group("word") or "").lower(), 1.0)
+            return value * mult
+    return 0.0
 
 
 def _has_strong_commercial_signals(blob: str) -> bool:
@@ -400,17 +460,6 @@ def parse_insurance_line(value: str | None) -> InsuranceLine | None:
         return None
 
 
-def _money(blob: str, *labels: str) -> float:
-    for label in labels:
-        m = re.search(rf"{re.escape(label)}\s*[:=]?\s*\$?\s*([\d,]+(?:\.\d+)?)", blob, re.I)
-        if m:
-            try:
-                return float(m.group(1).replace(",", ""))
-            except ValueError:
-                continue
-    return 0.0
-
-
 def _int_field(blob: str, *labels: str) -> int | None:
     for label in labels:
         m = re.search(rf"{re.escape(label)}\s*[:=]?\s*(\d{{1,4}})", blob, re.I)
@@ -659,7 +708,7 @@ def extract_auto_factors(bundle: SubmissionBundle) -> PersonalAutoFactors:
 
 
 def extract_life_factors(bundle: SubmissionBundle) -> LifeFactors:
-    blob = _blob(bundle)
+    blob = strip_negated_clauses(_blob(bundle))
     health = "standard"
     if "preferred plus" in blob or "preferred best" in blob or "super preferred" in blob:
         health = "preferred"
