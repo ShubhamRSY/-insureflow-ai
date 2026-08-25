@@ -3569,7 +3569,7 @@ def get_pipeline_story(
     if not summary and not memo_raw:
         raise HTTPException(status_code=404, detail="Pipeline data not found")
 
-    story: list[dict[str, str]] = []
+    story: list[dict[str, Any]] = []
     stages = summary.get("pipeline_stages", []) if summary else []
 
     # Build narrative from stages

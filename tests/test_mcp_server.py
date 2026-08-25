@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -12,11 +13,14 @@ from insureflow.mcp.server import create_mcp_server
 
 
 @pytest.fixture()
-def mcp_server():
-    return create_mcp_server("test-rytera")
+def mcp_server() -> Any:
+    server = create_mcp_server("test-rytera")
+    if server is None:
+        pytest.skip("mcp package not available")
+    return server
 
 
-def _call(mcp_server, tool_name: str, arguments: dict) -> dict:
+def _call(mcp_server: Any, tool_name: str, arguments: dict[str, Any]) -> dict[str, Any]:
     """Call an MCP tool and return the parsed JSON payload."""
     blocks, _ = asyncio.run(mcp_server.call_tool(tool_name, arguments))
     return json.loads(blocks[0].text)
