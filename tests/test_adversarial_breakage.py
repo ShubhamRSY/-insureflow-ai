@@ -1284,7 +1284,7 @@ class TestMCPMortgageMetrics:
 
     def test_zero_term_years_returns_error(self) -> None:
         pytest.importorskip("mcp.server.fastmcp")
-        from mcp.server.fastmcp import FastMCP
+        from mcp.server.fastmcp import FastMCP  # type: ignore[attr-defined]
 
         from insureflow.mcp.server import _register_all
 
@@ -1295,7 +1295,7 @@ class TestMCPMortgageMetrics:
 
     def test_negative_loan_amount_handled(self) -> None:
         pytest.importorskip("mcp.server.fastmcp")
-        from mcp.server.fastmcp import FastMCP
+        from mcp.server.fastmcp import FastMCP  # type: ignore[attr-defined]
 
         from insureflow.mcp.server import _register_all
 

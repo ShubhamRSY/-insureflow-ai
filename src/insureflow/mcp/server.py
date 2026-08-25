@@ -109,7 +109,9 @@ def _json_safe(obj: Any) -> Any:
     return str(obj)
 
 
-def create_mcp_server(name: str = "rytera") -> FastMCP:
+def create_mcp_server(name: str = "rytera") -> FastMCP | None:
+    if FastMCP is None:
+        return None
     mcp = FastMCP(name)
 
     # ── Jobs ──────────────────────────────────────────────────────

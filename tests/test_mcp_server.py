@@ -23,7 +23,8 @@ def mcp_server() -> Any:
 def _call(mcp_server: Any, tool_name: str, arguments: dict[str, Any]) -> dict[str, Any]:
     """Call an MCP tool and return the parsed JSON payload."""
     blocks, _ = asyncio.run(mcp_server.call_tool(tool_name, arguments))
-    return json.loads(blocks[0].text)
+    loaded: dict[str, Any] = json.loads(blocks[0].text)
+    return loaded
 
 
 class TestMCPServerTools:
