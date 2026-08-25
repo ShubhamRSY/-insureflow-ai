@@ -342,7 +342,7 @@ def test_landing_hero_copy() -> None:
     html = client.get("/", headers={"Accept": "text/html"}).text
     assert "AI underwriting you can" in html
     assert "actually trust" in html
-    assert "decision-ready memo" in html.lower() or "decision memo" in html.lower()
+    assert "decision-ready rytera memo" in html.lower() or "decision memo" in html.lower() or "rytera memo" in html.lower()
     assert "Built for Decisions" in html
 
 
