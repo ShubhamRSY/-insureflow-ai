@@ -309,6 +309,9 @@ export const endpoints = {
   // Insurance audit trail & export
   auditTrail: (bundleId) => api(`/pipeline/audit/${bundleId}`),
   auditPackage: (bundleId) => api(`/pipeline/audit/${bundleId}/package`),
+  pipelineDocuments: (bundleId) => api(`/pipeline/audit/${bundleId}/documents`),
+  pipelineDocument: (bundleId, docId) => api(`/pipeline/audit/${bundleId}/documents/${docId}`),
+  pipelineStory: (bundleId) => api(`/pipeline/audit/${bundleId}/pipeline-story`),
   verification: (bundleId) => api(`/verification/${bundleId}`),
   grounding: (bundleId) => api(`/grounding/${bundleId}`),
   workflowDetail: (bundleId) => api(`/pipeline/workflow/${bundleId}`),

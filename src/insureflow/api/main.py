@@ -3435,6 +3435,223 @@ def get_insurance_audit(
     }
 
 
+@app.get("/pipeline/audit/{bundle_id}/documents")
+def list_pipeline_documents(
+    bundle_id: str,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """List all documents from a completed pipeline job (structured + unstructured + supplemental)."""
+    from insureflow.audit.store import AuditStore
+
+    store = AuditStore()
+    raw = store.load_json(bundle_id, "submission_bundle.json", org_id=current.org_id)
+    if not raw:
+        raise HTTPException(status_code=404, detail="Submission bundle not found")
+
+    docs: list[dict[str, Any]] = []
+    # Structured (ACORD XML / JSON payload)
+    structured = raw.get("structured")
+    if structured:
+        docs.append(
+            {
+                "doc_id": structured.get("submission_id", "structured"),
+                "filename": "Structured Submission (ACORD / Broker API)",
+                "type": "structured",
+                "source": structured.get("source", ""),
+                "field_count": len(structured.get("coverages", [])) + len(structured.get("locations", [])),
+                "has_data": True,
+            }
+        )
+    # Unstructured docs (inspection reports, loss runs, PDFs, etc.)
+    for i, doc in enumerate(raw.get("unstructured") or []):
+        doc_id = doc.get("submission_id", f"unstructured-{i}")
+        docs.append(
+            {
+                "doc_id": doc_id,
+                "filename": doc.get("document_type", f"Document {i + 1}"),
+                "type": "unstructured",
+                "source": doc.get("source", ""),
+                "text_length": len(doc.get("raw_text", "")),
+                "extracted_field_count": sum(len(v) for v in (doc.get("extracted_fields") or {}).values()),
+                "has_data": bool(doc.get("raw_text")),
+            }
+        )
+    # Supplemental docs
+    for i, doc in enumerate(raw.get("supplemental") or []):
+        doc_id = doc.get("submission_id", f"supplemental-{i}")
+        docs.append(
+            {
+                "doc_id": doc_id,
+                "filename": doc.get("document_type", f"Supplemental {i + 1}"),
+                "type": "supplemental",
+                "source": doc.get("source", ""),
+                "text_length": len(doc.get("raw_text", "")),
+                "extracted_field_count": sum(len(v) for v in (doc.get("extracted_fields") or {}).values()),
+                "has_data": bool(doc.get("raw_text")),
+            }
+        )
+
+    return {
+        "bundle_id": bundle_id,
+        "document_count": len(docs),
+        "documents": docs,
+    }
+
+
+@app.get("/pipeline/audit/{bundle_id}/documents/{doc_id}")
+def get_pipeline_document(
+    bundle_id: str,
+    doc_id: str,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Get a specific document from a completed pipeline job with text and extracted fields."""
+    from insureflow.audit.store import AuditStore
+
+    store = AuditStore()
+    raw = store.load_json(bundle_id, "submission_bundle.json", org_id=current.org_id)
+    if not raw:
+        raise HTTPException(status_code=404, detail="Submission bundle not found")
+
+    # Search structured
+    structured = raw.get("structured")
+    if structured and structured.get("submission_id", "structured") == doc_id:
+        return {
+            "doc_id": doc_id,
+            "filename": "Structured Submission",
+            "type": "structured",
+            "content": structured.get("raw_xml") or structured.get("raw_json") or "",
+            "extracted_fields": {
+                "named_insured": structured.get("named_insured"),
+                "broker": structured.get("broker"),
+                "coverages": structured.get("coverages"),
+                "locations": structured.get("locations"),
+                "financial": structured.get("financial"),
+                "risk_profile": structured.get("risk_profile"),
+                "policy_period": structured.get("policy_period"),
+            },
+            "field_confidence": structured.get("field_confidence", {}),
+            "field_notes": structured.get("field_notes", {}),
+        }
+
+    # Search unstructured + supplemental
+    for collection_key in ("unstructured", "supplemental"):
+        for doc in raw.get(collection_key) or []:
+            if doc.get("submission_id") == doc_id:
+                extracted = doc.get("extracted_fields", {})
+                return {
+                    "doc_id": doc_id,
+                    "filename": doc.get("document_type", doc_id),
+                    "type": collection_key,
+                    "content": (doc.get("raw_text") or "")[:50000],
+                    "extracted_fields": {
+                        field_name: [{"value": f.get("value"), "confidence": f.get("confidence"), "context": f.get("context")} for f in fields] for field_name, fields in extracted.items()
+                    }
+                    if extracted
+                    else {},
+                    "verification": doc.get("verification"),
+                }
+
+    raise HTTPException(status_code=404, detail="Document not found")
+
+
+@app.get("/pipeline/audit/{bundle_id}/pipeline-story")
+def get_pipeline_story(
+    bundle_id: str,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Plain-English narrative of what happened in the pipeline — built for underwriters."""
+    from insureflow.audit.store import AuditStore
+
+    store = AuditStore()
+    summary = store.load_json(bundle_id, "pipeline_summary.json", org_id=current.org_id)
+    memo_raw = store.load_json(bundle_id, "underwriting_memo.json", org_id=current.org_id)
+
+    if not summary and not memo_raw:
+        raise HTTPException(status_code=404, detail="Pipeline data not found")
+
+    story: list[dict[str, str]] = []
+    stages = summary.get("pipeline_stages", []) if summary else []
+
+    # Build narrative from stages
+    stage_narratives = {
+        "triage": ("Submission Triage", "The submission was scored for priority and completeness."),
+        "appetite": ("Appetite Check", "Checked whether this risk fits within the company's underwriting appetite."),
+        "parse": ("Document Ingestion", "All submitted documents were read and parsed."),
+        "vision": ("Photo Analysis", "Property photos were analyzed for condition and risk indicators."),
+        "verify": ("External Verification", "Checked external databases (CLUE, NCCI, OFAC/sanctions)."),
+        "reconcile": ("Cross-Document Reconciliation", "Compared data across documents for consistency."),
+        "analyze": ("Risk Analysis", "Specialist agents analyzed risk across multiple dimensions."),
+        "portfolio": ("Portfolio Review", "Checked portfolio concentration risk."),
+        "reinsurance": ("Reinsurance Review", "Evaluated reinsurance treaty fit and retention."),
+        "moral_hazard": ("Character Screen", "Screened for moral hazard and applicant character indicators."),
+        "price": ("Premium Rating", "Calculated the indicated premium using actuarial methods."),
+        "decision": ("Final Decision", "Synthesized all findings into an underwriting recommendation."),
+    }
+
+    for stage in stages:
+        stage_id = stage.get("id", "")
+        title, default_detail = stage_narratives.get(stage_id, (stage_id.replace("_", " ").title(), ""))
+        detail = stage.get("detail") or default_detail
+        status = stage.get("status", "pending")
+        findings = stage.get("findings", 0)
+        duration = stage.get("duration_ms")
+
+        narrative = detail
+        if status == "skipped":
+            narrative = f"Skipped — {detail}" if detail else "This stage was skipped (deferred or not applicable)."
+        elif status == "failed":
+            narrative = f"Failed — {detail}" if detail else "This stage encountered an error."
+        elif findings and findings > 0:
+            narrative = f"{detail} ({findings} finding{'s' if findings != 1 else ''} flagged)"
+
+        story.append(
+            {
+                "stage": stage_id,
+                "title": title,
+                "narrative": narrative,
+                "status": status,
+                "findings": findings,
+                "duration_ms": duration,
+            }
+        )
+
+    # Add decision summary
+    if memo_raw:
+        decision = memo_raw.get("decision", "pending")
+        risk_score = memo_raw.get("overall_risk_score")
+        human_review = memo_raw.get("human_review_required", False)
+        conditions = memo_raw.get("conditions", [])
+
+        decision_narrative = f"The final recommendation is {decision.upper()}."
+        if risk_score is not None:
+            risk_pct = round(float(risk_score) * 100)
+            band = "high" if risk_pct >= 80 else "moderate" if risk_pct >= 50 else "low"
+            decision_narrative += f" Overall risk is {band} ({risk_pct}/100)."
+        if human_review:
+            decision_narrative += " An underwriter must review before this can be bound."
+        if conditions:
+            decision_narrative += f" {len(conditions)} open condition(s) must be cleared."
+
+        story.append(
+            {
+                "stage": "summary",
+                "title": "Decision Summary",
+                "narrative": decision_narrative,
+                "status": "complete",
+                "findings": 0,
+                "duration_ms": None,
+            }
+        )
+
+    return {
+        "bundle_id": bundle_id,
+        "story": story,
+        "decision": memo_raw.get("decision") if memo_raw else None,
+        "risk_score": memo_raw.get("overall_risk_score") if memo_raw else None,
+        "human_review_required": memo_raw.get("human_review_required", False) if memo_raw else None,
+    }
+
+
 @app.get("/pipeline/audit/{bundle_id}/similar")
 def similar_prior_decisions(
     bundle_id: str,

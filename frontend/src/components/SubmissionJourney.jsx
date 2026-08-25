@@ -55,6 +55,7 @@ function DocPreviewModal({ doc, onClose }) {
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState('content');
 
   useEffect(() => {
     let cancelled = false;
@@ -63,13 +64,23 @@ function DocPreviewModal({ doc, onClose }) {
       setError('Full document preview is not available for this file.');
       return () => {};
     }
+    // Try draft bundle first, then fall back to completed pipeline audit
     endpoints
       .previewDraftDocument(doc.bundleId, doc.id)
       .then((d) => { if (!cancelled) setPreview(d); })
-      .catch((e) => { if (!cancelled) setError(e.message || 'Could not load preview.'); })
+      .catch(() => {
+        // Fall back to pipeline audit document endpoint
+        endpoints.pipelineDocument(doc.bundleId, doc.id)
+          .then((d) => { if (!cancelled) setPreview(d); })
+          .catch((e) => { if (!cancelled) setError(e.message || 'Could not load preview.'); });
+      })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [doc]);
+
+  const extractedFields = preview?.extracted_fields || {};
+  const hasExtraction = Object.keys(extractedFields).length > 0;
+  const tabs = hasExtraction ? ['content', 'extraction'] : ['content'];
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-6" onClick={onClose}>
@@ -79,17 +90,69 @@ function DocPreviewModal({ doc, onClose }) {
       >
         <div className="flex items-center justify-between border-b border-white/[0.06] px-5 py-3">
           <p className="min-w-0 truncate text-sm font-semibold text-slate-200">{doc.filename || doc.name || 'Document'}</p>
-          <button type="button" onClick={onClose} className="rounded-lg px-2 py-1 text-xs text-slate-400 hover:bg-white/5 hover:text-white">Close</button>
+          <div className="flex items-center gap-2">
+            {tabs.length > 1 && (
+              <div className="flex rounded-lg bg-black/20 p-0.5">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() => setActiveTab(tab)}
+                    className={`rounded-md px-2.5 py-1 text-xs font-medium transition ${activeTab === tab ? 'bg-brand text-white' : 'text-slate-400 hover:text-slate-200'}`}
+                  >
+                    {tab === 'content' ? 'Document' : 'Extracted Data'}
+                  </button>
+                ))}
+              </div>
+            )}
+            <button type="button" onClick={onClose} className="rounded-lg px-2 py-1 text-xs text-slate-400 hover:bg-white/5 hover:text-white">Close</button>
+          </div>
         </div>
         <div className="max-h-[64vh] overflow-y-auto px-5 py-4">
           {loading && (
             <p className="flex items-center gap-2 text-sm text-slate-400"><Loader2 className="h-4 w-4 animate-spin" /> Loading preview…</p>
           )}
           {!loading && error && <p className="text-sm text-amber-300/90">{error}</p>}
-          {!loading && !error && (
+          {!loading && !error && activeTab === 'content' && (
             <pre className="whitespace-pre-wrap break-words font-mono text-[11px] leading-relaxed text-slate-300">
               {typeof preview === 'string' ? preview : displayText(preview?.content || preview?.text || preview?.snippet, 'No readable content available — file is stored as binary (PDF/image).')}
             </pre>
+          )}
+          {!loading && !error && activeTab === 'extraction' && hasExtraction && (
+            <div className="space-y-3">
+              {Object.entries(extractedFields).map(([fieldName, fields]) => (
+                <div key={fieldName} className="rounded-lg bg-black/20 p-3">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">{fieldName.replace(/_/g, ' ')}</p>
+                  <div className="mt-1.5 space-y-1">
+                    {(Array.isArray(fields) ? fields : [fields]).map((f, i) => (
+                      <div key={i} className="flex items-center gap-2 text-sm">
+                        <span className="font-mono text-slate-300">{typeof f === 'string' ? f : f?.value || String(f)}</span>
+                        {f?.confidence != null && (
+                          <span className={`text-[10px] ${f.confidence >= 0.8 ? 'text-emerald-400' : f.confidence >= 0.5 ? 'text-amber-400' : 'text-red-400'}`}>
+                            {Math.round(f.confidence * 100)}%
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              {preview?.field_confidence && Object.keys(preview.field_confidence).length > 0 && (
+                <div className="rounded-lg bg-brand/10 p-3">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Field Confidence Summary</p>
+                  <div className="mt-1.5 grid grid-cols-2 gap-1">
+                    {Object.entries(preview.field_confidence).slice(0, 12).map(([field, conf]) => (
+                      <div key={field} className="flex items-center justify-between text-xs">
+                        <span className="text-slate-400 truncate">{field.replace(/_/g, ' ')}</span>
+                        <span className={`font-mono ${conf >= 0.8 ? 'text-emerald-400' : conf >= 0.5 ? 'text-amber-400' : 'text-red-400'}`}>
+                          {Math.round(conf * 100)}%
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>
@@ -111,16 +174,36 @@ function PipelineTimeline({ stages, processing, currentStage, expandedStage, onT
   const docsForIntake = jobDocs.length > 0 ? jobDocs : bundleDocs;
 
   // Older jobs don't carry a documents list — pull it from the draft bundle
-  // the first time the Intake stage is expanded so View buttons appear.
+  // or the pipeline audit endpoint the first time the Intake stage is expanded.
   useEffect(() => {
     if (expandedStage !== 'intake' || docsForIntake.length > 0 || !bundleId) return undefined;
     let cancelled = false;
+    // Try draft bundle first (pre-pipeline), then fall back to pipeline audit (post-pipeline)
     endpoints.getDraftBundle(bundleId)
       .then((b) => {
         if (cancelled) return;
-        setBundleDocs(asList(b?.documents).map((d) => ({ id: d.doc_id, filename: d.filename })));
+        const draftDocs = asList(b?.documents).map((d) => ({ id: d.doc_id, filename: d.filename }));
+        if (draftDocs.length > 0) {
+          setBundleDocs(draftDocs);
+        } else {
+          // Fall back to pipeline audit documents
+          endpoints.pipelineDocuments(bundleId)
+            .then((pd) => {
+              if (cancelled) return;
+              setBundleDocs(asList(pd?.documents).map((d) => ({ id: d.doc_id, filename: d.filename })));
+            })
+            .catch(() => {});
+        }
       })
-      .catch(() => {});
+      .catch(() => {
+        // Draft bundle not found — try pipeline audit
+        endpoints.pipelineDocuments(bundleId)
+          .then((pd) => {
+            if (cancelled) return;
+            setBundleDocs(asList(pd?.documents).map((d) => ({ id: d.doc_id, filename: d.filename })));
+          })
+          .catch(() => {});
+      });
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [expandedStage]);
@@ -659,6 +742,59 @@ function HumanCheckpoints({ checkpoints, bundleId, onResolve }) {
   );
 }
 
+function PipelineStory({ story, decision, riskScore, humanReviewRequired }) {
+  const [expanded, setExpanded] = useState(false);
+  if (!story || story.length === 0) return <p className="text-sm text-slate-400">Pipeline story loads after processing completes.</p>;
+  function fmtMs(ms) {
+    if (ms == null || ms <= 0) return '';
+    return ms < 1000 ? `${Math.round(ms)}ms` : `${(ms / 1000).toFixed(1)}s`;
+  }
+  const displayStory = expanded ? story : story.filter((s) => s.status !== 'skipped').slice(0, 6);
+  return (
+    <div className="space-y-2">
+      {decision && (
+        <div className={`rounded-lg px-3 py-2 text-sm ring-1 ${
+          decision === 'accept' ? 'bg-emerald-500/10 ring-emerald-500/20 text-emerald-200'
+          : decision === 'decline' ? 'bg-red-500/10 ring-red-500/20 text-red-200'
+          : 'bg-amber-500/10 ring-amber-500/20 text-amber-200'
+        }`}>
+          <span className="font-semibold uppercase">{decision.replace(/_/g, ' ')}</span>
+          {riskScore != null && <span className="ml-2 text-xs opacity-70">· Risk {Math.round(riskScore * 100)}/100</span>}
+          {humanReviewRequired && <span className="ml-2 text-xs opacity-70">· Underwriter review required</span>}
+        </div>
+      )}
+      <div className="space-y-1.5">
+        {displayStory.map((step, i) => (
+          <div key={step.stage || i} className="flex items-start gap-2.5 rounded-lg bg-black/20 p-2.5">
+            <span className={`mt-0.5 h-2 w-2 shrink-0 rounded-full ${
+              step.status === 'complete' ? 'bg-emerald-400'
+              : step.status === 'warning' ? 'bg-amber-400'
+              : step.status === 'failed' ? 'bg-red-400'
+              : step.status === 'skipped' ? 'bg-slate-500'
+              : 'bg-brand'
+            }`} />
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-semibold text-slate-300">{step.title}</p>
+              <p className="text-xs text-slate-400">{step.narrative}</p>
+              {step.findings > 0 && (
+                <p className="text-[10px] text-slate-500 mt-0.5">{step.findings} finding{step.findings !== 1 ? 's' : ''}</p>
+              )}
+            </div>
+            {step.duration_ms != null && step.duration_ms > 0 && (
+              <span className="shrink-0 text-[10px] text-slate-500">{fmtMs(step.duration_ms)}</span>
+            )}
+          </div>
+        ))}
+      </div>
+      {story.length > 6 && (
+        <button type="button" onClick={() => setExpanded(!expanded)} className="text-xs text-brand-light hover:underline">
+          {expanded ? 'Show fewer steps' : `Show all ${story.length} steps`}
+        </button>
+      )}
+    </div>
+  );
+}
+
 function AuditTrailInline({ audit }) {
   const entries = asList(audit?.audit_trail?.entries);
   if (!entries.length) return <p className="text-sm text-slate-400">Audit trail populates as the pipeline runs.</p>;
@@ -880,6 +1016,7 @@ export default function SubmissionJourney({ job }) {
   const [docQuality, setDocQuality] = useState(null);
   const [audit, setAudit] = useState(null);
   const [ecosystem, setEcosystem] = useState(null);
+  const [pipelineStory, setPipelineStory] = useState(null);
   const [requesting, setRequesting] = useState(false);
   const [brokerEmail, setBrokerEmail] = useState('');
   const [brokerRequest, setBrokerRequest] = useState(null);
@@ -903,6 +1040,7 @@ export default function SubmissionJourney({ job }) {
         endpoints.missingDocuments(ctx.bundleId).then((d) => { if (!cancelled && d) setDocQuality(d); }).catch(() => {}),
         endpoints.auditTrail(ctx.bundleId).then((d) => { if (!cancelled) setAudit(d); }).catch(() => {}),
         endpoints.ecosystemBundle(ctx.bundleId).then((d) => { if (!cancelled) setEcosystem(d); }).catch(() => {}),
+        endpoints.pipelineStory(ctx.bundleId).then((d) => { if (!cancelled) setPipelineStory(d); }).catch(() => {}),
       ];
       if (!isLife) {
         tasks.push(endpoints.copeAnalysis(ctx.bundleId).then((d) => { if (!cancelled) setCope(d); }).catch(() => {}));
@@ -977,6 +1115,17 @@ export default function SubmissionJourney({ job }) {
       <Section title="Pipeline" icon={ClipboardCheck}>
         <PhaseStrip phases={groupStagesByPhase(ctx.stages)} processing={ctx.processing} currentStage={ctx.currentStage} expandedStage={expandedStage} onToggleStage={(id) => setExpandedStage((prev) => prev === id ? null : id)} job={job} />
       </Section>
+
+      {!ctx.processing && pipelineStory?.story && (
+        <Section title="What Happened — Plain English" icon={FileText} defaultOpen={true}>
+          <PipelineStory
+            story={pipelineStory.story}
+            decision={pipelineStory.decision}
+            riskScore={pipelineStory.risk_score}
+            humanReviewRequired={pipelineStory.human_review_required}
+          />
+        </Section>
+      )}
 
       <Section title="Human Checkpoints" icon={Users} defaultOpen={asList(checkpoints).length > 0}>
         <HumanCheckpoints checkpoints={checkpoints} bundleId={ctx.bundleId} onResolve={ctx.bundleId ? handleResolveCheckpoint : null} />
