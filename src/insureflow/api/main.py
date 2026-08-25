@@ -144,7 +144,8 @@ try:
     from insureflow.mcp import create_mcp_server
 
     _mcp_server = create_mcp_server()
-    app.mount("/mcp", _mcp_server.sse_app())
+    if _mcp_server is not None:
+        app.mount("/mcp", _mcp_server.sse_app())
 except Exception:
     pass
 
