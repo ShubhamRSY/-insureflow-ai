@@ -6,6 +6,7 @@ import {
 import { endpoints } from '../lib/api';
 import { defaultCommercialSelection } from '../lib/commercialTaxonomy';
 import RunSelector from '../components/RunSelector';
+import { PageBack } from '../components/ui';
 
 const LOB_ICONS = {
   level_term: HeartPulse,
@@ -77,6 +78,9 @@ export default function LifeLinePage({ presets, onRunDemo, onSubmit }) {
   return (
     <div className="mx-auto max-w-6xl space-y-8 animate-fade-in pb-12">
       <div>
+        <div className="mb-3">
+          <PageBack to="/insurance/life" label="Life insurance hub" />
+        </div>
         <div className="flex items-start gap-4">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-500/15 text-rose-400">
             <Icon className="h-6 w-6" />

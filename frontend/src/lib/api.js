@@ -140,6 +140,7 @@ export const endpoints = {
   commercialInsuranceHub: () => api('/insurance/commercial'),
   insuranceCompanies: () => api('/api/insurance/companies'),
   addInsuranceCompany: (body) => api('/api/insurance/companies', { method: 'POST', body }),
+  removeInsuranceCompany: (id) => api(`/api/insurance/companies/${encodeURIComponent(id)}`, { method: 'DELETE' }),
   commercialInsuranceTaxonomy: () => api('/insurance/commercial/taxonomy'),
   commercialInsuranceLine: (lineId) => api(`/insurance/commercial/lines/${encodeURIComponent(lineId)}`),
   lifeInsuranceHub: () => api('/insurance/life'),

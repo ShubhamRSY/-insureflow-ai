@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useNavigate, useParams } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Link, useNavigate, useParams } from 'react-router-dom';
 import { StateProvider } from './lib/useStateContext';
 import Layout from './components/Layout';
 import LoginModal from './components/LoginModal';
@@ -62,6 +62,19 @@ function Protected({ children, onLogin }) {
     );
   }
   return children;
+}
+
+// In-app landing for disabled or unknown routes. Stays inside the dashboard
+// (no redirect to the marketing site, no silent history replacement), so the
+// browser Back button keeps working predictably.
+function PlaceholderPage({ title, message }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-24 text-center">
+      <p className="text-lg text-slate-200">{title}</p>
+      <p className="mt-1 max-w-md text-sm text-slate-400">{message}</p>
+      <Link to="/" className="btn-primary mt-6">Back to Overview</Link>
+    </div>
+  );
 }
 
 function AppRoutes() {
@@ -230,7 +243,7 @@ function AppRoutes() {
       if (vertical === 'lending') {
         const res = await endpoints.runLendingDemo(presetId);
         setLendingDemoResult(res);
-        navigate('/lending');
+        navigate('/');
         return;
       }
       const res = vertical === 'insurance'
@@ -241,7 +254,7 @@ function AppRoutes() {
       if (vertical === 'insurance') {
         navigate(`/insurance/${res.job_id}`);
       } else {
-        navigate('/mortgage');
+        navigate('/');
         openJob('mortgage', res.job_id);
       }
     } catch (e) {
@@ -332,8 +345,8 @@ function AppRoutes() {
           <Route path="line-uw" element={<Protected onLogin={() => setLoginOpen(true)}><LineUnderwriting /></Protected>} />
           <Route path="staff-uw" element={<Protected onLogin={() => setLoginOpen(true)}><StaffUnderwriting /></Protected>} />
           <Route path="pilot" element={<Protected onLogin={() => setLoginOpen(true)}><PilotPage /></Protected>} />
-          <Route path="mortgage" element={<Navigate to="/" replace />} />
-          <Route path="lending" element={<Navigate to="/" replace />} />
+          <Route path="mortgage" element={<PlaceholderPage title="Mortgage is coming soon" message="Rytera currently underwrites insurance lines. Mortgage decisioning will open here." />} />
+          <Route path="lending" element={<PlaceholderPage title="Lending is coming soon" message="Rytera currently underwrites insurance lines. Lending decisioning will open here." />} />
           <Route path="workflow" element={<Protected onLogin={() => setLoginOpen(true)}><WorkflowPage pending={pending} onRefresh={loadOverview} onOpenJob={openJob} authorityData={authorityData} /></Protected>} />
           <Route path="uw-workbench" element={<Protected onLogin={() => setLoginOpen(true)}><UWWorkbench onOpenJob={openJob} authorityData={authorityData} onRefresh={refreshAll} /></Protected>} />
           <Route path="uw-dashboard" element={<Protected onLogin={() => setLoginOpen(true)}><UWDashboard onOpenJob={openJob} /></Protected>} />
@@ -356,7 +369,7 @@ function AppRoutes() {
           <Route path="market" element={<Protected onLogin={() => setLoginOpen(true)}><MarketAdmin /></Protected>} />
           <Route path="regulatory-review" element={<Protected onLogin={() => setLoginOpen(true)}><RegulatoryReviewPage /></Protected>} />
           <Route path="settings" element={<SettingsPage onLogin={() => setLoginOpen(true)} />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<PlaceholderPage title="Page not found" message="That dashboard page doesn't exist. Head back to the Overview to keep working." />} />
         </Route>
       </Routes>
 

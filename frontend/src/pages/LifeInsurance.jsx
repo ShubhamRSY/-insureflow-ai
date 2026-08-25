@@ -4,6 +4,7 @@ import { endpoints } from '../lib/api';
 import { commercialSelectionLabel, defaultCommercialSelection } from '../lib/commercialTaxonomy';
 import RunSelector from '../components/RunSelector';
 import SubmissionJobsList from '../components/SubmissionJobsList';
+import { PageBack } from '../components/ui';
 
 export default function LifeInsuranceHub({ presets, onRunDemo, onSubmit, jobs, onDeleteJob, onDeleteAllJobs }) {
   const [hub, setHub] = useState(null);
@@ -38,6 +39,9 @@ export default function LifeInsuranceHub({ presets, onRunDemo, onSubmit, jobs, o
   return (
     <div className="mx-auto w-full max-w-[1600px] animate-fade-in space-y-6 pb-12">
       <div>
+        <div className="mb-3">
+          <PageBack to="/insurance" label="All insurance" />
+        </div>
         <div className="flex items-start gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-rose-500/15 text-rose-400">
             <HeartPulse className="h-5 w-5" />

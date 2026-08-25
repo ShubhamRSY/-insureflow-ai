@@ -1,5 +1,24 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
+
+// Hierarchy-based back control: always goes to the logical parent route,
+// never relies on browser history — so it behaves the same whether the user
+// arrived from inside the app or via a deep link / full page load.
+export function PageBack({ to, label = 'Back' }) {
+  const navigate = useNavigate();
+  return (
+    <button
+      type="button"
+      onClick={() => navigate(to)}
+      className="inline-flex items-center gap-1.5 rounded-md px-1 py-0.5 text-xs font-medium text-slate-400 transition-colors hover:text-slate-200"
+    >
+      <ArrowLeft className="h-3.5 w-3.5" />
+      {label}
+    </button>
+  );
+}
 
 export function Hint({ text, children, className = '', position = 'top' }) {
   const anchorRef = useRef(null);

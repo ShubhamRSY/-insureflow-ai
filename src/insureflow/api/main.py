@@ -2153,6 +2153,19 @@ def add_insurance_company(
     return company
 
 
+@app.delete("/api/insurance/companies/{company_id}")
+def remove_insurance_company(
+    company_id: str,
+    current: TokenData = Depends(require_role(Role.UNDERWRITER)),
+) -> dict[str, Any]:
+    from insureflow.insurance.companies import delete_company
+
+    try:
+        return delete_company(current.org_id, company_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
 @app.post("/api/insurance/sources/{source_id}/pull")
 def pull_insurance_source(
     source_id: str,

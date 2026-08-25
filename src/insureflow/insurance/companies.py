@@ -22,6 +22,26 @@ def _slug(name: str) -> str:
     return slug[:64] or "company"
 
 
+# Letters (any script) or digits, plus the punctuation real carrier names
+# use: space . , ' & ( ) -. Underscore and everything else (@ ; : # " ! ? *)
+# are rejected so a stray keystroke can never become a panel entry on memos.
+_COMPANY_NAME_RE = re.compile(r"^(?:[^\W_]|[ .,'&()/-])+$", re.UNICODE)
+
+
+def clean_company_name(name: str) -> str:
+    """Normalize and validate a company name; raises ValueError on junk."""
+    clean = re.sub(r"\s+", " ", (name or "").strip())
+    if not clean:
+        raise ValueError("Company name is required")
+    if len(clean) > 80:
+        raise ValueError("Keep the company name under 80 characters")
+    if not _COMPANY_NAME_RE.match(clean):
+        raise ValueError("Letters, numbers, spaces and . , ' & ( ) - / only — no @ ; : # _ or other symbols")
+    if not re.search(r"[^\W\d_]", clean, re.UNICODE):
+        raise ValueError("Company name must contain at least one letter")
+    return clean
+
+
 def _load_json(path: Path) -> dict[str, Any]:
     if not path.exists():
         return {}
@@ -46,7 +66,7 @@ def org_overlay(org_id: str) -> list[dict[str, Any]]:
     safe = _slug(org_id or "default")
     data = _load_json(_ORG_PANELS / f"{safe}.json")
     companies = data.get("companies") or []
-    return [c for c in companies if isinstance(c, dict) and c.get("id") and c.get("name")]
+    return [dict(c, origin="org") for c in companies if isinstance(c, dict) and c.get("id") and c.get("name")]
 
 
 def list_companies(org_id: str = "default") -> list[dict[str, Any]]:
@@ -64,6 +84,7 @@ def list_companies(org_id: str = "default") -> list[dict[str, Any]]:
                 "kind": str(company.get("kind") or "panel"),
                 "naic": str(company.get("naic") or ""),
                 "notes": str(company.get("notes") or ""),
+                "origin": str(company.get("origin") or "panel"),
             }
         )
     return out
@@ -108,9 +129,7 @@ def add_company(
     naic: str = "",
     notes: str = "",
 ) -> dict[str, Any]:
-    clean_name = (name or "").strip()
-    if not clean_name:
-        raise ValueError("Company name is required")
+    clean_name = clean_company_name(name)
     company = {
         "id": _slug(clean_name),
         "name": clean_name,
@@ -126,3 +145,27 @@ def add_company(
     companies.append(company)
     path.write_text(json.dumps({"companies": companies}, indent=2) + "\n", encoding="utf-8")
     return company
+
+
+def delete_company(org_id: str, company_id: str) -> dict[str, Any]:
+    """Remove an org-added company from the panel.
+
+    Companies shipped in the Rytera demo panel cannot be deleted — only what
+    the org added itself.
+    """
+    cid = (company_id or "").strip()
+    if not cid:
+        raise ValueError("Company id is required")
+    if any(c["id"] == cid for c in default_panel()["companies"]):
+        raise ValueError("Demo-panel companies cannot be removed — pick a company your org added")
+    path = _ORG_PANELS / f"{_slug(org_id or 'default')}.json"
+    data = _load_json(path)
+    companies = [c for c in (data.get("companies") or []) if isinstance(c, dict)]
+    kept = [c for c in companies if str(c.get("id") or "") != cid]
+    if len(kept) == len(companies):
+        raise ValueError("Company not found on this org's panel")
+    if kept:
+        path.write_text(json.dumps({"companies": kept}, indent=2) + "\n", encoding="utf-8")
+    elif path.exists():
+        path.unlink()
+    return {"deleted": cid, "org_id": _slug(org_id or "default")}
