@@ -140,9 +140,9 @@ export default function CompanyPicker({ value = '', name = '', onChange, disable
             </button>
           </div>
           {inputInvalid ? (
-            <p className="text-[10px] text-amber-400">{validation.error}</p>
+            <p className="text-[10px] font-medium text-red-400">{validation.error}</p>
           ) : (
-            <p className="text-[10px] text-slate-500">Letters and numbers only — no @ ; : # symbols.</p>
+            <p className="text-[10px] text-red-400">Letters, numbers, spaces and . , ' &amp; ( ) - / only — no @ ; : # _ or other symbols</p>
           )}
         </div>
       )}

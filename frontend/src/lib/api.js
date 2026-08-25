@@ -50,7 +50,12 @@ export async function api(path, opts = {}) {
       : `HTTP ${res.status}`;
     if (res.status === 401) {
       auth.wipeSession();
-      throw new AuthError(msg);
+      // Auth endpoints (login/register/etc.) keep the server's own message
+      // (e.g. wrong password); every other 401 is a dead session.
+      const friendly = path.startsWith('/auth/')
+        ? msg
+        : 'Your session has ended. Please sign in to continue.';
+      throw new AuthError(friendly);
     }
     throw new Error(msg);
   }

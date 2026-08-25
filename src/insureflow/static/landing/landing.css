@@ -4271,3 +4271,96 @@ footer .brand-mark { width: 32px; height: 32px; border-radius: 10px; }
   font-size: .72rem;
   color: var(--muted-2);
 }
+
+/* ── Amplification section ─────────────────────────────────────────── */
+.ampli-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  align-items: start;
+}
+@media (max-width: 960px) { .ampli-grid { grid-template-columns: 1fr; } }
+
+.ampli-left h2 { margin-top: 1rem; }
+.ampli-lead { margin-top: 1rem; font-size: 1.05rem; line-height: 1.7; color: var(--text); }
+
+.ampli-table {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.25rem;
+  overflow: hidden;
+}
+.ampli-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .88rem;
+}
+.ampli-table th,
+.ampli-table td {
+  padding: .7rem .65rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.ampli-table thead th { font-size: .7rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted-2); font-weight: 600; }
+.ampli-role { font-weight: 600; color: var(--text-strong); white-space: nowrap; }
+.ampli-highlight { color: var(--accent); font-weight: 700; }
+.ampli-footnote {
+  margin: .8rem 0 0;
+  font-size: .78rem;
+  color: var(--muted-2);
+  line-height: 1.5;
+}
+
+.ampli-quote {
+  margin-top: 1.25rem;
+  padding: 1.15rem 1.25rem;
+  border-left: 3px solid var(--accent);
+  background: var(--surface-1);
+  border-radius: 0 10px 10px 0;
+  font-size: .88rem;
+  line-height: 1.65;
+  color: var(--text-strong);
+  font-style: italic;
+}
+
+/* ── Phase roadmap ─────────────────────────────────────────────────── */
+.phase-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+  margin-top: 2rem;
+}
+@media (max-width: 960px) { .phase-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px) { .phase-grid { grid-template-columns: 1fr; } }
+
+.phase-card {
+  position: relative;
+  padding: 1.6rem 1.4rem 1.4rem;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: border-color .2s;
+}
+.phase-card:hover { border-color: var(--accent); }
+.phase-card.phase-active { border-color: var(--accent); background: var(--accent-dim); }
+
+.phase-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 999px;
+  background: var(--accent-dim);
+  color: var(--accent);
+  font-size: .78rem;
+  font-weight: 700;
+  margin-bottom: .8rem;
+}
+.phase-active .phase-num { background: var(--accent); color: #fff; }
+
+.phase-card h3 { font-size: 1rem; font-weight: 700; color: var(--text-strong); margin-bottom: .5rem; }
+.phase-card p { font-size: .86rem; line-height: 1.6; color: var(--text); }
