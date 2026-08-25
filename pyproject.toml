@@ -125,7 +125,7 @@ pdf = [
 
 [project.scripts]
 insureflow = "insureflow.cli:app"
-insureflow-mcp = "insureflow.mcp.server:run_server"
+insureflow-mcp = "insureflow.mcp.__main__:main"
 
 [tool.setuptools.packages.find]
 where = ["src", "."]

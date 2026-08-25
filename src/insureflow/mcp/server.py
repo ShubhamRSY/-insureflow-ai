@@ -17,7 +17,10 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from mcp.server.fastmcp import FastMCP
+try:
+    from mcp.server.fastmcp import FastMCP
+except ImportError:
+    FastMCP = None  # type: ignore[assignment,misc]
 
 logger = logging.getLogger("insureflow.mcp")
 
@@ -35,6 +38,64 @@ def _get_audit_store():
     from insureflow.audit.store import AuditStore
 
     return AuditStore()
+
+
+def _parse_claims(raw: Any) -> list[dict[str, Any]]:
+    """Parse claims JSON string into a list of claim dicts. Returns [] on failure."""
+    if not raw:
+        return []
+    try:
+        parsed = json.loads(raw) if isinstance(raw, str) else raw
+    except (json.JSONDecodeError, TypeError):
+        return []
+    if isinstance(parsed, list):
+        return [c for c in parsed if isinstance(c, dict)]
+    return []
+
+
+def _register_all(server: Any) -> None:
+    """Register all Rytera MCP tools on a FastMCP server instance."""
+    if FastMCP is None or not hasattr(server, "tool"):
+        return
+
+    @server.tool()
+    def list_jobs(org_id: str = "default", limit: int = 50) -> str:
+        """List recent insurance pipeline jobs."""
+        js = _get_job_store()
+        ids = js.list_ids(_INSURANCE_NS, org_id=org_id)
+        jobs: list[dict[str, Any]] = []
+        for jid in ids[-limit:]:
+            job = js.get(_INSURANCE_NS, jid, org_id=org_id)
+            if job:
+                jobs.append(_json_safe({"id": jid, "status": job.get("status")}))
+        return json.dumps({"count": len(jobs), "jobs": jobs}, indent=2)
+
+    @server.tool()
+    def get_job(job_id: str, org_id: str = "default") -> str:
+        """Get full details of a specific pipeline job."""
+        js = _get_job_store()
+        job = js.get(_INSURANCE_NS, job_id, org_id=org_id)
+        if not job:
+            return json.dumps({"error": f"Job {job_id} not found"})
+        return json.dumps(_json_safe(job), indent=2)
+
+    @server.tool()
+    def calculate_mortgage_metrics(loan_amount: float, interest_rate: float, term_years: int) -> str:
+        """Calculate basic mortgage metrics."""
+        if term_years <= 0 or loan_amount <= 0 or interest_rate < 0:
+            return json.dumps({"error": "Invalid inputs"})
+        monthly_rate = interest_rate / 100.0 / 12.0
+        n_payments = term_years * 12
+        if monthly_rate == 0:
+            monthly_payment = loan_amount / n_payments
+        else:
+            monthly_payment = loan_amount * (monthly_rate * (1 + monthly_rate) ** n_payments) / ((1 + monthly_rate) ** n_payments - 1)
+        return json.dumps({"monthly_payment": round(monthly_payment, 2)})
+
+    @server.tool()
+    def get_health() -> str:
+        """Check system health."""
+        return json.dumps({"status": "ok", "version": "0.3.1"})
 
 
 def _json_safe(obj: Any) -> Any:
@@ -234,6 +295,37 @@ def create_mcp_server(name: str = "rytera") -> FastMCP:
         if "status" not in checks:
             checks["status"] = "ok"
         return json.dumps(checks, indent=2)
+
+    # ── Mortgage (placeholder — full calculator lives in mortgage vertical) ──
+
+    @mcp.tool()
+    def calculate_mortgage_metrics(
+        loan_amount: float,
+        interest_rate: float,
+        term_years: int,
+    ) -> str:
+        """Calculate basic mortgage metrics: monthly payment, total cost, total interest."""
+        if term_years <= 0 or loan_amount <= 0 or interest_rate < 0:
+            return json.dumps({"error": "Invalid inputs: loan_amount and term_years must be positive; interest_rate must be non-negative."})
+        monthly_rate = interest_rate / 100.0 / 12.0
+        n_payments = term_years * 12
+        if monthly_rate == 0:
+            monthly_payment = loan_amount / n_payments
+        else:
+            monthly_payment = loan_amount * (monthly_rate * (1 + monthly_rate) ** n_payments) / ((1 + monthly_rate) ** n_payments - 1)
+        total_cost = monthly_payment * n_payments
+        total_interest = total_cost - loan_amount
+        return json.dumps(
+            {
+                "loan_amount": loan_amount,
+                "interest_rate_pct": interest_rate,
+                "term_years": term_years,
+                "monthly_payment": round(monthly_payment, 2),
+                "total_cost": round(total_cost, 2),
+                "total_interest": round(total_interest, 2),
+            },
+            indent=2,
+        )
 
     return mcp
 

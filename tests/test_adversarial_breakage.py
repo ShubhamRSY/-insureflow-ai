@@ -297,11 +297,9 @@ class TestMCPToolsAdversarial:
         assert result == []
 
     def test_mcp_path_traversal_blocked(self) -> None:
-        with patch("insureflow.mcp.server._get_pipeline") as mock_pipeline:
-            mock_pipeline.return_value = MagicMock()
-            from insureflow.mcp.server import _parse_claims
+        from insureflow.mcp.server import _parse_claims
 
-            assert _parse_claims("invalid") == []
+        assert _parse_claims("invalid") == []
 
 
 # ===========================================================================

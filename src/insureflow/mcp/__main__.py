@@ -1,8 +1,18 @@
-from insureflow.mcp.server import run_server
+"""Allow ``python -m insureflow.mcp`` to launch the MCP server (stdio)."""
+
+from __future__ import annotations
+
+import logging
+import sys
+
+
+def main() -> None:
+    logging.basicConfig(level=logging.INFO, stream=sys.stderr)
+    from insureflow.mcp.server import create_mcp_server
+
+    server = create_mcp_server()
+    server.run(transport="stdio")
+
 
 if __name__ == "__main__":
-    import sys
-
-    host = sys.argv[1] if len(sys.argv) > 1 else "127.0.0.1"
-    port = int(sys.argv[2]) if len(sys.argv) > 2 else 8010
-    run_server(host=host, port=port)
+    main()

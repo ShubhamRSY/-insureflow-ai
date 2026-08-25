@@ -28,6 +28,7 @@ class TestMCPServerTools:
         names = sorted(tools.keys())
         assert names == [
             "add_company",
+            "calculate_mortgage_metrics",
             "delete_company",
             "detect_life_product",
             "get_health",
