@@ -140,6 +140,14 @@ try:
 except ImportError:
     pass
 
+try:
+    from insureflow.mcp import create_mcp_server
+
+    _mcp_server = create_mcp_server()
+    app.mount("/mcp", _mcp_server.sse_app())
+except Exception:
+    pass
+
 # api/main.py → package dir → insureflow/ → src/ → repo root
 _PKG_ROOT = Path(__file__).resolve().parent.parent  # src/insureflow
 STATIC_DIR = _PKG_ROOT / "static"
