@@ -60,14 +60,25 @@ def underwrite_fixed_annuity(ctx: LifeProductContext) -> LobOutcome:
         outcome.add_condition(disclosure)
 
     r = float(state_rules["accumulation_rate"])
-    vesting_age = max(ctx.age + 10, 65)
-    years = max(vesting_age - ctx.age, 5)
-    fund_at_vesting = round(principal * ((1.0 + r) ** years), 2)
+    show_income = ctx.coverage_id == "fixed_income"
+    if show_income:
+        # "Fixed Income" coverage: the contract is already funded and enters
+        # payout now — annuitize at the current age, no hypothetical further
+        # accumulation phase.
+        vesting_age = ctx.age
+        years = 0
+        fund_at_vesting = round(principal, 2)
+    else:
+        vesting_age = max(ctx.age + 10, 65)
+        years = max(vesting_age - ctx.age, 5)
+        fund_at_vesting = round(principal * ((1.0 + r) ** years), 2)
     income_factor = whole_life_annuity_due_factor(vesting_age, ctx.sex_key, ctx.smoker, float(state_rules["payout_basis_interest"]))
     annual_payout = round(fund_at_vesting / income_factor, 2) if income_factor > 0 else 0.0
-
-    show_income = ctx.coverage_id == "fixed_income"
     schedule = {f"surrender_charge_year_{y}": f"{int(pct * 100)}%" for y, pct in state_rules["surrender_charge_schedule"].items()}
+
+    # Single-consideration product — the premium IS the purchase price.
+    outcome.annual_premium = round(principal, 2)
+    outcome.base_premium = round(principal, 2)
 
     outcome.metadata.update(
         {

@@ -934,7 +934,9 @@ class TestProductGatesAllLOBs:
         for pid, cid in (("immediate_annuity", "life_income"), ("qlac", "qlac_lifetime"), ("structured_settlement_annuity", "structured_payments")):
             q = rate_life(_bundle("Purchase price: $200000. Applicant age: 65. Sex: male."), coverage_id=cid, product_id=pid, state="IL")
             assert q.eligible is False, pid
-            assert q.adjusted_premium == 0.0, pid
+            # Illustration-only (unfiled) does not mean the computed
+            # consideration is discarded — must not silently show $0.00.
+            assert q.adjusted_premium > 0.0, pid
 
     def test_qlac_irs_cap_clamped(self) -> None:
         over = rate_life(_bundle("Purchase price: $400000. Applicant age: 60. Sex: male."), coverage_id="qlac_lifetime", product_id="qlac")

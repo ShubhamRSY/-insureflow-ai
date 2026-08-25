@@ -157,7 +157,10 @@ def prospective_reserve_whole_life(
     """
     attained = age + duration
     if attained >= LIMITING_AGE:
-        return 0.0
+        # The table treats q_x = 1.0 at the limiting age — the policy
+        # endows for the full face amount, not $0. Per $1 of face, that's
+        # a reserve of 1.0 (immediate certain payment), not a lapsed policy.
+        return 1.0
 
     ax_t = pv_whole_life_benefits(attained, sex, smoker, interest)
 

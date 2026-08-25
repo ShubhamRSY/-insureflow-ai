@@ -76,6 +76,7 @@ def underwrite_rop_term(ctx: LifeProductContext, *, full_refund: bool) -> LobOut
 
     base_premium = (ctx.face / 1000.0) * q
     class_f = medical_class_factor(ctx)
+    sex_f = 1.0 if ctx.unisex_forced else float((manual.get("sex_factors") or {}).get(ctx.sex_key, 1.0))
     tobacco_f = float(manual.get("tobacco_factor", 1.85)) if ctx.smoker else 1.0
     band_f = band_factor(ctx)
     duration_factors = manual.get("term_duration_factors") or {}
@@ -83,7 +84,7 @@ def underwrite_rop_term(ctx: LifeProductContext, *, full_refund: bool) -> LobOut
     rop_load = float(state_rules["full_rop_load"] if full_refund else state_rules["partial_rop_load"])
     state_rel = state_relativity(ctx)
 
-    loaded = base_premium * class_f * tobacco_f * band_f * term_f * state_rel * rop_load
+    loaded = base_premium * class_f * sex_f * tobacco_f * band_f * term_f * state_rel * rop_load
     annual = add_common_loads(ctx, loaded)
 
     outcome.base_premium = round(base_premium, 2)
@@ -91,6 +92,7 @@ def underwrite_rop_term(ctx: LifeProductContext, *, full_refund: bool) -> LobOut
     outcome.components = [
         RateComponent(name="level_mortality_per_1000", amount=q, basis=f"age={ctx.age}/{ctx.sex_key}"),
         RateComponent(name="underwriting_class", amount=class_f, basis=ctx.medical.underwriting_class),
+        RateComponent(name="sex_factor", amount=sex_f, basis=ctx.sex_key),
         RateComponent(name="tobacco_factor", amount=tobacco_f, basis="tobacco" if ctx.smoker else "non_tobacco"),
         RateComponent(name="band_discount", amount=band_f, basis=f"face={ctx.face}"),
         RateComponent(name="term_duration", amount=term_f, basis=f"{years}yr"),

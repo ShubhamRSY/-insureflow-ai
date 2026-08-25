@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from insureflow.life.lobs.actuarial import endowment_insurance_nsp, temporary_annuity_due
+from insureflow.life.lobs.actuarial import temporary_annuity_due, term_insurance_nsp
 from insureflow.life.lobs.base import (
     LifeProductContext,
     LobOutcome,
@@ -20,6 +20,7 @@ from insureflow.life.lobs.base import (
     merge_state_rules,
     state_relativity,
 )
+from insureflow.life.money_back_uw import run_money_back_uw
 from insureflow.life.mortality import discount_factor, k_p_x
 from insureflow.rating.models import RateComponent
 
@@ -71,21 +72,35 @@ def underwrite_children_money_back(ctx: LifeProductContext) -> LobOutcome:
 
     v = discount_factor(interest)
     # Child's issue age is not carried separately in ctx — milestone PVs use
-    # an explicit assumption: child is 5 at proposal (documented, auditable).
+    # an explicit assumption: child is 5 at proposal (documented, auditable,
+    # and surfaced to the underwriter below since it directly drives price).
     child_age_at_issue = 5
+    # The insured life is the CHILD, not the proposer — the child's own
+    # sex/tobacco status has no data source here, so mortality uses a
+    # conservative, always-non-smoker assumption rather than silently
+    # reusing the proposer's tobacco status (which has no actuarial bearing
+    # on a 5-year-old). Sex still needs a value for the table lookup; using
+    # the proposer's sex_key is an explicit, documented placeholder pending
+    # a real child-sex field on the submission.
+    child_smoker = False
     coupon_pv_per_1 = 0.0
     schedule: list[dict[str, Any]] = []
     for age in [*milestones, maturity_age]:
         year = age - child_age_at_issue
         pct = ms_pct if age < maturity_age else 1.0 - ms_pct * len(milestones)
         amount_per_1 = pct
-        pv = amount_per_1 * (v**year) * k_p_x(child_age_at_issue, year, ctx.sex_key, ctx.smoker)
+        pv = amount_per_1 * (v**year) * k_p_x(child_age_at_issue, year, ctx.sex_key, child_smoker)
         coupon_pv_per_1 += pv
         schedule.append({"child_age": age, "year": year, "pct_of_sa": round(pct, 2)})
 
     term = maturity_age - child_age_at_issue
-    nsp_death = endowment_insurance_nsp(child_age_at_issue, term, ctx.sex_key, ctx.smoker, interest)
-    a_due = temporary_annuity_due(child_age_at_issue, term, ctx.sex_key, ctx.smoker, interest)
+    # Death cover priced on a DEATH-ONLY basis (term insurance) — the
+    # milestone schedule above already sums to 100% of face by maturity
+    # (3 x 25% milestones + 25% remainder), so using the endowment basis
+    # (term + pure endowment) here would price a second, undisclosed
+    # 100%-of-face maturity payment on top of it.
+    nsp_death = term_insurance_nsp(child_age_at_issue, term, ctx.sex_key, child_smoker, interest)
+    a_due = temporary_annuity_due(child_age_at_issue, term, ctx.sex_key, child_smoker, interest)
     class_f = medical_class_factor(ctx, cap=1.0)  # child rates never load up
     level_net = ctx.face * (nsp_death + coupon_pv_per_1) / max(a_due, 1e-9)
 
@@ -94,6 +109,27 @@ def underwrite_children_money_back(ctx: LifeProductContext) -> LobOutcome:
     gross = level_net * (1.0 + loading) * class_f * wp_load
     loaded = gross * band_f * state_rel
     annual = add_common_loads(ctx, loaded)
+
+    outcome.add_condition(f"Child's age assumed at {child_age_at_issue} for pricing — verify the actual insured child's age before bind; the milestone schedule and premium are age-sensitive")
+
+    uw = run_money_back_uw(
+        age=ctx.age,
+        sex=ctx.sex_key,
+        smoker=ctx.smoker,
+        face_amount=ctx.face,
+        annual_premium=round(annual, 2),
+        term_years=term,
+        income=getattr(ctx.factors, "income", 0.0),
+        payout_schedule="children_education",
+        survival_benefit_pct=ms_pct * 100,
+        purpose="children_education",
+    )
+    if uw.decision == "DECLINE":
+        outcome.eligible = False
+        for finding in uw.findings:
+            outcome.add_reason(f"Money-back UW: {finding}")
+    for finding in uw.findings:
+        outcome.add_condition(f"Money-back UW: {finding}")
 
     outcome.base_premium = round(gross, 2)
     outcome.annual_premium = annual
@@ -118,6 +154,7 @@ def underwrite_children_money_back(ctx: LifeProductContext) -> LobOutcome:
             "proposer_age": ctx.age,
             "death_benefit": round(ctx.face, 2),
             "waiver_of_premium_included": True,
+            "money_back_uw": uw.to_metadata(),
             "state_rules_applied": state_rules,
             "exam_required": bool(state_rules["paramed_exam_required"]),
         }

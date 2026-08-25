@@ -83,7 +83,7 @@ def joint_survival_curve(
     """Probability BOTH lives survive k more years (index 0 = 1.0)."""
     curve = [1.0]
     pa = pb = 1.0
-    for k in range(min(LIMITING_AGE - max(age_a, age_b), 60)):
+    for k in range(max(LIMITING_AGE - max(age_a, age_b), 0)):
         pa *= 1.0 - q_x(age_a + k, sex_a, smoker_a)
         pb *= 1.0 - q_x(age_b + k, sex_b, smoker_b)
         curve.append(pa * pb)
@@ -109,7 +109,7 @@ def joint_and_survivor_annuity_factor(
     total = 1.0  # first payment certain
     vp = 1.0
     pp = ps = 1.0
-    for k in range(min(LIMITING_AGE - max(age_primary, age_spouse), 60)):
+    for k in range(max(LIMITING_AGE - max(age_primary, age_spouse), 0)):
         q_p = q_x(age_primary + k, sex_primary, smoker)
         q_s = q_x(age_spouse + k, sex_spouse, smoker)
         vp *= d

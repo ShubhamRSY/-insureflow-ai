@@ -71,6 +71,10 @@ def underwrite_deferred_annuity(ctx: LifeProductContext) -> LobOutcome:
 
     schedule = {f"year_{y}": round(principal * ((1.0 + r) ** y), 2) for y in (5, 10, years)}
 
+    # Single-consideration product — the premium IS the purchase price.
+    outcome.annual_premium = round(principal, 2)
+    outcome.base_premium = round(principal, 2)
+
     outcome.metadata.update(
         {
             "actuarial": {

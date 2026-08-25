@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from insureflow.life.lobs.actuarial import endowment_insurance_nsp, temporary_annuity_due
+from insureflow.life.lobs.actuarial import temporary_annuity_due, term_insurance_nsp
 from insureflow.life.lobs.base import (
     LifeProductContext,
     LobOutcome,
@@ -31,6 +31,7 @@ from insureflow.life.lobs.money_back.traditional_money_back import (
 from insureflow.life.lobs.money_back.traditional_money_back import (
     STATE_RULES as _TRADITIONAL_STATE_TABLE,
 )
+from insureflow.life.money_back_uw import run_money_back_uw
 from insureflow.life.mortality import discount_factor, k_p_x
 from insureflow.rating.models import RateComponent
 
@@ -74,7 +75,10 @@ def underwrite_with_profit_money_back(ctx: LifeProductContext) -> LobOutcome:
     # Guaranteed basis identical to traditional; bonuses illustrated on top of
     # each payout (accruing at `bonus_rate` per year from issue to payout).
     coupon_pv_per_1, schedule = _coupon_pv(1.0, sb_pct, term, interval, ctx.age, ctx.sex_key, ctx.smoker, interest)
-    nsp_death = endowment_insurance_nsp(ctx.age, term, ctx.sex_key, ctx.smoker, interest)
+    # Death cover priced on a DEATH-ONLY basis — the coupon schedule already
+    # sums to 100% of face by maturity, so endowment_insurance_nsp (term +
+    # pure endowment) would price a second, undisclosed maturity payment.
+    nsp_death = term_insurance_nsp(ctx.age, term, ctx.sex_key, ctx.smoker, interest)
     a_due = temporary_annuity_due(ctx.age, term, ctx.sex_key, ctx.smoker, interest)
     class_f = medical_class_factor(ctx)
     level_net = ctx.face * (nsp_death + coupon_pv_per_1) / max(a_due, 1e-9)
@@ -91,6 +95,27 @@ def underwrite_with_profit_money_back(ctx: LifeProductContext) -> LobOutcome:
         year = int(entry["year"])
         accrued = bonus_rate * year  # total bonus pct of SA by that payout
         bonus_pv += ctx.face * accrued * (v**year) * k_p_x(ctx.age, year, ctx.sex_key, ctx.smoker)
+
+    # Non-guaranteed bonuses make persistency risk here at least as
+    # relevant as on the traditional plan (arguably more so — the client's
+    # expectations are pinned to an illustrated, not guaranteed, number).
+    uw = run_money_back_uw(
+        age=ctx.age,
+        sex=ctx.sex_key,
+        smoker=ctx.smoker,
+        face_amount=ctx.face,
+        annual_premium=round(annual, 2),
+        term_years=term,
+        income=getattr(ctx.factors, "income", 0.0),
+        payout_schedule="every_5_years",
+        survival_benefit_pct=sb_pct * 100,
+    )
+    if uw.decision == "DECLINE":
+        outcome.eligible = False
+        for finding in uw.findings:
+            outcome.add_reason(f"Money-back UW: {finding}")
+    for finding in uw.findings:
+        outcome.add_condition(f"Money-back UW: {finding}")
 
     outcome.base_premium = round(gross, 2)
     outcome.annual_premium = annual
@@ -113,6 +138,7 @@ def underwrite_with_profit_money_back(ctx: LifeProductContext) -> LobOutcome:
             "simple_bonus_rate": bonus_rate,
             "illustrated_bonus_pv": round(bonus_pv, 2),
             "death_benefit": round(ctx.face, 2),
+            "money_back_uw": uw.to_metadata(),
             "state_rules_applied": state_rules,
             "exam_required": bool(state_rules["paramed_exam_required"]),
         }

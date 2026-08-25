@@ -81,6 +81,10 @@ def underwrite_indexed_annuity(ctx: LifeProductContext) -> LobOutcome:
 
     schedule = {f"surrender_charge_year_{y}": f"{int(pct * 100)}%" for y, pct in state_rules["surrender_charge_schedule"].items()}
 
+    # Single-consideration product — the premium IS the purchase price.
+    outcome.annual_premium = round(principal, 2)
+    outcome.base_premium = round(principal, 2)
+
     outcome.metadata.update(
         {
             "actuarial": {

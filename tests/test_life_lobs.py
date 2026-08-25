@@ -491,7 +491,11 @@ def test_gul_no_lapse_guarantee_and_projection() -> None:
     assert gul.metadata["guarantee_to_age"] == 120
     assert to120.metadata["guarantee_to_age"] == 121
     proj = gul.metadata["account_value_projection_guaranteed_basis"]
-    assert set(proj) == {"av_year_5", "av_year_10", "av_year_20"}
+    # Projection now runs the FULL guarantee horizon (to guarantee_to_age),
+    # not a fixed 20 years — checkpoints at 5/10/20 plus the final horizon
+    # year, so the exact final-year key varies with issue age.
+    assert {"av_year_5", "av_year_10", "av_year_20"} <= set(proj)
+    assert "shadow_account_funding_adequate" in gul.metadata
     assert any("no-lapse" in c.lower() for c in gul.metadata["conditions"])
     assert gul.metadata["rating_engine"].startswith("life_")
     assert "universal life priced on actuarial equivalence" in " ".join(gul.ineligibility_reasons)
@@ -583,7 +587,10 @@ def test_ulip_sa_multiple_rule_by_age() -> None:
 
 def test_single_premium_ulip_zero_recurring_premium() -> None:
     sp = rate_life(_bundle(), coverage_id="sp_ulip", product_id="single_premium_ulip")
-    assert sp.adjusted_premium == 0.0  # no recurring premium — single contribution
+    # No RECURRING premium, but adjusted_premium must still carry the real
+    # lump-sum contribution — it must not silently report $0.00.
+    assert sp.adjusted_premium == 500000.0
+    assert sp.base_premium == 500000.0
     assert sp.metadata["single_premium"] == 500000.0
     assert sp.metadata["lock_in_years"] == 5
     assert sp.metadata["fund_value_projection"] > sp.metadata["single_premium"]  # growth at assumed rate
@@ -663,7 +670,11 @@ def test_all_annuity_paths_are_illustrations_only() -> None:
     for pid, cid in cases:
         q = rate_life(_ann(), coverage_id=cid, product_id=pid, state="IL")
         assert q.eligible is False, pid
-        assert q.adjusted_premium == 0.0, pid
+        # Illustration-only (unfiled) does not mean the computed consideration
+        # is discarded — adjusted_premium/base_premium must carry the real
+        # purchase price so quote documents don't show $0.00.
+        assert q.adjusted_premium > 0.0, pid
+        assert q.base_premium > 0.0, pid
         assert q.metadata["state_rules_applied"]["issue_state"] == "IL", pid
 
 

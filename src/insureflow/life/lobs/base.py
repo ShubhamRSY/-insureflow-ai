@@ -161,8 +161,19 @@ def apply_binding_gates(ctx: LifeProductContext, outcome: LobOutcome, *, family:
         outcome.add_reason("Face amount missing — cannot rate a face-driven product without a coverage amount")
         outcome.metadata["_zero_face"] = True
 
+    # Guaranteed-issue / simplified-issue products (e.g. graded whole life,
+    # guaranteed-issue group term) sell specifically to applicants a
+    # fully-underwritten product would decline. ctx.medical is computed from
+    # the submission's free-text disclosures with no product awareness, so
+    # without this opt-out the shared gate below would auto-decline the
+    # exact buyer the product exists for. A path sets this explicitly and
+    # takes responsibility for its own (documented) underwriting rules.
+    skip_medical_gate = bool(outcome.metadata.pop("_skip_medical_gate", False))
+
     # Medical decision propagation.
-    if ctx.medical.decision == UWDecision.DECLINE:
+    if skip_medical_gate:
+        pass
+    elif ctx.medical.decision == UWDecision.DECLINE:
         outcome.eligible = False
         for r in ctx.medical.reasons:
             outcome.add_reason(r)
@@ -191,18 +202,26 @@ def apply_binding_gates(ctx: LifeProductContext, outcome: LobOutcome, *, family:
             outcome.add_condition("Facultative reinsurance must be placed and accepted by the reinsurer before issue")
         elif ctx.reinsurance.jumbo:
             outcome.add_condition("Confirm automatic reinsurance treaty capacity before issue")
-        if ctx.medical.require_aps and not _has_evidence(
-            blob_l,
-            r"aps\s+(?:received|complete|on file)|attending physician statement\s+(?:received|attached)|\baps\b|attending physician",
-            types,
-            "aps_records",
+        if (
+            not skip_medical_gate
+            and ctx.medical.require_aps
+            and not _has_evidence(
+                blob_l,
+                r"aps\s+(?:received|complete|on file)|attending physician statement\s+(?:received|attached)|\baps\b|attending physician",
+                types,
+                "aps_records",
+            )
         ):
             outcome.add_condition("APS required before bind — not on file (flag is not an order)")
-        if ctx.medical.require_paramed and not _has_evidence(
-            blob_l,
-            r"paramed(?:ical)?\s+(?:complete|received|done)|examone\s+complete|paramedic",
-            types,
-            "medical_exam",
+        if (
+            not skip_medical_gate
+            and ctx.medical.require_paramed
+            and not _has_evidence(
+                blob_l,
+                r"paramed(?:ical)?\s+(?:complete|received|done)|examone\s+complete|paramedic",
+                types,
+                "medical_exam",
+            )
         ):
             if not any("paramed" in c.lower() for c in outcome.conditions):
                 outcome.add_condition("Paramedical exam required before bind — not fulfilled")
@@ -290,19 +309,26 @@ def apply_platform_state_law(ctx: LifeProductContext, outcome: LobOutcome, *, fa
     """
     from insureflow.life.lobs.state_law import is_annuity_context, premium_tax_on_consideration, suitability_regime
 
+    # Consumer point-of-sale suitability law (Reg 187 / NAIC #275 Best
+    # Interest) governs a producer RECOMMENDING a purchase to a retail buyer.
+    # A path can opt out via this flag when there's no such sale — e.g. a
+    # structured settlement, where the claimant isn't purchasing anything.
+    skip_consumer_suitability = bool(outcome.metadata.pop("_skip_consumer_suitability", False))
     annuity = family == "annuity" or is_annuity_context(ctx.product_id, ctx.coverage_id, ctx.coverage_name)
-    regime = suitability_regime(ctx.issue_state, annuity=annuity)
-    if regime["regime"] == "NY Reg 187":
-        outcome.add_condition("NY Reg 187: documented suitability analysis REQUIRED before recommendation")
-        outcome.add_condition("Reg 187: consumer-facing document delivered; producer statement signed; carrier reviews before issue")
-        outcome.metadata["suitability_regime"] = regime
-    elif annuity:
-        outcome.metadata["suitability_regime"] = regime
-        if "obligations" in regime:
-            outcome.add_condition(f"Best Interest ({regime['regime']}): {', '.join(regime['obligations'])} obligations documented at point of sale")
+    if not skip_consumer_suitability:
+        regime = suitability_regime(ctx.issue_state, annuity=annuity)
+        if regime["regime"] == "NY Reg 187":
+            outcome.add_condition("NY Reg 187: documented suitability analysis REQUIRED before recommendation")
+            outcome.add_condition("Reg 187: consumer-facing document delivered; producer statement signed; carrier reviews before issue")
+            outcome.metadata["suitability_regime"] = regime
+        elif annuity:
+            outcome.metadata["suitability_regime"] = regime
+            if "obligations" in regime:
+                outcome.add_condition(f"Best Interest ({regime['regime']}): {', '.join(regime['obligations'])} obligations documented at point of sale")
 
     consideration = float(outcome.metadata.get("purchase_price") or 0.0)
-    tax = premium_tax_on_consideration(ctx.issue_state, consideration, qualified=False)
+    qualified = bool(outcome.metadata.get("qualified_money", False))
+    tax = premium_tax_on_consideration(ctx.issue_state, consideration, qualified=qualified)
     if tax and tax["amount"] > 0:
         outcome.metadata["premium_tax"] = tax
         note = "; FL pass-through credit may offset when savings returned to policyholders" if tax["pass_through_credit"] else "insurer-paid, embedded in economics"
@@ -363,6 +389,23 @@ def add_common_loads(ctx: LifeProductContext, premium: float) -> float:
     loaded += (ctx.face / 1000.0) * ctx.medical.flat_extras_per_1000
     loaded += (ctx.face / 1000.0) * ctx.financial.rider_load_per_1000
     return loaded + policy_fee(ctx)
+
+
+def disclosures_acknowledged(ctx: LifeProductContext) -> bool:
+    """Whether the submission shows evidence of a signed investor-profile /
+    suitability disclosure — used by ULIP paths instead of assuming True.
+    """
+    import re as _re
+
+    blob = _blob(ctx.bundle) or ""
+    return bool(
+        _re.search(
+            r"(?:investor profil\w*|risk appetite|suitability)\s+(?:disclos\w*|questionnaire|form)\s+(?:signed|acknowledged|complete|received|on file)"
+            r"|disclos\w*\s+(?:signed|acknowledged|complete)",
+            blob,
+            _re.I,
+        )
+    )
 
 
 def purchase_price(ctx: LifeProductContext) -> float:

@@ -98,17 +98,38 @@ def underwrite_gul(ctx: LifeProductContext) -> LobOutcome:
     loaded = formula.gross_premium * NO_LAPSE_LOAD * class_f * band_f * state_rel
     annual = add_common_loads(ctx, loaded)
 
-    # Illustrative account-value projection at the guaranteed credit rate:
-    # AV_t = (AV + premium − COI − admin fee) × (1 + guaranteed rate).
-    # Annual COI ≈ face × q(age+t) × loading (attained age rises each year).
-    premium_net = annual / ctx.modal_f if ctx.modal_f else annual
+    # Shadow-account projection at the guaranteed credit rate, run over the
+    # FULL guarantee horizon (to `to_age`, not a fixed 20 years) — the
+    # no-lapse guarantee's shadow-account test runs for as long as the
+    # guarantee itself does. Mortality is NOT capped at an arbitrary
+    # attained age; q_x() already clamps correctly to each sex table's own
+    # terminal age, so letting it run the full horizon doesn't understate
+    # COI at the older durations this guarantee actually covers.
+    # `annual` is already the annual premium — dividing by modal_f would
+    # inflate the account-value input ~11.5x for monthly payers.
+    premium_net = annual
+    horizon_years = max(to_age - ctx.age, 1)
     av = 0.0
+    shadow_account_negative = False
+    first_negative_year: int | None = None
     projection: dict[str, float] = {}
-    for year in range(1, 21):
-        coi = ctx.face * q_x(min(ctx.age + year, 95), ctx.sex_key, ctx.smoker) * COI_LOADING
-        av = max((av + premium_net - coi - ADMIN_FEE_ANNUAL) * (1.0 + 0.02), 0.0)
-        if year in (5, 10, 20):
+    checkpoint_years = {5, 10, 20, horizon_years}
+    for year in range(1, horizon_years + 1):
+        coi = ctx.face * q_x(ctx.age + year, ctx.sex_key, ctx.smoker) * COI_LOADING
+        raw = (av + premium_net - coi - ADMIN_FEE_ANNUAL) * (1.0 + 0.02)
+        if raw < 0 and not shadow_account_negative:
+            shadow_account_negative = True
+            first_negative_year = year
+        av = max(raw, 0.0)
+        if year in checkpoint_years:
             projection[f"av_year_{year}"] = round(av, 2)
+
+    if shadow_account_negative:
+        outcome.add_condition(
+            f"Shadow-account funding test fails in policy year {first_negative_year} at the guaranteed credit rate — "
+            f"the quoted premium may be insufficient to keep the no-lapse guarantee in force to age {to_age}; "
+            "re-illustrate at a higher premium or shorter guarantee period before issue"
+        )
 
     outcome.base_premium = round(formula.gross_premium * NO_LAPSE_LOAD, 2)
     outcome.annual_premium = annual
@@ -132,6 +153,8 @@ def underwrite_gul(ctx: LifeProductContext) -> LobOutcome:
             "annual_coi_estimate": coi_annual,
             "admin_fee_annual": ADMIN_FEE_ANNUAL,
             "account_value_projection_guaranteed_basis": projection,
+            "shadow_account_funding_adequate": not shadow_account_negative,
+            "shadow_account_first_negative_year": first_negative_year,
             "state_rules_applied": state_rules,
             "exam_required": bool(state_rules["paramed_exam_required"]),
         }

@@ -12,6 +12,7 @@ from typing import Any
 from insureflow.life.lobs.base import (
     LifeProductContext,
     LobOutcome,
+    add_common_loads,
     band_factor,
     finish_quote,
     medical_class_factor,
@@ -70,7 +71,11 @@ def underwrite_single_premium(ctx: LifeProductContext) -> LobOutcome:
     band_f = band_factor(ctx)
     state_rel = state_relativity(ctx)
     loaded = formula.gross_premium * class_f * band_f * state_rel
-    annual = loaded + float((ctx.manual or {}).get("policy_fee", 60.0))
+    # add_common_loads applies flat-extras + rider loads + policy fee — every
+    # sibling whole-life path uses it; this path previously only added the
+    # policy fee, silently dropping a substandard applicant's flat-extra
+    # rating and any elected rider load.
+    annual = add_common_loads(ctx, loaded)
 
     if annual > float(state_rules["aml_review_threshold"]):
         outcome.add_condition(f"Large lump-sum (${annual:,.0f}) — enhanced AML review per ${float(state_rules['aml_review_threshold']):,.0f} threshold")

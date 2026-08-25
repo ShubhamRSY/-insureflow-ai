@@ -163,6 +163,7 @@ def rate_life(
     # Each registered product owns its own underwriting rules, rating math,
     # and state-rule table (see insureflow.life.lobs). Unregistered combos
     # fall through to the generic family pricing below.
+    _lob_dispatch_error: str | None = None
     try:
         from insureflow.life.lobs import LifeProductContext, run_product_logic
 
@@ -188,7 +189,20 @@ def rate_life(
         if lob_result is not None:
             return lob_result
     except Exception as exc:
-        logger.warning("LOB logic path failed for %s/%s: %s", product_id, coverage_id, exc)
+        # This falls through to the generic term-mortality pricer below, which
+        # prices on a DIFFERENT, actuarially-simpler basis than the product's
+        # dedicated LOB engine — the same submission can silently get two very
+        # different premiums depending on whether this path succeeds or fails.
+        # Log loudly and stamp the quote so the divergence is never silent.
+        logger.error(
+            "LOB logic path failed for product_id=%s coverage_id=%s (%s: %s) — falling back to generic term pricing, which may produce a materially different premium",
+            product_id,
+            coverage_id,
+            type(exc).__name__,
+            exc,
+            exc_info=True,
+        )
+        _lob_dispatch_error = f"{type(exc).__name__}: {exc}"
 
     # Unregistered annuity combos fall back to the generic illustration.
     if family == "annuity":
@@ -307,6 +321,7 @@ def rate_life(
         "personal_lines": True,
         "uw_decision_hint": medical.decision.value,
         "outcome": normalize_decision(medical.decision).value,
+        "lob_dispatch_error": _lob_dispatch_error,
         "conditions": [],
     }
     if medical.require_aps:

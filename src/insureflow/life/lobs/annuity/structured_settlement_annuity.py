@@ -84,9 +84,14 @@ def underwrite_structured_settlement(ctx: LifeProductContext) -> LobOutcome:
 
     total_paid = round(monthly_payment * months, 2)
 
+    # The settlement's PV is the closest analog to a "premium" this product
+    # has — without it, QuoteResult.adjusted_premium/base_premium stay $0.
+    outcome.annual_premium = settlement_value
+    outcome.base_premium = settlement_value
+
     outcome.components = [
         RateComponent(name="monthly_payment", amount=round(monthly_payment, 2), basis=f"guaranteed {years}yr certain"),
-        RateComponent(name="pv_of_schedule", amount=settlement_value, basis=f"@ {interest:.0%} monthly"),
+        RateComponent(name="pv_of_schedule", amount=settlement_value, basis=f"@ {interest:.0%} annual ({interest / 12:.3%} monthly)"),
     ]
     outcome.metadata.update(
         {
@@ -98,10 +103,19 @@ def underwrite_structured_settlement(ctx: LifeProductContext) -> LobOutcome:
             "term_years": years,
             "total_nominal_payouts": total_paid,
             "present_value_of_settlement": settlement_value,
+            # Not a purchase_price in the retail-annuity sense, but this is
+            # what apply_platform_state_law reads for the premium-tax note —
+            # the qualified assignment carrier does fund this consideration.
+            "purchase_price": settlement_value,
             "qualified_assignment_required": True,
             "tax_free_treatment_if_qualifying": True,
             "state_rules_applied": state_rules,
             "exam_required": False,
+            # This is litigation infrastructure funding a court-ordered
+            # schedule, not a producer recommending a purchase to a retail
+            # buyer — NY Reg 187 / NAIC #275 Best Interest sales-suitability
+            # language doesn't apply here (see apply_platform_state_law).
+            "_skip_consumer_suitability": True,
         }
     )
 

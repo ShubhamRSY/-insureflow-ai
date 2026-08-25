@@ -12,6 +12,7 @@ from typing import Any
 from insureflow.life.lobs.base import (
     LifeProductContext,
     LobOutcome,
+    disclosures_acknowledged,
     finish_quote,
     merge_state_rules,
 )
@@ -76,6 +77,20 @@ def underwrite_ulip_type_i(ctx: LifeProductContext) -> LobOutcome:
         if fv > sa and crossover_year is None:
             crossover_year = year
             break
+
+    # Suitability screening: premium-to-income and disclosure evidence are
+    # real, submission-grounded checks; risk-appetite/fund-allocation
+    # screening has no data source here (no investor questionnaire on the
+    # extraction pipeline), so it's disclosed as unverified rather than
+    # silently skipped or faked with unfalsifiable defaults.
+    income = getattr(ctx.factors, "income", 0.0)
+    if income and annual_premium / income > 0.15:
+        outcome.add_condition(f"CRITICAL: Premium-to-income {annual_premium / income:.1%} exceeds 15% — ULIP unsuitable, client cannot absorb investment losses")
+    elif income and annual_premium / income > 0.12:
+        outcome.add_condition(f"Premium-to-income {annual_premium / income:.1%} exceeds 12% guideline for ULIPs")
+    if not disclosures_acknowledged(ctx):
+        outcome.add_condition("Investor-profile disclosure not confirmed on file — signed suitability questionnaire required before bind")
+    outcome.add_condition("Risk-appetite / fund-allocation suitability not screened — no investor questionnaire on file; confirm before relying on this illustration")
 
     outcome.base_premium = annual_premium
     outcome.annual_premium = annual_premium

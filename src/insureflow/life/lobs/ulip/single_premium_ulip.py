@@ -14,6 +14,7 @@ from insureflow.life.lobs.actuarial import term_insurance_nsp
 from insureflow.life.lobs.base import (
     LifeProductContext,
     LobOutcome,
+    disclosures_acknowledged,
     finish_quote,
     merge_state_rules,
 )
@@ -78,7 +79,21 @@ def underwrite_sp_ulip(ctx: LifeProductContext) -> LobOutcome:
     mort_y1 = round(sum_assured * q_x(ctx.age, ctx.sex_key, ctx.smoker) * MORTALITY_LOADING, 2)
     prot_pv = round(sum_assured * term_insurance_nsp(ctx.age, n, ctx.sex_key, ctx.smoker, 0.04), 2)
 
-    outcome.annual_premium = 0.0  # single premium product — no recurring premium
+    # Single-consideration product — the "premium" IS the lump sum, not a
+    # recurring annual amount. Leaving both fields at the LobOutcome
+    # default of 0.0 (as before) makes QuoteResult.adjusted_premium/
+    # base_premium report $0.00 for a real lump-sum contribution.
+    outcome.annual_premium = round(premium, 2)
+    outcome.base_premium = round(premium, 2)
+
+    # Suitability screening: disclosure evidence is a real, submission-
+    # grounded check (premium-to-income doesn't apply — there's no
+    # recurring premium to compare against income); risk-appetite/fund-
+    # allocation has no data source here, so it's disclosed as unverified.
+    if not disclosures_acknowledged(ctx):
+        outcome.add_condition("Investor-profile disclosure not confirmed on file — signed suitability questionnaire required before bind")
+    outcome.add_condition("Risk-appetite / fund-allocation suitability not screened — no investor questionnaire on file; confirm before relying on this illustration")
+
     outcome.components = [
         RateComponent(name="single_premium", amount=round(premium, 2), basis="lump-sum contribution"),
         RateComponent(name="allocation_charge", amount=alloc, basis=f"{alloc:.1%} deducted at entry"),

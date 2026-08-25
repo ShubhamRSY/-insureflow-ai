@@ -96,7 +96,11 @@ def underwrite_caul(ctx: LifeProductContext) -> LobOutcome:
 
     # Two crediting columns: current declared rate vs contractual guarantee.
     # Annual COI ≈ face × q(age+t) × loading (attained age rises each year).
-    premium_net = annual / ctx.modal_f if ctx.modal_f else annual
+    # `annual` is already the annual premium — modal_f converts annual->modal
+    # payment size (e.g. 0.087 for monthly); dividing by it here would
+    # inflate the account-value input ~11.5x for monthly payers instead of
+    # leaving the annual funding amount unchanged.
+    premium_net = annual
     from insureflow.life.mortality import q_x
 
     projections: dict[str, dict[str, float]] = {"current_rate": {}, "guaranteed_min": {}}

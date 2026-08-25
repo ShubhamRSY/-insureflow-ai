@@ -60,12 +60,28 @@ function normalizeBackendStage(stage) {
 
 export function buildPipelineStages(job) {
   const backendStages = job?.progress?.pipeline_stages || job?.results?.pipeline_stages;
-  if (backendStages?.length) {
-    return backendStages.map(normalizeBackendStage);
-  }
-
   const processing = job?.status === 'processing';
   const failed = job?.status === 'failed';
+
+  // Build the full expected stage list for the current job so every phase is
+  // always visible, even during early processing when the backend has only
+  // emitted a few stages so far.
+  const fullExpected = buildExpectedStageList(job);
+
+  if (backendStages?.length) {
+    const byId = Object.fromEntries(backendStages.map((s) => [s.id, normalizeBackendStage(s)]));
+    // Merge: use backend data where available, fill the rest from expected
+    const merged = fullExpected.map((exp) => byId[exp.id] || exp);
+    if (!processing) return merged;
+    // During processing, apply current_stage overrides
+    return applyProcessingOverrides(merged, job?.progress?.current_stage);
+  }
+
+  if (processing) {
+    return applyProcessingOverrides(fullExpected, job?.progress?.current_stage);
+  }
+
+  // Post-processing fallback: derive status from results
   const r = job?.results || {};
   const memo = r.memo || {};
   const recon = r.reconciliation || {};
@@ -74,137 +90,61 @@ export function buildPipelineStages(job) {
   const appetiteDecline = r.appetite_filter_passed === false && !r.appetite_needs_uw_referral;
   const agentFindings = asList(memo.key_findings).filter((f) => f.category !== 'external_oracle');
 
-  const stages = [
-    {
-      id: 'intake',
-      label: 'Intake',
-      detail: r.document_count != null ? `${r.document_count} document(s)` : 'Documents received',
-      status: processing ? 'active' : failed ? 'failed' : 'complete',
-      findings: r.document_count ?? 0,
-    },
-    {
-      id: 'triage',
-      label: 'Triage',
-      detail: r.triage_score != null
-        ? `Score ${Number(r.triage_score).toFixed(0)} · ${r.triage_priority || 'normal'}`
-        : 'Priority scoring',
-      status: processing
-        ? 'pending'
-        : stageStatus(r.triage_score != null, r.triage_priority === 'low'),
-      findings: 0,
-    },
-    {
-      id: 'appetite',
-      label: 'Appetite',
-      detail: r.appetite_needs_uw_referral
-        ? 'Referral required'
-        : r.appetite_filter_passed === false
-          ? (r.decline_reason || 'Outside appetite')
-          : 'Within appetite',
-      status: processing
-        ? 'pending'
-        : stageStatus(
-            r.appetite_filter_passed !== false,
-            r.appetite_needs_uw_referral,
-            r.appetite_filter_passed === false,
-          ),
-      findings: r.appetite_filter_passed === false ? 1 : 0,
-    },
-    {
-      id: 'parse',
-      label: 'Parsed',
-      detail: (r.document_count || r.ocr_documents)
-        ? `${r.document_count ?? r.ocr_documents} document(s) read`
-        : 'Documents read & structured',
-      status: processing
-        ? 'pending'
-        : appetiteDecline
-          ? 'skipped'
-          : stageStatus((r.document_count || 0) > 0 || !!memo.insured_name),
-      findings: r.document_count ?? r.ocr_documents ?? 0,
-    },
-    {
-      id: 'verify',
-      label: 'Verified',
-      detail: isLifeStage(r)
-        ? 'Medical & bureau checks run'
-        : (r.oracle_findings_count ?? 0) > 0
-          ? `${r.oracle_findings_count} external record(s) checked`
-          : 'External records checked',
-      status: processing
-        ? 'pending'
-        : appetiteDecline
-          ? 'skipped'
-          : stageStatus(r.oracle_findings_count != null, (r.oracle_findings_count || 0) > 0),
-      findings: r.oracle_findings_count || 0,
-    },
-    {
-      id: 'reconcile',
-      label: 'Reconciled',
-      detail: recon.match_rate != null
-        ? `${Math.round(recon.match_rate * 100)}% match · ${discrepancies.length} conflict(s)`
-        : `${r.reconciliation_discrepancies ?? 0} conflict(s)`,
-      status: processing
-        ? 'pending'
-        : appetiteDecline
-          ? 'skipped'
-          : stageStatus(
-              recon.overall_status === 'reconciled' || discrepancies.length === 0,
-              discrepancies.length > 0,
-              criticalDisc.length > 0,
-            ),
-      findings: discrepancies.length,
-    },
-    {
-      id: 'analyze',
-      label: 'Scored',
-      detail: memo.overall_risk_score != null
-        ? `Overall risk: ${riskBand(memo.overall_risk_score)}`
-        : `${agentFindings.length} underwriting item(s) noted`,
-      status: processing
-        ? 'pending'
-        : appetiteDecline
-          ? 'skipped'
-          : stageStatus(!!memo.decision || agentFindings.length >= 0, agentFindings.length > 3),
-      findings: agentFindings.length,
-    },
-    {
-      id: 'price',
-      label: 'Priced',
-      detail: r.quote?.adjusted_premium != null
-        ? `Indicated ${formatCompact(r.quote.adjusted_premium)}`
-        : 'Premium calculation',
-      status: processing
-        ? 'pending'
-        : appetiteDecline
-          ? 'skipped'
-          : stageStatus(!!r.quote?.adjusted_premium || !!r.quote?.base_premium),
-      findings: 0,
-    },
-    {
-      id: 'decision',
-      label: 'Decision',
-      detail: (r.ai_decision || memo.decision || 'pending').toString().toUpperCase(),
-      status: processing
-        ? 'pending'
-        : stageStatus(!!r.ai_decision || !!memo.decision, r.human_review_required, r.ai_decision === 'decline'),
-      findings: (memo.human_review_reasons || []).length,
-    },
-  ];
-
-  if (processing) {
-    const current = job?.progress?.current_stage;
-    if (current) {
-      return stages.map((s) => ({
-        ...s,
-        duration: null,
-        status: s.id === current ? 'active' : stages.findIndex((x) => x.id === s.id) < stages.findIndex((x) => x.id === current) ? 'complete' : 'pending',
-      }));
+  return fullExpected.map((s) => {
+    switch (s.id) {
+      case 'intake':
+        return { ...s, detail: r.document_count != null ? `${r.document_count} document(s)` : 'Documents received', status: failed ? 'failed' : 'complete', findings: r.document_count ?? 0 };
+      case 'triage':
+        return { ...s, detail: r.triage_score != null ? `Score ${Number(r.triage_score).toFixed(0)} · ${r.triage_priority || 'normal'}` : 'Priority scoring', status: stageStatus(r.triage_score != null, r.triage_priority === 'low') };
+      case 'appetite':
+        return { ...s, detail: r.appetite_needs_uw_referral ? 'Referral required' : r.appetite_filter_passed === false ? (r.decline_reason || 'Outside appetite') : 'Within appetite', status: stageStatus(r.appetite_filter_passed !== false, r.appetite_needs_uw_referral, r.appetite_filter_passed === false), findings: r.appetite_filter_passed === false ? 1 : 0 };
+      case 'parse':
+        return { ...s, detail: (r.document_count || r.ocr_documents) ? `${r.document_count ?? r.ocr_documents} document(s) read` : 'Documents read & structured', status: appetiteDecline ? 'skipped' : stageStatus((r.document_count || 0) > 0 || !!memo.insured_name), findings: r.document_count ?? r.ocr_documents ?? 0 };
+      case 'verify':
+        return { ...s, detail: isLifeStage(r) ? 'Medical & bureau checks run' : (r.oracle_findings_count ?? 0) > 0 ? `${r.oracle_findings_count} external record(s) checked` : 'External records checked', status: appetiteDecline ? 'skipped' : stageStatus(r.oracle_findings_count != null, (r.oracle_findings_count || 0) > 0), findings: r.oracle_findings_count || 0 };
+      case 'reconcile':
+        return { ...s, detail: recon.match_rate != null ? `${Math.round(recon.match_rate * 100)}% match · ${discrepancies.length} conflict(s)` : `${r.reconciliation_discrepancies ?? 0} conflict(s)`, status: appetiteDecline ? 'skipped' : stageStatus(recon.overall_status === 'reconciled' || discrepancies.length === 0, discrepancies.length > 0, criticalDisc.length > 0), findings: discrepancies.length };
+      case 'analyze':
+        return { ...s, detail: memo.overall_risk_score != null ? `Overall risk: ${riskBand(memo.overall_risk_score)}` : `${agentFindings.length} underwriting item(s) noted`, status: appetiteDecline ? 'skipped' : stageStatus(!!memo.decision || agentFindings.length >= 0, agentFindings.length > 3), findings: agentFindings.length };
+      case 'price':
+        return { ...s, detail: r.quote?.adjusted_premium != null ? `Indicated ${formatCompact(r.quote.adjusted_premium)}` : 'Premium calculation', status: appetiteDecline ? 'skipped' : stageStatus(!!r.quote?.adjusted_premium || !!r.quote?.base_premium) };
+      case 'decision':
+        return { ...s, detail: (r.ai_decision || memo.decision || 'pending').toString().toUpperCase(), status: stageStatus(!!r.ai_decision || !!memo.decision, r.human_review_required, r.ai_decision === 'decline'), findings: (memo.human_review_reasons || []).length };
+      default:
+        return s;
     }
-    stages[0].status = 'active';
-  }
+  });
+}
 
-  return stages.map((s) => ({ ...s, duration: null }));
+/** Build the full expected stage list with default pending status. */
+function buildExpectedStageList(job) {
+  const r = job?.results || {};
+  const memo = r.memo || {};
+  return [
+    { id: 'intake', label: 'Intake', detail: 'Receiving submission package', status: 'pending', findings: 0, duration: null },
+    { id: 'triage', label: 'Triage', detail: 'Priority scoring', status: 'pending', findings: 0, duration: null },
+    { id: 'appetite', label: 'Appetite', detail: 'Checking carrier appetite', status: 'pending', findings: 0, duration: null },
+    { id: 'parse', label: 'Parsed', detail: 'Ingesting and parsing documents', status: 'pending', findings: 0, duration: null },
+    { id: 'verify', label: 'Verified', detail: 'Running external oracle checks', status: 'pending', findings: 0, duration: null },
+    { id: 'reconcile', label: 'Reconciled', detail: 'Reconciling cross-document fields', status: 'pending', findings: 0, duration: null },
+    { id: 'analyze', label: 'Scored', detail: 'Running specialist agent analysis', status: 'pending', findings: 0, duration: null },
+    { id: 'price', label: 'Priced', detail: 'Calculating indicated premium', status: 'pending', findings: 0, duration: null },
+    { id: 'decision', label: 'Decision', detail: 'Final underwriting decision', status: 'pending', findings: 0, duration: null },
+  ];
+}
+
+/** Mark stages as complete/active/pending based on current_stage during processing. */
+function applyProcessingOverrides(stages, currentStage) {
+  if (!currentStage) {
+    // No current_stage yet — mark intake as active, rest pending
+    return stages.map((s, i) => ({ ...s, status: i === 0 ? 'active' : 'pending', duration: null }));
+  }
+  const currentIdx = stages.findIndex((s) => s.id === currentStage);
+  return stages.map((s, i) => ({
+    ...s,
+    duration: null,
+    status: i < currentIdx ? 'complete' : i === currentIdx ? 'active' : 'pending',
+  }));
 }
 
 export function buildMiniStripStages(job) {

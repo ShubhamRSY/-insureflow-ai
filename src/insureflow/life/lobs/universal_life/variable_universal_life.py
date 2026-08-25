@@ -61,9 +61,13 @@ def underwrite_vul(ctx: LifeProductContext) -> LobOutcome:
         outcome.eligible = False
         outcome.add_reason(f"VUL minimum face ${MIN_FACE:,.0f} — selected face ${ctx.face:,.0f}")
 
+    # VUL is a securities-registered product on every coverage option (the
+    # base "vx_account" separate-account coverage included) — this must not
+    # be gated to one specific coverage_id, since that leaves the two real
+    # catalog coverages (vx_account, gmdb) with no suitability requirement.
+    outcome.add_condition("FINRA suitability review REQUIRED before issue — investor profile documented by a registered representative")
     if ctx.coverage_id == "finra_suitability":
         outcome.product_label = "Variable Universal Life — FINRA Suitability Track"
-        outcome.add_condition("FINRA suitability review REQUIRED before issue — investor profile documented")
     if ctx.coverage_id == "gmdb":
         outcome.product_label = "Variable Universal Life with GMDB Rider"
         outcome.add_condition("GMDB: death benefit floored at greater of premiums paid or account value")
@@ -100,7 +104,9 @@ def underwrite_vul(ctx: LifeProductContext) -> LobOutcome:
     annual = add_common_loads(ctx, loaded)
 
     # Illustrative separate-account growth at the ASSUMED AIR — not guaranteed.
-    premium_net = annual / ctx.modal_f if ctx.modal_f else annual
+    # `annual` is already the annual premium — dividing by modal_f would
+    # inflate the account-value input ~11.5x for monthly payers.
+    premium_net = annual
     from insureflow.life.mortality import q_x
 
     av = 0.0

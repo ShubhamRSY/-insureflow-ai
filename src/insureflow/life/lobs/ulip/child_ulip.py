@@ -13,6 +13,7 @@ from typing import Any
 from insureflow.life.lobs.base import (
     LifeProductContext,
     LobOutcome,
+    disclosures_acknowledged,
     finish_quote,
     merge_state_rules,
 )
@@ -59,6 +60,8 @@ def underwrite_child_ulip(ctx: LifeProductContext) -> LobOutcome:
     outcome.add_condition(f"{state_rules['free_look_days']}-day free-look period applies ({state_rules['issue_state'] or 'default'})")
     outcome.add_condition(f"Benefits vest to the child at milestone ages {milestones}")
     outcome.add_condition("Proposer must be parent or LEGAL GUARDIAN — proof of guardianship required")
+    max_child_age = int(state_rules["max_child_entry_age"])
+    outcome.add_condition(f"Insured child's age not captured on this submission — verify child's age is at or below the {max_child_age}-year entry maximum before bind")
     for disclosure in state_rules["disclosures"]:
         outcome.add_condition(disclosure)
 
@@ -68,6 +71,19 @@ def underwrite_child_ulip(ctx: LifeProductContext) -> LobOutcome:
     net_r = 1.0 + r - fmc
     horizon = max(int(milestones[-1]), 15) - min(max(ctx.age - 30, 0), 5)  # years until final milestone (proposer assumed ~30 at child's birth)
     fund_at_maturity = round(annual_premium * (1.0 - alloc) * wp_load * ((net_r**horizon - 1) / (net_r - 1)), 2)
+
+    # Suitability screening: premium-to-proposer-income and disclosure
+    # evidence are real, submission-grounded checks; risk-appetite/fund
+    # allocation has no data source here (no investor questionnaire on the
+    # extraction pipeline), so it's disclosed as unverified.
+    income = getattr(ctx.factors, "income", 0.0)
+    if income and annual_premium / income > 0.15:
+        outcome.add_condition(f"CRITICAL: Premium-to-income {annual_premium / income:.1%} exceeds 15% — ULIP unsuitable, proposer cannot absorb investment losses")
+    elif income and annual_premium / income > 0.12:
+        outcome.add_condition(f"Premium-to-income {annual_premium / income:.1%} exceeds 12% guideline for ULIPs")
+    if not disclosures_acknowledged(ctx):
+        outcome.add_condition("Investor-profile disclosure not confirmed on file — signed suitability questionnaire required before bind")
+    outcome.add_condition("Risk-appetite / fund-allocation suitability not screened — no investor questionnaire on file; confirm before relying on this illustration")
 
     outcome.base_premium = round(annual_premium * wp_load, 2)
     outcome.annual_premium = round(annual_premium * wp_load, 2)

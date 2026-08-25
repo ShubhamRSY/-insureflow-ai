@@ -78,17 +78,20 @@ def underwrite_renewable_term(ctx: LifeProductContext, *, annual: bool) -> LobOu
     sex_f = 1.0 if ctx.unisex_forced else float((manual.get("sex_factors") or {}).get(ctx.sex_key, 1.0))
     tobacco_f = float(manual.get("tobacco_factor", 1.85)) if ctx.smoker else 1.0
     band_f = band_factor(ctx)
+    duration_factors = manual.get("term_duration_factors") or {}
+    term_f = float(duration_factors.get(str(1 if annual else 10), 1.0))
     state_rel = state_relativity(ctx)
     first_premium = float(variant.renewal_periods[0]["annual_premium"]) if variant.renewal_periods else 0.0
     shape = stack_shape_ratio(ctx, first_premium, 1 if annual else 10)
 
-    loaded = base_premium * class_f * sex_f * tobacco_f * band_f * shape * state_rel
+    loaded = base_premium * class_f * sex_f * tobacco_f * band_f * term_f * shape * state_rel
     annual_premium = add_common_loads(ctx, loaded)
 
     outcome.base_premium = round(base_premium * shape, 2)
     outcome.annual_premium = annual_premium
     outcome.components = [
         RateComponent(name="manual_level_base", amount=round(base_premium * class_f * sex_f * tobacco_f * band_f, 2), basis="filed exhibit"),
+        RateComponent(name="term_duration", amount=term_f, basis=f"{1 if annual else 10}yr"),
         RateComponent(name="renewal_period_shape_ratio", amount=round(shape, 4), basis=f"{1 if annual else 10}yr period @ attained age"),
         RateComponent(name="state_relativity", amount=state_rel, basis=ctx.issue_state or ctx.filing_state),
     ]

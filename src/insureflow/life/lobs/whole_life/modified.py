@@ -10,6 +10,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
+from insureflow.life.lobs.actuarial import temporary_annuity_due
 from insureflow.life.lobs.base import (
     LifeProductContext,
     LobOutcome,
@@ -20,7 +21,8 @@ from insureflow.life.lobs.base import (
     merge_state_rules,
     state_relativity,
 )
-from insureflow.life.whole_life_formulas import compute_full_whole_life_quote
+from insureflow.life.mortality import discount_factor, k_p_x
+from insureflow.life.whole_life_formulas import compute_full_whole_life_quote, whole_life_annuity_due
 from insureflow.rating.models import RateComponent
 
 PRODUCT_ID = "modified_whole_life"
@@ -80,11 +82,27 @@ def underwrite_modified(ctx: LifeProductContext) -> LobOutcome:
     band_f = band_factor(ctx)
     state_rel = state_relativity(ctx)
     level_gross = formula.gross_premium * class_f * band_f * state_rel
-    year1_premium = level_gross * initial_ratio
+
+    # Solve for the post-step level premium P such that the ACTUAL stepped
+    # stream (initial_ratio*P for years 1..step_year-1, then P for life)
+    # has the same present value as the plain level_gross premium stream —
+    # true actuarial equivalence. Previously the post-step premium was just
+    # `level_gross` unchanged, which prices short of the level_gross
+    # obligation by construction (discounting makes the reduced early years
+    # worth less, so something later must be worth correspondingly more).
+    n = step_year - 1
+    full_annuity_due = whole_life_annuity_due(ctx.age, ctx.sex_key, ctx.smoker, interest)
+    temp_annuity_due = temporary_annuity_due(ctx.age, n, ctx.sex_key, ctx.smoker, interest)
+    deferred_factor = discount_factor(interest) ** n * k_p_x(ctx.age, n, ctx.sex_key, ctx.smoker)
+    deferred_annuity_due = whole_life_annuity_due(ctx.age + n, ctx.sex_key, ctx.smoker, interest)
+    stream_denominator = initial_ratio * temp_annuity_due + deferred_factor * deferred_annuity_due
+    final_level_gross = (level_gross * full_annuity_due) / stream_denominator if stream_denominator > 0 else level_gross
+
+    year1_premium = final_level_gross * initial_ratio
     annual = add_common_loads(ctx, year1_premium)
 
     income = float(getattr(ctx.factors, "income", 0.0) or 0.0)
-    final_premium = add_common_loads(ctx, level_gross)
+    final_premium = add_common_loads(ctx, final_level_gross)
     if income and final_premium > income * float(state_rules["max_income_multiple_of_final"]):
         outcome.eligible = False
         outcome.add_reason(f"Post-step-up premium exceeds {float(state_rules['max_income_multiple_of_final']):.0%} of documented income — modified structure unsuitable")

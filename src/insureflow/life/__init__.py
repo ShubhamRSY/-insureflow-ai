@@ -1,25 +1,19 @@
-"""Life Insurance Underwriting Pipeline.
+"""Life Insurance Underwriting — actuarial formulas and product-UW engines.
 
 Modules:
   mortality        — Mortality tables (q_x, p_x, survival/mortality probs)
   term_formulas    — Term life: NSP, equivalence principle, gross loading, reserves
   whole_life_formulas — Whole life: A_x, ä_x, P_x, cash value, nonforfeiture CSV
   product_variants — Decreasing/increasing term, convertible, renewable
-  underwriting_factors — Health, medical, lifestyle, financial, persistency models
   endowment_uw     — Endowment plan: premium capacity, savings ratio, parking detection
   ulip_uw          — ULIP: investor profiling, suitability, risk appetite, fund allocation
   money_back_uw    — Money-back: cash-flow matching, persistency, lapse risk
-  annuity_uw       — Annuity/pension: longevity risk, family history, payout risk
-  checklist        — 10-point compliance checklist
-  screening        — SSN, MIB, Rx, OFAC screening
-  medical_eval     — BMI, vitals, paramedical, class assignment
-  financial        — HLV, income multiples, net worth, table rating, reinsurance
-  decision_matrix  — Final disposition matrix
-  memo             — Underwriting evaluation memo generator
-  pipeline         — 4-step orchestrator
+
+Per-product rating and underwriting decisions are owned by
+``insureflow.life.lobs.<family>.<product>`` (dispatched from
+``insureflow.rating.personal.life_rating``), not by this package.
 """
 
-from .annuity_uw import AnnuityUWResult, run_annuity_uw
 from .endowment_uw import EndowmentUWResult, run_endowment_uw
 from .money_back_uw import MoneyBackUWResult, run_money_back_uw
 from .mortality import LIMITING_AGE, discount_factor, k_p_x, k_q_x, p_x, q_x, v_k
@@ -45,24 +39,6 @@ from .term_formulas import (
     recursive_reserve,
 )
 from .ulip_uw import InvestorProfile, ULIPUWResult, run_ulip_uw
-from .underwriting_factors import (
-    FinancialJustification,
-    HealthAssessment,
-    LifestyleAssessment,
-    MedicalHistoryAssessment,
-    PersistencyAssessment,
-    UWClass,
-    UWFactors,
-    assess_financial,
-    assess_health,
-    assess_lifestyle,
-    assess_medical_history,
-    assess_persistency,
-    classify_bp,
-    classify_cholesterol,
-    classify_uw_risk,
-    compute_bmi,
-)
 from .whole_life_formulas import (
     WholeLifeQuote,
     compute_full_whole_life_quote,
@@ -111,23 +87,6 @@ __all__ = [
     "compute_increasing_term",
     "compute_convertible_term",
     "compute_renewable_term",
-    # Underwriting Factors
-    "UWClass",
-    "UWFactors",
-    "HealthAssessment",
-    "MedicalHistoryAssessment",
-    "LifestyleAssessment",
-    "FinancialJustification",
-    "PersistencyAssessment",
-    "compute_bmi",
-    "classify_bp",
-    "classify_cholesterol",
-    "assess_health",
-    "assess_medical_history",
-    "assess_lifestyle",
-    "assess_financial",
-    "assess_persistency",
-    "classify_uw_risk",
     # Endowment UW
     "EndowmentUWResult",
     "run_endowment_uw",
@@ -138,7 +97,4 @@ __all__ = [
     # Money-Back UW
     "MoneyBackUWResult",
     "run_money_back_uw",
-    # Annuity UW
-    "AnnuityUWResult",
-    "run_annuity_uw",
 ]

@@ -231,8 +231,14 @@ _FEMALE_NS: list[float] = [
 _SMOKING_FACTOR_MALE = 2.40
 _SMOKING_FACTOR_FEMALE = 2.25
 
-# Maximum age in the table
-LIMITING_AGE = 99
+# Maximum age any table reaches q_x = 1.0 (female table is the longer of the
+# two — male reaches certain death at index 102, female at index 107). Shared
+# formulas that need one horizon (whole_life_formulas.py, lobs/actuarial.py)
+# should sum/discount out to this age; q_x() itself clamps per-table below so
+# a shorter table still correctly reports 1.0 (certain death) once its own
+# terminal index is reached, rather than the wrong mid-table value the two
+# tables would otherwise disagree on at a shared cutoff.
+LIMITING_AGE = 107
 
 _TABLES: dict[str, list[float]] = {
     "male_ns": _MALE_NS,
@@ -249,8 +255,8 @@ def q_x(age: int, sex: str = "male", smoker: bool = False) -> float:
     """Probability of death within one year for a person aged x."""
     base = _key(sex, smoker)
     table = _TABLES[base]
-    age_idx = max(0, min(age, LIMITING_AGE))
-    val = table[age_idx] if age_idx < len(table) else table[-1]
+    age_idx = max(0, min(age, len(table) - 1))
+    val = table[age_idx]
     if smoker:
         factor = _SMOKING_FACTOR_MALE if sex.lower().startswith("m") else _SMOKING_FACTOR_FEMALE
         val = min(val * factor, 1.0)

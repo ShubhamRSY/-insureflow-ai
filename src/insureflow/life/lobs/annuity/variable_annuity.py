@@ -31,6 +31,7 @@ DEFAULT_STATE_RULES: dict[str, Any] = {
     "disclosures": [
         "SEC prospectus required — subaccount value fluctuates and may lose value",
         "Rider fees reduce account value even when the guarantee is unused",
+        "FINRA Reg BI: securities-suitability review by a registered representative REQUIRED — separate from and in addition to insurance Best Interest",
     ],
 }
 STATE_RULES: dict[str, dict[str, Any]] = {
@@ -73,6 +74,10 @@ def underwrite_variable_annuity(ctx: LifeProductContext) -> LobOutcome:
         fund_at_vesting = round(fund_at_vesting * ((1.0 - float(state_rules["gmwb_rider_fee_pct"])) ** fee_years), 2)
     income_factor = whole_life_annuity_due_factor(vesting_age, ctx.sex_key, ctx.smoker, 0.04)
     annual_payout = round(fund_at_vesting / income_factor, 2) if income_factor > 0 else 0.0
+
+    # Single-consideration product — the premium IS the purchase price.
+    outcome.annual_premium = round(principal, 2)
+    outcome.base_premium = round(principal, 2)
 
     outcome.metadata.update(
         {

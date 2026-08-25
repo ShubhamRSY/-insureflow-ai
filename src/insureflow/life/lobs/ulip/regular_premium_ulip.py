@@ -14,6 +14,7 @@ from insureflow.life.lobs.actuarial import term_insurance_nsp
 from insureflow.life.lobs.base import (
     LifeProductContext,
     LobOutcome,
+    disclosures_acknowledged,
     finish_quote,
     merge_state_rules,
 )
@@ -78,6 +79,14 @@ def underwrite_rp_ulip(ctx: LifeProductContext) -> LobOutcome:
     mort_y1 = round(annual_premium * multiple * q_x(ctx.age, ctx.sex_key, ctx.smoker) * MORTALITY_LOADING, 2)
     prot_pv = round(annual_premium * multiple * term_insurance_nsp(ctx.age, n, ctx.sex_key, ctx.smoker, 0.04), 2)
 
+    # equity_pct/debt_pct/risk_appetite/loss_tolerance/etc. have no source on
+    # the submission — extraction doesn't capture an investor-profile
+    # questionnaire today, so run_ulip_uw falls back to its own moderate
+    # defaults for those fields. Only income, premium, and disclosure
+    # evidence below are real data; the risk-appetite/allocation checks are
+    # NOT a genuine suitability screen until that data is captured, so we
+    # say so explicitly rather than imply a check that can't actually fail.
+    disclosures_ok = disclosures_acknowledged(ctx)
     uw = run_ulip_uw(
         age=ctx.age,
         sex=ctx.sex_key,
@@ -85,12 +94,17 @@ def underwrite_rp_ulip(ctx: LifeProductContext) -> LobOutcome:
         face_amount=round(annual_premium * multiple, 2),
         annual_premium=annual_premium,
         income=getattr(ctx.factors, "income", 0.0),
-        disclosures_complete=True,
+        disclosures_complete=disclosures_ok,
     )
     if uw.decision == "DECLINE":
         outcome.eligible = False
-    for finding in uw.findings[:6]:
+        for finding in uw.findings:
+            outcome.add_reason(f"ULIP suitability: {finding}")
+    for finding in uw.findings:
         outcome.add_condition(f"ULIP suitability: {finding}")
+    if not disclosures_ok:
+        outcome.add_condition("Investor-profile disclosure not confirmed on file — signed suitability questionnaire required before bind")
+    outcome.add_condition("Risk-appetite / fund-allocation screened against DEFAULT assumptions, not a verified questionnaire — confirm before relying on the suitability result above")
 
     income = getattr(ctx.factors, "income", 0.0)
     if income and annual_premium / income > 0.15:

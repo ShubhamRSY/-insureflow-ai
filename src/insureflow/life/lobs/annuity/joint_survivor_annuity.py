@@ -78,6 +78,10 @@ def underwrite_joint_annuity(ctx: LifeProductContext) -> LobOutcome:
     annual_payout = round(principal / factor, 2) if factor > 0 else 0.0
     single_payout = round(principal / single_factor, 2) if single_factor > 0 else 0.0
 
+    # Single-consideration product — the premium IS the purchase price.
+    outcome.annual_premium = round(principal, 2)
+    outcome.base_premium = round(principal, 2)
+
     outcome.product_label = f"J&S {int(survivor_pct * 100)}% Continuation Annuity"
     outcome.metadata.update(
         {

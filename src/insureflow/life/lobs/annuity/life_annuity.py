@@ -74,6 +74,10 @@ def underwrite_life_annuity(ctx: LifeProductContext) -> LobOutcome:
 
     breakeven_years = round(principal / annual_payout, 1) if annual_payout else None
 
+    # Single-consideration product — the premium IS the purchase price.
+    outcome.annual_premium = round(principal, 2)
+    outcome.base_premium = round(principal, 2)
+
     outcome.metadata.update(
         {
             "actuarial": {

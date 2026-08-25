@@ -99,6 +99,11 @@ def underwrite_group_term(ctx: LifeProductContext, profile: dict[str, Any]) -> L
 
     # Simplified issue: medical declines do not auto-decline the group case;
     # evidence of insurability is handled through the EOI process instead.
+    # ctx.medical is mined from free-text disclosures with no product
+    # awareness — without this opt-out, the platform's shared binding gate
+    # would auto-decline the group case anyway, contradicting the line
+    # above and this product's guaranteed-issue design at these limits.
+    outcome.metadata["_skip_medical_gate"] = True
     if ctx.medical.decision.value == "decline":
         outcome.add_condition("Evidence of insurability (EOI) required before supplemental coverage becomes effective")
     apply_state_filing_gate(ctx, outcome, filed_for_state=True, product_family="group_term_life")

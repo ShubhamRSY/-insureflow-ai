@@ -72,6 +72,11 @@ def underwrite_qlac(ctx: LifeProductContext) -> LobOutcome:
     annual_payout = round(principal / factor, 2) if factor > 0 else 0.0
 
     lifetime_form = ctx.coverage_id == "qlac_lifetime"
+
+    # Single-consideration product — the premium IS the purchase price (capped).
+    outcome.annual_premium = round(principal, 2)
+    outcome.base_premium = round(principal, 2)
+
     outcome.metadata.update(
         {
             "actuarial": {
@@ -79,6 +84,11 @@ def underwrite_qlac(ctx: LifeProductContext) -> LobOutcome:
                 "interest_rate": interest,
                 "annuity_factor_at_start": round(factor, 4),
             },
+            # QLACs are, by IRS definition, funded with qualified (IRA/plan)
+            # money — this must be True so the platform-level premium-tax
+            # disclosure (base.py::apply_platform_state_law) uses each
+            # state's qualified_money_rate instead of the higher retail rate.
+            "qualified_money": True,
             "purchase_price": round(principal, 2),
             "purchase_price_uncapped": round(principal_raw, 2),
             "irs_cap": cap,

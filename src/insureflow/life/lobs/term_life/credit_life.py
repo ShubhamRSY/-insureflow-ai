@@ -14,7 +14,9 @@ from insureflow.life.lobs.base import (
     LobOutcome,
     add_common_loads,
     apply_state_filing_gate,
+    band_factor,
     finish_quote,
+    medical_class_factor,
     merge_state_rules,
     stack_shape_ratio,
     state_relativity,
@@ -43,6 +45,8 @@ STATE_RULES: dict[str, dict[str, Any]] = {
     "NY": {"free_look_days": 20},
 }
 
+MIN_ISSUE_AGE = 18
+
 
 def _coverage_label(ctx: LifeProductContext) -> str:
     coverage = (ctx.coverage_id or "").lower()
@@ -59,8 +63,15 @@ def underwrite_credit_life(ctx: LifeProductContext) -> LobOutcome:
     max_face = float(state_rules["max_credit_face"])
     effective_face = min(ctx.face, max_face)
     if ctx.face > max_face:
-        outcome.add_reason(f"Requested face ${ctx.face:,.0f} capped to credit-life maximum ${max_face:,.0f}")
+        # A condition, not a reason: the quote stays eligible after capping,
+        # and finish_quote only surfaces `reasons` when eligible=False — an
+        # add_reason() here would silently vanish from the returned
+        # QuoteResult with no trace the face was ever reduced.
+        outcome.add_condition(f"Requested face ${ctx.face:,.0f} capped to credit-life maximum ${max_face:,.0f}")
         ctx.face = effective_face
+    if ctx.age < MIN_ISSUE_AGE:
+        outcome.eligible = False
+        outcome.add_reason(f"Credit life issue age {ctx.age} below minimum {MIN_ISSUE_AGE} — insured cannot be a minor on a credit-linked policy")
     if ctx.age > int(state_rules["max_issue_age"]):
         outcome.eligible = False
         outcome.add_reason(f"Credit life issue age {ctx.age} above maximum {state_rules['max_issue_age']}")
@@ -90,13 +101,23 @@ def underwrite_credit_life(ctx: LifeProductContext) -> LobOutcome:
     state_rel = state_relativity(ctx)
     base_premium = (effective_face / 1000.0) * q
     shape = stack_shape_ratio(ctx, variant.level_premium, years)
-    loaded = base_premium * shape * 1.15 * state_rel
+    # "Simplified issue" waives the exam, not the rating class or tobacco
+    # question — every sibling term product applies these; credit life was
+    # the only one that didn't, which would charge a Table-D-rated smoker
+    # and a preferred non-smoker the same premium.
+    class_f = medical_class_factor(ctx)
+    tobacco_f = float((ctx.manual or {}).get("tobacco_factor", 1.85)) if ctx.smoker else 1.0
+    band_f = band_factor(ctx)
+    loaded = base_premium * class_f * tobacco_f * band_f * shape * 1.15 * state_rel
     annual = add_common_loads(ctx, loaded)
 
     outcome.base_premium = round(base_premium * shape, 2)
     outcome.annual_premium = annual
     outcome.components = [
         RateComponent(name="manual_level_base", amount=round(base_premium, 2), basis=f"declining {years}yr per filed exhibit"),
+        RateComponent(name="underwriting_class", amount=class_f, basis=ctx.medical.underwriting_class),
+        RateComponent(name="tobacco_factor", amount=tobacco_f, basis="tobacco" if ctx.smoker else "non_tobacco"),
+        RateComponent(name="band_discount", amount=band_f, basis=f"face={effective_face}"),
         RateComponent(name="credit_shape_ratio", amount=round(shape, 4), basis="outstanding-balance decline vs level"),
         RateComponent(name="simplified_issue_load", amount=1.15, basis="no-exam anti-selection load"),
         RateComponent(name="state_relativity", amount=state_rel, basis=ctx.issue_state or ctx.filing_state),

@@ -308,7 +308,7 @@ function PipelineTimeline({ stages, processing, currentStage, expandedStage, onT
           {list.map((stage, i) => {
             const status = processing && currentStage === stage.id ? 'active' : stage.status;
             const { Icon, cls } = STATUS_ICON[status] || STATUS_ICON.pending;
-            const activeCls = status === 'active' || status === 'complete' ? 'border-brand/20 bg-brand/5' : status === 'failed' ? 'border-red-500/20 bg-red-500/5' : 'border-white/[0.04] bg-surface/30';
+            const activeCls = status === 'active' ? 'border-brand/40 bg-brand/10 pipeline-stage-active' : status === 'complete' ? 'border-brand/20 bg-brand/5' : status === 'failed' ? 'border-red-500/20 bg-red-500/5' : 'border-white/[0.04] bg-surface/30';
             const isExpanded = expandedStage === stage.id;
             return (
               <div key={stage.id} className="flex items-stretch gap-0">
@@ -388,7 +388,15 @@ function PipelineTimeline({ stages, processing, currentStage, expandedStage, onT
       })()}
       {viewingDoc && <DocPreviewModal doc={viewingDoc} onClose={() => setViewingDoc(null)} />}
       {processing && (
-        <p className="pipeline-live mt-2 text-sm font-semibold text-brand-light">Live — {currentStage ? `Running ${currentStage}` : 'pipeline in progress'}</p>
+        <div className="mt-2 flex items-center gap-2">
+          <span className="relative flex h-2.5 w-2.5">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-light opacity-75" />
+            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-brand-light" />
+          </span>
+          <p className="pipeline-live text-sm font-semibold text-brand-light">
+            {currentStage ? `Processing — ${currentStage.replace(/_/g, ' ')}` : 'Pipeline in progress…'}
+          </p>
+        </div>
       )}
     </div>
   );
@@ -402,11 +410,11 @@ const PHASE_DEFS = [
   { label: '3 · Decision', ids: ['decision', 'integrate', 'integration'] },
 ];
 
-function groupStagesByPhase(stages = []) {
+function groupStagesByPhase(stages = [], processing = false) {
   return PHASE_DEFS.map((phase) => ({
     label: phase.label,
     stages: asList(stages).filter((s) => phase.ids.includes(s.id)),
-  })).filter((phase) => phase.stages.length > 0);
+  })).filter((phase) => phase.stages.length > 0 || processing);
 }
 
 function PhaseStrip({ phases, processing, currentStage, expandedStage, onToggleStage, job }) {
@@ -1113,7 +1121,7 @@ export default function SubmissionJourney({ job }) {
       />
 
       <Section title="Pipeline" icon={ClipboardCheck}>
-        <PhaseStrip phases={groupStagesByPhase(ctx.stages)} processing={ctx.processing} currentStage={ctx.currentStage} expandedStage={expandedStage} onToggleStage={(id) => setExpandedStage((prev) => prev === id ? null : id)} job={job} />
+        <PhaseStrip phases={groupStagesByPhase(ctx.stages, ctx.processing)} processing={ctx.processing} currentStage={ctx.currentStage} expandedStage={expandedStage} onToggleStage={(id) => setExpandedStage((prev) => prev === id ? null : id)} job={job} />
       </Section>
 
       {!ctx.processing && pipelineStory?.story && (

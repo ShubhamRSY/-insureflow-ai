@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import time
 from typing import Any, Optional
 
@@ -13,6 +14,8 @@ from insureflow.agents.uw_decision_agent import UWDecisionAgent
 from insureflow.llm.client import LLMClient
 from insureflow.models.agents import AgentResult, AgentType, UnderwritingMemo
 from insureflow.models.submissions import SubmissionBundle
+
+logger = logging.getLogger(__name__)
 
 CONFLICT_RESOLUTION_PROMPT = """\
 You are a senior underwriting supervisor. Review the findings from multiple \
@@ -222,7 +225,10 @@ class SupervisorAgent(BaseAgent):
                 notes.append(f"[MITIGATED] {f}")
             return notes
         except Exception as e:
-            return [f"Conflict resolution note: LLM processing failed ({type(e).__name__})"]
+            logger.warning("LLM conflict resolution failed (%s: %s) — falling back to deterministic conflict resolution", type(e).__name__, e)
+            return self._resolve_conflicts_deterministic(results) + [
+                f"[LLM UNAVAILABLE] Conflict resolution ran on deterministic rules only — LLM call failed ({type(e).__name__}); check LLM credentials/connectivity."
+            ]
 
     def _resolve_conflicts_deterministic(self, results: list[AgentResult]) -> list[str]:
         notes = []

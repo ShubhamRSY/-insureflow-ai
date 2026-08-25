@@ -70,6 +70,13 @@ def underwrite_immediate_annuity(ctx: LifeProductContext) -> LobOutcome:
 
     annual_payout = round(principal / factor, 2) if factor > 0 else 0.0
 
+    # The "premium" for a single-consideration product is the purchase price
+    # itself — without this, QuoteResult.adjusted_premium/base_premium stay
+    # at the LobOutcome default of $0.00 and the real number is stranded in
+    # metadata.
+    outcome.annual_premium = round(principal, 2)
+    outcome.base_premium = round(principal, 2)
+
     outcome.metadata.update(
         {
             "actuarial": {

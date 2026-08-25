@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+import logging
 from typing import Any, Optional, cast
 
 from pydantic import BaseModel, Field
@@ -13,6 +15,21 @@ from insureflow.llm.prompts import EXTRACTION_PROMPT, LIFE_EXTRACTION_PROMPT
 from insureflow.models.submissions import StructuredSubmission, SubmissionBundle, UnstructuredSubmission
 from insureflow.redaction.pipeline import RedactedLLMClient
 from insureflow.redaction.redactor import PIIRedactor
+
+logger = logging.getLogger(__name__)
+
+# Process-local cache: identical (schema, prompt, document text) always yields
+# the same extracted fields, so re-processing the same document within one
+# server process doesn't take a fresh, potentially different sample from the
+# model each time. Unbounded is fine here — keyed by content hash, so it only
+# grows with the number of *distinct* documents seen, not the number of runs.
+_EXTRACTION_CACHE: dict[str, dict[str, Any]] = {}
+
+
+def _extraction_cache_key(schema_name: str, prompt: str, text: str) -> str:
+    digest = hashlib.sha256(f"{schema_name}\x00{prompt}\x00{text}".encode("utf-8")).hexdigest()
+    return digest
+
 
 # The LLM prompt requests canonical snake_case keys, but keep a small alias map
 # for the common variants a model may drift toward.
@@ -110,6 +127,12 @@ class ExtractionAgent:
         additional fields in when the router decided this document genuinely
         needs it. The completion is coerced through a Pydantic schema so the
         model's free-form answer is parsed into canonical, type-safe keys.
+
+        Results are cached by (schema, prompt, document text) hash so that
+        re-processing the same document — e.g. re-running a demo preset, or
+        two documents in the bundle with identical text — returns the exact
+        same extracted fields instead of a fresh, potentially different
+        sample from the model.
         """
         if not self.llm.api_key:
             return submission
@@ -118,21 +141,38 @@ class ExtractionAgent:
         is_life = submission.document_type in LIFE_DOCUMENT_TYPES
         prompt = LIFE_EXTRACTION_PROMPT if is_life else EXTRACTION_PROMPT
         schema = LifeExtractionSchema if is_life else CommercialExtractionSchema
+
+        cache_key = _extraction_cache_key(schema.__name__, prompt, text_for_llm)
+        cached = _EXTRACTION_CACHE.get(cache_key)
+        if cached is not None:
+            self._merge_llm_results(submission, cached)
+            return submission
+
         try:
             llm_result = self.llm.complete(prompt, text_for_llm, response_format=schema)
-        except Exception:
+        except Exception as exc:
+            logger.warning(
+                "LLM extraction failed for document_type=%s (%s: %s) — falling back to deterministic regex extraction only",
+                submission.document_type,
+                type(exc).__name__,
+                exc,
+            )
             return submission
 
         parsed = self._parse_json_response(llm_result)
         if parsed is None:
+            logger.warning("LLM extraction returned unparseable JSON for document_type=%s", submission.document_type)
             return submission
 
         try:
             instance = cast(Any, schema).model_validate(parsed)
-        except Exception:
+        except Exception as exc:
+            logger.warning("LLM extraction result failed schema validation for document_type=%s: %s", submission.document_type, exc)
             return submission
 
-        self._merge_llm_results(submission, self._schema_to_llm_fields(instance))
+        llm_fields = self._schema_to_llm_fields(instance)
+        _EXTRACTION_CACHE[cache_key] = llm_fields
+        self._merge_llm_results(submission, llm_fields)
         return submission
 
     @staticmethod

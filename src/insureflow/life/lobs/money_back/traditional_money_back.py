@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from insureflow.life.lobs.actuarial import endowment_insurance_nsp, temporary_annuity_due
+from insureflow.life.lobs.actuarial import temporary_annuity_due, term_insurance_nsp
 from insureflow.life.lobs.base import (
     LifeProductContext,
     LobOutcome,
@@ -86,8 +86,14 @@ def underwrite_traditional_money_back(ctx: LifeProductContext) -> LobOutcome:
 
     coupon_pv_per_1, schedule = _coupon_pv(1.0, sb_pct, term, interval, ctx.age, ctx.sex_key, ctx.smoker, interest)
 
-    # Premium basis: death cover (full SA endowment-style) + survival coupons.
-    nsp_death = endowment_insurance_nsp(ctx.age, term, ctx.sex_key, ctx.smoker, interest)
+    # Premium basis: death cover + survival coupons. The coupon schedule
+    # above already includes the maturity share (see _coupon_pv's `+ 0.20`
+    # at the final interval), so death cover must be priced on a DEATH-ONLY
+    # basis (term insurance), not endowment_insurance_nsp (term + pure
+    # endowment) — using the endowment basis here would price a second,
+    # undisclosed 100%-of-face maturity payment on top of the coupon
+    # schedule's own maturity share.
+    nsp_death = term_insurance_nsp(ctx.age, term, ctx.sex_key, ctx.smoker, interest)
     a_due = temporary_annuity_due(ctx.age, term, ctx.sex_key, ctx.smoker, interest)
     class_f = medical_class_factor(ctx)
     level_net = ctx.face * (nsp_death + coupon_pv_per_1) / max(a_due, 1e-9)
@@ -111,7 +117,9 @@ def underwrite_traditional_money_back(ctx: LifeProductContext) -> LobOutcome:
     )
     if uw.decision == "DECLINE":
         outcome.eligible = False
-    for finding in uw.findings[:5]:
+        for finding in uw.findings:
+            outcome.add_reason(f"Money-back UW: {finding}")
+    for finding in uw.findings:
         outcome.add_condition(f"Money-back UW: {finding}")
 
     outcome.base_premium = round(gross, 2)
