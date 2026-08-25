@@ -6,12 +6,12 @@
 (function(){var t=new Date(),h=t.getHours()+t.getMinutes()/60;document.documentElement.setAttribute("data-theme",h>=6.5&&h<19.5?"day":"night");})();
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Rytera - AI underwriting you can actually trust.</title>
+  <title>Rytera - The next generation of underwriting.</title>
   <meta name="description" content="AI underwriting for insurance, mortgage, and lending. Rytera reads your submissions, runs the numbers, and hands you a decision-ready memo with every source cited." />
   <link rel="canonical" href="https://ryterainc.com/" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://ryterainc.com/" />
-  <meta property="og:title" content="Rytera - AI underwriting you can actually trust." />
+  <meta property="og:title" content="Rytera - The next generation of underwriting." />
   <meta property="og:description" content="AI underwriting for insurance, mortgage, and lending. Every source cited. Every rate verified. A licensed underwriter still signs." />
   <meta property="og:site_name" content="Rytera" />
   <meta property="og:image" content="https://ryterainc.com/og-image.png" />
@@ -129,14 +129,6 @@
             </div>
           </div>
           <div class="nav-item">
-            <a href="/pricing" data-nav>Pricing</a>
-            <div class="nav-drop">
-              <a href="/pricing">All plans</a>
-              <a href="/pricing#pricing">Compare features</a>
-              <a href="/pricing#go-live">Go live</a>
-            </div>
-          </div>
-          <div class="nav-item">
             <a href="/platform" data-nav>Platform</a>
             <div class="nav-drop">
               <a href="/platform">Overview</a>
@@ -183,6 +175,14 @@
             </div>
           </div>
           <div class="nav-item">
+            <a href="/pricing" data-nav>Pricing</a>
+            <div class="nav-drop">
+              <a href="/pricing">All plans</a>
+              <a href="/pricing#pricing">Compare features</a>
+              <a href="/pricing#go-live">Go live</a>
+            </div>
+          </div>
+          <div class="nav-item">
             <a href="/company" data-nav>Company</a>
             <div class="nav-drop">
               <a href="/company">About Rytera</a>
@@ -210,12 +210,6 @@
         <a href="/#trust">Trust</a>
         <a href="/#how-it-works">How it works</a>
         <a href="/#contact">Contact</a>
-      </details>
-      <details class="nav-acc">
-        <summary>Pricing</summary>
-        <a href="/pricing" data-nav>All plans</a>
-        <a href="/pricing#pricing">Compare features</a>
-        <a href="/pricing#go-live">Go live</a>
       </details>
       <details class="nav-acc">
         <summary>Platform</summary>
@@ -250,6 +244,12 @@
         <a href="/integrations#modes">Live / simulated / auto</a>
       </details>
       <details class="nav-acc">
+        <summary>Pricing</summary>
+        <a href="/pricing" data-nav>All plans</a>
+        <a href="/pricing#pricing">Compare features</a>
+        <a href="/pricing#go-live">Go live</a>
+      </details>
+      <details class="nav-acc">
         <summary>Company</summary>
         <a href="/company" data-nav>About Rytera</a>
         <a href="/company#faq">FAQ</a>
@@ -269,15 +269,15 @@
               <span class="dot"></span>
               AI Underwriting &amp; Risk Intelligence &middot; Built for Decisions
             </div>
-            <h1><span class="scramble-text" data-text="AI underwriting you can">AI underwriting you can</span><br /><span class="gradient">actually trust.</span></h1>
+            <h1><span class="scramble-text" data-text="The next generation of">The next generation of</span><br /><span class="gradient">underwriting.</span></h1>
             <p class="lead">
               Rytera reads your submissions, pulls external data, runs the numbers from state-filed rate manuals, and hands you a <strong>decision-ready memo with every source cited</strong>.
               We didn't build this to collect submissions. We built it to help you underwrite them &mdash; fast, grounded, and defensible.
             </p>
             <p class="brand-line">Every fact grounded with provenance. Zero invented rates. A licensed underwriter still signs.</p>
             <div class="punch-row" aria-hidden="true">
-              <span>99.8% Extraction Fidelity</span>
-              <span>Zero-Token Architecture</span>
+              <span>99.8% Extraction Fidelity*</span>
+              <span class="punch-gloss" tabindex="0" data-gloss="Deterministic rules run first; AI is reserved for complex free text. Zero-Token Architecture = rules before models.">Zero-Token Architecture</span>
               <span>100% Licensed UW Sign-Off</span>
               <span>Audit-Sealed Paper Trail</span>
             </div>
@@ -292,6 +292,10 @@
               </button>
               <a class="btn btn-ghost" href="/dashboard">Open Live Dashboard</a>
             </div>
+            <p class="practice-note">
+              <svg class="ico sm" aria-hidden="true"><use href="#i-shield-check"/></svg>
+              Run it on real files first &mdash; nothing binds or issues until you say so.
+            </p>
             <div class="hero-audience" aria-label="Built for">
               <span class="audience-pill"><svg class="ico sm"><use href="#i-building"/></svg> Commercial Insurance</span>
               <span class="audience-pill"><svg class="ico sm"><use href="#i-layers"/></svg> MGAs &amp; Programs</span>
@@ -369,10 +373,29 @@
           <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> Fernet-encrypted audit manifest</span>
         </div>
         <div class="stats reveal stagger-reveal" aria-label="Key Performance Indicators">
-          <div class="stat"><span class="num" data-target="99.8" data-decimals="1" data-suffix="%">99.8%</span><span>Extraction Fidelity &amp; Grounding</span></div>
+          <div class="stat"><span class="num" data-target="99.8" data-decimals="1" data-suffix="%">99.8%</span><span>Extraction Fidelity &amp; Grounding*</span></div>
           <div class="stat"><span class="num" data-target="85" data-suffix="%+">85%+</span><span>Faster Submission Turnaround</span></div>
           <div class="stat"><span class="num" data-target="0" data-suffix="%">0%</span><span>Invented Prices or Hallucinated Facts</span></div>
           <div class="stat"><span class="num" data-target="100" data-suffix="%">100%</span><span>Licensed Underwriter Sign-Off</span></div>
+        </div>
+        <p class="stats-note reveal">*Measured across pilot submissions in practice-mode testing. Every figure on this page traces to a cited source in the decision memo &mdash; for example:</p>
+        <div class="citation-crop reveal" role="img" aria-label="Zoomed crop of a Rytera decision memo showing the indicated premium with its source citations">
+          <div class="cc-head">
+            <span class="cc-title">Decision memo &middot; Submission #1052 &middot; Pacific Coast Supply Co</span>
+            <span class="cc-meta">crop &mdash; 16 / 16 pages grounded</span>
+          </div>
+          <div class="cc-row">
+            <span class="cc-field">Indicated premium</span>
+            <span class="cc-value">$46,890</span>
+            <span class="cc-cite"><svg class="ico sm" aria-hidden="true"><use href="#i-file-text"/></svg> Filed rate manual WC-PL-2025, p.&nbsp;31</span>
+            <span class="cc-cite"><svg class="ico sm" aria-hidden="true"><use href="#i-list"/></svg> SOV, p.&nbsp;4, row&nbsp;12</span>
+          </div>
+          <div class="cc-row">
+            <span class="cc-field">COPE grade</span>
+            <span class="cc-value">Preferred</span>
+            <span class="cc-cite"><svg class="ico sm" aria-hidden="true"><use href="#i-search"/></svg> Inspection report, p.&nbsp;2</span>
+            <span class="cc-cite"><svg class="ico sm" aria-hidden="true"><use href="#i-file-text"/></svg> Broker submission, p.&nbsp;7</span>
+          </div>
         </div>
       </section>
 
@@ -397,9 +420,14 @@
           <div class="bento-item bento-wide bento-blue">
             <span class="bento-icon"><svg class="ico" aria-hidden="true"><use href="#i-building"/></svg></span>
             <div>
-              <p class="bento-tag">Live Rating</p>
-              <h3>All Lines &amp; Specialty</h3>
-              <p>ACORD XML, broker PDFs, loss runs, SOVs &mdash; ingested into ISO-style rating build-ups. Life, health, personal, commercial, specialty, reinsurance, aviation, catastrophe, and emerging lines.</p>
+              <p class="bento-tag">Most-built-out desk &middot; Live rating</p>
+              <h3>Commercial Property</h3>
+              <p>The desk we show first because it goes deepest: ACORD XML, broker PDFs, multi-tab SOVs and loss runs &rarr; COPE build-ups priced line-by-line from your state-filed manuals &mdash; the same engine behind the memo crop above.</p>
+              <div class="bento-links">
+                <a href="#how-it-works">See a worked file <svg class="ico sm" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+                <a href="/dashboard/insurance/sections/commercial">Open the live desk <svg class="ico sm" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+              </div>
+              <p class="bento-sub">Everything else below rides the same workbench and paper trail.</p>
             </div>
           </div>
           <div class="bento-item bento-tall bento-green">
@@ -457,6 +485,7 @@
                 <li>Authority matrix limits who can sign what size of risk</li>
                 <li>Referral queue for files that need a human before bind</li>
                 <li>Practice mode blocks policy issue until you cut over</li>
+                <li>Overrides are logged like sign-offs &mdash; who, what changed, why &mdash; and feed the model-quality review queue. They never silently retrain anything.</li>
               </ul>
             </div>
           </div>
@@ -514,6 +543,14 @@
                 <li>SHA-256 manifest &mdash; nothing quietly rewritten</li>
                 <li>Reconstructible years later for market-conduct exams</li>
               </ul>
+              <div class="exam-tree" role="img" aria-label="Example contents of a sealed exam pack">
+                <span class="xt-head"><svg class="ico sm" aria-hidden="true"><use href="#i-lock"/></svg> exam-pack-1052.zip &mdash; sealed on sign-off</span>
+                <span class="xt-line">&#9500;&#9472; decision-log.jsonl <em>every recommendation, in order</em></span>
+                <span class="xt-line">&#9500;&#9472; override-log.jsonl <em>UW id, prior value, stated reason</em></span>
+                <span class="xt-line">&#9500;&#9472; oracle-checks/ <em>12 passed &middot; 0 failed</em></span>
+                <span class="xt-line">&#9500;&#9472; source-citations.json <em>fact &rarr; page &rarr; box</em></span>
+                <span class="xt-line">&#9492;&#9472; manifest.sha256 <em>hash chain &middot; tamper-evident</em></span>
+              </div>
             </div>
           </div>
           <div class="pillar-row">
