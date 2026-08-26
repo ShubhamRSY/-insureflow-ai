@@ -45,10 +45,7 @@ class ActuarialAgent(BaseAgent):
             self._add_finding(
                 Finding(
                     title=f"Expected mortality cost ${cost.expected_annual_cost:,.2f}/yr",
-                    description=(
-                        f"CSO 2017 rate {cost.mortality_rate_per_1000}/1000 for age {age} "
-                        f"({tobacco.value}). PV of death claim: ${pv:,.2f}."
-                    ),
+                    description=(f"CSO 2017 rate {cost.mortality_rate_per_1000}/1000 for age {age} ({tobacco.value}). PV of death claim: ${pv:,.2f}."),
                     severity=RiskSeverity.LOW,
                     category="actuarial",
                 )
@@ -60,10 +57,7 @@ class ActuarialAgent(BaseAgent):
             self._add_finding(
                 Finding(
                     title=f"Table spread {comparison.spread_pct:.1f}%",
-                    description=(
-                        f"Cost ranges from ${best_cost:,.2f} ({comparison.best_table}) "
-                        f"to ${worst_cost:,.2f} ({comparison.worst_table})."
-                    ),
+                    description=(f"Cost ranges from ${best_cost:,.2f} ({comparison.best_table}) to ${worst_cost:,.2f} ({comparison.worst_table})."),
                     severity=RiskSeverity.MODERATE,
                     category="actuarial",
                 )
@@ -86,8 +80,5 @@ class ActuarialAgent(BaseAgent):
     def _build_summary(self) -> str:
         if hasattr(self, "_actuarial_cost"):
             c = self._actuarial_cost
-            return (
-                f"Actuarial: age {c.age}, rate {c.mortality_rate_per_1000}/1000, "
-                f"expected cost ${c.expected_annual_cost:,.2f}/yr, PV ${self._pv:,.2f}"
-            )
+            return f"Actuarial: age {c.age}, rate {c.mortality_rate_per_1000}/1000, expected cost ${c.expected_annual_cost:,.2f}/yr, PV ${self._pv:,.2f}"
         return super()._build_summary()

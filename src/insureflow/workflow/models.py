@@ -32,10 +32,11 @@ class SignOffAction(str, Enum):
 
 class ReviewPriority(str, Enum):
     """SLA-driven priority tiers for human review queue."""
-    CRITICAL = "critical"    # 4-hour SLA — critical findings, fraud flags
-    URGENT = "urgent"        # 8-hour SLA — high-severity, large premium
-    NORMAL = "normal"        # 24-hour SLA — standard refer/conditional
-    LOW = "low"              # 72-hour SLA — low-risk conditional accepts
+
+    CRITICAL = "critical"  # 4-hour SLA — critical findings, fraud flags
+    URGENT = "urgent"  # 8-hour SLA — high-severity, large premium
+    NORMAL = "normal"  # 24-hour SLA — standard refer/conditional
+    LOW = "low"  # 72-hour SLA — low-risk conditional accepts
 
 
 # SLA windows in hours per priority tier
@@ -73,7 +74,7 @@ class EscalationRecord(BaseModel):
     bundle_id: str = ""
     org_id: str = "default"
     escalated_from: str = ""  # previous assignee
-    escalated_to: str = ""    # new assignee (supervisor / senior UW)
+    escalated_to: str = ""  # new assignee (supervisor / senior UW)
     reason: str = ""
     escalated_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
     sla_breach_hours: float = 0.0

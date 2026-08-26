@@ -88,6 +88,7 @@ class BaseAgent:
 
         # Volume amplification: log2(1 + count) / 6 → max ~0.5x boost at 63 findings
         import math
+
         volume_amp = math.log2(1.0 + total_weight) / 6.0
 
         # Category penalty: +0.1 per high-risk category finding (capped at +0.3)

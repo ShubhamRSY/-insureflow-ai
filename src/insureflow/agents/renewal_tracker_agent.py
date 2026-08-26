@@ -76,10 +76,5 @@ class RenewalTrackerAgent(BaseAgent):
     def _build_summary(self) -> str:
         if hasattr(self, "_renewal_result"):
             r = self._renewal_result
-            return (
-                f"Renewal: {r.record.renewal_type.value}, "
-                f"days_to_renewal={r.days_until_renewal}, "
-                f"conversion={r.record.conversion_eligible}, "
-                f"actions={len(r.action_items)}"
-            )
+            return f"Renewal: {r.record.renewal_type.value}, days_to_renewal={r.days_until_renewal}, conversion={r.record.conversion_eligible}, actions={len(r.action_items)}"
         return super()._build_summary()

@@ -112,18 +112,17 @@ class WorkflowService:
         self.store.save(record)
         logger.warning(
             "Bundle %s escalated to %s (overdue %.1fh): %s",
-            bundle_id, escalate_to, overdue_hours, escalation.reason,
+            bundle_id,
+            escalate_to,
+            overdue_hours,
+            escalation.reason,
         )
         return record
 
     def check_overdue(self, org_id: str = "default") -> list[WorkflowRecord]:
         """Return all cases in PENDING_REVIEW/ESCALATED state that have breached SLA."""
         all_records = self.store.list_by_org(org_id) if hasattr(self.store, "list_by_org") else []
-        return [
-            r for r in all_records
-            if r.state in (WorkflowState.PENDING_REVIEW, WorkflowState.ESCALATED)
-            and r.is_overdue()
-        ]
+        return [r for r in all_records if r.state in (WorkflowState.PENDING_REVIEW, WorkflowState.ESCALATED) and r.is_overdue()]
 
     def reassign_if_overdue(self, org_id: str, supervisor: str) -> list[WorkflowRecord]:
         """Auto-escalate overdue cases to a supervisor if no escalation exists yet."""
@@ -133,7 +132,8 @@ class WorkflowService:
             # Only auto-escalate if not already escalated
             if not record.escalations:
                 self.escalate(
-                    record.bundle_id, org_id,
+                    record.bundle_id,
+                    org_id,
                     escalate_to=supervisor,
                     reason=f"Auto-escalation: SLA breached by {record.hours_overdue():.1f}h",
                 )

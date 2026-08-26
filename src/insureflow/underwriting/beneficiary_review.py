@@ -119,13 +119,29 @@ class BeneficiaryReviewResult:
 
 
 _VALID_RELATIONSHIPS = {
-    "spouse", "wife", "husband", "child", "son", "daughter",
-    "parent", "mother", "father", "trust", "estate",
-    "partner", "business", "key_person", "employer",
+    "spouse",
+    "wife",
+    "husband",
+    "child",
+    "son",
+    "daughter",
+    "parent",
+    "mother",
+    "father",
+    "trust",
+    "estate",
+    "partner",
+    "business",
+    "key_person",
+    "employer",
 }
 
 _QUESTIONABLE_RELATIONSHIPS = {
-    "friend", "neighbor", "acquaintance", "unrelated", "other",
+    "friend",
+    "neighbor",
+    "acquaintance",
+    "unrelated",
+    "other",
 }
 
 
@@ -139,7 +155,7 @@ def _parse_beneficiaries_from_blob(blob: str) -> list[BeneficiaryEntry]:
     for pat in patterns:
         for m in re.finditer(pat, blob, re.I):
             name = m.group(1).strip()
-            rel_match = re.search(r"beneficiary.*?(?:relationship|rel)\s*[:=]\s*([A-Za-z][A-Za-z /-]{1,30})", blob[m.start():m.start() + 200], re.I)
+            rel_match = re.search(r"beneficiary.*?(?:relationship|rel)\s*[:=]\s*([A-Za-z][A-Za-z /-]{1,30})", blob[m.start() : m.start() + 200], re.I)
             rel = rel_match.group(1).strip() if rel_match else ""
             entries.append(BeneficiaryEntry(name=name, relationship=rel))
     return entries
@@ -154,14 +170,12 @@ def review_beneficiaries(
     named = structured.named_insured if structured else None
     face_amount = 0.0
     if structured and hasattr(structured, "coverages"):
-        for cov in (structured.coverages or []):
+        for cov in structured.coverages or []:
             if hasattr(cov, "face_amount") and cov.face_amount:
                 face_amount += float(cov.face_amount)
 
     if beneficiaries is None:
-        blob = " ".join(
-            doc.raw_text for doc in (bundle.unstructured or []) if doc.raw_text
-        ).lower() if bundle.unstructured else ""
+        blob = " ".join(doc.raw_text for doc in (bundle.unstructured or []) if doc.raw_text).lower() if bundle.unstructured else ""
         beneficiaries = _parse_beneficiaries_from_blob(blob)
 
     record = BeneficiaryReviewRecord(

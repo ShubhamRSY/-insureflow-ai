@@ -58,7 +58,9 @@ class ReActAgent(BaseAgent):
                 state = breaker.state
                 logger.warning(
                     "ReAct LLM call failed (breaker=%s, state=%s): %s — falling back to deterministic",
-                    circuit_key, state.value, e,
+                    circuit_key,
+                    state.value,
+                    e,
                 )
                 self._errors.append(f"ReAct loop error: {type(e).__name__}: {e}")
                 self._findings = []

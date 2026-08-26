@@ -34,9 +34,7 @@ class MibOrderAgent(BaseAgent):
         if face >= 10_000_000:
             priority = MibOrderPriority.URGENT
 
-        result: MibOrderResult = build_mib_order_from_bundle(
-            bundle, priority=priority, requesting_agent=self.agent_name
-        )
+        result: MibOrderResult = build_mib_order_from_bundle(bundle, priority=priority, requesting_agent=self.agent_name)
         persist_mib_order(result.order)
 
         for f in result.findings:

@@ -1762,7 +1762,9 @@ class InsurancePipeline:
                 review_priority = ReviewPriority.LOW
 
         wf = self.workflow.submit_for_review(
-            bid, self.org_id, memo.decision.value,
+            bid,
+            self.org_id,
+            memo.decision.value,
             priority=review_priority,
         )
         progress.complete(
@@ -2163,7 +2165,7 @@ class InsurancePipeline:
                 submission_id=bid,
                 decision=memo.decision.value,
                 attributes=_attrs,
-                premium=quote.annual_premium if quote else 0.0,
+                premium=quote.adjusted_premium if quote else 0.0,
                 ai_confidence=memo.overall_risk_score,
             )
             protected_alerts = self.bias_monitor.check_protected_class_alerts()
@@ -2171,7 +2173,7 @@ class InsurancePipeline:
                 summary["bias_alerts"] = [a.model_dump() for a in protected_alerts]
                 for alert in protected_alerts:
                     audit.log(
-                        PipelineEvent.COMPLIANCE_CHECK,
+                        PipelineEvent.HUMAN_REVIEW_REQUIRED,
                         f"Protected-class bias alert: {alert.message}",
                         severity=EventSeverity.CRITICAL,
                         metadata={"dimension": alert.dimension.value, "ratio": alert.ratio},

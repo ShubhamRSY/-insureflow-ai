@@ -37,11 +37,10 @@ class ApsOrderAgent(BaseAgent):
             priority = ApsOrderPriority.RUSH
 
         physician = ApsPhysicianInfo()
-        blob_lower = " ".join(
-            doc.raw_text for doc in (bundle.unstructured or []) if doc.raw_text
-        ).lower() if bundle.unstructured else ""
+        blob_lower = " ".join(doc.raw_text for doc in (bundle.unstructured or []) if doc.raw_text).lower() if bundle.unstructured else ""
 
         import re
+
         name_m = re.search(r"physician\s*[:=]\s*([A-Za-z][A-Za-z ,.'-]{2,50})", blob_lower)
         if name_m:
             physician.name = name_m.group(1).strip()

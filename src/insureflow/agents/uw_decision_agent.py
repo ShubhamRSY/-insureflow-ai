@@ -107,6 +107,7 @@ class UWDecisionAgent(ReActAgent):
         base_score = weighted_sum / total_weight
 
         import math
+
         volume_amp = math.log2(1.0 + total_weight) / 6.0
         category_penalty = min(0.3, high_risk_count * 0.1)
 

@@ -127,9 +127,7 @@ def create_aps_order(
     structured = bundle.structured
     named = structured.named_insured if structured else None
     hipaa = False
-    blob_lower = " ".join(
-        doc.raw_text for doc in (bundle.unstructured or []) if doc.raw_text
-    ).lower() if bundle.unstructured else ""
+    blob_lower = " ".join(doc.raw_text for doc in (bundle.unstructured or []) if doc.raw_text).lower() if bundle.unstructured else ""
     if "hipaa" in blob_lower or "authorization" in blob_lower:
         hipaa = True
 

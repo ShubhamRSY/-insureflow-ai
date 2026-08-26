@@ -230,11 +230,16 @@ class LLMClient:
                 last_exc = exc
                 is_transient = _is_transient_error(exc)
                 if attempt < max_retries - 1 and is_transient:
-                    backoff = min(2 ** attempt * 1.0, 10.0)
+                    backoff = min(2**attempt * 1.0, 10.0)
                     logger.warning(
                         "LLM %s/%s attempt %d/%d failed (%s): %s — retrying in %.1fs",
-                        self.provider, self.model, attempt + 1, max_retries,
-                        type(exc).__name__, exc, backoff,
+                        self.provider,
+                        self.model,
+                        attempt + 1,
+                        max_retries,
+                        type(exc).__name__,
+                        exc,
+                        backoff,
                     )
                     time.sleep(backoff)
                     continue
@@ -244,7 +249,10 @@ class LLMClient:
                     raise
                 logger.warning(
                     "Primary LLM (%s/%s) failed: %s — routing to %s",
-                    self.provider, self.model, exc, fb.provider,
+                    self.provider,
+                    self.model,
+                    exc,
+                    fb.provider,
                 )
                 text = fb._complete_once(system_prompt, user_prompt, response_format)
                 return guard_model_output(text)

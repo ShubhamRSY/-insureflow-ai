@@ -128,7 +128,9 @@ class BiasMonitor:
         return buckets
 
     def _detect_disparate_impact(
-        self, buckets: dict[str, OutcomeBucket], dimension: BiasDimension | None = None,
+        self,
+        buckets: dict[str, OutcomeBucket],
+        dimension: BiasDimension | None = None,
     ) -> list[BiasAlert]:
         alerts: list[BiasAlert] = []
         entries = list(buckets.values())
