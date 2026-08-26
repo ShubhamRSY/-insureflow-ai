@@ -1,11 +1,23 @@
 from __future__ import annotations
 
+import logging
+from datetime import datetime, timezone
 from uuid import uuid4
 
 from insureflow.decisions import DecisionOutcome, is_decline, normalize_decision, to_vertical
 from insureflow.underwriting.cosign import CoSignStatus, active_cosign, cosign_allows_bind, create_cosign_request, resolve_cosign
-from insureflow.workflow.models import SignOffAction, SignOffRecord, WorkflowRecord, WorkflowState, allows_bind
+from insureflow.workflow.models import (
+    EscalationRecord,
+    ReviewPriority,
+    SignOffAction,
+    SignOffRecord,
+    WorkflowRecord,
+    WorkflowState,
+    allows_bind,
+)
 from insureflow.workflow.store import WorkflowStore
+
+logger = logging.getLogger(__name__)
 
 
 class WorkflowService:
@@ -39,14 +51,94 @@ class WorkflowService:
         self.store.save(record)
         return record
 
-    def submit_for_review(self, bundle_id: str, org_id: str, ai_decision: str) -> WorkflowRecord:
+    def submit_for_review(
+        self,
+        bundle_id: str,
+        org_id: str,
+        ai_decision: str,
+        priority: ReviewPriority = ReviewPriority.NORMAL,
+        assigned_to: str = "",
+    ) -> WorkflowRecord:
         record = self.store.get(bundle_id, org_id) or WorkflowRecord(bundle_id=bundle_id, org_id=org_id)
         if record.state in (WorkflowState.APPROVED, WorkflowState.QUOTED, WorkflowState.BOUND):
             raise ValueError(f"Cannot reopen workflow in {record.state.value} state")
         record.state = WorkflowState.PENDING_REVIEW
         record.ai_decision = ai_decision
+        record.priority = priority
+        if assigned_to:
+            record.assigned_to = assigned_to
+            record.assigned_at = datetime.now(tz=timezone.utc)
+        record.compute_sla_deadline()
         self.store.save(record)
         return record
+
+    def assign(self, bundle_id: str, org_id: str, assignee: str) -> WorkflowRecord:
+        """Route a case to a specific underwriter. Sets/restarts SLA clock."""
+        record = self.store.get(bundle_id, org_id)
+        if not record:
+            raise ValueError(f"No workflow found for bundle {bundle_id}")
+        record.assigned_to = assignee
+        record.assigned_at = datetime.now(tz=timezone.utc)
+        record.compute_sla_deadline()
+        self.store.save(record)
+        return record
+
+    def escalate(
+        self,
+        bundle_id: str,
+        org_id: str,
+        escalate_to: str,
+        reason: str = "",
+    ) -> WorkflowRecord:
+        """Escalate an overdue or high-priority case to a senior underwriter."""
+        record = self.store.get(bundle_id, org_id)
+        if not record:
+            raise ValueError(f"No workflow found for bundle {bundle_id}")
+        overdue_hours = record.hours_overdue()
+        escalation = EscalationRecord(
+            escalation_id=f"esc-{uuid4().hex[:8]}",
+            bundle_id=bundle_id,
+            org_id=org_id,
+            escalated_from=record.assigned_to,
+            escalated_to=escalate_to,
+            reason=reason or (f"SLA breached by {overdue_hours:.1f}h" if overdue_hours > 0 else "Manual escalation"),
+            sla_breach_hours=overdue_hours,
+        )
+        record.escalations.append(escalation)
+        record.assigned_to = escalate_to
+        record.assigned_at = datetime.now(tz=timezone.utc)
+        record.state = WorkflowState.ESCALATED
+        record.compute_sla_deadline()
+        self.store.save(record)
+        logger.warning(
+            "Bundle %s escalated to %s (overdue %.1fh): %s",
+            bundle_id, escalate_to, overdue_hours, escalation.reason,
+        )
+        return record
+
+    def check_overdue(self, org_id: str = "default") -> list[WorkflowRecord]:
+        """Return all cases in PENDING_REVIEW/ESCALATED state that have breached SLA."""
+        all_records = self.store.list_by_org(org_id) if hasattr(self.store, "list_by_org") else []
+        return [
+            r for r in all_records
+            if r.state in (WorkflowState.PENDING_REVIEW, WorkflowState.ESCALATED)
+            and r.is_overdue()
+        ]
+
+    def reassign_if_overdue(self, org_id: str, supervisor: str) -> list[WorkflowRecord]:
+        """Auto-escalate overdue cases to a supervisor if no escalation exists yet."""
+        overdue = self.check_overdue(org_id)
+        reassigned: list[WorkflowRecord] = []
+        for record in overdue:
+            # Only auto-escalate if not already escalated
+            if not record.escalations:
+                self.escalate(
+                    record.bundle_id, org_id,
+                    escalate_to=supervisor,
+                    reason=f"Auto-escalation: SLA breached by {record.hours_overdue():.1f}h",
+                )
+                reassigned.append(record)
+        return reassigned
 
     def sign_off(
         self,

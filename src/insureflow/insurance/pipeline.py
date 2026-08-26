@@ -15,6 +15,7 @@ from insureflow.agents.reinsurance_agent import ReinsuranceAgent
 from insureflow.agents.selection_standards_agent import SelectionStandardsAgent
 from insureflow.agents.supervisor import SupervisorAgent
 from insureflow.agents.triage_agent import get_triage_agent
+from insureflow.analytics.bias_monitor import BiasMonitor
 from insureflow.analytics.documents import DocumentAnalyticsEngine
 from insureflow.audit.insurance_audit import InsuranceAuditLogger
 from insureflow.audit.store import AuditStore
@@ -192,6 +193,7 @@ class InsurancePipeline:
         self.feedback = FeedbackEngine()
         self.audit_store = audit_store or AuditStore()
         self.encryption = EnvelopeEncryption()
+        self.bias_monitor = BiasMonitor(org_id=org_id)
 
         # Zero Token Architecture — deterministic-first routing layer
         self.zta_config = ZtaConfig()
@@ -1744,9 +1746,25 @@ class InsurancePipeline:
 
         # Portfolio is recorded only after successful bind (see bind_policy API), not at quote time.
 
-        # ── 13. Workflow: submit for licensed UW review ──
+        # ── 13. Workflow: submit for licensed UW review with SLA priority ──
         progress.start("decision", "Decision", "Final underwriting recommendation")
-        wf = self.workflow.submit_for_review(bid, self.org_id, memo.decision.value)
+        from insureflow.workflow.models import ReviewPriority
+
+        review_priority = ReviewPriority.NORMAL
+        if memo.human_review_required:
+            has_critical = any(f.severity.value == "critical" for f in memo.key_findings)
+            has_high = any(f.severity.value == "high" for f in memo.key_findings)
+            if has_critical:
+                review_priority = ReviewPriority.CRITICAL
+            elif has_high:
+                review_priority = ReviewPriority.URGENT
+            elif memo.decision.value in ("conditional_accept",):
+                review_priority = ReviewPriority.LOW
+
+        wf = self.workflow.submit_for_review(
+            bid, self.org_id, memo.decision.value,
+            priority=review_priority,
+        )
         progress.complete(
             "decision",
             detail=memo.decision.value.upper(),
@@ -1904,6 +1922,9 @@ class InsurancePipeline:
             "insurance_company_id": (insurance_company_id or "").strip() or None,
             "insurance_company_name": (insurance_company_name or "").strip() or None,
             "human_review_required": memo.human_review_required or wf.state == WorkflowState.PENDING_REVIEW,
+            "review_priority": review_priority.value,
+            "sla_deadline": wf.sla_deadline.isoformat() if wf.sla_deadline else None,
+            "assigned_to": wf.assigned_to or None,
             "funnel": funnel,
             "deep_dive_available": (
                 [s for s in deferred_stages if s not in ("oracles", "portfolio", "selection_standards", "producer_experience", "adverse_selection", "reinsurance")]
@@ -2110,6 +2131,53 @@ class InsurancePipeline:
             decision=str(memo.decision.value if hasattr(memo.decision, "value") else memo.decision),
             org_id=self.org_id,
         )
+
+        # ── Bias monitoring: record outcome by protected & non-protected dimensions ──
+        try:
+            from insureflow.analytics.bias_monitor import BiasDimension
+            from insureflow.underwriting.personal_lines import extract_life_factors as _elf
+
+            _factors = _elf(bundle)
+            _attrs: dict[str, str] = {}
+            if _factors.state:
+                _attrs[BiasDimension.STATE.value] = _factors.state
+            if _factors.age is not None:
+                age = _factors.age
+                if age < 25:
+                    _attrs[BiasDimension.AGE.value] = "under_25"
+                elif age < 35:
+                    _attrs[BiasDimension.AGE.value] = "25_34"
+                elif age < 45:
+                    _attrs[BiasDimension.AGE.value] = "35_44"
+                elif age < 55:
+                    _attrs[BiasDimension.AGE.value] = "45_54"
+                elif age < 65:
+                    _attrs[BiasDimension.AGE.value] = "55_64"
+                else:
+                    _attrs[BiasDimension.AGE.value] = "65_plus"
+            if hasattr(_factors, "gender") and _factors.gender:
+                _attrs[BiasDimension.GENDER.value] = _factors.gender
+            if hasattr(_factors, "marital_status") and _factors.marital_status:
+                _attrs[BiasDimension.MARITAL_STATUS.value] = _factors.marital_status
+            self.bias_monitor.record(
+                submission_id=bid,
+                decision=memo.decision.value,
+                attributes=_attrs,
+                premium=quote.annual_premium if quote else 0.0,
+                ai_confidence=memo.overall_risk_score,
+            )
+            protected_alerts = self.bias_monitor.check_protected_class_alerts()
+            if protected_alerts:
+                summary["bias_alerts"] = [a.model_dump() for a in protected_alerts]
+                for alert in protected_alerts:
+                    audit.log(
+                        PipelineEvent.COMPLIANCE_CHECK,
+                        f"Protected-class bias alert: {alert.message}",
+                        severity=EventSeverity.CRITICAL,
+                        metadata={"dimension": alert.dimension.value, "ratio": alert.ratio},
+                    )
+        except Exception as exc:
+            logger.debug("Bias monitoring skipped: %s", exc)
 
         audit_paths = audit.persist(bundle, memo, provenance, reconciliation, extra=summary)
         try:

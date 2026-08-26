@@ -83,10 +83,35 @@ class UWDecisionAgent(ReActAgent):
             )
 
     def _calculate_aggregate_risk(self, findings: list[Finding]) -> float:
+        """Calibrated aggregate risk score — consistent with BaseAgent._calculate_risk_score."""
         if not findings:
             return 0.0
-        scores = [SEVERITY_WEIGHTS.get(f.severity.value, 0.5) for f in findings]
-        return min(1.0, sum(scores) / len(scores))
+
+        high_risk_categories = {"fraud_detection", "moral_hazard", "selection", "adverse_selection"}
+        weighted_sum = 0.0
+        high_risk_count = 0
+        total_weight = 0.0
+
+        for f in findings:
+            sev_weight = SEVERITY_WEIGHTS.get(f.severity.value, 0.5)
+            conf = getattr(f, "confidence", None) or 0.7
+            conf_weight = 0.5 + conf * 0.5
+            weighted_sum += sev_weight * conf_weight
+            total_weight += 1.0
+            if f.category in high_risk_categories:
+                high_risk_count += 1
+
+        if total_weight == 0:
+            return 0.0
+
+        base_score = weighted_sum / total_weight
+
+        import math
+        volume_amp = math.log2(1.0 + total_weight) / 6.0
+        category_penalty = min(0.3, high_risk_count * 0.1)
+
+        score = base_score + volume_amp + category_penalty
+        return min(1.0, max(0.0, score))
 
     def _build_recommendation(self) -> Recommendation | None:
         has_critical = any(f.severity == RiskSeverity.CRITICAL for f in self._findings)

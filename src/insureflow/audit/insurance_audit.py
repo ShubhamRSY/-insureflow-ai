@@ -1,15 +1,20 @@
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timezone
 from typing import Any
 from uuid import uuid4
 
+from insureflow.audit.retention import ArtifactType, RetentionEngine
 from insureflow.audit.store import AuditStore
+from insureflow.audit.worm import WormAuditStore
 from insureflow.models.agents import UnderwritingMemo
 from insureflow.models.audit import AuditEntry, AuditTrail, EventSeverity, PipelineEvent, ReconciliationResult
 from insureflow.models.provenance import ProvenanceRecord
 from insureflow.models.submissions import SubmissionBundle
 from insureflow.storage.encryption import EnvelopeEncryption
+
+logger = logging.getLogger(__name__)
 
 
 class InsuranceAuditLogger:
@@ -20,10 +25,14 @@ class InsuranceAuditLogger:
         store: AuditStore | None = None,
         encryption: EnvelopeEncryption | None = None,
         org_id: str = "default",
+        worm: WormAuditStore | None = None,
+        retention: RetentionEngine | None = None,
     ) -> None:
         self.store = store or AuditStore()
         self.encryption = encryption or EnvelopeEncryption()
         self.org_id = org_id
+        self.worm = worm or WormAuditStore()
+        self.retention = retention or RetentionEngine()
         self._trail: AuditTrail | None = None
 
     def start(self, bundle_id: str) -> AuditTrail:
@@ -127,6 +136,51 @@ class InsuranceAuditLogger:
                 "Regulatory audit bundle encrypted at rest",
                 metadata={"encrypted": True},
             )
+
+        # ── WORM seal: write-once-read-many for examiner audit ──
+        worm_record: dict[str, Any] | None = None
+        try:
+            worm_record = self.worm.seal(self.org_id, bundle_id, self._trail.model_dump())
+        except FileExistsError:
+            logger.warning("WORM object already sealed for bundle %s — skipping duplicate", bundle_id)
+        except Exception:
+            logger.exception("WORM seal failed for bundle %s", bundle_id)
+
+        # ── Retention registration: track lifecycle for each artifact ──
+        retention_records: list[dict[str, Any]] = []
+        for artifact_name, file_path in paths.items():
+            try:
+                artifact_type_map = {
+                    "audit_trail": ArtifactType.AUDIT_TRAIL,
+                    "submission_bundle": ArtifactType.SUBMISSION_BUNDLE,
+                    "underwriting_memo": ArtifactType.UNDERWRITING_MEMO,
+                    "provenance_record": ArtifactType.PROVENANCE_RECORD,
+                    "reconciliation": ArtifactType.RECONCILIATION,
+                    "pipeline_summary": ArtifactType.SYNTHESIS_OUTPUT,
+                }
+                art_type = artifact_type_map.get(artifact_name, ArtifactType.AUDIT_TRAIL)
+                rec = self.retention.register_artifact(
+                    artifact_type=art_type,
+                    bundle_id=bundle_id,
+                    org_id=self.org_id,
+                    file_path=file_path,
+                )
+                retention_records.append(rec.model_dump())
+            except Exception:
+                logger.warning("Retention registration failed for %s", artifact_name, exc_info=True)
+
+        if worm_record:
+            paths["worm_seal"] = worm_record.get("path", "")
+        if retention_records:
+            paths["retention_records"] = str(len(retention_records))
+
+        # ── Incremental audit trail persistence (crash-safe) ──
+        try:
+            trail_path = self.store.base_path / self.org_id / bundle_id / "audit_trail_incremental.json"
+            trail_path.parent.mkdir(parents=True, exist_ok=True)
+            trail_path.write_text(self._trail.model_dump_json(indent=2))
+        except Exception:
+            logger.warning("Incremental audit trail persist failed for bundle %s", bundle_id, exc_info=True)
 
         return paths
 

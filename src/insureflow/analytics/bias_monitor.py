@@ -20,11 +20,23 @@ _FOUR_FIFTHS_RULE = 0.80
 
 
 class BiasDimension(str, Enum):
+    # Protected class dimensions (ECOA / state fair-lending)
+    AGE = "age"
+    GENDER = "gender"
+    MARITAL_STATUS = "marital_status"
+    RACE_ETHNICITY = "race_ethnicity"
+    DISABILITY = "disability"
+    # Non-protected dimensions
     STATE = "state"
     INDUSTRY = "industry"
     OCCUPANCY = "occupancy"
     BROKER = "broker"
     POLICY_SIZE = "policy_size"
+
+    @classmethod
+    def protected(cls) -> list[BiasDimension]:
+        """Dimensions protected under ECOA / state fair-lending statutes."""
+        return [cls.AGE, cls.GENDER, cls.MARITAL_STATUS, cls.RACE_ETHNICITY, cls.DISABILITY]
 
 
 class OutcomeBucket(BaseModel):
@@ -115,7 +127,9 @@ class BiasMonitor:
                 b.avg_ai_confidence /= b.total_submissions
         return buckets
 
-    def _detect_disparate_impact(self, buckets: dict[str, OutcomeBucket]) -> list[BiasAlert]:
+    def _detect_disparate_impact(
+        self, buckets: dict[str, OutcomeBucket], dimension: BiasDimension | None = None,
+    ) -> list[BiasAlert]:
         alerts: list[BiasAlert] = []
         entries = list(buckets.values())
         if len(entries) < 2:
@@ -124,6 +138,7 @@ class BiasMonitor:
         if len(rates) < 2:
             return alerts
         rate_list = list(rates.items())
+        dim = dimension or BiasDimension.STATE
         for i in range(len(rate_list)):
             for j in range(i + 1, len(rate_list)):
                 g_a, r_a = rate_list[i]
@@ -137,14 +152,15 @@ class BiasMonitor:
                 if ratio < _DISPARATE_IMPACT_THRESHOLD:
                     alerts.append(
                         BiasAlert(
-                            alert_id=f"bias-{g_a}-{g_b}",
-                            dimension=BiasDimension.STATE,
+                            alert_id=f"bias-{dim.value}-{g_a}-{g_b}",
+                            dimension=dim,
                             group_a=g_a,
                             group_b=g_b,
                             rate_a=r_a,
                             rate_b=r_b,
                             ratio=ratio,
-                            message=f"Approval rate ratio {ratio:.2f} < {_FOUR_FIFTHS_RULE:.2f} between {g_a} ({r_a:.1%}) and {g_b} ({r_b:.1%})",
+                            message=f"[{dim.value}] Approval rate ratio {ratio:.2f} < {_FOUR_FIFTHS_RULE:.2f} between {g_a} ({r_a:.1%}) and {g_b} ({r_b:.1%})",
+                            severity="critical" if dim in BiasDimension.protected() else "warning",
                         )
                     )
         return alerts
@@ -156,7 +172,7 @@ class BiasMonitor:
         for dim in dims:
             buckets = self._bucketize(dim)
             all_buckets.extend(buckets.values())
-            all_alerts.extend(self._detect_disparate_impact(buckets))
+            all_alerts.extend(self._detect_disparate_impact(buckets, dimension=dim))
         total = len(self._records)
         approved = sum(1 for r in self._records if r.get("decision", "").lower() in ("accept", "approve", "quote"))
         return BiasReport(
@@ -166,3 +182,8 @@ class BiasMonitor:
             total_submissions=total,
             overall_approval_rate=approved / total if total > 0 else 0.0,
         )
+
+    def check_protected_class_alerts(self) -> list[BiasAlert]:
+        """Return only alerts on protected-class dimensions for quick compliance review."""
+        report = self.generate_report(dimensions=BiasDimension.protected())
+        return report.alerts

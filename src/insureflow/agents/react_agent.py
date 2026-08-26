@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import time
 from typing import Any, Optional, cast
 
@@ -10,19 +11,13 @@ from insureflow.agents.react_tools import ToolRegistry
 from insureflow.llm.client import LLMClient
 from insureflow.models.agents import AgentResult, AgentType, Finding, RiskSeverity
 from insureflow.models.submissions import SubmissionBundle
+from insureflow.verification.circuit_breaker import get_circuit_breaker
 
-# Process-wide circuit breaker: once a given (provider, model, api_key) combo
-# fails once, every ReActAgent using that same config skips the live LLM call
-# for the rest of the process instead of re-attempting it. Without this, two
-# runs of the *same* submission can silently diverge — one agent's LLM call
-# happens to succeed (transient network/rate-limit variance) while another's
-# fails, and since the ReAct loop's findings materially change the
-# underwriting decision, that alone can flip REFER into DECLINE between runs.
-_LLM_BROKEN: set[tuple[str, str, str]] = set()
+logger = logging.getLogger(__name__)
 
 
-def _llm_circuit_key(llm: LLMClient) -> tuple[str, str, str]:
-    return (llm.provider, llm.model or "", llm.api_key or "")
+def _llm_circuit_key(llm: LLMClient) -> str:
+    return f"{llm.provider}/{llm.model or ''}"
 
 
 class ReActAgent(BaseAgent):
@@ -49,17 +44,28 @@ class ReActAgent(BaseAgent):
         self._tools_registry = ToolRegistry(bundle)
 
         circuit_key = _llm_circuit_key(self.llm)
-        if self.llm.api_key and circuit_key not in _LLM_BROKEN:
+        breaker = get_circuit_breaker(
+            name=f"llm:{circuit_key}",
+            failure_threshold=3,
+            recovery_timeout=60.0,
+        )
+        if self.llm.api_key and breaker.is_available:
             try:
                 self._react_loop(bundle, **kwargs)
+                breaker.record_success()
             except Exception as e:
-                _LLM_BROKEN.add(circuit_key)
+                breaker.record_failure()
+                state = breaker.state
+                logger.warning(
+                    "ReAct LLM call failed (breaker=%s, state=%s): %s — falling back to deterministic",
+                    circuit_key, state.value, e,
+                )
                 self._errors.append(f"ReAct loop error: {type(e).__name__}: {e}")
-                # Always fall back to the full deterministic analysis on any
-                # failure — never rely on however far the ReAct loop got.
                 self._findings = []
                 self._analyze(bundle, **kwargs)
         else:
+            if self.llm.api_key:
+                logger.info("LLM circuit breaker OPEN for %s — using deterministic analysis", circuit_key)
             self._analyze(bundle, **kwargs)
 
         elapsed = (time.time() - start) * 1000

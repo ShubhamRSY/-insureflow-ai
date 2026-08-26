@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import os
+import time
 from dataclasses import dataclass
 from typing import Any, Iterator, Optional
 
@@ -11,6 +12,31 @@ logger = logging.getLogger(__name__)
 
 _OPENAI_COMPAT = frozenset({"openai", "vllm", "llama", "ollama"})
 _ANTHROPIC = frozenset({"anthropic", "claude"})
+
+
+def _is_transient_error(exc: Exception) -> bool:
+    """Distinguish transient (retryable) errors from permanent ones."""
+    msg = str(exc).lower()
+    exc_type = type(exc).__name__
+    # Rate limits — always retryable
+    if "429" in msg or "rate" in msg or "too many" in msg:
+        return True
+    # Network / timeout
+    if any(k in msg for k in ("timeout", "timed out", "connection", "network", "eof", "reset")):
+        return True
+    if "timeout" in exc_type.lower() or "connection" in exc_type.lower():
+        return True
+    # Server errors (5xx) — retryable
+    if any(f"{c}" in msg for c in ("500", "502", "503", "504")):
+        return True
+    # Authentication errors — NOT retryable
+    if "401" in msg or "403" in msg or "auth" in msg or "permission" in msg:
+        return False
+    # Bad request (400) — NOT retryable
+    if "400" in msg or "invalid" in msg:
+        return False
+    # Default: treat unknown errors as non-transient to avoid infinite retry loops
+    return False
 
 
 @dataclass
@@ -193,15 +219,36 @@ class LLMClient:
 
         system_prompt = self._redact_for_egress(system_prompt)
         user_prompt = neutralize_injection(self._redact_for_egress(user_prompt))
-        try:
-            text = self._complete_once(system_prompt, user_prompt, response_format)
-        except Exception as exc:
-            fb = self._spawn_fallback()
-            if fb is None:
-                raise
-            logger.warning("Primary LLM (%s/%s) failed: %s — routing to %s", self.provider, self.model, exc, fb.provider)
-            text = fb._complete_once(system_prompt, user_prompt, response_format)
-        return guard_model_output(text)
+
+        last_exc: Exception | None = None
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                text = self._complete_once(system_prompt, user_prompt, response_format)
+                return guard_model_output(text)
+            except Exception as exc:
+                last_exc = exc
+                is_transient = _is_transient_error(exc)
+                if attempt < max_retries - 1 and is_transient:
+                    backoff = min(2 ** attempt * 1.0, 10.0)
+                    logger.warning(
+                        "LLM %s/%s attempt %d/%d failed (%s): %s — retrying in %.1fs",
+                        self.provider, self.model, attempt + 1, max_retries,
+                        type(exc).__name__, exc, backoff,
+                    )
+                    time.sleep(backoff)
+                    continue
+                # Non-transient or final attempt: try fallback
+                fb = self._spawn_fallback()
+                if fb is None:
+                    raise
+                logger.warning(
+                    "Primary LLM (%s/%s) failed: %s — routing to %s",
+                    self.provider, self.model, exc, fb.provider,
+                )
+                text = fb._complete_once(system_prompt, user_prompt, response_format)
+                return guard_model_output(text)
+        raise last_exc  # type: ignore[misc]
 
     def _complete_once(
         self,
