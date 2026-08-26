@@ -40,6 +40,18 @@ export default function InsuranceJobDetail({ onDeleted, onDeleteJob }) {
   const processing = job?.status === 'processing';
   const bundleId = job?.results?.bundle_id;
   const insuredName = displayText(job?.results?.insured_name || job?.results?.memo?.insured_name);
+  const submittedAt = job?.created_at
+    ? new Date(job.created_at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
+    : null;
+  const updatedAt = job?.updated_at
+    ? new Date(job.updated_at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
+    : null;
+  const completedAt = job?.status === 'completed' && job?.created_at && job?.updated_at
+    ? updatedAt
+    : null;
+  const processingDuration = job?.status === 'completed' && job?.created_at && job?.updated_at
+    ? Math.round((new Date(job.updated_at) - new Date(job.created_at)) / 1000)
+    : null;
 
   useEffect(() => {
     if (!bundleId) return;
@@ -127,14 +139,23 @@ export default function InsuranceJobDetail({ onDeleted, onDeleteJob }) {
             <div className="h-4 w-px bg-white/[0.06]" />
             <div>
               <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Insurance Submission</p>
-              <p className="font-mono text-sm font-semibold">{jobId}</p>
-              {insuredName && <p className="text-xs text-slate-400">{insuredName}</p>}
+              <p className="text-sm font-semibold">{insuredName || 'Unnamed applicant'}</p>
+              <p className="font-mono text-[11px] text-slate-500">
+                {jobId}{submittedAt ? ` · Submitted ${submittedAt}` : ''}
+                {completedAt && processingDuration != null ? ` · Completed ${completedAt} (${processingDuration}s)` : ''}
+                {updatedAt && !completedAt ? ` · Updated ${updatedAt}` : ''}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             {processing && (
               <span className="flex items-center gap-1.5 text-xs text-slate-500">
                 <RefreshCw className="h-3 w-3 animate-spin" /> Processing…
+                {submittedAt && (
+                  <span className="ml-1 text-slate-600">
+                    ({Math.round((Date.now() - new Date(job.created_at).getTime()) / 1000)}s elapsed)
+                  </span>
+                )}
               </span>
             )}
             {bundleId && (
