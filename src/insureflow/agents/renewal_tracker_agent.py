@@ -11,6 +11,7 @@ from typing import Any
 from insureflow.agents.base import BaseAgent
 from insureflow.models.agents import AgentType, Finding, RiskSeverity
 from insureflow.models.submissions import SubmissionBundle
+from insureflow.underwriting.personal_lines import extract_life_factors
 from insureflow.underwriting.renewal_tracking import (
     PolicyRenewalRecord,
     RenewalCheckResult,
@@ -18,7 +19,6 @@ from insureflow.underwriting.renewal_tracking import (
     check_renewal,
     persist_renewal,
 )
-from insureflow.underwriting.personal_lines import extract_life_factors
 
 
 class RenewalTrackerAgent(BaseAgent):

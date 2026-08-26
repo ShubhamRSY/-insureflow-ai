@@ -12,11 +12,11 @@ from datetime import date, datetime
 from enum import Enum
 from typing import Any, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from insureflow.models.agents import Finding, RiskSeverity
 from insureflow.models.submissions import SubmissionBundle
-from insureflow.underwriting.mib import MibCode, MibCodeType, MibDiscrepancy, MibReport, process_mib_codes
+from insureflow.underwriting.mib import MibReport
 
 
 class MibOrderStatus(str, Enum):

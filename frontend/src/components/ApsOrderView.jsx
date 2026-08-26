@@ -1,62 +1,40 @@
-import { useState } from 'react';
+import { RatePanel, RateStat, Badge } from './ui';
 
-const STATUS_COLORS = {
-  not_requested: 'bg-slate-700 text-slate-300',
-  pending: 'bg-yellow-900/40 text-yellow-300',
-  submitted_to_vendor: 'bg-blue-900/40 text-blue-300',
-  vendor_processing: 'bg-blue-900/40 text-blue-300',
-  received: 'bg-green-900/40 text-green-300',
-  reviewed: 'bg-green-900/40 text-green-300',
-  failed: 'bg-red-900/40 text-red-300',
+const HINTS = {
+  orderId: 'Attending Physician Statement order tracking ID.',
+  status: 'Where the APS request stands — from not yet requested through received/reviewed by underwriting.',
+  priority: 'Requested turnaround priority with the medical records vendor.',
+  hipaa: "Whether a signed HIPAA authorization is on file to legally request these records. Required before the physician's office can release anything.",
+  physician: 'Attending physician the records are being requested from.',
+  eta: "Vendor's estimated delivery date for the completed statement.",
 };
 
 export default function ApsOrderView({ data }) {
   const orders = data?.aps_orders || [];
   const latest = orders[0];
 
+  if (!latest) {
+    return <p className="text-sm text-slate-500">No APS orders placed for this case.</p>;
+  }
+
   return (
     <div className="space-y-4">
-      <h3 className="text-sm font-semibold text-slate-200 uppercase tracking-wide">APS (Attending Physician Statement)</h3>
-      {!latest ? (
-        <p className="text-sm text-slate-400">No APS orders placed for this case.</p>
-      ) : (
-        <>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <Info label="Order ID" value={latest.order_id} />
-            <Info label="Status" value={<StatusBadge status={latest.status} />} />
-            <Info label="Priority" value={latest.priority} />
-            <Info label="HIPAA On File" value={latest.hipaa_authorization_on_file ? 'Yes' : 'No'} />
-          </div>
-          {latest.physician?.name && (
-            <div className="rounded border border-slate-800 bg-slate-900/50 p-3">
-              <p className="text-xs text-slate-400 mb-1">Physician</p>
-              <p className="text-sm text-white">{latest.physician.name}</p>
-              {latest.physician.specialty && <p className="text-xs text-slate-400">{latest.physician.specialty}</p>}
-              {latest.physician.practice_name && <p className="text-xs text-slate-400">{latest.physician.practice_name}</p>}
-            </div>
-          )}
-          {latest.estimated_completion && (
-            <p className="text-xs text-slate-400">Estimated completion: {latest.estimated_completion}</p>
-          )}
-        </>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <RateStat label="Order ID" value={latest.order_id} hint={HINTS.orderId} />
+        <RateStat label="Status" value={<Badge status={latest.status} label={latest.status?.replace(/_/g, ' ')} />} hint={HINTS.status} />
+        <RateStat label="Priority" value={latest.priority} hint={HINTS.priority} />
+        <RateStat label="HIPAA On File" value={latest.hipaa_authorization_on_file ? 'Yes' : 'No'} hint={HINTS.hipaa} />
+      </div>
+      {latest.physician?.name && (
+        <RatePanel>
+          <RateStat label="Physician" value={latest.physician.name} hint={HINTS.physician} />
+          {latest.physician.specialty && <p className="mt-1 text-xs text-slate-500">{latest.physician.specialty}</p>}
+          {latest.physician.practice_name && <p className="text-xs text-slate-500">{latest.physician.practice_name}</p>}
+        </RatePanel>
+      )}
+      {latest.estimated_completion && (
+        <RateStat label="Estimated completion" value={latest.estimated_completion} hint={HINTS.eta} />
       )}
     </div>
-  );
-}
-
-function Info({ label, value }) {
-  return (
-    <div className="text-xs">
-      <span className="text-slate-400">{label}: </span>
-      <span className="text-white">{value}</span>
-    </div>
-  );
-}
-
-function StatusBadge({ status }) {
-  return (
-    <span className={`inline-block rounded px-1.5 py-0.5 text-xs font-medium ${STATUS_COLORS[status] || 'bg-slate-700 text-slate-300'}`}>
-      {status?.replace(/_/g, ' ')}
-    </span>
   );
 }

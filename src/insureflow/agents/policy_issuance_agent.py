@@ -11,16 +11,15 @@ from typing import Any
 from insureflow.agents.base import BaseAgent
 from insureflow.models.agents import AgentType, Finding, RiskSeverity, UWDecision
 from insureflow.models.submissions import SubmissionBundle
+from insureflow.underwriting.personal_lines import extract_life_factors
 from insureflow.underwriting.policy_issuance import (
     IssuanceStatus,
     PolicyIssuanceData,
     PolicyType,
-    BinderRecord,
     check_issuance_readiness,
     create_binder,
     persist_binder,
 )
-from insureflow.underwriting.personal_lines import extract_life_factors
 
 
 class PolicyIssuanceAgent(BaseAgent):
@@ -31,7 +30,6 @@ class PolicyIssuanceAgent(BaseAgent):
         factors = extract_life_factors(bundle)
         decision = kwargs.get("decision", UWDecision.ACCEPT)
         face = float(factors.face_amount or 0)
-        age = factors.age or 40
 
         readiness = check_issuance_readiness(
             decision=decision,

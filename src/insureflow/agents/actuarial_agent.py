@@ -12,8 +12,6 @@ from insureflow.agents.base import BaseAgent
 from insureflow.models.agents import AgentType, Finding, RiskSeverity
 from insureflow.models.submissions import SubmissionBundle
 from insureflow.underwriting.actuarial_tables import (
-    MortalityComparison,
-    MortalityCostResult,
     MortalityTable,
     TobaccoStatus,
     calculate_mortality_cost,
@@ -57,10 +55,15 @@ class ActuarialAgent(BaseAgent):
             )
 
         if comparison.spread_pct > 20:
+            best_cost = comparison.annual_costs[comparison.best_table]
+            worst_cost = comparison.annual_costs[comparison.worst_table]
             self._add_finding(
                 Finding(
                     title=f"Table spread {comparison.spread_pct:.1f}%",
-                    description=f"Cost ranges from ${comparison.annual_costs[comparison.best_table]:,.2f} ({comparison.best_table}) to ${comparison.annual_costs[comparison.worst_table]:,.2f} ({comparison.worst_table}).",
+                    description=(
+                        f"Cost ranges from ${best_cost:,.2f} ({comparison.best_table}) "
+                        f"to ${worst_cost:,.2f} ({comparison.worst_table})."
+                    ),
                     severity=RiskSeverity.MODERATE,
                     category="actuarial",
                 )

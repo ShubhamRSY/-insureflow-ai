@@ -3,6 +3,55 @@ import { ChevronDown, ChevronRight, Eye, FileText, Loader2, User, Shield, AlertT
 import { displayText, safeLower } from '../lib/safe';
 import { endpoints } from '../lib/api';
 import { uwFinding, uwMemoText, premiumStepLabel } from '../lib/uwLanguage';
+import { Hint } from './ui';
+
+const FIELD_HINTS = {
+  'Insured Name': 'The person or entity this policy would cover, as extracted from the application.',
+  'Product': 'The insurance product line this submission was written for.',
+  'Coverage': 'The specific coverage or plan variant selected within the product.',
+  'Insurance Line': 'High-level line of business this submission is classified under — drives which rating tables and UW rules apply.',
+  'Face Amount / TIV': 'Face amount (life) or Total Insured Value (property/casualty) — the maximum the policy would pay out.',
+  'Base Premium': 'Premium before underwriting-class, band, or state adjustments are applied.',
+  'Indicated Premium': "The AI's fully-loaded premium recommendation after every rating factor below is applied. Not a bound rate until an underwriter signs off.",
+  'Primary State': 'Governing state for rate filing and regulatory rules on this policy.',
+  'Broker': 'Producer of record who submitted this business.',
+  'Policy Reference': 'Internal policy administration system reference number for this quote.',
+  'Quote Valid Until': 'Date this indicated premium expires — reprice if binding after this date, since rates or risk may have moved.',
+  'Issue State': 'State the policy will actually be issued in, if different from the primary rating state.',
+  'Decision': 'The underwriting outcome the AI recommends — accept, conditional accept, refer for review, or decline.',
+  'Risk Severity': "Overall severity bucket assigned from this file's findings — drives how much scrutiny the decision needs before sign-off.",
+  'Suggested Premium Adjustment': 'Additional loading or credit the AI recommends on top of the indicated premium, based on findings not already priced in.',
+  'Submission ID': 'Internal job identifier for this submission run — use it when searching logs or support tickets.',
+  'Bundle ID': 'Identifier for the document bundle this submission was built from.',
+  'Submitted': 'Timestamp the submission was received into the pipeline.',
+  'Completed': 'Timestamp the pipeline finished processing and produced this memo.',
+  'Processing Time': 'Wall-clock time the pipeline took from intake to a finished decision.',
+  'Memo Generated': 'Timestamp this underwriting memo was generated.',
+  'Approved By': 'Underwriter who signed off on this decision. "Pending" means no human sign-off has been recorded yet.',
+  'Approved At': 'Timestamp of human sign-off.',
+  'License #': "Signing underwriter's license number, recorded for audit and regulatory purposes.",
+  'Loss Ratio': 'Incurred losses divided by earned premium for this risk\'s prior history — a core input to pricing adequacy.',
+  'Basis': 'What the loss ratio and experience figures are measured against (e.g. per-exposure, per-payroll).',
+  'Experience Mod': 'Multiplier applied for this risk\'s claim history relative to class average — above 1.0 means worse than average.',
+};
+
+const AGENT_HINTS = {
+  RiskAnalystAgent: "Reviews the application and supporting documents to surface risk factors — this agent's findings drive most of the Risk Evaluation section above.",
+  LossRunAnalystAgent: 'Parses prior loss runs / claims history to compute loss ratio and experience modification.',
+  ComplianceAgent: 'Runs sanctions (OFAC/AML), licensing, and regulatory filing checks against the applicant and policy.',
+  FraudDetectionAgent: 'Screens for misrepresentation, moral hazard, and other fraud indicators across the submission.',
+  UWDecisionAgent: 'Synthesizes every other agent\'s findings into the final accept/refer/decline recommendation and rationale shown above.',
+};
+
+function FieldLabel({ label }) {
+  const hint = FIELD_HINTS[label];
+  if (!hint) return <>{label}</>;
+  return (
+    <Hint text={hint}>
+      <span className="hint-label cursor-help">{label}</span>
+    </Hint>
+  );
+}
 
 const BASIS_LABELS = {
   per_100_tiv: 'per $100 of insured value',
@@ -115,21 +164,32 @@ export function Collapsible({ title, defaultOpen = false, children, badge }) {
   );
 }
 
+const SEV_HINTS = {
+  critical: 'Blocks binding until resolved — typically a missing verification, an unverifiable figure, or a hard compliance failure.',
+  high: 'Materially affects the decision — resolve or explicitly waive before sign-off.',
+  moderate: 'Worth reviewing but unlikely to change the outcome on its own.',
+  low: 'Informational — noted for the file but does not require action.',
+};
+
 function FindingCard({ finding }) {
   const f = uwFinding(finding);
   const sev = safeLower(f?.severity, 'moderate');
   return (
     <div className="flex items-start gap-2.5 rounded-lg border border-white/[0.04] bg-surface/40 p-3">
-      <span className={`mt-0.5 shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ring-1 ring-inset ${SEV_COLORS[sev] || SEV_COLORS.moderate}`}>
-        {sev}
-      </span>
+      <Hint text={SEV_HINTS[sev]}>
+        <span className={`mt-0.5 inline-block shrink-0 cursor-help rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ring-1 ring-inset ${SEV_COLORS[sev] || SEV_COLORS.moderate}`}>
+          {sev}
+        </span>
+      </Hint>
       <div className="min-w-0 flex-1">
         <p className="text-sm font-medium text-slate-200">{displayText(f?.title, 'Finding')}</p>
         {f?.description && (
           <p className="mt-1 text-xs leading-relaxed text-slate-400">{displayText(f.description)}</p>
         )}
         {f?.field_path && (
-          <p className="mt-1 font-mono text-[10px] text-slate-600">{f.field_path}</p>
+          <Hint text="Underlying data field this finding traces back to — cross-reference against Provenance to see the source page.">
+            <p className="hint-label mt-1 inline-block cursor-help font-mono text-[10px] text-slate-600">{f.field_path}</p>
+          </Hint>
         )}
       </div>
     </div>
@@ -161,7 +221,7 @@ function InfoRow({ label, value }) {
   if (!value && value !== 0) return null;
   return (
     <div className="flex justify-between py-1.5 border-b border-white/[0.03] last:border-0">
-      <span className="text-xs text-slate-500">{label}</span>
+      <span className="text-xs text-slate-500"><FieldLabel label={label} /></span>
       <span className="text-xs font-medium text-slate-200">{value}</span>
     </div>
   );
@@ -354,7 +414,9 @@ export default function MemoReportView({ job }) {
           <div className="text-right">
             {riskPct != null && (
               <div>
-                <p className="text-[10px] uppercase opacity-70">Risk Score</p>
+                <Hint text="Composite 0-100 score combining every finding's severity and confidence — higher means more reasons to slow down before binding." position="bottom">
+                  <p className="hint-label inline-block cursor-help text-[10px] uppercase opacity-70">Risk Score</p>
+                </Hint>
                 <p className="text-3xl font-bold">{riskPct}<span className="text-sm font-normal opacity-60">/100</span></p>
                 {riskSeverity && <p className="text-[10px] uppercase opacity-60">{riskSeverity} severity</p>}
               </div>
@@ -363,16 +425,22 @@ export default function MemoReportView({ job }) {
         </div>
         <div className="mt-4 flex flex-wrap gap-6 border-t border-white/10 pt-4">
           <div>
-            <p className="text-[10px] uppercase opacity-70">Face Amount</p>
+            <Hint text="Death benefit (life) or Total Insured Value (P&C) being quoted." position="bottom">
+              <p className="hint-label inline-block cursor-help text-[10px] uppercase opacity-70">Face Amount</p>
+            </Hint>
             <p className="text-xl font-bold text-white">{fmtCurrency(faceAmount)}</p>
           </div>
           <div>
-            <p className="text-[10px] uppercase opacity-70">Indicated Premium</p>
+            <Hint text="AI-recommended premium before any underwriter override — see Premium Build-up below for how it was derived." position="bottom">
+              <p className="hint-label inline-block cursor-help text-[10px] uppercase opacity-70">Indicated Premium</p>
+            </Hint>
             <p className="text-xl font-bold text-white">{fmtCurrency(premium)}</p>
           </div>
           {uwClass && (
             <div>
-              <p className="text-[10px] uppercase opacity-70">UW Class</p>
+              <Hint text="Underwriting class the case would be rated at if accepted as presented — drives the mortality/rate factor used in the premium build-up." position="bottom">
+                <p className="hint-label inline-block cursor-help text-[10px] uppercase opacity-70">UW Class</p>
+              </Hint>
               <p className="text-lg font-semibold capitalize">{uwClass.replace(/_/g, ' ')}</p>
             </div>
           )}
@@ -431,16 +499,16 @@ export default function MemoReportView({ job }) {
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Loss Experience</p>
             <div className="mt-2 flex gap-6">
               <div>
-                <p className="text-xs text-slate-400">Loss Ratio</p>
+                <p className="text-xs text-slate-400"><FieldLabel label="Loss Ratio" /></p>
                 <p className="text-sm font-semibold text-slate-200">{fmtPct(lossExp.loss_ratio * 100)}</p>
               </div>
               <div>
-                <p className="text-xs text-slate-400">Basis</p>
+                <p className="text-xs text-slate-400"><FieldLabel label="Basis" /></p>
                 <p className="text-sm font-semibold text-slate-200">{lossExp.basis || '—'}</p>
               </div>
               {lossExp.experience_mod != null && (
                 <div>
-                  <p className="text-xs text-slate-400">Experience Mod</p>
+                  <p className="text-xs text-slate-400"><FieldLabel label="Experience Mod" /></p>
                   <p className="text-sm font-semibold text-slate-200">{fmtFactor(lossExp.experience_mod)}</p>
                 </div>
               )}
@@ -489,9 +557,11 @@ export default function MemoReportView({ job }) {
             <h2 className="text-base font-bold tracking-tight text-slate-100">Why This Decision</h2>
             <div className="flex gap-2">
               {Object.entries(counts).map(([sev, n]) => n > 0 && (
-                <span key={sev} className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ring-1 ring-inset ${SEV_COLORS[sev]}`}>
-                  {n} {sev}
-                </span>
+                <Hint key={sev} text={SEV_HINTS[sev]}>
+                  <span className={`cursor-help rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ring-1 ring-inset ${SEV_COLORS[sev]}`}>
+                    {n} {sev}
+                  </span>
+                </Hint>
               ))}
             </div>
           </div>
@@ -585,12 +655,16 @@ export default function MemoReportView({ job }) {
         )}
         {Object.keys(agentResults).length > 0 && (
           <div className="mt-4">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2">Agent Execution Trace</p>
+            <Hint text="Every specialist agent that ran on this file, in order, and whether it finished cleanly — use this to see which analysis actually informed the decision above.">
+              <p className="hint-label mb-2 inline-block cursor-help text-[10px] font-bold uppercase tracking-wider text-slate-500">Agent Execution Trace</p>
+            </Hint>
             <div className="space-y-1.5">
               {Object.entries(agentResults).map(([name, result]) => (
                 <div key={name} className="flex items-center gap-2 text-xs">
                   <CheckCircle2 className="h-3 w-3 text-emerald-500/60 shrink-0" />
-                  <span className="font-medium text-slate-300">{name}</span>
+                  <Hint text={AGENT_HINTS[name]}>
+                    <span className={`font-medium text-slate-300 ${AGENT_HINTS[name] ? 'hint-label cursor-help' : ''}`}>{name}</span>
+                  </Hint>
                   {result?.status && (
                     <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase ${
                       result.status === 'completed' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-500/10 text-slate-400'
@@ -624,21 +698,41 @@ export default function MemoReportView({ job }) {
             <table className="w-full text-left text-[11px]">
               <thead>
                 <tr className="border-b border-white/[0.06] text-slate-500">
-                  <th className="py-1.5 pr-3 font-medium">Rating component</th>
-                  <th className="py-1.5 pr-3 font-medium">Applied to</th>
-                  <th className="py-1.5 pr-3 font-medium">Factor</th>
-                  <th className="py-1.5 font-medium">Adjustment</th>
+                  <th className="py-1.5 pr-3 font-medium">
+                    <Hint text="Individual rating factor applied when building this premium — e.g. mortality rate, underwriting class, state relativity.">
+                      <span className="hint-label cursor-help">Rating component</span>
+                    </Hint>
+                  </th>
+                  <th className="py-1.5 pr-3 font-medium">
+                    <Hint text="What this factor is measured against — age/sex band, face amount, state, etc.">
+                      <span className="hint-label cursor-help">Applied to</span>
+                    </Hint>
+                  </th>
+                  <th className="py-1.5 pr-3 font-medium">
+                    <Hint text="The multiplier or flat amount this component contributes to the rate.">
+                      <span className="hint-label cursor-help">Factor</span>
+                    </Hint>
+                  </th>
+                  <th className="py-1.5 font-medium">
+                    <Hint text="How much this step moved the premium versus the running total. 0.0% means the factor is already baked into the rate above rather than layered on as a separate step.">
+                      <span className="hint-label cursor-help">Adjustment</span>
+                    </Hint>
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/[0.03]">
-                {premiumSteps.map((row, i) => (
+                {premiumSteps.map((row, i) => {
+                  const modPct = row.modifier_pct;
+                  const moved = modPct != null && Math.abs(modPct) >= 0.05;
+                  return (
                   <tr key={row.step || row.name || i} className="text-slate-300">
                     <td className="py-1.5 pr-3">{premiumStepLabel(row.step || row.name)}</td>
                     <td className="py-1.5 pr-3 text-slate-500">{premiumBasisLabel(displayText(row.basis))}</td>
                     <td className="py-1.5 pr-3 font-mono">{fmtFactor(row.factor || row.amount)}</td>
-                    <td className="py-1.5 font-mono">{row.modifier_pct != null ? fmtPct(row.modifier_pct) : '—'}</td>
+                    <td className={`py-1.5 font-mono ${moved ? (modPct > 0 ? 'font-semibold text-amber-400' : 'font-semibold text-emerald-400') : ''}`}>{modPct != null ? fmtPct(modPct) : '—'}</td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>

@@ -134,6 +134,29 @@ export function Badge({ status, pulse = false, label }) {
     flag: 'bg-amber-500/15 text-amber-400 ring-amber-500/20',
     fail: 'bg-red-500/15 text-red-400 ring-red-500/20',
     waived: 'bg-slate-500/15 text-slate-400 ring-slate-500/20',
+    // Bureau / order / issuance lifecycle statuses (MIB, APS, renewal, binder)
+    submitted: 'bg-sky-500/15 text-sky-400 ring-sky-500/20',
+    submitted_to_vendor: 'bg-sky-500/15 text-sky-400 ring-sky-500/20',
+    vendor_processing: 'bg-amber-500/15 text-amber-400 ring-amber-500/20',
+    received: 'bg-emerald-500/15 text-emerald-400 ring-emerald-500/20',
+    reviewed: 'bg-emerald-500/15 text-emerald-400 ring-emerald-500/20',
+    not_requested: 'bg-slate-500/15 text-slate-400 ring-slate-500/20',
+    not_ready: 'bg-slate-500/15 text-slate-400 ring-slate-500/20',
+    pending_uw_approval: 'bg-amber-500/15 text-amber-400 ring-amber-500/20',
+    binder_issued: 'bg-sky-500/15 text-sky-400 ring-sky-500/20',
+    policy_requested: 'bg-sky-500/15 text-sky-400 ring-sky-500/20',
+    policy_issued: 'bg-emerald-500/15 text-emerald-400 ring-emerald-500/20',
+    policy_delivered: 'bg-emerald-500/15 text-emerald-400 ring-emerald-500/20',
+    renewal_due: 'bg-amber-500/15 text-amber-400 ring-amber-500/20',
+    renewal_overdue: 'bg-red-500/15 text-red-400 ring-red-500/20',
+    convertible: 'bg-sky-500/15 text-sky-400 ring-sky-500/20',
+    conversion_window_open: 'bg-sky-500/15 text-sky-400 ring-sky-500/20',
+    conversion_window_closed: 'bg-slate-500/15 text-slate-400 ring-slate-500/20',
+    lapsed: 'bg-red-500/15 text-red-400 ring-red-500/20',
+    in_review: 'bg-amber-500/15 text-amber-400 ring-amber-500/20',
+    rejected: 'bg-red-500/15 text-red-400 ring-red-500/20',
+    changes_requested: 'bg-amber-500/15 text-amber-400 ring-amber-500/20',
+    flagged: 'bg-red-500/15 text-red-400 ring-red-500/20',
   };
   const cls = colors[s] || 'bg-slate-500/15 text-slate-400 ring-slate-500/20';
   return (
@@ -149,6 +172,39 @@ export function DecisionBadge({ decision, jobStatus }) {
   if (jobStatus === 'failed') return <span className="text-slate-500">—</span>;
   if (!decision) return <span className="text-slate-500">—</span>;
   return <Badge status={decision} />;
+}
+
+// Shared building blocks for the "Rate Provenance" tool panels (Actuarial,
+// Premium Calculator, MIB/APS orders, Beneficiary, Renewal, Issuance) — keeps
+// them on the app's theme tokens instead of one-off hardcoded dark colors.
+export function RatePanel({ children, className = '' }) {
+  return (
+    <div className={`rounded-lg border border-white/10 bg-surface-overlay/50 p-3 ${className}`.trim()}>
+      {children}
+    </div>
+  );
+}
+
+export function RateStat({ label, value, hint }) {
+  return (
+    <div className="text-xs">
+      <Hint text={hint}>
+        <span className={`text-slate-500 ${hint ? 'hint-label cursor-help' : ''}`}>{label}: </span>
+      </Hint>
+      <span className="font-medium text-slate-100">{value ?? 'N/A'}</span>
+    </div>
+  );
+}
+
+export function RateField({ label, hint, children }) {
+  return (
+    <label className="block text-xs text-slate-500">
+      <Hint text={hint}>
+        <span className={hint ? 'hint-label cursor-help' : ''}>{label}</span>
+      </Hint>
+      <div className="mt-1">{children}</div>
+    </label>
+  );
 }
 
 export function StatCard({ label, value, sub, accent = 'brand' }) {

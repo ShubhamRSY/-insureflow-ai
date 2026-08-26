@@ -59,7 +59,9 @@ class FileJobStore(JobStore):
 
     def set(self, namespace: str, job_id: str, data: dict[str, Any], org_id: str = "default") -> None:
         with self._lock:
-            payload = {**data, "org_id": org_id, "updated_at": datetime.now(tz=timezone.utc).isoformat()}
+            existing = self.get(namespace, job_id, org_id)
+            created_at = (existing or {}).get("created_at") or datetime.now(tz=timezone.utc).isoformat()
+            payload = {**data, "org_id": org_id, "created_at": created_at, "updated_at": datetime.now(tz=timezone.utc).isoformat()}
             self._path(namespace, job_id, org_id).write_text(json.dumps(payload, default=str), encoding="utf-8")
             ids = self._read_index(namespace, org_id)
             if job_id not in ids:

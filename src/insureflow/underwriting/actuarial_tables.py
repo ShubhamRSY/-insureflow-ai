@@ -7,12 +7,9 @@ comparisons across multiple published tables.
 
 from __future__ import annotations
 
-import math
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
-
-from pydantic import BaseModel, Field
 
 from insureflow.models.agents import Finding, RiskSeverity
 
@@ -73,7 +70,7 @@ class MortalityRate:
     source: str = ""
     rate_interpolated: bool = False
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.rate_annual = self.rate_per_1000 / 1000.0
         if not self.source:
             self.source = f"{self.table.value} ({self.gender}, {self.tobacco.value})"
@@ -262,8 +259,8 @@ def compare_mortality_tables(
         rates[t.value] = cost.mortality_rate_per_1000
         costs[t.value] = cost.expected_annual_cost
 
-    best = min(costs, key=costs.get)
-    worst = max(costs, key=costs.get)
+    best = min(costs, key=lambda k: costs[k])
+    worst = max(costs, key=lambda k: costs[k])
     spread = ((costs[worst] - costs[best]) / costs[best] * 100) if costs[best] > 0 else 0.0
 
     findings: list[Finding] = []

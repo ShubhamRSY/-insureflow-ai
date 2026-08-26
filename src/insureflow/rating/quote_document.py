@@ -6,6 +6,7 @@ from html import escape
 from insureflow.models.agents import UnderwritingMemo
 from insureflow.models.submissions import SubmissionBundle
 from insureflow.rating.models import InsuranceLine, QuoteResult, line_display_name
+from insureflow.rating.report_theme import WORDMARK_CSS_DARK, WORDMARK_CSS_PRINT, decision_color, wordmark_html
 
 
 def _esc(value: object) -> str:
@@ -25,13 +26,7 @@ def generate_quote_html(
     line_label = line_display_name(quote.line.value)
     subtitle = f"{'Life' if is_life else 'Commercial'} Insurance Quote — Issued {today}"
     decision = (memo.decision.value if hasattr(memo.decision, "value") else str(memo.decision or "")).upper()
-    decision_colors = {
-        "ACCEPT": "#15803d",
-        "CONDITIONAL_ACCEPT": "#b45309",
-        "REFER": "#b45309",
-        "DECLINE": "#b91c1c",
-    }
-    decision_color = decision_colors.get(decision, "#334155")
+    decision_color_hex = decision_color(decision)
     risk = memo.overall_risk_score
     risk_pct = round(float(risk) * 100) if risk is not None else None
     severity = (memo.overall_risk_severity.value if hasattr(memo.overall_risk_severity, "value") else str(memo.overall_risk_severity or "—")).upper()
@@ -133,7 +128,7 @@ def generate_quote_html(
     if review_reasons:
         items = "".join(f"<li>{_esc(r)}</li>" for r in review_reasons[:12])
         review_html = f"""
-  <h2>Human Review Reasons</h2>
+  <h2>Referral Basis</h2>
   <ul class="list">{items}</ul>"""
 
     if is_life:
@@ -144,7 +139,7 @@ def generate_quote_html(
   <div class="row"><span class="label">Face Amount</span><span>${face:,.0f}</span></div>
   <div class="row"><span class="label">UW Class</span><span>{_esc((medical.get("underwriting_class") or "—").replace("_", " ").title())}</span></div>
   <div class="row"><span class="label">Tobacco</span><span>{"Yes" if medical.get("tobacco") else "No"}</span></div>
-  <div class="row"><span class="label">Decision</span><span style="color:{decision_color};font-weight:700;">{_esc(decision)}</span></div>
+  <div class="row"><span class="label">Decision</span><span style="color:{decision_color_hex};font-weight:700;">{_esc(decision)}</span></div>
   <div class="row"><span class="label">Policy Admin Ref</span><span>{_esc(quote.policy_admin_reference or "N/A")}</span></div>"""
         modifiers_block = f"""
   <h2>Life Rating Factors</h2>
@@ -163,7 +158,7 @@ def generate_quote_html(
   <div class="row"><span class="label">COPE Risk Grade</span><span>{_esc(cope_grade.replace("_", " ").title())}</span></div>
   <div class="row"><span class="label">Market Phase</span><span>{_esc(market_phase.replace("_", " ").title())}</span></div>
   <div class="row"><span class="label">Risk Score</span><span>{risk_pct if risk_pct is not None else "—"}/100 · {_esc(severity)}</span></div>
-  <div class="row"><span class="label">Decision</span><span style="color:{decision_color};font-weight:700;">{_esc(decision)}</span></div>
+  <div class="row"><span class="label">Decision</span><span style="color:{decision_color_hex};font-weight:700;">{_esc(decision)}</span></div>
   <div class="row"><span class="label">Policy Admin Ref</span><span>{_esc(quote.policy_admin_reference or "N/A")}</span></div>"""
         modifiers_block = f"""
   <h2>Rate Components</h2>
@@ -229,7 +224,9 @@ def generate_quote_html(
   .sev-critical, .sev-high {{ color: #f87171; }}
   .sev-moderate {{ color: #fbbf24; }}
   .sev-low, .sev-info {{ color: #4ade80; }}
+  {WORDMARK_CSS_DARK}
   @media print {{
+    {WORDMARK_CSS_PRINT}
     body {{ background: white !important; color: #0f172a !important; }}
     .container {{ box-shadow: none; background: white !important; }}
     h1, .card-header, .finding-top, td, .row, .list li, .summary-text {{ color: #0f172a !important; }}
@@ -284,7 +281,7 @@ def generate_quote_html(
 
   <div class="footer">
     <p>This quote is for informational purposes only and does not constitute a binder of insurance.</p>
-    <p style="margin-top:4px;">Rytera &bull; Generated {_esc(today)}</p>
+    <p style="margin-top:8px;">{wordmark_html(14)} <span class="muted">&bull; Generated {_esc(today)}</span></p>
   </div>
 </div>
 </body>

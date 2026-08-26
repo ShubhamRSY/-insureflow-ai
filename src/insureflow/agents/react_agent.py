@@ -11,6 +11,19 @@ from insureflow.llm.client import LLMClient
 from insureflow.models.agents import AgentResult, AgentType, Finding, RiskSeverity
 from insureflow.models.submissions import SubmissionBundle
 
+# Process-wide circuit breaker: once a given (provider, model, api_key) combo
+# fails once, every ReActAgent using that same config skips the live LLM call
+# for the rest of the process instead of re-attempting it. Without this, two
+# runs of the *same* submission can silently diverge — one agent's LLM call
+# happens to succeed (transient network/rate-limit variance) while another's
+# fails, and since the ReAct loop's findings materially change the
+# underwriting decision, that alone can flip REFER into DECLINE between runs.
+_LLM_BROKEN: set[tuple[str, str, str]] = set()
+
+
+def _llm_circuit_key(llm: LLMClient) -> tuple[str, str, str]:
+    return (llm.provider, llm.model or "", llm.api_key or "")
+
 
 class ReActAgent(BaseAgent):
     agent_type: AgentType
@@ -35,13 +48,17 @@ class ReActAgent(BaseAgent):
 
         self._tools_registry = ToolRegistry(bundle)
 
-        if self.llm.api_key:
+        circuit_key = _llm_circuit_key(self.llm)
+        if self.llm.api_key and circuit_key not in _LLM_BROKEN:
             try:
                 self._react_loop(bundle, **kwargs)
             except Exception as e:
+                _LLM_BROKEN.add(circuit_key)
                 self._errors.append(f"ReAct loop error: {type(e).__name__}: {e}")
-                if not self._findings:
-                    self._analyze(bundle, **kwargs)
+                # Always fall back to the full deterministic analysis on any
+                # failure — never rely on however far the ReAct loop got.
+                self._findings = []
+                self._analyze(bundle, **kwargs)
         else:
             self._analyze(bundle, **kwargs)
 

@@ -13,10 +13,9 @@ from insureflow.models.agents import AgentType, Finding, RiskSeverity
 from insureflow.models.submissions import SubmissionBundle
 from insureflow.underwriting.beneficiary_review import (
     BeneficiaryReviewResult,
-    review_beneficiaries,
     persist_beneficiary_review,
+    review_beneficiaries,
 )
-from insureflow.underwriting.personal_lines import extract_life_factors
 
 
 class BeneficiaryReviewAgent(BaseAgent):

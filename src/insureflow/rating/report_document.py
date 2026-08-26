@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from insureflow.rating.models import line_display_name
+from insureflow.rating.report_theme import WORDMARK_CSS_PRINT, decision_color, wordmark_html
 
 # ── Underwriter-language translation ──────────────────────────────────────────
 # The verification stack speaks in engineering terms (hallucination, bbox,
@@ -163,12 +164,15 @@ def generate_memo_report_html(results: dict[str, Any], job_id: str, now: str) ->
     color: #1e293b; font-size: 12px; line-height: 1.55; background: white;
     -webkit-font-smoothing: antialiased;
   }}
+  {WORDMARK_CSS_PRINT}
 </style>
 </head>
 <body>
 
-  <div style="text-align:center;border-bottom:2px solid #0f172a;padding-bottom:12px;margin-bottom:14px;">
+  <div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid #0f172a;padding-bottom:12px;margin-bottom:14px;">
+    {wordmark_html(16)}
     <div style="font-size:17px;font-weight:700;letter-spacing:0.22em;color:#0f172a;text-transform:uppercase;">Underwriting Evaluation Memo</div>
+    <div style="width:60px;"></div>
   </div>
 
   {header_html}
@@ -216,12 +220,12 @@ def uw_signoff_html(results: dict[str, Any]) -> str:
 
     action = str(sign.get("action") or "—").replace("_", " ").upper()
     action_colors = {
-        "APPROVE": "#15803d",
-        "QUOTE": "#15803d",
-        "REFER": "#b45309",
-        "REQUEST_INFO": "#b45309",
-        "DECLINE": "#b91c1c",
-        "NO_QUOTE": "#b91c1c",
+        "APPROVE": decision_color("ACCEPT"),
+        "QUOTE": decision_color("ACCEPT"),
+        "REFER": decision_color("REFER"),
+        "REQUEST_INFO": decision_color("REFER"),
+        "DECLINE": decision_color("DECLINE"),
+        "NO_QUOTE": decision_color("DECLINE"),
     }
     action_color = action_colors.get(action, "#334155")
 
@@ -347,13 +351,7 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
     executive_summary = memo.get("summary") or memo.get("executive_summary") or ""
 
     # ── Colors ──
-    decision_colors = {
-        "ACCEPT": "#16a34a",
-        "CONDITIONAL_ACCEPT": "#d97706",
-        "REFER": "#d97706",
-        "DECLINE": "#dc2626",
-    }
-    decision_color = decision_colors.get(decision, "#64748b")
+    decision_color_hex = decision_color(decision)
 
     if risk_pct is not None:
         if risk_pct >= 75:
@@ -389,6 +387,10 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
         "ml_fraud": "ML Fraud",
         "ml_loss": "ML Loss",
         "uw_decision": "Underwriting Decision",
+        "hallucination": "Data Verification",
+        "mib": "MIB / Bureau Check",
+        "sanctions": "Sanctions Screening",
+        "life_reinsurance": "Reinsurance",
     }
 
     # ── Document checklist ──
@@ -423,8 +425,6 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
             sc = sev_colors.get(sev, "#64748b")
             title = uw_finding_title(f.get("title", ""))
             desc = uw_finding_description(f.get("description", ""))
-            if cat == "hallucination":
-                label = "Unverified Figures"
             findings_html += f"""
             <div class="finding-item" style="border-left-color:{sc};">
               <div class="finding-title">{_esc(title) or "Finding"}</div>
@@ -562,6 +562,8 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
     background: white;
     -webkit-font-smoothing: antialiased;
   }}
+
+  {WORDMARK_CSS_PRINT}
 
   /* ── Header ── */
   .report-header {{
@@ -728,7 +730,7 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
     <div class="report-meta">Job ID: {job_id}</div>
   </div>
   <div class="report-header-right">
-    <div class="decision-badge" style="background:{decision_color}12;color:{decision_color};border:1px solid {decision_color}30;">{decision}</div>
+    <div class="decision-badge" style="background:{decision_color_hex}12;color:{decision_color_hex};border:1px solid {decision_color_hex}30;">{decision}</div>
     <div class="report-meta" style="margin-top:6px;">Quote #{policy_ref}</div>
     <div class="report-meta">Expires {valid_until}</div>
   </div>
@@ -753,7 +755,7 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
 
 <div class="grid-2">
   <div class="card">
-    <div class="kv-row"><span class="kv-label">Decision</span><span class="kv-value" style="color:{decision_color};font-weight:700;">{decision}</span></div>
+    <div class="kv-row"><span class="kv-label">Decision</span><span class="kv-value" style="color:{decision_color_hex};font-weight:700;">{decision}</span></div>
     {line_block}
     {appetite_block}
     <div class="kv-row"><span class="kv-label">Severity</span><span class="kv-value">{severity.title()}</span></div>
@@ -812,7 +814,7 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
 <div class="card">
   <div class="kv-row">
     <span class="kv-label">Action</span>
-    <span class="kv-value" style="font-weight:700;color:{decision_color};">{rec_action}</span>
+    <span class="kv-value" style="font-weight:700;color:{decision_color_hex};">{rec_action}</span>
   </div>
   {_render_conditions(rec_conditions)}
 </div>
@@ -827,7 +829,7 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
 <div class="report-footer">
   <p>This report is generated by the Rytera AI Underwriting Platform for informational purposes only.</p>
   {footer_disclaimer}
-  <p style="margin-top:4px;font-weight:600;">Rytera &bull; {now}</p>
+  <p style="margin-top:6px;">{wordmark_html(13)} <span>&bull; {now}</span></p>
 </div>
 
 </body>

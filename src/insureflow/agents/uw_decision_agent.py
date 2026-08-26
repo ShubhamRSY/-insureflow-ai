@@ -6,6 +6,25 @@ from insureflow.agents.react_agent import ReActAgent
 from insureflow.models.agents import AgentResult, AgentType, Finding, Recommendation, RiskSeverity, UnderwritingMemo, UWDecision
 from insureflow.models.submissions import SubmissionBundle
 
+# ── Decision policy thresholds ──────────────────────────────────────────────
+# See docs/underwriting_decision_policy.md for the rationale. Single edit
+# point: change a tier's boundary here, not by hunting inline literals.
+SEVERITY_WEIGHTS = {"critical": 1.0, "high": 0.75, "moderate": 0.5, "low": 0.2}
+REFER_AGGREGATE_SCORE_THRESHOLD = 0.7  # any high finding OR score >= this -> REFER
+SURCHARGE_ELIGIBLE_SCORE_THRESHOLD = 0.6  # frequency/severity surcharge only applies above this
+HARD_DECLINE_CLAIM_FREQUENCY_PER_YEAR = 10.0  # claim frequency at/above this is an automatic DECLINE
+FREQUENCY_SURCHARGE_MODERATE_THRESHOLD = 1.5  # claims/yr
+FREQUENCY_SURCHARGE_MODERATE_PCT = 10.0
+FREQUENCY_SURCHARGE_HIGH_THRESHOLD = 3.0  # claims/yr
+FREQUENCY_SURCHARGE_HIGH_BASE_PCT = 15.0
+FREQUENCY_SURCHARGE_HIGH_PER_CLAIM_PCT = 15.0
+SEVERITY_SURCHARGE_MODERATE_THRESHOLD = 75_000.0  # avg claim severity, $
+SEVERITY_SURCHARGE_MODERATE_PCT = 5.0
+SEVERITY_SURCHARGE_HIGH_THRESHOLD = 200_000.0  # avg claim severity, $
+SEVERITY_SURCHARGE_HIGH_BASE_PCT = 10.0
+SEVERITY_SURCHARGE_HIGH_PER_DOLLAR_DIVISOR = 20_000.0
+MAX_TOTAL_SURCHARGE_PCT = 100.0
+
 
 class UWDecisionAgent(ReActAgent):
     agent_type = AgentType.UW_DECISION
@@ -53,7 +72,7 @@ class UWDecisionAgent(ReActAgent):
             )
 
         score = self._calculate_aggregate_risk(all_findings)
-        if score >= 0.7:
+        if score >= REFER_AGGREGATE_SCORE_THRESHOLD:
             self._add_finding(
                 Finding(
                     title="Elevated aggregate risk score",
@@ -66,8 +85,7 @@ class UWDecisionAgent(ReActAgent):
     def _calculate_aggregate_risk(self, findings: list[Finding]) -> float:
         if not findings:
             return 0.0
-        weights = {"critical": 1.0, "high": 0.75, "moderate": 0.5, "low": 0.2}
-        scores = [weights.get(f.severity.value, 0.5) for f in findings]
+        scores = [SEVERITY_WEIGHTS.get(f.severity.value, 0.5) for f in findings]
         return min(1.0, sum(scores) / len(scores))
 
     def _build_recommendation(self) -> Recommendation | None:
@@ -85,24 +103,24 @@ class UWDecisionAgent(ReActAgent):
                 severity_val = float(f.source_value)
 
         freq_surcharge = 0.0
-        if frequency_val > 3:
-            freq_surcharge = 15.0 + (frequency_val - 3) * 15.0
-        elif frequency_val > 1.5:
-            freq_surcharge = 10.0
+        if frequency_val > FREQUENCY_SURCHARGE_HIGH_THRESHOLD:
+            freq_surcharge = FREQUENCY_SURCHARGE_HIGH_BASE_PCT + (frequency_val - FREQUENCY_SURCHARGE_HIGH_THRESHOLD) * FREQUENCY_SURCHARGE_HIGH_PER_CLAIM_PCT
+        elif frequency_val > FREQUENCY_SURCHARGE_MODERATE_THRESHOLD:
+            freq_surcharge = FREQUENCY_SURCHARGE_MODERATE_PCT
 
         sev_surcharge = 0.0
-        if severity_val > 200_000:
-            sev_surcharge = 10.0 + (severity_val - 200_000) / 20_000
-        elif severity_val > 75_000:
-            sev_surcharge = 5.0
+        if severity_val > SEVERITY_SURCHARGE_HIGH_THRESHOLD:
+            sev_surcharge = SEVERITY_SURCHARGE_HIGH_BASE_PCT + (severity_val - SEVERITY_SURCHARGE_HIGH_THRESHOLD) / SEVERITY_SURCHARGE_HIGH_PER_DOLLAR_DIVISOR
+        elif severity_val > SEVERITY_SURCHARGE_MODERATE_THRESHOLD:
+            sev_surcharge = SEVERITY_SURCHARGE_MODERATE_PCT
 
-        total_surcharge = min(freq_surcharge + sev_surcharge, 100.0)
+        total_surcharge = min(freq_surcharge + sev_surcharge, MAX_TOTAL_SURCHARGE_PCT)
 
-        if frequency_val >= 10:
+        if frequency_val >= HARD_DECLINE_CLAIM_FREQUENCY_PER_YEAR:
             return Recommendation(
                 action="decline",
                 rationale=f"Extreme claim frequency: {frequency_val:.1f} claims/year indicates systemic operational issues. Aggregate risk score: {score:.2f}.",
-                conditions=[f"Claim frequency of {frequency_val:.1f}/yr exceeds maximum acceptable threshold (10/yr)."],
+                conditions=[f"Claim frequency of {frequency_val:.1f}/yr exceeds maximum acceptable threshold ({HARD_DECLINE_CLAIM_FREQUENCY_PER_YEAR:.0f}/yr)."],
             )
 
         if has_critical:
@@ -114,11 +132,11 @@ class UWDecisionAgent(ReActAgent):
                 conditions=[f.title for f in self._findings if f.severity == RiskSeverity.CRITICAL],
             )
 
-        if has_high or score >= 0.7:
+        if has_high or score >= REFER_AGGREGATE_SCORE_THRESHOLD:
             return Recommendation(
                 action="refer",
                 rationale=f"Aggregate risk score: {score:.2f}. {sum(1 for f in self._findings if f.severity == RiskSeverity.HIGH)} high-severity findings require UW review.",
-                suggested_premium_modification=total_surcharge if total_surcharge > 0 and score > 0.6 else None,
+                suggested_premium_modification=total_surcharge if total_surcharge > 0 and score > SURCHARGE_ELIGIBLE_SCORE_THRESHOLD else None,
                 conditions=[f.title for f in self._findings if f.severity in (RiskSeverity.HIGH, RiskSeverity.CRITICAL)],
             )
 

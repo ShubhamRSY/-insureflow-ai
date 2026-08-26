@@ -29,7 +29,6 @@ class ApsOrderAgent(BaseAgent):
     def _analyze(self, bundle: SubmissionBundle, **kwargs: Any) -> None:
         factors = extract_life_factors(bundle)
         face = float(factors.face_amount or 0)
-        age = factors.age or 40
 
         priority = ApsOrderPriority.ROUTINE
         if face >= 3_000_000:

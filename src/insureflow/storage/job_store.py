@@ -31,7 +31,9 @@ class MemoryJobStore(JobStore):
         return f"{org_id}:{namespace}:{job_id}"
 
     def set(self, namespace: str, job_id: str, data: dict[str, Any], org_id: str = "default") -> None:
-        data = {**data, "org_id": org_id, "updated_at": datetime.now(tz=timezone.utc).isoformat()}
+        existing = self._store.get(self._key(namespace, job_id, org_id))
+        created_at = (existing or {}).get("created_at") or datetime.now(tz=timezone.utc).isoformat()
+        data = {**data, "org_id": org_id, "created_at": created_at, "updated_at": datetime.now(tz=timezone.utc).isoformat()}
         self._store[self._key(namespace, job_id, org_id)] = data
 
     def get(self, namespace: str, job_id: str, org_id: str = "default") -> dict[str, Any] | None:
@@ -68,7 +70,9 @@ class RedisJobStore(JobStore):
         return f"insureflow:{org_id}:{namespace}:index"
 
     def set(self, namespace: str, job_id: str, data: dict[str, Any], org_id: str = "default") -> None:
-        data = {**data, "org_id": org_id, "updated_at": datetime.now(tz=timezone.utc).isoformat()}
+        existing = self.get(namespace, job_id, org_id)
+        created_at = (existing or {}).get("created_at") or datetime.now(tz=timezone.utc).isoformat()
+        data = {**data, "org_id": org_id, "created_at": created_at, "updated_at": datetime.now(tz=timezone.utc).isoformat()}
         key = self._key(namespace, job_id, org_id)
         self.client.setex(key, self.ttl, json.dumps(data, default=str))
         self.client.sadd(self._index_key(namespace, org_id), job_id)

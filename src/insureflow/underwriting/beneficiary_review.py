@@ -10,11 +10,11 @@ from __future__ import annotations
 import re
 import uuid
 from dataclasses import dataclass, field
-from datetime import date, datetime
+from datetime import datetime
 from enum import Enum
 from typing import Any, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from insureflow.models.agents import Finding, RiskSeverity
 from insureflow.models.submissions import SubmissionBundle

@@ -3342,6 +3342,26 @@ def _resolve_job_any_vertical(job_id: str, org_id: str) -> tuple[dict[str, Any] 
     return None, ""
 
 
+def _submission_file_name(job: dict[str, Any], job_id: str, insured: str | None) -> str:
+    """Human-readable file-name stem: applicant name + submission timestamp.
+
+    Falls back to the raw job id only when no applicant name was ever
+    extracted — a submission download should never just say "demo-xxxxx".
+    """
+    from datetime import datetime
+
+    safe_name = "".join(c if c.isalnum() or c in (" ", "-", "_") else "" for c in (insured or "")).strip().replace(" ", "_")
+    created_at = job.get("created_at") or job.get("updated_at") or ""
+    stamp = ""
+    if created_at:
+        try:
+            stamp = datetime.fromisoformat(created_at.replace("Z", "+00:00")).strftime("%Y-%m-%d_%H%M")
+        except ValueError:
+            stamp = ""
+    parts = [p for p in (safe_name, stamp) if p]
+    return "_".join(parts) or job_id
+
+
 @app.get("/pipeline/jobs/{job_id}/quote")
 def get_job_quote(
     job_id: str,
@@ -3355,8 +3375,8 @@ def get_job_quote(
     if not html:
         raise HTTPException(status_code=404, detail="Quote document not available")
     results = job.get("results") or {}
-    insured = results.get("memo", {}).get("insured_name") or results.get("insured_name") or job_id
-    safe_name = "".join(c if c.isalnum() or c in (" ", "-", "_") else "" for c in insured).strip().replace(" ", "_") or job_id
+    insured = results.get("memo", {}).get("insured_name") or results.get("insured_name")
+    safe_name = _submission_file_name(job, job_id, insured)
     try:
         from insureflow.rating.report_document import html_to_pdf
 
@@ -3386,8 +3406,8 @@ def get_job_report(
     results = job.get("results") or {}
     if not results:
         raise HTTPException(status_code=404, detail="Pipeline results not available for this job")
-    borrower = results.get("memo", {}).get("insured_name") or results.get("insured_name") or results.get("borrower") or (results.get("memo") or {}).get("borrower_name") or job_id
-    safe_name = "".join(c if c.isalnum() or c in (" ", "-", "_") else "" for c in borrower).strip().replace(" ", "_") or job_id
+    borrower = results.get("memo", {}).get("insured_name") or results.get("insured_name") or results.get("borrower") or (results.get("memo") or {}).get("borrower_name")
+    safe_name = _submission_file_name(job, job_id, borrower)
     try:
         from insureflow.rating.report_document import generate_lending_report_html, generate_mortgage_report_html, generate_report_html, html_to_pdf
 
