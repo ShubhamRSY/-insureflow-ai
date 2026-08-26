@@ -353,12 +353,12 @@ export default function RunSelector({
           {[1, 2, 3].map((s) => (
             <div key={s} className="flex items-center gap-2">
               <div className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold transition-colors ${
-                guidedStep >= s ? 'bg-brand text-white' : 'bg-slate-700 text-slate-400'
+                guidedStep >= s ? 'bg-brand text-white' : 'bg-slate-600 text-slate-300'
               }`}>{s}</div>
-              <span className={`text-xs font-medium ${guidedStep >= s ? 'text-slate-200' : 'text-slate-500'}`}>
+              <span className={`text-xs font-medium ${guidedStep >= s ? 'text-slate-200' : 'text-slate-400'}`}>
                 {s === 1 ? 'Company' : s === 2 ? 'Source & Line' : 'Run'}
               </span>
-              {s < 3 && <ChevronRight className="h-3 w-3 text-slate-600" />}
+              {s < 3 && <ChevronRight className="h-3 w-3 text-slate-500" />}
             </div>
           ))}
         </div>

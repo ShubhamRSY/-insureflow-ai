@@ -38,7 +38,7 @@ const DECISION_COLORS = {
   accept: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400',
   conditional_accept: 'border-amber-500/40 bg-amber-500/10 text-amber-400',
   refer: 'border-sky-500/40 bg-sky-500/10 text-sky-400',
-  decline: 'border-red-800 bg-red-950/60 text-red-200',
+  decline: 'border-red-400/50 bg-red-500/15 text-red-300',
 };
 
 const DECISION_LABELS = {
@@ -344,7 +344,7 @@ export default function MemoReportView({ job }) {
   return (
     <div className="space-y-5">
       {/* ── 1. Decision Hero ────────────────────────────────────────────── */}
-      <div className={`rounded-2xl border-2 p-5 ${DECISION_COLORS[decision] || DECISION_COLORS.refer}`}>
+      <div className={`rounded-2xl border p-5 ${DECISION_COLORS[decision] || DECISION_COLORS.refer}`}>
         <div className="flex items-start justify-between">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-widest opacity-70">Underwriting Decision</p>
