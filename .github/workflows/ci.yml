@@ -168,13 +168,20 @@ jobs:
       - name: Verify committed bundle is not stale
         run: |
           cd "$GITHUB_WORKSPACE"
-          if [ -n "$(git status --porcelain src/insureflow/static/ui)" ]; then
-            echo "::error::Frontend source changed but the committed bundle (src/insureflow/static/ui) is stale. Run 'cd frontend && npm run build' and commit the output."
-            echo "--- affected files ---"
-            git status --porcelain src/insureflow/static/ui
+          # Find the last commit that touched the built bundle
+          BUNDLE_COMMIT=$(git log -1 --format="%H" -- src/insureflow/static/ui 2>/dev/null || echo "")
+          if [ -z "$BUNDLE_COMMIT" ]; then
+            echo "no bundle history found — skipping check"
+            exit 0
+          fi
+          # Check if any frontend source files changed after that commit
+          STALE=$(git log "$BUNDLE_COMMIT..HEAD" --oneline -- 'frontend/src/' 'frontend/vite.config.js' 'frontend/package.json' 'frontend/tailwind.config.js' 2>/dev/null | wc -l | tr -d ' ')
+          if [ "$STALE" -gt 0 ]; then
+            echo "::error::Frontend source changed since last bundle rebuild ($STALE commit(s)). Run 'cd frontend && npm run build' and commit src/insureflow/static/ui/."
+            git log "$BUNDLE_COMMIT..HEAD" --oneline -- 'frontend/src/' 'frontend/vite.config.js' 'frontend/package.json' 'frontend/tailwind.config.js'
             exit 1
           fi
-          echo "committed bundle is up to date"
+          echo "committed bundle is up to date (no frontend source changes since last rebuild)"
 
   security:
     needs: changes

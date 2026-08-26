@@ -57,7 +57,9 @@ export default function InsuranceMemoView({ job }) {
     accept: 'from-emerald-600/30 to-emerald-900/10 border-emerald-500/40 text-emerald-300',
     conditional_accept: 'from-amber-600/30 to-amber-900/10 border-amber-500/40 text-amber-300',
     refer: 'from-sky-600/30 to-sky-900/10 border-sky-500/40 text-sky-300',
-    decline: 'from-red-600/30 to-red-900/10 border-red-500/40 text-red-300',
+    // Deliberately darker/more saturated than a "critical" finding chip (red-500) —
+    // DECLINE must read as more severe than any single finding, not the same hue.
+    decline: 'from-red-900/70 to-red-950/50 border-red-700 text-red-100',
   }[decision] || 'from-slate-600/30 to-slate-900/10 border-white/10 text-slate-300';
 
   const riskPct = memo.overall_risk_score != null

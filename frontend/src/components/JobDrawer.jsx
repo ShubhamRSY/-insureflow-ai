@@ -14,6 +14,11 @@ export default function JobDrawer({ job, vertical, jobId, onClose }) {
   const wide = isInsurance || vertical === 'mortgage' || vertical === 'lending';
 
   const bundleId = job?.results?.bundle_id;
+  const subjectName = job?.results?.insured_name || job?.results?.memo?.insured_name
+    || job?.results?.borrower || job?.results?.memo?.borrower_name || '';
+  const submittedAt = job?.created_at
+    ? new Date(job.created_at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
+    : null;
 
   let content;
   if (failed) {
@@ -196,7 +201,10 @@ export default function JobDrawer({ job, vertical, jobId, onClose }) {
             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
               {isInsurance ? 'Submission Journey' : 'Job Detail'}
             </p>
-            <p className="font-mono text-sm font-semibold">{jobId}</p>
+            <p className="text-sm font-semibold">{subjectName || 'Unnamed applicant'}</p>
+            <p className="font-mono text-[11px] text-slate-500">
+              {jobId}{submittedAt ? ` · ${submittedAt}` : ''}
+            </p>
           </div>
           <button type="button" onClick={onClose} className="rounded-lg p-2 hover:bg-white/5">
             <X className="h-5 w-5 text-slate-400" />
