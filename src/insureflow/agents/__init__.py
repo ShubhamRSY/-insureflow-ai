@@ -17,6 +17,12 @@ _LAZY_MAP: dict[str, tuple[str, str]] = {
     "SynthesisAgent": ("insureflow.agents.synthesis_agent", "SynthesisAgent"),
     "UWDecisionAgent": ("insureflow.agents.uw_decision_agent", "UWDecisionAgent"),
     "VerificationAgent": ("insureflow.agents.verification_agent", "VerificationAgent"),
+    "ActuarialAgent": ("insureflow.agents.actuarial_agent", "ActuarialAgent"),
+    "MibOrderAgent": ("insureflow.agents.mib_order_agent", "MibOrderAgent"),
+    "ApsOrderAgent": ("insureflow.agents.aps_order_agent", "ApsOrderAgent"),
+    "PolicyIssuanceAgent": ("insureflow.agents.policy_issuance_agent", "PolicyIssuanceAgent"),
+    "RenewalTrackerAgent": ("insureflow.agents.renewal_tracker_agent", "RenewalTrackerAgent"),
+    "BeneficiaryReviewAgent": ("insureflow.agents.beneficiary_review_agent", "BeneficiaryReviewAgent"),
 }
 
 

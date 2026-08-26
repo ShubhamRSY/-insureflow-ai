@@ -23,6 +23,12 @@ class AgentType(str, Enum):
     PRODUCER_EXPERIENCE = "producer_experience"
     ADVERSE_SELECTION = "adverse_selection"
     MORAL_HAZARD = "moral_hazard"
+    ACTUARIAL = "actuarial"
+    MIB_ORDER = "mib_order"
+    APS_ORDER = "aps_order"
+    POLICY_ISSUANCE = "policy_issuance"
+    RENEWAL_TRACKER = "renewal_tracker"
+    BENEFICIARY_REVIEW = "beneficiary_review"
 
 
 class RiskSeverity(str, Enum):

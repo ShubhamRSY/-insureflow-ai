@@ -8,6 +8,13 @@ import SubmissionJourney from '../components/SubmissionJourney';
 import UwWorksheetView from '../components/UwWorksheetView';
 import UwPolicyValidator from '../components/UwPolicyValidator';
 import RateProvenance from '../components/RateProvenance';
+import ActuarialView from '../components/ActuarialView';
+import MibOrderView from '../components/MibOrderView';
+import ApsOrderView from '../components/ApsOrderView';
+import PolicyIssuanceView from '../components/PolicyIssuanceView';
+import PremiumCalculator from '../components/PremiumCalculator';
+import RenewalTrackerView from '../components/RenewalTrackerView';
+import BeneficiaryReviewView from '../components/BeneficiaryReviewView';
 
 export default function InsuranceJobDetail({ onDeleted, onDeleteJob }) {
   const { jobId } = useParams();
@@ -229,6 +236,34 @@ export default function InsuranceJobDetail({ onDeleted, onDeleteJob }) {
               <RateProvenance metadata={job.quote_result?.metadata || job.results.quote_full.metadata} />
             </Collapsible>
           )}
+
+          <Collapsible title="Actuarial Mortality Lookup" defaultOpen={false}>
+            <ActuarialView data={job?.results} />
+          </Collapsible>
+
+          <Collapsible title="Premium Calculator" defaultOpen={false}>
+            <PremiumCalculator data={job?.results} />
+          </Collapsible>
+
+          <Collapsible title="MIB Bureau Orders" defaultOpen={false}>
+            <MibOrderView data={job?.results} />
+          </Collapsible>
+
+          <Collapsible title="APS Orders" defaultOpen={false}>
+            <ApsOrderView data={job?.results} />
+          </Collapsible>
+
+          <Collapsible title="Beneficiary Review" defaultOpen={false}>
+            <BeneficiaryReviewView data={job?.results} />
+          </Collapsible>
+
+          <Collapsible title="Renewal & Convertibility" defaultOpen={false}>
+            <RenewalTrackerView data={job?.results} />
+          </Collapsible>
+
+          <Collapsible title="Policy Issuance" defaultOpen={false}>
+            <PolicyIssuanceView data={job?.results} />
+          </Collapsible>
         </div>
       </div>
     </div>

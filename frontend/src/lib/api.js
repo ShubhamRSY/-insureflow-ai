@@ -441,6 +441,18 @@ export const endpoints = {
 
   // Admin
   createUser: (body) => api('/auth/users', { method: 'POST', body }),
+
+  // Life insurance gaps — actuarial, MIB order, APS order, issuance, renewal, beneficiary
+  actuarialLookup: (bundleId) => api(`/insurance/life/actuarial/${bundleId}`),
+  mibOrder: (bundleId) => api(`/insurance/life/mib-order/${bundleId}`, { method: 'POST' }),
+  mibOrderStatus: (bundleId) => api(`/insurance/life/mib-order/${bundleId}`),
+  apsOrder: (bundleId, body = {}) => api(`/insurance/life/aps-order/${bundleId}`, { method: 'POST', body }),
+  apsOrderStatus: (bundleId) => api(`/insurance/life/aps-order/${bundleId}`),
+  issuanceReadiness: (bundleId) => api(`/insurance/life/issuance/${bundleId}`),
+  issueBinder: (bundleId, body = {}) => api(`/insurance/life/issuance/${bundleId}/bind`, { method: 'POST', body }),
+  premiumCalc: (bundleId) => api(`/insurance/life/premium/${bundleId}`),
+  renewalStatus: (bundleId) => api(`/insurance/life/renewal/${bundleId}`),
+  beneficiaryReview: (bundleId) => api(`/insurance/life/beneficiary/${bundleId}`),
 };
 
 export function fmtCurrency(n) {
