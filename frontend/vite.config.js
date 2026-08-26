@@ -21,4 +21,11 @@ export default defineConfig({
       '/analytics': 'http://127.0.0.1:8002',
     },
   },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.js'],
+    css: true,
+    include: ['src/**/*.{test,spec}.{js,jsx}'],
+  },
 });
