@@ -283,8 +283,6 @@ def snapshot_from_bundle(bundle: SubmissionBundle) -> EntitySnapshot:
             name = ni.legal_name or ""
             tax_id = ni.tax_id or ""
             address = ni.address or address
-        if bundle.structured.broker and bundle.structured.broker.contact_email:
-            email = bundle.structured.broker.contact_email
         if bundle.structured.locations:
             loc = bundle.structured.locations[0]
             address = address or f"{loc.address}, {loc.city}, {loc.state} {loc.zip_code}"
@@ -297,7 +295,11 @@ def snapshot_from_bundle(bundle: SubmissionBundle) -> EntitySnapshot:
                     incurred += float(row.get("incurred_amount") or 0)
             premium = sum(c.premium or 0 for c in bundle.structured.coverages) or 1.0
             loss_ratio = incurred / premium if premium else 0.0
-    email = email or fields.get("email") or fields.get("contact_email") or ""
+    # Applicant-side email only — never the broker's own contact address.
+    # One broker legitimately submits many unrelated clients through the same
+    # desk email, so using it as a ring-matching identity key would flag every
+    # busy brokerage's normal submission stream as a "fraud ring".
+    email = fields.get("email") or fields.get("contact_email") or ""
     return EntitySnapshot(
         entity_id=bundle.bundle_id,
         legal_name=name,
@@ -313,16 +315,32 @@ def snapshot_from_bundle(bundle: SubmissionBundle) -> EntitySnapshot:
 
 
 class FraudRingIndex:
-    """In-process memory of recent applicants so rings can form across files."""
+    """In-process memory of recent applicants so rings can form across files.
 
-    def __init__(self) -> None:
-        self._entities: dict[str, EntitySnapshot] = {}
+    Bounded to the most recent ``max_entities`` submissions: a genuine fraud
+    ring is a cluster of *recent, related* submissions, so an identity match
+    against a submission from long ago (or, in a long-running process, from
+    an entirely unrelated batch) is weak signal and shouldn't be remembered
+    forever — this was previously unbounded, so this index only ever grew,
+    letting stale applicants retroactively flag unrelated later submissions
+    as a "ring" purely for sharing incidental data (e.g. a placeholder email
+    reused across many synthetic fixtures).
+    """
+
+    def __init__(self, max_entities: int = 500) -> None:
+        from collections import OrderedDict
+
+        self._entities: OrderedDict[str, EntitySnapshot] = OrderedDict()
+        self._max_entities = max_entities
 
     def clear(self) -> None:
         self._entities.clear()
 
     def upsert(self, snapshot: EntitySnapshot) -> None:
         self._entities[snapshot.entity_id] = snapshot
+        self._entities.move_to_end(snapshot.entity_id)
+        while len(self._entities) > self._max_entities:
+            self._entities.popitem(last=False)
 
     def ingest_bundle(self, bundle: SubmissionBundle) -> EntitySnapshot:
         snap = snapshot_from_bundle(bundle)
