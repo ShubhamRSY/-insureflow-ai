@@ -27,7 +27,13 @@ class FraudDetectionModel(BaseMLModel):
             n_estimators=200,
             contamination=0.08,
             random_state=42,
-            n_jobs=-1,
+            # n_jobs=1, not -1: sklearn's ensemble parallelism is not
+            # bit-reproducible across machines with different core counts —
+            # each worker derives its own sub-seed from job scheduling, so a
+            # fixed random_state alone does not make this deterministic
+            # across environments. This was the actual cause of findings
+            # (and therefore decisions) differing between local runs and CI.
+            n_jobs=1,
         )
         self.classifier = GradientBoostingClassifier(
             n_estimators=150,
