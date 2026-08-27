@@ -138,9 +138,7 @@ def test_report_and_quote_render_identical_life_factors() -> None:
             "base_premium": 1125.0,
             "adjusted_premium": 823.09,
             "metadata": {"insurance_line": "life", "personal_lines": True, "face_amount": 750000},
-            "schedule_modifications": [
-                {"name": mod.name, "amount": mod.amount, "modifier_pct": mod.modifier_pct} for mod in _life_schedule_mods()
-            ],
+            "schedule_modifications": [{"name": mod.name, "amount": mod.amount, "modifier_pct": mod.modifier_pct} for mod in _life_schedule_mods()],
         },
     }
     report_html = generate_report_html(results, "demo-parity-test")
@@ -158,9 +156,6 @@ def test_report_and_quote_render_identical_life_factors() -> None:
     report_values = factor_values(report_html)
 
     assert quote_values == {"mortality_per_1000": "1.5", "underwriting_class": "0.82"}
-    assert report_values == quote_values, (
-        f"Report and Quote must render identical factor values for the same job: "
-        f"quote={quote_values!r} report={report_values!r}"
-    )
+    assert report_values == quote_values, f"Report and Quote must render identical factor values for the same job: quote={quote_values!r} report={report_values!r}"
     # No bare, unwrapped <tr> in the Quote's factor list (markup bug regression guard)
     assert re.search(r"<div class=\"card\">\s*<div class=\"row\">.*?<tr>", quote_html, re.DOTALL) is None

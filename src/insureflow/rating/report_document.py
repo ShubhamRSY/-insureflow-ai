@@ -617,8 +617,7 @@ def generate_report_html(results: dict[str, Any], job_id: str, audience: str = "
 
         if completeness_raw is not None and completeness_raw < 0.85:
             completeness_note = (
-                f"Document package {completeness_display} complete — {len(missing_docs)} of "
-                f"{len(present_docs) + len(missing_docs)} required documents missing (see Document Checklist)."
+                f"Document package {completeness_display} complete — {len(missing_docs)} of {len(present_docs) + len(missing_docs)} required documents missing (see Document Checklist)."
             )
             if not any("document" in b.lower() and "complet" in b.lower() for b in why_bullets):
                 why_bullets.append(completeness_note)
