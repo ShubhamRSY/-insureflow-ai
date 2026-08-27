@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from insureflow.agents.base import NOISE_CATEGORIES
 from insureflow.agents.react_agent import ReActAgent
 from insureflow.models.agents import AgentResult, AgentType, Finding, Recommendation, RiskSeverity, UnderwritingMemo, UWDecision
 from insureflow.models.submissions import SubmissionBundle
@@ -83,21 +84,32 @@ class UWDecisionAgent(ReActAgent):
             )
 
     def _calculate_aggregate_risk(self, findings: list[Finding]) -> float:
-        """Calibrated aggregate risk score — consistent with BaseAgent._calculate_risk_score."""
-        if not findings:
+        """Calibrated aggregate risk score — consistent with BaseAgent._calculate_risk_score.
+
+        Environmental findings (NOISE_CATEGORIES) are excluded entirely — they're
+        data-availability noise, not underwriting risk, and independently force
+        REFER via dedicated pipeline handling. Volume amplification only counts
+        MODERATE+ findings, and is capped together with the category penalty at
+        +0.25 so pile-up effects nudge the score without dominating it.
+        """
+        high_risk_categories = {"fraud_detection", "moral_hazard", "selection", "adverse_selection"}
+        scored = [f for f in findings if f.category not in NOISE_CATEGORIES]
+        if not scored:
             return 0.0
 
-        high_risk_categories = {"fraud_detection", "moral_hazard", "selection", "adverse_selection"}
         weighted_sum = 0.0
         high_risk_count = 0
+        volume_count = 0.0
         total_weight = 0.0
 
-        for f in findings:
+        for f in scored:
             sev_weight = SEVERITY_WEIGHTS.get(f.severity.value, 0.5)
             conf = getattr(f, "confidence", None) or 0.7
             conf_weight = 0.5 + conf * 0.5
             weighted_sum += sev_weight * conf_weight
             total_weight += 1.0
+            if f.severity.value != "low":
+                volume_count += 1.0
             if f.category in high_risk_categories:
                 high_risk_count += 1
 
@@ -108,10 +120,11 @@ class UWDecisionAgent(ReActAgent):
 
         import math
 
-        volume_amp = math.log2(1.0 + total_weight) / 6.0
+        volume_amp = math.log2(1.0 + volume_count) / 6.0
         category_penalty = min(0.3, high_risk_count * 0.1)
+        pileup_bonus = min(0.25, volume_amp + category_penalty)
 
-        score = base_score + volume_amp + category_penalty
+        score = base_score + pileup_bonus
         return min(1.0, max(0.0, score))
 
     def _build_recommendation(self) -> Recommendation | None:
@@ -189,6 +202,12 @@ class UWDecisionAgent(ReActAgent):
     ) -> UnderwritingMemo:
         all_findings = []
         for ar in agent_results:
+            # Callers commonly append uw_decision_result into agent_results
+            # before calling this (for timing/summary display) *and* pass it
+            # again as uw_decision_result below — skip it here so its
+            # findings aren't double-counted into the risk score.
+            if ar is uw_decision_result or ar.agent_name == uw_decision_result.agent_name:
+                continue
             all_findings.extend(ar.findings)
         all_findings.extend(uw_decision_result.findings)
 

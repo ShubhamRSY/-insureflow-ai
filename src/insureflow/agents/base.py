@@ -7,6 +7,12 @@ from insureflow.agents.tools import UnderwritingTools
 from insureflow.models.agents import AgentResult, AgentType, Finding, Recommendation
 from insureflow.models.submissions import SubmissionBundle
 
+# Data-availability noise, not underwriting risk signal: an oracle being down or a
+# figure failing hallucination-grounding says nothing about this applicant's risk.
+# Excluded from risk-score arithmetic in both BaseAgent and UWDecisionAgent; still
+# shown to the underwriter and still forces REFER via dedicated pipeline handling.
+NOISE_CATEGORIES = {"oracle_failure", "external_oracle", "hallucination"}
+
 
 class BaseAgent:
     agent_type: AgentType
@@ -51,26 +57,36 @@ class BaseAgent:
         self._findings.append(finding)
 
     def _calculate_risk_score(self) -> float:
-        """Calibrated risk score: severity-weighted average with volume amplification and category penalties.
+        """Calibrated risk score: severity-weighted average plus a capped pile-up bonus.
 
         - Severity weights: critical=1.0, high=0.75, moderate=0.5, low=0.2
-        - Volume amplification: log2(1 + count) / 6 caps at ~0.5x boost for large finding sets
-        - Category penalties: fraud_detection/moral_hazard findings amplify the score
-        - Confidence adjustment: higher-confidence findings weigh more
-        - No artificial 0.8 cap — the volume amp + category penalty naturally bound the score
+        - Environmental findings (oracle_failure/external_oracle/hallucination) are
+          data-availability noise, not underwriting risk signal — they're excluded
+          from the score entirely. They still appear in findings and independently
+          force REFER via dedicated pipeline handling; they must not also inflate
+          the score toward DECLINE on files that are otherwise clean.
+        - Volume amplification (log2(1 + count) / 6) only counts MODERATE+ findings
+          — routine LOW-severity/informational findings (reinsurance summaries,
+          portfolio stats, clean OFAC screens) fire on nearly every submission and
+          must not read as a "pile-up of problems".
+        - volume_amp + category_penalty together are capped at +0.25 so pile-up
+          effects can nudge the score but never dominate the severity average.
+        - Confidence adjustment: higher-confidence findings weigh more.
         """
-        if not self._findings:
-            return 0.0  # Consistent default: no findings = no risk (was 0.5)
-
         severity_weights = {"critical": 1.0, "high": 0.75, "moderate": 0.5, "low": 0.2}
         high_risk_categories = {"fraud_detection", "moral_hazard", "selection", "adverse_selection"}
+
+        scored = [f for f in self._findings if f.category not in NOISE_CATEGORIES]
+        if not scored:
+            return 0.0  # Consistent default: no findings = no risk (was 0.5)
 
         weighted_sum = 0.0
         confidence_sum = 0.0
         high_risk_count = 0
+        volume_count = 0.0
         total_weight = 0.0
 
-        for f in self._findings:
+        for f in scored:
             sev_weight = severity_weights.get(f.severity.value, 0.5)
             conf = getattr(f, "confidence", None) or 0.7  # default 70% if not set
             conf_weight = 0.5 + conf * 0.5  # range [0.5, 1.0]
@@ -78,6 +94,8 @@ class BaseAgent:
             weighted_sum += effective_weight
             confidence_sum += conf
             total_weight += 1.0
+            if f.severity.value != "low":
+                volume_count += 1.0
             if f.category in high_risk_categories:
                 high_risk_count += 1
 
@@ -86,19 +104,21 @@ class BaseAgent:
 
         base_score = weighted_sum / total_weight
 
-        # Volume amplification: log2(1 + count) / 6 → max ~0.5x boost at 63 findings
         import math
 
-        volume_amp = math.log2(1.0 + total_weight) / 6.0
+        volume_amp = math.log2(1.0 + volume_count) / 6.0
 
         # Category penalty: +0.1 per high-risk category finding (capped at +0.3)
         category_penalty = min(0.3, high_risk_count * 0.1)
+
+        # Pile-up bonus: volume + category together nudge the score, never dominate it
+        pileup_bonus = min(0.25, volume_amp + category_penalty)
 
         # Average confidence factor: low-confidence findings reduce score slightly
         avg_confidence = confidence_sum / total_weight
         confidence_factor = 0.85 + 0.15 * avg_confidence  # range [0.85, 1.0]
 
-        score = (base_score + volume_amp + category_penalty) * confidence_factor
+        score = (base_score + pileup_bonus) * confidence_factor
         return min(1.0, max(0.0, score))
 
     def _build_recommendation(self) -> Optional[Recommendation]:

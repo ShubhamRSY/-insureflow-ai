@@ -310,20 +310,36 @@ class RiskAnalystAgent(BaseAgent):
 
         tiv = 0.0
         prior_claims = 0
+        total_incurred = 0.0
 
         if bundle.structured:
             for loc in bundle.structured.locations:
                 tiv += (loc.building_value or 0) + (loc.contents_value or 0) + (loc.bi_value or 0)
             if bundle.structured.risk_profile:
                 prior_claims = len(bundle.structured.risk_profile.prior_claims)
+                total_incurred += sum(c.incurred_amount for c in bundle.structured.risk_profile.prior_claims)
+            if bundle.structured.financial and bundle.structured.financial.loss_run:
+                total_incurred += sum(c.incurred_amount for c in bundle.structured.financial.loss_run.claims or [])
 
         if tiv == 0:
             return
 
+        # Use the applicant's own observed loss experience when we have it —
+        # a flat 0.5 assumption for every submission means clean accounts get
+        # the same "expected loss" treatment as genuinely bad ones. Falls back
+        # to 0.5 only when there's no loss history to measure against.
+        premium = sum(c.premium for c in bundle.structured.coverages) if bundle.structured else 0.0
+        if total_incurred > 0 and premium > 0:
+            loss_ratio = min(3.0, total_incurred / premium)
+        elif total_incurred > 0 and tiv > 0:
+            loss_ratio = min(3.0, total_incurred / tiv)
+        else:
+            loss_ratio = 0.5
+
         try:
             result = MLTools.predict_loss(
                 tiv=tiv,
-                loss_ratio=0.5,
+                loss_ratio=loss_ratio,
                 prior_claims_count=prior_claims,
                 insurance_line=insurance_line,
             )
@@ -341,11 +357,32 @@ class RiskAnalystAgent(BaseAgent):
         risk_factors = result.get("top_risk_factors", [])
 
         if expected_loss > 0:
+            # The model's output isn't a flat % of TIV at every TIV band — its
+            # own loss_ratio=0.0 prediction for the same tiv/prior_claims is
+            # already a large fraction of TIV at the low end (TIV-driven
+            # baseline, not attributable to this applicant's history). Compare
+            # against that baseline instead of a flat 5% of TIV, so severity
+            # reflects risk *attributable to this applicant*, not the model's
+            # floor for an account of this size.
+            baseline_loss = 0.0
+            if loss_ratio > 0:
+                try:
+                    baseline_result = MLTools.predict_loss(
+                        tiv=tiv,
+                        loss_ratio=0.0,
+                        prior_claims_count=prior_claims,
+                        insurance_line=insurance_line,
+                    )
+                    baseline_loss = baseline_result.get("expected_loss", 0) if "error" not in baseline_result else 0.0
+                except Exception:
+                    baseline_loss = 0.0
+            incremental_loss = max(0.0, expected_loss - baseline_loss)
+
             self._add_finding(
                 Finding(
                     title="ML loss prediction",
                     description=f"Expected annual loss: ${expected_loss:,.0f} (confidence: {confidence:.0%})",
-                    severity=RiskSeverity.HIGH if expected_loss > tiv * 0.05 else RiskSeverity.MODERATE,
+                    severity=RiskSeverity.HIGH if incremental_loss > tiv * 0.05 else RiskSeverity.MODERATE,
                     category="ml_loss",
                     source_value=expected_loss,
                     evidence=risk_factors[:5] if risk_factors else [f"Range: ${result.get('loss_range_low', 0):,.0f} - ${result.get('loss_range_high', 0):,.0f}"],
