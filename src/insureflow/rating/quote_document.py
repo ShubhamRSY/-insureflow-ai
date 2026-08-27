@@ -23,6 +23,13 @@ def generate_quote_html(
     insured_missing = not str(insured or "").strip()
     if insured_missing:
         insured = "Named insured not provided"
+    identity_gap_note = (
+        '<div class=\'finding\' style="border-left-color:#dc2626;"><div class=\'finding-top\'>'
+        "<strong>Identity verification incomplete</strong></div><p class='finding-desc'>"
+        "Named insured not on file. Confirm with the producer before bind.</p></div>"
+        if insured_missing
+        else ""
+    )
     today = datetime.now(tz=timezone.utc).strftime("%B %d, %Y")
     valid_until = quote.quote_valid_until or "30 days from issuance"
     meta = quote.metadata or {}
@@ -273,7 +280,7 @@ def generate_quote_html(
   </div>
 
   {header_rows}
-  {"<div class='finding' style=\"border-left-color:#dc2626;\"><div class='finding-top'><strong>Identity verification incomplete</strong></div><p class='finding-desc'>Named insured not on file. Confirm with the producer before bind.</p></div>" if insured_missing else ""}
+  {identity_gap_note}
   {summary_note}
 
   <h2>Coverages</h2>

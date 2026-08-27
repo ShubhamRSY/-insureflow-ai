@@ -509,8 +509,10 @@ def generate_report_html(results: dict[str, Any], job_id: str, audience: str = "
         decision_logic_block = f"""
 <div class="section-title">Decision Logic <span style="font-weight:400;text-transform:none;color:#94a3b8;font-size:9px;">&mdash; internal only</span></div>
 <div class="card">
-  <div class="kv-row"><span class="kv-label">Risk Assessment gate</span><span class="kv-value">{len(risk_findings_raw)} finding(s) &middot; highest severity <strong style="color:{risk_verdict_color};">{risk_verdict.upper()}</strong></span></div>
-  <div class="kv-row"><span class="kv-label">Compliance gate</span><span class="kv-value">{len(compliance_findings_raw)} finding(s) &middot; highest severity <strong style="color:{compliance_verdict_color};">{compliance_verdict.upper()}</strong></span></div>
+  <div class="kv-row"><span class="kv-label">Risk Assessment gate</span><span class="kv-value">{len(risk_findings_raw)} finding(s)
+    &middot; highest severity <strong style="color:{risk_verdict_color};">{risk_verdict.upper()}</strong></span></div>
+  <div class="kv-row"><span class="kv-label">Compliance gate</span><span class="kv-value">{len(compliance_findings_raw)} finding(s)
+    &middot; highest severity <strong style="color:{compliance_verdict_color};">{compliance_verdict.upper()}</strong></span></div>
   <p style="margin-top:8px;font-size:11px;color:#475569;line-height:1.6;">Final decision <strong style="color:{decision_color_hex};">{decision}</strong> — {reconciliation_note}</p>
 </div>
 """

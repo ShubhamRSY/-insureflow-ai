@@ -147,6 +147,7 @@ def test_rate_life_backfills_named_insured_identity() -> None:
     )
     quote = rate_life(bundle)
 
+    assert bundle.structured is not None and bundle.structured.named_insured is not None
     assert bundle.structured.named_insured.date_of_birth == "03/15/1984"
     assert bundle.structured.named_insured.state_of_residence == "NY"
     assert quote.metadata["date_of_birth"] == "03/15/1984"
@@ -168,5 +169,6 @@ def test_rate_life_never_overwrites_existing_named_insured_identity() -> None:
     )
     rate_life(bundle)
 
+    assert bundle.structured is not None and bundle.structured.named_insured is not None
     assert bundle.structured.named_insured.date_of_birth == "12/12/1975"
     assert bundle.structured.named_insured.state_of_residence == "TX"
