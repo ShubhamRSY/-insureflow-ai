@@ -254,7 +254,7 @@ export default function InsuranceJobDetail({ onDeleted, onDeleteJob }) {
             <PremiumCalculator data={job?.results} />
           </Collapsible>
 
-          <Collapsible title="MIB Bureau Orders" defaultOpen={false}>
+          <Collapsible id="section-mib-orders" title="MIB Bureau Orders" defaultOpen={false}>
             <MibOrderView data={job?.results} />
           </Collapsible>
 
@@ -262,7 +262,7 @@ export default function InsuranceJobDetail({ onDeleted, onDeleteJob }) {
             <ApsOrderView data={job?.results} />
           </Collapsible>
 
-          <Collapsible title="Beneficiary Review" defaultOpen={false}>
+          <Collapsible id="section-beneficiary-review" title="Beneficiary Review" defaultOpen={false}>
             <BeneficiaryReviewView data={job?.results} />
           </Collapsible>
 

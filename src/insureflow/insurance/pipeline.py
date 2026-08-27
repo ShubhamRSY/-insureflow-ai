@@ -803,6 +803,7 @@ class InsurancePipeline:
         # ── 4. EXTERNAL DATA ORACLES (CLUE, NCCI, CAT / life MIB+Rx) + OFAC ──
         oracle_findings: list[Any] = []
         ofac_meta: dict[str, Any] = {}
+        beneficiary_review_dict: dict[str, Any] | None = None
         is_life_line = (resolved_line is not None and resolved_line.value == "life") or checklist_lob == "life" or life_checklist_lob is not None
         is_health_line = (resolved_line is not None and resolved_line.value == "health") or checklist_lob == "health" or health_checklist_lob is not None
         is_general_line = (resolved_line is not None and resolved_line.value == "general") or checklist_lob == "general" or general_checklist_lob is not None
@@ -875,6 +876,44 @@ class InsurancePipeline:
                 )
             oracle_findings.extend(rx_result.findings)
             oracle_findings.extend(ofac_result.findings)
+
+            # Beneficiary designation review — a document classified as a
+            # beneficiary form (document_checklist "present") is not the same
+            # thing as beneficiary data actually being extracted from it.
+            # Run the real extraction/review here so the two never disagree,
+            # and store the structured result for the Beneficiary Review UI.
+            from insureflow.agents.beneficiary_review_agent import BeneficiaryReviewAgent
+
+            beneficiary_agent = BeneficiaryReviewAgent()
+            beneficiary_agent_result = beneficiary_agent.run(bundle)
+            oracle_findings.extend(beneficiary_agent_result.findings)
+            _beneficiary_review_obj = getattr(beneficiary_agent, "_review_result", None)
+            _has_beneficiary_doc = any("beneficiary" in p.lower() for p in triage_result.document_checklist.present)
+            if _has_beneficiary_doc and _beneficiary_review_obj is not None and not _beneficiary_review_obj.record.beneficiaries:
+                oracle_findings.append(
+                    Finding(
+                        title="Beneficiary form on file but no designation extracted",
+                        description=(
+                            "The document checklist shows a beneficiary form was submitted, but no beneficiary "
+                            "name/relationship could be extracted from it. Verify the form was scanned/attached correctly."
+                        ),
+                        severity=RiskSeverity.HIGH,
+                        category="beneficiary_review",
+                        source_document="beneficiary designation form",
+                        extraction_method="llm_extraction",
+                    )
+                )
+            if hasattr(beneficiary_agent, "_review_result"):
+                _bref = beneficiary_agent._review_result
+                beneficiary_review_dict = {
+                    **_bref.record.to_dict(),
+                    "primary_total_pct": _bref.primary_total_pct,
+                    "contingent_total_pct": _bref.contingent_total_pct,
+                    "allocation_valid": _bref.allocation_valid,
+                    "insurable_interest_flags": _bref.insurable_interest_flags,
+                    "action_items": _bref.action_items,
+                }
+
             progress.complete(
                 "verify",
                 detail=f"{len(oracle_findings)} external record(s) need attention" if oracle_findings else "Medical & bureau checks clear",
@@ -1885,9 +1924,19 @@ class InsurancePipeline:
             )
 
         # Final consistency gate: never emit ACCEPT with critical decline findings / high severity
-        from insureflow.underwriting.memo_sync import enforce_decision_consistency
+        from insureflow.underwriting.decision_thresholds import thresholds_payload
+        from insureflow.underwriting.memo_sync import enforce_decision_consistency, resync_memo_narrative
 
         enforce_decision_consistency(memo)
+        # Document completeness is a material driver of REFER/DECLINE — fold it
+        # into the primary "Why this decision" rationale, not just the separate
+        # Document Checklist section, so both stay in sync at the source.
+        resync_memo_narrative(
+            memo,
+            document_completeness_pct=triage_result.document_checklist.completeness_pct,
+            missing_document_count=len(missing_docs),
+            total_document_count=len(triage_result.document_checklist.present) + len(missing_docs),
+        )
         # Keep workflow AI decision aligned with the gated memo
         if wf.ai_decision != memo.decision.value:
             wf.ai_decision = memo.decision.value
@@ -1902,6 +1951,8 @@ class InsurancePipeline:
             "org_id": self.org_id,
             "insured_name": memo.insured_name,
             "named_insured": (bundle.structured.named_insured.model_dump() if bundle.structured and bundle.structured.named_insured else None),
+            "decision_thresholds": thresholds_payload(),
+            "beneficiary_review": beneficiary_review_dict,
             "broker_name": broker_name,
             "primary_state": primary_state,
             "issue_state": issue_state_for_compliance or "",

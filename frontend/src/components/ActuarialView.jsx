@@ -29,10 +29,16 @@ const HINTS = {
 };
 
 export default function ActuarialView({ data }) {
-  const [age, setAge] = useState(40);
-  const [face, setFace] = useState(500000);
-  const [tobacco, setTobacco] = useState('nontobacco');
-  const [gender, setGender] = useState('male');
+  // Seed inputs from this case's own extracted data instead of an unrelated
+  // generic default — the underwriter can still override any field to run
+  // a what-if from that real baseline.
+  const meta = data?.quote_full?.metadata || {};
+  const caseFactors = meta.personal_factors || {};
+  const caseMedical = meta.medical || {};
+  const [age, setAge] = useState(() => caseFactors.age || 40);
+  const [face, setFace] = useState(() => meta.face_amount || meta.tiv || 500000);
+  const [tobacco, setTobacco] = useState(() => (caseMedical.tobacco ? 'tobacco' : 'nontobacco'));
+  const [gender, setGender] = useState(() => (caseFactors.sex === 'female' ? 'female' : 'male'));
   const [table, setTable] = useState('cso_2017');
 
   const result = data?.actuarial;

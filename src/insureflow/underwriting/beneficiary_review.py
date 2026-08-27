@@ -14,8 +14,6 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Optional
 
-from pydantic import Field
-
 from insureflow.models.agents import Finding, RiskSeverity
 from insureflow.models.submissions import SubmissionBundle
 
@@ -44,7 +42,7 @@ class ReviewStatus(str, Enum):
 
 @dataclass
 class BeneficiaryEntry:
-    entry_id: str = Field(default_factory=lambda: f"ben-{uuid.uuid4().hex[:8]}")
+    entry_id: str = field(default_factory=lambda: f"ben-{uuid.uuid4().hex[:8]}")
     name: str = ""
     relationship: str = ""
     percentage: float = 0.0
@@ -72,14 +70,14 @@ class BeneficiaryEntry:
 
 @dataclass
 class BeneficiaryReviewRecord:
-    record_id: str = Field(default_factory=lambda: f"benrev-{uuid.uuid4().hex[:12]}")
+    record_id: str = field(default_factory=lambda: f"benrev-{uuid.uuid4().hex[:12]}")
     bundle_id: str = ""
     insured_name: str = ""
     face_amount: float = 0.0
     beneficiaries: list[BeneficiaryEntry] = field(default_factory=list)
     status: ReviewStatus = ReviewStatus.PENDING
-    created_at: datetime = Field(default_factory=datetime.now)
-    updated_at: datetime = Field(default_factory=datetime.now)
+    created_at: datetime = field(default_factory=datetime.now)
+    updated_at: datetime = field(default_factory=datetime.now)
     reviewer_notes: str = ""
 
     def to_dict(self) -> dict[str, Any]:

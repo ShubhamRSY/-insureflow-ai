@@ -4,9 +4,19 @@ from __future__ import annotations
 
 from insureflow.decisions import DecisionOutcome, decision_rank, normalize_decision, to_vertical
 from insureflow.models.agents import Finding, Recommendation, RiskSeverity, UnderwritingMemo, UWDecision
+from insureflow.underwriting.decision_thresholds import DECLINE_SCORE_THRESHOLD, REFER_SCORE_THRESHOLD
 
 
-def build_memo_summary(decision: UWDecision | str, score: float, findings: list[Finding], *, extra: str = "") -> str:
+def build_memo_summary(
+    decision: UWDecision | str,
+    score: float,
+    findings: list[Finding],
+    *,
+    extra: str = "",
+    document_completeness_pct: float | None = None,
+    missing_document_count: int = 0,
+    total_document_count: int = 0,
+) -> str:
     """Build a UW-facing executive summary: decision, drivers, next actions."""
     action = normalize_decision(decision).value.upper().replace("_", " ")
     pct = int(round(float(score or 0.0) * 100))
@@ -102,6 +112,13 @@ def build_memo_summary(decision: UWDecision | str, score: float, findings: list[
     else:
         lines.append("• No elevated findings recorded.")
 
+    # Document completeness is a material driver of REFER/DECLINE, not just a
+    # secondary checklist stat — surface it in the primary rationale list
+    # instead of leaving it only in the Document Checklist section.
+    if document_completeness_pct is not None and document_completeness_pct < 0.85 and missing_document_count > 0:
+        pct_display = round(document_completeness_pct * 100)
+        lines.append(f"• [DOCUMENT COMPLETENESS] Package {pct_display}% complete — {missing_document_count} of {total_document_count} required documents missing.")
+
     lines.extend(["", "What to do next"])
     for i, step in enumerate(next_steps[:6], 1):
         lines.append(f"{i}. {step}")
@@ -189,9 +206,9 @@ def enforce_decision_consistency(memo: UnderwritingMemo) -> UnderwritingMemo:
     sev = memo.overall_risk_severity
     sev_val = sev.value if hasattr(sev, "value") else str(sev or "")
     # Extreme score → decline; elevated severity / score → refer (unless already declining)
-    if score >= 0.85 or (sev_val == "critical" and explicit_decline):
+    if score >= DECLINE_SCORE_THRESHOLD or (sev_val == "critical" and explicit_decline):
         decisions.append(UWDecision.DECLINE)
-    elif sev_val in {"critical", "high"} or score >= 0.70:
+    elif sev_val in {"critical", "high"} or score >= REFER_SCORE_THRESHOLD:
         decisions.append(UWDecision.REFER)
 
     # Missing required docs / open human checkpoints → never clean ACCEPT
@@ -233,7 +250,14 @@ def enforce_decision_consistency(memo: UnderwritingMemo) -> UnderwritingMemo:
     return resync_memo_narrative(memo)
 
 
-def resync_memo_narrative(memo: UnderwritingMemo, *, extra_summary: str = "") -> UnderwritingMemo:
+def resync_memo_narrative(
+    memo: UnderwritingMemo,
+    *,
+    extra_summary: str = "",
+    document_completeness_pct: float | None = None,
+    missing_document_count: int = 0,
+    total_document_count: int = 0,
+) -> UnderwritingMemo:
     """Rebuild summary + recommendation.action to match ``memo.decision`` after overrides."""
     memo.key_findings = dedupe_findings(list(memo.key_findings or []))
     decision = _to_uw_decision(memo.decision) or UWDecision.REFER
@@ -244,6 +268,9 @@ def resync_memo_narrative(memo: UnderwritingMemo, *, extra_summary: str = "") ->
         float(memo.overall_risk_score or 0.0),
         list(memo.key_findings or []),
         extra=extra_summary,
+        document_completeness_pct=document_completeness_pct,
+        missing_document_count=missing_document_count,
+        total_document_count=total_document_count,
     )
 
     action = decision.value

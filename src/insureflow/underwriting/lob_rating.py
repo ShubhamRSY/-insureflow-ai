@@ -191,6 +191,41 @@ def apply_lob_rating(
     return quote
 
 
+# RateComponent.amount means different things per component: for these names
+# it's a multiplicative factor centered on 1.0 (0.82 = -18% off baseline), so a
+# "percentage swing" is meaningful. For the rest (mortality_per_1000, flat
+# dollar amounts like flat_extras/riders/policy_fee, or actuarial net-premium
+# breakdowns) amount is a rate or dollar figure, not a factor away from 1.0 —
+# computing (amount - 1) * 100 there would be nonsense, not a real percentage.
+_MULTIPLICATIVE_FACTOR_NAMES = {
+    "underwriting_class",
+    "sex_factor",
+    "tobacco_factor",
+    "band_discount",
+    "term_duration",
+    "product_family",
+    "state_relativity",
+    "modal_factor",
+}
+
+
+def _derived_modifier_pct(c: RateComponent) -> float | None:
+    """Real percentage swing from baseline for a rating component.
+
+    Life-insurance schedule_modifications store multiplicative factors in
+    ``amount`` with ``modifier_pct`` left at its 0.0 default (commercial lines
+    use the reverse convention). Derive the real percentage for factor-style
+    components instead of showing a flat, misleading 0.0% for every row; for
+    components where "percent swing" isn't a meaningful concept, return None
+    so the UI can show "not applicable" instead of a fake number.
+    """
+    if c.modifier_pct:
+        return c.modifier_pct
+    if c.name in _MULTIPLICATIVE_FACTOR_NAMES and c.amount is not None:
+        return round((c.amount - 1.0) * 100.0, 2)
+    return None
+
+
 def build_uw_worksheet(
     quote: QuoteResult,
     bundle: SubmissionBundle,
@@ -209,6 +244,7 @@ def build_uw_worksheet(
     lr = _loss_ratio(bundle)
     prof = lob_profile(insurance_line or line.value)
     meta = quote.metadata or {}
+    is_life = (insurance_line or line.value) == "life"
 
     exposure_label = meta.get("exposure_basis") or "tiv"
     exposure_value = {
@@ -222,30 +258,99 @@ def build_uw_worksheet(
             "step": c.name.replace("_", " ").title(),
             "basis": c.basis,
             "factor": c.amount,
-            "modifier_pct": c.modifier_pct,
+            "modifier_pct": _derived_modifier_pct(c),
         }
         for c in (quote.schedule_modifications or [])
     ]
 
-    limit = tiv if tiv > 0 else float(memo.recommendation.suggested_limit or 0) if memo.recommendation else 0
-    if limit <= 0 and bundle.structured and bundle.structured.coverages:
-        limit = max(float(c.limit_amount or 0) for c in bundle.structured.coverages)
-
-    deductible = 0.0
-    if bundle.structured and bundle.structured.coverages:
-        deds = [float(c.deductible or 0) for c in bundle.structured.coverages if c.deductible]
-        deductible = max(deds) if deds else 2500.0
-    if deductible <= 0:
-        deductible = 2500.0 if line in (InsuranceLine.COMMERCIAL_PROPERTY, InsuranceLine.BOP) else 5000.0
-
     indicated = float(quote.adjusted_premium or 0)
-    rate_per_100 = round(indicated / (exposure_value / 100.0), 4) if exposure_value > 0 else 0.0
+
+    # Life vs P&C worksheets are not the same shape: deductible, exposure/TIV,
+    # rate-per-$100, and loss-ratio/credibility are P&C (or renewal-experience)
+    # concepts that don't apply to new-business individual life — showing a
+    # hardcoded $5,000 deductible or $0 TIV on a life case reads as broken
+    # data rather than "not applicable". `applicable_fields` tells the UI
+    # which of these to render at all; life gets its own fields instead.
+    if is_life:
+        limit = float(meta.get("face_amount") or 0)
+        deductible = None
+        rate_per_100 = None
+        loss_experience: dict[str, Any] = {
+            "loss_ratio": None,
+            "known": False,
+            "basis": "not applicable — new business individual life (loss ratio applies at renewal)",
+            "formula": None,
+            "credibility_z": None,
+            "experience_mod": None,
+        }
+        mortality_component = next((c for c in (quote.schedule_modifications or []) if c.name == "mortality_per_1000"), None)
+        reinsurance_meta = meta.get("life_reinsurance") or {}
+        cession = float(reinsurance_meta.get("cession_amount") or 0)
+        life_terms = {
+            "net_amount_at_risk": round(float(meta.get("face_amount") or 0), 2),
+            "mortality_rate_per_1000": mortality_component.amount if mortality_component else None,
+            "reinsurance_cession_status": (
+                f"Facultative required — cede ${cession:,.0f} above retention"
+                if reinsurance_meta.get("facultative_required")
+                else f"Automatic treaty cession ${cession:,.0f}"
+                if cession > 0
+                else "Within retention — no cession"
+                if reinsurance_meta
+                else None
+            ),
+        }
+        applicable_fields = {
+            "deductible": False,
+            "exposure_tiv": False,
+            "rate_per_100": False,
+            "policy_limit": True,
+            "loss_ratio": False,
+            "credibility_z": False,
+            "net_amount_at_risk": True,
+            "mortality_rate_per_1000": True,
+            "reinsurance_cession": True,
+        }
+    else:
+        limit = tiv if tiv > 0 else float(memo.recommendation.suggested_limit or 0) if memo.recommendation else 0
+        if limit <= 0 and bundle.structured and bundle.structured.coverages:
+            limit = max(float(c.limit_amount or 0) for c in bundle.structured.coverages)
+
+        deductible = 0.0
+        if bundle.structured and bundle.structured.coverages:
+            deds = [float(c.deductible or 0) for c in bundle.structured.coverages if c.deductible]
+            deductible = max(deds) if deds else 2500.0
+        if deductible <= 0:
+            deductible = 2500.0 if line in (InsuranceLine.COMMERCIAL_PROPERTY, InsuranceLine.BOP) else 5000.0
+
+        rate_per_100 = round(indicated / (exposure_value / 100.0), 4) if exposure_value > 0 else 0.0
+        loss_experience = {
+            "loss_ratio": round(lr, 4),
+            "known": bool(meta.get("loss_ratio_known", lr > 0)),
+            "basis": meta.get("loss_ratio_basis") or ("stored" if lr > 0 else "unknown"),
+            "formula": "incurred_losses / earned_premium",
+            "credibility_z": meta.get("credibility_z"),
+            "experience_mod": meta.get("experience_mod_blended"),
+        }
+        life_terms = None
+        applicable_fields = {
+            "deductible": True,
+            "exposure_tiv": True,
+            "rate_per_100": True,
+            "policy_limit": True,
+            "loss_ratio": True,
+            "credibility_z": True,
+            "net_amount_at_risk": False,
+            "mortality_rate_per_1000": False,
+            "reinsurance_cession": False,
+        }
 
     return {
         "product": commercial_product_name or prof.get("name") or line.value.replace("_", " ").title(),
         "coverage": commercial_coverage_name or "",
         "coverage_id": commercial_coverage_id,
         "insurance_line": insurance_line or line.value,
+        "applicable_fields": applicable_fields,
+        "life_terms": life_terms,
         "exposure": {
             "label": exposure_label.replace("_", " ").upper(),
             "value": round(exposure_value, 2),
@@ -253,19 +358,12 @@ def build_uw_worksheet(
             "payroll": round(payroll, 2),
             "sales": round(sales, 2),
         },
-        "loss_experience": {
-            "loss_ratio": round(lr, 4),
-            "known": bool(meta.get("loss_ratio_known", lr > 0)),
-            "basis": meta.get("loss_ratio_basis") or ("stored" if lr > 0 else "unknown"),
-            "formula": "incurred_losses / earned_premium",
-            "credibility_z": meta.get("credibility_z"),
-            "experience_mod": meta.get("experience_mod_blended"),
-        },
+        "loss_experience": loss_experience,
         "indicated_terms": {
             "premium": indicated,
             "base_premium": float(quote.base_premium or 0),
             "limit": round(limit, 2),
-            "deductible": round(deductible, 2),
+            "deductible": round(deductible, 2) if deductible is not None else None,
             "rate_per_100_exposure": rate_per_100,
         },
         "premium_buildup": components,

@@ -15,10 +15,15 @@ const HINTS = {
 };
 
 export default function PremiumCalculator({ data }) {
-  const [faceAmount, setFaceAmount] = useState(500000);
-  const [age, setAge] = useState(40);
-  const [tobacco, setTobacco] = useState('nontobacco');
-  const [uwClass, setUwClass] = useState('standard');
+  // Seed inputs from this case's own extracted data — same real baseline as
+  // the Actuarial Lookup above — instead of an unrelated generic default.
+  const meta = data?.quote_full?.metadata || {};
+  const caseFactors = meta.personal_factors || {};
+  const caseMedical = meta.medical || {};
+  const [faceAmount, setFaceAmount] = useState(() => meta.face_amount || meta.tiv || 500000);
+  const [age, setAge] = useState(() => caseFactors.age || 40);
+  const [tobacco, setTobacco] = useState(() => (caseMedical.tobacco ? 'tobacco' : 'nontobacco'));
+  const [uwClass, setUwClass] = useState(() => caseMedical.underwriting_class || 'standard');
 
   const result = data?.premium_calc;
   const mortality = data?.actuarial?.mortality_cost;

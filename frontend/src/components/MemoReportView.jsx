@@ -142,12 +142,13 @@ function fmtTimestamp(iso) {
   } catch { return iso; }
 }
 
-export function Collapsible({ title, defaultOpen = false, children, badge }) {
+export function Collapsible({ id, title, defaultOpen = false, children, badge }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="rounded-xl border border-white/[0.06] bg-surface/60">
+    <div id={id} data-collapsed={!open} className="rounded-xl border border-white/[0.06] bg-surface/60">
       <button
         type="button"
+        data-collapsible-toggle
         onClick={() => setOpen(!open)}
         className="flex w-full items-center justify-between px-4 py-3 text-left transition hover:bg-white/[0.02]"
       >
@@ -171,9 +172,31 @@ const SEV_HINTS = {
   low: 'Informational — noted for the file but does not require action.',
 };
 
+// Maps a finding to the page section where an underwriter would actually
+// resolve it, instead of leaving the finding as an isolated line of text
+// with no path to action. Section ids are anchored in InsuranceJobDetail.jsx
+// (collapsed Technical Details sections) and further down this component.
+const FINDING_RESOLVE_TARGETS = [
+  { match: (f) => f.category === 'mib', id: 'section-mib-orders', label: 'Go to MIB Bureau Orders' },
+  { match: (f) => f.category === 'sanctions', id: 'section-applicant-profile', label: 'Go to Applicant Profile' },
+  { match: (f) => f.category === 'beneficiary_review', id: 'section-beneficiary-review', label: 'Go to Beneficiary Review' },
+  { match: (f) => f.category === 'hallucination' || f.category === 'data_quality', id: 'section-documents', label: 'Go to source documents' },
+];
+
+function scrollToSection(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  // The target may be inside a collapsed <Collapsible> in a sibling
+  // component — click its header to expand before scrolling into view.
+  const toggle = el.querySelector('[data-collapsible-toggle]');
+  if (toggle && el.getAttribute('data-collapsed') === 'true') toggle.click();
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
 function FindingCard({ finding }) {
   const f = uwFinding(finding);
   const sev = safeLower(f?.severity, 'moderate');
+  const resolveTarget = FINDING_RESOLVE_TARGETS.find((t) => t.match(finding || {}));
   return (
     <div className="flex items-start gap-2.5 rounded-lg border border-white/[0.04] bg-surface/40 p-3">
       <Hint text={SEV_HINTS[sev]}>
@@ -190,6 +213,15 @@ function FindingCard({ finding }) {
           <Hint text="Underlying data field this finding traces back to — cross-reference against Provenance to see the source page.">
             <p className="hint-label mt-1 inline-block cursor-help font-mono text-[10px] text-slate-600">{f.field_path}</p>
           </Hint>
+        )}
+        {resolveTarget && (
+          <button
+            type="button"
+            onClick={() => scrollToSection(resolveTarget.id)}
+            className="mt-1.5 text-[11px] font-medium text-sky-400 hover:text-sky-300 hover:underline"
+          >
+            {resolveTarget.label} →
+          </button>
         )}
       </div>
     </div>
@@ -301,7 +333,7 @@ function IngestedDocuments({ job }) {
   const bundleId = results.bundle_id || job?.bundle_id;
 
   return (
-    <div className="rounded-xl border border-white/[0.06] bg-surface/60 p-5">
+    <div id="section-documents" className="rounded-xl border border-white/[0.06] bg-surface/60 p-5">
       <h2 className="text-base font-bold tracking-tight text-slate-100">Documents On File</h2>
       <p className="mb-3 mt-1 text-xs text-slate-500">
         {list.length} document{list.length > 1 ? 's' : ''} received and reviewed for this submission.
@@ -348,6 +380,11 @@ export default function MemoReportView({ job }) {
   const memoText = memoObj.summary || results.memo_text || '';
   const quote = results.quote_full || {};
   const worksheet = results.uw_worksheet || {};
+  const namedInsured = results.named_insured || {};
+  // Single normalized source for fields that also appear in the worksheet
+  // below — top-of-page and worksheet must never disagree about the same case.
+  const caseState = namedInsured.state_of_residence || (quote.metadata || {}).issue_state || results.primary_state || '';
+  const caseCoverage = results.commercial_coverage_name || worksheet.coverage || (quote.metadata || {}).product || '';
 
   const decision = safeLower(results.ai_decision || results.outcome || memoObj.decision, 'refer');
   const insuredName = displayText(results.insured_name || memoObj.insured_name);
@@ -375,6 +412,16 @@ export default function MemoReportView({ job }) {
     if (counts[s] != null) counts[s] += 1;
   });
 
+  // Sourced from results.decision_thresholds (backend decision_thresholds.py) —
+  // never hardcode these numbers, or the legend can drift from what the
+  // decision engine actually uses.
+  const thresholds = results.decision_thresholds || {};
+  const referMinPct = thresholds.refer_min != null ? Math.round(thresholds.refer_min * 100) : null;
+  const declineMinPct = thresholds.decline_min != null ? Math.round(thresholds.decline_min * 100) : null;
+  const riskLegend = referMinPct != null && declineMinPct != null
+    ? `0–${referMinPct - 1} accept range · ${referMinPct}–${declineMinPct - 1} refer · ${declineMinPct}+ decline`
+    : '0 = lowest risk, 100 = highest risk';
+
   const riskPct = memoObj.overall_risk_score != null
     ? Math.round(Number(memoObj.overall_risk_score) * 100)
     : null;
@@ -401,6 +448,24 @@ export default function MemoReportView({ job }) {
   const rationaleHeadline = uwMemoText(
     (rationaleWhyIdx >= 0 ? memoLines.slice(0, rationaleWhyIdx) : memoLines).join('\n'),
   ).trim();
+
+  // Full Memo (below) must not just re-print the same findings/next-steps text
+  // that's already rendered as structured cards/lists above — keep only the
+  // headline + risk line + any line-specific notes (e.g. "Life class=..."),
+  // dropping the "Why this decision" and "What to do next" sections.
+  let memoAfterNextSteps = [];
+  if (whatToDoIdx >= 0) {
+    let i = whatToDoIdx + 1;
+    while (i < memoLines.length && memoLines[i].trim() !== '') i += 1;
+    memoAfterNextSteps = memoLines.slice(i + 1);
+  }
+  const memoRemainder = uwMemoText([...(rationaleWhyIdx >= 0 ? memoLines.slice(0, rationaleWhyIdx) : memoLines), ...memoAfterNextSteps].join('\n')).trim();
+
+  // Human Review Required reasons are titles drawn from the same findings
+  // already shown as full cards in "Why This Decision" above — don't repeat
+  // the ones that are already there verbatim, only genuinely extra reasons.
+  const findingTitles = new Set(sortedFindings.map((f) => (f?.title || '').trim().toLowerCase()));
+  const extraReviewReasons = (memoObj.human_review_reasons || []).filter((r) => !findingTitles.has((r || '').trim().toLowerCase()));
 
   const medicalFindings = sortedFindings.filter((f) => categorizeFinding(f) === 'medical');
   const financialFindings = sortedFindings.filter((f) => categorizeFinding(f) === 'financial');
@@ -434,6 +499,7 @@ export default function MemoReportView({ job }) {
                 </Hint>
                 <p className="text-3xl font-bold">{riskPct}<span className="text-sm font-normal opacity-60">/100</span></p>
                 {riskSeverity && <p className="text-[10px] uppercase opacity-60">{riskSeverity} severity</p>}
+                <p className="mt-1 text-[9px] uppercase tracking-wide opacity-50">{riskLegend}</p>
               </div>
             )}
           </div>
@@ -469,20 +535,20 @@ export default function MemoReportView({ job }) {
       </div>
 
       {/* ── 2. Applicant Profile & Basic Details ────────────────────────── */}
-      <div className="rounded-2xl border border-white/[0.08] bg-surface/80 p-5">
+      <div id="section-applicant-profile" className="rounded-2xl border border-white/[0.08] bg-surface/80 p-5">
         <SectionHeader icon={User} title="Applicant Profile & Basic Details" subtitle="Who are we insuring and what are they buying" accent="rose" />
         <div className="mt-4 grid gap-x-8 gap-y-0 sm:grid-cols-2">
           <div>
-            <InfoRow label="Insured Name" value={insuredName || '—'} />
+            <InfoRow label="Insured Name" value={insuredName || 'Name not extracted — see findings'} />
             <InfoRow label="Product" value={displayText(results.commercial_product_name || worksheet.product || results.insurance_line || '—').replace(/_/g, ' ')} />
-            <InfoRow label="Coverage" value={displayText(results.commercial_coverage_name || worksheet.coverage || '—').replace(/_/g, ' ')} />
+            <InfoRow label="Coverage" value={displayText(caseCoverage || '—').replace(/_/g, ' ')} />
             <InfoRow label="Insurance Line" value={displayText(results.insurance_line || '—').replace(/_/g, ' ')} />
           </div>
           <div>
             <InfoRow label="Face Amount / TIV" value={fmtCurrency(faceAmount)} />
             <InfoRow label="Base Premium" value={fmtCurrency(basePremium)} />
             <InfoRow label="Indicated Premium" value={fmtCurrency(premium)} />
-            <InfoRow label="Primary State" value={displayText(results.primary_state || '—')} />
+            <InfoRow label="Primary State" value={displayText(caseState || '—')} />
           </div>
         </div>
         {(results.broker_name || quote.policy_admin_reference || quote.quote_valid_until) && (
@@ -606,14 +672,16 @@ export default function MemoReportView({ job }) {
           {memoObj.human_review_required && (
             <div className="rounded-lg border border-sky-500/20 bg-sky-500/5 p-3">
               <p className="text-[10px] font-bold uppercase tracking-wider text-sky-400">Human Review Required</p>
-              {memoObj.human_review_reasons?.length > 0 && (
+              {extraReviewReasons.length > 0 ? (
                 <ul className="mt-1.5 space-y-1">
-                  {uwReasons(memoObj.human_review_reasons).map((r, i) => (
+                  {uwReasons(extraReviewReasons).map((r, i) => (
                     <li key={i} className="flex gap-2 text-xs text-slate-300">
                       <span className="text-sky-400 shrink-0">•</span>{displayText(r)}
                     </li>
                   ))}
                 </ul>
+              ) : (
+                <p className="mt-1.5 text-xs text-slate-400">Driven by the findings above in "Why This Decision" — {memoObj.human_review_reasons?.length || 0} of them require licensed UW sign-off before bind.</p>
               )}
             </div>
           )}
@@ -677,25 +745,40 @@ export default function MemoReportView({ job }) {
         )}
         {Object.keys(agentResults).length > 0 && (
           <div className="mt-4">
-            <Hint text="Every specialist agent that ran on this file, in order, and whether it finished cleanly — use this to see which analysis actually informed the decision above.">
+            <Hint text="Every specialist agent that ran on this file — its verdict, confidence, timing, and whether it finished cleanly. This is how you audit why the pipeline reached its conclusion instead of trusting a black box.">
               <p className="hint-label mb-2 inline-block cursor-help text-[10px] font-bold uppercase tracking-wider text-slate-500">Agent Execution Trace</p>
             </Hint>
             <div className="space-y-1.5">
-              {Object.entries(agentResults).map(([name, result]) => (
-                <div key={name} className="flex items-center gap-2 text-xs">
-                  <CheckCircle2 className="h-3 w-3 text-emerald-500/60 shrink-0" />
-                  <Hint text={AGENT_HINTS[name]}>
-                    <span className={`font-medium text-slate-300 ${AGENT_HINTS[name] ? 'hint-label cursor-help' : ''}`}>{name}</span>
-                  </Hint>
-                  {result?.status && (
-                    <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase ${
-                      result.status === 'completed' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-500/10 text-slate-400'
-                    }`}>
-                      {result.status}
+              {Object.entries(agentResults).map(([name, result]) => {
+                const ok = result?.success !== false;
+                const agentRiskPct = result?.risk_score != null ? Math.round(Number(result.risk_score) * 100) : null;
+                return (
+                <div key={name} className="rounded-lg border border-white/[0.04] bg-black/10 px-2.5 py-2 text-xs">
+                  <div className="flex items-center gap-2">
+                    {ok
+                      ? <CheckCircle2 className="h-3 w-3 text-emerald-500/60 shrink-0" />
+                      : <AlertTriangle className="h-3 w-3 text-amber-500/70 shrink-0" />}
+                    <Hint text={AGENT_HINTS[name]}>
+                      <span className={`font-medium text-slate-300 ${AGENT_HINTS[name] ? 'hint-label cursor-help' : ''}`}>{name}</span>
+                    </Hint>
+                    <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase ${ok ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'}`}>
+                      {ok ? 'completed' : 'errored'}
                     </span>
+                    {agentRiskPct != null && (
+                      <span className="ml-auto font-mono text-[10px] text-slate-500">risk {agentRiskPct}/100</span>
+                    )}
+                  </div>
+                  {result?.summary && (
+                    <p className="mt-1 pl-5 text-[11px] leading-snug text-slate-400">{displayText(result.summary)}</p>
                   )}
+                  <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 pl-5 text-[9px] uppercase tracking-wide text-slate-600">
+                    {result?.processed_at && <span>{fmtTimestamp(result.processed_at)}</span>}
+                    {result?.processing_time_ms != null && <span>{Math.round(result.processing_time_ms)}ms</span>}
+                    {Array.isArray(result?.findings) && <span>{result.findings.length} finding(s)</span>}
+                  </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
@@ -708,7 +791,10 @@ export default function MemoReportView({ job }) {
       {memoText ? (
         <Collapsible title="Full Memo" badge="text">
           <div className="rounded-lg border border-white/[0.04] bg-black/20 p-4">
-            <pre className="whitespace-pre-wrap font-sans text-[13px] leading-relaxed text-slate-300">{cleanMemoText(memoText)}</pre>
+            <pre className="whitespace-pre-wrap font-sans text-[13px] leading-relaxed text-slate-300">{memoRemainder || cleanMemoText(memoText)}</pre>
+            <p className="mt-3 border-t border-white/[0.06] pt-3 text-[11px] text-slate-500">
+              Full findings are listed above in "Why This Decision" and next steps in "What To Do Next" — not repeated here.
+            </p>
           </div>
         </Collapsible>
       ) : null}

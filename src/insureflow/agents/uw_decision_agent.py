@@ -6,12 +6,13 @@ from insureflow.agents.base import NOISE_CATEGORIES
 from insureflow.agents.react_agent import ReActAgent
 from insureflow.models.agents import AgentResult, AgentType, Finding, Recommendation, RiskSeverity, UnderwritingMemo, UWDecision
 from insureflow.models.submissions import SubmissionBundle
+from insureflow.underwriting.decision_thresholds import REFER_SCORE_THRESHOLD
 
 # ── Decision policy thresholds ──────────────────────────────────────────────
 # See docs/underwriting_decision_policy.md for the rationale. Single edit
 # point: change a tier's boundary here, not by hunting inline literals.
 SEVERITY_WEIGHTS = {"critical": 1.0, "high": 0.75, "moderate": 0.5, "low": 0.2}
-REFER_AGGREGATE_SCORE_THRESHOLD = 0.7  # any high finding OR score >= this -> REFER
+REFER_AGGREGATE_SCORE_THRESHOLD = REFER_SCORE_THRESHOLD  # any high finding OR score >= this -> REFER
 SURCHARGE_ELIGIBLE_SCORE_THRESHOLD = 0.6  # frequency/severity surcharge only applies above this
 HARD_DECLINE_CLAIM_FREQUENCY_PER_YEAR = 10.0  # claim frequency at/above this is an automatic DECLINE
 FREQUENCY_SURCHARGE_MODERATE_THRESHOLD = 1.5  # claims/yr
@@ -229,6 +230,24 @@ class UWDecisionAgent(ReActAgent):
         results_map = {ar.agent_name: ar for ar in agent_results}
         results_map[uw_decision_result.agent_name] = uw_decision_result
 
+        # Insured name for display must never silently become the internal
+        # bundle/job id — that reads as a real extracted name to an
+        # underwriter. If extraction genuinely found nothing, leave it blank
+        # and raise an explicit finding instead (get_named_insured() still
+        # falls back to bundle_id for callers that need a query-correlation
+        # key, e.g. oracle lookups — that's a different use than display).
+        extracted_name = (bundle.structured.named_insured.legal_name if bundle.structured and bundle.structured.named_insured else "") or ""
+        insured_name = extracted_name.strip()
+        if not insured_name:
+            all_findings.append(
+                Finding(
+                    title="Insured name not extracted",
+                    description="No named insured could be extracted from the submitted application. Verify the applicant's legal name against the source paperwork before proceeding.",
+                    severity=RiskSeverity.MODERATE,
+                    category="data_quality",
+                )
+            )
+
         # Preserve all CRITICAL/HIGH findings; truncate only lower severities
         critical_high = [f for f in all_findings if f.severity in (RiskSeverity.CRITICAL, RiskSeverity.HIGH)]
         other = [f for f in all_findings if f.severity not in (RiskSeverity.CRITICAL, RiskSeverity.HIGH)]
@@ -236,7 +255,7 @@ class UWDecisionAgent(ReActAgent):
 
         return UnderwritingMemo(
             bundle_id=bundle.bundle_id,
-            insured_name=self.tools.get_named_insured(bundle),
+            insured_name=insured_name,
             decision=decision,
             overall_risk_score=score,
             overall_risk_severity=severity,

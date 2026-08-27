@@ -166,6 +166,10 @@ def rate_life(
     state_rel = float((manual.get("state_relativities") or {}).get(issue_state) or 1.0)
     filing_state = str(manual.get("state_of_filing") or "IL").upper()
     state_filed = (not issue_state) or issue_state == filing_state or issue_state in (manual.get("state_relativities") or {})
+    # Label honestly: a resolved issue_state vs. the filing-state default used
+    # when no state could be extracted — these must never look the same in
+    # the worksheet, or "IL" reads as the applicant's real state.
+    state_rel_basis = issue_state if issue_state else f"{filing_state} (filing default — no state extracted)"
 
     # ── Dedicated LOB/Product/Coverage logic paths ────────────────────
     # Each registered product owns its own underwriting rules, rating math,
@@ -272,7 +276,7 @@ def rate_life(
             RateComponent(name="expense_loading", amount=round(base_premium - net_prem, 2), basis=f"{float(actuarial.get('expense_loading_pct', 0) or 0):.0%} of net"),
             RateComponent(name="underwriting_class", amount=class_f, basis=medical.underwriting_class),
             RateComponent(name="band_discount", amount=band_f, basis=f"face={face}"),
-            RateComponent(name="state_relativity", amount=state_rel, basis=issue_state or filing_state),
+            RateComponent(name="state_relativity", amount=state_rel, basis=state_rel_basis),
             RateComponent(name="modal_factor", amount=modal_f, basis=modal),
             RateComponent(name="flat_extras", amount=medical.flat_extras_per_1000, basis="per_1000"),
             RateComponent(name="riders", amount=financial.rider_load_per_1000, basis="per_1000"),
@@ -285,9 +289,9 @@ def rate_life(
             RateComponent(name="sex_factor", amount=sex_f, basis=sex),
             RateComponent(name="tobacco_factor", amount=tobacco_f, basis="tobacco" if medical.tobacco else "non_tobacco"),
             RateComponent(name="band_discount", amount=band_f, basis=f"face={face}"),
-            RateComponent(name="term_duration", amount=term_f, basis=f"{term_years}yr" if term_years else "default"),
+            RateComponent(name="term_duration", amount=term_f, basis=f"{term_years}yr" if term_years else "not resolved — default factor applied"),
             RateComponent(name="product_family", amount=product_f, basis=family),
-            RateComponent(name="state_relativity", amount=state_rel, basis=issue_state or filing_state),
+            RateComponent(name="state_relativity", amount=state_rel, basis=state_rel_basis),
             RateComponent(name="modal_factor", amount=modal_f, basis=modal),
             RateComponent(name="flat_extras", amount=medical.flat_extras_per_1000, basis="per_1000"),
             RateComponent(name="riders", amount=financial.rider_load_per_1000, basis="per_1000"),
