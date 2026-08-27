@@ -203,12 +203,16 @@ class FraudDetectionAgent(ReActAgent):
         patterns = result.get("flagged_patterns", [])
 
         if risk_level in ("high", "critical"):
-            sev = RiskSeverity.CRITICAL if risk_level == "critical" else RiskSeverity.HIGH
+            # Capped at HIGH, never CRITICAL: this is a statistical anomaly
+            # score, not a verified fact — it should route the file to a
+            # licensed underwriter (REFER), not autonomously DECLINE it.
+            # CRITICAL is reserved for findings with concrete, explainable
+            # evidence (e.g. the device/behavioral/GenAI checks above).
             self._add_finding(
                 Finding(
                     title="ML fraud anomaly detected",
                     description=f"ML fraud probability: {prob:.1%}, risk level: {risk_level}",
-                    severity=sev,
+                    severity=RiskSeverity.HIGH,
                     category="ml_fraud",
                     source_value=prob,
                     evidence=patterns or [f"Anomaly score: {result.get('anomaly_score', 0):.4f}"],
