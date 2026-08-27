@@ -11,19 +11,7 @@ from insureflow.testing.realworld_scenarios import build_all_scenarios, evaluate
 def test_realworld_scenario(scenario) -> None:
     result = run_scenario(scenario)
     failures = evaluate_result(scenario, result)
-    debug = ""
-    if failures:
-        import os
-
-        memo = result.get("memo") or {}
-        lines = [f"DEBUG score={memo.get('overall_risk_score')} cpu_count={os.cpu_count()}"]
-        for f in memo.get("key_findings", []):
-            sev = f.get("severity")
-            sev = sev.value if hasattr(sev, "value") else str(sev)
-            conf = f.get("confidence")
-            lines.append(f"DEBUG [{sev}] {f.get('category')}: {f.get('title')} conf={conf}")
-        debug = " || " + " ~~ ".join(lines)
-    assert not failures, f"{scenario.id} ({scenario.title}): decision={result.get('ai_decision')} appetite={result.get('appetite_filter_passed')} failures={failures}{debug}"
+    assert not failures, f"{scenario.id} ({scenario.title}): decision={result.get('ai_decision')} appetite={result.get('appetite_filter_passed')} failures={failures}"
 
 
 def test_scenario_catalog_covers_core_conditions() -> None:
