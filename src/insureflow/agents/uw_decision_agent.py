@@ -90,7 +90,9 @@ class UWDecisionAgent(ReActAgent):
         data-availability noise, not underwriting risk, and independently force
         REFER via dedicated pipeline handling. Volume amplification only counts
         MODERATE+ findings, and is capped together with the category penalty at
-        +0.25 so pile-up effects nudge the score without dominating it.
+        +0.15 so pile-up effects nudge the score without dominating it — and so
+        a file with only a couple of genuine findings stays comfortably clear
+        of the 0.85 decline threshold instead of riding the edge.
         """
         high_risk_categories = {"fraud_detection", "moral_hazard", "selection", "adverse_selection"}
         scored = [f for f in findings if f.category not in NOISE_CATEGORIES]
@@ -122,7 +124,7 @@ class UWDecisionAgent(ReActAgent):
 
         volume_amp = math.log2(1.0 + volume_count) / 6.0
         category_penalty = min(0.3, high_risk_count * 0.1)
-        pileup_bonus = min(0.25, volume_amp + category_penalty)
+        pileup_bonus = min(0.15, volume_amp + category_penalty)
 
         score = base_score + pileup_bonus
         return min(1.0, max(0.0, score))

@@ -69,8 +69,12 @@ class BaseAgent:
           — routine LOW-severity/informational findings (reinsurance summaries,
           portfolio stats, clean OFAC screens) fire on nearly every submission and
           must not read as a "pile-up of problems".
-        - volume_amp + category_penalty together are capped at +0.25 so pile-up
-          effects can nudge the score but never dominate the severity average.
+        - volume_amp + category_penalty together are capped at +0.15 so pile-up
+          effects can nudge the score but never dominate the severity average,
+          and a file with only a couple of genuine findings (not a real
+          pile-up) stays comfortably clear of the 0.85 decline threshold
+          instead of riding the edge, where ordinary run-to-run variance in
+          confidence/thread scheduling can tip a clean file over it.
         - Confidence adjustment: higher-confidence findings weigh more.
         """
         severity_weights = {"critical": 1.0, "high": 0.75, "moderate": 0.5, "low": 0.2}
@@ -112,7 +116,7 @@ class BaseAgent:
         category_penalty = min(0.3, high_risk_count * 0.1)
 
         # Pile-up bonus: volume + category together nudge the score, never dominate it
-        pileup_bonus = min(0.25, volume_amp + category_penalty)
+        pileup_bonus = min(0.15, volume_amp + category_penalty)
 
         # Average confidence factor: low-confidence findings reduce score slightly
         avg_confidence = confidence_sum / total_weight
