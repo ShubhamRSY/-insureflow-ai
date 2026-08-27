@@ -90,8 +90,11 @@ def build_memo_summary(decision: UWDecision | str, score: float, findings: list[
             sev = (f.severity.value if hasattr(f.severity, "value") else str(f.severity or "moderate")).upper()
             title = (f.title or "Finding").strip()
             detail = (f.description or "").strip()
-            if detail and len(detail) > 140:
-                detail = detail[:137].rstrip() + "…"
+            # CRITICAL/HIGH findings drive the decision — never cut them off
+            # mid-sentence. Lower-severity findings still get a generous cap,
+            # truncated on a word boundary rather than mid-word.
+            if detail and sev not in ("CRITICAL", "HIGH") and len(detail) > 220:
+                detail = detail[:220].rsplit(" ", 1)[0].rstrip() + "…"
             bullet = f"• [{sev}] {title}"
             if detail:
                 bullet += f" — {detail}"

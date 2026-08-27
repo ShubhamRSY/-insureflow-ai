@@ -209,7 +209,16 @@ export default function InsuranceJobDetail({ onDeleted, onDeleteJob }) {
         {/* Primary: Memo Report */}
         {!processing && <MemoReportView job={job} />}
 
-        {/* Technical Details — collapsed by default */}
+        {/* While the pipeline is running, show live stage-by-stage progress instead
+            of dumping every (still-empty) report section on screen at once. */}
+        {processing && (
+          <div className="mb-6">
+            <SubmissionJourney job={job} />
+          </div>
+        )}
+
+        {/* Technical Details — collapsed by default, only once there's something to show */}
+        {!processing && (
         <div className="mt-8 space-y-4">
           <Collapsible title="Underwriting Worksheet" defaultOpen={false}>
             {job?.results?.uw_worksheet ? (
@@ -265,6 +274,7 @@ export default function InsuranceJobDetail({ onDeleted, onDeleteJob }) {
             <PolicyIssuanceView data={job?.results} />
           </Collapsible>
         </div>
+        )}
       </div>
     </div>
   );

@@ -353,7 +353,7 @@ export default function RunSelector({
           {[1, 2, 3].map((s) => (
             <div key={s} className="flex items-center gap-2">
               <div className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold transition-colors ${
-                guidedStep >= s ? 'bg-brand text-white' : 'bg-slate-600 text-slate-300'
+                guidedStep >= s ? 'bg-brand text-white' : 'bg-surface-overlay text-slate-500 ring-1 ring-white/10'
               }`}>{s}</div>
               <span className={`text-xs font-medium ${guidedStep >= s ? 'text-slate-200' : 'text-slate-400'}`}>
                 {s === 1 ? 'Company' : s === 2 ? 'Source & Line' : 'Run'}

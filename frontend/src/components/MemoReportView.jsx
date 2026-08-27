@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { ChevronDown, ChevronRight, Eye, FileText, Loader2, User, Shield, AlertTriangle, ClipboardCheck, Clock, CheckCircle2 } from 'lucide-react';
 import { displayText, safeLower } from '../lib/safe';
 import { endpoints } from '../lib/api';
-import { uwFinding, uwMemoText, premiumStepLabel } from '../lib/uwLanguage';
+import { uwFinding, uwMemoText, uwReasons, premiumStepLabel } from '../lib/uwLanguage';
 import { Hint } from './ui';
 
 const FIELD_HINTS = {
@@ -386,6 +386,21 @@ export default function MemoReportView({ job }) {
   const memoLines = memoText.split('\n');
   const whatToDoIdx = memoLines.findIndex((l) => l.trim() === 'What to do next');
   const nextSteps = whatToDoIdx >= 0 ? uwMemoText(memoLines.slice(whatToDoIdx).join('\n')) : '';
+  // Numbered "N. step text" lines as a clean array for list rendering, instead of a <pre> text block.
+  const nextStepsList = nextSteps
+    .split('\n')
+    .map((l) => l.replace(/^\s*\d+\.\s*/, '').trim())
+    .filter(Boolean)
+    .filter((l) => l.toLowerCase() !== 'what to do next');
+
+  // Rationale headline only (decision + one-liner) — the findings breakdown and next
+  // steps it also contains are already shown, better-formatted, in their own sections
+  // below ("Why This Decision" cards, "What To Do Next" list), so repeating the raw
+  // text here would just be the same content twice.
+  const rationaleWhyIdx = memoLines.findIndex((l) => l.trim() === 'Why this decision');
+  const rationaleHeadline = uwMemoText(
+    (rationaleWhyIdx >= 0 ? memoLines.slice(0, rationaleWhyIdx) : memoLines).join('\n'),
+  ).trim();
 
   const medicalFindings = sortedFindings.filter((f) => categorizeFinding(f) === 'medical');
   const financialFindings = sortedFindings.filter((f) => categorizeFinding(f) === 'financial');
@@ -579,10 +594,10 @@ export default function MemoReportView({ job }) {
         <div className="mt-4 space-y-3">
           <InfoRow label="Decision" value={DECISION_LABELS[decision] || decision.replace('_', ' ')} />
           {riskSeverity && <InfoRow label="Risk Severity" value={riskSeverity.toUpperCase()} />}
-          {recommendation.rationale && (
+          {rationaleHeadline && (
             <div className="rounded-lg border border-white/[0.04] bg-black/20 p-3">
               <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Rationale</p>
-              <p className="mt-1 text-xs leading-relaxed text-slate-300">{displayText(recommendation.rationale)}</p>
+              <p className="mt-1 text-xs leading-relaxed text-slate-300">{displayText(rationaleHeadline)}</p>
             </div>
           )}
           {recommendation.suggested_premium_modification && (
@@ -593,7 +608,7 @@ export default function MemoReportView({ job }) {
               <p className="text-[10px] font-bold uppercase tracking-wider text-sky-400">Human Review Required</p>
               {memoObj.human_review_reasons?.length > 0 && (
                 <ul className="mt-1.5 space-y-1">
-                  {memoObj.human_review_reasons.map((r, i) => (
+                  {uwReasons(memoObj.human_review_reasons).map((r, i) => (
                     <li key={i} className="flex gap-2 text-xs text-slate-300">
                       <span className="text-sky-400 shrink-0">•</span>{displayText(r)}
                     </li>
@@ -606,10 +621,17 @@ export default function MemoReportView({ job }) {
       </div>
 
       {/* ── 7. Next Steps ──────────────────────────────────────────────── */}
-      {nextSteps && (
+      {nextStepsList.length > 0 && (
         <div className="rounded-xl border border-sky-500/20 bg-sky-500/5 p-4">
           <h4 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-sky-400">What To Do Next</h4>
-          <pre className="whitespace-pre-wrap font-sans text-[13px] leading-relaxed text-slate-300">{nextSteps}</pre>
+          <ol className="space-y-1.5">
+            {nextStepsList.map((step, i) => (
+              <li key={i} className="flex gap-2.5 text-[13px] leading-relaxed text-slate-300">
+                <span className="shrink-0 font-semibold text-sky-400">{i + 1}.</span>
+                <span>{displayText(step)}</span>
+              </li>
+            ))}
+          </ol>
         </div>
       )}
 

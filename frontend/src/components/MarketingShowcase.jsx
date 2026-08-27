@@ -522,16 +522,17 @@ export function AutomationsCatalog({ filterVertical }) {
 
 export function PlatformStrip() {
   const pillars = [
-    { title: 'Minutes, not weeks', body: 'Ingest, extract, verify, and decide in one visible pipeline.' },
-    { title: 'Cited & controllable', body: 'Provenance on every field. Human checkpoints when risk rises.' },
-    { title: 'LOB-native', body: 'Life medical, COPE property, mortgage packages — not one generic checklist.' },
+    { title: 'Minutes, not weeks', body: 'Ingest, extract, verify, and decide in one visible pipeline.', accent: 'from-brand to-indigo-500' },
+    { title: 'Cited & controllable', body: 'Provenance on every field. Human checkpoints when risk rises.', accent: 'from-insurance to-cyan-400' },
+    { title: 'LOB-native', body: 'Life medical, COPE property, mortgage packages — not one generic checklist.', accent: 'from-lending to-teal-400' },
   ];
   return (
     <section className="py-14 lg:py-20">
       <Container>
-        <div className="grid gap-8 md:grid-cols-3">
+        <div className="grid gap-5 md:grid-cols-3">
           {pillars.map((p) => (
-            <div key={p.title}>
+            <div key={p.title} className="relative overflow-hidden rounded-xl bg-surface-overlay/60 p-5 ring-1 ring-white/[0.06]">
+              <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${p.accent} opacity-70`} />
               <h4 className="font-display text-lg font-semibold text-white">{p.title}</h4>
               <p className="mt-2 text-sm leading-relaxed text-slate-400">{p.body}</p>
             </div>

@@ -22,11 +22,13 @@ class BaseAgent:
         self.tools = tools or UnderwritingTools()
         self._findings: list[Finding] = []
         self._errors: list[str] = []
+        self.bundle: Optional[SubmissionBundle] = None
 
     def run(self, bundle: SubmissionBundle, **kwargs: Any) -> AgentResult:
         start = time.time()
         self._findings = []
         self._errors = []
+        self.bundle = bundle
 
         try:
             self._analyze(bundle, **kwargs)
@@ -54,7 +56,44 @@ class BaseAgent:
         raise NotImplementedError
 
     def _add_finding(self, finding: Finding) -> None:
+        self._attribute_finding(finding)
         self._findings.append(finding)
+
+    def _attribute_finding(self, finding: Finding) -> None:
+        """Backfill provenance (source_document/extraction_method/confidence)
+        so a reviewer never sees a blank attribution line.
+
+        Per-field confidence/notes (real extraction signal from the ACORD/JSON
+        parsers, keyed by dotted field_path) take priority when the finding
+        names a specific field and hasn't already been given an explicit,
+        non-default confidence. Everything else falls back to a bundle-level
+        source/method — coarser, but never empty.
+        """
+        bundle = self.bundle
+        if bundle is None:
+            return
+        structured = bundle.structured
+
+        if finding.field_path and structured:
+            real_confidence = structured.field_confidence.get(finding.field_path)
+            if real_confidence is not None and finding.confidence == 0.8:
+                finding.confidence = real_confidence
+            note = structured.field_notes.get(finding.field_path)
+            if note and not finding.extraction_method:
+                finding.extraction_method = "structured_parser"
+                if not finding.evidence:
+                    finding.evidence = [note]
+
+        if not finding.source_document:
+            if structured and structured.source:
+                finding.source_document = structured.source
+            elif bundle.unstructured:
+                finding.source_document = bundle.unstructured[0].source or bundle.unstructured[0].document_type
+            else:
+                finding.source_document = "submission package"
+
+        if not finding.extraction_method:
+            finding.extraction_method = "structured_parser" if structured else "llm_extraction"
 
     def _calculate_risk_score(self) -> float:
         """Calibrated risk score: severity-weighted average plus a capped pile-up bonus.

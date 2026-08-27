@@ -21,6 +21,7 @@ class RiskAnalystAgent(BaseAgent):
         start = time.time()
         self._findings = []
         self._errors = []
+        self.bundle = bundle
         self._analyze(bundle, **kwargs)
         elapsed = (time.time() - start) * 1000
         severity = self.tools.assess_overall_severity(self._findings)

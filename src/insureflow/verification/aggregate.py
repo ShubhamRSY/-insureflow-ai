@@ -107,6 +107,8 @@ def verification_findings(
                 "severity": "high",
                 "category": "data_quality",
                 "evidence": [entry["submission_id"] for entry in exception_queue_for(doc)],
+                "source_document": doc.source or doc.document_type,
+                "extraction_method": "llm_extraction (failed citation grounding)",
             }
         )
     return findings

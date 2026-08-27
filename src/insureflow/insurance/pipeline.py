@@ -842,6 +842,8 @@ class InsurancePipeline:
                         description=mib_report.discrepancies[0].reason or "MIB authorization is not a bureau hit.",
                         severity=RiskSeverity.CRITICAL,
                         category="mib",
+                        source_document="MIB Bureau order",
+                        extraction_method="oracle_lookup",
                     )
                 )
             elif mib_report.discrepancies:
@@ -852,6 +854,8 @@ class InsurancePipeline:
                             description=d.reason,
                             severity=d.severity,
                             category="mib",
+                            source_document="MIB Bureau order",
+                            extraction_method="oracle_lookup",
                         )
                     )
             elif mib_report.no_hit:
@@ -865,6 +869,8 @@ class InsurancePipeline:
                         ),
                         severity=RiskSeverity.HIGH,
                         category="mib",
+                        source_document="MIB Bureau order",
+                        extraction_method="oracle_lookup",
                     )
                 )
             oracle_findings.extend(rx_result.findings)
@@ -1486,7 +1492,8 @@ class InsurancePipeline:
             memo.decision = worst_decision(agent_decision, medical.decision)
             if medical.decision != memo.decision and medical.reasons:
                 memo.human_review_reasons.extend([f"Life medical suggested {medical.decision.value}: {r}" for r in medical.reasons])
-            memo.human_review_reasons.extend(medical.reasons)
+            elif medical.reasons:
+                memo.human_review_reasons.extend(medical.reasons)
             memo.conditions.extend((quote.metadata or {}).get("conditions") or [])
             resync_memo_narrative(
                 memo,
@@ -1894,6 +1901,7 @@ class InsurancePipeline:
             "bundle_id": bid,
             "org_id": self.org_id,
             "insured_name": memo.insured_name,
+            "named_insured": (bundle.structured.named_insured.model_dump() if bundle.structured and bundle.structured.named_insured else None),
             "broker_name": broker_name,
             "primary_state": primary_state,
             "issue_state": issue_state_for_compliance or "",

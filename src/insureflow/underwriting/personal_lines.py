@@ -579,6 +579,7 @@ class LifeFactors:
     in_force_face: float = 0.0
     beneficiary_relationship: str = ""
     state: str = ""
+    date_of_birth: str = ""
     findings: list[Finding] = field(default_factory=list)
 
     @property
@@ -625,6 +626,18 @@ def _state_from_blob(blob: str) -> str:
     m = re.search(r",\s*([a-z]{2})\s+\d{5}", blob, re.I)
     if m:
         return m.group(1).upper()
+    return ""
+
+
+_DOB_LABELS = ("date of birth", "dob", "birth date", "birthdate", "d.o.b.")
+_DOB_DATE_RE = r"(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\d{4}-\d{2}-\d{2}|[A-Za-z]+\s+\d{1,2},?\s+\d{4})"
+
+
+def _dob_from_blob(blob: str) -> str:
+    for label in _DOB_LABELS:
+        m = re.search(rf"{re.escape(label)}\s*[:=]?\s*{_DOB_DATE_RE}", blob, re.I)
+        if m:
+            return m.group(1).strip()
     return ""
 
 
@@ -743,6 +756,7 @@ def extract_life_factors(bundle: SubmissionBundle) -> LifeFactors:
         in_force_face=_money(blob, "in-force face", "in force coverage", "existing life insurance", "inforce face"),
         beneficiary_relationship=beneficiary_match.group(1).strip() if beneficiary_match else "",
         state=_state_from_blob(blob),
+        date_of_birth=_dob_from_blob(blob),
     )
     if f.smoker:
         f.findings.append(

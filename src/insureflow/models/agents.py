@@ -73,6 +73,8 @@ class Finding(BaseModel):
     recommended_value: Optional[Any] = None
     confidence: float = 0.8
     evidence: list[str] = Field(default_factory=list)
+    source_document: str = ""
+    extraction_method: str = ""
 
 
 class Recommendation(BaseModel):

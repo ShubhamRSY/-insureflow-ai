@@ -63,6 +63,10 @@ class HallucinationHit:
             field_path=self.field_name,
             confidence=1.0,
             evidence=[self.claim_text] if self.claim_text else [],
+            # This finding exists *because* the claim has no page/bbox/source
+            # citation — say so explicitly rather than leaving attribution blank.
+            source_document="not traceable to a source document",
+            extraction_method="llm_extraction (failed citation grounding)",
         )
 
     def uw_message(self) -> str:

@@ -108,6 +108,8 @@ def screen_submission(bundle: SubmissionBundle) -> InsuranceSanctionsResult:
                     severity=RiskSeverity.CRITICAL,
                     category="sanctions",
                     evidence=[h.matched_name for h in result.hits[:5]],
+                    source_document="OFAC SDN watchlist screening",
+                    extraction_method="rule_engine",
                 )
             )
 
@@ -119,6 +121,8 @@ def screen_submission(bundle: SubmissionBundle) -> InsuranceSanctionsResult:
                 description=f"Screened {len(queries)} name(s) against the embedded SDN subset.",
                 severity=RiskSeverity.LOW,
                 category="sanctions",
+                source_document="OFAC SDN watchlist screening",
+                extraction_method="rule_engine",
             )
         )
     return InsuranceSanctionsResult(

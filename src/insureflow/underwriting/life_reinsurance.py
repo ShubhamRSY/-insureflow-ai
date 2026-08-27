@@ -59,6 +59,8 @@ def evaluate_life_reinsurance(bundle: SubmissionBundle, *, face_amount: float | 
                 description="Retention / cession not calculated without a face amount.",
                 severity=RiskSeverity.HIGH,
                 category="life_reinsurance",
+                source_document="life reinsurance retention/treaty table",
+                extraction_method="rule_engine",
             )
         )
         hint = UWDecision.REFER
@@ -71,6 +73,8 @@ def evaluate_life_reinsurance(bundle: SubmissionBundle, *, face_amount: float | 
                 description=(f"Face ${face:,.0f} is above automatic treaty (${automatic:,.0f}). Retain ${retention:,.0f}; cede ${cession:,.0f} facultatively. Do not bind until placed."),
                 severity=RiskSeverity.CRITICAL,
                 category="life_reinsurance",
+                source_document="life reinsurance retention/treaty table",
+                extraction_method="rule_engine",
             )
         )
     elif jumbo:
@@ -82,6 +86,8 @@ def evaluate_life_reinsurance(bundle: SubmissionBundle, *, face_amount: float | 
                 description=f"Retain ${retention:,.0f}; automatic YRT/coinsurance cession ${cession:,.0f}. Confirm treaty capacity before issue.",
                 severity=RiskSeverity.HIGH,
                 category="life_reinsurance",
+                source_document="life reinsurance retention/treaty table",
+                extraction_method="rule_engine",
             )
         )
     elif cession > 0:
@@ -91,6 +97,8 @@ def evaluate_life_reinsurance(bundle: SubmissionBundle, *, face_amount: float | 
                 description=f"Retain ${retention:,.0f}; cede ${cession:,.0f} under automatic treaty.",
                 severity=RiskSeverity.LOW,
                 category="life_reinsurance",
+                source_document="life reinsurance retention/treaty table",
+                extraction_method="rule_engine",
             )
         )
     else:
@@ -100,6 +108,8 @@ def evaluate_life_reinsurance(bundle: SubmissionBundle, *, face_amount: float | 
                 description=f"Face ${face:,.0f} is within retention ${retention:,.0f} — no cession.",
                 severity=RiskSeverity.LOW,
                 category="life_reinsurance",
+                source_document="life reinsurance retention/treaty table",
+                extraction_method="rule_engine",
             )
         )
 

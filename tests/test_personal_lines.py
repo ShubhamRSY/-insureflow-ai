@@ -115,3 +115,58 @@ def test_personal_rating_produces_premium() -> None:
     lq = engine.quote(_bundle(life_text, "life_application.md"), memo, line=InsuranceLine.LIFE)
     assert lq.adjusted_premium > 0
     assert extract_life_factors(_bundle(life_text)).face_amount == 500000
+
+
+def test_extract_life_factors_reads_dob_and_state() -> None:
+    text = """
+    Term life application. Applicant age: 40. Date of birth: 03/15/1984.
+    Face amount: $500000. State: NY. Annual income: $120000.
+    """
+    factors = extract_life_factors(_bundle(text))
+    assert factors.date_of_birth == "03/15/1984"
+    assert factors.state == "NY"
+
+
+def test_extract_life_factors_dob_from_city_state_zip() -> None:
+    text = "Term life application. Applicant address: 12 Main St, Buffalo, NY 14201."
+    assert extract_life_factors(_bundle(text)).state == "NY"
+
+
+def test_rate_life_backfills_named_insured_identity() -> None:
+    from insureflow.models.submissions import NamedInsured, StructuredSubmission
+    from insureflow.rating.personal.life_rating import rate_life
+
+    text = """
+    Term life application. Applicant age: 40. Date of birth: 03/15/1984.
+    Face amount: $500000. State: NY. Non-smoker. Preferred.
+    """
+    bundle = SubmissionBundle(
+        bundle_id="test-backfill",
+        structured=StructuredSubmission(submission_id="s1", named_insured=NamedInsured(legal_name="Jane Applicant")),
+        unstructured=[UnstructuredSubmission(submission_id="d1", source="life_application.md", raw_text=text, document_type="supplemental")],
+    )
+    quote = rate_life(bundle)
+
+    assert bundle.structured.named_insured.date_of_birth == "03/15/1984"
+    assert bundle.structured.named_insured.state_of_residence == "NY"
+    assert quote.metadata["date_of_birth"] == "03/15/1984"
+    assert quote.metadata["issue_state"] == "NY"
+
+
+def test_rate_life_never_overwrites_existing_named_insured_identity() -> None:
+    from insureflow.models.submissions import NamedInsured, StructuredSubmission
+    from insureflow.rating.personal.life_rating import rate_life
+
+    text = "Term life application. Face amount: $500000. Date of birth: 01/01/1970. State: CA."
+    bundle = SubmissionBundle(
+        bundle_id="test-no-overwrite",
+        structured=StructuredSubmission(
+            submission_id="s1",
+            named_insured=NamedInsured(legal_name="Jane Applicant", date_of_birth="12/12/1975", state_of_residence="TX"),
+        ),
+        unstructured=[UnstructuredSubmission(submission_id="d1", source="life_application.md", raw_text=text, document_type="supplemental")],
+    )
+    rate_life(bundle)
+
+    assert bundle.structured.named_insured.date_of_birth == "12/12/1975"
+    assert bundle.structured.named_insured.state_of_residence == "TX"

@@ -18,11 +18,17 @@ def generate_quote_html(
     memo: UnderwritingMemo,
     quote: QuoteResult,
 ) -> str:
-    insured = bundle.structured.named_insured.legal_name if bundle.structured and bundle.structured.named_insured else (memo.insured_name or "Named Insured")
+    named_insured = bundle.structured.named_insured if bundle.structured else None
+    insured = named_insured.legal_name if named_insured and named_insured.legal_name else (memo.insured_name or "")
+    insured_missing = not str(insured or "").strip()
+    if insured_missing:
+        insured = "Named insured not provided"
     today = datetime.now(tz=timezone.utc).strftime("%B %d, %Y")
     valid_until = quote.quote_valid_until or "30 days from issuance"
     meta = quote.metadata or {}
     is_life = quote.line == InsuranceLine.LIFE or str(meta.get("insurance_line") or "").lower() == "life"
+    date_of_birth = (named_insured.date_of_birth if named_insured else None) or meta.get("date_of_birth") or ""
+    state_of_residence = (named_insured.state_of_residence if named_insured else None) or meta.get("issue_state") or ""
     line_label = line_display_name(quote.line.value)
     subtitle = f"{'Life' if is_life else 'Commercial'} Insurance Quote — Issued {today}"
     decision = (memo.decision.value if hasattr(memo.decision, "value") else str(memo.decision or "")).upper()
@@ -97,19 +103,25 @@ def generate_quote_html(
         label = rc.name.replace("_", " ").title()
         amount = getattr(rc, "amount", None)
         if is_life and amount is not None and pct == 0:
-            components_html += f"<tr><td>{_esc(label)}</td><td class='text-right'>{_esc(amount)}</td></tr>"
+            components_html += f"<div class='row'><span class='label'>{_esc(label)}</span><span>{_esc(amount)}</span></div>"
         elif pct > 0:
-            components_html += f"<tr><td>{_esc(label)}</td><td class='text-right text-up'>+{pct:.1f}%</td></tr>"
+            components_html += f"<div class='row'><span class='label'>{_esc(label)}</span><span class='text-up'>+{pct:.1f}%</span></div>"
         elif pct < 0:
-            components_html += f"<tr><td>{_esc(label)}</td><td class='text-right text-down'>{pct:.1f}%</td></tr>"
+            components_html += f"<div class='row'><span class='label'>{_esc(label)}</span><span class='text-down'>{pct:.1f}%</span></div>"
         else:
-            components_html += f"<tr><td>{_esc(label)}</td><td class='text-right muted'>{pct:.1f}%</td></tr>"
+            components_html += f"<div class='row'><span class='label'>{_esc(label)}</span><span class='muted'>{pct:.1f}%</span></div>"
 
-    # Detailed findings for the quote package
-    findings = list(memo.key_findings or [])
+    # Detailed findings for the quote package — CRITICAL/HIGH first so a cap
+    # (if ever reached) never drops the findings that matter most.
+    _sev_order = {"critical": 0, "high": 1, "moderate": 2, "low": 3}
+    findings = sorted(
+        list(memo.key_findings or []),
+        key=lambda f: _sev_order.get((f.severity.value if hasattr(f.severity, "value") else str(f.severity or "moderate")).lower(), 4),
+    )
     findings_html = ""
     if findings:
-        for f in findings[:25]:
+        shown, overflow = findings[:40], findings[40:]
+        for f in shown:
             sev = (f.severity.value if hasattr(f.severity, "value") else str(f.severity or "moderate")).lower()
             findings_html += f"""
             <div class="finding">
@@ -120,13 +132,15 @@ def generate_quote_html(
               </div>
               <p class="finding-desc">{_esc(f.description or "")}</p>
             </div>"""
+        if overflow:
+            findings_html += f'<p class="muted">+ {len(overflow)} more lower-severity finding(s) — see the full Underwriting Report.</p>'
     else:
         findings_html = '<p class="muted">No underwriting findings recorded for this quote.</p>'
 
     review_reasons = list(memo.human_review_reasons or [])
     review_html = ""
     if review_reasons:
-        items = "".join(f"<li>{_esc(r)}</li>" for r in review_reasons[:12])
+        items = "".join(f"<li>{_esc(r)}</li>" for r in review_reasons)
         review_html = f"""
   <h2>Referral Basis</h2>
   <ul class="list">{items}</ul>"""
@@ -136,6 +150,8 @@ def generate_quote_html(
         medical = meta.get("medical") or {}
         header_rows = f"""
   <div class="row"><span class="label">Line of Business</span><span>{_esc(line_label)}</span></div>
+  <div class="row"><span class="label">Date of Birth</span><span>{_esc(date_of_birth) or "Not provided"}</span></div>
+  <div class="row"><span class="label">State of Residence</span><span>{_esc(state_of_residence) or "Not provided"}</span></div>
   <div class="row"><span class="label">Face Amount</span><span>${face:,.0f}</span></div>
   <div class="row"><span class="label">UW Class</span><span>{_esc((medical.get("underwriting_class") or "—").replace("_", " ").title())}</span></div>
   <div class="row"><span class="label">Tobacco</span><span>{"Yes" if medical.get("tobacco") else "No"}</span></div>
@@ -158,6 +174,7 @@ def generate_quote_html(
   <div class="row"><span class="label">COPE Risk Grade</span><span>{_esc(cope_grade.replace("_", " ").title())}</span></div>
   <div class="row"><span class="label">Market Phase</span><span>{_esc(market_phase.replace("_", " ").title())}</span></div>
   <div class="row"><span class="label">Risk Score</span><span>{risk_pct if risk_pct is not None else "—"}/100 · {_esc(severity)}</span></div>
+  <div class="row" style="border-bottom:none;"><span class="muted" style="font-size:10.5px;">0&ndash;49 Low &middot; 50&ndash;74 Moderate &middot; 75&ndash;100 High</span></div>
   <div class="row"><span class="label">Decision</span><span style="color:{decision_color_hex};font-weight:700;">{_esc(decision)}</span></div>
   <div class="row"><span class="label">Policy Admin Ref</span><span>{_esc(quote.policy_admin_reference or "N/A")}</span></div>"""
         modifiers_block = f"""
@@ -256,6 +273,7 @@ def generate_quote_html(
   </div>
 
   {header_rows}
+  {"<div class='finding' style=\"border-left-color:#dc2626;\"><div class='finding-top'><strong>Identity verification incomplete</strong></div><p class='finding-desc'>Named insured not on file. Confirm with the producer before bind.</p></div>" if insured_missing else ""}
   {summary_note}
 
   <h2>Coverages</h2>

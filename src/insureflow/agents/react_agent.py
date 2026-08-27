@@ -40,6 +40,7 @@ class ReActAgent(BaseAgent):
         start = time.time()
         self._findings = []
         self._errors = []
+        self.bundle = bundle
 
         self._tools_registry = ToolRegistry(bundle)
 

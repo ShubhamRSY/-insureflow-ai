@@ -54,6 +54,12 @@ def rate_life(
 ) -> QuoteResult:
     manual = life_manual()
     factors = extract_life_factors(bundle)
+    # Backfill identity fields the structured parsers don't capture (ACORD/JSON
+    # never read a DOB/state element for NamedInsured — see personal_lines.py's
+    # blob-regex extraction) so the Quote/Report don't show a false "not
+    # provided" when the applicant's own paperwork does state it.
+    if bundle.structured and bundle.structured.named_insured and factors.date_of_birth and not bundle.structured.named_insured.date_of_birth:
+        bundle.structured.named_insured.date_of_birth = factors.date_of_birth
     medical = underwrite_life(bundle)
     financial = evaluate_life_financial(bundle, factors=factors, product_id=product_id, coverage_id=coverage_id, coverage_name=coverage_name)
     reinsurance = evaluate_life_reinsurance(bundle, face_amount=factors.face_amount)
@@ -106,6 +112,8 @@ def rate_life(
     if issue_state in unisex_states:
         sex_key = "male"
         sex = "unisex"
+    if bundle.structured and bundle.structured.named_insured and issue_state and not bundle.structured.named_insured.state_of_residence:
+        bundle.structured.named_insured.state_of_residence = issue_state
     mort_table = (manual.get("mortality_per_1000") or {}).get(sex_key if sex_key in ("male", "female") else "male") or {}
     q = float(mort_table.get(nearest_key(mort_table, age), 1.5))
 
@@ -306,6 +314,7 @@ def rate_life(
         "modal": modal,
         "modal_premium": modal_premium,
         "issue_state": issue_state,
+        "date_of_birth": factors.date_of_birth,
         "state_of_filing": filing_state,
         "serff_tracking": manual.get("serff_tracking"),
         "rating_engine": "life_whole_life_actuarial" if actuarial else ("life_filing" if filed_term else "catalog_only"),

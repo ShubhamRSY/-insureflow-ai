@@ -56,6 +56,8 @@ class NamedInsured(BaseModel):
     tax_id: Optional[str] = None
     entity_type: Optional[str] = None
     address: Optional[str] = None
+    date_of_birth: Optional[str] = None
+    state_of_residence: Optional[str] = None
 
 
 class BrokerInfo(BaseModel):

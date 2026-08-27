@@ -5,10 +5,16 @@ from __future__ import annotations
 import html as _html
 import re
 from datetime import datetime, timezone
+from importlib.metadata import PackageNotFoundError, version
 from typing import Any
 
 from insureflow.rating.models import line_display_name
 from insureflow.rating.report_theme import WORDMARK_CSS_PRINT, decision_color, wordmark_html
+
+try:
+    _APP_VERSION = version("insureflow")
+except PackageNotFoundError:
+    _APP_VERSION = "dev"
 
 # ── Underwriter-language translation ──────────────────────────────────────────
 # The verification stack speaks in engineering terms (hallucination, bbox,
@@ -294,15 +300,22 @@ def uw_signoff_html(results: dict[str, Any]) -> str:
   </div>"""
 
 
-def generate_report_html(results: dict[str, Any], job_id: str) -> str:
-    """Build a professional, client-facing HTML report from pipeline results.
+def generate_report_html(results: dict[str, Any], job_id: str, audience: str = "internal") -> str:
+    """Build a professional HTML report from pipeline results.
 
     Works with the raw dict stored in the job store (not model objects)
     so it can render any completed job without re-running the pipeline.
 
     Life submissions carry a full ``memo_text`` UNDERWRITING EVALUATION MEMO —
     that memo IS the report. Everything else uses the structured layout.
+
+    ``audience`` controls how much internal reasoning is exposed:
+    - "internal" (default): full detail — decision logic reconciliation,
+      per-finding attribution, and the AI/reviewer audit trail.
+    - "external": everything except the internal-only sections above,
+      for cases where this report is shared outside the carrier.
     """
+    is_internal = audience != "external"
     r = results
     memo = r.get("memo") or {}
     now = datetime.now(tz=timezone.utc).strftime("%B %d, %Y at %H:%M UTC")
@@ -317,7 +330,7 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
     recon = r.get("reconciliation") or {}
     now = datetime.now(tz=timezone.utc).strftime("%B %d, %Y at %H:%M UTC")
 
-    insured = memo.get("insured_name") or r.get("insured_name") or "Named Insured"
+    insured = memo.get("insured_name") or r.get("insured_name") or ""
     decision = (r.get("ai_decision") or memo.get("decision") or "pending").upper()
     risk_score = memo.get("overall_risk_score")
     risk_pct = round(risk_score * 100) if risk_score is not None else None
@@ -332,6 +345,22 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
     insurance_line = str(r.get("insurance_line") or r.get("product_line") or meta.get("insurance_line") or "").lower()
     insurance_line_display = line_display_name(insurance_line)
     is_life = insurance_line == "life" or bool(meta.get("personal_lines") and "life" in str(meta.get("product") or "").lower())
+
+    # ── Identity fields — name/DOB/state are load-bearing for life UW; surface
+    #    gaps explicitly instead of leaving a blank the reader has to notice. ──
+    named_insured = (r.get("named_insured") or {}) if isinstance(r.get("named_insured"), dict) else {}
+    insured_name_missing = not str(insured or "").strip() or insured.strip() == job_id
+    date_of_birth = named_insured.get("date_of_birth") or meta.get("date_of_birth") or ""
+    state_of_residence = named_insured.get("state_of_residence") or meta.get("issue_state") or r.get("primary_state") or ""
+    identity_gaps: list[str] = []
+    if insured_name_missing:
+        identity_gaps.append("named insured")
+        insured = "Named insured not provided"
+    if is_life and not date_of_birth:
+        identity_gaps.append("date of birth")
+    if is_life and not state_of_residence:
+        identity_gaps.append("state of residence")
+
     key_findings = memo.get("key_findings") or []
     # Dedupe findings by title+description prefix
     _seen_f: set[tuple[str, str]] = set()
@@ -425,15 +454,66 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
             sc = sev_colors.get(sev, "#64748b")
             title = uw_finding_title(f.get("title", ""))
             desc = uw_finding_description(f.get("description", ""))
+            attribution = ""
+            if is_internal:
+                attr_bits: list[str] = []
+                if f.get("source_document"):
+                    attr_bits.append(f"Source: {_esc(f.get('source_document'))}")
+                if f.get("field_path"):
+                    attr_bits.append(f"Field: {_esc(f.get('field_path'))}")
+                if f.get("extraction_method"):
+                    attr_bits.append(f"Extraction: {_esc(f.get('extraction_method'))}")
+                conf = f.get("confidence")
+                if conf is not None:
+                    attr_bits.append(f"Confidence: {round(float(conf) * 100)}%")
+                if attr_bits:
+                    attribution = f'<div class="finding-attribution" style="font-size:9.5px;color:#94a3b8;margin-top:4px;">{" &middot; ".join(attr_bits)}</div>'
             findings_html += f"""
             <div class="finding-item" style="border-left-color:{sc};">
               <div class="finding-title">{_esc(title) or "Finding"}</div>
               <div class="finding-desc">{_esc(desc)}</div>
               <div class="finding-severity" style="color:{sc};">{sev.upper()}</div>
+              {attribution}
             </div>"""
 
     if not findings_html:
         findings_html = '<p style="color:#94a3b8;font-size:12px;padding:8px 0;">No findings recorded.</p>'
+
+    # ── Decision logic — reconcile the risk-assessment gate against the
+    #    compliance gate so a reviewer can see which one actually drove the
+    #    decision, not just the final badge. Internal audience only. ──
+    decision_logic_block = ""
+    if is_internal:
+        _sev_order = {"critical": 3, "high": 2, "moderate": 1, "low": 0}
+
+        def _gate_verdict(items: list[dict[str, Any]]) -> tuple[str, str]:
+            if not items:
+                return "no findings", "#64748b"
+            worst = max((str(f.get("severity") or "moderate").lower() for f in items), key=lambda s: _sev_order.get(s, 0))
+            return worst, sev_colors.get(worst, "#64748b")
+
+        risk_findings_raw = memo.get("risk_analyst_findings") or []
+        compliance_findings_raw = memo.get("compliance_findings") or []
+        risk_verdict, risk_verdict_color = _gate_verdict(risk_findings_raw)
+        compliance_verdict, compliance_verdict_color = _gate_verdict(compliance_findings_raw)
+
+        if risk_pct is not None and risk_pct >= 85:
+            reconciliation_note = "The aggregate risk score alone met the auto-decline threshold (&ge;85) — this drove the decision independent of the compliance gate."
+        elif compliance_verdict == "critical":
+            reconciliation_note = "A CRITICAL compliance finding is the binding constraint here — it forces REFER/DECLINE regardless of the risk score."
+        elif risk_verdict in ("critical", "high") and compliance_verdict in ("low", "no findings"):
+            reconciliation_note = "Risk assessment is the binding constraint — compliance findings did not independently require escalation."
+        else:
+            reconciliation_note = "Neither gate hit a hard threshold on its own; the decision reflects the combined severity across both gates."
+
+        decision_logic_block = f"""
+<div class="section-title">Decision Logic <span style="font-weight:400;text-transform:none;color:#94a3b8;font-size:9px;">&mdash; internal only</span></div>
+<div class="card">
+  <div class="kv-row"><span class="kv-label">Risk Assessment gate</span><span class="kv-value">{len(risk_findings_raw)} finding(s) &middot; highest severity <strong style="color:{risk_verdict_color};">{risk_verdict.upper()}</strong></span></div>
+  <div class="kv-row"><span class="kv-label">Compliance gate</span><span class="kv-value">{len(compliance_findings_raw)} finding(s) &middot; highest severity <strong style="color:{compliance_verdict_color};">{compliance_verdict.upper()}</strong></span></div>
+  <p style="margin-top:8px;font-size:11px;color:#475569;line-height:1.6;">Final decision <strong style="color:{decision_color_hex};">{decision}</strong> — {reconciliation_note}</p>
+</div>
+"""
 
     # ── Premium breakdown ──
     premium_rows = ""
@@ -441,9 +521,13 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
     for mod in premiums_mods:
         pct = mod.get("modifier_pct", 0)
         label = mod.get("name", "").replace("_", " ").title()
-        color = "#dc2626" if pct > 0 else "#16a34a" if pct < 0 else "#64748b"
-        sign = "+" if pct > 0 else ""
-        premium_rows += _row(label, f"{sign}{pct:.1f}%", color=color)
+        amount = mod.get("amount")
+        if is_life and amount is not None and pct == 0:
+            premium_rows += _row(label, f"{amount}")
+        else:
+            color = "#dc2626" if pct > 0 else "#16a34a" if pct < 0 else "#64748b"
+            sign = "+" if pct > 0 else ""
+            premium_rows += _row(label, f"{sign}{pct:.1f}%", color=color)
     premium_rows += _row(
         "Indicated Premium",
         f"${adjusted_premium:,.2f}",
@@ -500,21 +584,90 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
     <div class="kv-row"><span class="kv-label">Rate per $100 TIV</span><span class="kv-value">{quote_full.get("rate_per_100_tiv") or meta.get("rate_per_100_tiv") or "—"}</span></div>
   </div>"""
 
+    # ── Parse the memo summary into a headline + "Why this decision" bullets +
+    #    "What to do next" steps, instead of dumping it as one pre-wrap block.
+    #    Document completeness is promoted into the "Why" list when material
+    #    (< 85% complete) so a reviewer doesn't have to cross-reference the
+    #    Document Checklist section separately. ──
     summary_block = ""
     if executive_summary:
+        headline_lines: list[str] = []
+        why_bullets: list[str] = []
+        next_steps: list[str] = []
+        section: str | None = None
+        for raw_line in executive_summary.splitlines():
+            line = raw_line.strip()
+            if not line:
+                continue
+            low = line.lower()
+            if low == "why this decision":
+                section = "why"
+                continue
+            if low == "what to do next":
+                section = "next"
+                continue
+            if section == "why":
+                why_bullets.append(re.sub(r"^[•\-]\s*", "", line))
+            elif section == "next":
+                next_steps.append(re.sub(r"^\d+\.\s*", "", line))
+            elif section is None and not line.lower().startswith("risk score:"):
+                headline_lines.append(line)
+
+        if completeness_raw is not None and completeness_raw < 0.85:
+            completeness_note = (
+                f"Document package {completeness_display} complete — {len(missing_docs)} of "
+                f"{len(present_docs) + len(missing_docs)} required documents missing (see Document Checklist)."
+            )
+            if not any("document" in b.lower() and "complet" in b.lower() for b in why_bullets):
+                why_bullets.append(completeness_note)
+
+        headline_html = "".join(f'<p style="font-size:13px;color:#0f172a;line-height:1.6;">{_esc(h)}</p>' for h in headline_lines)
         summary_block = f"""
 <div class="section-title">Underwriting Summary</div>
-<div class="card"><p style="font-size:13px;color:#0f172a;line-height:1.6;white-space:pre-wrap;">{executive_summary}</p></div>
+<div class="card">{headline_html}</div>
+"""
+        if why_bullets:
+            why_items = "".join(f'<li style="padding:3px 0;font-size:12px;color:#0f172a;line-height:1.5;">&mdash; {_esc(b)}</li>' for b in why_bullets)
+            summary_block += f"""
+<div class="section-title">Why This Decision</div>
+<div class="card"><ul style="list-style:none;padding:0;margin:0;">{why_items}</ul></div>
+"""
+        if next_steps:
+            next_items = "".join(f'<li style="padding:3px 0;font-size:12px;color:#0f172a;line-height:1.5;">{_esc(s)}</li>' for s in next_steps)
+            summary_block += f"""
+<div class="section-title">What To Do Next</div>
+<div class="card"><ol style="padding-left:16px;margin:0;">{next_items}</ol></div>
 """
 
     review_reasons = [uw_finding_title(str(x)) for x in (memo.get("human_review_reasons") or [])]
     review_block = ""
     if review_reasons:
-        items = "".join(f"<li style='padding:3px 0;color:#0f172a;font-size:12px;'>&mdash; {r}</li>" for r in review_reasons[:15])
+        items = "".join(f"<li style='padding:3px 0;color:#0f172a;font-size:12px;'>&mdash; {r}</li>" for r in review_reasons)
         review_block = f"""
 <div class="section-title">Human Review Reasons</div>
 <div class="card"><ul style="list-style:none;padding:0;margin:0;">{items}</ul></div>
 """
+
+    # ── Identity — name/DOB/state, with an explicit gap callout instead of a
+    #    silent blank when any are genuinely missing from intake. ──
+    identity_block = f"""
+<div class="kv-row"><span class="kv-label">Named Insured</span><span class="kv-value">{_esc(insured)}</span></div>
+"""
+    if is_life:
+        identity_block += f"""
+<div class="kv-row"><span class="kv-label">Date of Birth</span><span class="kv-value">{_esc(date_of_birth) or "Not provided"}</span></div>
+<div class="kv-row"><span class="kv-label">State of Residence</span><span class="kv-value">{_esc(state_of_residence) or "Not provided"}</span></div>
+"""
+    identity_gap_block = ""
+    if identity_gaps:
+        identity_gap_block = f"""
+<div class="card" style="border-color:#fca5a5;background:#fef2f2;margin-top:8px;">
+  <div style="font-size:11px;font-weight:700;color:#b91c1c;">Identity verification incomplete</div>
+  <div style="font-size:11px;color:#7f1d1d;margin-top:2px;">Missing: {_esc(", ".join(identity_gaps))}. Confirm with the producer before bind.</div>
+</div>
+"""
+
+    risk_legend = '<div class="report-meta" style="text-align:center;margin-top:-4px;">0&ndash;49 Low &middot; 50&ndash;74 Moderate &middot; 75&ndash;100 High (&ge;85 auto-decline threshold)</div>'
 
     line_block = ""
     if insurance_line:
@@ -535,11 +688,39 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
     uw_signoff_block = uw_signoff_html(r)
     footer_disclaimer = "" if uw_signoff_block else "<p>It does not constitute a binder of insurance or a binding agreement.</p>"
 
+    # ── AI / reviewer audit trail — always present on the internal report
+    #    (not just after sign-off), so a compliance reader can always see
+    #    which model version produced the recommendation and when, with a
+    #    blank countersignature line pending human review. ──
+    audit_trail_block = ""
+    if is_internal and not uw_signoff_block:
+        audit_trail_block = f"""
+  <div style="margin-top:18px;border:1px solid #e2e8f0;border-radius:8px;padding:14px 16px;background:#f8fafc;">
+    <div style="font-size:11px;font-weight:700;color:#0f172a;text-transform:uppercase;letter-spacing:0.04em;padding-bottom:8px;border-bottom:1px solid #e2e8f0;">
+      AI Analysis &amp; Reviewer Sign-off
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #e2e8f0;font-size:11px;">
+      <span style="color:#64748b;">Generated by</span>
+      <span>Rytera AI Underwriting Platform v{_APP_VERSION}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #e2e8f0;font-size:11px;">
+      <span style="color:#64748b;">Generated at</span>
+      <span>{now}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:11px;">
+      <span style="color:#64748b;">Reviewer sign-off</span>
+      <span style="color:#94a3b8;">Pending — not yet countersigned by a licensed underwriter</span>
+    </div>
+    <div style="margin-top:10px;display:flex;justify-content:flex-end;">
+      <div style="border-top:1.5px solid #cbd5e1;width:190px;text-align:center;padding-top:3px;font-size:8.5px;color:#94a3b8;">Reviewer signature &amp; license #</div>
+    </div>
+  </div>"""
+
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Underwriting Report — {insured}</title>
+<title>Underwriting Report — {_esc(insured)}</title>
 <style>
   @page {{
     size: A4;
@@ -725,7 +906,7 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
 <!-- ═══════════════════════════════════════════ HEADER ═══════════════════════════════════════════ -->
 <div class="report-header">
   <div>
-    <h1>{insured}</h1>
+    <h1>{_esc(insured)}</h1>
     <div class="report-meta">Underwriting Report &mdash; {now}</div>
     <div class="report-meta">Job ID: {job_id}</div>
   </div>
@@ -752,8 +933,9 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
     <div class="stat-label">Doc Completeness</div>
   </div>
 </div>
+{risk_legend}
 
-<div class="grid-2">
+<div class="grid-2 mt-8">
   <div class="card">
     <div class="kv-row"><span class="kv-label">Decision</span><span class="kv-value" style="color:{decision_color_hex};font-weight:700;">{decision}</span></div>
     {line_block}
@@ -769,6 +951,13 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
     <div class="kv-row"><span class="kv-label">Reconciliation</span><span class="kv-value">{match_pct or 0}% match</span></div>
   </div>
 </div>
+
+<!-- ═══════════════════════════════════════════ IDENTITY ═══════════════════════════════════════════ -->
+<div class="section-title">Insured Identity</div>
+<div class="card">
+  {identity_block}
+</div>
+{identity_gap_block}
 
 <!-- ═══════════════════════════════════════════ DOCUMENTS ═══════════════════════════════════════════ -->
 <div class="section-title">Document Checklist</div>
@@ -823,7 +1012,10 @@ def generate_report_html(results: dict[str, Any], job_id: str) -> str:
 <div class="section-title">Key Findings</div>
 {findings_html}
 
+{decision_logic_block}
+
 {uw_signoff_block}
+{audit_trail_block}
 
 <!-- ═══════════════════════════════════════════ FOOTER ═══════════════════════════════════════════ -->
 <div class="report-footer">
