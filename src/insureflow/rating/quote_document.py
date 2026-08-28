@@ -7,6 +7,7 @@ from insureflow.models.agents import UnderwritingMemo
 from insureflow.models.submissions import SubmissionBundle
 from insureflow.rating.models import InsuranceLine, QuoteResult, line_display_name
 from insureflow.rating.report_theme import WORDMARK_CSS_DARK, WORDMARK_CSS_PRINT, decision_color, wordmark_html
+from insureflow.underwriting.lob_rating import _derived_modifier_pct
 
 
 def _esc(value: object) -> str:
@@ -23,13 +24,6 @@ def generate_quote_html(
     insured_missing = not str(insured or "").strip()
     if insured_missing:
         insured = "Named insured not provided"
-    identity_gap_note = (
-        "<div class='finding' style=\"border-left-color:#dc2626;\"><div class='finding-top'>"
-        "<strong>Identity verification incomplete</strong></div><p class='finding-desc'>"
-        "Named insured not on file. Confirm with the producer before bind.</p></div>"
-        if insured_missing
-        else ""
-    )
     today = datetime.now(tz=timezone.utc).strftime("%B %d, %Y")
     valid_until = quote.quote_valid_until or "30 days from issuance"
     meta = quote.metadata or {}
@@ -38,6 +32,26 @@ def generate_quote_html(
     state_of_residence = (named_insured.state_of_residence if named_insured else None) or meta.get("issue_state") or ""
     line_label = line_display_name(quote.line.value)
     subtitle = f"{'Life' if is_life else 'Commercial'} Insurance Quote — Issued {today}"
+    # The page headline must always be a fixed document title, never a data
+    # field — "Named insured not provided" must not itself BE the headline.
+    # The identity-gap callout box below (built after date_of_birth/
+    # state_of_residence are known, so it can describe all three gaps
+    # consistently with the Report) carries that fact instead.
+    headline = insured if not insured_missing else (f"{line_label} Quote" if "insurance" in line_label.lower() else f"{line_label} Insurance Quote")
+    identity_gaps: list[str] = []
+    if insured_missing:
+        identity_gaps.append("named insured")
+    if is_life and not date_of_birth:
+        identity_gaps.append("date of birth")
+    if is_life and not state_of_residence:
+        identity_gaps.append("state of residence")
+    identity_gap_note = (
+        "<div class='finding' style=\"border-left-color:#dc2626;\"><div class='finding-top'>"
+        "<strong>Identity verification incomplete</strong></div><p class='finding-desc'>"
+        f"Missing: {_esc(', '.join(identity_gaps))}. Confirm with the producer before bind.</p></div>"
+        if identity_gaps
+        else ""
+    )
     decision = (memo.decision.value if hasattr(memo.decision, "value") else str(memo.decision or "")).upper()
     decision_color_hex = decision_color(decision)
     risk = memo.overall_risk_score
@@ -104,19 +118,26 @@ def generate_quote_html(
         uniq_excl.append("Standard policy exclusions apply. See policy form for full details.")
     exclusions_html = "".join(f"<li>{_esc(e)}</li>" for e in uniq_excl)
 
+    # Same 4 columns as the in-app Premium Build-up table (Rating component |
+    # Applied to | Factor | Adjustment %), using the same _derived_modifier_pct()
+    # function that table uses, so the PDF and in-app view can never show
+    # different numbers for the same row.
     components_html = ""
     for rc in quote.schedule_modifications:
-        pct = rc.modifier_pct
-        label = rc.name.replace("_", " ").title()
+        label = _esc(rc.name.replace("_", " ").title())
+        basis = _esc(rc.basis or "—")
         amount = getattr(rc, "amount", None)
-        if is_life and amount is not None and pct == 0:
-            components_html += f"<div class='row'><span class='label'>{_esc(label)}</span><span>{_esc(amount)}</span></div>"
-        elif pct > 0:
-            components_html += f"<div class='row'><span class='label'>{_esc(label)}</span><span class='text-up'>+{pct:.1f}%</span></div>"
-        elif pct < 0:
-            components_html += f"<div class='row'><span class='label'>{_esc(label)}</span><span class='text-down'>{pct:.1f}%</span></div>"
+        factor_display = _esc(amount) if amount is not None else "—"
+        derived_pct = _derived_modifier_pct(rc)
+        if derived_pct is None:
+            adj_display, adj_class = "n/a", "muted"
         else:
-            components_html += f"<div class='row'><span class='label'>{_esc(label)}</span><span class='muted'>{pct:.1f}%</span></div>"
+            sign = "+" if derived_pct > 0 else ""
+            adj_display = f"{sign}{derived_pct:.1f}%"
+            adj_class = "text-up" if derived_pct > 0 else "text-down" if derived_pct < 0 else "muted"
+        components_html += (
+            f"<tr><td>{label}</td><td class='muted' style='font-size:10.5px;'>{basis}</td><td class='text-right'>{factor_display}</td><td class='text-right {adj_class}'>{adj_display}</td></tr>"
+        )
 
     # Detailed findings for the quote package — CRITICAL/HIGH first so a cap
     # (if ever reached) never drops the findings that matter most.
@@ -215,7 +236,7 @@ def generate_quote_html(
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Insurance Quote — {_esc(insured)}</title>
+<title>{_esc(headline) if insured_missing else f"Insurance Quote — {_esc(headline)}"}</title>
 <style>
   *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
   body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0a0f; color: #e2e8f0; padding: 40px 20px; font-size: 13px; line-height: 1.55; }}
@@ -270,7 +291,7 @@ def generate_quote_html(
 <div class="container">
   <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:4px;">
     <div>
-      <h1>{_esc(insured)}</h1>
+      <h1>{_esc(headline)}</h1>
       <p class="subtitle">{_esc(subtitle)}</p>
     </div>
     <div style="text-align:right;">
@@ -294,7 +315,10 @@ def generate_quote_html(
   <h2>Premium Breakdown</h2>
   <div class="card">
     <div class="row"><span class="label">Base Premium</span><span>${quote.base_premium:,.2f}</span></div>
-    {components_html}
+    <table style="margin-top:6px;">
+      <tr><th class="muted" style="text-align:left;font-size:10px;padding:4px 0;">Rating Component</th><th class="muted" style="text-align:left;font-size:10px;padding:4px 0;">Applied To</th><th class="muted" style="text-align:right;font-size:10px;padding:4px 0;">Factor</th><th class="muted" style="text-align:right;font-size:10px;padding:4px 0;">Adjustment</th></tr>
+      {components_html}
+    </table>
     <div class="total">${quote.adjusted_premium:,.2f}</div>
   </div>
 

@@ -30,7 +30,16 @@ def build_memo_summary(
     )
     critical = [f for f in ranked if (f.severity.value if hasattr(f.severity, "value") else str(f.severity)).lower() == "critical"]
     high = [f for f in ranked if (f.severity.value if hasattr(f.severity, "value") else str(f.severity)).lower() == "high"]
+    moderate = [f for f in ranked if (f.severity.value if hasattr(f.severity, "value") else str(f.severity)).lower() == "moderate"]
+    low = [f for f in ranked if (f.severity.value if hasattr(f.severity, "value") else str(f.severity)).lower() == "low"]
     drivers = (critical + high)[:5] or ranked[:3]
+
+    # Every severity actually present must be counted here — silently
+    # dropping moderate/low from the parenthetical breakdown while still
+    # counting them in the total (e.g. "6 findings (1 critical, 3 high)"
+    # for 1+3+1+1=6 findings) reads as the summary line not adding up.
+    severity_counts = [(len(critical), "critical"), (len(high), "high"), (len(moderate), "moderate"), (len(low), "low")]
+    severity_breakdown = ", ".join(f"{n} {label}" for n, label in severity_counts if n > 0) or "none"
 
     next_steps: list[str] = []
     decision_norm = normalize_decision(decision)
@@ -91,7 +100,7 @@ def build_memo_summary(
     lines = [
         headline,
         "",
-        f"Risk score: {pct}/100 · {len(findings)} findings ({len(critical)} critical, {len(high)} high)",
+        f"Risk score: {pct}/100 · {len(findings)} findings ({severity_breakdown})",
         "",
         "Why this decision",
     ]

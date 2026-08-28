@@ -144,12 +144,15 @@ def test_report_and_quote_render_identical_life_factors() -> None:
     report_html = generate_report_html(results, "demo-parity-test")
 
     def factor_values(html: str) -> dict[str, str]:
-        # Matches both the Quote's <div class='row'> pairs and the Report's <tr><td> pairs.
+        # Both the Quote and Report render factor rows as 4-column <tr><td>
+        # rows: Label | Applied To | Factor | Adjustment — capture the 3rd
+        # (Factor) column specifically.
         found = {}
-        for label, value in re.findall(r"Mortality Per 1000</span>\s*<span[^>]*>([^<]+)|Mortality Per 1000</td><td[^>]*>([^<]+)", html):
-            found["mortality_per_1000"] = label or value
-        for label, value in re.findall(r"Underwriting Class</span>\s*<span[^>]*>([^<]+)|Underwriting Class</td><td[^>]*>([^<]+)", html):
-            found["underwriting_class"] = label or value
+        for name, value in re.findall(r"<td[^>]*>([^<]+)</td><td[^>]*>[^<]*</td><td[^>]*>([^<]+)</td>", html):
+            if name.strip() == "Mortality Per 1000":
+                found["mortality_per_1000"] = value
+            elif name.strip() == "Underwriting Class":
+                found["underwriting_class"] = value
         return found
 
     quote_values = factor_values(quote_html)
@@ -157,5 +160,16 @@ def test_report_and_quote_render_identical_life_factors() -> None:
 
     assert quote_values == {"mortality_per_1000": "1.5", "underwriting_class": "0.82"}
     assert report_values == quote_values, f"Report and Quote must render identical factor values for the same job: quote={quote_values!r} report={report_values!r}"
-    # No bare, unwrapped <tr> in the Quote's factor list (markup bug regression guard)
-    assert re.search(r"<div class=\"card\">\s*<div class=\"row\">.*?<tr>", quote_html, re.DOTALL) is None
+    # Every <tr> in the Quote's factor table must sit inside a <table> — the
+    # historical bug was bare <tr> fragments dropped straight into a <div
+    # class="card"> with no enclosing <table>, which renders as one run-on
+    # line in some viewers. Every open <tr> must be preceded by a <table
+    # opened more recently than any </table> close.
+    depth = 0
+    for tag in re.findall(r"<table[ >]|</table>|<tr>", quote_html):
+        if tag.startswith("<table"):
+            depth += 1
+        elif tag == "</table>":
+            depth -= 1
+        elif tag == "<tr>":
+            assert depth > 0, "Found a <tr> not inside any <table> in the Quote HTML"

@@ -8,8 +8,9 @@ from datetime import datetime, timezone
 from importlib.metadata import PackageNotFoundError, version
 from typing import Any
 
-from insureflow.rating.models import line_display_name
+from insureflow.rating.models import RateComponent, line_display_name
 from insureflow.rating.report_theme import WORDMARK_CSS_PRINT, decision_color, wordmark_html
+from insureflow.underwriting.lob_rating import _derived_modifier_pct
 
 try:
     _APP_VERSION = version("insureflow")
@@ -41,6 +42,40 @@ _FINDING_DESC_SUBS: tuple[tuple[str, str], ...] = (
         "OFAC / AML screening could not be run because no named insured appears on the application. Obtain the full legal name and re-run screening.",
     ),
 )
+
+
+# Which finding category belongs to which decision "gate" for the internal
+# Decision Logic section — single source of truth so gate membership can
+# never be computed a different way than what's actually displayed as a
+# finding elsewhere on the page.
+RISK_GATE_CATEGORIES = {
+    "risk",
+    "loss_history",
+    "fraud",
+    "ml_fraud",
+    "ml_loss",
+    "adverse_selection",
+    "moral_hazard",
+    "portfolio_risk",
+    "limit_adequacy",
+    "coverage_gaps",
+    "uw_decision",
+}
+COMPLIANCE_GATE_CATEGORIES = {
+    "compliance",
+    "sanctions",
+    "mib",
+    "hallucination",
+    "data_quality",
+    "beneficiary_review",
+}
+
+# Shared wording for both the Quote and the Report so "Confidence: X%" never
+# reads two different ways on the two documents — it's the system's
+# confidence that the finding/flag itself is correctly raised, not a claim
+# about how reliable the underlying figure is (a figure flagged as
+# unverifiable can carry a HIGH confidence that the flag is right).
+CONFIDENCE_LEGEND = "Confidence % = how confident the system is that this finding/flag is correctly raised — not a claim about the reliability of the underlying figure itself."
 
 
 def uw_finding_title(title: str) -> str:
@@ -361,6 +396,13 @@ def generate_report_html(results: dict[str, Any], job_id: str, audience: str = "
     if is_life and not state_of_residence:
         identity_gaps.append("state of residence")
 
+    # The page headline must always be a fixed document title, never a data
+    # field — when the applicant name is missing, "insured" becomes the
+    # literal string "Named insured not provided", which must not itself
+    # BE the headline. The identity-gap callout box below already carries
+    # that fact; the headline falls back to a generic title instead.
+    headline = insured if not insured_name_missing else f"{insurance_line_display} Underwriting Report".strip()
+
     key_findings = memo.get("key_findings") or []
     # Dedupe findings by title+description prefix
     _seen_f: set[tuple[str, str]] = set()
@@ -492,8 +534,16 @@ def generate_report_html(results: dict[str, Any], job_id: str, audience: str = "
             worst = max((str(f.get("severity") or "moderate").lower() for f in items), key=lambda s: _sev_order.get(s, 0))
             return worst, sev_colors.get(worst, "#64748b")
 
-        risk_findings_raw = memo.get("risk_analyst_findings") or []
-        compliance_findings_raw = memo.get("compliance_findings") or []
+        # Gate membership is derived from the SAME canonical key_findings list
+        # already rendered above — not the separate per-agent finding buckets
+        # (memo.risk_analyst_findings/compliance_findings), which only hold
+        # each specialist AGENT's own findings and miss pipeline-level ones
+        # (MIB, sanctions, beneficiary review) merged into key_findings later.
+        # Reading a different list here than what's actually displayed was
+        # exactly the "Compliance gate: 0 findings" bug — the page listed
+        # compliance findings while this section claimed there were none.
+        risk_findings_raw = [f for f in key_findings if f.get("category") in RISK_GATE_CATEGORIES]
+        compliance_findings_raw = [f for f in key_findings if f.get("category") in COMPLIANCE_GATE_CATEGORIES]
         risk_verdict, risk_verdict_color = _gate_verdict(risk_findings_raw)
         compliance_verdict, compliance_verdict_color = _gate_verdict(compliance_findings_raw)
 
@@ -506,6 +556,25 @@ def generate_report_html(results: dict[str, Any], job_id: str, audience: str = "
         else:
             reconciliation_note = "Neither gate hit a hard threshold on its own; the decision reflects the combined severity across both gates."
 
+        # If neither gate has any findings but the risk score is still
+        # elevated, the score must still be traceable to something visible
+        # on the page — list the actual contributors instead of leaving an
+        # unexplained number. (Findings outside both gate categories, e.g.
+        # data verification/hallucination flags, still feed the score.)
+        score_source_block = ""
+        if not risk_findings_raw and not compliance_findings_raw and risk_pct and risk_pct > 0:
+            contributors = sorted(key_findings, key=lambda f: _sev_order.get(str(f.get("severity") or "moderate").lower(), 0), reverse=True)[:5]
+            if contributors:
+                items = "".join(
+                    f"<li style='padding:2px 0;font-size:11px;color:#475569;'>&mdash; [{_esc(str(c.get('severity') or 'moderate').upper())}] {_esc(c.get('title') or 'Finding')}</li>"
+                    for c in contributors
+                )
+                score_source_block = f"""
+  <div style="margin-top:8px;padding-top:8px;border-top:1px solid #e2e8f0;">
+    <p style="font-size:10.5px;color:#64748b;">Risk score {risk_pct}/100 is driven by findings outside the risk/compliance gate categories above:</p>
+    <ul style="list-style:none;padding:0;margin-top:2px;">{items}</ul>
+  </div>"""
+
         decision_logic_block = f"""
 <div class="section-title">Decision Logic <span style="font-weight:400;text-transform:none;color:#94a3b8;font-size:9px;">&mdash; internal only</span></div>
 <div class="card">
@@ -514,24 +583,35 @@ def generate_report_html(results: dict[str, Any], job_id: str, audience: str = "
   <div class="kv-row"><span class="kv-label">Compliance gate</span><span class="kv-value">{len(compliance_findings_raw)} finding(s)
     &middot; highest severity <strong style="color:{compliance_verdict_color};">{compliance_verdict.upper()}</strong></span></div>
   <p style="margin-top:8px;font-size:11px;color:#475569;line-height:1.6;">Final decision <strong style="color:{decision_color_hex};">{decision}</strong> — {reconciliation_note}</p>
+  {score_source_block}
 </div>
 """
 
-    # ── Premium breakdown ──
+    # ── Premium breakdown — same 4 columns as the in-app Premium Build-up
+    #    table (Rating component | Applied to | Factor | Adjustment %), and
+    #    the same _derived_modifier_pct() function that table uses, so the
+    #    PDF and in-app view can never show different numbers for the same
+    #    row. ──
     premium_rows = ""
-    premium_rows += _row("Base Premium", f"${base_premium:,.2f}")
+    premium_rows += _premium_row("Base Premium", "—", "—", f"${base_premium:,.2f}")
     for mod in premiums_mods:
-        pct = mod.get("modifier_pct", 0)
+        pct = float(mod.get("modifier_pct") or 0)
         label = mod.get("name", "").replace("_", " ").title()
         amount = mod.get("amount")
-        if is_life and amount is not None and pct == 0:
-            premium_rows += _row(label, f"{amount}")
+        basis = _esc(mod.get("basis") or "—")
+        factor_display = _esc(amount) if amount is not None else "—"
+        derived_pct = _derived_modifier_pct(RateComponent(name=mod.get("name", ""), amount=float(amount) if amount is not None else 0.0, basis=mod.get("basis") or "", modifier_pct=pct))
+        if derived_pct is None:
+            adj_display, adj_color = "n/a", "#94a3b8"
         else:
-            color = "#dc2626" if pct > 0 else "#16a34a" if pct < 0 else "#64748b"
-            sign = "+" if pct > 0 else ""
-            premium_rows += _row(label, f"{sign}{pct:.1f}%", color=color)
-    premium_rows += _row(
+            adj_color = "#dc2626" if derived_pct > 0 else "#16a34a" if derived_pct < 0 else "#64748b"
+            sign = "+" if derived_pct > 0 else ""
+            adj_display = f"{sign}{derived_pct:.1f}%"
+        premium_rows += _premium_row(label, basis, factor_display, adj_display, color=adj_color)
+    premium_rows += _premium_row(
         "Indicated Premium",
+        "—",
+        "—",
         f"${adjusted_premium:,.2f}",
         bold=True,
         color="#0f172a",
@@ -634,10 +714,20 @@ def generate_report_html(results: dict[str, Any], job_id: str, audience: str = "
 <div class="card"><ul style="list-style:none;padding:0;margin:0;">{why_items}</ul></div>
 """
         if next_steps:
-            next_items = "".join(f'<li style="padding:3px 0;font-size:12px;color:#0f172a;line-height:1.5;">{_esc(s)}</li>' for s in next_steps)
+            # Manually-numbered flex rows, not a native <ol>/<li> — WeasyPrint
+            # has a pagination bug where a native ordered list's counter can
+            # bleed into an unrelated later block as empty numbered markers
+            # with no text (reproduced: a phantom "1. 2. 3. 4. 5." appeared
+            # under the unrelated "Underwriting Recommendation" section
+            # below). Every other list in this document already avoids
+            # native markers for the same reason — this was the one holdout.
+            next_items = "".join(
+                f'<div style="display:flex;gap:6px;padding:3px 0;font-size:12px;color:#0f172a;line-height:1.5;"><span style="flex-shrink:0;">{i}.</span><span>{_esc(s)}</span></div>'
+                for i, s in enumerate(next_steps, 1)
+            )
             summary_block += f"""
 <div class="section-title">What To Do Next</div>
-<div class="card"><ol style="padding-left:16px;margin:0;">{next_items}</ol></div>
+<div class="card">{next_items}</div>
 """
 
     review_reasons = [uw_finding_title(str(x)) for x in (memo.get("human_review_reasons") or [])]
@@ -668,13 +758,24 @@ def generate_report_html(results: dict[str, Any], job_id: str, audience: str = "
 </div>
 """
 
-    risk_legend = '<div class="report-meta" style="text-align:center;margin-top:-4px;">0&ndash;49 Low &middot; 50&ndash;74 Moderate &middot; 75&ndash;100 High (&ge;85 auto-decline threshold)</div>'
+    risk_legend = (
+        '<div class="report-meta" style="text-align:center;margin-top:2px;">'
+        "<strong>Risk Score Scale:</strong> 0&ndash;49 Low &middot; 50&ndash;74 Moderate &middot; 75&ndash;100 High (&ge;85 auto-decline threshold)</div>"
+    )
 
     line_block = ""
     if insurance_line:
         line_block = f"""
 <div class="kv-row"><span class="kv-label">Line of Business</span><span class="kv-value">{insurance_line_display}</span></div>
 """
+    # Underwriter of Record — who currently owns this file, distinct from
+    # the sign-off/countersignature block below (final approval, not
+    # current ownership) so a reader always knows who to ask about it.
+    assigned_underwriter = r.get("assigned_to") or "Unassigned"
+    underwriter_block = f"""
+<div class="kv-row"><span class="kv-label">Underwriter of Record</span><span class="kv-value">{_esc(assigned_underwriter)}</span></div>
+"""
+
     appetite_block = ""
     appetite_passed = r.get("appetite_filter_passed")
     if appetite_passed is not None:
@@ -721,7 +822,7 @@ def generate_report_html(results: dict[str, Any], job_id: str, audience: str = "
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Underwriting Report — {_esc(insured)}</title>
+<title>{_esc(headline) if insured_name_missing else f"Underwriting Report — {_esc(headline)}"}</title>
 <style>
   @page {{
     size: A4;
@@ -907,7 +1008,7 @@ def generate_report_html(results: dict[str, Any], job_id: str, audience: str = "
 <!-- ═══════════════════════════════════════════ HEADER ═══════════════════════════════════════════ -->
 <div class="report-header">
   <div>
-    <h1>{_esc(insured)}</h1>
+    <h1>{_esc(headline)}</h1>
     <div class="report-meta">Underwriting Report &mdash; {now}</div>
     <div class="report-meta">Job ID: {job_id}</div>
   </div>
@@ -924,6 +1025,7 @@ def generate_report_html(results: dict[str, Any], job_id: str, audience: str = "
   <div class="card stat">
     <div class="stat-value" style="color:{risk_color};">{risk_pct if risk_pct is not None else "—"}</div>
     <div class="stat-label">Risk Score</div>
+    {risk_legend}
   </div>
   <div class="card stat">
     <div class="stat-value" style="color:#0f172a;">${adjusted_premium:,.0f}</div>
@@ -934,11 +1036,11 @@ def generate_report_html(results: dict[str, Any], job_id: str, audience: str = "
     <div class="stat-label">Doc Completeness</div>
   </div>
 </div>
-{risk_legend}
 
 <div class="grid-2 mt-8">
   <div class="card">
     <div class="kv-row"><span class="kv-label">Decision</span><span class="kv-value" style="color:{decision_color_hex};font-weight:700;">{decision}</span></div>
+    {underwriter_block}
     {line_block}
     {appetite_block}
     <div class="kv-row"><span class="kv-label">Severity</span><span class="kv-value">{severity.title()}</span></div>
@@ -974,7 +1076,12 @@ def generate_report_html(results: dict[str, Any], job_id: str, audience: str = "
 <div class="section-title">Premium Breakdown</div>
 <div class="card" style="padding:0;">
   <table>
-    <thead><tr><th style="text-align:left;">Component</th><th style="text-align:right;width:100px;">Amount / Factor</th></tr></thead>
+    <thead><tr>
+      <th style="text-align:left;">Rating Component</th>
+      <th style="text-align:left;">Applied To</th>
+      <th style="text-align:right;width:70px;">Factor</th>
+      <th style="text-align:right;width:80px;">Adjustment</th>
+    </tr></thead>
     <tbody>{premium_rows}</tbody>
   </table>
 </div>
@@ -1011,6 +1118,7 @@ def generate_report_html(results: dict[str, Any], job_id: str, audience: str = "
 
 <!-- ═══════════════════════════════════════════ KEY FINDINGS ═══════════════════════════════════════════ -->
 <div class="section-title">Key Findings</div>
+<p class="report-meta" style="margin-bottom:6px;">{CONFIDENCE_LEGEND}</p>
 {findings_html}
 
 {decision_logic_block}
@@ -1037,10 +1145,32 @@ def _row(
     bold: bool = False,
     border_top: bool = False,
 ) -> str:
-    """Build a single premium breakdown table row."""
+    """Build a single 2-column table row (mortgage/lending report sections)."""
     border = "border-top:2px solid #e2e8f0;" if border_top else ""
     weight = "font-weight:700;" if bold else ""
     return f'<tr><td style="padding:5px 8px;{border}">{label}</td><td style="padding:5px 8px;text-align:right;color:{color};{weight}{border}">{value}</td></tr>'
+
+
+def _premium_row(
+    label: str,
+    basis: str,
+    factor: str,
+    adjustment: str,
+    *,
+    color: str = "#1e293b",
+    bold: bool = False,
+    border_top: bool = False,
+) -> str:
+    """Build a single Premium Breakdown row — 4 columns matching the in-app
+    Premium Build-up table (Rating component | Applied to | Factor | Adjustment %)."""
+    border = "border-top:2px solid #e2e8f0;" if border_top else ""
+    weight = "font-weight:700;" if bold else ""
+    return (
+        f'<tr><td style="padding:5px 8px;{border}">{label}</td>'
+        f'<td style="padding:5px 8px;color:#64748b;font-size:10.5px;{border}">{basis}</td>'
+        f'<td style="padding:5px 8px;text-align:right;{border}">{factor}</td>'
+        f'<td style="padding:5px 8px;text-align:right;color:{color};{weight}{border}">{adjustment}</td></tr>'
+    )
 
 
 def _fmt_money(value: Any) -> str:

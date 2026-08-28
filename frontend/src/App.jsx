@@ -140,6 +140,7 @@ function AppRoutes() {
   }, []);
 
   const loadInsuranceJobs = useCallback(async () => {
+    if (!auth.isLoggedIn) return;
     try {
       const { jobs } = await endpoints.insuranceJobs();
       const rows = await Promise.all(
