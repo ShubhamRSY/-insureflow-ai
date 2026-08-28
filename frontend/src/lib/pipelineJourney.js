@@ -176,8 +176,18 @@ function dedupeFindings(findings) {
   });
 }
 
+// Loosely match a bucket label ("Risk Analyst") to its agent_results key
+// ("RiskAnalystAgent") so execution timing/success can be shown alongside
+// findings instead of in a second, separate "Agent Execution Trace" section.
+function _matchAgentResult(agentResults, label) {
+  const normalized = label.toLowerCase().replace(/[^a-z]/g, '');
+  const match = Object.entries(agentResults || {}).find(([name]) => name.toLowerCase().replace(/[^a-z]/g, '').startsWith(normalized));
+  return match ? match[1] : null;
+}
+
 export function buildAgentFindings(job) {
   const memo = job?.results?.memo || {};
+  const agentResults = memo.agent_results || {};
   const line = safeLower(job?.results?.insurance_line || job?.results?.product_line);
   const isLife = line === 'life';
   const keep = (f) => f.category !== 'external_oracle' && !(isLife && isPropertyOnlyFinding(f));
@@ -188,12 +198,18 @@ export function buildAgentFindings(job) {
     ['fraud_findings', 'Fraud Detection'],
   ];
   const built = sections
-    .map(([key, label]) => ({
-      key,
-      label,
-      findings: dedupeFindings(asList(memo[key]).filter(keep)),
-    }))
-    .filter((s) => s.findings.length > 0);
+    .map(([key, label]) => {
+      const agent = _matchAgentResult(agentResults, label);
+      return {
+        key,
+        label,
+        findings: dedupeFindings(asList(memo[key]).filter(keep)),
+        success: agent ? agent.success !== false : null,
+        processingTimeMs: agent?.processing_time_ms ?? null,
+        processedAt: agent?.processed_at ?? null,
+      };
+    })
+    .filter((s) => s.findings.length > 0 || s.success != null);
   // Only surface key_findings when agent buckets are empty (avoid duplicates).
   if (built.length === 0 && asList(memo.key_findings).length > 0) {
     return [{
@@ -211,16 +227,26 @@ export function buildProvenanceView(job) {
   const summary = r.provenance_summary || {};
   const nodes = (prov.nodes && typeof prov.nodes === 'object' && !Array.isArray(prov.nodes)) ? prov.nodes : {};
   const line = safeLower(r.insurance_line || r.product_line);
+  // A field can carry more than one node (e.g. conflicting values found
+  // across source documents) — showing only nodeList[0] silently discarded
+  // the conflict. Surface the resolved/verified value as primary, plus any
+  // contradicting values with their sources so the discrepancy is visible
+  // here instead of only affecting a summary count.
   const fields = Object.entries(nodes).slice(0, 8).map(([field, nodeList]) => {
-    const node = (nodeList || [])[0] || {};
-    const source = node.source || {};
+    const list = nodeList || [];
+    const primary = list.find((n) => n.verification_status === 'verified') || list[0] || {};
+    const source = primary.source || {};
+    const conflicts = list
+      .filter((n) => n !== primary && n.verification_status === 'contradicted')
+      .map((n) => ({ value: n.value, source: (n.source || {}).source_name || (n.source || {}).source_type || 'unknown' }));
     return {
       field,
-      value: node.value,
+      value: primary.value,
       source: source.source_name || source.source_type || 'unknown',
       trust: source.trust_level || 'unverified',
-      status: node.verification_status || 'unverified',
-      confidence: node.confidence,
+      status: primary.verification_status || 'unverified',
+      confidence: primary.confidence,
+      conflicts,
     };
   });
   return {

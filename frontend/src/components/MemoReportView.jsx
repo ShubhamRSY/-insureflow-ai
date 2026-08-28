@@ -35,14 +35,6 @@ const FIELD_HINTS = {
   'Experience Mod': 'Multiplier applied for this risk\'s claim history relative to class average — above 1.0 means worse than average.',
 };
 
-const AGENT_HINTS = {
-  RiskAnalystAgent: "Reviews the application and supporting documents to surface risk factors — this agent's findings drive most of the Risk Evaluation section above.",
-  LossRunAnalystAgent: 'Parses prior loss runs / claims history to compute loss ratio and experience modification.',
-  ComplianceAgent: 'Runs sanctions (OFAC/AML), licensing, and regulatory filing checks against the applicant and policy.',
-  FraudDetectionAgent: 'Screens for misrepresentation, moral hazard, and other fraud indicators across the submission.',
-  UWDecisionAgent: 'Synthesizes every other agent\'s findings into the final accept/refer/decline recommendation and rationale shown above.',
-};
-
 function FieldLabel({ label }) {
   const hint = FIELD_HINTS[label];
   if (!hint) return <>{label}</>;
@@ -384,6 +376,12 @@ export default function MemoReportView({ job }) {
   // Single normalized source for fields that also appear in the worksheet
   // below — top-of-page and worksheet must never disagree about the same case.
   const caseState = namedInsured.state_of_residence || (quote.metadata || {}).issue_state || results.primary_state || '';
+  // When no real state was extracted, say so the same way the worksheet's
+  // State Relativity row does ("filing default"), instead of a bare "—"
+  // that reads as disagreeing with the worksheet lower on the page.
+  const caseStateDisplay = caseState || ((quote.metadata || {}).state_of_filing
+    ? `Not extracted (rating used ${(quote.metadata || {}).state_of_filing} filing default)`
+    : '—');
   const caseCoverage = results.commercial_coverage_name || worksheet.coverage || (quote.metadata || {}).product || '';
 
   const decision = safeLower(results.ai_decision || results.outcome || memoObj.decision, 'refer');
@@ -400,6 +398,15 @@ export default function MemoReportView({ job }) {
   const premiumSteps = buildup.length > 0 ? buildup : quoteComponents;
 
   const allFindings = Array.isArray(memoObj.key_findings) ? memoObj.key_findings : [];
+  // If the name came from a secondary document (not the application itself),
+  // the backend raises a matching finding carrying the real confidence/source
+  // — surface that as a badge next to the name instead of showing it as if
+  // fully verified, and instead of the finding text being the only place
+  // that says so.
+  const insuredNameFinding = allFindings.find((f) => f?.category === 'data_quality' && (f?.title || '').startsWith('Insured name unverified'));
+  const insuredNameBadge = insuredNameFinding
+    ? `unverified — ${Math.round((insuredNameFinding.confidence ?? 0.5) * 100)}% confidence, from ${displayText(insuredNameFinding.source_document).replace('broker_', '').replace(/_/g, ' ') || 'a secondary document'}`
+    : '';
   const sortedFindings = [...allFindings].sort((a, b) => {
     const sa = SEV_ORDER[safeLower(a?.severity, 'moderate')] ?? 2;
     const sb = SEV_ORDER[safeLower(b?.severity, 'moderate')] ?? 2;
@@ -428,7 +435,6 @@ export default function MemoReportView({ job }) {
 
   const conditions = memoObj.conditions || [];
   const recommendation = memoObj.recommendation || {};
-  const agentResults = memoObj.agent_results || {};
 
   const memoLines = memoText.split('\n');
   const whatToDoIdx = memoLines.findIndex((l) => l.trim() === 'What to do next');
@@ -539,7 +545,14 @@ export default function MemoReportView({ job }) {
         <SectionHeader icon={User} title="Applicant Profile & Basic Details" subtitle="Who are we insuring and what are they buying" accent="rose" />
         <div className="mt-4 grid gap-x-8 gap-y-0 sm:grid-cols-2">
           <div>
-            <InfoRow label="Insured Name" value={insuredName || 'Name not extracted — see findings'} />
+            <InfoRow
+              label="Insured Name"
+              value={
+                insuredName
+                  ? (insuredNameBadge ? <>{insuredName} <span className="text-amber-400">({insuredNameBadge})</span></> : insuredName)
+                  : 'Name not extracted — see findings'
+              }
+            />
             <InfoRow label="Product" value={displayText(results.commercial_product_name || worksheet.product || results.insurance_line || '—').replace(/_/g, ' ')} />
             <InfoRow label="Coverage" value={displayText(caseCoverage || '—').replace(/_/g, ' ')} />
             <InfoRow label="Insurance Line" value={displayText(results.insurance_line || '—').replace(/_/g, ' ')} />
@@ -548,7 +561,7 @@ export default function MemoReportView({ job }) {
             <InfoRow label="Face Amount / TIV" value={fmtCurrency(faceAmount)} />
             <InfoRow label="Base Premium" value={fmtCurrency(basePremium)} />
             <InfoRow label="Indicated Premium" value={fmtCurrency(premium)} />
-            <InfoRow label="Primary State" value={displayText(caseState || '—')} />
+            <InfoRow label="Primary State" value={displayText(caseStateDisplay)} />
           </div>
         </div>
         {(results.broker_name || quote.policy_admin_reference || quote.quote_valid_until) && (
@@ -743,45 +756,6 @@ export default function MemoReportView({ job }) {
             <p className="mt-1 text-xs leading-relaxed text-slate-300">{displayText(memoObj.sign_off_notes)}</p>
           </div>
         )}
-        {Object.keys(agentResults).length > 0 && (
-          <div className="mt-4">
-            <Hint text="Every specialist agent that ran on this file — its verdict, confidence, timing, and whether it finished cleanly. This is how you audit why the pipeline reached its conclusion instead of trusting a black box.">
-              <p className="hint-label mb-2 inline-block cursor-help text-[10px] font-bold uppercase tracking-wider text-slate-500">Agent Execution Trace</p>
-            </Hint>
-            <div className="space-y-1.5">
-              {Object.entries(agentResults).map(([name, result]) => {
-                const ok = result?.success !== false;
-                const agentRiskPct = result?.risk_score != null ? Math.round(Number(result.risk_score) * 100) : null;
-                return (
-                <div key={name} className="rounded-lg border border-white/[0.04] bg-black/10 px-2.5 py-2 text-xs">
-                  <div className="flex items-center gap-2">
-                    {ok
-                      ? <CheckCircle2 className="h-3 w-3 text-emerald-500/60 shrink-0" />
-                      : <AlertTriangle className="h-3 w-3 text-amber-500/70 shrink-0" />}
-                    <Hint text={AGENT_HINTS[name]}>
-                      <span className={`font-medium text-slate-300 ${AGENT_HINTS[name] ? 'hint-label cursor-help' : ''}`}>{name}</span>
-                    </Hint>
-                    <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase ${ok ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'}`}>
-                      {ok ? 'completed' : 'errored'}
-                    </span>
-                    {agentRiskPct != null && (
-                      <span className="ml-auto font-mono text-[10px] text-slate-500">risk {agentRiskPct}/100</span>
-                    )}
-                  </div>
-                  {result?.summary && (
-                    <p className="mt-1 pl-5 text-[11px] leading-snug text-slate-400">{displayText(result.summary)}</p>
-                  )}
-                  <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 pl-5 text-[9px] uppercase tracking-wide text-slate-600">
-                    {result?.processed_at && <span>{fmtTimestamp(result.processed_at)}</span>}
-                    {result?.processing_time_ms != null && <span>{Math.round(result.processing_time_ms)}ms</span>}
-                    {Array.isArray(result?.findings) && <span>{result.findings.length} finding(s)</span>}
-                  </div>
-                </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* ── 10. Documents on file ──────────────────────────────────────── */}
@@ -836,7 +810,7 @@ export default function MemoReportView({ job }) {
                   <tr key={row.step || row.name || i} className="text-slate-300">
                     <td className="py-1.5 pr-3">{premiumStepLabel(row.step || row.name)}</td>
                     <td className="py-1.5 pr-3 text-slate-500">{premiumBasisLabel(displayText(row.basis))}</td>
-                    <td className="py-1.5 pr-3 font-mono">{fmtFactor(row.factor || row.amount)}</td>
+                    <td className="py-1.5 pr-3 font-mono">{fmtFactor(row.factor ?? row.amount)}</td>
                     <td className={`py-1.5 font-mono ${moved ? (modPct > 0 ? 'font-semibold text-amber-400' : 'font-semibold text-emerald-400') : ''}`}>{modPct != null ? fmtPct(modPct) : '—'}</td>
                   </tr>
                   );

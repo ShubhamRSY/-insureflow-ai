@@ -145,18 +145,42 @@ _QUESTIONABLE_RELATIONSHIPS = {
 
 def _parse_beneficiaries_from_blob(blob: str) -> list[BeneficiaryEntry]:
     entries: list[BeneficiaryEntry] = []
-    patterns = [
-        r"beneficiary\s*[:=]\s*([A-Za-z][A-Za-z ,.'-]{1,60})",
-        r"primary\s+beneficiary\s*[:=]\s*([A-Za-z][A-Za-z ,.'-]{1,60})",
-        r"contingent\s+beneficiary\s*[:=]\s*([A-Za-z][A-Za-z ,.'-]{1,60})",
+
+    def _relationship_near(start: int) -> str:
+        rel_match = re.search(r"beneficiary.*?(?:relationship|rel)\s*[:=]\s*([A-Za-z][A-Za-z /-]{1,30})", blob[start : start + 200], re.I)
+        return rel_match.group(1).strip() if rel_match else ""
+
+    # Typed patterns first, so "contingent beneficiary" is correctly bucketed
+    # (the previous version always defaulted to PRIMARY regardless of which
+    # pattern matched — silently mis-typing every contingent beneficiary).
+    typed_patterns = [
+        (r"primary\s+beneficiary\s*[:=]\s*([A-Za-z][A-Za-z ,.'-]{1,60})", BeneficiaryType.PRIMARY),
+        (r"contingent\s+beneficiary\s*[:=]\s*([A-Za-z][A-Za-z ,.'-]{1,60})", BeneficiaryType.CONTINGENT),
     ]
-    for pat in patterns:
+    matched_spans: list[tuple[int, int]] = []
+    for pat, btype in typed_patterns:
         for m in re.finditer(pat, blob, re.I):
-            name = m.group(1).strip()
-            rel_match = re.search(r"beneficiary.*?(?:relationship|rel)\s*[:=]\s*([A-Za-z][A-Za-z /-]{1,30})", blob[m.start() : m.start() + 200], re.I)
-            rel = rel_match.group(1).strip() if rel_match else ""
-            entries.append(BeneficiaryEntry(name=name, relationship=rel))
-    return entries
+            entries.append(BeneficiaryEntry(name=m.group(1).strip(), relationship=_relationship_near(m.start()), beneficiary_type=btype))
+            matched_spans.append(m.span())
+
+    # Generic "beneficiary:" pattern only for spans NOT already captured by a
+    # more specific typed match above — otherwise "primary beneficiary: X"
+    # gets counted twice (once generic, once primary-specific), doubling the
+    # allocation percentage and the finding count for a single beneficiary.
+    for m in re.finditer(r"beneficiary\s*[:=]\s*([A-Za-z][A-Za-z ,.'-]{1,60})", blob, re.I):
+        if any(start <= m.start() <= end for start, end in matched_spans):
+            continue
+        entries.append(BeneficiaryEntry(name=m.group(1).strip(), relationship=_relationship_near(m.start())))
+
+    seen: set[tuple[str, str]] = set()
+    deduped: list[BeneficiaryEntry] = []
+    for e in entries:
+        key = (e.name.strip().lower(), e.beneficiary_type.value)
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(e)
+    return deduped
 
 
 def review_beneficiaries(
@@ -176,6 +200,44 @@ def review_beneficiaries(
         blob = " ".join(doc.raw_text for doc in (bundle.unstructured or []) if doc.raw_text).lower() if bundle.unstructured else ""
         beneficiaries = _parse_beneficiaries_from_blob(blob)
 
+        # The dedicated per-document extractors (ingestion/insurance/extractors.py)
+        # require a capitalized two-word name and separate it from the
+        # relationship word — a stricter, more reliable pattern than this
+        # module's loose blob regex, which can capture a relationship word
+        # ("Spouse") into .name when that's what immediately follows
+        # "beneficiary:" in the source text. Prefer it when available instead
+        # of silently showing the relationship where the name belongs.
+        extracted_name = ""
+        extracted_relationship = ""
+        for doc in bundle.unstructured or []:
+            name_entries = doc.extracted_fields.get("beneficiary_name") or []
+            rel_entries = doc.extracted_fields.get("beneficiary_relationship") or []
+            if name_entries and (name_entries[0].value or "").strip():
+                extracted_name = name_entries[0].value.strip()
+            if rel_entries and (rel_entries[0].value or "").strip():
+                extracted_relationship = rel_entries[0].value.strip()
+            if extracted_name:
+                break
+        if extracted_name:
+            if beneficiaries:
+                beneficiaries[0].name = extracted_name
+                if extracted_relationship and not beneficiaries[0].relationship:
+                    beneficiaries[0].relationship = extracted_relationship
+            else:
+                beneficiaries = [BeneficiaryEntry(name=extracted_name, relationship=extracted_relationship)]
+
+    # No percentage-extraction pattern exists in the blob regex, so every
+    # parsed entry starts at the dataclass default of 0% — which reads as
+    # "sole beneficiary gets nothing" rather than "not stated". When there is
+    # exactly one primary beneficiary and no percentage was found, default to
+    # 100% (the only allocation that makes sense) and flag it as an assumption
+    # rather than silently presenting an assumed number as extracted fact.
+    percentage_assumed = False
+    primary_entries = [b for b in beneficiaries if b.beneficiary_type == BeneficiaryType.PRIMARY]
+    if len(primary_entries) == 1 and primary_entries[0].percentage == 0.0:
+        primary_entries[0].percentage = 100.0
+        percentage_assumed = True
+
     record = BeneficiaryReviewRecord(
         bundle_id=bundle.bundle_id or "",
         insured_name=(named.legal_name if named else "") or "",
@@ -186,6 +248,19 @@ def review_beneficiaries(
     findings: list[Finding] = []
     action_items: list[str] = []
     interest_flags: list[str] = []
+
+    if percentage_assumed:
+        findings.append(
+            Finding(
+                title="Primary beneficiary allocation assumed at 100%",
+                description=(
+                    f"'{primary_entries[0].name}' is the sole primary beneficiary but no allocation percentage was "
+                    "stated on the application — defaulted to 100%. Confirm this is correct before issuance."
+                ),
+                severity=RiskSeverity.LOW,
+                category="beneficiary_review",
+            )
+        )
 
     if not beneficiaries:
         findings.append(

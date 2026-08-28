@@ -1021,6 +1021,30 @@ class InsurancePipeline:
             insurance_line=resolved_line.value if resolved_line else insurance_line,
         )
 
+        # ── 6a-pre. Promote provenance contradictions into the primary findings
+        # list — a field with conflicting values across source documents is a
+        # stronger signal than "unverified" and must not sit as an invisible
+        # provenance-panel footnote while the rest of the page moves on. ──
+        contradicted_fields = provenance.genuine_contradictions()
+        if contradicted_fields:
+            from insureflow.models.agents import Finding, RiskSeverity
+
+            for field_path, nodes in contradicted_fields:
+                values_desc = "; ".join(f"'{n.value}' from {n.source.source_name}" for n in nodes)
+                memo.key_findings.append(
+                    Finding(
+                        title=f"Contradicted field: {field_path.replace('_', ' ')}",
+                        description=(f"Conflicting values found across source documents for '{field_path}': {values_desc}. Resolve which value is correct before relying on this field."),
+                        severity=RiskSeverity.HIGH,
+                        category="data_quality",
+                        field_path=field_path,
+                        source_document="multiple source documents",
+                        extraction_method="llm_extraction",
+                    )
+                )
+            memo.human_review_required = True
+            memo.human_review_reasons.append(f"{len(contradicted_fields)} field(s) have contradicting values across source documents")
+
         # ── 6a. Apply deferred critical oracle failures to memo ──
         if pending_oracle_failures:
             from insureflow.models.agents import Finding, RiskSeverity, UWDecision

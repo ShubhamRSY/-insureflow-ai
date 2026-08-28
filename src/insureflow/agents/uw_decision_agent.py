@@ -239,14 +239,53 @@ class UWDecisionAgent(ReActAgent):
         extracted_name = (bundle.structured.named_insured.legal_name if bundle.structured and bundle.structured.named_insured else "") or ""
         insured_name = extracted_name.strip()
         if not insured_name:
-            all_findings.append(
-                Finding(
-                    title="Insured name not extracted",
-                    description="No named insured could be extracted from the submitted application. Verify the applicant's legal name against the source paperwork before proceeding.",
-                    severity=RiskSeverity.MODERATE,
-                    category="data_quality",
+            # Before declaring nothing was found, check whether ANY submitted
+            # document extracted a name — a low-confidence hit on a medical
+            # exam is a materially different (and more actionable) finding
+            # than "nothing anywhere", and silently showing "—" while
+            # Provenance shows a real extracted value reads as the system
+            # contradicting itself.
+            secondary_name = ""
+            secondary_source = ""
+            secondary_confidence: float | None = None
+            for doc in bundle.unstructured or []:
+                for key in ("insured_name", "named_insured"):
+                    entries = doc.extracted_fields.get(key) or []
+                    if entries and (entries[0].value or "").strip():
+                        secondary_name = entries[0].value.strip()
+                        secondary_source = doc.source or doc.document_type
+                        secondary_confidence = entries[0].confidence
+                        break
+                if secondary_name:
+                    break
+
+            if secondary_name:
+                insured_name = secondary_name
+                conf_pct = round((secondary_confidence if secondary_confidence is not None else 0.5) * 100)
+                doc_label = secondary_source.replace("broker_", "").replace("_", " ") or "a submitted document"
+                all_findings.append(
+                    Finding(
+                        title="Insured name unverified — not confirmed in application",
+                        description=(
+                            f"Insured name extracted from {doc_label} only ({secondary_name}, {conf_pct}% confidence) — "
+                            "not present in or confirmed against the application itself. Verify before relying on this name."
+                        ),
+                        severity=RiskSeverity.MODERATE,
+                        category="data_quality",
+                        source_document=secondary_source,
+                        extraction_method="llm_extraction",
+                        confidence=secondary_confidence if secondary_confidence is not None else 0.5,
+                    )
                 )
-            )
+            else:
+                all_findings.append(
+                    Finding(
+                        title="Insured name not extracted",
+                        description="No named insured could be extracted from the submitted application. Verify the applicant's legal name against the source paperwork before proceeding.",
+                        severity=RiskSeverity.MODERATE,
+                        category="data_quality",
+                    )
+                )
 
         # Preserve all CRITICAL/HIGH findings; truncate only lower severities
         critical_high = [f for f in all_findings if f.severity in (RiskSeverity.CRITICAL, RiskSeverity.HIGH)]

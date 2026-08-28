@@ -115,3 +115,19 @@ class ProvenanceRecord(BaseModel):
                 if node.verification_status == VerificationStatus.CONTRADICTED:
                     count += 1
         return count
+
+    def genuine_contradictions(self) -> list[tuple[str, list["ProvenanceNode"]]]:
+        """Fields with a CONTRADICTED node whose values actually differ.
+
+        The entity resolver marks every non-winning node in a similarity
+        cluster as CONTRADICTED, including an exact-duplicate value
+        corroborating the winner from a second document — that's agreement,
+        not a conflict worth escalating to an underwriter as a finding.
+        """
+        out: list[tuple[str, list[ProvenanceNode]]] = []
+        for field_path, nodes in self.nodes.items():
+            if not any(n.verification_status == VerificationStatus.CONTRADICTED for n in nodes):
+                continue
+            if len({str(n.value) for n in nodes}) > 1:
+                out.append((field_path, nodes))
+        return out

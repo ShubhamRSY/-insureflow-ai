@@ -12,6 +12,12 @@ import { insuranceLineLabel } from '../lib/insuranceLines';
 import SimilarPriors from './SimilarPriors';
 import { asList, displayText, fmtFixed, safeLower } from '../lib/safe';
 
+function fmtTimestamp(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? '' : d.toLocaleTimeString();
+}
+
 const STATUS_ICON = {
   complete: { Icon: CheckCircle2, cls: 'text-emerald-400' },
   warning: { Icon: AlertTriangle, cls: 'text-amber-400' },
@@ -458,6 +464,11 @@ function SubmissionQuality({ quality, docQuality, onRequestDocs, requesting, bro
               ? 'Waiting for intake & triage before scoring'
               : `${lob ? `${insuranceLineLabel(lob)} package · ` : ''}Completeness, appetite fit, and data trust`}
           </p>
+          {!pending && (
+            <p className="mt-0.5 text-[11px] text-slate-500">
+              Measures data quality of the documents received (legibility, extraction confidence, appetite fit) — independent of how many required documents are present. See Document Completeness below for what's missing.
+            </p>
+          )}
         </div>
         <div className="text-right relative">
           {pending ? (
@@ -668,30 +679,47 @@ function LifeMedicalPanel({ job }) {
   );
 }
 
+// Shows which agent raised how many findings, at what severity — a useful
+// audit-trail view the severity-sorted "Why This Decision" list doesn't
+// give. Deliberately does NOT re-print finding title/description text here;
+// that's the exact same data already shown as full cards in "Why This
+// Decision" above, and duplicating it verbatim in a second section was the
+// bug being fixed.
 function AgentFindingsPanel({ sections }) {
   const list = asList(sections);
   if (!list.length) return <p className="text-sm text-slate-400">No agent findings yet.</p>;
   return (
-    <div className="space-y-3">
-      {list.map((section) => (
-        <div key={section.key}>
-          <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-slate-400">{section.label}</p>
-          <div className="space-y-1.5">
-            {asList(section.findings).slice(0, 3).map((f, i) => {
-              const sev = safeLower(f?.severity, 'moderate');
-              return (
-                <div key={f.finding_id || i} className="rounded-lg bg-black/20 p-2.5 text-sm">
-                  <div className="flex items-center gap-2">
-                    <span className={`rounded px-1.5 py-0.5 text-[11px] uppercase ring-1 ring-inset ${SEV_CLS[sev] || SEV_CLS.moderate}`}>{sev}</span>
-                    <span className="font-medium text-slate-300">{displayText(f.title)}</span>
-                  </div>
-                  {f.description && <p className="mt-1 text-slate-500">{displayText(f.description)}</p>}
-                </div>
-              );
-            })}
+    <div className="space-y-2">
+      <p className="text-xs text-slate-500">Which agent raised what — see "Why This Decision" above for the full finding text.</p>
+      {list.map((section) => {
+        const findings = asList(section.findings);
+        const counts = { critical: 0, high: 0, moderate: 0, low: 0 };
+        findings.forEach((f) => { const s = safeLower(f?.severity, 'moderate'); if (counts[s] != null) counts[s] += 1; });
+        return (
+          <div key={section.key} className="rounded-lg bg-black/20 p-2.5 text-sm">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                {section.success === false
+                  ? <AlertTriangle className="h-3 w-3 text-amber-500/70 shrink-0" />
+                  : <CheckCircle2 className="h-3 w-3 text-emerald-500/60 shrink-0" />}
+                <span className="font-medium text-slate-300">{section.label}</span>
+              </div>
+              <div className="flex gap-1.5">
+                {Object.entries(counts).map(([sev, n]) => n > 0 && (
+                  <span key={sev} className={`rounded px-1.5 py-0.5 text-[10px] uppercase ring-1 ring-inset ${SEV_CLS[sev] || SEV_CLS.moderate}`}>{n} {sev}</span>
+                ))}
+                {findings.length === 0 && <span className="text-xs text-slate-500">clean</span>}
+              </div>
+            </div>
+            {(section.processingTimeMs != null || section.processedAt) && (
+              <div className="mt-1 flex gap-3 pl-5 text-[9px] uppercase tracking-wide text-slate-600">
+                {section.processedAt && <span>{fmtTimestamp(section.processedAt)}</span>}
+                {section.processingTimeMs != null && <span>{Math.round(section.processingTimeMs)}ms</span>}
+              </div>
+            )}
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -717,11 +745,21 @@ function ProvenancePanel({ provenance }) {
       </div>
       <div className="space-y-1.5">
         {provenance.fields.map((f) => (
-          <div key={f.field} className="grid grid-cols-4 gap-2 rounded-lg bg-black/20 p-2 text-sm">
-            <span className="font-medium text-slate-300">{displayText(f.field)}</span>
-            <span className="truncate font-mono text-slate-400">{displayText(f.value, '—')}</span>
-            <span className="truncate text-slate-500">{displayText(f.source)}</span>
-            <span className="capitalize text-slate-500">{displayText(f.trust)}</span>
+          <div key={f.field} className={f.conflicts?.length ? 'rounded-lg border border-red-500/20 bg-red-500/5 p-2' : 'rounded-lg bg-black/20 p-2'}>
+            <div className="grid grid-cols-4 gap-2 text-sm">
+              <span className="font-medium text-slate-300">{displayText(f.field)}</span>
+              <span className="truncate font-mono text-slate-400">{displayText(f.value, '—')}</span>
+              <span className="truncate text-slate-500">{displayText(f.source)}</span>
+              <span className="capitalize text-slate-500">{displayText(f.trust)}</span>
+            </div>
+            {f.conflicts?.length > 0 && (
+              <div className="mt-1.5 border-t border-red-500/20 pt-1.5 text-xs text-red-300">
+                <p className="font-semibold uppercase tracking-wide">Conflicts with:</p>
+                {f.conflicts.map((c, i) => (
+                  <p key={i}>'{displayText(c.value)}' from {displayText(c.source)}</p>
+                ))}
+              </div>
+            )}
           </div>
         ))}
       </div>
