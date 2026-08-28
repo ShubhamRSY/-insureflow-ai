@@ -191,19 +191,28 @@ export function buildAgentFindings(job) {
   const line = safeLower(job?.results?.insurance_line || job?.results?.product_line);
   const isLife = line === 'life';
   const keep = (f) => f.category !== 'external_oracle' && !(isLife && isPropertyOnlyFinding(f));
+  // Compliance findings raised at the pipeline level (MIB, sanctions,
+  // beneficiary review, provenance contradictions) never go through
+  // ComplianceAgent, so memo.compliance_findings alone misses them —
+  // the exact bug that made the PDF's Decision Logic show "Compliance
+  // gate: 0 findings" while compliance findings existed elsewhere on the
+  // page. results.gate_summary (src/insureflow/underwriting/finding_gates.py)
+  // is the same canonical category→gate classification the PDF uses —
+  // read from it instead of re-deriving "what counts as compliance" here.
+  const gateComplianceFindings = asList(job?.results?.gate_summary?.compliance?.findings);
   const sections = [
-    ['risk_analyst_findings', 'Risk Analyst'],
-    ['loss_run_findings', 'Loss Run'],
-    ['compliance_findings', 'Compliance'],
-    ['fraud_findings', 'Fraud Detection'],
+    ['risk_analyst_findings', 'Risk Analyst', []],
+    ['loss_run_findings', 'Loss Run', []],
+    ['compliance_findings', 'Compliance', gateComplianceFindings],
+    ['fraud_findings', 'Fraud Detection', []],
   ];
   const built = sections
-    .map(([key, label]) => {
+    .map(([key, label, extra]) => {
       const agent = _matchAgentResult(agentResults, label);
       return {
         key,
         label,
-        findings: dedupeFindings(asList(memo[key]).filter(keep)),
+        findings: dedupeFindings([...asList(memo[key]), ...extra].filter(keep)),
         success: agent ? agent.success !== false : null,
         processingTimeMs: agent?.processing_time_ms ?? null,
         processedAt: agent?.processed_at ?? null,

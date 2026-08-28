@@ -745,6 +745,7 @@ export default function MemoReportView({ job }) {
           </div>
           <div>
             <InfoRow label="Memo Generated" value={fmtTimestamp(memoObj.generated_at)} />
+            <InfoRow label="Underwriter of Record" value={displayText(results.assigned_to) || 'Unassigned'} />
             <InfoRow label="Approved By" value={displayText(memoObj.approved_by) || 'Pending'} />
             {memoObj.approved_at && <InfoRow label="Approved At" value={fmtTimestamp(memoObj.approved_at)} />}
             <InfoRow label="License #" value={displayText(memoObj.license_number) || '—'} />

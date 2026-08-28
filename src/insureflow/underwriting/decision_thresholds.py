@@ -26,3 +26,16 @@ def thresholds_payload() -> dict[str, float]:
         "refer_max": DECLINE_SCORE_THRESHOLD,
         "decline_min": DECLINE_SCORE_THRESHOLD,
     }
+
+
+def risk_score_legend_text() -> str:
+    """One canonical risk-score legend string, in the same wording the
+    in-app UI uses ("N–M accept range / refer / decline") — the PDF used to
+    say "Low/Moderate/High" for the exact same boundaries, which read as a
+    different scale for the same score. Both surfaces must render this
+    exact string; never hand-write the wording (or the numbers) a second
+    time anywhere else.
+    """
+    refer_min = round(REFER_SCORE_THRESHOLD * 100)
+    decline_min = round(DECLINE_SCORE_THRESHOLD * 100)
+    return f"0–{refer_min - 1} accept range · {refer_min}–{decline_min - 1} refer · {decline_min}+ decline"

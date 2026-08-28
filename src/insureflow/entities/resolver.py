@@ -12,6 +12,13 @@ logger = logging.getLogger(__name__)
 SIMILARITY_THRESHOLD = 0.85
 
 
+def _values_match(a: Any, b: Any) -> bool:
+    """Case/whitespace-normalized equality check — the actual value
+    comparison that decides VERIFIED (cross-confirmed) vs CONTRADICTED
+    (genuinely different values) for two nodes in the same similarity cluster."""
+    return re.sub(r"\s+", " ", str(a or "").strip().lower()) == re.sub(r"\s+", " ", str(b or "").strip().lower())
+
+
 class EntityCluster:
     def __init__(self, seed: ProvenanceNode) -> None:
         self.nodes: list[ProvenanceNode] = [seed]
@@ -65,8 +72,20 @@ class EntityResolver:
                 winner.value = canonical
                 winner.verification_status = VerificationStatus.VERIFIED
                 for dupe in cluster.nodes[1:]:
-                    dupe.verification_status = VerificationStatus.CONTRADICTED
-                    dupe.notes = f"Deduplicated: merged with {winner.node_id}, similarity≥{self.threshold}"
+                    # Clustering groups nodes by SIMILARITY, which includes
+                    # exact matches (similarity=1.0) — marking every non-
+                    # winning cluster member CONTRADICTED regardless of
+                    # whether its value actually differs from the winner's
+                    # turned "two sources agree" into a false conflict.
+                    # Only a genuine value mismatch is a contradiction; an
+                    # identical value from a second source is a positive,
+                    # cross-confirming signal.
+                    if _values_match(dupe.value, canonical):
+                        dupe.verification_status = VerificationStatus.VERIFIED
+                        dupe.notes = f"Confirmed — matches {winner.node_id} ({winner.source.source_name})"
+                    else:
+                        dupe.verification_status = VerificationStatus.CONTRADICTED
+                        dupe.notes = f"Deduplicated: merged with {winner.node_id}, similarity≥{self.threshold}"
                     if dupe not in merged:
                         merged.append(dupe)
                 merged.append(winner)

@@ -1969,6 +1969,15 @@ class InsurancePipeline:
             except Exception:
                 pass
 
+        # Single source of truth for gate/agent-status sections (internal
+        # Report's Decision Logic, in-app "Agent Findings" panel) — computed
+        # once from the final, fully-merged key_findings list so every
+        # consumer reads the same classification instead of each section
+        # re-deriving (and drifting from) its own.
+        from insureflow.underwriting.finding_gates import compute_gate_summary
+
+        gate_summary = compute_gate_summary([f.model_dump(mode="json") for f in memo.key_findings])
+
         summary = {
             "status": "completed",
             "bundle_id": bid,
@@ -1976,6 +1985,7 @@ class InsurancePipeline:
             "insured_name": memo.insured_name,
             "named_insured": (bundle.structured.named_insured.model_dump() if bundle.structured and bundle.structured.named_insured else None),
             "decision_thresholds": thresholds_payload(),
+            "gate_summary": gate_summary,
             "beneficiary_review": beneficiary_review_dict,
             "broker_name": broker_name,
             "primary_state": primary_state,

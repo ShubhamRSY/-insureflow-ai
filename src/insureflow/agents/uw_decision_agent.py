@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from insureflow.agents.base import NOISE_CATEGORIES
@@ -244,39 +245,63 @@ class UWDecisionAgent(ReActAgent):
             # exam is a materially different (and more actionable) finding
             # than "nothing anywhere", and silently showing "—" while
             # Provenance shows a real extracted value reads as the system
-            # contradicting itself.
-            secondary_name = ""
-            secondary_source = ""
-            secondary_confidence: float | None = None
+            # contradicting itself. Check EVERY document (not just the
+            # first match) so a name confirmed across multiple sources is
+            # recognized as cross-confirmed rather than mislabeled as coming
+            # from only one place — "extracted from the life application
+            # only, not present in the application" was self-contradictory.
+            name_hits: list[tuple[str, str, float]] = []
             for doc in bundle.unstructured or []:
                 for key in ("insured_name", "named_insured"):
                     entries = doc.extracted_fields.get(key) or []
                     if entries and (entries[0].value or "").strip():
-                        secondary_name = entries[0].value.strip()
-                        secondary_source = doc.source or doc.document_type
-                        secondary_confidence = entries[0].confidence
+                        name_hits.append((entries[0].value.strip(), doc.source or doc.document_type, entries[0].confidence if entries[0].confidence is not None else 0.5))
                         break
-                if secondary_name:
-                    break
 
-            if secondary_name:
-                insured_name = secondary_name
-                conf_pct = round((secondary_confidence if secondary_confidence is not None else 0.5) * 100)
-                doc_label = secondary_source.replace("broker_", "").replace("_", " ") or "a submitted document"
-                all_findings.append(
-                    Finding(
-                        title="Insured name unverified — not confirmed in application",
-                        description=(
-                            f"Insured name extracted from {doc_label} only ({secondary_name}, {conf_pct}% confidence) — "
-                            "not present in or confirmed against the application itself. Verify before relying on this name."
-                        ),
-                        severity=RiskSeverity.MODERATE,
-                        category="data_quality",
-                        source_document=secondary_source,
-                        extraction_method="llm_extraction",
-                        confidence=secondary_confidence if secondary_confidence is not None else 0.5,
+            if name_hits:
+                name_hits.sort(key=lambda hit: hit[2], reverse=True)
+                insured_name, primary_source, primary_confidence = name_hits[0]
+
+                def _norm(s: str) -> str:
+                    return re.sub(r"\s+", " ", s.strip().lower())
+
+                agreeing = [(src, conf) for name, src, conf in name_hits if _norm(name) == _norm(insured_name)]
+                sources_label = ", ".join(src.replace("broker_", "").replace("_", " ") for src, _ in agreeing)
+                conf_pct = round(max(conf for _, conf in agreeing) * 100)
+
+                if len(agreeing) > 1:
+                    all_findings.append(
+                        Finding(
+                            title="Insured name extracted but not independently verified",
+                            description=(
+                                f"'{insured_name}' appears consistently across {len(agreeing)} submitted documents ({sources_label}) "
+                                "but is not present in the structured application data on file and has not been independently "
+                                "verified against a government-issued ID. Confirm identity before binding."
+                            ),
+                            severity=RiskSeverity.MODERATE,
+                            category="data_quality",
+                            source_document=sources_label,
+                            extraction_method="llm_extraction",
+                            confidence=conf_pct / 100,
+                        )
                     )
-                )
+                else:
+                    doc_label = primary_source.replace("broker_", "").replace("_", " ") or "a submitted document"
+                    all_findings.append(
+                        Finding(
+                            title="Insured name unverified — single source only",
+                            description=(
+                                f"Insured name extracted from {doc_label} only ({insured_name}, {conf_pct}% confidence) — "
+                                "not present in the structured application data on file and not corroborated by any other "
+                                "document. Verify against the original application before relying on this name."
+                            ),
+                            severity=RiskSeverity.MODERATE,
+                            category="data_quality",
+                            source_document=primary_source,
+                            extraction_method="llm_extraction",
+                            confidence=primary_confidence,
+                        )
+                    )
             else:
                 all_findings.append(
                     Finding(

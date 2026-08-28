@@ -10,6 +10,8 @@ from typing import Any
 
 from insureflow.rating.models import RateComponent, line_display_name
 from insureflow.rating.report_theme import WORDMARK_CSS_PRINT, decision_color, wordmark_html
+from insureflow.underwriting.decision_thresholds import risk_score_legend_text
+from insureflow.underwriting.finding_gates import COMPLIANCE_GATE_CATEGORIES, RISK_GATE_CATEGORIES
 from insureflow.underwriting.lob_rating import _derived_modifier_pct
 
 try:
@@ -43,32 +45,6 @@ _FINDING_DESC_SUBS: tuple[tuple[str, str], ...] = (
     ),
 )
 
-
-# Which finding category belongs to which decision "gate" for the internal
-# Decision Logic section — single source of truth so gate membership can
-# never be computed a different way than what's actually displayed as a
-# finding elsewhere on the page.
-RISK_GATE_CATEGORIES = {
-    "risk",
-    "loss_history",
-    "fraud",
-    "ml_fraud",
-    "ml_loss",
-    "adverse_selection",
-    "moral_hazard",
-    "portfolio_risk",
-    "limit_adequacy",
-    "coverage_gaps",
-    "uw_decision",
-}
-COMPLIANCE_GATE_CATEGORIES = {
-    "compliance",
-    "sanctions",
-    "mib",
-    "hallucination",
-    "data_quality",
-    "beneficiary_review",
-}
 
 # Shared wording for both the Quote and the Report so "Confidence: X%" never
 # reads two different ways on the two documents — it's the system's
@@ -758,10 +734,7 @@ def generate_report_html(results: dict[str, Any], job_id: str, audience: str = "
 </div>
 """
 
-    risk_legend = (
-        '<div class="report-meta" style="text-align:center;margin-top:2px;">'
-        "<strong>Risk Score Scale:</strong> 0&ndash;49 Low &middot; 50&ndash;74 Moderate &middot; 75&ndash;100 High (&ge;85 auto-decline threshold)</div>"
-    )
+    risk_legend = f'<div class="report-meta" style="text-align:center;margin-top:2px;"><strong>Risk Score Scale:</strong> {_esc(risk_score_legend_text())}</div>'
 
     line_block = ""
     if insurance_line:
