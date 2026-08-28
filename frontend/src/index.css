@@ -209,6 +209,9 @@ html.theme-light .text-rose-100,
 html.theme-light .text-rose-200,
 html.theme-light .text-rose-300 { color: #9f1239 !important; }
 html.theme-light .text-red-300 { color: #b91c1c !important; }
+html.theme-light .text-sky-300,
+html.theme-light .text-sky-400 { color: #0369a1 !important; }
+html.theme-light .text-amber-400 { color: #92400e !important; }
 
 html.theme-light .border-white\/\[0\.04\],
 html.theme-light .border-white\/\[0\.06\],
