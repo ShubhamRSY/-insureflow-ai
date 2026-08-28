@@ -66,7 +66,7 @@ class SupervisorAgent(BaseAgent):
         start = time.time()
 
         if use_celery:
-            agent_results = self._run_agents_celery(bundle)
+            agent_results = self._run_agents_celery(bundle, insurance_line=insurance_line)
         elif parallel:
             agent_results = self._run_agents_threadpool(bundle, skip_ml_fraud=skip_ml_fraud, insurance_line=insurance_line)
         else:
@@ -93,8 +93,8 @@ class SupervisorAgent(BaseAgent):
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
             risk_future = pool.submit(self.risk_analyst.run, bundle, insurance_line=insurance_line)
-            loss_future = pool.submit(self.loss_run_analyst.run, bundle)
-            comp_future = pool.submit(self.compliance_agent.run, bundle)
+            loss_future = pool.submit(self.loss_run_analyst.run, bundle, insurance_line=insurance_line)
+            comp_future = pool.submit(self.compliance_agent.run, bundle, insurance_line=insurance_line)
             fraud_future = pool.submit(self._run_fraud_agent, bundle, skip_ml_fraud, insurance_line)
             return [
                 risk_future.result(),
@@ -106,8 +106,8 @@ class SupervisorAgent(BaseAgent):
     def _run_agents_sequential(self, bundle: SubmissionBundle, skip_ml_fraud: bool = False, insurance_line: str | None = None) -> list[AgentResult]:
         return [
             self.risk_analyst.run(bundle, insurance_line=insurance_line),
-            self.loss_run_analyst.run(bundle),
-            self.compliance_agent.run(bundle),
+            self.loss_run_analyst.run(bundle, insurance_line=insurance_line),
+            self.compliance_agent.run(bundle, insurance_line=insurance_line),
             self._run_fraud_agent(bundle, skip_ml_fraud, insurance_line),
         ]
 
@@ -121,7 +121,7 @@ class SupervisorAgent(BaseAgent):
             if skip_ml_fraud:
                 self.fraud_detection.defer_ml = False
 
-    def _run_agents_celery(self, bundle: SubmissionBundle) -> list[AgentResult]:
+    def _run_agents_celery(self, bundle: SubmissionBundle, insurance_line: str | None = None) -> list[AgentResult]:
         try:
             from celery import group
 
@@ -135,7 +135,7 @@ class SupervisorAgent(BaseAgent):
                 "FraudDetectionAgent",
             ]
 
-            job = group(run_agent.s(agent_name, bundle_data) for agent_name in agent_names)
+            job = group(run_agent.s(agent_name, bundle_data, insurance_line=insurance_line) for agent_name in agent_names)
             result = job.apply_async()
 
             raw_results = result.get(timeout=300, propagate=True)

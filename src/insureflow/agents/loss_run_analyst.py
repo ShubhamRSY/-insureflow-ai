@@ -13,6 +13,15 @@ class LossRunAnalystAgent(ReActAgent):
     prompt_key = "loss_run_analyst"
 
     def _analyze(self, bundle: SubmissionBundle, **kwargs: Any) -> None:
+        from insureflow.rating.models import is_non_property_line
+
+        if is_non_property_line(kwargs.get("insurance_line")):
+            # P&C-style claims loss-run history (frequency/severity/litigation
+            # against ClaimRecord shapes) is not a concept this line has —
+            # never flag its absence. Prior-claim history for these lines is
+            # assessed elsewhere (e.g. life_medical.py's MIB/APS checks).
+            return
+
         loss_run = self.tools.get_loss_run(bundle)
         if not loss_run or not loss_run.claims:
             self._add_finding(

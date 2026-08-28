@@ -38,6 +38,26 @@ def decision_color(decision: str) -> str:
     return DECISION_COLORS.get((decision or "").upper(), DECISION_COLORS_DEFAULT)
 
 
+# Single source of truth for every generated document's font stack.
+#
+# These documents are rendered by WeasyPrint (Pango/fontconfig), not a
+# browser — "-apple-system", "BlinkMacSystemFont", "Segoe UI", and "SF Mono"
+# are browser/OS integration keywords that mean nothing to Pango. It silently
+# skips each one it can't resolve and falls through the stack; in the
+# production container (python:3.12-slim, see Dockerfile) none of those
+# names exist and no font package is guaranteed installed, so fontconfig can
+# end up substituting a *different* fallback font per glyph within the same
+# line — particularly for the em/en-dashes (—/–), middot (·), and bullet
+# characters used throughout these documents. Different font files have
+# different ascent/descent/baseline metrics at the same declared font-size,
+# so that per-glyph substitution is what reads as "characters sitting above
+# or below their line." Naming one real, broadly-available family first
+# (installed explicitly via `fonts-dejavu-core` in the Dockerfile) makes
+# every glyph in a paragraph resolve from the same font file.
+PDF_FONT_STACK = "'DejaVu Sans', 'Liberation Sans', Arial, sans-serif"
+PDF_MONO_FONT_STACK = "'DejaVu Sans Mono', 'Liberation Mono', Consolas, monospace"
+
+
 def wordmark_html(size_px: int = 20) -> str:
     """Text-lockup wordmark — no logo asset exists in the repo, so this is a
     deliberately simple, consistent typographic treatment rather than a

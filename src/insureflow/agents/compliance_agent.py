@@ -13,32 +13,36 @@ class ComplianceAgent(ReActAgent):
     prompt_key = "compliance_agent"
 
     def _analyze(self, bundle: SubmissionBundle, **kwargs: Any) -> None:
-        coverages = self.tools.get_coverages(bundle)
-        if not coverages:
-            self._add_finding(
-                Finding(
-                    title="No coverage schedule on file — adequacy unverified",
-                    description=(
-                        "The package does not show current coverages or limits, so coverage "
-                        "adequacy cannot be verified. Request the declarations page or a "
-                        "current schedule of insurance from the producer."
-                    ),
-                    severity=RiskSeverity.HIGH,
-                    category="data_quality",
+        from insureflow.rating.models import is_non_property_line
+
+        if not is_non_property_line(kwargs.get("insurance_line")):
+            coverages = self.tools.get_coverages(bundle)
+            if not coverages:
+                self._add_finding(
+                    Finding(
+                        title="No coverage schedule on file — adequacy unverified",
+                        description=(
+                            "The package does not show current coverages or limits, so coverage "
+                            "adequacy cannot be verified. Request the declarations page or a "
+                            "current schedule of insurance from the producer."
+                        ),
+                        severity=RiskSeverity.HIGH,
+                        category="data_quality",
+                    )
                 )
-            )
-            return
+            else:
+                locations = self.tools.get_locations(bundle)
+                total_iv = self.tools.total_insurable_value(locations)
 
-        locations = self.tools.get_locations(bundle)
-        total_iv = self.tools.total_insurable_value(locations)
+                for cov in coverages:
+                    self._assess_sublimits(cov)
+                    self._assess_limit_adequacy(cov, total_iv)
+                    self._assess_deductible(cov)
+                    self._assess_endorsements(cov)
 
-        for cov in coverages:
-            self._assess_sublimits(cov)
-            self._assess_limit_adequacy(cov, total_iv)
-            self._assess_deductible(cov)
-            self._assess_endorsements(cov)
+                self._assess_coverage_gaps(coverages)
 
-        self._assess_coverage_gaps(coverages)
+        # Named-insured identification applies to every line — always run it.
         self._assess_named_insured(bundle)
 
     def _assess_sublimits(self, cov: CoverageDetail) -> None:

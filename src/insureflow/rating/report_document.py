@@ -9,7 +9,7 @@ from importlib.metadata import PackageNotFoundError, version
 from typing import Any
 
 from insureflow.rating.models import RateComponent, line_display_name
-from insureflow.rating.report_theme import WORDMARK_CSS_PRINT, decision_color, wordmark_html
+from insureflow.rating.report_theme import PDF_FONT_STACK, PDF_MONO_FONT_STACK, WORDMARK_CSS_PRINT, decision_color, wordmark_html
 from insureflow.underwriting.decision_thresholds import risk_score_legend_text
 from insureflow.underwriting.finding_gates import COMPLIANCE_GATE_CATEGORIES, RISK_GATE_CATEGORIES
 from insureflow.underwriting.lob_rating import _derived_modifier_pct
@@ -145,7 +145,7 @@ def generate_memo_report_html(results: dict[str, Any], job_id: str, now: str) ->
             polished = _esc(line).replace("[X]", "&#9745;").replace("[x]", "&#9745;").replace("[ ]", "&#9744;")
             indent = len(line) - len(line.lstrip(" "))
             out += f'<div style="padding-left:{indent * 7}px;text-indent:-14px;margin-left:14px;">{polished}</div>'
-        return f"<div style=\"font-family:'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;font-size:10px;line-height:1.65;color:#1e293b;\">{out}</div>"
+        return f'<div style="font-family:{PDF_MONO_FONT_STACK};font-size:10px;line-height:1.65;color:#1e293b;">{out}</div>'
 
     sections_html = ""
     for title, lines in sections:
@@ -172,12 +172,12 @@ def generate_memo_report_html(results: dict[str, Any], job_id: str, now: str) ->
       content: "Page " counter(page) " of " counter(pages);
       font-size: 9px;
       color: #94a3b8;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: {PDF_FONT_STACK};
     }}
   }}
   * {{ box-sizing: border-box; margin: 0; padding: 0; }}
   body {{
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-family: {PDF_FONT_STACK};
     color: #1e293b; font-size: 12px; line-height: 1.55; background: white;
     -webkit-font-smoothing: antialiased;
   }}
@@ -804,14 +804,14 @@ def generate_report_html(results: dict[str, Any], job_id: str, audience: str = "
       content: "Page " counter(page) " of " counter(pages);
       font-size: 9px;
       color: #94a3b8;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: {PDF_FONT_STACK};
     }}
   }}
 
   * {{ box-sizing: border-box; margin: 0; padding: 0; }}
 
   body {{
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-family: {PDF_FONT_STACK};
     color: #1e293b;
     font-size: 12px;
     line-height: 1.55;
@@ -1168,12 +1168,12 @@ _REPORT_CSS = """\
       content: "Page " counter(page) " of " counter(pages);
       font-size: 9px;
       color: #94a3b8;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: {PDF_FONT_STACK};
     }
   }
   * {{ box-sizing: border-box; margin: 0; padding: 0; }}
   body {{
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-family: {PDF_FONT_STACK};
     color: #1e293b; font-size: 11px; line-height: 1.55; background: white;
     -webkit-font-smoothing: antialiased;
   }}

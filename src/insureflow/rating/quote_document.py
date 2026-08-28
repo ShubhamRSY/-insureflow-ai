@@ -6,12 +6,27 @@ from html import escape
 from insureflow.models.agents import UnderwritingMemo
 from insureflow.models.submissions import SubmissionBundle
 from insureflow.rating.models import InsuranceLine, QuoteResult, line_display_name
-from insureflow.rating.report_theme import WORDMARK_CSS_DARK, WORDMARK_CSS_PRINT, decision_color, wordmark_html
+from insureflow.rating.report_theme import (
+    PDF_FONT_STACK,
+    SEVERITY_COLORS,
+    WORDMARK_CSS_PRINT,
+    decision_color,
+    wordmark_html,
+)
 from insureflow.underwriting.lob_rating import _derived_modifier_pct
 
 
 def _esc(value: object) -> str:
     return escape(str(value if value is not None else ""))
+
+
+def _detail_item(label: str, value: str, *, accent: str | None = None) -> str:
+    """One label/value pair in the two-column details grid below the hero —
+    short-value fields (Face Amount, UW Class, Tobacco, DOB, State, ...) read
+    far better two-up than stacked one-per-line, and this is the single place
+    that markup is built so every field in the grid stays visually uniform."""
+    style = f' style="color:{accent};font-weight:700;"' if accent else ""
+    return f'<div class="detail-item"><div class="detail-label">{_esc(label)}</div><div class="detail-value"{style}>{value}</div></div>'
 
 
 def generate_quote_html(
@@ -47,7 +62,7 @@ def generate_quote_html(
         identity_gaps.append("state of residence")
     identity_gap_note = (
         "<div class='finding' style=\"border-left-color:#dc2626;\"><div class='finding-top'>"
-        "<strong>Identity verification incomplete</strong></div><p class='finding-desc'>"
+        "<span class=\"finding-title\">Identity verification incomplete</span></div><p class='finding-desc'>"
         f"Missing: {_esc(', '.join(identity_gaps))}. Confirm with the producer before bind.</p></div>"
         if identity_gaps
         else ""
@@ -63,7 +78,7 @@ def generate_quote_html(
     if bundle.structured and bundle.structured.coverages:
         for c in bundle.structured.coverages:
             sublimits = "".join(f"<tr><td class='pl-8'>{_esc(k)}</td><td class='text-right'>${v:,.0f}</td></tr>" for k, v in c.sublimits.items())
-            endorsements = "".join(f"<li>{_esc(e)}</li>" for e in c.endorsements) if c.endorsements else "<li class='muted'>None</li>"
+            endorsements = "".join(f"<li>{_esc(e)}</li>" for e in c.endorsements) if c.endorsements else "<li class='muted-item'>None</li>"
             coverages_html += f"""
             <div class="card">
               <div class="card-header">{_esc(c.coverage_type)}</div>
@@ -73,7 +88,7 @@ def generate_quote_html(
                 <tr><td>Premium</td><td class='text-right'>${c.premium:,.0f}</td></tr>
                 {sublimits}
               </table>
-              <div class="section-title">Endorsements</div>
+              <div class="micro-label">Endorsements</div>
               <ul class="list">{endorsements}</ul>
             </div>"""
     elif is_life:
@@ -89,17 +104,19 @@ def generate_quote_html(
               </table>
             </div>"""
     else:
-        coverages_html = '<p class="muted">Coverage details not available — see quote breakdown below.</p>'
+        coverages_html = '<p class="muted-item">Coverage details not available — see quote breakdown below.</p>'
 
     iso_forms = list(meta.get("iso_forms") or [])
     if iso_forms:
         rows = "".join(f"<tr><td>{_esc(f.get('number'))}</td><td>{_esc(f.get('title'))}</td><td class='text-right'>{_esc(f.get('edition'))}</td></tr>" for f in iso_forms)
-        forms_html = f"<h2>ISO / form schedule</h2><div class='card'><table>{rows}</table><p class='muted' style='margin-top:8px;'>Jacket map only — not a filed edition date until the carrier book supplies one.</p></div>"
+        forms_html = f"<div class='section-header'>ISO / Form Schedule</div><div class='card'><table>{rows}</table><p class='muted-item' style='margin-top:8px;'>Jacket map only — not a filed edition date until the carrier book supplies one.</p></div>"
     else:
         forms_html = ""
     sl = meta.get("surplus_lines") or {}
     if sl:
-        forms_html += f"<h2>Admitted / E&amp;S</h2><div class='card'><p>{_esc(sl.get('market_status') or sl.get('status') or 'unknown')} — {_esc(sl.get('reason') or '')}</p></div>"
+        forms_html += (
+            f"<div class='section-header'>Admitted / E&amp;S</div><div class='card'><p>{_esc(sl.get('market_status') or sl.get('status') or 'unknown')} — {_esc(sl.get('reason') or '')}</p></div>"
+        )
 
     exclusions: list[str] = []
     if memo.recommendation and memo.recommendation.conditions:
@@ -130,14 +147,12 @@ def generate_quote_html(
         factor_display = _esc(amount) if amount is not None else "—"
         derived_pct = _derived_modifier_pct(rc)
         if derived_pct is None:
-            adj_display, adj_class = "n/a", "muted"
+            adj_display, adj_class = "n/a", "muted-cell"
         else:
             sign = "+" if derived_pct > 0 else ""
             adj_display = f"{sign}{derived_pct:.1f}%"
-            adj_class = "text-up" if derived_pct > 0 else "text-down" if derived_pct < 0 else "muted"
-        components_html += (
-            f"<tr><td>{label}</td><td class='muted' style='font-size:10.5px;'>{basis}</td><td class='text-right'>{factor_display}</td><td class='text-right {adj_class}'>{adj_display}</td></tr>"
-        )
+            adj_class = "text-up" if derived_pct > 0 else "text-down" if derived_pct < 0 else "muted-cell"
+        components_html += f"<tr><td>{label}</td><td class='basis-cell'>{basis}</td><td class='text-right'>{factor_display}</td><td class='text-right {adj_class}'>{adj_display}</td></tr>"
 
     # Detailed findings for the quote package — CRITICAL/HIGH first so a cap
     # (if ever reached) never drops the findings that matter most.
@@ -151,75 +166,81 @@ def generate_quote_html(
         shown, overflow = findings[:40], findings[40:]
         for f in shown:
             sev = (f.severity.value if hasattr(f.severity, "value") else str(f.severity or "moderate")).lower()
+            border_color = SEVERITY_COLORS.get(sev.upper(), "#94a3b8")
             findings_html += f"""
-            <div class="finding">
+            <div class="finding" style="border-left-color:{border_color};">
               <div class="finding-top">
-                <span class="sev sev-{_esc(sev)}">{_esc(sev.upper())}</span>
-                <strong>{_esc(f.title)}</strong>
-                <span class="muted"> · {_esc((f.category or "general").replace("_", " "))}</span>
+                <span class="sev-chip sev-{_esc(sev)}">{_esc(sev.upper())}</span>
+                <span class="finding-title">{_esc(f.title)}</span>
+                <span class="finding-category">{_esc((f.category or "general").replace("_", " "))}</span>
               </div>
               <p class="finding-desc">{_esc(f.description or "")}</p>
             </div>"""
         if overflow:
-            findings_html += f'<p class="muted">+ {len(overflow)} more lower-severity finding(s) — see the full Underwriting Report.</p>'
+            findings_html += f'<p class="muted-item">+ {len(overflow)} more lower-severity finding(s) — see the full Underwriting Report.</p>'
     else:
-        findings_html = '<p class="muted">No underwriting findings recorded for this quote.</p>'
+        findings_html = '<p class="muted-item">No underwriting findings recorded for this quote.</p>'
 
     review_reasons = list(memo.human_review_reasons or [])
     review_html = ""
     if review_reasons:
         items = "".join(f"<li>{_esc(r)}</li>" for r in review_reasons)
         review_html = f"""
-  <h2>Referral Basis</h2>
+  <div class="section-header">Referral Basis</div>
   <ul class="list">{items}</ul>"""
 
     if is_life:
         face = float(meta.get("face_amount") or meta.get("tiv") or 0)
         medical = meta.get("medical") or {}
-        header_rows = f"""
-  <div class="row"><span class="label">Line of Business</span><span>{_esc(line_label)}</span></div>
-  <div class="row"><span class="label">Date of Birth</span><span>{_esc(date_of_birth) or "Not provided"}</span></div>
-  <div class="row"><span class="label">State of Residence</span><span>{_esc(state_of_residence) or "Not provided"}</span></div>
-  <div class="row"><span class="label">Face Amount</span><span>${face:,.0f}</span></div>
-  <div class="row"><span class="label">UW Class</span><span>{_esc((medical.get("underwriting_class") or "—").replace("_", " ").title())}</span></div>
-  <div class="row"><span class="label">Tobacco</span><span>{"Yes" if medical.get("tobacco") else "No"}</span></div>
-  <div class="row"><span class="label">Decision</span><span style="color:{decision_color_hex};font-weight:700;">{_esc(decision)}</span></div>
-  <div class="row"><span class="label">Policy Admin Ref</span><span>{_esc(quote.policy_admin_reference or "N/A")}</span></div>"""
+        details_grid = "".join(
+            [
+                _detail_item("Line of Business", _esc(line_label)),
+                _detail_item("Decision", _esc(decision), accent=decision_color_hex),
+                _detail_item("Date of Birth", _esc(date_of_birth) or "Not provided"),
+                _detail_item("State of Residence", _esc(state_of_residence) or "Not provided"),
+                _detail_item("Face Amount", f"${face:,.0f}"),
+                _detail_item("UW Class", _esc((medical.get("underwriting_class") or "—").replace("_", " ").title())),
+                _detail_item("Tobacco", "Yes" if medical.get("tobacco") else "No"),
+                _detail_item("Policy Admin Ref", _esc(quote.policy_admin_reference or "N/A")),
+            ]
+        )
         modifiers_block = f"""
-  <h2>Life Rating Factors</h2>
+  <div class="section-header">Life Rating Factors</div>
   <div class="card">
-    <div class="row"><span class="label">Filing</span><span>{_esc(meta.get("filing_id") or "—")}</span></div>
-    <div class="row"><span class="label">Product</span><span>{_esc(meta.get("product") or "—")}</span></div>
-    <div class="row"><span class="label">UW hint</span><span>{_esc(meta.get("uw_decision_hint") or decision.lower())}</span></div>
+    <div class="kv-row"><span class="kv-label">Filing</span><span class="kv-value">{_esc(meta.get("filing_id") or "—")}</span></div>
+    <div class="kv-row"><span class="kv-label">Product</span><span class="kv-value">{_esc(meta.get("product") or "—")}</span></div>
+    <div class="kv-row"><span class="kv-label">UW hint</span><span class="kv-value">{_esc(meta.get("uw_decision_hint") or decision.lower())}</span></div>
   </div>"""
     else:
         cope_grade = str(meta.get("cope_grade", "N/A"))
         market_phase = str(meta.get("market_phase", "N/A"))
         tiv = sum((loc.building_value or 0) + (loc.contents_value or 0) + (loc.bi_value or 0) for loc in (bundle.structured.locations if bundle.structured else [])) or meta.get("tiv", 0)
-        header_rows = f"""
-  <div class="row"><span class="label">Line of Business</span><span>{_esc(line_label)}</span></div>
-  <div class="row"><span class="label">Total Insured Value</span><span>${float(tiv):,.0f}</span></div>
-  <div class="row"><span class="label">COPE Risk Grade</span><span>{_esc(cope_grade.replace("_", " ").title())}</span></div>
-  <div class="row"><span class="label">Market Phase</span><span>{_esc(market_phase.replace("_", " ").title())}</span></div>
-  <div class="row"><span class="label">Risk Score</span><span>{risk_pct if risk_pct is not None else "—"}/100 · {_esc(severity)}</span></div>
-  <div class="row" style="border-bottom:none;"><span class="muted" style="font-size:10.5px;">0&ndash;49 Low &middot; 50&ndash;74 Moderate &middot; 75&ndash;100 High</span></div>
-  <div class="row"><span class="label">Decision</span><span style="color:{decision_color_hex};font-weight:700;">{_esc(decision)}</span></div>
-  <div class="row"><span class="label">Policy Admin Ref</span><span>{_esc(quote.policy_admin_reference or "N/A")}</span></div>"""
+        details_grid = "".join(
+            [
+                _detail_item("Line of Business", _esc(line_label)),
+                _detail_item("Decision", _esc(decision), accent=decision_color_hex),
+                _detail_item("Total Insured Value", f"${float(tiv):,.0f}"),
+                _detail_item("COPE Risk Grade", _esc(cope_grade.replace("_", " ").title())),
+                _detail_item("Market Phase", _esc(market_phase.replace("_", " ").title())),
+                _detail_item("Risk Score", f"{risk_pct if risk_pct is not None else '—'}/100 &middot; {_esc(severity)}"),
+                _detail_item("Policy Admin Ref", _esc(quote.policy_admin_reference or "N/A")),
+            ]
+        )
         modifiers_block = f"""
-  <h2>Rate Components</h2>
+  <div class="section-header">Rate Components</div>
   <div class="grid-2">
     <div class="card">
       <div class="card-header">Base Rate</div>
-      <div class="row"><span class="label">ISO Loss Cost</span><span>${meta.get("loss_cost", 0):.4f}/$100</span></div>
-      <div class="row"><span class="label">Rate per $100 TIV</span><span>${quote.rate_per_100_tiv:.4f}</span></div>
+      <div class="kv-row"><span class="kv-label">ISO Loss Cost</span><span class="kv-value">${meta.get("loss_cost", 0):.4f}/$100</span></div>
+      <div class="kv-row"><span class="kv-label">Rate per $100 TIV</span><span class="kv-value">${quote.rate_per_100_tiv:.4f}</span></div>
     </div>
     <div class="card">
       <div class="card-header">Modifiers</div>
-      <div class="row"><span class="label">COPE</span><span>{meta.get("cope_mod_pct", 0):+.1f}%</span></div>
-      <div class="row"><span class="label">Market</span><span>{meta.get("market_mod_pct", 0):+.1f}%</span></div>
-      <div class="row"><span class="label">Deductible</span><span>{meta.get("deductible_credit", 0):+.1f}%</span></div>
-      <div class="row"><span class="label">Loss Exp</span><span>{meta.get("loss_experience_mod_pct", 0):+.1f}%</span></div>
-      <div class="row"><span class="label">Tenure</span><span>{meta.get("years_in_business_mod_pct", 0):+.1f}%</span></div>
+      <div class="kv-row"><span class="kv-label">COPE</span><span class="kv-value">{meta.get("cope_mod_pct", 0):+.1f}%</span></div>
+      <div class="kv-row"><span class="kv-label">Market</span><span class="kv-value">{meta.get("market_mod_pct", 0):+.1f}%</span></div>
+      <div class="kv-row"><span class="kv-label">Deductible</span><span class="kv-value">{meta.get("deductible_credit", 0):+.1f}%</span></div>
+      <div class="kv-row"><span class="kv-label">Loss Exp</span><span class="kv-value">{meta.get("loss_experience_mod_pct", 0):+.1f}%</span></div>
+      <div class="kv-row"><span class="kv-label">Tenure</span><span class="kv-value">{meta.get("years_in_business_mod_pct", 0):+.1f}%</span></div>
     </div>
   </div>"""
 
@@ -238,100 +259,235 @@ def generate_quote_html(
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{_esc(headline) if insured_missing else f"Insurance Quote — {_esc(headline)}"}</title>
 <style>
-  *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
-  body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0a0f; color: #e2e8f0; padding: 40px 20px; font-size: 13px; line-height: 1.55; }}
-  .container {{ max-width: 860px; margin: 0 auto; background: #14141f; border-radius: 12px; padding: 32px; box-shadow: 0 4px 24px rgba(0,0,0,0.4); }}
-  h1 {{ font-size: 22px; font-weight: 700; margin-bottom: 4px; color: #f8fafc; }}
-  h2 {{ font-size: 15px; font-weight: 600; margin: 24px 0 8px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }}
-  .subtitle {{ color: #94a3b8; font-size: 13px; margin-bottom: 20px; }}
-  .row {{ display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.06); color: #e2e8f0; }}
-  .label {{ color: #94a3b8; }}
-  .muted {{ color: #94a3b8; }}
-  .total {{ font-size: 20px; font-weight: 700; color: #4ade80; text-align: right; margin-top: 12px; padding-top: 12px; border-top: 2px solid rgba(255,255,255,0.08); }}
-  .card {{ background: rgba(255,255,255,0.04); border-radius: 8px; padding: 16px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.06); }}
-  .card-header {{ font-weight: 600; font-size: 14px; margin-bottom: 8px; color: #f1f5f9; }}
-    .summary-text {{ color: #e2e8f0; font-size: 13px; line-height: 1.6; white-space: pre-wrap; }}
-  table {{ width: 100%; border-collapse: collapse; color: #e2e8f0; }}
-  td {{ padding: 4px 0; color: #e2e8f0; }}
-  .section-title {{ font-size: 11px; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.05em; margin-top: 12px; margin-bottom: 4px; }}
-  .list {{ list-style: none; padding: 0; }}
-  .list li {{ padding: 3px 0; color: #e2e8f0; font-size: 12px; }}
-  .list li::before {{ content: "— "; color: #94a3b8; }}
-  .footer {{ margin-top: 24px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.06); font-size: 11px; color: #94a3b8; text-align: center; }}
-  .badge {{ display: inline-block; background: rgba(74,222,128,0.12); color: #4ade80; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }}
-  .grid-2 {{ display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }}
-  .text-up {{ color: #f87171; }}
-  .text-down {{ color: #4ade80; }}
-  .finding {{ border-left: 3px solid #64748b; padding: 8px 10px; margin-bottom: 8px; background: rgba(255,255,255,0.03); border-radius: 0 6px 6px 0; }}
-  .finding-top {{ font-size: 12px; color: #f1f5f9; }}
-  .finding-desc {{ margin-top: 4px; font-size: 12px; color: #cbd5e1; line-height: 1.5; }}
-  .sev {{ display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 0.04em; margin-right: 6px; }}
-  .sev-critical, .sev-high {{ color: #f87171; }}
-  .sev-moderate {{ color: #fbbf24; }}
-  .sev-low, .sev-info {{ color: #4ade80; }}
-  {WORDMARK_CSS_DARK}
-  @media print {{
-    {WORDMARK_CSS_PRINT}
-    body {{ background: white !important; color: #0f172a !important; }}
-    .container {{ box-shadow: none; background: white !important; }}
-    h1, .card-header, .finding-top, td, .row, .list li, .summary-text {{ color: #0f172a !important; }}
-    h2, .label, .muted, .subtitle, .section-title, .footer, .finding-desc {{ color: #334155 !important; }}
-    .card, .finding {{ background: #f8fafc !important; border-color: #e2e8f0 !important; }}
-    .total {{ color: #15803d !important; }}
-    .text-up {{ color: #b91c1c !important; }}
-    .text-down {{ color: #15803d !important; }}
-    .sev-critical, .sev-high {{ color: #b91c1c !important; }}
-    .sev-moderate {{ color: #b45309 !important; }}
-    .sev-low, .sev-info {{ color: #15803d !important; }}
-    .badge {{ background: #dcfce7 !important; color: #166534 !important; }}
+  @page {{
+    size: A4;
+    margin: 18mm 16mm 20mm 16mm;
+    @bottom-center {{
+      content: "Page " counter(page) " of " counter(pages);
+      font-size: 8pt;
+      color: #94a3b8;
+      font-family: {PDF_FONT_STACK};
+    }}
   }}
+
+  /* ── Type scale: 9pt body / 11pt subheader / 14pt section header / 18pt title ── */
+  *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  body {{
+    font-family: {PDF_FONT_STACK};
+    background: #ffffff;
+    color: #1e293b;
+    padding: 0;
+    font-size: 9pt;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }}
+  h1 {{ font-size: 18pt; font-weight: 700; color: #0f172a; }}
+  .subtitle {{ color: #64748b; font-size: 9pt; margin-top: 2px; }}
+
+  /* ── Document header ── */
+  .doc-header {{
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #0f172a;
+    margin-bottom: 14px;
+  }}
+  .doc-header-right {{ text-align: right; }}
+  .quote-ref {{ font-size: 9pt; font-weight: 700; color: #0f172a; }}
+  .quote-meta {{ font-size: 8pt; color: #64748b; margin-top: 2px; }}
+
+  /* ── Hero: decision / face amount / premium, scannable before anything else ── */
+  .hero {{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    border: 1.5px solid {decision_color_hex}55;
+    background: {decision_color_hex}0d;
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-bottom: 16px;
+  }}
+  .hero-decision-block {{ min-width: 140px; }}
+  .hero-eyebrow {{ font-size: 8pt; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #64748b; }}
+  .hero-decision {{ font-size: 22pt; font-weight: 800; letter-spacing: -0.01em; color: {decision_color_hex}; text-transform: uppercase; line-height: 1.15; margin-top: 2px; }}
+  /* display:table, not flex — WeasyPrint's flexbox can collapse the gap
+     between nested flex children (two hero numbers rendered on top of each
+     other); table-cell spacing is unambiguous and well-supported. */
+  .hero-stats {{ display: table; border-collapse: separate; border-spacing: 28px 0; }}
+  .hero-stat {{ display: table-cell; text-align: right; white-space: nowrap; }}
+  .hero-stat-value {{ font-size: 16pt; font-weight: 700; color: #0f172a; line-height: 1.2; }}
+  .hero-stat-label {{ font-size: 8pt; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }}
+
+  /* ── Section headers: uniform spacing + weight for every major section ── */
+  .section-header {{
+    font-size: 14pt;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 22px 0 10px 0;
+    padding-bottom: 5px;
+    border-bottom: 1.5px solid #e2e8f0;
+    break-after: avoid;
+  }}
+  .section-header:first-of-type {{ margin-top: 0; }}
+
+  /* ── Two-column details grid for short-value fields ── */
+  .details-grid {{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 24px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 4px 16px;
+    margin-bottom: 4px;
+  }}
+  .detail-item {{
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 7px 0;
+    border-bottom: 1px solid #f1f5f9;
+  }}
+  .detail-item:nth-last-child(-n+2) {{ border-bottom: none; }}
+  .detail-label {{ color: #64748b; font-size: 9pt; }}
+  .detail-value {{ font-weight: 500; font-size: 9pt; text-align: right; }}
+
+  /* ── Cards ── */
+  .card {{ background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; break-inside: avoid; page-break-inside: avoid; }}
+  .card-header {{ font-weight: 600; font-size: 11pt; margin-bottom: 8px; color: #0f172a; }}
+  .summary-text {{ color: #1e293b; font-size: 9pt; line-height: 1.6; white-space: pre-wrap; }}
+  .grid-2 {{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }}
+
+  /* ── kv rows (inside cards) ── */
+  .kv-row {{ display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #f1f5f9; }}
+  .kv-row:last-child {{ border-bottom: none; }}
+  .kv-label {{ color: #64748b; }}
+  .kv-value {{ font-weight: 500; text-align: right; }}
+
+  /* ── Tables ── */
+  table {{ width: 100%; border-collapse: collapse; font-size: 9pt; }}
+  td {{ padding: 6px 4px; border-bottom: 1px solid #f1f5f9; }}
+  tr:last-child td {{ border-bottom: none; }}
+  .pl-8 {{ padding-left: 8px; color: #64748b; }}
+  .micro-label {{ font-size: 8pt; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em; margin-top: 10px; margin-bottom: 4px; }}
+
+  /* ── Premium breakdown table: ruled + shaded rows, wide "Applied To" column ── */
+  .premium-table th {{
+    text-align: left; font-size: 8pt; text-transform: uppercase; letter-spacing: 0.04em;
+    color: #64748b; font-weight: 600; padding: 6px 4px; border-bottom: 2px solid #cbd5e1;
+  }}
+  .premium-table col.col-component {{ width: 26%; }}
+  .premium-table col.col-basis {{ width: 38%; }}
+  .premium-table col.col-factor {{ width: 16%; }}
+  .premium-table col.col-adjustment {{ width: 20%; }}
+  .premium-table th.text-right, .premium-table td.text-right {{ text-align: right; }}
+  .premium-table tbody tr:nth-child(even) {{ background: #f8fafc; }}
+  .premium-table td {{ padding: 7px 4px; }}
+  .basis-cell {{ color: #64748b; font-size: 8.5pt; }}
+  .muted-cell {{ color: #94a3b8; }}
+  .premium-total {{ display: flex; justify-content: space-between; align-items: baseline; font-size: 16pt; font-weight: 700; color: #15803d; margin-top: 12px; padding-top: 12px; border-top: 2px solid #0f172a; }}
+  .premium-total-label {{ font-size: 9pt; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; }}
+
+  /* ── Lists ── */
+  .list {{ list-style: none; padding: 0; }}
+  .list li {{ padding: 3px 0; color: #1e293b; font-size: 9pt; }}
+  .list li::before {{ content: "\\2014\\a0"; color: #94a3b8; }}
+  .muted-item {{ color: #64748b; font-size: 9pt; }}
+
+  /* ── Findings: severity chip + bold title + lighter body, real spacing ── */
+  .finding {{ border-left: 3px solid #94a3b8; padding: 9px 12px; margin-bottom: 8px; background: #f8fafc; border-radius: 0 6px 6px 0; break-inside: avoid; page-break-inside: avoid; }}
+  /* Plain inline flow, not flex — WeasyPrint's flexbox can drop the
+     margin-left:auto push (the category tag lands with no gap after the
+     title); ordinary inline-box spacing is unambiguous and well-supported. */
+  .finding-top {{ line-height: 1.6; }}
+  .finding-title {{ font-weight: 600; font-size: 11pt; color: #0f172a; margin-left: 6px; }}
+  .finding-category {{ font-size: 8pt; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.03em; float: right; padding-top: 3px; }}
+  .finding-desc {{ margin-top: 4px; font-size: 9pt; color: #475569; line-height: 1.5; font-weight: 400; }}
+  .sev-chip {{ display: inline-block; font-size: 7.5pt; font-weight: 700; letter-spacing: 0.05em; padding: 2px 7px; border-radius: 4px; }}
+  .sev-critical {{ background: #fee2e2; color: #b91c1c; }}
+  .sev-high {{ background: #ffedd5; color: #c2410c; }}
+  .sev-moderate {{ background: #fef3c7; color: #b45309; }}
+  .sev-low, .sev-info {{ background: #dcfce7; color: #166534; }}
+
+  /* ── Footer ── */
+  .footer {{ margin-top: 26px; padding-top: 14px; border-top: 1px solid #e2e8f0; font-size: 8pt; color: #94a3b8; text-align: center; }}
+  .footer p {{ margin-bottom: 2px; }}
+
+  .text-up {{ color: #b91c1c; }}
+  .text-down {{ color: #15803d; }}
+  {WORDMARK_CSS_PRINT}
 </style>
 </head>
 <body>
-<div class="container">
-  <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:4px;">
-    <div>
-      <h1>{_esc(headline)}</h1>
-      <p class="subtitle">{_esc(subtitle)}</p>
+<!-- ═══════ Document header ═══════ -->
+<div class="doc-header">
+  <div>
+    <h1>{_esc(headline)}</h1>
+    <p class="subtitle">{_esc(subtitle)}</p>
+  </div>
+  <div class="doc-header-right">
+    <div class="quote-ref">Quote #{_esc(quote.policy_admin_reference or "N/A")}</div>
+    <p class="quote-meta">Expires {_esc(valid_until)}</p>
+  </div>
+</div>
+
+<!-- ═══════ Hero: decision + face amount + premium, scannable before findings/rating factors ═══════ -->
+<div class="hero">
+  <div class="hero-decision-block">
+    <div class="hero-eyebrow">Underwriting Decision</div>
+    <div class="hero-decision">{_esc(decision)}</div>
+  </div>
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <div class="hero-stat-value">${float(meta.get("face_amount") or meta.get("tiv") or 0):,.0f}</div>
+      <div class="hero-stat-label">Face Amount</div>
     </div>
-    <div style="text-align:right;">
-      <div class="badge">Quote #{_esc(quote.policy_admin_reference or "N/A")}</div>
-      <p class="muted" style="font-size:12px;margin-top:4px;">Expires {_esc(valid_until)}</p>
+    <div class="hero-stat">
+      <div class="hero-stat-value">${quote.adjusted_premium:,.0f}</div>
+      <div class="hero-stat-label">Indicated Premium</div>
     </div>
   </div>
+</div>
 
-  {header_rows}
-  {identity_gap_note}
-  {summary_note}
+<div class="details-grid">{details_grid}</div>
+{identity_gap_note}
+{summary_note}
 
-  <h2>Coverages</h2>
-  {coverages_html}
+<div class="section-header">Coverages</div>
+{coverages_html}
 
-  {forms_html}
+{forms_html}
 
-  <h2>Exclusions & Conditions</h2>
-  <ul class="list">{exclusions_html}</ul>
-
-  <h2>Premium Breakdown</h2>
-  <div class="card">
-    <div class="row"><span class="label">Base Premium</span><span>${quote.base_premium:,.2f}</span></div>
-    <table style="margin-top:6px;">
-      <tr><th class="muted" style="text-align:left;font-size:10px;padding:4px 0;">Rating Component</th><th class="muted" style="text-align:left;font-size:10px;padding:4px 0;">Applied To</th><th class="muted" style="text-align:right;font-size:10px;padding:4px 0;">Factor</th><th class="muted" style="text-align:right;font-size:10px;padding:4px 0;">Adjustment</th></tr>
+<div class="section-header">Premium Breakdown</div>
+<div class="card">
+  <div class="kv-row"><span class="kv-label">Base Premium</span><span class="kv-value">${quote.base_premium:,.2f}</span></div>
+  <table class="premium-table" style="margin-top:8px;">
+    <colgroup>
+      <col class="col-component"><col class="col-basis"><col class="col-factor"><col class="col-adjustment">
+    </colgroup>
+    <thead>
+      <tr><th>Rating Component</th><th>Applied To</th><th class="text-right">Factor</th><th class="text-right">Adjustment</th></tr>
+    </thead>
+    <tbody>
       {components_html}
-    </table>
-    <div class="total">${quote.adjusted_premium:,.2f}</div>
-  </div>
+    </tbody>
+  </table>
+  <div class="premium-total"><span class="premium-total-label">Adjusted Premium</span><span>${quote.adjusted_premium:,.2f}</span></div>
+</div>
 
-  {modifiers_block}
+{modifiers_block}
 
-  <h2>Key Underwriting Findings</h2>
-  {findings_html}
-  {review_html}
+<div class="section-header">Key Underwriting Findings</div>
+{findings_html}
+{review_html}
 
-  <div class="footer">
-    <p>This quote is for informational purposes only and does not constitute a binder of insurance.</p>
-    <p style="margin-top:8px;">{wordmark_html(14)} <span class="muted">&bull; Generated {_esc(today)}</span></p>
-  </div>
+<div class="section-header">Exclusions &amp; Conditions</div>
+<ul class="list">{exclusions_html}</ul>
+
+<div class="footer">
+  <p>This quote is for informational purposes only and does not constitute a binder of insurance.</p>
+  <p style="margin-top:8px;">{wordmark_html(11)} <span class="muted-item">&bull; Generated {_esc(today)}</span></p>
 </div>
 </body>
 </html>"""

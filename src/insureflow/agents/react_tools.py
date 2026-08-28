@@ -16,10 +16,40 @@ class ToolDef:
 
 
 class ToolRegistry:
-    def __init__(self, bundle: SubmissionBundle) -> None:
+    # Tools that expose or reason about P&C-only concepts — physical insured
+    # locations, coverage limits/deductibles/sublimits, and claims loss-run
+    # history. Never registered for a line in NON_PROPERTY_LINES (life,
+    # health, general, and the face/limit-rated commercial specialty lines):
+    # an LLM-driven ReAct agent that cannot call these tools cannot fabricate
+    # a "missing locations/coverages/loss run/schedule of values" finding
+    # from their (structurally-always-empty, for those lines) output.
+    _PROPERTY_ONLY_TOOLS = frozenset(
+        {
+            "get_risk_profile",
+            "get_locations",
+            "get_coverages",
+            "get_loss_run",
+            "get_sovs",
+            "compute_claim_frequency",
+            "compute_average_severity",
+            "compute_large_loss_ratio",
+            "compute_open_claim_ratio",
+            "compute_litigation_ratio",
+            "assess_protection_class",
+            "assess_year_built_risk",
+            "check_non_disclosed_claims",
+            "check_sov_vs_location_valuation",
+            "check_coverage_adequacy",
+        }
+    )
+
+    def __init__(self, bundle: SubmissionBundle, insurance_line: str | None = None) -> None:
         self.bundle = bundle
         self.uw = UnderwritingTools()
         self._tools: dict[str, ToolDef] = {}
+        from insureflow.rating.models import is_non_property_line
+
+        self._include_property_tools = not is_non_property_line(insurance_line)
         self._register_all()
 
     def _register_all(self) -> None:
@@ -165,6 +195,8 @@ class ToolRegistry:
         parameters: dict[str, str],
         fn: Callable[..., Any],
     ) -> None:
+        if name in self._PROPERTY_ONLY_TOOLS and not self._include_property_tools:
+            return
         self._tools[name] = ToolDef(name=name, description=description, parameters=parameters, fn=fn)
 
     def list_tools(self) -> list[dict[str, Any]]:

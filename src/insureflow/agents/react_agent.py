@@ -42,7 +42,8 @@ class ReActAgent(BaseAgent):
         self._errors = []
         self.bundle = bundle
 
-        self._tools_registry = ToolRegistry(bundle)
+        self._insurance_line = kwargs.get("insurance_line")
+        self._tools_registry = ToolRegistry(bundle, insurance_line=self._insurance_line)
 
         circuit_key = _llm_circuit_key(self.llm)
         breaker = get_circuit_breaker(
@@ -130,12 +131,28 @@ class ReActAgent(BaseAgent):
         self._errors.append("ReAct loop reached max steps without final answer")
 
     def _build_react_prompt(self, bundle: SubmissionBundle) -> str:
+        from insureflow.rating.models import is_non_property_line
+
         base_prompt = SYSTEM_PROMPTS.get(self.prompt_key, "")
         tools_desc = self._tools_registry.tool_descriptions() if self._tools_registry else ""
         insured = self.tools.get_named_insured(bundle)
+        insurance_line = getattr(self, "_insurance_line", None)
+
+        line_context = f"This submission's line of business is: {insurance_line}.\n" if insurance_line else ""
+        scope_warning = (
+            "This line has no physical insured locations, coverage limits/deductibles/"
+            "sublimits, or P&C-style claims loss-run history — those concepts do not "
+            "apply here. Never report a finding about missing/absent locations, "
+            "coverages, coverage limits, loss runs, claims history, or schedule of "
+            "values for this submission; only the tools relevant to this line are "
+            "available to you below.\n"
+            if is_non_property_line(insurance_line)
+            else ""
+        )
 
         return (
             f"You are {self.agent_name} analyzing a submission for {insured}.\n\n"
+            f"{line_context}{scope_warning}\n"
             f"{base_prompt}\n\n"
             f"{tools_desc}\n\n"
             "You must respond in JSON format with exactly this structure:\n"
@@ -191,12 +208,43 @@ class ReActAgent(BaseAgent):
         result = self._tools_registry.call(name, **inp)
         return result
 
+    # Keyword guard applied only when insurance_line is a NON_PROPERTY_LINE —
+    # a last-resort, generation-time reject for an LLM finding that names a
+    # P&C-only concept despite the prompt/tool scoping above. This runs
+    # before the finding is ever constructed or enters memo.key_findings, so
+    # it's still "the source," not a downstream display filter.
+    _PROPERTY_ONLY_FINDING_KEYWORDS = (
+        "insured location",
+        "no location",
+        "missing location",
+        "coverage schedule",
+        "coverage limit",
+        "missing coverage",
+        "no coverage",
+        "loss run",
+        "schedule of values",
+        "statement of values",
+    )
+
     def _process_final_answer(self, parsed: dict[str, Any]) -> None:
+        from insureflow.rating.models import is_non_property_line
+
         findings_data = parsed.get("findings", [])
         if not findings_data and parsed.get("action") == "final_answer":
             findings_data = parsed.get("findings", [])
 
+        line_restricted = is_non_property_line(getattr(self, "_insurance_line", None))
+
         for fd in findings_data:
+            if line_restricted:
+                blob = f"{fd.get('title', '')} {fd.get('description', '')}".lower()
+                if any(kw in blob for kw in self._PROPERTY_ONLY_FINDING_KEYWORDS):
+                    logger.warning(
+                        "%s: dropped LLM finding referencing a P&C-only concept on a non-property line: %r",
+                        self.agent_name,
+                        fd.get("title"),
+                    )
+                    continue
             sev_map = {
                 "low": RiskSeverity.LOW,
                 "moderate": RiskSeverity.MODERATE,

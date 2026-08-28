@@ -84,6 +84,39 @@ PACKAGE_LINES = frozenset(
     }
 )
 
+# Lines with no physical insured locations, coverage-limit/deductible/
+# sublimit structure, or P&C-style claims loss-run history — life, health,
+# undetermined/general, and the face/limit/receivable-rated commercial
+# specialty lines (D&O, trade credit, E&O, key person) are all underwritten
+# on entirely different data (face amount, financial statements, receivables
+# aging, management liability history) instead of locations/coverages/loss
+# runs. The core agent swarm (RiskAnalystAgent, LossRunAnalystAgent,
+# ComplianceAgent, FraudDetectionAgent — see insureflow.agents) and the ReAct
+# tool registry must gate every P&C-only finding/tool on this set so a
+# submission on one of these lines is structurally incapable of producing a
+# "missing locations/coverages/loss run/schedule of values" finding, rather
+# than having it hidden downstream.
+NON_PROPERTY_LINES = frozenset(
+    {
+        InsuranceLine.LIFE,
+        InsuranceLine.HEALTH,
+        InsuranceLine.GENERAL,
+        *COMMERCIAL_SPECIALTY_LINES,
+    }
+)
+
+NON_PROPERTY_LINE_VALUES = frozenset(line.value for line in NON_PROPERTY_LINES)
+
+
+def is_non_property_line(insurance_line: str | None) -> bool:
+    """True when `insurance_line` is a line with no physical locations,
+    coverage-limit structure, or P&C-style loss-run history — see
+    NON_PROPERTY_LINES. Unknown/unresolved lines (None or empty) are treated
+    as property-like (False) to preserve existing behavior for callers that
+    haven't resolved a line yet, rather than silently suppressing findings."""
+    return bool(insurance_line) and str(insurance_line).lower() in NON_PROPERTY_LINE_VALUES
+
+
 # Human-friendly line labels for reports / quotes / UI.
 # Extended commercial taxonomy labels are merged from commercial_lobs at first use.
 LINE_DISPLAY_NAMES: dict[str, str] = {
