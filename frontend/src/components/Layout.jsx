@@ -473,7 +473,7 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
 
         <main className="flex-1 p-6 lg:p-8">
           {!selectedState && (
-            <div className="fixed right-6 top-20 z-50 w-[380px] rounded-2xl border border-white/10 bg-slate-900 shadow-2xl shadow-black/40">
+            <div className="fixed right-6 top-20 z-50 w-[380px] rounded-2xl border border-white/10 bg-surface-raised shadow-2xl shadow-black/40">
               <div className="flex items-center gap-3 border-b border-white/[0.08] px-5 py-4">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-red-500/15">
                   <AlertTriangle className="h-4.5 w-4.5 text-red-400" />
