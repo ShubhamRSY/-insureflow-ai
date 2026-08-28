@@ -191,7 +191,7 @@ export function RateStat({ label, value, hint }) {
       <Hint text={hint}>
         <span className={`text-slate-500 ${hint ? 'hint-label cursor-help' : ''}`}>{label}: </span>
       </Hint>
-      <span className="font-medium text-slate-100">{value ?? 'N/A'}</span>
+      <span className="ml-1.5 font-medium text-slate-100">{value ?? 'N/A'}</span>
     </div>
   );
 }

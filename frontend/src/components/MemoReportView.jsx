@@ -767,9 +767,6 @@ export default function MemoReportView({ job }) {
         <Collapsible title="Full Memo" badge="text">
           <div className="rounded-lg border border-white/[0.04] bg-black/20 p-4">
             <pre className="whitespace-pre-wrap font-sans text-[13px] leading-relaxed text-slate-300">{memoRemainder || cleanMemoText(memoText)}</pre>
-            <p className="mt-3 border-t border-white/[0.06] pt-3 text-[11px] text-slate-500">
-              Full findings are listed above in "Why This Decision" and next steps in "What To Do Next" — not repeated here.
-            </p>
           </div>
         </Collapsible>
       ) : null}

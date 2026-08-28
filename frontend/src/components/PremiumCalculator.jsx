@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { fmtCurrency } from '../lib/api';
 import { Hint, RatePanel, RateField } from './ui';
+import { lookupBaseRate } from '../lib/mortalityRates';
 
 const HINTS = {
   face: 'Death benefit / face amount the premium is calculated on.',
-  age: 'Attained age — for reference alongside the mortality rate pulled from the Actuarial Lookup above. Not used directly in this calculator\'s formula.',
-  tobacco: 'Tobacco class — for reference. The base rate already reflects whatever class was used in the Actuarial Lookup above.',
+  age: 'Attained age — drives the base mortality rate below via interpolation against the CSO 2017 table (same table the rating pipeline uses). Changing it recalculates every figure below instantly.',
+  tobacco: 'Tobacco class — tobacco users are looked up against a materially higher mortality table than non-tobacco. Changing it recalculates the base rate below instantly.',
   uwClass: 'Underwriting class multiplier applied on top of the base mortality rate. Better classes (super preferred, preferred) pay less than standard; substandard/table ratings pay more for added risk.',
-  baseRate: 'Raw mortality rate per $1,000 of face, pulled from the Actuarial Mortality Lookup above (or a $0.726 default if no lookup has been run yet).',
+  baseRate: 'Mortality rate per $1,000 of face, interpolated live from the CSO 2017 table for the age and tobacco class selected above.',
   adjustedRate: 'Base rate × underwriting class multiplier — the rate actually charged per $1,000 of face.',
   annualPremium: 'Adjusted rate × face amount / 1,000 — the full-year cost of insurance before riders, flat extras, or policy fees.',
   monthlyPremium: 'Annual premium ÷ 12, for reference only — does not include any modal (monthly payment) loading a real billing schedule would apply.',
@@ -26,9 +27,11 @@ export default function PremiumCalculator({ data }) {
   const [uwClass, setUwClass] = useState(() => caseMedical.underwriting_class || 'standard');
 
   const result = data?.premium_calc;
-  const mortality = data?.actuarial?.mortality_cost;
 
-  const baseRate = mortality?.mortality_rate_per_1000 || 0.726;
+  // Live-interpolated from age + tobacco class — not a static snapshot from
+  // whatever the pipeline originally computed — so toggling either input
+  // here actually moves the price, the way "what-if" implies it should.
+  const baseRate = lookupBaseRate(age, tobacco);
   const classMultipliers = {
     super_preferred: 0.60,
     preferred: 0.75,

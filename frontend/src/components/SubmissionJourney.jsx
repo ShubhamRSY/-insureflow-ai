@@ -801,7 +801,7 @@ function PipelineStory({ story, decision, riskScore, humanReviewRequired }) {
       {decision && (
         <div className={`rounded-lg px-3 py-2 text-sm ring-1 ${
           decision === 'accept' ? 'bg-emerald-500/10 ring-emerald-500/20 text-emerald-200'
-          : decision === 'decline' ? 'bg-red-500/10 ring-red-500/20 text-red-200'
+          : decision === 'decline' ? 'bg-red-500/20 ring-red-500/30 text-red-100'
           : 'bg-amber-500/10 ring-amber-500/20 text-amber-200'
         }`}>
           <span className="font-semibold uppercase">{decision.replace(/_/g, ' ')}</span>

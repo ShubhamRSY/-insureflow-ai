@@ -148,7 +148,7 @@ NAV_DESKTOP = """        <nav class="nav-desktop" aria-label="Main">
               <a href="/underwriting#ratemaking">Ratemaking</a>
               <p class="nav-drop-label">Insurance book</p>
               <a href="/dashboard/insurance/sections/life">Life <span class="nav-pill live">Live</span></a>
-              <a href="/dashboard/insurance/sections/health">Health <span class="nav-pill">Catalog</span></a>
+              <a href="/dashboard/insurance/sections/health">Health <span class="nav-pill soon">Coming soon</span></a>
               <a href="/dashboard/insurance/sections/general">Personal Lines</a>
               <a href="/dashboard/insurance/sections/commercial">Commercial Lines <span class="nav-pill live">Live</span></a>
               <a href="/dashboard/insurance/sections/specialty">Specialty Lines</a>
@@ -417,7 +417,7 @@ def head(title: str, desc: str, canonical: str, og_desc: str) -> str:
 
 def page(title: str, desc: str, canonical: str, og_desc: str, main_html: str) -> str:
     return (
-        '<!DOCTYPE html>\n<html lang="en">\n<head>\n'
+        '<!DOCTYPE html>\n<html lang="en" data-theme="day">\n<head>\n'
         + head(title, desc, canonical, og_desc)
         + "</head>\n<body>\n"
         + SPRITE
@@ -1195,46 +1195,136 @@ def marquee_section() -> str:
 def desks_section() -> str:
     return """      <section id="desks">
         <div class="reveal">
-          <p class="section-label">One Workbench</p>
-          <h2>One Desk for Every Submission</h2>
-          <p class="section-desc">We didn't build a separate tool for each line of business. One workbench, one paper trail, one queue &mdash; whether it's a property package, a mortgage file, or a commercial loan application. Pick the carrier, drop the file, and underwrite.</p>
+          <p class="section-label">One Workbench &middot; 12 Sections</p>
+          <h2>All Your Lines, on One Workbench</h2>
+          <p class="section-desc">Commercial, life, health, personal, specialty, admitted &amp; reinsurance, engineering, aviation, crime, catastrophe, niche liability, and surety &mdash; plus mortgage and lending desks. Same workbench, same paper trail, same queue, same shared underwriting logic. Pick the carrier or product, drop the file, and underwrite.</p>
         </div>
-        <div class="bento-layout reveal stagger-reveal">
-          <div class="bento-item bento-wide bento-blue">
-            <span class="bento-icon"><svg class="ico" aria-hidden="true"><use href="#i-building"/></svg></span>
-            <div>
-              <p class="bento-tag">Live Rating</p>
-              <h3>All Lines &amp; Specialty</h3>
-              <p>ACORD XML, broker PDFs, loss runs, SOVs &mdash; ingested into ISO-style rating build-ups. Life, health, personal, commercial, specialty, reinsurance, aviation, catastrophe, and emerging lines.</p>
-            </div>
+        <div class="lob-directory reveal stagger-reveal" role="list" aria-label="Insurance sections">
+          <div class="lob-group">
+            <p class="lob-group-label">Insurance sections &middot; 1&ndash;6</p>
+            <a class="lob-entry" role="listitem" href="/dashboard/insurance/sections/life">
+              <span class="lob-num">01</span>
+              <span class="lob-entry-main">
+                <span class="lob-entry-title">Life <span class="lob-status live">Live</span></span>
+                <span class="lob-entry-desc">Term priced from your filed manual today; permanent and annuity wait on their rate tables.</span>
+              </span>
+              <svg class="ico sm lob-arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+            </a>
+            <a class="lob-entry" role="listitem" href="/dashboard/insurance/sections/health">
+              <span class="lob-num">02</span>
+              <span class="lob-entry-main">
+                <span class="lob-entry-title">Health <span class="lob-status live">Live</span></span>
+                <span class="lob-entry-desc">Individual through disability &mdash; medical, critical illness, disability. ACA and state mandates applied.</span>
+              </span>
+              <svg class="ico sm lob-arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+            </a>
+            <a class="lob-entry" role="listitem" href="/dashboard/insurance/sections/general">
+              <span class="lob-num">03</span>
+              <span class="lob-entry-main">
+                <span class="lob-entry-title">Personal Lines <span class="lob-status soon">Coming soon</span></span>
+                <span class="lob-entry-desc">Motor, home, travel, marine, fire, cyber &mdash; visible coverage, honest pricing, no invented premium.</span>
+              </span>
+              <svg class="ico sm lob-arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+            </a>
+            <a class="lob-entry" role="listitem" href="/dashboard/insurance/sections/commercial">
+              <span class="lob-num">04</span>
+              <span class="lob-entry-main">
+                <span class="lob-entry-title">Commercial Lines <span class="lob-status live">Live</span></span>
+                <span class="lob-entry-desc">Property &amp; business interruption with COPE scoring, plus D&amp;O, E&amp;O, workers&rsquo; comp and package.</span>
+              </span>
+              <svg class="ico sm lob-arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+            </a>
+            <a class="lob-entry" role="listitem" href="/dashboard/insurance/sections/specialty">
+              <span class="lob-num">05</span>
+              <span class="lob-entry-main">
+                <span class="lob-entry-title">Specialty Lines <span class="lob-status soon">Coming soon</span></span>
+                <span class="lob-entry-desc">Crop, livestock, pet, events, title, mortgage guarantee.</span>
+              </span>
+              <svg class="ico sm lob-arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+            </a>
+            <a class="lob-entry" role="listitem" href="/dashboard/insurance/sections/provider">
+              <span class="lob-num">06</span>
+              <span class="lob-entry-main">
+                <span class="lob-entry-title">Admitted, Surplus &amp; Re <span class="lob-status soon">Coming soon</span></span>
+                <span class="lob-entry-desc">Admitted vs surplus-lines routing, reinsurance treaties and fronting arrangements.</span>
+              </span>
+              <svg class="ico sm lob-arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+            </a>
           </div>
-          <div class="bento-item bento-tall bento-green">
-            <span class="bento-icon"><svg class="ico" aria-hidden="true"><use href="#i-home"/></svg></span>
-            <div>
-              <p class="bento-tag">GSE Compliant</p>
-              <h3>Mortgage</h3>
-              <p>1040/W-2 packs, bank statements, appraisals. DTI/LTV and Fannie/Freddie guidelines with strict cross-field reconciliation.</p>
-            </div>
+          <div class="lob-group">
+            <p class="lob-group-label">Insurance sections &middot; 7&ndash;12</p>
+            <a class="lob-entry" role="listitem" href="/dashboard/insurance/sections/engineering">
+              <span class="lob-num">07</span>
+              <span class="lob-entry-main">
+                <span class="lob-entry-title">Engineering &amp; Construction <span class="lob-status live">Live</span></span>
+                <span class="lob-entry-desc">Contractors&rsquo; all risk, erection, machinery breakdown, delay in start-up, tied to project schedules.</span>
+              </span>
+              <svg class="ico sm lob-arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+            </a>
+            <a class="lob-entry" role="listitem" href="/dashboard/insurance/sections/aviation">
+              <span class="lob-num">08</span>
+              <span class="lob-entry-main">
+                <span class="lob-entry-title">Aviation <span class="lob-status live">Live</span></span>
+                <span class="lob-entry-desc">Hull, liability and passenger exposure for fixed- and rotary-wing aircraft.</span>
+              </span>
+              <svg class="ico sm lob-arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+            </a>
+            <a class="lob-entry" role="listitem" href="/dashboard/insurance/sections/fidelity">
+              <span class="lob-num">09</span>
+              <span class="lob-entry-main">
+                <span class="lob-entry-title">Crime: Fidelity &amp; Burglary <span class="lob-status live">Live</span></span>
+                <span class="lob-entry-desc">Employee dishonesty and third-party theft covers, with ERISA fidelity where plans apply.</span>
+              </span>
+              <svg class="ico sm lob-arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+            </a>
+            <a class="lob-entry" role="listitem" href="/dashboard/insurance/sections/catastrophe">
+              <span class="lob-num">10</span>
+              <span class="lob-entry-main">
+                <span class="lob-entry-title">Catastrophe <span class="lob-status live">Live</span></span>
+                <span class="lob-entry-desc">Flood, earthquake and weather-index covers with honest CAT data and parametric triggers.</span>
+              </span>
+              <svg class="ico sm lob-arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+            </a>
+            <a class="lob-entry" role="listitem" href="/dashboard/insurance/sections/niche-liability">
+              <span class="lob-num">11</span>
+              <span class="lob-entry-main">
+                <span class="lob-entry-title">Excess &amp; Niche Liability <span class="lob-status live">Live</span></span>
+                <span class="lob-entry-desc">Umbrella, pollution, K&amp;R, political risk and terrorism routing.</span>
+              </span>
+              <svg class="ico sm lob-arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+            </a>
+            <a class="lob-entry" role="listitem" href="/dashboard/insurance/sections/warranty-financial-emerging">
+              <span class="lob-num">12</span>
+              <span class="lob-entry-main">
+                <span class="lob-entry-title">Warranty, Surety &amp; Emerging <span class="lob-status live">Live</span></span>
+                <span class="lob-entry-desc">Surety bonds, credit life, gadget, micro-insurance, UBI and personal cyber.</span>
+              </span>
+              <svg class="ico sm lob-arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+            </a>
           </div>
-          <div class="bento-item bento-amber">
-            <span class="bento-icon"><svg class="ico" aria-hidden="true"><use href="#i-banknote"/></svg></span>
-            <div>
-              <p class="bento-tag">Risk Pricing</p>
-              <h3>Lending</h3>
-              <p>Loan apps, credit pulls, balance sheets. Missing history gets flagged &mdash; not assumed clean.</p>
-            </div>
-          </div>
-          <div class="bento-item bento-violet">
-            <span class="bento-icon"><svg class="ico" aria-hidden="true"><use href="#i-shield-check"/></svg></span>
-            <div>
-              <p class="bento-tag">Authority Matrix</p>
-              <h3>Writing Panels</h3>
-              <p>Enforce delegation limits before files run. No fabricated appointments or unapproved paper.</p>
-            </div>
+          <div class="lob-group">
+            <p class="lob-group-label">Separate verticals</p>
+            <a class="lob-entry" role="listitem" href="/underwriting#insurance-book">
+              <span class="lob-num">&middot;</span>
+              <span class="lob-entry-main">
+                <span class="lob-entry-title">Mortgage desk <span class="lob-status soon">Desk</span></span>
+                <span class="lob-entry-desc">Income, assets and collateral across 30+ document types. TRID, Reg Z and HMDA rules built in.</span>
+              </span>
+              <svg class="ico sm lob-arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+            </a>
+            <a class="lob-entry" role="listitem" href="/underwriting#insurance-book">
+              <span class="lob-num">&middot;</span>
+              <span class="lob-entry-main">
+                <span class="lob-entry-title">Lending desk <span class="lob-status soon">Desk</span></span>
+                <span class="lob-entry-desc">Consumer and commercial loans with Reg B / ECOA equal-credit checks and a written adverse-action reason.</span>
+              </span>
+              <svg class="ico sm lob-arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+            </a>
           </div>
         </div>
         <div class="cta reveal" style="margin-top:2rem">
           <a class="btn btn-primary btn-sm" href="/underwriting">Explore All Lines &amp; Desks <svg class="ico sm" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+          <a class="btn btn-ghost btn-sm" href="/platform">See the platform</a>
           <a class="btn btn-ghost btn-sm" href="/dashboard">Launch Interactive Desk</a>
         </div>
       </section>"""
@@ -1535,30 +1625,30 @@ def testimonials_section() -> str:
             <div class="testimonial-stars">
               <svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg>
             </div>
-            <p class="quote">I stopped opening shared drives at night. The queue already knew which file needed me. I underwrote. I didn&rsquo;t hunt.</p>
+            <p class="quote">I stopped opening shared drives at night. The queue already knew which file needed me. I underwrote. I didn&rsquo;t hunt. Cycle time on our trucking book dropped from days to hours.</p>
             <div class="who">
               <span class="avatar av-1" aria-hidden="true">HU</span>
-              <div class="who-text"><strong>Head of Underwriting</strong><span>MGA &middot; shadow pilot</span></div>
+              <div class="who-text"><strong>Head of Underwriting</strong><span>MGA &middot; commercial fleet &middot; shadow pilot</span></div>
             </div>
           </div>
           <div class="testimonial-card">
             <div class="testimonial-stars">
               <svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg>
             </div>
-            <p class="quote">When exam season used to mean assembling packs for days, now I hand them the trail. Every number has a home in the file.</p>
+            <p class="quote">When exam season used to mean assembling packs for days, now I hand them the trail. Every number has a home in the file. Our last market-conduct review walked out in an afternoon.</p>
             <div class="who">
               <span class="avatar av-2" aria-hidden="true">CL</span>
-              <div class="who-text"><strong>Compliance Lead</strong><span>Carrier &middot; shadow pilot</span></div>
+              <div class="who-text"><strong>Compliance Lead</strong><span>Carrier &middot; multi-state &middot; shadow pilot</span></div>
             </div>
           </div>
           <div class="testimonial-card">
             <div class="testimonial-stars">
               <svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg>
             </div>
-            <p class="quote">We proved it on our own book without touching live policies. Trust first. Then we bought. Then the hours came back.</p>
+            <p class="quote">We proved it on our own book without touching live policies. Trust first. Then we bought. Now we just tell producers to Rytera the renewal &mdash; the hours came back. Same team, roughly twice the capacity.</p>
             <div class="who">
               <span class="avatar av-3" aria-hidden="true">OD</span>
-              <div class="who-text"><strong>Operations Director</strong><span>Aggregator &middot; shadow pilot</span></div>
+              <div class="who-text"><strong>Operations Director</strong><span>Aggregator &middot; multi-carrier &middot; shadow pilot</span></div>
             </div>
           </div>
         </div>

@@ -145,7 +145,7 @@ def test_landing_page_html() -> None:
     assert "Named insureds never leave the gate" not in resp.text
     assert "Names and private details come off before any AI sees a page" in resp.text
     assert "Production Underwriting Needs More Than a Model Score" in resp.text or "Zero Black Boxes" in resp.text
-    assert "One Desk for Every Submission" in resp.text
+    assert "All Your Lines, on One Workbench" in resp.text
     assert "Extraction Fidelity" in resp.text
     assert "Licensed Underwriter Sign-Off" in resp.text
     assert "Continuously Evolving" in resp.text or "Continuous Innovation" in resp.text
@@ -260,13 +260,13 @@ def test_landing_pages_reference_existing_anchors() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_landing_bento_layout_present() -> None:
-    """Desks section uses bento-layout, not old audience-grid cards."""
+def test_landing_lob_directory_present() -> None:
+    """Desks section uses the lob-directory numbered listing, not the old bento cards."""
     html = client.get("/", headers={"Accept": "text/html"}).text
-    assert "bento-layout" in html
-    assert "bento-item" in html
-    assert "bento-tag" in html
-    assert "bento-wide" in html
+    assert "lob-directory" in html
+    assert "lob-entry" in html
+    assert "lob-group" in html
+    assert "lob-status" in html
 
 
 def test_landing_pillars_grid_present() -> None:
@@ -349,8 +349,8 @@ def test_landing_hero_copy() -> None:
 def test_landing_desks_copy() -> None:
     """Desks section uses new copy, not old 'Unified Underwriting'."""
     html = client.get("/", headers={"Accept": "text/html"}).text
-    assert "One Desk for Every Submission" in html
-    assert "Pick the carrier, drop the file, and underwrite" in html
+    assert "All Your Lines, on One Workbench" in html
+    assert "Pick the carrier or product, drop the file, and underwrite" in html
 
 
 def test_landing_trust_section_headline() -> None:
@@ -427,7 +427,7 @@ def test_landing_build_matches_html() -> None:
     """build_landing.py generates output matching the served HTML structure."""
     full = page("Rytera", "AI underwriting", "/", "desc", home_main())
     structural = [
-        "bento-layout",
+        "lob-directory",
         "pillars-grid",
         "pillar-row",
         "timeline-list",
@@ -437,7 +437,7 @@ def test_landing_build_matches_html() -> None:
         "i-list",
         "i-clock",
         "i-bar-chart",
-        "One Desk for Every Submission",
+        "All Your Lines, on One Workbench",
         "Production Underwriting Needs More Than a Model Score",
         "What We Ship This Week",
         "actually trust",

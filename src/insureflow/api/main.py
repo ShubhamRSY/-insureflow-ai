@@ -2969,6 +2969,13 @@ def run_lending_demo(
     }
 
 
+def _landing_response(path: Path, media_type: str = "text/html") -> FileResponse:
+    """FileResponse with no-cache headers so edits always show on refresh."""
+    response = FileResponse(path, media_type=media_type)
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
 @app.get("/", response_model=None)
 async def root(request: Request) -> FileResponse | JSONResponse:
     """Serve the marketing landing by default; JSON only when explicitly requested."""
@@ -2976,7 +2983,7 @@ async def root(request: Request) -> FileResponse | JSONResponse:
     wants_json_only = "application/json" in accept and "text/html" not in accept
     landing = STATIC_DIR / "landing" / "index.html"
     if landing.exists() and not wants_json_only:
-        return FileResponse(landing)
+        return _landing_response(landing)
     return JSONResponse(
         {
             "service": "Rytera",
@@ -9116,7 +9123,7 @@ def landing_css() -> FileResponse:
     path = STATIC_DIR / "landing" / "landing.css"
     if not path.exists():
         raise HTTPException(status_code=404, detail="landing.css not found")
-    return FileResponse(path, media_type="text/css")
+    return _landing_response(path, media_type="text/css")
 
 
 @app.get("/static/landing.js", include_in_schema=False)
@@ -9125,7 +9132,7 @@ def landing_js() -> FileResponse:
     path = STATIC_DIR / "landing" / "landing.js"
     if not path.exists():
         raise HTTPException(status_code=404, detail="landing.js not found")
-    return FileResponse(path, media_type="application/javascript")
+    return _landing_response(path, media_type="application/javascript")
 
 
 @app.get("/{landing_page}", include_in_schema=False)
@@ -9136,4 +9143,4 @@ def landing_subpage(landing_page: str) -> FileResponse:
     path = STATIC_DIR / "landing" / f"{landing_page}.html"
     if not path.exists():
         raise HTTPException(status_code=404, detail=f"Page not found: /{landing_page}")
-    return FileResponse(path)
+    return _landing_response(path)

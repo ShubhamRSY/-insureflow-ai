@@ -533,6 +533,7 @@
     { t: 'Citation gate', c: 'ai', d: 'A critical number without a page, box, or source ref is not a fact. It fails straight-through processing and stays off the memo until grounded.' },
     { t: 'Self-RAG / HyDE', c: 'ai', d: 'Self-RAG = retrieve, ask if the context is enough, retrieve again if not. HyDE = search with a hypothetical guideline paragraph when the desk question is too short for vector match.' },
     { t: 'Glass box', c: 'ai', d: 'Click a value, see the page highlight. Warm color means low confidence. Approve still needs a licensed person.' },
+    { t: 'The Rytera Memo', c: 'underwriting', d: 'A clear recommendation you can read and sign. A completed, auditable file summary ready for approval — not a pile of notes you still have to rewrite.' },
     { t: 'Zero-hallucination gate', c: 'ai', d: 'Target: zero uncited money, limits, or totals on a Rytera Memo. Anything invented is stripped and the file is referred. We do not rubber-stamp a pretty number.' },
     { t: 'Oracles (CLUE, NCCI, A+, CAT)', c: 'data', d: 'Outside data checks: prior claims, workers-comp history, catastrophe risk. We only treat them as real when your accounts are connected. We never fake a clean history.' },
     { t: 'Verbatim Source Attribution', c: 'ai', d: 'Every extracted data point, financial metric, or policy clause links directly to its original document bounding box and page number.' },
