@@ -79,14 +79,26 @@ def underwrite_rp_ulip(ctx: LifeProductContext) -> LobOutcome:
     mort_y1 = round(annual_premium * multiple * q_x(ctx.age, ctx.sex_key, ctx.smoker) * MORTALITY_LOADING, 2)
     prot_pv = round(annual_premium * multiple * term_insurance_nsp(ctx.age, n, ctx.sex_key, ctx.smoker, 0.04), 2)
 
-    # equity_pct/debt_pct/risk_appetite/loss_tolerance/etc. have no source on
-    # the submission — extraction doesn't capture an investor-profile
-    # questionnaire today, so run_ulip_uw falls back to its own moderate
-    # defaults for those fields. Only income, premium, and disclosure
-    # evidence below are real data; the risk-appetite/allocation checks are
-    # NOT a genuine suitability screen until that data is captured, so we
-    # say so explicitly rather than imply a check that can't actually fail.
+    # risk_appetite and the equity/debt/balanced fund split both come from
+    # the submission's documented investor profile when present — real
+    # investor-profile answers, not defaults — so the mismatch/allocation
+    # checks below are genuine whenever that data exists. run_ulip_uw falls
+    # back to its own moderate-fund defaults (60/30/10) only for whichever
+    # piece isn't actually on file.
     disclosures_ok = disclosures_acknowledged(ctx)
+    risk_tolerance = (getattr(ctx.factors, "risk_tolerance", "") or "").strip().lower()
+    risk_tolerance_known = risk_tolerance in ("conservative", "moderate", "aggressive", "very_aggressive")
+    equity_from_submission = getattr(ctx.factors, "equity_allocation_pct", None)
+    debt_from_submission = getattr(ctx.factors, "debt_allocation_pct", None)
+    balanced_from_submission = getattr(ctx.factors, "balanced_allocation_pct", None)
+    if equity_from_submission is not None and debt_from_submission is not None and balanced_from_submission is not None:
+        fund_split_documented = True
+        equity_pct: float = float(equity_from_submission)
+        debt_pct: float = float(debt_from_submission)
+        balanced_pct: float = float(balanced_from_submission)
+    else:
+        fund_split_documented = False
+        equity_pct, debt_pct, balanced_pct = 60.0, 30.0, 10.0
     uw = run_ulip_uw(
         age=ctx.age,
         sex=ctx.sex_key,
@@ -94,6 +106,10 @@ def underwrite_rp_ulip(ctx: LifeProductContext) -> LobOutcome:
         face_amount=round(annual_premium * multiple, 2),
         annual_premium=annual_premium,
         income=getattr(ctx.factors, "income", 0.0),
+        equity_pct=equity_pct,
+        debt_pct=debt_pct,
+        balanced_pct=balanced_pct,
+        risk_appetite=risk_tolerance if risk_tolerance_known else "moderate",
         disclosures_complete=disclosures_ok,
     )
     if uw.decision == "DECLINE":
@@ -104,7 +120,16 @@ def underwrite_rp_ulip(ctx: LifeProductContext) -> LobOutcome:
         outcome.add_condition(f"ULIP suitability: {finding}")
     if not disclosures_ok:
         outcome.add_condition("Investor-profile disclosure not confirmed on file — signed suitability questionnaire required before bind")
-    outcome.add_condition("Risk-appetite / fund-allocation screened against DEFAULT assumptions, not a verified questionnaire — confirm before relying on the suitability result above")
+    if risk_tolerance_known and fund_split_documented:
+        outcome.add_condition(
+            f"Risk-appetite and fund allocation screened against documented investor data (tolerance: {risk_tolerance}, equity {equity_pct:.0f}% / debt {debt_pct:.0f}% / balanced {balanced_pct:.0f}%)"
+        )
+    elif risk_tolerance_known:
+        outcome.add_condition(f"Risk-appetite screened against documented investor risk tolerance ({risk_tolerance}); fund allocation still assumed at the product default — confirm actual fund split")
+    elif fund_split_documented:
+        outcome.add_condition(f"Fund allocation screened against documented split (equity {equity_pct:.0f}% / debt {debt_pct:.0f}% / balanced {balanced_pct:.0f}%); risk tolerance not on file")
+    else:
+        outcome.add_condition("Risk-appetite / fund-allocation screened against DEFAULT assumptions, not a verified questionnaire — confirm before relying on the suitability result above")
 
     income = getattr(ctx.factors, "income", 0.0)
     if income and annual_premium / income > 0.15:
@@ -133,6 +158,8 @@ def underwrite_rp_ulip(ctx: LifeProductContext) -> LobOutcome:
             "fund_value_projection": fund_value,
             "mortality_charge_year1": mort_y1,
             "suitability_uw": uw.to_metadata(),
+            "risk_tolerance_source": "submission" if risk_tolerance_known else "assumed_default",
+            "fund_allocation_source": "submission" if fund_split_documented else "assumed_default",
             "lock_in_years": int(state_rules["lock_in_years"]),
             "state_rules_applied": state_rules,
             "exam_required": False,

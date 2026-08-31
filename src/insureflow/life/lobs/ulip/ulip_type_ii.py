@@ -15,6 +15,7 @@ from insureflow.life.lobs.base import (
     disclosures_acknowledged,
     finish_quote,
     merge_state_rules,
+    ulip_suitability_conditions,
 )
 from insureflow.life.mortality import q_x
 from insureflow.rating.models import RateComponent
@@ -88,7 +89,8 @@ def underwrite_ulip_type_ii(ctx: LifeProductContext) -> LobOutcome:
         outcome.add_condition(f"Premium-to-income {annual_premium / income:.1%} exceeds 12% guideline for ULIPs")
     if not disclosures_acknowledged(ctx):
         outcome.add_condition("Investor-profile disclosure not confirmed on file — signed suitability questionnaire required before bind")
-    outcome.add_condition("Risk-appetite / fund-allocation suitability not screened — no investor questionnaire on file; confirm before relying on this illustration")
+    for _c in ulip_suitability_conditions(ctx):
+        outcome.add_condition(_c)
 
     outcome.base_premium = annual_premium
     outcome.annual_premium = annual_premium

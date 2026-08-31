@@ -71,17 +71,19 @@ def underwrite_children_money_back(ctx: LifeProductContext) -> LobOutcome:
     outcome.add_condition(f"{state_rules['free_look_days']}-day free-look period applies ({state_rules['issue_state'] or 'default'})")
 
     v = discount_factor(interest)
-    # Child's issue age is not carried separately in ctx — milestone PVs use
-    # an explicit assumption: child is 5 at proposal (documented, auditable,
-    # and surfaced to the underwriter below since it directly drives price).
-    child_age_at_issue = 5
-    # The insured life is the CHILD, not the proposer — the child's own
-    # sex/tobacco status has no data source here, so mortality uses a
-    # conservative, always-non-smoker assumption rather than silently
-    # reusing the proposer's tobacco status (which has no actuarial bearing
-    # on a 5-year-old). Sex still needs a value for the table lookup; using
-    # the proposer's sex_key is an explicit, documented placeholder pending
-    # a real child-sex field on the submission.
+    # Child's issue age/sex come from the submission when documented (e.g.
+    # "Child's age: 6") — extract_life_factors() picks these up separately
+    # from the proposer's own age/sex. Absent that, milestone PVs fall back
+    # to a disclosed assumption: child is 5 at proposal.
+    child_age_from_submission = getattr(ctx.factors, "child_age", None)
+    child_age_at_issue = child_age_from_submission if child_age_from_submission is not None else 5
+    # The child's own tobacco status has no data source here, so mortality
+    # uses a conservative, always-non-smoker assumption regardless — that has
+    # no actuarial bearing at these ages either way. Sex uses the documented
+    # child_sex when present; otherwise the proposer's sex_key is an
+    # explicit, disclosed placeholder.
+    child_sex_from_submission = getattr(ctx.factors, "child_sex", "") or ""
+    child_sex_key = child_sex_from_submission if child_sex_from_submission in ("male", "female") else ctx.sex_key
     child_smoker = False
     coupon_pv_per_1 = 0.0
     schedule: list[dict[str, Any]] = []
@@ -89,7 +91,7 @@ def underwrite_children_money_back(ctx: LifeProductContext) -> LobOutcome:
         year = age - child_age_at_issue
         pct = ms_pct if age < maturity_age else 1.0 - ms_pct * len(milestones)
         amount_per_1 = pct
-        pv = amount_per_1 * (v**year) * k_p_x(child_age_at_issue, year, ctx.sex_key, child_smoker)
+        pv = amount_per_1 * (v**year) * k_p_x(child_age_at_issue, year, child_sex_key, child_smoker)
         coupon_pv_per_1 += pv
         schedule.append({"child_age": age, "year": year, "pct_of_sa": round(pct, 2)})
 
@@ -99,8 +101,8 @@ def underwrite_children_money_back(ctx: LifeProductContext) -> LobOutcome:
     # (3 x 25% milestones + 25% remainder), so using the endowment basis
     # (term + pure endowment) here would price a second, undisclosed
     # 100%-of-face maturity payment on top of it.
-    nsp_death = term_insurance_nsp(child_age_at_issue, term, ctx.sex_key, child_smoker, interest)
-    a_due = temporary_annuity_due(child_age_at_issue, term, ctx.sex_key, child_smoker, interest)
+    nsp_death = term_insurance_nsp(child_age_at_issue, term, child_sex_key, child_smoker, interest)
+    a_due = temporary_annuity_due(child_age_at_issue, term, child_sex_key, child_smoker, interest)
     class_f = medical_class_factor(ctx, cap=1.0)  # child rates never load up
     level_net = ctx.face * (nsp_death + coupon_pv_per_1) / max(a_due, 1e-9)
 
@@ -110,7 +112,12 @@ def underwrite_children_money_back(ctx: LifeProductContext) -> LobOutcome:
     loaded = gross * band_f * state_rel
     annual = add_common_loads(ctx, loaded)
 
-    outcome.add_condition(f"Child's age assumed at {child_age_at_issue} for pricing — verify the actual insured child's age before bind; the milestone schedule and premium are age-sensitive")
+    if child_age_from_submission is not None:
+        outcome.add_condition(f"Child's age ({child_age_at_issue}) taken from submission — confirm against birth certificate before bind")
+    else:
+        outcome.add_condition(f"Child's age assumed at {child_age_at_issue} for pricing — verify the actual insured child's age before bind; the milestone schedule and premium are age-sensitive")
+    if not child_sex_from_submission:
+        outcome.add_condition("Insured child's sex not captured on this submission — rated using the proposer's sex as a placeholder; verify before bind")
 
     uw = run_money_back_uw(
         age=ctx.age,
@@ -148,6 +155,8 @@ def underwrite_children_money_back(ctx: LifeProductContext) -> LobOutcome:
                 "interest_rate": interest,
                 "expense_loading_pct": loading,
                 "child_age_assumption": child_age_at_issue,
+                "child_age_source": "submission" if child_age_from_submission is not None else "assumed_default",
+                "child_sex_source": "submission" if child_sex_from_submission else "proposer_placeholder",
             },
             "term_years": term,
             "payout_schedule": schedule,

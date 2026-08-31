@@ -612,6 +612,96 @@ def test_child_ulip_waiver_of_premium_and_proposer_gate() -> None:
     assert old_proposer.eligible is False
 
 
+def test_child_ulip_uses_real_child_age_when_documented() -> None:
+    no_data = rate_life(_bundle("Applicant age: 35."), coverage_id="child_ulip", product_id="child_ulip")
+    assert no_data.metadata["child_age_source"] == "not_captured"
+    assert no_data.metadata["child_age"] is None
+
+    documented = rate_life(_bundle("Applicant age: 35. Child's age: 7."), coverage_id="child_ulip", product_id="child_ulip")
+    assert documented.metadata["child_age_source"] == "submission"
+    assert documented.metadata["child_age"] == 7
+    assert documented.metadata["actuarial"]["horizon_years"] == 25 - 7  # final milestone minus real child age
+
+    over_age = rate_life(_bundle("Applicant age: 35. Child's age: 15."), coverage_id="child_ulip", product_id="child_ulip")
+    assert any("exceeds the 10-year entry maximum" in r for r in over_age.ineligibility_reasons)
+
+
+@pytest.mark.parametrize(
+    "coverage_id,product_id",
+    [
+        ("type_i", "ulip_type_i"),
+        ("type_ii", "ulip_type_ii"),
+        ("sp_ulip", "single_premium_ulip"),
+        ("pension_ulip", "pension_ulip"),
+        ("child_ulip", "child_ulip"),
+    ],
+)
+def test_ulip_risk_tolerance_screening_when_documented(coverage_id: str, product_id: str) -> None:
+    base_text = "Applicant age: 34. Face amount: $500000. Annual income: 145000."
+    unscreened = rate_life(_bundle(base_text), coverage_id=coverage_id, product_id=product_id)
+    assert any("not screened" in c for c in unscreened.metadata["conditions"])
+
+    conservative = rate_life(_bundle(base_text + " Risk tolerance: conservative."), coverage_id=coverage_id, product_id=product_id)
+    assert any(c.startswith("CRITICAL: Investor's documented risk tolerance is CONSERVATIVE") for c in conservative.metadata["conditions"])
+
+    aggressive = rate_life(_bundle(base_text + " Risk tolerance: aggressive."), coverage_id=coverage_id, product_id=product_id)
+    assert any("screened against documented investor risk tolerance (aggressive)" in c for c in aggressive.metadata["conditions"])
+
+
+def test_regular_premium_ulip_flags_real_risk_appetite_mismatch() -> None:
+    base_text = "Applicant age: 34. Face amount: $500000. Annual income: 145000."
+    unscreened = rate_life(_bundle(base_text), coverage_id="rp_ulip", product_id="regular_premium_ulip")
+    assert unscreened.metadata["risk_tolerance_source"] == "assumed_default"
+    assert unscreened.metadata["suitability_uw"]["risk_appetite_aligned"] is True  # moderate default vs. moderate default fund mix
+
+    conservative = rate_life(_bundle(base_text + " Risk tolerance: conservative."), coverage_id="rp_ulip", product_id="regular_premium_ulip")
+    assert conservative.metadata["risk_tolerance_source"] == "submission"
+    # A real conservative investor vs. the product's assumed ~60% equity fund is a genuine mismatch.
+    assert conservative.metadata["suitability_uw"]["risk_appetite_aligned"] is False
+    assert any("RISK MISMATCH" in c for c in conservative.metadata["conditions"])
+
+
+def test_ulip_uses_real_equity_allocation_when_documented() -> None:
+    base_text = "Applicant age: 34. Face amount: $500000."
+    # Conservative + a documented LOW equity split (25%) is actually aligned —
+    # the product-default 60% assumption would have wrongly flagged a mismatch.
+    aligned = rate_life(
+        _bundle(base_text + " Risk tolerance: conservative. Equity allocation: 25%. Debt allocation: 65%. Balanced allocation: 10%."),
+        coverage_id="type_i",
+        product_id="ulip_type_i",
+    )
+    assert not any(c.startswith("CRITICAL: Investor's documented risk tolerance is CONSERVATIVE") for c in aligned.metadata["conditions"])
+    assert any("consistent with a documented 25% equity allocation" in c for c in aligned.metadata["conditions"])
+
+    # A split that doesn't sum to ~100% is flagged as inconsistent data, independent of risk tolerance.
+    bad_split = rate_life(
+        _bundle(base_text + " Equity allocation: 70%. Debt allocation: 50%. Balanced allocation: 10%."),
+        coverage_id="type_i",
+        product_id="ulip_type_i",
+    )
+    assert any("does not sum to ~100%" in c for c in bad_split.metadata["conditions"])
+
+    over_max = rate_life(
+        _bundle(base_text + " Equity allocation: 90%. Debt allocation: 5%. Balanced allocation: 5%."),
+        coverage_id="type_i",
+        product_id="ulip_type_i",
+    )
+    assert any("exceeds the 80% retail ULIP maximum" in c for c in over_max.metadata["conditions"])
+
+
+def test_regular_premium_ulip_uses_real_fund_split_when_documented() -> None:
+    base_text = "Applicant age: 34. Face amount: $500000. Annual income: 145000."
+    documented = rate_life(
+        _bundle(base_text + " Risk tolerance: conservative. Equity allocation: 30%. Debt allocation: 60%. Balanced allocation: 10%."),
+        coverage_id="rp_ulip",
+        product_id="regular_premium_ulip",
+    )
+    assert documented.metadata["fund_allocation_source"] == "submission"
+    assert documented.metadata["suitability_uw"]["equity_pct"] == 30.0
+    # Conservative investor within the <=40% equity band is actually aligned once the real split is used.
+    assert documented.metadata["suitability_uw"]["risk_appetite_aligned"] is True
+
+
 # ---------------------------------------------------------------------------
 # LOB 6 — Money-Back sub-product paths
 # ---------------------------------------------------------------------------
@@ -641,6 +731,24 @@ def test_children_money_back_milestones_and_wp() -> None:
     assert cmb.metadata["waiver_of_premium_included"] is True
     young_parent = rate_life(_bundle("Applicant age: 19."), coverage_id="children_mb", product_id="children_money_back")
     assert young_parent.eligible is False
+
+
+def test_children_money_back_uses_real_child_age_and_sex_when_documented() -> None:
+    no_data = rate_life(_bundle("Applicant age: 34. Face amount: $500000."), coverage_id="children_mb", product_id="children_money_back")
+    assert no_data.metadata["actuarial"]["child_age_source"] == "assumed_default"
+    assert no_data.metadata["actuarial"]["child_sex_source"] == "proposer_placeholder"
+    assert [s["year"] for s in no_data.metadata["payout_schedule"]] == [13, 15, 17, 20]  # 18/20/22/25 minus assumed age 5
+
+    documented = rate_life(
+        _bundle("Applicant age: 34. Sex: male. Face amount: $500000. Child's age: 8. Child's sex: female."),
+        coverage_id="children_mb",
+        product_id="children_money_back",
+    )
+    assert documented.metadata["actuarial"]["child_age_source"] == "submission"
+    assert documented.metadata["actuarial"]["child_sex_source"] == "submission"
+    assert [s["year"] for s in documented.metadata["payout_schedule"]] == [10, 12, 14, 17]  # 18/20/22/25 minus real age 8
+    # A real 8-year-old (vs. an assumed 5-year-old on the proposer's own sex) prices differently, not identically.
+    assert documented.adjusted_premium != no_data.adjusted_premium
 
 
 # ---------------------------------------------------------------------------
@@ -699,6 +807,25 @@ def test_joint_survivor_continuation_costs_income() -> None:
     assert j100.metadata["annual_payout"] > single_payout * 0.6
     assert j100.metadata["continuation_pct"] == 1.0
     assert j100.metadata["assumed_spouse_age"] == 62  # explicit −3 offset assumption
+
+
+def test_joint_survivor_uses_real_spouse_age_and_sex_when_documented() -> None:
+    assumed = rate_life(_ann(), coverage_id="joint_100", product_id="joint_survivor_annuity")
+    assert assumed.metadata["spouse_age_source"] == "assumed_default"
+    assert assumed.metadata["spouse_sex_source"] == "assumed_default"
+    assert assumed.metadata["assumed_spouse_age"] == 62  # 65 - 3 default offset
+
+    documented = rate_life(
+        _ann(ANN_TEXT + " Spouse's age: 40. Spouse's sex: male."),
+        coverage_id="joint_100",
+        product_id="joint_survivor_annuity",
+    )
+    assert documented.metadata["spouse_age_source"] == "submission"
+    assert documented.metadata["spouse_sex_source"] == "submission"
+    assert documented.metadata["assumed_spouse_age"] == 40
+    assert documented.metadata["assumed_spouse_sex"] == "male"
+    # A much younger survivor pays out longer, so the joint factor rises and the starting payout drops.
+    assert documented.metadata["annual_payout"] < assumed.metadata["annual_payout"]
 
 
 def test_deferred_accumulates_then_annuitizes_at_vesting() -> None:

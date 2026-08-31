@@ -63,14 +63,26 @@ def underwrite_joint_annuity(ctx: LifeProductContext) -> LobOutcome:
         outcome.add_condition(disclosure)
 
     survivor_pct = 1.0 if ctx.coverage_id == "joint_100" else 0.5
-    spouse_age = ctx.age + int(state_rules["spouse_age_offset"])
+    spouse_age_from_submission = getattr(ctx.factors, "spouse_age", None)
+    if spouse_age_from_submission is not None:
+        spouse_age: int = int(spouse_age_from_submission)
+    else:
+        spouse_age = ctx.age + int(state_rules["spouse_age_offset"])
+    spouse_age_known = spouse_age_from_submission is not None
+    spouse_sex_from_submission = getattr(ctx.factors, "spouse_sex", "") or ""
+    spouse_sex_known = spouse_sex_from_submission in ("male", "female")
+    spouse_sex = spouse_sex_from_submission if spouse_sex_known else str(state_rules["spouse_sex_assumption"])
+    if spouse_age_known:
+        outcome.add_condition(f"Spouse's age ({spouse_age}) taken from submission — confirm before bind")
+    if spouse_sex_known:
+        outcome.add_condition(f"Spouse's sex ({spouse_sex}) taken from submission — confirm before bind")
     interest = 0.04
     factor = joint_and_survivor_annuity_factor(
         ctx.age,
         max(spouse_age, 30),
         survivor_pct,
         sex_primary=ctx.sex_key,
-        sex_spouse=str(state_rules["spouse_sex_assumption"]),
+        sex_spouse=spouse_sex,
         smoker=ctx.smoker,
         interest_rate=interest,
     )
@@ -97,7 +109,9 @@ def underwrite_joint_annuity(ctx: LifeProductContext) -> LobOutcome:
             "single_life_payout_comparison": single_payout,
             "continuation_pct": survivor_pct,
             "assumed_spouse_age": max(spouse_age, 30),
-            "assumed_spouse_sex": str(state_rules["spouse_sex_assumption"]),
+            "assumed_spouse_sex": spouse_sex,
+            "spouse_age_source": "submission" if spouse_age_known else "assumed_default",
+            "spouse_sex_source": "submission" if spouse_sex_known else "assumed_default",
             "payout_reduction_vs_single_pct": round(1.0 - annual_payout / single_payout, 4) if single_payout else None,
             "state_rules_applied": state_rules,
             "exam_required": False,

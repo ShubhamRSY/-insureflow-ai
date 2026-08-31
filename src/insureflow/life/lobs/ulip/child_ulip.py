@@ -16,6 +16,7 @@ from insureflow.life.lobs.base import (
     disclosures_acknowledged,
     finish_quote,
     merge_state_rules,
+    ulip_suitability_conditions,
 )
 from insureflow.rating.models import RateComponent
 
@@ -61,7 +62,14 @@ def underwrite_child_ulip(ctx: LifeProductContext) -> LobOutcome:
     outcome.add_condition(f"Benefits vest to the child at milestone ages {milestones}")
     outcome.add_condition("Proposer must be parent or LEGAL GUARDIAN — proof of guardianship required")
     max_child_age = int(state_rules["max_child_entry_age"])
-    outcome.add_condition(f"Insured child's age not captured on this submission — verify child's age is at or below the {max_child_age}-year entry maximum before bind")
+    child_age = getattr(ctx.factors, "child_age", None)
+    if child_age is not None:
+        outcome.add_condition(f"Insured child's age ({child_age}) taken from submission — confirm against birth certificate before bind")
+        if child_age > max_child_age:
+            outcome.eligible = False
+            outcome.add_reason(f"Insured child's age {child_age} exceeds the {max_child_age}-year entry maximum")
+    else:
+        outcome.add_condition(f"Insured child's age not captured on this submission — verify child's age is at or below the {max_child_age}-year entry maximum before bind")
     for disclosure in state_rules["disclosures"]:
         outcome.add_condition(disclosure)
 
@@ -69,7 +77,10 @@ def underwrite_child_ulip(ctx: LifeProductContext) -> LobOutcome:
     fmc = float(state_rules["fmc_pct"])
     r = float(state_rules["assumed_net_return"])
     net_r = 1.0 + r - fmc
-    horizon = max(int(milestones[-1]), 15) - min(max(ctx.age - 30, 0), 5)  # years until final milestone (proposer assumed ~30 at child's birth)
+    if child_age is not None:
+        horizon = max(int(milestones[-1]) - child_age, 1)  # years until final milestone, from the real child age
+    else:
+        horizon = max(int(milestones[-1]), 15) - min(max(ctx.age - 30, 0), 5)  # years until final milestone (proposer assumed ~30 at child's birth)
     fund_at_maturity = round(annual_premium * (1.0 - alloc) * wp_load * ((net_r**horizon - 1) / (net_r - 1)), 2)
 
     # Suitability screening: premium-to-proposer-income and disclosure
@@ -83,7 +94,8 @@ def underwrite_child_ulip(ctx: LifeProductContext) -> LobOutcome:
         outcome.add_condition(f"Premium-to-income {annual_premium / income:.1%} exceeds 12% guideline for ULIPs")
     if not disclosures_acknowledged(ctx):
         outcome.add_condition("Investor-profile disclosure not confirmed on file — signed suitability questionnaire required before bind")
-    outcome.add_condition("Risk-appetite / fund-allocation suitability not screened — no investor questionnaire on file; confirm before relying on this illustration")
+    for _c in ulip_suitability_conditions(ctx):
+        outcome.add_condition(_c)
 
     outcome.base_premium = round(annual_premium * wp_load, 2)
     outcome.annual_premium = round(annual_premium * wp_load, 2)
@@ -101,6 +113,8 @@ def underwrite_child_ulip(ctx: LifeProductContext) -> LobOutcome:
             },
             "annual_premium": round(annual_premium * wp_load, 2),
             "proposer_age": ctx.age,
+            "child_age": child_age,
+            "child_age_source": "submission" if child_age is not None else "not_captured",
             "milestone_ages": milestones,
             "fund_value_projection": fund_at_maturity,
             "waiver_of_premium_included": True,

@@ -408,6 +408,52 @@ def disclosures_acknowledged(ctx: LifeProductContext) -> bool:
     )
 
 
+def ulip_suitability_conditions(ctx: LifeProductContext, assumed_equity_pct: float = 60.0) -> list[str]:
+    """Real suitability read(s) built from whatever the submission actually
+    documents — investor risk tolerance and/or the chosen fund split —
+    falling back to the product's own default fund-mix assumption for
+    whichever piece isn't there, down to the honest "not screened"
+    disclosure when neither is. A ULIP is an equity-exposed unit account by
+    construction, so a mismatch here is a genuine product-suitability
+    finding, not missing paperwork — flagged the same way the
+    premium-to-income CRITICAL checks are (a condition string, not an
+    automatic decline; UW judgment call).
+    """
+    risk_tolerance = (getattr(ctx.factors, "risk_tolerance", "") or "").lower()
+    equity_from_submission = getattr(ctx.factors, "equity_allocation_pct", None)
+    if equity_from_submission is not None:
+        equity_pct: float = float(equity_from_submission)
+    else:
+        equity_pct = assumed_equity_pct
+    equity_documented = equity_from_submission is not None
+    basis = "documented" if equity_documented else "product-default"
+
+    conditions: list[str] = []
+
+    debt = getattr(ctx.factors, "debt_allocation_pct", None)
+    balanced = getattr(ctx.factors, "balanced_allocation_pct", None)
+    if equity_documented and debt is not None and balanced is not None:
+        total = equity_pct + float(debt) + float(balanced)
+        if abs(total - 100.0) > 5.0:
+            conditions.append(f"Documented fund allocation totals {total:.0f}% (equity {equity_pct:.0f}% / debt {debt:.0f}% / balanced {balanced:.0f}%) — does not sum to ~100%; confirm the split")
+    if equity_pct > 80.0:
+        conditions.append(f"Fund allocation at {equity_pct:.0f}% equity exceeds the 80% retail ULIP maximum — confirm before bind")
+
+    if risk_tolerance in ("conservative", "moderate", "aggressive", "very_aggressive"):
+        mismatch = (risk_tolerance in ("conservative", "moderate") and equity_pct > 60.0) or (risk_tolerance == "conservative" and equity_pct > 40.0)
+        if mismatch:
+            conditions.append(
+                f"CRITICAL: Investor's documented risk tolerance is {risk_tolerance.upper()} against a {basis} {equity_pct:.0f}% equity allocation — "
+                "a market-linked ULIP at this fund mix is misaligned with this risk appetite; refer for a fixed/guaranteed alternative or lower-equity fund before bind"
+            )
+        else:
+            conditions.append(f"Risk-appetite suitability screened against documented investor risk tolerance ({risk_tolerance}) — consistent with a {basis} {equity_pct:.0f}% equity allocation")
+    else:
+        conditions.append("Risk-appetite / fund-allocation suitability not screened — no investor questionnaire on file; confirm before relying on this illustration")
+
+    return conditions
+
+
 def purchase_price(ctx: LifeProductContext) -> float:
     """Consideration for payout products (annuities): face → parsed principal → default.
 

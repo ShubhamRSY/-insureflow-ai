@@ -17,6 +17,7 @@ from insureflow.life.lobs.base import (
     disclosures_acknowledged,
     finish_quote,
     merge_state_rules,
+    ulip_suitability_conditions,
 )
 from insureflow.life.mortality import q_x
 from insureflow.rating.models import RateComponent
@@ -92,7 +93,8 @@ def underwrite_sp_ulip(ctx: LifeProductContext) -> LobOutcome:
     # allocation has no data source here, so it's disclosed as unverified.
     if not disclosures_acknowledged(ctx):
         outcome.add_condition("Investor-profile disclosure not confirmed on file — signed suitability questionnaire required before bind")
-    outcome.add_condition("Risk-appetite / fund-allocation suitability not screened — no investor questionnaire on file; confirm before relying on this illustration")
+    for _c in ulip_suitability_conditions(ctx):
+        outcome.add_condition(_c)
 
     outcome.components = [
         RateComponent(name="single_premium", amount=round(premium, 2), basis="lump-sum contribution"),

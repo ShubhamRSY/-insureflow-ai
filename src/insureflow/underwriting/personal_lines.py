@@ -471,6 +471,17 @@ def _int_field(blob: str, *labels: str) -> int | None:
     return None
 
 
+def _pct_field(blob: str, *labels: str) -> float | None:
+    for label in labels:
+        m = re.search(rf"{re.escape(label)}\s*[:=]?\s*(\d{{1,3}}(?:\.\d+)?)\s*%?", blob, re.I)
+        if m:
+            try:
+                return float(m.group(1))
+            except ValueError:
+                continue
+    return None
+
+
 @dataclass
 class PersonalHomeFactors:
     dwelling_limit: float = 0.0
@@ -580,6 +591,23 @@ class LifeFactors:
     beneficiary_relationship: str = ""
     state: str = ""
     date_of_birth: str = ""
+    # Co-insured lives on child/joint products (the proposer above is a
+    # different person from who's actually rated) — populated only when the
+    # submission documents them explicitly; LOB paths fall back to a
+    # disclosed assumption when these are unset.
+    child_age: int | None = None
+    child_sex: str = ""
+    spouse_age: int | None = None
+    spouse_sex: str = ""
+    # Investor risk tolerance for ULIP suitability screening — "" when the
+    # submission carries no investor-profile questionnaire data at all.
+    risk_tolerance: str = ""
+    # Actual fund split the investor chose (ULIP suitability) — None when
+    # the submission doesn't document it; LOB paths fall back to the
+    # product's own default fund-mix assumption.
+    equity_allocation_pct: float | None = None
+    debt_allocation_pct: float | None = None
+    balanced_allocation_pct: float | None = None
     findings: list[Finding] = field(default_factory=list)
 
     @property
@@ -638,6 +666,27 @@ def _dob_from_blob(blob: str) -> str:
         m = re.search(rf"{re.escape(label)}\s*[:=]?\s*{_DOB_DATE_RE}", blob, re.I)
         if m:
             return m.group(1).strip()
+    return ""
+
+
+def _labeled_sex(blob: str, *labels: str) -> str:
+    """Sex tied to a specific label (e.g. "child's sex"), not the applicant's."""
+    for label in labels:
+        m = re.search(rf"{re.escape(label)}\s*[:=]?\s*(female|f\b|male|m\b)", blob, re.I)
+        if m:
+            return "female" if m.group(1).lower().startswith("f") else "male"
+    return ""
+
+
+_RISK_TOLERANCE_LABELS = ("risk tolerance", "risk appetite", "investor risk profile", "investment risk profile", "risk profile")
+
+
+def _risk_tolerance_from_blob(blob: str) -> str:
+    """Investor risk tolerance from a documented profile/questionnaire, if any."""
+    for label in _RISK_TOLERANCE_LABELS:
+        m = re.search(rf"{re.escape(label)}\s*[:=]?\s*(very[\s_-]?aggressive|aggressive|moderate|conservative)", blob, re.I)
+        if m:
+            return m.group(1).lower().replace("-", "_").replace(" ", "_")
     return ""
 
 
@@ -757,6 +806,14 @@ def extract_life_factors(bundle: SubmissionBundle) -> LifeFactors:
         beneficiary_relationship=beneficiary_match.group(1).strip() if beneficiary_match else "",
         state=_state_from_blob(blob),
         date_of_birth=_dob_from_blob(blob),
+        child_age=_int_field(blob, "child's age", "child age", "insured child's age", "insured child age", "child's age at issue"),
+        child_sex=_labeled_sex(blob, "child's sex", "child sex", "insured child's sex", "insured child sex"),
+        spouse_age=_int_field(blob, "spouse's age", "spouse age", "co-insured's age", "co-insured age", "joint annuitant's age", "joint annuitant age"),
+        spouse_sex=_labeled_sex(blob, "spouse's sex", "spouse sex", "co-insured's sex", "co-insured sex", "joint annuitant's sex", "joint annuitant sex"),
+        risk_tolerance=_risk_tolerance_from_blob(blob),
+        equity_allocation_pct=_pct_field(blob, "equity allocation", "equity fund allocation", "equity percentage", "equity %"),
+        debt_allocation_pct=_pct_field(blob, "debt allocation", "debt fund allocation", "debt percentage", "debt %"),
+        balanced_allocation_pct=_pct_field(blob, "balanced allocation", "balanced fund allocation", "balanced percentage", "balanced %"),
     )
     if f.smoker:
         f.findings.append(
