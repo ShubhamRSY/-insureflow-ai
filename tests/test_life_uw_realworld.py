@@ -917,7 +917,9 @@ class TestProductGatesAllLOBs:
         lp10 = rate_life(_bundle(self.B), coverage_id="ten_pay", product_id="limited_pay_whole_life")
         lp20 = rate_life(_bundle(self.B), coverage_id="twenty_pay", product_id="limited_pay_whole_life")
         lifetime = rate_life(_bundle(self.B), coverage_name="Traditional Whole Life", product_id="traditional_whole_life")
-        ill = lambda q: q.metadata["illustrated_adjusted_premium"]
+        def ill(q):
+            return q.metadata["illustrated_adjusted_premium"]
+
         assert all(q.eligible is False and q.adjusted_premium == 0.0 for q in (lp10, lp20, lifetime))
         assert ill(lp10) > ill(lp20) > ill(lifetime)
 
@@ -926,7 +928,9 @@ class TestProductGatesAllLOBs:
         gul = rate_life(_bundle(self.B), coverage_id="no_lapse", product_id="guaranteed_universal_life")
         iul = rate_life(_bundle(self.B), coverage_id="indexed_account", product_id="indexed_universal_life")
         vul = rate_life(_bundle(self.B), coverage_id="gmdb", product_id="variable_universal_life")
-        ill = lambda q: q.metadata["illustrated_adjusted_premium"]
+        def ill(q):
+            return q.metadata["illustrated_adjusted_premium"]
+
         assert all(q.eligible is False and q.adjusted_premium == 0.0 for q in (caul, gul, iul, vul))
         assert ill(caul) < ill(gul) < ill(iul) < ill(vul)
 

@@ -250,7 +250,9 @@ def test_limited_pay_ordering_10_pay_gt_20_pay_gt_lifetime() -> None:
     # Whole-life is filed-permanent (illustration-only here) so the premium
     # CONTRACT fields are $0; the pricing ordering lives on the illustrated
     # (pre-C1) premium so documents still show the real ordering.
-    ill = lambda q: q.metadata["illustrated_adjusted_premium"]
+    def ill(q):
+        return q.metadata["illustrated_adjusted_premium"]
+
     assert all(q.eligible is False and q.adjusted_premium == 0.0 for q in (lifetime, lp20, lp10))
     assert ill(lp20) > ill(lifetime)
     assert ill(lp10) > ill(lp20)
@@ -260,7 +262,9 @@ def test_limited_pay_ordering_10_pay_gt_20_pay_gt_lifetime() -> None:
 def test_single_premium_equals_nsp_scale() -> None:
     sp = rate_life(_bundle(), coverage_id="lump_sum", product_id="single_premium_whole_life")
     lifetime = rate_life(_bundle(), coverage_name="Guaranteed Whole Life", product_id="traditional_whole_life")
-    ill = lambda q: q.metadata["illustrated_adjusted_premium"]
+    def ill(q):
+        return q.metadata["illustrated_adjusted_premium"]
+
     assert sp.eligible is False and sp.adjusted_premium == 0.0
     assert ill(sp) > ill(lifetime) * 10
     assert sp.metadata["actuarial"]["premium_term"] == 1
@@ -543,7 +547,9 @@ def test_ul_charge_load_ordering_gul_lt_iul_lt_vul() -> None:
     caul = rate_life(_bundle(), coverage_id="current_rate", product_id="current_assumption_universal_life")
     # Universal is filed-permanent (illustration-only) -> premium contract $0;
     # the charge-load ordering is preserved on the illustrated premium.
-    ill = lambda q: q.metadata["illustrated_adjusted_premium"]
+    def ill(q):
+        return q.metadata["illustrated_adjusted_premium"]
+
     assert all(q.eligible is False and q.adjusted_premium == 0.0 for q in (gul, iul, vul, caul))
     assert ill(caul) < ill(gul) < ill(iul) < ill(vul)  # lowest flexibility load
 
@@ -585,7 +591,9 @@ def test_endowment_ordering_pure_lt_with_profit_lt_fixed() -> None:
     fixed = rate_life(_bundle(), coverage_id="fixed_endowment", product_id="guaranteed_fixed_endowment")
     # Endowment is filed-permanent (illustration-only) -> premium contract $0;
     # No death benefit → cheapest; guaranteed-all-values → most expensive.
-    ill = lambda q: q.metadata["illustrated_adjusted_premium"]
+    def ill(q):
+        return q.metadata["illustrated_adjusted_premium"]
+
     assert all(q.eligible is False and q.adjusted_premium == 0.0 for q in (pure, full, fixed))
     assert ill(pure) < ill(full) < ill(fixed)
     assert pure.metadata["death_benefit"] == 0.0

@@ -97,20 +97,20 @@ def test_health_pipeline_runs_only_selected_cancer_coverage(tmp_path: Path) -> N
     result = _pipeline(tmp_path, "cov-health").run(
         bundle_id="health-cancer",
         insurance_line="health",
-        health_product_id="disease_specific",
+        health_product_id="disease_specific_critical_illness",
         health_coverage_id="cancer_care",
         documents=[
             {
                 "filename": "health_proposal.txt",
                 "content": (
-                    "Mediclaim / health insurance proposal. Disease-specific cancer care plan. Identity proof Aadhaar. Address proof. Age proof. Photograph. Family history of cancer declaration."
+                    "Disease-specific cancer care critical illness plan. Government-issued photo ID. Proof of address. Date of birth verification. Family history of cancer declaration."
                 ),
             }
         ],
     )
     assert result["status"] == "completed"
     assert result["insurance_line"] == "health"
-    assert result["health_checklist_lob"] == "disease_specific"
+    assert result["health_checklist_lob"] == "disease_specific_critical_illness"
     assert result["health_coverage_id"] == "cancer_care"
     assert result["commercial_coverage_id"] == "cancer_care"
     missing = result["document_checklist"]["missing_documents"]
@@ -120,7 +120,7 @@ def test_health_pipeline_runs_only_selected_cancer_coverage(tmp_path: Path) -> N
     assert quote.get("eligible") is False
     reasons = " ".join(quote.get("ineligibility_reasons") or []).lower()
     assert "catalog" not in reasons
-    assert "age" in reasons or "sum insured" in reasons
+    assert "amount" in reasons or "benefit" in reasons
 
 
 def test_health_pipeline_maternity_logic_differs_from_opd(tmp_path: Path) -> None:
