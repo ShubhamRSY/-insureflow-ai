@@ -102,9 +102,7 @@ def test_health_pipeline_runs_only_selected_cancer_coverage(tmp_path: Path) -> N
         documents=[
             {
                 "filename": "health_proposal.txt",
-                "content": (
-                    "Disease-specific cancer care critical illness plan. Government-issued photo ID. Proof of address. Date of birth verification. Family history of cancer declaration."
-                ),
+                "content": ("Disease-specific cancer care critical illness plan. Government-issued photo ID. Proof of address. Date of birth verification. Family history of cancer declaration."),
             }
         ],
     )

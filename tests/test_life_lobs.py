@@ -247,6 +247,7 @@ def test_limited_pay_ordering_10_pay_gt_20_pay_gt_lifetime() -> None:
     lifetime = rate_life(_bundle(), coverage_name="Traditional Whole Life", product_id="traditional_whole_life")
     lp20 = rate_life(_bundle(), coverage_id="twenty_pay", product_id="limited_pay_whole_life")
     lp10 = rate_life(_bundle(), coverage_id="ten_pay", product_id="limited_pay_whole_life")
+
     # Whole-life is filed-permanent (illustration-only here) so the premium
     # CONTRACT fields are $0; the pricing ordering lives on the illustrated
     # (pre-C1) premium so documents still show the real ordering.
@@ -262,6 +263,7 @@ def test_limited_pay_ordering_10_pay_gt_20_pay_gt_lifetime() -> None:
 def test_single_premium_equals_nsp_scale() -> None:
     sp = rate_life(_bundle(), coverage_id="lump_sum", product_id="single_premium_whole_life")
     lifetime = rate_life(_bundle(), coverage_name="Guaranteed Whole Life", product_id="traditional_whole_life")
+
     def ill(q):
         return q.metadata["illustrated_adjusted_premium"]
 
@@ -545,6 +547,7 @@ def test_ul_charge_load_ordering_gul_lt_iul_lt_vul() -> None:
     iul = rate_life(_bundle(), coverage_id="indexed_account", product_id="indexed_universal_life")
     vul = rate_life(_bundle(), coverage_id="gmdb", product_id="variable_universal_life")
     caul = rate_life(_bundle(), coverage_id="current_rate", product_id="current_assumption_universal_life")
+
     # Universal is filed-permanent (illustration-only) -> premium contract $0;
     # the charge-load ordering is preserved on the illustrated premium.
     def ill(q):
@@ -589,6 +592,7 @@ def test_endowment_ordering_pure_lt_with_profit_lt_fixed() -> None:
     pure = rate_life(_bundle(), coverage_id="pure_maturity", product_id="pure_endowment")
     full = rate_life(_bundle(), coverage_id="with_profit", product_id="full_endowment")
     fixed = rate_life(_bundle(), coverage_id="fixed_endowment", product_id="guaranteed_fixed_endowment")
+
     # Endowment is filed-permanent (illustration-only) -> premium contract $0;
     # No death benefit → cheapest; guaranteed-all-values → most expensive.
     def ill(q):

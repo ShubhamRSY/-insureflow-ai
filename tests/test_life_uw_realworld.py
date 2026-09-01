@@ -917,6 +917,7 @@ class TestProductGatesAllLOBs:
         lp10 = rate_life(_bundle(self.B), coverage_id="ten_pay", product_id="limited_pay_whole_life")
         lp20 = rate_life(_bundle(self.B), coverage_id="twenty_pay", product_id="limited_pay_whole_life")
         lifetime = rate_life(_bundle(self.B), coverage_name="Traditional Whole Life", product_id="traditional_whole_life")
+
         def ill(q):
             return q.metadata["illustrated_adjusted_premium"]
 
@@ -928,6 +929,7 @@ class TestProductGatesAllLOBs:
         gul = rate_life(_bundle(self.B), coverage_id="no_lapse", product_id="guaranteed_universal_life")
         iul = rate_life(_bundle(self.B), coverage_id="indexed_account", product_id="indexed_universal_life")
         vul = rate_life(_bundle(self.B), coverage_id="gmdb", product_id="variable_universal_life")
+
         def ill(q):
             return q.metadata["illustrated_adjusted_premium"]
 
