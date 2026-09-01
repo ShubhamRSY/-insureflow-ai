@@ -34,6 +34,7 @@ DEFAULT_STATE_RULES: dict[str, Any] = {
 }
 STATE_RULES: dict[str, dict[str, Any]] = {}
 
+MAX_ISSUE_AGE = 64
 MAX_ISSUE_AGE_WITHOUT_EXEMPTION = 30
 
 
@@ -55,6 +56,13 @@ def underwrite_catastrophic(ctx: HealthProductContext) -> LobOutcome:
         outcome.add_reason(
             f"Catastrophic plans require age under {MAX_ISSUE_AGE_WITHOUT_EXEMPTION} or a documented hardship/affordability exemption — applicant is {ctx.age} with no exemption on file"
         )
+    if ctx.age > MAX_ISSUE_AGE:
+        # A hardship exemption does not override Medicare eligibility — a
+        # 65+ applicant is out of the ACA individual market entirely,
+        # exemption or not, the same ceiling every other individual product
+        # in this package enforces.
+        outcome.eligible = False
+        outcome.add_reason(f"Catastrophic plan issue age {ctx.age} exceeds {MAX_ISSUE_AGE} (65+ is Medicare-eligible) — a hardship exemption does not override Medicare eligibility")
 
     state_rules = merge_state_rules(ctx, DEFAULT_STATE_RULES, STATE_RULES)
     outcome.add_condition(f"{state_rules['free_look_days']}-day free-look period applies ({state_rules['issue_state'] or 'default'})")

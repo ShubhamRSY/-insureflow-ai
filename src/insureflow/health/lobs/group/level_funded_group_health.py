@@ -37,6 +37,12 @@ DEFAULT_STATE_RULES: dict[str, Any] = {
 }
 STATE_RULES: dict[str, dict[str, Any]] = {}
 
+# Level-funding is a small/mid-size-employer alternative-funding mechanism —
+# above this size, an employer is just Large Group self-funded outright, not
+# "level-funded" in the sense this product actually prices (a flat monthly
+# payment reconciled annually against a stop-loss-capped claims fund).
+MAX_LEVEL_FUNDED_EMPLOYEES = 200
+
 
 def _has_stop_loss_questionnaire(blob: str) -> bool:
     return any(k in blob for k in ("stop-loss questionnaire", "stop loss questionnaire", "stop-loss health questionnaire"))
@@ -51,6 +57,10 @@ def underwrite_level_funded_group(ctx: HealthProductContext) -> LobOutcome:
 
     state_rules = merge_state_rules(ctx, DEFAULT_STATE_RULES, STATE_RULES)
     employee_count = max(1, ctx.household_members)
+    if employee_count > MAX_LEVEL_FUNDED_EMPLOYEES:
+        outcome.add_condition(
+            f"{employee_count} employees exceeds the typical level-funded range (up to {MAX_LEVEL_FUNDED_EMPLOYEES}) — confirm this should not be priced as traditional Large Group self-funded"
+        )
 
     outcome.add_condition(f"{state_rules['free_look_days']}-day free-look period applies ({state_rules['issue_state'] or 'default'})")
     for disclosure in state_rules["disclosures"]:

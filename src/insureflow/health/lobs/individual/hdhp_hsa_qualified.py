@@ -59,6 +59,8 @@ def underwrite_hdhp(ctx: HealthProductContext) -> LobOutcome:
     hsa_qualified = MIN_HDHP_DEDUCTIBLE_SELF <= deductible <= MAX_HDHP_OUT_OF_POCKET_SELF
     if deductible < MIN_HDHP_DEDUCTIBLE_SELF:
         outcome.add_condition(f"Chosen deductible ${deductible:,.0f} is below the IRS HSA-qualifying minimum of ${MIN_HDHP_DEDUCTIBLE_SELF:,.0f} — plan can issue but will NOT be HSA-eligible")
+    elif deductible > MAX_HDHP_OUT_OF_POCKET_SELF:
+        outcome.add_condition(f"Chosen deductible ${deductible:,.0f} exceeds the IRS maximum out-of-pocket of ${MAX_HDHP_OUT_OF_POCKET_SELF:,.0f} — plan can issue but will NOT be HSA-eligible")
 
     state_rules = merge_state_rules(ctx, DEFAULT_STATE_RULES, STATE_RULES)
     outcome.add_condition(f"{state_rules['free_look_days']}-day free-look period applies ({state_rules['issue_state'] or 'default'})")

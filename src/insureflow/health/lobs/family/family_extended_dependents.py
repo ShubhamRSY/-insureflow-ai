@@ -13,6 +13,7 @@ different intake requirement from the base family plan.
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from insureflow.health.lobs.base import (
@@ -55,6 +56,18 @@ def _has_disabled_dependent_certification(blob: str) -> bool:
     return any(k in blob for k in ("disability certification", "disabled dependent certification", "incapacitated dependent"))
 
 
+def _has_dependent_over_26(blob: str) -> bool:
+    if any(k in blob for k in ("over 26", "over-26", "disabled adult dependent")):
+        return True
+    # Catches any explicitly stated dependent age above the ceiling (e.g.
+    # "dependent age 28", "dependent age: 30") — a literal "age 27" needle
+    # alone would miss every other age past the ceiling.
+    for match in re.finditer(r"dependent age[:\s]*(\d+)", blob):
+        if int(match.group(1)) > DEPENDENT_AGE_CEILING:
+            return True
+    return False
+
+
 def underwrite_extended_dependents(ctx: HealthProductContext) -> LobOutcome:
     from insureflow.underwriting.health_uw import underwrite_health
 
@@ -70,7 +83,7 @@ def underwrite_extended_dependents(ctx: HealthProductContext) -> LobOutcome:
         outcome.add_condition(f"Only {ctx.household_members} covered member(s) documented — confirm this is a family enrollment, not individual")
 
     certified = _has_disabled_dependent_certification(ctx.blob)
-    over_26_declared = any(k in ctx.blob for k in ("over 26", "over-26", "dependent age 27", "disabled adult dependent"))
+    over_26_declared = _has_dependent_over_26(ctx.blob)
     if over_26_declared and not certified:
         outcome.add_condition(f"Dependent past age {DEPENDENT_AGE_CEILING} requires a disability certification on file to remain covered")
 

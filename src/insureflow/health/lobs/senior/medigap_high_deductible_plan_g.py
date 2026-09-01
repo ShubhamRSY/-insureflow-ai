@@ -6,8 +6,9 @@ guaranteed-issue/window handler-selection logic rather than reusing a
 "top-up on a base policy" handler — HD Plan G IS the base Medigap policy
 itself, not a rider sitting above one, so a base-policy-evidence gate would
 be factually wrong here). The real, distinct feature is purely economic:
-a much lower premium in exchange for paying the first ~$2,800/year in
-Medicare cost-sharing out of pocket before the plan starts paying.
+a much lower premium in exchange for paying the first ~$2,870/year
+(CMS-published, adjusts annually) in Medicare cost-sharing out of pocket
+before the plan starts paying.
 """
 
 from __future__ import annotations
@@ -21,6 +22,7 @@ from insureflow.health.lobs.base import (
     area_relativity,
     finish_quote,
     merge_state_rules,
+    nearest_banded_key,
     policy_fee,
 )
 from insureflow.health.lobs.state_law import medigap_enrollment_rules
@@ -68,22 +70,33 @@ def underwrite_hd_plan_g(ctx: HealthProductContext, *, within_open_enrollment: b
     manual = (ctx.manual or {}).get("senior") or {}
     base_monthly = float(manual.get("medigap_base_rate_monthly", 165.0))
     hd_factor = float(manual.get("medigap_hd_plan_g_factor", 0.35))
-    deductible = float(manual.get("medigap_hd_deductible", 2800.0))
+    deductible = float(manual.get("medigap_hd_deductible", 2870.0))
     area_f = area_relativity(ctx)
 
-    monthly = base_monthly * hd_factor * area_f
+    # Same age-rating rule as standard Medigap (medicare_supplement.py): flat
+    # in the 4 true community-rated states, real age-banded elsewhere — HD
+    # Plan G is still Medigap, so it is not exempt from that split.
+    community_rated = enrollment["community_rated"]
+    age_curve = manual.get("medigap_age_curve") or {}
+    age_f = 1.0 if community_rated or not age_curve else float(age_curve[nearest_banded_key(age_curve, ctx.age)])
+
+    monthly = base_monthly * hd_factor * age_f * area_f
     annual = round(monthly * 12.0 + policy_fee(ctx), 2)
 
     outcome.base_premium = round(base_monthly * hd_factor * 12.0, 2)
     outcome.annual_premium = annual
     outcome.components = [
         RateComponent(name="high_deductible_factor", amount=hd_factor, basis=f"annual deductible=${deductible:,.0f}"),
+        RateComponent(name="age_rating", amount=age_f, basis="community-rated — flat" if community_rated else f"age={ctx.age}"),
         RateComponent(name="area_relativity", amount=area_f, basis=ctx.issue_state or ctx.filing_state),
     ]
+    if community_rated:
+        outcome.add_condition(f"{ctx.issue_state} is a community-rated Medigap state — premium does not vary by age")
     outcome.metadata.update(
         {
             "guaranteed_issue": guaranteed_issue,
             "within_open_enrollment": within_open_enrollment,
+            "community_rated": community_rated,
             "annual_deductible": deductible,
             "monthly_premium": round(monthly, 2),
             "state_rules_applied": state_rules,
