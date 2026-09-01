@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from insureflow.health.lobs.topup.hospital_indemnity import PRODUCT_ID as HOSPITAL_INDEMNITY_PRODUCT_ID
 from insureflow.health.lobs.topup.supplemental_gap import PRODUCT_ID as SUPPLEMENTAL_GAP_PRODUCT_ID
 
 TOPUP_LOGIC_PATHS = {
     SUPPLEMENTAL_GAP_PRODUCT_ID: "insureflow.health.lobs.topup.supplemental_gap",
+    HOSPITAL_INDEMNITY_PRODUCT_ID: "insureflow.health.lobs.topup.hospital_indemnity",
 }
