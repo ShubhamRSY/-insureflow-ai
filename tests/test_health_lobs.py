@@ -29,17 +29,33 @@ def test_all_catalog_products_have_dedicated_paths():
     expected = {
         "aca_marketplace_plan",
         "off_exchange_major_medical",
+        "short_term_limited_duration",
+        "hdhp_hsa_qualified",
+        "catastrophic_plan",
         "family_health_plan",
+        "family_hdhp_hsa_qualified",
+        "family_extended_dependents",
         "critical_illness_standalone",
         "disease_specific_critical_illness",
+        "critical_illness_rider",
+        "critical_illness_multistage",
         "medicare_supplement",
         "medicare_advantage",
+        "medigap_high_deductible_plan_g",
+        "medicare_advantage_snp",
         "small_group_health",
         "large_group_health",
+        "association_health_plan",
+        "public_sector_group_health",
+        "level_funded_group_health",
         "supplemental_gap_coverage",
+        "hospital_indemnity",
         "add_accident_indemnity",
+        "standalone_add",
         "short_term_disability",
         "long_term_disability",
+        "disability_ptd",
+        "disability_ppd",
     }
     assert set(PRODUCT_LOGIC_PATHS) == expected
     assert {ln["id"] for ln in HEALTH_LINES} == expected
@@ -351,3 +367,154 @@ def test_unregistered_product_falls_back_to_legacy_engine():
     # must be handled by the legacy engine, not silently dropped.
     q = rate_health(_bundle("Age: 34. Sum insured: 500000."), product_id="individual_basic")
     assert q.metadata.get("rating_engine") in ("health_filing", "catalog_only")
+
+
+# ---------------------------------------------------------------------------
+# Breadth expansion — Individual (STLDI, HDHP, Catastrophic)
+# ---------------------------------------------------------------------------
+
+
+def test_stldi_banned_in_restricted_states_available_elsewhere():
+    text = "Applicant age: 35. Non-smoker."
+    banned = rate_health(_bundle(text), coverage_id="stldi_standard", product_id="short_term_limited_duration", state="CA")
+    allowed = rate_health(_bundle(text), coverage_id="stldi_standard", product_id="short_term_limited_duration", state="TX")
+    assert banned.eligible is False
+    assert any("bans" in r.lower() or "not permit" in r.lower() for r in banned.ineligibility_reasons)
+    assert allowed.eligible is True
+
+
+def test_stldi_cheaper_than_aca_marketplace_same_profile():
+    text = "Applicant age: 35. Non-smoker. Annual income: 60000."
+    stldi = rate_health(_bundle(text), coverage_id="stldi_standard", product_id="short_term_limited_duration", state="TX")
+    bronze = rate_health(_bundle(text), coverage_id="bronze", product_id="aca_marketplace_plan", state="TX")
+    assert stldi.adjusted_premium < bronze.adjusted_premium
+
+
+def test_hdhp_higher_deductible_is_cheaper_and_hsa_eligibility_tracked():
+    low = rate_health(_bundle("Applicant age: 35. Non-smoker. Deductible: 1650."), coverage_id="hdhp_standard", product_id="hdhp_hsa_qualified", state="TX")
+    high = rate_health(_bundle("Applicant age: 35. Non-smoker. Deductible: 8300."), coverage_id="hdhp_standard", product_id="hdhp_hsa_qualified", state="TX")
+    below_min = rate_health(_bundle("Applicant age: 35. Non-smoker. Deductible: 500."), coverage_id="hdhp_standard", product_id="hdhp_hsa_qualified", state="TX")
+    assert high.adjusted_premium < low.adjusted_premium
+    assert low.metadata["hsa_qualified"] is True
+    assert below_min.metadata["hsa_qualified"] is False
+    assert below_min.eligible is True  # still issuable, just not HSA-qualified
+
+
+def test_catastrophic_plan_age_and_hardship_exemption_gate():
+    young = rate_health(_bundle("Applicant age: 25. Non-smoker."), coverage_id="catastrophic_standard", product_id="catastrophic_plan", state="TX")
+    old_no_exemption = rate_health(_bundle("Applicant age: 40. Non-smoker."), coverage_id="catastrophic_standard", product_id="catastrophic_plan", state="TX")
+    old_with_exemption = rate_health(_bundle("Applicant age: 40. Non-smoker. Hardship exemption on file."), coverage_id="catastrophic_standard", product_id="catastrophic_plan", state="TX")
+    assert young.eligible is True
+    assert old_no_exemption.eligible is False
+    assert old_with_exemption.eligible is True
+
+
+# ---------------------------------------------------------------------------
+# Breadth expansion — Family (HDHP, Extended Dependents)
+# ---------------------------------------------------------------------------
+
+
+def test_family_hdhp_and_extended_dependents_are_guaranteed_issue():
+    sick_text = "Applicant age: 40. Household size: 4. Diabetes. Heart attack history."
+    hdhp = rate_health(_bundle(sick_text + " Deductible: 3300."), coverage_id="family_hdhp_standard", product_id="family_hdhp_hsa_qualified", state="TX")
+    ext = rate_health(_bundle(sick_text), coverage_id="extended_dependents_standard", product_id="family_extended_dependents", state="TX")
+    assert hdhp.eligible is True
+    assert ext.eligible is True
+
+
+# ---------------------------------------------------------------------------
+# Breadth expansion — Critical Illness (Rider, Multistage)
+# ---------------------------------------------------------------------------
+
+
+def test_ci_rider_requires_base_policy_referral():
+    q = rate_health(_bundle("Applicant age: 40. Non-smoker. Benefit amount: 50000."), coverage_id="ci_rider_standard", product_id="critical_illness_rider", state="IL")
+    assert q.metadata["outcome"] == "refer"
+    assert any("base policy" in c.lower() for c in q.metadata["conditions"])
+
+
+def test_ci_multistage_cheaper_than_standalone_same_benefit():
+    text = "Applicant age: 45. Non-smoker. Benefit amount: 100000."
+    standalone = rate_health(_bundle(text), coverage_id="ci_standalone", product_id="critical_illness_standalone", state="IL")
+    multistage = rate_health(_bundle(text), coverage_id="ci_multistage_standard", product_id="critical_illness_multistage", state="IL")
+    assert multistage.adjusted_premium < standalone.adjusted_premium
+
+
+# ---------------------------------------------------------------------------
+# Breadth expansion — Senior (Medigap HD Plan G, MA SNP)
+# ---------------------------------------------------------------------------
+
+
+def test_medigap_hd_plan_g_cheaper_than_standard_plan_g():
+    text = "Applicant age: 66."
+    standard = rate_health(_bundle(text), coverage_id="plan_g", product_id="medicare_supplement", state="TX")
+    hd = rate_health(_bundle(text), coverage_id="hd_plan_g", product_id="medigap_high_deductible_plan_g", state="TX")
+    assert hd.adjusted_premium < standard.adjusted_premium
+
+
+def test_ma_snp_requires_qualifying_condition_or_dual_eligibility():
+    with_condition = rate_health(_bundle("Applicant age: 68. Diabetes diagnosis on file."), coverage_id="snp_standard", product_id="medicare_advantage_snp", state="IL")
+    without_condition = rate_health(_bundle("Applicant age: 68."), coverage_id="snp_standard", product_id="medicare_advantage_snp", state="IL")
+    assert with_condition.eligible is True
+    assert without_condition.eligible is False
+
+
+# ---------------------------------------------------------------------------
+# Breadth expansion — Group (AHP, Public Sector, Level-Funded)
+# ---------------------------------------------------------------------------
+
+
+def test_new_group_products_price_and_carry_distinct_conditions():
+    text = "Applicant age: 35. Employee count: 20."
+    ahp = rate_health(_bundle(text), coverage_id="ahp_standard", product_id="association_health_plan", state="IL")
+    public_sector = rate_health(_bundle(text), coverage_id="public_sector_standard", product_id="public_sector_group_health", state="IL")
+    level_funded = rate_health(_bundle(text), coverage_id="level_funded_standard", product_id="level_funded_group_health", state="IL")
+    assert ahp.eligible is True and ahp.adjusted_premium > 0
+    assert public_sector.eligible is True and public_sector.adjusted_premium > 0
+    assert level_funded.eligible is True and level_funded.adjusted_premium > 0
+    assert any("association" in c.lower() for c in ahp.metadata["conditions"])
+    assert any("government" in c.lower() or "psu" in c.lower() for c in public_sector.metadata["conditions"])
+    assert any("stop-loss" in c.lower() for c in level_funded.metadata["conditions"])
+
+
+def test_level_funded_stop_loss_questionnaire_condition_clears_when_on_file():
+    text = "Applicant age: 35. Employee count: 20."
+    without_q = rate_health(_bundle(text), coverage_id="level_funded_standard", product_id="level_funded_group_health", state="IL")
+    with_q = rate_health(_bundle(text + " Stop-loss questionnaire on file."), coverage_id="level_funded_standard", product_id="level_funded_group_health", state="IL")
+    assert any("stop-loss health questionnaire required" in c.lower() for c in without_q.metadata["conditions"])
+    assert not any("stop-loss health questionnaire required" in c.lower() for c in with_q.metadata["conditions"])
+
+
+# ---------------------------------------------------------------------------
+# Breadth expansion — Top-up (Hospital Indemnity), Personal Accident (Standalone AD&D)
+# ---------------------------------------------------------------------------
+
+
+def test_hospital_indemnity_prices_off_daily_benefit_not_deductible():
+    q = rate_health(_bundle("Applicant age: 45. Benefit amount: 200. Bank account details on file."), coverage_id="hospital_indemnity_standard", product_id="hospital_indemnity", state="IL")
+    assert q.eligible is True
+    assert q.metadata["daily_benefit_amount"] == 200.0
+    assert q.metadata["payout_structure"] == "fixed_daily_cash"
+
+
+def test_standalone_add_cheaper_than_full_add():
+    text = "Applicant age: 35. Occupation: office clerk. Benefit amount: 500000. Nominee: spouse."
+    full = rate_health(_bundle(text), coverage_id="individual", product_id="add_accident_indemnity", state="IL")
+    standalone = rate_health(_bundle(text), coverage_id="standalone_add_standard", product_id="standalone_add", state="IL")
+    assert standalone.adjusted_premium < full.adjusted_premium
+
+
+# ---------------------------------------------------------------------------
+# Breadth expansion — Disability (PTD, PPD)
+# ---------------------------------------------------------------------------
+
+
+def test_ptd_ppd_are_lump_sum_not_income_replacement():
+    text = "Applicant age: 40. Occupation: office clerk. Medical fitness certificate on file. Benefit amount: 100000."
+    ptd = rate_health(_bundle(text), coverage_id="ptd_standard", product_id="disability_ptd", state="IL")
+    ppd = rate_health(_bundle(text), coverage_id="loss_of_one_limb", product_id="disability_ppd", state="IL")
+    assert ptd.eligible is True
+    assert ptd.metadata["benefit_type"] == "permanent_total_disability"
+    assert ppd.eligible is True
+    assert ppd.metadata["schedule_key"] == "loss_of_one_limb"
+    assert ppd.adjusted_premium < ptd.adjusted_premium  # partial schedule payout is cheaper than total

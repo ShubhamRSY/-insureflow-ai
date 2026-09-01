@@ -23,7 +23,7 @@ from insureflow.underwriting.health_product import LIVE_HEALTH_PRODUCT_IDS, is_f
 
 def test_full_health_taxonomy_shape():
     assert len(HEALTH_CATEGORIES) == 8
-    assert len(HEALTH_LINES) == 13
+    assert len(HEALTH_LINES) == 29
     cats = {c["id"] for c in HEALTH_CATEGORIES}
     assert cats == {
         "individual",
@@ -158,7 +158,7 @@ def test_base_packet_is_included_in_every_line():
 
 def test_category_filters():
     individual = list_health_lines(category_id="individual")
-    assert len(individual) == 2
+    assert len(individual) == 5
     assert all(line["category_id"] == "individual" for line in individual)
     cats = list_health_categories()
     ind_cat = next(c for c in cats if c["id"] == "individual")
