@@ -9,6 +9,7 @@ fact this path surfaces, not a generic disclosure.
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from insureflow.health.lobs.base import (
@@ -39,6 +40,17 @@ MIN_ISSUE_AGE = 18
 MAX_ISSUE_AGE = 64
 DEFAULT_ELIMINATION_DAYS = 14
 DEFAULT_BENEFIT_PERIOD = "2_year"
+# STD elimination periods are short (days, not months) — a real, meaningful
+# rating factor the previous version never applied despite the manual
+# already carrying elimination_period_factors for "7"/"14"/"30".
+_STD_ELIMINATION_DAYS = (7, 14, 30)
+
+
+def _elimination_days(blob: str) -> int:
+    match = re.search(r"elimination period\s*[:=]?\s*(\d+)\s*day", blob, re.I)
+    if match and int(match.group(1)) in _STD_ELIMINATION_DAYS:
+        return int(match.group(1))
+    return DEFAULT_ELIMINATION_DAYS
 
 
 def underwrite_std(ctx: HealthProductContext) -> LobOutcome:
@@ -65,20 +77,23 @@ def underwrite_std(ctx: HealthProductContext) -> LobOutcome:
         outcome.add_condition(f"{ctx.issue_state} runs a mandatory state disability insurance (SDI) program — this policy's benefit must be coordinated with (typically offset by) the state benefit")
 
     occ_class = _occupation_class(ctx.blob) or "II"
+    elimination_days = _elimination_days(ctx.blob)
 
     disability_manual = (ctx.manual or {}).get("disability") or {}
     rate_per_10 = float(disability_manual.get("std_base_rate_per_10_weekly_benefit", 0.11))
     occ_f = float((disability_manual.get("occupation_class_factors") or {}).get(occ_class, 1.0))
+    elim_f = float((disability_manual.get("elimination_period_factors") or {}).get(str(elimination_days), 1.0))
     area_f = area_relativity(ctx)
 
     base_premium = (ctx.benefit_amount / 10.0) * rate_per_10 * 52.0
-    annual = round(base_premium * occ_f * area_f + policy_fee(ctx), 2)
+    annual = round(base_premium * occ_f * elim_f * area_f + policy_fee(ctx), 2)
 
     outcome.base_premium = round(base_premium, 2)
     outcome.annual_premium = annual
     outcome.components = [
         RateComponent(name="std_rate_per_10_weekly", amount=rate_per_10, basis="weekly benefit"),
         RateComponent(name="occupation_class", amount=occ_f, basis=f"Class {occ_class}"),
+        RateComponent(name="elimination_period", amount=elim_f, basis=f"{elimination_days} days"),
         RateComponent(name="area_relativity", amount=area_f, basis=ctx.issue_state or ctx.filing_state),
     ]
     outcome.metadata.update(
@@ -86,7 +101,7 @@ def underwrite_std(ctx: HealthProductContext) -> LobOutcome:
             "weekly_benefit": ctx.benefit_amount,
             "occupation_class": occ_class,
             "sdi_coordination_required": is_sdi_state(ctx.issue_state),
-            "elimination_period_days": DEFAULT_ELIMINATION_DAYS,
+            "elimination_period_days": elimination_days,
             "benefit_period": DEFAULT_BENEFIT_PERIOD,
             "state_rules_applied": state_rules,
             "exam_required": False,

@@ -21,6 +21,7 @@ from insureflow.health.lobs.base import (
     area_relativity,
     finish_quote,
     merge_state_rules,
+    nearest_banded_key,
     policy_fee,
 )
 from insureflow.health.lobs.state_law import medigap_enrollment_rules
@@ -41,9 +42,22 @@ MIN_ISSUE_AGE = 65
 def underwrite_medicare_supplement(ctx: HealthProductContext, plan_letter: str, *, within_open_enrollment: bool) -> LobOutcome:
     from insureflow.underwriting.health_uw import underwrite_health
 
-    # Guaranteed-issue window uses the no-medical-questions handler; outside
-    # it, most states allow full medical underwriting (senior_standard).
-    ctx.uw = underwrite_health(ctx.bundle, product_id="senior_no_medical" if within_open_enrollment else "senior_standard")
+    # Guaranteed issue applies during the 6-month federal open-enrollment
+    # window OR in a continuous-GI state (NY/MA/CT/ME) at any time — compute
+    # this BEFORE choosing the reused handler, not just from the window flag,
+    # or a continuous-GI-state applicant outside the window would still get
+    # medically underwritten by mistake.
+    enrollment = medigap_enrollment_rules(ctx.issue_state)
+    guaranteed_issue = within_open_enrollment or enrollment["continuous_guaranteed_issue"]
+
+    # "senior_no_medical" is "simplified issue" (no exam) — it still carries
+    # a CRITICAL knockout gate on a disclosed severe disease, which is NOT
+    # guaranteed issue. Federal/state law gives zero exceptions when
+    # guaranteed_issue is true — a carrier cannot decline for ANY declared
+    # condition — so that case uses the pure KYC-only baseline instead.
+    # Otherwise most states allow full medical underwriting (senior_standard),
+    # where a knockout is real.
+    ctx.uw = underwrite_health(ctx.bundle) if guaranteed_issue else underwrite_health(ctx.bundle, product_id="senior_standard")
 
     outcome = LobOutcome(product_label=f"Medicare Supplement Plan {plan_letter}")
 
@@ -55,9 +69,6 @@ def underwrite_medicare_supplement(ctx: HealthProductContext, plan_letter: str, 
     outcome.add_condition(f"{state_rules['free_look_days']}-day free-look period applies ({state_rules['issue_state'] or 'default'})")
     for disclosure in state_rules["disclosures"]:
         outcome.add_condition(disclosure)
-
-    enrollment = medigap_enrollment_rules(ctx.issue_state)
-    guaranteed_issue = within_open_enrollment or enrollment["continuous_guaranteed_issue"]
     if guaranteed_issue:
         if enrollment["continuous_guaranteed_issue"] and not within_open_enrollment:
             reason = "state runs continuous guaranteed issue"
@@ -74,20 +85,33 @@ def underwrite_medicare_supplement(ctx: HealthProductContext, plan_letter: str, 
     plan_f = float((manual.get("medigap_plan_factors") or {}).get(plan_letter, 1.0))
     area_f = area_relativity(ctx)
 
-    monthly = base_monthly * plan_f * area_f
+    # Community-rated states (NY/VT/CT/ME): the same rate applies at every
+    # age — no age factor. Everywhere else, age-rating (issue-age or
+    # attained-age; identical at first purchase) is real and material —
+    # a 90-year-old's Medigap premium is genuinely higher than a
+    # newly-eligible 65-year-old's, which this used to not model at all.
+    community_rated = enrollment["community_rated"]
+    age_curve = manual.get("medigap_age_curve") or {}
+    age_f = 1.0 if community_rated or not age_curve else float(age_curve[nearest_banded_key(age_curve, ctx.age)])
+
+    monthly = base_monthly * plan_f * age_f * area_f
     annual = round(monthly * 12.0 + policy_fee(ctx), 2)
 
     outcome.base_premium = round(base_monthly * plan_f * 12.0, 2)
     outcome.annual_premium = annual
     outcome.components = [
         RateComponent(name="plan_letter_factor", amount=plan_f, basis=f"Plan {plan_letter}"),
+        RateComponent(name="age_rating", amount=age_f, basis="community-rated — flat" if community_rated else f"age={ctx.age}"),
         RateComponent(name="area_relativity", amount=area_f, basis=ctx.issue_state or ctx.filing_state),
     ]
+    if community_rated:
+        outcome.add_condition(f"{ctx.issue_state} is a community-rated Medigap state — premium does not vary by age")
     outcome.metadata.update(
         {
             "plan_letter": plan_letter,
             "guaranteed_issue": guaranteed_issue,
             "within_open_enrollment": within_open_enrollment,
+            "community_rated": community_rated,
             "monthly_premium": round(monthly, 2),
             "state_rules_applied": state_rules,
             "exam_required": not guaranteed_issue,

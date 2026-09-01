@@ -46,12 +46,17 @@ MAX_ISSUE_AGE = 64  # 65+ moves to Medicare — see health/lobs/senior/
 def underwrite_marketplace_plan(ctx: HealthProductContext, tier: str) -> LobOutcome:
     # underwrite_health() is product-id-aware (its own dispatch table), so each
     # LOB path resolves its OWN reused handler here rather than the generic
-    # dispatcher pre-populating ctx.uw — "individual_comprehensive" is the
-    # closest existing handler: paperwork/income-proof gates only, never a
-    # health-status decline, which matches ACA guaranteed-issue exactly.
+    # dispatcher pre-populating ctx.uw. Deliberately NOT "individual_comprehensive":
+    # that handler requires evidence of a "pre-policy medical check-up" above
+    # age 45 / high SI — a real health-status-adjacent gate that directly
+    # contradicts ACA guaranteed issue (§2702), even though it only produces a
+    # REFER, not a decline. "individual_basic" is administrative/KYC-only
+    # (a self-declared questionnaire on file, never a medical exam requirement).
+    from insureflow.health.lobs.base import reconcile_for_aca_guaranteed_issue
     from insureflow.underwriting.health_uw import underwrite_health
 
-    ctx.uw = underwrite_health(ctx.bundle, product_id="individual_comprehensive")
+    ctx.uw = underwrite_health(ctx.bundle, product_id="individual_basic")
+    reconcile_for_aca_guaranteed_issue(ctx.uw)
 
     outcome = LobOutcome(product_label=f"ACA Marketplace {tier.title()} Plan")
 

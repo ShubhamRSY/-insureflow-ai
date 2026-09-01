@@ -60,6 +60,14 @@
       "G": 1.0,
       "N": 0.8
     },
+    "medigap_age_curve": {
+      "65": 1.0,
+      "70": 1.15,
+      "75": 1.35,
+      "80": 1.6,
+      "85": 1.9,
+      "90": 2.15
+    },
     "medicare_advantage_base_rate_monthly": 0.0,
     "medicare_advantage_admin_fee_monthly": 25.0
   },

@@ -38,6 +38,36 @@ def _extract_tobacco(blob: str) -> bool:
     return bool(re.search(r"(?:current smoker|nicotine\s*:\s*positive|tobacco\s*:\s*(?!none\b|no\b|non-)\w+|cigarettes\s*:\s*(?!none\b|no\b|0)\w+)", blob, re.I))
 
 
+def reconcile_for_aca_guaranteed_issue(uw: HealthUWDecision) -> None:
+    """Mutates a reused HealthUWDecision in place to match two ACA facts the
+    reused handler's own assumptions get wrong:
+
+    1. ACA §2704 bans pre-existing-condition exclusions/waiting periods
+       entirely, on every individual/family/group major-medical plan — the
+       reused handler's static "PED waiting period" disclosure is simply
+       false here, not just inapplicable, so it's replaced with the correct
+       statement rather than silently dropped.
+    2. Some reused handlers gate on a 60+ "route to senior" rule (the
+       reused source market's senior threshold) — the real US Medicare
+       eligibility age is 65, already enforced by each ACA product's own
+       MAX_ISSUE_AGE=64 gate, so a same-labeled "age_fit" gate failure here
+       is a false referral, not a real finding. Downgrades the decision back
+       from REFER to ACCEPT only when that was the SOLE failing gate — a
+       genuine KYC gap elsewhere still refers normally.
+    """
+    from insureflow.models.agents import UWDecision
+
+    aca_disclosure = "No pre-existing-condition exclusions or waiting periods — prohibited under ACA §2704"
+    uw.conditions = [aca_disclosure if "ped waiting period" in c.lower() else c for c in uw.conditions]
+    if aca_disclosure not in uw.conditions:
+        uw.conditions.append(aca_disclosure)
+    uw.reasons = [r for r in uw.reasons if "route to senior" not in r.lower()]
+
+    if uw.gates.get("age_fit") == "fail" and uw.decision == UWDecision.REFER and all(v != "fail" for k, v in uw.gates.items() if k != "age_fit"):
+        uw.decision = UWDecision.ACCEPT
+        uw.conditions = [c for c in uw.conditions if "route to senior" not in c.lower()]
+
+
 @dataclass
 class HealthProductContext:
     """Everything a health product-level logic path needs to make its own decision."""
@@ -249,6 +279,16 @@ def finish_quote(
         ineligibility_reasons=ineligibility,
         metadata=meta,
     )
+
+
+def nearest_banded_key(table: dict[str, float], value: float) -> str:
+    """Largest table key <= value, for age/deductible/etc. banded lookups."""
+    keys = sorted(int(k) for k in table)
+    best = keys[0]
+    for k in keys:
+        if k <= value:
+            best = k
+    return str(best)
 
 
 def age_band_factor(ctx: HealthProductContext, table_key: str = "age_curve") -> float:

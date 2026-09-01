@@ -22,6 +22,7 @@ from insureflow.health.lobs.base import (
     merge_state_rules,
     tobacco_surcharge,
 )
+from insureflow.health.lobs.state_law import small_group_size_threshold
 from insureflow.rating.models import RateComponent
 
 PRODUCT_ID = "large_group_health"
@@ -33,8 +34,6 @@ DEFAULT_STATE_RULES: dict[str, Any] = {
 }
 STATE_RULES: dict[str, dict[str, Any]] = {}
 
-DEFAULT_SMALL_GROUP_MAX = 50
-
 
 def underwrite_large_group(ctx: HealthProductContext, *, self_funded: bool) -> LobOutcome:
     from insureflow.underwriting.health_uw import underwrite_health
@@ -45,7 +44,7 @@ def underwrite_large_group(ctx: HealthProductContext, *, self_funded: bool) -> L
 
     state_rules = merge_state_rules(ctx, DEFAULT_STATE_RULES, STATE_RULES)
     group_manual = (ctx.manual or {}).get("group") or {}
-    small_group_max = int(group_manual.get("small_group_size_max", DEFAULT_SMALL_GROUP_MAX))
+    small_group_max = small_group_size_threshold(ctx.issue_state)
 
     employee_count = ctx.household_members  # reused field: covered-lives count, not household
     if employee_count <= small_group_max:

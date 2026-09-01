@@ -46,9 +46,11 @@ MAX_ISSUE_AGE = 64
 
 
 def underwrite_off_exchange(ctx: HealthProductContext) -> LobOutcome:
+    from insureflow.health.lobs.base import reconcile_for_aca_guaranteed_issue
     from insureflow.underwriting.health_uw import underwrite_health
 
     ctx.uw = underwrite_health(ctx.bundle, product_id="individual_basic")
+    reconcile_for_aca_guaranteed_issue(ctx.uw)
 
     outcome = LobOutcome(product_label="Off-Exchange Major Medical")
 

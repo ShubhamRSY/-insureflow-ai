@@ -35,6 +35,27 @@ MEDIGAP_BIRTHDAY_RULE_STATES: frozenset[str] = frozenset({"CA", "OR", "MO", "NV"
 # guaranteed-issue year-round, not just the 6-month window after 65.
 MEDIGAP_CONTINUOUS_GI_STATES: frozenset[str] = frozenset({"CT", "MA", "NY", "ME"})
 
+# Medigap "community rated" states: the premium does NOT vary by age at
+# all — everyone on a given plan pays the same rate regardless of whether
+# they're 65 or 95. Elsewhere carriers may issue-age-rate (fixed at the age
+# you bought it) or attained-age-rate (rises every year); both look
+# identical at the moment of first purchase, which is all a point-in-time
+# quote engine can price — only the community-rated/not split actually
+# changes the math at issue.
+MEDIGAP_COMMUNITY_RATED_STATES: frozenset[str] = frozenset({"NY", "VT", "CT", "ME"})
+
+# Small-group market size definition — federal/ACA default is 1-50 FTE
+# employees, but several states raised their own small-group ceiling to 100
+# (using the option ACA left states under 45 CFR 144.103's state flexibility)
+# — a materially different Small Group vs. Large Group boundary.
+SMALL_GROUP_SIZE_THRESHOLD: dict[str, int] = {
+    "CA": 100,
+    "CO": 100,
+    "NY": 100,
+    "VT": 100,
+}
+DEFAULT_SMALL_GROUP_SIZE_THRESHOLD = 50
+
 DEFAULT_GRACE_PERIOD_DAYS = 31
 
 
@@ -84,4 +105,9 @@ def medigap_enrollment_rules(issue_state: str) -> dict[str, Any]:
     return {
         "birthday_rule": state in MEDIGAP_BIRTHDAY_RULE_STATES,
         "continuous_guaranteed_issue": state in MEDIGAP_CONTINUOUS_GI_STATES,
+        "community_rated": state in MEDIGAP_COMMUNITY_RATED_STATES,
     }
+
+
+def small_group_size_threshold(issue_state: str) -> int:
+    return SMALL_GROUP_SIZE_THRESHOLD.get((issue_state or "").upper(), DEFAULT_SMALL_GROUP_SIZE_THRESHOLD)

@@ -82,6 +82,39 @@ def test_individual_is_guaranteed_issue_regardless_of_health_status():
     assert q.adjusted_premium > 0
 
 
+_FULL_KYC_TEXT = "Identity proof photo ID. Address proof utility bill. Age proof birth certificate. Passport-size photograph. Proposal form. Self-declared good health. Annual income: 65000."
+
+
+def test_aca_products_never_claim_a_pre_existing_condition_waiting_period():
+    # The reused handler's default disclosure ("PED waiting period apply per
+    # filing") is flatly false for ACA products — ACA §2704 bans PED
+    # exclusions entirely, on every individual/family plan.
+    for product_id, coverage_id in (
+        ("aca_marketplace_plan", "silver"),
+        ("off_exchange_major_medical", "off_exchange_standard"),
+        ("family_health_plan", "standard_family"),
+    ):
+        text = f"Applicant age: 40. Sex: female. {_FULL_KYC_TEXT}"
+        if product_id == "family_health_plan":
+            text += " Household size: 3."
+        q = rate_health(_bundle(text), coverage_id=coverage_id, product_id=product_id, state="IL")
+        conditions_l = [c.lower() for c in q.metadata["conditions"]]
+        assert not any("ped waiting period" in c for c in conditions_l), product_id
+        assert any("aca" in c and "2704" in c for c in conditions_l), product_id
+
+
+def test_aca_marketplace_does_not_falsely_route_pre_medicare_seniors():
+    # The reused handler's "age 60+ -> route to senior" gate uses the source
+    # market's senior threshold, not the real US Medicare age of 65 (already
+    # enforced by MAX_ISSUE_AGE=64) — a 62-year-old with complete paperwork
+    # must clear straight to ACCEPT, not a false referral.
+    text = f"Applicant age: 62. Sex: female. {_FULL_KYC_TEXT}"
+    q = rate_health(_bundle(text), coverage_id="silver", product_id="aca_marketplace_plan", state="IL")
+    assert q.metadata["outcome"] == "accept"
+    assert not any("senior" in c.lower() for c in q.metadata["conditions"])
+    assert not any("referral" in c.lower() for c in q.metadata["conditions"])
+
+
 def test_off_exchange_not_subsidy_eligible():
     q = rate_health(_bundle(_INDIVIDUAL_TEXT), coverage_id="off_exchange_standard", product_id="off_exchange_major_medical", state="IL")
     assert q.eligible is True
@@ -150,6 +183,20 @@ def test_medigap_continuous_gi_state_overrides_window():
     assert outside_gi_state.metadata["guaranteed_issue"] is True
 
 
+def test_medigap_guaranteed_issue_never_declines_on_disclosed_condition():
+    # The reused "senior_no_medical" handler ("simplified issue") still
+    # carries a CRITICAL knockout gate on a disclosed severe condition —
+    # real guaranteed issue (open enrollment, or a continuous-GI state
+    # outside it) has zero exceptions and must never decline on this.
+    sick = "Applicant age: 70. Cancer diagnosed 2 years ago. Currently in remission."
+    open_enrollment = rate_health(_bundle(sick), coverage_id="open_enrollment_plan_g", product_id="medicare_supplement", state="TX")
+    assert open_enrollment.eligible is True
+
+    continuous_gi_outside_window = rate_health(_bundle(sick), coverage_id="plan_n", product_id="medicare_supplement", state="NY")
+    assert continuous_gi_outside_window.eligible is True
+    assert continuous_gi_outside_window.metadata["guaranteed_issue"] is True
+
+
 def test_medigap_plan_letter_ordering():
     a = rate_health(_bundle("Applicant age: 66."), coverage_id="open_enrollment_plan_a", product_id="medicare_supplement", state="IL")
     g = rate_health(_bundle("Applicant age: 66."), coverage_id="open_enrollment_plan_g", product_id="medicare_supplement", state="IL")
@@ -180,6 +227,19 @@ def test_small_group_over_threshold_routes_to_large_group():
     q = rate_health(_bundle("Applicant age: 35. Employee count: 75."), coverage_id="small_group_standard", product_id="small_group_health", state="IL")
     assert q.eligible is False
     assert any("large group" in r.lower() for r in q.ineligibility_reasons)
+
+
+def test_small_group_threshold_is_state_specific():
+    # CA/CO/NY/VT raised their small-group ceiling to 100 (45 CFR 144.103
+    # state flexibility) — the same 75-employee group is still Small Group
+    # there but must route to Large Group in a default-threshold state.
+    text = "Applicant age: 35. Employee count: 75."
+    ca = rate_health(_bundle(text), coverage_id="small_group_standard", product_id="small_group_health", state="CA")
+    il = rate_health(_bundle(text), coverage_id="small_group_standard", product_id="small_group_health", state="IL")
+    assert ca.eligible is True
+    assert ca.metadata["small_group_max"] == 100
+    assert il.eligible is False
+    assert il.metadata["small_group_max"] == 50
 
 
 def test_large_group_self_funded_erisa_preemption():
@@ -238,6 +298,20 @@ def test_std_flags_sdi_coordination_in_sdi_states_only():
     assert tx.metadata["sdi_coordination_required"] is False
     assert any("sdi" in c.lower() for c in ca.metadata["conditions"])
     assert not any("sdi" in c.lower() for c in tx.metadata["conditions"])
+
+
+def test_std_elimination_period_actually_affects_price():
+    # Elimination period used to be a hardcoded metadata label never fed into
+    # the rate formula, despite the manual already carrying real STD
+    # elimination_period_factors for 7/14/30 days — a shorter elimination
+    # period (insurer pays sooner) must cost more, not the same.
+    base = "Applicant age: 30. Weekly benefit: $600. Annual income: 70000."
+    short = rate_health(_bundle(base + " Elimination period: 7 days."), coverage_id="std_standard", product_id="short_term_disability", state="TX")
+    mid = rate_health(_bundle(base + " Elimination period: 14 days."), coverage_id="std_standard", product_id="short_term_disability", state="TX")
+    long_ = rate_health(_bundle(base + " Elimination period: 30 days."), coverage_id="std_standard", product_id="short_term_disability", state="TX")
+    assert short.adjusted_premium > mid.adjusted_premium > long_.adjusted_premium
+    assert short.metadata["elimination_period_days"] == 7
+    assert any(c.name == "elimination_period" for c in short.schedule_modifications)
 
 
 def test_ltd_income_replacement_ceiling_flagged():
