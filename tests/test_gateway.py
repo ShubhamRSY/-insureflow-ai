@@ -146,7 +146,7 @@ def test_landing_page_html() -> None:
     assert "Names and private details come off before any AI sees a page" in resp.text
     assert "Production Underwriting Needs More Than a Model Score" in resp.text or "Zero Black Boxes" in resp.text
     assert "All Your Lines, on One Workbench" in resp.text
-    assert "Extraction Fidelity" in resp.text
+    assert "85%+ Field Extraction SLA" in resp.text or "Field-extraction SLA 85%+" in resp.text
     assert "Licensed Underwriter Sign-Off" in resp.text
     assert "Continuously Evolving" in resp.text or "Continuous Innovation" in resp.text
     assert "The Underwriting &amp; Risk Glossary" in resp.text or "Underwriting Glossary" in resp.text
