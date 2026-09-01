@@ -238,6 +238,8 @@ highest-trust source.
 
 ### 6.1 Insurance (`insurance/`)
 
+> **Deep dive (commercial lines):** [`commercial_underwriting_pipeline.html`](./commercial_underwriting_pipeline.html) — full layered system design (input → API gateway → AI orchestrator → RAG/memory/LLM → tool-calling/Agent Gateway → validation → response & action → audit log), the decision-scoring formula, data handling/retention specifics, and the fail-closed reliability model. Open it directly in a browser.
+
 | Stage | Engine | Notes |
 |-------|--------|-------|
 | 1. Triage | `TriageAgent` | 0–100 score (NAICS fit, geography, size, coverage, doc completeness); HOT/WARM/COLD/NO_FIT |
@@ -717,6 +719,7 @@ ephemeral in-memory default — so job status survives restarts.
 
 ## 21. Related Documentation
 
+- [`docs/architecture/commercial_underwriting_pipeline.html`](./commercial_underwriting_pipeline.html) — commercial-lines system design deep dive (layered architecture, decision logic, data handling, reliability)
 - [`docs/ZERO_TOKEN_ARCHITECTURE.md`](../ZERO_TOKEN_ARCHITECTURE.md) — ZTA specification
 - [`docs/README.md`](../README.md) — platform guide (README)
 - [`docs/ops/LAUNCH_CHECKLIST.md`](../ops/LAUNCH_CHECKLIST.md) — production launch checklist

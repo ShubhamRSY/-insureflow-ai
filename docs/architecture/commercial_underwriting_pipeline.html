@@ -1,0 +1,1008 @@
+<title>Commercial Underwriting Pipeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+<style>
+  :root {
+    --ink: #1B2430;
+    --paper: #EDE9DD;
+    --paper-raised: #E1DAC6;
+    --paper-line: rgba(27,36,48,0.20);
+    --teal: #2A6A5E;
+    --teal-fill: rgba(42,106,94,0.13);
+    --gold: #8B5E2A;
+    --gold-fill: rgba(139,94,42,0.16);
+    --muted: #5B5749;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink: #E8E4D8;
+      --paper: #14181F;
+      --paper-raised: #1E2430;
+      --paper-line: rgba(232,228,216,0.24);
+      --teal: #55B0A2;
+      --teal-fill: rgba(85,176,162,0.16);
+      --gold: #D2A164;
+      --gold-fill: rgba(210,161,100,0.18);
+      --muted: #B9B4A5;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ink: #E8E4D8;
+    --paper: #14181F;
+    --paper-raised: #1E2430;
+    --paper-line: rgba(232,228,216,0.24);
+    --teal: #55B0A2;
+    --teal-fill: rgba(85,176,162,0.16);
+    --gold: #D2A164;
+    --gold-fill: rgba(210,161,100,0.18);
+    --muted: #B9B4A5;
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    background: var(--paper);
+    color: var(--ink);
+  }
+  body {
+    margin: 0;
+    font-family: 'Public Sans', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.55;
+  }
+  .page {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 56px 28px 90px;
+  }
+
+  /* ── Cover / case-file header ─────────────────────────────── */
+  .case-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--paper-line);
+    padding-bottom: 14px;
+  }
+  h1 {
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-weight: 700;
+    font-size: clamp(2rem, 4.4vw, 3rem);
+    line-height: 1.08;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    margin: 22px 0 10px;
+  }
+  .dek {
+    font-size: 1.08rem;
+    color: var(--muted);
+    max-width: 62ch;
+    margin: 0 0 6px;
+  }
+  .principle {
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-style: italic;
+    font-size: 1.15rem;
+    max-width: 58ch;
+    margin: 22px 0 0;
+    padding-left: 18px;
+    border-left: 3px solid var(--gold);
+  }
+
+  section { margin-top: 64px; }
+  .section-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin: 0 0 8px;
+  }
+  h2 {
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-weight: 600;
+    font-size: 1.5rem;
+    margin: 0 0 10px;
+    text-wrap: balance;
+  }
+  .lede {
+    color: var(--muted);
+    max-width: 68ch;
+    margin: 0 0 26px;
+  }
+
+  /* ── Diagram frame ─────────────────────────────────────────── */
+  figure { margin: 0; }
+  .diagram-frame {
+    position: relative;
+    border: 1px solid var(--paper-line);
+    background: var(--paper-raised);
+    padding: 26px 18px 20px;
+    overflow-x: auto;
+  }
+  .diagram-frame::before,
+  .diagram-frame::after,
+  .diagram-frame > .tick-tl, .diagram-frame > .tick-br {
+    content: "";
+  }
+  .tick {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border: 1.5px solid var(--muted);
+    opacity: 0.55;
+  }
+  .tick.tl { top: -1px; left: -1px; border-right: none; border-bottom: none; }
+  .tick.br { bottom: -1px; right: -1px; border-left: none; border-top: none; }
+  svg { display: block; margin: 0 auto; max-width: 100%; height: auto; }
+  figcaption {
+    font-size: 0.9rem;
+    color: var(--muted);
+    margin-top: 12px;
+    max-width: 68ch;
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    margin: 16px 0 0;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .swatch { width: 13px; height: 13px; display: inline-block; border-radius: 2px; }
+  .swatch.teal { background: var(--teal-fill); border: 1.5px solid var(--teal); }
+  .swatch.gold { background: var(--gold-fill); border: 1.5px solid var(--gold); }
+  .swatch.human { background: transparent; border: 2px solid var(--ink); }
+  .swatch.neutral { background: transparent; border: 1px solid var(--muted); }
+
+  /* ── Closing note ─────────────────────────────────────────── */
+  .closing {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 22px;
+    margin-top: 26px;
+  }
+  .closing .card {
+    border-top: 2px solid var(--gold);
+    padding-top: 12px;
+  }
+  .closing .card.human { border-top-color: var(--ink); }
+  .closing h3 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 6px;
+  }
+  .closing p { margin: 0; font-size: 0.95rem; }
+  @media (max-width: 700px) {
+    .closing { grid-template-columns: 1fr; }
+  }
+
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* ── Reference tables ─────────────────────────────────────── */
+  .ref-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.92rem;
+  }
+  .ref-table th {
+    text-align: left;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 500;
+    padding: 0 14px 8px 0;
+    border-bottom: 1.5px solid var(--ink);
+  }
+  .ref-table td {
+    padding: 12px 14px 12px 0;
+    border-bottom: 1px solid var(--paper-line);
+    vertical-align: top;
+  }
+  .ref-table tr:last-child td { border-bottom: none; }
+  .ref-table td.k { font-weight: 600; white-space: nowrap; }
+  .ref-table td.mono, .ref-table code {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85em;
+  }
+  .ref-table code {
+    background: var(--paper);
+    padding: 1px 5px;
+    border-radius: 3px;
+    border: 1px solid var(--paper-line);
+  }
+  .table-scroll { overflow-x: auto; }
+
+  /* ── Fact grid (data handling) ────────────────────────────── */
+  .fact-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px 28px;
+    margin-top: 8px;
+  }
+  .fact {
+    border-left: 2px solid var(--paper-line);
+    padding-left: 14px;
+  }
+  .fact.yes { border-left-color: var(--teal); }
+  .fact.no { border-left-color: var(--gold); }
+  .fact h4 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    letter-spacing: 0.04em;
+    margin: 0 0 4px;
+    color: var(--muted);
+  }
+  .fact p { margin: 0; font-size: 0.92rem; }
+  @media (max-width: 700px) { .fact-grid { grid-template-columns: 1fr; } }
+
+  /* ── Decision formula ─────────────────────────────────────── */
+  .formula-box {
+    background: var(--paper-raised);
+    border: 1px solid var(--paper-line);
+    padding: 20px 22px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    line-height: 1.8;
+  }
+  .formula-box .thresh { color: var(--gold); }
+  .formula-box .op { color: var(--muted); }
+
+  footer {
+    margin-top: 72px;
+    padding-top: 18px;
+    border-top: 1px solid var(--paper-line);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    color: var(--muted);
+    letter-spacing: 0.03em;
+  }
+</style>
+
+<div class="page">
+
+  <div class="case-meta">
+    <span>System Design &middot; Commercial Lines</span>
+    <span>Rev. 2026-08</span>
+  </div>
+
+  <h1>From submission to sign-off: the commercial underwriting pipeline</h1>
+  <p class="dek">Every layer, from the API gateway down to the audit log: the orchestrator, the tool-calling and validation layers, what's stored versus redacted, how the risk score is actually computed, and what the system does the moment something goes wrong — not just the happy path from documents to a decision.</p>
+  <p class="principle">Use AI only where it must be used. Everything that can be solved with rules, a trained model, or a lookup, is — and every field a reader sees is traceable back to the page it came from.</p>
+
+  <section>
+    <p class="section-label">01 &middot; System architecture</p>
+    <h2>Ingress, orchestration &amp; knowledge</h2>
+    <p class="lede">Everything a request touches before an agent ever calls a tool. Every box names its real implementation, not a generic label — this is what the code is actually called.</p>
+
+    <figure class="diagram-frame">
+      <span class="tick tl"></span><span class="tick br"></span>
+      <svg viewBox="0 0 1000 660" role="img" aria-label="Diagram of the input layer feeding the API gateway and security layer, which authorizes a job into the AI orchestrator, composed of a router, task planner, and context manager, which in turn consults the RAG and knowledge layer, memory layer, and LLM layer in parallel.">
+        <defs>
+          <marker id="a1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="currentColor" />
+          </marker>
+        </defs>
+        <g font-family="IBM Plex Mono, monospace">
+
+          <!-- B1 INPUT -->
+          <text x="40" y="34" font-size="11" fill="var(--muted)" letter-spacing="0.06em">INPUT LAYER — SUBMISSION CHANNELS</text>
+          <g fill="none" stroke="var(--ink)" stroke-width="1.2">
+            <rect x="40" y="44" width="155" height="60" rx="3"/>
+            <rect x="215" y="44" width="155" height="60" rx="3"/>
+            <rect x="390" y="44" width="155" height="60" rx="3"/>
+            <rect x="565" y="44" width="155" height="60" rx="3"/>
+          </g>
+          <g fill="var(--ink)" text-anchor="middle" font-size="12">
+            <text x="117" y="79">ACORD XML</text>
+            <text x="292" y="79">Loss Runs</text>
+            <text x="467" y="71">SOV +</text><text x="467" y="87">Inspection Rpt</text>
+            <text x="642" y="71">Broker Email</text><text x="642" y="87">/ API / JSON</text>
+          </g>
+          <text x="40" y="118" fill="var(--muted)" font-size="10">12+ connectors: SharePoint &middot; S3 &middot; Azure Blob &middot; IVANS &middot; Salesforce &middot; DocuSign &middot; Snowflake &hellip;</text>
+
+          <line x1="380" y1="104" x2="380" y2="164" stroke="var(--ink)" stroke-width="1.3" marker-end="url(#a1)"/>
+          <text x="396" y="138" fill="var(--muted)" font-size="10.5">submission arrives</text>
+
+          <!-- B2 GATEWAY -->
+          <text x="40" y="160" font-size="11" fill="var(--muted)" letter-spacing="0.06em">API GATEWAY &amp; SECURITY LAYER</text>
+          <rect x="40" y="170" width="680" height="92" rx="3" fill="var(--teal-fill)" stroke="var(--teal)" stroke-width="1.3"/>
+          <text x="380" y="198" text-anchor="middle" fill="var(--ink)" font-size="12.5">FastAPI + slowapi &middot; 30 req/min per client</text>
+          <text x="380" y="220" text-anchor="middle" fill="var(--ink)" font-size="11">JWT bearer &rarr; <tspan font-style="italic">Depends(require_role(Role.X))</tspan></text>
+          <text x="380" y="240" text-anchor="middle" fill="var(--muted)" font-size="10.5">6-tier RBAC: viewer &middot; underwriter / staff UW &middot; licensed UW &middot; admin &middot; CUO</text>
+
+          <line x1="380" y1="262" x2="380" y2="322" stroke="var(--ink)" stroke-width="1.3" marker-end="url(#a1)"/>
+          <text x="396" y="296" fill="var(--muted)" font-size="10.5">authorized job</text>
+
+          <!-- B3 ORCHESTRATOR -->
+          <text x="40" y="318" font-size="11" fill="var(--muted)" letter-spacing="0.06em">AI ORCHESTRATOR</text>
+          <g fill="var(--teal-fill)" stroke="var(--teal)" stroke-width="1.3">
+            <rect x="40" y="328" width="210" height="84" rx="3"/>
+            <rect x="275" y="328" width="210" height="84" rx="3"/>
+            <rect x="510" y="328" width="210" height="84" rx="3"/>
+          </g>
+          <g text-anchor="middle">
+            <text x="145" y="350" fill="var(--ink)" font-weight="600" font-size="13">Router</text>
+            <text x="145" y="368" fill="var(--ink)" font-size="10.5" font-style="italic">ZeroTokenRouter.route()</text>
+            <text x="145" y="386" fill="var(--muted)" font-size="10">deterministic / llm /</text>
+            <text x="145" y="399" fill="var(--muted)" font-size="10">escalate / skip</text>
+
+            <text x="380" y="350" fill="var(--ink)" font-weight="600" font-size="13">Task Planner</text>
+            <text x="380" y="368" fill="var(--ink)" font-size="10.5" font-style="italic">SupervisorAgent.run()</text>
+            <text x="380" y="386" fill="var(--muted)" font-size="10">fans out agents —</text>
+            <text x="380" y="399" fill="var(--muted)" font-size="10">threadpool / celery</text>
+
+            <text x="615" y="350" fill="var(--ink)" font-weight="600" font-size="13">Context Manager</text>
+            <text x="615" y="368" fill="var(--ink)" font-size="10.5" font-style="italic">SubmissionBundle</text>
+            <text x="615" y="386" fill="var(--muted)" font-size="10">+ ProvenanceRecord,</text>
+            <text x="615" y="399" fill="var(--muted)" font-size="10">passed by reference</text>
+          </g>
+
+          <g stroke="var(--ink)" stroke-width="1.2" fill="none">
+            <line x1="145" y1="412" x2="145" y2="480" marker-end="url(#a1)"/>
+            <line x1="380" y1="412" x2="380" y2="480" marker-end="url(#a1)"/>
+            <line x1="615" y1="412" x2="615" y2="480" marker-end="url(#a1)"/>
+          </g>
+          <text x="380" y="450" text-anchor="middle" fill="var(--muted)" font-size="10">consulted per task — not always all three</text>
+
+          <!-- B4 RAG / MEMORY / LLM -->
+          <text x="40" y="476" font-size="11" fill="var(--muted)" letter-spacing="0.06em">RAG &amp; KNOWLEDGE &middot; MEMORY &middot; LLM LAYER</text>
+          <rect x="40" y="486" width="210" height="140" rx="3" fill="var(--teal-fill)" stroke="var(--teal)" stroke-width="1.3"/>
+          <rect x="275" y="486" width="210" height="140" rx="3" fill="var(--teal-fill)" stroke="var(--teal)" stroke-width="1.3"/>
+          <rect x="510" y="486" width="210" height="140" rx="3" fill="var(--gold-fill)" stroke="var(--gold)" stroke-width="1.3"/>
+          <g text-anchor="middle">
+            <text x="145" y="508" fill="var(--ink)" font-weight="600" font-size="13">RAG &amp; Knowledge</text>
+            <text x="145" y="526" fill="var(--ink)" font-size="10.5" font-style="italic">RAGAgent &middot; pgvector</text>
+            <text x="145" y="548" fill="var(--muted)" font-size="9.5">indexes guideline_embeddings</text>
+            <text x="145" y="562" fill="var(--muted)" font-size="9.5">only — never customer docs</text>
+            <text x="145" y="580" fill="var(--muted)" font-size="9.5">in-memory + KG hybrid in dev</text>
+
+            <text x="380" y="508" fill="var(--ink)" font-weight="600" font-size="13">Memory</text>
+            <text x="380" y="526" fill="var(--ink)" font-size="10.5" font-style="italic">JobStore / AuditStore</text>
+            <text x="380" y="548" fill="var(--muted)" font-size="9.5">job state: Redis, ~7-day TTL</text>
+            <text x="380" y="562" fill="var(--muted)" font-size="9.5">decision memory: encrypted</text>
+            <text x="380" y="576" fill="var(--muted)" font-size="9.5">disk, ~7-yr retention</text>
+
+            <text x="615" y="508" fill="var(--ink)" font-weight="600" font-size="13">LLM Layer</text>
+            <text x="615" y="526" fill="var(--ink)" font-size="10.5" font-style="italic">RedactedLLMClient</text>
+            <text x="615" y="548" fill="var(--muted)" font-size="9.5">tiered: cheap / expensive,</text>
+            <text x="615" y="562" fill="var(--muted)" font-size="9.5">multi-provider</text>
+            <text x="615" y="580" fill="var(--muted)" font-size="9.5">PII-redacted before every call</text>
+          </g>
+        </g>
+      </svg>
+      <figcaption>Every box names its real class or function — this is the literal call path a submission takes, not a conceptual sketch. Teal is deterministic work (rules, trained ML, or storage); gold is the one place a generative model actually reasons over text.</figcaption>
+      <div class="legend">
+        <span><i class="swatch teal"></i>Deterministic — rules, trained ML, or storage</span>
+        <span><i class="swatch gold"></i>Generative AI — used only when routed here</span>
+      </div>
+    </figure>
+
+    <h2 style="margin-top:44px;">Tool calling, validation, action &amp; audit</h2>
+    <p class="lede">Where the orchestrator reaches outside itself — through an explicit gateway, not a direct call — and where every response is checked before it becomes an action. Governance runs alongside every layer here, not after it.</p>
+
+    <figure class="diagram-frame">
+      <span class="tick tl"></span><span class="tick br"></span>
+      <svg viewBox="0 0 1000 860" role="img" aria-label="Diagram of the tool and API calling layer, where a tool registry and MCP server pass through an explicit agent gateway to approved APIs, databases, and SaaS tools, followed by a validation checkpoint, a response and action layer with six concrete actions, and an immutable audit log — with a governance, guardrails, and observability column connected to each of these four layers.">
+        <defs>
+          <marker id="a2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="currentColor" />
+          </marker>
+        </defs>
+        <g font-family="IBM Plex Mono, monospace">
+
+          <!-- B5 TOOL / API CALLING LAYER -->
+          <text x="40" y="34" font-size="11" fill="var(--muted)" letter-spacing="0.06em">TOOL / API CALLING LAYER</text>
+          <rect x="40" y="44" width="680" height="58" rx="3" fill="none" stroke="var(--ink)" stroke-width="1.3"/>
+          <text x="380" y="68" text-anchor="middle" fill="var(--ink)" font-size="12.5">Tool Registry + MCP Server</text>
+          <text x="380" y="86" text-anchor="middle" fill="var(--ink)" font-size="10.5" font-style="italic">ToolRegistry &middot; FastMCP — stdio or SSE at /mcp</text>
+
+          <line x1="380" y1="102" x2="380" y2="122" stroke="var(--ink)" stroke-width="1.2" marker-end="url(#a2)"/>
+
+          <rect x="290" y="126" width="180" height="58" rx="3" fill="var(--gold-fill)" stroke="var(--gold)" stroke-width="1.4"/>
+          <text x="380" y="150" text-anchor="middle" fill="var(--ink)" font-weight="600" font-size="12.5">Agent Gateway</text>
+          <text x="380" y="167" text-anchor="middle" fill="var(--ink)" font-size="9.5" font-style="italic">scoped per insurance line</text>
+          <text x="380" y="179" text-anchor="middle" fill="var(--muted)" font-size="9">routes each tool call to its real backend</text>
+
+          <g stroke="var(--ink)" stroke-width="1.1" fill="none">
+            <path d="M290,155 C 200,155 145,170 145,196" marker-end="url(#a2)"/>
+            <line x1="380" y1="184" x2="380" y2="196" marker-end="url(#a2)"/>
+            <path d="M470,155 C 560,155 615,170 615,196" marker-end="url(#a2)"/>
+          </g>
+
+          <g fill="none" stroke="var(--ink)" stroke-width="1.2">
+            <rect x="40" y="200" width="210" height="80" rx="3"/>
+            <rect x="275" y="200" width="210" height="80" rx="3"/>
+            <rect x="510" y="200" width="210" height="80" rx="3"/>
+          </g>
+          <g text-anchor="middle">
+            <text x="145" y="222" fill="var(--ink)" font-weight="600" font-size="12.5">Approved APIs</text>
+            <text x="145" y="240" fill="var(--muted)" font-size="9.5">CLUE &middot; NCCI &middot; CAT &middot; OFAC</text>
+            <text x="145" y="254" fill="var(--muted)" font-size="9.5">Guidewire / BriteCore adapters</text>
+            <text x="145" y="268" fill="var(--muted)" font-size="9" font-style="italic">integration/*_adapter.py</text>
+
+            <text x="380" y="222" fill="var(--ink)" font-weight="600" font-size="12.5">Databases</text>
+            <text x="380" y="240" fill="var(--muted)" font-size="9.5">Postgres / pgvector</text>
+            <text x="380" y="254" fill="var(--muted)" font-size="9.5">Redis</text>
+
+            <text x="615" y="222" fill="var(--ink)" font-weight="600" font-size="12.5">SaaS Tools</text>
+            <text x="615" y="240" fill="var(--muted)" font-size="9.5">DocuSign &middot; Salesforce</text>
+            <text x="615" y="254" fill="var(--muted)" font-size="9.5">SharePoint &middot; S3 &middot; Snowflake</text>
+          </g>
+
+          <line x1="380" y1="280" x2="380" y2="336" stroke="var(--ink)" stroke-width="1.3" marker-end="url(#a2)"/>
+          <text x="396" y="312" fill="var(--muted)" font-size="10.5">draft response</text>
+
+          <!-- B6 VALIDATION -->
+          <text x="40" y="332" font-size="11" fill="var(--muted)" letter-spacing="0.06em">VALIDATION CHECKPOINT</text>
+          <g fill="var(--teal-fill)" stroke="var(--teal)" stroke-width="1.3">
+            <rect x="40" y="342" width="155" height="78" rx="3"/>
+            <rect x="215" y="342" width="155" height="78" rx="3"/>
+            <rect x="390" y="342" width="155" height="78" rx="3"/>
+            <rect x="565" y="342" width="155" height="78" rx="3"/>
+          </g>
+          <g text-anchor="middle">
+            <text x="117" y="364" fill="var(--ink)" font-size="11">Doc Quality Gate</text>
+            <text x="117" y="380" fill="var(--ink)" font-size="9.5" font-style="italic">DocQualityGate</text>
+            <text x="117" y="396" fill="var(--muted)" font-size="9">.evaluate()</text>
+            <text x="117" y="410" fill="var(--muted)" font-size="9">block / warn / pass</text>
+
+            <text x="292" y="358" fill="var(--ink)" font-size="11">Zero-Hallucin-</text>
+            <text x="292" y="372" fill="var(--ink)" font-size="11">ation Gate</text>
+            <text x="292" y="388" fill="var(--muted)" font-size="9" font-style="italic">enforce_zero_</text>
+            <text x="292" y="399" fill="var(--muted)" font-size="9" font-style="italic">hallucination()</text>
+            <text x="292" y="413" fill="var(--muted)" font-size="9">every claim cites a source</text>
+
+            <text x="467" y="364" fill="var(--ink)" font-size="11">Low-Confidence</text>
+            <text x="467" y="380" fill="var(--ink)" font-size="11">Hold</text>
+            <text x="467" y="396" fill="var(--muted)" font-size="9" font-style="italic">confidence &lt; 0.6</text>
+            <text x="467" y="410" fill="var(--muted)" font-size="9">limit / ded / premium</text>
+
+            <text x="642" y="364" fill="var(--ink)" font-size="11">Prompt-Injection</text>
+            <text x="642" y="380" fill="var(--ink)" font-size="11">Screen</text>
+            <text x="642" y="396" fill="var(--muted)" font-size="9" font-style="italic">genai_defense.py</text>
+            <text x="642" y="410" fill="var(--muted)" font-size="9">jailbreak &amp; AI-text tells</text>
+          </g>
+
+          <line x1="380" y1="420" x2="380" y2="476" stroke="var(--ink)" stroke-width="1.3" marker-end="url(#a2)"/>
+          <text x="396" y="452" fill="var(--muted)" font-size="10.5">validated response</text>
+
+          <!-- B7 RESPONSE & ACTION -->
+          <text x="40" y="472" font-size="11" fill="var(--muted)" letter-spacing="0.06em">RESPONSE &amp; ACTION LAYER</text>
+          <g fill="none" stroke="var(--ink)" stroke-width="1.2">
+            <rect x="40" y="482" width="210" height="76" rx="3"/>
+            <rect x="275" y="482" width="210" height="76" rx="3"/>
+            <rect x="510" y="482" width="210" height="76" rx="3"/>
+            <rect x="40" y="574" width="210" height="76" rx="3"/>
+            <rect x="275" y="574" width="210" height="76" rx="3"/>
+            <rect x="510" y="574" width="210" height="76" rx="3"/>
+          </g>
+          <g text-anchor="middle">
+            <text x="145" y="504" fill="var(--ink)" font-size="11">Final Answer</text>
+            <text x="145" y="520" fill="var(--ink)" font-size="9.5" font-style="italic">UnderwritingMemo</text>
+            <text x="145" y="536" fill="var(--muted)" font-size="9">advisory — never binds</text>
+
+            <text x="380" y="504" fill="var(--ink)" font-size="11">API Action</text>
+            <text x="380" y="520" fill="var(--ink)" font-size="9.5" font-style="italic">GuidewireAdapter</text>
+            <text x="380" y="536" fill="var(--muted)" font-size="9">pushes bind-ready policy</text>
+
+            <text x="615" y="504" fill="var(--ink)" font-size="11">Ticket Update</text>
+            <text x="615" y="520" fill="var(--ink)" font-size="9.5" font-style="italic">WorkflowService</text>
+            <text x="615" y="536" fill="var(--muted)" font-size="9">SLA queue — 4h to 72h</text>
+
+            <text x="145" y="596" fill="var(--ink)" font-size="11">Policy Check &amp;</text>
+            <text x="145" y="610" fill="var(--ink)" font-size="11">Safety Validation</text>
+            <text x="145" y="626" fill="var(--ink)" font-size="9.5" font-style="italic">apply_binding_gates()</text>
+            <text x="145" y="640" fill="var(--muted)" font-size="9">appetite &middot; medical &middot; filing</text>
+
+            <text x="380" y="602" fill="var(--ink)" font-size="11">Notification</text>
+            <text x="380" y="618" fill="var(--ink)" font-size="9.5" font-style="italic">webhook_dispatcher</text>
+            <text x="380" y="634" fill="var(--muted)" font-size="9">.dispatch_async()</text>
+
+            <text x="615" y="596" fill="var(--ink)" font-size="11">Report</text>
+            <text x="615" y="610" fill="var(--ink)" font-size="11">Generation</text>
+            <text x="615" y="626" fill="var(--ink)" font-size="9.5" font-style="italic">quote_document.py</text>
+            <text x="615" y="640" fill="var(--muted)" font-size="9">Quote PDF + UW Memo PDF</text>
+          </g>
+
+          <line x1="380" y1="650" x2="380" y2="706" stroke="var(--ink)" stroke-width="1.3" marker-end="url(#a2)"/>
+          <text x="396" y="682" fill="var(--muted)" font-size="10.5">every action, whether it binds or not</text>
+
+          <!-- B8 AUDIT LOG -->
+          <text x="40" y="702" font-size="11" fill="var(--muted)" letter-spacing="0.06em">AUDIT LOG</text>
+          <rect x="40" y="712" width="680" height="82" rx="3" fill="none" stroke="var(--ink)" stroke-width="2"/>
+          <text x="380" y="740" text-anchor="middle" fill="var(--ink)" font-size="12.5">Immutable log of every request, action, and response</text>
+          <text x="380" y="759" text-anchor="middle" fill="var(--ink)" font-size="10.5" font-style="italic">AuditLogger.log() &rarr; AuditEntry per event</text>
+          <text x="380" y="777" text-anchor="middle" fill="var(--muted)" font-size="10">append-only per bundle &middot; Fernet-encrypted &middot; WORM storage &middot; fed by every layer above</text>
+
+          <!-- GOVERNANCE SIDEBAR -->
+          <rect x="760" y="40" width="200" height="754" rx="3" fill="none" stroke="var(--ink)" stroke-width="1.3"/>
+          <text x="780" y="64" fill="var(--ink)" font-weight="600" font-size="11">GOVERNANCE,</text>
+          <text x="780" y="80" fill="var(--ink)" font-weight="600" font-size="11">GUARDRAILS &amp;</text>
+          <text x="780" y="96" fill="var(--ink)" font-weight="600" font-size="11">OBSERVABILITY</text>
+          <text x="780" y="114" fill="var(--muted)" font-size="9.5">cross-cutting, not a final step</text>
+
+          <g stroke="var(--muted)" stroke-width="1" stroke-dasharray="2,3">
+            <line x1="720" y1="162" x2="760" y2="162"/>
+            <line x1="720" y1="381" x2="760" y2="381"/>
+            <line x1="720" y1="566" x2="760" y2="566"/>
+            <line x1="720" y1="753" x2="760" y2="753"/>
+          </g>
+          <g fill="var(--ink)" font-size="10.5">
+            <text x="780" y="150">Agent Gateway enforces</text>
+            <text x="780" y="164">tool scoping per line</text>
+
+            <text x="780" y="369">Zero-hallucination gate</text>
+            <text x="780" y="383">fails closed to REFER</text>
+
+            <text x="780" y="554">Bias monitor + SLA</text>
+            <text x="780" y="568">breach escalation</text>
+
+            <text x="780" y="741">Prometheus + Grafana</text>
+            <text x="780" y="755">rytera_* metrics</text>
+          </g>
+        </g>
+      </svg>
+      <figcaption>The dashed connectors mark which layer each guardrail actually lives in. Gold marks the Agent Gateway as the one place a tool call is authorized before it reaches a real API, database, or SaaS system — everything downstream of it is neutral infrastructure or output.</figcaption>
+      <div class="legend">
+        <span><i class="swatch teal"></i>Deterministic checks — rules or a trained model</span>
+        <span><i class="swatch gold"></i>Authorization boundary — the Agent Gateway</span>
+        <span><i class="swatch neutral"></i>Infrastructure, external system, or output</span>
+      </div>
+    </figure>
+  </section>
+
+  <section>
+    <p class="section-label">02 &middot; Technical reference</p>
+    <h2>The literal call path, not a paraphrase</h2>
+    <p class="lede">What a request actually looks like end to end — the endpoints, the audit record shape, and the tool definition an agent calls.</p>
+
+    <div class="table-scroll">
+      <table class="ref-table">
+        <tr><th>Step</th><th>Endpoint</th><th>What comes back</th></tr>
+        <tr><td class="k">Submit</td><td class="mono"><code>POST /pipeline/run</code></td><td>202 Accepted, <code>{job_id}</code> — async, doesn't block on the pipeline</td></tr>
+        <tr><td class="k">Poll</td><td class="mono"><code>GET /pipeline/jobs/{job_id}</code></td><td>status: processing / completed / failed</td></tr>
+        <tr><td class="k">Read the decision</td><td class="mono"><code>GET /pipeline/jobs/{job_id}/quote</code></td><td>rated quote, or <code>/report</code> for the full memo</td></tr>
+        <tr><td class="k">Verify it</td><td class="mono"><code>GET /pipeline/audit/{bundle_id}</code></td><td>the complete <code>AuditTrail</code> for that submission</td></tr>
+        <tr><td class="k">Agent tools</td><td class="mono"><code>/mcp</code></td><td>the same tool surface, exposed to external MCP clients (Claude Desktop, etc.)</td></tr>
+      </table>
+    </div>
+
+    <p class="lede" style="margin-top:24px;">One audit entry, as it's actually written to disk — this is <code>AuditEntry.to_dict()</code>, not a mockup:</p>
+    <div class="formula-box" style="font-size:12px;">
+      {<br>
+      &nbsp;&nbsp;"entry_id": "entry-8f2a1c9d",<br>
+      &nbsp;&nbsp;"bundle_id": "bundle-4471",<br>
+      &nbsp;&nbsp;"event": <span class="thresh">"discrepancy_detected"</span>,<br>
+      &nbsp;&nbsp;"severity": "warning",<br>
+      &nbsp;&nbsp;"agent_name": "ReconciliationEngine",<br>
+      &nbsp;&nbsp;"message": "coverage.limit mismatch: ACORD $2.0M vs SOV $2.4M",<br>
+      &nbsp;&nbsp;"metadata": { "field_path": "coverage.limit", "confidence": 0.71 },<br>
+      &nbsp;&nbsp;"timestamp": "2026-08-31T14:02:11Z"<br>
+      }
+    </div>
+    <p class="lede" style="margin-top:12px;">And one tool the Agent Gateway exposes — a <code>ToolDef</code> from the registry, only registered at all if the submission's line isn't life/health/general:</p>
+    <div class="formula-box" style="font-size:12px;">
+      ToolDef(<br>
+      &nbsp;&nbsp;name=<span class="thresh">"get_loss_run"</span>,<br>
+      &nbsp;&nbsp;description="Returns the loss run data with all claims, totals, and loss ratios.",<br>
+      &nbsp;&nbsp;parameters={},<br>
+      &nbsp;&nbsp;fn=lambda: self.uw.get_loss_run(self.bundle),<br>
+      )
+    </div>
+  </section>
+
+
+  <section>
+    <p class="section-label">03 &middot; Sequence view</p>
+    <h2>How one submission actually moves</h2>
+    <p class="lede">The architecture above is the floor plan; this is the walk-through — one submission, in order, through those same layers. Parallel work is drawn as parallel lanes, not a list, because that's where most of the wall-clock time disappears.</p>
+
+    <figure class="diagram-frame">
+      <span class="tick tl"></span><span class="tick br"></span>
+      <svg viewBox="0 0 1000 1660" role="img" aria-label="Flow diagram of the commercial underwriting pipeline from broker submission through triage, extraction, reconciliation, external bureau checks, a parallel swarm of specialist risk agents, rating, an underwriting decision, human sign-off, to final output documents.">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="currentColor" />
+          </marker>
+          <marker id="arrow-muted" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--muted)" />
+          </marker>
+        </defs>
+
+        <g font-family="IBM Plex Mono, monospace" font-size="11">
+
+          <!-- STAGE 1 — INPUT -->
+          <text x="190" y="44" fill="var(--muted)" letter-spacing="0.06em">INPUT — SUBMISSION PACKAGE</text>
+          <g>
+            <rect x="190" y="54" width="100" height="56" rx="3" fill="none" stroke="var(--ink)" stroke-width="1.2"/>
+            <text x="240" y="78" text-anchor="middle" fill="var(--ink)">ACORD</text>
+            <text x="240" y="92" text-anchor="middle" fill="var(--ink)">XML</text>
+
+            <rect x="320" y="54" width="100" height="56" rx="3" fill="none" stroke="var(--ink)" stroke-width="1.2"/>
+            <text x="370" y="78" text-anchor="middle" fill="var(--ink)">Loss</text>
+            <text x="370" y="92" text-anchor="middle" fill="var(--ink)">Runs</text>
+
+            <rect x="450" y="54" width="100" height="56" rx="3" fill="none" stroke="var(--ink)" stroke-width="1.2"/>
+            <text x="500" y="78" text-anchor="middle" fill="var(--ink)">Schedule</text>
+            <text x="500" y="92" text-anchor="middle" fill="var(--ink)">of Values</text>
+
+            <rect x="580" y="54" width="100" height="56" rx="3" fill="none" stroke="var(--ink)" stroke-width="1.2"/>
+            <text x="630" y="78" text-anchor="middle" fill="var(--ink)">Inspection</text>
+            <text x="630" y="92" text-anchor="middle" fill="var(--ink)">Reports</text>
+
+            <rect x="710" y="54" width="100" height="56" rx="3" fill="none" stroke="var(--ink)" stroke-width="1.2"/>
+            <text x="760" y="78" text-anchor="middle" fill="var(--ink)">Broker</text>
+            <text x="760" y="92" text-anchor="middle" fill="var(--ink)">Email / API</text>
+          </g>
+          <line x1="500" y1="110" x2="500" y2="150" stroke="var(--ink)" stroke-width="1.3" marker-end="url(#arrow)"/>
+          <text x="516" y="134" fill="var(--muted)">single dossier</text>
+
+          <!-- STAGE 2 — TRIAGE + APPETITE -->
+          <text x="190" y="168" fill="var(--muted)" letter-spacing="0.06em">TRIAGE + APPETITE GATE</text>
+          <rect x="190" y="178" width="620" height="74" rx="3" fill="var(--teal-fill)" stroke="var(--teal)" stroke-width="1.3"/>
+          <text x="500" y="209" text-anchor="middle" fill="var(--ink)" font-size="12">Priority score &middot; NAICS / geography / TIV check</text>
+          <text x="500" y="228" text-anchor="middle" fill="var(--muted)">rule engine &middot; before any expensive processing</text>
+
+          <line x1="810" y1="215" x2="878" y2="215" stroke="var(--muted)" stroke-width="1.2" marker-end="url(#arrow-muted)"/>
+          <rect x="880" y="188" width="100" height="54" rx="3" fill="none" stroke="var(--muted)" stroke-width="1.2" stroke-dasharray="3,3"/>
+          <text x="930" y="212" text-anchor="middle" fill="var(--muted)">Declined</text>
+          <text x="930" y="226" text-anchor="middle" fill="var(--muted)" font-size="9.5">(out of appetite)</text>
+
+          <line x1="500" y1="252" x2="500" y2="294" stroke="var(--ink)" stroke-width="1.3" marker-end="url(#arrow)"/>
+          <text x="516" y="278" fill="var(--muted)">passes appetite</text>
+
+          <!-- STAGE 3 — INGESTION + EXTRACTION -->
+          <text x="190" y="312" fill="var(--muted)" letter-spacing="0.06em">INGESTION + EXTRACTION</text>
+          <rect x="190" y="322" width="620" height="98" rx="3" fill="none" stroke="var(--ink)" stroke-width="1" stroke-opacity="0.35"/>
+          <rect x="206" y="336" width="470" height="34" rx="3" fill="var(--teal-fill)" stroke="var(--teal)" stroke-width="1.3"/>
+          <text x="441" y="358" text-anchor="middle" fill="var(--ink)" font-size="11.5">Rule-based parsing &middot; ACORD parser, regex extractors</text>
+
+          <line x1="676" y1="353" x2="700" y2="353" stroke="var(--gold)" stroke-width="1.1" stroke-dasharray="2,3"/>
+          <line x1="700" y1="353" x2="700" y2="386" stroke="var(--gold)" stroke-width="1.1" stroke-dasharray="2,3" marker-end="url(#arrow)" />
+          <rect x="576" y="386" width="220" height="26" rx="3" fill="var(--gold-fill)" stroke="var(--gold)" stroke-width="1.3"/>
+          <text x="686" y="403" text-anchor="middle" fill="var(--ink)" font-size="10.5">LLM extract — only if coverage &lt; threshold</text>
+
+          <line x1="500" y1="420" x2="500" y2="462" stroke="var(--ink)" stroke-width="1.3" marker-end="url(#arrow)"/>
+
+          <!-- STAGE 4 — RECONCILIATION + PROVENANCE -->
+          <text x="190" y="480" fill="var(--muted)" letter-spacing="0.06em">RECONCILIATION + PROVENANCE</text>
+          <rect x="190" y="490" width="620" height="70" rx="3" fill="var(--teal-fill)" stroke="var(--teal)" stroke-width="1.3"/>
+          <text x="500" y="518" text-anchor="middle" fill="var(--ink)" font-size="12">Cross-document field matching &middot; rule engine</text>
+          <text x="500" y="536" text-anchor="middle" fill="var(--muted)" font-size="10.5">LLM only when a genuine conflict needs reasoning</text>
+          <text x="500" y="552" text-anchor="middle" fill="var(--muted)" font-size="10">every field stamped &rarr; source document &middot; page</text>
+
+          <line x1="500" y1="560" x2="500" y2="602" stroke="var(--ink)" stroke-width="1.3" marker-end="url(#arrow)"/>
+          <text x="516" y="586" fill="var(--muted)">reconciled bundle</text>
+
+          <!-- STAGE 5 — EXTERNAL ORACLES -->
+          <text x="190" y="620" fill="var(--muted)" letter-spacing="0.06em">EXTERNAL ORACLES — PARALLEL LOOKUPS</text>
+          <g>
+            <rect x="190" y="630" width="140" height="56" rx="3" fill="var(--teal-fill)" stroke="var(--teal)" stroke-width="1.2"/>
+            <text x="260" y="654" text-anchor="middle" fill="var(--ink)">Loss History</text>
+            <text x="260" y="668" text-anchor="middle" fill="var(--muted)" font-size="9.5">CLUE / A-PLUS</text>
+
+            <rect x="350" y="630" width="140" height="56" rx="3" fill="var(--teal-fill)" stroke="var(--teal)" stroke-width="1.2"/>
+            <text x="420" y="654" text-anchor="middle" fill="var(--ink)">Workers&#8217; Comp</text>
+            <text x="420" y="668" text-anchor="middle" fill="var(--muted)" font-size="9.5">NCCI</text>
+
+            <rect x="510" y="630" width="140" height="56" rx="3" fill="var(--teal-fill)" stroke="var(--teal)" stroke-width="1.2"/>
+            <text x="580" y="654" text-anchor="middle" fill="var(--ink)">Catastrophe</text>
+            <text x="580" y="668" text-anchor="middle" fill="var(--muted)" font-size="9.5">CAT model</text>
+
+            <rect x="670" y="630" width="140" height="56" rx="3" fill="var(--teal-fill)" stroke="var(--teal)" stroke-width="1.2"/>
+            <text x="740" y="654" text-anchor="middle" fill="var(--ink)">Sanctions</text>
+            <text x="740" y="668" text-anchor="middle" fill="var(--muted)" font-size="9.5">OFAC</text>
+          </g>
+          <line x1="500" y1="686" x2="500" y2="728" stroke="var(--ink)" stroke-width="1.3" marker-end="url(#arrow)"/>
+          <text x="516" y="712" fill="var(--muted)">parallel &middot; seconds, not calls</text>
+
+          <!-- STAGE 6 — AGENT SWARM -->
+          <text x="190" y="744" fill="var(--muted)" letter-spacing="0.06em">SPECIALIST AGENT SWARM — PARALLEL</text>
+          <g>
+            <rect x="190" y="754" width="140" height="56" rx="3" fill="var(--gold-fill)" stroke="var(--gold)" stroke-width="1.2"/>
+            <text x="260" y="778" text-anchor="middle" fill="var(--ink)">Risk &amp;</text>
+            <text x="260" y="792" text-anchor="middle" fill="var(--ink)">Hazard</text>
+
+            <rect x="350" y="754" width="140" height="56" rx="3" fill="var(--gold-fill)" stroke="var(--gold)" stroke-width="1.2"/>
+            <text x="420" y="778" text-anchor="middle" fill="var(--ink)">Loss History</text>
+            <text x="420" y="792" text-anchor="middle" fill="var(--ink)">Read</text>
+
+            <rect x="510" y="754" width="140" height="56" rx="3" fill="var(--gold-fill)" stroke="var(--gold)" stroke-width="1.2"/>
+            <text x="580" y="778" text-anchor="middle" fill="var(--ink)">Compliance &amp;</text>
+            <text x="580" y="792" text-anchor="middle" fill="var(--ink)">Sanctions</text>
+
+            <rect x="670" y="754" width="140" height="56" rx="3" fill="var(--gold-fill)" stroke="var(--gold)" stroke-width="1.2"/>
+            <text x="740" y="778" text-anchor="middle" fill="var(--ink)">Fraud</text>
+            <text x="740" y="792" text-anchor="middle" fill="var(--ink)">ML + rules</text>
+
+            <rect x="190" y="824" width="140" height="56" rx="3" fill="var(--gold-fill)" stroke="var(--gold)" stroke-width="1.2"/>
+            <text x="260" y="848" text-anchor="middle" fill="var(--ink)">Adverse</text>
+            <text x="260" y="862" text-anchor="middle" fill="var(--ink)">Selection</text>
+
+            <rect x="350" y="824" width="140" height="56" rx="3" fill="var(--gold-fill)" stroke="var(--gold)" stroke-width="1.2"/>
+            <text x="420" y="848" text-anchor="middle" fill="var(--ink)">Moral Hazard</text>
+            <text x="420" y="862" text-anchor="middle" fill="var(--ink)">/ Character</text>
+
+            <rect x="510" y="824" width="140" height="56" rx="3" fill="var(--gold-fill)" stroke="var(--gold)" stroke-width="1.2"/>
+            <text x="580" y="848" text-anchor="middle" fill="var(--ink)">Portfolio</text>
+            <text x="580" y="862" text-anchor="middle" fill="var(--ink)">Concentration</text>
+
+            <rect x="670" y="824" width="140" height="56" rx="3" fill="var(--gold-fill)" stroke="var(--gold)" stroke-width="1.2"/>
+            <text x="740" y="848" text-anchor="middle" fill="var(--ink)">Reinsurance</text>
+            <text x="740" y="862" text-anchor="middle" fill="var(--ink)">Treaty</text>
+          </g>
+          <line x1="500" y1="880" x2="500" y2="922" stroke="var(--ink)" stroke-width="1.3" marker-end="url(#arrow)"/>
+          <text x="516" y="906" fill="var(--muted)">findings + severity + evidence</text>
+
+          <!-- STAGE 7 — FINDINGS MERGE -->
+          <text x="190" y="938" fill="var(--muted)" letter-spacing="0.06em">FINDINGS</text>
+          <rect x="190" y="948" width="620" height="50" rx="3" fill="none" stroke="var(--ink)" stroke-width="1.3"/>
+          <text x="500" y="978" text-anchor="middle" fill="var(--ink)" font-size="12">Every finding merged, each one citing its source document</text>
+
+          <line x1="500" y1="998" x2="500" y2="1040" stroke="var(--ink)" stroke-width="1.3" marker-end="url(#arrow)"/>
+          <text x="516" y="1024" fill="var(--muted)">scored bundle</text>
+
+          <!-- STAGE 8 — RATING -->
+          <text x="190" y="1056" fill="var(--muted)" letter-spacing="0.06em">RATING</text>
+          <rect x="190" y="1066" width="620" height="74" rx="3" fill="var(--teal-fill)" stroke="var(--teal)" stroke-width="1.3"/>
+          <text x="500" y="1097" text-anchor="middle" fill="var(--ink)" font-size="12">Filed-manual rating engine &middot; ISO-style, state relativities</text>
+          <text x="500" y="1116" text-anchor="middle" fill="var(--muted)" font-size="10.5">deterministic &middot; same inputs always price the same</text>
+
+          <line x1="500" y1="1140" x2="500" y2="1182" stroke="var(--ink)" stroke-width="1.3" marker-end="url(#arrow)"/>
+          <text x="516" y="1166" fill="var(--muted)">indicated premium</text>
+
+          <!-- STAGE 9 — UW DECISION -->
+          <text x="190" y="1198" fill="var(--muted)" letter-spacing="0.06em">UNDERWRITING DECISION</text>
+          <rect id="decision-box" x="190" y="1208" width="620" height="74" rx="3" fill="var(--gold-fill)" stroke="var(--gold)" stroke-width="1.3"/>
+          <text x="500" y="1239" text-anchor="middle" fill="var(--ink)" font-size="12">Aggregate risk score across every finding</text>
+          <text x="500" y="1258" text-anchor="middle" fill="var(--muted)" font-size="10.5">recommendation only — never binds on its own</text>
+
+          <g stroke="var(--muted)" stroke-width="1" fill="none">
+            <path d="M260,1282 L260,1296" marker-end="url(#arrow-muted)"/>
+            <path d="M420,1282 L420,1296" marker-end="url(#arrow-muted)"/>
+            <path d="M580,1282 L580,1296" marker-end="url(#arrow-muted)"/>
+            <path d="M740,1282 L740,1296" marker-end="url(#arrow-muted)"/>
+          </g>
+          <rect x="190" y="1296" width="140" height="56" rx="3" fill="none" stroke="var(--ink)" stroke-width="1.2"/>
+          <text x="260" y="1329" text-anchor="middle" fill="var(--ink)">Accept</text>
+          <rect x="350" y="1296" width="140" height="56" rx="3" fill="none" stroke="var(--ink)" stroke-width="1.2"/>
+          <text x="420" y="1322" text-anchor="middle" fill="var(--ink)">Conditional</text>
+          <text x="420" y="1336" text-anchor="middle" fill="var(--ink)">Accept</text>
+          <rect x="510" y="1296" width="140" height="56" rx="3" fill="none" stroke="var(--ink)" stroke-width="1.2"/>
+          <text x="580" y="1329" text-anchor="middle" fill="var(--ink)">Refer</text>
+          <rect x="670" y="1296" width="140" height="56" rx="3" fill="none" stroke="var(--ink)" stroke-width="1.2"/>
+          <text x="740" y="1329" text-anchor="middle" fill="var(--ink)">Decline</text>
+
+          <line x1="500" y1="1352" x2="500" y2="1394" stroke="var(--ink)" stroke-width="1.3" marker-end="url(#arrow)"/>
+          <text x="516" y="1378" fill="var(--muted)">recommendation + full evidence trail</text>
+
+          <!-- STAGE 10 — HUMAN REVIEW -->
+          <text x="190" y="1410" fill="var(--muted)" letter-spacing="0.06em">HUMAN REVIEW</text>
+          <rect x="190" y="1420" width="620" height="74" rx="3" fill="none" stroke="var(--ink)" stroke-width="2"/>
+          <text x="500" y="1451" text-anchor="middle" fill="var(--ink)" font-size="12">Licensed underwriter reviews the cited memo</text>
+          <text x="500" y="1470" text-anchor="middle" fill="var(--muted)" font-size="10.5">reads findings + evidence, not 200 raw pages &middot; can override</text>
+
+          <path d="M150,1420 C110,1360 110,1250 150,1210" fill="none" stroke="var(--muted)" stroke-width="1.1" stroke-dasharray="3,3" marker-end="url(#arrow-muted)"/>
+          <text x="60" y="1320" fill="var(--muted)" font-size="10" transform="rotate(-90 60 1320)" text-anchor="middle">override &rarr; re-price</text>
+
+          <line x1="500" y1="1494" x2="500" y2="1536" stroke="var(--ink)" stroke-width="1.3" marker-end="url(#arrow)"/>
+          <text x="516" y="1520" fill="var(--muted)">sign-off</text>
+
+          <!-- STAGE 11 — OUTPUT -->
+          <text x="190" y="1552" fill="var(--muted)" letter-spacing="0.06em">OUTPUT</text>
+          <g>
+            <rect x="190" y="1562" width="140" height="56" rx="3" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.3"/>
+            <text x="260" y="1586" text-anchor="middle" fill="var(--ink)">UW Memo</text>
+            <text x="260" y="1600" text-anchor="middle" fill="var(--muted)" font-size="9.5">PDF</text>
+
+            <rect x="350" y="1562" width="140" height="56" rx="3" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.3"/>
+            <text x="420" y="1586" text-anchor="middle" fill="var(--ink)">Quote Doc</text>
+            <text x="420" y="1600" text-anchor="middle" fill="var(--muted)" font-size="9.5">PDF</text>
+
+            <rect x="510" y="1562" width="140" height="56" rx="3" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.3"/>
+            <text x="580" y="1586" text-anchor="middle" fill="var(--ink)">Policy Admin</text>
+            <text x="580" y="1600" text-anchor="middle" fill="var(--muted)" font-size="9.5">Guidewire / BriteCore</text>
+
+            <rect x="670" y="1562" width="140" height="56" rx="3" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.3"/>
+            <text x="740" y="1586" text-anchor="middle" fill="var(--ink)">Audit Trail</text>
+            <text x="740" y="1600" text-anchor="middle" fill="var(--muted)" font-size="9.5">provenance record</text>
+          </g>
+        </g>
+      </svg>
+      <figcaption>Vertical position is pipeline order; horizontal groups are work that happens at the same time. Teal marks a deterministic step (rules or a trained model — fixed cost, same answer every run); gold marks a step where a generative model is actually reasoning over text; unfilled boxes are merge points, decisions, or output artifacts.</figcaption>
+      <div class="legend">
+        <span><i class="swatch teal"></i>Deterministic — rules / trained ML</span>
+        <span><i class="swatch gold"></i>Generative AI — used only when needed</span>
+        <span><i class="swatch neutral"></i>Merge / decision / output</span>
+        <span><i class="swatch human"></i>Human-in-the-loop (bold outline)</span>
+      </div>
+    </figure>
+  </section>
+
+  <section>
+    <p class="section-label">04 &middot; The time trade</p>
+    <h2>What moves off the underwriter's desk</h2>
+    <p class="lede">Same five jobs get done either way. The question is who's holding the file while each one happens.</p>
+
+    <figure class="diagram-frame">
+      <span class="tick tl"></span><span class="tick br"></span>
+      <svg viewBox="0 0 1000 260" role="img" aria-label="Comparison of a traditional manual underwriting workflow, where all five steps are done by hand over multiple days, against the AI-assisted pipeline, where four of the five steps are automated and only the final sign-off remains a human step, typically completed in under an hour.">
+        <g font-family="IBM Plex Mono, monospace" font-size="11">
+          <text x="190" y="26" fill="var(--muted)" letter-spacing="0.06em">TRADITIONAL &mdash; TYPICALLY DAYS</text>
+          <g stroke="var(--ink)" stroke-width="1" fill="var(--paper)">
+            <rect x="190" y="36" width="124" height="46"/>
+            <rect x="314" y="36" width="124" height="46"/>
+            <rect x="438" y="36" width="124" height="46"/>
+            <rect x="562" y="36" width="124" height="46"/>
+            <rect x="686" y="36" width="124" height="46"/>
+          </g>
+          <g fill="var(--ink)" font-size="10" text-anchor="middle">
+            <text x="252" y="56">Read every</text><text x="252" y="68">doc by hand</text>
+            <text x="376" y="56">Cross-check</text><text x="376" y="68">by hand</text>
+            <text x="500" y="56">Call bureaus</text><text x="500" y="68">one by one</text>
+            <text x="624" y="56">Price from</text><text x="624" y="68">rate manual</text>
+            <text x="748" y="56">Draft memo</text><text x="748" y="68">from scratch</text>
+          </g>
+
+          <text x="190" y="146" fill="var(--muted)" letter-spacing="0.06em">AI-ASSISTED &mdash; TYPICALLY UNDER AN HOUR</text>
+          <g stroke="var(--teal)" stroke-width="1.3" fill="var(--teal-fill)">
+            <rect x="190" y="156" width="124" height="46"/>
+            <rect x="314" y="156" width="124" height="46"/>
+            <rect x="438" y="156" width="124" height="46"/>
+            <rect x="562" y="156" width="124" height="46"/>
+          </g>
+          <g fill="var(--ink)" font-size="10" text-anchor="middle">
+            <text x="252" y="176">Ingest &amp;</text><text x="252" y="188">extract</text>
+            <text x="376" y="176">Reconcile &amp;</text><text x="376" y="188">verify</text>
+            <text x="500" y="176">Query</text><text x="500" y="188">bureaus</text>
+            <text x="624" y="176">Auto-rate</text><text x="624" y="188">to filing</text>
+          </g>
+          <rect x="686" y="156" width="124" height="46" fill="none" stroke="var(--ink)" stroke-width="2"/>
+          <text x="748" y="176" text-anchor="middle" fill="var(--ink)" font-size="10">Underwriter</text>
+          <text x="748" y="188" text-anchor="middle" fill="var(--ink)" font-size="10">reviews &amp; signs</text>
+
+          <path d="M810,60 C 900,60 900,180 815,180" fill="none" stroke="var(--muted)" stroke-width="1" stroke-dasharray="3,3" marker-end="url(#arrow-muted)"/>
+          <text x="905" y="122" fill="var(--muted)" font-size="9.5" text-anchor="middle" transform="rotate(90 905 122)">4 of 5 steps automate</text>
+        </g>
+      </svg>
+      <figcaption>Same five jobs, same order. In the traditional path a person does all five. In the AI-assisted path, four run in the pipeline (teal) and only the last — the actual underwriting judgment — still requires a licensed human.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <p class="section-label">05 &middot; Decision logic</p>
+    <h2>How the aggregate risk score is actually computed</h2>
+    <p class="lede">Not a black-box probability — a weighted sum an underwriter can re-derive by hand from the findings in front of them.</p>
+    <div class="formula-box">
+      score = Σ (severity_weight &times; confidence_weight) / n_findings + pile-up_bonus<br>
+      &nbsp;&nbsp;severity_weight <span class="op">=</span> critical <span class="thresh">1.00</span> &middot; high <span class="thresh">0.75</span> &middot; moderate <span class="thresh">0.50</span> &middot; low <span class="thresh">0.20</span><br>
+      &nbsp;&nbsp;confidence_weight <span class="op">=</span> 0.5 + (finding confidence &times; 0.5)<br>
+      &nbsp;&nbsp;pile-up_bonus <span class="op">=</span> min(<span class="thresh">0.15</span>, volume amplification + high-risk category penalty)<br><br>
+      decision <span class="op">=</span><br>
+      &nbsp;&nbsp;<span class="thresh">DECLINE</span> — claim frequency &ge; 10/yr (hard gate, independent of score)<br>
+      &nbsp;&nbsp;<span class="thresh">REFER</span> — any CRITICAL finding, or score &ge; refer threshold<br>
+      &nbsp;&nbsp;<span class="thresh">CONDITIONAL ACCEPT</span> — moderate findings only, subjectivities attached<br>
+      &nbsp;&nbsp;<span class="thresh">ACCEPT</span> — no findings requiring conditions
+    </div>
+    <p class="lede" style="margin-top:16px;">Environmental "data unavailable" findings never count toward the score — a missing loss run isn't the same risk signal as a disclosed one, and conflating the two is exactly the false-positive pattern this system had to fix. Findings are capped at HIGH unless a specific rule promotes them to CRITICAL, so no single fragile signal can auto-decline a file on its own.</p>
+  </section>
+
+  <section>
+    <p class="section-label">06 &middot; Data &amp; documents</p>
+    <h2>What actually gets read, and by what</h2>
+    <p class="lede">Every document type has a named deterministic parser first; the LLM is the fallback, not the default.</p>
+    <div class="table-scroll">
+      <table class="ref-table">
+        <tr><th>Document</th><th>Structured?</th><th>Primary reader</th><th>LLM involved?</th></tr>
+        <tr><td class="k">ACORD XML</td><td>Structured</td><td class="mono">ACORDParser</td><td>Never — schema-mapped</td></tr>
+        <tr><td class="k">Loss runs</td><td>Semi-structured</td><td class="mono">Loss-run extractor (regex)</td><td>Only if table layout defeats regex</td></tr>
+        <tr><td class="k">Schedule of values</td><td>Semi-structured</td><td class="mono">SOV extractor</td><td>Only on low regex coverage</td></tr>
+        <tr><td class="k">Inspection reports</td><td>Unstructured</td><td class="mono">Inspection extractor (rule-based)</td><td>Only on low regex coverage</td></tr>
+        <tr><td class="k">Property photos</td><td>Image</td><td>Vision model + satellite/damage detection</td><td>Always — no deterministic substitute</td></tr>
+        <tr><td class="k">Broker email / narrative</td><td>Unstructured text</td><td>Regex field extraction</td><td>Only for genuine free-text reasoning</td></tr>
+      </table>
+    </div>
+    <p class="lede" style="margin-top:16px;">Broker-side intake connects through 12+ source integrations already in the connector library — SharePoint, S3, Azure Blob, IVANS, Salesforce, DocuSign, Snowflake, and direct carrier/PAS feeds — so "input" in practice means wherever the broker already works, not a bespoke upload portal.</p>
+  </section>
+
+  <section>
+    <p class="section-label">07 &middot; Data handling &amp; storage</p>
+    <h2>What's kept, what's encrypted, and what's never stored at all</h2>
+    <div class="fact-grid">
+      <div class="fact yes">
+        <h4>WORKING STATE</h4>
+        <p>Job progress lives in Redis (or in-memory in dev), keyed per organization, and expires in roughly a week. This is the "is the pipeline still running" state — not the record of what happened.</p>
+      </div>
+      <div class="fact yes">
+        <h4>THE PERMANENT RECORD</h4>
+        <p>The audit bundle and decision memory are Fernet-encrypted and written to the customer's own landing-zone disk, in WORM-pattern storage, for the retention window — a default of roughly seven years for sealed audit artifacts, matching examiner expectations.</p>
+      </div>
+      <div class="fact no">
+        <h4>WHAT'S NOT RETAINED</h4>
+        <p>Source documents themselves are not kept for replay after the job completes — the policy admin system (Guidewire/BriteCore) is the system of record for the original files. This system stores the decision and its evidence trail, not a second copy of the submission.</p>
+      </div>
+      <div class="fact no">
+        <h4>WHAT NEVER REACHES AN LLM OR A LOG</h4>
+        <p>The same PII redactor runs in two places: every prompt, streamed response, and embedding call is redacted before it leaves the process, and the identical redactor filters every application log line before it reaches stdout or CloudWatch — one redaction policy, not two to keep in sync.</p>
+      </div>
+    </div>
+    <p class="lede" style="margin-top:20px;">The knowledge base the RAG layer searches is built from underwriting <em>guidelines</em>, not customer submissions — so a vector-search leak, if it ever happened, would expose reference material, not a policyholder's data.</p>
+  </section>
+
+  <section>
+    <p class="section-label">08 &middot; Governance, guardrails &amp; observability</p>
+    <h2>The cross-cutting layer, in specifics</h2>
+    <p class="lede">Shown as one column in the diagram above; this is what's actually inside it.</p>
+    <div class="table-scroll">
+      <table class="ref-table">
+        <tr><th>Concern</th><th>Mechanism</th><th>Where it lives</th></tr>
+        <tr><td class="k">Access control</td><td>6-tier RBAC — viewer &lt; underwriter / staff&nbsp;UW &lt; licensed&nbsp;UW &lt; admin &lt; CUO — plus org-scoped API keys</td><td class="mono">auth/</td></tr>
+        <tr><td class="k">Abuse / cost control</td><td>slowapi rate limiter, 30 requests/min per client by default</td><td class="mono">api/main.py</td></tr>
+        <tr><td class="k">Token spend</td><td>Zero-Token Router logs deterministic/LLM/skip on every task, with estimated tokens saved, per job</td><td class="mono">zta/</td></tr>
+        <tr><td class="k">Hallucination</td><td>Zero-hallucination gate enforces a citation on every claim; on internal failure it fails <em>closed</em> to mandatory human review, never to silent accept</td><td class="mono">verification/</td></tr>
+        <tr><td class="k">Adversarial input</td><td>Deterministic regex screen for prompt-injection phrasing, jailbreak attempts, and AI-generated narrative "tells" in submission text</td><td class="mono">fraud/genai_defense.py</td></tr>
+        <tr><td class="k">Fairness</td><td>Bias monitor records every decision against protected/non-protected attributes, AI confidence, and whether a human overrode it</td><td class="mono">analytics/</td></tr>
+        <tr><td class="k">Production hardening</td><td>BANK_MODE posture check refuses to boot in production with a default secret key or dev gateway key still set</td><td class="mono">security/posture.py</td></tr>
+        <tr><td class="k">Metrics</td><td>Prometheus counters/histograms — requests, pipeline runs by decision, quotes, binds, oracle findings by severity — scraped into Grafana; logs also ship to CloudWatch / OpenObserve</td><td class="mono">observability/</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <p class="section-label">09 &middot; Reliability &amp; trust</p>
+    <h2>What happens when something goes wrong</h2>
+    <p class="lede">The trust question isn't "does it work" — it's "what does it do when it doesn't." Every failure mode below defaults toward a human, never toward a silent accept.</p>
+    <div class="table-scroll">
+      <table class="ref-table">
+        <tr><th>If this fails&hellip;</th><th>&hellip;the system does this, not a silent default</th></tr>
+        <tr><td class="k">Hallucination gate errors</td><td>Fails <em>closed</em>: adds a CRITICAL finding, forces the decision to REFER, requires human review</td></tr>
+        <tr><td class="k">A document is poor quality</td><td>Doc quality gate blocks straight-through processing and asks for resubmission rather than extracting garbage silently</td></tr>
+        <tr><td class="k">A critical field is low-confidence</td><td>Held for human confirmation below a 60% confidence floor — never priced on a guess</td></tr>
+        <tr><td class="k">The dedicated pricing path throws</td><td>Falls back to generic pricing, but logs loudly and stamps the quote so the divergence is never invisible to the underwriter</td></tr>
+        <tr><td class="k">A specialist agent errors</td><td>That agent's result is marked failed; it does not silently drop out of the aggregate score</td></tr>
+        <tr><td class="k">The LLM provider is down</td><td>Retry logic distinguishes transient errors (timeout, 5xx, rate limit) from permanent ones (auth, bad request) — no infinite retry loop, no wasted spend on a dead credential</td></tr>
+      </table>
+    </div>
+    <p class="lede" style="margin-top:16px;">Reproducibility is a design constraint, not an afterthought: rating, scoring, and appetite decisions are deterministic — the same submission prices the same way twice — because that determinism is exactly what makes the audit trail worth trusting.</p>
+  </section>
+
+  <section>
+    <p class="section-label">10 &middot; What doesn't change</p>
+    <h2>The sign-off stays human</h2>
+    <p class="lede">Speed comes from removing the reading and re-checking, not the judgment.</p>
+    <div class="closing">
+      <div class="card">
+        <h3>What AI does</h3>
+        <p>Extracts, cross-checks, and scores every document against loss bureaus, sanctions lists, CAT models, and the filed rate manual — in parallel, in minutes, and only reaches for a language model where a rule genuinely can't decide.</p>
+      </div>
+      <div class="card">
+        <h3>What the underwriter sees</h3>
+        <p>A memo with every finding, its severity, and the exact document and page it came from — not a stack of raw ACORD forms, loss runs, and inspection reports to re-derive by hand.</p>
+      </div>
+      <div class="card human">
+        <h3>What stays human</h3>
+        <p>Accept, refer, decline, or price a condition — the recommendation is advisory. A licensed underwriter signs every decision, and can override or send it back for re-pricing at any point.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Commercial Lines &middot; Underwriting Pipeline &middot; System Design Reference
+  </footer>
+
+</div>
