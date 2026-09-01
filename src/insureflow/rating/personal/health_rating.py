@@ -1,7 +1,15 @@
-"""Health rating — filed retail health manual (mediclaim, floater, CI, senior, group, PA, disability)."""
+"""Health rating.
+
+Tries the dedicated US-market LOB/Product/Coverage logic paths
+(insureflow.health.lobs) first — one explicit module per product with its
+own state-rule table, mirroring the life insurance architecture. Falls back
+to the legacy flat filed-manual engine below for any product not (yet)
+registered there.
+"""
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from insureflow.models.submissions import SubmissionBundle
@@ -12,7 +20,10 @@ from insureflow.underwriting.health_product import is_filed_health_product
 from insureflow.underwriting.health_uw import health_product_terms
 from insureflow.underwriting.personal_lines import _blob, _int_field, _money
 
+logger = logging.getLogger(__name__)
+
 _AGE_LABELS = ("age", "insured age", "applicant age", "proposer age", "principal member age")
+_BENEFIT_LABELS = ("sum insured", "coverage amount", "benefit amount", "lump sum", "principal sum", "monthly benefit", "weekly benefit", "face amount", "deductible")
 
 
 def _sum_insured(blob: str, conf: dict[str, Any]) -> float:
@@ -48,6 +59,50 @@ def rate_health(
     state: str = "",
 ) -> QuoteResult:
     """Rate a filed retail health product from the carrier health manual."""
+    # ── Dedicated LOB/Product/Coverage logic paths (US market) ──────────
+    # Dispatches BEFORE the legacy catalog lookup below (unlike life's
+    # dispatch, which runs after its generic pre-computation) because the
+    # legacy general_health_rate_manual.json has no entries at all for the
+    # new US product ids — falling through to it first would always return
+    # a false "catalog_only" ineligible quote for every one of them.
+    try:
+        from insureflow.health.lobs import HealthProductContext, run_product_logic
+        from insureflow.health.lobs.base import _extract_sex, _extract_tobacco
+        from insureflow.rating.personal.manuals import health_manual_us
+        from insureflow.underwriting.health_uw import underwrite_health
+
+        us_manual = health_manual_us()
+        blob = _blob(bundle)
+        health_ctx = HealthProductContext(
+            bundle=bundle,
+            state_code=state,
+            product_id=product_id or "",
+            coverage_id=coverage_id or "",
+            coverage_name=coverage_name or "",
+            manual=us_manual,
+            uw=underwrite_health(bundle),
+            age=_int_field(blob, *_AGE_LABELS) or 40,
+            sex_key=_extract_sex(blob),
+            tobacco=_extract_tobacco(blob),
+            income=_money(blob, "income", "annual income", "salary"),
+            benefit_amount=_money(blob, *_BENEFIT_LABELS),
+            household_members=_int_field(blob, "household size", "number of dependents", "family size", "employee count", "number of employees") or 1,
+            modal="monthly" if "monthly premium" in blob or "modal: m" in blob else "annual",
+        )
+        lob_result = run_product_logic(health_ctx)
+        if lob_result is not None:
+            return lob_result
+    except Exception as exc:
+        logger.error(
+            "Health LOB logic path failed for product_id=%s coverage_id=%s (%s: %s) — falling back to legacy health pricing, which may produce a materially different premium",
+            product_id,
+            coverage_id,
+            type(exc).__name__,
+            exc,
+            exc_info=True,
+        )
+
+    # ── Legacy flat filed-manual engine (unregistered products only) ────
     pid = str(product_id or "").strip().lower().replace("-", "_").replace(" ", "_")
     terms = health_product_terms(pid, coverage_id)
     manual = general_health_manual()

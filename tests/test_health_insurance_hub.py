@@ -22,8 +22,8 @@ from insureflow.underwriting.health_product import LIVE_HEALTH_PRODUCT_IDS, is_f
 
 
 def test_full_health_taxonomy_shape():
-    assert len(HEALTH_CATEGORIES) == 9
-    assert len(HEALTH_LINES) == 37
+    assert len(HEALTH_CATEGORIES) == 8
+    assert len(HEALTH_LINES) == 13
     cats = {c["id"] for c in HEALTH_CATEGORIES}
     assert cats == {
         "individual",
@@ -34,7 +34,6 @@ def test_full_health_taxonomy_shape():
         "top_up",
         "personal_accident",
         "disability",
-        "other",
     }
     for line in HEALTH_LINES:
         assert line["category_id"] in cats
@@ -54,7 +53,7 @@ def test_full_health_taxonomy_shape():
 
 def test_health_hub_fully_live():
     assert len(LIVE_HEALTH_PRODUCT_IDS) == len(HEALTH_LINES)
-    assert is_filed_health_product("individual_basic")
+    assert is_filed_health_product("aca_marketplace_plan")
     live = [ln for ln in HEALTH_LINES if ln.get("status") == "live"]
     catalog = [ln for ln in HEALTH_LINES if ln.get("status") == "catalog"]
     assert len(live) == len(HEALTH_LINES)
@@ -63,7 +62,7 @@ def test_health_hub_fully_live():
     assert hub["stats"]["live_count"] == len(HEALTH_LINES)
     assert hub["stats"]["catalog_count"] == 0
     assert hub["stats"]["product_count"] == len(HEALTH_LINES)
-    assert "HLTH-2026-01" in hub["summary"]
+    assert "HLTH-US-2026-01" in hub["summary"]
     assert "catalog-only" not in hub["uw_responsibilities"][-1]["summary"].lower()
 
 
@@ -72,13 +71,13 @@ def test_hub_payload_has_taxonomy_and_stats():
     assert hub["segment"] == "personal_health"
     assert hub["title"] == "Health Insurance"
     assert len(hub["base_packet"]) == len(HEALTH_BASE_PACKET)
-    assert "Identity proof" in HEALTH_BASE_PACKET[0]
+    assert "photo ID" in HEALTH_BASE_PACKET[0]
     assert len(hub["uw_responsibilities"]) >= 6
-    assert hub["stats"]["category_count"] == 9
+    assert hub["stats"]["category_count"] == 8
     assert hub["stats"]["product_count"] == len(HEALTH_LINES)
-    assert len(hub["taxonomy"]) == 9
+    assert len(hub["taxonomy"]) == 8
     assert len(hub["lines"]) == len(HEALTH_LINES)
-    assert len(hub["categories"]) == 9
+    assert len(hub["categories"]) == 8
     sample = hub["lines"][0]
     assert "all_documents" in sample
     assert isinstance(sample["coverages"], list)
@@ -87,7 +86,7 @@ def test_hub_payload_has_taxonomy_and_stats():
 def test_taxonomy_tree_nests_disease_coverages():
     tree = health_taxonomy_tree()
     ci_cat = next(c for c in tree if c["id"] == "critical_illness")
-    disease = next(p for p in ci_cat["products"] if p["id"] == "disease_specific")
+    disease = next(p for p in ci_cat["products"] if p["id"] == "disease_specific_critical_illness")
     cov_ids = {c["id"] for c in disease["coverages"]}
     assert {"cancer_care", "cardiac_care", "diabetes_kidney_care"} <= cov_ids
     for cov in disease["coverages"]:
@@ -97,7 +96,7 @@ def test_taxonomy_tree_nests_disease_coverages():
 
 
 def test_flatten_coverage_documents_excludes_sibling_coverages():
-    disease = get_health_line("disease_specific")
+    disease = get_health_line("disease_specific_critical_illness")
     assert disease is not None
     cancer = flatten_coverage_documents(disease, "cancer_care")
     cardiac = flatten_coverage_documents(disease, "cardiac_care")
@@ -110,21 +109,21 @@ def test_flatten_coverage_documents_excludes_sibling_coverages():
 
 
 def test_resolve_health_coverage_id_to_product():
-    assert resolve_health_checklist_lob("cancer_care") == "disease_specific"
-    assert resolve_health_checklist_lob("Cancer Care Plan") == "disease_specific"
-    line, cov = get_health_coverage("disease_specific", "cancer_care")
+    assert resolve_health_checklist_lob("cancer_care") == "disease_specific_critical_illness"
+    assert resolve_health_checklist_lob("Cancer Care") == "disease_specific_critical_illness"
+    line, cov = get_health_coverage("disease_specific_critical_illness", "cancer_care")
     assert line is not None and cov is not None
     assert cov["id"] == "cancer_care"
     line_only, cov_only = get_health_coverage(None, "cardiac_care")
     assert line_only is not None and cov_only is not None
-    assert line_only["checklist_lob"] == "disease_specific"
+    assert line_only["checklist_lob"] == "disease_specific_critical_illness"
     assert cov_only["id"] == "cardiac_care"
 
 
 def test_package_checklist_scopes_to_health_coverage():
-    cancer = package_checklist([], lob="disease_specific", coverage_id="cancer_care")
-    cardiac = package_checklist([], lob="disease_specific", coverage_id="cardiac_care")
-    assert cancer["lob"] == "disease_specific"
+    cancer = package_checklist([], lob="disease_specific_critical_illness", coverage_id="cancer_care")
+    cardiac = package_checklist([], lob="disease_specific_critical_illness", coverage_id="cardiac_care")
+    assert cancer["lob"] == "disease_specific_critical_illness"
     assert cancer["coverage_id"] == "cancer_care"
     assert cardiac["coverage_id"] == "cardiac_care"
     assert any("ecg" in m.lower() or "cardiac" in m.lower() for m in cardiac["missing"])
@@ -132,18 +131,18 @@ def test_package_checklist_scopes_to_health_coverage():
 
 
 def test_get_line_by_slug_and_id():
-    by_slug = get_health_line("individual-basic")
+    by_slug = get_health_line("aca-marketplace-plan")
     assert by_slug is not None
-    assert by_slug["checklist_lob"] == "individual_basic"
+    assert by_slug["checklist_lob"] == "aca_marketplace_plan"
     assert len(by_slug["documents"]) >= len(HEALTH_BASE_PACKET)
     assert "all_documents" in by_slug
 
-    by_id = get_health_line("maternity_inclusive")
+    by_id = get_health_line("family_health_plan")
     assert by_id is not None
-    assert by_id["slug"] == "maternity-inclusive"
+    assert by_id["slug"] == "family-health-plan"
     assert any("marriage" in d.lower() for d in by_id["additional_documents"])
 
-    by_checklist_lob = get_health_line("group_employer_mediclaim")
+    by_checklist_lob = get_health_line("small_group_health")
     assert by_checklist_lob is not None
     assert by_checklist_lob["category_id"] == "group"
 
@@ -159,7 +158,7 @@ def test_base_packet_is_included_in_every_line():
 
 def test_category_filters():
     individual = list_health_lines(category_id="individual")
-    assert len(individual) == 5
+    assert len(individual) == 2
     assert all(line["category_id"] == "individual" for line in individual)
     cats = list_health_categories()
     ind_cat = next(c for c in cats if c["id"] == "individual")
@@ -182,7 +181,7 @@ def test_detect_lob_health_keywords_before_life():
     assert detect_lob("critical illness insurance medical test reports", "") == "health"
     assert detect_lob("personal accident occupation proof nominee", "") == "health"
     assert detect_lob("disability income salary slips medical fitness", "") == "health"
-    assert detect_lob("", "individual_basic") == "individual_basic"
+    assert detect_lob("", "aca_marketplace_plan") == "aca_marketplace_plan"
     assert detect_lob("", "health") == "health"
     assert detect_lob("term life insurance face amount beneficiary designation paramedical", "") == "life"
 

@@ -1,48 +1,26 @@
-"""Health product families. Filed health rate manual is live — all 37 leaves underwritable and rateable."""
+"""Health product families. All catalog leaves have a dedicated LOB logic
+path (insureflow.health.lobs) or a filed rate entry, so the whole hub is live.
+"""
 
 from __future__ import annotations
 
-# Every health hub leaf has a product handler in health_uw.py and a filed rate
-# entry in general_health_rate_manual.json, so the whole hub is live.
+# Every health hub leaf has a dedicated logic path in insureflow.health.lobs
+# (see insureflow.health.lobs.PRODUCT_LOGIC_PATHS), so the whole hub is live.
 LIVE_HEALTH_PRODUCT_IDS: frozenset[str] = frozenset(
     {
-        "critical_illness_multistage",
-        "critical_illness_rider",
+        "aca_marketplace_plan",
+        "off_exchange_major_medical",
+        "family_health_plan",
         "critical_illness_standalone",
-        "disability_income",
-        "disability_ppd",
-        "disability_ptd",
-        "disability_ttd",
-        "disease_specific",
-        "family_floater_multiyear",
-        "family_floater_parent",
-        "family_floater_restore",
-        "family_floater_standard",
-        "group_association",
-        "group_employer_mediclaim",
-        "group_government_psu",
-        "group_pa_health_combo",
-        "hospital_cash",
-        "individual_basic",
-        "individual_comprehensive",
-        "maternity_inclusive",
-        "maternity_newborn_standalone",
-        "mediclaim_basic",
-        "opd_cover",
-        "opd_only",
-        "overseas_health",
-        "pa_add",
-        "pa_family",
-        "pa_group",
-        "pa_individual",
-        "senior_no_medical",
-        "senior_preexisting",
-        "senior_standard",
-        "senior_topup",
-        "super_topup_plan",
-        "topup_plan",
-        "ulip_health",
-        "wellness_savings",
+        "disease_specific_critical_illness",
+        "medicare_supplement",
+        "medicare_advantage",
+        "small_group_health",
+        "large_group_health",
+        "supplemental_gap_coverage",
+        "add_accident_indemnity",
+        "short_term_disability",
+        "long_term_disability",
     }
 )
 

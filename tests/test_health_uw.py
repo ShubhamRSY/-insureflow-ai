@@ -8,7 +8,6 @@ from insureflow.models.submissions import SubmissionBundle, UnstructuredSubmissi
 from insureflow.rating.personal.health_rating import rate_health
 from insureflow.underwriting.health_uw import (
     health_product_terms,
-    registered_health_uw_products,
     underwrite_health,
 )
 
@@ -24,11 +23,16 @@ def _bundle(text: str, doc_type: str = "health_application") -> SubmissionBundle
     )
 
 
-def test_every_health_leaf_has_dedicated_uw_handler():
-    registered = registered_health_uw_products()
-    missing = [ln["id"] for ln in HEALTH_LINES if ln["id"] not in registered]
+def test_every_health_leaf_has_dedicated_lob_logic_path():
+    # Every catalog leaf owns a dedicated logic path in insureflow.health.lobs
+    # (the same architecture life insurance uses) — each of those paths
+    # internally reuses one of the handlers below via underwrite_health()
+    # rather than every catalog id being a handler key itself.
+    from insureflow.health.lobs import PRODUCT_LOGIC_PATHS
+
+    missing = [ln["id"] for ln in HEALTH_LINES if ln["id"] not in PRODUCT_LOGIC_PATHS]
     assert missing == [], missing
-    assert len(registered) == len(HEALTH_LINES)
+    assert len(PRODUCT_LOGIC_PATHS) == len(HEALTH_LINES)
 
 
 def test_maternity_requires_marriage_opd_does_not():

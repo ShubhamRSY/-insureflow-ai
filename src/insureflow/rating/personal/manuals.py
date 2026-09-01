@@ -80,6 +80,10 @@ def general_health_manual() -> dict[str, Any]:
     return load_manual("general_health_rate_manual.json")
 
 
+def health_manual_us() -> dict[str, Any]:
+    return load_manual("health_rate_manual_us.json")
+
+
 def life_manual() -> dict[str, Any]:
     return load_manual("life_rate_manual.json")
 
