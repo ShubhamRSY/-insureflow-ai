@@ -24,6 +24,7 @@ LIVE_HEALTH_PRODUCT_IDS: frozenset[str] = frozenset(
         "medicare_advantage",
         "medigap_high_deductible_plan_g",
         "medicare_advantage_snp",
+        "medicare_part_d",
         "small_group_health",
         "large_group_health",
         "association_health_plan",

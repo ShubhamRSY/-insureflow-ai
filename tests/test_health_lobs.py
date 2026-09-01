@@ -43,6 +43,7 @@ def test_all_catalog_products_have_dedicated_paths():
         "medicare_advantage",
         "medigap_high_deductible_plan_g",
         "medicare_advantage_snp",
+        "medicare_part_d",
         "small_group_health",
         "large_group_health",
         "association_health_plan",
@@ -459,6 +460,19 @@ def test_ma_snp_requires_qualifying_condition_or_dual_eligibility():
     assert without_condition.eligible is False
 
 
+def test_medicare_part_d_guaranteed_issue_with_late_enrollment_penalty():
+    # Every Medigap product in this package tells the applicant a separate
+    # Part D plan is required -- this closes that loop.
+    no_gap = rate_health(_bundle("Applicant age: 68."), coverage_id="part_d_standard", product_id="medicare_part_d", state="IL")
+    with_gap = rate_health(_bundle("Applicant age: 68. 12 months without creditable coverage."), coverage_id="part_d_standard", product_id="medicare_part_d", state="IL")
+    under_65 = rate_health(_bundle("Applicant age: 60."), coverage_id="part_d_standard", product_id="medicare_part_d", state="IL")
+    assert no_gap.eligible is True
+    assert no_gap.metadata["late_enrollment_penalty_applies"] is False
+    assert with_gap.metadata["late_enrollment_penalty_applies"] is True
+    assert with_gap.adjusted_premium > no_gap.adjusted_premium
+    assert under_65.eligible is False
+
+
 # ---------------------------------------------------------------------------
 # Breadth expansion — Group (AHP, Public Sector, Level-Funded)
 # ---------------------------------------------------------------------------
@@ -518,3 +532,52 @@ def test_ptd_ppd_are_lump_sum_not_income_replacement():
     assert ppd.eligible is True
     assert ppd.metadata["schedule_key"] == "loss_of_one_limb"
     assert ppd.adjusted_premium < ptd.adjusted_premium  # partial schedule payout is cheaper than total
+
+
+def test_ppd_schedule_reachable_through_real_catalog_coverages_and_scales():
+    # Regression: the catalog originally offered only one generic
+    # "ppd_standard" coverage, so the schedule-based pricing this product's
+    # whole design turns on could never actually be selected in real usage.
+    text = "Applicant age: 40. Medical fitness certificate on file. Benefit amount: 100000."
+    one_limb = rate_health(_bundle(text), coverage_id="loss_of_one_limb", product_id="disability_ppd", state="IL")
+    two_limbs = rate_health(_bundle(text), coverage_id="loss_of_two_limbs", product_id="disability_ppd", state="IL")
+    assert one_limb.metadata["schedule_key"] == "loss_of_one_limb"
+    assert two_limbs.metadata["schedule_key"] == "loss_of_two_limbs"
+    assert one_limb.adjusted_premium < two_limbs.adjusted_premium
+
+
+# ---------------------------------------------------------------------------
+# Adversarial fixes on the breadth-expansion products
+# ---------------------------------------------------------------------------
+
+
+def test_catastrophic_plan_hardship_exemption_does_not_override_medicare_age():
+    # A hardship exemption waives the under-30 rule, not Medicare eligibility.
+    q = rate_health(_bundle("Applicant age: 70. Non-smoker. Hardship exemption on file."), coverage_id="catastrophic_standard", product_id="catastrophic_plan", state="TX")
+    assert q.eligible is False
+    assert any("medicare" in r.lower() for r in q.ineligibility_reasons)
+
+
+def test_hdhp_deductible_above_irs_max_flagged_not_just_below_min():
+    q = rate_health(_bundle("Applicant age: 35. Non-smoker. Deductible: 20000."), coverage_id="hdhp_standard", product_id="hdhp_hsa_qualified", state="TX")
+    assert q.metadata["hsa_qualified"] is False
+    assert any("exceeds the irs maximum" in c.lower() for c in q.metadata["conditions"])
+
+
+def test_extended_dependent_detects_any_age_past_ceiling_not_just_27():
+    q = rate_health(_bundle("Applicant age: 45. Household size: 3. Dependent age: 30."), coverage_id="extended_dependents_standard", product_id="family_extended_dependents", state="TX")
+    assert any("disability certification" in c.lower() for c in q.metadata["conditions"])
+
+
+def test_medigap_hd_plan_g_is_age_rated_outside_community_rated_states():
+    young = rate_health(_bundle("Applicant age: 65."), coverage_id="hd_plan_g", product_id="medigap_high_deductible_plan_g", state="TX")
+    old = rate_health(_bundle("Applicant age: 85."), coverage_id="hd_plan_g", product_id="medigap_high_deductible_plan_g", state="TX")
+    ny_young = rate_health(_bundle("Applicant age: 65."), coverage_id="hd_plan_g", product_id="medigap_high_deductible_plan_g", state="NY")
+    ny_old = rate_health(_bundle("Applicant age: 85."), coverage_id="hd_plan_g", product_id="medigap_high_deductible_plan_g", state="NY")
+    assert old.adjusted_premium > young.adjusted_premium
+    assert ny_old.adjusted_premium == ny_young.adjusted_premium  # community-rated — flat
+
+
+def test_level_funded_group_flags_employer_too_large_for_the_market():
+    q = rate_health(_bundle("Applicant age: 35. Employee count: 5000."), coverage_id="level_funded_standard", product_id="level_funded_group_health", state="IL")
+    assert any("exceeds the typical level-funded range" in c for c in q.metadata["conditions"])

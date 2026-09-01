@@ -306,7 +306,7 @@ HEALTH_LINES: list[dict[str, Any]] = [
         short_name="Medigap HD Plan G",
         category_id="senior",
         checklist_lob="medigap_high_deductible_plan_g",
-        description="CMS-standardized Medigap variant — much lower premium in exchange for a high annual deductible (~$2,800) before the plan starts paying.",
+        description="CMS-standardized Medigap variant — much lower premium in exchange for a high annual deductible (~$2,870) before the plan starts paying.",
         uw_focus="Same guaranteed-issue window logic as standard Plan G. Confirm the applicant understands the deductible mechanic before bind.",
         additional_documents=["Medicare Part B effective date (to determine open-enrollment window)", "Health questionnaire (required only outside the guaranteed-issue window)"],
         coverages=[
@@ -325,6 +325,18 @@ HEALTH_LINES: list[dict[str, Any]] = [
         uw_focus="No health-status decline, but enrollment REQUIRES a documented qualifying chronic condition or dual-eligible status — the inverse of a knockout gate.",
         additional_documents=["Medicare eligibility verification (Part A & B enrollment)", "Chronic condition diagnosis or dual Medicare/Medicaid eligibility documentation"],
         coverages=[_coverage("snp_standard", "Standard Special Needs Plan", "Chronic condition diagnosis or dual Medicare/Medicaid eligibility documentation")],
+    ),
+    _line(
+        id="medicare_part_d",
+        slug="medicare-part-d",
+        name="Medicare Part D (Prescription Drug Plan)",
+        short_name="Part D",
+        category_id="senior",
+        checklist_lob="medicare_part_d",
+        description="Standalone prescription drug plan every Medigap disclosure points to — guaranteed issue, with a permanent late-enrollment penalty for any coverage gap.",
+        uw_focus="No health-status underwriting. Check for a documented gap in creditable drug coverage since Medicare eligibility — it drives a permanent premium surcharge.",
+        additional_documents=["Medicare eligibility verification (Part A & B enrollment)", "Prior creditable prescription drug coverage details (if any gap since eligibility)"],
+        coverages=[_coverage("part_d_standard", "Standard Part D Plan", "Prior creditable prescription drug coverage details (if any gap since eligibility)")],
     ),
     # ===== 5. GROUP / CORPORATE =====
     _line(
@@ -494,7 +506,14 @@ HEALTH_LINES: list[dict[str, Any]] = [
         description="Scheduled-injury lump sum (loss of a limb, sight, or hearing) — no income proof required since the payout is fixed by the schedule, not earnings.",
         uw_focus="Match the disclosed injury type to the correct schedule percentage; do not invent a schedule entry that isn't in the filed manual.",
         additional_documents=["Medical fitness certificate"],
-        coverages=[_coverage("ppd_standard", "Standard Permanent Partial Disability", "Medical fitness certificate")],
+        coverages=[
+            _coverage("loss_of_one_limb", "Loss of One Limb", "Medical fitness certificate"),
+            _coverage("loss_of_two_limbs", "Loss of Two Limbs", "Medical fitness certificate"),
+            _coverage("loss_of_sight_one_eye", "Loss of Sight — One Eye", "Medical fitness certificate"),
+            _coverage("loss_of_sight_both_eyes", "Loss of Sight — Both Eyes", "Medical fitness certificate"),
+            _coverage("loss_of_hearing", "Loss of Hearing", "Medical fitness certificate"),
+            _coverage("unscheduled", "Unscheduled Injury", "Medical fitness certificate"),
+        ],
     ),
 ]
 
