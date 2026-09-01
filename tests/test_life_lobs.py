@@ -130,6 +130,30 @@ def test_level_term_duration_ladder_via_lob_path() -> None:
     assert premiums[10] < premiums[15] < premiums[20] < premiums[25] < premiums[30]
 
 
+@pytest.mark.parametrize(
+    "product_id,coverage_id",
+    [
+        ("level_term", "term_20"),
+        ("guaranteed_universal_life", "gul"),
+        ("indexed_universal_life", "iul"),
+        ("current_assumption_universal_life", "caul"),
+    ],
+)
+def test_product_age_ceiling_matches_the_manual_eligibility_gate(product_id: str, coverage_id: str) -> None:
+    # These products used to declare their own MAX_ISSUE_AGE above 75 (80, or
+    # 85 for GUL) while life_medical.underwrite_life declines anyone over the
+    # filed manual's eligibility.max_age=75 regardless — so ages 76 up to the
+    # product's own stated ceiling were unreachable dead range: the product
+    # claimed they were in range, but every one of them was declined anyway.
+    # The product's own ceiling must not promise an age band the shared
+    # medical gate will never actually honor.
+    at_ceiling = rate_life(_bundle("Applicant age: 75."), coverage_id=coverage_id, product_id=product_id)
+    assert not any("outside" in r.lower() and "issue age" in r.lower() for r in at_ceiling.ineligibility_reasons)
+
+    over_ceiling = rate_life(_bundle("Applicant age: 76."), coverage_id=coverage_id, product_id=product_id)
+    assert any("outside" in r.lower() for r in over_ceiling.ineligibility_reasons)
+
+
 def test_decreasing_cheaper_than_level_and_amortizes() -> None:
     level = rate_life(_bundle(), coverage_id="level_term_20", product_id="level_term")
     mortgage = rate_life(
@@ -147,6 +171,10 @@ def test_decreasing_cheaper_than_level_and_amortizes() -> None:
     assert mortgage.metadata["variant"]["amortize"] is True
     assert mortgage.adjusted_premium < level.adjusted_premium
     assert debt.adjusted_premium != mortgage.adjusted_premium
+    # Debt-Reducing Term declines 10%/yr — over a 20-year term that's a real
+    # discount vs level term, not the ~1% a percentage/fraction unit mismatch
+    # in reduction_rate would produce (10%/yr read as 0.1%/yr).
+    assert debt.adjusted_premium < level.adjusted_premium * 0.85
 
 
 def test_mortgage_life_lender_assignment_loads_admin() -> None:
@@ -219,15 +247,22 @@ def test_limited_pay_ordering_10_pay_gt_20_pay_gt_lifetime() -> None:
     lifetime = rate_life(_bundle(), coverage_name="Traditional Whole Life", product_id="traditional_whole_life")
     lp20 = rate_life(_bundle(), coverage_id="twenty_pay", product_id="limited_pay_whole_life")
     lp10 = rate_life(_bundle(), coverage_id="ten_pay", product_id="limited_pay_whole_life")
-    assert lp20.adjusted_premium > lifetime.adjusted_premium
-    assert lp10.adjusted_premium > lp20.adjusted_premium
+    # Whole-life is filed-permanent (illustration-only here) so the premium
+    # CONTRACT fields are $0; the pricing ordering lives on the illustrated
+    # (pre-C1) premium so documents still show the real ordering.
+    ill = lambda q: q.metadata["illustrated_adjusted_premium"]
+    assert all(q.eligible is False and q.adjusted_premium == 0.0 for q in (lifetime, lp20, lp10))
+    assert ill(lp20) > ill(lifetime)
+    assert ill(lp10) > ill(lp20)
     assert lp10.metadata["actuarial"]["premium_term"] == 10
 
 
 def test_single_premium_equals_nsp_scale() -> None:
     sp = rate_life(_bundle(), coverage_id="lump_sum", product_id="single_premium_whole_life")
     lifetime = rate_life(_bundle(), coverage_name="Guaranteed Whole Life", product_id="traditional_whole_life")
-    assert sp.adjusted_premium > lifetime.adjusted_premium * 10
+    ill = lambda q: q.metadata["illustrated_adjusted_premium"]
+    assert sp.eligible is False and sp.adjusted_premium == 0.0
+    assert ill(sp) > ill(lifetime) * 10
     assert sp.metadata["actuarial"]["premium_term"] == 1
     assert sp.metadata["mec_notice_required"] is True
     assert any("AML" in c or "source-of-funds" in c.lower() for c in sp.metadata["conditions"])
@@ -506,8 +541,11 @@ def test_ul_charge_load_ordering_gul_lt_iul_lt_vul() -> None:
     iul = rate_life(_bundle(), coverage_id="indexed_account", product_id="indexed_universal_life")
     vul = rate_life(_bundle(), coverage_id="gmdb", product_id="variable_universal_life")
     caul = rate_life(_bundle(), coverage_id="current_rate", product_id="current_assumption_universal_life")
-    assert gul.adjusted_premium < iul.adjusted_premium < vul.adjusted_premium
-    assert caul.adjusted_premium < gul.adjusted_premium  # lowest flexibility load
+    # Universal is filed-permanent (illustration-only) -> premium contract $0;
+    # the charge-load ordering is preserved on the illustrated premium.
+    ill = lambda q: q.metadata["illustrated_adjusted_premium"]
+    assert all(q.eligible is False and q.adjusted_premium == 0.0 for q in (gul, iul, vul, caul))
+    assert ill(caul) < ill(gul) < ill(iul) < ill(vul)  # lowest flexibility load
 
 
 def test_iul_crediting_scenarios_cap_and_floor() -> None:
@@ -525,7 +563,8 @@ def test_vul_finra_gate_and_gmdb_rider() -> None:
     assert any("FINRA suitability review REQUIRED" in c for c in finra.metadata["conditions"])
     assert any("Prospectus delivery receipt" in c for c in plain.metadata["conditions"])
     assert gmdb.metadata["gmdb_rider"] is True
-    assert gmdb.adjusted_premium > plain.adjusted_premium  # rider costs extra
+    # Rider costs extra -> reflected in the illustrated premium (contract is $0).
+    assert gmdb.metadata["illustrated_adjusted_premium"] > plain.metadata["illustrated_adjusted_premium"]
 
 
 def test_caul_two_crediting_columns() -> None:
@@ -544,8 +583,11 @@ def test_endowment_ordering_pure_lt_with_profit_lt_fixed() -> None:
     pure = rate_life(_bundle(), coverage_id="pure_maturity", product_id="pure_endowment")
     full = rate_life(_bundle(), coverage_id="with_profit", product_id="full_endowment")
     fixed = rate_life(_bundle(), coverage_id="fixed_endowment", product_id="guaranteed_fixed_endowment")
+    # Endowment is filed-permanent (illustration-only) -> premium contract $0;
     # No death benefit → cheapest; guaranteed-all-values → most expensive.
-    assert pure.adjusted_premium < full.adjusted_premium < fixed.adjusted_premium
+    ill = lambda q: q.metadata["illustrated_adjusted_premium"]
+    assert all(q.eligible is False and q.adjusted_premium == 0.0 for q in (pure, full, fixed))
+    assert ill(pure) < ill(full) < ill(fixed)
     assert pure.metadata["death_benefit"] == 0.0
     assert fixed.metadata["actuarial"]["basis"].endswith("fully guaranteed")
 
@@ -587,10 +629,14 @@ def test_ulip_sa_multiple_rule_by_age() -> None:
 
 def test_single_premium_ulip_zero_recurring_premium() -> None:
     sp = rate_life(_bundle(), coverage_id="sp_ulip", product_id="single_premium_ulip")
-    # No RECURRING premium, but adjusted_premium must still carry the real
-    # lump-sum contribution — it must not silently report $0.00.
-    assert sp.adjusted_premium == 500000.0
-    assert sp.base_premium == 500000.0
+    # Single-premium ULIP is illustration-only (ineligible) so the premium
+    # CONTRACT fields are $0 (C1: declined/illustration business never books a
+    # premium); the real lump-sum contribution is preserved on the illustrated
+    # premium and the single_premium metadata key.
+    assert sp.eligible is False
+    assert sp.adjusted_premium == 0.0
+    assert sp.base_premium == 0.0
+    assert sp.metadata["illustrated_adjusted_premium"] == 500000.0
     assert sp.metadata["single_premium"] == 500000.0
     assert sp.metadata["lock_in_years"] == 5
     assert sp.metadata["fund_value_projection"] > sp.metadata["single_premium"]  # growth at assumed rate
@@ -748,7 +794,7 @@ def test_children_money_back_uses_real_child_age_and_sex_when_documented() -> No
     assert documented.metadata["actuarial"]["child_sex_source"] == "submission"
     assert [s["year"] for s in documented.metadata["payout_schedule"]] == [10, 12, 14, 17]  # 18/20/22/25 minus real age 8
     # A real 8-year-old (vs. an assumed 5-year-old on the proposer's own sex) prices differently, not identically.
-    assert documented.adjusted_premium != no_data.adjusted_premium
+    assert documented.metadata["illustrated_adjusted_premium"] != no_data.metadata["illustrated_adjusted_premium"]
 
 
 # ---------------------------------------------------------------------------
@@ -778,11 +824,13 @@ def test_all_annuity_paths_are_illustrations_only() -> None:
     for pid, cid in cases:
         q = rate_life(_ann(), coverage_id=cid, product_id=pid, state="IL")
         assert q.eligible is False, pid
-        # Illustration-only (unfiled) does not mean the computed consideration
-        # is discarded — adjusted_premium/base_premium must carry the real
-        # purchase price so quote documents don't show $0.00.
-        assert q.adjusted_premium > 0.0, pid
-        assert q.base_premium > 0.0, pid
+        # Illustration-only (unfiled) means the premium CONTRACT fields are $0
+        # (C1: declined/illustration business never books a premium) — but the
+        # computed consideration is preserved on the illustrated premium so
+        # quote documents don't show $0.00.
+        assert q.adjusted_premium == 0.0, pid
+        assert q.base_premium == 0.0, pid
+        assert q.metadata["illustrated_adjusted_premium"] > 0.0, pid
         assert q.metadata["state_rules_applied"]["issue_state"] == "IL", pid
 
 

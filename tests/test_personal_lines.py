@@ -113,7 +113,12 @@ def test_personal_rating_produces_premium() -> None:
     Annual income: $120000. Non-smoker. Preferred. No criminal history.
     """
     lq = engine.quote(_bundle(life_text, "life_application.md"), memo, line=InsuranceLine.LIFE)
-    assert lq.adjusted_premium > 0
+    # No product/coverage hint -> generic (catalog-only) life path -> ineligible
+    # (unfiled) so the premium contract is $0 (C1); the computed premium is
+    # preserved on the illustrated premium.
+    assert lq.eligible is False
+    assert lq.adjusted_premium == 0
+    assert lq.metadata["illustrated_adjusted_premium"] > 0
     assert extract_life_factors(_bundle(life_text)).face_amount == 500000
 
 

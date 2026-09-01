@@ -44,7 +44,12 @@ STATE_RULES: dict[str, dict[str, Any]] = {
 }
 
 MIN_ISSUE_AGE = 18
-MAX_ISSUE_AGE = 85
+# Capped at the filed manual's eligibility.max_age (life_medical.underwrite_life
+# declines anyone older than that regardless of this product's own gate), not
+# 85 — a higher local ceiling here was dead: ages 76-85 always got declined by
+# the shared medical gate anyway, while this product's own message claimed
+# they were in range.
+MAX_ISSUE_AGE = 75
 MIN_FACE = 100_000.0
 NO_LAPSE_LOAD = 1.08  # secondary-guarantee reserve charge on top of lifetime basis
 PAY_TO_AGE = 100

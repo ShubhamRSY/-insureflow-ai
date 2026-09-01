@@ -119,7 +119,10 @@ def rate_life(
 
     class_factors = manual.get("underwriting_class_factors") or {}
     class_f = float(class_factors.get(medical.underwriting_class, class_factors.get("standard", 1.0)))
-    sex_f = 1.0 if sex == "unisex" else float((manual.get("sex_factors") or {}).get(sex, 1.0))
+    # Sex differential is already fully captured by the sex-specific mortality
+    # table above (mort_table keyed on sex_key) — applying manual["sex_factors"]
+    # on top would discount/load female/male mortality a second time.
+    sex_f = 1.0
     tobacco_f = float(manual.get("tobacco_factor", 1.85)) if medical.tobacco else 1.0
     band_f = 1.0
     for band in sorted(manual.get("band_discounts") or [], key=lambda b: float(b.get("min_face") or 0)):
@@ -137,8 +140,13 @@ def rate_life(
     # Net level premium P_x = A_x / ä_x at the manual's interest rate, with
     # expense loading; sex/tobacco are already inside the sex/smoker mortality
     # so only the UW class, band, and state factors apply on top.
-    wl_interest = float(manual.get("whole_life_interest_rate", 0.04))
-    wl_loading = float(manual.get("whole_life_expense_loading", 0.30))
+    # `.get(key, default)` only falls back when the key is ABSENT — the filed
+    # manual carries these keys explicitly set to null (not yet filed), so
+    # `.get` returns None and float(None) raised, silently caught below and
+    # collapsing permanent pricing to the one-year-term fallback. `or` catches
+    # the null value itself, not just a missing key.
+    wl_interest = float(manual.get("whole_life_interest_rate") or 0.04)
+    wl_loading = float(manual.get("whole_life_expense_loading") or 0.30)
     actuarial: dict[str, Any] | None = None
     if family in PERMANENT_ACTUARIAL_FAMILIES:
         try:
@@ -250,8 +258,11 @@ def rate_life(
     adjusted += (face / 1000.0) * medical.flat_extras_per_1000
     adjusted += (face / 1000.0) * financial.rider_load_per_1000
     annual = adjusted + float(manual.get("policy_fee", 60.0))
-    modal_premium = round(annual * modal_f, 2) if modal != "annual" else round(max(annual, float(manual.get("minimum_premium", 250.0))), 2)
+    # Floor to the minimum premium BEFORE deriving the modal payment — otherwise
+    # a policy priced below the floor understates every non-annual installment
+    # even though the annual total on the same quote is correctly floored up.
     adjusted = round(max(annual, float(manual.get("minimum_premium", 250.0))), 2)
+    modal_premium = round(adjusted * modal_f, 2) if modal != "annual" else adjusted
 
     eligible = not is_decline(medical.decision)
     reasons = list(medical.reasons)
@@ -317,6 +328,7 @@ def rate_life(
         "term_years": term_years,
         "modal": modal,
         "modal_premium": modal_premium,
+        "illustrated_adjusted_premium": adjusted,
         "issue_state": issue_state,
         "date_of_birth": factors.date_of_birth,
         "state_of_filing": filing_state,
@@ -348,6 +360,13 @@ def rate_life(
 
     if not eligible:
         ineligibility = [r for r in reasons if r] or ["Life quote ineligible"]
+        # C1: ineligible = declined / illustrative-only -> zero the premium
+        # contract fields so aggregators never book business we did not approve.
+        # (Consistent with finish_quote's guard in insureflow/life/lobs/base.py.)
+        # The illustrative adjusted/base figures remain in metadata/components.
+        adjusted = round(adjusted * 0.0, 2)
+        base_premium = round(base_premium * 0.0, 2)
+        modal_premium = 0.0
     else:
         ineligibility = []
 
@@ -357,7 +376,7 @@ def rate_life(
         base_premium=round(base_premium, 2),
         adjusted_premium=adjusted,
         schedule_modifications=components,
-        rate_per_100_tiv=round(adjusted / (face / 100.0), 4),
+        rate_per_100_tiv=round(adjusted / (face / 100.0), 4) if face else 0.0,
         eligible=eligible,
         ineligibility_reasons=ineligibility,
         metadata=meta,

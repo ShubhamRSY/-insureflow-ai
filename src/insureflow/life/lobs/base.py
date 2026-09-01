@@ -251,6 +251,27 @@ def finish_quote(
     adjusted = round(max(annual_value, 0.0), 2)
     modal_premium = round(adjusted * ctx.modal_f, 2) if ctx.modal != "annual" else adjusted
 
+    # The pre-C1 "booked" premium, kept for quote documents / ordering tests even
+    # when the quote is ineligible. It is never written to the premium contract
+    # fields (see C1 below); aggregators and downstream bind logic only read the
+    # zeroed adjusted/base, so declined/illustration-only business never inflates
+    # revenue or exposure figures.
+    illustrated_adjusted = adjusted
+    illustrated_modal = modal_premium
+
+    # Ineligible = declined / illustration-only -> must NOT carry a booked
+    # premium. Without this guard, eligible=False quotes still surface a large
+    # base/adjusted premium (a $500k annuity consideration, a whole-life or
+    # ULIP illustration, a money-back projection...) which inflates every
+    # premium / revenue / exposure aggregate with business we did NOT approve.
+    # The illustrative/actuarial figures remain intact in `metadata`; only the
+    # premium contract fields are zeroed so aggregators see $0 for non-approved
+    # business. (See life hard-test: 32 catalog products returned
+    # eligible=False with premium from ~$1.8k to $500k.)
+    if not outcome.eligible:
+        adjusted = 0.0
+        modal_premium = 0.0
+
     meta: dict[str, Any] = {
         "filing_id": manual.get("filing_id"),
         "product": outcome.product_label,
@@ -261,6 +282,8 @@ def finish_quote(
         "lob_logic_path": logic_path,
         "modal": ctx.modal,
         "modal_premium": modal_premium,
+        "illustrated_adjusted_premium": illustrated_adjusted,
+        "illustrated_modal_premium": illustrated_modal,
         "issue_state": ctx.issue_state,
         "state_of_filing": ctx.filing_state,
         "serff_tracking": manual.get("serff_tracking"),
@@ -287,13 +310,15 @@ def finish_quote(
     meta.setdefault("premium_tax", outcome.metadata.get("premium_tax"))
 
     ineligibility = [r for r in outcome.reasons if r] if not outcome.eligible else []
+    base = round(outcome.base_premium, 2) if outcome.eligible else 0.0
+    rate_per_100 = round(adjusted / (ctx.face / 100.0), 4) if ctx.face and outcome.eligible else 0.0
     return QuoteResult(
         bundle_id=ctx.bundle.bundle_id,
         line=InsuranceLine.LIFE,
-        base_premium=round(outcome.base_premium, 2),
+        base_premium=base,
         adjusted_premium=adjusted,
         schedule_modifications=list(outcome.components),
-        rate_per_100_tiv=round(adjusted / (ctx.face / 100.0), 4) if ctx.face else 0.0,
+        rate_per_100_tiv=rate_per_100,
         eligible=outcome.eligible,
         ineligibility_reasons=ineligibility,
         metadata=meta,

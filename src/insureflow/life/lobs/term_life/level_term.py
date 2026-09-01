@@ -50,7 +50,12 @@ STATE_RULES: dict[str, dict[str, Any]] = {
 }
 
 MIN_ISSUE_AGE = 18
-MAX_ISSUE_AGE = 80
+# Capped at the filed manual's eligibility.max_age (life_medical.underwrite_life
+# declines anyone older than that regardless of this product's own gate), not
+# 80 — a higher local ceiling here was dead: ages 76-80 always got declined by
+# the shared medical gate anyway, while this product's own message claimed
+# they were in range.
+MAX_ISSUE_AGE = 75
 
 _DURATION_RE = re.compile(r"(?:^|[_\s-])(10|15|20|25|30)(?:$|[_\s-]|\s*-?\s*year|_year)")
 
@@ -85,7 +90,10 @@ def underwrite_level_term(ctx: LifeProductContext, years: int) -> LobOutcome:
 
     base_premium = (ctx.face / 1000.0) * q
     class_f = medical_class_factor(ctx)
-    sex_f = 1.0 if ctx.unisex_forced else float((manual.get("sex_factors") or {}).get(ctx.sex_key, 1.0))
+    # Sex differential is already fully captured by the sex-specific mortality
+    # table above (q_table keyed on ctx.sex_key) — applying manual["sex_factors"]
+    # on top would discount/load female/male mortality a second time.
+    sex_f = 1.0
     tobacco_f = float(manual.get("tobacco_factor", 1.85)) if ctx.smoker else 1.0
     band_f = band_factor(ctx)
     duration_factors = manual.get("term_duration_factors") or {}

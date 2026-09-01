@@ -629,13 +629,48 @@ class TestRatingMechanics:
         comp = {c.name: c.amount for c in q.schedule_modifications}
         assert comp["policy_fee"] == 60.0
 
+    def test_generic_modal_premium_floored_before_modal_split(self) -> None:
+        # A tiny face amount prices below the $250 minimum premium — the
+        # minimum must be applied BEFORE deriving the monthly payment, or the
+        # monthly figure quietly understates what the (correctly floored)
+        # annual total actually implies.
+        text = "Applicant age: 25. Sex: female. Face amount: $5000. Non-smoker. Preferred. Monthly payment."
+        q = rate_life(_bundle(text), coverage_name="Some Term Product 12 Year")
+        assert q.adjusted_premium == 250.0
+        assert q.metadata["modal_premium"] == pytest.approx(250.0 * 0.087, abs=0.01)
+
+    def test_generic_permanent_path_does_not_collapse_to_term(self) -> None:
+        # The filed manual carries whole_life_interest_rate/expense_loading as
+        # explicit nulls (not yet filed) — `.get(key, default)` doesn't apply a
+        # default for a key that's present but None, so float(None) used to
+        # raise, get silently caught, and permanent pricing fell back to the
+        # same one-year-term math as level_term. An unregistered whole-life
+        # coverage name forces this generic (non-LOB-dispatched) path.
+        q = rate_life(_bundle(self.T), coverage_name="Generic Whole Life")
+        assert q.metadata["rating_engine"] == "life_whole_life_actuarial"
+        assert q.metadata["actuarial"] is not None
+        assert q.metadata["actuarial"]["interest_rate"] == 0.04
+        assert q.metadata["actuarial"]["expense_loading_pct"] == 0.30
+        term_only = rate_life(_bundle(self.T), coverage_id="level_term_20", product_id="level_term")
+        # Generic permanent path is ineligible/illustration-only -> premium
+        # contract is $0 (C1); the actuarial premium lives on the illustrated
+        # premium. It must be far above the filed term premium, never collapsing
+        # to the same term math.
+        assert q.eligible is False and q.adjusted_premium == 0.0
+        assert q.metadata["illustrated_adjusted_premium"] > term_only.adjusted_premium * 5
+
     def test_sex_component_female_discount(self) -> None:
+        # The female discount comes entirely from the sex-specific mortality
+        # table (mortality_per_1000) — sex_factor is a fixed 1.0 on both sides
+        # because applying it on top of an already sex-specific table would
+        # double-count the differential (see level_term.py).
         male = rate_life(_bundle("Applicant age: 42. Sex: male. Face amount: $500000. Annual income: 145000. Non-smoker."), coverage_id="level_term_20")
         female = rate_life(_bundle(self.T), coverage_id="level_term_20")
         mcomp = {c.name: c.amount for c in male.schedule_modifications}
         fcomp = {c.name: c.amount for c in female.schedule_modifications}
         assert mcomp["sex_factor"] == 1.0
-        assert fcomp["sex_factor"] == 0.88
+        assert fcomp["sex_factor"] == 1.0
+        assert fcomp["mortality_per_1000"] < mcomp["mortality_per_1000"]
         assert female.adjusted_premium < male.adjusted_premium
 
     def test_unfiled_state_generic_path_ineligible(self) -> None:
@@ -648,7 +683,10 @@ class TestRatingMechanics:
         rules = q.metadata["state_rules_applied"]
         assert rules["issue_state"] == "ZZ"
         assert rules["free_look_days"] >= 10  # NAIC floor default
-        assert q.adjusted_premium > 0
+        # ZZ is not the state of filing -> ineligible, so the premium contract
+        # is $0 but the computed premium survives on the illustrated premium.
+        assert q.eligible is False
+        assert q.metadata["illustrated_adjusted_premium"] > 0
 
     def test_lowercase_state_normalized(self) -> None:
         q = rate_life(_bundle(self.T), coverage_id="level_term_20", product_id="level_term", state="il")
@@ -879,14 +917,18 @@ class TestProductGatesAllLOBs:
         lp10 = rate_life(_bundle(self.B), coverage_id="ten_pay", product_id="limited_pay_whole_life")
         lp20 = rate_life(_bundle(self.B), coverage_id="twenty_pay", product_id="limited_pay_whole_life")
         lifetime = rate_life(_bundle(self.B), coverage_name="Traditional Whole Life", product_id="traditional_whole_life")
-        assert lp10.adjusted_premium > lp20.adjusted_premium > lifetime.adjusted_premium
+        ill = lambda q: q.metadata["illustrated_adjusted_premium"]
+        assert all(q.eligible is False and q.adjusted_premium == 0.0 for q in (lp10, lp20, lifetime))
+        assert ill(lp10) > ill(lp20) > ill(lifetime)
 
     def test_ul_charging_ordering(self) -> None:
         caul = rate_life(_bundle(self.B), coverage_id="current_rate", product_id="current_assumption_universal_life")
         gul = rate_life(_bundle(self.B), coverage_id="no_lapse", product_id="guaranteed_universal_life")
         iul = rate_life(_bundle(self.B), coverage_id="indexed_account", product_id="indexed_universal_life")
         vul = rate_life(_bundle(self.B), coverage_id="gmdb", product_id="variable_universal_life")
-        assert caul.adjusted_premium < gul.adjusted_premium < iul.adjusted_premium < vul.adjusted_premium
+        ill = lambda q: q.metadata["illustrated_adjusted_premium"]
+        assert all(q.eligible is False and q.adjusted_premium == 0.0 for q in (caul, gul, iul, vul))
+        assert ill(caul) < ill(gul) < ill(iul) < ill(vul)
 
     def test_iul_floor_and_cap_scenarios(self) -> None:
         iul = rate_life(_bundle(self.B), coverage_id="indexed_account", product_id="indexed_universal_life")
@@ -934,9 +976,11 @@ class TestProductGatesAllLOBs:
         for pid, cid in (("immediate_annuity", "life_income"), ("qlac", "qlac_lifetime"), ("structured_settlement_annuity", "structured_payments")):
             q = rate_life(_bundle("Purchase price: $200000. Applicant age: 65. Sex: male."), coverage_id=cid, product_id=pid, state="IL")
             assert q.eligible is False, pid
-            # Illustration-only (unfiled) does not mean the computed
-            # consideration is discarded — must not silently show $0.00.
-            assert q.adjusted_premium > 0.0, pid
+            # Illustration-only (unfiled) -> premium contract is $0 (C1), but
+            # the computed consideration is preserved on the illustrated premium
+            # so quote documents don't show $0.00.
+            assert q.adjusted_premium == 0.0, pid
+            assert q.metadata["illustrated_adjusted_premium"] > 0.0, pid
 
     def test_qlac_irs_cap_clamped(self) -> None:
         over = rate_life(_bundle("Purchase price: $400000. Applicant age: 60. Sex: male."), coverage_id="qlac_lifetime", product_id="qlac")
@@ -1355,7 +1399,12 @@ class TestRefutedSuspicionPins:
     def test_mortality_clamps_to_nearest_filed_age(self) -> None:
         young = rate_life(_bundle("Face amount: $250000. Applicant age: 16."), coverage_id="level_term_10")
         adult = rate_life(_bundle("Face amount: $250000. Applicant age: 18."), coverage_id="level_term_10")
-        assert young.adjusted_premium > 0 and adult.adjusted_premium > 0
+        # Age 16 is below the issued band -> ineligible, premium contract $0 but
+        # clamped to the nearest filed age on the illustrated premium; age 18
+        # issues normally.
+        assert young.eligible is False
+        assert young.metadata["illustrated_adjusted_premium"] > 0
+        assert adult.eligible is True and adult.adjusted_premium > 0
 
 
 @pytest.mark.xfail(reason="KNOWN GAP (spec needed): diastolic pressure ignored entirely — 118/105 rates Preferred; needs diastolic band table", strict=False)

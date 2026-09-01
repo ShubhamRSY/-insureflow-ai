@@ -77,7 +77,12 @@ def test_life_medical_and_filing() -> None:
     assert med.underwriting_class in ("preferred", "super_preferred", "standard", "standard_plus")
     q = rate_personal_line(clean, InsuranceLine.LIFE)
     assert q.metadata["filing_id"] == "RYT-LIFE-2026-01"
-    assert q.adjusted_premium >= 250
+    # No product/coverage hint -> generic (catalog-only) path, which is
+    # ineligible (unfiled) so the premium contract is $0 (C1); the computed
+    # term premium is preserved on the illustrated premium.
+    assert q.eligible is False
+    assert q.adjusted_premium == 0
+    assert q.metadata["illustrated_adjusted_premium"] >= 250
     assert q.metadata["medical"]["underwriting_class"]
 
     knockout = _bundle(

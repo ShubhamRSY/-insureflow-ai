@@ -60,6 +60,19 @@ _FAMILY_BY_ID: dict[str, str] = {
     "joint_survivor_annuity": "annuity",
     "qlac": "annuity",
     "structured_settlement_annuity": "annuity",
+    # Bare family ids — callers may select a whole product family without a
+    # specific product/coverage. Without these, the regex fallback below sees
+    # e.g. "universal_20" and its term-duration pattern matches the "20",
+    # misclassifying permanent products as "term" and pricing universal/whole
+    # life / etc. as 20-year term (life hard-test H4).
+    "term": "term",
+    "whole_life": "whole_life",
+    "universal": "universal",
+    "variable_universal": "variable_universal",
+    "endowment": "endowment",
+    "ulip": "ulip",
+    "money_back": "money_back",
+    "annuity": "annuity",
 }
 
 

@@ -83,7 +83,10 @@ def underwrite_decreasing_term(ctx: LifeProductContext, *, amortize: bool, reduc
     q = float(q_table.get(nearest_key(q_table, ctx.age), 1.5))
     base_premium = (ctx.face / 1000.0) * q
     class_f = medical_class_factor(ctx)
-    sex_f = 1.0 if ctx.unisex_forced else float((manual.get("sex_factors") or {}).get(ctx.sex_key, 1.0))
+    # Sex differential is already fully captured by the sex-specific mortality
+    # table above (q_table keyed on ctx.sex_key) — applying manual["sex_factors"]
+    # on top would discount/load female/male mortality a second time.
+    sex_f = 1.0
     tobacco_f = float(manual.get("tobacco_factor", 1.85)) if ctx.smoker else 1.0
     band_f = band_factor(ctx)
     term_f = float((manual.get("term_duration_factors") or {}).get(str(years), 1.0))
@@ -115,6 +118,9 @@ def underwrite_decreasing_term(ctx: LifeProductContext, *, amortize: bool, reduc
 def build_quote(ctx: LifeProductContext) -> Any:
     coverage = (ctx.coverage_id or "").lower()
     amortize = coverage in {"mortgage_term", "mortgage_balance"} or "mortgage" in (ctx.coverage_name or "").lower()
-    reduction_rate = 0.10 if not amortize else 0.0
+    # _decreasing_face() divides reduction_rate by 100 (it takes a percentage,
+    # e.g. 10.0 for "10% per year" — see product_variants.py's annual_rate_pct
+    # convention) — 0.10 here was being read as 0.1% per year, not 10%/year.
+    reduction_rate = 10.0 if not amortize else 0.0
     outcome = underwrite_decreasing_term(ctx, amortize=amortize, reduction_rate=reduction_rate)
     return finish_quote(ctx, outcome, logic_path=LOGIC_PATH, family="term")

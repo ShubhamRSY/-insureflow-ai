@@ -76,7 +76,10 @@ def underwrite_rop_term(ctx: LifeProductContext, *, full_refund: bool) -> LobOut
 
     base_premium = (ctx.face / 1000.0) * q
     class_f = medical_class_factor(ctx)
-    sex_f = 1.0 if ctx.unisex_forced else float((manual.get("sex_factors") or {}).get(ctx.sex_key, 1.0))
+    # Sex differential is already fully captured by the sex-specific mortality
+    # table above (q_table keyed on ctx.sex_key) — applying manual["sex_factors"]
+    # on top would discount/load female/male mortality a second time.
+    sex_f = 1.0
     tobacco_f = float(manual.get("tobacco_factor", 1.85)) if ctx.smoker else 1.0
     band_f = band_factor(ctx)
     duration_factors = manual.get("term_duration_factors") or {}
