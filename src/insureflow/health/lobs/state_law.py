@@ -56,6 +56,12 @@ SMALL_GROUP_SIZE_THRESHOLD: dict[str, int] = {
 }
 DEFAULT_SMALL_GROUP_SIZE_THRESHOLD = 50
 
+# Short-Term Limited Duration Insurance (STLDI) — not ACA-compliant, so
+# several states ban it outright or restrict it below the federal 364-day
+# initial-term ceiling; those states are excluded from this product's
+# availability entirely rather than merely priced differently.
+STLDI_BANNED_STATES: frozenset[str] = frozenset({"CA", "MA", "NJ", "NY", "RI", "VT"})
+
 DEFAULT_GRACE_PERIOD_DAYS = 31
 
 
@@ -111,3 +117,7 @@ def medigap_enrollment_rules(issue_state: str) -> dict[str, Any]:
 
 def small_group_size_threshold(issue_state: str) -> int:
     return SMALL_GROUP_SIZE_THRESHOLD.get((issue_state or "").upper(), DEFAULT_SMALL_GROUP_SIZE_THRESHOLD)
+
+
+def stldi_available(issue_state: str) -> bool:
+    return (issue_state or "").upper() not in STLDI_BANNED_STATES
