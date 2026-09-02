@@ -1228,3 +1228,79 @@ class TestSupervisorAgent:
         supervisor = SupervisorAgent()
         memo = supervisor.analyze_submission(bundle, parallel=True)
         assert len(memo.agent_results) >= 4
+
+    def test_auto_plan_defaults_to_off_and_changes_nothing(self) -> None:
+        # auto_plan=False (the default) must dispatch every agent exactly as
+        # before this feature existed -- it's opt-in, not a behavior change
+        # for any existing caller.
+        bundle = _make_bundle(insured_name="Life Applicant")
+        supervisor = SupervisorAgent()
+        memo = supervisor.analyze_submission(bundle, insurance_line="life")
+        assert "LossRunAnalystAgent" in memo.agent_results
+        assert not any("Skipped LossRunAnalystAgent" in n for n in memo.review_notes)
+
+    def test_auto_plan_skips_loss_run_analyst_for_non_property_line(self) -> None:
+        bundle = _make_bundle(insured_name="Life Applicant")
+        supervisor = SupervisorAgent()
+        memo = supervisor.analyze_submission(bundle, insurance_line="life", auto_plan=True)
+        assert "LossRunAnalystAgent" not in memo.agent_results
+        assert any("Skipped LossRunAnalystAgent" in n for n in memo.review_notes)
+        # Everything else still ran -- this skips one agent, not the analysis.
+        assert "RiskAnalystAgent" in memo.agent_results
+        assert "ComplianceAgent" in memo.agent_results
+        assert "FraudDetectionAgent" in memo.agent_results
+
+    def test_auto_plan_records_fraud_ml_skip_reason_for_property_line(self) -> None:
+        bundle = _make_bundle(
+            insured_name="Small Shop",
+            locations=[LocationData(address="A", city="C", state="S", zip_code="Z", building_value=100_000)],
+        )
+        supervisor = SupervisorAgent()
+        memo = supervisor.analyze_submission(bundle, insurance_line="commercial_property", auto_plan=True)
+        assert "LossRunAnalystAgent" in memo.agent_results  # property line -- still relevant, still runs
+        assert any("lowest materiality band" in n for n in memo.review_notes)
+
+
+class TestAgentPlanner:
+    def test_skips_loss_run_analyst_for_non_property_line(self) -> None:
+        from insureflow.agents.planner import AgentPlanner
+
+        bundle = _make_bundle(insured_name="Life Applicant")
+        plan = AgentPlanner().plan(bundle, insurance_line="life")
+        assert plan.run_loss_run_analyst is False
+        assert plan.skip_ml_fraud is False
+        assert any("LossRunAnalystAgent" in r for r in plan.reasons)
+
+    def test_skips_fraud_ml_for_low_materiality_property(self) -> None:
+        from insureflow.agents.planner import AgentPlanner
+
+        bundle = _make_bundle(
+            insured_name="Small Shop",
+            locations=[LocationData(address="A", city="C", state="S", zip_code="Z", building_value=100_000)],
+        )
+        plan = AgentPlanner().plan(bundle, insurance_line="commercial_property")
+        assert plan.run_loss_run_analyst is True
+        assert plan.skip_ml_fraud is True
+        assert any("materiality" in r for r in plan.reasons)
+
+    def test_runs_everything_for_large_property(self) -> None:
+        from insureflow.agents.planner import AgentPlanner
+
+        bundle = _make_bundle(
+            insured_name="Big Factory",
+            locations=[LocationData(address="A", city="C", state="S", zip_code="Z", building_value=5_000_000)],
+        )
+        plan = AgentPlanner().plan(bundle, insurance_line="commercial_property")
+        assert plan.run_loss_run_analyst is True
+        assert plan.skip_ml_fraud is False
+        assert plan.reasons == []
+
+    def test_runs_everything_when_no_locations_on_a_property_line(self) -> None:
+        # No TIV signal to act on -- fail safe to "run everything", never
+        # silently skip a check when there's nothing to justify skipping it.
+        from insureflow.agents.planner import AgentPlanner
+
+        bundle = _make_bundle(insured_name="Unknown Risk")
+        plan = AgentPlanner().plan(bundle, insurance_line="commercial_property")
+        assert plan.run_loss_run_analyst is True
+        assert plan.skip_ml_fraud is False

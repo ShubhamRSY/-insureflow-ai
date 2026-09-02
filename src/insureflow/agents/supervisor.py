@@ -63,15 +63,26 @@ class SupervisorAgent(BaseAgent):
         skip_ml_fraud: bool = False,
         insurance_line: str | None = None,
         org_id: str | None = None,
+        auto_plan: bool = False,
     ) -> UnderwritingMemo:
         start = time.time()
 
+        plan_reasons: list[str] = []
+        run_loss_run_analyst = True
+        if auto_plan:
+            from insureflow.agents.planner import AgentPlanner
+
+            plan = AgentPlanner().plan(bundle, insurance_line=insurance_line)
+            run_loss_run_analyst = plan.run_loss_run_analyst
+            skip_ml_fraud = skip_ml_fraud or plan.skip_ml_fraud
+            plan_reasons = plan.reasons
+
         if use_celery:
-            agent_results = self._run_agents_celery(bundle, insurance_line=insurance_line, org_id=org_id)
+            agent_results = self._run_agents_celery(bundle, insurance_line=insurance_line, org_id=org_id, run_loss_run_analyst=run_loss_run_analyst)
         elif parallel:
-            agent_results = self._run_agents_threadpool(bundle, skip_ml_fraud=skip_ml_fraud, insurance_line=insurance_line, org_id=org_id)
+            agent_results = self._run_agents_threadpool(bundle, skip_ml_fraud=skip_ml_fraud, insurance_line=insurance_line, org_id=org_id, run_loss_run_analyst=run_loss_run_analyst)
         else:
-            agent_results = self._run_agents_sequential(bundle, skip_ml_fraud=skip_ml_fraud, insurance_line=insurance_line, org_id=org_id)
+            agent_results = self._run_agents_sequential(bundle, skip_ml_fraud=skip_ml_fraud, insurance_line=insurance_line, org_id=org_id, run_loss_run_analyst=run_loss_run_analyst)
 
         conflict_resolution = self._resolve_conflicts(agent_results, resolve_with_llm=resolve_with_llm)
 
@@ -83,34 +94,50 @@ class SupervisorAgent(BaseAgent):
 
         if conflict_resolution:
             memo.review_notes.extend(conflict_resolution)
+        if plan_reasons:
+            memo.review_notes.extend(plan_reasons)
 
         elapsed = time.time() - start
         self._add_timing_to_memo(memo, agent_results, elapsed)
 
         return memo
 
-    def _run_agents_threadpool(self, bundle: SubmissionBundle, skip_ml_fraud: bool = False, insurance_line: str | None = None, org_id: str | None = None) -> list[AgentResult]:
+    def _run_agents_threadpool(
+        self,
+        bundle: SubmissionBundle,
+        skip_ml_fraud: bool = False,
+        insurance_line: str | None = None,
+        org_id: str | None = None,
+        run_loss_run_analyst: bool = True,
+    ) -> list[AgentResult]:
         import concurrent.futures
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
             risk_future = pool.submit(self.risk_analyst.run, bundle, insurance_line=insurance_line, org_id=org_id)
-            loss_future = pool.submit(self.loss_run_analyst.run, bundle, insurance_line=insurance_line, org_id=org_id)
+            loss_future = pool.submit(self.loss_run_analyst.run, bundle, insurance_line=insurance_line, org_id=org_id) if run_loss_run_analyst else None
             comp_future = pool.submit(self.compliance_agent.run, bundle, insurance_line=insurance_line, org_id=org_id)
             fraud_future = pool.submit(self._run_fraud_agent, bundle, skip_ml_fraud, insurance_line, org_id)
-            return [
-                risk_future.result(),
-                loss_future.result(),
-                comp_future.result(),
-                fraud_future.result(),
-            ]
+            results = [risk_future.result()]
+            if loss_future is not None:
+                results.append(loss_future.result())
+            results.append(comp_future.result())
+            results.append(fraud_future.result())
+            return results
 
-    def _run_agents_sequential(self, bundle: SubmissionBundle, skip_ml_fraud: bool = False, insurance_line: str | None = None, org_id: str | None = None) -> list[AgentResult]:
-        return [
-            self.risk_analyst.run(bundle, insurance_line=insurance_line, org_id=org_id),
-            self.loss_run_analyst.run(bundle, insurance_line=insurance_line, org_id=org_id),
-            self.compliance_agent.run(bundle, insurance_line=insurance_line, org_id=org_id),
-            self._run_fraud_agent(bundle, skip_ml_fraud, insurance_line, org_id),
-        ]
+    def _run_agents_sequential(
+        self,
+        bundle: SubmissionBundle,
+        skip_ml_fraud: bool = False,
+        insurance_line: str | None = None,
+        org_id: str | None = None,
+        run_loss_run_analyst: bool = True,
+    ) -> list[AgentResult]:
+        results = [self.risk_analyst.run(bundle, insurance_line=insurance_line, org_id=org_id)]
+        if run_loss_run_analyst:
+            results.append(self.loss_run_analyst.run(bundle, insurance_line=insurance_line, org_id=org_id))
+        results.append(self.compliance_agent.run(bundle, insurance_line=insurance_line, org_id=org_id))
+        results.append(self._run_fraud_agent(bundle, skip_ml_fraud, insurance_line, org_id))
+        return results
 
     def _run_fraud_agent(self, bundle: SubmissionBundle, skip_ml_fraud: bool = False, insurance_line: str | None = None, org_id: str | None = None) -> AgentResult:
         """Run the fraud agent, optionally deferring its ML scoring to a deep dive."""
@@ -122,7 +149,7 @@ class SupervisorAgent(BaseAgent):
             if skip_ml_fraud:
                 self.fraud_detection.defer_ml = False
 
-    def _run_agents_celery(self, bundle: SubmissionBundle, insurance_line: str | None = None, org_id: str | None = None) -> list[AgentResult]:
+    def _run_agents_celery(self, bundle: SubmissionBundle, insurance_line: str | None = None, org_id: str | None = None, run_loss_run_analyst: bool = True) -> list[AgentResult]:
         try:
             from celery import group
 
@@ -131,10 +158,11 @@ class SupervisorAgent(BaseAgent):
             bundle_data = bundle.model_dump()
             agent_names = [
                 "RiskAnalystAgent",
-                "LossRunAnalystAgent",
                 "ComplianceAgent",
                 "FraudDetectionAgent",
             ]
+            if run_loss_run_analyst:
+                agent_names.append("LossRunAnalystAgent")
 
             job = group(run_agent.s(agent_name, bundle_data, insurance_line=insurance_line, org_id=org_id) for agent_name in agent_names)
             result = job.apply_async()
@@ -149,7 +177,7 @@ class SupervisorAgent(BaseAgent):
                 success=False,
                 errors=[f"Celery execution failed, falling back to threadpool: {exc}"],
             )
-            agent_results = self._run_agents_threadpool(bundle, insurance_line=insurance_line, org_id=org_id)
+            agent_results = self._run_agents_threadpool(bundle, insurance_line=insurance_line, org_id=org_id, run_loss_run_analyst=run_loss_run_analyst)
             agent_results.append(fallback)
             return agent_results
 
