@@ -95,6 +95,34 @@ export function HintCheckbox({
   );
 }
 
+// Generalizes the button-toggle tab pattern already hand-rolled ad hoc in
+// StaffUnderwriting.jsx / RunSelector.jsx / PackageSourceHub.jsx into one
+// shared widget, so a page switches between sections instead of stacking
+// every section at once. `tabs`: [{id, label, icon?}].
+export function Tabs({ tabs, active, onChange, className = '' }) {
+  return (
+    <div role="tablist" className={`flex flex-wrap gap-2 ${className}`}>
+      {tabs.map((t) => {
+        const Icon = t.icon;
+        const isActive = active === t.id;
+        return (
+          <button
+            key={t.id}
+            type="button"
+            role="tab"
+            aria-selected={isActive}
+            onClick={() => onChange(t.id)}
+            className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${isActive ? 'bg-brand/20 text-brand-light' : 'bg-white/5 text-slate-400 hover:text-slate-200'}`}
+          >
+            {Icon && <Icon className="h-3.5 w-3.5" />}
+            {t.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 export function Badge({ status, pulse = false, label }) {
   if (!status) return null;
   const s = String(status).toLowerCase();

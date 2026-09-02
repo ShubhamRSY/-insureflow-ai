@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import LifeLinePage from './LifeLine';
 
@@ -124,56 +124,113 @@ describe('LifeLinePage', () => {
     expect(screen.getByText('MIB Report')).toBeInTheDocument();
   });
 
-  it('renders the Base packet section', async () => {
+  it('renders all four section tabs', async () => {
     endpoints.lifeInsuranceLine.mockResolvedValue(mockLineData);
     renderLine();
 
     await waitFor(() => {
-      expect(screen.getByText('Base packet (keep ready)')).toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: /document pack/i })).toBeInTheDocument();
     });
+    expect(screen.getByRole('tab', { name: /base packet/i })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /underwriter focus/i })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /checklist/i })).toBeInTheDocument();
+  });
+
+  it('shows only the active tab\'s content, not every section stacked at once', async () => {
+    endpoints.lifeInsuranceLine.mockResolvedValue(mockLineData);
+    renderLine();
+
+    await waitFor(() => {
+      expect(screen.getByText('Document pack')).toBeInTheDocument();
+    });
+    // Document Pack is the default tab -- its content is visible...
+    expect(screen.getByText('Application')).toBeInTheDocument();
+    // ...but Underwriter Focus's content is not, until its tab is clicked.
+    expect(screen.queryByText('Evaluate mortality risk based on age, health, and lifestyle.')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('tab', { name: /underwriter focus/i }));
+
+    expect(screen.getByText('Evaluate mortality risk based on age, health, and lifestyle.')).toBeInTheDocument();
+    // Switching away hides Document Pack's own content in turn.
+    expect(screen.queryByText('Application')).not.toBeInTheDocument();
+  });
+
+  it('renders the Base packet section behind its tab', async () => {
+    endpoints.lifeInsuranceLine.mockResolvedValue(mockLineData);
+    renderLine();
+
+    await waitFor(() => {
+      expect(screen.getByRole('tab', { name: /base packet/i })).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByRole('tab', { name: /base packet/i }));
+
+    expect(screen.getByText('Base packet (keep ready)')).toBeInTheDocument();
     expect(screen.getByText('Signed application')).toBeInTheDocument();
     expect(screen.getByText('Premium payment')).toBeInTheDocument();
   });
 
-  it('renders the Underwriter focus section', async () => {
+  it('renders the Underwriter focus section behind its tab', async () => {
     endpoints.lifeInsuranceLine.mockResolvedValue(mockLineData);
     renderLine();
 
     await waitFor(() => {
-      expect(screen.getByText('Underwriter focus')).toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: /underwriter focus/i })).toBeInTheDocument();
     });
+    fireEvent.click(screen.getByRole('tab', { name: /underwriter focus/i }));
+
+    expect(screen.getByText('Underwriter focus')).toBeInTheDocument();
     expect(screen.getByText('Evaluate mortality risk based on age, health, and lifestyle.')).toBeInTheDocument();
   });
 
-  it('renders the UW question in italics', async () => {
+  it('renders the UW question in italics behind the Underwriter Focus tab', async () => {
     endpoints.lifeInsuranceLine.mockResolvedValue(mockLineData);
     renderLine();
 
     await waitFor(() => {
-      expect(screen.getByText(/Is the applicant insurable at standard rates\?/)).toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: /underwriter focus/i })).toBeInTheDocument();
     });
+    fireEvent.click(screen.getByRole('tab', { name: /underwriter focus/i }));
+
+    expect(screen.getByText(/Is the applicant insurable at standard rates\?/)).toBeInTheDocument();
   });
 
-  it('renders UW responsibilities', async () => {
+  it('renders UW responsibilities behind the Underwriter Focus tab', async () => {
     endpoints.lifeInsuranceLine.mockResolvedValue(mockLineData);
     renderLine();
 
     await waitFor(() => {
-      expect(screen.getByText('Medical UW')).toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: /underwriter focus/i })).toBeInTheDocument();
     });
+    fireEvent.click(screen.getByRole('tab', { name: /underwriter focus/i }));
+
+    expect(screen.getByText('Medical UW')).toBeInTheDocument();
     expect(screen.getByText('Review health history and exam results.')).toBeInTheDocument();
     expect(screen.getByText('Financial UW')).toBeInTheDocument();
     expect(screen.getByText('Verify income and coverage need.')).toBeInTheDocument();
   });
 
-  it('renders the Checklist template section with correct count', async () => {
+  it('renders the Checklist template section with correct count behind its tab', async () => {
     endpoints.lifeInsuranceLine.mockResolvedValue(mockLineData);
     renderLine();
 
     await waitFor(() => {
-      expect(screen.getByText('Checklist template')).toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: /checklist/i })).toBeInTheDocument();
     });
+    fireEvent.click(screen.getByRole('tab', { name: /checklist/i }));
+
+    expect(screen.getByText('Checklist template')).toBeInTheDocument();
     expect(screen.getByText('0 / 2')).toBeInTheDocument();
+  });
+
+  it('switches tabs without losing the always-visible Start Submission section', async () => {
+    endpoints.lifeInsuranceLine.mockResolvedValue(mockLineData);
+    renderLine();
+
+    await waitFor(() => {
+      expect(screen.getByText(/Start submission — Level Term/)).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByRole('tab', { name: /checklist/i }));
+    expect(screen.getByText(/Start submission — Level Term/)).toBeInTheDocument();
   });
 
   it('renders Start submission section with short_name', async () => {
@@ -241,8 +298,10 @@ describe('LifeLinePage', () => {
     renderLine();
 
     await waitFor(() => {
-      expect(screen.getByText('Level Term Life Insurance')).toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: /checklist/i })).toBeInTheDocument();
     });
+    fireEvent.click(screen.getByRole('tab', { name: /checklist/i }));
+
     const checklist = screen.getByText('Checklist template').closest('section');
     expect(checklist).toHaveTextContent(/present \/ required for this line/);
   });
@@ -252,8 +311,12 @@ describe('LifeLinePage', () => {
     renderLine();
 
     await waitFor(() => {
-      expect(screen.getByText('Base packet (keep ready)')).toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: /base packet/i })).toBeInTheDocument();
     });
+    fireEvent.click(screen.getByRole('tab', { name: /base packet/i }));
+
+    expect(screen.getByText('Base packet (keep ready)')).toBeInTheDocument();
+    expect(screen.getByText('No base packet items for this line.')).toBeInTheDocument();
   });
 
   it('renders empty uw_responsibilities gracefully', async () => {
@@ -261,7 +324,10 @@ describe('LifeLinePage', () => {
     renderLine();
 
     await waitFor(() => {
-      expect(screen.getByText('Underwriter focus')).toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: /underwriter focus/i })).toBeInTheDocument();
     });
+    fireEvent.click(screen.getByRole('tab', { name: /underwriter focus/i }));
+
+    expect(screen.getByText('Underwriter focus')).toBeInTheDocument();
   });
 });
