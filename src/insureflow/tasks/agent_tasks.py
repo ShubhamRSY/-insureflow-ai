@@ -11,7 +11,7 @@ from insureflow.tasks.celery_app import celery_app
     max_retries=3,
     default_retry_delay=10,
 )
-def run_agent(self: Any, agent_name: str, bundle_data: dict[str, Any], insurance_line: str | None = None) -> dict[str, Any]:
+def run_agent(self: Any, agent_name: str, bundle_data: dict[str, Any], insurance_line: str | None = None, org_id: str | None = None) -> dict[str, Any]:
     from insureflow.agents.compliance_agent import ComplianceAgent
     from insureflow.agents.fraud_detection_agent import FraudDetectionAgent
     from insureflow.agents.loss_run_analyst import LossRunAnalystAgent
@@ -31,7 +31,7 @@ def run_agent(self: Any, agent_name: str, bundle_data: dict[str, Any], insurance
 
     bundle = SubmissionBundle(**bundle_data)
     agent = agent_cls()
-    result = agent.run(bundle, insurance_line=insurance_line)
+    result = agent.run(bundle, insurance_line=insurance_line, org_id=org_id)
 
     return result.model_dump()  # type: ignore[no-any-return]
 

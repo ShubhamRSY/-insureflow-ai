@@ -994,6 +994,128 @@ class TestReActAgent:
         assert result.success is False
         assert any("max steps" in e.lower() for e in result.errors)
 
+    def _seeded_decision_memory(self, tmp_path: Any, monkeypatch: Any) -> Any:
+        """A DecisionMemoryStore pointed at a throwaway file, pre-seeded with
+        one org-scoped precedent, wired in as the module-level singleton so
+        ToolRegistry's lazy `get_decision_memory()` import picks it up.
+
+        Uses monkeypatch (not a raw assignment) so the real singleton is
+        always restored after the test, pass or fail -- this global is
+        genuinely shared with production code paths (archive.py, the main
+        pipeline), not just other tests.
+        """
+        import insureflow.privacy.decision_memory as dm
+        from insureflow.privacy.decision_memory import DecisionMemoryRecord, DecisionMemoryStore
+
+        # Force the offline hashed-embedding path — deterministic and
+        # network-free regardless of the ambient environment's
+        # EMBEDDING_BACKEND/API-key/egress config.
+        monkeypatch.setenv("EMBEDDING_BACKEND", "local")
+        store = DecisionMemoryStore(persist_path=tmp_path / "decision_memory.jsonl")
+        store.remember(
+            DecisionMemoryRecord(
+                org_id="org-x",
+                bundle_id="past-1",
+                line="commercial_property",
+                decision="refer",
+                naics="236220",
+                state="CA",
+                tiv_band="1m-5m",
+                construction="wood frame",
+                occupancy="habitational",
+                loss_count_band="2-3",
+                reasons=["three prior losses", "wood frame construction in wildfire zone"],
+            )
+        )
+        monkeypatch.setattr(dm, "_store", store)
+        return store
+
+    def test_recall_tool_registered_and_safe_without_org_id(self, tmp_path: Any, monkeypatch: Any) -> None:
+        self._seeded_decision_memory(tmp_path, monkeypatch)
+        bundle = _make_bundle(insured_name="Test Corp")
+        from insureflow.agents.react_tools import ToolRegistry
+
+        reg = ToolRegistry(bundle, insurance_line="commercial_property", org_id=None)
+        names = [t["name"] for t in reg.list_tools()]
+        assert "recall_similar_past_decisions" in names
+
+        result = reg.call("recall_similar_past_decisions")
+        assert result["available"] is False
+
+    def test_recall_tool_returns_real_precedent_with_org_id(self, tmp_path: Any, monkeypatch: Any) -> None:
+        self._seeded_decision_memory(tmp_path, monkeypatch)
+        bundle = SubmissionBundle(
+            bundle_id="current-1",
+            structured=StructuredSubmission(
+                submission_id="s1",
+                named_insured=NamedInsured(legal_name="Test Corp", state_of_residence="CA"),
+                risk_profile=RiskProfile(naics_code="236220", construction_type="wood frame", occupancy_type="habitational"),
+                locations=[LocationData(address="123 Main", city="LA", state="CA", zip_code="90001", building_value=2_000_000)],
+            ),
+        )
+        from insureflow.agents.react_tools import ToolRegistry
+
+        reg = ToolRegistry(bundle, insurance_line="commercial_property", org_id="org-x")
+        result = reg.call("recall_similar_past_decisions", limit=3)
+        assert result["available"] is True
+        assert result["count"] == 1
+        assert result["similar_cases"][0]["bundle_id"] == "past-1"
+        assert result["similar_cases"][0]["decision"] == "refer"
+        assert "three prior losses" in result["similar_cases"][0]["reasons"]
+
+    def test_react_loop_recalls_past_decisions_and_feeds_observation_back(self, tmp_path: Any, monkeypatch: Any) -> None:
+        # End-to-end: the mocked model calls recall_similar_past_decisions
+        # mid-loop, and the REAL precedent it returns (not a stub) must
+        # round-trip into the next prompt -- this is the actual gap the
+        # whole feature exists to close: retrieval feeding agent reasoning,
+        # not just a tool that technically exists.
+        from unittest.mock import MagicMock
+
+        from insureflow.llm.client import LLMClient
+        from insureflow.verification.circuit_breaker import get_circuit_breaker
+
+        self._seeded_decision_memory(tmp_path, monkeypatch)
+
+        claims = [
+            ClaimRecord(
+                claim_id="C1",
+                date_of_loss=date(2024, 1, 1),
+                line_of_business="GL",
+                cause="wildfire exposure",
+                incurred_amount=50_000,
+            ),
+        ]
+        bundle = _make_bundle(insured_name="Test Corp", claims=claims)
+
+        mock_llm = MagicMock(spec=LLMClient)
+        mock_llm.provider = "mock_provider"
+        mock_llm.model = "mock_model_react_loop_recall_test"
+        mock_llm.api_key = "test-key"
+        mock_llm.complete.side_effect = [
+            '{"thought": "checking for precedent", "action": "recall_similar_past_decisions", "action_input": {"limit": 3}}',
+            (
+                '{"thought": "found a similar prior referral", "action": "final_answer", '
+                '"findings": [{"title": "Similar past case was referred", '
+                '"description": "A prior wood-frame CA habitational risk with 3 losses was referred", '
+                '"severity": "moderate", "category": "precedent", "evidence": ["past-1"]}], '
+                '"summary": "Consistent with a prior referral decision"}'
+            ),
+        ]
+
+        get_circuit_breaker(name=f"llm:{mock_llm.provider}/{mock_llm.model}", failure_threshold=3, recovery_timeout=60.0).reset()
+
+        agent = LossRunAnalystAgent(llm=mock_llm)
+        result = agent.run(bundle, insurance_line="commercial_property", org_id="org-x")
+
+        assert mock_llm.complete.call_count == 2
+        assert result.success is True
+        assert result.findings[0].title == "Similar past case was referred"
+
+        second_call_prompt = mock_llm.complete.call_args_list[1].args[1]
+        assert "Observation:" in second_call_prompt
+        assert "past-1" in second_call_prompt  # the real precedent's bundle_id
+        assert "wood frame construction in wildfire zone" in second_call_prompt  # its real stored reason
+
 
 class TestSupervisorAgent:
     def test_full_analysis(self) -> None:

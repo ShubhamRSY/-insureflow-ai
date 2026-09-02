@@ -1019,6 +1019,7 @@ class InsurancePipeline:
             resolve_with_llm=resolve_with_llm,
             skip_ml_fraud=funnel,
             insurance_line=resolved_line.value if resolved_line else insurance_line,
+            org_id=self.org_id,
         )
 
         # ── 6a-pre. Promote provenance contradictions into the primary findings

@@ -43,7 +43,8 @@ class ReActAgent(BaseAgent):
         self.bundle = bundle
 
         self._insurance_line = kwargs.get("insurance_line")
-        self._tools_registry = ToolRegistry(bundle, insurance_line=self._insurance_line)
+        self._org_id = kwargs.get("org_id")
+        self._tools_registry = ToolRegistry(bundle, insurance_line=self._insurance_line, org_id=self._org_id)
 
         circuit_key = _llm_circuit_key(self.llm)
         breaker = get_circuit_breaker(

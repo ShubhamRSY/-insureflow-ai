@@ -43,9 +43,11 @@ class ToolRegistry:
         }
     )
 
-    def __init__(self, bundle: SubmissionBundle, insurance_line: str | None = None) -> None:
+    def __init__(self, bundle: SubmissionBundle, insurance_line: str | None = None, org_id: str | None = None) -> None:
         self.bundle = bundle
         self.uw = UnderwritingTools()
+        self.insurance_line = insurance_line
+        self.org_id = org_id
         self._tools: dict[str, ToolDef] = {}
         from insureflow.rating.models import is_non_property_line
 
@@ -187,6 +189,15 @@ class ToolRegistry:
             {},
             lambda: self._serialize(self.bundle.structured),
         )
+        self._register(
+            "recall_similar_past_decisions",
+            "Finds past submissions from this same organization with similar risk characteristics "
+            "(line, state, industry, size band, construction, occupancy) and reports what decision "
+            "was made and why. Use this to check for precedent before making a judgment call — this "
+            "line is agnostic and applies to every insurance line, not just property.",
+            {"limit": "max number of similar past cases to return (default 5)"},
+            lambda limit=5: self._recall_similar_past_decisions(int(limit)),
+        )
 
     def _register(
         self,
@@ -262,6 +273,54 @@ class ToolRegistry:
             "sov_total": sov_total,
             "location_total": loc_total,
             "ratio": round(sov_total / loc_total, 4) if loc_total else 0,
+        }
+
+    def _recall_query_text(self) -> str:
+        """Best-effort description of the CURRENT submission's own risk
+        characteristics — built from whatever fields this line actually has,
+        not the eventual decision/reasons (those don't exist yet; that's
+        what the agent calling this tool is still reasoning toward).
+        """
+        from insureflow.privacy.decision_memory import tiv_band
+
+        structured = self.bundle.structured
+        risk = structured.risk_profile if structured else None
+        insured = structured.named_insured if structured else None
+        locations = self.uw.get_locations(self.bundle) if self._include_property_tools else []
+
+        state = (locations[0].state if locations else None) or (insured.state_of_residence if insured else None) or ""
+        naics = risk.naics_code if risk else ""
+        construction = risk.construction_type if risk else ""
+        occupancy = risk.occupancy_type if risk else ""
+        tiv = self.uw.total_insurable_value(locations) if locations else 0.0
+
+        parts = [f"line={self.insurance_line or ''}", f"state={state or ''}", f"naics={naics or ''}", f"tiv_band={tiv_band(tiv)}", f"construction={construction or ''}", f"occupancy={occupancy or ''}"]
+        return " ".join(parts)
+
+    def _recall_similar_past_decisions(self, limit: int) -> dict[str, Any]:
+        if not self.org_id:
+            return {"available": False, "reason": "org_id not available for this run — cannot look up organization-scoped decision history"}
+        from insureflow.privacy.decision_memory import get_decision_memory
+
+        try:
+            hits = get_decision_memory().similar_semantic(self._recall_query_text(), self.org_id, limit=max(1, min(limit, 20)))
+        except Exception as e:
+            return {"error": f"{type(e).__name__}: {e}"}
+        return {
+            "available": True,
+            "count": len(hits),
+            "similar_cases": [
+                {
+                    "bundle_id": rec.bundle_id,
+                    "score": round(score, 3),
+                    "decision": rec.decision,
+                    "line": rec.line,
+                    "state": rec.state,
+                    "tiv_band": rec.tiv_band,
+                    "reasons": rec.reasons,
+                }
+                for rec, score in hits
+            ],
         }
 
     def _check_coverage_adequacy(self, coverage_type: str) -> dict[str, Any]:
