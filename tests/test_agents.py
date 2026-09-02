@@ -905,6 +905,95 @@ class TestReActAgent:
         parsed = agent._parse_llm_output("not json at all")
         assert "findings" in parsed
 
+    def test_react_loop_full_multiturn_with_tool_calls(self) -> None:
+        # End-to-end: a mocked LLM drives a real multi-step ReAct loop through
+        # ReActAgent._react_loop() — tool selection, real tool execution
+        # against the bundle, the observation fed back into the next prompt,
+        # and a final answer that becomes a real Finding. The existing tests
+        # only cover the JSON parser and the tool registry in isolation; none
+        # of them exercise the loop mechanics themselves.
+        from unittest.mock import MagicMock
+
+        from insureflow.llm.client import LLMClient
+        from insureflow.verification.circuit_breaker import get_circuit_breaker
+
+        claims = [
+            ClaimRecord(
+                claim_id="C1",
+                date_of_loss=date(2024, 1, 1),
+                line_of_business="GL",
+                cause="slip and fall",
+                incurred_amount=250_000,
+            ),
+        ]
+        bundle = _make_bundle(insured_name="Test Corp", claims=claims)
+
+        mock_llm = MagicMock(spec=LLMClient)
+        mock_llm.provider = "mock_provider"
+        mock_llm.model = "mock_model_react_loop_test"
+        mock_llm.api_key = "test-key"
+        mock_llm.complete.side_effect = [
+            '{"thought": "I need the claims data first", "action": "get_loss_run", "action_input": {}}',
+            '{"thought": "checking large-loss concentration", "action": "compute_large_loss_ratio", "action_input": {}}',
+            (
+                '{"thought": "enough information", "action": "final_answer", '
+                '"findings": [{"title": "Large loss concentration", '
+                '"description": "One claim exceeds $100K", "severity": "high", '
+                '"category": "large_loss", "evidence": ["C1"]}], '
+                '"summary": "Elevated large-loss exposure"}'
+            ),
+        ]
+
+        # Reset (not just construct) the breaker for this exact provider/model
+        # key so a prior test's failures elsewhere in the suite can never
+        # leave it OPEN and silently skip straight to the deterministic path.
+        get_circuit_breaker(name=f"llm:{mock_llm.provider}/{mock_llm.model}", failure_threshold=3, recovery_timeout=60.0).reset()
+
+        agent = LossRunAnalystAgent(llm=mock_llm)
+        result = agent.run(bundle)
+
+        assert mock_llm.complete.call_count == 3
+        assert result.success is True
+        assert len(result.findings) == 1
+        assert result.findings[0].title == "Large loss concentration"
+        assert result.findings[0].severity == RiskSeverity.HIGH
+
+        # The tool observations must have actually round-tripped back into
+        # the conversation the model sees on later steps — not just that the
+        # loop terminated after 3 calls for some other reason.
+        second_call_prompt = mock_llm.complete.call_args_list[1].args[1]
+        third_call_prompt = mock_llm.complete.call_args_list[2].args[1]
+        assert "Observation:" in second_call_prompt
+        assert "C1" in second_call_prompt  # the claim id from get_loss_run's real result
+        assert "large_loss_ratio" in third_call_prompt  # the real result of compute_large_loss_ratio
+
+    def test_react_loop_bails_after_max_steps_without_final_answer(self) -> None:
+        # Safety-net mechanic: if the model never emits final_answer, the loop
+        # must stop at max_steps (10) rather than looping forever, and must
+        # surface that as an error rather than silently succeeding empty.
+        from unittest.mock import MagicMock
+
+        from insureflow.llm.client import LLMClient
+        from insureflow.verification.circuit_breaker import get_circuit_breaker
+
+        bundle = _make_bundle(insured_name="Test Corp")
+
+        mock_llm = MagicMock(spec=LLMClient)
+        mock_llm.provider = "mock_provider"
+        mock_llm.model = "mock_model_react_loop_max_steps_test"
+        mock_llm.api_key = "test-key"
+        # Always asks for the same tool, never returns final_answer.
+        mock_llm.complete.return_value = '{"thought": "still looking", "action": "get_named_insured", "action_input": {}}'
+
+        get_circuit_breaker(name=f"llm:{mock_llm.provider}/{mock_llm.model}", failure_threshold=3, recovery_timeout=60.0).reset()
+
+        agent = LossRunAnalystAgent(llm=mock_llm)
+        result = agent.run(bundle)
+
+        assert mock_llm.complete.call_count == 10
+        assert result.success is False
+        assert any("max steps" in e.lower() for e in result.errors)
+
 
 class TestSupervisorAgent:
     def test_full_analysis(self) -> None:
