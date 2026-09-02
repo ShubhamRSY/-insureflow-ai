@@ -31,6 +31,21 @@ _HAZARDOUS_OCCUPATION = (
     "window cleaning high rise",
 )
 
+_FAMILY_RELATION_NEEDLES = ("mother", "father", "parent", "sibling", "brother", "sister", "grandmother", "grandfather", "family history", "relative", "spouse", "son", "daughter")
+
+
+def _applicant_only_text(blob: str) -> str:
+    """Drop sentences describing a family member rather than the applicant.
+
+    Shared by every text-scan that must key off the APPLICANT's own facts,
+    not a relative's — e.g. occupation-class rating ("spouse works in
+    mining" must not classify the applicant as Class IV hazardous) and SNP
+    eligibility ("mother has diabetes" must not qualify the applicant).
+    """
+    sentences = re.split(r"(?<=[.!?])\s+", blob)
+    return " ".join(s for s in sentences if not any(k in s for k in _FAMILY_RELATION_NEEDLES))
+
+
 _PREGNANT = (
     r"\bpregnant\b",
     r"\bpregnancy\b",
@@ -138,6 +153,7 @@ def _is_pregnant(blob: str) -> bool:
 
 
 def _occupation_class(blob: str) -> str:
+    blob = _applicant_only_text(blob)
     if any(k in blob for k in _HAZARDOUS_OCCUPATION):
         return "IV"
     if any(k in blob for k in ("factory worker", "driver", "mechanic", "construction labour", "welder")):

@@ -38,6 +38,13 @@ _DUAL_ELIGIBLE_NEEDLES = ("dual eligible", "medicare and medicaid", "medicaid en
 
 
 def _snp_eligibility(blob: str) -> tuple[bool, str]:
+    from insureflow.underwriting.health_uw import _applicant_only_text
+
+    # SNP eligibility turns on the APPLICANT'S own diagnosis or dual-eligible
+    # status, not a relative's — "mother has diabetes" must not qualify the
+    # applicant. Reuses the same family-context filter occupation-class
+    # rating uses, rather than a separate ad hoc implementation.
+    blob = _applicant_only_text(blob)
     if any(k in blob for k in _DUAL_ELIGIBLE_NEEDLES):
         return True, "dual_eligible"
     for condition in _QUALIFYING_CHRONIC_CONDITIONS:

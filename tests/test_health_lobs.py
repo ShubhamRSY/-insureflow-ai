@@ -603,3 +603,26 @@ def test_age_zero_is_not_silently_rewritten_to_forty():
     newborn = rate_health(_bundle("Applicant age: 0. Household size: 3."), coverage_id="standard_family", product_id="family_health_plan", state="IL")
     age_band = next(c for c in newborn.schedule_modifications if c.name == "primary_applicant_age_band")
     assert age_band.basis == "age=0"
+
+
+def test_occupation_class_ignores_a_family_members_hazardous_job():
+    # _occupation_class scanned the whole submission blob for hazardous
+    # keywords, so "spouse works in mining" wrongly classified the
+    # APPLICANT (an office manager) as Class IV hazardous -- a 3.5x factor
+    # instead of 1.0x. Shared by every occupation-rated health product.
+    text = "Applicant age: 35. Occupation: office manager. Benefit amount: 500000. Spouse works in mining."
+    q = rate_health(_bundle(text), coverage_id="standalone_add_standard", product_id="standalone_add", state="IL")
+    assert q.metadata["occupation_class"] == "I"
+
+    hazardous_text = "Applicant age: 35. Occupation: mining engineer underground mine. Benefit amount: 500000."
+    q2 = rate_health(_bundle(hazardous_text), coverage_id="standalone_add_standard", product_id="standalone_add", state="IL")
+    assert q2.metadata["occupation_class"] == "IV"
+
+
+def test_snp_eligibility_requires_the_applicants_own_condition():
+    # Same class of bug as the occupation-class fix -- "mother has diabetes"
+    # must not qualify the APPLICANT for a Special Needs Plan.
+    only_mother = rate_health(_bundle("Applicant age: 68. No chronic conditions. Mother has diabetes."), coverage_id="snp_standard", product_id="medicare_advantage_snp", state="IL")
+    applicant_has_it = rate_health(_bundle("Applicant age: 68. Diabetes diagnosis on file."), coverage_id="snp_standard", product_id="medicare_advantage_snp", state="IL")
+    assert only_mother.eligible is False
+    assert applicant_has_it.eligible is True
