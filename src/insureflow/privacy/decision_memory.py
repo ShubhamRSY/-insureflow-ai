@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import logging
+import math
 import os
 import threading
 from datetime import datetime, timezone
@@ -22,6 +23,16 @@ from pydantic import BaseModel, Field
 from insureflow.redaction.redactor import PIIRedactor
 
 logger = logging.getLogger(__name__)
+
+
+def _cosine_similarity(a: list[float], b: list[float]) -> float:
+    dot = sum(x * y for x, y in zip(a, b))
+    na = math.sqrt(sum(x * x for x in a))
+    nb = math.sqrt(sum(x * x for x in b))
+    if na == 0 or nb == 0:
+        return 0.0
+    return dot / (na * nb)
+
 
 _TIV_BANDS = (
     (0, 250_000, "0-250k"),
@@ -69,6 +80,11 @@ class DecisionMemoryRecord(BaseModel):
     loss_count_band: str = ""
     reasons: list[str] = Field(default_factory=list)
     remembered_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
+    # Semantic-recall vector over _embedding_text(record) below. Optional so
+    # records written before this field existed still parse — they simply
+    # never surface from similar_semantic(), only from the categorical
+    # similar() this field doesn't touch.
+    embedding: list[float] | None = None
 
     def match_score(self, other: DecisionMemoryRecord) -> float:
         score = 0.0
@@ -84,6 +100,26 @@ class DecisionMemoryRecord(BaseModel):
             elif mine and theirs and (mine in theirs or theirs in mine):
                 score += 0.5
         return score / max(checks, 1)
+
+
+def _embedding_text(record: DecisionMemoryRecord) -> str:
+    """Descriptive text summarizing a decision record — the thing that gets
+    embedded, so semantic recall can find "cases like this" rather than only
+    exact categorical-field matches.
+    """
+    parts = [
+        f"line={record.line}",
+        f"decision={record.decision}",
+        f"naics={record.naics}",
+        f"state={record.state}",
+        f"tiv_band={record.tiv_band}",
+        f"construction={record.construction}",
+        f"occupancy={record.occupancy}",
+        f"loss_count_band={record.loss_count_band}",
+    ]
+    if record.reasons:
+        parts.append("reasons=" + "; ".join(record.reasons))
+    return " ".join(parts)
 
 
 class DecisionMemoryStore:
@@ -108,6 +144,17 @@ class DecisionMemoryStore:
                 "routing": (record.routing or "")[:32],
             }
         )
+        if clean.embedding is None:
+            # Compute over the already-redacted text, never the raw record —
+            # the vector must never carry anything the JSONL row itself
+            # wouldn't. Never let embedding failure (e.g. a network hiccup on
+            # a remote embedding backend) block the write itself.
+            try:
+                from insureflow.llm.embeddings import embed_text
+
+                clean = clean.model_copy(update={"embedding": embed_text(_embedding_text(clean))})
+            except Exception:
+                logger.debug("Decision memory embedding skipped", exc_info=True)
         with self._lock:
             existing = self._load_unlocked()
             key = (clean.org_id, clean.bundle_id)
@@ -228,6 +275,44 @@ class DecisionMemoryStore:
         if probe is None:
             return []
         return self.similar(probe, limit=limit)
+
+    def similar_semantic(
+        self,
+        probe_text: str,
+        org_id: str,
+        *,
+        limit: int = 8,
+        min_score: float = 0.3,
+    ) -> list[tuple[DecisionMemoryRecord, float]]:
+        """Semantic recall — ranks by cosine similarity over embedded
+        decision text, not exact/substring field matching. Lets an agent ask
+        "cases like this one" while it still only knows the current
+        submission's own risk characteristics, not its eventual decision.
+
+        Records written before the embedding field existed (embedding=None)
+        are skipped rather than erroring — they simply aren't semantically
+        searchable, the same way they were never in similar()'s reach either
+        for any field this record predates.
+        """
+        if not probe_text or not org_id:
+            return []
+        try:
+            from insureflow.llm.embeddings import embed_text
+
+            probe_vec = embed_text(probe_text)
+        except Exception:
+            logger.debug("Decision memory semantic probe embedding failed", exc_info=True)
+            return []
+
+        hits: list[tuple[DecisionMemoryRecord, float]] = []
+        for rec in self._iter_org(org_id):
+            if not rec.embedding:
+                continue
+            score = _cosine_similarity(probe_vec, rec.embedding)
+            if score >= min_score:
+                hits.append((rec, score))
+        hits.sort(key=lambda x: -x[1])
+        return hits[:limit]
 
     def _iter_org(self, org_id: str) -> list[DecisionMemoryRecord]:
         with self._lock:
