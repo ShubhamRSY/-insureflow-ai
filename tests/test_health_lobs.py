@@ -581,3 +581,25 @@ def test_medigap_hd_plan_g_is_age_rated_outside_community_rated_states():
 def test_level_funded_group_flags_employer_too_large_for_the_market():
     q = rate_health(_bundle("Applicant age: 35. Employee count: 5000."), coverage_id="level_funded_standard", product_id="level_funded_group_health", state="IL")
     assert any("exceeds the typical level-funded range" in c for c in q.metadata["conditions"])
+
+
+def test_sex_extraction_prefers_primary_applicant_over_spouse_mention():
+    # _extract_sex used to check "female" as an unordered OR before "male",
+    # so a family submission stating the primary applicant as male but
+    # mentioning a spouse's sex as female anywhere in the text would
+    # silently price critical illness off the wrong sex's morbidity table.
+    text = "Applicant age: 45. Sex: male. Household size: 3. Spouse: Jane Doe, sex: female."
+    q = rate_health(_bundle(text), coverage_id="ci_standalone", product_id="critical_illness_standalone", state="IL")
+    morbidity = next(c for c in q.schedule_modifications if c.name == "morbidity_per_1000")
+    assert morbidity.basis == "age=45/male"
+
+
+def test_age_zero_is_not_silently_rewritten_to_forty():
+    # rate_health()'s dispatch used `_int_field(...) or 40`, which silently
+    # discards a genuine age-0 newborn primary applicant (0 is falsy in
+    # Python) and rates them as 40 instead -- a real, significant premium
+    # error on every MIN_ISSUE_AGE=0 product (family/HDHP/hospital
+    # indemnity). An explicit None-check is required instead of `or`.
+    newborn = rate_health(_bundle("Applicant age: 0. Household size: 3."), coverage_id="standard_family", product_id="family_health_plan", state="IL")
+    age_band = next(c for c in newborn.schedule_modifications if c.name == "primary_applicant_age_band")
+    assert age_band.basis == "age=0"

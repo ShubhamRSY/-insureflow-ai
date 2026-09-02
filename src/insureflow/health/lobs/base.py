@@ -25,10 +25,20 @@ from insureflow.underwriting.personal_lines import _blob
 
 
 def _extract_sex(blob: str) -> str:
-    if "female" in blob or " sex: f" in blob:
-        return "female"
-    if "male" in blob or " sex: m" in blob:
-        return "male"
+    import re
+
+    # Checking "female"/"male" as an unordered OR — as this used to — means
+    # any mention of "female" ANYWHERE in the blob wins outright, even a
+    # spouse's or dependent's sex on a family submission where the primary
+    # applicant is stated as male. Take the first "sex: X" (or bare
+    # "female"/"male") occurrence in reading order instead, which matches
+    # how real forms list the primary applicant's own fields first.
+    labeled = re.search(r"\bsex\s*[:=]?\s*(female|f\b|male|m\b)", blob, re.I)
+    if labeled:
+        return "female" if labeled.group(1).lower().startswith("f") else "male"
+    bare = re.search(r"\b(female|male)\b", blob, re.I)
+    if bare:
+        return bare.group(1).lower()
     return "unknown"
 
 

@@ -73,6 +73,7 @@ def rate_health(
 
         us_manual = health_manual_us()
         blob = _blob(bundle)
+        parsed_age = _int_field(blob, *_AGE_LABELS)
         health_ctx = HealthProductContext(
             bundle=bundle,
             state_code=state,
@@ -81,7 +82,11 @@ def rate_health(
             coverage_name=coverage_name or "",
             manual=us_manual,
             uw=underwrite_health(bundle),
-            age=_int_field(blob, *_AGE_LABELS) or 40,
+            # `parsed_age or 40` would silently rewrite a genuine age-0
+            # newborn dependent (a real primary applicant on the several
+            # MIN_ISSUE_AGE=0 family/HDHP/hospital-indemnity products) to 40,
+            # since 0 is falsy in Python — an explicit None-check is required.
+            age=parsed_age if parsed_age is not None else 40,
             sex_key=_extract_sex(blob),
             tobacco=_extract_tobacco(blob),
             income=_money(blob, "income", "annual income", "salary"),
