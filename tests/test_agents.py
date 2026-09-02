@@ -994,6 +994,85 @@ class TestReActAgent:
         assert result.success is False
         assert any("max steps" in e.lower() for e in result.errors)
 
+    def _mock_llm(self, model_name: str) -> Any:
+        from unittest.mock import MagicMock
+
+        from insureflow.llm.client import LLMClient
+        from insureflow.verification.circuit_breaker import get_circuit_breaker
+
+        mock_llm = MagicMock(spec=LLMClient)
+        mock_llm.provider = "mock_provider"
+        mock_llm.model = model_name
+        mock_llm.api_key = "test-key"
+        get_circuit_breaker(name=f"llm:{mock_llm.provider}/{mock_llm.model}", failure_threshold=3, recovery_timeout=60.0).reset()
+        return mock_llm
+
+    def test_reflection_disabled_by_default(self) -> None:
+        # reflect defaults to False -- must not add an extra LLM call unless
+        # explicitly requested, so no existing caller's behavior changes.
+        mock_llm = self._mock_llm("mock_reflection_off_test")
+        mock_llm.complete.return_value = (
+            '{"thought": "done", "action": "final_answer", "findings": [{"title": "Draft finding", "description": "d", "severity": "high", "category": "test"}], "summary": "s"}'
+        )
+        agent = LossRunAnalystAgent(llm=mock_llm)
+        result = agent.run(_make_bundle(insured_name="Test Corp"))
+
+        assert mock_llm.complete.call_count == 1  # only the react-loop call, no reflection call
+        assert result.findings[0].title == "Draft finding"
+
+    def test_reflection_revises_findings(self) -> None:
+        # End-to-end: the model's own second-pass critique genuinely changes
+        # what gets returned -- not just that a reflection call happened.
+        mock_llm = self._mock_llm("mock_reflection_revise_test")
+        mock_llm.complete.side_effect = [
+            ('{"thought": "done", "action": "final_answer", "findings": [{"title": "Overstated finding", "description": "d", "severity": "critical", "category": "test"}], "summary": "s"}'),
+            ('{"findings": [{"title": "Corrected finding", "description": "d2", "severity": "moderate", "category": "test"}], "summary": "revised"}'),
+        ]
+        agent = LossRunAnalystAgent(llm=mock_llm)
+        result = agent.run(_make_bundle(insured_name="Test Corp"), reflect=True)
+
+        assert mock_llm.complete.call_count == 2
+        assert len(result.findings) == 1
+        assert result.findings[0].title == "Corrected finding"
+        assert result.findings[0].severity == RiskSeverity.MODERATE
+        assert "Reflection revised" in result.summary
+
+    def test_reflection_keeps_original_when_llm_call_fails(self) -> None:
+        mock_llm = self._mock_llm("mock_reflection_fail_test")
+        mock_llm.complete.side_effect = [
+            ('{"thought": "done", "action": "final_answer", "findings": [{"title": "Draft finding", "description": "d", "severity": "high", "category": "test"}], "summary": "s"}'),
+            Exception("network error"),
+        ]
+        agent = LossRunAnalystAgent(llm=mock_llm)
+        result = agent.run(_make_bundle(insured_name="Test Corp"), reflect=True)
+
+        assert len(result.findings) == 1
+        assert result.findings[0].title == "Draft finding"  # untouched by the failed reflection call
+        assert "Reflection revised" not in result.summary
+
+    def test_reflection_keeps_original_when_response_unparseable(self) -> None:
+        mock_llm = self._mock_llm("mock_reflection_garbage_test")
+        mock_llm.complete.side_effect = [
+            ('{"thought": "done", "action": "final_answer", "findings": [{"title": "Draft finding", "description": "d", "severity": "high", "category": "test"}], "summary": "s"}'),
+            "not json at all",
+        ]
+        agent = LossRunAnalystAgent(llm=mock_llm)
+        result = agent.run(_make_bundle(insured_name="Test Corp"), reflect=True)
+
+        assert len(result.findings) == 1
+        assert result.findings[0].title == "Draft finding"
+
+    def test_reflection_skipped_when_no_draft_findings(self) -> None:
+        # Nothing to reflect on -- must not spend an extra LLM call reviewing
+        # an empty findings list.
+        mock_llm = self._mock_llm("mock_reflection_empty_test")
+        mock_llm.complete.return_value = '{"thought": "done", "action": "final_answer", "findings": [], "summary": "clean"}'
+        agent = LossRunAnalystAgent(llm=mock_llm)
+        result = agent.run(_make_bundle(insured_name="Test Corp"), reflect=True)
+
+        assert mock_llm.complete.call_count == 1
+        assert result.findings == []
+
     def _seeded_decision_memory(self, tmp_path: Any, monkeypatch: Any) -> Any:
         """A DecisionMemoryStore pointed at a throwaway file, pre-seeded with
         one org-scoped precedent, wired in as the module-level singleton so
