@@ -8270,9 +8270,18 @@ async def websocket_job_status(websocket: WebSocket, job_id: str) -> None:
     if not token:
         await websocket.close(code=4001, reason="Missing token")
         return
+    from insureflow.auth.dependencies import _refresh_from_live_store
     from insureflow.auth.jwt import decode_access_token
 
-    user = decode_access_token(token)
+    token_data = decode_access_token(token)
+    if token_data is None:
+        await websocket.close(code=4001, reason="Invalid token")
+        return
+    # Re-check the live user store (same as get_current_user) so a
+    # disabled/deleted user's still-unexpired JWT can't keep streaming job
+    # status, and so org scoping matches the live-resolved org_id rather
+    # than a potentially stale JWT claim.
+    user = _refresh_from_live_store(token_data)
     if user is None:
         await websocket.close(code=4001, reason="Invalid token")
         return

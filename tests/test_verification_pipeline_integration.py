@@ -200,12 +200,25 @@ class TestVerificationAPI:
         yield
         object.__setattr__(settings, "audit_log_path", original)
 
-    def _headers(self, role: Role = Role.VIEWER, org_id: str = "acme") -> dict[str, str]:
-        get_user_store()["uw"] = User(username="uw", hashed_password="x", role=role, org_id=org_id)
-        token = create_access_token({"sub": "uw", "role": role.value, "org_id": org_id})
-        return {"Authorization": f"Bearer {token}"}
+    def _headers(self, role: Role = Role.VIEWER, org_id: str = "acme") -> tuple[dict[str, str], str]:
+        """Returns (auth headers, resolved org_id).
+
+        A Postgres-backed user store (real multi-tenancy) resolves an
+        org_id like "acme" as an org NAME to its canonical UUID on write —
+        callers that need the org_id a saved record will actually be
+        scoped under (e.g. to save an audit record under the same org the
+        request will read it back from) must use the resolved value, not
+        the literal string, or the two diverge in a Postgres-backed
+        environment even though they'd trivially match in file-backed mode.
+        """
+        store = get_user_store()
+        store["uw"] = User(username="uw", hashed_password="x", role=role, org_id=org_id)
+        resolved_org_id = store.get("uw").org_id
+        token = create_access_token({"sub": "uw", "role": role.value, "org_id": resolved_org_id})
+        return {"Authorization": f"Bearer {token}"}, resolved_org_id
 
     def test_endpoint_returns_persisted_report(self, tmp_path: Path) -> None:
+        headers, resolved_org_id = self._headers(Role.VIEWER)
         report = aggregate_verification(
             SubmissionBundle(
                 bundle_id="endpoint-b1",
@@ -214,10 +227,10 @@ class TestVerificationAPI:
             )
         )
         store = AuditStore()
-        store.save_json("endpoint-b1", "verification.json", report, org_id="acme")
+        store.save_json("endpoint-b1", "verification.json", report, org_id=resolved_org_id)
 
         client = TestClient(app)
-        resp = client.get("/verification/endpoint-b1", headers=self._headers(Role.VIEWER))
+        resp = client.get("/verification/endpoint-b1", headers=headers)
         assert resp.status_code == 200
         data = resp.json()
         assert data["bundle_id"] == "endpoint-b1"
@@ -227,5 +240,6 @@ class TestVerificationAPI:
 
     def test_endpoint_404_when_no_verification(self) -> None:
         client = TestClient(app)
-        resp = client.get("/verification/does-not-exist", headers=self._headers(Role.VIEWER))
+        headers, _resolved_org_id = self._headers(Role.VIEWER)
+        resp = client.get("/verification/does-not-exist", headers=headers)
         assert resp.status_code == 404

@@ -44,13 +44,22 @@ def test_platform_stack_authenticated() -> None:
     from insureflow.auth.store import clear_user_store, get_user_store
 
     clear_user_store()
-    get_user_store()["uw"] = User(username="uw", hashed_password="x", role=Role.VIEWER, org_id="acme")
-    token = create_access_token({"sub": "uw", "role": Role.VIEWER.value, "org_id": "acme"})
+    store = get_user_store()
+    store["uw"] = User(username="uw", hashed_password="x", role=Role.VIEWER, org_id="acme")
+    # A Postgres-backed store (real multi-tenancy) resolves "acme" as an
+    # org NAME to its canonical UUID org_id on write — assert against
+    # whatever the store actually assigned rather than the literal string,
+    # so this test holds for both the file-backed and Postgres-backed
+    # stores instead of assuming the simpler single-string org_id model.
+    saved_user = store.get("uw")
+    assert saved_user is not None
+    resolved_org_id = saved_user.org_id
+    token = create_access_token({"sub": "uw", "role": Role.VIEWER.value, "org_id": resolved_org_id})
     client = TestClient(app)
     resp = client.get("/platform/stack", headers={"Authorization": f"Bearer {token}"})
     assert resp.status_code == 200
     body = resp.json()
-    assert body["org_id"] == "acme"
+    assert body["org_id"] == resolved_org_id
     assert body["ci_cd"]["github_actions"] is True
 
 
