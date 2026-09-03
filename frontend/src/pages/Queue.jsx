@@ -1,5 +1,5 @@
 import { Search, RefreshCw, Shield } from 'lucide-react';
-import { Badge, DecisionBadge, EmptyState } from '../components/ui';
+import { Badge, DecisionBadge, EmptyState, ScoreBadge } from '../components/ui';
 import JourneyMiniStrip from '../components/JourneyMiniStrip';
 import { fmtCurrency } from '../lib/api';
 import { useState } from 'react';
@@ -71,7 +71,7 @@ export default function QueuePage({ queueStats, insuranceJobs, onOpenJob, onRefr
                     {fullJob ? <JourneyMiniStrip job={fullJob} compact /> : <span className="text-xs text-slate-600">—</span>}
                   </td>
                   <td className="px-6 py-3.5"><Badge status={item.priority} /></td>
-                  <td className="px-6 py-3.5">{item.triage_score != null ? item.triage_score.toFixed(1) : '—'}</td>
+                  <td className="px-6 py-3.5"><ScoreBadge value={item.score} direction="quality" /></td>
                   <td className="px-6 py-3.5 font-mono">{fmtCurrency(item.estimated_premium)}</td>
                 </tr>
               );})}

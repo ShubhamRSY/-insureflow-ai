@@ -202,6 +202,29 @@ export function DecisionBadge({ decision, jobStatus }) {
   return <Badge status={decision} />;
 }
 
+// Compact colored score pill for table/list rows — a lighter-weight sibling
+// of ScoreGauge for places a full radial gauge would be too heavy (queue
+// tables, submission lists). `direction="risk"` colors high=red (more risk
+// is worse); `direction="quality"` colors high=green (more guidelines met
+// is better). Same red/amber/emerald band cuts as ScoreGauge so a score
+// reads the same color wherever it appears in the app.
+export function ScoreBadge({ value, max = 100, direction = 'risk', suffix = '' }) {
+  if (value == null || Number.isNaN(Number(value))) return <span className="text-slate-600">—</span>;
+  const pct = Math.max(0, Math.min(100, (Number(value) / max) * 100));
+  const bandPct = direction === 'quality' ? 100 - pct : pct;
+  const cls = bandPct >= 66
+    ? 'bg-red-500/15 text-red-400 ring-red-500/25'
+    : bandPct >= 33
+    ? 'bg-amber-500/15 text-amber-400 ring-amber-500/25'
+    : 'bg-emerald-500/15 text-emerald-400 ring-emerald-500/25';
+  const display = Number.isInteger(Number(value)) ? value : Number(value).toFixed(1);
+  return (
+    <span className={`inline-flex min-w-[2.75rem] items-center justify-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold ring-1 ring-inset ${cls}`}>
+      {display}{suffix}
+    </span>
+  );
+}
+
 // Shared building blocks for the "Rate Provenance" tool panels (Actuarial,
 // Premium Calculator, MIB/APS orders, Beneficiary, Renewal, Issuance) — keeps
 // them on the app's theme tokens instead of one-off hardcoded dark colors.

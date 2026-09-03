@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
 import { ChevronDown, ChevronRight, Eye, FileText, Loader2, User, Shield, AlertTriangle, ClipboardCheck, Clock, CheckCircle2 } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, Cell, ResponsiveContainer } from 'recharts';
 import { displayText, safeLower } from '../lib/safe';
 import { endpoints } from '../lib/api';
 import { uwFinding, uwMemoText, uwReasons, premiumStepLabel } from '../lib/uwLanguage';
 import { Hint } from './ui';
+import ScoreGauge from './ScoreGauge';
+import SubmissionOverview from './SubmissionOverview';
 
 const FIELD_HINTS = {
   'Insured Name': 'The person or entity this policy would cover, as extracted from the application.',
@@ -396,6 +399,11 @@ export default function MemoReportView({ job }) {
   const buildup = worksheet.premium_buildup || [];
   const quoteComponents = (quote.metadata || {}).components || [];
   const premiumSteps = buildup.length > 0 ? buildup : quoteComponents;
+  // Chart only the steps that actually moved the premium — a step baked
+  // into the base rate (0.0% adjustment) would just be a zero-height bar.
+  const premiumChartData = premiumSteps
+    .filter((row) => row.modifier_pct != null && Math.abs(row.modifier_pct) >= 0.05)
+    .map((row) => ({ name: premiumStepLabel(row.step || row.name), pct: row.modifier_pct }));
 
   const allFindings = Array.isArray(memoObj.key_findings) ? memoObj.key_findings : [];
   // If the name came from a secondary document (not the application itself),
@@ -499,13 +507,10 @@ export default function MemoReportView({ job }) {
           </div>
           <div className="text-right">
             {riskPct != null && (
-              <div>
-                <Hint text="Composite 0-100 score combining every finding's severity and confidence — higher means more reasons to slow down before binding." position="bottom">
-                  <p className="hint-label inline-block cursor-help text-[10px] uppercase opacity-70">Risk Score</p>
-                </Hint>
-                <p className="text-3xl font-bold">{riskPct}<span className="text-sm font-normal opacity-60">/100</span></p>
-                {riskSeverity && <p className="text-[10px] uppercase opacity-60">{riskSeverity} severity</p>}
-                <p className="mt-1 text-[9px] uppercase tracking-wide opacity-50">{riskLegend}</p>
+              <div className="flex flex-col items-end">
+                <ScoreGauge value={riskPct} label="Risk Score" direction="risk" size={92} />
+                {riskSeverity && <p className="mt-1 text-[10px] uppercase opacity-60">{riskSeverity} severity</p>}
+                <p className="mt-1 max-w-[9rem] text-right text-[9px] uppercase tracking-wide opacity-50">{riskLegend}</p>
               </div>
             )}
           </div>
@@ -539,6 +544,23 @@ export default function MemoReportView({ job }) {
           )}
         </div>
       </div>
+
+      {/* ── 1b. Submission Overview — score + guideline checklist + severity mix ── */}
+      <SubmissionOverview
+        summaryText={rationaleHeadline}
+        riskPct={riskPct}
+        riskLegend={riskLegend}
+        counts={counts}
+        categorized={{
+          medical: medicalFindings,
+          financial: financialFindings,
+          compliance: complianceFindings,
+          fraud: fraudFindings,
+          loss: lossFindings,
+          other: otherFindings,
+        }}
+        onJumpToFindings={sortedFindings.length > 0 ? () => scrollToSection('section-why-this-decision') : null}
+      />
 
       {/* ── 2. Applicant Profile & Basic Details ────────────────────────── */}
       <div id="section-applicant-profile" className="rounded-2xl border border-white/[0.08] bg-surface/80 p-5">
@@ -646,7 +668,7 @@ export default function MemoReportView({ job }) {
 
       {/* ── 5. Why This Decision — all findings ─────────────────────────── */}
       {sortedFindings.length > 0 && (
-        <div className="rounded-2xl border border-white/[0.08] bg-surface/80 p-5">
+        <div id="section-why-this-decision" className="rounded-2xl border border-white/[0.08] bg-surface/80 p-5">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-base font-bold tracking-tight text-slate-100">Why This Decision</h2>
             <div className="flex gap-2">
@@ -774,6 +796,26 @@ export default function MemoReportView({ job }) {
       {/* ── 12. Premium Build-up ───────────────────────────────────────── */}
       {premiumSteps.length > 0 && (
         <Collapsible title="Premium Build-up" badge={`${premiumSteps.length} rating components`}>
+          {premiumChartData.length > 0 && (
+            <div className="mb-4" style={{ height: Math.max(90, premiumChartData.length * 28) }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={premiumChartData} layout="vertical" margin={{ left: 4, right: 24, top: 4, bottom: 4 }}>
+                  <XAxis type="number" tickFormatter={(v) => `${v > 0 ? '+' : ''}${v}%`} tick={{ fill: '#64748b', fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <YAxis type="category" dataKey="name" width={140} tick={{ fill: '#94a3b8', fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <Tooltip
+                    formatter={(v) => [`${v > 0 ? '+' : ''}${v.toFixed(1)}%`, 'Adjustment']}
+                    contentStyle={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 11 }}
+                    cursor={{ fill: 'rgba(255,255,255,0.04)' }}
+                  />
+                  <Bar dataKey="pct" radius={[0, 4, 4, 0]}>
+                    {premiumChartData.map((d, i) => (
+                      <Cell key={i} fill={d.pct > 0 ? '#fbbf24' : '#34d399'} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
           <div className="overflow-x-auto">
             <table className="w-full text-left text-[11px]">
               <thead>

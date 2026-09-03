@@ -1,6 +1,7 @@
 import { displayText } from '../lib/safe';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, FileText, Trash2 } from 'lucide-react';
+import { ScoreBadge } from './ui';
 
 export default function SubmissionJobsList({
   jobs = [],
@@ -63,7 +64,10 @@ export default function SubmissionJobsList({
         </div>
       ) : (
         <div className="divide-y divide-white/[0.04]">
-          {runs.map(({ id, job }) => (
+          {runs.map(({ id, job }) => {
+            const memoObj = job?.results?.memo && typeof job.results.memo === 'object' ? job.results.memo : {};
+            const riskPct = memoObj.overall_risk_score != null ? Math.round(Number(memoObj.overall_risk_score) * 100) : null;
+            return (
             <div
               key={id}
               className="flex w-full items-center justify-between gap-3 px-5 py-3.5 transition hover:bg-white/[0.02]"
@@ -83,13 +87,16 @@ export default function SubmissionJobsList({
                       : displayText(job?.results?.commercial_product_name || job?.results?.insurance_line, fallbackLine)}
                   </p>
                 </div>
-                <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium capitalize ${
-                  job?.status === 'completed'
-                    ? 'bg-emerald-500/10 text-emerald-400'
-                    : 'bg-white/[0.06] text-slate-400'
-                }`}>
-                  {job?.status || '—'}
-                </span>
+                <div className="flex shrink-0 items-center gap-2">
+                  {riskPct != null && <ScoreBadge value={riskPct} direction="risk" />}
+                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium capitalize ${
+                    job?.status === 'completed'
+                      ? 'bg-emerald-500/10 text-emerald-400'
+                      : 'bg-white/[0.06] text-slate-400'
+                  }`}>
+                    {job?.status || '—'}
+                  </span>
+                </div>
               </button>
               <div className="flex shrink-0 items-center gap-1">
                 {onDeleteJob && (
@@ -113,7 +120,8 @@ export default function SubmissionJobsList({
                 </button>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </section>
