@@ -60,10 +60,18 @@ def test_wc_oracle_emod_is_used():
 
 
 def test_catalog_only_commercial_product_not_quoted():
+    # Catalog-only products still run the real parent-line engine so a real
+    # indicative number exists (see InsuranceRatingEngine._apply_catalog_
+    # illustrative) — but the CONTRACT premium stays $0/ineligible, exactly
+    # like the pre-existing life permanent-product honesty gate, so nothing
+    # downstream can quote/bind an unfiled rate as if it were a real one.
     engine = InsuranceRatingEngine()
     q = engine.quote(_bundle(), UnderwritingMemo(bundle_id="p0-1"), line=InsuranceLine.COMMERCIAL_PROPERTY, commercial_product_id="crop_insurance")
     assert q.eligible is False
-    assert q.metadata.get("rating_engine") == "catalog_only"
+    assert q.adjusted_premium == 0
+    assert q.metadata.get("catalog_status") == "catalog"
+    assert q.metadata.get("illustrative") is True
+    assert q.metadata.get("illustrated_adjusted_premium", 0) > 0
     assert any("catalog" in r.lower() for r in q.ineligibility_reasons)
 
 

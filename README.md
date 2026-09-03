@@ -74,9 +74,9 @@ docker compose up -d redis db
 uvicorn insureflow.api:app --reload --port 8002
 
 # CLI examples
-python cli.py insurance demo --preset pacific_coast
-python cli.py system health
-python cli.py test
+python cli.py demo
+python cli.py doctor
+python cli.py e2e
 ```
 
 > **No LLM key?** Fine. Every agent falls back to deterministic rule-based analysis.

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass
+from dataclasses import field as _dc_field
 from datetime import datetime, timezone
 from typing import Any
 
@@ -13,6 +15,16 @@ from insureflow.underwriting.loss_ratio import LossRatioResult
 from insureflow.underwriting.market import get_market_cycle
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class _CatalogStatus:
+    """A catalog-only (unfiled) product match — see ``InsuranceRatingEngine._catalog_status``."""
+
+    name: str
+    reason: str
+    extra_meta: dict[str, Any] = _dc_field(default_factory=dict)
+
 
 # ISO-style base loss costs (per $100 of TIV) — representative values
 # Overridden by data/rate_curves.json or RATE_CURVES_URL when present
@@ -229,10 +241,41 @@ class InsuranceRatingEngine:
         experience_mod: float | None = None,
         state_override: str = "",
     ) -> QuoteResult:
+        """Public entry point — wraps ``_quote_dispatch`` with the catalog/
+        indicative-quote transform (see ``_apply_catalog_illustrative``).
+
+        LIFE is excluded: ``rate_life`` already applies its own filed-vs-
+        illustrative handling internally (illustrated_adjusted_premium,
+        honest reasons, actuarial component breakdown) and does it for
+        every code path, including the no-product-id-hint case this
+        catalog check can't see — reusing that is strictly better than
+        duplicating a second, shallower version of the same logic here.
+        """
+        catalog_info = None if line == InsuranceLine.LIFE else self._catalog_status(bundle, line, commercial_product_id, commercial_coverage_id)
+        result = self._quote_dispatch(
+            bundle,
+            memo,
+            line,
+            commercial_product_id,
+            commercial_coverage_id,
+            experience_mod,
+            state_override,
+        )
+        if catalog_info is not None:
+            result = self._apply_catalog_illustrative(result, catalog_info)
+        return result
+
+    def _quote_dispatch(
+        self,
+        bundle: SubmissionBundle,
+        memo: UnderwritingMemo,
+        line: InsuranceLine = InsuranceLine.COMMERCIAL_PROPERTY,
+        commercial_product_id: str | None = None,
+        commercial_coverage_id: str | None = None,
+        experience_mod: float | None = None,
+        state_override: str = "",
+    ) -> QuoteResult:
         personal = line in PERSONAL_LINES
-        catalog_block = self._catalog_only_quote(bundle, line, commercial_product_id, commercial_coverage_id)
-        if catalog_block is not None:
-            return self._finalize_quote(catalog_block)
         if personal:
             from insureflow.rating.personal import rate_personal_line
             from insureflow.underwriting.personal_lines import _blob, _state_from_blob
@@ -504,39 +547,29 @@ class InsuranceRatingEngine:
     def bind(self, bundle_id: str, quote_reference: str, bound_by: str) -> dict[str, Any]:
         return self.adapter.bind_policy(bundle_id, quote_reference, bound_by)
 
-    def _catalog_only_quote(
+    def _catalog_status(
         self,
         bundle: SubmissionBundle,
         line: InsuranceLine,
         commercial_product_id: str | None,
         commercial_coverage_id: str | None,
-    ) -> QuoteResult | None:
+    ) -> _CatalogStatus | None:
+        """Look up whether this product is catalog-only (no filed rate manual).
+
+        Pure lookup — does NOT build a QuoteResult or block dispatch. The
+        real dedicated pricing engine for this product still runs (via
+        ``_quote_dispatch``) so the platform can show a real indicative
+        premium instead of a bare, uninformative $0; ``_apply_catalog_
+        illustrative`` then marks the result honestly afterward: the real
+        number is preserved in metadata['illustrated_adjusted_premium'],
+        but the contract-level base/adjusted premium are zeroed and
+        eligible is forced False (mirrors the pattern already used by
+        insureflow.rating.personal.life_rating.rate_life for permanent
+        life/annuities), so nothing downstream can quote or bind an
+        unfiled rate as if it were a real one.
+        """
         product_id = (commercial_product_id or "").strip()
         if not product_id:
-            return None
-        status = ""
-        name = product_id
-        if line == InsuranceLine.LIFE:
-            from insureflow.insurance.life_lobs import get_life_line
-            from insureflow.underwriting.life_product import is_filed_term_product
-
-            row = get_life_line(product_id)
-            if row:
-                status = str(row.get("status") or "")
-                name = str(row.get("name") or product_id)
-            if status == "catalog" or (row and not is_filed_term_product(product_id, commercial_coverage_id)):
-                if status != "live":
-                    return QuoteResult(
-                        bundle_id=bundle.bundle_id,
-                        line=line,
-                        base_premium=0.0,
-                        adjusted_premium=0.0,
-                        eligible=False,
-                        ineligibility_reasons=[
-                            f"{name} is catalog-only — no filed permanent/annuity rates (do not price as 20-year term)",
-                        ],
-                        metadata={"rating_engine": "catalog_only", "product_id": product_id, "catalog_status": status or "catalog"},
-                    )
             return None
         if line == InsuranceLine.HEALTH:
             from insureflow.insurance.health_lobs import get_health_line
@@ -544,78 +577,76 @@ class InsuranceRatingEngine:
             from insureflow.underwriting.health_uw import health_product_terms
 
             row = get_health_line(product_id)
-            if row:
-                status = str(row.get("status") or "")
-                name = str(row.get("name") or product_id)
-            if status == "catalog" or (row and not is_filed_health_product(product_id)):
-                if status != "live":
-                    terms = health_product_terms(product_id, commercial_coverage_id)
-                    return QuoteResult(
-                        bundle_id=bundle.bundle_id,
-                        line=line,
-                        base_premium=0.0,
-                        adjusted_premium=0.0,
-                        eligible=False,
-                        ineligibility_reasons=[
-                            f"{name} is catalog-only — no filed health rate manual (will not invent premium)",
-                        ],
-                        metadata={
-                            "rating_engine": "catalog_only",
-                            "product_id": product_id,
-                            "catalog_status": status or "catalog",
-                            **terms,
-                        },
-                    )
-            return None
+            if not row:
+                return None
+            status = str(row.get("status") or "")
+            if status == "live" and is_filed_health_product(product_id):
+                return None
+            name = str(row.get("name") or product_id)
+            return _CatalogStatus(
+                name=name,
+                reason=f"{name} is catalog-only — no filed health rate manual (illustrative estimate, not an issueable premium)",
+                extra_meta=health_product_terms(product_id, commercial_coverage_id),
+            )
         if line == InsuranceLine.GENERAL:
             from insureflow.insurance.general_lobs import get_general_line
             from insureflow.underwriting.general_product import is_filed_general_product
             from insureflow.underwriting.general_uw import general_product_terms
 
             row = get_general_line(product_id)
-            if row:
-                status = str(row.get("status") or "")
-                name = str(row.get("name") or product_id)
-            if status == "catalog" or (row and not is_filed_general_product(product_id)):
-                if status != "live":
-                    terms = general_product_terms(product_id, commercial_coverage_id)
-                    return QuoteResult(
-                        bundle_id=bundle.bundle_id,
-                        line=line,
-                        base_premium=0.0,
-                        adjusted_premium=0.0,
-                        eligible=False,
-                        ineligibility_reasons=[
-                            f"{name} is catalog-only — no filed general rate manual (will not invent premium)",
-                        ],
-                        metadata={
-                            "rating_engine": "catalog_only",
-                            "product_id": product_id,
-                            "catalog_status": status or "catalog",
-                            **terms,
-                        },
-                    )
-            return None
+            if not row:
+                return None
+            status = str(row.get("status") or "")
+            if status == "live" and is_filed_general_product(product_id):
+                return None
+            name = str(row.get("name") or product_id)
+            return _CatalogStatus(
+                name=name,
+                reason=f"{name} is catalog-only — no filed general rate manual (illustrative estimate, not an issueable premium)",
+                extra_meta=general_product_terms(product_id, commercial_coverage_id),
+            )
         from insureflow.insurance.commercial_lobs import get_commercial_line
 
         row = get_commercial_line(product_id)
         if not row:
             return None
         status = str(row.get("status") or "")
-        if status == "catalog":
-            name = str(row.get("name") or product_id)
-            return QuoteResult(
-                bundle_id=bundle.bundle_id,
-                line=line,
-                base_premium=0.0,
-                adjusted_premium=0.0,
-                eligible=False,
-                ineligibility_reasons=[
-                    f"{name} is catalog-only — parent-line proxy, not an underwritable filing",
-                ],
-                metadata={"rating_engine": "catalog_only", "product_id": product_id, "catalog_status": "catalog"},
-            )
-        return None
+        if status != "catalog":
+            return None
+        name = str(row.get("name") or product_id)
+        rating_line = str(row.get("rating_line") or row.get("insurance_line") or line.value).replace("_", " ")
+        return _CatalogStatus(
+            name=name,
+            reason=f"{name} is catalog-only — priced via the {rating_line} parent-line proxy, illustrative estimate only, not an underwritable filing for this specific product",
+        )
+
+    def _apply_catalog_illustrative(self, result: QuoteResult, info: _CatalogStatus) -> QuoteResult:
+        """Preserve the real computed premium as an honest illustrative
+        estimate, then zero the contract-level fields so nothing can quote
+        or bind an unfiled rate as if it were a real filed one."""
+        meta = dict(result.metadata or {})
+        meta["illustrated_adjusted_premium"] = result.adjusted_premium
+        meta["illustrated_base_premium"] = result.base_premium
+        meta["illustrative"] = True
+        meta["catalog_status"] = "catalog"
+        meta.setdefault("rating_engine", "catalog_only")
+        meta.update(info.extra_meta)
+        conditions = list(meta.get("conditions") or [])
+        if info.reason not in conditions:
+            conditions.append(info.reason)
+        meta["conditions"] = conditions
+
+        reasons = list(result.ineligibility_reasons or [])
+        if info.reason not in reasons:
+            reasons.append(info.reason)
+
+        result.metadata = meta
+        result.eligible = False
+        result.base_premium = 0.0
+        result.adjusted_premium = 0.0
+        result.rate_per_100_tiv = 0.0
+        result.ineligibility_reasons = reasons
+        return result
 
     def _finalize_quote(self, result: QuoteResult, *, state: str = "", bundle: SubmissionBundle | None = None) -> QuoteResult:
         """Desk+ refuses pilot manuals — rating must be the carrier's SERFF book.
