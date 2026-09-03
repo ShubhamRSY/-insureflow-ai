@@ -2138,6 +2138,25 @@ for _ln in COMMERCIAL_LINES:
     _ln["status"] = "live" if _ln["id"] in LIVE_COMMERCIAL_PRODUCT_IDS else "catalog"
 
 
+# ── Self-describing: stamp every product/coverage with its dedicated LOB
+# logic path, the same pattern insureflow.insurance.life_lobs/health_lobs use. ─
+def _logic_paths() -> dict[str, str]:
+    try:
+        from insureflow.commercial.lobs import PRODUCT_LOGIC_PATHS
+
+        return dict(PRODUCT_LOGIC_PATHS)
+    except Exception:
+        return {}
+
+
+_LOGIC_PATHS = _logic_paths()
+for _ln in COMMERCIAL_LINES:
+    if _ln["id"] in _LOGIC_PATHS:
+        _ln["logic_path"] = _LOGIC_PATHS[_ln["id"]]
+        for _cov in _ln.get("coverages") or []:
+            _cov["logic_path"] = _LOGIC_PATHS[_ln["id"]]
+
+
 def list_commercial_categories() -> list[dict[str, Any]]:
     counts: dict[str, int] = {}
     live_counts: dict[str, int] = {}

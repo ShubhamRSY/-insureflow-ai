@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timezone
 from typing import Any
 
@@ -10,6 +11,8 @@ from insureflow.rating.models import COMMERCIAL_SPECIALTY_LINES, PERSONAL_LINES,
 from insureflow.underwriting.cope import COPERatingEngine
 from insureflow.underwriting.loss_ratio import LossRatioResult
 from insureflow.underwriting.market import get_market_cycle
+
+logger = logging.getLogger(__name__)
 
 # ISO-style base loss costs (per $100 of TIV) — representative values
 # Overridden by data/rate_curves.json or RATE_CURVES_URL when present
@@ -275,12 +278,17 @@ class InsuranceRatingEngine:
             return self._finalize_quote(adapted)
 
         if line in COMMERCIAL_SPECIALTY_LINES:
-            from insureflow.rating.commercial_specialty import rate_specialty_line
-
             state = self._primary_state(bundle)
             schedule_mod = memo.recommendation.suggested_premium_modification if memo.recommendation else 0.0
             schedule_mod = schedule_mod or 0.0
             market_mod = self._get_market_mod(line)
+
+            dedicated = self._dispatch_commercial_lob(bundle, memo, line, commercial_product_id, state, float(schedule_mod), market_mod)
+            if dedicated is not None:
+                return dedicated
+
+            from insureflow.rating.commercial_specialty import rate_specialty_line
+
             result = rate_specialty_line(
                 bundle,
                 line,
@@ -351,6 +359,10 @@ class InsuranceRatingEngine:
                 return self._adapt_actuarial_result(leaf, memo, bundle, schedule_mod)
 
         if line == InsuranceLine.WORKERS_COMP:
+            dedicated = self._dispatch_commercial_lob(bundle, memo, line, commercial_product_id or "workers_comp", state, schedule_mod, market_mod, experience_mod=experience_mod)
+            if dedicated is not None:
+                return dedicated
+
             result = rate_workers_comp_ncci(
                 bundle,
                 memo,
@@ -487,7 +499,7 @@ class InsuranceRatingEngine:
         if personal_meta:
             result.metadata["personal_factors"] = {k: v for k, v in personal_meta.items() if k != "findings"}
 
-        return self._finalize_quote(result)
+        return self._finalize_quote(result, state=state, bundle=bundle)
 
     def bind(self, bundle_id: str, quote_reference: str, bound_by: str) -> dict[str, Any]:
         return self.adapter.bind_policy(bundle_id, quote_reference, bound_by)
@@ -605,7 +617,7 @@ class InsuranceRatingEngine:
             )
         return None
 
-    def _finalize_quote(self, result: QuoteResult) -> QuoteResult:
+    def _finalize_quote(self, result: QuoteResult, *, state: str = "", bundle: SubmissionBundle | None = None) -> QuoteResult:
         """Desk+ refuses pilot manuals — rating must be the carrier's SERFF book.
 
         Records full rate audit trail with filed rate source citations.
@@ -616,6 +628,22 @@ class InsuranceRatingEngine:
         from insureflow.rating.calibration import is_rate_curves_synthetic, rate_curves_provenance
         from insureflow.rating.iso_forms import attach_iso_forms
         from insureflow.rating.leaf_filings import carrier_book_status
+
+        # Property state law (valued policy law / named-storm deductible / wind
+        # pool) and the real coinsurance penalty check apply regardless of
+        # which upstream engine priced this quote (leaf filing, generic
+        # COPE/ISO, or a dedicated LOB path) — this is the one choke point
+        # every commercial property quote passes through.
+        if result.line == InsuranceLine.COMMERCIAL_PROPERTY:
+            issue_state = state or str((result.metadata or {}).get("state") or "")
+            try:
+                from insureflow.commercial.lobs.property_bi import apply_coinsurance_check, apply_state_law_overlay
+
+                apply_state_law_overlay(result, issue_state)
+                if bundle is not None:
+                    apply_coinsurance_check(result, bundle)
+            except Exception as exc:
+                logger.error("Property state-law/coinsurance overlay failed (%s: %s) — quote unaffected", type(exc).__name__, exc)
 
         plan = current_plan()
         status = carrier_book_status()
@@ -741,6 +769,52 @@ class InsuranceRatingEngine:
         result.metadata = meta
         return result
 
+    def _dispatch_commercial_lob(
+        self,
+        bundle: SubmissionBundle,
+        memo: UnderwritingMemo,
+        line: InsuranceLine,
+        commercial_product_id: str | None,
+        state: str,
+        schedule_mod_pct: float,
+        market_mod_pct: float,
+        experience_mod: float | None = None,
+    ) -> QuoteResult | None:
+        """Dedicated per-product logic path first — see insureflow.commercial.lobs.
+
+        Mirrors insureflow.rating.personal.life_rating's dispatch-first
+        pattern: on any failure (including "no dedicated path registered
+        for this product"), log and return None so the caller falls
+        through to the existing generic engine rather than a silently
+        blanked quote.
+        """
+        try:
+            from insureflow.commercial.lobs import CommercialProductContext, run_product_logic
+
+            ctx = CommercialProductContext(
+                bundle=bundle,
+                memo=memo,
+                line=line,
+                state_code=state,
+                product_id=commercial_product_id or "",
+                schedule_mod_pct=schedule_mod_pct,
+                market_mod_pct=market_mod_pct,
+                experience_mod=experience_mod,
+            )
+            dedicated = run_product_logic(ctx)
+        except Exception as exc:
+            logger.error(
+                "Commercial LOB logic path failed for product_id=%s line=%s (%s: %s) — falling back to the generic engine, which may produce a materially different premium",
+                commercial_product_id,
+                line.value,
+                type(exc).__name__,
+                exc,
+            )
+            return None
+        if dedicated is None:
+            return None
+        return self._adapt_actuarial_result(dedicated, memo, bundle, schedule_mod_pct)
+
     def _adapt_actuarial_result(
         self,
         result: QuoteResult,
@@ -771,7 +845,7 @@ class InsuranceRatingEngine:
         meta = dict(result.metadata or {})
         meta["market_phase"] = self._market.current.phase.value
         adapted.metadata = meta
-        return self._finalize_quote(adapted)
+        return self._finalize_quote(adapted, state=str(meta.get("state") or self._primary_state(bundle)), bundle=bundle)
 
     def _estimate_tiv(self, bundle: SubmissionBundle) -> float:
         if bundle.structured:
