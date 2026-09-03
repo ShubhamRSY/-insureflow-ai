@@ -290,7 +290,7 @@ class UserStore:
             try:
                 with FileLock(str(self._path) + ".lock"):
                     raw = self._path.read_text(encoding="utf-8")
-                self._users = {k: User.model_validate(v) for k, v in json.loads(raw)}
+                self._users = {k: User.model_validate(v) for k, v in json.loads(raw).items()}
             except (json.JSONDecodeError, OSError, ValueError):
                 self._users = {}
         else:
