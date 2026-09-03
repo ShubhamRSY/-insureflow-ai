@@ -353,6 +353,7 @@ def test_ncci_premium_discount_is_layered_not_flat_top_tier():
 def test_wc_large_payroll_gets_a_real_layered_discount_end_to_end():
     bundle = _bundle("Experience modification: 1.0 e-mod: 1.0", with_payroll=True, state="IL")
     assert bundle.structured is not None
+    assert bundle.structured.financial is not None
     bundle.structured.financial.payroll = 5_000_000.0
     ctx = _ctx("workers_comp", InsuranceLine.WORKERS_COMP, state="IL", bundle=bundle)
     result = run_product_logic(ctx)

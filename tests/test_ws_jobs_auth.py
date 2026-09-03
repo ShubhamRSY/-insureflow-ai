@@ -53,7 +53,9 @@ def test_websocket_uses_live_resolved_org_id_not_stale_jwt_claim() -> None:
     clear_user_store()
     store = get_user_store()
     store["ws-user"] = User(username="ws-user", hashed_password="x", role=Role.VIEWER, org_id="acme")
-    resolved_org_id = store.get("ws-user").org_id
+    ws_user = store.get("ws-user")
+    assert ws_user is not None
+    resolved_org_id = ws_user.org_id
 
     # JWT deliberately embeds a DIFFERENT (stale/wrong) org_id than the
     # user's live record — the endpoint must not trust it.

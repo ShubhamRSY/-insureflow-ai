@@ -33,10 +33,12 @@ def test_userstore_reloads_multiple_users_after_reconstruction(tmp_path: Path, m
     # Simulate a process restart: a brand new instance reading the same file.
     reloaded = UserStore(path=path)
     assert len(reloaded) == 2
-    assert reloaded.get("uw") is not None
-    assert reloaded.get("uw").org_id == "acme"
-    assert reloaded.get("admin") is not None
-    assert reloaded.get("admin").role == Role.ADMIN
+    reloaded_uw = reloaded.get("uw")
+    assert reloaded_uw is not None
+    assert reloaded_uw.org_id == "acme"
+    reloaded_admin = reloaded.get("admin")
+    assert reloaded_admin is not None
+    assert reloaded_admin.role == Role.ADMIN
 
 
 def test_userstore_single_user_also_survives_reload(tmp_path: Path, monkeypatch) -> None:

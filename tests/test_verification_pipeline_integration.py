@@ -213,7 +213,9 @@ class TestVerificationAPI:
         """
         store = get_user_store()
         store["uw"] = User(username="uw", hashed_password="x", role=role, org_id=org_id)
-        resolved_org_id = store.get("uw").org_id
+        saved_user = store.get("uw")
+        assert saved_user is not None
+        resolved_org_id = saved_user.org_id
         token = create_access_token({"sub": "uw", "role": role.value, "org_id": resolved_org_id})
         return {"Authorization": f"Bearer {token}"}, resolved_org_id
 
