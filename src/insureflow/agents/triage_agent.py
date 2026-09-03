@@ -421,6 +421,13 @@ class TriageAgent:
             review_by=review_by,
             estimated_review_minutes=est_minutes,
         )
+        # Pipeline stages call this twice per submission — an early triage on
+        # the preliminary bundle, then a re-score once the full bundle is
+        # ingested (see insureflow.insurance.pipeline's "RE-SCORE DOCUMENT
+        # CHECKLIST" step). Upsert by bundle_id so the queue keeps only the
+        # latest, most-complete score per submission instead of accumulating
+        # a duplicate entry on every re-score.
+        self._queue = [r for r in self._queue if r.bundle_id != result.bundle_id]
         self._queue.append(result)
         return result
 

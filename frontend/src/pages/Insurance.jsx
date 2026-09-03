@@ -1,22 +1,25 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Shield, ArrowRight, HeartPulse, Stethoscope, Umbrella, Briefcase, Leaf,
   Landmark, HardHat, Plane, Lock, CloudRain, Scale, ShieldCheck, Trash2,
   ChevronDown, ChevronUp,
 } from 'lucide-react';
-import { insuranceLineLabel } from '../lib/insuranceLines';
 import { INSURANCE_SECTIONS, insuranceSectionAccent } from '../lib/insuranceSections';
+import { buildJobRow, queueItemsByBundleId } from '../lib/submissions';
+import { Badge, ScoreBadge, PriorityBadge, AssigneeAvatar } from '../components/ui';
 
 const ICONS = {
   HeartPulse, Stethoscope, Umbrella, Briefcase, Leaf, Landmark,
   HardHat, Plane, Lock, CloudRain, Scale, ShieldCheck,
 };
 
-export default function InsurancePage({ jobs, onRefresh, onDeleteJob, onDeleteAllJobs }) {
+export default function InsurancePage({ jobs, queueStats, onRefresh, onDeleteJob, onDeleteAllJobs }) {
   const navigate = useNavigate();
   const recent = (jobs || []).slice(0, 8);
   const [showAll, setShowAll] = useState(false);
+  const queueByBundle = useMemo(() => queueItemsByBundleId(queueStats), [queueStats]);
+  const rows = useMemo(() => recent.map((j) => buildJobRow(j, queueByBundle)), [recent, queueByBundle]);
 
   const activeSections = INSURANCE_SECTIONS.filter((s) => !s.disabled);
   const disabledSections = INSURANCE_SECTIONS.filter((s) => s.disabled);
@@ -163,52 +166,57 @@ export default function InsurancePage({ jobs, onRefresh, onDeleteJob, onDeleteAl
         {!recent.length ? (
           <p className="px-5 py-8 text-sm text-slate-500">No jobs yet. Open a section and run a package.</p>
         ) : (
-          <div className="divide-y divide-white/[0.04]">
-            {recent.map((j) => {
-              const results = j.job?.results || j.results || {};
-              const company = results.insurance_company_name || j.insurance_company_name;
-              const line = results.insurance_line || results.product_line || j.insurance_line || j.product_line || 'commercial';
-              return (
-              <div
-                key={j.id}
-                className="flex w-full items-center justify-between gap-3 px-5 py-3 hover:bg-white/[0.02]"
-              >
-                <button
-                  type="button"
-                  onClick={() => navigate(`/insurance/${j.id}`)}
-                  className="flex min-w-0 flex-1 items-center justify-between gap-3 text-left"
-                >
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-slate-200">{j.name || results.insured_name || j.insured_name || j.id}</p>
-                  <p className="text-xs text-slate-500">
-                    {company ? `${company} · ` : ''}
-                    {insuranceLineLabel(line)}
-                  </p>
-                </div>
-                <span className="shrink-0 text-xs capitalize text-slate-400">{j.job?.status || j.status || '—'}</span>
-                </button>
-                {onDeleteJob && (
-                  <button
-                    type="button"
-                    onClick={async (e) => {
-                      e.stopPropagation();
-                      if (!window.confirm('Delete this job? This cannot be undone.')) return;
-                      try {
-                        await onDeleteJob(j.id);
-                      } catch (err) {
-                        window.alert(err.message || 'Could not delete this job');
-                      }
-                    }}
-                    className="shrink-0 rounded-lg p-1.5 text-red-400 hover:bg-red-500/10"
-                    title="Delete job"
-                    aria-label={`Delete ${j.id}`}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
-              );
-            })}
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-white/[0.06] bg-surface-overlay text-left text-xs uppercase tracking-wider text-slate-500">
+                  <th className="px-5 py-2.5">Submission ID</th>
+                  <th className="px-5 py-2.5">Insured</th>
+                  <th className="px-5 py-2.5">Priority</th>
+                  <th className="px-5 py-2.5">Score</th>
+                  <th className="px-5 py-2.5">LoB</th>
+                  <th className="px-5 py-2.5">Agency</th>
+                  <th className="px-5 py-2.5">Status</th>
+                  <th className="px-5 py-2.5">Assignee</th>
+                  <th className="px-5 py-2.5" />
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/[0.04]">
+                {rows.map((r) => (
+                  <tr key={r.bundleId} onClick={() => navigate(`/insurance/${r.bundleId}`)} className="cursor-pointer transition hover:bg-white/[0.02]">
+                    <td className="px-5 py-3 font-mono text-xs text-slate-400">{r.submissionId}</td>
+                    <td className="px-5 py-3 text-slate-300">{r.insuredName || '—'}</td>
+                    <td className="px-5 py-3">{r.priority ? <PriorityBadge priority={r.priority} /> : <span className="text-xs text-slate-600">—</span>}</td>
+                    <td className="px-5 py-3">{r.score != null ? <ScoreBadge value={r.score} direction="quality" /> : <span className="text-xs text-slate-600">—</span>}</td>
+                    <td className="px-5 py-3 text-xs text-slate-400">{r.lob || '—'}</td>
+                    <td className="px-5 py-3 text-xs text-slate-400">{r.agency || '—'}</td>
+                    <td className="px-5 py-3"><Badge status={r.statusMeta.status} label={r.statusMeta.label} pulse={r.statusMeta.status === 'processing'} /></td>
+                    <td className="px-5 py-3"><AssigneeAvatar name={r.assignee} /></td>
+                    <td className="px-5 py-3 text-right">
+                      {onDeleteJob && (
+                        <button
+                          type="button"
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            if (!window.confirm('Delete this job? This cannot be undone.')) return;
+                            try {
+                              await onDeleteJob(r.bundleId);
+                            } catch (err) {
+                              window.alert(err.message || 'Could not delete this job');
+                            }
+                          }}
+                          className="rounded-lg p-1.5 text-red-400 hover:bg-red-500/10"
+                          title="Delete job"
+                          aria-label={`Delete ${r.bundleId}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </section>

@@ -342,7 +342,7 @@ function AppRoutes() {
           <Route path="insurance/general" element={<Protected onLogin={() => setLoginOpen(true)}><GeneralInsuranceHub presets={presets} onRunDemo={runDemo} onSubmit={submitInsurance} jobs={insuranceJobs} onDeleteJob={deleteInsuranceJob} onDeleteAllJobs={deleteAllInsuranceJobs} /></Protected>} />
           <Route path="insurance/sections/:sectionId" element={<Protected onLogin={() => setLoginOpen(true)}><InsuranceSegmentPage /></Protected>} />
           <Route path="insurance/:jobId" element={<Protected onLogin={() => setLoginOpen(true)}><InsuranceJobDetail onDeleted={loadInsuranceJobs} onDeleteJob={deleteInsuranceJob} /></Protected>} />
-          <Route path="insurance" element={<Protected onLogin={() => setLoginOpen(true)}><InsurancePage presets={presets} jobs={insuranceJobs} onRunDemo={runDemo} onOpenJob={openJob} onSubmit={submitInsurance} onRefresh={loadInsuranceJobs} onDeleteJob={deleteInsuranceJob} onDeleteAllJobs={deleteAllInsuranceJobs} /></Protected>} />
+          <Route path="insurance" element={<Protected onLogin={() => setLoginOpen(true)}><InsurancePage presets={presets} jobs={insuranceJobs} queueStats={queueStats} onRunDemo={runDemo} onOpenJob={openJob} onSubmit={submitInsurance} onRefresh={loadInsuranceJobs} onDeleteJob={deleteInsuranceJob} onDeleteAllJobs={deleteAllInsuranceJobs} /></Protected>} />
           <Route path="line-uw" element={<Protected onLogin={() => setLoginOpen(true)}><LineUnderwriting /></Protected>} />
           <Route path="staff-uw" element={<Protected onLogin={() => setLoginOpen(true)}><StaffUnderwriting /></Protected>} />
           <Route path="pilot" element={<Protected onLogin={() => setLoginOpen(true)}><PilotPage /></Protected>} />

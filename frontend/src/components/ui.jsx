@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ArrowUp, ArrowDown, Minus, XCircle } from 'lucide-react';
 
 // Hierarchy-based back control: always goes to the logical parent route,
 // never relies on browser history — so it behaves the same whether the user
@@ -185,6 +185,13 @@ export function Badge({ status, pulse = false, label }) {
     rejected: 'bg-red-500/15 text-red-400 ring-red-500/20',
     changes_requested: 'bg-amber-500/15 text-amber-400 ring-amber-500/20',
     flagged: 'bg-red-500/15 text-red-400 ring-red-500/20',
+    // Triage priority tiers (insureflow.agents.triage_agent.SubmissionPriority)
+    hot: 'bg-red-500/15 text-red-400 ring-red-500/20',
+    warm: 'bg-amber-500/15 text-amber-400 ring-amber-500/20',
+    cold: 'bg-sky-500/15 text-sky-400 ring-sky-500/20',
+    no_fit: 'bg-slate-500/15 text-slate-400 ring-slate-500/20',
+    'no-fit': 'bg-slate-500/15 text-slate-400 ring-slate-500/20',
+    appetite_check_failed: 'bg-red-500/15 text-red-400 ring-red-500/20',
   };
   const cls = colors[s] || 'bg-slate-500/15 text-slate-400 ring-slate-500/20';
   return (
@@ -222,6 +229,62 @@ export function ScoreBadge({ value, max = 100, direction = 'risk', suffix = '' }
     <span className={`inline-flex min-w-[2.75rem] items-center justify-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold ring-1 ring-inset ${cls}`}>
       {display}{suffix}
     </span>
+  );
+}
+
+// Triage priority tier with a directional icon — hot (highest-scoring, work
+// this first) reads as "up"/urgent, cold as "down"/low urgency, warm as flat,
+// no_fit as an explicit reject icon. Mirrors SubmissionPriority in
+// insureflow.agents.triage_agent (hot >= 80, warm >= 50, cold >= 25, else no_fit).
+const PRIORITY_META = {
+  hot: { label: 'High', icon: ArrowUp, cls: 'bg-red-500/15 text-red-400 ring-red-500/20' },
+  warm: { label: 'Medium', icon: Minus, cls: 'bg-amber-500/15 text-amber-400 ring-amber-500/20' },
+  cold: { label: 'Low', icon: ArrowDown, cls: 'bg-sky-500/15 text-sky-400 ring-sky-500/20' },
+  no_fit: { label: 'No Fit', icon: XCircle, cls: 'bg-slate-500/15 text-slate-400 ring-slate-500/20' },
+};
+
+export function PriorityBadge({ priority }) {
+  const key = String(priority || '').toLowerCase().replace('-', '_');
+  const meta = PRIORITY_META[key];
+  if (!meta) return <span className="text-slate-600">—</span>;
+  const Icon = meta.icon;
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ring-1 ring-inset ${meta.cls}`}>
+      <Icon className="h-3 w-3" />
+      {meta.label}
+    </span>
+  );
+}
+
+const AVATAR_COLORS = [
+  'bg-sky-500/20 text-sky-300', 'bg-emerald-500/20 text-emerald-300', 'bg-amber-500/20 text-amber-300',
+  'bg-violet-500/20 text-violet-300', 'bg-rose-500/20 text-rose-300', 'bg-cyan-500/20 text-cyan-300',
+];
+
+function hashColorIndex(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i += 1) h = (h * 31 + str.charCodeAt(i)) >>> 0;
+  return h % AVATAR_COLORS.length;
+}
+
+// Initials avatar for a submission's assigned underwriter — falls back to a
+// dashed "unassigned" ring rather than inventing a name.
+export function AssigneeAvatar({ name }) {
+  const clean = (name || '').trim();
+  if (!clean || clean.toLowerCase() === 'unassigned') {
+    return (
+      <Hint text="Unassigned">
+        <span className="flex h-7 w-7 items-center justify-center rounded-full border border-dashed border-white/15 text-[10px] text-slate-600">—</span>
+      </Hint>
+    );
+  }
+  const initials = clean.split(/\s+/).map((p) => p[0]).slice(0, 2).join('').toUpperCase();
+  return (
+    <Hint text={clean}>
+      <span className={`flex h-7 w-7 shrink-0 cursor-help items-center justify-center rounded-full text-[10px] font-bold ${AVATAR_COLORS[hashColorIndex(clean)]}`}>
+        {initials}
+      </span>
+    </Hint>
   );
 }
 
