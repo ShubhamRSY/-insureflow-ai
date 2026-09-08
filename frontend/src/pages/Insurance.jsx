@@ -74,7 +74,7 @@ export default function InsurancePage({ jobs, queueStats, onRefresh, onDeleteJob
                       <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
                         section.status === 'live'
                           ? 'bg-emerald-500/15 text-emerald-400'
-                          : 'bg-amber-500/15 text-amber-400'
+                          : 'bg-slate-500/20 text-slate-300'
                       }`}>
                         {section.disabled ? 'Coming soon' : section.status === 'live' ? 'Live' : 'Catalog'}
                       </span>

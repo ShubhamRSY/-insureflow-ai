@@ -649,6 +649,42 @@ def sandbox_status(
         console.print(f"  • {item}")
     console.print()
     console.print("[dim]Oracle keys only: python cli.py oracle-verify [--ping][/]\n")
+    console.print("[dim]Bind cutover: python cli.py cutover-check[/]\n")
+
+
+@app.command("cutover-check")
+def cutover_check(
+    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
+) -> None:
+    """Honest bind cutover gate — PAS, carrier book, oracles, simulated-bind posture."""
+    from insureflow.pilot.sandbox_readiness import bind_cutover_checklist
+
+    cut = bind_cutover_checklist()
+    if json_output:
+        console.print_json(json.dumps(cut, indent=2, default=str))
+        return
+
+    ready = cut.get("cutover_ready")
+    color = "green bold" if ready else "yellow bold"
+    console.print("\n[bold]Bind cutover checklist[/]")
+    console.print(f"Cutover ready: [{color}]{'yes' if ready else 'no'}[/]  ·  Bind allowed: {cut.get('bind_allowed')}")
+    console.print(f"System of record: {cut.get('system_of_record')}")
+    book = cut.get("carrier_book") or {}
+    console.print(
+        f"Carrier book: customer={book.get('is_customer_book')} · "
+        f"posture={book.get('posture')} · book_id={book.get('book_id') or 'none'}"
+    )
+    console.print()
+    for step in cut.get("steps") or []:
+        mark = "[green]✓[/]" if step.get("done") else "[red]○[/]"
+        req = "" if step.get("required") else " [dim](optional)[/]"
+        console.print(f"  {mark} {step.get('title')}{req}")
+        if step.get("note") and not step.get("done"):
+            console.print(f"      [dim]{step['note'][:120]}[/]")
+    if book.get("import_hint"):
+        console.print(f"\n[dim]Import hint: {book['import_hint']}[/]\n")
+    else:
+        console.print()
 
 
 @app.command("oracle-verify")
@@ -979,6 +1015,7 @@ def doctor(
         console.print("     cp .env.example .env  →  edit LLM_API_KEY=sk-...")
     console.print("\n[dim]Web UI: python cli.py serve --port 8002  →  /dashboard[/]\n")
     console.print("[dim]Pilot readiness: python cli.py sandbox-status[/]\n")
+    console.print("[dim]Bind cutover: python cli.py cutover-check[/]\n")
 
 
 # ── Lending ─────────────────────────────────────────────────────────────

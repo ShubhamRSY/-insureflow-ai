@@ -5,14 +5,12 @@ import { insuranceLineLabel } from '../lib/insuranceLines';
 import {
   Inbox, FileCheck, AlertTriangle, Clock, TrendingUp, CheckCircle2, XCircle,
   ArrowRight, Search, Filter, RefreshCw, Zap, Shield, Bell, BarChart3,
-  ChevronRight, Loader2, Sparkles, Target, Flame,
+  ChevronRight, Loader2, Sparkles, Target, Flame, Briefcase,
 } from 'lucide-react';
 
 const QUICK_ACTIONS = [
-  { key: '1', label: 'Approve', color: 'bg-emerald-600 hover:bg-emerald-500', icon: CheckCircle2 },
-  { key: '2', label: 'Decline', color: 'bg-red-600 hover:bg-red-500', icon: XCircle },
-  { key: '3', label: 'Refer', color: 'bg-amber-600 hover:bg-amber-500', icon: AlertTriangle },
-  { key: '4', label: 'Quote', color: 'bg-sky-600 hover:bg-sky-500', icon: FileCheck },
+  { key: 'w', label: 'Open Workbench', color: 'bg-brand hover:bg-brand-light', icon: Briefcase, to: '/uw-workbench' },
+  { key: 'Enter', label: 'Open submission', color: 'bg-sky-600 hover:bg-sky-500', icon: FileCheck, openJob: true },
 ];
 
 const SEVERITY_COLORS = {
@@ -62,7 +60,7 @@ function MetricCard({ icon: Icon, label, value, sub, color = 'text-brand', pulse
   );
 }
 
-function SubmissionRow({ job, onSelect, onQuickAction, isSelected, index }) {
+function SubmissionRow({ job, onSelect, isSelected, index }) {
   const results = job.results || {};
   const memo = results.memo || {};
   const quote = results.quote || {};
@@ -165,7 +163,6 @@ export default function UWDashboard({ onOpenJob }) {
   const [metrics, setMetrics] = useState(null);
   const [selectedJob, setSelectedJob] = useState(null);
   const [selectedIdx, setSelectedIdx] = useState(-1);
-  const [quickAction, setQuickAction] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterLine, setFilterLine] = useState('');
   const [filterState, setFilterState] = useState('');
@@ -265,9 +262,8 @@ export default function UWDashboard({ onOpenJob }) {
         const id = selectedJob.id || selectedJob.job_id;
         if (id) navigate(`/insurance/${id}`);
       }
-      if (selectedJob && ['1', '2', '3', '4'].includes(e.key)) {
-        const actions = ['approve', 'decline', 'refer', 'quote'];
-        setQuickAction(actions[parseInt(e.key) - 1]);
+      if (e.key === 'w' || e.key === 'W') {
+        navigate('/uw-workbench');
       }
       if (e.key === '?') {
         setShowShortcuts((s) => !s);
@@ -331,10 +327,7 @@ export default function UWDashboard({ onOpenJob }) {
               ['/', 'Search'],
               ['\u2191\u2193', 'Navigate'],
               ['Enter', 'Open submission'],
-              ['1', 'Approve'],
-              ['2', 'Decline'],
-              ['3', 'Refer'],
-              ['4', 'Quote'],
+              ['W', 'Open Workbench'],
               ['Esc', 'Clear selection'],
             ].map(([key, desc]) => (
               <div key={key} className="flex items-center gap-2">
@@ -408,7 +401,6 @@ export default function UWDashboard({ onOpenJob }) {
                     index={i}
                     isSelected={selectedIdx === i}
                     onSelect={(j) => { setSelectedJob(j); setSelectedIdx(i); }}
-                    onQuickAction={setQuickAction}
                   />
                 ))}
               </div>
@@ -442,24 +434,30 @@ export default function UWDashboard({ onOpenJob }) {
 
         {/* Right sidebar — alerts + quick actions */}
         <div className="space-y-4">
-          {/* Quick actions */}
+          {/* Triage actions — decisions happen on Workbench, not here */}
           {selectedJob && (
             <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
-              <h3 className="text-sm font-medium text-white mb-3 flex items-center gap-2">
+              <h3 className="text-sm font-medium text-white mb-2 flex items-center gap-2">
                 <Zap size={14} className="text-brand" />
-                Quick Action
-                <span className="text-[10px] text-slate-500 ml-auto">
-                  {selectedJob._results?.insured_name || 'Selected'}
-                </span>
+                Next step
               </h3>
-              <div className="grid grid-cols-2 gap-2">
-                {QUICK_ACTIONS.map(({ key, label, color, icon: Icon }) => (
+              <p className="mb-3 text-xs text-slate-400">
+                Approve / decline / refer / quote live on the UW Workbench — this dashboard is triage only.
+              </p>
+              <div className="grid grid-cols-1 gap-2">
+                {QUICK_ACTIONS.map(({ key, label, color, icon: Icon, to, openJob }) => (
                   <button
                     key={key}
                     type="button"
                     onClick={() => {
-                      const id = selectedJob.id || selectedJob.job_id;
-                      if (id) navigate(`/insurance/${id}`);
+                      if (to) {
+                        navigate(to);
+                        return;
+                      }
+                      if (openJob) {
+                        const id = selectedJob.id || selectedJob.job_id;
+                        if (id) navigate(`/insurance/${id}`);
+                      }
                     }}
                     className={`${color} text-white text-sm py-2 px-3 rounded-lg flex items-center justify-center gap-2 transition-all`}
                   >
@@ -507,12 +505,16 @@ export default function UWDashboard({ onOpenJob }) {
             )}
           </div>
 
-          {/* Hot states */}
+          {/* Hot states — illustrative only until portfolio feed is wired */}
           <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
-            <h3 className="text-sm font-medium text-white mb-3 flex items-center gap-2">
+            <h3 className="text-sm font-medium text-white mb-1 flex items-center gap-2">
               <BarChart3 size={14} className="text-sky-400" />
               Activity Hotspots
+              <span className="ml-auto rounded-full bg-amber-500/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-300">
+                Demo
+              </span>
             </h3>
+            <p className="mb-3 text-[11px] text-slate-500">Illustrative examples — not live portfolio concentration.</p>
             <div className="space-y-2">
               {[
                 { state: 'FL', reason: 'Hurricane season', severity: 'critical' },

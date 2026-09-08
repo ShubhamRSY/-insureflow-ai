@@ -7,6 +7,7 @@ import { insuranceLineLabel } from '../lib/insuranceLines';
 import {
   ShieldCheck, Inbox, FileCheck, History, Search, Loader2, Layers, AlertTriangle, GitCompare, UserCheck, CircleCheck, HandCoins,
 } from 'lucide-react';
+import BindReadinessPanel from '../components/BindReadinessPanel';
 
 const REASON_CATEGORIES = [
   { value: 'pricing', label: 'Pricing' },
@@ -24,8 +25,8 @@ const REASON_CATEGORIES = [
 const STATE_BADGE = {
   pending_review: { status: 'pending', label: 'Pending review' },
   pending_co_sign: { status: 'refer', label: 'Needs co-sign' },
-  approved: { status: 'approved', label: 'Approved — ready to bind' },
-  quoted: { status: 'approved', label: 'Quoted — ready to bind' },
+  approved: { status: 'approved', label: 'Approved — check bind readiness' },
+  quoted: { status: 'approved', label: 'Quoted — check bind readiness' },
   declined: { status: 'decline', label: 'Declined' },
   no_quote: { status: 'decline', label: 'No quote' },
   bound: { status: 'bound', label: 'Bound' },
@@ -124,9 +125,22 @@ export default function UWWorkbench({ onOpenJob, authorityData, onRefresh }) {
   };
 
   const handleBind = async (bundleId) => {
-    if (!window.confirm(`Bind policy for ${bundleId}?`)) return;
     setBusy(bundleId);
     try {
+      const readiness = await endpoints.bindReadiness(bundleId);
+      const gate = readiness?.bind_readiness || readiness;
+      if (gate && gate.ready_to_bind === false) {
+        setBusy(null);
+        alert(gate.summary || 'Bind readiness checks are not clear. Clear open subjectivities first.');
+        return;
+      }
+      const ok = window.confirm(
+        `Bind ${bundleId} in the carrier PAS?\n\nThis is a real bind request — only continue if licensed UW sign-off is complete and you are not in shadow mode.`,
+      );
+      if (!ok) {
+        setBusy(null);
+        return;
+      }
       await endpoints.bindPolicy(bundleId);
       await afterMutate();
     } catch (e) {
@@ -195,7 +209,7 @@ export default function UWWorkbench({ onOpenJob, authorityData, onRefresh }) {
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard label="Awaiting UW" value={pendingCount} sub="review or co-sign" accent="brand" />
-        <StatCard label="Ready to bind" value={bindCount} sub="quoted / approved" accent="success" />
+        <StatCard label="Ready to bind" value={bindCount} sub="approved — still check subjectivities" accent="success" />
         <StatCard label="Need co-sign" value={coSignCount} sub="above binding authority" accent="mortgage" />
         <StatCard label="Decided" value={totals.done || 0} sub="bound · no quote · declined" accent="insurance" />
       </div>
@@ -350,6 +364,12 @@ export default function UWWorkbench({ onOpenJob, authorityData, onRefresh }) {
                           <ShieldCheck className="h-2.5 w-2.5" /> {so.action} by {so.username || so.license_number || 'UW'}
                         </span>
                       ))}
+                    </div>
+                  )}
+
+                  {(c.state === 'approved' || c.state === 'quoted' || tab === 'bind') && (
+                    <div className="mt-4">
+                      <BindReadinessPanel bundleId={c.bundle_id} onChanged={load} />
                     </div>
                   )}
 

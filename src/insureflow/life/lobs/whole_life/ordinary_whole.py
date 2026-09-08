@@ -3,6 +3,10 @@
 Coverages: Guaranteed Whole Life, Ordinary Whole Life. Priced on actuarial
 equivalence (net level premium P_x = A_x / ä_x) with expense loading —
 explicitly NOT a flat multiplier on term mortality.
+
+Pilot filing: traditional_whole_life is issueable on the IL permanent exhibit
+(same honesty class as the term exhibit). Other permanent products stay
+illustrative until their filings land.
 """
 
 from __future__ import annotations
@@ -13,6 +17,7 @@ from insureflow.life.lobs.base import (
     LifeProductContext,
     LobOutcome,
     add_common_loads,
+    apply_state_filing_gate,
     band_factor,
     finish_quote,
     medical_class_factor,
@@ -21,6 +26,7 @@ from insureflow.life.lobs.base import (
 )
 from insureflow.life.whole_life_formulas import compute_full_whole_life_quote
 from insureflow.rating.models import RateComponent
+from insureflow.underwriting.life_product import is_filed_permanent_product
 
 PRODUCT_ID = "traditional_whole_life"
 LOGIC_PATH = "insureflow.life.lobs.whole_life.ordinary_whole"
@@ -58,8 +64,10 @@ def underwrite_ordinary_whole_life(ctx: LifeProductContext) -> LobOutcome:
     for disclosure in state_rules["disclosures"]:
         outcome.add_condition(disclosure)
 
-    interest = float(state_rules["interest_rate"])
-    loading = float(state_rules["expense_loading_pct"])
+    # Prefer filed-manual permanent rates when present; else carrier defaults.
+    manual = ctx.manual or {}
+    interest = float(manual.get("whole_life_interest_rate") or state_rules["interest_rate"])
+    loading = float(manual.get("whole_life_expense_loading") or state_rules["expense_loading_pct"])
     formula = compute_full_whole_life_quote(
         age=ctx.age,
         sex=ctx.sex_key,
@@ -96,16 +104,25 @@ def underwrite_ordinary_whole_life(ctx: LifeProductContext) -> LobOutcome:
     if ctx.medical.decision.value == "decline":
         outcome.eligible = False
 
-    # No permanent rates filed in the pilot — illustrative only.
-    filing = ctx.filing_state
-    issue = ctx.issue_state
-    outcome.eligible = False
-    outcome.add_reason(f"whole life priced on actuarial equivalence (A_x / ä_x) — illustrative only, no {filing}-filed permanent rates")
-    if issue and issue != filing:
-        outcome.add_reason(f"{filing} pilot exhibit applied — not a {issue} state-of-issue filing")
+    filed = is_filed_permanent_product(PRODUCT_ID)
+    apply_state_filing_gate(ctx, outcome, filed_for_state=filed, product_family="traditional_whole_life")
+    if filed:
+        permanent = manual.get("permanent_filing") if isinstance(manual.get("permanent_filing"), dict) else {}
+        outcome.metadata["filed_permanent"] = True
+        if permanent.get("filing_id"):
+            outcome.metadata["filing_id"] = permanent["filing_id"]
+        if permanent.get("serff_tracking"):
+            outcome.metadata["serff_tracking"] = permanent["serff_tracking"]
     return outcome
 
 
 def build_quote(ctx: LifeProductContext) -> Any:
     outcome = underwrite_ordinary_whole_life(ctx)
-    return finish_quote(ctx, outcome, logic_path=LOGIC_PATH, family="whole_life")
+    filed = is_filed_permanent_product(PRODUCT_ID)
+    return finish_quote(
+        ctx,
+        outcome,
+        logic_path=LOGIC_PATH,
+        family="whole_life",
+        rating_engine="life_filing" if filed else "life_whole_life_actuarial",
+    )

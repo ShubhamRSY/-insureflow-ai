@@ -2089,20 +2089,24 @@ COMMERCIAL_LINES: list[dict[str, Any]] = [
     ),
 ]
 
-# Only products with a dedicated rater (or true property TIV+COPE) are live.
-# Extended taxonomy leaves (aviation, catastrophe, pollution, K&R, political risk,
-# terrorism, legal expense) rate from their carrier leaf filings. Pure parent-line
-# proxies that remain catalog are crop / captive / E&S specialties.
+# Every commercial product has a leaf filing in the carrier book
+# (see insureflow.rating.leaf_filings). Dedicated LOB modules still own
+# UW depth for property / WC / D&O / trade credit / E&O / key person; the
+# remaining leaves rate from their product-specific filings.
 LIVE_COMMERCIAL_PRODUCT_IDS = frozenset(
     {
         "property_bi",
         "business_interruption",
         "builders_risk",
         "inland_marine",
+        "ocean_marine",
+        "equipment_breakdown",
+        "flood_commercial",
+        "earthquake_commercial",
         "crime",
         "ordinance_or_law",
         "rent_loss_of_rents",
-        "equipment_breakdown",
+        "dic_excess_flood",
         "general_liability",
         "product_liability",
         "errors_omissions",
@@ -2113,25 +2117,43 @@ LIVE_COMMERCIAL_PRODUCT_IDS = frozenset(
         "fiduciary_liability",
         "cyber_liability",
         "umbrella",
+        "pollution",
+        "liquor_liability",
+        "media_liability",
         "workers_comp",
         "employers_liability",
+        "group_health",
+        "group_life",
+        "group_disability",
         "key_person",
+        "business_overhead",
+        "voluntary_benefits",
         "commercial_auto",
         "fleet",
+        "hnoa",
+        "motor_truck_cargo",
+        "garage_liability",
+        "non_trucking_liability",
         "trade_credit",
         "surety_bonds",
+        "political_risk",
+        "representations_warranties",
+        "legal_expense",
         "tech_eo_cyber",
         "construction",
+        "aviation",
+        "event_insurance",
+        "intellectual_property",
+        "kidnap_ransom",
+        "terrorism",
+        "product_recall",
+        "supply_chain",
+        "crop_insurance",
+        "livestock_bloodstock",
+        "captive_insurance",
+        "sir_fronting",
         "bop",
         "cpp",
-        "aviation",
-        "flood_commercial",
-        "earthquake_commercial",
-        "pollution",
-        "kidnap_ransom",
-        "political_risk",
-        "terrorism",
-        "legal_expense",
     }
 )
 for _ln in COMMERCIAL_LINES:

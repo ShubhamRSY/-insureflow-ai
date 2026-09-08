@@ -640,13 +640,12 @@ class TestRatingMechanics:
         assert q.metadata["modal_premium"] == pytest.approx(250.0 * 0.087, abs=0.01)
 
     def test_generic_permanent_path_does_not_collapse_to_term(self) -> None:
-        # The filed manual carries whole_life_interest_rate/expense_loading as
-        # explicit nulls (not yet filed) — `.get(key, default)` doesn't apply a
-        # default for a key that's present but None, so float(None) used to
-        # raise, get silently caught, and permanent pricing fell back to the
-        # same one-year-term math as level_term. An unregistered whole-life
-        # coverage name forces this generic (non-LOB-dispatched) path.
-        q = rate_life(_bundle(self.T), coverage_name="Generic Whole Life")
+        # Bare family id "whole_life" is not a registered LOB leaf, so this
+        # forces the generic (non-LOB-dispatched) permanent path. The filed
+        # manual now carries whole_life_interest_rate/expense_loading for the
+        # traditional_whole_life exhibit; the generic path must still use
+        # actuarial A_x/ä_x math — never collapse to one-year-term mortality.
+        q = rate_life(_bundle(self.T), product_id="whole_life", coverage_id="generic_permanent")
         assert q.metadata["rating_engine"] == "life_whole_life_actuarial"
         assert q.metadata["actuarial"] is not None
         assert q.metadata["actuarial"]["interest_rate"] == 0.04
@@ -918,11 +917,11 @@ class TestProductGatesAllLOBs:
         lp20 = rate_life(_bundle(self.B), coverage_id="twenty_pay", product_id="limited_pay_whole_life")
         lifetime = rate_life(_bundle(self.B), coverage_name="Traditional Whole Life", product_id="traditional_whole_life")
 
-        def ill(q):
-            return q.metadata["illustrated_adjusted_premium"]
-
-        assert all(q.eligible is False and q.adjusted_premium == 0.0 for q in (lp10, lp20, lifetime))
-        assert ill(lp10) > ill(lp20) > ill(lifetime)
+        assert lp10.eligible is True and lp10.adjusted_premium > 0
+        assert lp20.eligible is True and lp20.adjusted_premium > 0
+        assert lifetime.eligible is True and lifetime.adjusted_premium > 0
+        assert lifetime.metadata["rating_engine"] == "life_filing"
+        assert lp10.adjusted_premium > lp20.adjusted_premium > lifetime.adjusted_premium
 
     def test_ul_charging_ordering(self) -> None:
         caul = rate_life(_bundle(self.B), coverage_id="current_rate", product_id="current_assumption_universal_life")
@@ -979,7 +978,11 @@ class TestProductGatesAllLOBs:
         assert fit.metadata["waiver_of_premium_included"] is True
 
     def test_annuity_paths_are_illustrations_only(self) -> None:
-        for pid, cid in (("immediate_annuity", "life_income"), ("qlac", "qlac_lifetime"), ("structured_settlement_annuity", "structured_payments")):
+        # Immediate annuity is a pilot filing; other annuity families stay illustrative.
+        filed = rate_life(_bundle("Purchase price: $200000. Applicant age: 65. Sex: male."), coverage_id="life_income", product_id="immediate_annuity", state="IL")
+        assert filed.eligible is True and filed.adjusted_premium > 0
+        assert filed.metadata.get("filed_annuity") is True
+        for pid, cid in (("qlac", "qlac_lifetime"), ("structured_settlement_annuity", "structured_payments")):
             q = rate_life(_bundle("Purchase price: $200000. Applicant age: 65. Sex: male."), coverage_id=cid, product_id=pid, state="IL")
             assert q.eligible is False, pid
             # Illustration-only (unfiled) -> premium contract is $0 (C1), but

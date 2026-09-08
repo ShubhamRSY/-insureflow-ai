@@ -6,7 +6,7 @@ from pathlib import Path
 
 from pytest import MonkeyPatch
 
-from insureflow.ingestion.insurance.sources import list_sources
+from insureflow.ingestion.insurance.sources import LIVE_CONNECTOR_IDS, list_sources
 from insureflow.pilot.sandbox_readiness import bind_cutover_checklist
 
 
@@ -20,18 +20,26 @@ def test_lab_sources_are_labeled() -> None:
     assert "outlook-inbox" in by_id
 
 
-def test_all_connectors_are_live() -> None:
+def test_live_vs_stub_connector_honesty() -> None:
     rows = list_sources(Path("examples"), hardened=False)
     by_id = {str(r["id"]): r for r in rows}
+
+    # Always-on live filesystem connector
+    assert by_id["server-folder"]["kind"] == "live"
+    assert by_id["server-folder"]["configured"] is True
+
+    # Real pull adapters without env credentials → needs_config
+    for sid in ("email-inbox", "outlook-inbox", "s3-bucket", "sftp"):
+        assert sid in LIVE_CONNECTOR_IDS
+        assert by_id[sid]["kind"] == "needs_config", f"{sid} should need creds when unset"
+        assert by_id[sid]["configured"] is False
+
+    # Catalog stubs must not claim to be live vendor feeds
     for sid in (
         "google-drive",
         "sharepoint",
-        "s3-bucket",
         "azure-blob",
         "box",
-        "email-inbox",
-        "outlook-inbox",
-        "sftp",
         "ivans-download",
         "acord-al3",
         "guidewire-policycenter",
@@ -47,10 +55,10 @@ def test_all_connectors_are_live() -> None:
         "microsoft-teams",
         "slack-intake",
         "snowflake",
-        "server-folder",
     ):
-        assert by_id[sid]["kind"] == "live", f"{sid} should be live"
-        assert by_id[sid]["configured"] is True, f"{sid} should be configured"
+        assert by_id[sid]["kind"] == "catalog_stub", f"{sid} should be catalog_stub"
+        assert by_id[sid]["configured"] is False
+        assert "not contracted" in str(by_id[sid]["honesty"]).lower()
 
 
 def test_bind_cutover_not_ready_in_shadow(monkeypatch: MonkeyPatch) -> None:
@@ -67,6 +75,8 @@ def test_bind_cutover_not_ready_in_shadow(monkeypatch: MonkeyPatch) -> None:
     assert ids["shadow_off"]["done"] is False
     assert ids["not_sor"]["done"] is True
     assert ids["uw_hitl"]["done"] is True
+    assert "import_carrier_filings" in ids["carrier_book"]["note"]
+    assert cut["carrier_book"]["is_customer_book"] is False
 
 
 def test_sandbox_status_includes_cutover(monkeypatch: MonkeyPatch) -> None:

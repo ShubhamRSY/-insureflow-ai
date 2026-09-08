@@ -148,10 +148,10 @@ NAV_DESKTOP = """        <nav class="nav-desktop" aria-label="Main">
               <a href="/underwriting#ratemaking">Ratemaking</a>
               <p class="nav-drop-label">Insurance book</p>
               <a href="/dashboard/insurance/sections/life">Life <span class="nav-pill live">Live</span></a>
-              <a href="/dashboard/insurance/sections/health">Health <span class="nav-pill soon">Coming soon</span></a>
-              <a href="/dashboard/insurance/sections/general">Personal Lines</a>
+              <a href="/dashboard/insurance/sections/health">Health <span class="nav-pill live">Live</span></a>
+              <a href="/dashboard/insurance/sections/general">Personal Lines <span class="nav-pill live">Live</span></a>
               <a href="/dashboard/insurance/sections/commercial">Commercial Lines <span class="nav-pill live">Live</span></a>
-              <a href="/dashboard/insurance/sections/specialty">Specialty Lines</a>
+              <a href="/dashboard/insurance/sections/specialty">Specialty Lines <span class="nav-pill live">Live</span></a>
               <a href="/underwriting#insurance-book">All 12 sections</a>
               <p class="nav-drop-label">Other desks</p>
               <a href="/underwriting#audience">Mortgage</a>
@@ -1221,7 +1221,7 @@ def desks_section() -> str:
             <a class="lob-entry" role="listitem" href="/dashboard/insurance/sections/general">
               <span class="lob-num">03</span>
               <span class="lob-entry-main">
-                <span class="lob-entry-title">Personal Lines <span class="lob-status soon">Coming soon</span></span>
+                <span class="lob-entry-title">Personal Lines <span class="lob-status live">Live</span></span>
                 <span class="lob-entry-desc">Motor, home, travel, marine, fire, cyber &mdash; visible coverage, honest pricing, no invented premium.</span>
               </span>
               <svg class="ico sm lob-arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg>
@@ -1237,7 +1237,7 @@ def desks_section() -> str:
             <a class="lob-entry" role="listitem" href="/dashboard/insurance/sections/specialty">
               <span class="lob-num">05</span>
               <span class="lob-entry-main">
-                <span class="lob-entry-title">Specialty Lines <span class="lob-status soon">Coming soon</span></span>
+                <span class="lob-entry-title">Specialty Lines <span class="lob-status live">Live</span></span>
                 <span class="lob-entry-desc">Crop, livestock, pet, events, title, mortgage guarantee.</span>
               </span>
               <svg class="ico sm lob-arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg>
@@ -1245,7 +1245,7 @@ def desks_section() -> str:
             <a class="lob-entry" role="listitem" href="/dashboard/insurance/sections/provider">
               <span class="lob-num">06</span>
               <span class="lob-entry-main">
-                <span class="lob-entry-title">Admitted, Surplus &amp; Re <span class="lob-status soon">Coming soon</span></span>
+                <span class="lob-entry-title">Admitted, Surplus &amp; Re <span class="lob-status live">Live</span></span>
                 <span class="lob-entry-desc">Admitted vs surplus-lines routing, reinsurance treaties and fronting arrangements.</span>
               </span>
               <svg class="ico sm lob-arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg>
@@ -1307,7 +1307,7 @@ def desks_section() -> str:
             <a class="lob-entry" role="listitem" href="/underwriting#insurance-book">
               <span class="lob-num">&middot;</span>
               <span class="lob-entry-main">
-                <span class="lob-entry-title">Mortgage desk <span class="lob-status soon">Desk</span></span>
+                <span class="lob-entry-title">Mortgage desk <span class="lob-status live">Live</span></span>
                 <span class="lob-entry-desc">Income, assets and collateral across 30+ document types. TRID, Reg Z and HMDA rules built in.</span>
               </span>
               <svg class="ico sm lob-arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg>
@@ -1315,7 +1315,7 @@ def desks_section() -> str:
             <a class="lob-entry" role="listitem" href="/underwriting#insurance-book">
               <span class="lob-num">&middot;</span>
               <span class="lob-entry-main">
-                <span class="lob-entry-title">Lending desk <span class="lob-status soon">Desk</span></span>
+                <span class="lob-entry-title">Lending desk <span class="lob-status live">Live</span></span>
                 <span class="lob-entry-desc">Consumer and commercial loans with Reg B / ECOA equal-credit checks and a written adverse-action reason.</span>
               </span>
               <svg class="ico sm lob-arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg>

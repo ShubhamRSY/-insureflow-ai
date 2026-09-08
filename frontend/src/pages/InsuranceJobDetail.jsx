@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, FileCheck, ExternalLink, FileText, RefreshCw, AlertTriangle, Trash2 } from 'lucide-react';
+import { ArrowLeft, FileCheck, ExternalLink, FileText, RefreshCw, AlertTriangle, Trash2, ClipboardCheck } from 'lucide-react';
 import { endpoints } from '../lib/api';
 import { displayText } from '../lib/safe';
 import MemoReportView, { Collapsible } from '../components/MemoReportView';
@@ -8,6 +8,7 @@ import SubmissionJourney from '../components/SubmissionJourney';
 import UwWorksheetView from '../components/UwWorksheetView';
 import UwPolicyValidator from '../components/UwPolicyValidator';
 import RateProvenance from '../components/RateProvenance';
+import BindReadinessPanel from '../components/BindReadinessPanel';
 import ActuarialView from '../components/ActuarialView';
 import MibOrderView from '../components/MibOrderView';
 import ApsOrderView from '../components/ApsOrderView';
@@ -167,8 +168,11 @@ export default function InsuranceJobDetail({ onDeleted, onDeleteJob }) {
             )}
             {bundleId && (
               <>
+                <button onClick={() => navigate('/uw-workbench')} className="btn-primary btn-sm text-xs">
+                  <ClipboardCheck className="h-3.5 w-3.5" /> Sign off
+                </button>
                 <button onClick={handleQuote} disabled={quoteLoading} className="btn-secondary btn-sm text-xs">
-                  {quoteLoading ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <FileCheck className="h-3.5 w-3.5" />} Quote PDF
+                  {quoteLoading ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <FileCheck className="h-3.5 w-3.5" />} Indication PDF
                 </button>
                 <button onClick={handleReport} className="btn-secondary btn-sm text-xs">
                   <FileText className="h-3.5 w-3.5" /> Full Report
@@ -209,6 +213,21 @@ export default function InsuranceJobDetail({ onDeleted, onDeleteJob }) {
         {/* Primary: Memo Report */}
         {!processing && <MemoReportView job={job} />}
 
+        {!processing && (job?.quote_result?.metadata || job?.results?.quote_full?.metadata) && (
+          <div className="mt-6">
+            <RateProvenance
+              metadata={job.quote_result?.metadata || job.results.quote_full.metadata}
+              defaultExpanded
+            />
+          </div>
+        )}
+
+        {!processing && bundleId && (
+          <div className="mt-6">
+            <BindReadinessPanel bundleId={bundleId} onChanged={fetchJob} />
+          </div>
+        )}
+
         {/* While the pipeline is running, show live stage-by-stage progress instead
             of dumping every (still-empty) report section on screen at once. */}
         {processing && (
@@ -239,12 +258,6 @@ export default function InsuranceJobDetail({ onDeleted, onDeleteJob }) {
           <Collapsible title="Pipeline Journey" defaultOpen={false}>
             <SubmissionJourney job={job} />
           </Collapsible>
-
-          {(job?.quote_result?.metadata || job?.results?.quote_full?.metadata) && (
-            <Collapsible title="Rate Provenance" defaultOpen={false}>
-              <RateProvenance metadata={job.quote_result?.metadata || job.results.quote_full.metadata} />
-            </Collapsible>
-          )}
 
           <Collapsible title="Actuarial Mortality Lookup" defaultOpen={false}>
             <ActuarialView data={job?.results} />

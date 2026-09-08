@@ -2,6 +2,19 @@
 
 Use this checklist before public launch at [rytera.ai](https://rytera.ai).
 
+## Production bind (not demo)
+
+Demo / pilot UW can run without these. **Do not** treat cutover as ready until all are true:
+
+- [ ] `OPERATING_MODE=ready` (shadow off)
+- [ ] Customer PAS live URL + non-dev key (not `integrations.rytera.ai`)
+- [ ] `ALLOW_SIMULATED_BIND=false` in bank/hardened mode
+- [ ] Customer filed rate book imported (`python cli.py cutover-check` → `carrier_book` green)
+- [ ] At least one vendor oracle sandbox (CLUE or A-PLUS) with real keys
+- [ ] Counsel-signed DPA + privacy; Terraform applied; domain/TLS/SPF; trademark filing in flight
+
+Verify: `PYTHONPATH=src python cli.py cutover-check`
+
 ## Domain & DNS
 
 - [ ] Register **rytera.ai** (and optionally rytera.com, getrytera.com)

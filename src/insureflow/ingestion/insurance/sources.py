@@ -312,7 +312,8 @@ DEMO_CONNECTORS: dict[str, dict[str, Any]] = {
 }
 
 # Real pull adapters. Everything else in DEMO_CONNECTORS is a lab stub.
-LIVE_CONNECTOR_IDS = frozenset({"email-inbox", "s3-bucket", "sftp", "server-folder"})
+# outlook-inbox is live when OUTLOOK_* or IMAP_* credentials are set (IMAP path, not Graph OAuth).
+LIVE_CONNECTOR_IDS = frozenset({"email-inbox", "outlook-inbox", "s3-bucket", "sftp", "server-folder"})
 
 
 def _live_connector_configured(source_id: str) -> bool:
@@ -322,6 +323,13 @@ def _live_connector_configured(source_id: str) -> bool:
         from insureflow.ingestion.insurance.email_connector import ImapConnection
 
         return ImapConnection().is_configured
+    if source_id == "outlook-inbox":
+        import os
+
+        host = (os.getenv("OUTLOOK_HOST") or os.getenv("IMAP_HOST") or "").strip()
+        user = (os.getenv("OUTLOOK_USERNAME") or os.getenv("IMAP_USERNAME") or "").strip()
+        password = (os.getenv("OUTLOOK_PASSWORD") or os.getenv("IMAP_PASSWORD") or "").strip()
+        return bool(host and user and password)
     if source_id == "s3-bucket":
         from insureflow.ingestion.insurance.s3_connector import s3_configured
 
@@ -334,7 +342,7 @@ def _live_connector_configured(source_id: str) -> bool:
 
 
 def annotate_source(entry: dict[str, object]) -> dict[str, object]:
-    """Every connector shows as live and functional."""
+    """Label connectors honestly: live / needs_config / lab_demo / catalog_stub."""
     sid = str(entry.get("id") or "")
     if entry.get("type") == "library" or entry.get("category") == "Demo Packages":
         entry["kind"] = "lab_demo"
@@ -342,35 +350,52 @@ def annotate_source(entry: dict[str, object]) -> dict[str, object]:
         entry["configured"] = True
         entry["pullable"] = True
         return entry
+
     _live_honesty = {
         "server-folder": "Live folder on this server",
         "email-inbox": "Live IMAP — pull broker submissions from mailbox",
-        "outlook-inbox": "Live Outlook/Microsoft 365 — pull broker submissions via Graph API",
+        "outlook-inbox": "Live Outlook via IMAP — set OUTLOOK_HOST/USERNAME/PASSWORD (or IMAP_*)",
         "s3-bucket": "Live S3 drop — pull submissions from bucket",
         "sftp": "Live SFTP — pull from broker drop folder",
-        "google-drive": "Live Google Drive — pull broker submissions from shared drive",
-        "sharepoint": "Live SharePoint/OneDrive — pull from document library",
-        "azure-blob": "Live Azure Blob — pull from intake container",
-        "box": "Live Box Enterprise — pull from content cloud",
-        "ivans-download": "Live IVANS — download carrier/broker transactions",
-        "acord-al3": "Live ACORD Hub — automated ACORD XML intake",
-        "guidewire-policycenter": "Live Guidewire PolicyCenter — pull submission attachments",
-        "duck-creek": "Live Duck Creek — pull submission documents",
-        "majesco-policy": "Live Majesco — pull P&C policy admin exports",
-        "applied-epic": "Live Applied Epic — pull broker submissions from AMS",
-        "hawksoft": "Live HawkSoft — pull new business submissions",
-        "salesforce-crm": "Live Salesforce — pull broker opportunity files",
-        "verisk-iso": "Live Verisk/ISO — loss costs, PPC, property analytics",
-        "corelogic": "Live CoreLogic — property risk, replacement cost, cat models",
-        "bold-penguin": "Live Bold Penguin — route applications from agents",
-        "docusign": "Live DocuSign — signed application packets and attestations",
-        "microsoft-teams": "Live Microsoft Teams — UW intake channel file drops",
-        "slack-intake": "Live Slack — broker file uploads via workflow",
-        "snowflake": "Live Snowflake — historical loss and exposure data",
     }
-    entry["kind"] = "live"
-    entry["honesty"] = _live_honesty.get(sid, "Live — connected and ready")
-    entry["configured"] = True
+    _stub_honesty = {
+        "google-drive": "Not contracted — Google Drive lab stub (maps to demo packages)",
+        "sharepoint": "Not contracted — SharePoint lab stub (maps to demo packages)",
+        "azure-blob": "Not contracted — Azure Blob lab stub (maps to demo packages)",
+        "box": "Not contracted — Box lab stub (maps to demo packages)",
+        "ivans-download": "Not contracted — IVANS lab stub (maps to demo packages)",
+        "acord-al3": "Not contracted — ACORD Hub lab stub (maps to demo packages)",
+        "guidewire-policycenter": "Not contracted — Guidewire attach lab stub (maps to demo packages)",
+        "duck-creek": "Not contracted — Duck Creek lab stub (maps to demo packages)",
+        "majesco-policy": "Not contracted — Majesco lab stub (maps to demo packages)",
+        "applied-epic": "Not contracted — Applied Epic lab stub (maps to demo packages)",
+        "hawksoft": "Not contracted — HawkSoft lab stub (maps to demo packages)",
+        "salesforce-crm": "Not contracted — Salesforce lab stub (maps to demo packages)",
+        "verisk-iso": "Not contracted — Verisk/ISO lab stub (maps to demo packages)",
+        "corelogic": "Not contracted — CoreLogic lab stub (maps to demo packages)",
+        "bold-penguin": "Not contracted — Bold Penguin lab stub (maps to demo packages)",
+        "docusign": "Not contracted — DocuSign lab stub (maps to demo packages)",
+        "microsoft-teams": "Not contracted — Teams lab stub (maps to demo packages)",
+        "slack-intake": "Not contracted — Slack lab stub (maps to demo packages)",
+        "snowflake": "Not contracted — Snowflake lab stub (maps to demo packages)",
+    }
+
+    if sid in LIVE_CONNECTOR_IDS:
+        configured = _live_connector_configured(sid)
+        entry["kind"] = "live" if configured else "needs_config"
+        entry["honesty"] = (
+            _live_honesty.get(sid, "Live — connected and ready")
+            if configured
+            else f"Live connector available — set credentials to enable ({sid})"
+        )
+        entry["configured"] = configured
+        entry["pullable"] = configured or sid == "server-folder"
+        return entry
+
+    entry["kind"] = "catalog_stub"
+    entry["honesty"] = _stub_honesty.get(sid, "Not contracted — lab stub maps to demo packages until vendor credentials")
+    entry["configured"] = False
+    # Still pullable: stubs resolve to curated demo packages for lab runs.
     entry["pullable"] = True
     return entry
 

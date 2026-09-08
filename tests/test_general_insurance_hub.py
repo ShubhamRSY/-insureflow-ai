@@ -148,6 +148,11 @@ def test_filed_products_are_live_rest_catalog():
     assert hub["stats"]["product_count"] == 31
 
 
+def test_legacy_general_slug_aliases_resolve():
+    assert get_general_line("professional-indemnity-gi")["id"] == "professional_indemnity_gi"
+    assert get_general_line("professional-indemnity")["id"] == "professional_indemnity_gi"
+
+
 def test_hub_payload_has_taxonomy_and_stats():
     hub = general_hub_payload()
     assert hub["segment"] == "general_non_life"

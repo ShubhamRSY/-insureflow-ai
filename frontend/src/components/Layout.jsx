@@ -12,6 +12,7 @@ import { useStateContext } from '../lib/useStateContext';
 import ThemeToggle from './ThemeToggle';
 import StateSelector from './StateSelector';
 import ErrorBoundary from './ErrorBoundary';
+import OperatingModeBanner from './OperatingModeBanner';
 
 const nav = [
   { to: '/', icon: LayoutDashboard, label: 'Overview' },
@@ -38,8 +39,8 @@ const nav = [
     ],
   },
   { section: 'Mortgage & Lending' },
-  { to: '/mortgage', icon: Home, label: 'Mortgage', color: 'text-mortgage', disabled: true, tag: 'Soon' },
-  { to: '/lending', icon: Wallet, label: 'Lending', color: 'text-lending', disabled: true, tag: 'Soon' },
+  { to: '/mortgage', icon: Home, label: 'Mortgage', color: 'text-mortgage', tag: 'Live' },
+  { to: '/lending', icon: Wallet, label: 'Lending', color: 'text-lending', tag: 'Live' },
   { section: 'UW Operations' },
   {
     to: '/uw-dashboard',
@@ -48,13 +49,13 @@ const nav = [
     color: 'text-sky-400',
     defaultOpen: true,
     children: [
+      { to: '/uw-workbench', label: 'UW Workbench' },
+      { to: '/uw-dashboard', label: 'UW Dashboard' },
+      { to: '/workflow', label: 'UW Sign-off' },
+      { to: '/queue', label: 'Queue' },
       { to: '/line-uw', label: 'Line UW Desk' },
       { to: '/staff-uw', label: 'Staff UW Desk' },
-      { to: '/uw-dashboard', label: 'UW Dashboard' },
-      { to: '/workflow', label: 'UW Sign-off', badge: true },
-      { to: '/uw-workbench', label: 'UW Workbench' },
       { to: '/prior-decisions', label: 'Prior decisions' },
-      { to: '/queue', label: 'Queue' },
     ],
   },
   { section: 'Post-Decision' },
@@ -256,7 +257,7 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
             <div
               className={`ml-4 mt-0.5 border-l border-white/[0.07] pl-2 ${
                 item.scrollChildren
-                  ? 'max-h-[140px] overflow-y-auto overscroll-contain pr-1 [scrollbar-width:thin] [scrollbar-color:rgba(148,163,184,0.45)_transparent]'
+                  ? 'max-h-[280px] overflow-y-auto overscroll-contain pr-1 [scrollbar-width:thin] [scrollbar-color:rgba(148,163,184,0.45)_transparent]'
                   : ''
               }`}
             >
@@ -292,7 +293,9 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
                       <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
                         child.tag === 'Live'
                           ? 'bg-emerald-500/15 text-emerald-400'
-                          : 'bg-amber-500/15 text-amber-400'
+                          : child.tag === 'Catalog'
+                            ? 'bg-slate-500/20 text-slate-300'
+                            : 'bg-amber-500/15 text-amber-400'
                       }`}>
                         {child.tag}
                       </span>
@@ -341,6 +344,15 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
       >
         <Icon className={`h-[18px] w-[18px] ${sidebarCollapsed ? 'mx-auto' : ''} ${item.color || ''}`} />
         {!sidebarCollapsed && <span className="flex-1">{item.label}</span>}
+        {!sidebarCollapsed && item.tag && (
+          <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
+            item.tag === 'Live'
+              ? 'bg-emerald-500/15 text-emerald-400'
+              : 'bg-amber-500/15 text-amber-400'
+          }`}>
+            {item.tag}
+          </span>
+        )}
         {!sidebarCollapsed && isProtected && (
           <Lock className="h-3 w-3 shrink-0 text-slate-600" />
         )}
@@ -384,16 +396,6 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
 
         <nav className="flex-1 space-y-0.5 overflow-y-auto p-3">
           {nav.map(renderNavItem)}
-
-          {!sidebarCollapsed && (
-            <div className="mx-3 mt-1 flex items-center gap-2 rounded-xl border border-dashed border-white/[0.08] px-3 py-2 text-xs text-slate-600">
-              <Plus className="h-3.5 w-3.5" />
-              More underwriting lines
-              <span className="ml-auto rounded-full bg-slate-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-slate-500">
-                Soon
-              </span>
-            </div>
-          )}
         </nav>
 
         {!sidebarCollapsed && (
@@ -504,6 +506,7 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
               </button>
             </div>
           )}
+          <OperatingModeBanner />
           <ErrorBoundary resetKey={pathname}>
             <Outlet context={{ user, onLogin }} />
           </ErrorBoundary>

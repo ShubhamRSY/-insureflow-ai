@@ -49,11 +49,21 @@ def test_full_life_taxonomy_shape():
 def test_life_live_vs_catalog_split():
     live = [ln for ln in LIFE_LINES if ln.get("status") == "live"]
     catalog = [ln for ln in LIFE_LINES if ln.get("status") == "catalog"]
-    assert {ln["id"] for ln in live} >= {"level_term", "mortgage_life", "rop_term", "group_term_life"}
-    assert {ln["id"] for ln in catalog} >= {"traditional_whole_life", "indexed_universal_life", "variable_universal_life", "immediate_annuity"}
+    assert {ln["id"] for ln in live} >= {
+        "level_term",
+        "mortgage_life",
+        "rop_term",
+        "group_term_life",
+        "traditional_whole_life",
+        "indexed_universal_life",
+        "variable_universal_life",
+        "immediate_annuity",
+    }
+    assert catalog == []
+    assert len(live) == len(LIFE_LINES)
     hub = life_hub_payload()
     assert hub["stats"]["live_count"] == len(live)
-    assert hub["stats"]["catalog_count"] == len(catalog)
+    assert hub["stats"]["catalog_count"] == 0
     assert hub["stats"]["product_count"] == len(LIFE_LINES)
 
 
@@ -65,14 +75,19 @@ def test_live_lines_still_present():
         "credit-life",
         "return-of-premium-term",
         "group-term-life",
-    } <= live_slugs
-    catalog_slugs = {ln["slug"] for ln in list_life_lines(status="catalog")}
-    assert {
         "traditional-whole-life",
         "indexed-universal-life",
         "variable-universal-life",
         "immediate-annuity",
-    } <= catalog_slugs
+    } <= live_slugs
+    assert list_life_lines(status="catalog") == []
+
+
+def test_legacy_life_slug_aliases_resolve():
+    row = get_life_line("universal-life")
+    assert row is not None
+    assert row["id"] == "guaranteed_universal_life"
+    assert row["slug"] == "guaranteed-universal-life"
 
 
 def test_hub_payload_has_taxonomy_and_stats():

@@ -292,9 +292,22 @@ Thank you,
           ))}
         </div>
         {readiness?.bind_cutover && (
-          <p className="border-t border-white/[0.06] px-5 py-3 text-xs text-slate-500">
-            Cutover ready: {readiness.bind_cutover.cutover_ready ? 'yes' : 'no'} · Bind allowed: {readiness.bind_cutover.bind_allowed ? 'yes' : 'no'}
-          </p>
+          <div className="border-t border-white/[0.06] px-5 py-3 text-xs text-slate-500 space-y-1">
+            <p>
+              Cutover ready: {readiness.bind_cutover.cutover_ready ? 'yes' : 'no'} · Bind allowed:{' '}
+              {readiness.bind_cutover.bind_allowed ? 'yes' : 'no'}
+            </p>
+            {readiness.bind_cutover.carrier_book && (
+              <p>
+                Carrier book: {readiness.bind_cutover.carrier_book.is_customer_book ? 'customer' : 'not customer'} ·
+                posture={readiness.bind_cutover.carrier_book.posture || 'n/a'} ·{' '}
+                {readiness.bind_cutover.carrier_book.book_id || 'no book id'}
+              </p>
+            )}
+            {readiness.bind_cutover.carrier_book?.import_hint && !readiness.bind_cutover.carrier_book?.is_customer_book && (
+              <p className="font-mono text-[10px] text-slate-600">{readiness.bind_cutover.carrier_book.import_hint}</p>
+            )}
+          </div>
         )}
       </section>
 

@@ -79,7 +79,7 @@ export default function SubmissionOverview({ summaryText, riskPct, riskLegend, c
               className="text-xs font-semibold text-slate-300 hover:text-white hover:underline disabled:no-underline disabled:cursor-default"
               disabled={!onJumpToFindings}
             >
-              {metCount} of {items.length} guidelines met
+              {metCount} of {items.length} finding categories clear
             </button>
             <div className="mt-2 grid gap-1.5 sm:grid-cols-2">
               {items.map((it, i) => (

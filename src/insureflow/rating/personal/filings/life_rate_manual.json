@@ -1,6 +1,6 @@
 {
   "filing_id": "RYT-LIFE-2026-01",
-  "product": "Term Life 20-Year Level",
+  "product": "Term + Whole Life + Immediate Annuity (IL pilot)",
   "carrier": "Rytera Life",
   "effective_date": "2026-01-01",
   "expiration_date": "2026-12-31",
@@ -256,7 +256,35 @@
       "99": 10
     }
   },
-  "notes": "IL term exhibit only. Permanent/annuity families are illustrative loads, not issueable filings. Modal factors convert annual premium; actuarial memorandum required for production.",
+  "whole_life_interest_rate": 0.04,
+  "whole_life_expense_loading": 0.30,
+  "filed_permanent_products": [
+    "traditional_whole_life",
+    "limited_pay_whole_life",
+    "participating_whole_life"
+  ],
+  "permanent_filing": {
+    "filing_id": "RYT-LIFE-WL-2026-01",
+    "product": "Traditional / Limited-Pay / Participating Whole Life",
+    "serff_tracking": "RYT-LIFE-WL-2026-001",
+    "products": [
+      "traditional_whole_life",
+      "limited_pay_whole_life",
+      "participating_whole_life"
+    ]
+  },
+  "filed_annuity_products": [
+    "immediate_annuity"
+  ],
+  "annuity_filing": {
+    "filing_id": "RYT-LIFE-ANN-2026-01",
+    "product": "Immediate Annuity",
+    "serff_tracking": "RYT-LIFE-ANN-2026-001",
+    "products": [
+      "immediate_annuity"
+    ]
+  },
+  "notes": "IL pilot exhibits for term, traditional/limited-pay/participating whole life, and immediate annuity. Other permanent/ULIP/UL/annuity families remain illustrative loads, not issueable filings. Modal factors convert annual premium; actuarial memorandum required for production.",
   "relativity_basis": {
     "AL": "no_state_filing_generic_engine_only",
     "AK": "no_state_filing_generic_engine_only",

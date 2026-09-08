@@ -13,10 +13,12 @@ from insureflow.life.lobs.actuarial import certain_and_life_annuity_due, whole_l
 from insureflow.life.lobs.base import (
     LifeProductContext,
     LobOutcome,
+    apply_state_filing_gate,
     finish_quote,
     merge_state_rules,
     purchase_price,
 )
+from insureflow.underwriting.life_product import is_filed_annuity_product
 
 PRODUCT_ID = "immediate_annuity"
 LOGIC_PATH = "insureflow.life.lobs.annuity.immediate_annuity"
@@ -96,20 +98,29 @@ def underwrite_immediate_annuity(ctx: LifeProductContext) -> LobOutcome:
 
     filing = ctx.filing_state
     issue = ctx.issue_state
-    outcome.eligible = False
-    outcome.add_reason("annuity illustration only — requires a payout / consideration filing to issue")
-    if issue and issue != filing:
+    filed = is_filed_annuity_product(PRODUCT_ID)
+    apply_state_filing_gate(ctx, outcome, filed_for_state=filed, product_family="immediate_annuity")
+    if filed:
+        manual = ctx.manual or {}
+        annuity = manual.get("annuity_filing") if isinstance(manual.get("annuity_filing"), dict) else {}
+        outcome.metadata["filed_annuity"] = True
+        if annuity.get("filing_id"):
+            outcome.metadata["filing_id"] = annuity["filing_id"]
+        if annuity.get("serff_tracking"):
+            outcome.metadata["serff_tracking"] = annuity["serff_tracking"]
+    elif issue and issue != filing:
         outcome.add_reason(f"{filing} pilot exhibit applied — not a {issue} state-of-issue filing")
     return outcome
 
 
 def build_quote(ctx: LifeProductContext) -> Any:
     outcome = underwrite_immediate_annuity(ctx)
+    filed = is_filed_annuity_product(PRODUCT_ID)
     return finish_quote(
         ctx,
         outcome,
         logic_path=LOGIC_PATH,
         family="annuity",
-        rating_engine="annuity_illustration",
+        rating_engine="life_filing" if filed else "annuity_illustration",
         apply_minimum_premium=False,
     )

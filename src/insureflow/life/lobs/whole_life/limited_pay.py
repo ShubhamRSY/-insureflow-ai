@@ -14,6 +14,7 @@ from insureflow.life.lobs.base import (
     LifeProductContext,
     LobOutcome,
     add_common_loads,
+    apply_state_filing_gate,
     band_factor,
     finish_quote,
     medical_class_factor,
@@ -22,6 +23,7 @@ from insureflow.life.lobs.base import (
 )
 from insureflow.life.whole_life_formulas import compute_full_whole_life_quote
 from insureflow.rating.models import RateComponent
+from insureflow.underwriting.life_product import is_filed_permanent_product
 
 PRODUCT_ID = "limited_pay_whole_life"
 LOGIC_PATH = "insureflow.life.lobs.whole_life.limited_pay"
@@ -67,8 +69,9 @@ def underwrite_limited_pay(ctx: LifeProductContext) -> LobOutcome:
     for disclosure in state_rules["disclosures"]:
         outcome.add_condition(disclosure)
 
-    interest = float(state_rules["interest_rate"])
-    loading = float(state_rules["expense_loading_pct"])
+    manual = ctx.manual or {}
+    interest = float(manual.get("whole_life_interest_rate") or state_rules["interest_rate"])
+    loading = float(manual.get("whole_life_expense_loading") or state_rules["expense_loading_pct"])
     formula = compute_full_whole_life_quote(
         age=ctx.age,
         sex=ctx.sex_key,
@@ -111,13 +114,27 @@ def underwrite_limited_pay(ctx: LifeProductContext) -> LobOutcome:
 
     if ctx.medical.decision.value == "decline":
         outcome.eligible = False
-    outcome.eligible = False
-    outcome.add_reason(f"limited-pay whole life priced on actuarial equivalence (A_x / ä_x) — illustrative only, no {ctx.filing_state}-filed permanent rates")
-    if ctx.issue_state and ctx.issue_state != ctx.filing_state:
-        outcome.add_reason(f"{ctx.filing_state} pilot exhibit applied — not a {ctx.issue_state} state-of-issue filing")
+
+    # Path-resolved PRODUCT_ID (not raw ctx.product_id aliases like "limited_pay").
+    filed = is_filed_permanent_product(PRODUCT_ID)
+    apply_state_filing_gate(ctx, outcome, filed_for_state=filed, product_family="limited_pay_whole_life")
+    if filed:
+        permanent = manual.get("permanent_filing") if isinstance(manual.get("permanent_filing"), dict) else {}
+        outcome.metadata["filed_permanent"] = True
+        if permanent.get("filing_id"):
+            outcome.metadata["filing_id"] = permanent["filing_id"]
+        if permanent.get("serff_tracking"):
+            outcome.metadata["serff_tracking"] = permanent["serff_tracking"]
     return outcome
 
 
 def build_quote(ctx: LifeProductContext) -> Any:
     outcome = underwrite_limited_pay(ctx)
-    return finish_quote(ctx, outcome, logic_path=LOGIC_PATH, family="whole_life")
+    filed = is_filed_permanent_product(PRODUCT_ID)
+    return finish_quote(
+        ctx,
+        outcome,
+        logic_path=LOGIC_PATH,
+        family="whole_life",
+        rating_engine="life_filing" if filed else "life_whole_life_actuarial",
+    )

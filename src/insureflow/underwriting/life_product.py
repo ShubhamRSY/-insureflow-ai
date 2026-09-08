@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 
+# Backward-compatible alias — callers that only care about filed term exhibits.
 LIVE_TERM_PRODUCT_IDS = frozenset(
     {
         "level_term",
@@ -15,6 +16,25 @@ LIVE_TERM_PRODUCT_IDS = frozenset(
         "rop_term",
         "group_term_life",
         "credit_life",
+    }
+)
+
+# Pilot permanent exhibit — traditional / ordinary / limited-pay / participating WL.
+# Other permanent / UL / annuity products stay actuarial-illustrative until
+# their own filings are imported (except filed annuities below).
+LIVE_WHOLE_LIFE_PRODUCT_IDS = frozenset(
+    {
+        "traditional_whole_life",
+        "ordinary_whole_life",  # legacy / coverage-hint alias
+        "limited_pay_whole_life",
+        "participating_whole_life",
+    }
+)
+
+# Pilot annuity exhibit — immediate annuity only (consideration → payout filing).
+LIVE_ANNUITY_PRODUCT_IDS = frozenset(
+    {
+        "immediate_annuity",
     }
 )
 
@@ -75,6 +95,24 @@ _FAMILY_BY_ID: dict[str, str] = {
     "annuity": "annuity",
 }
 
+# Term products use filed exhibits. Permanent / annuity / ULIP products own
+# dedicated LOB logic paths with actuarial illustrative pricing — they are
+# live for UW (not stubbed), while the rating engine still marks unfiled
+# families as illustrative / non-issueable until permanent filings land.
+_BARE_FAMILY_IDS = frozenset(
+    {
+        "term",
+        "whole_life",
+        "universal",
+        "variable_universal",
+        "endowment",
+        "ulip",
+        "money_back",
+        "annuity",
+    }
+)
+LIVE_LIFE_PRODUCT_IDS = frozenset(_FAMILY_BY_ID) - _BARE_FAMILY_IDS
+
 
 def normalize_life_id(value: str | None) -> str:
     return (value or "").strip().lower().replace("-", "_").replace(" ", "_")
@@ -109,3 +147,31 @@ def is_filed_term_product(product_id: str | None = None, coverage_id: str | None
     if pid in LIVE_TERM_PRODUCT_IDS:
         return True
     return classify_life_family(product_id, coverage_id, coverage_name) == "term"
+
+
+def is_filed_permanent_product(product_id: str | None = None, coverage_id: str | None = None, coverage_name: str | None = None) -> bool:
+    """True when the product has a pilot permanent (whole-life) filing exhibit."""
+    pid = normalize_life_id(product_id)
+    if pid in LIVE_WHOLE_LIFE_PRODUCT_IDS:
+        return True
+    # Bare family id "whole_life" is not a filed leaf — only explicit product ids.
+    _ = coverage_id, coverage_name
+    return False
+
+
+def is_filed_annuity_product(product_id: str | None = None, coverage_id: str | None = None, coverage_name: str | None = None) -> bool:
+    """True when the product has a pilot annuity (consideration/payout) filing exhibit."""
+    pid = normalize_life_id(product_id)
+    if pid in LIVE_ANNUITY_PRODUCT_IDS:
+        return True
+    _ = coverage_id, coverage_name
+    return False
+
+
+def is_filed_life_product(product_id: str | None = None, coverage_id: str | None = None, coverage_name: str | None = None) -> bool:
+    """True when the product has any issueable pilot filing (term, permanent, or annuity)."""
+    return (
+        is_filed_term_product(product_id, coverage_id, coverage_name)
+        or is_filed_permanent_product(product_id, coverage_id, coverage_name)
+        or is_filed_annuity_product(product_id, coverage_id, coverage_name)
+    )

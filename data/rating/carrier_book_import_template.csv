@@ -1,0 +1,4 @@
+product_id,name,loss_cost,lcm,minimum_premium,exposure_basis,filing_id,effective_date
+general_liability,Commercial General Liability,125.00,1.35,750,payroll,SERFF-GL-EXAMPLE-001,2026-01-01
+workers_comp,Workers Compensation,2.40,1.10,500,payroll,SERFF-WC-EXAMPLE-001,2026-01-01
+property_bi,Commercial Property,0.18,1.25,1000,tiv,SERFF-PROP-EXAMPLE-001,2026-01-01

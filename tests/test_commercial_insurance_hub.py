@@ -48,12 +48,27 @@ def test_full_commercial_taxonomy_shape():
 def test_commercial_live_vs_catalog_split():
     live = [ln for ln in COMMERCIAL_LINES if ln.get("status") == "live"]
     catalog = [ln for ln in COMMERCIAL_LINES if ln.get("status") == "catalog"]
-    assert {ln["id"] for ln in live} >= {"general_liability", "workers_comp", "commercial_auto", "cyber_liability", "bop"}
-    assert {ln["id"] for ln in catalog} >= {"crop_insurance", "captive_insurance", "group_health", "ocean_marine"}
-    assert {"aviation", "kidnap_ransom", "flood_commercial", "terrorism", "legal_expense"} <= {ln["id"] for ln in live}
+    assert {ln["id"] for ln in live} >= {
+        "general_liability",
+        "workers_comp",
+        "commercial_auto",
+        "cyber_liability",
+        "bop",
+        "crop_insurance",
+        "captive_insurance",
+        "group_health",
+        "ocean_marine",
+        "aviation",
+        "kidnap_ransom",
+        "flood_commercial",
+        "terrorism",
+        "legal_expense",
+    }
+    assert catalog == []
+    assert len(live) == len(COMMERCIAL_LINES)
     hub = commercial_hub_payload()
     assert hub["stats"]["live_count"] == len(live)
-    assert hub["stats"]["catalog_count"] == len(catalog)
+    assert hub["stats"]["catalog_count"] == 0
     assert hub["stats"]["product_count"] == len(COMMERCIAL_LINES)
 
 

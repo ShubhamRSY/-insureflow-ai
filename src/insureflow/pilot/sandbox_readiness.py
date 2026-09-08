@@ -132,7 +132,14 @@ def bind_cutover_checklist() -> dict[str, Any]:
             "title": "Customer filed rate book loaded",
             "done": bool(book.get("is_customer_book")),
             "required": bool(book.get("carrier_book_required")),
-            "note": "Indications are not a bind. Unfiled products stay catalog-only.",
+            "note": (
+                f"Current book: {book.get('book_id') or 'none'} · posture={book.get('posture') or 'n/a'} · "
+                f"path={book.get('path') or 'n/a'}. "
+                "Pilot synthetic books do not count. Import via "
+                "`python scripts/ops/import_carrier_filings.py` or POST /rating/carrier-book, "
+                "or set CARRIER_BOOK_PATH to a customer SERFF JSON. "
+                "Template: data/rating/carrier_book_import_template.csv"
+            ),
         },
     ]
     required = [s for s in steps if s["required"]]
@@ -147,6 +154,13 @@ def bind_cutover_checklist() -> dict[str, Any]:
             "is_customer_book": book.get("is_customer_book"),
             "carrier": book.get("carrier"),
             "book_id": book.get("book_id"),
+            "posture": book.get("posture"),
+            "path": book.get("path"),
+            "filings": book.get("filings"),
+            "coverage_pct": book.get("coverage_pct"),
+            "carrier_book_required": book.get("carrier_book_required"),
+            "ready_for_plan": book.get("ready_for_plan"),
+            "import_hint": "python scripts/ops/import_carrier_filings.py --csv data/rating/carrier_book_import_template.csv",
         },
     }
 
@@ -419,7 +433,7 @@ def assess_sandbox_readiness(*, ping: bool = True) -> dict[str, Any]:
         "honesty": {
             "system_of_record": "customer_pas",
             "oracles": "simulated unless CLUE/A-PLUS keys and a non-gateway URL are set",
-            "connectors": "IMAP/S3/SFTP/folder are live; SharePoint/Drive/IVANS stay dark until contracted",
+            "connectors": "IMAP/Outlook-IMAP/S3/SFTP/folder are live when configured; SharePoint/Drive/IVANS stay dark until contracted",
             "pricing": "indications are not a bind; unfiled products stay catalog-only",
         },
         "ecosystem": ecosystem,

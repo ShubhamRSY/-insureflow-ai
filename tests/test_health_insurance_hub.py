@@ -66,6 +66,13 @@ def test_health_hub_fully_live():
     assert "catalog-only" not in hub["uw_responsibilities"][-1]["summary"].lower()
 
 
+def test_legacy_health_slug_aliases_resolve():
+    assert get_health_line("individual-basic")["id"] == "aca_marketplace_plan"
+    assert get_health_line("family-floater-standard")["id"] == "family_health_plan"
+    assert get_health_line("senior-standard")["id"] == "medicare_supplement"
+    assert get_health_line("disability-income")["id"] == "short_term_disability"
+
+
 def test_hub_payload_has_taxonomy_and_stats():
     hub = health_hub_payload()
     assert hub["segment"] == "personal_health"

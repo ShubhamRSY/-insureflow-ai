@@ -20,7 +20,7 @@ from insureflow.insurance.commercial_lobs import (
     _normalize_coverages,
     flatten_line_documents,
 )
-from insureflow.underwriting.life_product import LIVE_TERM_PRODUCT_IDS
+from insureflow.underwriting.life_product import LIVE_LIFE_PRODUCT_IDS
 
 # BASE DOCUMENT SET — required for every life insurance policy (US)
 LIFE_BASE_PACKET: list[str] = [
@@ -977,10 +977,11 @@ LIFE_LINES: list[dict[str, Any]] = [
     ),
 ]
 
-# Term products have a filed exhibit. WL / IUL / VUL / annuity stay catalog until
-# a permanent/annuity filing is imported — they must not look "live" as 20-year term.
+# All products with a dedicated LOB logic path are live for UW. Term uses
+# filed exhibits; permanent / annuity / ULIP use actuarial illustrative
+# pricing (rating still marks unfiled families non-issueable).
 for _ln in LIFE_LINES:
-    _ln["status"] = "live" if _ln["id"] in LIVE_TERM_PRODUCT_IDS else "catalog"
+    _ln["status"] = "live" if _ln["id"] in LIVE_LIFE_PRODUCT_IDS else "catalog"
 
 
 # ---------------------------------------------------------------------------
@@ -1101,6 +1102,12 @@ def get_life_line(line_id_or_slug: str) -> dict[str, Any] | None:
     raw = (line_id_or_slug or "").strip().lower()
     if not raw:
         return None
+    # Legacy IA / marketing slugs → canonical product slugs
+    _ALIASES = {
+        "universal-life": "guaranteed-universal-life",
+        "universal_life": "guaranteed_universal_life",
+    }
+    raw = _ALIASES.get(raw, raw)
     dashed = raw.replace("_", "-")
     underscored = raw.replace("-", "_")
     variants = {raw, dashed, underscored}

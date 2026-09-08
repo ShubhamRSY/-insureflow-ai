@@ -60,7 +60,7 @@ export default function BindReadinessPanel({ bundleId, onChanged }) {
         <ListChecks className="h-4 w-4 text-brand" />
         <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Bind readiness</p>
         {readiness?.ready_to_bind ? (
-          <span className="ml-auto rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-400">Ready to bind</span>
+          <span className="ml-auto rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-400">Checks clear</span>
         ) : (
           <span className="ml-auto rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-400">
             {readiness?.summary || 'Pending'}

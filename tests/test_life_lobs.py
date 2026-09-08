@@ -248,15 +248,13 @@ def test_limited_pay_ordering_10_pay_gt_20_pay_gt_lifetime() -> None:
     lp20 = rate_life(_bundle(), coverage_id="twenty_pay", product_id="limited_pay_whole_life")
     lp10 = rate_life(_bundle(), coverage_id="ten_pay", product_id="limited_pay_whole_life")
 
-    # Whole-life is filed-permanent (illustration-only here) so the premium
-    # CONTRACT fields are $0; the pricing ordering lives on the illustrated
-    # (pre-C1) premium so documents still show the real ordering.
-    def ill(q):
-        return q.metadata["illustrated_adjusted_premium"]
-
-    assert all(q.eligible is False and q.adjusted_premium == 0.0 for q in (lifetime, lp20, lp10))
-    assert ill(lp20) > ill(lifetime)
-    assert ill(lp10) > ill(lp20)
+    # Limited-pay + traditional WL are pilot permanent filings.
+    assert lp20.eligible is True and lp20.adjusted_premium > 0
+    assert lp10.eligible is True and lp10.adjusted_premium > 0
+    assert lifetime.eligible is True and lifetime.adjusted_premium > 0
+    assert lifetime.metadata["rating_engine"] == "life_filing"
+    assert lp10.metadata["rating_engine"] == "life_filing"
+    assert lp10.adjusted_premium > lp20.adjusted_premium > lifetime.adjusted_premium
     assert lp10.metadata["actuarial"]["premium_term"] == 10
 
 
@@ -268,7 +266,8 @@ def test_single_premium_equals_nsp_scale() -> None:
         return q.metadata["illustrated_adjusted_premium"]
 
     assert sp.eligible is False and sp.adjusted_premium == 0.0
-    assert ill(sp) > ill(lifetime) * 10
+    assert lifetime.eligible is True and lifetime.adjusted_premium > 0
+    assert ill(sp) > lifetime.adjusted_premium * 10
     assert sp.metadata["actuarial"]["premium_term"] == 1
     assert sp.metadata["mec_notice_required"] is True
     assert any("AML" in c or "source-of-funds" in c.lower() for c in sp.metadata["conditions"])
@@ -278,7 +277,12 @@ def test_par_costs_more_than_non_par() -> None:
     par_cash = rate_life(_bundle(), coverage_id="div_cash", product_id="participating_whole_life")
     par_pua = rate_life(_bundle(), coverage_id="div_pua", product_id="participating_whole_life")
     nonpar = rate_life(_bundle(), coverage_id="non_par_whole", product_id="non_participating_whole_life")
-    assert par_cash.adjusted_premium == pytest.approx(nonpar.adjusted_premium * 1.12, rel=0.02)
+    # Participating is filed; non-par remains illustrative — compare on illustrated basis.
+    assert par_cash.eligible is True and par_cash.adjusted_premium > 0
+    assert par_cash.metadata["rating_engine"] == "life_filing"
+    assert nonpar.eligible is False and nonpar.adjusted_premium == 0.0
+    nonpar_ill = nonpar.metadata["illustrated_adjusted_premium"]
+    assert par_cash.adjusted_premium == pytest.approx(nonpar_ill * 1.12, rel=0.02)
     assert par_pua.adjusted_premium == pytest.approx(par_cash.adjusted_premium, rel=0.01)
     assert any("NOT guaranteed" in c or "not guaranteed" in c.lower() for c in par_cash.metadata["conditions"])
 
@@ -309,8 +313,11 @@ def test_traditional_whole_life_actuarial_metadata() -> None:
     act = wl.metadata["actuarial"]
     assert act["pv_whole_life_benefits"] > 0
     assert act["gross_premium"] > act["level_net_premium"]
-    assert wl.eligible is False  # no filed permanent rates in pilot
-    assert any("illustrative" in r.lower() for r in wl.ineligibility_reasons)
+    assert wl.eligible is True  # pilot permanent exhibit (IL)
+    assert wl.adjusted_premium > 0
+    assert wl.metadata["rating_engine"] == "life_filing"
+    assert wl.metadata.get("filed_permanent") is True
+    assert not any("illustrative" in r.lower() for r in (wl.ineligibility_reasons or []))
 
 
 # ---------------------------------------------------------------------------
@@ -810,7 +817,7 @@ def test_children_money_back_uses_real_child_age_and_sex_when_documented() -> No
 
 
 # ---------------------------------------------------------------------------
-# LOB 7 — Annuity sub-product paths (illustration only)
+# LOB 7 — Annuity sub-product paths (immediate filed; others illustration)
 # ---------------------------------------------------------------------------
 
 
@@ -821,9 +828,16 @@ def _ann(text: str = ANN_TEXT):
     return _bundle(text)
 
 
-def test_all_annuity_paths_are_illustrations_only() -> None:
+def test_immediate_annuity_is_filed_pilot_exhibit() -> None:
+    q = rate_life(_ann(), coverage_id="life_income", product_id="immediate_annuity", state="IL")
+    assert q.eligible is True
+    assert q.adjusted_premium > 0
+    assert q.metadata["rating_engine"] == "life_filing"
+    assert q.metadata.get("filed_annuity") is True
+
+
+def test_other_annuity_paths_are_illustrations_only() -> None:
     cases = [
-        ("immediate_annuity", "life_income"),
         ("deferred_annuity", "deferred_income"),
         ("fixed_annuity", "fixed_accum"),
         ("variable_annuity", "var_annuity"),

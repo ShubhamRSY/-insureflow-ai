@@ -12,7 +12,7 @@ from insureflow.rating.models import InsuranceLine, QuoteResult, RateComponent
 from insureflow.rating.personal.manuals import life_manual, nearest_key
 from insureflow.underwriting.life_financial import evaluate_life_financial
 from insureflow.underwriting.life_medical import underwrite_life
-from insureflow.underwriting.life_product import classify_life_family, is_filed_term_product
+from insureflow.underwriting.life_product import classify_life_family, is_filed_life_product, is_filed_term_product
 from insureflow.underwriting.life_reinsurance import evaluate_life_reinsurance
 from insureflow.underwriting.personal_lines import _blob, extract_life_factors
 
@@ -75,6 +75,7 @@ def rate_life(
     if term_years_hint and family in {"unknown", "term"}:
         family = "term"
     filed_term = is_filed_term_product(product_id, coverage_id, coverage_name) or family == "term"
+    filed_life = is_filed_life_product(product_id, coverage_id, coverage_name) or family == "term"
 
     face = factors.face_amount
     reasons: list[str] = []
@@ -269,7 +270,7 @@ def rate_life(
     reasons.extend(financial.reasons)
     reasons.extend(reinsurance.reasons)
 
-    if not filed_term:
+    if not filed_life:
         eligible = False
         if actuarial:
             reasons.append(f"{family.replace('_', ' ')} priced on actuarial equivalence (A_x / ä_x) — illustrative only, no {filing_state}-filed permanent rates")
@@ -312,9 +313,11 @@ def rate_life(
     product_label = manual.get("product")
     if filed_term and term_years:
         product_label = f"{term_years}-Year Level Term"
+    elif filed_life and actuarial:
+        product_label = f"Traditional Whole Life — {filing_state} Pilot Exhibit"
     elif actuarial:
         product_label = f"Illustrative {family.replace('_', ' ').title()} — Actuarial Basis (not filed)"
-    elif not filed_term:
+    elif not filed_life:
         product_label = f"Illustrative {family.replace('_', ' ')} (not filed)"
 
     meta: dict[str, Any] = {
@@ -323,7 +326,8 @@ def rate_life(
         "product_id": product_id or "",
         "product_family": family,
         "filed_term": filed_term,
-        "illustrative": not filed_term,
+        "filed_permanent": bool(filed_life and not filed_term),
+        "illustrative": not filed_life,
         "life_coverage_id": coverage_id or "",
         "term_years": term_years,
         "modal": modal,
@@ -333,7 +337,11 @@ def rate_life(
         "date_of_birth": factors.date_of_birth,
         "state_of_filing": filing_state,
         "serff_tracking": manual.get("serff_tracking"),
-        "rating_engine": "life_whole_life_actuarial" if actuarial else ("life_filing" if filed_term else "catalog_only"),
+        "rating_engine": (
+            "life_filing"
+            if filed_life
+            else ("life_whole_life_actuarial" if actuarial else "catalog_only")
+        ),
         "actuarial": actuarial,
         "face_amount": face,
         "medical": medical.to_metadata(),

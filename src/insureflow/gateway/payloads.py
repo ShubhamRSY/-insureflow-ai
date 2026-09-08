@@ -10,9 +10,14 @@ def _today() -> date:
 
 
 def clue_query(body: dict[str, Any]) -> dict[str, Any]:
+    """Synthetic CLUE Commercial responses keyed off legal_name for lab scenarios."""
     name = str(body.get("legal_name", "Unknown"))
+    key = name.lower()
     records: list[dict[str, Any]] = []
-    if "pacific" in name.lower() or "marine" in name.lower():
+    has_litigation = False
+    has_cancellation = False
+
+    if any(t in key for t in ("pacific", "marine", "coast")):
         records.append(
             {
                 "claim_id": f"CLUE-{uuid4().hex[:8].upper()}",
@@ -25,14 +30,125 @@ def clue_query(body: dict[str, Any]) -> dict[str, Any]:
                 "description": "Slip and fall at insured premises",
             }
         )
+    elif any(t in key for t in ("arson", "fraud", "torch")):
+        records.append(
+            {
+                "claim_id": f"CLUE-{uuid4().hex[:8].upper()}",
+                "date_of_loss": (_today() - timedelta(days=400)).isoformat(),
+                "loss_type": "fire",
+                "paid_amount": 285000,
+                "current_status": "closed",
+                "policy_type": "CP",
+                "claimant_name": name,
+                "description": "Structure fire — cause under investigation (synthetic arson-flag scenario)",
+                "flags": ["arson_investigation"],
+            }
+        )
+        has_litigation = True
+        has_cancellation = True
+    elif any(t in key for t in ("litigat", "lawsuit", "northwind")):
+        records.extend(
+            [
+                {
+                    "claim_id": f"CLUE-{uuid4().hex[:8].upper()}",
+                    "date_of_loss": (_today() - timedelta(days=1100)).isoformat(),
+                    "loss_type": "general_liability",
+                    "paid_amount": 92000,
+                    "current_status": "closed",
+                    "policy_type": "CGL",
+                    "claimant_name": "Injured Party",
+                    "description": "Product liability claim — settled",
+                },
+                {
+                    "claim_id": f"CLUE-{uuid4().hex[:8].upper()}",
+                    "date_of_loss": (_today() - timedelta(days=180)).isoformat(),
+                    "loss_type": "auto_liability",
+                    "paid_amount": 41000,
+                    "current_status": "open",
+                    "policy_type": "CA",
+                    "claimant_name": "Third Party Driver",
+                    "description": "Fleet collision with BI reserve — litigation pending",
+                    "flags": ["litigation"],
+                },
+            ]
+        )
+        has_litigation = True
+    elif any(t in key for t in ("clean", "greenfield", "newco")):
+        records = []
+    # else: empty history (default clean)
+
     return {
         "records": records,
         "total_claims_found": len(records),
         "total_paid": sum(float(r.get("paid_amount", 0)) for r in records),
-        "has_prior_litigation": False,
-        "has_prior_cancellation": False,
+        "has_prior_litigation": has_litigation,
+        "has_prior_cancellation": has_cancellation,
         "synthetic": True,
         "mode": "gateway_synthetic",
+        "scenario": (
+            "arson_flag"
+            if has_cancellation
+            else ("multi_claim_litigation" if has_litigation else ("prior_gl" if records else "clean"))
+        ),
+    }
+
+
+def aplus_query(body: dict[str, Any]) -> dict[str, Any]:
+    """Synthetic A-PLUS property loss history keyed off legal_name / address."""
+    name = str(body.get("legal_name", "") or body.get("named_insured", "")).lower()
+    address = str(body.get("address", "") or body.get("location", "")).lower()
+    blob = f"{name} {address}"
+    records: list[dict[str, Any]] = []
+    arson = False
+    repeated = False
+
+    if any(t in blob for t in ("flood", "water", "basement")):
+        records.append(
+            {
+                "claim_id": f"APLUS-{uuid4().hex[:8].upper()}",
+                "date_of_loss": (_today() - timedelta(days=540)).isoformat(),
+                "loss_type": "water",
+                "paid_amount": 18500,
+                "current_status": "closed",
+                "description": "Water damage — burst supply line (synthetic)",
+            }
+        )
+    if any(t in blob for t in ("arson", "fraud", "torch")):
+        records.append(
+            {
+                "claim_id": f"APLUS-{uuid4().hex[:8].upper()}",
+                "date_of_loss": (_today() - timedelta(days=900)).isoformat(),
+                "loss_type": "fire",
+                "paid_amount": 210000,
+                "current_status": "closed",
+                "description": "Fire loss with arson indicator (synthetic)",
+                "flags": ["arson"],
+            }
+        )
+        arson = True
+    if any(t in blob for t in ("repeat", "serial", "frequent")) or len(records) >= 2:
+        if not records:
+            records.append(
+                {
+                    "claim_id": f"APLUS-{uuid4().hex[:8].upper()}",
+                    "date_of_loss": (_today() - timedelta(days=200)).isoformat(),
+                    "loss_type": "theft",
+                    "paid_amount": 6200,
+                    "current_status": "closed",
+                    "description": "Contents theft (synthetic repeated-claim scenario)",
+                }
+            )
+        repeated = True
+
+    return {
+        "records": records,
+        "total_claims_found": len(records),
+        "total_paid": sum(float(r.get("paid_amount", 0)) for r in records),
+        "has_repeated_property_claims": repeated,
+        "has_arson_or_fraud_flag": arson,
+        "synthetic": True,
+        "mode": "gateway_synthetic",
+        "scenario": "arson_flag" if arson else ("repeated_claims" if repeated else ("water" if records else "clean")),
     }
 
 
@@ -54,18 +170,6 @@ def ncci_query(body: dict[str, Any]) -> dict[str, Any]:
         ],
         "total_expected_losses": 45000,
         "total_actual_losses": 45000 * mod,
-        "synthetic": True,
-        "mode": "gateway_synthetic",
-    }
-
-
-def aplus_query(body: dict[str, Any]) -> dict[str, Any]:
-    return {
-        "records": [],
-        "total_claims_found": 0,
-        "total_paid": 0,
-        "has_repeated_property_claims": False,
-        "has_arson_or_fraud_flag": False,
         "synthetic": True,
         "mode": "gateway_synthetic",
     }

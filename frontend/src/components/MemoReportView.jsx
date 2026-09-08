@@ -395,6 +395,11 @@ export default function MemoReportView({ job }) {
   const basePremium = (quote.indicated_terms || {}).base_premium || worksheet.indicated_terms?.base_premium || 0;
   const uwClass = (quote.medical || {}).underwriting_class || worksheet.uw_class || '';
   const riskSeverity = safeLower(memoObj.overall_risk_severity, '');
+  const quoteMeta = quote.metadata || {};
+  // Prefer explicit true from rating; otherwise treat as indication until proven filed.
+  const rateIsFiled = quoteMeta._is_filed_rate === true
+    || Boolean(quoteMeta.filed_permanent || quoteMeta.filed_annuity || quoteMeta.filing_id);
+  const ratePostureLabel = rateIsFiled ? 'Filed exhibit' : 'Indication only';
 
   const buildup = worksheet.premium_buildup || [];
   const quoteComponents = (quote.metadata || {}).components || [];
@@ -501,9 +506,12 @@ export default function MemoReportView({ job }) {
       <div className={`rounded-2xl border p-5 ${DECISION_COLORS[decision] || DECISION_COLORS.refer}`}>
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest opacity-70">Underwriting Decision</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest opacity-70">AI recommendation — not bound</p>
             <p className="mt-1 text-3xl font-bold tracking-tight uppercase">{DECISION_LABELS[decision] || decision.replace('_', ' ')}</p>
             {insuredName && <p className="mt-1 text-base font-medium text-white">{insuredName}</p>}
+            <p className="mt-2 max-w-xl text-xs opacity-80">
+              Licensed underwriter sign-off required before issue. This is not a carrier bind.
+            </p>
           </div>
           <div className="text-right">
             {riskPct != null && (
@@ -523,10 +531,19 @@ export default function MemoReportView({ job }) {
             <p className="text-xl font-bold text-white">{fmtCurrency(faceAmount)}</p>
           </div>
           <div>
-            <Hint text="AI-recommended premium before any underwriter override — see Premium Build-up below for how it was derived." position="bottom">
+            <Hint text="The AI's fully-loaded premium recommendation after every rating factor below is applied. Not a bound rate until an underwriter signs off." position="bottom">
               <p className="hint-label inline-block cursor-help text-[10px] uppercase opacity-70">Indicated Premium</p>
             </Hint>
             <p className="text-xl font-bold text-white">{fmtCurrency(premium)}</p>
+            <span
+              className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
+                rateIsFiled
+                  ? 'bg-emerald-500/20 text-emerald-200'
+                  : 'bg-amber-500/20 text-amber-200'
+              }`}
+            >
+              {ratePostureLabel}
+            </span>
           </div>
           {uwClass && (
             <div>
