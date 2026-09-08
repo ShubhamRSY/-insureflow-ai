@@ -122,16 +122,18 @@ def test_lob_rating_does_not_overwrite_life_filing():
     assert out.adjusted_premium == 250.0
 
 
-def test_term_life_rates_and_wl_is_not_filed():
+def test_term_life_rates_and_wl_is_filed_pilot_exhibit():
     text = "Face amount: $500000 Applicant age: 40 Sex: male Annual income: 120000 Beneficiary relationship: spouse"
     term = rate_life(_bundle(text), coverage_id="term_20", coverage_name="20-Year Level Term", product_id="level_term", state="IL")
     assert term.eligible is True
     assert term.metadata["rating_engine"] == "life_filing"
     assert term.adjusted_premium >= 250
     wl = rate_life(_bundle(text), coverage_id="wl", coverage_name="Traditional Whole Life", product_id="traditional_whole_life", state="IL")
-    assert wl.eligible is False
+    assert wl.eligible is True
     assert wl.metadata["product_family"] == "whole_life"
-    assert any("filed" in r.lower() or "illustrative" in r.lower() for r in wl.ineligibility_reasons)
+    assert wl.metadata["rating_engine"] == "life_filing"
+    assert wl.metadata.get("filed_permanent") is True
+    assert not any("illustrative" in r.lower() for r in (wl.ineligibility_reasons or []))
 
 
 def test_life_income_not_net_worth():

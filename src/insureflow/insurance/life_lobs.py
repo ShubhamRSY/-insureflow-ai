@@ -1102,12 +1102,11 @@ def get_life_line(line_id_or_slug: str) -> dict[str, Any] | None:
     raw = (line_id_or_slug or "").strip().lower()
     if not raw:
         return None
-    # Legacy IA / marketing slugs → canonical product slugs
-    _ALIASES = {
+    # Legacy IA / marketing URL slugs → canonical product slugs (hyphenated only).
+    aliases = {
         "universal-life": "guaranteed-universal-life",
-        "universal_life": "guaranteed_universal_life",
     }
-    raw = _ALIASES.get(raw, raw)
+    raw = aliases.get(raw, raw)
     dashed = raw.replace("_", "-")
     underscored = raw.replace("-", "_")
     variants = {raw, dashed, underscored}

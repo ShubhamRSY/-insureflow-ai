@@ -614,24 +614,19 @@ def get_health_line(line_id_or_slug: str) -> dict[str, Any] | None:
     raw = (line_id_or_slug or "").strip().lower()
     if not raw:
         return None
-    # Legacy IA / marketing slugs → canonical product slugs
-    _ALIASES = {
+    # Legacy IA / marketing URL slugs → canonical product slugs.
+    # Keep hyphenated keys only — underscored India product_ids (e.g. senior_standard)
+    # are still used by health_uw handlers and must not be remapped here.
+    aliases = {
         "individual-basic": "aca-marketplace-plan",
-        "individual_basic": "aca_marketplace_plan",
         "family-floater-standard": "family-health-plan",
-        "family_floater_standard": "family_health_plan",
         "senior-standard": "medicare-supplement",
-        "senior_standard": "medicare_supplement",
         "group-employer-mediclaim": "small-group-health",
-        "group_employer_mediclaim": "small_group_health",
         "super-topup-plan": "supplemental-gap-coverage",
-        "super_topup_plan": "supplemental_gap_coverage",
         "pa-individual": "standalone-add",
-        "pa_individual": "standalone_add",
         "disability-income": "short-term-disability",
-        "disability_income": "short_term_disability",
     }
-    raw = _ALIASES.get(raw, raw)
+    raw = aliases.get(raw, raw)
     variants = {raw, raw.replace("_", "-"), raw.replace("-", "_")}
     for line in HEALTH_LINES:
         candidates = {

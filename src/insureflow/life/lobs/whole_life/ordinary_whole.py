@@ -107,12 +107,15 @@ def underwrite_ordinary_whole_life(ctx: LifeProductContext) -> LobOutcome:
     filed = is_filed_permanent_product(PRODUCT_ID)
     apply_state_filing_gate(ctx, outcome, filed_for_state=filed, product_family="traditional_whole_life")
     if filed:
-        permanent = manual.get("permanent_filing") if isinstance(manual.get("permanent_filing"), dict) else {}
+        permanent_raw = manual.get("permanent_filing")
+        permanent = permanent_raw if isinstance(permanent_raw, dict) else {}
         outcome.metadata["filed_permanent"] = True
-        if permanent.get("filing_id"):
-            outcome.metadata["filing_id"] = permanent["filing_id"]
-        if permanent.get("serff_tracking"):
-            outcome.metadata["serff_tracking"] = permanent["serff_tracking"]
+        filing_id = permanent.get("filing_id")
+        if filing_id:
+            outcome.metadata["filing_id"] = filing_id
+        serff = permanent.get("serff_tracking")
+        if serff:
+            outcome.metadata["serff_tracking"] = serff
     return outcome
 
 

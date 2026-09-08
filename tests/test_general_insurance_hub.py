@@ -149,8 +149,10 @@ def test_filed_products_are_live_rest_catalog():
 
 
 def test_legacy_general_slug_aliases_resolve():
-    assert get_general_line("professional-indemnity-gi")["id"] == "professional_indemnity_gi"
-    assert get_general_line("professional-indemnity")["id"] == "professional_indemnity_gi"
+    gi = get_general_line("professional-indemnity-gi")
+    plain = get_general_line("professional-indemnity")
+    assert gi is not None and gi["id"] == "professional_indemnity_gi"
+    assert plain is not None and plain["id"] == "professional_indemnity_gi"
 
 
 def test_hub_payload_has_taxonomy_and_stats():

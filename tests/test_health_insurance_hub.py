@@ -67,10 +67,14 @@ def test_health_hub_fully_live():
 
 
 def test_legacy_health_slug_aliases_resolve():
-    assert get_health_line("individual-basic")["id"] == "aca_marketplace_plan"
-    assert get_health_line("family-floater-standard")["id"] == "family_health_plan"
-    assert get_health_line("senior-standard")["id"] == "medicare_supplement"
-    assert get_health_line("disability-income")["id"] == "short_term_disability"
+    basic = get_health_line("individual-basic")
+    family = get_health_line("family-floater-standard")
+    senior = get_health_line("senior-standard")
+    disability = get_health_line("disability-income")
+    assert basic is not None and basic["id"] == "aca_marketplace_plan"
+    assert family is not None and family["id"] == "family_health_plan"
+    assert senior is not None and senior["id"] == "medicare_supplement"
+    assert disability is not None and disability["id"] == "short_term_disability"
 
 
 def test_hub_payload_has_taxonomy_and_stats():

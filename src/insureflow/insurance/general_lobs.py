@@ -772,14 +772,13 @@ def get_general_line(line_id_or_slug: str) -> dict[str, Any] | None:
     raw = (line_id_or_slug or "").strip().lower()
     if not raw:
         return None
-    # Legacy IA / marketing slugs → canonical product slugs
-    _ALIASES = {
+    # Legacy IA / marketing URL slugs → canonical product slugs (hyphenated only).
+    aliases = {
         "professional-indemnity-gi": "professional-indemnity",
-        "professional_indemnity_gi": "professional_indemnity_gi",
         "public-liability-gi": "public-liability",
         "title-insurance-gi": "title-insurance",
     }
-    raw = _ALIASES.get(raw, raw)
+    raw = aliases.get(raw, raw)
     variants = {raw, raw.replace("_", "-"), raw.replace("-", "_")}
     for line in GENERAL_LINES:
         candidates = {

@@ -102,12 +102,15 @@ def underwrite_immediate_annuity(ctx: LifeProductContext) -> LobOutcome:
     apply_state_filing_gate(ctx, outcome, filed_for_state=filed, product_family="immediate_annuity")
     if filed:
         manual = ctx.manual or {}
-        annuity = manual.get("annuity_filing") if isinstance(manual.get("annuity_filing"), dict) else {}
+        annuity_raw = manual.get("annuity_filing")
+        annuity = annuity_raw if isinstance(annuity_raw, dict) else {}
         outcome.metadata["filed_annuity"] = True
-        if annuity.get("filing_id"):
-            outcome.metadata["filing_id"] = annuity["filing_id"]
-        if annuity.get("serff_tracking"):
-            outcome.metadata["serff_tracking"] = annuity["serff_tracking"]
+        filing_id = annuity.get("filing_id")
+        if filing_id:
+            outcome.metadata["filing_id"] = filing_id
+        serff = annuity.get("serff_tracking")
+        if serff:
+            outcome.metadata["serff_tracking"] = serff
     elif issue and issue != filing:
         outcome.add_reason(f"{filing} pilot exhibit applied — not a {issue} state-of-issue filing")
     return outcome
