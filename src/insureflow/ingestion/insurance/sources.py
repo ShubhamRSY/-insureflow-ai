@@ -383,11 +383,7 @@ def annotate_source(entry: dict[str, object]) -> dict[str, object]:
     if sid in LIVE_CONNECTOR_IDS:
         configured = _live_connector_configured(sid)
         entry["kind"] = "live" if configured else "needs_config"
-        entry["honesty"] = (
-            _live_honesty.get(sid, "Live — connected and ready")
-            if configured
-            else f"Live connector available — set credentials to enable ({sid})"
-        )
+        entry["honesty"] = _live_honesty.get(sid, "Live — connected and ready") if configured else f"Live connector available — set credentials to enable ({sid})"
         entry["configured"] = configured
         entry["pullable"] = configured or sid == "server-folder"
         return entry

@@ -337,11 +337,7 @@ def rate_life(
         "date_of_birth": factors.date_of_birth,
         "state_of_filing": filing_state,
         "serff_tracking": manual.get("serff_tracking"),
-        "rating_engine": (
-            "life_filing"
-            if filed_life
-            else ("life_whole_life_actuarial" if actuarial else "catalog_only")
-        ),
+        "rating_engine": ("life_filing" if filed_life else ("life_whole_life_actuarial" if actuarial else "catalog_only")),
         "actuarial": actuarial,
         "face_amount": face,
         "medical": medical.to_metadata(),

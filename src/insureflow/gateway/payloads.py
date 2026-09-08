@@ -85,11 +85,7 @@ def clue_query(body: dict[str, Any]) -> dict[str, Any]:
         "has_prior_cancellation": has_cancellation,
         "synthetic": True,
         "mode": "gateway_synthetic",
-        "scenario": (
-            "arson_flag"
-            if has_cancellation
-            else ("multi_claim_litigation" if has_litigation else ("prior_gl" if records else "clean"))
-        ),
+        "scenario": ("arson_flag" if has_cancellation else ("multi_claim_litigation" if has_litigation else ("prior_gl" if records else "clean"))),
     }
 
 

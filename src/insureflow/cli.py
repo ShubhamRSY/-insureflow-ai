@@ -670,10 +670,7 @@ def cutover_check(
     console.print(f"Cutover ready: [{color}]{'yes' if ready else 'no'}[/]  ·  Bind allowed: {cut.get('bind_allowed')}")
     console.print(f"System of record: {cut.get('system_of_record')}")
     book = cut.get("carrier_book") or {}
-    console.print(
-        f"Carrier book: customer={book.get('is_customer_book')} · "
-        f"posture={book.get('posture')} · book_id={book.get('book_id') or 'none'}"
-    )
+    console.print(f"Carrier book: customer={book.get('is_customer_book')} · posture={book.get('posture')} · book_id={book.get('book_id') or 'none'}")
     console.print()
     for step in cut.get("steps") or []:
         mark = "[green]✓[/]" if step.get("done") else "[red]○[/]"
