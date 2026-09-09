@@ -28,8 +28,10 @@ from insureflow.insurance.pipeline import InsurancePipeline
 from insureflow.models.mortgage import ProductLine
 from insureflow.pipeline import UnderwritingPipeline
 from insureflow.security.posture import SecurityPosture, resolve_security_posture
+from insureflow.storage.draft_bundle_store import BundleTooLargeError, DraftBundleBusyError
 from insureflow.storage.job_store import JobStore, get_job_store
 from insureflow.underwriting.renewal import PremiumAuditEngine
+from insureflow.workflow.store import WorkflowConflictError, WorkflowStoreBusyError
 
 try:
     from insureflow.config import bootstrap_security, maybe_enable_langsmith_tracing
@@ -109,6 +111,34 @@ app = FastAPI(
 )
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
+
+
+@app.exception_handler(WorkflowConflictError)
+async def _workflow_conflict_handler(_request: Any, exc: WorkflowConflictError) -> JSONResponse:
+    """Two underwriters (or two tabs) raced to save the same case — surface
+    it as a 409 so the client can reload and retry rather than silently
+    losing one of the updates."""
+    return JSONResponse(status_code=409, content={"detail": str(exc)})
+
+
+@app.exception_handler(WorkflowStoreBusyError)
+async def _workflow_busy_handler(_request: Any, exc: WorkflowStoreBusyError) -> JSONResponse:
+    """Couldn't even acquire the lock on this workflow record in time —
+    someone else is mid-write to it right now."""
+    return JSONResponse(status_code=409, content={"detail": str(exc)})
+
+
+@app.exception_handler(DraftBundleBusyError)
+async def _draft_bundle_busy_handler(_request: Any, exc: DraftBundleBusyError) -> JSONResponse:
+    """Another request is mid-write to this same draft bundle — ask the
+    client to retry rather than racing the in-flight accumulate/remove."""
+    return JSONResponse(status_code=409, content={"detail": str(exc)})
+
+
+@app.exception_handler(BundleTooLargeError)
+async def _bundle_too_large_handler(_request: Any, exc: BundleTooLargeError) -> JSONResponse:
+    """This draft bundle's total content size has hit the aggregate cap."""
+    return JSONResponse(status_code=413, content={"detail": str(exc)})
 
 try:
     from insureflow.observability.http_middleware import PrometheusHTTPMiddleware
@@ -2211,10 +2241,12 @@ def pull_insurance_source(
         )
         if not bundle:
             return None
+        skipped = bundle.get("last_skipped_oversized") or []
         return {
             "bundle_id": bundle["bundle_id"],
             "document_count": len(bundle.get("documents", [])),
-            "added": len(documents),
+            "added": len(documents) - len(skipped),
+            "skipped_oversized": skipped,
         }
 
     def _register(label: str) -> None:
@@ -2393,6 +2425,36 @@ def pull_insurance_source(
                     detail="SFTP not configured — set SFTP_HOST, SFTP_USERNAME, and SFTP_PASSWORD or SFTP_KEY_PATH",
                 )
 
+        if source_id == "databricks":
+            from insureflow.ingestion.insurance.databricks_connector import databricks_configured, pull_databricks_submissions
+
+            if databricks_configured(req.host):
+                parts = (req.prefix or "").split(".")
+                cat, sch, tbl = (parts + [None, None, None])[:3]
+                try:
+                    pull = pull_databricks_submissions(host=req.host, catalog=cat, schema=sch, table=tbl)
+                except Exception as exc:
+                    raise HTTPException(status_code=502, detail=f"Databricks pull failed: {exc}") from exc
+                label = f"Databricks › {pull['catalog']}.{pull['schema']}.{pull['table']}"
+                result = {
+                    "source_id": source_id,
+                    "simulated": False,
+                    "connection_label": label,
+                    "documents": pull["documents"],
+                    "file_count": pull["documents_found"],
+                    "rows_fetched": pull.get("rows_fetched", 0),
+                }
+                accum = _accumulate(pull["documents"], source_id, label)
+                if accum:
+                    result["accumulated"] = accum
+                _register(label)
+                return result
+            if _posture().is_hardened:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Databricks not configured — set DATABRICKS_HOST, DATABRICKS_HTTP_PATH, and DATABRICKS_TOKEN",
+                )
+
         if source_id in DEMO_CONNECTORS:
             if _posture().is_hardened:
                 raise HTTPException(
@@ -2523,6 +2585,20 @@ class DraftBundleAddDocsRequest(BaseModel):
     connection_label: str = ""
 
 
+class DraftBundlePresignRequest(BaseModel):
+    filename: str
+    content_type: str = ""
+    size_bytes: int = 0
+
+
+class DraftBundleConfirmUploadRequest(BaseModel):
+    storage_key: str
+    filename: str
+    content_type: str = ""
+    source_id: str = ""
+    connection_label: str = ""
+
+
 @app.get("/pipeline/bundles")
 def list_draft_bundles(
     current: TokenData = Depends(require_role(Role.VIEWER)),
@@ -2643,11 +2719,101 @@ def add_documents_to_draft(
     )
     if not bundle:
         raise HTTPException(status_code=404, detail="Draft bundle not found")
+    skipped = bundle.get("last_skipped_oversized") or []
     return {
         "bundle_id": bundle["bundle_id"],
         "document_count": len(bundle.get("documents", [])),
-        "added": len(docs),
+        "added": len(docs) - len(skipped),
+        "skipped_oversized": skipped,
         "relevance": relevance,
+    }
+
+
+@app.post("/pipeline/bundles/{bundle_id}/documents/presign")
+@limiter.limit("20/minute")
+def presign_draft_document_upload(
+    bundle_id: str,
+    req: DraftBundlePresignRequest,
+    request: Request,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Get a presigned S3 POST for a large file (bigger than the inline
+    per-document cap in ``add_documents_to_draft``).
+
+    The browser uploads directly to S3 with the returned url/fields — the
+    file's bytes never pass through this API or Redis. Once the upload
+    finishes, the client calls ``.../documents/confirm`` to register it.
+    """
+    from insureflow.storage.draft_bundle_store import get_draft_bundle_store
+    from insureflow.storage.object_storage import object_storage_configured, presign_upload
+
+    if not object_storage_configured():
+        raise HTTPException(status_code=400, detail="Large-file upload isn't configured — set S3_UPLOADS_BUCKET (or S3_SUBMISSIONS_BUCKET)")
+
+    bundle = get_draft_bundle_store().get(bundle_id, org_id=current.org_id)
+    if not bundle:
+        raise HTTPException(status_code=404, detail="Draft bundle not found")
+
+    try:
+        presigned = presign_upload(
+            bundle_id=bundle_id,
+            org_id=current.org_id,
+            filename=req.filename,
+            content_type=req.content_type,
+        )
+    except ConnectionError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return presigned
+
+
+@app.post("/pipeline/bundles/{bundle_id}/documents/confirm")
+def confirm_draft_document_upload(
+    bundle_id: str,
+    req: DraftBundleConfirmUploadRequest,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Register a file the client already uploaded directly to S3.
+
+    Verifies the object actually landed (a HEAD request for its real size)
+    rather than trusting the client's word for it, then adds a reference —
+    not the content — to the draft bundle.
+
+    The storage key must fall under this exact org+bundle's own presigned
+    prefix (``draft-uploads/{org_id}/{bundle_id}/...`` — see
+    ``object_storage.presign_upload``). Without this check, any
+    authenticated caller could pass an arbitrary storage key — including
+    one belonging to a different org's bundle, if guessed or leaked — and
+    have that file registered into their own bundle for the pipeline to
+    ingest: a cross-tenant IDOR, not just a bug in this org's own data.
+    """
+    from insureflow.storage.draft_bundle_store import get_draft_bundle_store
+    from insureflow.storage.object_storage import head_object
+
+    expected_prefix = f"draft-uploads/{current.org_id}/{bundle_id}/"
+    if not req.storage_key.startswith(expected_prefix):
+        raise HTTPException(status_code=403, detail="Storage key does not belong to this bundle")
+
+    meta = head_object(req.storage_key)
+    if meta is None:
+        raise HTTPException(status_code=400, detail="Upload not found in object storage — the presigned upload may not have completed")
+
+    store = get_draft_bundle_store()
+    bundle = store.add_object_reference(
+        bundle_id,
+        storage_key=req.storage_key,
+        filename=req.filename,
+        size_bytes=meta["size_bytes"],
+        content_type=req.content_type or meta.get("content_type", ""),
+        source_id=req.source_id,
+        connection_label=req.connection_label,
+        org_id=current.org_id,
+    )
+    if not bundle:
+        raise HTTPException(status_code=404, detail="Draft bundle not found")
+    return {
+        "bundle_id": bundle["bundle_id"],
+        "document_count": len(bundle.get("documents", [])),
+        "size_bytes": meta["size_bytes"],
     }
 
 

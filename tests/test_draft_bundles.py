@@ -1,6 +1,18 @@
 from __future__ import annotations
 
-from insureflow.storage.draft_bundle_store import DraftBundleStore
+import base64
+import threading
+import time
+from unittest.mock import patch
+
+import pytest
+
+from insureflow.storage.draft_bundle_store import (
+    MAX_BUNDLE_TOTAL_BYTES,
+    MAX_DOCUMENT_BYTES,
+    BundleTooLargeError,
+    DraftBundleStore,
+)
 from insureflow.storage.job_store import MemoryJobStore
 
 
@@ -159,3 +171,146 @@ def test_org_isolation() -> None:
     assert store.get(b1["bundle_id"], org_id="org-b") is None
     assert len(store.list_all(org_id="org-a")) == 1
     assert len(store.list_all(org_id="org-b")) == 1
+
+
+def test_oversized_document_is_skipped_not_accepted() -> None:
+    store = _make_store()
+    bundle = store.create(org_id="test")
+    huge = base64.b64encode(b"x" * (MAX_DOCUMENT_BYTES + 1024)).decode()
+    result = store.add_documents(bundle["bundle_id"], [{"filename": "huge.pdf", "content": huge, "encoding": "base64"}], org_id="test")
+    assert result is not None
+    assert result["documents"] == []
+    assert result["last_skipped_oversized"][0]["filename"] == "huge.pdf"
+
+    # A normal file in the same batch still goes through.
+    result2 = store.add_documents(
+        bundle["bundle_id"],
+        [
+            {"filename": "huge.pdf", "content": huge, "encoding": "base64"},
+            {"filename": "small.txt", "content": "hello", "encoding": "utf-8"},
+        ],
+        org_id="test",
+    )
+    assert result2 is not None
+    assert len(result2["documents"]) == 1
+    assert result2["documents"][0]["filename"] == "small.txt"
+
+
+def test_add_object_reference_stores_key_not_bytes() -> None:
+    store = _make_store()
+    bundle = store.create(org_id="test")
+    result = store.add_object_reference(
+        bundle["bundle_id"],
+        storage_key="draft-uploads/test/bundle-x/roof.pdf",
+        filename="roof.pdf",
+        size_bytes=2_147_483_648,
+        content_type="application/pdf",
+        org_id="test",
+    )
+    assert result is not None
+    doc = result["documents"][0]
+    assert doc["encoding"] == "s3_ref"
+    assert doc["content"] == "draft-uploads/test/bundle-x/roof.pdf"
+    assert doc["size_bytes"] == 2_147_483_648
+    # The reference itself must stay tiny regardless of the file's real size.
+    assert len(str(result)) < 2000
+
+
+def test_bundle_total_size_cap_rejects_object_reference() -> None:
+    store = _make_store()
+    bundle = store.create(org_id="test")
+    store.add_object_reference(
+        bundle["bundle_id"],
+        storage_key="k1",
+        filename="big1.pdf",
+        size_bytes=MAX_BUNDLE_TOTAL_BYTES - 1000,
+        org_id="test",
+    )
+    with pytest.raises(BundleTooLargeError):
+        store.add_object_reference(bundle["bundle_id"], storage_key="k2", filename="big2.pdf", size_bytes=5000, org_id="test")
+    # The rejected file must not have been added.
+    result = store.get(bundle["bundle_id"], org_id="test")
+    assert result is not None
+    assert len(result["documents"]) == 1
+
+
+def test_bundle_total_size_cap_skips_in_batch_add() -> None:
+    store = _make_store()
+    bundle = store.create(org_id="test")
+    store.add_object_reference(
+        bundle["bundle_id"],
+        storage_key="k1",
+        filename="big1.pdf",
+        size_bytes=MAX_BUNDLE_TOTAL_BYTES - 100,
+        org_id="test",
+    )
+    result = store.add_documents(bundle["bundle_id"], [{"filename": "tiny.txt", "content": "x" * 1000, "encoding": "utf-8"}], org_id="test")
+    assert result is not None
+    assert len(result["documents"]) == 1  # the batch file was skipped, not added
+    assert "total bundle size limit" in result["last_skipped_oversized"][0]["reason"]
+
+
+def test_delete_bundle_cleans_up_s3_objects() -> None:
+    store = _make_store()
+    bundle = store.create(org_id="test")
+    store.add_object_reference(bundle["bundle_id"], storage_key="draft-uploads/test/x/big.pdf", filename="big.pdf", size_bytes=999, org_id="test")
+
+    with patch("insureflow.storage.object_storage.delete_object") as mock_delete:
+        assert store.delete(bundle["bundle_id"], org_id="test") is True
+        mock_delete.assert_called_once_with("draft-uploads/test/x/big.pdf")
+    assert store.get(bundle["bundle_id"], org_id="test") is None
+
+
+def test_delete_bundle_without_s3_docs_never_touches_object_storage() -> None:
+    store = _make_store()
+    bundle = store.create(org_id="test")
+    store.add_documents(bundle["bundle_id"], [{"filename": "small.txt", "content": "hi", "encoding": "utf-8"}], org_id="test")
+
+    with patch("insureflow.storage.object_storage.delete_object") as mock_delete:
+        assert store.delete(bundle["bundle_id"], org_id="test") is True
+        mock_delete.assert_not_called()
+
+
+def test_remove_document_cleans_up_its_own_s3_object_only() -> None:
+    store = _make_store()
+    bundle = store.create(org_id="test")
+    store.add_object_reference(bundle["bundle_id"], storage_key="k1", filename="a.pdf", size_bytes=10, org_id="test")
+    result = store.add_object_reference(bundle["bundle_id"], storage_key="k2", filename="b.pdf", size_bytes=10, org_id="test")
+    assert result is not None
+    doc_a_id = result["documents"][0]["doc_id"]
+
+    with patch("insureflow.storage.object_storage.delete_object") as mock_delete:
+        store.remove_document(bundle["bundle_id"], doc_a_id, org_id="test")
+        mock_delete.assert_called_once_with("k1")
+
+
+def test_concurrent_add_documents_does_not_lose_writes() -> None:
+    """Reproduces the read-modify-write race this store used to have: two
+    'underwriters' both read the bundle, both append, whoever wrote last used
+    to silently discard the other's document. The lock in _bundle_lock must
+    prevent that."""
+    store = _make_store()
+    bundle = store.create(org_id="test")
+    bundle_id = bundle["bundle_id"]
+
+    orig_get = store.get
+
+    def slow_get(*args: object, **kwargs: object) -> dict | None:  # type: ignore[type-arg]
+        result = orig_get(*args, **kwargs)
+        time.sleep(0.02)
+        return result
+
+    store.get = slow_get  # type: ignore[method-assign]
+
+    def worker(name: str) -> None:
+        store.add_documents(bundle_id, [{"filename": f"{name}.pdf", "content": "x", "encoding": "utf-8"}], org_id="test")
+
+    threads = [threading.Thread(target=worker, args=(f"uw{i}",)) for i in range(5)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+
+    final = orig_get(bundle_id, org_id="test")
+    assert final is not None
+    assert len(final["documents"]) == 5

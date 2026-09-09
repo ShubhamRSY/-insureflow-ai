@@ -309,11 +309,22 @@ DEMO_CONNECTORS: dict[str, dict[str, Any]] = {
         ],
         "label": lambda req: f"Snowflake › {req.prefix or 'UW.SUBMISSIONS_STAGING'}",
     },
+    "databricks": {
+        "name": "Databricks",
+        "type": "data",
+        "category": "Data Warehouse",
+        "description": "Lakehouse exposure and loss triangles (Unity Catalog table, via databricks-sql-connector)",
+        "config_fields": [
+            {"key": "host", "label": "Workspace hostname (optional — else DATABRICKS_HOST)", "placeholder": "adb-1234.5.azuredatabricks.net"},
+            {"key": "prefix", "label": "catalog.schema.table", "placeholder": "uw.exposure.loss_triangles"},
+        ],
+        "label": lambda req: f"Databricks › {req.prefix or 'uw.exposure.loss_triangles'}",
+    },
 }
 
 # Real pull adapters. Everything else in DEMO_CONNECTORS is a lab stub.
 # outlook-inbox is live when OUTLOOK_* or IMAP_* credentials are set (IMAP path, not Graph OAuth).
-LIVE_CONNECTOR_IDS = frozenset({"email-inbox", "outlook-inbox", "s3-bucket", "sftp", "server-folder"})
+LIVE_CONNECTOR_IDS = frozenset({"email-inbox", "outlook-inbox", "s3-bucket", "sftp", "server-folder", "databricks"})
 
 
 def _live_connector_configured(source_id: str) -> bool:
@@ -338,6 +349,10 @@ def _live_connector_configured(source_id: str) -> bool:
         from insureflow.ingestion.insurance.sftp_connector import sftp_configured
 
         return sftp_configured()
+    if source_id == "databricks":
+        from insureflow.ingestion.insurance.databricks_connector import databricks_configured
+
+        return databricks_configured()
     return False
 
 
@@ -357,6 +372,7 @@ def annotate_source(entry: dict[str, object]) -> dict[str, object]:
         "outlook-inbox": "Live Outlook via IMAP — set OUTLOOK_HOST/USERNAME/PASSWORD (or IMAP_*)",
         "s3-bucket": "Live S3 drop — pull submissions from bucket",
         "sftp": "Live SFTP — pull from broker drop folder",
+        "databricks": "Live Databricks SQL warehouse — pull exposure/loss-triangle table",
     }
     _stub_honesty = {
         "google-drive": "Not contracted — Google Drive lab stub (maps to demo packages)",

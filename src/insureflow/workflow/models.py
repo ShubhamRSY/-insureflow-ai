@@ -95,6 +95,11 @@ class WorkflowRecord(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
     metadata: dict[str, Any] = Field(default_factory=dict)
+    # Optimistic-concurrency version. Bumped by WorkflowStore.save() on every
+    # write; a save whose `version` doesn't match what's on disk means two
+    # underwriters read this case before either of them saved — see
+    # WorkflowConflictError.
+    version: int = 0
 
     def compute_sla_deadline(self) -> None:
         """Set the SLA deadline based on priority tier."""

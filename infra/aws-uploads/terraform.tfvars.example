@@ -1,0 +1,18 @@
+# Copy this file to terraform.tfvars and fill in real values, then:
+#   terraform init
+#   terraform plan
+#   terraform apply
+
+aws_region  = "us-east-1"
+project_name = "insureflow"
+environment  = "dev"
+
+# The origin(s) your frontend is actually served from. For local dev with
+# a Vite/CRA dev server this is typically http://localhost:5173 or :3000.
+cors_allowed_origins = ["http://localhost:5173"]
+
+expire_after_days = 30
+
+tags = {
+  Project = "insureflow"
+}

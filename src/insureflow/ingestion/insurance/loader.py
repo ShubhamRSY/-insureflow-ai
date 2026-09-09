@@ -163,34 +163,35 @@ class InsuranceDocumentLoader:
 
     def _resolve_content(self, content: str, filename: str, encoding: str) -> tuple[str, str, dict[str, list[ExtractedField]], dict[int, dict[str, list[float]]], bytes | None]:
         ext = Path(filename).suffix.lower()
+        if encoding == "s3_ref":
+            # Large-file path: `content` is a storage key, not bytes — a file
+            # too big for the inline base64 path (object_storage.MAX_UPLOAD_BYTES
+            # vs. draft_bundle_store.MAX_DOCUMENT_BYTES). Fetched here, one
+            # document at a time, so memory use is bounded by this single file
+            # rather than the whole bundle.
+            #
+            # The upload path is memory-safe (streams straight to S3), but
+            # OCR/parsing is not — it needs the full file in memory, same as
+            # every other document. A 25MB base64 upload was always small
+            # enough for that; this path allows up to 5GB, which is not. So a
+            # separate, much lower ceiling gates what gets auto-processed —
+            # above it, the document is kept as a reference (visible, still
+            # downloadable) but flagged for manual review instead of risking
+            # an OOM crash trying to OCR a multi-GB file in this process.
+            from insureflow.storage.object_storage import MAX_PROCESSABLE_BYTES, download_object_bytes, head_object
+
+            meta = head_object(content)
+            size = int((meta or {}).get("size_bytes") or 0)
+            if size > MAX_PROCESSABLE_BYTES:
+                message = f"[File too large to auto-process: {size:,} bytes exceeds the {MAX_PROCESSABLE_BYTES // (1024 * 1024)}MB automatic-processing limit — needs manual review]"
+                return message, "unprocessed_oversized", {}, {}, None
+
+            data = download_object_bytes(content)
+            return self._process_binary(data, filename, ext)
+
         if encoding == "base64":
             data = base64.b64decode(content)
-
-            if ext in _PDF_IMAGE_EXTS and router_enabled():
-                decision = route_document(profile_document(filename, data))
-                if decision.route == RouteKind.VLM and vlm_enabled():
-                    parsed_vlm = vlm_parse_document(data, filename)
-                    if parsed_vlm is not None:
-                        markdown, vlm_engine = parsed_vlm
-                        return markdown, vlm_engine, {}, {}, data
-
-            try:
-                structured = parse_structured_document(data, filename)
-            except Exception:
-                structured = None
-            if structured is not None:
-                return structured[0], structured[1], structured[2], {}, data
-            if ext in _PDF_IMAGE_EXTS:
-                sub_id = f"ocr-{uuid4().hex[:8]}"
-                parsed = self.ocr.extract_text_from_bytes(data, filename, sub_id)
-                engine = "tesseract" if parsed.raw_text and not parsed.raw_text.startswith("[OCR:") else "pdfminer"
-                return parsed.raw_text, engine, parsed.extracted_fields or {}, parsed.spatial_lines, data
-
-            if _code_exec_fallback_enabled():
-                result = self._code_parse(data, filename)
-                if result is not None:
-                    return result
-            return data.decode("utf-8", errors="replace"), "", {}, {}, data
+            return self._process_binary(data, filename, ext)
 
         if ext == ".pdf" and encoding == "utf-8":
             raw_bytes = content.encode("utf-8", errors="surrogateescape") if isinstance(content, str) else content
@@ -204,6 +205,35 @@ class InsuranceDocumentLoader:
                 Path(tmp_path).unlink(missing_ok=True)
 
         return content, "", {}, {}, None
+
+    def _process_binary(self, data: bytes, filename: str, ext: str) -> tuple[str, str, dict[str, list[ExtractedField]], dict[int, dict[str, list[float]]], bytes | None]:
+        """Shared by the inline-base64 and object-storage (``s3_ref``) paths
+        once each has produced the same thing: raw file bytes in memory."""
+        if ext in _PDF_IMAGE_EXTS and router_enabled():
+            decision = route_document(profile_document(filename, data))
+            if decision.route == RouteKind.VLM and vlm_enabled():
+                parsed_vlm = vlm_parse_document(data, filename)
+                if parsed_vlm is not None:
+                    markdown, vlm_engine = parsed_vlm
+                    return markdown, vlm_engine, {}, {}, data
+
+        try:
+            structured = parse_structured_document(data, filename)
+        except Exception:
+            structured = None
+        if structured is not None:
+            return structured[0], structured[1], structured[2], {}, data
+        if ext in _PDF_IMAGE_EXTS:
+            sub_id = f"ocr-{uuid4().hex[:8]}"
+            parsed = self.ocr.extract_text_from_bytes(data, filename, sub_id)
+            engine = "tesseract" if parsed.raw_text and not parsed.raw_text.startswith("[OCR:") else "pdfminer"
+            return parsed.raw_text, engine, parsed.extracted_fields or {}, parsed.spatial_lines, data
+
+        if _code_exec_fallback_enabled():
+            result = self._code_parse(data, filename)
+            if result is not None:
+                return result
+        return data.decode("utf-8", errors="replace"), "", {}, {}, data
 
     def _code_parse(self, data: bytes, filename: str) -> tuple[str, str, dict[str, list[ExtractedField]], dict[int, dict[str, list[float]]], bytes] | None:
         """Programmatic-generative fallback for binary blobs the generic parsers miss."""

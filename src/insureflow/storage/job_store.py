@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import json
 import logging
+import threading
 from abc import ABC, abstractmethod
+from contextlib import contextmanager
 from datetime import datetime, timezone
-from typing import Any, cast
+from typing import Any, Iterator, cast
 
 logger = logging.getLogger(__name__)
 
@@ -141,3 +143,50 @@ def get_job_store() -> JobStore:
 
     logger.info("Using file job store (no Redis configured)")
     return FileJobStore()
+
+
+class LockBusyError(RuntimeError):
+    """Raised when a distributed lock can't be acquired within its timeout —
+    someone else is mid-write to the same record right now."""
+
+
+_local_locks: dict[str, threading.Lock] = {}
+_local_locks_guard = threading.Lock()
+
+
+def _local_lock(key: str) -> threading.Lock:
+    with _local_locks_guard:
+        lock = _local_locks.get(key)
+        if lock is None:
+            lock = threading.Lock()
+            _local_locks[key] = lock
+        return lock
+
+
+@contextmanager
+def distributed_lock(store: JobStore, key: str, *, timeout: int = 30, blocking_timeout: int = 10) -> Iterator[None]:
+    """Serialize a critical section keyed by ``key``.
+
+    Uses a real distributed lock (Redis ``SET NX``, via redis-py's ``Lock``)
+    when ``store`` is Redis-backed — safe across multiple app-server
+    processes, the real multi-user deployment case. Falls back to an
+    in-process lock otherwise (memory/file-backed stores), which only
+    protects concurrent requests within a single process — the same
+    limitation ``FileJobStore`` already documents for itself.
+
+    Shared by every store that needs "don't let two writers race on the same
+    record" (draft bundles, workflow sign-offs) so the safety behavior is
+    identical everywhere rather than reimplemented per store.
+    """
+    client = getattr(store, "client", None)
+    if client is not None:
+        from redis.exceptions import LockError
+
+        try:
+            with client.lock(key, timeout=timeout, blocking_timeout=blocking_timeout):
+                yield
+        except LockError as exc:
+            raise LockBusyError(f"Could not acquire lock for {key} — try again in a moment") from exc
+        return
+    with _local_lock(key):
+        yield
