@@ -140,6 +140,7 @@ async def _bundle_too_large_handler(_request: Any, exc: BundleTooLargeError) -> 
     """This draft bundle's total content size has hit the aggregate cap."""
     return JSONResponse(status_code=413, content={"detail": str(exc)})
 
+
 try:
     from insureflow.observability.http_middleware import PrometheusHTTPMiddleware
 

@@ -200,8 +200,7 @@ class DraftBundleStore:
             running_total = _bundle_total_bytes(bundle)
             if running_total + size_bytes > MAX_BUNDLE_TOTAL_BYTES:
                 raise BundleTooLargeError(
-                    f"Adding {filename} ({size_bytes:,} bytes) would push bundle {bundle_id} over the "
-                    f"{MAX_BUNDLE_TOTAL_BYTES // (1024**3)}GB total size limit (currently {running_total:,} bytes)"
+                    f"Adding {filename} ({size_bytes:,} bytes) would push bundle {bundle_id} over the {MAX_BUNDLE_TOTAL_BYTES // (1024**3)}GB total size limit (currently {running_total:,} bytes)"
                 )
 
             existing = bundle.get("documents", [])

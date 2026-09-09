@@ -68,8 +68,8 @@ def test_concurrent_saves_under_load_never_lose_the_conflict_check() -> None:
 
     orig_get = store.get
 
-    def slow_get(*args: object, **kwargs: object) -> WorkflowRecord | None:
-        result = orig_get(*args, **kwargs)
+    def slow_get(bundle_id: str, org_id: str = "default") -> WorkflowRecord | None:
+        result = orig_get(bundle_id, org_id=org_id)
         time.sleep(0.02)
         return result
 

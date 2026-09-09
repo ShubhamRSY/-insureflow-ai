@@ -91,8 +91,7 @@ class WorkflowStore:
                 on_disk = WorkflowRecord.model_validate_json(raw) if raw.strip() else None
                 if on_disk is not None and on_disk.version != record.version:
                     raise WorkflowConflictError(
-                        f"Workflow for bundle {record.bundle_id} was updated by someone else "
-                        f"(you read version {record.version}, current is {on_disk.version}) — reload and retry"
+                        f"Workflow for bundle {record.bundle_id} was updated by someone else (you read version {record.version}, current is {on_disk.version}) — reload and retry"
                     )
                 record.version += 1
                 record.updated_at = datetime.now(tz=timezone.utc)
@@ -111,8 +110,7 @@ class WorkflowStore:
                 on_disk = WorkflowRecord.model_validate(data) if data else None
                 if on_disk is not None and on_disk.version != record.version:
                     raise WorkflowConflictError(
-                        f"Workflow for bundle {record.bundle_id} was updated by someone else "
-                        f"(you read version {record.version}, current is {on_disk.version}) — reload and retry"
+                        f"Workflow for bundle {record.bundle_id} was updated by someone else (you read version {record.version}, current is {on_disk.version}) — reload and retry"
                     )
                 record.version += 1
                 record.updated_at = datetime.now(tz=timezone.utc)
