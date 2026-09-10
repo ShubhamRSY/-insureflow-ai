@@ -7,6 +7,23 @@ from dataclasses import asdict, dataclass, field
 from typing import Any
 
 _DEV_GATEWAY = "rytera-dev-gateway-key-change-in-production"
+# This repo's own .env.example ships every placeholder credential with one
+# of these prefixes (e.g. "rytera-pilot-oeX4Av...") — a real vendor-issued
+# key will never happen to start with either, so this catches the whole
+# family of placeholders, not just the one hardcoded gateway-key string.
+_DEV_KEY_PREFIXES = ("rytera-dev-", "rytera-pilot-")
+# Hosts that mean "this URL points at Rytera's own bundled/hosted
+# integration gateway (or its local dev mirror), not a genuine external
+# vendor." 127.0.0.1/localhost matter because the bundled gateway is a real,
+# reachable local HTTP server that returns live-shaped responses on
+# purpose — presence + reachability alone can't tell "real vendor" from
+# "our own simulator answering on localhost."
+_DEV_GATEWAY_HOSTS = ("integrations.rytera.ai", "127.0.0.1", "localhost", "0.0.0.0")
+
+
+def _is_dev_gateway_url(url: str) -> bool:
+    lowered = (url or "").lower()
+    return any(host in lowered for host in _DEV_GATEWAY_HOSTS)
 
 
 @dataclass
@@ -24,7 +41,9 @@ class FeedReadiness:
 
 def _key_ok(name: str) -> bool:
     val = (os.getenv(name) or "").strip()
-    return bool(val) and val != _DEV_GATEWAY
+    if not val or val == _DEV_GATEWAY:
+        return False
+    return not val.lower().startswith(_DEV_KEY_PREFIXES)
 
 
 def _mode(name: str, default: str = "auto") -> str:
@@ -36,17 +55,16 @@ def _pas_configured() -> bool:
     from insureflow.integrations.http_client import IntegrationHTTPClient
     from insureflow.oracles._live import resolve_integration_mode
 
-    _dev_gateways = ("integrations.rytera.ai",)
     gw_url = (os.getenv("GUIDEWIRE_API_URL") or "").strip()
     bc_url = (os.getenv("BRITECORE_API_URL") or "").strip()
     if _key_ok("GUIDEWIRE_API_KEY") and gw_url:
-        if any(d in gw_url for d in _dev_gateways):
+        if _is_dev_gateway_url(gw_url):
             return False
         http = IntegrationHTTPClient(api_key=os.getenv("GUIDEWIRE_API_KEY", ""), base_url=gw_url)
         if resolve_integration_mode("auto", http) == "live":
             return True
     if _key_ok("BRITECORE_API_KEY") and bc_url:
-        if any(d in bc_url for d in _dev_gateways):
+        if _is_dev_gateway_url(bc_url):
             return False
         http = IntegrationHTTPClient(api_key=os.getenv("BRITECORE_API_KEY", ""), base_url=bc_url)
         if resolve_integration_mode("auto", http) == "live":
@@ -69,8 +87,10 @@ def bind_cutover_checklist() -> dict[str, Any]:
     shadow = is_shadow_mode()
     pas = _pas_configured()
     sim_bind = allow_simulated_bind()
-    clue = _key_ok("CLUE_API_KEY") and bool(os.getenv("CLUE_API_URL"))
-    aplus = _key_ok("APLUS_API_KEY") and bool(os.getenv("APLUS_API_URL"))
+    clue_url = (os.getenv("CLUE_API_URL") or "").strip()
+    aplus_url = (os.getenv("APLUS_API_URL") or "").strip()
+    clue = _key_ok("CLUE_API_KEY") and bool(clue_url) and not _is_dev_gateway_url(clue_url)
+    aplus = _key_ok("APLUS_API_KEY") and bool(aplus_url) and not _is_dev_gateway_url(aplus_url)
     book = current_book_status()
     steps = [
         {
@@ -316,8 +336,7 @@ def assess_sandbox_readiness(*, ping: bool = True) -> dict[str, Any]:
         )
     )
 
-    gateway = os.getenv("INTEGRATION_GATEWAY_API_KEY", "")
-    gateway_ok = bool(gateway) and gateway != _DEV_GATEWAY
+    gateway_ok = _key_ok("INTEGRATION_GATEWAY_API_KEY")
     feeds.append(
         FeedReadiness(
             name="Integration gateway key",

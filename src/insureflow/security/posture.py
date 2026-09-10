@@ -10,6 +10,19 @@ logger = logging.getLogger(__name__)
 
 _INSECURE_SECRET = "CHANGE_ME_TO_A_LONG_SECRET_KEY_IN_PRODUCTION"
 _DEV_GATEWAY_KEY = "rytera-dev-gateway-key-change-in-production"
+# .env.example ships every placeholder vendor/gateway credential with one of
+# these prefixes (e.g. "rytera-pilot-oeX4Av..."). A real vendor-issued key
+# will never happen to start with either, so this catches the whole family
+# of placeholders — matching one exact string alone (as this file used to)
+# lets a still-placeholder key sail through BANK_MODE startup validation
+# undetected, same class of gap fixed in insureflow.pilot.sandbox_readiness.
+_DEV_KEY_PREFIXES = ("rytera-dev-", "rytera-pilot-")
+
+
+def _is_placeholder_key(value: str) -> bool:
+    if not value or value == _DEV_GATEWAY_KEY:
+        return True
+    return value.lower().startswith(_DEV_KEY_PREFIXES)
 
 
 @dataclass(frozen=True)
@@ -119,8 +132,8 @@ def validate_startup_secrets(
 
     if posture.is_hardened:
         gateway_key = os.getenv("INTEGRATION_GATEWAY_API_KEY", "")
-        if not gateway_key or gateway_key == _DEV_GATEWAY_KEY:
-            errors.append("BANK_MODE/production requires INTEGRATION_GATEWAY_API_KEY to be a unique production secret (not the rytera-dev-gateway-key placeholder).")
+        if _is_placeholder_key(gateway_key):
+            errors.append("BANK_MODE/production requires INTEGRATION_GATEWAY_API_KEY to be a unique production secret (not the rytera-dev-gateway-key / rytera-pilot-* placeholder).")
 
         job_backend = (os.getenv("JOB_STORE_BACKEND") or "auto").strip().lower()
         if job_backend == "memory":
@@ -142,9 +155,12 @@ def validate_startup_secrets(
             "ISO_RATING_API_KEY",
         ):
             val = os.getenv(key_name, "")
-            if val == _DEV_GATEWAY_KEY:
+            # These vendor keys are legitimately optional (an unused oracle
+            # can stay unset) — only flag one that's *set* to something
+            # placeholder-shaped, not merely empty.
+            if val and _is_placeholder_key(val):
                 errors.append(
-                    f"BANK_MODE/production: {key_name} still uses the development gateway placeholder. Replace with a production secret or clear it and set ORACLE_MODE/policy modes appropriately."
+                    f"BANK_MODE/production: {key_name} still uses a development/pilot placeholder. Replace with a production secret or clear it and set ORACLE_MODE/policy modes appropriately."
                 )
 
         if os.getenv("REQUIRE_LIVE_ORACLES", "").lower() in {"1", "true", "yes"}:

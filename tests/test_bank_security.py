@@ -86,6 +86,43 @@ def test_validate_startup_rejects_dev_gateway_key(monkeypatch: MonkeyPatch) -> N
     assert any("INTEGRATION_GATEWAY_API_KEY" in e for e in errors)
 
 
+def test_validate_startup_rejects_pilot_prefixed_gateway_key(monkeypatch: MonkeyPatch) -> None:
+    """.env.example ships every placeholder credential as rytera-pilot-*,
+    not just the one hardcoded rytera-dev-gateway-key-change-in-production
+    string — a real deployment carrying that value over into BANK_MODE must
+    still be caught, not silently accepted as a production secret."""
+    monkeypatch.setenv("BANK_MODE", "true")
+    monkeypatch.setenv("ALLOW_OPEN_REGISTRATION", "false")
+    monkeypatch.setenv("ALLOW_AUTH_RESET", "false")
+    monkeypatch.setenv("INTEGRATION_GATEWAY_API_KEY", "rytera-pilot-oeX4AvHtbqEW0oKAAHgTHXtuOiaUF0-G")
+    monkeypatch.setenv("JOB_STORE_BACKEND", "redis")
+    posture = resolve_security_posture()
+    errors = validate_startup_secrets(
+        secret_key="a" * 32,
+        encryption_key="fernet-or-derived-key-value",
+        posture=posture,
+    )
+    assert any("INTEGRATION_GATEWAY_API_KEY" in e for e in errors)
+
+
+def test_validate_startup_ignores_unset_optional_vendor_keys(monkeypatch: MonkeyPatch) -> None:
+    """An oracle nobody has configured (CLUE unset, say) is fine — only a
+    key that's actually set to a placeholder value should be flagged."""
+    monkeypatch.setenv("BANK_MODE", "true")
+    monkeypatch.setenv("ALLOW_OPEN_REGISTRATION", "false")
+    monkeypatch.setenv("ALLOW_AUTH_RESET", "false")
+    monkeypatch.setenv("INTEGRATION_GATEWAY_API_KEY", "a-genuinely-unique-production-secret")
+    monkeypatch.setenv("JOB_STORE_BACKEND", "redis")
+    monkeypatch.delenv("CLUE_API_KEY", raising=False)
+    posture = resolve_security_posture()
+    errors = validate_startup_secrets(
+        secret_key="a" * 32,
+        encryption_key="fernet-or-derived-key-value",
+        posture=posture,
+    )
+    assert not any("CLUE_API_KEY" in e for e in errors)
+
+
 def test_dev_posture_defaults_open_registration(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setenv("BANK_MODE", "false")
     monkeypatch.setenv("ENVIRONMENT", "development")

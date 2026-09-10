@@ -141,6 +141,26 @@ async def _bundle_too_large_handler(_request: Any, exc: BundleTooLargeError) -> 
     return JSONResponse(status_code=413, content={"detail": str(exc)})
 
 
+@app.exception_handler(Exception)
+async def _unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    """Catch-all for anything not handled above (this only ever fires for
+    exceptions with no more specific handler — FastAPI/Starlette always
+    prefer a matching subclass handler, like the ones above, over this one).
+
+    Without this, an unexpected exception (real-world malformed data
+    hitting a code path nobody anticipated) fell through to Starlette's
+    default 500 — a bare *plain-text* "Internal Server Error", not the
+    ``{"detail": ...}`` JSON shape every other error path in this API
+    returns. A client that does ``response.json()`` unconditionally would
+    itself crash on top of the original error. This also gives every
+    unhandled failure a correlatable ID in the logs, and never echoes the
+    raw exception message back to whoever sent the request that triggered it.
+    """
+    error_id = uuid.uuid4().hex[:12]
+    logger.exception("Unhandled exception [%s] on %s %s", error_id, request.method, request.url.path, exc_info=exc)
+    return JSONResponse(status_code=500, content={"detail": "Internal server error", "error_id": error_id})
+
+
 try:
     from insureflow.observability.http_middleware import PrometheusHTTPMiddleware
 
