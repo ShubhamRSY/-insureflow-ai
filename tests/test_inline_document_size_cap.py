@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
@@ -35,7 +36,7 @@ def _auth_headers(org_id: str = "acme", role: Role = Role.ADMIN) -> dict[str, st
         ("/mortgage/pipeline/run", {"documents": [{"filename": "huge.pdf", "content": _OVERSIZED_BASE64, "encoding": "base64"}]}),
     ],
 )
-def test_oversized_inline_document_rejected(path: str, payload: dict) -> None:
+def test_oversized_inline_document_rejected(path: str, payload: dict[str, Any]) -> None:
     client = TestClient(app)
     resp = client.post(path, json=payload, headers=_auth_headers())
     assert resp.status_code == 413
