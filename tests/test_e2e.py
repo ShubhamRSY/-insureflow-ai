@@ -15,7 +15,16 @@ def test_e2e_inprocess_fast(monkeypatch) -> None:
     monkeypatch.setenv("OPERATING_MODE", "ready")
     monkeypatch.setenv("PILOT_SHADOW_MODE", "false")
     monkeypatch.setenv("GUIDEWIRE_API_KEY", "ci-e2e-guidewire-key")
-    monkeypatch.setenv("GUIDEWIRE_API_URL", "http://127.0.0.1:9/integrations/policy/guidewire/v1")
+    # Deliberately unreachable but NOT 127.0.0.1/localhost/0.0.0.0 — those are
+    # treated as "still pointed at our own bundled dev gateway" by
+    # sandbox_readiness._is_dev_gateway_url and would make _pas_configured()
+    # (and therefore bind) return False before the ISO adapter ever gets a
+    # chance to attempt — and fall back from — a live call. The IPv6 loopback
+    # isn't in that host list, and refuses connections just as instantly as
+    # 127.0.0.1 on both Linux and macOS (unlike other unused 127.0.0.0/8
+    # addresses, which macOS doesn't bind to lo0 by default and so time out
+    # instead of refusing).
+    monkeypatch.setenv("GUIDEWIRE_API_URL", "http://[::1]:9/integrations/policy/guidewire/v1")
 
     # This suite runs with test_connectors=False / use_llm=False specifically so
     # it never depends on live external connectivity. GET /health independently
