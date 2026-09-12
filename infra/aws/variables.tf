@@ -66,6 +66,29 @@ variable "ecs_worker_desired_count" {
   description = "Celery workers for pipeline/mortgage/agent queues (orchestration bus)."
 }
 
+# Large-file submissions (dispatch.LARGE_FILE_QUEUE = "pipeline-large") get
+# their own task definition/service instead of sharing the default worker's
+# pool — a burst of GB-scale OCR jobs must not starve normal-sized traffic's
+# CPU/memory. More memory than the default worker by default since a single
+# near-200MB (object_storage.MAX_PROCESSABLE_BYTES) document buffered fully
+# in memory for OCR needs real headroom; lower concurrency because each task
+# is heavier, not more numerous.
+variable "ecs_worker_large_cpu" {
+  type    = string
+  default = "2048"
+}
+
+variable "ecs_worker_large_memory" {
+  type    = string
+  default = "4096"
+}
+
+variable "ecs_worker_large_desired_count" {
+  type        = number
+  default     = 1
+  description = "Celery workers dedicated to the pipeline-large queue (GB-scale submissions)."
+}
+
 variable "langsmith_api_key" {
   type      = string
   default   = ""

@@ -64,6 +64,31 @@ services:
       redis:
         condition: service_started
 
+  # Dedicated pool for the pipeline-large queue (GB-scale submissions — see
+  # tasks/dispatch.py:LARGE_FILE_QUEUE) so a burst of large-file jobs can't
+  # eat into the default worker's capacity.
+  worker-large:
+    build: .
+    command: celery -A insureflow.tasks.celery_app worker -Q pipeline-large -l info --concurrency=1
+    environment:
+      ENVIRONMENT: production
+      BANK_MODE: "true"
+      TRUSTED_PROXY: "true"
+      SECRET_KEY: ${SECRET_KEY:?required}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?required}
+      DATABASE_URL: postgresql://insureflow:${POSTGRES_PASSWORD}@db:5432/insureflow
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      JOB_STORE_BACKEND: redis
+      INSURANCE_USE_CELERY: "true"
+      PYTHONPATH: /app
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
   redis:
     image: redis:7-alpine
     healthcheck:

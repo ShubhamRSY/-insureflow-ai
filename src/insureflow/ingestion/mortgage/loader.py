@@ -173,10 +173,37 @@ class MortgageSubmissionLoader:
             content = item.get("content", "")
             encoding = item.get("encoding", "utf-8")
 
-            if encoding == "base64":
+            if encoding == "s3_ref":
+                doc = self._load_s3_ref(content, filename, bid, i, product_line)
+            elif encoding == "base64":
                 data = base64.b64decode(content)
                 doc = self.parser.parse_bytes(data, filename, f"{bid}-doc-{i}", product_line=product_line)
             else:
                 doc = self.parser.parse(content, f"{bid}-doc-{i}", source_path=filename, product_line=product_line)
             results.append(doc)
         return results
+
+    def _load_s3_ref(
+        self,
+        storage_key: str,
+        filename: str,
+        bundle_id: str,
+        index: int,
+        product_line: ProductLine,
+    ) -> MortgageDocument:
+        """Large-file path mirroring the insurance loader's ``s3_ref`` branch
+        (``insurance/loader.py:_resolve_content``) — ``storage_key`` is an S3
+        object reference, not inline content. Gated by the same
+        ``MAX_PROCESSABLE_BYTES`` ceiling so a multi-GB closing package scan
+        is stored/visible but never auto-OCR'd into this process's memory.
+        """
+        from insureflow.storage.object_storage import MAX_PROCESSABLE_BYTES, download_object_bytes, head_object
+
+        meta = head_object(storage_key)
+        size = int((meta or {}).get("size_bytes") or 0)
+        if size > MAX_PROCESSABLE_BYTES:
+            raw = f"[File too large to auto-process: {size:,} bytes exceeds the {MAX_PROCESSABLE_BYTES // (1024 * 1024)}MB automatic-processing limit — needs manual review]"
+            return self.parser.parse(raw, f"{bundle_id}-doc-{index}", source_path=filename, product_line=product_line)
+
+        data = download_object_bytes(storage_key)
+        return self.parser.parse_bytes(data, filename, f"{bundle_id}-doc-{index}", product_line=product_line)

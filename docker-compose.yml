@@ -62,6 +62,21 @@ services:
         condition: service_started
     restart: unless-stopped
 
+  # Dedicated pool for the pipeline-large queue (GB-scale submissions — see
+  # tasks/dispatch.py:LARGE_FILE_QUEUE) so a burst of large-file jobs can't
+  # eat into the default worker's capacity.
+  worker-large:
+    build: .
+    command: celery -A insureflow.tasks.celery_app worker -Q pipeline-large -l info --concurrency=1
+    environment:
+      <<: *api-env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+
   redis:
     image: redis:7-alpine
     ports:

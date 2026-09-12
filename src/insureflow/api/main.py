@@ -913,6 +913,66 @@ class InsuranceDocumentPayload(BaseModel):
     encoding: str = "utf-8"  # or "base64" for PDF/image uploads
 
 
+def _reject_oversized_inline_documents(
+    documents: Optional[list[Any]],
+    endpoint: str = "unknown",
+    org_id: Optional[str] = None,
+    s3_prefix: str = "draft-uploads",
+) -> None:
+    """Enforce the same per-document ceiling the draft-bundle path enforces
+    (``draft_bundle_store.MAX_DOCUMENT_BYTES``) on the direct-submission
+    endpoints (``/pipeline/run``, ``/pipeline/v2/run``, ``/v2/pipeline/run``,
+    ``/mortgage/pipeline/run``, ``/api/doc-quality/check``).
+
+    Those endpoints take document content inline in the request body and skip
+    DraftBundleStore entirely, so without this they'd accept a base64 payload
+    of any size straight into request memory and, on the Celery path, into
+    the broker message — the exact problem the S3 presigned-upload path was
+    built to avoid for the draft-bundle flow.
+
+    When ``org_id`` is given, also enforces that any ``s3_ref`` document's
+    storage key falls under ``{s3_prefix}/{org_id}/`` — the same ownership
+    check ``confirm_draft_document_upload`` applies. Without it, these direct
+    endpoints (unlike the draft-bundle confirm step) would let an
+    authenticated caller from one org submit any other org's storage key and
+    have the pipeline download and process that org's file: a cross-tenant
+    IDOR, not just a missing validation. ``org_id`` is left unset for callers
+    (like doc-quality-check) that never actually download the referenced
+    object, so there's nothing to leak.
+    """
+    from insureflow.storage.draft_bundle_store import MAX_DOCUMENT_BYTES, _size_bytes
+
+    for doc in documents or []:
+        if isinstance(doc, dict):
+            filename = doc.get("filename", "unknown")
+            content = doc.get("content") or ""
+            encoding = doc.get("encoding") or "utf-8"
+        else:
+            filename = getattr(doc, "filename", "unknown")
+            content = getattr(doc, "content", "") or ""
+            encoding = getattr(doc, "encoding", None) or "utf-8"
+        if encoding == "s3_ref":
+            if org_id is not None and not str(content).startswith(f"{s3_prefix}/{org_id}/"):
+                raise HTTPException(status_code=403, detail=f"Storage key for document '{filename}' does not belong to this org")
+            continue
+        size = _size_bytes(content, encoding)
+        if size > MAX_DOCUMENT_BYTES:
+            try:
+                from insureflow.observability.prometheus_metrics import observe_oversized_document_rejection
+
+                observe_oversized_document_rejection(endpoint)
+            except Exception:
+                pass
+            raise HTTPException(
+                status_code=413,
+                detail=(
+                    f"Document '{filename}' is {size:,} bytes, exceeds the "
+                    f"{MAX_DOCUMENT_BYTES // (1024 * 1024)}MB inline-upload limit — use the draft bundle "
+                    "presigned-upload flow (POST /pipeline/bundles/{bundle_id}/documents/presign) for larger files"
+                ),
+            )
+
+
 class SubmissionRequest(BaseModel):
     acord_xml: Optional[str] = None
     inspection_reports: Optional[list[str]] = None
@@ -1499,12 +1559,23 @@ async def regulatory_review_history(limit: int = 100) -> dict[str, Any]:
 
 
 @app.post("/api/doc-quality/check")
-async def doc_quality_check(documents: list[dict[str, Any]]) -> dict[str, Any]:
+async def doc_quality_check(
+    documents: list[dict[str, Any]],
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
     """Check document quality before ingestion. Returns per-doc scores and batch decision."""
+    _reject_oversized_inline_documents(documents, endpoint="/api/doc-quality/check")
     from insureflow.ingestion.quality_gate import DocQualityGate
 
     gate = DocQualityGate()
-    return gate.evaluate(documents)
+    result = gate.evaluate(documents)
+    try:
+        from insureflow.observability.prometheus_metrics import observe_doc_quality_decision
+
+        observe_doc_quality_decision(result.get("decision", "unknown"))
+    except Exception:
+        pass
+    return result
 
 
 @app.get("/api/resubmit/pending")
@@ -3321,64 +3392,67 @@ def icon_512() -> FileResponse:
 
 
 def _run_pipeline_task(job_id: str, request: SubmissionRequest, org_id: str) -> None:
-    try:
-        pipeline: Any
-        result: Any
-        if request.use_legacy_pipeline:
-            pipeline = UnderwritingPipeline()
-            result = pipeline.run(
-                acord_xml=request.acord_xml,
-                inspection_reports=request.inspection_reports,
-                supplemental_docs=request.supplemental_docs,
-                bundle_id=request.bundle_id or job_id,
-            )
-        else:
-            docs = [{"filename": d.filename, "content": d.content, "encoding": getattr(d, "encoding", None) or "utf-8"} for d in request.documents] if request.documents else None
-            pipeline = InsurancePipeline(org_id=org_id, use_llm=request.use_llm)
+    from insureflow.tasks.dispatch import in_process_job_slot
 
-            def on_progress(data: dict[str, Any]) -> None:
-                job_store.set(
-                    INSURANCE_NS,
-                    job_id,
-                    {"status": "processing", "progress": data},
-                    org_id=org_id,
+    with in_process_job_slot():
+        try:
+            pipeline: Any
+            result: Any
+            if request.use_legacy_pipeline:
+                pipeline = UnderwritingPipeline()
+                result = pipeline.run(
+                    acord_xml=request.acord_xml,
+                    inspection_reports=request.inspection_reports,
+                    supplemental_docs=request.supplemental_docs,
+                    bundle_id=request.bundle_id or job_id,
                 )
-                try:
-                    _notify_job_subscribers(job_id, {"type": "progress", **data})
-                except Exception:
-                    pass
+            else:
+                docs = [{"filename": d.filename, "content": d.content, "encoding": getattr(d, "encoding", None) or "utf-8"} for d in request.documents] if request.documents else None
+                pipeline = InsurancePipeline(org_id=org_id, use_llm=request.use_llm)
 
-            result = pipeline.run(
-                acord_xml=request.acord_xml,
-                inspection_reports=request.inspection_reports,
-                supplemental_docs=request.supplemental_docs,
-                json_payload=request.json_payload,
-                loss_run=request.loss_run,
-                schedule_of_values=request.schedule_of_values,
-                documents=docs,
-                pdf_paths=request.pdf_paths,
-                bundle_id=request.bundle_id or job_id,
-                insurance_line=request.insurance_line,
-                commercial_product_id=request.commercial_product_id,
-                life_product_id=request.life_product_id,
-                life_coverage_id=request.life_coverage_id,
-                health_product_id=request.health_product_id,
-                health_coverage_id=request.health_coverage_id,
-                general_product_id=request.general_product_id,
-                general_coverage_id=request.general_coverage_id,
-                commercial_coverage_id=request.commercial_coverage_id,
-                commercial_product_name=request.commercial_product_name,
-                commercial_coverage_name=request.commercial_coverage_name,
-                commercial_category_id=request.commercial_category_id,
-                insurance_company_id=request.insurance_company_id,
-                insurance_company_name=request.insurance_company_name,
-                state_code=request.state_code or "",
-                progress_callback=on_progress,
-            )
-        job_store.set(INSURANCE_NS, job_id, {"status": "completed", "results": result, "state_code": request.state_code}, org_id=org_id)
-    except Exception as exc:
-        logger.exception("Pipeline run failed")
-        job_store.set(INSURANCE_NS, job_id, {"status": "failed", "error": str(exc)}, org_id=org_id)
+                def on_progress(data: dict[str, Any]) -> None:
+                    job_store.set(
+                        INSURANCE_NS,
+                        job_id,
+                        {"status": "processing", "progress": data},
+                        org_id=org_id,
+                    )
+                    try:
+                        _notify_job_subscribers(job_id, {"type": "progress", **data})
+                    except Exception:
+                        pass
+
+                result = pipeline.run(
+                    acord_xml=request.acord_xml,
+                    inspection_reports=request.inspection_reports,
+                    supplemental_docs=request.supplemental_docs,
+                    json_payload=request.json_payload,
+                    loss_run=request.loss_run,
+                    schedule_of_values=request.schedule_of_values,
+                    documents=docs,
+                    pdf_paths=request.pdf_paths,
+                    bundle_id=request.bundle_id or job_id,
+                    insurance_line=request.insurance_line,
+                    commercial_product_id=request.commercial_product_id,
+                    life_product_id=request.life_product_id,
+                    life_coverage_id=request.life_coverage_id,
+                    health_product_id=request.health_product_id,
+                    health_coverage_id=request.health_coverage_id,
+                    general_product_id=request.general_product_id,
+                    general_coverage_id=request.general_coverage_id,
+                    commercial_coverage_id=request.commercial_coverage_id,
+                    commercial_product_name=request.commercial_product_name,
+                    commercial_coverage_name=request.commercial_coverage_name,
+                    commercial_category_id=request.commercial_category_id,
+                    insurance_company_id=request.insurance_company_id,
+                    insurance_company_name=request.insurance_company_name,
+                    state_code=request.state_code or "",
+                    progress_callback=on_progress,
+                )
+            job_store.set(INSURANCE_NS, job_id, {"status": "completed", "results": result, "state_code": request.state_code}, org_id=org_id)
+        except Exception as exc:
+            logger.exception("Pipeline run failed")
+            job_store.set(INSURANCE_NS, job_id, {"status": "failed", "error": str(exc)}, org_id=org_id)
 
 
 @app.post("/pipeline/run", status_code=202)
@@ -3389,6 +3463,7 @@ async def run_pipeline(
     request: Request,
     current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
+    _reject_oversized_inline_documents(req.documents, endpoint="/pipeline/run", org_id=current.org_id)
     job_id = f"job-{uuid.uuid4().hex[:12]}"
     from insureflow.tasks.dispatch import send_pipeline_task, should_use_celery
 
@@ -7060,7 +7135,7 @@ def run_ratemaking(body: RatemakingRunRequest, _: TokenData = Depends(require_ro
 class MortgageDocumentPayload(BaseModel):
     filename: str
     content: str
-    encoding: str = "utf-8"  # or "base64" for PDF/image uploads
+    encoding: str = "utf-8"  # or "base64" for PDF/image uploads, or "s3_ref" (content = storage key) for large files
 
 
 class MortgageSubmissionRequest(BaseModel):
@@ -7132,6 +7207,7 @@ def _run_mortgage_task(job_id: str, request: MortgageSubmissionRequest, org_id: 
     from insureflow.models.mortgage import ProductLine
     from insureflow.mortgage.pipeline import MortgagePipeline
     from insureflow.mortgage.webhooks import webhook_dispatcher
+    from insureflow.tasks.dispatch import in_process_job_slot
 
     def on_progress(data: dict[str, Any]) -> None:
         job_store.set(
@@ -7145,52 +7221,53 @@ def _run_mortgage_task(job_id: str, request: MortgageSubmissionRequest, org_id: 
         except Exception:
             pass
 
-    pipeline = MortgagePipeline(use_llm=request.use_llm, org_id=org_id)
-    try:
-        product_line = _parse_product_line(request.product_line)
+    with in_process_job_slot():
+        pipeline = MortgagePipeline(use_llm=request.use_llm, org_id=org_id)
+        try:
+            product_line = _parse_product_line(request.product_line)
 
-        if request.per_borrower and request.directory:
-            result = pipeline.run_per_borrower(request.directory, product_line=product_line)
-        elif request.directory:
-            result = pipeline.run_from_directory(
-                request.directory,
-                bundle_id=request.bundle_id or job_id,
-                product_line=product_line,
-                loan_product=request.loan_product,
-                loan_amount=request.loan_amount,
-                progress_callback=on_progress,
-            )
-        elif request.documents:
-            docs = [d.model_dump() for d in request.documents]
-            result = pipeline.run_from_texts(
-                docs,
-                bundle_id=request.bundle_id or job_id,
-                product_line=product_line or ProductLine.RESIDENTIAL_MORTGAGE,
-                borrower_id=request.borrower_id,
-                loan_product=request.loan_product,
-                loan_amount=request.loan_amount,
-                progress_callback=on_progress,
-            )
-        else:
-            job_store.set(
-                MORTGAGE_NS,
-                job_id,
-                {
-                    "status": "failed",
-                    "error": "Provide documents or directory",
-                },
-                org_id=org_id,
-            )
-            webhook_dispatcher.dispatch_async("mortgage.failed", org_id, {"job_id": job_id, "error": "no input"})
-            return
+            if request.per_borrower and request.directory:
+                result = pipeline.run_per_borrower(request.directory, product_line=product_line)
+            elif request.directory:
+                result = pipeline.run_from_directory(
+                    request.directory,
+                    bundle_id=request.bundle_id or job_id,
+                    product_line=product_line,
+                    loan_product=request.loan_product,
+                    loan_amount=request.loan_amount,
+                    progress_callback=on_progress,
+                )
+            elif request.documents:
+                docs = [d.model_dump() for d in request.documents]
+                result = pipeline.run_from_texts(
+                    docs,
+                    bundle_id=request.bundle_id or job_id,
+                    product_line=product_line or ProductLine.RESIDENTIAL_MORTGAGE,
+                    borrower_id=request.borrower_id,
+                    loan_product=request.loan_product,
+                    loan_amount=request.loan_amount,
+                    progress_callback=on_progress,
+                )
+            else:
+                job_store.set(
+                    MORTGAGE_NS,
+                    job_id,
+                    {
+                        "status": "failed",
+                        "error": "Provide documents or directory",
+                    },
+                    org_id=org_id,
+                )
+                webhook_dispatcher.dispatch_async("mortgage.failed", org_id, {"job_id": job_id, "error": "no input"})
+                return
 
-        job_store.set(MORTGAGE_NS, job_id, {"status": "completed", "results": result, "state_code": request.state_code}, org_id=org_id)
-    except Exception as exc:
-        logger.exception("Mortgage pipeline run failed")
-        job_store.set(MORTGAGE_NS, job_id, {"status": "failed", "error": str(exc)}, org_id=org_id)
-        from insureflow.mortgage.webhooks import webhook_dispatcher
+            job_store.set(MORTGAGE_NS, job_id, {"status": "completed", "results": result, "state_code": request.state_code}, org_id=org_id)
+        except Exception as exc:
+            logger.exception("Mortgage pipeline run failed")
+            job_store.set(MORTGAGE_NS, job_id, {"status": "failed", "error": str(exc)}, org_id=org_id)
+            from insureflow.mortgage.webhooks import webhook_dispatcher
 
-        webhook_dispatcher.dispatch_async("mortgage.failed", org_id, {"job_id": job_id, "error": str(exc)})
+            webhook_dispatcher.dispatch_async("mortgage.failed", org_id, {"job_id": job_id, "error": str(exc)})
 
 
 def _finalize_celery_mortgage_job(job_id: str, org_id: str, job: dict[str, Any]) -> dict[str, Any]:
@@ -7279,12 +7356,94 @@ def _dispatch_mortgage_celery(job_id: str, request: MortgageSubmissionRequest, o
     )
 
 
+class MortgagePresignRequest(BaseModel):
+    bundle_id: str
+    filename: str
+    content_type: str = ""
+
+
+class MortgageConfirmUploadRequest(BaseModel):
+    bundle_id: str
+    storage_key: str
+    filename: str
+    content_type: str = ""
+
+
+@app.post("/mortgage/pipeline/documents/presign")
+@limiter.limit("20/minute")
+def presign_mortgage_document_upload(
+    req: MortgagePresignRequest,
+    request: Request,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Get a presigned S3 POST for a large mortgage document (a full closing
+    package scan, appraisal, or bank-statement bundle can easily exceed the
+    inline base64 cap ``_reject_oversized_inline_documents`` enforces).
+
+    Mirrors the insurance draft-bundle presign/confirm flow
+    (``/pipeline/bundles/{bundle_id}/documents/presign``), scoped under its
+    own ``mortgage-uploads/`` prefix. Mortgage has no persistent draft-bundle
+    store, so there's no bundle to attach to server-side — the caller just
+    needs ``bundle_id`` to be the same value it'll pass to
+    ``/mortgage/pipeline/run``, so the confirmed storage key's prefix can be
+    verified against it later.
+    """
+    from insureflow.storage.object_storage import object_storage_configured, presign_upload
+
+    if not object_storage_configured():
+        raise HTTPException(status_code=400, detail="Large-file upload isn't configured — set S3_UPLOADS_BUCKET (or S3_SUBMISSIONS_BUCKET)")
+
+    try:
+        presigned = presign_upload(
+            bundle_id=req.bundle_id,
+            org_id=current.org_id,
+            filename=req.filename,
+            content_type=req.content_type,
+            prefix="mortgage-uploads",
+        )
+    except ConnectionError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return presigned
+
+
+@app.post("/mortgage/pipeline/documents/confirm")
+def confirm_mortgage_document_upload(
+    req: MortgageConfirmUploadRequest,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
+    """Verify a mortgage document actually landed in S3 (HEAD, not the
+    client's word for it) and that its storage key belongs to this org and
+    bundle — the same cross-tenant check ``confirm_draft_document_upload``
+    applies for insurance. Returns the document reference
+    (``{filename, content: storage_key, encoding: "s3_ref"}``) the caller
+    should include in its next ``/mortgage/pipeline/run`` request.
+    """
+    from insureflow.storage.object_storage import head_object
+
+    expected_prefix = f"mortgage-uploads/{current.org_id}/{req.bundle_id}/"
+    if not req.storage_key.startswith(expected_prefix):
+        raise HTTPException(status_code=403, detail="Storage key does not belong to this bundle")
+
+    meta = head_object(req.storage_key)
+    if meta is None:
+        raise HTTPException(status_code=400, detail="Upload not found in object storage — the presigned upload may not have completed")
+
+    return {
+        "filename": req.filename,
+        "content": req.storage_key,
+        "encoding": "s3_ref",
+        "size_bytes": meta["size_bytes"],
+        "content_type": req.content_type or meta.get("content_type", ""),
+    }
+
+
 @app.post("/mortgage/pipeline/run", status_code=202)
 async def run_mortgage_pipeline(
     req: MortgageSubmissionRequest,
     background_tasks: BackgroundTasks,
     current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
+    _reject_oversized_inline_documents(req.documents, endpoint="/mortgage/pipeline/run", org_id=current.org_id, s3_prefix="mortgage-uploads")
     job_id = req.bundle_id or f"mortgage-job-{uuid.uuid4().hex[:12]}"
     job_store.set(MORTGAGE_NS, job_id, {"status": "processing"}, org_id=current.org_id)
 
@@ -7865,6 +8024,7 @@ async def run_pipeline_v2(
     current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
     """Enhanced pipeline run with appetite filter, oracles, portfolio, and core integration."""
+    _reject_oversized_inline_documents(req.documents, endpoint="/pipeline/v2/run", org_id=current.org_id)
     if _posture().is_hardened and any(
         [
             req.skip_appetite_filter,
@@ -7895,42 +8055,45 @@ async def run_pipeline_v2(
 
 
 def _run_pipeline_v2_task(job_id: str, request: PipelineConfigRequest, org_id: str) -> None:
-    try:
-        docs = [{"filename": d.filename, "content": d.content} for d in request.documents] if request.documents else None
-        pipeline = InsurancePipeline(org_id=org_id, use_llm=request.use_llm)
-        result = pipeline.run(
-            acord_xml=request.acord_xml,
-            inspection_reports=request.inspection_reports,
-            supplemental_docs=request.supplemental_docs,
-            json_payload=request.json_payload,
-            loss_run=request.loss_run,
-            schedule_of_values=request.schedule_of_values,
-            documents=docs,
-            pdf_paths=request.pdf_paths,
-            bundle_id=request.bundle_id or job_id,
-            funnel=request.funnel,
-            skip_appetite_filter=request.skip_appetite_filter,
-            skip_oracles=request.skip_oracles,
-            skip_portfolio=request.skip_portfolio,
-            skip_reinsurance=request.skip_reinsurance,
-            skip_core_integration=request.skip_core_integration,
-        )
+    from insureflow.tasks.dispatch import in_process_job_slot
 
-        if request.create_broker_share and result.get("bundle_id"):
-            from insureflow.webhooks.dispatcher import webhook_dispatcher
-
-            token = webhook_dispatcher.create_broker_share(
-                bundle_id=result["bundle_id"],
-                org_id=org_id,
-                broker_name=result.get("broker_name", ""),
+    with in_process_job_slot():
+        try:
+            docs = [{"filename": d.filename, "content": d.content} for d in request.documents] if request.documents else None
+            pipeline = InsurancePipeline(org_id=org_id, use_llm=request.use_llm)
+            result = pipeline.run(
+                acord_xml=request.acord_xml,
+                inspection_reports=request.inspection_reports,
+                supplemental_docs=request.supplemental_docs,
+                json_payload=request.json_payload,
+                loss_run=request.loss_run,
+                schedule_of_values=request.schedule_of_values,
+                documents=docs,
+                pdf_paths=request.pdf_paths,
+                bundle_id=request.bundle_id or job_id,
+                funnel=request.funnel,
+                skip_appetite_filter=request.skip_appetite_filter,
+                skip_oracles=request.skip_oracles,
+                skip_portfolio=request.skip_portfolio,
+                skip_reinsurance=request.skip_reinsurance,
+                skip_core_integration=request.skip_core_integration,
             )
-            result["broker_status_token"] = token
-            result["broker_status_url"] = f"/broker/status/{token}"
 
-        job_store.set(INSURANCE_NS, job_id, {"status": "completed", "results": result}, org_id=org_id)
-    except Exception as exc:
-        logger.exception("Pipeline v2 run failed")
-        job_store.set(INSURANCE_NS, job_id, {"status": "failed", "error": str(exc)}, org_id=org_id)
+            if request.create_broker_share and result.get("bundle_id"):
+                from insureflow.webhooks.dispatcher import webhook_dispatcher
+
+                token = webhook_dispatcher.create_broker_share(
+                    bundle_id=result["bundle_id"],
+                    org_id=org_id,
+                    broker_name=result.get("broker_name", ""),
+                )
+                result["broker_status_token"] = token
+                result["broker_status_url"] = f"/broker/status/{token}"
+
+            job_store.set(INSURANCE_NS, job_id, {"status": "completed", "results": result}, org_id=org_id)
+        except Exception as exc:
+            logger.exception("Pipeline v2 run failed")
+            job_store.set(INSURANCE_NS, job_id, {"status": "failed", "error": str(exc)}, org_id=org_id)
 
 
 class DeepDiveRequest(BaseModel):
@@ -8550,6 +8713,7 @@ async def run_pipeline_row_level(
     current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
     """Pipeline run with enforced org isolation — jobs always scoped to caller's org."""
+    _reject_oversized_inline_documents(req.documents, endpoint="/v2/pipeline/run", org_id=current.org_id)
     job_id = f"job-{uuid.uuid4().hex[:12]}"
     job_store.set(INSURANCE_NS, job_id, {"status": "processing"}, org_id=current.org_id)
     from insureflow.tasks.dispatch import send_pipeline_task, should_use_celery

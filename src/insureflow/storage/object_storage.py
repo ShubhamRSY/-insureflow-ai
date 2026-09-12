@@ -62,6 +62,7 @@ def presign_upload(
     filename: str,
     content_type: str = "",
     max_bytes: int = MAX_UPLOAD_BYTES,
+    prefix: str = "draft-uploads",
 ) -> dict[str, Any]:
     """Return a presigned POST the browser can submit the file to directly.
 
@@ -69,12 +70,17 @@ def presign_upload(
     content-length-range condition — an oversized upload is rejected by S3
     before a single byte reaches this application, so the server never has
     to trust the client's claimed size.
+
+    ``prefix`` namespaces the key by caller (``draft-uploads`` for the
+    insurance draft-bundle flow, ``mortgage-uploads`` for mortgage) — callers
+    that later validate ownership (e.g. ``main._reject_oversized_inline_documents``)
+    check the storage key starts with ``{prefix}/{org_id}/``.
     """
     bucket = _bucket()
     if not bucket:
         raise ConnectionError("Object storage not configured — set S3_UPLOADS_BUCKET (or S3_SUBMISSIONS_BUCKET)")
 
-    key = f"draft-uploads/{org_id}/{bundle_id}/{uuid.uuid4().hex[:12]}-{Path(filename).name}"
+    key = f"{prefix}/{org_id}/{bundle_id}/{uuid.uuid4().hex[:12]}-{Path(filename).name}"
     conditions: list[Any] = [["content-length-range", 0, max_bytes]]
     fields: dict[str, str] = {}
     if content_type:
@@ -111,16 +117,26 @@ def head_object(storage_key: str) -> dict[str, Any] | None:
     return {"size_bytes": int(resp.get("ContentLength") or 0), "content_type": str(resp.get("ContentType") or "")}
 
 
-def download_object_bytes(storage_key: str) -> bytes:
+def download_object_bytes(storage_key: str, *, max_bytes: int = MAX_PROCESSABLE_BYTES) -> bytes:
     """Stream an uploaded object down to bytes at ingestion time.
 
     Called once per document by the loader, not once per bundle — memory use
     stays bounded by the size of whichever single file is being processed
     right now, not the sum of everything in the bundle.
+
+    Enforces ``max_bytes`` itself rather than trusting every caller to have
+    already checked — the loader checks size against ``MAX_PROCESSABLE_BYTES``
+    before calling this (to produce a friendly "needs manual review" message),
+    but that check living only in one caller means a future caller that skips
+    it would silently buffer an arbitrarily large object into memory.
     """
     bucket = _bucket()
     if not bucket:
         raise ConnectionError("Object storage not configured — set S3_UPLOADS_BUCKET (or S3_SUBMISSIONS_BUCKET)")
+    meta = head_object(storage_key)
+    size = int((meta or {}).get("size_bytes") or 0)
+    if size > max_bytes:
+        raise ValueError(f"Object {storage_key} is {size:,} bytes, exceeds the {max_bytes:,}-byte processing limit")
     buf = io.BytesIO()
     _client().download_fileobj(bucket, storage_key, buf)
     return buf.getvalue()

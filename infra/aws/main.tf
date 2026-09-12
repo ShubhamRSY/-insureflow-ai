@@ -653,6 +653,9 @@ resource "aws_ecs_service" "api" {
 }
 
 # Celery worker — same image, no ALB. This is the orchestration bus (not Temporal).
+# Handles the default queues only — pipeline-large has its own dedicated
+# task definition/service below so a burst of GB-scale submissions can't eat
+# into the CPU/memory this pool needs for normal-sized traffic.
 resource "aws_ecs_task_definition" "worker" {
   family                   = "${local.name}-worker"
   requires_compatibilities = ["FARGATE"]
@@ -695,6 +698,62 @@ resource "aws_ecs_service" "worker" {
   cluster         = aws_ecs_cluster.main.id
   task_definition = aws_ecs_task_definition.worker.arn
   desired_count   = var.ecs_worker_desired_count
+  launch_type     = "FARGATE"
+  network_configuration {
+    subnets          = aws_subnet.private[*].id
+    security_groups  = [aws_security_group.ecs.id]
+    assign_public_ip = false
+  }
+  tags = local.tags
+}
+
+# Dedicated pool for dispatch.LARGE_FILE_QUEUE ("pipeline-large") — see
+# tasks/dispatch.py for the routing decision (any submission with an S3
+# presigned/s3_ref document lands here instead of the default worker).
+# Bigger memory per task, lower concurrency: each task is heavier (a
+# near-200MB document fully buffered for OCR), not more numerous.
+resource "aws_ecs_task_definition" "worker_large" {
+  family                   = "${local.name}-worker-large"
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+  cpu                      = var.ecs_worker_large_cpu
+  memory                   = var.ecs_worker_large_memory
+  execution_role_arn       = aws_iam_role.ecs_exec.arn
+  task_role_arn            = aws_iam_role.ecs_task.arn
+  container_definitions = jsonencode([
+    {
+      name      = "worker-large"
+      image     = var.container_image
+      essential = true
+      command   = ["celery", "-A", "insureflow.tasks.celery_app", "worker", "-Q", "pipeline-large", "-l", "info", "--concurrency=1"]
+      environment = [
+        { name = "BANK_MODE", value = "true" },
+        { name = "ENVIRONMENT", value = var.environment },
+        { name = "AWS_SECRETS_ARN", value = aws_secretsmanager_secret.app.arn },
+        { name = "AWS_REGION", value = var.aws_region },
+        { name = "CLOUDWATCH_LOGS", value = "true" },
+        { name = "SERVICE_NAME", value = "insureflow-worker-large" },
+        { name = "INSURANCE_USE_CELERY", value = "true" },
+        { name = "JOB_STORE_BACKEND", value = "redis" }
+      ]
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          awslogs-group         = aws_cloudwatch_log_group.api.name
+          awslogs-region        = var.aws_region
+          awslogs-stream-prefix = "worker-large"
+        }
+      }
+    }
+  ])
+  tags = local.tags
+}
+
+resource "aws_ecs_service" "worker_large" {
+  name            = "${local.name}-worker-large"
+  cluster         = aws_ecs_cluster.main.id
+  task_definition = aws_ecs_task_definition.worker_large.arn
+  desired_count   = var.ecs_worker_large_desired_count
   launch_type     = "FARGATE"
   network_configuration {
     subnets          = aws_subnet.private[*].id

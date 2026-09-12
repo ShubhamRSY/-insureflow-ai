@@ -17,11 +17,38 @@ import logging
 import os
 import threading
 import time
+from collections.abc import Iterator
+from contextlib import contextmanager
 from typing import Any
 
 logger = logging.getLogger(__name__)
 
 _BROKER_ENVS = ("REDIS_URL", "CELERY_BROKER_URL")
+
+# A submission is routed here instead of the default "pipeline" queue once it
+# has any document uploaded via the large-file (S3 presigned) path — see
+# object_storage.py. Keeping these on their own queue means a burst of GB-scale
+# submissions queues up behind each other, not behind (or in front of) the
+# fast, small submissions that make up most day-to-day traffic. A worker must
+# actually be listening on this queue (``-Q ...,pipeline-large``) or jobs sent
+# here just sit unclaimed — see docker-compose.yml / infra/aws/main.tf.
+LARGE_FILE_QUEUE = "pipeline-large"
+
+# The default per-task time limits (celery_app.py) assume a normal, fast
+# submission. A near-200MB (MAX_PROCESSABLE_BYTES) document being OCR'd can
+# plausibly run long past that, so large-file jobs get a longer leash instead
+# of being SIGKILL'd mid-run.
+_LARGE_FILE_SOFT_TIME_LIMIT = 1700
+_LARGE_FILE_TIME_LIMIT = 1800
+
+# Bounds how many pipeline/mortgage runs execute inside the API process at
+# once. Only matters when Celery is unavailable and jobs fall back to
+# BackgroundTasks (see should_use_celery) — without a cap, a burst of large
+# submissions during a broker outage could spawn unboundedly many concurrent
+# OCR/LLM runs in the same process that's serving API traffic, competing with
+# it for memory/CPU instead of just running slower.
+_MAX_INPROCESS_JOBS = int(os.getenv("INSURANCE_MAX_INPROCESS_JOBS", "3"))
+_inprocess_job_semaphore = threading.BoundedSemaphore(_MAX_INPROCESS_JOBS)
 
 _probe_lock = threading.Lock()
 _celery_available: bool | None = None
@@ -89,19 +116,41 @@ def should_use_celery(requested: bool | None = None) -> bool:
     return broker_reachable()
 
 
+def _has_large_file_document(request_data: dict[str, Any]) -> bool:
+    """True when any document in the request was uploaded via the S3
+    presigned path (``encoding: "s3_ref"``) rather than inlined as base64 —
+    that path only exists for files over the 25MB inline cap, so its mere
+    presence is a cheap, no-I/O signal that this submission is "large"."""
+    for doc in request_data.get("documents") or []:
+        if isinstance(doc, dict) and doc.get("encoding") == "s3_ref":
+            return True
+    return False
+
+
 def send_pipeline_task(job_id: str, request_data: dict[str, Any], org_id: str) -> str:
-    """Dispatch an insurance pipeline job to the ``pipeline`` Celery queue.
+    """Dispatch an insurance pipeline job to a Celery queue.
+
+    Large-file submissions (any document uploaded via S3 presigned upload)
+    are routed to ``LARGE_FILE_QUEUE`` with an extended time limit instead of
+    the default ``pipeline`` queue, so they queue and time out independently
+    of the small, fast submissions most traffic consists of.
 
     Returns the Celery task id. Raises on broker/serialization failure so the
     caller can fall back to in-process execution.
     """
     from insureflow.tasks.celery_app import celery_app
 
+    large = _has_large_file_document(request_data)
+    queue = LARGE_FILE_QUEUE if large else "pipeline"
+    extra: dict[str, Any] = {"soft_time_limit": _LARGE_FILE_SOFT_TIME_LIMIT, "time_limit": _LARGE_FILE_TIME_LIMIT} if large else {}
+
     async_result = celery_app.send_task(
         "insureflow.tasks.pipeline_tasks.run_pipeline",
         args=[job_id, request_data, org_id],
-        queue="pipeline",
+        queue=queue,
+        **extra,
     )
+    _observe_dispatch(queue, "celery")
     return str(async_result.id)
 
 
@@ -114,4 +163,58 @@ def send_mortgage_task(job_id: str, request_data: dict[str, Any], org_id: str) -
         args=[job_id, request_data, org_id],
         queue="mortgage",
     )
+    _observe_dispatch("mortgage", "celery")
     return str(async_result.id)
+
+
+def _observe_dispatch(queue: str, backend: str) -> None:
+    try:
+        from insureflow.observability.prometheus_metrics import observe_pipeline_dispatch
+
+        observe_pipeline_dispatch(queue, backend)
+    except Exception:
+        pass
+
+
+def _slot_acquired() -> None:
+    try:
+        from insureflow.observability.prometheus_metrics import inprocess_job_slot_acquired
+
+        inprocess_job_slot_acquired()
+    except Exception:
+        pass
+
+
+def _slot_released() -> None:
+    try:
+        from insureflow.observability.prometheus_metrics import inprocess_job_slot_released
+
+        inprocess_job_slot_released()
+    except Exception:
+        pass
+
+
+@contextmanager
+def in_process_job_slot() -> Iterator[None]:
+    """Throttle in-process pipeline execution to ``INSURANCE_MAX_INPROCESS_JOBS``
+    concurrent runs (default 3).
+
+    Wrap the body of every BackgroundTasks fallback executor (pipeline,
+    pipeline v2, mortgage) in this. Acquiring blocks rather than rejecting, so
+    excess jobs queue up in the threadpool instead of being dropped — the
+    same backpressure a small Celery worker pool would give you, applied to
+    the in-process fallback path.
+
+    Reports through ``rytera_pipeline_dispatch_total{queue="in_process",...}``
+    and ``rytera_inprocess_job_slots_in_use`` so a burst of in-process
+    fallback runs (e.g. during a broker outage) is visible on a dashboard,
+    not just inferred after the fact from CPU/memory graphs.
+    """
+    _observe_dispatch("in_process", "in_process")
+    _inprocess_job_semaphore.acquire()
+    try:
+        _slot_acquired()
+        yield
+    finally:
+        _slot_released()
+        _inprocess_job_semaphore.release()
