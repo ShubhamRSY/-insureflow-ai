@@ -408,6 +408,7 @@ class InsurancePipeline:
         if documents:
             bundle = self.doc_loader.load_from_documents(documents, bundle_id=bid)
             ocr_count = sum(1 for d in bundle.unstructured if d.extracted_fields.get("ocr_engine"))
+            oversized_docs = [d.submission_id for d in bundle.unstructured if any(f.value == "unprocessed_oversized" for f in d.extracted_fields.get("ocr_engine", []))]
         else:
             bundle = self.legacy_loader.load_bundle(
                 acord_xml=acord_xml,
@@ -420,6 +421,7 @@ class InsurancePipeline:
                 bundle_id=bid,
             )
             ocr_count = len(pdf_paths or [])
+            oversized_docs = []
 
         audit.log(
             PipelineEvent.STRUCTURED_PARSE_COMPLETE,
@@ -1045,6 +1047,25 @@ class InsurancePipeline:
                 )
             memo.human_review_required = True
             memo.human_review_reasons.append(f"{len(contradicted_fields)} field(s) have contradicting values across source documents")
+
+        if oversized_docs:
+            from insureflow.models.agents import Finding, RiskSeverity, UWDecision
+
+            memo.human_review_required = True
+            memo.human_review_reasons.append(f"{len(oversized_docs)} document(s) exceeded the auto-processing size limit and were not parsed: {', '.join(oversized_docs)}")
+            memo.key_findings.append(
+                Finding(
+                    title="Document too large to auto-process",
+                    description=(
+                        f"{len(oversized_docs)} document(s) exceeded the automatic-processing size limit and were kept as a reference only — "
+                        "no content was extracted. Review the original file directly."
+                    ),
+                    severity=RiskSeverity.HIGH,
+                    category="data_quality",
+                )
+            )
+            if memo.decision not in (UWDecision.DECLINE, UWDecision.REFER):
+                memo.decision = UWDecision.REFER
 
         # ── 6a. Apply deferred critical oracle failures to memo ──
         if pending_oracle_failures:

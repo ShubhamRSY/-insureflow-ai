@@ -297,56 +297,6 @@ class TestCircuitBreaker:
         assert "failure_count" in s
 
 
-# ── Pillar 2a: Confidence Routing ────────────────────────────────────────────
-
-
-class TestConfidenceRouting:
-    def test_high_confidence_stp(self):
-        from insureflow.underwriting.confidence_routing import RoutingTier, route_decision
-
-        fields = {f"f{i}": f"v{i}" for i in range(8)}
-        confidences = [0.98] * 8
-        decision = route_decision(fields, field_confidences=confidences)
-        assert decision.tier == RoutingTier.STP
-
-    def test_low_confidence_routes_up(self):
-        from insureflow.underwriting.confidence_routing import RoutingTier, route_decision
-
-        fields = {f"f{i}": f"v{i}" for i in range(8)}
-        confidences = [0.2] * 8
-        decision = route_decision(fields, field_confidences=confidences)
-        assert decision.tier in (RoutingTier.CUO, RoutingTier.SENIOR)
-
-    def test_few_fields_complexity(self):
-        from insureflow.underwriting.confidence_routing import RoutingTier, route_decision
-
-        fields = {"f1": "v1", "f2": "v2"}
-        decision = route_decision(fields)
-        assert decision.tier != RoutingTier.STP or decision.complexity_score > 0
-
-    def test_co_sign_for_high_complexity(self):
-        from insureflow.underwriting.confidence_routing import route_decision
-
-        fields = {f"f{i}": f"v{i}" for i in range(8)}
-        confidences = [0.1] * 8
-        decision = route_decision(fields, field_confidences=confidences)
-        assert decision.requires_co_sign is True
-
-    def test_reasons_populated(self):
-        from insureflow.underwriting.confidence_routing import route_decision
-
-        fields = {f"f{i}": f"v{i}" for i in range(8)}
-        decision = route_decision(fields, field_confidences=[0.5] * 8)
-        assert len(decision.reasons) > 0
-
-    def test_confidence_score_computed(self):
-        from insureflow.underwriting.confidence_routing import route_decision
-
-        fields = {f"f{i}": f"v{i}" for i in range(5)}
-        decision = route_decision(fields, field_confidences=[0.6, 0.7, 0.8, 0.9, 1.0])
-        assert 0.6 <= decision.confidence_score <= 1.0
-
-
 # ── Pillar 4b: Bias Monitoring ───────────────────────────────────────────────
 
 

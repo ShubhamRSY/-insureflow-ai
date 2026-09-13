@@ -1,9 +1,56 @@
 from __future__ import annotations
 
+from pathlib import Path
 from unittest.mock import patch
 
+from insureflow.audit.store import AuditStore
 from insureflow.ingestion.insurance.loader import InsuranceDocumentLoader
+from insureflow.insurance.pipeline import InsurancePipeline
 from insureflow.storage.object_storage import MAX_PROCESSABLE_BYTES
+
+
+def test_oversized_s3_ref_document_is_tagged_unprocessed() -> None:
+    loader = InsuranceDocumentLoader()
+    with (
+        patch("insureflow.storage.object_storage.head_object", return_value={"size_bytes": 3_000_000_000, "content_type": "application/pdf"}),
+        patch("insureflow.storage.object_storage.download_object_bytes") as mock_download,
+    ):
+        bundle = loader.load_from_documents(
+            [{"filename": "huge.pdf", "content": "draft-uploads/org/bundle/huge.pdf", "encoding": "s3_ref"}],
+            bundle_id="b1",
+        )
+    assert mock_download.called is False
+    tags = [f.value for f in bundle.unstructured[0].extracted_fields.get("ocr_engine", [])]
+    assert "unprocessed_oversized" in tags
+
+
+def test_oversized_document_forces_human_review_in_pipeline(tmp_path: Path) -> None:
+    pipeline = InsurancePipeline(org_id="oversized-test", use_llm=False, audit_store=AuditStore(base_path=tmp_path / "audit"))
+    with (
+        patch("insureflow.storage.object_storage.head_object", return_value={"size_bytes": 3_000_000_000, "content_type": "application/pdf"}),
+        patch("insureflow.storage.object_storage.download_object_bytes") as mock_download,
+    ):
+        result = pipeline.run(
+            bundle_id="oversized-life",
+            insurance_line="life",
+            life_product_id="level_term",
+            life_coverage_id="level_term_10",
+            documents=[
+                {
+                    "filename": "life_application.txt",
+                    "content": (
+                        "Completed life insurance application. Level term life. "
+                        "Applicant age: 40. Sex: male. Face amount: $500000. Non-smoker. "
+                        "Beneficiary Jane Doe DOB 1985-01-01 SSN relationship spouse."
+                    ),
+                },
+                {"filename": "huge_medical_record.pdf", "content": "draft-uploads/org/bundle/huge.pdf", "encoding": "s3_ref"},
+            ],
+        )
+    assert mock_download.called is False
+    assert result["human_review_required"] is True
+    assert result["outcome"] in ("refer", "decline")
+    assert any("exceeded the auto-processing size limit" in reason for reason in result["memo"]["human_review_reasons"])
 
 
 def test_oversized_s3_ref_document_is_flagged_not_downloaded() -> None:

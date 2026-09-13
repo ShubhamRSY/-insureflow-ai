@@ -9,7 +9,7 @@ from insureflow.audit.store import AuditStore
 from insureflow.decisions import normalize_decision
 from insureflow.ingestion.mortgage.loader import MortgageSubmissionLoader
 from insureflow.models.audit import PipelineEvent
-from insureflow.models.mortgage import MortgageBundle, MortgageBundleStatus, ProductLine
+from insureflow.models.mortgage import MortgageBundle, MortgageBundleStatus, MortgageDecision, MortgageFinding, ProductLine
 from insureflow.mortgage.audit import MortgageAuditLogger
 from insureflow.mortgage.bundler import discover_borrower_packages
 from insureflow.mortgage.compliance import MortgageComplianceEngine
@@ -212,6 +212,7 @@ class MortgagePipeline:
 
         llm_doc_count = sum(1 for d in documents if any(f.field_name == "extraction_method" and "llm" in f.value for f in d.extracted_fields.get("extraction_method", [])))
         ocr_doc_count = sum(1 for d in documents if d.extracted_fields.get("ocr_engine"))
+        oversized_docs = [d.document_id for d in documents if any(f.value == "unprocessed_oversized" for f in d.extracted_fields.get("ocr_engine", []))]
 
         if llm_doc_count:
             audit.log(PipelineEvent.EXTRACTION_COMPLETE, f"LLM extraction on {llm_doc_count} document(s)")
@@ -252,6 +253,22 @@ class MortgagePipeline:
 
         progress.start("underwrite", "Underwrite", "Supervisor decision")
         memo = self.supervisor.analyze(bundle)
+        if oversized_docs:
+            memo.human_review_required = True
+            memo.key_findings.append(
+                MortgageFinding(
+                    title="Document too large to auto-process",
+                    description=(
+                        f"{len(oversized_docs)} document(s) exceeded the automatic-processing size limit and were kept as a reference only — "
+                        "no content was extracted. Review the original file directly."
+                    ),
+                    severity="high",
+                    category="data_quality",
+                    document_refs=oversized_docs,
+                )
+            )
+            if memo.decision not in (MortgageDecision.DENY, MortgageDecision.REFER):
+                memo.decision = MortgageDecision.REFER
         bundle.status = MortgageBundleStatus.COMPLETED
         progress.complete("underwrite", detail=memo.decision.value)
 

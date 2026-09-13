@@ -203,7 +203,7 @@ class MortgageSubmissionLoader:
         size = int((meta or {}).get("size_bytes") or 0)
         if size > MAX_PROCESSABLE_BYTES:
             raw = f"[File too large to auto-process: {size:,} bytes exceeds the {MAX_PROCESSABLE_BYTES // (1024 * 1024)}MB automatic-processing limit — needs manual review]"
-            return self.parser.parse(raw, f"{bundle_id}-doc-{index}", source_path=filename, product_line=product_line)
+            return self.parser.parse(raw, f"{bundle_id}-doc-{index}", source_path=filename, product_line=product_line, ocr_engine="unprocessed_oversized")
 
         data = download_object_bytes(storage_key)
         return self.parser.parse_bytes(data, filename, f"{bundle_id}-doc-{index}", product_line=product_line)

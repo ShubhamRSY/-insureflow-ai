@@ -9,7 +9,7 @@ from insureflow.api import app
 from insureflow.audit.store import AuditStore
 from insureflow.ingestion.mortgage.classifier import MortgageDocumentClassifier
 from insureflow.ingestion.mortgage.loader import MortgageSubmissionLoader
-from insureflow.models.mortgage import MortgageDocumentType, ProductLine
+from insureflow.models.mortgage import ExtractedMortgageField, MortgageDocument, MortgageDocumentType, ProductLine
 from insureflow.mortgage.audit import MortgageAuditLogger
 from insureflow.mortgage.bundler import discover_borrower_packages
 from insureflow.mortgage.llm_extractor import MortgageLLMExtractor
@@ -196,6 +196,27 @@ class TestMortgagePipeline:
         assert results["decision"] in ("approve", "refer", "suspend", "deny")
         assert results["audit_trail_entries"] >= 1
         assert "audit_paths" in results
+
+    def test_oversized_document_forces_human_review(self, audit_store: AuditStore) -> None:
+        paths = [
+            str(HOME / "income" / "w2_2024_john_thompson.txt"),
+            str(HOME / "credit_debt" / "credit_report_john_thompson.txt"),
+        ]
+        pipeline = MortgagePipeline(use_llm=False, audit_store=audit_store)
+        documents = pipeline.loader.load_from_paths(paths, bundle_id="test-oversized", product_line=ProductLine.RESIDENTIAL_MORTGAGE)
+        documents.append(
+            MortgageDocument(
+                document_id="test-oversized-doc-2",
+                document_type=MortgageDocumentType.UNKNOWN,
+                product_line=ProductLine.RESIDENTIAL_MORTGAGE,
+                raw_text="[File too large to auto-process: 300,000,000 bytes exceeds the 200MB automatic-processing limit — needs manual review]",
+                extracted_fields={"ocr_engine": [ExtractedMortgageField(field_name="ocr_engine", value="unprocessed_oversized", confidence=1.0)]},
+            )
+        )
+        results = pipeline.run_documents(documents, bundle_id="test-oversized", product_line=ProductLine.RESIDENTIAL_MORTGAGE)
+        assert results["status"] == "completed"
+        assert results["human_review_required"] is True
+        assert results["decision"] == "refer"
 
     def test_per_borrower_processing(self, audit_store: AuditStore) -> None:
         results = MortgagePipeline(use_llm=False, audit_store=audit_store).run_per_borrower(str(HOME))
