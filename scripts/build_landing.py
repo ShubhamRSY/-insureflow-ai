@@ -329,16 +329,16 @@ MODAL = """  <div class="modal-overlay" id="demo-modal" role="dialog" aria-modal
               Send request
               <svg class="ico sm" aria-hidden="true"><use href="#i-send"/></svg>
             </button>
-            <a class="btn btn-ghost" href="/dashboard">Try dashboard</a>
+            <a class="btn btn-ghost" href="/dashboard/signup">Try dashboard</a>
           </div>
         </form>
-        <p class="form-note">Prefer email? <a href="mailto:hello@ryterainc.com">hello@ryterainc.com</a> &middot; or jump straight to the <a href="/dashboard">live dashboard</a></p>
+        <p class="form-note">Prefer email? <a href="mailto:hello@ryterainc.com">hello@ryterainc.com</a> &middot; or jump straight to the <a href="/dashboard/signup">live dashboard</a></p>
       </div>
       <div class="modal-success" id="modal-success">
         <span class="ok-ico"><svg class="ico"><use href="#i-check-circle"/></svg></span>
         <h3>Request received</h3>
         <p>Thanks &mdash; our team will reach out within one business day to schedule your walkthrough.</p>
-        <a class="btn btn-ghost" href="/dashboard">Explore the dashboard now</a>
+        <a class="btn btn-ghost" href="/dashboard/signup">Explore the dashboard now</a>
       </div>
     </div>
   </div>
@@ -445,7 +445,7 @@ def sub_page_hero(label: str, h1: str, lead: str, primary: str = "book", primary
     if primary == "book":
         btns.append('      <button type="button" class="btn btn-primary" id="open-demo-hero">Book a demo</button>')
     elif primary == "dashboard":
-        btns.append('      <a class="btn btn-primary" href="/dashboard">Open the live dashboard</a>')
+        btns.append('      <a class="btn btn-primary" href="/dashboard/signup">Open the live dashboard</a>')
     if secondary and secondary_label:
         btns.append(f'      <a class="btn btn-ghost" href="{secondary}">{secondary_label}</a>')
     cta = ""
@@ -503,7 +503,7 @@ def pricing_section() -> str:
               <li>{check} Subjectivities &amp; bind-readiness checklist</li>
               <li>{check} Encrypted audit trail &middot; bind off</li>
             </ul>
-            <a class="btn btn-ghost" href="/dashboard">Get started free</a>
+            <a class="btn btn-ghost" href="/dashboard/signup">Get started free</a>
           </article>
           <article class="price-card">
             <p class="price-tier">Desk</p>
@@ -605,7 +605,7 @@ def pricing_main() -> str:
             "You pay for production — not pretend data",
             "Pilot is free and honest: practice outside data, a demo rate book, and nothing issued. Desk, Book, and Enterprise refuse to quote unless live oracles, your filed rates, and PAS bind without re-key are actually connected.",
             primary="book",
-            secondary="/dashboard",
+            secondary="/dashboard/signup",
             secondary_label="Open the live dashboard",
         )
         + "\n\n"
@@ -755,7 +755,7 @@ def contact_section() -> str:
           <p>Bring one messy broker pack. We run it in practice mode &mdash; nothing binds until you say so. You still sign. We show you the memo, the math, and the paper trail.</p>
           <div class="cta" style="justify-content:center;">
             <button type="button" class="btn btn-primary" id="open-demo-contact">Book a demo</button>
-            <a class="btn btn-ghost" href="/dashboard">Open the live dashboard</a>
+            <a class="btn btn-ghost" href="/dashboard/signup">Open the live dashboard</a>
           </div>
           <p style="margin-top:1.5rem;margin-bottom:0;font-size:.875rem">
             Prefer email? <a class="contact-email" href="mailto:hello@ryterainc.com">hello@ryterainc.com</a>
@@ -1096,7 +1096,7 @@ def hero_home() -> str:
                 <svg class="ico sm" aria-hidden="true"><use href="#i-search"/></svg>
                 Underwriting Glossary
               </button>
-              <a class="btn btn-ghost" href="/dashboard">Open Live Dashboard</a>
+              <a class="btn btn-ghost" href="/dashboard/signup">Start free trial</a>
             </div>
             <div class="hero-audience" aria-label="Built for">
               <span class="audience-pill"><svg class="ico sm"><use href="#i-building"/></svg> Commercial Insurance</span>
@@ -1110,7 +1110,7 @@ def hero_home() -> str:
             <div class="mockup" aria-hidden="true">
               <div class="mock-bar">
                 <span class="mock-dots"><i></i><i></i><i></i></span>
-                <span class="mock-url"><svg class="ico"><use href="#i-lock"/></svg> app.rytera.ai/dashboard</span>
+                <span class="mock-url"><svg class="ico"><use href="#i-lock"/></svg> app.ryterainc.com/dashboard</span>
               </div>
               <div class="mock-body">
                 <div class="mock-side">
@@ -1325,7 +1325,7 @@ def desks_section() -> str:
         <div class="cta reveal" style="margin-top:2rem">
           <a class="btn btn-primary btn-sm" href="/underwriting">Explore All Lines &amp; Desks <svg class="ico sm" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
           <a class="btn btn-ghost btn-sm" href="/platform">See the platform</a>
-          <a class="btn btn-ghost btn-sm" href="/dashboard">Launch Interactive Desk</a>
+          <a class="btn btn-ghost btn-sm" href="/dashboard/signup">Launch Interactive Desk</a>
         </div>
       </section>"""
 
@@ -2055,7 +2055,7 @@ def technology_main() -> str:
             "Technology",
             "Rules first. AI last. Always counted.",
             "Most steps are ordinary software (no AI bill). A language model is the last resort, counted, and never used to invent a fact. That is Zero Token Architecture &mdash; said simply: we do not pay an AI to do what a rule already can.",
-            secondary="/dashboard",
+            secondary="/dashboard/signup",
             secondary_label="Open the live dashboard",
         )
         + "\n\n"
@@ -2183,7 +2183,7 @@ def underwriting_main() -> str:
           <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-book"/></svg></span><h3>Industry starting rates</h3><p>ISO, AAIS, NCCI, and Surety Association publish loss costs &mdash; a starting price for claims. You add your own expenses and profit. We do not skip that and invent a number.</p></div>
         </div>
         <div class="cta" style="margin-top:1.5rem">
-          <a class="btn btn-primary" href="/dashboard">
+          <a class="btn btn-primary" href="/dashboard/signup">
             Open ratemaking dashboard
             <svg class="ico sm" aria-hidden="true"><use href="#i-arrow-right"/></svg>
           </a>
@@ -2251,7 +2251,7 @@ def integrations_main() -> str:
             "Integrations",
             "Connects to the systems you already use",
             "One Connect &amp; pull hub meets the file where it already lives &mdash; email, folders, the policy system, CRM, and outside data checks. Real when wired, honest demo when not.",
-            secondary="/dashboard",
+            secondary="/dashboard/signup",
             secondary_label="Open the live dashboard",
         )
         + "\n\n"
@@ -2298,7 +2298,7 @@ def company_main() -> str:
             "Rytera Inc.",
             "We build underwriting software for the people who say yes or no &mdash; a person stays in charge, ordinary software does most of the work, and you can hand the paper trail to a regulator.",
             primary="book",
-            secondary="/dashboard",
+            secondary="/dashboard/signup",
             secondary_label="Open the live dashboard",
         )
         + "\n\n"
