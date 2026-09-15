@@ -53,6 +53,7 @@ data/*
 !data/insurance/
 data/insurance/panels/
 frontend/data/
+src/insureflow/data/resubmit_queue/*.jsonl
 # Keep schema docs for real training datasets (CSVs are regenerated locally)
 ml_data/**
 !ml_data/README.md

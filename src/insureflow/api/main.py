@@ -1578,19 +1578,53 @@ async def doc_quality_check(
     return result
 
 
+def _bundle_owned_by_org(bundle_id: str, org_id: str) -> bool:
+    """Whether an insurance bundle/job resolves under the given org (IDOR guard)."""
+    if job_store.get(INSURANCE_NS, bundle_id, org_id=org_id):
+        return True
+    from insureflow.privacy.archive import hydrate_job_from_archive
+
+    return bool(hydrate_job_from_archive(bundle_id, org_id=org_id))
+
+
 @app.get("/api/resubmit/pending")
-async def resubmit_pending(bundle_id: str = "") -> dict[str, Any]:
+async def resubmit_pending(
+    bundle_id: str = "",
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
     """Get pending resubmit requests, optionally filtered by bundle."""
     from insureflow.ingestion.resubmit import ResubmitManager
 
+    if bundle_id and not _bundle_owned_by_org(bundle_id, current.org_id):
+        raise HTTPException(status_code=404, detail="Bundle not found")
+
     manager = ResubmitManager()
-    return {"pending": manager.get_pending(bundle_id=bundle_id)}
+    pending = manager.get_pending(bundle_id=bundle_id)
+    if not bundle_id:
+        owned: dict[str, bool] = {}
+        filtered = []
+        for record in pending:
+            rec_bundle = record.get("bundle_id", "")
+            if rec_bundle not in owned:
+                owned[rec_bundle] = _bundle_owned_by_org(rec_bundle, current.org_id)
+            if owned[rec_bundle]:
+                filtered.append(record)
+        pending = filtered
+    return {"pending": pending}
 
 
 @app.post("/api/resubmit/{bundle_id}/waive")
-async def resubmit_waive(bundle_id: str, filename: str, reason: str = "") -> dict[str, Any]:
+async def resubmit_waive(
+    bundle_id: str,
+    filename: str,
+    reason: str = "",
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
     """Waive a resubmit request — UW decides to proceed without the document."""
     from insureflow.ingestion.resubmit import ResubmitManager
+
+    if not _bundle_owned_by_org(bundle_id, current.org_id):
+        raise HTTPException(status_code=404, detail="Bundle not found")
 
     manager = ResubmitManager()
     success = manager.mark_waived(bundle_id, filename, reason)
@@ -1598,9 +1632,15 @@ async def resubmit_waive(bundle_id: str, filename: str, reason: str = "") -> dic
 
 
 @app.get("/api/resubmit/{bundle_id}/summary")
-async def resubmit_summary(bundle_id: str) -> dict[str, Any]:
+async def resubmit_summary(
+    bundle_id: str,
+    current: TokenData = Depends(require_role(Role.VIEWER)),
+) -> dict[str, Any]:
     """Resubmit status summary for a bundle."""
     from insureflow.ingestion.resubmit import ResubmitManager
+
+    if not _bundle_owned_by_org(bundle_id, current.org_id):
+        raise HTTPException(status_code=404, detail="Bundle not found")
 
     manager = ResubmitManager()
     return manager.get_resubmit_summary(bundle_id)
