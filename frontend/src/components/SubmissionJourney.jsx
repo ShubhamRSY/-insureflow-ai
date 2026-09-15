@@ -11,6 +11,7 @@ import { getJourneyContext } from '../lib/pipelineJourney';
 import { insuranceLineLabel } from '../lib/insuranceLines';
 import SimilarPriors from './SimilarPriors';
 import { asList, displayText, fmtFixed, safeLower } from '../lib/safe';
+import { toast } from '../lib/toast';
 
 function fmtTimestamp(iso) {
   if (!iso) return '';
@@ -1111,7 +1112,7 @@ export default function SubmissionJourney({ job }) {
       });
       setBrokerRequest(res);
     } catch (e) {
-      alert(e.message);
+      toast.error(e.message);
     } finally {
       setRequesting(false);
     }
@@ -1122,16 +1123,16 @@ export default function SubmissionJourney({ job }) {
       await endpoints.resolveCheckpoint(ctx.bundleId, checkpointId, action);
       setCheckpoints((prev) => asList(prev).map((c) => (c.id === checkpointId ? { ...c, status: action === 'approve' ? 'approved' : 'rejected' } : c)));
     } catch (e) {
-      alert(e.message);
+      toast.error(e.message);
     }
   };
 
   const handleDispatchLC = async () => {
     try {
       const r = await endpoints.dispatchLossControl(ctx.bundleId, 'Requested from submission journey');
-      alert(`Loss control scheduled: ${r.dispatch_id}`);
+      toast.success(`Loss control scheduled: ${r.dispatch_id}`);
     } catch (e) {
-      alert(e.message);
+      toast.error(e.message);
     }
   };
 

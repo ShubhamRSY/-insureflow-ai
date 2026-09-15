@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Database, RefreshCw, Plus, Trash2 } from 'lucide-react';
 import { EmptyState, Badge } from '../components/ui';
 import { endpoints } from '../lib/api';
+import { toast } from '../lib/toast';
 
 export default function WebhooksPage() {
   const [webhooks, setWebhooks] = useState([]);
@@ -44,7 +45,7 @@ export default function WebhooksPage() {
       setForm({ url: '', events: 'mortgage.completed' });
       await load();
     } catch (e) {
-      alert(e.message);
+      toast.error(e.message);
     }
   };
 
@@ -57,7 +58,7 @@ export default function WebhooksPage() {
       }
       await load();
     } catch (e) {
-      alert(e.message);
+      toast.error(e.message);
     }
   };
 

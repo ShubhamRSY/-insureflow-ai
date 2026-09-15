@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { Badge, EmptyState } from '../components/ui';
 import { endpoints } from '../lib/api';
+import { toast } from '../lib/toast';
 
 function fmtDate(value) {
   if (!value) return '—';
@@ -258,7 +259,7 @@ export default function RegistryPage() {
       setForm({ component: 'prompt', key: '', version: '1.0.0', description: '', change_notes: '' });
       await load();
     } catch (err) {
-      alert(err.message);
+      toast.error(err.message);
     }
   };
 
@@ -269,7 +270,7 @@ export default function RegistryPage() {
       else if (action === 'reject') await endpoints.rejectRegistryEntry(id);
       await load();
     } catch (err) {
-      alert(err.message);
+      toast.error(err.message);
     }
   };
 
@@ -278,7 +279,7 @@ export default function RegistryPage() {
       await endpoints.registrySnapshot();
       await load();
     } catch (err) {
-      alert(err.message);
+      toast.error(err.message);
     }
   };
 
@@ -288,7 +289,7 @@ export default function RegistryPage() {
       await endpoints.registryBootstrap();
       await load();
     } catch (err) {
-      alert(err.message);
+      toast.error(err.message);
     } finally {
       setBootstrapping(false);
     }
@@ -299,7 +300,7 @@ export default function RegistryPage() {
       const d = await endpoints.registryDiff(diffA, diffB);
       setDiffData(d);
     } catch (err) {
-      alert(err.message);
+      toast.error(err.message);
     }
   };
 

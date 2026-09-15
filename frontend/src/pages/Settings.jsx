@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { auth, endpoints } from '../lib/api';
 import ThemeToggle from '../components/ThemeToggle';
+import { toast } from '../lib/toast';
 
 const ROLE_BADGE = {
   viewer: 'bg-slate-500/15 text-slate-300',
@@ -34,7 +35,7 @@ export default function SettingsPage({ onLogin, onAuthReset }) {
       onAuthReset?.();
       window.location.href = '/dashboard';
     } catch (e) {
-      alert(e.message);
+      toast.error(e.message);
     }
   };
 

@@ -13,6 +13,7 @@ import ThemeToggle from './ThemeToggle';
 import StateSelector from './StateSelector';
 import ErrorBoundary from './ErrorBoundary';
 import OperatingModeBanner from './OperatingModeBanner';
+import ToastContainer from './Toast';
 
 const nav = [
   { to: '/', icon: LayoutDashboard, label: 'Overview' },
@@ -513,9 +514,10 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
         </main>
 
         <footer className="border-t border-white/[0.06] px-6 py-3 text-center text-xs text-slate-400">
-          Rytera™ · <a href="https://rytera.ai" className="text-slate-500 hover:text-slate-400">rytera.ai</a>
+          Rytera™ · <a href="https://ryterainc.com" className="text-slate-500 hover:text-slate-400">ryterainc.com</a>
           {' · '}Rytera is a trademark of Rytera, Inc. All rights reserved.
         </footer>
+        <ToastContainer />
       </div>
     </div>
   );

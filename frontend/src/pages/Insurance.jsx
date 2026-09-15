@@ -8,6 +8,7 @@ import {
 import { INSURANCE_SECTIONS, insuranceSectionAccent } from '../lib/insuranceSections';
 import { buildJobRow, queueItemsByBundleId } from '../lib/submissions';
 import { Badge, ScoreBadge, PriorityBadge, AssigneeAvatar } from '../components/ui';
+import { toast } from '../lib/toast';
 
 const ICONS = {
   HeartPulse, Stethoscope, Umbrella, Briefcase, Leaf, Landmark,
@@ -202,7 +203,7 @@ export default function InsurancePage({ jobs, queueStats, onRefresh, onDeleteJob
                             try {
                               await onDeleteJob(r.bundleId);
                             } catch (err) {
-                              window.alert(err.message || 'Could not delete this job');
+                              toast.error(err.message || 'Could not delete this job');
                             }
                           }}
                           className="rounded-lg p-1.5 text-red-400 hover:bg-red-500/10"

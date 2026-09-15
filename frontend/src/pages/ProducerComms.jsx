@@ -3,6 +3,7 @@ import { useOutletContext } from 'react-router-dom';
 import { MessagesSquare, RefreshCw, CheckCircle2, Clock, Send, Shield, User } from 'lucide-react';
 import { Badge, EmptyState } from '../components/ui';
 import { endpoints } from '../lib/api';
+import { toast } from '../lib/toast';
 
 function fmtDateTime(value) {
   if (!value) return '—';
@@ -95,7 +96,7 @@ export default function ProducerCommsPage() {
       await endpoints.acknowledgeNotification(n.bundle_id, n.notification_id, user?.username || 'broker');
       await load();
     } catch (e) {
-      alert(e.message);
+      toast.error(e.message);
     } finally {
       setBusy('');
     }

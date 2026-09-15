@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { Badge } from './ui';
 import { endpoints } from '../lib/api';
+import { toast } from '../lib/toast';
 
 const SEVERITY_CONFIG = {
   critical: { icon: AlertCircle, cls: 'text-red-400 bg-red-500/10 ring-red-500/20' },
@@ -92,7 +93,7 @@ export default function AuditTrailViewer({ data, bundleId, onClose }) {
       const r = await endpoints.auditPackage(bundleId);
       setExportResult(r);
     } catch (e) {
-      alert(e.message || 'Export failed');
+      toast.error(e.message || 'Export failed');
     } finally {
       setExporting(false);
     }

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Badge, EmptyState } from '../components/ui';
 import { ClipboardCheck, Shield, Search, FileCheck } from 'lucide-react';
 import { endpoints } from '../lib/api';
+import { toast } from '../lib/toast';
 
 const REASON_CATEGORIES = [
   { value: 'pricing', label: 'Pricing' },
@@ -29,7 +30,7 @@ export default function WorkflowPage({ pending, onRefresh, authorityData, onOpen
       setForm({ action: 'quote', license_number: '', notes: '', override_reason: '', override_reason_category: 'other', uw_confidence: 'medium' });
       onRefresh();
     } catch (e) {
-      alert(e.message);
+      toast.error(e.message);
     }
   };
 
@@ -88,9 +89,9 @@ export default function WorkflowPage({ pending, onRefresh, authorityData, onOpen
                       <button type="button" onClick={() => { setShowSignOff(id); setForm(f => ({ ...f, action: 'request_info' })); }} className="btn-secondary text-xs">Request info</button>
                       <button type="button" onClick={() => { setShowSignOff(id); setForm(f => ({ ...f, action: 'refer' })); }} className="btn-secondary text-xs">Refer</button>
                       {(p.state === 'approved' || p.state === 'quoted') && (
-                        <button type="button" onClick={async () => { await endpoints.bindPolicy(id).catch(e => alert(e.message)); onRefresh?.(); }} className="rounded-xl px-3 py-1.5 text-xs text-emerald-400 ring-1 ring-emerald-500/30 hover:bg-emerald-500/10"><FileCheck className="h-3 w-3 inline" /> Bind</button>
+                        <button type="button" onClick={async () => { await endpoints.bindPolicy(id).catch(e => toast.error(e.message)); onRefresh?.(); }} className="rounded-xl px-3 py-1.5 text-xs text-emerald-400 ring-1 ring-emerald-500/30 hover:bg-emerald-500/10"><FileCheck className="h-3 w-3 inline" /> Bind</button>
                       )}
-                      <button type="button" onClick={async () => { setDetailBundleId(id); try { const d = await endpoints.workflowDetail(id); setWorkflowDetail(d); } catch (e) { alert(e.message); } }} className="btn-secondary text-xs"><Search className="h-3 w-3 inline" /> Detail</button>
+                      <button type="button" onClick={async () => { setDetailBundleId(id); try { const d = await endpoints.workflowDetail(id); setWorkflowDetail(d); } catch (e) { toast.error(e.message); } }} className="btn-secondary text-xs"><Search className="h-3 w-3 inline" /> Detail</button>
                     </div>
 
                   {isOpen && (

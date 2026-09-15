@@ -5,6 +5,7 @@ import { endpoints, fmtCurrency } from '../lib/api';
 import StageStrip, { stagesFromProgress } from '../components/StageStrip';
 import RunSelector from '../components/RunSelector';
 import { useStateContext } from '../lib/useStateContext';
+import { toast } from '../lib/toast';
 
 function sampleResult(res) {
   return {
@@ -42,7 +43,7 @@ export default function LendingPage({ presets, demoResult, onRunDemo }) {
   }, []);
 
   const loadProducts = async () => {
-    try { setProducts(await endpoints.lendingProducts()); } catch (e) { alert(e.message); }
+    try { setProducts(await endpoints.lendingProducts()); } catch (e) { toast.error(e.message); }
   };
 
   useEffect(() => {

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { FileText, TrendingUp, TrendingDown, AlertTriangle, RefreshCw, Search, Plus, CheckCircle } from 'lucide-react';
 import { StatCard, Badge, EmptyState } from '../components/ui';
 import { endpoints, fmtCurrency } from '../lib/api';
+import { toast } from '../lib/toast';
 
 export default function RenewalDashboard() {
   const [renewals, setRenewals] = useState([]);
@@ -93,7 +94,7 @@ export default function RenewalDashboard() {
               setShowCreate(false);
               setCreateForm({ bundle_id: '', estimated_premium: '', policy_number: '' });
               await load();
-            } catch (e) { alert(e.message); }
+            } catch (e) { toast.error(e.message); }
           }} className="space-y-4">
             <div className="grid grid-cols-3 gap-4">
               <div>
@@ -189,7 +190,7 @@ export default function RenewalDashboard() {
               setShowComplete(null);
               setCompleteForm({ actual_premium: '', notes: '' });
               await load();
-            } catch (e) { alert(e.message); }
+            } catch (e) { toast.error(e.message); }
           }} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>

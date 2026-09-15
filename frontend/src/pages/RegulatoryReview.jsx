@@ -6,6 +6,7 @@ import {
 import { Badge, EmptyState } from '../components/ui';
 import StateRegulatoryPanel from '../components/StateRegulatoryPanel';
 import { api } from '../lib/api';
+import { toast } from '../lib/toast';
 
 function fmtDate(value) {
   if (!value) return '—';
@@ -75,7 +76,7 @@ export default function RegulatoryReview() {
       await api(`/api/regulatory/review/${changelogId}?approved=${approved}`, { method: 'POST' });
       await load();
     } catch (e) {
-      alert(e.message);
+      toast.error(e.message);
     } finally {
       setBusy('');
     }

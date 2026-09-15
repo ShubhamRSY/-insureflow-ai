@@ -1,56 +1,57 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Link, useNavigate, useParams } from 'react-router-dom';
 import { StateProvider } from './lib/useStateContext';
 import Layout from './components/Layout';
 import LoginModal from './components/LoginModal';
-import SignupPage from './pages/SignupPage';
 import JobDrawer from './components/JobDrawer';
 import FreemiumBanner from './components/FreemiumBanner';
-import Overview from './pages/Overview';
-import SsoCallback from './pages/SsoCallback';
-import SystemPage from './pages/System';
-import InsurancePage from './pages/Insurance';
-import CommercialInsuranceHub from './pages/CommercialInsurance';
-import CommercialReference from './pages/CommercialReference';
-import CommercialLinePage from './pages/CommercialLine';
-import LifeInsuranceHub from './pages/LifeInsurance';
-import LifeLinePage from './pages/LifeLine';
-import HealthInsuranceHub from './pages/HealthInsurance';
-import HealthLinePage from './pages/HealthLine';
-import GeneralInsuranceHub from './pages/GeneralInsurance';
-import GeneralLinePage from './pages/GeneralLine';
-import InsuranceSegmentPage from './pages/InsuranceSegment';
-import MortgagePage from './pages/Mortgage';
-import LendingPage from './pages/Lending';
-import WorkflowPage from './pages/Workflow';
-import UWWorkbench from './pages/UWWorkbench';
-import UWDashboard from './pages/UWDashboard';
-import SettingsPage from './pages/Settings';
-import RegulatoryReviewPage from './pages/RegulatoryReview';
-import BrokerStatusPage from './pages/BrokerStatus';
-import AuthorityMatrix from './pages/AuthorityMatrix';
-import MarketAdmin from './pages/MarketAdmin';
-import RenewalDashboard from './pages/RenewalDashboard';
-import RegistryPage from './pages/Registry';
-import QueuePage from './pages/Queue';
-import OverrideAnalyticsPage from './pages/OverrideAnalytics';
-import EvalTrendsPage from './pages/EvalTrends';
-import PortfolioPage from './pages/Portfolio';
-import IntegrationsPage from './pages/Integrations';
-import WebhooksPage from './pages/Webhooks';
-import InsuranceJobDetail from './pages/InsuranceJobDetail';
-import PilotPage from './pages/Pilot';
-import IssuancePage from './pages/Issuance';
-import MonitoringPage from './pages/Monitoring';
-import ProducerCommsPage from './pages/ProducerComms';
-import LineUnderwriting from './pages/LineUnderwriting';
-import StaffUnderwriting from './pages/StaffUnderwriting';
-import RatemakingPage from './pages/Ratemaking';
-import BusinessKPIsPage from './pages/BusinessKPIs';
-import PriorDecisionsPage from './pages/PriorDecisions';
 import ErrorBoundary from './components/ErrorBoundary';
 import { auth, endpoints, AuthError } from './lib/api';
 import { useFreemium } from './lib/useFreemium';
+
+const SignupPage = lazy(() => import('./pages/SignupPage'));
+const Overview = lazy(() => import('./pages/Overview'));
+const SsoCallback = lazy(() => import('./pages/SsoCallback'));
+const SystemPage = lazy(() => import('./pages/System'));
+const InsurancePage = lazy(() => import('./pages/Insurance'));
+const CommercialInsuranceHub = lazy(() => import('./pages/CommercialInsurance'));
+const CommercialReference = lazy(() => import('./pages/CommercialReference'));
+const CommercialLinePage = lazy(() => import('./pages/CommercialLine'));
+const LifeInsuranceHub = lazy(() => import('./pages/LifeInsurance'));
+const LifeLinePage = lazy(() => import('./pages/LifeLine'));
+const HealthInsuranceHub = lazy(() => import('./pages/HealthInsurance'));
+const HealthLinePage = lazy(() => import('./pages/HealthLine'));
+const GeneralInsuranceHub = lazy(() => import('./pages/GeneralInsurance'));
+const GeneralLinePage = lazy(() => import('./pages/GeneralLine'));
+const InsuranceSegmentPage = lazy(() => import('./pages/InsuranceSegment'));
+const MortgagePage = lazy(() => import('./pages/Mortgage'));
+const LendingPage = lazy(() => import('./pages/Lending'));
+const WorkflowPage = lazy(() => import('./pages/Workflow'));
+const UWWorkbench = lazy(() => import('./pages/UWWorkbench'));
+const UWDashboard = lazy(() => import('./pages/UWDashboard'));
+const SettingsPage = lazy(() => import('./pages/Settings'));
+const RegulatoryReviewPage = lazy(() => import('./pages/RegulatoryReview'));
+const BrokerStatusPage = lazy(() => import('./pages/BrokerStatus'));
+const AuthorityMatrix = lazy(() => import('./pages/AuthorityMatrix'));
+const MarketAdmin = lazy(() => import('./pages/MarketAdmin'));
+const RenewalDashboard = lazy(() => import('./pages/RenewalDashboard'));
+const RegistryPage = lazy(() => import('./pages/Registry'));
+const QueuePage = lazy(() => import('./pages/Queue'));
+const OverrideAnalyticsPage = lazy(() => import('./pages/OverrideAnalytics'));
+const EvalTrendsPage = lazy(() => import('./pages/EvalTrends'));
+const PortfolioPage = lazy(() => import('./pages/Portfolio'));
+const IntegrationsPage = lazy(() => import('./pages/Integrations'));
+const WebhooksPage = lazy(() => import('./pages/Webhooks'));
+const InsuranceJobDetail = lazy(() => import('./pages/InsuranceJobDetail'));
+const PilotPage = lazy(() => import('./pages/Pilot'));
+const IssuancePage = lazy(() => import('./pages/Issuance'));
+const MonitoringPage = lazy(() => import('./pages/Monitoring'));
+const ProducerCommsPage = lazy(() => import('./pages/ProducerComms'));
+const LineUnderwriting = lazy(() => import('./pages/LineUnderwriting'));
+const StaffUnderwriting = lazy(() => import('./pages/StaffUnderwriting'));
+const RatemakingPage = lazy(() => import('./pages/Ratemaking'));
+const BusinessKPIsPage = lazy(() => import('./pages/BusinessKPIs'));
+const PriorDecisionsPage = lazy(() => import('./pages/PriorDecisions'));
 
 function Protected({ children, onLogin }) {
   if (!auth.isLoggedIn) {
@@ -322,6 +323,7 @@ function AppRoutes() {
   return (
     <>
       <FreemiumBanner remaining={remaining} DAILY_LIMIT={DAILY_LIMIT} onLogin={() => setLoginOpen(true)} isLoggedIn={auth.isLoggedIn} />
+      <Suspense fallback={<div className="flex items-center justify-center py-24 text-sm text-slate-400">Loading…</div>}>
       <Routes>
         <Route path="broker/status/:token" element={<BrokerStatusPage />} />
         <Route path="signup" element={<SignupPage />} />
@@ -373,6 +375,7 @@ function AppRoutes() {
           <Route path="*" element={<PlaceholderPage title="Page not found" message="That dashboard page doesn't exist. Head back to the Overview to keep working." />} />
         </Route>
       </Routes>
+      </Suspense>
 
       <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} onSuccess={(u) => {
         setUser(u);

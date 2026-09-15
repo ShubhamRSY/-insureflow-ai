@@ -8,6 +8,7 @@ import {
   ShieldCheck, Inbox, FileCheck, History, Search, Loader2, Layers, AlertTriangle, GitCompare, UserCheck, CircleCheck, HandCoins,
 } from 'lucide-react';
 import BindReadinessPanel from '../components/BindReadinessPanel';
+import { toast } from '../lib/toast';
 
 const REASON_CATEGORIES = [
   { value: 'pricing', label: 'Pricing' },
@@ -120,7 +121,7 @@ export default function UWWorkbench({ onOpenJob, authorityData, onRefresh }) {
       await afterMutate();
     } catch (e) {
       setBusy(null);
-      alert(formatError(e));
+      toast.error(formatError(e));
     }
   };
 
@@ -131,7 +132,7 @@ export default function UWWorkbench({ onOpenJob, authorityData, onRefresh }) {
       const gate = readiness?.bind_readiness || readiness;
       if (gate && gate.ready_to_bind === false) {
         setBusy(null);
-        alert(gate.summary || 'Bind readiness checks are not clear. Clear open subjectivities first.');
+        toast.error(gate.summary || 'Bind readiness checks are not clear. Clear open subjectivities first.');
         return;
       }
       const ok = window.confirm(
@@ -145,7 +146,7 @@ export default function UWWorkbench({ onOpenJob, authorityData, onRefresh }) {
       await afterMutate();
     } catch (e) {
       setBusy(null);
-      alert(formatError(e));
+      toast.error(formatError(e));
     }
   };
 
@@ -156,7 +157,7 @@ export default function UWWorkbench({ onOpenJob, authorityData, onRefresh }) {
       await afterMutate();
     } catch (e) {
       setBusy(null);
-      alert(formatError(e));
+      toast.error(formatError(e));
     }
   };
 

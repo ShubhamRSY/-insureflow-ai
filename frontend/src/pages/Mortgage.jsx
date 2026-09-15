@@ -5,6 +5,7 @@ import RunSelector from '../components/RunSelector';
 import StageStrip, { stagesFromProgress } from '../components/StageStrip';
 import { Home, Package, FileText, Building2 } from 'lucide-react';
 import { useStateContext } from '../lib/useStateContext';
+import { toast } from '../lib/toast';
 
 export default function MortgagePage({ presets, jobs, onRunDemo, onOpenJob, onRunConnect, onSubmit }) {
   const [loading, setLoading] = useState(false);
@@ -14,11 +15,11 @@ export default function MortgagePage({ presets, jobs, onRunDemo, onOpenJob, onRu
   const { selectedState } = useStateContext();
 
   const loadMortgageProducts = async () => {
-    try { setMortgageProducts(await endpoints.mortgageProducts()); } catch (e) { alert(e.message); }
+    try { setMortgageProducts(await endpoints.mortgageProducts()); } catch (e) { toast.error(e.message); }
   };
 
   const loadMortgageAudit = async (bundleId) => {
-    try { setMortgageAudit(await endpoints.mortgageAudit(bundleId)); } catch (e) { alert('No audit data: ' + e.message); }
+    try { setMortgageAudit(await endpoints.mortgageAudit(bundleId)); } catch (e) { toast.error('No audit data: ' + e.message); }
   };
 
   const handleSubmit = async (body) => {

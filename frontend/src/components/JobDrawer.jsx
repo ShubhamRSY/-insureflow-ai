@@ -4,6 +4,7 @@ import { extractMortgage, endpoints, fmtCurrency } from '../lib/api';
 import { insuranceLineLabel } from '../lib/insuranceLines';
 import InsuranceMemoView from './InsuranceMemoView';
 import SubmissionJourney from './SubmissionJourney';
+import { toast } from '../lib/toast';
 
 export default function JobDrawer({ job, vertical, jobId, onClose }) {
   if (!jobId) return null;
@@ -51,7 +52,7 @@ export default function JobDrawer({ job, vertical, jobId, onClose }) {
                 a.download = filename;
                 a.click();
                 URL.revokeObjectURL(url);
-              } catch (e) { alert(e.message || 'Quote not available'); }
+              } catch (e) { toast.error(e.message || 'Quote not available'); }
             }} className="btn-secondary btn-sm text-xs"><FileCheck className="h-3.5 w-3.5" /> Quote PDF</button>
             <button type="button" onClick={async () => {
               try {
@@ -62,15 +63,15 @@ export default function JobDrawer({ job, vertical, jobId, onClose }) {
                 a.download = filename;
                 a.click();
                 URL.revokeObjectURL(url);
-              } catch (e) { alert(e.message || 'Report not available'); }
+              } catch (e) { toast.error(e.message || 'Report not available'); }
             }} className="btn-secondary btn-sm text-xs"><FileText className="h-3.5 w-3.5" /> Full Report</button>
             <button type="button" onClick={async () => {
               try {
                 const r = await endpoints.createBrokerShare(bundleId);
                 const link = `${window.location.origin}/dashboard/broker/status/${r.token}`;
                 await navigator.clipboard?.writeText(link);
-                alert(`Share link copied!\n${link}`);
-              } catch (e) { alert(e.message); }
+                toast.success(`Share link copied! ${link}`);
+              } catch (e) { toast.error(e.message); }
             }} className="btn-secondary btn-sm text-xs"><ExternalLink className="h-3.5 w-3.5" /> Broker Share</button>
           </div>
         )}
@@ -184,7 +185,7 @@ export default function JobDrawer({ job, vertical, jobId, onClose }) {
                 a.download = filename;
                 a.click();
                 URL.revokeObjectURL(url);
-              } catch (e) { alert(e.message || 'Report not available'); }
+              } catch (e) { toast.error(e.message || 'Report not available'); }
             }} className="btn-secondary btn-sm text-xs"><FileText className="h-3.5 w-3.5" /> Full Report</button>
           </div>
         )}

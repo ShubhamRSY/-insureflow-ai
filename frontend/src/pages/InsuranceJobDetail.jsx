@@ -16,6 +16,7 @@ import PolicyIssuanceView from '../components/PolicyIssuanceView';
 import PremiumCalculator from '../components/PremiumCalculator';
 import RenewalTrackerView from '../components/RenewalTrackerView';
 import BeneficiaryReviewView from '../components/BeneficiaryReviewView';
+import { toast } from '../lib/toast';
 
 export default function InsuranceJobDetail({ onDeleted, onDeleteJob }) {
   const { jobId } = useParams();
@@ -73,7 +74,7 @@ export default function InsuranceJobDetail({ onDeleted, onDeleteJob }) {
       const a = document.createElement('a');
       a.href = url; a.download = filename; a.click();
       URL.revokeObjectURL(url);
-    } catch (e) { alert(e.message); }
+    } catch (e) { toast.error(e.message); }
   };
 
   const handleQuote = async () => {
@@ -84,7 +85,7 @@ export default function InsuranceJobDetail({ onDeleted, onDeleteJob }) {
       const a = document.createElement('a');
       a.href = url; a.download = filename; a.click();
       URL.revokeObjectURL(url);
-    } catch (e) { alert(e.message || 'Quote not available'); }
+    } catch (e) { toast.error(e.message || 'Quote not available'); }
     finally { setQuoteLoading(false); }
   };
 
@@ -93,8 +94,8 @@ export default function InsuranceJobDetail({ onDeleted, onDeleteJob }) {
       const r = await endpoints.createBrokerShare(bundleId);
       const link = `${window.location.origin}/dashboard/broker/status/${r.token}`;
       await navigator.clipboard?.writeText(link);
-      alert(`Share link copied!\n${link}`);
-    } catch (e) { alert(e.message); }
+      toast.success(`Share link copied! ${link}`);
+    } catch (e) { toast.error(e.message); }
   };
 
   const handleDeleteJob = async () => {
@@ -104,7 +105,7 @@ export default function InsuranceJobDetail({ onDeleted, onDeleteJob }) {
       else await endpoints.deleteJob(jobId);
       await onDeleted?.();
       navigate('/insurance');
-    } catch (e) { alert(e.message || 'Could not delete submission'); }
+    } catch (e) { toast.error(e.message || 'Could not delete submission'); }
   };
 
   if (loading) {
@@ -203,7 +204,7 @@ export default function InsuranceJobDetail({ onDeleted, onDeleteJob }) {
             <p className="text-sm font-semibold text-amber-200">Pipeline has not run yet</p>
             <p className="mt-1 text-xs text-slate-400">Run the pipeline to extract data and generate the underwriting memo.</p>
             <button onClick={async () => {
-              try { await endpoints.retryJob(jobId); fetchJob(); } catch (e) { alert(e.message || 'Could not start pipeline'); }
+              try { await endpoints.retryJob(jobId); fetchJob(); } catch (e) { toast.error(e.message || 'Could not start pipeline'); }
             }} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2 text-xs font-semibold text-white hover:bg-brand-light transition">
               <RefreshCw className="h-3.5 w-3.5" /> Run Pipeline
             </button>

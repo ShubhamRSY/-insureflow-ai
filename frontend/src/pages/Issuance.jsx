@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { FileCheck, RefreshCw, ScrollText, FileText, BadgeCheck, ClipboardList, ShieldCheck } from 'lucide-react';
 import { Badge, EmptyState } from '../components/ui';
 import { endpoints, fmtCurrency } from '../lib/api';
+import { toast } from '../lib/toast';
 
 const DOC_META = {
   binder: { label: 'Binder', icon: ScrollText, accent: 'text-emerald-400', cls: 'bg-emerald-500/10 text-emerald-400 ring-emerald-500/25 hover:bg-emerald-500/20' },
@@ -42,7 +43,7 @@ function IssuanceCard({ record }) {
     try {
       await triggerDownload(endpoints.issuanceDownload(record.bundle_id, docType));
     } catch (e) {
-      alert(e.message);
+      toast.error(e.message);
     } finally {
       setBusy('');
     }

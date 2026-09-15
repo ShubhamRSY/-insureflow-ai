@@ -2,6 +2,7 @@ import { displayText } from '../lib/safe';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, FileText, Trash2 } from 'lucide-react';
 import { ScoreBadge } from './ui';
+import { toast } from '../lib/toast';
 
 export default function SubmissionJobsList({
   jobs = [],
@@ -20,7 +21,7 @@ export default function SubmissionJobsList({
     try {
       await onDeleteJob?.(id);
     } catch (e) {
-      window.alert(e.message || 'Could not delete this submission');
+      toast.error(e.message || 'Could not delete this submission');
     }
   };
 
@@ -30,7 +31,7 @@ export default function SubmissionJobsList({
     try {
       await onDeleteAll?.(runs.map((r) => r.id));
     } catch (e) {
-      window.alert(e.message || 'Could not delete submissions');
+      toast.error(e.message || 'Could not delete submissions');
     }
   };
 

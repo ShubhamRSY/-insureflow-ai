@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { Badge, EmptyState } from '../components/ui';
 import { endpoints, fmtCurrency } from '../lib/api';
+import { toast } from '../lib/toast';
 
 function fmtDate(value) {
   if (!value) return '—';
@@ -102,7 +103,7 @@ export default function MonitoringPage() {
         if (fresh) setDetail({ policyId: detail.policyId, record: fresh });
       }
     } catch (e) {
-      alert(e.message);
+      toast.error(e.message);
     } finally {
       setEvaluating(false);
     }
@@ -114,7 +115,7 @@ export default function MonitoringPage() {
       const record = await endpoints.monitoringPolicy(policyId);
       setDetail({ policyId, record });
     } catch (e) {
-      alert(e.message);
+      toast.error(e.message);
       setDetail(null);
     }
   };
@@ -134,7 +135,7 @@ export default function MonitoringPage() {
       setShowAddItem(false);
       await afterMutation(detail.policyId);
     } catch (err) {
-      alert(err.message);
+      toast.error(err.message);
     }
   };
 
@@ -148,7 +149,7 @@ export default function MonitoringPage() {
       await endpoints.resolveMonitoringItem(detail.policyId, itemId, { status, note, resolved_by: user?.username || 'uw' });
       await afterMutation(detail.policyId);
     } catch (err) {
-      alert(err.message);
+      toast.error(err.message);
     } finally {
       setBusy('');
     }
@@ -169,7 +170,7 @@ export default function MonitoringPage() {
       setShowLossDev(false);
       await afterMutation(detail.policyId);
     } catch (err) {
-      alert(err.message);
+      toast.error(err.message);
     }
   };
 
