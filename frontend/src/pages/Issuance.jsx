@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { FileCheck, RefreshCw, ScrollText, FileText, BadgeCheck, ClipboardList, ShieldCheck } from 'lucide-react';
-import { Badge, EmptyState } from '../components/ui';
+import { FileCheck, RefreshCw, ScrollText, BadgeCheck, ClipboardList } from 'lucide-react';
+import { Badge, EmptyState, StatCard } from '../components/ui';
 import { endpoints, fmtCurrency } from '../lib/api';
 import { toast } from '../lib/toast';
 
@@ -161,30 +161,9 @@ export default function IssuancePage() {
       {error && <div className="rounded-xl bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</div>}
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <div className="glass-card group relative overflow-hidden p-5 animate-slide-up">
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-emerald-500 to-teal-400 opacity-60" />
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-medium uppercase tracking-wider text-slate-500">Packages issued</p>
-            <ShieldCheck className="h-4 w-4 text-emerald-400" />
-          </div>
-          <p className="mt-2 text-3xl font-bold tracking-tight text-white">{records.length}</p>
-        </div>
-        <div className="glass-card group relative overflow-hidden p-5 animate-slide-up">
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-sky-500 to-cyan-400 opacity-60" />
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-medium uppercase tracking-wider text-slate-500">Policies in force</p>
-            <FileText className="h-4 w-4 text-sky-400" />
-          </div>
-          <p className="mt-2 text-3xl font-bold tracking-tight text-white">{inForce}</p>
-        </div>
-        <div className="glass-card group relative overflow-hidden p-5 animate-slide-up">
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-amber-500 to-orange-400 opacity-60" />
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-medium uppercase tracking-wider text-slate-500">Annualized premium</p>
-            <FileCheck className="h-4 w-4 text-amber-400" />
-          </div>
-          <p className="mt-2 text-3xl font-bold tracking-tight text-white">{fmtCurrency(totalPremium)}</p>
-        </div>
+        <StatCard label="Packages issued" value={records.length} accent="success" />
+        <StatCard label="Policies in force" value={inForce} />
+        <StatCard label="Annualized premium" value={fmtCurrency(totalPremium)} />
       </div>
 
       <div className="glass-card p-6">
