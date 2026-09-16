@@ -79,6 +79,8 @@ export default function HealthLinePage({ presets, onRunDemo, onSubmit }) {
       eyebrowLabel="Health Insurance"
       accent="teal"
       icon={Icon}
+      backTo="/insurance/health"
+      backLabel="Health insurance hub"
       presets={presets}
       lineTaxonomy={lineTaxonomy}
       selection={selection}

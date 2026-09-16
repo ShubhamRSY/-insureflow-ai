@@ -80,6 +80,8 @@ export default function CommercialLinePage({ presets, onRunDemo, onSubmit }) {
       eyebrowLabel="Business / Commercial"
       accent="brand"
       icon={Icon}
+      backTo="/insurance/commercial"
+      backLabel="Commercial insurance hub"
       presets={presets}
       lineTaxonomy={lineTaxonomy}
       selection={selection}

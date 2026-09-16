@@ -108,6 +108,8 @@ export default function GeneralLinePage({ presets, onRunDemo, onSubmit }) {
       eyebrowLabel="Personal Lines"
       accent="sky"
       icon={Icon}
+      backTo="/insurance/general"
+      backLabel="General insurance hub"
       presets={presets}
       lineTaxonomy={lineTaxonomy}
       selection={selection}
