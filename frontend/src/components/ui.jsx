@@ -128,6 +128,8 @@ export function Badge({ status, pulse = false, label }) {
   const s = String(status).toLowerCase();
   const colors = {
     ok: 'bg-emerald-500/15 text-emerald-400 ring-emerald-500/20',
+    live: 'bg-emerald-500/15 text-emerald-400 ring-emerald-500/20',
+    catalog: 'bg-slate-500/20 text-slate-300 ring-slate-500/20',
     healthy: 'bg-emerald-500/15 text-emerald-400 ring-emerald-500/20',
     completed: 'bg-emerald-500/15 text-emerald-400 ring-emerald-500/20',
     approved: 'bg-emerald-500/15 text-emerald-400 ring-emerald-500/20',
