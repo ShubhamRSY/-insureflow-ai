@@ -323,7 +323,7 @@ export function RateField({ label, hint, children }) {
 
 export function StatCard({ label, value, sub, accent = 'brand' }) {
   const accents = {
-    brand: 'from-brand/80 to-indigo-500',
+    brand: 'from-brand/80 to-brand',
     insurance: 'from-insurance to-cyan-400',
     mortgage: 'from-mortgage to-violet-400',
     success: 'from-emerald-500 to-teal-400',

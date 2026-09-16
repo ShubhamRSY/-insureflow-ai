@@ -96,7 +96,7 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
     <div className="flex min-h-screen bg-surface bg-mesh">
       {/* Sidebar */}
       <aside className={`fixed inset-y-0 left-0 z-50 flex lg:translate-x-0 ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="flex w-[60px] shrink-0 flex-col items-center border-r border-white/[0.06] bg-[rgb(9,11,16)] py-4">
+        <div className="flex w-[60px] shrink-0 flex-col items-center border-r border-white/[0.06] bg-surface py-4">
           <button type="button" onClick={() => navigate('/')} className="mb-4 flex h-8 w-8 items-center justify-center rounded-lg border border-brand text-brand">
             <Shield className="h-4 w-4" />
           </button>
@@ -121,20 +121,21 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
           </nav>
         </div>
 
-        <div className="flex w-[198px] shrink-0 flex-col border-r border-white/[0.06] bg-surface-raised/95 backdrop-blur-xl">
+        <div className="flex w-[198px] shrink-0 flex-col border-r border-white/[0.06] bg-surface-raised">
           <div className="border-b border-white/[0.06] px-4 py-[19px]">
             <p className="font-display text-base font-semibold">{activeGroup.label}</p>
           </div>
           <div className="flex-1 space-y-0.5 overflow-y-auto p-2">
             {activeGroup.items.map((item) => {
               const isProtected = item.to !== '/' && item.to !== '/system' && !user;
+              const isHubMatch = Boolean(item.hub && pathname.startsWith(item.hub));
               return (
                 <NavLink
                   key={item.to}
                   to={item.to}
-                  end={item.to === '/' || item.to === '/insurance'}
+                  end={item.to === '/' || item.to === '/insurance' || item.to === '/integrations'}
                   onClick={() => setMobileOpen(false)}
-                  className={({ isActive }) => `nav-link ${isActive ? 'nav-link-active' : ''}`}
+                  className={({ isActive }) => `nav-link ${isActive || isHubMatch ? 'nav-link-active' : ''}`}
                 >
                   <span className="flex-1">{item.label}</span>
                   {item.tag && (

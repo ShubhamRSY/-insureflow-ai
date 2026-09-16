@@ -12,7 +12,6 @@ export const RAIL_GROUPS = [
   {
     id: 'insurance',
     label: 'Insurance',
-    scrollItems: true,
     items: INSURANCE_NAV_CHILDREN,
   },
   {
@@ -76,8 +75,8 @@ export const RAIL_GROUPS = [
   {
     id: 'integrations',
     label: 'Integrations',
-    scrollItems: true,
     items: [
+      { to: '/integrations', label: 'All configurations' },
       { to: '/integrations/google-drive', label: 'Google Drive' },
       { to: '/integrations/sharepoint', label: 'SharePoint / OneDrive' },
       { to: '/integrations/s3-bucket', label: 'AWS S3' },

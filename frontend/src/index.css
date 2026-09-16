@@ -10,7 +10,7 @@ html.theme-dark {
   --ry-overlay: 23 28 38;
   --ry-hover: 29 35 48;
   --ry-fg: 231 233 238;
-  --ry-glow: none;
+  --ry-glow: 0 0 #0000;
   --ry-card-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06);
   --ry-mesh: none;
   --ry-hero: linear-gradient(180deg, #0b0e14 0%, #0b0e14 100%);
@@ -60,7 +60,7 @@ html.theme-light {
   }
 
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-surface transition hover:brightness-110 disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-[#0B0E14] transition hover:brightness-110 disabled:opacity-50;
   }
 
   .btn-secondary {
@@ -149,8 +149,6 @@ html.theme-light .text-slate-700 { color: #1e293b !important; }
 html.theme-light .text-white {
   color: #0f172a !important;
 }
-html.theme-light .btn-primary,
-html.theme-light .btn-primary *,
 html.theme-light .keep-white,
 html.theme-light .keep-white *,
 html.theme-light .bg-brand.text-white,
@@ -167,7 +165,7 @@ html.theme-light .text-white\/50 { color: rgb(15 23 42 / 0.55) !important; }
 html.theme-light .text-white\/60,
 html.theme-light .text-white\/70 { color: rgb(15 23 42 / 0.72) !important; }
 
-html.theme-light .text-brand-light { color: #1d4ed8 !important; }
+html.theme-light .text-brand-light { color: #92702c !important; }
 html.theme-light .text-brand-light\/80,
 html.theme-light .text-brand-light\/70 { color: #1e3a8a !important; }
 html.theme-light .pipeline-live { color: #1e3a8a !important; }
@@ -318,7 +316,7 @@ html.theme-light .nav-link:hover {
 }
 
 html.theme-light .nav-link-active {
-  color: #1d4ed8;
+  color: #92702c;
 }
 
 html.theme-light .bg-gray-900,
