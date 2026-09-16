@@ -64,3 +64,4 @@ external_data/**
 !external_data/README.md
 .playwright-mcp/
 graphify-out/
+.worktrees/
