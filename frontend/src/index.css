@@ -5,19 +5,15 @@
 :root,
 html.theme-dark {
   color-scheme: dark;
-  --ry-surface: 16 20 31;
-  --ry-raised: 22 29 44;
-  --ry-overlay: 28 37 56;
-  --ry-hover: 36 48 68;
-  --ry-fg: 241 245 249;
-  --ry-glow: 0 0 40px rgba(91, 141, 239, 0.15);
-  --ry-card-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 8px 32px rgba(0, 0, 0, 0.4);
-  --ry-mesh: radial-gradient(at 20% 20%, rgba(91, 141, 239, 0.18) 0, transparent 50%),
-    radial-gradient(at 80% 0%, rgba(56, 189, 248, 0.1) 0, transparent 45%),
-    radial-gradient(at 50% 100%, rgba(52, 211, 153, 0.06) 0, transparent 50%);
-  --ry-hero: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(91, 141, 239, 0.28), transparent 55%),
-    radial-gradient(ellipse 50% 40% at 90% 20%, rgba(56, 189, 248, 0.12), transparent 50%),
-    linear-gradient(180deg, #12182a 0%, #10141f 100%);
+  --ry-surface: 11 14 20;
+  --ry-raised: 18 22 31;
+  --ry-overlay: 23 28 38;
+  --ry-hover: 29 35 48;
+  --ry-fg: 231 233 238;
+  --ry-glow: none;
+  --ry-card-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06);
+  --ry-mesh: none;
+  --ry-hero: linear-gradient(180deg, #0b0e14 0%, #0b0e14 100%);
 }
 
 html.theme-light {
@@ -60,15 +56,15 @@ html.theme-light {
 
 @layer components {
   .glass-card {
-    @apply rounded-2xl border border-white/[0.08] bg-surface-raised/85 backdrop-blur-xl shadow-card;
+    @apply rounded-lg border border-white/[0.08] bg-surface-raised shadow-card;
   }
 
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand to-indigo-500 px-4 py-2.5 text-sm font-semibold text-white shadow-glow transition hover:brightness-110 disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-surface transition hover:brightness-110 disabled:opacity-50;
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-surface-overlay px-4 py-2.5 text-sm font-medium text-slate-100 transition hover:bg-surface-hover;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-white/15 bg-surface-overlay px-4 py-2.5 text-sm font-medium text-slate-100 transition hover:bg-surface-hover;
   }
 
   .input,
@@ -94,11 +90,11 @@ html.theme-light {
   }
 
   .nav-link {
-    @apply flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-300 transition hover:bg-white/[0.05] hover:text-slate-50;
+    @apply flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-300 transition hover:bg-white/[0.05] hover:text-slate-50;
   }
 
   .nav-link-active {
-    @apply bg-gradient-to-r from-brand/15 to-transparent text-brand-light border-l-2 border-brand shadow-[inset_2px_0_8px_-2px_rgba(99,102,241,0.3)];
+    @apply bg-brand/[0.14] text-brand;
   }
 
   .hint-anchor {
