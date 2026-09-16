@@ -3,7 +3,7 @@ import {
   ShieldCheck, RefreshCw, CheckCircle2, XCircle, Clock, FileText,
   AlertTriangle, Leaf, ChevronDown, ExternalLink,
 } from 'lucide-react';
-import { Badge, EmptyState } from '../components/ui';
+import { Badge, EmptyState, StatCard } from '../components/ui';
 import StateRegulatoryPanel from '../components/StateRegulatoryPanel';
 import { api } from '../lib/api';
 import { toast } from '../lib/toast';
@@ -109,34 +109,13 @@ export default function RegulatoryReview() {
       <StateRegulatoryPanel />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <div className="glass-card group relative overflow-hidden p-5 animate-slide-up">
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-emerald-500 to-teal-400 opacity-60" />
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-medium uppercase tracking-wider text-slate-500">Pending changes</p>
-            <AlertTriangle className="h-4 w-4 text-amber-400" />
-          </div>
-          <p className="mt-2 text-3xl font-bold tracking-tight text-white">{pending.length}</p>
-        </div>
-        <div className="glass-card group relative overflow-hidden p-5 animate-slide-up">
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-sky-500 to-cyan-400 opacity-60" />
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-medium uppercase tracking-wider text-slate-500">Overall freshness</p>
-            <Leaf className="h-4 w-4 text-sky-400" />
-          </div>
-          {overallScore != null ? (
-            <p className={`mt-2 text-3xl font-bold tracking-tight ${freshnessColor(overallScore)}`}>{overallScore.toFixed(1)}%</p>
-          ) : (
-            <p className="mt-2 text-3xl font-bold tracking-tight text-slate-600">—</p>
-          )}
-        </div>
-        <div className="glass-card group relative overflow-hidden p-5 animate-slide-up">
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-violet-500 to-fuchsia-400 opacity-60" />
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-medium uppercase tracking-wider text-slate-500">Recent changelog</p>
-            <FileText className="h-4 w-4 text-violet-400" />
-          </div>
-          <p className="mt-2 text-3xl font-bold tracking-tight text-white">{changelog.length}</p>
-        </div>
+        <StatCard label="Pending changes" value={pending.length} accent="success" />
+        <StatCard
+          label="Overall freshness"
+          value={overallScore != null ? `${overallScore.toFixed(1)}%` : '—'}
+          valueClassName={overallScore != null ? freshnessColor(overallScore) : 'text-slate-600'}
+        />
+        <StatCard label="Recent changelog" value={changelog.length} />
       </div>
 
       {overallScore != null && (
