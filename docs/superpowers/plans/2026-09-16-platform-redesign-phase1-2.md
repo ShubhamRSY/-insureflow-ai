@@ -157,9 +157,10 @@ git commit -m "Repoint brand color token to brass, add verdigris/risk tokens"
 **Files:**
 - Modify: `frontend/src/index.css:5-21` (dark theme CSS variables)
 - Modify: `frontend/src/index.css:62-72` (`.glass-card`, `.btn-primary`, `.btn-secondary`)
+- Modify: `frontend/src/index.css:96-102` (`.nav-link`, `.nav-link-active`)
 
 **Interfaces:**
-- Produces: `bg-surface`, `bg-surface-raised`, `bg-surface-overlay`, `bg-surface-hover`, `bg-mesh`, `bg-hero-glow`, `shadow-card`, `shadow-glow`, `.glass-card`, `.btn-primary`, `.btn-secondary` all repointed — used unchanged by every page.
+- Produces: `bg-surface`, `bg-surface-raised`, `bg-surface-overlay`, `bg-surface-hover`, `bg-mesh`, `bg-hero-glow`, `shadow-card`, `shadow-glow`, `.glass-card`, `.btn-primary`, `.btn-secondary`, `.nav-link`, `.nav-link-active` all repointed — used unchanged by every page, and `.nav-link`/`.nav-link-active` specifically by Task 5's new nav panel.
 
 - [ ] **Step 1: Repoint the dark-theme CSS custom properties**
 
@@ -241,25 +242,53 @@ with:
 
 `text-surface` on `.btn-primary` reuses the same repointed `--ry-surface` variable (now `ink`, `#0B0E14`) as the button's text color, giving dark text on the brass background for contrast — no new color token needed.
 
-- [ ] **Step 3: Verify the build**
+- [ ] **Step 3: Flatten `.nav-link-active`**
+
+`.nav-link`/`.nav-link-active` are consumed by Task 5's new nav-panel items, but were not otherwise in scope for this task. Left alone, `.nav-link-active` keeps a gradient wash (`bg-gradient-to-r from-brand/15 to-transparent`) and a left-border accent, and its `shadow-[inset_2px_0_8px_-2px_rgba(99,102,241,0.3)]` hardcodes the *old* indigo color directly as an rgba literal — Task 2's brand repoint does not touch it, so it would keep glowing indigo even after every other accent turns brass. That contradicts the spec's "hairlines over shadows/glow, one flat accent" direction, so fold the fix in here rather than leaving it for Task 5 or a later pass.
+
+In `frontend/src/index.css`, replace lines 96-102:
+
+```css
+  .nav-link {
+    @apply flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-300 transition hover:bg-white/[0.05] hover:text-slate-50;
+  }
+
+  .nav-link-active {
+    @apply bg-gradient-to-r from-brand/15 to-transparent text-brand-light border-l-2 border-brand shadow-[inset_2px_0_8px_-2px_rgba(99,102,241,0.3)];
+  }
+```
+
+with:
+
+```css
+  .nav-link {
+    @apply flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-300 transition hover:bg-white/[0.05] hover:text-slate-50;
+  }
+
+  .nav-link-active {
+    @apply bg-brand/[0.14] text-brand;
+  }
+```
+
+- [ ] **Step 4: Verify the build**
 
 Run: `cd frontend && npm run build`
 Expected: build succeeds.
 
-- [ ] **Step 4: Run the existing test suite**
+- [ ] **Step 5: Run the existing test suite**
 
 Run: `cd frontend && npm test`
 Expected: all existing tests still pass — none of them assert on rendered colors/shadows.
 
-- [ ] **Step 5: Manual visual check**
+- [ ] **Step 6: Manual visual check**
 
 Run: `cd frontend && npm run dev`, open the app, navigate to the Overview page. Confirm: background is flat near-black (no mesh gradient), cards have a visible hairline border and no blur, primary buttons are solid brass with dark text.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
 git add frontend/src/index.css
-git commit -m "Flatten surfaces: drop mesh/glow/blur, hairline cards, brass buttons"
+git commit -m "Flatten surfaces: drop mesh/glow/blur, hairline cards/nav, brass buttons"
 ```
 
 ---
