@@ -1,5 +1,5 @@
 import { Search, RefreshCw, ArrowUpDown } from 'lucide-react';
-import { Badge, ScoreBadge, PriorityBadge, AssigneeAvatar, EmptyState } from '../components/ui';
+import { Badge, ScoreBadge, PriorityBadge, AssigneeAvatar, EmptyState, StatCard } from '../components/ui';
 import { STATUS_META, buildQueueRows } from '../lib/submissions';
 import { useMemo, useState } from 'react';
 
@@ -46,22 +46,10 @@ export default function QueuePage({ queueStats, insuranceJobs, onOpenJob, onRefr
       </div>
 
       <div className="grid gap-4 sm:grid-cols-4">
-        <div className="glass-card p-4">
-          <p className="text-xs font-medium uppercase tracking-wider text-slate-500">Total</p>
-          <p className="mt-1 text-2xl font-bold">{items.length}</p>
-        </div>
-        <div className="glass-card p-4">
-          <p className="text-xs font-medium uppercase tracking-wider text-slate-500">Hot</p>
-          <p className="mt-1 text-2xl font-bold text-red-400">{items.filter((i) => i.priority === 'hot').length}</p>
-        </div>
-        <div className="glass-card p-4">
-          <p className="text-xs font-medium uppercase tracking-wider text-slate-500">Warm</p>
-          <p className="mt-1 text-2xl font-bold text-amber-400">{items.filter((i) => i.priority === 'warm').length}</p>
-        </div>
-        <div className="glass-card p-4">
-          <p className="text-xs font-medium uppercase tracking-wider text-slate-500">Appetite Check Failed</p>
-          <p className="mt-1 text-2xl font-bold text-slate-400">{statusCounts.appetite_check_failed || 0}</p>
-        </div>
+        <StatCard label="Total" value={items.length} />
+        <StatCard label="Hot" value={items.filter((i) => i.priority === 'hot').length} valueClassName="text-risk-red" />
+        <StatCard label="Warm" value={items.filter((i) => i.priority === 'warm').length} valueClassName="text-risk-amber" />
+        <StatCard label="Appetite Check Failed" value={statusCounts.appetite_check_failed || 0} valueClassName="text-slate-400" />
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
