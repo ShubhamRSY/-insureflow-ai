@@ -132,7 +132,7 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
                 <NavLink
                   key={item.to}
                   to={item.to}
-                  end={item.to === '/'}
+                  end={item.to === '/' || item.to === '/insurance'}
                   onClick={() => setMobileOpen(false)}
                   className={({ isActive }) => `nav-link ${isActive ? 'nav-link-active' : ''}`}
                 >
