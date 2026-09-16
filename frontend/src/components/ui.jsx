@@ -323,7 +323,7 @@ export function RateField({ label, hint, children }) {
   );
 }
 
-export function StatCard({ label, value, sub, accent = 'brand' }) {
+export function StatCard({ label, value, sub, accent = 'brand', valueClassName = 'text-white' }) {
   const accents = {
     brand: 'from-brand/80 to-brand',
     insurance: 'from-insurance to-cyan-400',
@@ -334,7 +334,7 @@ export function StatCard({ label, value, sub, accent = 'brand' }) {
     <div className="glass-card group relative overflow-hidden p-5 animate-slide-up">
       <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${accents[accent]} opacity-60`} />
       <p className="text-xs font-medium uppercase tracking-wider text-slate-500">{label}</p>
-      <p className="mt-2 text-3xl font-bold tracking-tight text-white">{value}</p>
+      <p className={`mt-2 text-3xl font-bold tracking-tight ${valueClassName}`}>{value}</p>
       {sub && <p className="mt-1 text-sm text-slate-400">{sub}</p>}
     </div>
   );
