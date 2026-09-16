@@ -207,7 +207,7 @@ export default function AuthorityMatrix() {
                   <div className={`inline-flex rounded-lg ${cfg.bg} px-2.5 py-1 text-xs font-semibold ${cfg.color}`}>
                     {cfg.label}
                   </div>
-                  <p className="mt-3 text-2xl font-bold">{uws.length}</p>
+                  <p className="mt-3 text-3xl font-bold tracking-tight">{uws.length}</p>
                   <p className="text-xs text-slate-500">underwriters</p>
                 </div>
               );
