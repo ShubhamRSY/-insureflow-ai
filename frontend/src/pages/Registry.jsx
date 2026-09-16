@@ -4,7 +4,7 @@ import {
   GitCompare, Upload, ListChecks, FlaskConical, FileText, Cpu, Shield,
   Bot, Boxes, Clock, User, ChevronRight, X, Sparkles,
 } from 'lucide-react';
-import { Badge, EmptyState } from '../components/ui';
+import { Badge, EmptyState, StatCard } from '../components/ui';
 import { endpoints } from '../lib/api';
 import { toast } from '../lib/toast';
 
@@ -360,15 +360,7 @@ export default function RegistryPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((s) => (
-          <div key={s.label} className="glass-card group relative overflow-hidden p-5 animate-slide-up">
-            <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${s.bar} opacity-60`} />
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-medium uppercase tracking-wider text-slate-500">{s.label}</p>
-              <s.icon className={`h-4 w-4 ${s.accent}`} />
-            </div>
-            <p className="mt-2 text-3xl font-bold tracking-tight text-white">{s.value}</p>
-            {s.sub && <p className="mt-1 text-xs text-slate-500">{s.sub}</p>}
-          </div>
+          <StatCard key={s.label} label={s.label} value={s.value} sub={s.sub} accent={s.bar === 'from-emerald-500 to-teal-400' ? 'success' : 'brand'} />
         ))}
       </div>
 
