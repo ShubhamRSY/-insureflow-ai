@@ -4,7 +4,7 @@ import {
   BookOpen, ClipboardCheck, GraduationCap, LineChart, RefreshCw, Scale, Search,
   ArrowRight, TrendingUp,
 } from 'lucide-react';
-import { Badge, EmptyState } from '../components/ui';
+import { Badge, EmptyState, StatCard } from '../components/ui';
 import { endpoints } from '../lib/api';
 
 const TABS = [
@@ -137,10 +137,7 @@ export default function StaffUnderwriting() {
         <div className="space-y-6">
           <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-4">
             {Object.entries(overview.counts || {}).map(([k, v]) => (
-              <div key={k} className="glass-card px-4 py-3">
-                <p className="text-[10px] uppercase tracking-wider text-slate-500">{k.replace(/_/g, ' ')}</p>
-                <p className="mt-1 text-2xl font-bold">{v}</p>
-              </div>
+              <StatCard key={k} label={k.replace(/_/g, ' ')} value={v} />
             ))}
           </div>
           <div className="glass-card p-5">
