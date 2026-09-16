@@ -1,12 +1,11 @@
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
-  LayoutDashboard, Shield, Home, Activity, Settings, LogOut, RefreshCw, Menu, X,
-  BarChart3, Wallet, FileCheck, Briefcase, ChevronDown, ChevronRight, Plus,
-  ShieldCheck, Library, Lock, Cable, HandCoins, AlertTriangle,
+  Shield, Home, Settings, LogOut, RefreshCw, Menu, X,
+  BarChart3, FileCheck, Briefcase, ShieldCheck, Library, Lock, Cable, AlertTriangle, LayoutDashboard,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { auth } from '../lib/api';
-import { INSURANCE_SECTIONS, INSURANCE_NAV_CHILDREN, insuranceSectionAccent } from '../lib/insuranceSections';
+import { RAIL_GROUPS, deriveActiveGroupId } from '../lib/railNav';
 import { displayText } from '../lib/safe';
 import { useStateContext } from '../lib/useStateContext';
 import ThemeToggle from './ThemeToggle';
@@ -15,133 +14,18 @@ import ErrorBoundary from './ErrorBoundary';
 import OperatingModeBanner from './OperatingModeBanner';
 import ToastContainer from './Toast';
 
-const nav = [
-  { to: '/', icon: LayoutDashboard, label: 'Overview' },
-  { to: '/system', icon: Activity, label: 'System Health' },
-  { section: 'Insurance' },
-  {
-    to: '/insurance',
-    icon: Shield,
-    label: 'Insurance',
-    color: 'text-insurance',
-    defaultOpen: true,
-    scrollChildren: true,
-    children: INSURANCE_NAV_CHILDREN,
-  },
-  { section: 'Reference' },
-  {
-    to: '/reference',
-    icon: Library,
-    label: 'Reference notebooks',
-    color: 'text-slate-300',
-    defaultOpen: true,
-    children: [
-      { to: '/reference/commercial', label: 'Commercial insurance' },
-    ],
-  },
-  { section: 'Mortgage & Lending' },
-  { to: '/mortgage', icon: Home, label: 'Mortgage', color: 'text-mortgage', tag: 'Live' },
-  { to: '/lending', icon: Wallet, label: 'Lending', color: 'text-lending', tag: 'Live' },
-  { section: 'UW Operations' },
-  {
-    to: '/uw-dashboard',
-    icon: Briefcase,
-    label: 'UW Operations',
-    color: 'text-sky-400',
-    defaultOpen: true,
-    children: [
-      { to: '/uw-workbench', label: 'UW Workbench' },
-      { to: '/uw-dashboard', label: 'UW Dashboard' },
-      { to: '/workflow', label: 'UW Sign-off' },
-      { to: '/queue', label: 'Queue' },
-      { to: '/line-uw', label: 'Line UW Desk' },
-      { to: '/staff-uw', label: 'Staff UW Desk' },
-      { to: '/prior-decisions', label: 'Prior decisions' },
-    ],
-  },
-  { section: 'Post-Decision' },
-  {
-    to: '/issuance',
-    icon: FileCheck,
-    label: 'Post-Decision',
-    color: 'text-emerald-400',
-    defaultOpen: true,
-    children: [
-      { to: '/issuance', label: 'Issuance' },
-      { to: '/monitoring', label: 'Policy Monitoring' },
-      { to: '/producer-comms', label: 'Producer Comms' },
-    ],
-  },
-  { section: 'Analytics' },
-  {
-    to: '/portfolio',
-    icon: BarChart3,
-    label: 'Analytics',
-    color: 'text-brand',
-    defaultOpen: true,
-    children: [
-      { to: '/renewals', label: 'Renewals' },
-      { to: '/overrides', label: 'Override Analytics' },
-      { to: '/business-kpis', label: 'ROI & KPIs' },
-      { to: '/eval-trends', label: 'Eval Trends' },
-      { to: '/portfolio', label: 'Portfolio' },
-      { to: '/authority', label: 'Authority Matrix' },
-      { to: '/market', label: 'Market Cycle' },
-    ],
-  },
-  { section: 'Governance' },
-  {
-    to: '/regulatory-review',
-    icon: ShieldCheck,
-    label: 'Governance',
-    color: 'text-emerald-400',
-    defaultOpen: true,
-    children: [
-      { to: '/pilot', label: 'Pilot Lab' },
-      { to: '/registry', label: 'Model Registry' },
-      { to: '/regulatory-review', label: 'Regulatory Review' },
-      { to: '/webhooks', label: 'Webhooks' },
-    ],
-  },
-  { section: 'Integrations' },
-  {
-    to: '/integrations',
-    icon: Cable,
-    label: 'Configurations',
-    color: 'text-blue-400',
-    defaultOpen: true,
-    scrollChildren: true,
-    children: [
-      { to: '/integrations/google-drive', label: 'Google Drive' },
-      { to: '/integrations/sharepoint', label: 'SharePoint / OneDrive' },
-      { to: '/integrations/s3-bucket', label: 'AWS S3' },
-      { to: '/integrations/azure-blob', label: 'Azure Blob Storage' },
-      { to: '/integrations/box', label: 'Box Enterprise' },
-      { to: '/integrations/email-inbox', label: 'Email Inbox' },
-      { to: '/integrations/outlook-inbox', label: 'Outlook / Microsoft 365' },
-      { to: '/integrations/server-folder', label: 'Server Directory' },
-      { to: '/integrations/sftp', label: 'SFTP / Broker Portal' },
-      { to: '/integrations/ivans-download', label: 'IVANS Download' },
-      { to: '/integrations/acord-al3', label: 'ACORD AL3 / XML Hub' },
-      { to: '/integrations/guidewire-policycenter', label: 'Guidewire PolicyCenter' },
-      { to: '/integrations/duck-creek', label: 'Duck Creek Policy' },
-      { to: '/integrations/majesco-policy', label: 'Majesco Policy' },
-      { to: '/integrations/applied-epic', label: 'Applied Epic (Vertafore)' },
-      { to: '/integrations/hawksoft', label: 'HawkSoft AMS' },
-      { to: '/integrations/salesforce-crm', label: 'Salesforce' },
-      { to: '/integrations/verisk-iso', label: 'Verisk / ISO' },
-      { to: '/integrations/corelogic', label: 'CoreLogic / Cotality' },
-      { to: '/integrations/bold-penguin', label: 'Bold Penguin' },
-      { to: '/integrations/docusign', label: 'DocuSign' },
-      { to: '/integrations/microsoft-teams', label: 'Microsoft Teams' },
-      { to: '/integrations/slack-intake', label: 'Slack' },
-      { to: '/integrations/snowflake', label: 'Snowflake' },
-    ],
-  },
-  { section: 'Account' },
-  { to: '/ratemaking', icon: HandCoins, label: 'Ratemaking & Pricing', color: 'text-brand' },
-  { to: '/settings', icon: Settings, label: 'Settings' },
-];
+const GROUP_ICONS = {
+  home: LayoutDashboard,
+  insurance: Shield,
+  reference: Library,
+  'mortgage-lending': Home,
+  'uw-operations': Briefcase,
+  'post-decision': FileCheck,
+  analytics: BarChart3,
+  governance: ShieldCheck,
+  integrations: Cable,
+  account: Settings,
+};
 
 const CRUMBS = [
   { prefix: '/reference/commercial', labels: [{ text: 'Reference', to: '/reference' }, 'Commercial insurance'] },
@@ -191,16 +75,16 @@ function crumbsFor(pathname) {
 
 export default function Layout({ health, pendingCount, onRefresh, onLogin, user, setUser, isLimited, welcomeMessage, onDismissWelcome }) {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [openGroups, setOpenGroups] = useState(() => {
-    const init = {};
-    nav.forEach((item) => { if (item.children && item.defaultOpen) init[item.to] = true; });
-    return init;
-  });
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const { selectedState } = useStateContext();
   const crumbs = crumbsFor(pathname);
+
+  const [activeGroupId, setActiveGroupId] = useState(() => deriveActiveGroupId(pathname));
+  useEffect(() => {
+    setActiveGroupId(deriveActiveGroupId(pathname));
+  }, [pathname]);
+  const activeGroup = RAIL_GROUPS.find((g) => g.id === activeGroupId) || RAIL_GROUPS[0];
 
   const logout = () => {
     auth.clear();
@@ -208,240 +92,102 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
     navigate('/system');
   };
 
-  const toggleGroup = (to) => setOpenGroups((g) => ({ ...g, [to]: !g[to] }));
-
-  const renderNavItem = (item, i) => {
-    if (item.section) {
-      if (sidebarCollapsed) return null;
-      return (
-        <p key={i} className="px-3 pb-1 pt-4 text-[10px] font-bold uppercase tracking-widest text-slate-600">
-          {item.section}
-        </p>
-      );
-    }
-
-    if (item.children) {
-      const Icon = item.icon;
-      const isOpen = !!openGroups[item.to];
-      if (sidebarCollapsed) {
-        return (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            title={item.label}
-            className={({ isActive }) => `nav-link ${isActive ? 'nav-link-active' : ''}`}
-          >
-            <Icon className={`h-[18px] w-[18px] mx-auto ${item.color || ''}`} />
-          </NavLink>
-        );
-      }
-      return (
-        <div key={item.to}>
-          <div className="flex items-center gap-0">
-            <NavLink
-              to={item.to}
-              className={({ isActive }) => `nav-link flex-1 ${isActive ? 'nav-link-active' : ''}`}
-            >
-              <Icon className={`h-[18px] w-[18px] ${item.color || ''}`} />
-              <span className="flex-1">{item.label}</span>
-            </NavLink>
-            <button
-              type="button"
-              onClick={() => toggleGroup(item.to)}
-              className="mr-1 rounded-lg p-2 text-slate-500 transition hover:bg-white/[0.05] hover:text-slate-300"
-              title={isOpen ? 'Collapse' : 'Expand'}
-            >
-              {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-            </button>
-          </div>
-          {isOpen && (
-            <div
-              className={`ml-4 mt-0.5 border-l border-white/[0.07] pl-2 ${
-                item.scrollChildren
-                  ? 'max-h-[280px] overflow-y-auto overscroll-contain pr-1 [scrollbar-width:thin] [scrollbar-color:rgba(148,163,184,0.45)_transparent]'
-                  : ''
-              }`}
-            >
-              {item.children.map((child) => {
-                if (child.soon || child.disabled) {
-                  return (
-                    <div
-                      key={child.label}
-                      className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-slate-600"
-                      title="Coming soon"
-                    >
-                      <Plus className="h-3.5 w-3.5 shrink-0 text-slate-600" />
-                      <span className="flex-1">{child.label}</span>
-                      <span className="rounded-full bg-slate-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-slate-500">
-                        Soon
-                      </span>
-                    </div>
-                  );
-                }
-                return (
-                  <NavLink
-                    key={child.to}
-                    to={child.to}
-                    end={child.to === item.to || child.to === '/insurance'}
-                    onClick={() => setMobileOpen(false)}
-                    className={({ isActive }) => {
-                      const hubMatch = child.hub && pathname.startsWith(child.hub);
-                      return `nav-link ${isActive || hubMatch ? 'nav-link-active' : ''}`;
-                    }}
-                  >
-                    <span className={`flex-1 ${child.sectionId ? insuranceSectionAccent(INSURANCE_SECTIONS.find((s) => s.id === child.sectionId)?.accent).tag : ''}`}>{child.label}</span>
-                    {child.tag && (
-                      <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
-                        child.tag === 'Live'
-                          ? 'bg-emerald-500/15 text-emerald-400'
-                          : child.tag === 'Catalog'
-                            ? 'bg-slate-500/20 text-slate-300'
-                            : 'bg-amber-500/15 text-amber-400'
-                      }`}>
-                        {child.tag}
-                      </span>
-                    )}
-                    {!sidebarCollapsed && child.badge && pendingCount > 0 && (
-                      <span className="rounded-full bg-red-500/20 px-2 py-0.5 text-[10px] font-bold text-red-400">
-                        {pendingCount}
-                      </span>
-                    )}
-                  </NavLink>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      );
-    }
-
-    const Icon = item.icon;
-    const isProtected = item.to !== '/' && item.to !== '/system' && !user;
-    if (item.disabled) {
-      return (
-        <div
-          key={item.to}
-          className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-slate-600 opacity-50 pointer-events-none"
-          title="Coming soon"
-        >
-          <Icon className={`h-[18px] w-[18px] ${item.color || ''}`} />
-          <span className="flex-1">{item.label}</span>
-          {item.tag && (
-            <span className="rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-amber-500/60">
-              {item.tag}
-            </span>
-          )}
-        </div>
-      );
-    }
-    return (
-      <NavLink
-        key={item.to}
-        to={item.to}
-        end={item.to === '/'}
-        onClick={() => setMobileOpen(false)}
-        className={({ isActive }) => `nav-link ${isActive ? 'nav-link-active' : ''} ${isProtected && sidebarCollapsed ? 'opacity-60' : ''}`}
-        title={sidebarCollapsed ? item.label : undefined}
-      >
-        <Icon className={`h-[18px] w-[18px] ${sidebarCollapsed ? 'mx-auto' : ''} ${item.color || ''}`} />
-        {!sidebarCollapsed && <span className="flex-1">{item.label}</span>}
-        {!sidebarCollapsed && item.tag && (
-          <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
-            item.tag === 'Live'
-              ? 'bg-emerald-500/15 text-emerald-400'
-              : 'bg-amber-500/15 text-amber-400'
-          }`}>
-            {item.tag}
-          </span>
-        )}
-        {!sidebarCollapsed && isProtected && (
-          <Lock className="h-3 w-3 shrink-0 text-slate-600" />
-        )}
-        {!sidebarCollapsed && item.badge && pendingCount > 0 && (
-          <span className="rounded-full bg-red-500/20 px-2 py-0.5 text-[10px] font-bold text-red-400">
-            {pendingCount}
-          </span>
-        )}
-      </NavLink>
-    );
-  };
-
   return (
     <div className="flex min-h-screen bg-surface bg-mesh">
       {/* Sidebar */}
-      <aside className={`fixed inset-y-0 left-0 z-50 flex flex-col border-r border-white/[0.06] bg-surface-raised/95 backdrop-blur-xl transition-all duration-300 lg:translate-x-0 ${
-        sidebarCollapsed ? 'w-[64px]' : 'w-[272px]'
-      } ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="flex items-center gap-3 border-b border-white/[0.06] px-5 py-5">
-          {sidebarCollapsed ? (
-            <button type="button" className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-brand to-indigo-600 shadow-glow" onClick={() => setSidebarCollapsed(false)}>
-              <Shield className="keep-white h-5 w-5 text-white" />
-            </button>
-          ) : (
-            <>
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-brand to-indigo-600 shadow-glow">
-                <Shield className="keep-white h-5 w-5 text-white" />
-              </div>
-              <div>
-                <h1 className="font-display text-base font-bold tracking-tight">Rytera</h1>
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">AI Underwriting</p>
-              </div>
-            </>
-          )}
-          {!sidebarCollapsed && (
-            <button type="button" className="ml-auto lg:hidden" onClick={() => setMobileOpen(false)}>
-              <X className="h-5 w-5 text-slate-400" />
-            </button>
-          )}
+      <aside className={`fixed inset-y-0 left-0 z-50 flex lg:translate-x-0 ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="flex w-[60px] shrink-0 flex-col items-center border-r border-white/[0.06] bg-[rgb(9,11,16)] py-4">
+          <button type="button" onClick={() => navigate('/')} className="mb-4 flex h-8 w-8 items-center justify-center rounded-lg border border-brand text-brand">
+            <Shield className="h-4 w-4" />
+          </button>
+          <nav className="flex flex-1 flex-col items-center gap-1 overflow-y-auto">
+            {RAIL_GROUPS.map((group) => {
+              const Icon = GROUP_ICONS[group.id];
+              const isActive = group.id === activeGroupId;
+              return (
+                <button
+                  key={group.id}
+                  type="button"
+                  title={group.label}
+                  onClick={() => setActiveGroupId(group.id)}
+                  className={`flex h-9 w-9 items-center justify-center rounded-lg transition ${
+                    isActive ? 'bg-brand/[0.14] text-brand' : 'text-slate-500 hover:bg-white/[0.05] hover:text-slate-300'
+                  }`}
+                >
+                  <Icon className="h-[17px] w-[17px]" />
+                </button>
+              );
+            })}
+          </nav>
         </div>
 
-        <nav className="flex-1 space-y-0.5 overflow-y-auto p-3">
-          {nav.map(renderNavItem)}
-        </nav>
-
-        {!sidebarCollapsed && (
-          <div className="border-t border-white/[0.06] p-4">
+        <div className="flex w-[198px] shrink-0 flex-col border-r border-white/[0.06] bg-surface-raised/95 backdrop-blur-xl">
+          <div className="border-b border-white/[0.06] px-4 py-[19px]">
+            <p className="font-display text-base font-semibold">{activeGroup.label}</p>
+          </div>
+          <div className="flex-1 space-y-0.5 overflow-y-auto p-2">
+            {activeGroup.items.map((item) => {
+              const isProtected = item.to !== '/' && item.to !== '/system' && !user;
+              return (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end={item.to === '/'}
+                  onClick={() => setMobileOpen(false)}
+                  className={({ isActive }) => `nav-link ${isActive ? 'nav-link-active' : ''}`}
+                >
+                  <span className="flex-1">{item.label}</span>
+                  {item.tag && (
+                    <span className={`rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide ${
+                      item.tag === 'Live' ? 'text-verdigris' : 'text-slate-500'
+                    }`}>
+                      {item.tag}
+                    </span>
+                  )}
+                  {item.badge && pendingCount > 0 && (
+                    <span className="rounded-full bg-risk-red/20 px-2 py-0.5 text-[10px] font-bold text-risk-red">
+                      {pendingCount}
+                    </span>
+                  )}
+                  {isProtected && <Lock className="h-3 w-3 shrink-0 text-slate-600" />}
+                </NavLink>
+              );
+            })}
+          </div>
+          <div className="border-t border-white/[0.06] p-3.5">
             {health && (
-              <div className="mb-3 flex items-center gap-2 rounded-xl bg-surface-overlay px-3 py-2 text-xs text-slate-400">
-                <span className={`h-2 w-2 rounded-full ${health.overall === 'healthy' ? 'bg-emerald-400' : health.overall === 'degraded' ? 'bg-amber-400' : 'bg-red-400'}`} />
+              <div className="mb-2.5 flex items-center gap-2 text-[11.5px] text-slate-400">
+                <span className={`h-1.5 w-1.5 rounded-full ${health.overall === 'healthy' ? 'bg-verdigris' : health.overall === 'degraded' ? 'bg-risk-amber' : 'bg-risk-red'}`} />
                 {displayText(health.overall)} · {displayText(health.llm_mode)}
               </div>
             )}
             {user ? (
               <div className="flex items-center gap-2">
-                <div className="keep-white flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-brand to-indigo-500 text-xs font-bold text-white">
+                <div className="keep-white flex h-[26px] w-[26px] items-center justify-center rounded-full bg-brand text-[10.5px] font-bold text-surface">
                   {displayText(user.username)?.slice(0, 2).toUpperCase()}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{displayText(user.username)}</p>
-                  <p className="truncate text-[10px] text-slate-500">{displayText(user.role)} · {displayText(user.org_id)}</p>
+                  <p className="truncate text-[12.5px] font-medium">{displayText(user.username)}</p>
+                  <p className="truncate text-[10px] text-slate-500">{displayText(user.role)}</p>
                 </div>
-                <button type="button" onClick={logout} className="rounded-lg p-1.5 text-slate-500 hover:bg-white/5 hover:text-slate-300">
-                  <LogOut className="h-4 w-4" />
+                <button type="button" onClick={logout} className="rounded-lg p-1 text-slate-500 hover:bg-white/5 hover:text-slate-300">
+                  <LogOut className="h-3.5 w-3.5" />
                 </button>
               </div>
             ) : (
-              <button type="button" onClick={onLogin} className="btn-primary w-full text-sm">Sign In</button>
+              <button type="button" onClick={onLogin} className="btn-primary w-full text-xs">Sign in</button>
             )}
           </div>
-        )}
+        </div>
       </aside>
 
       {mobileOpen && <div className="fixed inset-0 z-40 bg-black/60 lg:hidden" onClick={() => setMobileOpen(false)} />}
 
       {/* Main */}
-      <div className={`flex min-w-0 flex-1 flex-col transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-[64px]' : 'lg:ml-[272px]'}`}>
+      <div className="flex min-w-0 flex-1 flex-col lg:ml-[258px]">
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-3 overflow-visible border-b border-white/[0.06] bg-surface/80 px-6 backdrop-blur-xl">
           <div className="flex min-w-0 items-center gap-3">
             <button type="button" className="rounded-lg p-2 lg:hidden" onClick={() => setMobileOpen(true)}>
-              <Menu className="h-5 w-5" />
-            </button>
-            <button
-              type="button"
-              className="hidden rounded-lg p-2 text-slate-500 hover:bg-white/5 hover:text-slate-300 lg:block"
-              onClick={() => setSidebarCollapsed((v) => !v)}
-              title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            >
               <Menu className="h-5 w-5" />
             </button>
             <nav className="hidden min-w-0 items-center gap-1.5 text-sm text-slate-400 md:flex" aria-label="Breadcrumb">
