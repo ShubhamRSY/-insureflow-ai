@@ -39,7 +39,7 @@ export default function MortgagePage({ presets, jobs, onRunDemo, onOpenJob, onRu
     <div className="mx-auto max-w-7xl space-y-8 animate-fade-in">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Mortgage Underwriting</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Mortgage Underwriting</h1>
           <p className="mt-2 max-w-xl text-sm text-slate-400">
             Income, credit, and property → decision + rate.
           </p>

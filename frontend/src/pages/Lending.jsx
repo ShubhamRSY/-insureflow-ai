@@ -100,7 +100,7 @@ export default function LendingPage({ presets, demoResult, onRunDemo }) {
             <Wallet className="h-6 w-6 text-lending" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Lending Underwriting</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Lending Underwriting</h1>
             <p className="mt-1 max-w-xl text-slate-400">
               Load one package, then run underwriting — application, P&amp;L, balance sheet, bank, credit, tax.
             </p>

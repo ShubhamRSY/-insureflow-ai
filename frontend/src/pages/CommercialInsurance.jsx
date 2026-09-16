@@ -45,7 +45,7 @@ export default function CommercialInsuranceHub({ presets, onRunDemo, onSubmit, j
           </div>
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-2xl font-bold tracking-tight text-slate-100">{hub.title}</h1>
+              <h1 className="text-3xl font-bold tracking-tight text-slate-100">{hub.title}</h1>
               <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-400">
                 Live
               </span>

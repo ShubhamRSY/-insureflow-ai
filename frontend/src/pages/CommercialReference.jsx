@@ -115,7 +115,7 @@ export default function CommercialReference() {
             <BookOpen className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-100">Commercial insurance notebook</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-100">Commercial insurance notebook</h1>
             <p className="mt-1 text-sm text-slate-400">
               Product taxonomy, required documents, and UW reference — separate from the submission workbench.
             </p>
