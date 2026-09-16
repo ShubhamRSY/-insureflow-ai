@@ -66,6 +66,18 @@ describe('Badge', () => {
     expect(badge.className).toContain('amber');
   });
 
+  it('applies correct color class for "live"', () => {
+    render(<Badge status="live" />);
+    const badge = screen.getByText('live');
+    expect(badge.className).toContain('emerald');
+  });
+
+  it('applies correct color class for "catalog"', () => {
+    render(<Badge status="catalog" />);
+    const badge = screen.getByText('catalog');
+    expect(badge.className).toContain('slate');
+  });
+
   it('shows pulse animation when pulse prop is true', () => {
     render(<Badge status="ok" pulse />);
     const badge = screen.getByText('ok');
