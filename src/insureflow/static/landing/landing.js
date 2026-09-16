@@ -881,4 +881,38 @@
     });
   }
 
+  /* ---- Lob directory filter ---- */
+  var lobInput = document.getElementById('lob-filter-input');
+  if (lobInput) {
+    var lobDirectory = document.getElementById('lob-directory');
+    var lobGroups = lobDirectory.querySelectorAll('.lob-group');
+    var lobEntries = lobDirectory.querySelectorAll('.lob-entry');
+    var lobEmpty = document.getElementById('lob-empty');
+    var lobEmptyTerm = document.getElementById('lob-empty-term');
+    var lobCount = document.getElementById('lob-filter-count');
+    var lobTotal = lobEntries.length;
+
+    var runLobFilter = function () {
+      var q = lobInput.value.trim().toLowerCase();
+      var visible = 0;
+      lobEntries.forEach(function (entry) {
+        var haystack = (entry.getAttribute('data-search') || '') + ' ' + entry.textContent.toLowerCase();
+        var match = !q || haystack.toLowerCase().indexOf(q) !== -1;
+        entry.hidden = !match;
+        if (match) visible++;
+      });
+      lobGroups.forEach(function (group) {
+        var anyVisible = group.querySelectorAll('.lob-entry:not([hidden])').length > 0;
+        group.hidden = !anyVisible;
+      });
+      if (lobEmpty) {
+        lobEmpty.hidden = visible !== 0;
+        if (lobEmptyTerm) lobEmptyTerm.textContent = lobInput.value.trim();
+      }
+      if (lobCount) lobCount.textContent = q ? visible + ' of ' + lobTotal : '';
+    };
+
+    lobInput.addEventListener('input', runLobFilter);
+  }
+
 })();

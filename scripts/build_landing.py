@@ -71,6 +71,10 @@ SPRITE = """  <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-
     <symbol id="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></symbol>
     <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
     <symbol id="i-bar-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/></symbol>
+    <symbol id="i-cross-medical" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v9M7.5 12h9"/></symbol>
+    <symbol id="i-leaf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20c8 0 14-6 14-14V4h-2C8 4 4 10 4 18z"/><path d="M4 20 14 10"/></symbol>
+    <symbol id="i-hard-hat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18a8 8 0 0 1 16 0"/><path d="M2 18h20"/><path d="M12 10V6"/></symbol>
+    <symbol id="i-plane" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M4 9 12 6l8 3"/><path d="M8.5 19 12 17l3.5 2"/></symbol>
   </svg>"""
 
 BG = """  <div class="bg-canvas" aria-hidden="true">
@@ -410,7 +414,7 @@ def head(title: str, desc: str, canonical: str, og_desc: str) -> str:
         "  </script>\n"
         '  <link rel="preconnect" href="https://fonts.googleapis.com" />\n'
         '  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />\n'
-        '  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet" />\n'
+        '  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet" />\n'
         '  <link rel="stylesheet" href="/static/landing.css" />\n'
     )
 
@@ -1071,18 +1075,14 @@ def hero_home() -> str:
         <div class="particle-field" aria-hidden="true"></div>
         <div class="hero-grid">
           <div class="reveal">
-            <div class="hero-badge">
-              <span class="dot"></span>
-              AI Underwriting &amp; Risk Intelligence &middot; Built for Decisions
-            </div>
-            <h1><span class="scramble-text" data-text="AI underwriting you can">AI underwriting you can</span><br /><span class="gradient">actually trust.</span></h1>
+            <h1><span class="scramble-text" data-text="Every number, traced to its source.">Every number, traced to its source.</span></h1>
             <p class="lead">
-              Rytera reads your submissions, pulls external data, runs the numbers from state-filed rate manuals, and hands you a <strong>decision-ready memo with every source cited</strong>.
-              We didn't build this to collect submissions. We built it to help you underwrite them &mdash; fast, grounded, and defensible.
+              Rytera reads the submission, pulls external data, runs the numbers against your state-filed rate manual, and hands you a decision-ready memo &mdash; every figure linked back to the page it came from.
+              Nothing is collected for its own sake. It's read so you can decide.
             </p>
-            <p class="brand-line">Every fact grounded with provenance. Zero invented rates. A licensed underwriter still signs.</p>
+            <p class="brand-line">Zero invented rates. A licensed underwriter still signs.</p>
             <div class="punch-row" aria-hidden="true">
-              <span>99.8% Extraction Fidelity</span>
+              <span>Field-extraction SLA 85%+</span>
               <span>Zero-Token Architecture</span>
               <span>100% Licensed UW Sign-Off</span>
               <span>Audit-Sealed Paper Trail</span>
@@ -1136,7 +1136,7 @@ def hero_home() -> str:
                     <span class="m-stage pending">Sign-off / Override</span>
                   </div>
                   <div class="m-progress">
-                    <div class="m-prog-label"><span>Field-level verification &amp; attribution</span><span>16 / 16 pages grounded &middot; 99.8% conf</span></div>
+                    <div class="m-prog-label"><span>Field-level verification &amp; attribution</span><span>16 / 16 pages grounded</span></div>
                     <div class="m-bar"><span style="width:100%"></span></div>
                   </div>
                   <div class="m-grid">
@@ -1175,7 +1175,7 @@ def hero_home() -> str:
           <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> Fernet-encrypted audit manifest</span>
         </div>
         <div class="stats reveal stagger-reveal" aria-label="Key Performance Indicators">
-          <div class="stat"><span class="num" data-target="99.8" data-decimals="1" data-suffix="%">99.8%</span><span>Extraction Fidelity &amp; Grounding</span></div>
+          <div class="stat"><span class="num" data-target="100" data-suffix="%">100%</span><span>Fields Traced to a Source Page</span></div>
           <div class="stat"><span class="num" data-target="85" data-suffix="%+">85%+</span><span>Faster Submission Turnaround</span></div>
           <div class="stat"><span class="num" data-target="0" data-suffix="%">0%</span><span>Invented Prices or Hallucinated Facts</span></div>
           <div class="stat"><span class="num" data-target="100" data-suffix="%">100%</span><span>Licensed Underwriter Sign-Off</span></div>
@@ -1199,128 +1199,188 @@ def desks_section() -> str:
           <h2>All Your Lines, on One Workbench</h2>
           <p class="section-desc">Commercial, life, health, personal, specialty, admitted &amp; reinsurance, engineering, aviation, crime, catastrophe, niche liability, and surety &mdash; plus mortgage and lending desks. Same workbench, same paper trail, same queue, same shared underwriting logic. Pick the carrier or product, drop the file, and underwrite.</p>
         </div>
-        <div class="lob-directory reveal stagger-reveal" role="list" aria-label="Insurance sections">
+        <div class="lob-filter reveal">
+          <svg class="ico sm" aria-hidden="true"><use href="#i-search"/></svg>
+          <input type="text" id="lob-filter-input" placeholder="Filter by name or keyword&hellip; (e.g. &ldquo;flood&rdquo;, &ldquo;aviation&rdquo;, &ldquo;D&amp;O&rdquo;)" aria-label="Filter insurance sections by name or keyword" autocomplete="off">
+          <span class="lob-filter-count" id="lob-filter-count" aria-live="polite"></span>
+        </div>
+        <div class="lob-directory reveal stagger-reveal" role="list" aria-label="Insurance sections" id="lob-directory">
           <div class="lob-group">
             <p class="lob-group-label">Insurance sections &middot; 1&ndash;6</p>
-            <a class="lob-entry" role="listitem" href="/dashboard/insurance/sections/life">
-              <span class="lob-num">01</span>
+            <a class="lob-entry" role="listitem" data-family="personal" data-search="life term whole universal annuity endowment ulip money-back" href="/dashboard/insurance/sections/life">
+              <span class="lob-num-wrap">
+                <svg class="ico lob-icon" aria-hidden="true"><use href="#i-heart-pulse"/></svg>
+                <span class="lob-num">01</span>
+              </span>
               <span class="lob-entry-main">
-                <span class="lob-entry-title">Life <span class="lob-status live">Live</span></span>
+                <span class="lob-entry-title">Life</span>
                 <span class="lob-entry-desc">Term priced from your filed manual today; permanent and annuity wait on their rate tables.</span>
               </span>
+              <span class="lob-stat">7 products</span>
               <svg class="ico sm lob-arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg>
             </a>
-            <a class="lob-entry" role="listitem" href="/dashboard/insurance/sections/health">
-              <span class="lob-num">02</span>
+            <a class="lob-entry" role="listitem" data-family="personal" data-search="health medical critical illness disability aca group corporate" href="/dashboard/insurance/sections/health">
+              <span class="lob-num-wrap">
+                <svg class="ico lob-icon" aria-hidden="true"><use href="#i-cross-medical"/></svg>
+                <span class="lob-num">02</span>
+              </span>
               <span class="lob-entry-main">
-                <span class="lob-entry-title">Health <span class="lob-status live">Live</span></span>
+                <span class="lob-entry-title">Health</span>
                 <span class="lob-entry-desc">Individual through disability &mdash; medical, critical illness, disability. ACA and state mandates applied.</span>
               </span>
+              <span class="lob-stat">8 products</span>
               <svg class="ico sm lob-arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg>
             </a>
-            <a class="lob-entry" role="listitem" href="/dashboard/insurance/sections/general">
-              <span class="lob-num">03</span>
+            <a class="lob-entry" role="listitem" data-family="personal" data-search="personal lines motor auto home travel marine fire cyber" href="/dashboard/insurance/sections/general">
+              <span class="lob-num-wrap">
+                <svg class="ico lob-icon" aria-hidden="true"><use href="#i-home"/></svg>
+                <span class="lob-num">03</span>
+              </span>
               <span class="lob-entry-main">
-                <span class="lob-entry-title">Personal Lines <span class="lob-status live">Live</span></span>
+                <span class="lob-entry-title">Personal Lines</span>
                 <span class="lob-entry-desc">Motor, home, travel, marine, fire, cyber &mdash; visible coverage, honest pricing, no invented premium.</span>
               </span>
+              <span class="lob-stat">7 products</span>
               <svg class="ico sm lob-arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg>
             </a>
-            <a class="lob-entry" role="listitem" href="/dashboard/insurance/sections/commercial">
-              <span class="lob-num">04</span>
+            <a class="lob-entry" role="listitem" data-family="commercial" data-search="commercial lines property business interruption cope d&o e&o workers comp package" href="/dashboard/insurance/sections/commercial">
+              <span class="lob-num-wrap">
+                <svg class="ico lob-icon" aria-hidden="true"><use href="#i-briefcase"/></svg>
+                <span class="lob-num">04</span>
+              </span>
               <span class="lob-entry-main">
-                <span class="lob-entry-title">Commercial Lines <span class="lob-status live">Live</span></span>
+                <span class="lob-entry-title">Commercial Lines</span>
                 <span class="lob-entry-desc">Property &amp; business interruption with COPE scoring, plus D&amp;O, E&amp;O, workers&rsquo; comp and package.</span>
               </span>
+              <span class="lob-stat">6 products</span>
               <svg class="ico sm lob-arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg>
             </a>
-            <a class="lob-entry" role="listitem" href="/dashboard/insurance/sections/specialty">
-              <span class="lob-num">05</span>
+            <a class="lob-entry" role="listitem" data-family="specialty" data-search="specialty lines crop livestock pet events title mortgage guarantee" href="/dashboard/insurance/sections/specialty">
+              <span class="lob-num-wrap">
+                <svg class="ico lob-icon" aria-hidden="true"><use href="#i-leaf"/></svg>
+                <span class="lob-num">05</span>
+              </span>
               <span class="lob-entry-main">
-                <span class="lob-entry-title">Specialty Lines <span class="lob-status live">Live</span></span>
+                <span class="lob-entry-title">Specialty Lines</span>
                 <span class="lob-entry-desc">Crop, livestock, pet, events, title, mortgage guarantee.</span>
               </span>
+              <span class="lob-stat">6 products</span>
               <svg class="ico sm lob-arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg>
             </a>
-            <a class="lob-entry" role="listitem" href="/dashboard/insurance/sections/provider">
-              <span class="lob-num">06</span>
+            <a class="lob-entry" role="listitem" data-family="commercial" data-search="admitted surplus reinsurance treaties fronting" href="/dashboard/insurance/sections/provider">
+              <span class="lob-num-wrap">
+                <svg class="ico lob-icon" aria-hidden="true"><use href="#i-landmark"/></svg>
+                <span class="lob-num">06</span>
+              </span>
               <span class="lob-entry-main">
-                <span class="lob-entry-title">Admitted, Surplus &amp; Re <span class="lob-status live">Live</span></span>
+                <span class="lob-entry-title">Admitted, Surplus &amp; Re</span>
                 <span class="lob-entry-desc">Admitted vs surplus-lines routing, reinsurance treaties and fronting arrangements.</span>
               </span>
+              <span class="lob-stat">4 products</span>
               <svg class="ico sm lob-arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg>
             </a>
           </div>
           <div class="lob-group">
             <p class="lob-group-label">Insurance sections &middot; 7&ndash;12</p>
-            <a class="lob-entry" role="listitem" href="/dashboard/insurance/sections/engineering">
-              <span class="lob-num">07</span>
+            <a class="lob-entry" role="listitem" data-family="commercial" data-search="engineering construction contractors all risk erection machinery breakdown" href="/dashboard/insurance/sections/engineering">
+              <span class="lob-num-wrap">
+                <svg class="ico lob-icon" aria-hidden="true"><use href="#i-hard-hat"/></svg>
+                <span class="lob-num">07</span>
+              </span>
               <span class="lob-entry-main">
-                <span class="lob-entry-title">Engineering &amp; Construction <span class="lob-status live">Live</span></span>
+                <span class="lob-entry-title">Engineering &amp; Construction</span>
                 <span class="lob-entry-desc">Contractors&rsquo; all risk, erection, machinery breakdown, delay in start-up, tied to project schedules.</span>
               </span>
+              <span class="lob-stat">5 products</span>
               <svg class="ico sm lob-arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg>
             </a>
-            <a class="lob-entry" role="listitem" href="/dashboard/insurance/sections/aviation">
-              <span class="lob-num">08</span>
+            <a class="lob-entry" role="listitem" data-family="excess" data-search="aviation hull liability passenger fixed rotary wing aircraft" href="/dashboard/insurance/sections/aviation">
+              <span class="lob-num-wrap">
+                <svg class="ico lob-icon" aria-hidden="true"><use href="#i-plane"/></svg>
+                <span class="lob-num">08</span>
+              </span>
               <span class="lob-entry-main">
-                <span class="lob-entry-title">Aviation <span class="lob-status live">Live</span></span>
+                <span class="lob-entry-title">Aviation</span>
                 <span class="lob-entry-desc">Hull, liability and passenger exposure for fixed- and rotary-wing aircraft.</span>
               </span>
+              <span class="lob-stat">3 products</span>
               <svg class="ico sm lob-arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg>
             </a>
-            <a class="lob-entry" role="listitem" href="/dashboard/insurance/sections/fidelity">
-              <span class="lob-num">09</span>
+            <a class="lob-entry" role="listitem" data-family="excess" data-search="crime fidelity burglary employee dishonesty theft erisa" href="/dashboard/insurance/sections/fidelity">
+              <span class="lob-num-wrap">
+                <svg class="ico lob-icon" aria-hidden="true"><use href="#i-lock"/></svg>
+                <span class="lob-num">09</span>
+              </span>
               <span class="lob-entry-main">
-                <span class="lob-entry-title">Crime: Fidelity &amp; Burglary <span class="lob-status live">Live</span></span>
+                <span class="lob-entry-title">Crime: Fidelity &amp; Burglary</span>
                 <span class="lob-entry-desc">Employee dishonesty and third-party theft covers, with ERISA fidelity where plans apply.</span>
               </span>
+              <span class="lob-stat">2 products</span>
               <svg class="ico sm lob-arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg>
             </a>
-            <a class="lob-entry" role="listitem" href="/dashboard/insurance/sections/catastrophe">
-              <span class="lob-num">10</span>
+            <a class="lob-entry" role="listitem" data-family="excess" data-search="catastrophe flood earthquake weather index parametric cat" href="/dashboard/insurance/sections/catastrophe">
+              <span class="lob-num-wrap">
+                <svg class="ico lob-icon" aria-hidden="true"><use href="#i-zap"/></svg>
+                <span class="lob-num">10</span>
+              </span>
               <span class="lob-entry-main">
-                <span class="lob-entry-title">Catastrophe <span class="lob-status live">Live</span></span>
+                <span class="lob-entry-title">Catastrophe</span>
                 <span class="lob-entry-desc">Flood, earthquake and weather-index covers with honest CAT data and parametric triggers.</span>
               </span>
+              <span class="lob-stat">3 products</span>
               <svg class="ico sm lob-arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg>
             </a>
-            <a class="lob-entry" role="listitem" href="/dashboard/insurance/sections/niche-liability">
-              <span class="lob-num">11</span>
+            <a class="lob-entry" role="listitem" data-family="excess" data-search="excess niche liability umbrella pollution kidnap ransom political risk terrorism" href="/dashboard/insurance/sections/niche-liability">
+              <span class="lob-num-wrap">
+                <svg class="ico lob-icon" aria-hidden="true"><use href="#i-scale"/></svg>
+                <span class="lob-num">11</span>
+              </span>
               <span class="lob-entry-main">
-                <span class="lob-entry-title">Excess &amp; Niche Liability <span class="lob-status live">Live</span></span>
+                <span class="lob-entry-title">Excess &amp; Niche Liability</span>
                 <span class="lob-entry-desc">Umbrella, pollution, K&amp;R, political risk and terrorism routing.</span>
               </span>
+              <span class="lob-stat">5 products</span>
               <svg class="ico sm lob-arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg>
             </a>
-            <a class="lob-entry" role="listitem" href="/dashboard/insurance/sections/warranty-financial-emerging">
-              <span class="lob-num">12</span>
+            <a class="lob-entry" role="listitem" data-family="specialty" data-search="warranty surety emerging bonds credit gadget micro-insurance ubi cyber" href="/dashboard/insurance/sections/warranty-financial-emerging">
+              <span class="lob-num-wrap">
+                <svg class="ico lob-icon" aria-hidden="true"><use href="#i-shield-check"/></svg>
+                <span class="lob-num">12</span>
+              </span>
               <span class="lob-entry-main">
-                <span class="lob-entry-title">Warranty, Surety &amp; Emerging <span class="lob-status live">Live</span></span>
+                <span class="lob-entry-title">Warranty, Surety &amp; Emerging</span>
                 <span class="lob-entry-desc">Surety bonds, credit life, gadget, micro-insurance, UBI and personal cyber.</span>
               </span>
+              <span class="lob-stat">11 products</span>
               <svg class="ico sm lob-arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg>
             </a>
           </div>
           <div class="lob-group">
             <p class="lob-group-label">Separate verticals</p>
-            <a class="lob-entry" role="listitem" href="/underwriting#insurance-book">
-              <span class="lob-num">&middot;</span>
+            <a class="lob-entry" role="listitem" data-family="vertical" data-search="mortgage desk income assets collateral trid reg z hmda" href="/underwriting#insurance-book">
+              <span class="lob-num-wrap">
+                <svg class="ico lob-icon" aria-hidden="true"><use href="#i-key"/></svg>
+                <span class="lob-num">&middot;</span>
+              </span>
               <span class="lob-entry-main">
-                <span class="lob-entry-title">Mortgage desk <span class="lob-status live">Live</span></span>
+                <span class="lob-entry-title">Mortgage desk</span>
                 <span class="lob-entry-desc">Income, assets and collateral across 30+ document types. TRID, Reg Z and HMDA rules built in.</span>
               </span>
               <svg class="ico sm lob-arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg>
             </a>
-            <a class="lob-entry" role="listitem" href="/underwriting#insurance-book">
-              <span class="lob-num">&middot;</span>
+            <a class="lob-entry" role="listitem" data-family="vertical" data-search="lending desk consumer commercial loans reg b ecoa adverse action" href="/underwriting#insurance-book">
+              <span class="lob-num-wrap">
+                <svg class="ico lob-icon" aria-hidden="true"><use href="#i-wallet"/></svg>
+                <span class="lob-num">&middot;</span>
+              </span>
               <span class="lob-entry-main">
-                <span class="lob-entry-title">Lending desk <span class="lob-status live">Live</span></span>
+                <span class="lob-entry-title">Lending desk</span>
                 <span class="lob-entry-desc">Consumer and commercial loans with Reg B / ECOA equal-credit checks and a written adverse-action reason.</span>
               </span>
               <svg class="ico sm lob-arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg>
             </a>
           </div>
+          <p class="lob-empty" id="lob-empty" hidden>No sections match &ldquo;<span id="lob-empty-term"></span>&rdquo;. Try a different word, or <a href="/underwriting">browse everything</a>.</p>
         </div>
         <div class="cta reveal" style="margin-top:2rem">
           <a class="btn btn-primary btn-sm" href="/underwriting">Explore All Lines &amp; Desks <svg class="ico sm" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>

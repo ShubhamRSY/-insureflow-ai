@@ -266,7 +266,10 @@ def test_landing_lob_directory_present() -> None:
     assert "lob-directory" in html
     assert "lob-entry" in html
     assert "lob-group" in html
-    assert "lob-status" in html
+    assert "lob-icon" in html
+    assert "lob-stat" in html
+    assert 'data-family="personal"' in html
+    assert "lob-filter-input" in html
 
 
 def test_landing_pillars_grid_present() -> None:
@@ -338,12 +341,11 @@ def test_landing_new_svg_icons_exist() -> None:
 
 
 def test_landing_hero_copy() -> None:
-    """Hero uses 'AI underwriting you can actually trust' headline."""
+    """Hero uses the 'every number traced to its source' headline."""
     html = client.get("/", headers={"Accept": "text/html"}).text
-    assert "AI underwriting you can" in html
-    assert "actually trust" in html
-    assert "decision-ready rytera memo" in html.lower() or "decision memo" in html.lower() or "rytera memo" in html.lower()
-    assert "Built for Decisions" in html
+    assert "Every number, traced to its source" in html
+    assert "decision-ready memo" in html.lower()
+    assert "Zero invented rates" in html
 
 
 def test_landing_desks_copy() -> None:
@@ -440,8 +442,8 @@ def test_landing_build_matches_html() -> None:
         "All Your Lines, on One Workbench",
         "Production Underwriting Needs More Than a Model Score",
         "What We Ship This Week",
-        "actually trust",
-        "Built for Decisions",
+        "traced to its source",
+        "Zero invented rates",
     ]
     for s in structural:
         assert s in full, f"build_landing.py output missing {s!r}"
