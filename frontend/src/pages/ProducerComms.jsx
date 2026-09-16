@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { MessagesSquare, RefreshCw, CheckCircle2, Clock, Send, Shield, User } from 'lucide-react';
-import { Badge, EmptyState } from '../components/ui';
+import { Badge, EmptyState, StatCard } from '../components/ui';
 import { endpoints } from '../lib/api';
 import { toast } from '../lib/toast';
 
@@ -129,30 +129,9 @@ export default function ProducerCommsPage() {
       {error && <div className="rounded-xl bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</div>}
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <div className="glass-card group relative overflow-hidden p-5 animate-slide-up">
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-sky-500 to-cyan-400 opacity-60" />
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-medium uppercase tracking-wider text-slate-500">Total communications</p>
-            <Send className="h-4 w-4 text-sky-400" />
-          </div>
-          <p className="mt-2 text-3xl font-bold tracking-tight text-white">{counts.all}</p>
-        </div>
-        <div className="glass-card group relative overflow-hidden p-5 animate-slide-up">
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-emerald-500 to-teal-400 opacity-60" />
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-medium uppercase tracking-wider text-slate-500">Acknowledged</p>
-            <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-          </div>
-          <p className="mt-2 text-3xl font-bold tracking-tight text-white">{counts.acknowledged}</p>
-        </div>
-        <div className="glass-card group relative overflow-hidden p-5 animate-slide-up">
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-amber-500 to-orange-400 opacity-60" />
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-medium uppercase tracking-wider text-slate-500">Awaiting ack</p>
-            <Clock className="h-4 w-4 text-amber-400" />
-          </div>
-          <p className="mt-2 text-3xl font-bold tracking-tight text-white">{counts.sent}</p>
-        </div>
+        <StatCard label="Total communications" value={counts.all} />
+        <StatCard label="Acknowledged" value={counts.acknowledged} accent="success" />
+        <StatCard label="Awaiting ack" value={counts.sent} />
       </div>
 
       <div className="glass-card p-6">
