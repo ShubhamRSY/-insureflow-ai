@@ -4,7 +4,7 @@ import { endpoints } from '../lib/api';
 import { commercialSelectionLabel, defaultCommercialSelection } from '../lib/commercialTaxonomy';
 import RunSelector from '../components/RunSelector';
 import SubmissionJobsList from '../components/SubmissionJobsList';
-import { PageBack } from '../components/ui';
+import { PageBack, Badge } from '../components/ui';
 
 export default function LifeInsuranceHub({ presets, onRunDemo, onSubmit, jobs, onDeleteJob, onDeleteAllJobs }) {
   const [hub, setHub] = useState(null);
@@ -49,9 +49,7 @@ export default function LifeInsuranceHub({ presets, onRunDemo, onSubmit, jobs, o
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-3xl font-bold tracking-tight text-slate-100">{hub.title}</h1>
-              <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-400">
-                Live
-              </span>
+              <Badge status="live" />
             </div>
             <p className="mt-1 max-w-2xl text-sm text-slate-400">{hub.summary}</p>
           </div>

@@ -93,7 +93,7 @@ describe('LifeInsuranceHub', () => {
     renderHub();
 
     await waitFor(() => {
-      expect(screen.getByText('Live')).toBeInTheDocument();
+      expect(screen.getByText('live')).toBeInTheDocument();
     });
   });
 

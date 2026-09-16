@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import GeneralInsuranceHub from './GeneralInsurance';
 
 vi.mock('../lib/api', () => ({
@@ -38,7 +39,9 @@ const mockHubData = {
 
 function renderHub(props = {}) {
   return render(
-    <GeneralInsuranceHub presets={[]} onRunDemo={vi.fn()} onSubmit={vi.fn()} jobs={[]} onDeleteJob={vi.fn()} onDeleteAllJobs={vi.fn()} {...props} />
+    <MemoryRouter>
+      <GeneralInsuranceHub presets={[]} onRunDemo={vi.fn()} onSubmit={vi.fn()} jobs={[]} onDeleteJob={vi.fn()} onDeleteAllJobs={vi.fn()} {...props} />
+    </MemoryRouter>
   );
 }
 
@@ -68,9 +71,9 @@ describe('GeneralInsuranceHub', () => {
     renderHub();
 
     await waitFor(() => {
-      expect(screen.getByText('Catalog')).toBeInTheDocument();
+      expect(screen.getByText('catalog')).toBeInTheDocument();
     });
-    expect(screen.queryByText('Live')).not.toBeInTheDocument();
+    expect(screen.queryByText('live')).not.toBeInTheDocument();
   });
 
   it('renders RunSelector with the general product picker flag', async () => {

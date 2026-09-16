@@ -4,6 +4,7 @@ import { endpoints } from '../lib/api';
 import { commercialSelectionLabel, defaultCommercialSelection } from '../lib/commercialTaxonomy';
 import RunSelector from '../components/RunSelector';
 import SubmissionJobsList from '../components/SubmissionJobsList';
+import { PageBack, Badge } from '../components/ui';
 
 export default function GeneralInsuranceHub({ presets, onRunDemo, onSubmit, jobs, onDeleteJob, onDeleteAllJobs }) {
   const [hub, setHub] = useState(null);
@@ -38,6 +39,9 @@ export default function GeneralInsuranceHub({ presets, onRunDemo, onSubmit, jobs
   return (
     <div className="mx-auto w-full max-w-[1600px] animate-fade-in space-y-6 pb-12">
       <div>
+        <div className="mb-3">
+          <PageBack to="/insurance" label="All insurance" />
+        </div>
         <div className="flex items-start gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-sky-500/15 text-sky-400">
             <Umbrella className="h-5 w-5" />
@@ -45,9 +49,7 @@ export default function GeneralInsuranceHub({ presets, onRunDemo, onSubmit, jobs
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-3xl font-bold tracking-tight text-slate-100">{hub.title}</h1>
-              <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-400">
-                Catalog
-              </span>
+              <Badge status="catalog" />
             </div>
             <p className="mt-1 max-w-2xl text-sm text-slate-400">{hub.summary}</p>
           </div>

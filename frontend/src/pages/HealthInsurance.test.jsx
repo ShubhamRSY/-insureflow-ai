@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import HealthInsuranceHub from './HealthInsurance';
 
 vi.mock('../lib/api', () => ({
@@ -38,7 +39,9 @@ const mockHubData = {
 
 function renderHub(props = {}) {
   return render(
-    <HealthInsuranceHub presets={[]} onRunDemo={vi.fn()} onSubmit={vi.fn()} jobs={[]} onDeleteJob={vi.fn()} onDeleteAllJobs={vi.fn()} {...props} />
+    <MemoryRouter>
+      <HealthInsuranceHub presets={[]} onRunDemo={vi.fn()} onSubmit={vi.fn()} jobs={[]} onDeleteJob={vi.fn()} onDeleteAllJobs={vi.fn()} {...props} />
+    </MemoryRouter>
   );
 }
 
@@ -68,7 +71,7 @@ describe('HealthInsuranceHub', () => {
     renderHub();
 
     await waitFor(() => {
-      expect(screen.getByText('Live')).toBeInTheDocument();
+      expect(screen.getByText('live')).toBeInTheDocument();
     });
   });
 
