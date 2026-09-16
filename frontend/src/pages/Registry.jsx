@@ -313,10 +313,10 @@ export default function RegistryPage() {
   const visible = filter === 'all' ? entries : entries.filter((e) => e.component_type === filter);
 
   const stats = [
-    { label: 'Release checklist', value: steps.length || '—', sub: 'engineering → compliance → production', icon: ListChecks, accent: 'text-amber-400', bar: 'from-amber-500 to-orange-400' },
-    { label: 'Experiments', value: experiments?.summary?.total_runs ?? '—', sub: `${Object.keys(experiments?.summary?.by_class || {}).length} classes tracked`, icon: FlaskConical, accent: 'text-sky-400', bar: 'from-sky-500 to-cyan-400' },
-    { label: 'Registry entries', value: entries.length, sub: `${approvedCount} approved`, icon: Boxes, accent: 'text-violet-400', bar: 'from-violet-500 to-fuchsia-400' },
-    { label: 'Snapshots', value: snapshots.length, sub: 'audit pins of approved set', icon: Camera, accent: 'text-emerald-400', bar: 'from-emerald-500 to-teal-400' },
+    { label: 'Release checklist', value: steps.length || '—', sub: 'engineering → compliance → production', accent: 'brand' },
+    { label: 'Experiments', value: experiments?.summary?.total_runs ?? '—', sub: `${Object.keys(experiments?.summary?.by_class || {}).length} classes tracked`, accent: 'brand' },
+    { label: 'Registry entries', value: entries.length, sub: `${approvedCount} approved`, accent: 'brand' },
+    { label: 'Snapshots', value: snapshots.length, sub: 'audit pins of approved set', accent: 'success' },
   ];
 
   const contextSections = [
@@ -360,7 +360,7 @@ export default function RegistryPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((s) => (
-          <StatCard key={s.label} label={s.label} value={s.value} sub={s.sub} accent={s.bar === 'from-emerald-500 to-teal-400' ? 'success' : 'brand'} />
+          <StatCard key={s.label} label={s.label} value={s.value} sub={s.sub} accent={s.accent} />
         ))}
       </div>
 
