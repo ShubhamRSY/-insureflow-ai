@@ -30,9 +30,19 @@ export default {
           hover: 'rgb(var(--ry-hover) / <alpha-value>)',
         },
         brand: {
-          DEFAULT: '#5b8def',
-          light: '#8bb0f7',
-          glow: 'rgba(91, 141, 239, 0.28)',
+          DEFAULT: '#C79A46',
+          light: '#dcb15f',
+          glow: 'rgba(199, 154, 70, 0.28)',
+        },
+        verdigris: {
+          DEFAULT: '#3E8E82',
+          soft: 'rgba(62, 142, 130, 0.14)',
+        },
+        risk: {
+          red: '#C0524A',
+          'red-soft': 'rgba(192, 82, 74, 0.14)',
+          amber: '#C98A3A',
+          'amber-soft': 'rgba(201, 138, 58, 0.14)',
         },
         insurance: '#38bdf8',
         mortgage: '#a78bfa',
