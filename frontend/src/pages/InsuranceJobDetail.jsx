@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, FileCheck, ExternalLink, FileText, RefreshCw, AlertTriangle, Trash2, ClipboardCheck } from 'lucide-react';
 import { endpoints } from '../lib/api';
 import { displayText } from '../lib/safe';
+import { EmptyState } from '../components/ui';
 import MemoReportView, { Collapsible } from '../components/MemoReportView';
 import SubmissionJourney from '../components/SubmissionJourney';
 import UwWorksheetView from '../components/UwWorksheetView';
@@ -119,19 +120,20 @@ export default function InsuranceJobDetail({ onDeleted, onDeleteJob }) {
 
   if (error) {
     return (
-      <div className="py-16 text-center">
-        <p className="text-red-400">{error}</p>
-        <button onClick={() => navigate('/insurance')} className="mt-4 text-sm text-slate-400 hover:text-white">Back to Insurance</button>
-      </div>
+      <EmptyState
+        title="Couldn't load this submission"
+        description={error}
+        action={<button onClick={() => navigate('/insurance')} className="btn-secondary btn-sm text-sm">Back to Insurance</button>}
+      />
     );
   }
 
   if (!job) {
     return (
-      <div className="py-16 text-center">
-        <p className="text-slate-400">Submission not found.</p>
-        <button onClick={() => navigate('/insurance')} className="mt-4 text-sm text-slate-400 hover:text-white">Back to Insurance</button>
-      </div>
+      <EmptyState
+        title="Submission not found"
+        action={<button onClick={() => navigate('/insurance')} className="btn-secondary btn-sm text-sm">Back to Insurance</button>}
+      />
     );
   }
 

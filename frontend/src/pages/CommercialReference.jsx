@@ -12,6 +12,7 @@ import {
   Shield,
 } from 'lucide-react';
 import { endpoints } from '../lib/api';
+import { PageBack } from '../components/ui';
 
 function GuideSection({ title, icon: Icon, open, onToggle, children, badge }) {
   return (
@@ -119,9 +120,9 @@ export default function CommercialReference() {
             <p className="mt-1 text-sm text-slate-400">
               Product taxonomy, required documents, and UW reference — separate from the submission workbench.
             </p>
-            <Link to="/insurance/commercial" className="mt-2 inline-flex items-center gap-1 text-xs text-brand hover:underline">
-              ← Back to submissions
-            </Link>
+            <div className="mt-2">
+              <PageBack to="/insurance/commercial" label="Back to submissions" />
+            </div>
           </div>
         </div>
       </div>
