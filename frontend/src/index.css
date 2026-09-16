@@ -315,6 +315,10 @@ html.theme-light .nav-link:hover {
   color: #0f172a;
 }
 
+html.theme-light .text-brand {
+  color: #92702c;
+}
+
 html.theme-light .nav-link-active {
   color: #92702c;
 }
