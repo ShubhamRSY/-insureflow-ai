@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { endpoints } from '../lib/api';
 import { getInsuranceSection, insuranceSectionAccent } from '../lib/insuranceSections';
+import { Badge } from '../components/ui';
 
 const ICONS = {
   HeartPulse, Stethoscope, Umbrella, Briefcase, Leaf, Landmark,
@@ -101,13 +102,7 @@ export default function InsuranceSegmentPage() {
            <div>
             <div className="mt-1 flex flex-wrap items-center gap-2">
               <h1 className="text-3xl font-bold tracking-tight text-slate-100">{section.title}</h1>
-              <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-                sectionStatus === 'live'
-                  ? 'bg-emerald-500/15 text-emerald-400'
-                  : 'bg-slate-500/20 text-slate-300'
-              }`}>
-                {sectionStatus === 'live' ? 'Live' : 'Catalog'}
-              </span>
+              <Badge status={sectionStatus} />
             </div>
             <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">{section.summary}</p>
             {section.hub && section.hub !== `/insurance/sections/${section.id}` ? (
@@ -131,11 +126,7 @@ export default function InsuranceSegmentPage() {
             >
               <div className="flex items-center justify-between gap-2">
                 <p className="font-medium text-slate-200">{p.name}</p>
-                {p.cat && liveByCat[p.cat] ? (
-                  <span className="shrink-0 rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-400">
-                    Live
-                  </span>
-                ) : null}
+                {p.cat && liveByCat[p.cat] ? <Badge status="live" /> : null}
               </div>
               {p.hint ? <p className="mt-1 text-xs leading-relaxed text-slate-500">{p.hint}</p> : null}
               <p className={`mt-3 inline-flex items-center gap-1 text-xs font-medium ${accent.tag}`}>

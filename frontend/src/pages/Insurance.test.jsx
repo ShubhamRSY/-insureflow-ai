@@ -50,7 +50,8 @@ describe('InsurancePage', () => {
 
   it('shows an empty state when there are no recent jobs', () => {
     renderPage();
-    expect(screen.getByText('No jobs yet. Open a section and run a package.')).toBeInTheDocument();
+    expect(screen.getByText('No jobs yet')).toBeInTheDocument();
+    expect(screen.getByText('Open a section and run a package.')).toBeInTheDocument();
   });
 
   it('renders a recent job row', () => {

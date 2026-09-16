@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { INSURANCE_SECTIONS, insuranceSectionAccent } from '../lib/insuranceSections';
 import { buildJobRow, queueItemsByBundleId } from '../lib/submissions';
-import { Badge, ScoreBadge, PriorityBadge, AssigneeAvatar } from '../components/ui';
+import { Badge, ScoreBadge, PriorityBadge, AssigneeAvatar, EmptyState } from '../components/ui';
 import { toast } from '../lib/toast';
 
 const ICONS = {
@@ -72,13 +72,10 @@ export default function InsurancePage({ jobs, queueStats, onRefresh, onDeleteJob
                     <div className="flex flex-wrap items-center gap-2">
                       <span className={`text-[11px] font-bold tabular-nums ${accent.num}`}>{String(section.n).padStart(2, '0')}</span>
                       <h3 className="text-base font-semibold text-slate-100">{section.title}</h3>
-                      <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-                        section.status === 'live'
-                          ? 'bg-emerald-500/15 text-emerald-400'
-                          : 'bg-slate-500/20 text-slate-300'
-                      }`}>
-                        {section.disabled ? 'Coming soon' : section.status === 'live' ? 'Live' : 'Catalog'}
-                      </span>
+                      <Badge
+                        status={section.disabled ? 'catalog' : section.status === 'live' ? 'live' : 'catalog'}
+                        label={section.disabled ? 'Coming soon' : undefined}
+                      />
                     </div>
                     <p className="mt-1.5 text-xs leading-relaxed text-slate-400">{section.summary}</p>
                   </div>
@@ -165,7 +162,7 @@ export default function InsurancePage({ jobs, queueStats, onRefresh, onDeleteJob
           </div>
         </div>
         {!recent.length ? (
-          <p className="px-5 py-8 text-sm text-slate-500">No jobs yet. Open a section and run a package.</p>
+          <EmptyState title="No jobs yet" description="Open a section and run a package." />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">

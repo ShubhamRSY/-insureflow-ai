@@ -38,7 +38,7 @@ describe('InsuranceSegmentPage', () => {
 
     expect(screen.getByText('Life Insurance')).toBeInTheDocument();
     expect(screen.getByText('Term Life Insurance')).toBeInTheDocument();
-    expect(screen.getByText('Live')).toBeInTheDocument();
+    expect(screen.getByText('live')).toBeInTheDocument();
     expect(endpoints.generalInsuranceHub).not.toHaveBeenCalled();
     expect(endpoints.commercialInsuranceHub).not.toHaveBeenCalled();
   });
@@ -57,8 +57,8 @@ describe('InsuranceSegmentPage', () => {
     });
     expect(screen.getByText('Car TP')).toBeInTheDocument();
     expect(screen.queryByText('Unrelated')).not.toBeInTheDocument();
-    // Catalog section stays "Catalog" even with live lines underneath.
-    expect(screen.getByText('Catalog')).toBeInTheDocument();
+    // Catalog section stays "catalog" even with live lines underneath.
+    expect(screen.getByText('catalog')).toBeInTheDocument();
   });
 
   it('shows an error message when the hub fetch fails', async () => {
