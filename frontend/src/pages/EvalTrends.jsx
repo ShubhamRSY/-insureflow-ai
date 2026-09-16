@@ -4,7 +4,7 @@ import {
   CartesianGrid, Legend,
 } from 'recharts';
 import { Activity, RefreshCw, Search } from 'lucide-react';
-import { EmptyState } from '../components/ui';
+import { EmptyState, StatCard } from '../components/ui';
 import { endpoints } from '../lib/api';
 
 function fmtDay(ts) {
@@ -115,22 +115,9 @@ export default function EvalTrendsPage() {
       ) : (
         <>
           <div className="grid gap-4 sm:grid-cols-3">
-            <div className="glass-card p-4">
-              <p className="text-xs uppercase tracking-wider text-slate-500">Trend points</p>
-              <p className="mt-1 text-2xl font-semibold text-slate-100">{data.points}</p>
-            </div>
-            <div className="glass-card p-4">
-              <p className="text-xs uppercase tracking-wider text-slate-500">Avg agent error rate</p>
-              <p className="mt-1 text-2xl font-semibold text-slate-100">
-                {((data.agent_snapshot?.avg_error_rate || 0) * 100).toFixed(2)}%
-              </p>
-            </div>
-            <div className="glass-card p-4">
-              <p className="text-xs uppercase tracking-wider text-slate-500">Avg agent latency</p>
-              <p className="mt-1 text-2xl font-semibold text-slate-100">
-                {data.agent_snapshot?.avg_latency_ms != null ? `${data.agent_snapshot.avg_latency_ms} ms` : '—'}
-              </p>
-            </div>
+            <StatCard label="Trend points" value={data.points} />
+            <StatCard label="Avg agent error rate" value={`${((data.agent_snapshot?.avg_error_rate || 0) * 100).toFixed(2)}%`} />
+            <StatCard label="Avg agent latency" value={data.agent_snapshot?.avg_latency_ms != null ? `${data.agent_snapshot.avg_latency_ms} ms` : '—'} />
           </div>
 
           <div className="glass-card p-5">
@@ -203,30 +190,10 @@ export default function EvalTrendsPage() {
                   Performance &amp; price benchmark (Artificial Analysis)
                 </h3>
                 <div className="grid gap-4 sm:grid-cols-4">
-                  <div className="rounded-xl bg-surface-overlay p-4">
-                    <p className="text-xs uppercase tracking-wider text-slate-500">TTFT (avg, s)</p>
-                    <p className="mt-1 text-2xl font-semibold text-slate-100">
-                      {latestBench.ttft != null ? `${latestBench.ttft.toFixed(2)}` : '—'}
-                    </p>
-                  </div>
-                  <div className="rounded-xl bg-surface-overlay p-4">
-                    <p className="text-xs uppercase tracking-wider text-slate-500">E2E response (avg, s)</p>
-                    <p className="mt-1 text-2xl font-semibold text-slate-100">
-                      {latestBench.e2e != null ? `${latestBench.e2e.toFixed(2)}` : '—'}
-                    </p>
-                  </div>
-                  <div className="rounded-xl bg-surface-overlay p-4">
-                    <p className="text-xs uppercase tracking-wider text-slate-500">Output speed (tok/s)</p>
-                    <p className="mt-1 text-2xl font-semibold text-slate-100">
-                      {latestBench.speed != null ? `${latestBench.speed.toFixed(1)}` : '—'}
-                    </p>
-                  </div>
-                  <div className="rounded-xl bg-surface-overlay p-4">
-                    <p className="text-xs uppercase tracking-wider text-slate-500">Reasoning tokens (avg)</p>
-                    <p className="mt-1 text-2xl font-semibold text-slate-100">
-                      {latestBench.reasoning != null ? latestBench.reasoning.toLocaleString() : '—'}
-                    </p>
-                  </div>
+                  <StatCard label="TTFT (avg, s)" value={latestBench.ttft != null ? `${latestBench.ttft.toFixed(2)}` : '—'} />
+                  <StatCard label="E2E response (avg, s)" value={latestBench.e2e != null ? `${latestBench.e2e.toFixed(2)}` : '—'} />
+                  <StatCard label="Output speed (tok/s)" value={latestBench.speed != null ? `${latestBench.speed.toFixed(1)}` : '—'} />
+                  <StatCard label="Reasoning tokens (avg)" value={latestBench.reasoning != null ? latestBench.reasoning.toLocaleString() : '—'} />
                 </div>
                 <div className="mt-4 grid gap-4 lg:grid-cols-2">
                   <div className="h-56">
