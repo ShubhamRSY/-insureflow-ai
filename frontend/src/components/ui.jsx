@@ -194,24 +194,18 @@ export function Badge({ status, pulse = false, label }) {
     no_fit: 'bg-slate-500/15 text-slate-400 ring-slate-500/20',
     'no-fit': 'bg-slate-500/15 text-slate-400 ring-slate-500/20',
     appetite_check_failed: 'bg-red-500/15 text-red-400 ring-red-500/20',
-    // Alert-severity tiers (UWDashboard regulatory alerts) — same red/amber/
-    // sky bands as the risk-severity keys above.
-    urgent: 'bg-red-500/15 text-red-400 ring-red-500/20',
-    warning: 'bg-amber-500/15 text-amber-400 ring-amber-500/20',
-    info: 'bg-sky-500/15 text-sky-400 ring-sky-500/20',
     // Connector/source integration kind (Integrations.jsx) — simulated is a
-    // "not really live" caution, same amber bucket as pending/flag; live and
-    // catalog (catalog_stub) already have keys above.
-    connected: 'bg-emerald-500/15 text-emerald-400 ring-emerald-500/20',
+    // "not really live" caution, same amber bucket as pending/flag; live,
+    // catalog (catalog_stub), and connected (reuses `ok`) already have keys.
     simulated: 'bg-amber-500/15 text-amber-400 ring-amber-500/20',
     needs_config: 'bg-amber-500/15 text-amber-400 ring-amber-500/20',
     // User role tiers (Settings.jsx) — escalating slate → sky → amber →
     // orange → red mirrors the app's existing severity/priority gradient.
-    viewer: 'bg-slate-500/15 text-slate-300 ring-slate-500/20',
+    viewer: 'bg-slate-500/15 text-slate-400 ring-slate-500/20',
     underwriter: 'bg-sky-500/15 text-sky-400 ring-sky-500/20',
     staff_uw: 'bg-amber-500/15 text-amber-400 ring-amber-500/20',
     licensed_uw: 'bg-orange-500/15 text-orange-400 ring-orange-500/20',
-    admin: 'bg-orange-500/15 text-orange-400 ring-orange-500/20',
+    admin: 'bg-violet-500/15 text-violet-400 ring-violet-500/20',
     cuo: 'bg-red-500/15 text-red-400 ring-red-500/20',
   };
   const cls = colors[s] || 'bg-slate-500/15 text-slate-400 ring-slate-500/20';

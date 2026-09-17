@@ -10,6 +10,15 @@ const PHASES = [
   { value: 'transitioning_soft', label: 'Transitioning → Soft', desc: 'Market softening' },
 ];
 
+// Single source of truth for the market-phase color treatment — was
+// previously a text/border/bg ternary repeated at each call site (and
+// used a stray text-green-400 inconsistent with the app's emerald palette).
+const PHASE_COLORS = {
+  hard: { text: 'text-red-400', border: 'border-red-500/20', bg: 'bg-red-500/15' },
+  soft: { text: 'text-emerald-400', border: 'border-emerald-500/20', bg: 'bg-emerald-500/15' },
+};
+const DEFAULT_PHASE_COLORS = { text: 'text-amber-400', border: 'border-amber-500/20', bg: 'bg-amber-500/15' };
+
 export default function MarketAdmin() {
   const [cycle, setCycle] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -47,14 +56,6 @@ export default function MarketAdmin() {
     }
   };
 
-  // Single source of truth for the market-phase color treatment — was
-  // previously a text/border/bg ternary repeated at each call site (and
-  // used a stray text-green-400 inconsistent with the app's emerald palette).
-  const PHASE_COLORS = {
-    hard: { text: 'text-red-400', border: 'border-red-500/20', bg: 'bg-red-500/15' },
-    soft: { text: 'text-emerald-400', border: 'border-emerald-500/20', bg: 'bg-emerald-500/15' },
-  };
-  const DEFAULT_PHASE_COLORS = { text: 'text-amber-400', border: 'border-amber-500/20', bg: 'bg-amber-500/15' };
   const phaseColors = PHASE_COLORS[cycle?.phase] || DEFAULT_PHASE_COLORS;
   const phaseColor = phaseColors.text;
   const direction = cycle?.phase === 'hard' ? 'up' : cycle?.phase === 'soft' ? 'down' : 'stable';

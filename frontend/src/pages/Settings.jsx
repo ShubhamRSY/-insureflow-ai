@@ -51,7 +51,7 @@ export default function SettingsPage({ onLogin, onAuthReset }) {
         <div className="glass-card divide-y divide-white/[0.04]">
           {[
             ['Username', user.username],
-            ['Role', <Badge key="role" status={user.role} label={user.role.replace(/_/g, ' ')} />],
+            ['Role', <Badge key="role" status={user.role} label={(user.role || '').replace(/_/g, ' ')} />],
             ['Organization', user.org_id],
           ].map(([label, val]) => (
             <div key={label} className="flex justify-between px-6 py-4">

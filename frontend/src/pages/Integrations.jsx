@@ -139,7 +139,7 @@ export default function IntegrationsPage() {
                         )}
                         {src.connected ? (
                           <div className="flex shrink-0 items-center gap-2">
-                            <Badge status="connected" label="Connected" />
+                            <Badge status="ok" label="Connected" />
                             <button type="button" onClick={() => disconnect(src)} disabled={connectingId === src.id}
                               className="rounded-lg border border-white/[0.08] px-2 py-1 text-[10px] text-slate-400 transition hover:border-red-400/30 hover:text-red-300">
                               {connectingId === src.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Unplug className="h-3 w-3" />}

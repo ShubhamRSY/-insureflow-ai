@@ -258,7 +258,7 @@ export default function AuthorityMatrix() {
                           {ba.requires_co_sign ? (
                             <Badge status="flag" label="Required" />
                           ) : ba.co_sign_threshold_premium ? (
-                            <Badge status="watch" label={`>${fmtCurrency(ba.co_sign_threshold_premium)}`} />
+                            <Badge status="monitored" label={`>${fmtCurrency(ba.co_sign_threshold_premium)}`} />
                           ) : (
                             <Badge status="not_requested" label="No" />
                           )}

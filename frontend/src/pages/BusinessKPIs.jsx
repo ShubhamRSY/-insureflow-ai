@@ -178,7 +178,7 @@ export default function BusinessKPIsPage() {
                   ) : badge === 'pending' ? (
                     <Clock className="h-3.5 w-3.5 text-amber-400" />
                   ) : (
-                    <AlertTriangle className="h-3.5 w-3.5 text-slate-500" />
+                    <AlertTriangle className="h-3.5 w-3.5 text-red-400" />
                   )}
                   <span>{kpi.target?.label || '—'}</span>
                   {kpi.pass ? <span className="text-emerald-400">· on target</span> : null}

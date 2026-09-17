@@ -23,6 +23,12 @@ const SEVERITY_DOT = {
   info: 'bg-sky-400',
 };
 
+// Maps this file's 4-tier severity onto Badge's existing color keys instead
+// of adding near-duplicate ones — urgent and critical must stay visually
+// distinct (matches SEVERITY_DOT above), so urgent borrows Badge's `critical`
+// (red) and this file's own `critical` borrows Badge's `high` (orange).
+const SEVERITY_BADGE = { urgent: 'critical', critical: 'high', warning: 'moderate', info: 'low' };
+
 function timeAgo(dateStr) {
   if (!dateStr) return '';
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -120,7 +126,7 @@ function AlertRow({ alert, onReview }) {
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-white">{alert.title}</span>
-          <Badge status={alert.severity} />
+          <Badge status={SEVERITY_BADGE[alert.severity] || 'low'} label={alert.severity} />
         </div>
         <div className="text-xs text-slate-400 mt-0.5 line-clamp-2">{alert.description}</div>
         <div className="flex items-center gap-2 mt-1.5">
@@ -514,7 +520,7 @@ export default function UWDashboard({ onOpenJob }) {
                 { state: 'TX', reason: 'TDI bulletins', severity: 'info' },
               ].map((h) => (
                 <div key={h.state} className="flex items-center gap-2 text-xs">
-                  <span className={`w-2 h-2 rounded-full ${SEVERITY_DOT[h.severity]}`} />
+                  <span className={`w-2 h-2 rounded-full ${SEVERITY_DOT[h.severity] || SEVERITY_DOT.info}`} />
                   <span className="font-mono text-white w-6">{h.state}</span>
                   <span className="text-slate-400">{h.reason}</span>
                 </div>
