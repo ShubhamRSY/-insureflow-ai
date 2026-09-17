@@ -2,11 +2,11 @@ import { useCallback, useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { endpoints, fmtCurrency, AuthError } from '../lib/api';
 import { insuranceLineLabel } from '../lib/insuranceLines';
-import { Badge } from '../components/ui';
+import { Badge, EmptyState, StatCard } from '../components/ui';
 import {
-  Inbox, FileCheck, AlertTriangle, Clock, TrendingUp, CheckCircle2, XCircle,
-  ArrowRight, Search, Filter, RefreshCw, Zap, Shield, Bell, BarChart3,
-  ChevronRight, Loader2, Sparkles, Target, Flame, Briefcase,
+  FileCheck, AlertTriangle, Clock, TrendingUp, CheckCircle2, XCircle,
+  ArrowRight, Search, Filter, RefreshCw, Zap, Bell, BarChart3,
+  ChevronRight, Loader2, Sparkles, Flame, Briefcase,
 } from 'lucide-react';
 
 const QUICK_ACTIONS = [
@@ -38,21 +38,6 @@ function timeAgo(dateStr) {
   const hrs = Math.floor(mins / 60);
   if (hrs < 24) return `${hrs}h ago`;
   return `${Math.floor(hrs / 24)}d ago`;
-}
-
-function MetricCard({ icon: Icon, label, value, sub, color = 'text-brand', pulse = false }) {
-  return (
-    <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 flex items-start gap-3">
-      <div className={`p-2 rounded-lg bg-slate-700/50 ${color} ${pulse ? 'animate-pulse' : ''}`}>
-        <Icon size={18} />
-      </div>
-      <div className="min-w-0">
-        <div className="text-2xl font-bold text-white leading-tight">{value}</div>
-        <div className="text-xs text-slate-400 mt-0.5">{label}</div>
-        {sub && <div className="text-xs text-slate-500 mt-0.5">{sub}</div>}
-      </div>
-    </div>
-  );
 }
 
 function SubmissionRow({ job, onSelect, isSelected, index }) {
@@ -96,7 +81,7 @@ function SubmissionRow({ job, onSelect, isSelected, index }) {
           <div className="flex items-center gap-3 mt-1">
             {risk != null && (
               <span className={`text-xs font-medium ${
-                risk >= 7 ? 'text-red-400' : risk >= 4 ? 'text-amber-400' : 'text-emerald-400'
+                risk >= 7 ? 'text-risk-red' : risk >= 4 ? 'text-risk-amber' : 'text-verdigris'
               }`}>
                 Risk {risk}/10
               </span>
@@ -282,11 +267,11 @@ export default function UWDashboard({ onOpenJob }) {
   }
 
   return (
-    <div className="max-w-[1600px] mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+          <h1 className="text-3xl font-bold tracking-tight text-white flex items-center gap-2">
             <Sparkles size={22} className="text-brand" />
             UW Dashboard
           </h1>
@@ -315,7 +300,7 @@ export default function UWDashboard({ onOpenJob }) {
 
       {/* Keyboard shortcuts panel */}
       {showShortcuts && (
-        <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
+        <div className="glass-card p-4">
           <h3 className="text-sm font-medium text-white mb-3 flex items-center gap-2">
             <Zap size={14} className="text-brand" /> Keyboard Shortcuts
           </h3>
@@ -338,10 +323,10 @@ export default function UWDashboard({ onOpenJob }) {
 
       {/* Metrics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <MetricCard icon={Inbox} label="Pending review" value={pendingJobs.length} color="text-sky-400" pulse={pendingJobs.length > 0} />
-        <MetricCard icon={CheckCircle2} label="Decided today" value={recentJobs.length} color="text-emerald-400" />
-        <MetricCard icon={Shield} label="Active alerts" value={alerts.filter((a) => !a.reviewed).length} color="text-amber-400" />
-        <MetricCard icon={Target} label="Total submissions" value={metrics?.total || inbox.length} color="text-slate-300" />
+        <StatCard label="Pending review" value={pendingJobs.length} valueClassName="text-sky-400" />
+        <StatCard label="Decided today" value={recentJobs.length} valueClassName="text-emerald-400" />
+        <StatCard label="Active alerts" value={alerts.filter((a) => !a.reviewed).length} valueClassName="text-amber-400" />
+        <StatCard label="Total submissions" value={metrics?.total || inbox.length} valueClassName="text-slate-300" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -385,10 +370,7 @@ export default function UWDashboard({ onOpenJob }) {
               </h2>
             </div>
             {pendingJobs.length === 0 ? (
-              <div className="text-center py-12 text-slate-500">
-                <CheckCircle2 size={32} className="mx-auto mb-2 text-emerald-500/50" />
-                <p className="text-sm">All caught up! No submissions pending review.</p>
-              </div>
+              <EmptyState icon={CheckCircle2} title="All caught up" description="No submissions pending review." />
             ) : (
               <div className="space-y-1.5">
                 {pendingJobs.map((job, i) => (
@@ -433,7 +415,7 @@ export default function UWDashboard({ onOpenJob }) {
         <div className="space-y-4">
           {/* Triage actions — decisions happen on Workbench, not here */}
           {selectedJob && (
-            <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
+            <div className="glass-card p-4">
               <h3 className="text-sm font-medium text-white mb-2 flex items-center gap-2">
                 <Zap size={14} className="text-brand" />
                 Next step
@@ -468,7 +450,7 @@ export default function UWDashboard({ onOpenJob }) {
           )}
 
           {/* Regulatory alerts */}
-          <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
+          <div className="glass-card p-4">
             <h3 className="text-sm font-medium text-white mb-3 flex items-center gap-2">
               <Bell size={14} className="text-amber-400" />
               Regulatory Alerts
@@ -479,7 +461,7 @@ export default function UWDashboard({ onOpenJob }) {
               )}
             </h3>
             {alerts.length === 0 ? (
-              <p className="text-xs text-slate-500 py-4 text-center">No alerts</p>
+              <EmptyState title="No alerts" />
             ) : (
               <div className="space-y-2 max-h-80 overflow-y-auto">
                 {alerts.slice(0, 8).map((alert) => (
@@ -503,7 +485,7 @@ export default function UWDashboard({ onOpenJob }) {
           </div>
 
           {/* Hot states — illustrative only until portfolio feed is wired */}
-          <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
+          <div className="glass-card p-4">
             <h3 className="text-sm font-medium text-white mb-1 flex items-center gap-2">
               <BarChart3 size={14} className="text-sky-400" />
               Activity Hotspots

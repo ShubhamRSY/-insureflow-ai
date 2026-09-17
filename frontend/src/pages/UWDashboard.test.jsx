@@ -50,8 +50,9 @@ describe('UWDashboard', () => {
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getByText('All caught up! No submissions pending review.')).toBeInTheDocument();
+      expect(screen.getByText('All caught up')).toBeInTheDocument();
     });
+    expect(screen.getByText('No submissions pending review.')).toBeInTheDocument();
   });
 
   it('renders a pending submission row', async () => {
@@ -107,7 +108,7 @@ describe('UWDashboard', () => {
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getByText('All caught up! No submissions pending review.')).toBeInTheDocument();
+      expect(screen.getByText('All caught up')).toBeInTheDocument();
     });
     fireEvent.click(screen.getByTitle('Keyboard shortcuts (?)'));
 
