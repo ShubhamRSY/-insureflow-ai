@@ -205,6 +205,12 @@ function AppRoutes() {
   }, [refreshAll, loadHealth]);
 
   useEffect(() => {
+    if (!insuranceJobs.some((r) => r.job?.status === 'processing')) return;
+    const iv = setInterval(loadInsuranceJobs, 3000);
+    return () => clearInterval(iv);
+  }, [insuranceJobs, loadInsuranceJobs]);
+
+  useEffect(() => {
     if (!drawer.jobId || drawer.job?.status !== 'processing') return;
     const iv = setInterval(async () => {
       try {

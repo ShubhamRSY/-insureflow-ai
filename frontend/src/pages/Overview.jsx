@@ -245,6 +245,10 @@ export default function Overview({ overview, health, presets, onRunDemo, onOpenJ
                 <>
                   {(overview?.recent_jobs || []).slice(0, 8).map((j) => {
                     const fullJob = insuranceJobs?.find(({ id }) => id === j.job_id)?.job;
+                    const results = fullJob?.results || {};
+                    const memo = results.memo || {};
+                    const risk = memo.overall_risk_score;
+                    const decision = results.ai_decision || memo.decision || '';
                     return (
                       <button
                         key={j.job_id}
@@ -257,8 +261,18 @@ export default function Overview({ overview, health, presets, onRunDemo, onOpenJ
                         {j.vertical === 'insurance' && fullJob && (
                           <JourneyMiniStrip job={fullJob} compact />
                         )}
-                        <span className="text-xs capitalize text-slate-500">{j.vertical}</span>
-                        <ArrowRight className="h-3.5 w-3.5 text-slate-600" />
+                        {risk != null && (
+                          <span className={`shrink-0 text-xs font-medium ${
+                            risk >= 7 ? 'text-risk-red' : risk >= 4 ? 'text-risk-amber' : 'text-verdigris'
+                          }`}>
+                            Score {risk}/10
+                          </span>
+                        )}
+                        {decision && (
+                          <span className="shrink-0 text-xs capitalize text-slate-500">{decision.replace(/_/g, ' ')}</span>
+                        )}
+                        <span className="shrink-0 text-xs capitalize text-slate-500">{j.vertical}</span>
+                        <ArrowRight className="h-3.5 w-3.5 shrink-0 text-slate-600" />
                       </button>
                     );
                   })}
