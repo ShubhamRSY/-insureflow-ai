@@ -152,7 +152,7 @@ export default function BusinessKPIsPage() {
         <div className="grid gap-4 lg:grid-cols-2">
           {KPI_META.map(({ key, title, hint }) => {
             const kpi = kpis[key] || {};
-            const ready = kpi.status === 'production_ready';
+            const badge = statusBadge(kpi.status);
             return (
               <div key={key} className="glass-card p-5 space-y-3">
                 <div className="flex items-start justify-between gap-3">
@@ -160,7 +160,7 @@ export default function BusinessKPIsPage() {
                     <h3 className="text-sm font-semibold text-slate-100">{title}</h3>
                     <p className="text-xs text-slate-500">{hint}</p>
                   </div>
-                  <Badge status={statusBadge(kpi.status)} label={(kpi.status || 'not_measured').replace(/_/g, ' ')} />
+                  <Badge status={badge} label={(kpi.status || 'not_measured').replace(/_/g, ' ')} />
                 </div>
                 <div className="flex items-end gap-3">
                   <p className="text-3xl font-bold tabular-nums text-white">{fmtValue(kpi)}</p>
@@ -173,9 +173,9 @@ export default function BusinessKPIsPage() {
                 </div>
                 <p className="text-sm text-slate-300">{kpi.what_to_say}</p>
                 <div className="flex items-center gap-2 text-xs text-slate-500">
-                  {ready ? (
+                  {badge === 'ok' ? (
                     <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
-                  ) : kpi.sample_size > 0 ? (
+                  ) : badge === 'pending' ? (
                     <Clock className="h-3.5 w-3.5 text-amber-400" />
                   ) : (
                     <AlertTriangle className="h-3.5 w-3.5 text-slate-500" />
