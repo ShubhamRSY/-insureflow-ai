@@ -246,24 +246,24 @@ export default function RatemakingPage() {
               <div>
                 <h4 className="mb-2 text-xs uppercase tracking-wider text-slate-400">Accident-year development (paid · reported · IBNR)</h4>
                 <div className="overflow-x-auto rounded-lg ring-1 ring-inset ring-slate-500/20">
-                  <table className="w-full text-sm">
+                  <table className="w-full text-xs">
                     <thead>
-                      <tr className="border-b border-white/[0.06] bg-surface-overlay text-left text-xs uppercase tracking-wider text-slate-500">
-                        <th className="px-6 py-3">Valuation</th>
-                        <th className="px-6 py-3 text-right">Paid to date</th>
-                        <th className="px-6 py-3 text-right">Reported unpaid</th>
-                        <th className="px-6 py-3 text-right">IBNR</th>
-                        <th className="px-6 py-3 text-right">Incurred est.</th>
+                      <tr className="bg-surface-overlay text-left text-slate-400">
+                        <th className="px-3 py-2 font-medium">Valuation</th>
+                        <th className="px-3 py-2 text-right font-medium">Paid to date</th>
+                        <th className="px-3 py-2 text-right font-medium">Reported unpaid</th>
+                        <th className="px-3 py-2 text-right font-medium">IBNR</th>
+                        <th className="px-3 py-2 text-right font-medium">Incurred est.</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/[0.04]">
+                    <tbody>
                       {(overview?.reserve_analysis?.payout_pattern?.valuations || []).map((v) => (
-                        <tr key={v.valuation_year} className="text-slate-200 hover:bg-white/[0.02]">
-                          <td className="px-6 py-3.5 text-slate-400">Year {v.valuation_year}</td>
-                          <td className="px-6 py-3.5 text-right tabular-nums">{fmtCurrency(v.paid_to_date)}</td>
-                          <td className="px-6 py-3.5 text-right tabular-nums">{fmtCurrency(v.reported_but_unpaid)}</td>
-                          <td className="px-6 py-3.5 text-right tabular-nums">{fmtCurrency(v.ibnr)}</td>
-                          <td className="px-6 py-3.5 text-right font-semibold tabular-nums">{fmtCurrency(v.incurred_estimate)}</td>
+                        <tr key={v.valuation_year} className="border-t border-slate-500/10 text-slate-200">
+                          <td className="px-3 py-1.5 text-slate-400">Year {v.valuation_year}</td>
+                          <td className="px-3 py-1.5 text-right tabular-nums">{fmtCurrency(v.paid_to_date)}</td>
+                          <td className="px-3 py-1.5 text-right tabular-nums">{fmtCurrency(v.reported_but_unpaid)}</td>
+                          <td className="px-3 py-1.5 text-right tabular-nums">{fmtCurrency(v.ibnr)}</td>
+                          <td className="px-3 py-1.5 text-right font-semibold tabular-nums">{fmtCurrency(v.incurred_estimate)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -326,24 +326,24 @@ export default function RatemakingPage() {
               <div>
                 <h4 className="mb-2 text-xs uppercase tracking-wider text-slate-400">Investment income by line (reserve funding × yield)</h4>
                 <div className="overflow-x-auto rounded-lg ring-1 ring-inset ring-slate-500/20">
-                  <table className="w-full text-sm">
+                  <table className="w-full text-xs">
                     <thead>
-                      <tr className="border-b border-white/[0.06] bg-surface-overlay text-left text-xs uppercase tracking-wider text-slate-500">
-                        <th className="px-6 py-3">Line</th>
-                        <th className="px-6 py-3">Tail</th>
-                        <th className="px-6 py-3 text-right">Reserve funding</th>
-                        <th className="px-6 py-3 text-right">Income % prem</th>
-                        <th className="px-6 py-3 text-right">Rate offset</th>
+                      <tr className="bg-surface-overlay text-left text-slate-400">
+                        <th className="px-3 py-2 font-medium">Line</th>
+                        <th className="px-3 py-2 font-medium">Tail</th>
+                        <th className="px-3 py-2 text-right font-medium">Reserve funding</th>
+                        <th className="px-3 py-2 text-right font-medium">Income % prem</th>
+                        <th className="px-3 py-2 text-right font-medium">Rate offset</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/[0.04]">
+                    <tbody>
                       {(overview?.investment_income || []).map((a, i) => (
-                        <tr key={i} className="text-slate-200 hover:bg-white/[0.02]">
-                          <td className="px-6 py-3.5">{a.line}</td>
-                          <td className="px-6 py-3.5 text-slate-400">{a.tail}</td>
-                          <td className="px-6 py-3.5 text-right tabular-nums">{((a.loss_reserve_funding + a.unearned_premium_reserve_funding) * 100).toFixed(0)}%</td>
-                          <td className="px-6 py-3.5 text-right tabular-nums">{a.investment_income_pct_of_premium}%</td>
-                          <td className="px-6 py-3.5 text-right font-semibold tabular-nums">{a.rate_offset_pct}%</td>
+                        <tr key={i} className="border-t border-slate-500/10 text-slate-200">
+                          <td className="px-3 py-1.5">{a.line}</td>
+                          <td className="px-3 py-1.5 text-slate-400">{a.tail}</td>
+                          <td className="px-3 py-1.5 text-right tabular-nums">{((a.loss_reserve_funding + a.unearned_premium_reserve_funding) * 100).toFixed(0)}%</td>
+                          <td className="px-3 py-1.5 text-right tabular-nums">{a.investment_income_pct_of_premium}%</td>
+                          <td className="px-3 py-1.5 text-right font-semibold tabular-nums">{a.rate_offset_pct}%</td>
                         </tr>
                       ))}
                     </tbody>

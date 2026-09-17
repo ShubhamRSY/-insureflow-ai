@@ -137,16 +137,16 @@ export default function PilotPage() {
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button type="button" onClick={load} className="btn-secondary btn-sm text-xs">
+          <button type="button" onClick={load} disabled={loading} className="btn-secondary btn-sm text-xs">
             <RefreshCw className="h-3.5 w-3.5" /> Refresh
           </button>
-          <button type="button" onClick={seed} disabled={!!busy} className="btn-secondary btn-sm text-xs">
+          <button type="button" onClick={seed} disabled={loading || !!busy} className="btn-secondary btn-sm text-xs">
             Seed demos
           </button>
-          <button type="button" onClick={ingestEmail} disabled={!!busy} className="btn-secondary btn-sm text-xs">
+          <button type="button" onClick={ingestEmail} disabled={loading || !!busy} className="btn-secondary btn-sm text-xs">
             {busy === 'ingest-email' ? 'Pulling…' : 'Ingest email'}
           </button>
-          <button type="button" onClick={calibrate} disabled={!!busy} className="btn-primary btn-sm text-xs">
+          <button type="button" onClick={calibrate} disabled={loading || !!busy} className="btn-primary btn-sm text-xs">
             {busy === 'calibrate' ? 'Running…' : 'Calibrate all'}
           </button>
         </div>
@@ -212,14 +212,14 @@ export default function PilotPage() {
               href={`mailto:?subject=${encodeURIComponent('30-day shadow UW pilot — redacted commercial submissions')}&body=${encodeURIComponent(
                 `Hi [First name],
 
-  I'm with Rytera (ryterainc.com). We run multi-agent commercial underwriting with licensed UW sign-off.
+I'm with Rytera (ryterainc.com). We run multi-agent commercial underwriting with licensed UW sign-off.
 
-  Looking for a 30-day shadow pilot: 20–50 redacted packages + one UW 2–4 hrs/week. Bind stays off.
+Looking for a 30-day shadow pilot: 20–50 redacted packages + one UW 2–4 hrs/week. Bind stays off.
 
-  Open to 15 minutes this week?
+Open to 15 minutes this week?
 
-  Best,
-  [Your name]`,
+Best,
+[Your name]`,
               )}`}
             >
               Pilot carrier / MGA
@@ -229,12 +229,12 @@ export default function PilotPage() {
               href={`mailto:?subject=${encodeURIComponent('Sandbox API access — Rytera commercial UW (CLUE)')}&body=${encodeURIComponent(
                 `Hello,
 
-  Rytera (ryterainc.com) needs sandbox / UAT CLUE Commercial access for a shadow underwriting pilot.
+Rytera (ryterainc.com) needs sandbox / UAT CLUE Commercial access for a shadow underwriting pilot.
 
-  Please advise sandbox URL, auth, test FEINs, rate limits, and commercial contact.
+Please advise sandbox URL, auth, test FEINs, rate limits, and commercial contact.
 
-  Thank you,
-  [Your name]`,
+Thank you,
+[Your name]`,
               )}`}
             >
               LexisNexis CLUE
@@ -244,12 +244,12 @@ export default function PilotPage() {
               href={`mailto:?subject=${encodeURIComponent('Sandbox API access — A-PLUS for Rytera commercial UW pilot')}&body=${encodeURIComponent(
                 `Hello,
 
-  Requesting sandbox credentials for A-PLUS property loss history for Rytera's multi-agent underwriting platform.
+Requesting sandbox credentials for A-PLUS property loss history for Rytera's multi-agent underwriting platform.
 
-  Please send sandbox URL, API key process, and sample request/response docs.
+Please send sandbox URL, API key process, and sample request/response docs.
 
-  Thank you,
-  [Your name]`,
+Thank you,
+[Your name]`,
               )}`}
             >
               Verisk A-PLUS
