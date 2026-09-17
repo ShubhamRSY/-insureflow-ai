@@ -3,15 +3,7 @@ import { useOutletContext } from 'react-router-dom';
 import { auth, endpoints } from '../lib/api';
 import ThemeToggle from '../components/ThemeToggle';
 import { toast } from '../lib/toast';
-
-const ROLE_BADGE = {
-  viewer: 'bg-slate-500/15 text-slate-300',
-  underwriter: 'bg-blue-500/15 text-blue-300',
-  staff_uw: 'bg-violet-500/15 text-violet-300',
-  licensed_uw: 'bg-purple-500/15 text-purple-300',
-  admin: 'bg-amber-500/15 text-amber-300',
-  cuo: 'bg-red-500/15 text-red-300',
-};
+import { Badge } from '../components/ui';
 
 export default function SettingsPage({ onLogin, onAuthReset }) {
   const { user } = useOutletContext() || {};
@@ -59,7 +51,7 @@ export default function SettingsPage({ onLogin, onAuthReset }) {
         <div className="glass-card divide-y divide-white/[0.04]">
           {[
             ['Username', user.username],
-            ['Role', <span key="role" className={`rounded-full px-2.5 py-0.5 text-xs font-semibold uppercase ${ROLE_BADGE[user.role] || 'bg-slate-500/15 text-slate-300'}`}>{user.role}</span>],
+            ['Role', <Badge key="role" status={user.role} label={user.role.replace(/_/g, ' ')} />],
             ['Organization', user.org_id],
           ].map(([label, val]) => (
             <div key={label} className="flex justify-between px-6 py-4">
@@ -84,7 +76,7 @@ export default function SettingsPage({ onLogin, onAuthReset }) {
           <div className="divide-y divide-white/[0.04]">
             {roles.map((r) => (
               <div key={r.role} className="flex items-center gap-4 px-6 py-4">
-                <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold uppercase ${ROLE_BADGE[r.role] || 'bg-slate-500/15 text-slate-300'}`}>{r.role.replace('_', ' ')}</span>
+                <Badge status={r.role} label={r.role.replace(/_/g, ' ')} />
                 <span className="text-xs text-slate-500">Lv.{r.level}</span>
                 <span className="flex-1 text-sm text-slate-400">{r.description}</span>
               </div>
