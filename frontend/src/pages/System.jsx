@@ -28,9 +28,9 @@ export default function SystemPage({ health }) {
           <h2 className="text-xl font-bold capitalize">{health.overall}</h2>
           <p className="mt-1 text-slate-400">LLM mode: <span className="font-semibold text-brand-light">{health.llm_mode}</span></p>
           <div className="mt-4 flex flex-wrap justify-center gap-2 sm:justify-start">
-            <span className="rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-xs font-semibold text-emerald-400">{health.summary?.ok} OK</span>
-            <span className="rounded-full bg-amber-500/15 px-2.5 py-0.5 text-xs font-semibold text-amber-400">{health.summary?.degraded} Degraded</span>
-            <span className="rounded-full bg-red-500/15 px-2.5 py-0.5 text-xs font-semibold text-red-400">{health.summary?.missing} Missing</span>
+            <Badge status="ok" label={`${health.summary?.ok} OK`} />
+            <Badge status="degraded" label={`${health.summary?.degraded} Degraded`} />
+            <Badge status="missing" label={`${health.summary?.missing} Missing`} />
           </div>
           <Link to="/pilot" className="mt-4 inline-flex text-sm font-medium text-amber-400 hover:text-amber-300">
             Open Pilot Lab → sandbox feeds &amp; packages
