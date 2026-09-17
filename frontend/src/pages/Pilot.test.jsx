@@ -37,12 +37,14 @@ describe('PilotPage', () => {
     vi.clearAllMocks();
   });
 
-  it('shows a loading spinner while fetching pilot data', () => {
+  it('shows a loading spinner while fetching pilot data, without hiding the header', () => {
     endpoints.pilotSandboxStatus.mockReturnValue(new Promise(() => {}));
     endpoints.pilotPackages.mockReturnValue(new Promise(() => {}));
     endpoints.pilotCalibration.mockReturnValue(new Promise(() => {}));
     const { container } = render(<PilotPage />);
     expect(container.querySelector('.animate-spin')).toBeInTheDocument();
+    expect(screen.getByText('Pilot Lab')).toBeInTheDocument();
+    expect(screen.getByText('Calibrate all')).toBeInTheDocument();
   });
 
   it('renders readiness stat cards', async () => {

@@ -119,14 +119,6 @@ export default function PilotPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center py-24">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand border-t-transparent" />
-      </div>
-    );
-  }
-
   const overall = readiness?.overall || 'not_ready';
   const matchPct = calibration?.match_rate != null ? `${Math.round(calibration.match_rate * 100)}%` : '—';
 
@@ -160,271 +152,279 @@ export default function PilotPage() {
         </div>
       </div>
 
-      {error && <div className="rounded-xl bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</div>}
-      {message && <div className="rounded-xl bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">{message}</div>}
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          label="Readiness"
-          value={overall.replace(/_/g, ' ')}
-          sub={readiness?.ready_mode ? (readiness?.bind_allowed ? 'Ready · bind ON' : 'Ready · PAS credentials needed') : 'Shadow mode ON'}
-          accent="insurance"
-        />
-        <StatCard label="Required feeds" value={`${readiness?.required_ready ?? 0}/${readiness?.required_total ?? 0}`} sub="CLUE / A-PLUS / Guidewire / Redis" />
-        <StatCard label="Packages" value={String(packages.length)} sub="Under pilot_packages/" />
-        <StatCard label="Match rate" value={matchPct} sub={`n=${calibration?.labeled_sample_size ?? 0} labeled`} accent="success" />
-      </div>
-
-      {readiness?.shadow_mode && (
-        <div className="flex items-start gap-3 rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-          <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
-          <p>
-            Bind is disabled while shadow mode is on. Set <code className="text-amber-200">OPERATING_MODE=ready</code> and{' '}
-            <code className="text-amber-200">PILOT_SHADOW_MODE=false</code> with Guidewire credentials to enable bind.
-          </p>
+      {loading ? (
+        <div className="flex justify-center py-24">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand border-t-transparent" />
         </div>
-      )}
+      ) : (
+        <>
+        {error && <div className="rounded-xl bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</div>}
+        {message && <div className="rounded-xl bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">{message}</div>}
 
-      {readiness?.ready_mode && !readiness?.bind_allowed && (
-        <div className="flex items-start gap-3 rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-          <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
-          <p>
-            Ready mode is on but bind is blocked until <code className="text-amber-200">GUIDEWIRE_API_KEY</code> +{' '}
-            <code className="text-amber-200">GUIDEWIRE_API_URL</code> are set to non-dev values (or BriteCore equivalents).
-          </p>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <StatCard
+            label="Readiness"
+            value={overall.replace(/_/g, ' ')}
+            sub={readiness?.ready_mode ? (readiness?.bind_allowed ? 'Ready · bind ON' : 'Ready · PAS credentials needed') : 'Shadow mode ON'}
+            accent="insurance"
+          />
+          <StatCard label="Required feeds" value={`${readiness?.required_ready ?? 0}/${readiness?.required_total ?? 0}`} sub="CLUE / A-PLUS / Guidewire / Redis" />
+          <StatCard label="Packages" value={String(packages.length)} sub="Under pilot_packages/" />
+          <StatCard label="Match rate" value={matchPct} sub={`n=${calibration?.labeled_sample_size ?? 0} labeled`} accent="success" />
         </div>
-      )}
 
-      {readiness?.ready_mode && readiness?.bind_allowed && (
-        <div className="flex items-start gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
-          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
-          <p>Ready mode active — UW-approved submissions can bind through the configured policy-admin system.</p>
-        </div>
-      )}
-
-      <section className="glass-card p-5 space-y-3">
-        <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">Free outreach (mailto)</h3>
-        <p className="text-sm text-slate-400">
-          Opens your mail client with a draft — no paid tools. Full templates live in{' '}
-          <code className="text-slate-300">docs/outreach/THIS_WEEK_OUTREACH.md</code>.
-        </p>
-        <div className="flex flex-wrap gap-2">
-          <a
-            className="btn-secondary btn-sm text-xs"
-            href={`mailto:?subject=${encodeURIComponent('30-day shadow UW pilot — redacted commercial submissions')}&body=${encodeURIComponent(
-              `Hi [First name],
-
-I'm with Rytera (ryterainc.com). We run multi-agent commercial underwriting with licensed UW sign-off.
-
-Looking for a 30-day shadow pilot: 20–50 redacted packages + one UW 2–4 hrs/week. Bind stays off.
-
-Open to 15 minutes this week?
-
-Best,
-[Your name]`,
-            )}`}
-          >
-            Pilot carrier / MGA
-          </a>
-          <a
-            className="btn-secondary btn-sm text-xs"
-            href={`mailto:?subject=${encodeURIComponent('Sandbox API access — Rytera commercial UW (CLUE)')}&body=${encodeURIComponent(
-              `Hello,
-
-Rytera (ryterainc.com) needs sandbox / UAT CLUE Commercial access for a shadow underwriting pilot.
-
-Please advise sandbox URL, auth, test FEINs, rate limits, and commercial contact.
-
-Thank you,
-[Your name]`,
-            )}`}
-          >
-            LexisNexis CLUE
-          </a>
-          <a
-            className="btn-secondary btn-sm text-xs"
-            href={`mailto:?subject=${encodeURIComponent('Sandbox API access — A-PLUS for Rytera commercial UW pilot')}&body=${encodeURIComponent(
-              `Hello,
-
-Requesting sandbox credentials for A-PLUS property loss history for Rytera's multi-agent underwriting platform.
-
-Please send sandbox URL, API key process, and sample request/response docs.
-
-Thank you,
-[Your name]`,
-            )}`}
-          >
-            Verisk A-PLUS
-          </a>
-        </div>
-      </section>
-
-      {readiness?.honesty && (
-        <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3 text-sm text-slate-300">
-          <p className="font-medium text-slate-200">What is live vs invented</p>
-          <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-slate-400">
-            <li>System of record: their PAS — not this Postgres</li>
-            <li>{readiness.honesty.oracles}</li>
-            <li>{readiness.honesty.connectors}</li>
-            <li>{readiness.honesty.pricing}</li>
-          </ul>
-        </div>
-      )}
-
-      <section className="glass-card overflow-hidden">
-        <div className="border-b border-white/[0.06] px-5 py-3">
-          <h3 className="text-sm font-semibold">Bind cutover checklist</h3>
-          <p className="mt-0.5 text-[11px] text-slate-500">Do not invent a bind. This is the gate before PAS cutover.</p>
-        </div>
-        <div className="divide-y divide-white/[0.04]">
-          {(readiness?.bind_cutover?.steps || []).map((s) => (
-            <div key={s.id} className="flex items-start gap-3 px-5 py-3">
-              {s.done ? (
-                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
-              ) : (
-                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
-              )}
-              <div className="min-w-0 flex-1">
-                <p className="text-sm text-slate-200">{s.title}{s.required ? '' : ' (optional)'}</p>
-                {s.note && <p className="mt-0.5 text-[11px] text-slate-500">{s.note}</p>}
-              </div>
-            </div>
-          ))}
-        </div>
-        {readiness?.bind_cutover && (
-          <div className="border-t border-white/[0.06] px-5 py-3 text-xs text-slate-500 space-y-1">
+        {readiness?.shadow_mode && (
+          <div className="flex items-start gap-3 rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+            <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
             <p>
-              Cutover ready: {readiness.bind_cutover.cutover_ready ? 'yes' : 'no'} · Bind allowed:{' '}
-              {readiness.bind_cutover.bind_allowed ? 'yes' : 'no'}
+              Bind is disabled while shadow mode is on. Set <code className="text-amber-200">OPERATING_MODE=ready</code> and{' '}
+              <code className="text-amber-200">PILOT_SHADOW_MODE=false</code> with Guidewire credentials to enable bind.
             </p>
-            {readiness.bind_cutover.carrier_book && (
-              <p>
-                Carrier book: {readiness.bind_cutover.carrier_book.is_customer_book ? 'customer' : 'not customer'} ·
-                posture={readiness.bind_cutover.carrier_book.posture || 'n/a'} ·{' '}
-                {readiness.bind_cutover.carrier_book.book_id || 'no book id'}
-              </p>
-            )}
-            {readiness.bind_cutover.carrier_book?.import_hint && !readiness.bind_cutover.carrier_book?.is_customer_book && (
-              <p className="font-mono text-[10px] text-slate-600">{readiness.bind_cutover.carrier_book.import_hint}</p>
-            )}
           </div>
         )}
-      </section>
 
-      <section className="glass-card overflow-hidden">
-        <div className="border-b border-white/[0.06] px-5 py-3">
-          <h3 className="text-sm font-semibold">Integration feeds</h3>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-white/[0.06] bg-surface-overlay text-left text-xs uppercase tracking-wider text-slate-500">
-                <th className="px-6 py-3">Feed</th>
-                <th className="px-6 py-3">Category</th>
-                <th className="px-6 py-3">Status</th>
-                <th className="px-6 py-3">Next action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/[0.04]">
-              {(readiness?.feeds || []).map((f) => (
-                <tr key={f.name} className="hover:bg-white/[0.02]">
-                  <td className="px-6 py-3.5 text-slate-200">{f.name}{f.required_for_pilot ? ' *' : ''}</td>
-                  <td className="px-6 py-3.5 text-xs text-slate-400">{f.category}</td>
-                  <td className="px-6 py-3.5"><Badge status={statusColor(f.status)} /></td>
-                  <td className="px-6 py-3.5 text-xs text-slate-400">{f.next_action}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+        {readiness?.ready_mode && !readiness?.bind_allowed && (
+          <div className="flex items-start gap-3 rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+            <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+            <p>
+              Ready mode is on but bind is blocked until <code className="text-amber-200">GUIDEWIRE_API_KEY</code> +{' '}
+              <code className="text-amber-200">GUIDEWIRE_API_URL</code> are set to non-dev values (or BriteCore equivalents).
+            </p>
+          </div>
+        )}
 
-      <section className="glass-card overflow-hidden">
-        <div className="flex items-center justify-between border-b border-white/[0.06] px-5 py-3">
-          <h3 className="text-sm font-semibold">Pilot packages</h3>
-          <p className="text-xs text-slate-500">Drop redacted files under pilot_packages/&lt;partner&gt;/&lt;id&gt;/</p>
-        </div>
-        {packages.length === 0 ? (
-          <EmptyState
-            icon={FlaskConical}
-            title="No pilot packages"
-            description="Seed demo scenarios or drop partner redacted submissions into pilot_packages/"
-            action={<button type="button" className="btn-primary btn-sm" onClick={seed}>Seed demos</button>}
-          />
-        ) : (
+        {readiness?.ready_mode && readiness?.bind_allowed && (
+          <div className="flex items-start gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
+            <p>Ready mode active — UW-approved submissions can bind through the configured policy-admin system.</p>
+          </div>
+        )}
+
+        <section className="glass-card p-5 space-y-3">
+          <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">Free outreach (mailto)</h3>
+          <p className="text-sm text-slate-400">
+            Opens your mail client with a draft — no paid tools. Full templates live in{' '}
+            <code className="text-slate-300">docs/outreach/THIS_WEEK_OUTREACH.md</code>.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <a
+              className="btn-secondary btn-sm text-xs"
+              href={`mailto:?subject=${encodeURIComponent('30-day shadow UW pilot — redacted commercial submissions')}&body=${encodeURIComponent(
+                `Hi [First name],
+
+  I'm with Rytera (ryterainc.com). We run multi-agent commercial underwriting with licensed UW sign-off.
+
+  Looking for a 30-day shadow pilot: 20–50 redacted packages + one UW 2–4 hrs/week. Bind stays off.
+
+  Open to 15 minutes this week?
+
+  Best,
+  [Your name]`,
+              )}`}
+            >
+              Pilot carrier / MGA
+            </a>
+            <a
+              className="btn-secondary btn-sm text-xs"
+              href={`mailto:?subject=${encodeURIComponent('Sandbox API access — Rytera commercial UW (CLUE)')}&body=${encodeURIComponent(
+                `Hello,
+
+  Rytera (ryterainc.com) needs sandbox / UAT CLUE Commercial access for a shadow underwriting pilot.
+
+  Please advise sandbox URL, auth, test FEINs, rate limits, and commercial contact.
+
+  Thank you,
+  [Your name]`,
+              )}`}
+            >
+              LexisNexis CLUE
+            </a>
+            <a
+              className="btn-secondary btn-sm text-xs"
+              href={`mailto:?subject=${encodeURIComponent('Sandbox API access — A-PLUS for Rytera commercial UW pilot')}&body=${encodeURIComponent(
+                `Hello,
+
+  Requesting sandbox credentials for A-PLUS property loss history for Rytera's multi-agent underwriting platform.
+
+  Please send sandbox URL, API key process, and sample request/response docs.
+
+  Thank you,
+  [Your name]`,
+              )}`}
+            >
+              Verisk A-PLUS
+            </a>
+          </div>
+        </section>
+
+        {readiness?.honesty && (
+          <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3 text-sm text-slate-300">
+            <p className="font-medium text-slate-200">What is live vs invented</p>
+            <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-slate-400">
+              <li>System of record: their PAS — not this Postgres</li>
+              <li>{readiness.honesty.oracles}</li>
+              <li>{readiness.honesty.connectors}</li>
+              <li>{readiness.honesty.pricing}</li>
+            </ul>
+          </div>
+        )}
+
+        <section className="glass-card overflow-hidden">
+          <div className="border-b border-white/[0.06] px-5 py-3">
+            <h3 className="text-sm font-semibold">Bind cutover checklist</h3>
+            <p className="mt-0.5 text-[11px] text-slate-500">Do not invent a bind. This is the gate before PAS cutover.</p>
+          </div>
+          <div className="divide-y divide-white/[0.04]">
+            {(readiness?.bind_cutover?.steps || []).map((s) => (
+              <div key={s.id} className="flex items-start gap-3 px-5 py-3">
+                {s.done ? (
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
+                ) : (
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm text-slate-200">{s.title}{s.required ? '' : ' (optional)'}</p>
+                  {s.note && <p className="mt-0.5 text-[11px] text-slate-500">{s.note}</p>}
+                </div>
+              </div>
+            ))}
+          </div>
+          {readiness?.bind_cutover && (
+            <div className="border-t border-white/[0.06] px-5 py-3 text-xs text-slate-500 space-y-1">
+              <p>
+                Cutover ready: {readiness.bind_cutover.cutover_ready ? 'yes' : 'no'} · Bind allowed:{' '}
+                {readiness.bind_cutover.bind_allowed ? 'yes' : 'no'}
+              </p>
+              {readiness.bind_cutover.carrier_book && (
+                <p>
+                  Carrier book: {readiness.bind_cutover.carrier_book.is_customer_book ? 'customer' : 'not customer'} ·
+                  posture={readiness.bind_cutover.carrier_book.posture || 'n/a'} ·{' '}
+                  {readiness.bind_cutover.carrier_book.book_id || 'no book id'}
+                </p>
+              )}
+              {readiness.bind_cutover.carrier_book?.import_hint && !readiness.bind_cutover.carrier_book?.is_customer_book && (
+                <p className="font-mono text-[10px] text-slate-600">{readiness.bind_cutover.carrier_book.import_hint}</p>
+              )}
+            </div>
+          )}
+        </section>
+
+        <section className="glass-card overflow-hidden">
+          <div className="border-b border-white/[0.06] px-5 py-3">
+            <h3 className="text-sm font-semibold">Integration feeds</h3>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-white/[0.06] bg-surface-overlay text-left text-xs uppercase tracking-wider text-slate-500">
-                  <th className="px-6 py-3">Partner</th>
-                  <th className="px-6 py-3">Submission</th>
-                  <th className="px-6 py-3">Insured</th>
-                  <th className="px-6 py-3">Docs</th>
-                  <th className="px-6 py-3" />
+                  <th className="px-6 py-3">Feed</th>
+                  <th className="px-6 py-3">Category</th>
+                  <th className="px-6 py-3">Status</th>
+                  <th className="px-6 py-3">Next action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/[0.04]">
-                {packages.map((p) => (
-                  <tr key={`${p.partner}/${p.submission_id}`} className="hover:bg-white/[0.02]">
-                    <td className="px-6 py-3.5 text-slate-300">{p.partner}</td>
-                    <td className="px-6 py-3.5 text-slate-200">{p.submission_id}</td>
-                    <td className="px-6 py-3.5 text-slate-400">{p.insured_name}</td>
-                    <td className="px-6 py-3.5 text-xs text-slate-500">
-                      {p.has_acord ? 'ACORD ' : ''}
-                      {p.has_loss_run ? 'Loss ' : ''}
-                      {p.has_sov ? 'SOV ' : ''}
-                      {p.inspection_count ? `Insp×${p.inspection_count}` : ''}
-                    </td>
-                    <td className="px-6 py-3.5 text-right">
-                      <div className="flex justify-end gap-2">
-                        <button
-                          type="button"
-                          className="btn-secondary btn-sm text-xs"
-                          disabled={!!busy}
-                          onClick={() => redactOne(p.partner, p.submission_id)}
-                        >
-                          {busy === `redact:${p.partner}/${p.submission_id}` ? '…' : 'Redact'}
-                        </button>
-                        <button
-                          type="button"
-                          className="btn-secondary btn-sm text-xs"
-                          disabled={!!busy}
-                          onClick={() => runOne(p.partner, p.submission_id)}
-                        >
-                          <Play className="h-3.5 w-3.5" />
-                          {busy === `${p.partner}/${p.submission_id}` ? '…' : 'Run'}
-                        </button>
-                      </div>
-                    </td>
+                {(readiness?.feeds || []).map((f) => (
+                  <tr key={f.name} className="hover:bg-white/[0.02]">
+                    <td className="px-6 py-3.5 text-slate-200">{f.name}{f.required_for_pilot ? ' *' : ''}</td>
+                    <td className="px-6 py-3.5 text-xs text-slate-400">{f.category}</td>
+                    <td className="px-6 py-3.5"><Badge status={statusColor(f.status)} /></td>
+                    <td className="px-6 py-3.5 text-xs text-slate-400">{f.next_action}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        )}
-      </section>
+        </section>
 
-      {calibration && calibration.sample_size > 0 && (
-        <section className="glass-card p-5">
-          <h3 className="text-sm font-semibold">Calibration</h3>
-          <div className="mt-3 flex flex-wrap gap-4 text-sm text-slate-300">
-            <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-emerald-400" /> Match {matchPct}</span>
-            <span>Overrides {calibration.override_rate != null ? `${Math.round(calibration.override_rate * 100)}%` : '—'}</span>
-            <span>By decision: {Object.entries(calibration.by_decision || {}).map(([k, v]) => `${k}:${v}`).join(' · ')}</span>
+        <section className="glass-card overflow-hidden">
+          <div className="flex items-center justify-between border-b border-white/[0.06] px-5 py-3">
+            <h3 className="text-sm font-semibold">Pilot packages</h3>
+            <p className="text-xs text-slate-500">Drop redacted files under pilot_packages/&lt;partner&gt;/&lt;id&gt;/</p>
           </div>
-          {(calibration.mismatches || []).length > 0 && (
-            <div className="mt-4 space-y-1">
-              <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-amber-400">
-                <AlertTriangle className="h-3.5 w-3.5" /> Mismatches
-              </p>
-              {calibration.mismatches.slice(0, 8).map((m) => (
-                <p key={`${m.partner}-${m.submission_id}`} className="text-xs text-slate-400">
-                  {m.submission_id}: ai={m.ai} expected={m.expected}
-                </p>
-              ))}
+          {packages.length === 0 ? (
+            <EmptyState
+              icon={FlaskConical}
+              title="No pilot packages"
+              description="Seed demo scenarios or drop partner redacted submissions into pilot_packages/"
+              action={<button type="button" className="btn-primary btn-sm" onClick={seed}>Seed demos</button>}
+            />
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-white/[0.06] bg-surface-overlay text-left text-xs uppercase tracking-wider text-slate-500">
+                    <th className="px-6 py-3">Partner</th>
+                    <th className="px-6 py-3">Submission</th>
+                    <th className="px-6 py-3">Insured</th>
+                    <th className="px-6 py-3">Docs</th>
+                    <th className="px-6 py-3" />
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/[0.04]">
+                  {packages.map((p) => (
+                    <tr key={`${p.partner}/${p.submission_id}`} className="hover:bg-white/[0.02]">
+                      <td className="px-6 py-3.5 text-slate-300">{p.partner}</td>
+                      <td className="px-6 py-3.5 text-slate-200">{p.submission_id}</td>
+                      <td className="px-6 py-3.5 text-slate-400">{p.insured_name}</td>
+                      <td className="px-6 py-3.5 text-xs text-slate-500">
+                        {p.has_acord ? 'ACORD ' : ''}
+                        {p.has_loss_run ? 'Loss ' : ''}
+                        {p.has_sov ? 'SOV ' : ''}
+                        {p.inspection_count ? `Insp×${p.inspection_count}` : ''}
+                      </td>
+                      <td className="px-6 py-3.5 text-right">
+                        <div className="flex justify-end gap-2">
+                          <button
+                            type="button"
+                            className="btn-secondary btn-sm text-xs"
+                            disabled={!!busy}
+                            onClick={() => redactOne(p.partner, p.submission_id)}
+                          >
+                            {busy === `redact:${p.partner}/${p.submission_id}` ? '…' : 'Redact'}
+                          </button>
+                          <button
+                            type="button"
+                            className="btn-secondary btn-sm text-xs"
+                            disabled={!!busy}
+                            onClick={() => runOne(p.partner, p.submission_id)}
+                          >
+                            <Play className="h-3.5 w-3.5" />
+                            {busy === `${p.partner}/${p.submission_id}` ? '…' : 'Run'}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </section>
+
+        {calibration && calibration.sample_size > 0 && (
+          <section className="glass-card p-5">
+            <h3 className="text-sm font-semibold">Calibration</h3>
+            <div className="mt-3 flex flex-wrap gap-4 text-sm text-slate-300">
+              <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-emerald-400" /> Match {matchPct}</span>
+              <span>Overrides {calibration.override_rate != null ? `${Math.round(calibration.override_rate * 100)}%` : '—'}</span>
+              <span>By decision: {Object.entries(calibration.by_decision || {}).map(([k, v]) => `${k}:${v}`).join(' · ')}</span>
+            </div>
+            {(calibration.mismatches || []).length > 0 && (
+              <div className="mt-4 space-y-1">
+                <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-amber-400">
+                  <AlertTriangle className="h-3.5 w-3.5" /> Mismatches
+                </p>
+                {calibration.mismatches.slice(0, 8).map((m) => (
+                  <p key={`${m.partner}-${m.submission_id}`} className="text-xs text-slate-400">
+                    {m.submission_id}: ai={m.ai} expected={m.expected}
+                  </p>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+        </>
       )}
     </div>
   );
