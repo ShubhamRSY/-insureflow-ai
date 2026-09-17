@@ -76,6 +76,14 @@ html.theme-light {
     @apply px-3 py-1.5 text-xs;
   }
 
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-3 py-1.5 text-xs font-medium text-red-400 ring-1 ring-red-500/30 transition hover:bg-red-500/10;
+  }
+
+  .btn-success {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-3 py-1.5 text-xs font-medium text-emerald-400 ring-1 ring-emerald-500/30 transition hover:bg-emerald-500/10;
+  }
+
   .input:-webkit-autofill,
   .input:-webkit-autofill:hover,
   .input:-webkit-autofill:focus,

@@ -85,11 +85,11 @@ export default function WorkflowPage({ pending, onRefresh, authorityData, onOpen
                     <div className="mt-4 flex flex-wrap gap-2">
                       <button type="button" onClick={() => onOpenJob?.('insurance', id, id)} className="btn-secondary text-xs">View</button>
                       <button type="button" onClick={() => { setShowSignOff(id); setForm(f => ({ ...f, action: 'quote' })); }} className="btn-primary btn-sm text-xs">Quote</button>
-                      <button type="button" onClick={() => { setShowSignOff(id); setForm(f => ({ ...f, action: 'no_quote' })); }} className="rounded-xl px-3 py-1.5 text-xs text-red-400 ring-1 ring-red-500/30 hover:bg-red-500/10">No quote</button>
+                      <button type="button" onClick={() => { setShowSignOff(id); setForm(f => ({ ...f, action: 'no_quote' })); }} className="btn-danger">No quote</button>
                       <button type="button" onClick={() => { setShowSignOff(id); setForm(f => ({ ...f, action: 'request_info' })); }} className="btn-secondary text-xs">Request info</button>
                       <button type="button" onClick={() => { setShowSignOff(id); setForm(f => ({ ...f, action: 'refer' })); }} className="btn-secondary text-xs">Refer</button>
                       {(p.state === 'approved' || p.state === 'quoted') && (
-                        <button type="button" onClick={async () => { await endpoints.bindPolicy(id).catch(e => toast.error(e.message)); onRefresh?.(); }} className="rounded-xl px-3 py-1.5 text-xs text-emerald-400 ring-1 ring-emerald-500/30 hover:bg-emerald-500/10"><FileCheck className="h-3 w-3 inline" /> Bind</button>
+                        <button type="button" onClick={async () => { await endpoints.bindPolicy(id).catch(e => toast.error(e.message)); onRefresh?.(); }} className="btn-success"><FileCheck className="h-3 w-3 inline" /> Bind</button>
                       )}
                       <button type="button" onClick={async () => { setDetailBundleId(id); try { const d = await endpoints.workflowDetail(id); setWorkflowDetail(d); } catch (e) { toast.error(e.message); } }} className="btn-secondary text-xs"><Search className="h-3 w-3 inline" /> Detail</button>
                     </div>

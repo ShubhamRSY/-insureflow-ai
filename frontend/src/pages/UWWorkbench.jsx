@@ -388,7 +388,7 @@ export default function UWWorkbench({ onOpenJob, authorityData, onRefresh }) {
                         type="button"
                         disabled={busy === c.bundle_id}
                         onClick={() => handleBind(c.bundle_id)}
-                        className="rounded-xl px-3 py-1.5 text-xs text-emerald-400 ring-1 ring-emerald-500/30 hover:bg-emerald-500/10"
+                        className="btn-success"
                       >
                         <HandCoins className="h-3 w-3 inline" /> {busy === c.bundle_id ? 'Binding…' : 'Bind policy'}
                       </button>
@@ -412,7 +412,7 @@ export default function UWWorkbench({ onOpenJob, authorityData, onRefresh }) {
                     )}
                     {c.state === 'pending_review' && (
                       <>
-                        <button type="button" onClick={() => { setSigningId(c.bundle_id); setForm((f) => ({ ...f, action: 'no_quote' })); }} className="rounded-xl px-3 py-1.5 text-xs text-red-400 ring-1 ring-red-500/30 hover:bg-red-500/10">No quote</button>
+                        <button type="button" onClick={() => { setSigningId(c.bundle_id); setForm((f) => ({ ...f, action: 'no_quote' })); }} className="btn-danger">No quote</button>
                         <button type="button" onClick={() => { setSigningId(c.bundle_id); setForm((f) => ({ ...f, action: 'refer' })); }} className="btn-secondary text-xs">Refer</button>
                         <button type="button" onClick={() => { setSigningId(c.bundle_id); setForm((f) => ({ ...f, action: 'request_info' })); }} className="btn-secondary text-xs">Request info</button>
                       </>
