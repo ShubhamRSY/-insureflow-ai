@@ -1063,6 +1063,23 @@ class InsuranceSourcePullRequest(BaseModel):
     environment: Optional[str] = None
     unread_only: Optional[bool] = None
     bundle_id: Optional[str] = None  # accumulate into existing draft bundle
+    # Connector credential fields (Integrations page config forms). None of
+    # these are validated or persisted anywhere — real "live" status for the
+    # handful of connectors that support it is env-var driven (see
+    # LIVE_CONNECTOR_IDS / _live_connector_configured in sources.py). These
+    # exist so each connector's config form can ask for what it actually
+    # needs instead of overloading the generic fields above.
+    port: Optional[str] = None
+    username: Optional[str] = None
+    password: Optional[str] = None
+    api_key: Optional[str] = None
+    client_id: Optional[str] = None
+    client_secret: Optional[str] = None
+    access_key_id: Optional[str] = None
+    secret_access_key: Optional[str] = None
+    region: Optional[str] = None
+    account_id: Optional[str] = None
+    token: Optional[str] = None
 
 
 @app.get("/health")

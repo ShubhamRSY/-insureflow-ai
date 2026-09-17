@@ -138,6 +138,71 @@ describe('IntegrationsPage', () => {
     });
   });
 
+  it('masks a password field by default and toggles visibility', async () => {
+    const pwAdapter = {
+      id: 'sftp', name: 'SFTP', category: 'Other', kind: 'needs_config', connected: false,
+      config_fields: [{ key: 'password', label: 'Password', type: 'password', placeholder: '•••••••••••', required: true }],
+    };
+    endpoints.integrationStatus.mockResolvedValue({ adapters: [pwAdapter], systems: [] });
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('Connect')).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByText('Connect'));
+
+    const input = screen.getByPlaceholderText('•••••••••••');
+    expect(input).toHaveAttribute('type', 'password');
+    fireEvent.click(screen.getByTitle('Show'));
+    expect(input).toHaveAttribute('type', 'text');
+    fireEvent.click(screen.getByTitle('Hide'));
+    expect(input).toHaveAttribute('type', 'password');
+  });
+
+  it('renders a select field and sends the chosen option', async () => {
+    const selectAdapter = {
+      id: 's3-bucket', name: 'AWS S3', category: 'Other', kind: 'needs_config', connected: false,
+      config_fields: [
+        { key: 'bucket', label: 'Bucket', placeholder: 'carrier-submissions', required: true },
+        { key: 'region', label: 'Region', type: 'select', options: [{ value: 'us-east-1', label: 'us-east-1' }] },
+      ],
+    };
+    endpoints.integrationStatus.mockResolvedValue({ adapters: [selectAdapter], systems: [] });
+    endpoints.connectSource.mockResolvedValue({ ok: true });
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('Connect')).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByText('Connect'));
+    fireEvent.change(screen.getByPlaceholderText('carrier-submissions'), { target: { value: 'my-bucket' } });
+    fireEvent.change(screen.getByDisplayValue('Select…'), { target: { value: 'us-east-1' } });
+    fireEvent.click(screen.getByText('Configure to AWS S3'));
+
+    await waitFor(() => {
+      expect(endpoints.connectSource).toHaveBeenCalledWith('s3-bucket', { bucket: 'my-bucket', region: 'us-east-1' });
+    });
+  });
+
+  it('disables Connect until a required field is filled', async () => {
+    const requiredAdapter = {
+      id: 'box', name: 'Box', category: 'Other', kind: 'catalog_stub', connected: false,
+      config_fields: [{ key: 'folder_id', label: 'Folder ID', placeholder: '123456789', required: true }],
+    };
+    endpoints.integrationStatus.mockResolvedValue({ adapters: [requiredAdapter], systems: [] });
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('Connect')).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByText('Connect'));
+
+    const connectButton = screen.getByText('Configure to Box').closest('button');
+    expect(connectButton).toBeDisabled();
+    fireEvent.change(screen.getByPlaceholderText('123456789'), { target: { value: '42' } });
+    expect(connectButton).not.toBeDisabled();
+  });
+
   it('renders the core systems table', async () => {
     endpoints.integrationStatus.mockResolvedValue({
       adapters: [adapter],

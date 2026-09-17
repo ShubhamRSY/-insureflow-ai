@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import { Link2, RefreshCw, XCircle, Cable, Loader2, Unplug, ArrowUpRight } from 'lucide-react';
+import { Link2, RefreshCw, XCircle, Cable, Loader2, Unplug, ArrowUpRight, Eye, EyeOff } from 'lucide-react';
 import { Badge, EmptyState } from '../components/ui';
 import { endpoints } from '../lib/api';
 import ConnectorLogo from '../components/ConnectorLogo';
@@ -15,6 +15,10 @@ export default function IntegrationsPage() {
   const [connectingId, setConnectingId] = useState(null);
   const [config, setConfig] = useState({});
   const [activeId, setActiveId] = useState(null);
+  const [visiblePasswords, setVisiblePasswords] = useState({});
+
+  const requiredFieldsFilled = (src, cfg) =>
+    (src.config_fields || []).every((f) => !f.required || (cfg[f.key] || '').trim());
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -162,16 +166,48 @@ export default function IntegrationsPage() {
                           {(src.config_fields || []).length === 0 ? (
                             <p className="text-[11px] text-cyan-400/80">No configuration needed — this source is ready to use. Click Connect to activate.</p>
                           ) : (
-                            (src.config_fields || []).map((f) => (
-                              <div key={f.key}>
-                                <label className="mb-0.5 block text-[10px] text-slate-500">{f.label}</label>
-                                <input className="input-field w-full text-xs" placeholder={f.placeholder}
-                                  value={cfg[f.key] || ''}
-                                  onChange={(e) => setConfig((c) => ({ ...c, [src.id]: { ...c[src.id], [f.key]: e.target.value } }))} />
-                              </div>
-                            ))
+                            (src.config_fields || []).map((f) => {
+                              const fieldId = `${src.id}-${f.key}`;
+                              const showPassword = !!visiblePasswords[fieldId];
+                              return (
+                                <div key={f.key}>
+                                  <label className="mb-0.5 block text-[10px] text-slate-500">
+                                    {f.label}{f.required && <span className="text-risk-red"> *</span>}
+                                  </label>
+                                  {f.type === 'select' ? (
+                                    <select className="input-field w-full text-xs"
+                                      value={cfg[f.key] || ''}
+                                      onChange={(e) => setConfig((c) => ({ ...c, [src.id]: { ...c[src.id], [f.key]: e.target.value } }))}>
+                                      <option value="">Select…</option>
+                                      {(f.options || []).map((o) => (
+                                        <option key={o.value} value={o.value}>{o.label}</option>
+                                      ))}
+                                    </select>
+                                  ) : f.type === 'password' ? (
+                                    <div className="relative">
+                                      <input className="input-field w-full pr-8 text-xs" placeholder={f.placeholder}
+                                        type={showPassword ? 'text' : 'password'}
+                                        value={cfg[f.key] || ''}
+                                        onChange={(e) => setConfig((c) => ({ ...c, [src.id]: { ...c[src.id], [f.key]: e.target.value } }))} />
+                                      <button type="button"
+                                        onClick={() => setVisiblePasswords((v) => ({ ...v, [fieldId]: !v[fieldId] }))}
+                                        className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+                                        title={showPassword ? 'Hide' : 'Show'}>
+                                        {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <input className="input-field w-full text-xs" placeholder={f.placeholder}
+                                      type={f.type === 'number' ? 'number' : 'text'}
+                                      value={cfg[f.key] || ''}
+                                      onChange={(e) => setConfig((c) => ({ ...c, [src.id]: { ...c[src.id], [f.key]: e.target.value } }))} />
+                                  )}
+                                </div>
+                              );
+                            })
                           )}
-                          <button type="button" onClick={() => connect(src)} disabled={connectingId === src.id}
+                          <button type="button" onClick={() => connect(src)}
+                            disabled={connectingId === src.id || !requiredFieldsFilled(src, cfg)}
                             className="btn-primary btn-sm w-full text-xs disabled:opacity-40">
                             {connectingId === src.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Cable className="h-3 w-3" />}
                             Configure to {src.name}
