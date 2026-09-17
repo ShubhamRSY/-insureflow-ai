@@ -41,8 +41,8 @@ export default function RenewalDashboard() {
   };
 
   const deltaColor = (pct) => {
-    if (pct > 15) return 'text-red-400';
-    if (pct < -15) return 'text-emerald-400';
+    if (pct > 15) return 'text-risk-red';
+    if (pct < -15) return 'text-verdigris';
     return 'text-slate-400';
   };
 
