@@ -36,7 +36,7 @@ export default function MortgagePage({ presets, jobs, onRunDemo, onOpenJob, onRu
   };
 
   return (
-    <div className="mx-auto max-w-7xl space-y-8 animate-fade-in">
+    <div className="mx-auto max-w-6xl space-y-8 animate-fade-in">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Mortgage Underwriting</h1>

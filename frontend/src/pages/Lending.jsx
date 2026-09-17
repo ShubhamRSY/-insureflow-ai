@@ -93,7 +93,7 @@ export default function LendingPage({ presets, demoResult, onRunDemo }) {
   };
 
   return (
-    <div className="mx-auto max-w-7xl space-y-8 animate-fade-in">
+    <div className="mx-auto max-w-6xl space-y-8 animate-fade-in">
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-4">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-lending/15">

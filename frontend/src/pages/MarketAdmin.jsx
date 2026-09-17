@@ -61,7 +61,7 @@ export default function MarketAdmin() {
   const direction = cycle?.phase === 'hard' ? 'up' : cycle?.phase === 'soft' ? 'down' : 'stable';
 
   return (
-    <div className="mx-auto max-w-4xl space-y-8 animate-fade-in">
+    <div className="mx-auto max-w-6xl space-y-8 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Market Cycle Admin</h1>
