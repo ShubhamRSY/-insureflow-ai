@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { endpoints, fmtCurrency, AuthError } from '../lib/api';
 import { insuranceLineLabel } from '../lib/insuranceLines';
+import { Badge } from '../components/ui';
 import {
   Inbox, FileCheck, AlertTriangle, Clock, TrendingUp, CheckCircle2, XCircle,
   ArrowRight, Search, Filter, RefreshCw, Zap, Shield, Bell, BarChart3,
@@ -13,25 +14,13 @@ const QUICK_ACTIONS = [
   { key: 'Enter', label: 'Open submission', color: 'bg-sky-600 hover:bg-sky-500', icon: FileCheck, openJob: true },
 ];
 
-const SEVERITY_COLORS = {
-  urgent: 'bg-red-500/20 text-red-300 border-red-500/30',
-  critical: 'bg-orange-500/20 text-orange-300 border-orange-500/30',
-  warning: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
-  info: 'bg-sky-500/20 text-sky-300 border-sky-500/30',
-};
-
+// Decorative severity dot for the illustrative Activity Hotspots list only —
+// a plain unlabeled dot has no Badge equivalent, so this stays local.
 const SEVERITY_DOT = {
   urgent: 'bg-red-400',
   critical: 'bg-orange-400',
   warning: 'bg-amber-400',
   info: 'bg-sky-400',
-};
-
-const STATUS_STYLES = {
-  processing: 'bg-sky-500/20 text-sky-300',
-  completed: 'bg-emerald-500/20 text-emerald-300',
-  failed: 'bg-red-500/20 text-red-300',
-  pending: 'bg-amber-500/20 text-amber-300',
 };
 
 function timeAgo(dateStr) {
@@ -127,26 +116,28 @@ function SubmissionRow({ job, onSelect, isSelected, index }) {
 
 function AlertRow({ alert, onReview }) {
   return (
-    <div className={`p-3 rounded-lg border ${SEVERITY_COLORS[alert.severity] || SEVERITY_COLORS.info} flex items-start gap-3`}>
-      <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${SEVERITY_DOT[alert.severity] || SEVERITY_DOT.info}`} />
+    <div className="p-3 rounded-lg border border-slate-700/40 bg-slate-800/30 flex items-start gap-3">
       <div className="min-w-0 flex-1">
-        <div className="text-sm font-medium">{alert.title}</div>
-        <div className="text-xs opacity-75 mt-0.5 line-clamp-2">{alert.description}</div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-white">{alert.title}</span>
+          <Badge status={alert.severity} />
+        </div>
+        <div className="text-xs text-slate-400 mt-0.5 line-clamp-2">{alert.description}</div>
         <div className="flex items-center gap-2 mt-1.5">
           {alert.line_of_business && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-black/20">{insuranceLineLabel(alert.line_of_business)}</span>
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-black/20 text-slate-400">{insuranceLineLabel(alert.line_of_business)}</span>
           )}
           {alert.requires_action && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-black/20 font-medium">Action required</span>
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-black/20 font-medium text-slate-300">Action required</span>
           )}
-          <span className="text-[10px] opacity-60">{timeAgo(alert.detected_at)}</span>
+          <span className="text-[10px] text-slate-500">{timeAgo(alert.detected_at)}</span>
         </div>
       </div>
       {!alert.reviewed && (
         <button
           type="button"
           onClick={() => onReview(alert.alert_id)}
-          className="text-[10px] px-2 py-1 rounded bg-black/20 hover:bg-black/30 shrink-0"
+          className="text-[10px] px-2 py-1 rounded bg-black/20 hover:bg-black/30 shrink-0 text-slate-300"
         >
           Dismiss
         </button>

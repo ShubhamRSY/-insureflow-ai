@@ -194,6 +194,11 @@ export function Badge({ status, pulse = false, label }) {
     no_fit: 'bg-slate-500/15 text-slate-400 ring-slate-500/20',
     'no-fit': 'bg-slate-500/15 text-slate-400 ring-slate-500/20',
     appetite_check_failed: 'bg-red-500/15 text-red-400 ring-red-500/20',
+    // Alert-severity tiers (UWDashboard regulatory alerts) — same red/amber/
+    // sky bands as the risk-severity keys above.
+    urgent: 'bg-red-500/15 text-red-400 ring-red-500/20',
+    warning: 'bg-amber-500/15 text-amber-400 ring-amber-500/20',
+    info: 'bg-sky-500/15 text-sky-400 ring-sky-500/20',
     // Connector/source integration kind (Integrations.jsx) — simulated is a
     // "not really live" caution, same amber bucket as pending/flag; live and
     // catalog (catalog_stub) already have keys above.
