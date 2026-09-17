@@ -256,11 +256,11 @@ export default function AuthorityMatrix() {
                         <td className="px-5 py-3 text-right font-mono text-slate-400">{fmtCurrency(ba.max_aggregate_exposure)}</td>
                         <td className="px-5 py-3 text-center">
                           {ba.requires_co_sign ? (
-                            <Badge status="Yes" />
+                            <Badge status="flag" label="Required" />
                           ) : ba.co_sign_threshold_premium ? (
-                            <span className="text-xs text-amber-400">&gt;{fmtCurrency(ba.co_sign_threshold_premium)}</span>
+                            <Badge status="watch" label={`>${fmtCurrency(ba.co_sign_threshold_premium)}`} />
                           ) : (
-                            <span className="text-xs text-slate-500">No</span>
+                            <Badge status="not_requested" label="No" />
                           )}
                         </td>
                         <td className="px-5 py-3 text-xs text-slate-400">{a.license_number || '\u2014'}</td>
