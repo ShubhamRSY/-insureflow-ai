@@ -4,7 +4,7 @@ import {
   GitCompare, Upload, ListChecks, FlaskConical, FileText, Cpu, Shield,
   Bot, Boxes, Clock, User, ChevronRight, X, Sparkles,
 } from 'lucide-react';
-import { Badge, EmptyState, StatCard } from '../components/ui';
+import { Badge, EmptyState, StatCard, Tabs } from '../components/ui';
 import { endpoints } from '../lib/api';
 import { toast } from '../lib/toast';
 
@@ -486,18 +486,17 @@ export default function RegistryPage() {
             </h3>
             <p className="mt-1 text-xs text-slate-500">draft → review → approved · approved entries pin the live agent stack</p>
           </div>
-          <div className="flex flex-wrap gap-1.5">
-            {[['all', 'All', entries.length], ['prompt', 'Prompts', byType.prompt || 0], ['llm_config', 'LLM Configs', byType.llm_config || 0], ['compliance_rule', 'Compliance', byType.compliance_rule || 0], ['agent_logic', 'Agent Logic', byType.agent_logic || 0]].map(([k, label, count]) => (
-              <button
-                key={k}
-                type="button"
-                onClick={() => setFilter(k)}
-                className={`rounded-full px-3 py-1 text-xs font-medium ring-1 transition ${filter === k ? 'bg-violet-500/15 text-violet-300 ring-violet-500/30' : 'bg-surface-overlay text-slate-400 ring-white/[0.06] hover:text-slate-200'}`}
-              >
-                {label} <span className="ml-0.5 opacity-60">{count}</span>
-              </button>
-            ))}
-          </div>
+          <Tabs
+            tabs={[
+              { id: 'all', label: <>All <span className="ml-0.5 opacity-60">{entries.length}</span></> },
+              { id: 'prompt', label: <>Prompts <span className="ml-0.5 opacity-60">{byType.prompt || 0}</span></> },
+              { id: 'llm_config', label: <>LLM Configs <span className="ml-0.5 opacity-60">{byType.llm_config || 0}</span></> },
+              { id: 'compliance_rule', label: <>Compliance <span className="ml-0.5 opacity-60">{byType.compliance_rule || 0}</span></> },
+              { id: 'agent_logic', label: <>Agent Logic <span className="ml-0.5 opacity-60">{byType.agent_logic || 0}</span></> },
+            ]}
+            active={filter}
+            onChange={setFilter}
+          />
         </div>
 
         {loading ? (

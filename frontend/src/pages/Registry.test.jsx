@@ -150,7 +150,7 @@ describe('RegistryPage', () => {
     await waitFor(() => {
       expect(screen.getByText('uw_decision')).toBeInTheDocument();
     });
-    fireEvent.click(screen.getByRole('button', { name: /^LLM Configs/ }));
+    fireEvent.click(screen.getByRole('tab', { name: /^LLM Configs/ }));
 
     expect(screen.queryByText('uw_decision')).not.toBeInTheDocument();
     expect(screen.getByText('default config')).toBeInTheDocument();
