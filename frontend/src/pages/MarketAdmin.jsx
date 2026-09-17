@@ -47,7 +47,16 @@ export default function MarketAdmin() {
     }
   };
 
-  const phaseColor = cycle?.phase === 'hard' ? 'text-red-400' : cycle?.phase === 'soft' ? 'text-green-400' : 'text-amber-400';
+  // Single source of truth for the market-phase color treatment — was
+  // previously a text/border/bg ternary repeated at each call site (and
+  // used a stray text-green-400 inconsistent with the app's emerald palette).
+  const PHASE_COLORS = {
+    hard: { text: 'text-red-400', border: 'border-red-500/20', bg: 'bg-red-500/15' },
+    soft: { text: 'text-emerald-400', border: 'border-emerald-500/20', bg: 'bg-emerald-500/15' },
+  };
+  const DEFAULT_PHASE_COLORS = { text: 'text-amber-400', border: 'border-amber-500/20', bg: 'bg-amber-500/15' };
+  const phaseColors = PHASE_COLORS[cycle?.phase] || DEFAULT_PHASE_COLORS;
+  const phaseColor = phaseColors.text;
   const direction = cycle?.phase === 'hard' ? 'up' : cycle?.phase === 'soft' ? 'down' : 'stable';
 
   return (
@@ -78,9 +87,9 @@ export default function MarketAdmin() {
       ) : (
         <>
           {/* Current Status Banner */}
-          <div className={`glass-card rounded-2xl border p-6 ${cycle.phase === 'hard' ? 'border-red-500/20' : cycle.phase === 'soft' ? 'border-green-500/20' : 'border-amber-500/20'}`}>
+          <div className={`glass-card rounded-2xl border p-6 ${phaseColors.border}`}>
             <div className="flex items-center gap-4">
-              <div className={`flex h-14 w-14 items-center justify-center rounded-2xl ${direction === 'up' ? 'bg-red-500/15' : direction === 'down' ? 'bg-green-500/15' : 'bg-amber-500/15'}`}>
+              <div className={`flex h-14 w-14 items-center justify-center rounded-2xl ${phaseColors.bg}`}>
                 {direction === 'up' ? <TrendingUp className={`h-7 w-7 ${phaseColor}`} /> :
                  direction === 'down' ? <TrendingDown className={`h-7 w-7 ${phaseColor}`} /> :
                  <AlertTriangle className="h-7 w-7 text-amber-400" />}
