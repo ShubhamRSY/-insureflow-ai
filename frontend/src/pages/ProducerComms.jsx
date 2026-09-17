@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { MessagesSquare, RefreshCw, CheckCircle2, Clock, Send, Shield, User } from 'lucide-react';
-import { Badge, EmptyState, StatCard } from '../components/ui';
+import { Badge, EmptyState, StatCard, Tabs } from '../components/ui';
 import { endpoints } from '../lib/api';
 import { toast } from '../lib/toast';
 
@@ -140,18 +140,15 @@ export default function ProducerCommsPage() {
             <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">Communication log</h3>
             <p className="mt-1 text-xs text-slate-500">Durable audit of producer-facing decisions, including acknowledgement back from the broker</p>
           </div>
-          <div className="flex flex-wrap gap-1.5">
-            {[['all', 'All', counts.all], ['sent', 'Awaiting ack', counts.sent], ['acknowledged', 'Acknowledged', counts.acknowledged]].map(([k, label, count]) => (
-              <button
-                key={k}
-                type="button"
-                onClick={() => setFilter(k)}
-                className={`rounded-full px-3 py-1 text-xs font-medium ring-1 transition ${filter === k ? 'bg-sky-500/15 text-sky-300 ring-sky-500/30' : 'bg-surface-overlay text-slate-400 ring-white/[0.06] hover:text-slate-200'}`}
-              >
-                {label} <span className="ml-0.5 opacity-60">{count}</span>
-              </button>
-            ))}
-          </div>
+          <Tabs
+            tabs={[
+              { id: 'all', label: <>All <span className="ml-0.5 opacity-60">{counts.all}</span></> },
+              { id: 'sent', label: <>Awaiting ack <span className="ml-0.5 opacity-60">{counts.sent}</span></> },
+              { id: 'acknowledged', label: <>Acknowledged <span className="ml-0.5 opacity-60">{counts.acknowledged}</span></> },
+            ]}
+            active={filter}
+            onChange={setFilter}
+          />
         </div>
 
         {loading ? (

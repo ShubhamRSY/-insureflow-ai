@@ -127,7 +127,7 @@ describe('ProducerCommsPage', () => {
     await waitFor(() => {
       expect(screen.getByText('Your submission has been approved.')).toBeInTheDocument();
     });
-    fireEvent.click(screen.getByRole('button', { name: /^Acknowledged/ }));
+    fireEvent.click(screen.getByRole('tab', { name: /^Acknowledged/ }));
 
     expect(screen.queryByText('Your submission has been approved.')).not.toBeInTheDocument();
     expect(screen.getByText('Coverage is now in force.')).toBeInTheDocument();
