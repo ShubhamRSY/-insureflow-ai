@@ -194,6 +194,12 @@ export function Badge({ status, pulse = false, label }) {
     no_fit: 'bg-slate-500/15 text-slate-400 ring-slate-500/20',
     'no-fit': 'bg-slate-500/15 text-slate-400 ring-slate-500/20',
     appetite_check_failed: 'bg-red-500/15 text-red-400 ring-red-500/20',
+    // Connector/source integration kind (Integrations.jsx) — simulated is a
+    // "not really live" caution, same amber bucket as pending/flag; live and
+    // catalog (catalog_stub) already have keys above.
+    connected: 'bg-emerald-500/15 text-emerald-400 ring-emerald-500/20',
+    simulated: 'bg-amber-500/15 text-amber-400 ring-amber-500/20',
+    needs_config: 'bg-amber-500/15 text-amber-400 ring-amber-500/20',
     // User role tiers (Settings.jsx) — escalating slate → sky → amber →
     // orange → red mirrors the app's existing severity/priority gradient.
     viewer: 'bg-slate-500/15 text-slate-300 ring-slate-500/20',

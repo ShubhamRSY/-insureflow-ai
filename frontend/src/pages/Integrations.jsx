@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import { Link2, RefreshCw, CheckCircle2, XCircle, Cable, Loader2, Unplug, ArrowUpRight } from 'lucide-react';
-import { EmptyState } from '../components/ui';
+import { Link2, RefreshCw, XCircle, Cable, Loader2, Unplug, ArrowUpRight } from 'lucide-react';
+import { Badge, EmptyState } from '../components/ui';
 import { endpoints } from '../lib/api';
 import ConnectorLogo from '../components/ConnectorLogo';
 import { groupSourcesByCategory } from '../lib/connectorBrands';
@@ -126,22 +126,20 @@ export default function IntegrationsPage() {
                           <p className="truncate text-xs text-slate-500">{src.honesty || src.description}</p>
                         </div>
                         {src.kind === 'catalog_stub' && (
-                          <span className="shrink-0 rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Not contracted</span>
+                          <Badge status="catalog" label="Not contracted" />
                         )}
                         {src.kind === 'simulated' && (
-                          <span className="shrink-0 rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-blue-400">Simulated</span>
+                          <Badge status="simulated" />
                         )}
                         {src.kind === 'live' && (
-                          <span className="shrink-0 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-400">Live</span>
+                          <Badge status="live" />
                         )}
                         {src.kind === 'needs_config' && (
-                          <span className="shrink-0 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-400">Needs creds</span>
+                          <Badge status="needs_config" label="Needs creds" />
                         )}
                         {src.connected ? (
                           <div className="flex shrink-0 items-center gap-2">
-                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-400">
-                              <CheckCircle2 className="h-3 w-3" /> Connected
-                            </span>
+                            <Badge status="connected" label="Connected" />
                             <button type="button" onClick={() => disconnect(src)} disabled={connectingId === src.id}
                               className="rounded-lg border border-white/[0.08] px-2 py-1 text-[10px] text-slate-400 transition hover:border-red-400/30 hover:text-red-300">
                               {connectingId === src.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Unplug className="h-3 w-3" />}
@@ -230,9 +228,9 @@ export default function IntegrationsPage() {
                         <td className="px-6 py-3.5 text-slate-300">{a.name}</td>
                         <td className="px-6 py-3.5 text-xs text-slate-400">
                           {a.mode === 'live' ? (
-                            <span className="text-emerald-400">live</span>
+                            <Badge status="live" />
                           ) : (
-                            <span className="text-amber-400">simulated — not a live bind</span>
+                            <Badge status="simulated" label="Simulated — not a live bind" />
                           )}
                         </td>
                         <td className="px-6 py-3.5 text-xs text-slate-500">
