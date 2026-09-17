@@ -4,9 +4,9 @@ import { endpoints, fmtCurrency, AuthError } from '../lib/api';
 import { insuranceLineLabel } from '../lib/insuranceLines';
 import { Badge, EmptyState, StatCard } from '../components/ui';
 import {
-  FileCheck, AlertTriangle, Clock, TrendingUp, CheckCircle2, XCircle,
-  ArrowRight, Search, Filter, RefreshCw, Zap, Bell, BarChart3,
-  ChevronRight, Loader2, Sparkles, Flame, Briefcase,
+  FileCheck, Clock, CheckCircle2,
+  ArrowRight, Search, RefreshCw, Zap, Bell, BarChart3,
+  Loader2, Sparkles, Flame, Briefcase,
 } from 'lucide-react';
 
 const QUICK_ACTIONS = [
@@ -326,7 +326,7 @@ export default function UWDashboard({ onOpenJob }) {
         <StatCard label="Pending review" value={pendingJobs.length} valueClassName="text-sky-400" />
         <StatCard label="Decided today" value={recentJobs.length} valueClassName="text-emerald-400" />
         <StatCard label="Active alerts" value={alerts.filter((a) => !a.reviewed).length} valueClassName="text-amber-400" />
-        <StatCard label="Total submissions" value={metrics?.total || inbox.length} valueClassName="text-slate-300" />
+        <StatCard label="Total submissions" value={metrics?.total || inbox.length} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
