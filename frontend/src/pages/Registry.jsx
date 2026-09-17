@@ -436,27 +436,27 @@ export default function RegistryPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-white/[0.06] text-left text-xs uppercase tracking-wider text-slate-500">
-                    <th className="px-3 py-2">Run</th>
-                    <th className="px-3 py-2">Class</th>
-                    <th className="px-3 py-2">Stage</th>
-                    <th className="px-3 py-2">Key metrics</th>
-                    <th className="px-3 py-2">Logged</th>
+                  <tr className="border-b border-white/[0.06] bg-surface-overlay text-left text-xs uppercase tracking-wider text-slate-500">
+                    <th className="px-6 py-3">Run</th>
+                    <th className="px-6 py-3">Class</th>
+                    <th className="px-6 py-3">Stage</th>
+                    <th className="px-6 py-3">Key metrics</th>
+                    <th className="px-6 py-3">Logged</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/[0.04]">
                   {experiments.runs.slice().reverse().map((r) => (
                     <tr key={r.run_id} className="align-top hover:bg-white/[0.02]">
-                      <td className="px-3 py-2.5">
+                      <td className="px-6 py-3.5">
                         <p className="font-medium text-slate-200">{r.name}</p>
                         {r.hypothesis && <p className="mt-0.5 max-w-xs text-[11px] text-slate-500">{r.hypothesis}</p>}
                         <p className="mt-0.5 font-mono text-[10px] text-slate-600">{r.run_id}</p>
                       </td>
-                      <td className="px-3 py-2.5">
+                      <td className="px-6 py-3.5">
                         <span className="rounded-lg bg-surface-overlay px-2 py-0.5 text-xs text-slate-300 ring-1 ring-white/[0.06]">{r.experiment_class}</span>
                       </td>
-                      <td className="px-3 py-2.5"><Badge status={stageBadge(r.stage)} /></td>
-                      <td className="px-3 py-2.5">
+                      <td className="px-6 py-3.5"><Badge status={stageBadge(r.stage)} /></td>
+                      <td className="px-6 py-3.5">
                         <div className="flex max-w-xs flex-wrap gap-1">
                           {Object.entries(r.metrics || {}).slice(0, 3).map(([k, v]) => (
                             <span key={k} className="rounded bg-black/25 px-1.5 py-0.5 font-mono text-[11px] text-slate-400" title={k}>
@@ -466,7 +466,7 @@ export default function RegistryPage() {
                           {Object.keys(r.metrics || {}).length > 3 && <span className="text-[10px] text-slate-600">+{Object.keys(r.metrics).length - 3} more</span>}
                         </div>
                       </td>
-                      <td className="whitespace-nowrap px-3 py-2.5 text-xs text-slate-500">{fmtDate(r.created_at)}</td>
+                      <td className="whitespace-nowrap px-6 py-3.5 text-xs text-slate-500">{fmtDate(r.created_at)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -548,19 +548,19 @@ export default function RegistryPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-white/[0.06] text-left text-xs uppercase tracking-wider text-slate-500">
-                  <th className="px-3 py-2">Snapshot</th>
-                  <th className="px-3 py-2">Taken</th>
-                  <th className="px-3 py-2">Pinned components</th>
-                  <th className="px-3 py-2">Bundle</th>
+                <tr className="border-b border-white/[0.06] bg-surface-overlay text-left text-xs uppercase tracking-wider text-slate-500">
+                  <th className="px-6 py-3">Snapshot</th>
+                  <th className="px-6 py-3">Taken</th>
+                  <th className="px-6 py-3">Pinned components</th>
+                  <th className="px-6 py-3">Bundle</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/[0.04]">
                 {snapshots.slice().reverse().map((s) => (
                   <tr key={s.snapshot_id} className="hover:bg-white/[0.02]">
-                    <td className="whitespace-nowrap px-3 py-2.5 font-mono text-xs text-slate-300">{s.snapshot_id}</td>
-                    <td className="whitespace-nowrap px-3 py-2.5 text-xs text-slate-400">{fmtDate(s.generated_at)}</td>
-                    <td className="px-3 py-2.5">
+                    <td className="whitespace-nowrap px-6 py-3.5 font-mono text-xs text-slate-300">{s.snapshot_id}</td>
+                    <td className="whitespace-nowrap px-6 py-3.5 text-xs text-slate-400">{fmtDate(s.generated_at)}</td>
+                    <td className="px-6 py-3.5">
                       <div className="flex flex-wrap gap-1">
                         {Object.keys(s.prompts || {}).length > 0 && <span className="rounded bg-amber-500/10 px-1.5 py-0.5 text-[11px] text-amber-400">prompts {Object.keys(s.prompts).length}</span>}
                         {Object.keys(s.llm_configs || {}).length > 0 && <span className="rounded bg-sky-500/10 px-1.5 py-0.5 text-[11px] text-sky-400">llm {Object.keys(s.llm_configs).length}</span>}
@@ -569,7 +569,7 @@ export default function RegistryPage() {
                         {snapshotCount(s) === 0 && <span className="text-[11px] text-slate-600">empty</span>}
                       </div>
                     </td>
-                    <td className="px-3 py-2.5 text-xs text-slate-500">{s.bundle_id || '—'}</td>
+                    <td className="px-6 py-3.5 text-xs text-slate-500">{s.bundle_id || '—'}</td>
                   </tr>
                 ))}
               </tbody>

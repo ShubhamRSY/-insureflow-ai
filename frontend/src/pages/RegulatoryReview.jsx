@@ -200,15 +200,15 @@ export default function RegulatoryReview() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-white/[0.06] text-left text-[10px] uppercase tracking-wider text-slate-500">
-                  <th className="px-3 py-2">State</th>
-                  <th className="px-3 py-2">Line</th>
-                  <th className="px-3 py-2">Rule key</th>
-                  <th className="px-3 py-2">Old value</th>
-                  <th className="px-3 py-2">New value</th>
-                  <th className="px-3 py-2">Source</th>
-                  <th className="px-3 py-2">Detected</th>
-                  <th className="px-3 py-2 text-right">Actions</th>
+                <tr className="border-b border-white/[0.06] bg-surface-overlay text-left text-xs uppercase tracking-wider text-slate-500">
+                  <th className="px-6 py-3">State</th>
+                  <th className="px-6 py-3">Line</th>
+                  <th className="px-6 py-3">Rule key</th>
+                  <th className="px-6 py-3">Old value</th>
+                  <th className="px-6 py-3">New value</th>
+                  <th className="px-6 py-3">Source</th>
+                  <th className="px-6 py-3">Detected</th>
+                  <th className="px-6 py-3 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/[0.04]">
@@ -217,13 +217,13 @@ export default function RegulatoryReview() {
                   const isOpen = expandedRow === id;
                   return (
                     <tr key={id} className="align-top hover:bg-white/[0.02]">
-                      <td className="px-3 py-2.5">
+                      <td className="px-6 py-3.5">
                         <Badge status={stateBadge(change.state)} />
                       </td>
-                      <td className="whitespace-nowrap px-3 py-2.5 text-xs text-slate-300">
+                      <td className="whitespace-nowrap px-6 py-3.5 text-xs text-slate-300">
                         {change.line_of_business || change.lob || '—'}
                       </td>
-                      <td className="px-3 py-2.5">
+                      <td className="px-6 py-3.5">
                         <button
                           type="button"
                           onClick={() => setExpandedRow(isOpen ? null : id)}
@@ -233,23 +233,23 @@ export default function RegulatoryReview() {
                           <ChevronDown className={`h-3 w-3 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                         </button>
                       </td>
-                      <td className="max-w-[180px] truncate px-3 py-2.5 font-mono text-xs text-slate-500" title={JSON.stringify(change.old_value)}>
+                      <td className="max-w-[180px] truncate px-6 py-3.5 font-mono text-xs text-slate-500" title={JSON.stringify(change.old_value)}>
                         {change.old_value != null ? (typeof change.old_value === 'string' ? change.old_value : JSON.stringify(change.old_value)) : '—'}
                       </td>
-                      <td className="max-w-[180px] truncate px-3 py-2.5 font-mono text-xs text-emerald-400/80" title={JSON.stringify(change.new_value)}>
+                      <td className="max-w-[180px] truncate px-6 py-3.5 font-mono text-xs text-emerald-400/80" title={JSON.stringify(change.new_value)}>
                         {change.new_value != null ? (typeof change.new_value === 'string' ? change.new_value : JSON.stringify(change.new_value)) : '—'}
                       </td>
-                      <td className="whitespace-nowrap px-3 py-2.5 text-xs text-slate-400">
+                      <td className="whitespace-nowrap px-6 py-3.5 text-xs text-slate-400">
                         {change.source ? (
                           <span className="inline-flex items-center gap-1">
                             <ExternalLink className="h-3 w-3" /> {change.source}
                           </span>
                         ) : '—'}
                       </td>
-                      <td className="whitespace-nowrap px-3 py-2.5 text-xs text-slate-500">
+                      <td className="whitespace-nowrap px-6 py-3.5 text-xs text-slate-500">
                         <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" /> {fmtDate(change.detected_at || change.created_at)}</span>
                       </td>
-                      <td className="px-3 py-2.5 text-right">
+                      <td className="px-6 py-3.5 text-right">
                         <div className="flex justify-end gap-1.5">
                           <button
                             type="button"
@@ -289,13 +289,13 @@ export default function RegulatoryReview() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-white/[0.06] text-left text-[10px] uppercase tracking-wider text-slate-500">
-                  <th className="px-3 py-2">Status</th>
-                  <th className="px-3 py-2">Line</th>
-                  <th className="px-3 py-2">Rule key</th>
-                  <th className="px-3 py-2">Change</th>
-                  <th className="px-3 py-2">Reviewed</th>
-                  <th className="px-3 py-2">Date</th>
+                <tr className="border-b border-white/[0.06] bg-surface-overlay text-left text-xs uppercase tracking-wider text-slate-500">
+                  <th className="px-6 py-3">Status</th>
+                  <th className="px-6 py-3">Line</th>
+                  <th className="px-6 py-3">Rule key</th>
+                  <th className="px-6 py-3">Change</th>
+                  <th className="px-6 py-3">Reviewed</th>
+                  <th className="px-6 py-3">Date</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/[0.04]">
@@ -303,24 +303,24 @@ export default function RegulatoryReview() {
                   const eid = entry.changelog_id || entry.id || '';
                   return (
                     <tr key={eid} className="hover:bg-white/[0.02]">
-                      <td className="px-3 py-2.5">
+                      <td className="px-6 py-3.5">
                         <Badge status={stateBadge(entry.state || entry.status)} />
                       </td>
-                      <td className="whitespace-nowrap px-3 py-2.5 text-xs text-slate-300">
+                      <td className="whitespace-nowrap px-6 py-3.5 text-xs text-slate-300">
                         {entry.line_of_business || entry.lob || '—'}
                       </td>
-                      <td className="px-3 py-2.5 font-mono text-xs text-slate-300">
+                      <td className="px-6 py-3.5 font-mono text-xs text-slate-300">
                         {entry.rule_key || entry.key || '—'}
                       </td>
-                      <td className="max-w-[200px] truncate px-3 py-2.5 text-xs text-slate-400">
+                      <td className="max-w-[200px] truncate px-6 py-3.5 text-xs text-slate-400">
                         {entry.old_value != null && entry.new_value != null
                           ? <span className="font-mono">{String(entry.old_value)} → <span className="text-emerald-400/80">{String(entry.new_value)}</span></span>
                           : entry.summary || entry.description || '—'}
                       </td>
-                      <td className="whitespace-nowrap px-3 py-2.5 text-xs text-slate-500">
+                      <td className="whitespace-nowrap px-6 py-3.5 text-xs text-slate-500">
                         {entry.reviewed_by || '—'}
                       </td>
-                      <td className="whitespace-nowrap px-3 py-2.5 text-xs text-slate-500">
+                      <td className="whitespace-nowrap px-6 py-3.5 text-xs text-slate-500">
                         {fmtDateTime(entry.reviewed_at || entry.created_at)}
                       </td>
                     </tr>
