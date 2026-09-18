@@ -1,6 +1,34 @@
 (function () {
   'use strict';
 
+  /* ---- Cookie consent (only relevant on pages that load GA4; harmless no-op otherwise) ---- */
+  (function () {
+    var banner = document.getElementById('consent-banner');
+    if (!banner) return;
+    var CONSENT_KEY = 'rytera_consent';
+    function applyConsent(granted) {
+      if (typeof window.gtag === 'function') {
+        window.gtag('consent', 'update', { analytics_storage: granted ? 'granted' : 'denied' });
+      }
+    }
+    var stored = null;
+    try { stored = localStorage.getItem(CONSENT_KEY); } catch (e) { /* private mode */ }
+    if (stored === 'granted' || stored === 'denied') {
+      applyConsent(stored === 'granted');
+    } else {
+      banner.style.display = 'block';
+    }
+    function choose(granted) {
+      applyConsent(granted);
+      try { localStorage.setItem(CONSENT_KEY, granted ? 'granted' : 'denied'); } catch (e) { /* private mode */ }
+      banner.style.display = 'none';
+    }
+    var acceptBtn = document.getElementById('consent-accept');
+    var declineBtn = document.getElementById('consent-decline');
+    if (acceptBtn) acceptBtn.addEventListener('click', function () { choose(true); });
+    if (declineBtn) declineBtn.addEventListener('click', function () { choose(false); });
+  })();
+
   var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* ---- Location-time day/night theme (automatic — no user toggle) ---- */
@@ -475,7 +503,8 @@
           email: email,
           company: company,
           message: form.message.value.trim(),
-          vertical: form.vertical.value
+          vertical: form.vertical.value,
+          website: form.website.value
         })
       }).then(function (res) {
         if (!res.ok) throw new Error('Request failed (' + res.status + ')');

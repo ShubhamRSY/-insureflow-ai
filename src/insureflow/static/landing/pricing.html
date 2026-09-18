@@ -456,6 +456,7 @@
         <div>
           <div style="margin-bottom:.25rem">Names and private details come off before any AI sees a page. <a href="/technology#privacy">How it works</a></div>
           <div style="margin-bottom:.25rem">A licensed underwriter still signs. We never invent a price.</div>
+          <div style="margin-bottom:.25rem"><a href="/privacy">Privacy Policy</a> &middot; <a href="/terms">Terms of Service</a></div>
           <div>&copy; 2026 Rytera Inc. All rights reserved.</div>
         </div>
       </div>
@@ -469,6 +470,10 @@
         <h3 id="modal-title">Request a demo</h3>
         <p class="m-sub">Tell us about your team and we'll schedule a walkthrough.</p>
         <form id="demo-form" novalidate>
+          <div style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden" aria-hidden="true">
+            <label for="d-website">Website</label>
+            <input type="text" id="d-website" name="website" tabindex="-1" autocomplete="off" />
+          </div>
           <div class="field">
             <label for="d-name">Full name</label>
             <input type="text" id="d-name" name="name" placeholder="Alex Chen" required />

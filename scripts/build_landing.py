@@ -10,9 +10,14 @@ Re-run after editing page bodies here:
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 LANDING = Path(__file__).resolve().parent.parent / "src" / "insureflow" / "static" / "landing"
+
+# Set at build time (not baked into source) — empty means analytics stays off and no
+# consent banner renders. Rerun `python scripts/build_landing.py` after setting it.
+GA4_MEASUREMENT_ID = os.environ.get("GA4_MEASUREMENT_ID", "").strip()
 
 # ---------------------------------------------------------------------------
 # Shared fragments
@@ -280,6 +285,7 @@ FOOTER = (
         <div>
           <div style="margin-bottom:.25rem">Names and private details come off before any AI sees a page. <a href="/technology#privacy">How it works</a></div>
           <div style="margin-bottom:.25rem">A licensed underwriter still signs. We never invent a price.</div>
+          <div style="margin-bottom:.25rem"><a href="/privacy">Privacy Policy</a> &middot; <a href="/terms">Terms of Service</a></div>
           <div>&copy; 2026 Rytera Inc. All rights reserved.</div>
         </div>
       </div>
@@ -293,6 +299,10 @@ MODAL = """  <div class="modal-overlay" id="demo-modal" role="dialog" aria-modal
         <h3 id="modal-title">Request a demo</h3>
         <p class="m-sub">Tell us about your team and we'll schedule a walkthrough.</p>
         <form id="demo-form" novalidate>
+          <div style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden" aria-hidden="true">
+            <label for="d-website">Website</label>
+            <input type="text" id="d-website" name="website" tabindex="-1" autocomplete="off" />
+          </div>
           <div class="field">
             <label for="d-name">Full name</label>
             <input type="text" id="d-name" name="name" placeholder="Alex Chen" required />
@@ -377,10 +387,27 @@ MODAL = """  <div class="modal-overlay" id="demo-modal" role="dialog" aria-modal
 THEME_BOOTSTRAP = '  <script>\n(function(){var t=new Date(),h=t.getHours()+t.getMinutes()/60;document.documentElement.setAttribute("data-theme",h>=6.5&&h<19.5?"day":"night");})();\n  </script>\n'
 
 
+def _ga4_snippet() -> str:
+    if not GA4_MEASUREMENT_ID:
+        return ""
+    gid = GA4_MEASUREMENT_ID
+    return (
+        "  <script>\n"
+        "    window.dataLayer = window.dataLayer || [];\n"
+        "    function gtag(){dataLayer.push(arguments);}\n"
+        "    gtag('consent', 'default', { analytics_storage: 'denied' });\n"
+        "  </script>\n"
+        f'  <script async src="https://www.googletagmanager.com/gtag/js?id={gid}"></script>\n'
+        "  <script>\n"
+        f"    gtag('js', new Date());\n"
+        f"    gtag('config', '{gid}');\n"
+        "  </script>\n"
+    )
+
+
 def head(title: str, desc: str, canonical: str, og_desc: str) -> str:
     return (
-        '  <meta charset="UTF-8" />\n' + THEME_BOOTSTRAP + '  <meta name="viewport" content="width=device-width, initial-scale=1.0" />\n'
-        f"  <title>{title}</title>\n"
+        '  <meta charset="UTF-8" />\n' + THEME_BOOTSTRAP + '  <meta name="viewport" content="width=device-width, initial-scale=1.0" />\n' + _ga4_snippet() + f"  <title>{title}</title>\n"
         f'  <meta name="description" content="{desc}" />\n'
         f'  <link rel="canonical" href="https://ryterainc.com/{canonical}" />\n'
         '  <meta property="og:type" content="website" />\n'
@@ -419,6 +446,15 @@ def head(title: str, desc: str, canonical: str, og_desc: str) -> str:
     )
 
 
+CONSENT_BANNER = """  <div class="consent-banner" id="consent-banner" role="dialog" aria-label="Cookie consent" style="display:none;position:fixed;left:1rem;right:1rem;bottom:1rem;z-index:60;max-width:640px;margin:0 auto;padding:1rem 1.1rem;border-radius:.75rem;background:var(--surface);border:1px solid var(--border);box-shadow:0 10px 30px rgba(0,0,0,.25);font-size:.85rem">
+    <p style="margin:0 0 .6rem">We use analytics cookies to see which pages are useful. No ads, no selling data. <a href="/privacy">Privacy Policy</a></p>
+    <div style="display:flex;gap:.5rem;justify-content:flex-end">
+      <button type="button" class="btn btn-ghost" id="consent-decline">Decline</button>
+      <button type="button" class="btn btn-primary" id="consent-accept">Accept</button>
+    </div>
+  </div>"""
+
+
 def page(title: str, desc: str, canonical: str, og_desc: str, main_html: str) -> str:
     return (
         '<!DOCTYPE html>\n<html lang="en" data-theme="day">\n<head>\n'
@@ -435,6 +471,7 @@ def page(title: str, desc: str, canonical: str, og_desc: str, main_html: str) ->
         + FOOTER
         + "\n  </div>\n\n"
         + MODAL
+        + ("\n" + CONSENT_BANNER if GA4_MEASUREMENT_ID else "")
         + '\n  <script src="/static/landing.js" defer></script>\n</body>\n</html>\n'
     )
 
@@ -2370,6 +2407,100 @@ def company_main() -> str:
     )
 
 
+def legal_draft_notice() -> str:
+    return (
+        '      <div class="reveal" style="max-width:720px;margin:0 auto 2rem;padding:.85rem 1.1rem;'
+        "border:1px solid rgba(217,119,6,.35);background:rgba(217,119,6,.08);border-radius:.6rem;"
+        'font-size:.85rem;color:var(--muted)">'
+        "<strong>Draft &mdash; not yet reviewed by legal counsel.</strong> This page states our current practices "
+        "in plain language. It has not been through outside legal review and should not be relied on as a final "
+        'legal document until counsel signs off. Questions: <a class="contact-email" href="mailto:hello@ryterainc.com">hello@ryterainc.com</a>.'
+        "</div>"
+    )
+
+
+def privacy_main() -> str:
+    body = """      <section id="privacy-policy">
+        <div class="reveal" style="max-width:720px;margin:0 auto">
+          <p style="color:var(--muted-2);font-size:.85rem">Last updated: 2026-09-18 &middot; Effective for ryterainc.com and the Rytera dashboard</p>
+          <h2>What we collect</h2>
+          <p>When you request a demo or sign up, we collect the name, work email, company, and any message you give us. When your organization uses the Rytera dashboard, we process the submission files, structured data, and decisions your organization sends us on its behalf &mdash; that data belongs to you, not to us.</p>
+          <h2>Names and private details come off before any AI sees a page</h2>
+          <p>Before a submission reaches a language model, we strip Social Security numbers, tax IDs, dates of birth, and named individuals. Underwriters at your organization still see the full, real submission in the dashboard &mdash; the de-identification only applies to what the AI model itself receives.</p>
+          <h2>How we use it</h2>
+          <p>Demo-request details are used to contact you about a walkthrough and are not sold or shared with third parties for advertising. Dashboard data is used only to run the underwriting, pricing, and compliance checks your organization configured, and to maintain the audit trail a regulator can request.</p>
+          <h2>Who else sees it</h2>
+          <p>We use infrastructure and model providers (cloud hosting, database, and language-model vendors) as sub-processors bound by confidentiality and data-processing terms. De-identified text may pass through a language-model provider as described above. We do not sell personal data.</p>
+          <h2>Cookies</h2>
+          <p>The dashboard sets a session cookie so you stay logged in. We do not currently run third-party analytics or advertising cookies on this site; if that changes, we will update this page and add a consent banner before any non-essential cookie is set.</p>
+          <h2>Security</h2>
+          <p>Traffic is encrypted in transit (HTTPS/HSTS). Stored files are encrypted at rest. Access inside the dashboard is role-based, and every underwriting decision is logged with who made it and when.</p>
+          <h2>Your rights</h2>
+          <p>You can ask us what we hold about you, ask us to correct it, or ask us to delete it, subject to what we're legally required to retain (for example, underwriting audit records). Email <a class="contact-email" href="mailto:hello@ryterainc.com">hello@ryterainc.com</a> to make a request.</p>
+          <h2>Changes to this policy</h2>
+          <p>If we materially change how we handle personal data, we will update this page and, where required, notify you directly.</p>
+          <h2>Contact</h2>
+          <p>Rytera Inc. &middot; <a class="contact-email" href="mailto:hello@ryterainc.com">hello@ryterainc.com</a></p>
+        </div>
+      </section>"""
+
+    return (
+        sub_page_hero(
+            "Legal",
+            "Privacy Policy",
+            "What we collect, why, and how it's protected &mdash; in plain language.",
+            primary="",
+        )
+        + "\n\n"
+        + legal_draft_notice()
+        + "\n\n"
+        + body
+        + "\n\n"
+        + contact_section()
+    )
+
+
+def terms_main() -> str:
+    body = """      <section id="terms-of-service">
+        <div class="reveal" style="max-width:720px;margin:0 auto">
+          <p style="color:var(--muted-2);font-size:.85rem">Last updated: 2026-09-18 &middot; Effective for ryterainc.com and the Rytera dashboard</p>
+          <h2>What Rytera is</h2>
+          <p>Rytera is underwriting-support software: it reads submissions, checks them against filed rates and state rules, and prepares a decision-ready memo. It does not itself decide, quote, or bind a policy &mdash; a licensed underwriter at your organization does, or your organization's own policy admin system does.</p>
+          <h2>Practice mode / shadow mode</h2>
+          <p>Unless your organization has explicitly configured live bind with your own carrier or policy-admin credentials, Rytera runs in practice (shadow) mode: it produces recommendations only, and no policy is issued through it.</p>
+          <h2>Your responsibilities</h2>
+          <p>You are responsible for the accuracy of the data you submit, for maintaining licensed-underwriter sign-off where your jurisdiction requires it, and for keeping your account credentials confidential. You must have the right to submit any customer or applicant data you upload.</p>
+          <h2>Rate and pricing sources</h2>
+          <p>Rytera prices a line only when a real, filed rate source is connected for it. Where a product is shown as "catalog" rather than "live," no price it displays is a bindable quote &mdash; see the specific product page for that line's status.</p>
+          <h2>No warranty of fitness for a specific outcome</h2>
+          <p>Rytera is provided to support, not replace, professional underwriting judgment. We do not warrant that any recommendation is free of error, and your organization remains responsible for the underwriting and compliance decisions it makes.</p>
+          <h2>Availability and changes</h2>
+          <p>We may update, suspend, or change features of the service, including during maintenance, and will make reasonable efforts to notify you of changes that materially affect your use.</p>
+          <h2>Termination</h2>
+          <p>Either party may terminate use of the service per the order or subscription agreement in place between us; on termination we will make your organization's data available for export for a reasonable period before deletion.</p>
+          <h2>Governing law</h2>
+          <p>These terms are governed by the laws of the state in which Rytera Inc. is incorporated, without regard to conflict-of-laws principles, unless a signed order form between us states otherwise.</p>
+          <h2>Contact</h2>
+          <p>Rytera Inc. &middot; <a class="contact-email" href="mailto:hello@ryterainc.com">hello@ryterainc.com</a></p>
+        </div>
+      </section>"""
+
+    return (
+        sub_page_hero(
+            "Legal",
+            "Terms of Service",
+            "The plain-language rules for using ryterainc.com and the Rytera dashboard.",
+            primary="",
+        )
+        + "\n\n"
+        + legal_draft_notice()
+        + "\n\n"
+        + body
+        + "\n\n"
+        + contact_section()
+    )
+
+
 # ---------------------------------------------------------------------------
 # Extract shared CSS / JS from the legacy single-page file
 # ---------------------------------------------------------------------------
@@ -2434,6 +2565,20 @@ def main() -> None:
             "pricing",
             "You will not buy fake outside data, a demo rate book sold as yours, or a bind you still have to type in by hand.",
             pricing_main(),
+        ),
+        "privacy.html": page(
+            "Rytera - Privacy Policy",
+            "What Rytera collects, why, and how it's protected. Names and private details come off before any AI sees a page.",
+            "privacy",
+            "What we collect, why, and how it's protected — in plain language.",
+            privacy_main(),
+        ),
+        "terms.html": page(
+            "Rytera - Terms of Service",
+            "The plain-language rules for using ryterainc.com and the Rytera dashboard.",
+            "terms",
+            "The plain-language rules for using ryterainc.com and the Rytera dashboard.",
+            terms_main(),
         ),
     }
 

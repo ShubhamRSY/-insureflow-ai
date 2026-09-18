@@ -3319,6 +3319,7 @@ class DemoRequest(BaseModel):
     company: str
     message: str = ""
     vertical: str = ""
+    website: str = ""  # honeypot — real visitors never see or fill this field
 
 
 @app.post("/api/contact/demo-request")
@@ -3326,6 +3327,10 @@ class DemoRequest(BaseModel):
 async def demo_request_endpoint(request: Request, payload: DemoRequest) -> JSONResponse:
     """Capture a landing-page demo request lead to data/demo_requests.jsonl + notify the team."""
     from datetime import datetime, timezone
+
+    if (payload.website or "").strip():
+        # Bot filled the hidden honeypot field — pretend success, drop silently.
+        return JSONResponse({"ok": True, "id": f"lead-{uuid.uuid4().hex[:10]}"})
 
     name = (payload.name or "").strip()
     email = (payload.email or "").strip().lower()
@@ -9532,7 +9537,7 @@ def ml_explain(model_type: str, features: dict[str, Any], current: TokenData = D
     return model.explain(fv)
 
 
-_LANDING_PAGES = ("platform", "technology", "underwriting", "integrations", "company", "pricing")
+_LANDING_PAGES = ("platform", "technology", "underwriting", "integrations", "company", "pricing", "privacy", "terms")
 
 
 @app.get("/static/landing.css", include_in_schema=False)
