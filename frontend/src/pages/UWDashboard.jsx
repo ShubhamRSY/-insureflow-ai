@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { endpoints, fmtCurrency, AuthError } from '../lib/api';
 import { insuranceLineLabel } from '../lib/insuranceLines';
+import { decisionLabel, uwReasons, ageInfo, AGE_STYLE } from '../lib/uwLanguage';
 import { Badge, EmptyState, StatCard } from '../components/ui';
 import {
   FileCheck, Clock, CheckCircle2,
@@ -40,18 +41,14 @@ function timeAgo(dateStr) {
   return `${Math.floor(hrs / 24)}d ago`;
 }
 
-function SubmissionRow({ job, onSelect, isSelected, index }) {
-  const results = job.results || {};
-  const memo = results.memo || {};
-  const quote = results.quote || {};
-  const insured = results.insured_name || memo.insured_name || 'Unknown';
-  const line = results.insurance_line || results.product_line || quote.insurance_line || '';
-  const state = results.state || memo.state || '';
-  const risk = memo.overall_risk_score;
-  const severity = memo.overall_risk_severity;
-  const premium = quote.adjusted_premium || quote.estimated_premium;
-  const decision = results.ai_decision || memo.decision || '';
-  const status = job.status || 'processing';
+function SubmissionRow({ job, onSelect, isSelected }) {
+  const insured = job.insured_name || 'Unknown';
+  const line = job.insurance_line || '';
+  const risk = job.risk_score;
+  const premium = job.premium;
+  const decision = job.ai_decision;
+  const age = ageInfo(job.created_at);
+  const reason = uwReasons(job.human_review_reasons || [])[0];
 
   return (
     <button
@@ -67,37 +64,35 @@ function SubmissionRow({ job, onSelect, isSelected, index }) {
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <span className="font-medium text-white text-sm truncate">{insured}</span>
-            {state && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-700 text-slate-300 font-mono">
-                {state}
-              </span>
-            )}
             {line && (
               <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-700/50 text-slate-400">
                 {insuranceLineLabel(line)}
+              </span>
+            )}
+            {age && (
+              <span className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] ring-1 ring-inset ${AGE_STYLE[age.level]}`}>
+                <Clock className="h-2.5 w-2.5" /> {age.label}
               </span>
             )}
           </div>
           <div className="flex items-center gap-3 mt-1">
             {risk != null && (
               <span className={`text-xs font-medium ${
-                risk >= 7 ? 'text-risk-red' : risk >= 4 ? 'text-risk-amber' : 'text-verdigris'
+                risk >= 70 ? 'text-risk-red' : risk >= 40 ? 'text-risk-amber' : 'text-verdigris'
               }`}>
-                Risk {risk}/10
+                Risk {risk}%
               </span>
             )}
-            {premium && (
+            {premium != null && (
               <span className="text-xs text-slate-400">{fmtCurrency(premium)}</span>
             )}
             {decision && (
-              <span className="text-xs text-slate-500 capitalize">{decision.replace(/_/g, ' ')}</span>
+              <span className="text-xs text-slate-500">{decisionLabel(decision)}</span>
             )}
           </div>
+          {reason && <p className="mt-1 text-[11px] text-amber-400/80 truncate">Why: {reason}</p>}
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          {status === 'processing' && (
-            <Loader2 size={14} className="text-sky-400 animate-spin" />
-          )}
           <ArrowRight size={14} className="text-slate-600 group-hover:text-slate-400 transition-colors" />
         </div>
       </div>
@@ -140,34 +135,28 @@ function AlertRow({ alert, onReview }) {
 export default function UWDashboard({ onOpenJob }) {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [inbox, setInbox] = useState([]);
+  const [pending, setPending] = useState([]);
+  const [done, setDone] = useState([]);
+  const [totals, setTotals] = useState({});
   const [alerts, setAlerts] = useState([]);
-  const [metrics, setMetrics] = useState(null);
   const [selectedJob, setSelectedJob] = useState(null);
   const [selectedIdx, setSelectedIdx] = useState(-1);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterLine, setFilterLine] = useState('');
-  const [filterState, setFilterState] = useState('');
   const [showShortcuts, setShowShortcuts] = useState(false);
 
   const loadDashboard = useCallback(async () => {
     setLoading(true);
     try {
-      const [inboxRes, alertsRes] = await Promise.allSettled([
-        endpoints.workflowInbox(),
-        endpoints.healthComplianceAllStates?.() ?? Promise.resolve({ states: {} }),
-      ]);
+      const [inboxRes] = await Promise.allSettled([endpoints.uwWorkbench()]);
 
       if (inboxRes.status === 'fulfilled') {
-        const items = (inboxRes.value?.cases || inboxRes.value || []).map((c) => ({
-          ...c,
-          _results: c.results || c.memo || {},
-        }));
-        setInbox(items);
+        setPending(inboxRes.value?.pending || []);
+        setDone((inboxRes.value?.done || []).slice(0, 10));
+        setTotals(inboxRes.value?.totals || {});
       }
 
       try {
-        const state = 'CT';
         const res = await fetch(`/api/law-tracker/alerts?limit=20`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('insureflow_token')}` },
         });
@@ -176,11 +165,6 @@ export default function UWDashboard({ onOpenJob }) {
           setAlerts(data.alerts || []);
         }
       } catch { /* alerts optional */ }
-
-      setMetrics({
-        total: inboxRes.status === 'fulfilled' ? (inboxRes.value?.cases || inboxRes.value || []).length : 0,
-        pending: inboxRes.status === 'fulfilled' ? (inboxRes.value?.cases || inboxRes.value || []).filter((c) => !c.final_decision).length : 0,
-      });
     } catch (e) {
       if (e instanceof AuthError) return;
     } finally {
@@ -190,30 +174,24 @@ export default function UWDashboard({ onOpenJob }) {
 
   useEffect(() => { loadDashboard(); }, [loadDashboard]);
 
-  const filteredInbox = useMemo(() => {
-    let items = inbox;
+  const matches = useCallback((j) => {
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
-      items = items.filter((j) => {
-        const r = j._results || j.results || {};
-        const name = (r.insured_name || r.memo?.insured_name || '').toLowerCase();
-        return name.includes(q) || (r.state || '').toLowerCase().includes(q);
-      });
+      const hay = `${j.insured_name || ''} ${j.broker_name || ''} ${j.bundle_id || ''}`.toLowerCase();
+      if (!hay.includes(q)) return false;
     }
-    if (filterLine) {
-      items = items.filter((j) => {
-        const r = j._results || j.results || {};
-        return (r.insurance_line || r.product_line || '').toLowerCase() === filterLine.toLowerCase();
-      });
-    }
-    if (filterState) {
-      items = items.filter((j) => {
-        const r = j._results || j.results || {};
-        return (r.state || '').toUpperCase() === filterState.toUpperCase();
-      });
-    }
-    return items;
-  }, [inbox, searchQuery, filterLine, filterState]);
+    if (filterLine && (j.insurance_line || '').toLowerCase() !== filterLine.toLowerCase()) return false;
+    return true;
+  }, [searchQuery, filterLine]);
+
+  const pendingJobs = useMemo(() => pending.filter(matches), [pending, matches]);
+  const recentJobs = useMemo(() => done.filter(matches), [done, matches]);
+  const filteredInbox = useMemo(() => [...pendingJobs, ...recentJobs], [pendingJobs, recentJobs]);
+
+  const openSelected = useCallback((job) => {
+    if (!job) return;
+    onOpenJob ? onOpenJob('insurance', job.bundle_id, job.bundle_id) : navigate(`/insurance/${job.bundle_id}`);
+  }, [onOpenJob, navigate]);
 
   useEffect(() => {
     const handler = (e) => {
@@ -241,8 +219,7 @@ export default function UWDashboard({ onOpenJob }) {
         setSelectedJob(filteredInbox[prev]);
       }
       if (e.key === 'Enter' && selectedJob) {
-        const id = selectedJob.id || selectedJob.job_id;
-        if (id) navigate(`/insurance/${id}`);
+        openSelected(selectedJob);
       }
       if (e.key === 'w' || e.key === 'W') {
         navigate('/uw-workbench');
@@ -253,10 +230,7 @@ export default function UWDashboard({ onOpenJob }) {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [filteredInbox, selectedIdx, selectedJob, navigate]);
-
-  const pendingJobs = filteredInbox.filter((j) => !j.final_decision);
-  const recentJobs = filteredInbox.filter((j) => j.final_decision).slice(0, 10);
+  }, [filteredInbox, selectedIdx, selectedJob, navigate, openSelected]);
 
   if (loading) {
     return (
@@ -323,10 +297,10 @@ export default function UWDashboard({ onOpenJob }) {
 
       {/* Metrics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard label="Pending review" value={pendingJobs.length} valueClassName="text-sky-400" />
-        <StatCard label="Decided today" value={recentJobs.length} valueClassName="text-emerald-400" />
+        <StatCard label="Pending review" value={totals.pending || 0} valueClassName="text-sky-400" />
+        <StatCard label="Ready to bind" value={totals.approved || 0} valueClassName="text-emerald-400" />
         <StatCard label="Active alerts" value={alerts.filter((a) => !a.reviewed).length} valueClassName="text-amber-400" />
-        <StatCard label="Total submissions" value={metrics?.total || inbox.length} />
+        <StatCard label="Total submissions" value={(totals.pending || 0) + (totals.approved || 0) + (totals.done || 0)} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -375,9 +349,8 @@ export default function UWDashboard({ onOpenJob }) {
               <div className="space-y-1.5">
                 {pendingJobs.map((job, i) => (
                   <SubmissionRow
-                    key={job.id || i}
+                    key={job.bundle_id || i}
                     job={job}
-                    index={i}
                     isSelected={selectedIdx === i}
                     onSelect={(j) => { setSelectedJob(j); setSelectedIdx(i); }}
                   />
@@ -394,16 +367,12 @@ export default function UWDashboard({ onOpenJob }) {
                 Recent Decisions ({recentJobs.length})
               </h2>
               <div className="space-y-1.5">
-                {recentJobs.map((job, i) => (
+                {recentJobs.map((job) => (
                   <SubmissionRow
-                    key={job.id || `r-${i}`}
+                    key={job.bundle_id}
                     job={job}
-                    index={i + pendingJobs.length}
                     isSelected={false}
-                    onSelect={(j) => {
-                      const id = j.id || j.job_id;
-                      if (id) navigate(`/insurance/${id}`);
-                    }}
+                    onSelect={openSelected}
                   />
                 ))}
               </div>
@@ -433,10 +402,7 @@ export default function UWDashboard({ onOpenJob }) {
                         navigate(to);
                         return;
                       }
-                      if (openJob) {
-                        const id = selectedJob.id || selectedJob.job_id;
-                        if (id) navigate(`/insurance/${id}`);
-                      }
+                      if (openJob) openSelected(selectedJob);
                     }}
                     className={`${color} text-white text-sm py-2 px-3 rounded-lg flex items-center justify-center gap-2 transition-all`}
                   >

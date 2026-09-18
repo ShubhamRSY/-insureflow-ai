@@ -7,6 +7,7 @@ import {
 import { Badge, EmptyState } from '../components/ui';
 import { endpoints, fmtCurrency } from '../lib/api';
 import { toast } from '../lib/toast';
+import { insuranceLineLabel } from '../lib/insuranceLines';
 
 function fmtDate(value) {
   if (!value) return '—';
@@ -303,7 +304,7 @@ export default function MonitoringPage() {
                       </div>
                       <p className="mt-0.5 text-xs text-slate-500">
                         <span className="font-mono text-slate-400">{p.policy_number || p.policy_id}</span>
-                        {' · '}{p.line_of_business || '—'}
+                        {' · '}{insuranceLineLabel(p.line_of_business) || p.line_of_business || '—'}
                         {' · expires in '}<span className={p.days_to_expiry <= 120 && p.days_to_expiry > 0 ? 'text-amber-400' : 'text-slate-400'}>{p.days_to_expiry > 0 ? `${p.days_to_expiry}d` : '—'}</span>
                       </p>
                     </div>

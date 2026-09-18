@@ -1987,6 +1987,7 @@ def uw_workbench(
             "ai_decision": rec.ai_decision or results.get("ai_decision") or (memo.get("decision") if isinstance(memo, dict) else ""),
             "final_decision": rec.final_decision,
             "assigned_to": rec.assigned_to,
+            "created_at": rec.created_at.isoformat(),
             "updated_at": rec.updated_at.isoformat(),
             "job_status": job.get("status"),
             "insured_name": results.get("insured_name") or (memo.get("insured_name") if isinstance(memo, dict) else None),

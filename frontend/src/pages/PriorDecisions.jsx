@@ -106,6 +106,7 @@ export default function PriorDecisionsPage() {
           {(rows.length ? rows : archive?.cases || []).map((r) => {
             const id = r.bundle_id;
             const dec = r.decision || r.ai_decision || '';
+            const reasons = r.reasons || [];
             return (
               <button
                 key={id}
@@ -120,10 +121,21 @@ export default function PriorDecisionsPage() {
                     {(r.state || r.primary_state) ? ` · ${r.state || r.primary_state}` : ''}
                     {r.tiv_band ? ` · ${r.tiv_band}` : ''}
                     {r.naics ? ` · NAICS ${r.naics}` : ''}
+                    {r.construction ? ` · ${r.construction}` : ''}
+                    {r.occupancy ? ` · ${r.occupancy}` : ''}
+                    {r.loss_count_band && r.loss_count_band !== '0' ? ` · ${r.loss_count_band} losses` : ''}
                   </p>
+                  {reasons.length > 0 && (
+                    <p className="mt-1 text-xs text-slate-500 line-clamp-1">
+                      Why: {reasons[0]}{reasons.length > 1 ? ` (+${reasons.length - 1} more)` : ''}
+                    </p>
+                  )}
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-1">
-                  {dec ? <Badge status={dec} label={dec} /> : null}
+                  <div className="flex items-center gap-1.5">
+                    {r.routing === 'referred' && <Badge status="refer" label="Referred" />}
+                    {dec ? <Badge status={dec} label={dec} /> : null}
+                  </div>
                   <span className="text-[10px] text-slate-500">
                     {r.remembered_at || r.updated_at
                       ? new Date(r.remembered_at || r.updated_at).toLocaleString()

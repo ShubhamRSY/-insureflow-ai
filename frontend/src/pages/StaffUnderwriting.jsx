@@ -4,8 +4,42 @@ import {
   BookOpen, ClipboardCheck, GraduationCap, LineChart, RefreshCw, Scale, Search,
   ArrowRight, TrendingUp,
 } from 'lucide-react';
-import { Badge, EmptyState, StatCard } from '../components/ui';
+import { Badge, EmptyState, ScoreBadge, StatCard } from '../components/ui';
 import { endpoints } from '../lib/api';
+
+const TOPIC_LABEL = {
+  target_market: 'Target market',
+  state_expansion: 'State expansion',
+  product_mix: 'Product mix',
+  premium_volume: 'Premium volume',
+  other: 'Other',
+  technical_insurance: 'Technical insurance',
+};
+
+const COV_STATUS_META = {
+  proposed: { status: 'pending', label: 'Proposed' },
+  in_review: { status: 'processing', label: 'In review' },
+  approved: { status: 'approved', label: 'Approved' },
+  filed: { status: 'completed', label: 'Filed' },
+};
+
+const GUIDE_STATUS_META = {
+  draft: { status: 'pending', label: 'Draft' },
+  published: { status: 'approved', label: 'Published' },
+  archived: { status: 'closed', label: 'Archived' },
+};
+
+const RATING_ACTION_META = {
+  monitor: { status: 'monitored', label: 'Monitor' },
+  revise: { status: 'processing', label: 'Revise' },
+  file: { status: 'approved', label: 'File' },
+};
+
+const EXPERIENCE_STRATEGY_META = {
+  tighten: { status: 'moderate', label: 'Tighten' },
+  grow: { status: 'approved', label: 'Grow' },
+  maintain: { status: 'monitored', label: 'Maintain' },
+};
 
 const TABS = [
   { id: 'overview', label: 'Overview', icon: Search },
@@ -167,7 +201,7 @@ export default function StaffUnderwriting() {
             <textarea className="input min-h-[60px] w-full" placeholder="Recommendation" value={researchForm.recommendation} onChange={(e) => setResearchForm({ ...researchForm, recommendation: e.target.value })} />
             <button type="submit" disabled={saving} className="btn-primary text-sm">Save research note</button>
           </form>
-          <ItemList items={items} empty="No market research notes yet" />
+          <ItemList items={items} kind="research" empty="No market research notes yet" />
         </div>
       )}
 
@@ -185,7 +219,7 @@ export default function StaffUnderwriting() {
             <textarea className="input min-h-[100px] w-full" placeholder="Description" required value={covForm.description} onChange={(e) => setCovForm({ ...covForm, description: e.target.value })} />
             <button type="submit" disabled={saving} className="btn-primary text-sm">Propose coverage change</button>
           </form>
-          <ItemList items={items} empty="No coverage development items" />
+          <ItemList items={items} kind="coverage" empty="No coverage development items" />
         </div>
       )}
 
@@ -215,7 +249,7 @@ export default function StaffUnderwriting() {
           </form>
           {experience ? (
             <div className="glass-card space-y-3 p-5">
-              <Badge>{experience.strategy}</Badge>
+              <Badge status={EXPERIENCE_STRATEGY_META[experience.strategy]?.status || experience.strategy} label={EXPERIENCE_STRATEGY_META[experience.strategy]?.label || experience.strategy} />
               <p className="text-2xl font-bold">LR {(experience.loss_ratio * 100).toFixed(1)}%</p>
               <p className="text-sm text-slate-400">Industry {(experience.industry_loss_ratio * 100).toFixed(1)}% · Δ {(experience.delta_vs_industry * 100).toFixed(1)} pts</p>
               <p className="text-sm text-slate-300">{experience.narrative}</p>
@@ -246,7 +280,7 @@ export default function StaffUnderwriting() {
             </div>
             <button type="submit" disabled={saving} className="btn-primary text-sm">Record rating review</button>
           </form>
-          <ItemList items={items} empty="No rating plan reviews" />
+          <ItemList items={items} kind="rating" empty="No rating plan reviews" />
         </div>
       )}
 
@@ -267,7 +301,7 @@ export default function StaffUnderwriting() {
             </div>
             <button type="submit" disabled={saving} className="btn-primary text-sm">Publish / save guide</button>
           </form>
-          <ItemList items={items} empty="No guides yet" />
+          <ItemList items={items} kind="guide" empty="No guides yet" />
         </div>
       )}
 
@@ -293,7 +327,7 @@ export default function StaffUnderwriting() {
             <textarea className="input min-h-[80px] w-full" placeholder="Findings (one per line)" value={auditForm.findings} onChange={(e) => setAuditForm({ ...auditForm, findings: e.target.value })} />
             <button type="submit" disabled={saving} className="btn-primary text-sm">Record audit</button>
           </form>
-          <ItemList items={items} empty="No underwriting audits yet" />
+          <ItemList items={items} kind="audit" empty="No underwriting audits yet" />
         </div>
       )}
 
@@ -302,6 +336,7 @@ export default function StaffUnderwriting() {
           <form className="glass-card space-y-3 p-5" onSubmit={(e) => { e.preventDefault(); run(() => endpoints.staffTraining(trainForm).then(() => setTrainForm({ title: '', topic: 'technical_insurance', audience: 'line_uw', outline: '' }))); }}>
             <h2 className="font-semibold">Education & training</h2>
             <input className="input w-full" placeholder="Module title" required value={trainForm.title} onChange={(e) => setTrainForm({ ...trainForm, title: e.target.value })} />
+            <input className="input w-full" placeholder="Topic (e.g. coverage forms, claims handling)" value={trainForm.topic} onChange={(e) => setTrainForm({ ...trainForm, topic: e.target.value })} />
             <select className="input w-full" value={trainForm.audience} onChange={(e) => setTrainForm({ ...trainForm, audience: e.target.value })}>
               <option value="line_uw">Line underwriters</option>
               <option value="producers">Producers</option>
@@ -310,14 +345,14 @@ export default function StaffUnderwriting() {
             <textarea className="input min-h-[100px] w-full" placeholder="Outline" required value={trainForm.outline} onChange={(e) => setTrainForm({ ...trainForm, outline: e.target.value })} />
             <button type="submit" disabled={saving} className="btn-primary text-sm">Add training module</button>
           </form>
-          <ItemList items={items} empty="No training modules" />
+          <ItemList items={items} kind="training" empty="No training modules" />
         </div>
       )}
     </div>
   );
 }
 
-function ItemList({ items, empty }) {
+function ItemList({ items, empty, kind }) {
   if (!items?.length) {
     return <EmptyState icon={BookOpen} title={empty} description="New items appear after you save." />;
   }
@@ -326,18 +361,41 @@ function ItemList({ items, empty }) {
       {items.slice().reverse().map((item) => {
         const key = item.note_id || item.item_id || item.review_id || item.guide_id || item.audit_id || item.module_id || item.policy_id || JSON.stringify(item).slice(0, 40);
         const title = item.title || item.office || item.line_of_business || key;
+        const covStatus = kind === 'coverage' ? COV_STATUS_META[item.status] : null;
+        const guideStatus = kind === 'guide' ? GUIDE_STATUS_META[item.status] : null;
+        const ratingAction = kind === 'rating' ? RATING_ACTION_META[item.action] : null;
+        const findingCount = (item.findings || []).length;
         return (
           <div key={key} className="glass-card px-4 py-3">
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-sm font-medium">{title}</span>
-              {item.status && <Badge>{item.status}</Badge>}
-              {item.topic && <Badge>{item.topic}</Badge>}
-              {item.advisory_org && <Badge>{item.advisory_org}</Badge>}
-              {typeof item.compliant_pct === 'number' && <Badge>{item.compliant_pct}% compliant</Badge>}
+              {covStatus && <Badge status={covStatus.status} label={covStatus.label} />}
+              {guideStatus && <Badge status={guideStatus.status} label={guideStatus.label} />}
+              {ratingAction && <Badge status={ratingAction.status} label={ratingAction.label} />}
+              {kind === 'guide' && item.version && (
+                <span className="rounded-full bg-black/20 px-2 py-0.5 text-[10px] text-slate-400 ring-1 ring-white/[0.06]">v{item.version}</span>
+              )}
+              {kind === 'research' && item.topic && (
+                <span className="rounded-full bg-black/20 px-2 py-0.5 text-[10px] text-slate-300 ring-1 ring-white/[0.06]">{TOPIC_LABEL[item.topic] || item.topic}</span>
+              )}
+              {kind === 'training' && item.topic && (
+                <span className="rounded-full bg-black/20 px-2 py-0.5 text-[10px] text-slate-300 ring-1 ring-white/[0.06]">{TOPIC_LABEL[item.topic] || item.topic}</span>
+              )}
+              {kind === 'rating' && item.advisory_org && (
+                <span className="rounded-full bg-black/20 px-2 py-0.5 text-[10px] text-slate-300 ring-1 ring-white/[0.06]">{item.advisory_org}</span>
+              )}
+              {kind === 'audit' && typeof item.compliant_pct === 'number' && (
+                <ScoreBadge value={item.compliant_pct} direction="quality" suffix="%" />
+              )}
             </div>
             <p className="mt-1 text-xs text-slate-500 line-clamp-3">
               {item.summary || item.description || item.body || item.outline || item.scope || ''}
             </p>
+            {kind === 'audit' && (
+              <p className="mt-1 text-[11px] text-slate-500">
+                {item.files_reviewed || 0} files reviewed · {findingCount ? `${findingCount} finding(s)` : 'no findings'}
+              </p>
+            )}
           </div>
         );
       })}

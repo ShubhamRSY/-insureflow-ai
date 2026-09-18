@@ -8,6 +8,13 @@ export const STATUS_META = {
   appetite_check_failed: { label: 'Appetite Check Failed', status: 'appetite_check_failed' },
 };
 
+export const REVIEW_DESK_LABEL = {
+  senior: 'Senior UW',
+  junior_hourly: 'Junior UW',
+  triage_desk: 'Triage desk',
+  cuo: 'CUO',
+};
+
 // Row-level status: the triage agent's "no_fit" tier means the submission
 // never cleared the carrier's appetite in the first place — surfaced as its
 // own status rather than lumped in with "processing", since it's a distinct
@@ -37,6 +44,9 @@ export function buildQueueRows(items, insuranceJobs) {
       agency: displayText(results.broker_name, ''),
       statusMeta: deriveStatus(item.priority, fullJob?.status),
       assignee: results.assigned_to || '',
+      reviewBy: item.review_by || '',
+      estimatedReviewMinutes: item.estimated_review_minutes ?? null,
+      missingDocuments: item.missing_documents || [],
       fullJob,
     };
   });

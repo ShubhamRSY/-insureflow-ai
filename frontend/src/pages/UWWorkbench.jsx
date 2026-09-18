@@ -2,10 +2,10 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Badge, EmptyState, StatCard } from '../components/ui';
 import { endpoints, fmtCurrency, AuthError } from '../lib/api';
-import { uwReasons } from '../lib/uwLanguage';
+import { uwReasons, decisionLabel, ageInfo, AGE_STYLE } from '../lib/uwLanguage';
 import { insuranceLineLabel } from '../lib/insuranceLines';
 import {
-  ShieldCheck, Inbox, FileCheck, History, Search, Loader2, Layers, AlertTriangle, GitCompare, UserCheck, CircleCheck, HandCoins,
+  ShieldCheck, Inbox, FileCheck, History, Search, Loader2, Layers, AlertTriangle, GitCompare, UserCheck, CircleCheck, HandCoins, Clock, User2,
 } from 'lucide-react';
 import BindReadinessPanel from '../components/BindReadinessPanel';
 import { toast } from '../lib/toast';
@@ -74,7 +74,7 @@ function checkpointLabel(name) {
   }[name] || name?.replace(/_/g, ' ');
 }
 
-export default function UWWorkbench({ onOpenJob, authorityData, onRefresh }) {
+export default function UWWorkbench({ onOpenJob, authorityData, onRefresh, user }) {
   const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -83,6 +83,8 @@ export default function UWWorkbench({ onOpenJob, authorityData, onRefresh }) {
   const [signingId, setSigningId] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [busy, setBusy] = useState(null);
+  const [query, setQuery] = useState('');
+  const [mineOnly, setMineOnly] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -181,7 +183,21 @@ export default function UWWorkbench({ onOpenJob, authorityData, onRefresh }) {
 
   const totals = data?.totals || {};
   const lists = { inbox: data?.pending || [], bind: data?.approved || [], done: data?.done || [] };
-  const cards = lists[tab] || [];
+  const rawCards = lists[tab] || [];
+  const q = query.trim().toLowerCase();
+  const filtered = rawCards.filter((c) => {
+    if (mineOnly && user?.username && c.assigned_to !== user.username) return false;
+    if (!q) return true;
+    return [c.bundle_id, c.insured_name, c.broker_name].some((v) => (v || '').toLowerCase().includes(q));
+  });
+  const cards = [...filtered].sort((a, b) => {
+    const aUrgent = a.state === 'pending_co_sign' ? 1 : 0;
+    const bUrgent = b.state === 'pending_co_sign' ? 1 : 0;
+    if (aUrgent !== bUrgent) return bUrgent - aUrgent;
+    const aAge = a.created_at ? new Date(a.created_at).getTime() : 0;
+    const bAge = b.created_at ? new Date(b.created_at).getTime() : 0;
+    return aAge - bAge; // oldest first
+  });
   const pendingCount = totals.pending || 0;
   const bindCount = totals.approved || 0;
   const coSignCount = totals.co_sign || 0;
@@ -215,26 +231,51 @@ export default function UWWorkbench({ onOpenJob, authorityData, onRefresh }) {
         <StatCard label="Decided" value={totals.done || 0} sub="bound · no quote · declined" accent="insurance" />
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {[
-          { key: 'inbox', label: 'Inbox', icon: Inbox, count: pendingCount },
-          { key: 'bind', label: 'Ready to bind', icon: FileCheck, count: bindCount },
-          { key: 'done', label: 'History', icon: History, count: totals.done || 0 },
-        ].map((t) => (
-          <button
-            key={t.key}
-            type="button"
-            onClick={() => setTab(t.key)}
-            className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium ring-1 transition ${
-              tab === t.key
-                ? 'bg-brand/15 text-brand ring-brand/30'
-                : 'bg-surface-overlay text-slate-400 ring-white/[0.06] hover:text-slate-200'
-            }`}
-          >
-            <t.icon className="h-4 w-4" /> {t.label}
-            <span className="rounded-full bg-black/30 px-1.5 py-0.5 text-xs tabular-nums">{t.count}</span>
-          </button>
-        ))}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-2">
+          {[
+            { key: 'inbox', label: 'Inbox', icon: Inbox, count: pendingCount },
+            { key: 'bind', label: 'Ready to bind', icon: FileCheck, count: bindCount },
+            { key: 'done', label: 'History', icon: History, count: totals.done || 0 },
+          ].map((t) => (
+            <button
+              key={t.key}
+              type="button"
+              onClick={() => setTab(t.key)}
+              className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium ring-1 transition ${
+                tab === t.key
+                  ? 'bg-brand/15 text-brand ring-brand/30'
+                  : 'bg-surface-overlay text-slate-400 ring-white/[0.06] hover:text-slate-200'
+              }`}
+            >
+              <t.icon className="h-4 w-4" /> {t.label}
+              <span className="rounded-full bg-black/30 px-1.5 py-0.5 text-xs tabular-nums">{t.count}</span>
+            </button>
+          ))}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {user?.username && (
+            <button
+              type="button"
+              onClick={() => setMineOnly((v) => !v)}
+              className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium ring-1 transition ${
+                mineOnly ? 'bg-brand/15 text-brand ring-brand/30' : 'bg-surface-overlay text-slate-400 ring-white/[0.06] hover:text-slate-200'
+              }`}
+            >
+              <User2 className="h-3.5 w-3.5" /> Assigned to me
+            </button>
+          )}
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search insured, broker, bundle id…"
+              className="input-field w-56 pl-8 text-xs"
+            />
+          </div>
+        </div>
       </div>
 
       {error && <div className="rounded-xl bg-red-500/10 p-4 text-sm text-red-400 ring-1 ring-red-500/20">{error}</div>}
@@ -243,13 +284,15 @@ export default function UWWorkbench({ onOpenJob, authorityData, onRefresh }) {
         {!cards.length ? (
           <EmptyState
             icon={tab === 'inbox' ? Inbox : tab === 'bind' ? FileCheck : History}
-            title={tab === 'inbox' ? 'Inbox clear' : tab === 'bind' ? 'Nothing to bind' : 'No history yet'}
+            title={rawCards.length ? 'No matches' : tab === 'inbox' ? 'Inbox clear' : tab === 'bind' ? 'Nothing to bind' : 'No history yet'}
             description={
-              tab === 'inbox'
-                ? 'All submissions are being handled. New pipeline runs land here for UW sign-off.'
-                : tab === 'bind'
-                  ? 'No approved submissions waiting to bind.'
-                  : 'Decided cases will appear here.'
+              rawCards.length
+                ? 'No submissions match the current search / assigned-to-me filter.'
+                : tab === 'inbox'
+                  ? 'All submissions are being handled. New pipeline runs land here for UW sign-off.'
+                  : tab === 'bind'
+                    ? 'No approved submissions waiting to bind.'
+                    : 'Decided cases will appear here.'
             }
           />
         ) : (
@@ -262,6 +305,8 @@ export default function UWWorkbench({ onOpenJob, authorityData, onRefresh }) {
               const line = insuranceLineLabel(c.insurance_line);
               const coSign = c.state === 'pending_co_sign';
               const isOpen = signingId === c.bundle_id;
+              const age = ageInfo(c.created_at);
+              const hasConditions = (c.conditions || []).length > 0;
               return (
                 <div key={c.bundle_id} className="rounded-xl border border-white/[0.06] bg-surface-overlay p-5">
                   <div className="flex flex-wrap items-start justify-between gap-4">
@@ -283,102 +328,18 @@ export default function UWWorkbench({ onOpenJob, authorityData, onRefresh }) {
                         <span className="font-mono text-lg font-bold text-white">{fmtCurrency(c.premium)}</span>
                       )}
                       {authLabel && <span className="text-xs text-slate-500">{authLabel}</span>}
-                      {c.updated_at && (
-                        <span className="text-xs text-slate-500">{new Date(c.updated_at).toLocaleString()}</span>
-                      )}
+                      <div className="flex items-center gap-1.5">
+                        {age && (
+                          <span className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] ring-1 ring-inset ${AGE_STYLE[age.level]}`} title="Time since submission entered the queue">
+                            <Clock className="h-2.5 w-2.5" /> {age.label}
+                          </span>
+                        )}
+                        {c.updated_at && (
+                          <span className="text-xs text-slate-500">{new Date(c.updated_at).toLocaleString()}</span>
+                        )}
+                      </div>
                     </div>
                   </div>
-
-                  <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-                    <div className="rounded-lg bg-black/20 p-2.5">
-                      <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">AI decision</p>
-                      <p className="mt-0.5 text-sm font-medium text-slate-200 capitalize">{c.ai_decision || '—'}</p>
-                    </div>
-                    <div className="rounded-lg bg-black/20 p-2.5">
-                      <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Risk</p>
-                      <p className="mt-0.5 text-sm font-medium text-slate-200">
-                        {c.severity ? <span className="capitalize">{c.severity}</span> : '—'}
-                        {c.risk_score != null && <span className="ml-1 text-slate-400 tabular-nums">({c.risk_score}%)</span>}
-                      </p>
-                    </div>
-                    <div className="rounded-lg bg-black/20 p-2.5">
-                      <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Open conditions</p>
-                      <p className="mt-0.5 text-sm font-medium text-slate-200 tabular-nums">{(c.conditions || []).length}</p>
-                    </div>
-                    <div className="rounded-lg bg-black/20 p-2.5">
-                      <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Checkpoints</p>
-                      <p className="mt-0.5 text-sm font-medium text-slate-200 tabular-nums">
-                        {openChecks > 0 ? `${openChecks} open` : 'cleared'}
-                      </p>
-                    </div>
-                  </div>
-
-                  {(c.checkpoints || []).length > 0 && (
-                    <div className="mt-3 flex flex-wrap items-center gap-1.5">
-                      <Layers className="h-3 w-3 text-slate-500" />
-                      {(c.checkpoints || []).map((cp) => (
-                        <span
-                          key={`${cp.id || cp.name}-${cp.status}`}
-                          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] ring-1 ring-inset ${
-                            cp.status === 'pending'
-                              ? 'bg-amber-500/10 text-amber-400 ring-amber-500/20'
-                              : cp.status === 'approved' || cp.status === 'cleared'
-                                ? 'bg-emerald-500/10 text-emerald-400 ring-emerald-500/20'
-                                : cp.status === 'waived'
-                                  ? 'bg-slate-500/10 text-slate-400 ring-slate-500/20'
-                                  : 'bg-sky-500/10 text-sky-400 ring-sky-500/20'
-                          }`}
-                        >
-                          {cp.status === 'pending'
-                            ? <AlertTriangle className="h-2.5 w-2.5" />
-                            : (cp.status === 'approved' || cp.status === 'cleared')
-                              ? <CircleCheck className="h-2.5 w-2.5" />
-                              : null}
-                          {checkpointLabel(cp.id || cp.name)} · {cp.status}
-                          {cp.status === 'pending' && (
-                            <button
-                              type="button"
-                              disabled={busy === `cp:${c.bundle_id}:${cp.id}`}
-                              onClick={() => handleResolveCheckpoint(c.bundle_id, cp.id)}
-                              className="ml-1 rounded-full bg-brand/20 px-1.5 py-px text-[10px] font-semibold text-brand hover:bg-brand/30"
-                            >
-                              {busy === `cp:${c.bundle_id}:${cp.id}` ? '…' : 'Approve'}
-                            </button>
-                          )}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-
-                  {(c.human_review_reasons || []).length > 0 && (
-                    <ul className="mt-3 space-y-1">
-                      {uwReasons((c.human_review_reasons || []).map((r) => (typeof r === 'string' ? r : r.reason || JSON.stringify(r)))).map((r, i) => (
-                        <li key={i} className="text-xs text-amber-400/90">· {r}</li>
-                      ))}
-                    </ul>
-                  )}
-
-                  {(c.sign_offs || []).length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-1.5">
-                      {(c.sign_offs || []).map((so, i) => (
-                        <span key={i} className="inline-flex items-center gap-1 rounded-full bg-black/20 px-2 py-0.5 text-[10px] text-slate-400 ring-1 ring-white/[0.06]">
-                          <ShieldCheck className="h-2.5 w-2.5" /> {so.action} by {so.username || so.license_number || 'UW'}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-
-                  {(c.state === 'approved' || c.state === 'quoted' || tab === 'bind') && (
-                    <div className="mt-4">
-                      <BindReadinessPanel bundleId={c.bundle_id} onChanged={load} />
-                    </div>
-                  )}
-
-                      {c.archived && (
-                        <p className="mt-2 text-[11px] text-slate-500">
-                          Archived memo · {c.source_docs_retained === false ? 'source file is in the PAS, not here' : 'open to view decision'}
-                        </p>
-                      )}
 
                   <div className="mt-4 flex flex-wrap gap-2">
                     <button type="button" onClick={() => onOpenJob?.('insurance', c.bundle_id, c.bundle_id)} className="btn-secondary text-xs"><Search className="h-3 w-3 inline" /> View</button>
@@ -431,7 +392,7 @@ export default function UWWorkbench({ onOpenJob, authorityData, onRefresh }) {
                   {isOpen && (
                     <div className="mt-4 space-y-3 rounded-lg bg-black/20 p-4 ring-1 ring-white/[0.06]">
                       <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                        {form.action === 'quote' ? 'Quote' : form.action === 'no_quote' ? 'No quote' : form.action === 'approve' ? 'Approve / sign' : form.action} — {c.bundle_id}
+                        {decisionLabel(form.action)} — {c.bundle_id}
                       </p>
                       <div className="grid gap-3 sm:grid-cols-2">
                         <input
@@ -479,12 +440,111 @@ export default function UWWorkbench({ onOpenJob, authorityData, onRefresh }) {
                       />
                       <div className="flex gap-2">
                         <button type="button" disabled={busy === c.bundle_id} onClick={() => handleSignOff(c.bundle_id)} className="btn-primary btn-sm text-xs">
-                          {busy === c.bundle_id ? 'Submitting…' : `Confirm ${form.action === 'no_quote' ? 'no quote' : form.action}`}
+                          {busy === c.bundle_id ? 'Submitting…' : `Confirm ${decisionLabel(form.action)}`}
                         </button>
                         <button type="button" onClick={() => setSigningId(null)} className="btn-secondary text-xs">Cancel</button>
                       </div>
                     </div>
                   )}
+
+                  <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                    <div className="rounded-lg bg-black/20 p-2.5">
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">AI decision</p>
+                      <p className="mt-0.5 text-sm font-medium text-slate-200">{decisionLabel(c.ai_decision)}</p>
+                    </div>
+                    <div className="rounded-lg bg-black/20 p-2.5">
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Risk</p>
+                      <p className="mt-0.5 text-sm font-medium text-slate-200">
+                        {c.severity ? <span className="capitalize">{c.severity}</span> : '—'}
+                        {c.risk_score != null && <span className="ml-1 text-slate-400 tabular-nums">({c.risk_score}%)</span>}
+                      </p>
+                    </div>
+                    <div className="rounded-lg bg-black/20 p-2.5">
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Open conditions</p>
+                      <p className="mt-0.5 text-sm font-medium text-slate-200 tabular-nums">{hasConditions ? (c.conditions || []).length : 'None'}</p>
+                    </div>
+                    <div className="rounded-lg bg-black/20 p-2.5">
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Checkpoints</p>
+                      <p className="mt-0.5 text-sm font-medium text-slate-200 tabular-nums">
+                        {openChecks > 0 ? `${openChecks} open` : 'cleared'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {hasConditions && (
+                    <ul className="mt-3 space-y-1">
+                      {(c.conditions || []).map((cond, i) => (
+                        <li key={i} className="text-xs text-sky-400/90">· {typeof cond === 'string' ? cond : cond.text || cond.description || JSON.stringify(cond)}</li>
+                      ))}
+                    </ul>
+                  )}
+
+                  {(c.checkpoints || []).length > 0 && (
+                    <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                      <Layers className="h-3 w-3 text-slate-500" />
+                      {(c.checkpoints || []).map((cp) => (
+                        <span
+                          key={`${cp.id || cp.name}-${cp.status}`}
+                          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] ring-1 ring-inset ${
+                            cp.status === 'pending'
+                              ? 'bg-amber-500/10 text-amber-400 ring-amber-500/20'
+                              : cp.status === 'approved' || cp.status === 'cleared'
+                                ? 'bg-emerald-500/10 text-emerald-400 ring-emerald-500/20'
+                                : cp.status === 'waived'
+                                  ? 'bg-slate-500/10 text-slate-400 ring-slate-500/20'
+                                  : 'bg-sky-500/10 text-sky-400 ring-sky-500/20'
+                          }`}
+                        >
+                          {cp.status === 'pending'
+                            ? <AlertTriangle className="h-2.5 w-2.5" />
+                            : (cp.status === 'approved' || cp.status === 'cleared')
+                              ? <CircleCheck className="h-2.5 w-2.5" />
+                              : null}
+                          {checkpointLabel(cp.id || cp.name)} · {cp.status}
+                          {cp.status === 'pending' && (
+                            <button
+                              type="button"
+                              disabled={busy === `cp:${c.bundle_id}:${cp.id}`}
+                              onClick={() => handleResolveCheckpoint(c.bundle_id, cp.id)}
+                              className="ml-1 rounded-full bg-brand/20 px-1.5 py-px text-[10px] font-semibold text-brand hover:bg-brand/30"
+                            >
+                              {busy === `cp:${c.bundle_id}:${cp.id}` ? '…' : 'Approve'}
+                            </button>
+                          )}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {(c.human_review_reasons || []).length > 0 && (
+                    <ul className="mt-3 space-y-1">
+                      {uwReasons((c.human_review_reasons || []).map((r) => (typeof r === 'string' ? r : r.reason || JSON.stringify(r)))).map((r, i) => (
+                        <li key={i} className="text-xs text-amber-400/90">· {r}</li>
+                      ))}
+                    </ul>
+                  )}
+
+                  {(c.sign_offs || []).length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {(c.sign_offs || []).map((so, i) => (
+                        <span key={i} className="inline-flex items-center gap-1 rounded-full bg-black/20 px-2 py-0.5 text-[10px] text-slate-400 ring-1 ring-white/[0.06]">
+                          <ShieldCheck className="h-2.5 w-2.5" /> {decisionLabel(so.action)} by {so.username || so.license_number || 'UW'}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {(c.state === 'approved' || c.state === 'quoted' || tab === 'bind') && (
+                    <div className="mt-4">
+                      <BindReadinessPanel bundleId={c.bundle_id} onChanged={load} />
+                    </div>
+                  )}
+
+                      {c.archived && (
+                        <p className="mt-2 text-[11px] text-slate-500">
+                          Archived memo · {c.source_docs_retained === false ? 'source file is in the PAS, not here' : 'open to view decision'}
+                        </p>
+                      )}
                 </div>
               );
             })}

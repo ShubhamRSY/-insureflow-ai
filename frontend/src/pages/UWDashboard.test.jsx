@@ -8,7 +8,7 @@ vi.mock('../lib/api', async () => {
   return {
     ...actual,
     endpoints: {
-      workflowInbox: vi.fn(),
+      uwWorkbench: vi.fn(),
     },
   };
 });
@@ -16,8 +16,11 @@ vi.mock('../lib/api', async () => {
 import { endpoints } from '../lib/api';
 
 const pendingCase = {
-  id: 'job-1',
-  results: { insured_name: 'Acme Corp', state: 'CA', insurance_line: 'general_liability', memo: { overall_risk_score: 5 } },
+  bundle_id: 'bundle-1',
+  insured_name: 'Acme Corp',
+  insurance_line: 'general_liability',
+  risk_score: 50,
+  ai_decision: 'quote',
 };
 
 function renderPage(props = {}) {
@@ -40,13 +43,13 @@ describe('UWDashboard', () => {
   });
 
   it('shows a loading spinner while fetching the inbox', () => {
-    endpoints.workflowInbox.mockReturnValue(new Promise(() => {}));
+    endpoints.uwWorkbench.mockReturnValue(new Promise(() => {}));
     const { container } = renderPage();
     expect(container.querySelector('.animate-spin')).toBeInTheDocument();
   });
 
   it('shows the all-caught-up message when there is nothing pending', async () => {
-    endpoints.workflowInbox.mockResolvedValue({ cases: [] });
+    endpoints.uwWorkbench.mockResolvedValue({ pending: [], done: [], totals: {} });
     renderPage();
 
     await waitFor(() => {
@@ -56,18 +59,18 @@ describe('UWDashboard', () => {
   });
 
   it('renders a pending submission row', async () => {
-    endpoints.workflowInbox.mockResolvedValue({ cases: [pendingCase] });
+    endpoints.uwWorkbench.mockResolvedValue({ pending: [pendingCase], done: [], totals: { pending: 1 } });
     renderPage();
 
     await waitFor(() => {
       expect(screen.getByText('Acme Corp')).toBeInTheDocument();
     });
-    expect(screen.getAllByText('CA').length).toBeGreaterThan(0);
-    expect(screen.getByText('Risk 5/10')).toBeInTheDocument();
+    expect(screen.getByText('Risk 50%')).toBeInTheDocument();
+    expect(screen.getByText('Quote')).toBeInTheDocument();
   });
 
   it('renders the pending-review metric count', async () => {
-    endpoints.workflowInbox.mockResolvedValue({ cases: [pendingCase] });
+    endpoints.uwWorkbench.mockResolvedValue({ pending: [pendingCase], done: [], totals: { pending: 1 } });
     renderPage();
 
     await waitFor(() => {
@@ -76,8 +79,10 @@ describe('UWDashboard', () => {
   });
 
   it('filters the inbox by search query', async () => {
-    endpoints.workflowInbox.mockResolvedValue({
-      cases: [pendingCase, { id: 'job-2', results: { insured_name: 'Beta LLC', state: 'NY' } }],
+    endpoints.uwWorkbench.mockResolvedValue({
+      pending: [pendingCase, { bundle_id: 'bundle-2', insured_name: 'Beta LLC' }],
+      done: [],
+      totals: { pending: 2 },
     });
     renderPage();
 
@@ -91,7 +96,7 @@ describe('UWDashboard', () => {
   });
 
   it('selects a job and shows the "Next step" quick-actions panel', async () => {
-    endpoints.workflowInbox.mockResolvedValue({ cases: [pendingCase] });
+    endpoints.uwWorkbench.mockResolvedValue({ pending: [pendingCase], done: [], totals: { pending: 1 } });
     renderPage();
 
     await waitFor(() => {
@@ -103,8 +108,22 @@ describe('UWDashboard', () => {
     expect(screen.getByText('Open Workbench')).toBeInTheDocument();
   });
 
+  it('opens the selected job via onOpenJob when "Open submission" is clicked', async () => {
+    const onOpenJob = vi.fn();
+    endpoints.uwWorkbench.mockResolvedValue({ pending: [pendingCase], done: [], totals: { pending: 1 } });
+    renderPage({ onOpenJob });
+
+    await waitFor(() => {
+      expect(screen.getByText('Acme Corp')).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByText('Acme Corp'));
+    fireEvent.click(screen.getByText('Open submission'));
+
+    expect(onOpenJob).toHaveBeenCalledWith('insurance', 'bundle-1', 'bundle-1');
+  });
+
   it('toggles the keyboard shortcuts panel', async () => {
-    endpoints.workflowInbox.mockResolvedValue({ cases: [] });
+    endpoints.uwWorkbench.mockResolvedValue({ pending: [], done: [], totals: {} });
     renderPage();
 
     await waitFor(() => {
@@ -116,7 +135,7 @@ describe('UWDashboard', () => {
   });
 
   it('shows regulatory alerts fetched from the law tracker endpoint', async () => {
-    endpoints.workflowInbox.mockResolvedValue({ cases: [] });
+    endpoints.uwWorkbench.mockResolvedValue({ pending: [], done: [], totals: {} });
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({ alerts: [{ alert_id: 'a1', title: 'New rate filing', severity: 'warning', detected_at: '2026-01-01T00:00:00Z' }] }),
@@ -129,7 +148,7 @@ describe('UWDashboard', () => {
   });
 
   it('shows "No alerts" when the alerts feed is empty', async () => {
-    endpoints.workflowInbox.mockResolvedValue({ cases: [] });
+    endpoints.uwWorkbench.mockResolvedValue({ pending: [], done: [], totals: {} });
     renderPage();
 
     await waitFor(() => {
@@ -138,7 +157,7 @@ describe('UWDashboard', () => {
   });
 
   it('dismisses an alert', async () => {
-    endpoints.workflowInbox.mockResolvedValue({ cases: [] });
+    endpoints.uwWorkbench.mockResolvedValue({ pending: [], done: [], totals: {} });
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({ alerts: [{ alert_id: 'a1', title: 'New rate filing', severity: 'warning', reviewed: false }] }),

@@ -1,15 +1,33 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Briefcase, FilePlus2, LifeBuoy, RefreshCw, Shield, Sparkles, ArrowRight,
+  Briefcase, Clock, FilePlus2, LifeBuoy, RefreshCw, Shield, Sparkles, ArrowRight,
 } from 'lucide-react';
 import { Badge, EmptyState, HintCheckbox } from '../components/ui';
 import { endpoints } from '../lib/api';
 import { UI_HINTS } from '../lib/uiHints';
+import { ageInfo, AGE_STYLE } from '../lib/uwLanguage';
 
 const REQUEST_TYPES = [
   'quote', 'endorsement', 'certificate', 'cancellation', 'renewal', 'correspondence', 'policyholder_inquiry',
 ];
+
+const REQUEST_TYPE_LABEL = {
+  quote: 'Quote',
+  endorsement: 'Endorsement',
+  certificate: 'Certificate',
+  cancellation: 'Cancellation',
+  renewal: 'Renewal',
+  correspondence: 'Correspondence',
+  policyholder_inquiry: 'Policyholder inquiry',
+};
+
+const TICKET_STATUS_META = {
+  open: { status: 'open', label: 'Open' },
+  in_progress: { status: 'pending', label: 'In progress' },
+  completed: { status: 'completed', label: 'Completed' },
+  cancelled: { status: 'closed', label: 'Cancelled' },
+};
 
 const ACTION_COLOR = {
   broaden: 'text-emerald-400 bg-emerald-500/10',
@@ -17,6 +35,8 @@ const ACTION_COLOR = {
   verify: 'text-sky-400 bg-sky-500/10',
   manuscript: 'text-violet-400 bg-violet-500/10',
 };
+
+const PRIORITY_BADGE = { high: 'high', medium: 'moderate', low: 'low' };
 
 export default function LineUnderwriting() {
   const [desks, setDesks] = useState(null);
@@ -158,12 +178,16 @@ export default function LineUnderwriting() {
               <p className="text-sm text-slate-300">{assist.summary}</p>
               {(assist.recommendations || []).map((r) => (
                 <div key={r.title} className="rounded-xl bg-surface-overlay px-3 py-3 ring-1 ring-white/[0.06]">
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${ACTION_COLOR[r.action] || ''}`}>{r.action}</span>
+                    {r.priority && <Badge status={PRIORITY_BADGE[r.priority] || r.priority} label={`${r.priority} priority`} />}
                     <span className="text-sm font-medium">{r.title}</span>
                   </div>
                   <p className="mt-1 text-xs text-slate-500">{r.rationale}</p>
                   {r.suggested_form && <p className="mt-1 text-[11px] text-slate-400">Form: {r.suggested_form}</p>}
+                  {(r.suggested_endorsements || []).length > 0 && (
+                    <p className="mt-1 text-[11px] text-slate-500">Endorsements: {r.suggested_endorsements.join(', ')}</p>
+                  )}
                 </div>
               ))}
             </div>
@@ -178,7 +202,7 @@ export default function LineUnderwriting() {
           <form onSubmit={createTicket} className="space-y-3">
             <div className="grid grid-cols-2 gap-2">
               <select className="input" value={ticketForm.request_type} onChange={(e) => setTicketForm({ ...ticketForm, request_type: e.target.value })}>
-                {REQUEST_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                {REQUEST_TYPES.map((t) => <option key={t} value={t}>{REQUEST_TYPE_LABEL[t] || t}</option>)}
               </select>
               <select className="input" value={ticketForm.requester} onChange={(e) => setTicketForm({ ...ticketForm, requester: e.target.value })}>
                 <option value="producer">Producer</option>
@@ -198,21 +222,32 @@ export default function LineUnderwriting() {
           <div className="mt-5 space-y-2 border-t border-white/[0.06] pt-4">
             {tickets.length === 0 ? (
               <EmptyState icon={Briefcase} title="No open service work" description="Quotes, endorsements, certificates, and renewals appear here." />
-            ) : tickets.map((t) => (
-              <div key={t.ticket_id} className="flex items-start justify-between gap-3 rounded-xl bg-surface-overlay px-3 py-3 ring-1 ring-white/[0.06]">
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge>{t.request_type}</Badge>
-                    <Badge>{t.status}</Badge>
-                    <span className="text-sm font-medium">{t.subject}</span>
+            ) : tickets.map((t) => {
+              const sm = TICKET_STATUS_META[t.status] || { status: t.status, label: t.status };
+              const age = ageInfo(t.created_at);
+              return (
+                <div key={t.ticket_id} className="flex items-start justify-between gap-3 rounded-xl bg-surface-overlay px-3 py-3 ring-1 ring-white/[0.06]">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="rounded-full bg-black/20 px-2 py-0.5 text-[10px] font-medium text-slate-300 ring-1 ring-white/[0.06]">{REQUEST_TYPE_LABEL[t.request_type] || t.request_type}</span>
+                      <Badge status={sm.status} label={sm.label} />
+                      {age && (
+                        <span className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] ring-1 ring-inset ${AGE_STYLE[age.level]}`}>
+                          <Clock className="h-2.5 w-2.5" /> {age.label}
+                        </span>
+                      )}
+                      <span className="text-sm font-medium">{t.subject}</span>
+                    </div>
+                    <p className="mt-1 text-xs text-slate-500">{t.requester}{t.requester_name ? ` · ${t.requester_name}` : ''}{t.policy_number ? ` · ${t.policy_number}` : ''}</p>
+                    {t.detail && <p className="mt-1 text-xs text-slate-400">{t.detail}</p>}
+                    {t.resolution_notes && <p className="mt-1 text-[11px] text-emerald-400/80">Resolution: {t.resolution_notes}</p>}
                   </div>
-                  <p className="mt-1 text-xs text-slate-500">{t.requester}{t.requester_name ? ` · ${t.requester_name}` : ''}{t.policy_number ? ` · ${t.policy_number}` : ''}</p>
+                  {t.status !== 'completed' && (
+                    <button type="button" className="btn-secondary btn-sm text-[10px] shrink-0" onClick={() => completeTicket(t.ticket_id)}>Complete</button>
+                  )}
                 </div>
-                {t.status !== 'completed' && (
-                  <button type="button" className="btn-secondary btn-sm text-[10px]" onClick={() => completeTicket(t.ticket_id)}>Complete</button>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
       </div>

@@ -4,6 +4,7 @@ import { MessagesSquare, RefreshCw, CheckCircle2, Clock, Send, Shield, User } fr
 import { Badge, EmptyState, StatCard, Tabs } from '../components/ui';
 import { endpoints } from '../lib/api';
 import { toast } from '../lib/toast';
+import { decisionLabel } from '../lib/uwLanguage';
 
 function fmtDateTime(value) {
   if (!value) return '—';
@@ -54,7 +55,7 @@ function NotificationCard({ n, onAcknowledge, busy }) {
       <p className="mt-3 rounded-xl bg-black/20 px-4 py-3 text-sm leading-relaxed text-slate-300">{n.message}</p>
 
       <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-slate-500">
-        <span className="inline-flex items-center gap-1"><Send className="h-3 w-3" /> decision: <span className="capitalize text-slate-300">{n.decision}</span></span>
+        <span className="inline-flex items-center gap-1"><Send className="h-3 w-3" /> decision: <span className="text-slate-300">{decisionLabel(n.decision)}</span></span>
         <span className="inline-flex items-center gap-1"><User className="h-3 w-3" /> producer: <span className="text-slate-300">{n.producer_name || '—'}</span></span>
         {n.status === 'acknowledged' ? (
           <span className="inline-flex items-center gap-1"><CheckCircle2 className="h-3 w-3 text-emerald-400" /> acknowledged by <span className="text-slate-300">{n.acknowledged_by}</span> at {fmtDateTime(n.acknowledged_at)}</span>

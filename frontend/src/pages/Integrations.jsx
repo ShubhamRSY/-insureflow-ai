@@ -43,7 +43,8 @@ export default function IntegrationsPage() {
     }
   }, [sourceId, adapters, activeId]);
 
-  const sections = groupSourcesByCategory(adapters.map((a) => ({ ...a, status: a.connected ? 'connected' : 'ready' })));
+  const visibleAdapters = sourceId ? adapters.filter((a) => a.id === sourceId) : adapters;
+  const sections = groupSourcesByCategory(visibleAdapters.map((a) => ({ ...a, status: a.connected ? 'connected' : 'ready' })));
 
   const connect = async (src) => {
     setError('');
@@ -103,7 +104,7 @@ export default function IntegrationsPage() {
         <div className="flex justify-center py-16">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand border-t-transparent" />
         </div>
-      ) : adapters.length === 0 ? (
+      ) : visibleAdapters.length === 0 ? (
         <EmptyState icon={Link2} title="No connectors" description="Source connectors will appear here" />
       ) : (
         <div className="space-y-6">

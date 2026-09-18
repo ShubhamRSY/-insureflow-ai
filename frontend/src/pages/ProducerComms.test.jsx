@@ -90,6 +90,18 @@ describe('ProducerCommsPage', () => {
     expect(screen.getByText(/acknowledged by/)).toBeInTheDocument();
   });
 
+  it('renders a plain-language decision label for multi-word raw decisions', async () => {
+    endpoints.producerNotifications.mockResolvedValue({
+      notifications: [{ ...sentNotification, decision: 'no_quote', message: 'Your submission was declined.' }],
+    });
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('Your submission was declined.')).toBeInTheDocument();
+    });
+    expect(screen.getByText('No quote')).toBeInTheDocument();
+  });
+
   it('acknowledges a sent notification', async () => {
     endpoints.producerNotifications.mockResolvedValue({ notifications: [sentNotification] });
     endpoints.acknowledgeNotification.mockResolvedValue({ ok: true });

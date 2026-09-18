@@ -85,6 +85,17 @@ describe('MonitoringPage', () => {
     expect(screen.getAllByText('50%').length).toBeGreaterThan(0);
   });
 
+  it('renders a raw snake_case line of business as a readable label', async () => {
+    endpoints.monitoringPolicies.mockResolvedValue({ policies: [{ ...policy, line_of_business: 'general_liability' }] });
+    endpoints.monitoringAlerts.mockResolvedValue({ alerts: [] });
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('Acme Corp')).toBeInTheDocument();
+    });
+    expect(screen.getByText(/General Liability/)).toBeInTheDocument();
+  });
+
   it('renders open monitoring alerts', async () => {
     endpoints.monitoringPolicies.mockResolvedValue({ policies: [] });
     endpoints.monitoringAlerts.mockResolvedValue({

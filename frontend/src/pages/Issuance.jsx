@@ -3,6 +3,7 @@ import { FileCheck, RefreshCw, ScrollText, BadgeCheck, ClipboardList } from 'luc
 import { Badge, EmptyState, StatCard } from '../components/ui';
 import { endpoints, fmtCurrency } from '../lib/api';
 import { toast } from '../lib/toast';
+import { insuranceLineLabel } from '../lib/insuranceLines';
 
 const DOC_META = {
   binder: { label: 'Binder', icon: ScrollText, accent: 'text-emerald-400', cls: 'bg-emerald-500/10 text-emerald-400 ring-emerald-500/25 hover:bg-emerald-500/20' },
@@ -59,7 +60,7 @@ function IssuanceCard({ record }) {
           </div>
           <p className="mt-1 text-xs text-slate-500">
             <span className="font-mono text-slate-400">{record.policy_number || '—'}</span>
-            {' · '}{record.line_of_business || '—'}{' · '}{record.broker_name ? `via ${record.broker_name}` : ''}
+            {' · '}{insuranceLineLabel(record.line_of_business) || record.line_of_business || '—'}{' · '}{record.broker_name ? `via ${record.broker_name}` : ''}
           </p>
         </div>
         <div className="shrink-0 text-right">
@@ -90,6 +91,9 @@ function IssuanceCard({ record }) {
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
         <span className="font-mono text-[11px] text-slate-600">{record.bundle_id} · {record.issuance_id}</span>
         <div className="flex flex-wrap gap-2">
+          {(record.documents || []).length === 0 && (
+            <span className="text-xs text-slate-500">No documents generated yet</span>
+          )}
           {['binder', 'policy_worksheet', 'certificate'].map((dt) => {
             const meta = DOC_META[dt];
             const Icon = meta.icon;

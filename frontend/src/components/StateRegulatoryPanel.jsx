@@ -114,7 +114,7 @@ export default function StateRegulatoryPanel() {
           {activeLine === 'general' ? 'General Rules' : `${LINE_LABELS[activeLine]?.label || activeLine} Rules`}
         </h3>
         <div className="space-y-3">
-          {Object.entries(currentLineData).filter(([k]) => !['state_code', 'state_name', 'line_of_business', 'data'].includes(k) && currentLineData[k] !== null && currentLineData[k] !== '' && currentLineData[k] !== false).map(([key, val]) => (
+          {Object.entries(currentLineData).filter(([k, v]) => !['state_code', 'state_name', 'line_of_business', 'data'].includes(k) && v !== null && v !== '' && v !== false && !(Array.isArray(v) && v.length === 0)).map(([key, val]) => (
             <div key={key} className="flex items-start gap-3 py-2 border-b border-white/5 last:border-0">
               <span className="text-xs font-mono text-emerald-400/70 min-w-[160px] pt-0.5">{key.replace(/_/g, ' ')}</span>
               <span className="text-sm text-white/80">
@@ -122,7 +122,7 @@ export default function StateRegulatoryPanel() {
               </span>
             </div>
           ))}
-          {currentLineData.data && typeof currentLineData.data === 'object' && Object.entries(currentLineData.data).filter(([,v]) => v !== null && v !== '' && v !== false).map(([key, val]) => (
+          {currentLineData.data && typeof currentLineData.data === 'object' && Object.entries(currentLineData.data).filter(([,v]) => v !== null && v !== '' && v !== false && !(Array.isArray(v) && v.length === 0)).map(([key, val]) => (
             <div key={`data-${key}`} className="flex items-start gap-3 py-2 border-b border-white/5 last:border-0">
               <span className="text-xs font-mono text-blue-400/70 min-w-[160px] pt-0.5">{key.replace(/_/g, ' ')}</span>
               <span className="text-sm text-white/80">

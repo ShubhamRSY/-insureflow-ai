@@ -1,6 +1,6 @@
 import { Search, RefreshCw, ArrowUpDown } from 'lucide-react';
 import { Badge, ScoreBadge, PriorityBadge, AssigneeAvatar, EmptyState, StatCard } from '../components/ui';
-import { STATUS_META, buildQueueRows } from '../lib/submissions';
+import { STATUS_META, REVIEW_DESK_LABEL, buildQueueRows } from '../lib/submissions';
 import { useMemo, useState } from 'react';
 
 const SORTS = {
@@ -104,6 +104,7 @@ export default function QueuePage({ queueStats, insuranceJobs, onOpenJob, onRefr
                 <th className="px-6 py-3">LoB</th>
                 <th className="px-6 py-3">Agency</th>
                 <th className="px-6 py-3">Status</th>
+                <th className="px-6 py-3">Docs</th>
                 <th className="px-6 py-3">Assignee</th>
               </tr>
             </thead>
@@ -117,7 +118,22 @@ export default function QueuePage({ queueStats, insuranceJobs, onOpenJob, onRefr
                   <td className="px-6 py-3.5 text-xs text-slate-400">{r.lob || '—'}</td>
                   <td className="px-6 py-3.5 text-xs text-slate-400">{r.agency || '—'}</td>
                   <td className="px-6 py-3.5"><Badge status={r.statusMeta.status} label={r.statusMeta.label} pulse={r.statusMeta.status === 'processing'} /></td>
-                  <td className="px-6 py-3.5"><AssigneeAvatar name={r.assignee} /></td>
+                  <td className="px-6 py-3.5 text-xs">
+                    {r.missingDocuments.length > 0 ? (
+                      <span className="text-risk-amber" title={r.missingDocuments.join(', ')}>{r.missingDocuments.length} missing</span>
+                    ) : (
+                      <span className="text-slate-500">Complete</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-3.5">
+                    <AssigneeAvatar name={r.assignee} />
+                    {r.reviewBy && (
+                      <p className="mt-0.5 text-[11px] text-slate-500">
+                        {REVIEW_DESK_LABEL[r.reviewBy] || r.reviewBy}
+                        {r.estimatedReviewMinutes != null && ` · ~${r.estimatedReviewMinutes}m`}
+                      </p>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>

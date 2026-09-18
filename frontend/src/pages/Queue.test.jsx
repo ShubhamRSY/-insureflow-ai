@@ -91,4 +91,22 @@ describe('QueuePage', () => {
     const [label] = screen.getAllByText('Appetite Check Failed');
     expect(label.closest('div')).toHaveTextContent('1');
   });
+
+  it('shows missing document count and review desk when triage data has it', () => {
+    const withTriageDetail = {
+      queue: [
+        { bundle_id: 'bundle-hot', insured_name: 'Acme Corp', priority: 'hot', score: 88, missing_documents: ['SOV', 'Loss run'], review_by: 'senior', estimated_review_minutes: 60 },
+      ],
+    };
+    render(<QueuePage queueStats={withTriageDetail} insuranceJobs={insuranceJobs} onOpenJob={vi.fn()} onRefresh={vi.fn()} />);
+
+    expect(screen.getByText('2 missing')).toBeInTheDocument();
+    expect(screen.getByText(/Senior UW/)).toBeInTheDocument();
+    expect(screen.getByText(/~60m/)).toBeInTheDocument();
+  });
+
+  it('shows "Complete" when no documents are missing', () => {
+    render(<QueuePage queueStats={queueStats} insuranceJobs={insuranceJobs} onOpenJob={vi.fn()} onRefresh={vi.fn()} />);
+    expect(screen.getAllByText('Complete').length).toBeGreaterThan(0);
+  });
 });

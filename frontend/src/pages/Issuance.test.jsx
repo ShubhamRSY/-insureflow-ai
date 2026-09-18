@@ -132,6 +132,25 @@ describe('IssuancePage', () => {
     });
   });
 
+  it('renders a raw snake_case line of business as a readable label', async () => {
+    endpoints.issuanceRecords.mockResolvedValue({ records: [{ ...record, line_of_business: 'general_liability' }] });
+    render(<IssuancePage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Acme Corp')).toBeInTheDocument();
+    });
+    expect(screen.getByText(/General Liability/)).toBeInTheDocument();
+  });
+
+  it('shows a message when a record has no generated documents yet', async () => {
+    endpoints.issuanceRecords.mockResolvedValue({ records: [{ ...record, documents: [] }] });
+    render(<IssuancePage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('No documents generated yet')).toBeInTheDocument();
+    });
+  });
+
   it('reloads records when Refresh is clicked', async () => {
     endpoints.issuanceRecords.mockResolvedValue({ records: [] });
     render(<IssuancePage />);

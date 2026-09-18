@@ -128,7 +128,7 @@ describe('UWWorkbench', () => {
     fireEvent.click(screen.getByText('Quote'));
 
     expect(screen.getByPlaceholderText('License number')).toBeInTheDocument();
-    fireEvent.click(screen.getByText('Confirm quote'));
+    fireEvent.click(screen.getByText('Confirm Quote'));
 
     await waitFor(() => {
       expect(endpoints.signOff).toHaveBeenCalledWith('bundle-1', expect.objectContaining({ action: 'quote' }));
@@ -146,7 +146,7 @@ describe('UWWorkbench', () => {
       expect(screen.getByText('Quote')).toBeInTheDocument();
     });
     fireEvent.click(screen.getByText('Quote'));
-    fireEvent.click(screen.getByText('Confirm quote'));
+    fireEvent.click(screen.getByText('Confirm Quote'));
 
     await waitFor(() => {
       expect(toast.error).toHaveBeenCalledWith('Missing license number');
@@ -268,5 +268,57 @@ describe('UWWorkbench', () => {
     });
     fireEvent.click(screen.getByText('View'));
     expect(onOpenJob).toHaveBeenCalledWith('insurance', 'bundle-1', 'bundle-1');
+  });
+
+  it('renders open condition text and a plain-language AI decision', async () => {
+    endpoints.uwWorkbench.mockResolvedValue({
+      pending: [{ ...pendingCase, ai_decision: 'no_quote', conditions: ['Provide 5-year loss run'] }],
+      approved: [], done: [], totals: { pending: 1, approved: 0, co_sign: 0, done: 0 },
+    });
+    renderWorkbench();
+
+    await waitFor(() => {
+      expect(screen.getAllByText('No quote').length).toBeGreaterThan(0);
+    });
+    expect(screen.getByText(/Provide 5-year loss run/)).toBeInTheDocument();
+  });
+
+  it('filters cards by search query', async () => {
+    endpoints.uwWorkbench.mockResolvedValue({
+      pending: [pendingCase, { ...pendingCase, bundle_id: 'bundle-9', insured_name: 'Other Co' }],
+      approved: [], done: [], totals: { pending: 2, approved: 0, co_sign: 0, done: 0 },
+    });
+    renderWorkbench();
+
+    await waitFor(() => {
+      expect(screen.getByText('Acme Corp')).toBeInTheDocument();
+    });
+    expect(screen.getByText('Other Co')).toBeInTheDocument();
+
+    fireEvent.change(screen.getByPlaceholderText('Search insured, broker, bundle id…'), { target: { value: 'Acme' } });
+
+    expect(screen.getByText('Acme Corp')).toBeInTheDocument();
+    expect(screen.queryByText('Other Co')).not.toBeInTheDocument();
+  });
+
+  it('filters to cases assigned to the current user', async () => {
+    endpoints.uwWorkbench.mockResolvedValue({
+      pending: [
+        { ...pendingCase, assigned_to: 'jsmith' },
+        { ...pendingCase, bundle_id: 'bundle-9', insured_name: 'Other Co', assigned_to: 'someone_else' },
+      ],
+      approved: [], done: [], totals: { pending: 2, approved: 0, co_sign: 0, done: 0 },
+    });
+    renderWorkbench({ user: { username: 'jsmith' } });
+
+    await waitFor(() => {
+      expect(screen.getByText('Acme Corp')).toBeInTheDocument();
+    });
+    expect(screen.getByText('Other Co')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('Assigned to me'));
+
+    expect(screen.getByText('Acme Corp')).toBeInTheDocument();
+    expect(screen.queryByText('Other Co')).not.toBeInTheDocument();
   });
 });

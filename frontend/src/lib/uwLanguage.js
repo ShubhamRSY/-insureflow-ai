@@ -164,6 +164,45 @@ const PREMIUM_STEP_LABELS = {
   medical_risk: 'Medical risk rating',
 };
 
+// ── Decision / sign-off action labels ──────────────────────────────────────────
+
+const DECISION_LABELS = {
+  quote: 'Quote',
+  no_quote: 'No quote',
+  refer: 'Refer',
+  request_info: 'Request info',
+  approve: 'Approve',
+  decline: 'Decline',
+  bound: 'Bound',
+  expired: 'Expired',
+};
+
+export function decisionLabel(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '—';
+  const key = raw.toLowerCase();
+  if (DECISION_LABELS[key]) return DECISION_LABELS[key];
+  return raw.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+// ── Time-in-queue badge ─────────────────────────────────────────────────────
+// ponytail: fixed 24h/72h bands, revisit if desks want a per-LOB SLA config
+
+export function ageInfo(createdAt) {
+  if (!createdAt) return null;
+  const hours = (Date.now() - new Date(createdAt).getTime()) / 36e5;
+  if (!Number.isFinite(hours) || hours < 0) return null;
+  const label = hours < 1 ? '<1h' : hours < 48 ? `${Math.round(hours)}h` : `${Math.round(hours / 24)}d`;
+  const level = hours >= 72 ? 'urgent' : hours >= 24 ? 'warn' : 'normal';
+  return { hours, label, level };
+}
+
+export const AGE_STYLE = {
+  normal: 'bg-white/5 text-slate-400 ring-white/10',
+  warn: 'bg-amber-500/10 text-amber-400 ring-amber-500/20',
+  urgent: 'bg-red-500/10 text-red-400 ring-red-500/20',
+};
+
 export function premiumStepLabel(step) {
   const raw = String(step || '').trim();
   if (!raw) return '—';

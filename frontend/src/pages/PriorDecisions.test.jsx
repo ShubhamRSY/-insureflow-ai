@@ -57,6 +57,24 @@ describe('PriorDecisionsPage', () => {
     expect(screen.getByText(/CA/)).toBeInTheDocument();
   });
 
+  it('shows the reason and referred routing when present', async () => {
+    endpoints.decisionMemory.mockResolvedValue({
+      records: [{
+        bundle_id: 'bundle-1', decision: 'refer', line: 'general_liability', state: 'CA',
+        routing: 'referred', reasons: ['Loss history exceeds appetite', 'Missing SOV'],
+      }],
+    });
+    endpoints.decisionArchive.mockResolvedValue({ cases: [] });
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('bundle-1')).toBeInTheDocument();
+    });
+    expect(screen.getByText(/Loss history exceeds appetite/)).toBeInTheDocument();
+    expect(screen.getByText(/\+1 more/)).toBeInTheDocument();
+    expect(screen.getByText('Referred')).toBeInTheDocument();
+  });
+
   it('falls back to archive cases when no memory records match', async () => {
     endpoints.decisionMemory.mockResolvedValue({ records: [] });
     endpoints.decisionArchive.mockResolvedValue({ cases: [{ bundle_id: 'bundle-arch', ai_decision: 'refer' }] });

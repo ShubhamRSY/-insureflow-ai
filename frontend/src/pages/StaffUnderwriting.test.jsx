@@ -144,6 +144,63 @@ describe('StaffUnderwriting', () => {
     });
   });
 
+  it('shows readable status badges instead of blank ones for coverage items', async () => {
+    endpoints.staffSection.mockResolvedValue({
+      items: [{ item_id: 'c1', title: 'Add cyber endorsement', change_type: 'endorsement', status: 'in_review', description: 'Draft cyber endorsement language' }],
+    });
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('Staff underwriting tasks')).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByText('Coverages'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Add cyber endorsement')).toBeInTheDocument();
+    });
+    expect(screen.getByText('In review')).toBeInTheDocument();
+  });
+
+  it('shows the rating action badge and advisory org for rating reviews', async () => {
+    endpoints.staffSection.mockResolvedValue({
+      items: [{ review_id: 'r1', line_of_business: 'commercial_property', advisory_org: 'ISO', action: 'revise', summary: 'Loss costs trending up' }],
+    });
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('Staff underwriting tasks')).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByText('Rating plans'));
+
+    await waitFor(() => {
+      expect(screen.getByText('commercial_property')).toBeInTheDocument();
+    });
+    expect(screen.getByText('Revise')).toBeInTheDocument();
+    expect(screen.getAllByText('ISO').length).toBeGreaterThan(0);
+  });
+
+  it('shows the finding count and compliance score for audits', async () => {
+    endpoints.staffSection.mockResolvedValue({
+      items: [{
+        audit_id: 'a1', office: 'Southwest Regional', scope: 'Documentation review', files_reviewed: 12,
+        compliant_pct: 83, findings: [{ severity: 'minor', category: 'documentation', detail: 'Missing signature' }],
+      }],
+    });
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('Staff underwriting tasks')).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByText('UW audits'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Southwest Regional')).toBeInTheDocument();
+    });
+    expect(screen.getByText('83%')).toBeInTheDocument();
+    expect(screen.getByText(/12 files reviewed/)).toBeInTheDocument();
+    expect(screen.getByText(/1 finding\(s\)/)).toBeInTheDocument();
+  });
+
   it('submits an underwriting audit with parsed findings', async () => {
     endpoints.staffAudits.mockResolvedValue({ ok: true });
     renderPage();
