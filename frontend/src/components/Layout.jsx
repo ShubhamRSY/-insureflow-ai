@@ -8,6 +8,7 @@ import { auth } from '../lib/api';
 import { RAIL_GROUPS, deriveActiveGroupId } from '../lib/railNav';
 import { displayText } from '../lib/safe';
 import { useStateContext } from '../lib/useStateContext';
+import BrandMark from './BrandMark';
 import ThemeToggle from './ThemeToggle';
 import StateSelector from './StateSelector';
 import ErrorBoundary from './ErrorBoundary';
@@ -97,8 +98,8 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
       {/* Sidebar */}
       <aside className={`fixed inset-y-0 left-0 z-50 flex lg:translate-x-0 ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex w-[60px] shrink-0 flex-col items-center border-r border-white/[0.06] bg-surface py-4">
-          <button type="button" onClick={() => navigate('/')} className="mb-4 flex h-8 w-8 items-center justify-center rounded-lg border border-brand text-brand">
-            <Shield className="h-4 w-4" />
+          <button type="button" onClick={() => navigate('/')} aria-label="Rytera home" className="mb-4 h-8 w-8 rounded-lg">
+            <BrandMark />
           </button>
           <nav className="flex flex-1 flex-col items-center gap-1 overflow-y-auto">
             {RAIL_GROUPS.map((group) => {
