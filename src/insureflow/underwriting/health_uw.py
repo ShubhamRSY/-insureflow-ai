@@ -12,7 +12,7 @@ from typing import Any, Callable
 
 from insureflow.models.agents import Finding, RiskSeverity, UWDecision
 from insureflow.models.submissions import SubmissionBundle
-from insureflow.underwriting.personal_lines import _blob, _int_field, _money
+from insureflow.underwriting.personal_lines import _blob, _money, applicant_age
 
 # Hazardous PA / disability occupations — class IV / uninsurable on standard PA.
 _HAZARDOUS_OCCUPATION = (
@@ -29,9 +29,37 @@ _HAZARDOUS_OCCUPATION = (
     "armed forces combat",
     "combat duty",
     "window cleaning high rise",
+    "roofer",
+    "roofing",
+    "ironworker",
+    "iron worker",
+    "structural steel",
+    "steeplejack",
+    "scaffold",
+    "scaffolder",
+    "high-rise construction",
+    "high rise construction",
+    "demolition",
+    "crane operator",
+    "logger",
+    "logging",
+    "lumberjack",
+    "tree trimmer",
+    "tree trimming",
+    "tree removal",
+    "arborist",
+    "commercial fisherman",
+    "commercial fishing",
+    "lineman",
+    "commercial diver",
+    "crop duster",
+    "quarry",
+    "asbestos",
 )
 
 _FAMILY_RELATION_NEEDLES = ("mother", "father", "parent", "sibling", "brother", "sister", "grandmother", "grandfather", "family history", "relative", "spouse", "son", "daughter")
+# Whole-word match: bare substring hits "mother" in "chemotherapy", "son" in "reason"/"person", "parent" in "apparent".
+_FAMILY_RELATION_RE = re.compile(r"\b(?:" + "|".join(_FAMILY_RELATION_NEEDLES) + r")s?\b", re.I)
 
 
 def _applicant_only_text(blob: str) -> str:
@@ -42,8 +70,8 @@ def _applicant_only_text(blob: str) -> str:
     mining" must not classify the applicant as Class IV hazardous) and SNP
     eligibility ("mother has diabetes" must not qualify the applicant).
     """
-    sentences = re.split(r"(?<=[.!?])\s+", blob)
-    return " ".join(s for s in sentences if not any(k in s for k in _FAMILY_RELATION_NEEDLES))
+    sentences = re.split(r"(?<=[.!?])\s+|\n", blob)
+    return " ".join(s for s in sentences if not _FAMILY_RELATION_RE.search(s))
 
 
 _PREGNANT = (
@@ -59,8 +87,8 @@ _KYC_NEEDLES = {
     "identity": ("identity proof", "aadhaar", "passport", "voter id", "photo id", "pan card", "driver"),
     "address": ("address proof", "utility bill", "proof of address"),
     "age": ("age proof", "birth certificate", "10th marksheet", "date of birth", "dob", "age:"),
-    "photo": ("photograph", "passport-size", "passport size photo"),
-    "proposal": ("proposal form", "health application", "mediclaim proposal", "master proposal"),
+    "photo": ("photograph", "passport-size", "passport size photo", "photo id", "photo_id", "government id", "driver license", "driver's license"),
+    "proposal": ("proposal form", "health application", "mediclaim proposal", "master proposal", "enrollment form", "application form", "completed application"),
 }
 
 
@@ -113,7 +141,13 @@ def _doc_types(bundle: SubmissionBundle) -> set[str]:
 
 
 def _has_text(blob: str, *needles: str) -> bool:
-    return any(n.lower() in blob for n in needles if n)
+    # Word-start match: bare substring hit "son" in "person", "mining" in "determining", "logger" in "blogger".
+    return any(re.search(r"(?<![a-z0-9])" + re.escape(n.lower()), blob) for n in needles if n)
+
+
+def _has_word(blob: str, *needles: str) -> bool:
+    """Whole-word match allowing a plural/gerund ending ("roofers", "logging") — not "stunted" for "stunt" or "mechanical" for "mechanic"."""
+    return any(re.search(r"(?<![a-z0-9])" + re.escape(n.lower()) + r"(?:s|es|ing|er|ers)?(?![a-z0-9])", blob) for n in needles if n)
 
 
 def _has_type(types: set[str], *wanted: str) -> bool:
@@ -139,7 +173,7 @@ def _kyc_gates(ctx: _Ctx) -> list[tuple[str, bool, str]]:
         elif key == "age":
             ok = ok or _has_type(ctx.types, "age_proof", "child_birth_certificate") or ctx.age is not None
         elif key == "photo":
-            ok = ok or _has_type(ctx.types, "passport_photo")
+            ok = ok or _has_type(ctx.types, "passport_photo", "photo_id")
         elif key == "proposal":
             ok = ok or _has_type(ctx.types, "health_application", "enrollment_form")
         gates.append((f"kyc_{key}", ok, f"Missing {key} proof" if not ok else f"{key} present"))
@@ -147,22 +181,46 @@ def _kyc_gates(ctx: _Ctx) -> list[tuple[str, bool, str]]:
 
 
 def _is_pregnant(blob: str) -> bool:
-    if re.search(r"\b(?:not|no)\s+(?:currently\s+)?pregnant\b", blob, re.I):
+    blob = _applicant_only_text(blob)
+    if re.search(
+        r"\b(?:not|no)\s+(?:currently\s+|longer\s+)?pregnant\b|\bnon-?pregnant\b|\bpregnan(?:t|cy)\s*[:=]\s*(?:no|n|none|false|negative)\b"
+        r"|\bpregnancy test\s+negative\b|\bdenies\s+pregnancy\b"
+        r"|\bnever\s+(?:been\s+)?pregnant\b|\blmp\s*[:=]\s*(?:n/?a|none|unknown)\b"
+        r"|\bwas pregnant\b|\bplanning\s+(?:a\s+)?pregnancy\b|\bplan(?:ning)? to (?:become|get) pregnant\b",
+        blob,
+        re.I,
+    ):
         return False
     return any(re.search(p, blob, re.I) for p in _PREGNANT)
 
 
 def _occupation_class(blob: str) -> str:
-    blob = _applicant_only_text(blob)
-    if any(k in blob for k in _HAZARDOUS_OCCUPATION):
+    blob = re.sub(r"driver'?s?[\s_-]*licen[sc]e", "", _applicant_only_text(blob))
+    if _has_word(blob, *_HAZARDOUS_OCCUPATION, "linemen"):
         return "IV"
-    if any(k in blob for k in ("factory worker", "driver", "mechanic", "construction labour", "welder")):
+    if _has_word(blob, "factory worker", "driver", "mechanic", "construction labour", "construction worker", "welder"):
         return "III"
-    if any(k in blob for k in ("supervisor", "sales executive", "field sales", "teacher")):
+    if _has_word(blob, "supervisor", "sales executive", "field sales", "teacher"):
         return "II"
-    if any(k in blob for k in ("office", "accountant", "software", "clerk", "manager", "desk")):
+    if _has_word(blob, "office worker", "office job", "office staff", "office admin", "accountant", "software", "clerk", "manager", "administrator", "desk"):
         return "I"
     return ""
+
+
+_SEVERE_CONDITION_RE = re.compile(r"\b(?:cancer|heart attack|stroke|dialysis|organ transplant|hiv)\b", re.I)
+_NEGATION_RE = re.compile(r"\b(?:no|not|never|denies|denied|without|none|negative for|free of|free from)\b", re.I)
+_NEGATION_AFTER_RE = re.compile(r"(?:-|\s)?free\b|\s*[:=-]?\s*(?:screening\s+)?(?:no|none|n|nil|false|negative|denied|n/a|na)(?![a-z])", re.I)
+
+
+def _declares_severe_condition(text: str) -> bool:
+    """A severe condition is declared unless the same clause negates it ("no history of cancer")."""
+    for m in _SEVERE_CONDITION_RE.finditer(text):
+        clause = re.split(r"[.;\n]", text[max(0, m.start() - 40) : m.start()])[-1]
+        after = text[m.end() : m.end() + 30]
+        if _NEGATION_RE.search(clause) or _NEGATION_AFTER_RE.match(after):
+            continue
+        return True
+    return False
 
 
 def _finding(title: str, description: str, severity: RiskSeverity, family: str) -> Finding:
@@ -216,7 +274,7 @@ def _finalize(
         decision = UWDecision.CONDITIONAL_ACCEPT
     else:
         decision = UWDecision.ACCEPT
-        conds.append("Eligibility clear — filed health rate manual applies (filing HLTH-2026-01)")
+        conds.append("Eligibility clear — filed health rate manual applies")
 
     terms = health_product_terms(ctx.product_id, ctx.coverage_id)
     meta = {
@@ -272,14 +330,16 @@ def _uw_individual_comprehensive(ctx: _Ctx) -> HealthUWDecision:
     porting = _has_text(ctx.blob, "porting", "portability", "existing policy", "already insured")
     existing = _present(ctx, types=("dec_page",), needles=("existing policy", "prior policy", "policy copy"))
     extra: list[tuple[str, bool, str, RiskSeverity]] = [
-        ("income_proof", income, "Income proof required for higher sum insured comprehensive cover", RiskSeverity.HIGH),
+        ("income_proof", income or ctx.sum_insured < 500_000, "Income proof required for higher sum insured comprehensive cover", RiskSeverity.HIGH),
+        # Medically-underwritten cover (STLDI): a declared severe condition is a real decline.
+        ("no_severe_declared_disease", not _declares_severe_condition(_applicant_only_text(ctx.blob)), "Declared severe condition — declined on medical underwriting", RiskSeverity.CRITICAL),
     ]
     needs_medical = (ctx.age is not None and ctx.age >= 45) or (ctx.sum_insured >= 500_000)
     extra.append(
         (
             "pre_policy_medical",
             medical or not needs_medical,
-            "Pre-policy medical check-up required above age 45 / SI ₹5L",
+            "Pre-policy medical check-up required above age 45 / high sum insured",
             RiskSeverity.HIGH,
         )
     )
@@ -364,7 +424,7 @@ def _uw_opd(ctx: _Ctx) -> HealthUWDecision:
     bank = _present(
         ctx,
         types=("bank_ach_form",),
-        needles=("bank account", "cancelled cheque", "ifsc", "reimbursement account", "account number"),
+        needles=("bank account", "cancelled cheque", "ifsc", "reimbursement account", "account number", "routing number", "ach routing", "ach form", "ach debit"),
     )
     extra = [
         ("bank_reimbursement", bank, "Bank account details required for OPD reimbursement payouts", RiskSeverity.HIGH),
@@ -413,7 +473,7 @@ def _uw_floater_standard(ctx: _Ctx) -> HealthUWDecision:
         needles=("medical declaration", "each member", "all members"),
     )
     extra = [
-        ("spouse_relationship", marriage, "Marriage certificate required to prove spouse relationship", RiskSeverity.HIGH),
+        ("spouse_relationship", marriage or not _has_text(ctx.blob, "spouse", "wife", "husband", "married"), "Marriage certificate required to prove spouse relationship", RiskSeverity.HIGH),
         ("child_age_proof", kids or not _has_text(ctx.blob, "child", "son", "daughter", "kids"), "Birth certificates of children required", RiskSeverity.HIGH),
         ("member_medicals", member_decl, "Medical declaration required for each floater member", RiskSeverity.HIGH),
     ]
@@ -579,6 +639,9 @@ def _uw_senior_standard(ctx: _Ctx) -> HealthUWDecision:
     nominee = _present(ctx, types=("nominee_form", "beneficiary_form"), needles=("nominee", "nomination"))
     extra.append(("pre_policy_medical", medical, "Pre-policy medical check-up is mandatory for senior standard", RiskSeverity.HIGH))
     extra.append(("nominee", nominee, "Nominee details + ID proof required", RiskSeverity.HIGH))
+    # Medically-underwritten path (e.g. Medigap outside guaranteed-issue): a declared severe condition is a real decline, not just a missing document.
+    knockout = _declares_severe_condition(_applicant_only_text(ctx.blob))
+    extra.append(("no_severe_declared_disease", not knockout, "Declared severe condition — declined on medical underwriting", RiskSeverity.CRITICAL))
     return _finalize(ctx, family="senior_standard", extra_gates=extra, conditions=["Senior PED waiting periods per filing"])
 
 
@@ -605,7 +668,7 @@ def _uw_senior_no_medical(ctx: _Ctx) -> HealthUWDecision:
         needles=("self-declaration of good health", "self declaration of good health", "good health form", "simplified issue"),
     )
     nominee = _present(ctx, types=("nominee_form", "beneficiary_form"), needles=("nominee", "nomination"))
-    knockout = any(k in ctx.blob for k in ("cancer", "heart attack", "stroke", "dialysis", "organ transplant", "hiv"))
+    knockout = _declares_severe_condition(_applicant_only_text(ctx.blob))
     extra = [
         ("good_health_decl", decl, "Self-declaration of good health form replaces medical test", RiskSeverity.HIGH),
         ("nominee", nominee, "Nominee details required", RiskSeverity.HIGH),
@@ -636,8 +699,8 @@ def _uw_senior_topup(ctx: _Ctx) -> HealthUWDecision:
 
 
 def _uw_group_employer(ctx: _Ctx) -> HealthUWDecision:
-    gst = _present(ctx, types=("company_registration",), needles=("gst", "company registration", "certificate of incorporation"))
-    pan = _has_text(ctx.blob, "company pan", "pan card") or gst
+    gst = _present(ctx, types=("company_registration",), needles=("gst", "company registration", "certificate of incorporation", "employer identification", "fein", "ein:", "ein #", "tax id"))
+    pan = _has_text(ctx.blob, "company pan", "pan card", "employer identification", "fein", "ein:", "ein #", "tax id") or gst
     census = _present(ctx, types=("employee_census",), needles=("employee list", "census", "payroll"))
     employment = _present(ctx, types=("employee_census",), needles=("offer letter", "payroll", "proof of employment"))
     extra = [
@@ -672,7 +735,7 @@ def _uw_group_psu(ctx: _Ctx) -> HealthUWDecision:
 
 
 def _uw_group_pa_health(ctx: _Ctx) -> HealthUWDecision:
-    gst = _present(ctx, types=("company_registration",), needles=("gst", "company registration"))
+    gst = _present(ctx, types=("company_registration",), needles=("gst", "company registration", "employer identification", "fein", "ein:", "ein #", "tax id"))
     census = _present(ctx, types=("employee_census",), needles=("employee list", "census"))
     occ = _present(ctx, types=("occupation_proof",), needles=("occupation", "job role", "risk classification"))
     occ_class = _occupation_class(ctx.blob)
@@ -756,7 +819,7 @@ def _uw_pa_family(ctx: _Ctx) -> HealthUWDecision:
 
 
 def _uw_pa_group(ctx: _Ctx) -> HealthUWDecision:
-    gst = _present(ctx, types=("company_registration",), needles=("gst", "company registration"))
+    gst = _present(ctx, types=("company_registration",), needles=("gst", "company registration", "employer identification", "fein", "ein:", "ein #", "tax id"))
     census = _present(ctx, types=("employee_census",), needles=("employee list",))
     occ = _present(ctx, types=("occupation_proof",), needles=("occupation", "job role"))
     extra = [
@@ -826,7 +889,7 @@ def _uw_disability_income(ctx: _Ctx) -> HealthUWDecision:
 
 
 def _uw_hospital_cash(ctx: _Ctx) -> HealthUWDecision:
-    bank = _present(ctx, types=("bank_ach_form",), needles=("bank account", "cancelled cheque", "ifsc"))
+    bank = _present(ctx, types=("bank_ach_form",), needles=("bank account", "cancelled cheque", "ifsc", "routing number", "account number", "ach routing", "ach form", "ach debit"))
     extra = [("bank_payout", bank, "Bank account details required for daily cash payout", RiskSeverity.HIGH)]
     return _finalize(
         ctx,
@@ -869,7 +932,7 @@ def _uw_overseas(ctx: _Ctx) -> HealthUWDecision:
 
 
 def _uw_wellness(ctx: _Ctx) -> HealthUWDecision:
-    bank = _present(ctx, types=("bank_ach_form",), needles=("bank account", "cancelled cheque", "ifsc"))
+    bank = _present(ctx, types=("bank_ach_form",), needles=("bank account", "cancelled cheque", "ifsc", "routing number", "account number", "ach routing", "ach form", "ach debit"))
     consent = _present(ctx, types=("wellness_consent",), needles=("wellness", "fitness app", "consent"))
     extra = [
         ("bank_cashback", bank, "Bank account required for wellness cashback credit", RiskSeverity.HIGH),
@@ -1015,7 +1078,7 @@ def underwrite_health(
 ) -> HealthUWDecision:
     pid, cid, category = _resolve_ids(product_id, coverage_id)
     blob = _blob(bundle)
-    age = _int_field(blob, "age", "proposer age", "insured age")
+    age = applicant_age(blob, "applicant age", "proposer age", "insured age")
     si = _money(blob, "sum insured", "si", "sum_insured")
     ctx = _Ctx(
         bundle=bundle,

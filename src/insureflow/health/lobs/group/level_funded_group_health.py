@@ -77,7 +77,10 @@ def underwrite_level_funded_group(ctx: HealthProductContext) -> LobOutcome:
     admin_fee = float(group_manual.get("level_funded_admin_fee_pepm", 28.0))
     stop_loss_fee = float(group_manual.get("level_funded_stop_loss_fee_pepm", 18.0))
 
-    per_employee_monthly = silver_base * age_f * tobacco_f * area_f + admin_fee + stop_loss_fee
+    # Employer funds expected claims, not the fully insured premium's non-claims load (ACA small-group MLR floor is 80%).
+    claims_share = float(group_manual.get("level_funded_claims_share", 0.8))
+
+    per_employee_monthly = silver_base * age_f * tobacco_f * area_f * claims_share + admin_fee + stop_loss_fee
     annual = round(per_employee_monthly * employee_count * 12.0, 2)
 
     outcome.base_premium = round(silver_base * 12.0, 2)
@@ -86,6 +89,7 @@ def underwrite_level_funded_group(ctx: HealthProductContext) -> LobOutcome:
         RateComponent(name="employee_age_band", amount=age_f, basis=f"age={ctx.age}"),
         RateComponent(name="tobacco_surcharge", amount=tobacco_f, basis="tobacco" if ctx.tobacco else "non_tobacco"),
         RateComponent(name="area_relativity", amount=area_f, basis=ctx.issue_state or ctx.filing_state),
+        RateComponent(name="funding_claims_share", amount=claims_share, basis="level_funded"),
         RateComponent(name="admin_fee_pepm", amount=admin_fee, basis="per-employee-per-month"),
         RateComponent(name="stop_loss_fee_pepm", amount=stop_loss_fee, basis="per-employee-per-month"),
     ]

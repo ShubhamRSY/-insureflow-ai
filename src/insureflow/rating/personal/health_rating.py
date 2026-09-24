@@ -10,6 +10,7 @@ registered there.
 from __future__ import annotations
 
 import logging
+import re
 from typing import Any
 
 from insureflow.models.submissions import SubmissionBundle
@@ -18,12 +19,104 @@ from insureflow.rating.personal.manuals import _band_factor, general_health_manu
 from insureflow.underwriting.general_uw import _claims_severity
 from insureflow.underwriting.health_product import is_filed_health_product
 from insureflow.underwriting.health_uw import health_product_terms
-from insureflow.underwriting.personal_lines import _blob, _int_field, _money
+from insureflow.underwriting.personal_lines import _blob, _int_field, _money, annual_income, applicant_age
 
 logger = logging.getLogger(__name__)
 
-_AGE_LABELS = ("age", "insured age", "applicant age", "proposer age", "principal member age")
+_AGE_LABELS = ("applicant age", "insured age", "proposer age", "principal member age")
 _BENEFIT_LABELS = ("sum insured", "coverage amount", "benefit amount", "lump sum", "principal sum", "monthly benefit", "weekly benefit", "face amount", "deductible")
+
+
+_TOTAL_COUNT_LABELS = (
+    "household size",
+    "family size",
+    "employee count",
+    "number of employees",
+    "number of covered employees",
+    "total covered employees",
+    "covered employees",
+    "eligible employees",
+    "enrolled employees",
+    "employees enrolled",
+    "total employees",
+    "covered lives",
+    "group size",
+    "headcount",
+)
+_DEPENDENT_COUNT_LABELS = ("number of dependents", "number of covered dependents", "number of children", "dependents")
+
+
+def _stated_household_members(blob: str) -> int | None:
+    """Total covered lives as stated: an explicit total wins; a dependents count is additive to the primary applicant. None when nothing is stated."""
+    total = _int_field(blob, *_TOTAL_COUNT_LABELS)
+    if total is not None:
+        return max(1, total)
+    # Filler words between label and number ("covered employees across all members: 180"), or the number first ("200 employees enrolled").
+    loose = re.search(
+        r"(?:covered employees|employees enrolled|covered lives|employee count|number of employees|group size)[^\d\n]{0,40}?(\d{1,3}(?:,\d{3})+|\d{1,7})"
+        r"|\b(\d{1,3}(?:,\d{3})+|\d{1,7})\s+(?:employees|covered lives|lives)\b",
+        blob,
+        re.I,
+    )
+    if loose:
+        return max(1, int((loose.group(1) or loose.group(2)).replace(",", "")))
+    dependents = _int_field(blob, *_DEPENDENT_COUNT_LABELS)
+    return 1 + dependents if dependents is not None else None
+
+
+def _household_members(blob: str) -> int:
+    return _stated_household_members(blob) or 1
+
+
+# A benefit label that means something else for a product must never be read as its rating base
+# (a "Deductible" is not a CI lump sum; a "Sum insured" is not a gap plan's deductible).
+_PRODUCT_BENEFIT_LABELS: dict[str, tuple[str, ...]] = {
+    "hospital_indemnity": ("daily benefit amount", "daily benefit", "daily cash", "benefit amount"),
+    "short_term_disability": ("weekly benefit", "monthly benefit", "benefit amount"),
+    "long_term_disability": ("monthly benefit", "benefit amount"),
+    "supplemental_gap_coverage": ("base plan deductible", "base deductible", "deductible"),
+    "critical_illness_standalone": ("lump sum", "critical illness benefit", "sum insured", "benefit amount", "coverage amount"),
+    "disease_specific_critical_illness": ("lump sum", "critical illness benefit", "sum insured", "benefit amount", "coverage amount"),
+    "critical_illness_rider": ("lump sum", "critical illness benefit", "sum insured", "benefit amount", "coverage amount"),
+    "critical_illness_multistage": ("lump sum", "critical illness benefit", "sum insured", "benefit amount", "coverage amount"),
+    "add_accident_indemnity": ("principal sum", "sum insured", "benefit amount", "coverage amount"),
+    "standalone_add": ("principal sum", "sum insured", "benefit amount", "coverage amount"),
+    "disability_ptd": ("principal sum", "lump sum", "benefit amount", "sum insured"),
+    "disability_ppd": ("principal sum", "lump sum", "benefit amount", "sum insured"),
+}
+
+_MODAL_FACTORS = {"monthly": 1 / 12, "quarterly": 1 / 4, "semiannual": 1 / 2}
+
+
+def _modal(blob: str) -> str:
+    if re.search(r"\bmonthly premium\b|\bmodal:\s*m\b|\bpay(?:ing|ment)?\s+monthly\b", blob):
+        return "monthly"
+    if re.search(r"\bquarterly (?:premium|payment)\b", blob):
+        return "quarterly"
+    if re.search(r"\bsemi[- ]?annual (?:premium|payment)\b", blob):
+        return "semiannual"
+    return "annual"
+
+
+def _require_declared_inputs(result: QuoteResult, *, age_declared: bool, count_declared: bool) -> QuoteResult:
+    """A quote built on an assumed age (or an assumed one-life group) must not stay bindable."""
+    family = result.metadata.get("product_family")
+    reasons: list[str] = []
+    if family == "group":
+        if not count_declared:
+            reasons.append("Employee / covered-lives count not declared — cannot rate a group")
+    elif not age_declared:
+        reasons.append("Applicant age not declared or not readable — cannot rate")
+    if not reasons or not result.eligible:
+        return result
+    result.eligible = False
+    result.ineligibility_reasons = [*result.ineligibility_reasons, *reasons]
+    result.base_premium = 0.0
+    result.adjusted_premium = 0.0
+    result.rate_per_100_tiv = 0.0
+    result.metadata["modal_premium"] = 0.0
+    result.metadata["outcome"] = "refer"
+    return result
 
 
 def _sum_insured(blob: str, conf: dict[str, Any]) -> float:
@@ -73,7 +166,11 @@ def rate_health(
 
         us_manual = health_manual_us()
         blob = _blob(bundle)
-        parsed_age = _int_field(blob, *_AGE_LABELS)
+        parsed_age = applicant_age(blob, *_AGE_LABELS)
+        modal = _modal(blob)
+        from insureflow.health.lobs import resolve_product_id
+
+        benefit_labels = _PRODUCT_BENEFIT_LABELS.get(resolve_product_id(product_id, coverage_id, coverage_name) or "", _BENEFIT_LABELS)
         health_ctx = HealthProductContext(
             bundle=bundle,
             state_code=state,
@@ -89,14 +186,15 @@ def rate_health(
             age=parsed_age if parsed_age is not None else 40,
             sex_key=_extract_sex(blob),
             tobacco=_extract_tobacco(blob),
-            income=_money(blob, "income", "annual income", "salary"),
-            benefit_amount=_money(blob, *_BENEFIT_LABELS),
-            household_members=_int_field(blob, "household size", "number of dependents", "family size", "employee count", "number of employees") or 1,
-            modal="monthly" if "monthly premium" in blob or "modal: m" in blob else "annual",
+            income=annual_income(blob),
+            benefit_amount=_money(blob, *benefit_labels),
+            household_members=_household_members(blob),
+            modal=modal,
+            modal_f=_MODAL_FACTORS.get(modal, 1.0),
         )
         lob_result = run_product_logic(health_ctx)
         if lob_result is not None:
-            return lob_result
+            return _require_declared_inputs(lob_result, age_declared=parsed_age is not None, count_declared=_stated_household_members(blob) is not None)
     except Exception as exc:
         logger.error(
             "Health LOB logic path failed for product_id=%s coverage_id=%s (%s: %s) — falling back to legacy health pricing, which may produce a materially different premium",
@@ -141,7 +239,7 @@ def rate_health(
     min_age = float(elig.get("min_age", 18))
     max_age = float(elig.get("max_age", 75))
 
-    age = _int_field(blob, *_AGE_LABELS)
+    age = applicant_age(blob, *_AGE_LABELS)
     si = _sum_insured(blob, conf)
     deductible = _money(blob, "deductible", "excess")
     severity = _claims_severity(blob) or "none"

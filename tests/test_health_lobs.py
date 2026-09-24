@@ -626,3 +626,29 @@ def test_snp_eligibility_requires_the_applicants_own_condition():
     applicant_has_it = rate_health(_bundle("Applicant age: 68. Diabetes diagnosis on file."), coverage_id="snp_standard", product_id="medicare_advantage_snp", state="IL")
     assert only_mother.eligible is False
     assert applicant_has_it.eligible is True
+
+
+def _prem(text, cov, pid, state="IL"):
+    return rate_health(_bundle(text), coverage_id=cov, product_id=pid, state=state).adjusted_premium
+
+
+def test_coverage_options_and_age_actually_move_the_price():
+    add = "Age: 35. Occupation: accountant. Principal sum: $100,000. "
+    assert _prem(add, "add_family", "add_accident_indemnity") > _prem(add, "add_individual", "add_accident_indemnity") > _prem(add, "add_group", "add_accident_indemnity")
+
+    gap = "Age: 40. Base plan deductible: $5,000. "
+    silver = _prem("Age: 40.", "silver", "aca_marketplace_plan")
+    assert _prem(gap, "standard_gap", "supplemental_gap_coverage") < silver * 12 * 0.5
+    assert _prem(gap, "super_gap", "supplemental_gap_coverage") > _prem(gap, "standard_gap", "supplemental_gap_coverage")
+
+    grp = "Age: 40. Employee count: 120. "
+    fi = _prem(grp, "large_fully_insured", "large_group_health")
+    assert _prem(grp, "large_self_funded", "large_group_health") < fi
+    assert _prem(grp, "level_funded_standard", "level_funded_group_health") < fi * 1.05  # level-funded no longer prices above the fully insured group
+
+    for text, cov, pid in [
+        ("Monthly benefit: $3,000. Occupation: accountant. ", "ltd_standard", "long_term_disability"),
+        ("Weekly benefit: $500. Occupation: accountant. ", "std_standard", "short_term_disability"),
+        ("Principal sum: $100,000. Occupation: accountant. ", "add_individual", "add_accident_indemnity"),
+    ]:
+        assert _prem("Age: 60. " + text, cov, pid) > _prem("Age: 30. " + text, cov, pid)

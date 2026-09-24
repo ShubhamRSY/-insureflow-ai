@@ -14,7 +14,7 @@ from insureflow.underwriting.life_financial import evaluate_life_financial
 from insureflow.underwriting.life_medical import underwrite_life
 from insureflow.underwriting.life_product import classify_life_family, is_filed_life_product, is_filed_term_product
 from insureflow.underwriting.life_reinsurance import evaluate_life_reinsurance
-from insureflow.underwriting.personal_lines import _blob, extract_life_factors
+from insureflow.underwriting.personal_lines import _blob, extract_life_factors, normalize_state
 
 logger = logging.getLogger(__name__)
 
@@ -105,11 +105,11 @@ def rate_life(
             pass
         generic_annuity_meta = annuity_meta  # returned AFTER the LOB dispatch below
 
-    age = factors.age or 40
+    age = factors.age if factors.age is not None else 40
     sex = factors.sex if factors.sex in ("male", "female") else "unknown"
     sex_key = "female" if sex == "female" else "male"
     unisex_states = {s.upper() for s in (manual.get("unisex_states") or ["MT"])}
-    issue_state = (state or getattr(factors, "state", "") or "").upper()[:2]
+    issue_state = normalize_state(state or getattr(factors, "state", "") or "")
     if issue_state in unisex_states:
         sex_key = "male"
         sex = "unisex"

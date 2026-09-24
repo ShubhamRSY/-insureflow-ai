@@ -233,7 +233,7 @@ def net_cash_surrender_value(
     """
     charge = surrender_charges(year, max_surrender_years, max_charge_pct) * face_amount
     return round(
-        guaranteed_cash_value - charge - policy_loans + dividend_additions,
+        max(0.0, guaranteed_cash_value - charge - policy_loans + dividend_additions),
         2,
     )
 

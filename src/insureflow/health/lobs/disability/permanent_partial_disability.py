@@ -15,6 +15,7 @@ from typing import Any
 from insureflow.health.lobs.base import (
     HealthProductContext,
     LobOutcome,
+    age_band_factor,
     apply_state_filing_gate,
     area_relativity,
     finish_quote,
@@ -41,6 +42,13 @@ _SCHEDULE_KEYWORDS: dict[str, str] = {
     "loss_of_sight_both_eyes": "loss_of_sight_both_eyes",
     "loss_of_sight_one_eye": "loss_of_sight_one_eye",
     "loss_of_hearing": "loss_of_hearing",
+    "loss_of_hand": "loss_of_hand",
+    "loss_of_foot": "loss_of_foot",
+    "loss_of_thumb": "loss_of_thumb",
+    "loss_of_index_finger": "loss_of_index_finger",
+    "loss_of_finger": "loss_of_finger",
+    "loss_of_great_toe": "loss_of_great_toe",
+    "loss_of_toe": "loss_of_toe",
 }
 
 
@@ -76,15 +84,17 @@ def underwrite_ppd(ctx: HealthProductContext) -> LobOutcome:
     schedule_f = float(schedule_factors.get(schedule_key, 0.5))
     rate_per_1000 = float(disability_manual.get("ptd_lump_sum_rate_per_1000", 4.5)) * 0.8  # PPD's base rate is a discount off PTD's — same injury pool, partial payout
     area_f = area_relativity(ctx)
+    age_f = age_band_factor(ctx, "age_factors", section="disability")
 
     base_premium = (ctx.benefit_amount / 1000.0) * rate_per_1000 * schedule_f
-    annual = round(base_premium * area_f + policy_fee(ctx), 2)
+    annual = round(base_premium * area_f * age_f + policy_fee(ctx), 2)
 
     outcome.base_premium = round(base_premium, 2)
     outcome.annual_premium = annual
     outcome.components = [
         RateComponent(name="ppd_rate_per_1000", amount=rate_per_1000, basis="annual"),
         RateComponent(name="schedule_factor", amount=schedule_f, basis=schedule_key),
+        RateComponent(name="attained_age", amount=age_f, basis=f"age={ctx.age}"),
         RateComponent(name="area_relativity", amount=area_f, basis=ctx.issue_state or ctx.filing_state),
     ]
     outcome.metadata.update(

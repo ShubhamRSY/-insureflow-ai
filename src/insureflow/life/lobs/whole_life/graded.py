@@ -72,8 +72,8 @@ def underwrite_graded(ctx: LifeProductContext, *, guaranteed_issue: bool) -> Lob
     # is issued to (min_issue_age defaults to 50). The no-exam
     # anti-selection risk is priced as an explicit load on top of the net
     # premium, same pattern as every other simplified-issue path.
-    wl_interest = float(manual.get("whole_life_interest_rate", 0.04))
-    wl_loading = float(manual.get("whole_life_expense_loading", 0.30))
+    wl_interest = float(manual.get("whole_life_interest_rate") or 0.04)
+    wl_loading = float(manual.get("whole_life_expense_loading") or 0.30)
     anti_selection_load = 1.60
     wl_quote = compute_full_whole_life_quote(
         age=ctx.age,

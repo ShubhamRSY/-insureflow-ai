@@ -13,6 +13,7 @@ from insureflow.life.lobs.actuarial import whole_life_annuity_due_factor
 from insureflow.life.lobs.base import (
     LifeProductContext,
     LobOutcome,
+    enforce_minimum_consideration,
     finish_quote,
     merge_state_rules,
     purchase_price,
@@ -54,6 +55,7 @@ def underwrite_qlac(ctx: LifeProductContext) -> LobOutcome:
         outcome.add_reason(f"QLAC issue age {ctx.age} outside {state_rules['min_issue_age']}-{state_rules['max_issue_age']}")
 
     principal_raw = purchase_price(ctx)
+    enforce_minimum_consideration(outcome, principal_raw, MIN_PURCHASE_PRICE)
     cap = float(state_rules["irs_premium_cap"])
     capped = principal_raw > cap
     principal = min(principal_raw, cap)

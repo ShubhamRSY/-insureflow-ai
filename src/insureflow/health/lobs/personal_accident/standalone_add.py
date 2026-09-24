@@ -14,6 +14,7 @@ from typing import Any
 from insureflow.health.lobs.base import (
     HealthProductContext,
     LobOutcome,
+    age_band_factor,
     apply_state_filing_gate,
     area_relativity,
     finish_quote,
@@ -55,23 +56,30 @@ def underwrite_standalone_add(ctx: HealthProductContext) -> LobOutcome:
     for disclosure in state_rules["disclosures"]:
         outcome.add_condition(disclosure)
 
-    occ_class = _occupation_class(ctx.blob) or "II"
+    occ_class = _occupation_class(ctx.blob)
+    if not occ_class:
+        occ_class = "II"
+        outcome.add_condition("Occupation not recognized by the automated classifier — refer for manual occupation-class assignment before bind (priced at Class II meanwhile)")
+        outcome.metadata.setdefault("_outcome", "refer")
     if occ_class == "IV":
         outcome.add_condition("Class IV hazardous occupation — refer for underwriter review before bind")
+        outcome.metadata.setdefault("_outcome", "refer")
 
     pa_manual = (ctx.manual or {}).get("personal_accident") or {}
     rate_per_1000 = float(pa_manual.get("standalone_add_rate_per_1000_annual", 0.35))
     occ_f = float((pa_manual.get("occupation_class_factors") or {}).get(occ_class, 1.0))
     area_f = area_relativity(ctx)
+    age_f = age_band_factor(ctx, "age_factors", section="personal_accident")
 
     base_premium = (ctx.benefit_amount / 1000.0) * rate_per_1000
-    annual = round(base_premium * occ_f * area_f + policy_fee(ctx), 2)
+    annual = round(base_premium * occ_f * area_f * age_f + policy_fee(ctx), 2)
 
     outcome.base_premium = round(base_premium, 2)
     outcome.annual_premium = annual
     outcome.components = [
         RateComponent(name="standalone_add_rate_per_1000", amount=rate_per_1000, basis="annual"),
         RateComponent(name="occupation_class", amount=occ_f, basis=f"Class {occ_class}"),
+        RateComponent(name="attained_age", amount=age_f, basis=f"age={ctx.age}"),
         RateComponent(name="area_relativity", amount=area_f, basis=ctx.issue_state or ctx.filing_state),
     ]
     outcome.metadata.update(

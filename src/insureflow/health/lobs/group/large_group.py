@@ -70,8 +70,12 @@ def underwrite_large_group(ctx: HealthProductContext, *, self_funded: bool) -> L
     # groups are more credible (predictable) and get a bigger discount than
     # a still-community-rated small group ever would.
     experience_credibility_discount = min(0.15, employee_count / 10_000.0)
+    # The filed Silver rate is a fully insured premium (>= 15% non-claims load under the ACA MLR floor). A self-funded
+    # employer pays expected claims plus its own stop-loss and admin instead of that insurer margin.
+    claims_share = float(group_manual.get("self_funded_claims_share", 0.85)) if self_funded else 1.0
+    stop_loss_fee = float(group_manual.get("level_funded_stop_loss_fee_pepm", 18.0)) if self_funded else 0.0
 
-    per_employee_monthly = (silver_base * age_f * tobacco_f * area_f) * (1.0 - experience_credibility_discount) + admin_fee
+    per_employee_monthly = (silver_base * age_f * tobacco_f * area_f) * (1.0 - experience_credibility_discount) * claims_share + admin_fee + stop_loss_fee
     annual = round(per_employee_monthly * employee_count * 12.0, 2)
 
     outcome.base_premium = round(silver_base * 12.0, 2)
@@ -81,7 +85,9 @@ def underwrite_large_group(ctx: HealthProductContext, *, self_funded: bool) -> L
         RateComponent(name="tobacco_surcharge", amount=tobacco_f, basis="tobacco" if ctx.tobacco else "non_tobacco"),
         RateComponent(name="area_relativity", amount=area_f, basis=ctx.issue_state or ctx.filing_state),
         RateComponent(name="experience_credibility_discount", amount=round(1.0 - experience_credibility_discount, 4), basis=f"{employee_count} covered lives"),
+        RateComponent(name="funding_claims_share", amount=claims_share, basis="self_funded" if self_funded else "fully_insured"),
         RateComponent(name="admin_fee_pepm", amount=admin_fee, basis="per-employee-per-month"),
+        RateComponent(name="stop_loss_fee_pepm", amount=stop_loss_fee, basis="per-employee-per-month"),
     ]
     outcome.metadata.update(
         {

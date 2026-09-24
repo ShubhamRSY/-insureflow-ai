@@ -13,6 +13,7 @@ from insureflow.life.lobs.actuarial import whole_life_annuity_due_factor
 from insureflow.life.lobs.base import (
     LifeProductContext,
     LobOutcome,
+    enforce_minimum_consideration,
     finish_quote,
     merge_state_rules,
     purchase_price,
@@ -56,6 +57,7 @@ def _credited(gain: float, part: float, cap: float, floor: float) -> float:
 def underwrite_indexed_annuity(ctx: LifeProductContext) -> LobOutcome:
     outcome = LobOutcome(product_label="Fixed Index Annuity")
     principal = purchase_price(ctx)
+    enforce_minimum_consideration(outcome, principal, MIN_PURCHASE_PRICE)
 
     state_rules = merge_state_rules(ctx, DEFAULT_STATE_RULES, STATE_RULES)
     if ctx.age < int(state_rules["min_issue_age"]) or ctx.age > int(state_rules["max_issue_age"]):

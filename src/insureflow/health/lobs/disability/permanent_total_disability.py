@@ -14,6 +14,7 @@ from typing import Any
 from insureflow.health.lobs.base import (
     HealthProductContext,
     LobOutcome,
+    age_band_factor,
     apply_state_filing_gate,
     area_relativity,
     finish_quote,
@@ -60,15 +61,17 @@ def underwrite_ptd(ctx: HealthProductContext) -> LobOutcome:
     rate_per_1000 = float(disability_manual.get("ptd_lump_sum_rate_per_1000", 4.5))
     occ_f = float((disability_manual.get("occupation_class_factors") or {}).get(occ_class, 1.0))
     area_f = area_relativity(ctx)
+    age_f = age_band_factor(ctx, "age_factors", section="disability")
 
     base_premium = (ctx.benefit_amount / 1000.0) * rate_per_1000
-    annual = round(base_premium * occ_f * area_f + policy_fee(ctx), 2)
+    annual = round(base_premium * occ_f * area_f * age_f + policy_fee(ctx), 2)
 
     outcome.base_premium = round(base_premium, 2)
     outcome.annual_premium = annual
     outcome.components = [
         RateComponent(name="ptd_rate_per_1000", amount=rate_per_1000, basis="annual"),
         RateComponent(name="occupation_class", amount=occ_f, basis=f"Class {occ_class}"),
+        RateComponent(name="attained_age", amount=age_f, basis=f"age={ctx.age}"),
         RateComponent(name="area_relativity", amount=area_f, basis=ctx.issue_state or ctx.filing_state),
     ]
     outcome.metadata.update(

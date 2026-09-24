@@ -21,31 +21,20 @@ from insureflow.models.submissions import SubmissionBundle
 from insureflow.rating.models import InsuranceLine, RateComponent
 from insureflow.rating.models import QuoteResult as QuoteResult
 from insureflow.underwriting.health_uw import HealthUWDecision
-from insureflow.underwriting.personal_lines import _blob
+from insureflow.underwriting.personal_lines import _blob, detect_sex, detect_tobacco, normalize_state
 
 
 def _extract_sex(blob: str) -> str:
-    import re
-
-    # Checking "female"/"male" as an unordered OR — as this used to — means
-    # any mention of "female" ANYWHERE in the blob wins outright, even a
-    # spouse's or dependent's sex on a family submission where the primary
-    # applicant is stated as male. Take the first "sex: X" (or bare
-    # "female"/"male") occurrence in reading order instead, which matches
-    # how real forms list the primary applicant's own fields first.
-    labeled = re.search(r"\bsex\s*[:=]?\s*(female|f\b|male|m\b)", blob, re.I)
-    if labeled:
-        return "female" if labeled.group(1).lower().startswith("f") else "male"
-    bare = re.search(r"\b(female|male)\b", blob, re.I)
-    if bare:
-        return bare.group(1).lower()
-    return "unknown"
+    return detect_sex(blob) or "unknown"
 
 
 def _extract_tobacco(blob: str) -> bool:
-    import re
+    return detect_tobacco(blob)
 
-    return bool(re.search(r"(?:current smoker|nicotine\s*:\s*positive|tobacco\s*:\s*(?!none\b|no\b|non-)\w+|cigarettes\s*:\s*(?!none\b|no\b|0)\w+)", blob, re.I))
+
+MAX_INSURABLE_BENEFIT = 100_000_000.0  # ponytail: sanity ceiling matching the legacy manual's max sum insured; move to the filed manual
+
+_ACA_WAIVED_GATES = ("age_fit", "medical_declaration", "member_medicals")
 
 
 def reconcile_for_aca_guaranteed_issue(uw: HealthUWDecision) -> None:
@@ -73,9 +62,17 @@ def reconcile_for_aca_guaranteed_issue(uw: HealthUWDecision) -> None:
         uw.conditions.append(aca_disclosure)
     uw.reasons = [r for r in uw.reasons if "route to senior" not in r.lower()]
 
-    if uw.gates.get("age_fit") == "fail" and uw.decision == UWDecision.REFER and all(v != "fail" for k, v in uw.gates.items() if k != "age_fit"):
+    # ACA §2702 bans medical underwriting: a missing health declaration can never gate issue.
+    waived = [g for g in _ACA_WAIVED_GATES if uw.gates.get(g) == "fail"]
+    if uw.decision == UWDecision.REFER and waived and all(v != "fail" for k, v in uw.gates.items() if k not in _ACA_WAIVED_GATES):
         uw.decision = UWDecision.ACCEPT
         uw.conditions = [c for c in uw.conditions if "route to senior" not in c.lower()]
+    for gate in waived:
+        uw.gates[gate] = "waived_aca"
+        title = gate.replace("_", " ").title()
+        uw.findings = [f for f in uw.findings if f.title != title]
+    if waived:
+        uw.reasons = [r for r in uw.reasons if "medical declaration" not in r.lower() and "senior citizen health" not in r.lower()]
 
 
 @dataclass
@@ -108,7 +105,7 @@ class HealthProductContext:
 
     @property
     def issue_state(self) -> str:
-        return (self.state_code or "").upper()[:2]
+        return normalize_state(self.state_code)
 
     @property
     def filing_state(self) -> str:
@@ -235,8 +232,18 @@ def finish_quote(
     $0 for business that was never approved.
     """
     apply_binding_gates(ctx, outcome, family=family)
+    if ctx.benefit_amount > MAX_INSURABLE_BENEFIT:
+        outcome.eligible = False
+        outcome.add_reason(f"Benefit ${ctx.benefit_amount:,.0f} exceeds the ${MAX_INSURABLE_BENEFIT:,.0f} maximum insurable amount")
+    if not ctx.issue_state:
+        outcome.add_condition("Issue state not provided or not recognized — priced on the filing-state exhibit; confirm state of issue before bind")
+        outcome.metadata.setdefault("_outcome", "refer")
+    if family == "critical_illness" and ctx.sex_key not in ("male", "female"):
+        outcome.add_condition("Sex not stated — priced on the male morbidity table; confirm before bind")
+    if not outcome.eligible:
+        outcome.conditions = [c for c in outcome.conditions if not c.startswith("Eligibility clear")]
     manual = ctx.manual or {}
-    minimum_premium = float(manual.get("minimum_premium", 0.0))
+    minimum_premium = float(manual.get("minimum_premium") or 0.0)
     annual_value = outcome.annual_premium
     if apply_minimum_premium:
         annual_value = max(annual_value, minimum_premium)
@@ -301,9 +308,10 @@ def nearest_banded_key(table: dict[str, float], value: float) -> str:
     return str(best)
 
 
-def age_band_factor(ctx: HealthProductContext, table_key: str = "age_curve") -> float:
-    """ACA-style age-band rating factor from the manual's age curve."""
-    curve = (ctx.manual or {}).get(table_key) or {}
+def age_band_factor(ctx: HealthProductContext, table_key: str = "age_curve", section: str | None = None) -> float:
+    """Age-band rating factor: the manual's ACA age curve, or ``manual[section][table_key]`` for a product-family table."""
+    src = (ctx.manual or {}).get(section) or {} if section else ctx.manual or {}
+    curve = src.get(table_key) or {}
     if not curve:
         return 1.0
     keys = sorted((int(k) for k in curve), reverse=True)

@@ -12,7 +12,7 @@
     },
     {
       "id": "KO-HIV",
-      "pattern": "hiv positive|hiv\\+|\\baids\\b|aids diagnosis",
+      "pattern": "hiv positive|hiv\\+|(?<!hearing )(?<!mobility )(?<!walking )(?<!visual )\\baids\\b|aids diagnosis",
       "action": "decline",
       "reason": "HIV/AIDS \u2014 outside standard issue"
     },

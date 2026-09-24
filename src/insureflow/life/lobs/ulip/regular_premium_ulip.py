@@ -115,7 +115,8 @@ def underwrite_rp_ulip(ctx: LifeProductContext) -> LobOutcome:
     if uw.decision == "DECLINE":
         outcome.eligible = False
         for finding in uw.findings:
-            outcome.add_reason(f"ULIP suitability: {finding}")
+            if not finding.startswith(("Mortality charge", "WARNING")):
+                outcome.add_reason(f"ULIP suitability: {finding}")
     for finding in uw.findings:
         outcome.add_condition(f"ULIP suitability: {finding}")
     if not disclosures_ok:

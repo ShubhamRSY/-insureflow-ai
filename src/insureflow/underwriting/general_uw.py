@@ -1149,7 +1149,7 @@ def _scaled_money(blob: str, *labels: str) -> float:
     """Parse an amount with an optional crore/lakh/million/k suffix (Indian filings)."""
     for label in labels:
         m = re.search(
-            rf"{re.escape(label)}\s*[:=]?\s*\$?\s*([\d,]+(?:\.\d+)?)\s*(crore|crs?|lakh|lacs?|k|million|mn)?",
+            rf"(?<![a-z]){re.escape(label)}\s*[:=]?\s*(?:usd|inr|rs\.?|₹)?\s*\$?\s*([\d,]+(?:\.\d+)?)\s*(?:(crore|crs?|lakhs?|lacs?|k|million|mn|mm|m)(?![a-z]))?",
             blob,
             re.I,
         )
@@ -1162,11 +1162,11 @@ def _scaled_money(blob: str, *labels: str) -> float:
         suffix = (m.group(2) or "").strip().lower()
         if suffix in {"crore", "cr", "crs"}:
             value *= 10_000_000
-        elif suffix in {"lakh", "lac", "lacs"}:
+        elif suffix in {"lakh", "lakhs", "lac", "lacs"}:
             value *= 100_000
         elif suffix == "k":
             value *= 1_000
-        elif suffix in {"million", "mn"}:
+        elif suffix in {"million", "mn", "mm", "m"}:
             value *= 1_000_000
         return value
     return 0.0
@@ -1184,6 +1184,13 @@ def _risk_class(blob: str, table: Sequence[tuple[str, float, tuple[str, ...]]]) 
 
 def _claims_severity(blob: str) -> str | None:
     """Classify declared claims history by severity; None when nothing declared."""
+    blob = re.sub(
+        r"\b(?:no|nil|zero|without|free of)\s+(?:prior\s+|previous\s+|known\s+)?(?:\w+\s+){0,2}?(?:claims?|losses|incidents?|lawsuits?)\b"
+        r"|\bclaims?[\s-]free\b|\bclaims?\s*[:=-]\s*(?:none|nil|no|n/?a|0)\b|\bclaim forms?\b",
+        " ",
+        blob,
+        flags=re.I,
+    )
     if not re.search(r"claim|loss run|incident", blob, re.I):
         return None
     if re.search(r"\b(death|fatal|paralysis|permanent disability|catastrophic)\b", blob, re.I):

@@ -57,7 +57,10 @@ def underwrite_public_sector_group(ctx: HealthProductContext) -> LobOutcome:
     area_f = area_relativity(ctx)
     admin_fee = float((ctx.manual or {}).get("group", {}).get("public_sector_admin_fee_pepm", 20.0))
 
-    per_employee_monthly = silver_base * age_f * tobacco_f * area_f + admin_fee
+    # Same size-based credibility discount as large_group (larger pools are more predictable).
+    experience_credibility_discount = min(0.15, employee_count / 10_000.0)
+
+    per_employee_monthly = silver_base * age_f * tobacco_f * area_f * (1.0 - experience_credibility_discount) + admin_fee
     annual = round(per_employee_monthly * employee_count * 12.0, 2)
 
     outcome.base_premium = round(silver_base * 12.0, 2)
@@ -66,6 +69,7 @@ def underwrite_public_sector_group(ctx: HealthProductContext) -> LobOutcome:
         RateComponent(name="employee_age_band", amount=age_f, basis=f"age={ctx.age}"),
         RateComponent(name="tobacco_surcharge", amount=tobacco_f, basis="tobacco" if ctx.tobacco else "non_tobacco"),
         RateComponent(name="area_relativity", amount=area_f, basis=ctx.issue_state or ctx.filing_state),
+        RateComponent(name="experience_credibility_discount", amount=round(1.0 - experience_credibility_discount, 4), basis=f"{employee_count} covered lives"),
         RateComponent(name="admin_fee_pepm", amount=admin_fee, basis="per-employee-per-month"),
     ]
     outcome.metadata.update(

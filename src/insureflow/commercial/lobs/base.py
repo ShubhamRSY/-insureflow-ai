@@ -17,6 +17,7 @@ from typing import Any
 from insureflow.models.agents import UnderwritingMemo
 from insureflow.models.submissions import SubmissionBundle
 from insureflow.rating.models import InsuranceLine, QuoteResult, RateComponent
+from insureflow.underwriting.personal_lines import normalize_state
 
 
 @dataclass
@@ -36,7 +37,7 @@ class CommercialProductContext:
 
     @property
     def issue_state(self) -> str:
-        return (self.state_code or "").upper()[:2]
+        return normalize_state(self.state_code)
 
 
 @dataclass

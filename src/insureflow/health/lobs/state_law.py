@@ -29,7 +29,7 @@ SDI_STATES: frozenset[str] = frozenset({"CA", "NY", "NJ", "RI", "HI", "PR"})
 # (same or lesser value) within 30-63 days of their birthday each year
 # without medical underwriting, independent of the federal one-time
 # open-enrollment window at 65.
-MEDIGAP_BIRTHDAY_RULE_STATES: frozenset[str] = frozenset({"CA", "OR", "MO", "NV", "ID", "IL", "LA"})
+MEDIGAP_BIRTHDAY_RULE_STATES: frozenset[str] = frozenset({"CA", "OR", "MO", "NV", "ID", "IL", "LA", "KY", "MD", "OK"})
 
 # Medigap continuous/guaranteed-issue states: community-rated or
 # guaranteed-issue year-round, not just the 6-month window after 65.
@@ -42,7 +42,7 @@ MEDIGAP_CONTINUOUS_GI_STATES: frozenset[str] = frozenset({"CT", "MA", "NY", "ME"
 # identical at the moment of first purchase, which is all a point-in-time
 # quote engine can price — only the community-rated/not split actually
 # changes the math at issue.
-MEDIGAP_COMMUNITY_RATED_STATES: frozenset[str] = frozenset({"NY", "VT", "CT", "ME"})
+MEDIGAP_COMMUNITY_RATED_STATES: frozenset[str] = frozenset({"NY", "VT", "CT", "ME", "MA"})
 
 # Small-group market size definition — federal/ACA default is 1-50 FTE
 # employees, but several states raised their own small-group ceiling to 100
@@ -79,7 +79,7 @@ def canonical_state_row(issue_state: str) -> dict[str, Any]:
         return {}
     rule = _get_state_health_rule(issue_state)
     if not rule:
-        return {"grace_period_days": DEFAULT_GRACE_PERIOD_DAYS}
+        return {}  # unknown state: no platform row, so callers report "carrier_default" rather than a fake table hit
     return {
         "rate_filing": rule.get("rate_filing", "file_and_use"),
         "state_individual_mandate": bool(rule.get("state_individual_mandate", False)),

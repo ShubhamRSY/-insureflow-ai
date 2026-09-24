@@ -45,18 +45,30 @@ PRODUCT_LOGIC_PATHS: dict[str, str] = {
 # Fallback matching when the caller passes only a coverage id / free-text name.
 # Order matters — most specific patterns first.
 _COVERAGE_HINTS: list[tuple[re.Pattern[str], str]] = [
-    (re.compile(r"bronze|silver|gold|platinum|marketplace|exchange(?!.*off)", re.I), "aca_marketplace_plan"),
     (re.compile(r"off[_\s-]?exchange|off[_\s-]?market", re.I), "off_exchange_major_medical"),
-    (re.compile(r"family[_\s-]?(health|floater|plan)", re.I), "family_health_plan"),
+    # Medicare family before the metal-tier names ("Medicare Advantage Gold", "Platinum Medigap Plan G").
+    (re.compile(r"\bhd[_\s-]?plan[_\s-]?g\b|high[_\s-]?deductible[_\s-]?(?:medigap|plan[_\s-]?g)|medigap[_\s-]?hd", re.I), "medigap_high_deductible_plan_g"),
+    (re.compile(r"\bsnp\b|special[_\s-]?needs", re.I), "medicare_advantage_snp"),
+    (re.compile(r"\bpart[_\s-]?d\b|prescription[_\s-]?drug[_\s-]?plan", re.I), "medicare_part_d"),
+    (re.compile(r"medicare[_\s-]?advantage|\bpart[_\s-]?c\b", re.I), "medicare_advantage"),
+    (re.compile(r"medigap|medicare[_\s-]?supplement|\bplan[_\s-]?[afgn]\b", re.I), "medicare_supplement"),
+    (re.compile(r"extended[_\s-]?dependent", re.I), "family_extended_dependents"),
+    (re.compile(r"family.*(?:hdhp|hsa)|(?:hdhp|hsa).*family", re.I), "family_hdhp_hsa_qualified"),
+    (re.compile(r"family[_\s-]?(health|floater|plan)|\bfamily\b", re.I), "family_health_plan"),
+    (re.compile(r"multi[_\s-]?stage", re.I), "critical_illness_multistage"),
+    (re.compile(r"critical[_\s-]?illness[_\s-]?rider|\bci[_\s-]?rider\b", re.I), "critical_illness_rider"),
     (re.compile(r"cancer|cardiac|diabetes|kidney|disease[_\s-]?specific", re.I), "disease_specific_critical_illness"),
     (re.compile(r"critical[_\s-]?illness|\bci\b", re.I), "critical_illness_standalone"),
-    (re.compile(r"medigap|medicare[_\s-]?supplement|plan[_\s-]?[afgn]\b", re.I), "medicare_supplement"),
-    (re.compile(r"medicare[_\s-]?advantage|part[_\s-]?c", re.I), "medicare_advantage"),
+    (re.compile(r"\bhsa\b|\bhdhp\b", re.I), "hdhp_hsa_qualified"),
+    (re.compile(r"catastrophic", re.I), "catastrophic_plan"),
+    (re.compile(r"\bstldi\b|short[_\s-]?term[_\s-]?(?:limited|medical|health)", re.I), "short_term_limited_duration"),
+    (re.compile(r"\b(?:bronze|silver|gold|platinum|marketplace)\b|\bexchange\b", re.I), "aca_marketplace_plan"),
     (re.compile(r"small[_\s-]?group", re.I), "small_group_health"),
     (re.compile(r"large[_\s-]?group|self[_\s-]?funded|erisa", re.I), "large_group_health"),
     (re.compile(r"super[_\s-]?top.?up|super[_\s-]?gap", re.I), "supplemental_gap_coverage"),
     (re.compile(r"top.?up|gap[_\s-]?coverage", re.I), "supplemental_gap_coverage"),
-    (re.compile(r"add\b|accidental[_\s-]?death|dismemberment|personal[_\s-]?accident|\bpa\b", re.I), "add_accident_indemnity"),
+    (re.compile(r"standalone[_\s-]?add", re.I), "standalone_add"),
+    (re.compile(r"\badd\b|accidental[_\s-]?death|dismemberment|personal[_\s-]?accident|\bpa\b", re.I), "add_accident_indemnity"),
     (re.compile(r"short[_\s-]?term[_\s-]?disability|\bstd\b", re.I), "short_term_disability"),
     (re.compile(r"long[_\s-]?term[_\s-]?disability|\bltd\b|disability[_\s-]?income", re.I), "long_term_disability"),
 ]
@@ -75,6 +87,14 @@ def _load_builder(module_path: str) -> Callable[[HealthProductContext], Any] | N
         return None
 
 
+@lru_cache(maxsize=None)
+def _coverage_to_product() -> dict[str, str]:
+    """Catalog coverage ids are unique across products, so an exact id resolves its product with no guessing."""
+    from insureflow.insurance.health_lobs import HEALTH_LINES
+
+    return {normalize_id(cv["id"]): line["id"] for line in HEALTH_LINES for cv in line["coverages"]}
+
+
 def resolve_product_id(
     product_id: str | None,
     coverage_id: str | None = None,
@@ -84,6 +104,9 @@ def resolve_product_id(
     pid = normalize_id(product_id)
     if pid in PRODUCT_LOGIC_PATHS:
         return pid
+    exact = _coverage_to_product().get(normalize_id(coverage_id))
+    if exact in PRODUCT_LOGIC_PATHS:
+        return exact
     blob = f"{normalize_id(coverage_id)} {coverage_name or ''}"
     for pattern, target in _COVERAGE_HINTS:
         if pattern.search(blob):

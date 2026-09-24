@@ -39,6 +39,9 @@ STATE_RULES: dict[str, dict[str, Any]] = {
 MIN_ISSUE_AGE = 18
 MAX_ISSUE_AGE = 70
 
+# ponytail: assumed diagnosis-stage mix (diagnoses skew late); replace with carrier claims experience when available.
+_STAGE_INCIDENCE_WEIGHTS = {"early_stage": 0.20, "intermediate_stage": 0.30, "advanced_stage": 0.50}
+
 
 def underwrite_ci_multistage(ctx: HealthProductContext) -> LobOutcome:
     from insureflow.underwriting.health_uw import underwrite_health
@@ -64,7 +67,13 @@ def underwrite_ci_multistage(ctx: HealthProductContext) -> LobOutcome:
     table = (ci_manual.get("morbidity_per_1000") or {}).get(sex_key) or {}
     rate_per_1000 = float(table.get(_nearest_age(table, ctx.age), 3.0)) if table else 3.0
     stage_factors = ci_manual.get("multistage_payout_factors") or {}
-    blended_stage_f = sum(float(v) for v in stage_factors.values()) / len(stage_factors) if stage_factors else 0.583
+    blended_stage_f = (
+        sum(float(stage_factors[k]) * w for k, w in _STAGE_INCIDENCE_WEIGHTS.items())
+        if all(k in stage_factors for k in _STAGE_INCIDENCE_WEIGHTS)
+        else sum(float(v) for v in stage_factors.values()) / len(stage_factors)
+        if stage_factors
+        else 0.70
+    )
 
     tobacco_f = tobacco_surcharge(ctx)
 

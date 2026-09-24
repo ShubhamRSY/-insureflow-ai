@@ -16,7 +16,7 @@ from insureflow.rating.models import InsuranceLine, RateComponent
 from insureflow.rating.models import QuoteResult as QuoteResult
 from insureflow.underwriting.life_financial import LifeFinancialResult
 from insureflow.underwriting.life_medical import LifeMedicalDecision
-from insureflow.underwriting.personal_lines import _blob
+from insureflow.underwriting.personal_lines import _blob, normalize_state
 
 
 @dataclass
@@ -42,7 +42,7 @@ class LifeProductContext:
 
     @property
     def issue_state(self) -> str:
-        return (self.state_code or getattr(self.factors, "state", "") or "").upper()[:2]
+        return normalize_state(self.state_code or getattr(self.factors, "state", "") or "")
 
     @property
     def filing_state(self) -> str:
@@ -242,7 +242,7 @@ def finish_quote(
     """Convert a LobOutcome into the platform QuoteResult contract."""
     apply_binding_gates(ctx, outcome, family=family)
     manual = ctx.manual or {}
-    minimum_premium = float(manual.get("minimum_premium", 250.0))
+    minimum_premium = float(manual.get("minimum_premium") or 250.0)
     annual_value = outcome.annual_premium
     if apply_minimum_premium:
         annual_value = max(annual_value, minimum_premium)
@@ -363,7 +363,7 @@ def apply_platform_state_law(ctx: LifeProductContext, outcome: LobOutcome, *, fa
 def medical_class_factor(ctx: LifeProductContext, cap: float | None = None) -> float:
     """Underwriting-class factor from the manual, optionally capped."""
     class_factors = (ctx.manual or {}).get("underwriting_class_factors") or {}
-    factor = float(class_factors.get(ctx.medical.underwriting_class, class_factors.get("standard", 1.0)))
+    factor = float(class_factors.get(ctx.medical.underwriting_class) or class_factors.get("standard") or 1.0)
     if cap is not None:
         factor = min(factor, cap)
     return factor
@@ -373,7 +373,7 @@ def band_factor(ctx: LifeProductContext) -> float:
     band_f = 1.0
     for band in sorted((ctx.manual or {}).get("band_discounts") or [], key=lambda b: float(b.get("min_face") or 0)):
         if ctx.face >= float(band.get("min_face") or 0):
-            band_f = float(band.get("factor", 1.0))
+            band_f = float(band.get("factor") or 1.0)
     return band_f
 
 
@@ -382,7 +382,7 @@ def state_relativity(ctx: LifeProductContext) -> float:
 
 
 def policy_fee(ctx: LifeProductContext) -> float:
-    return float((ctx.manual or {}).get("policy_fee", 60.0))
+    return float((ctx.manual or {}).get("policy_fee") or 60.0)
 
 
 def stack_shape_ratio(
@@ -497,6 +497,28 @@ def purchase_price(ctx: LifeProductContext) -> float:
         return float(match.group(1).replace(",", ""))
     income = getattr(ctx.factors, "income", 0.0) or 0.0
     return round(income * 10.0, 2) if income else 500_000.0
+
+
+def stated_term_years(ctx: LifeProductContext, default: int) -> int:
+    """Term to maturity the applicant/producer actually stated ("20-year endowment", "term to maturity: 25", "maturity age 65", coverage id suffix); `default` only when none is stated."""
+    import re
+
+    text = f"{ctx.coverage_id} {ctx.coverage_name} {_blob(ctx.bundle)}"
+    m = re.search(
+        r"term(?:\s+to\s+maturity)?\s*[:=]\s*(\d{1,2})\b|(\d{1,2})[\s-]*(?:year|yr)s?\s+(?:endowment|maturity|plan|policy|term)|maturity\s+age\s*[:=]?\s*(\d{2,3})|[_\s-](\d{1,2})$", text, re.I
+    )
+    if m:
+        if m.group(3):
+            return max(1, int(m.group(3)) - ctx.age)
+        return int(m.group(1) or m.group(2) or m.group(4))
+    return default
+
+
+def enforce_minimum_consideration(outcome: LobOutcome, amount: float, minimum: float, label: str = "Purchase price") -> None:
+    """A declared consideration below the product's minimum is ineligible (never silently priced)."""
+    if amount < minimum:
+        outcome.eligible = False
+        outcome.add_reason(f"{label} ${amount:,.0f} is below the ${minimum:,.0f} minimum for this product")
 
 
 HandlerFn = Callable[[LifeProductContext], LobOutcome]

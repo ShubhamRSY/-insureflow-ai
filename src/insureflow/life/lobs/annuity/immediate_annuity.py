@@ -14,6 +14,7 @@ from insureflow.life.lobs.base import (
     LifeProductContext,
     LobOutcome,
     apply_state_filing_gate,
+    enforce_minimum_consideration,
     finish_quote,
     merge_state_rules,
     purchase_price,
@@ -50,6 +51,7 @@ MIN_PURCHASE_PRICE = 10_000.0
 def underwrite_immediate_annuity(ctx: LifeProductContext) -> LobOutcome:
     outcome = LobOutcome(product_label="Immediate Annuity")
     principal = purchase_price(ctx)
+    enforce_minimum_consideration(outcome, principal, MIN_PURCHASE_PRICE)
 
     state_rules = merge_state_rules(ctx, DEFAULT_STATE_RULES, STATE_RULES)
     if ctx.age < int(state_rules["min_issue_age"]) or ctx.age > int(state_rules["max_issue_age"]):

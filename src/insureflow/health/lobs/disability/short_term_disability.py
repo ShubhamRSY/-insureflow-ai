@@ -15,6 +15,7 @@ from typing import Any
 from insureflow.health.lobs.base import (
     HealthProductContext,
     LobOutcome,
+    age_band_factor,
     apply_state_filing_gate,
     area_relativity,
     finish_quote,
@@ -46,11 +47,17 @@ DEFAULT_BENEFIT_PERIOD = "2_year"
 _STD_ELIMINATION_DAYS = (7, 14, 30)
 
 
+def _stated_elimination_days(blob: str) -> int | None:
+    match = re.search(r"elimination period\s*[:=]?\s*(\d+)\s*-?\s*day|(?<![\d-])(\d+)\s*-?\s*day\s+elimination", blob, re.I)
+    return int(match.group(1) or match.group(2)) if match else None
+
+
 def _elimination_days(blob: str) -> int:
-    match = re.search(r"elimination period\s*[:=]?\s*(\d+)\s*day", blob, re.I)
-    if match and int(match.group(1)) in _STD_ELIMINATION_DAYS:
-        return int(match.group(1))
-    return DEFAULT_ELIMINATION_DAYS
+    """Filed STD period to price at: the stated one when filed, else the nearest filed period at or below it (never cheaper than asked)."""
+    days = _stated_elimination_days(blob)
+    if days is None:
+        return DEFAULT_ELIMINATION_DAYS
+    return max((d for d in _STD_ELIMINATION_DAYS if d <= days), default=min(_STD_ELIMINATION_DAYS))
 
 
 def underwrite_std(ctx: HealthProductContext) -> LobOutcome:
@@ -78,15 +85,21 @@ def underwrite_std(ctx: HealthProductContext) -> LobOutcome:
 
     occ_class = _occupation_class(ctx.blob) or "II"
     elimination_days = _elimination_days(ctx.blob)
+    stated_days = _stated_elimination_days(ctx.blob)
+    if stated_days is None:
+        outcome.add_condition(f"Elimination period not stated — priced at the {DEFAULT_ELIMINATION_DAYS}-day default; confirm before bind")
+    elif stated_days != elimination_days:
+        outcome.add_condition(f"{stated_days}-day elimination period is not a filed STD option — priced at the {elimination_days}-day factor")
 
     disability_manual = (ctx.manual or {}).get("disability") or {}
     rate_per_10 = float(disability_manual.get("std_base_rate_per_10_weekly_benefit", 0.11))
     occ_f = float((disability_manual.get("occupation_class_factors") or {}).get(occ_class, 1.0))
     elim_f = float((disability_manual.get("elimination_period_factors") or {}).get(str(elimination_days), 1.0))
     area_f = area_relativity(ctx)
+    age_f = age_band_factor(ctx, "std_age_factors", section="disability")
 
     base_premium = (ctx.benefit_amount / 10.0) * rate_per_10 * 52.0
-    annual = round(base_premium * occ_f * elim_f * area_f + policy_fee(ctx), 2)
+    annual = round(base_premium * occ_f * elim_f * area_f * age_f + policy_fee(ctx), 2)
 
     outcome.base_premium = round(base_premium, 2)
     outcome.annual_premium = annual
@@ -94,6 +107,7 @@ def underwrite_std(ctx: HealthProductContext) -> LobOutcome:
         RateComponent(name="std_rate_per_10_weekly", amount=rate_per_10, basis="weekly benefit"),
         RateComponent(name="occupation_class", amount=occ_f, basis=f"Class {occ_class}"),
         RateComponent(name="elimination_period", amount=elim_f, basis=f"{elimination_days} days"),
+        RateComponent(name="attained_age", amount=age_f, basis=f"age={ctx.age}"),
         RateComponent(name="area_relativity", amount=area_f, basis=ctx.issue_state or ctx.filing_state),
     ]
     outcome.metadata.update(

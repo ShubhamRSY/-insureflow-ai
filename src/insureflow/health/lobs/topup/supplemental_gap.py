@@ -75,7 +75,12 @@ def underwrite_gap_coverage(ctx: HealthProductContext, *, is_super: bool) -> Lob
     credit_table = topup_manual.get("deductible_credit_factors") or {}
     credit_f = float(credit_table.get(_nearest_deductible(credit_table, ctx.benefit_amount), 1.0)) if credit_table else 1.0
 
-    monthly = silver_base * age_f * area_f * credit_f
+    # A gap policy sits above a base deductible, so it is priced off a share of the major-medical rate, not the full Silver rate.
+    gap_share = float(topup_manual.get("gap_base_share_of_silver", 1.0))
+    basis_key = "super" if is_super else "standard"
+    basis_f = float((topup_manual.get("gap_basis_factors") or {}).get(basis_key, 1.0))  # aggregate deductible accumulates across claims -> pays more often
+
+    monthly = silver_base * gap_share * basis_f * age_f * area_f * credit_f
     annual = round(monthly * 12.0 + policy_fee(ctx), 2)
 
     outcome.base_premium = round(silver_base * 12.0, 2)
@@ -83,6 +88,8 @@ def underwrite_gap_coverage(ctx: HealthProductContext, *, is_super: bool) -> Lob
     outcome.components = [
         RateComponent(name="age_band", amount=age_f, basis=f"age={ctx.age}"),
         RateComponent(name="area_relativity", amount=area_f, basis=ctx.issue_state or ctx.filing_state),
+        RateComponent(name="gap_base_share", amount=gap_share, basis="share of Silver major-medical rate"),
+        RateComponent(name="deductible_basis", amount=basis_f, basis=basis_key),
         RateComponent(name="deductible_credit", amount=credit_f, basis=f"base deductible ${ctx.benefit_amount:,.0f}"),
     ]
     outcome.metadata.update(

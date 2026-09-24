@@ -14,7 +14,7 @@ from typing import Any
 from insureflow.models.agents import Finding, RiskSeverity
 from insureflow.models.submissions import SubmissionBundle
 from insureflow.rating.models import InsuranceLine
-from insureflow.underwriting.personal_lines import _blob
+from insureflow.underwriting.personal_lines import _blob, normalize_state
 
 # Lines that are frequently non-admitted / E&S when the admitted market declines.
 _ES_PRONE_LINES = frozenset(
@@ -75,7 +75,7 @@ def classify_surplus_lines(
     blob = _blob(bundle)
     line_key = line.value if isinstance(line, InsuranceLine) else str(line or "").strip().lower()
     product_id = (product_id or "").strip().lower()
-    st = (state or "").strip().upper()[:2]
+    st = normalize_state(state)
 
     explicit_es = bool(re.search(r"\b(?:e\s*&\s*s|surplus\s*lines|non-?admitted|excess\s*&\s*surplus)\b", blob, re.I))
     explicit_admitted = bool(re.search(r"\badmitted\s+market\b|\badmitted\s+carrier\b", blob, re.I))
@@ -168,7 +168,7 @@ def guarantee_fund_assessment(*, admitted: bool, state: str = "", premium: float
     are not covered by the fund, which is part of the admitted/non-admitted
     consumer-protection distinction.
     """
-    st = (state or "").strip().upper()[:2]
+    st = normalize_state(state)
     if not admitted:
         return {
             "guaranty_fund_backed": False,

@@ -9,7 +9,7 @@ from typing import Any
 from insureflow.models.agents import Finding, RiskSeverity, UWDecision
 from insureflow.models.submissions import SubmissionBundle
 from insureflow.rating.personal.manuals import life_manual, life_medical_guide
-from insureflow.underwriting.personal_lines import _blob, _int_field, _money, extract_life_factors, strip_negated_clauses
+from insureflow.underwriting.personal_lines import _blob, _int_field, _money, extract_life_factors, primary_text, strip_negated_clauses
 
 
 @dataclass
@@ -91,7 +91,7 @@ def underwrite_life(bundle: SubmissionBundle) -> LifeMedicalDecision:
     rate = life_manual()
     factors = extract_life_factors(bundle)
     blob = _blob(bundle)
-    uw_blob = strip_negated_clauses(blob)
+    uw_blob = strip_negated_clauses(primary_text(blob))
     vitals = _parse_vitals(blob)
     findings: list[Finding] = list(factors.findings)
     reasons: list[str] = []
@@ -186,7 +186,7 @@ def underwrite_life(bundle: SubmissionBundle) -> LifeMedicalDecision:
     # Avocation flat extras
     extras = guide.get("avocation_flat_extras") or {}
     for name, amt in extras.items():
-        if name.lower() in blob:
+        if re.search(rf"\b{re.escape(name.lower())}\b", uw_blob):
             flat_extra += float(amt)
             reasons.append(f"Flat extra {name}: ${amt}/1000")
             findings.append(

@@ -25,7 +25,7 @@ from __future__ import annotations
 from insureflow.commercial.lobs.state_law import property_state_row
 from insureflow.models.submissions import SubmissionBundle
 from insureflow.rating.models import QuoteResult
-from insureflow.underwriting.personal_lines import _money, _pct_field
+from insureflow.underwriting.personal_lines import _money, _pct_field, normalize_state
 
 PRODUCT_ID = "property_bi"
 LOGIC_PATH = "insureflow.commercial.lobs.property_bi"
@@ -101,7 +101,7 @@ def apply_state_law_overlay(result: QuoteResult, issue_state: str) -> QuoteResul
     a no-op state (no VPL/named-storm/wind-pool facts) leaves the quote
     untouched beyond the (empty) state_rules_applied stamp.
     """
-    state = (issue_state or "").upper()[:2]
+    state = normalize_state(issue_state)
     row = property_state_row(state)
     result.metadata["lob_logic_path"] = LOGIC_PATH
     result.metadata["state_rules_applied"] = {"issue_state": state, **row}

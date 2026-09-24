@@ -19,6 +19,7 @@ from insureflow.life.lobs.base import (
     finish_quote,
     merge_state_rules,
     state_relativity,
+    stated_term_years,
 )
 from insureflow.rating.models import RateComponent
 
@@ -54,7 +55,7 @@ def underwrite_pure_endowment(ctx: LifeProductContext) -> LobOutcome:
         outcome.add_reason(f"Pure endowment issue age {ctx.age} outside {MIN_ISSUE_AGE}-{MAX_ISSUE_AGE}")
 
     state_rules = merge_state_rules(ctx, DEFAULT_STATE_RULES, STATE_RULES)
-    term_years = min(max(int(getattr(ctx.factors, "term_years", 0) or 20), int(state_rules["min_term_years"])), int(state_rules["max_term_years"]))
+    term_years = min(max(stated_term_years(ctx, 20), int(state_rules["min_term_years"])), int(state_rules["max_term_years"]))
 
     for disclosure in state_rules["disclosures"]:
         outcome.add_condition(disclosure)

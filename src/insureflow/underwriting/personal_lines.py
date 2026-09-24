@@ -48,6 +48,12 @@ _NEGATION_SEGMENT_RE = re.compile(
 )
 
 
+# "Organ transplant: No", "Smoker - N", "HIV: negative": the value negates the label.
+_NEGATED_VALUE_RE = re.compile(r"[^\n.;!?#]*[:=\-–]\s*(?:no|none|n|negative|n/?a|nil|false|never|denied|not applicable)\b[^\n.;!?#]*", re.I)
+# "Applicant reports no history of cancer or chemotherapy": drop from the negation word to the end of the clause.
+_NEGATION_TAIL_RE = re.compile(r"\b(?:no|not|never|denies|denied|without|negative for|free of)\b[^\n.;!?#]*", re.I)
+
+
 def strip_negated_clauses(text: str) -> str:
     """Remove self-negated segments ('no prior X', 'denies Y') from a blob.
 
@@ -56,19 +62,32 @@ def strip_negated_clauses(text: str) -> str:
     are sentence punctuation and newlines so a negation never reaches across
     documents or fields.
     """
-    return _NEGATION_SEGMENT_RE.sub("", text)
+    return _NEGATION_TAIL_RE.sub("", _NEGATED_VALUE_RE.sub("", _NEGATION_SEGMENT_RE.sub("", text)))
 
 
 _MONEY_SUFFIX_MULT = {"k": 1_000.0, "m": 1_000_000.0, "mm": 1_000_000.0, "bn": 1_000_000_000.0, "b": 1_000_000_000.0}
-_MONEY_WORD_MULT = {"thousand": 1_000.0, "million": 1_000_000.0, "billion": 1_000_000_000.0}
+_MONEY_WORD_MULT = {
+    "thousand": 1_000.0,
+    "mil": 1_000_000.0,
+    "million": 1_000_000.0,
+    "billion": 1_000_000_000.0,
+    "lakh": 100_000.0,
+    "lakhs": 100_000.0,
+    "lac": 100_000.0,
+    "lacs": 100_000.0,
+    "crore": 10_000_000.0,
+    "crores": 10_000_000.0,
+}
 
 
-def _money(blob: str, *labels: str) -> float:
+def _money(blob: str, *labels: str, skip_prefix: tuple[str, ...] = ()) -> float:
+    """Amount after the first matching label. `skip_prefix` ignores a label preceded by e.g. "spouse"/"existing"."""
+    skip = "".join(f"(?<!{re.escape(p)} )" for p in skip_prefix)
     for label in labels:
         m = re.search(
-            rf"{re.escape(label)}\s*[:=]?\s*(?:usd|eur|gbp|cad)?\s*\$?\s*"
+            rf"(?<![a-z]){skip}{re.escape(label)}\s*[:=]?\s*(?:usd|eur|gbp|cad)?\s*\$?\s*"
             rf"([\d,]+(?:\.\d+)?)"
-            rf"(?:\s*(?P<sym>k|mm|bn|b|m)(?![a-z])|\s*(?P<word>thousand|million|billion)\b)?",
+            rf"(?:\s*(?P<sym>k|mm|bn|b|m)(?![a-z])|\s*(?P<word>thousand|million|mil|billion|lakhs?|lacs?|crores?)\b)?",
             blob,
             re.I,
         )
@@ -460,12 +479,178 @@ def parse_insurance_line(value: str | None) -> InsuranceLine | None:
         return None
 
 
+def normalize_state(value: str | None) -> str:
+    """Two-letter state code from a code or a full state name; "" when unresolvable ("New York" must not become "NE")."""
+    v = (value or "").strip()
+    if re.fullmatch(r"[A-Za-z]{2}", v):
+        return v.upper()
+    if not v:
+        return ""
+    from insureflow.regulatory.diff import _NAME_TO_CODE
+
+    return _NAME_TO_CODE.get(re.sub(r"\s+", " ", v).lower(), "")
+
+
+_RELATIVE_RE = re.compile(
+    r"\b(?:spouse|spouse's|wife|husband|partner|child|child's|children|kids?|dependents|dependent(?:'s)?\s+(?:child|children|spouse|age|dob|name|sex)"
+    r"|beneficiar(?:y|ies)|co-?insured|joint annuitant"
+    r"|mother|father|parents?|sons?|daughters?|sibling|brother|sister|relatives?|family history)\b",
+    re.I,
+)
+
+
+def primary_text(blob: str) -> str:
+    """Only the segments (lines/sentences) that do not mention a relative or beneficiary.
+
+    Applicant facts (sex, smoker, age, income, DOB, state) must not be read from
+    "Spouse sex: female" or "Beneficiary: Wife". Falls back to the full blob for
+    a field only when the applicant-only text has no answer (see callers).
+    """
+    return "\n".join(seg for seg in re.split(r"\n|(?<=[.!?])\s+", blob) if not _RELATIVE_RE.search(seg))
+
+
+def _strict_texts(blob: str) -> tuple[str, ...]:
+    """Applicant-only text; the raw blob only when nothing but relative-mentioning text exists (unlabeled fields can't be told apart there)."""
+    primary = primary_text(blob)
+    return (primary,) if primary.strip() else (blob,)
+
+
+def detect_sex(blob: str) -> str:
+    """ "male"/"female" for the applicant, or "" — labeled "sex"/"gender" first, relatives excluded."""
+    for text in _strict_texts(blob):
+        m = re.search(r"(?<![a-z])(?:sex|gender)\s*[:=]?\s*(female|male|f|m)\b", text, re.I) or re.search(r"\b(female|male)\b", text, re.I)
+        if m:
+            return "female" if m.group(1).lower().startswith("f") else "male"
+    return ""
+
+
+_TOBACCO_YES = {"yes", "y", "true", "current", "currently", "daily", "positive", "regular", "occasional", "occasionally", "socially", "smoker", "user", "light", "heavy", "1"}
+_TOBACCO_NO = {"no", "n", "none", "never", "false", "negative", "non", "nonsmoker", "0", "n/a", "na", "nil", "former", "quit", "ex", "denied"}
+_TOBACCO_LABEL_RE = re.compile(
+    r"(?<![a-z])(?<!non)(?<!non-)(?<!non )(?P<label>smoker(?:\s+status)?"
+    r"|smoking(?:\s+status)?|tobacco(?:\s+(?:use|user|status))?|nicotine(?:\s+(?:use|user|status))?"
+    r"|cigarettes?(?:\s+per\s+day)?|do you (?:smoke|use tobacco)\??)"
+    r"\s*(?::|=|\?|-|–)\s*(?P<value>[a-z0-9/.+]+)",
+    re.I,
+)
+_TOBACCO_PHRASE_RE = re.compile(
+    r"(?<![a-z-])(?<!non )(?<!ex )(?<!former )(?<!no )(?<!not a )(?<!never a )\b(?:current smoker|is a smoker|smokes|tobacco user|uses tobacco|nicotine user|smoker)\b(?!\s*[:=?-])",
+    re.I,
+)
+
+
+def detect_tobacco(blob: str) -> bool:
+    """Current tobacco/nicotine use for the applicant: labeled value first ("Smoker: Yes"), phrase fallback."""
+    for text in _strict_texts(blob):
+        decisive = False
+        for m in _TOBACCO_LABEL_RE.finditer(text):
+            value = m.group("value").lower().rstrip(".")
+            lax = not m.group("label").lower().startswith(("smok", "do you smoke"))  # tobacco/nicotine/cigarette: any non-"no" value counts
+            if value in _TOBACCO_NO:
+                decisive = True
+            elif value in _TOBACCO_YES or (lax and not value.isdigit()) or (value.isdigit() and int(value) > 0):
+                return True
+        if not decisive and _TOBACCO_PHRASE_RE.search(text):
+            return True
+        if decisive:
+            return False
+    return False
+
+
+_AGE_PHRASE_RE = re.compile(r"(?<![a-z])aged\s+(\d{1,3})\b|\b(\d{1,3})[\s-]*(?:years?[\s-]*old|y/?o)\b", re.I)
+_DOB_FORMATS = ("%m/%d/%Y", "%m-%d-%Y", "%m/%d/%y", "%Y-%m-%d", "%B %d, %Y", "%B %d %Y", "%b %d, %Y", "%b %d %Y", "%d %B %Y", "%d %b %Y", "%d-%b-%Y", "%d-%B-%Y")
+
+
+def age_from_dob(dob: str) -> int | None:
+    from datetime import date, datetime
+
+    cleaned = re.sub(r"\s+", " ", dob.strip().rstrip(".").replace(",", ", ").replace(",  ", ", "))
+    for fmt in _DOB_FORMATS:
+        try:
+            born = datetime.strptime(cleaned, fmt).date()
+        except ValueError:
+            continue
+        today = date.today()
+        age = today.year - born.year - ((today.month, today.day) < (born.month, born.day))
+        return age if 0 <= age <= 120 else None
+    return None
+
+
+def applicant_age(blob: str, *labels: str) -> int | None:
+    """Applicant age: labeled value, then "aged 45"/"45 years old"/"45 y/o", then derived from a DOB. None when absent (never a silent default)."""
+    all_labels = labels + ("age last birthday", "age nearest birthday", "age at issue")
+    for text in (primary_text(blob), blob):
+        age = _int_field(text, *all_labels)
+        if age is None:
+            m = re.search(r"(?<![a-z])(?<!spouse )(?<!child )(?<!dependent )age\s*[:=]\s*(\d{1,3})\b", text, re.I)
+            if not m:  # bare "Age 34" — but never "to age 65" / "until age 65" / "age 65+" (benefit-period language)
+                m = re.search(
+                    r"(?<![a-z])(?<!to )(?<!at )(?<!until )(?<!by )(?<!before )(?<!over )(?<!under )(?<!past )(?<!spouse )(?<!child )(?<!dependent )age\s+(\d{1,3})\b(?!\s*(?:\+|and\b|or\b|to\b|-))",
+                    text,
+                    re.I,
+                )
+            age = int(m.group(1)) if m else None
+        if age is None:
+            m = _AGE_PHRASE_RE.search(text)
+            age = int(m.group(1) or m.group(2)) if m else None
+        if age is None:
+            dob = _dob_from_blob(text)
+            age = age_from_dob(dob) if dob else None
+        if age is not None and 0 <= age <= 120:
+            return age
+    return None
+
+
+_INCOME_SKIP = ("spouse", "spouse's", "wife", "husband", "partner", "household", "monthly", "weekly", "child", "beneficiary")
+
+
+def annual_income(blob: str) -> float:
+    """Applicant annual income in dollars: monthly/weekly phrasings are annualized, relatives' and household income ignored."""
+    for text in (primary_text(blob), blob):
+        monthly = _money(text, "monthly income", "monthly salary", "monthly earnings", skip_prefix=_INCOME_SKIP[:6])
+        if monthly > 0:
+            return monthly * 12.0
+        weekly = _money(text, "weekly income", "weekly salary", skip_prefix=_INCOME_SKIP[:6])
+        if weekly > 0:
+            return weekly * 52.0
+        m = re.search(r"(?<![a-z])(?:income|salary|earnings)\s*[:=]?\s*\$?\s*([\d,]+(?:\.\d+)?)\s*(?:/|per\s*|a\s*)(month|mo|week|wk)\b", text, re.I)
+        if m:
+            return float(m.group(1).replace(",", "")) * (12.0 if m.group(2).lower().startswith("mo") else 52.0)
+        annual = _money(text, "annual income", "earned income", "salary", "w-2 income", "gross income", "income", skip_prefix=_INCOME_SKIP)
+        if annual > 0:
+            return annual
+    return 0.0
+
+
+_REL_PREFIXES = (
+    "spouse",
+    "spouse's",
+    "wife",
+    "husband",
+    "partner",
+    "child",
+    "child's",
+    "dependent",
+    "beneficiary",
+    "mother",
+    "father",
+    "son",
+    "daughter",
+    "kid",
+    "co-insured",
+    "coinsured",
+    "household",
+)
+_REL_LOOKBEHIND = "".join(f"(?<!{re.escape(p)} )" for p in _REL_PREFIXES)
+_INT_RE = r"(\d{1,3}(?:,\d{3})+|\d{1,7})"
+
+
 def _int_field(blob: str, *labels: str) -> int | None:
     for label in labels:
-        m = re.search(rf"{re.escape(label)}\s*[:=]?\s*(\d{{1,4}})", blob, re.I)
+        m = re.search(rf"(?<![a-z]){_REL_LOOKBEHIND}{re.escape(label)}\s*[:=]?\s*{_INT_RE}", blob, re.I)
         if m:
             try:
-                return int(m.group(1))
+                return int(m.group(1).replace(",", ""))
             except ValueError:
                 continue
     return None
@@ -647,25 +832,27 @@ class LifeFactors:
 
 
 def _state_from_blob(blob: str) -> str:
-    m = re.search(r"\bstate\s*[:=]\s*([a-z]{2})\b", blob, re.I)
-    if m:
-        return m.group(1).upper()
-    # City, ST ZIP
-    m = re.search(r",\s*([a-z]{2})\s+\d{5}", blob, re.I)
-    if m:
-        return m.group(1).upper()
+    for text in (primary_text(blob), blob):
+        m = re.search(r"(?<![a-z])(?:state of residence|residence state|resident state|state of issue|issue state|state)\s*[:=]\s*([a-z][a-z ]{1,25}?)(?=\s*(?:\d|\n|,|;|\.|$))", text, re.I)
+        if m and normalize_state(m.group(1)):
+            return normalize_state(m.group(1))
+        # City, ST ZIP
+        m = re.search(r",\s*([a-z]{2})\s+\d{5}", text, re.I)
+        if m:
+            return m.group(1).upper()
     return ""
 
 
 _DOB_LABELS = ("date of birth", "dob", "birth date", "birthdate", "d.o.b.")
-_DOB_DATE_RE = r"(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\d{4}-\d{2}-\d{2}|[A-Za-z]+\s+\d{1,2},?\s+\d{4})"
+_DOB_DATE_RE = r"(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\d{4}-\d{2}-\d{2}|[A-Za-z]+\s+\d{1,2},?\s+\d{4}|\d{1,2}[\s-][A-Za-z]{3,9}[\s-]\d{4})"
 
 
 def _dob_from_blob(blob: str) -> str:
-    for label in _DOB_LABELS:
-        m = re.search(rf"{re.escape(label)}\s*[:=]?\s*{_DOB_DATE_RE}", blob, re.I)
-        if m:
-            return m.group(1).strip()
+    for text in (primary_text(blob), blob):
+        for label in _DOB_LABELS:
+            m = re.search(rf"(?<![a-z]){re.escape(label)}\s*(?:\([^)]*\))?\s*[:=]?\s*{_DOB_DATE_RE}", text, re.I)
+            if m:
+                return m.group(1).strip()
     return ""
 
 
@@ -692,17 +879,18 @@ def _risk_tolerance_from_blob(blob: str) -> str:
 
 def extract_home_factors(bundle: SubmissionBundle) -> PersonalHomeFactors:
     blob = _blob(bundle)
+    neg = strip_negated_clauses(blob)  # "No swimming pool", "Prior claims: none" must not set flags
     f = PersonalHomeFactors(
         dwelling_limit=_money(blob, "dwelling coverage", "dwelling limit", "coverage a", "replacement cost"),
         year_built=_int_field(blob, "year built", "year_built"),
-        construction=next((c for c in ("masonry", "brick", "frame", "steel") if c in blob), ""),
+        construction=next((c for c in ("masonry", "brick", "frame", "steel") if c in neg), ""),
         protection_class=_int_field(blob, "protection class", "ppc", "iso ppc"),
-        has_pool=any(k in blob for k in ("swimming pool", "has pool", "in-ground pool")),
-        has_wood_stove=any(k in blob for k in ("wood stove", "woodstove", "solid fuel")),
-        renovations_recent=any(k in blob for k in ("renovation", "upgraded electrical", "new roof", "rewired")),
-        high_crime_area=any(k in blob for k in ("high crime", "crime score", "theft prone")),
-        coastal_or_cat=any(k in blob for k in ("coastal", "hurricane", "flood zone", "wildfire zone", "cat exposure")),
-        prior_claims=len(re.findall(r"prior claim|date of loss|claim #", blob)),
+        has_pool=any(k in neg for k in ("swimming pool", "has pool", "in-ground pool")),
+        has_wood_stove=any(k in neg for k in ("wood stove", "woodstove", "solid fuel")),
+        renovations_recent=any(k in neg for k in ("renovation", "upgraded electrical", "new roof", "rewired")),
+        high_crime_area=any(k in neg for k in ("high crime", "crime score", "theft prone")),
+        coastal_or_cat=any(k in neg for k in ("coastal", "hurricane", "flood zone", "wildfire zone", "cat exposure")),
+        prior_claims=len(re.findall(r"prior claim|date of loss|claim #", neg)),
     )
     if f.has_pool:
         f.findings.append(
@@ -727,6 +915,7 @@ def extract_home_factors(bundle: SubmissionBundle) -> PersonalHomeFactors:
 
 def extract_auto_factors(bundle: SubmissionBundle) -> PersonalAutoFactors:
     blob = _blob(bundle)
+    neg = strip_negated_clauses(blob)  # "Violations: none", "no speeding tickets, no DUI" are clean, not 1-3 violations
     use = "personal"
     if "rideshare" in blob or "uber" in blob or "lyft" in blob:
         use = "rideshare"
@@ -740,8 +929,8 @@ def extract_auto_factors(bundle: SubmissionBundle) -> PersonalAutoFactors:
         intended_use=use,
         driver_age=_int_field(blob, "driver age", "applicant age", "age:"),
         years_licensed=_int_field(blob, "years licensed", "driving experience", "years driving"),
-        violations=len(re.findall(r"speeding|violation|ticket|dui|dwi", blob)),
-        at_fault_accidents=len(re.findall(r"at-fault|at fault accident", blob)),
+        violations=len(re.findall(r"\b(?:speeding|violations?|tickets?|dui|dwi)\b", neg)),
+        at_fault_accidents=len(re.findall(r"at-fault|at fault accident", neg)),
         high_performance=any(k in blob for k in ("high-performance", "high performance", "sports car", "turbo", "mustang gt", "corvette")),
         rideshare=use == "rideshare",
     )
@@ -774,24 +963,28 @@ def extract_life_factors(bundle: SubmissionBundle) -> LifeFactors:
     health = "standard"
     if "preferred plus" in blob or "preferred best" in blob or "super preferred" in blob:
         health = "preferred"
-    elif "preferred" in blob:
+    elif re.search(r"(?<!non-)(?<!non )\bpreferred\b(?!\s+(?:provider|pharmacy|network|customer|partner|contact|method|language))", blob):
         health = "preferred"
     elif "substandard" in blob or "rated table" in blob or "table rating" in blob:
         health = "substandard"
     beneficiary_match = re.search(r"beneficiary(?:\s+relationship)?\s*[:=]\s*([A-Za-z][A-Za-z /-]{1,40})", blob, re.I)
     f = LifeFactors(
-        face_amount=_money(blob, "face amount", "death benefit", "coverage amount", "sum assured"),
-        age=_int_field(blob, "applicant age", "insured age", "age:"),
-        sex="female" if "female" in blob or " sex: f" in blob else ("male" if "male" in blob or " sex: m" in blob else ""),
-        smoker=bool(
-            re.search(
-                r"(?:current smoker|nicotine\s*:\s*positive|tobacco\s*:\s*(?!none\b|no\b|non-)\w+|cigarettes\s*:\s*(?!none\b|no\b|0)\w+)",
-                blob,
-                re.I,
-            )
+        face_amount=_money(
+            blob,
+            "face amount requested",
+            "requested face amount",
+            "face amount",
+            "death benefit",
+            "coverage amount requested",
+            "coverage amount",
+            "sum assured",
+            skip_prefix=("in-force", "in force", "inforce", "existing", "current", "total"),
         ),
+        age=applicant_age(blob, "applicant age", "insured age", "proposer age"),
+        sex=detect_sex(blob),
+        smoker=detect_tobacco(blob),
         health_class=health,
-        hazardous_avocation=any(k in blob for k in ("scuba", "skydiving", "hang gliding", "motorsport", "pilot", "aviation")),
+        hazardous_avocation=bool(re.search(r"\b(?:scuba|skydiving|hang gliding|motorsports?|pilot(?!\s+(?:light|program|study|project))|aviation)\b", blob)),
         foreign_travel=any(k in blob for k in ("foreign travel", "travel to", "overseas residence")),
         criminal_history=bool(
             re.search(
@@ -800,7 +993,7 @@ def extract_life_factors(bundle: SubmissionBundle) -> LifeFactors:
                 re.I,
             )
         ),
-        income=_money(blob, "annual income", "earned income", "salary", "w-2 income"),
+        income=annual_income(blob),
         net_worth=_money(blob, "net worth", "networth", "liquid net worth"),
         in_force_face=_money(blob, "in-force face", "in force coverage", "existing life insurance", "inforce face"),
         beneficiary_relationship=beneficiary_match.group(1).strip() if beneficiary_match else "",
@@ -892,7 +1085,7 @@ def personal_appetite_check(bundle: SubmissionBundle, line: InsuranceLine) -> tu
     elif line == InsuranceLine.PERSONAL_AUTO:
         auto = extract_auto_factors(bundle)
         findings.extend(auto.findings)
-        if auto.violations >= 4 or "dui" in _blob(bundle) or "dwi" in _blob(bundle):
+        if auto.violations >= 4 or re.search(r"\b(?:dui|dwi)\b", strip_negated_clauses(_blob(bundle))):
             findings.append(
                 Finding(
                     title="Unacceptable driving record",
