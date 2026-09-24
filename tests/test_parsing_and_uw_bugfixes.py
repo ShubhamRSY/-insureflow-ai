@@ -7,6 +7,7 @@ import pytest
 from insureflow.health.lobs import resolve_logic_path
 from insureflow.health.lobs.base import _extract_sex, _extract_tobacco
 from insureflow.models.submissions import SubmissionBundle, UnstructuredSubmission
+from insureflow.rating.models import QuoteResult
 from insureflow.rating.personal.health_rating import _household_members, rate_health
 from insureflow.rating.personal.life_rating import rate_life
 from insureflow.underwriting.general_uw import _claims_severity, _scaled_money
@@ -130,7 +131,8 @@ def test_applicant_age(text: str, want: int) -> None:
 
 def test_age_from_dob_formats() -> None:
     for dob in ("03/02/1980", "1980-03-02", "March 2, 1980", "2 March 1980", "2-Mar-1980"):
-        assert age_from_dob(dob) is not None and 40 <= age_from_dob(dob) <= 50, dob
+        age = age_from_dob(dob)
+        assert age is not None and 40 <= age <= 50, dob
 
 
 @pytest.mark.parametrize(
@@ -186,7 +188,7 @@ def test_severe_condition_detection(text: str, want: bool) -> None:
     assert _declares_severe_condition(text.lower()) is want
 
 
-def _medigap(text: str, state: str = "TX") -> object:
+def _medigap(text: str, state: str = "TX") -> QuoteResult:
     return rate_health(_b(f"Applicant age: 68. Plan G. {text}"), product_id="medicare_supplement", coverage_id="plan_g", state=state)
 
 
@@ -270,7 +272,7 @@ def test_stldi_declines_declared_severe_condition_but_not_clean_applicant() -> N
 
 def test_ppd_schedule_distinguishes_finger_from_arm() -> None:
     def prem(cid: str) -> float:
-        return rate_health(_b("Applicant age: 40. Principal sum: 5000000"), product_id="disability_ppd", coverage_id=cid, state="TX").metadata["illustrated_adjusted_premium"]
+        return float(rate_health(_b("Applicant age: 40. Principal sum: 5000000"), product_id="disability_ppd", coverage_id=cid, state="TX").metadata["illustrated_adjusted_premium"])
 
     finger, thumb, hand, limb, two = prem("loss_of_finger"), prem("loss_of_thumb"), prem("loss_of_hand"), prem("loss_of_one_limb"), prem("loss_of_two_limbs")
     assert finger < thumb < hand == limb < two
@@ -278,7 +280,7 @@ def test_ppd_schedule_distinguishes_finger_from_arm() -> None:
 
 def test_public_sector_group_gets_the_size_discount_like_large_group() -> None:
     def pepm(pid: str) -> float:
-        return rate_health(_b("Applicant age: 50. Employee count: 400"), product_id=pid, state="NY").metadata["per_employee_monthly"]
+        return float(rate_health(_b("Applicant age: 50. Employee count: 400"), product_id=pid, state="NY").metadata["per_employee_monthly"])
 
     assert abs(pepm("public_sector_group_health") - pepm("large_group_health")) < 5.0
 
@@ -443,7 +445,7 @@ def test_unknown_state_is_reported_as_carrier_default_and_medigap_tables_are_com
 
 
 def _prem(text: str, pid: str, **kw: str) -> float:
-    return rate_health(_b(text), product_id=pid, state=kw.pop("state", "TX"), **kw).metadata["illustrated_adjusted_premium"]
+    return float(rate_health(_b(text), product_id=pid, state=kw.pop("state", "TX"), **kw).metadata["illustrated_adjusted_premium"])
 
 
 @pytest.mark.parametrize("age_text", ["", "Applicant age: forty.", "Applicant age: -5.", "Applicant age: 130."])
