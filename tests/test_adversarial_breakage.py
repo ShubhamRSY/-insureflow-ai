@@ -1284,23 +1284,25 @@ class TestMCPMortgageMetrics:
 
     def test_zero_term_years_returns_error(self) -> None:
         pytest.importorskip("mcp.server.fastmcp")
-        from mcp.server.fastmcp import FastMCP  # type: ignore[attr-defined]
 
-        from insureflow.mcp.server import _register_all
+        from insureflow.mcp.server import create_mcp_server
 
-        server = FastMCP("test")
-        _register_all(server)
+        server = create_mcp_server("test")
+        assert server is not None
         tools = {t.name: t for t in server._tool_manager.list_tools()}
         assert "calculate_mortgage_metrics" in tools
 
     def test_negative_loan_amount_handled(self) -> None:
         pytest.importorskip("mcp.server.fastmcp")
-        from mcp.server.fastmcp import FastMCP  # type: ignore[attr-defined]
+        import asyncio
+        import json
 
-        from insureflow.mcp.server import _register_all
+        from insureflow.mcp.server import create_mcp_server
 
-        server = FastMCP("test")
-        _register_all(server)
+        server = create_mcp_server("test")
+        assert server is not None
+        blocks, _ = asyncio.run(server.call_tool("calculate_mortgage_metrics", {"loan_amount": -1, "interest_rate": 5, "term_years": 30}))
+        assert "error" in json.loads(blocks[0].text)
 
     def test_parse_claims_empty_string(self) -> None:
         from insureflow.mcp.server import _parse_claims

@@ -193,10 +193,16 @@ except ImportError:
 
 try:
     from insureflow.mcp import create_mcp_server
+    from insureflow.mcp.auth import MCPAuthMiddleware
 
     _mcp_server = create_mcp_server()
     if _mcp_server is not None:
-        app.mount("/mcp", _mcp_server.sse_app())
+        # A mount is a separate ASGI app and inherits none of this app's
+        # Depends() graph, so without this wrapper /mcp served every tool
+        # to anonymous callers. MCPAuthMiddleware authenticates the bearer
+        # token and binds the caller's org for the request; tools read
+        # tenancy from that principal and take no org_id argument.
+        app.mount("/mcp", MCPAuthMiddleware(_mcp_server.sse_app()))
 except Exception:
     pass
 

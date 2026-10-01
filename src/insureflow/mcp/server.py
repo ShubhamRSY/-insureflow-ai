@@ -2,11 +2,19 @@
 
 Usage:
     # stdio (for Claude Desktop / local clients)
+    #   requires MCP_ACCESS_TOKEN to be set, otherwise org-scoped tools
+    #   refuse to run (see insureflow.mcp.auth.bind_process_principal)
     python -m insureflow.mcp.server
 
     # SSE (for remote access, mounted on FastAPI at /mcp/)
     from insureflow.mcp import create_mcp_server
     mcp = create_mcp_server()
+
+Tenancy: no tool accepts an ``org_id`` argument. The caller is identified
+by the bearer token on the transport (see ``insureflow.mcp.auth``) and the
+org is read from that verified principal via ``require_org_id()``, so a
+client cannot name another tenant's org. Tools return a JSON error string
+rather than raising, matching the existing tool-result shape.
 """
 
 from __future__ import annotations
@@ -16,6 +24,9 @@ import logging
 import sys
 from pathlib import Path
 from typing import Any
+
+from insureflow.auth import Role
+from insureflow.mcp.auth import MCPAuthError, require_org_id, require_role
 
 try:
     from mcp.server.fastmcp import FastMCP
@@ -40,6 +51,10 @@ def _get_audit_store():
     return AuditStore()
 
 
+def _auth_error(exc: MCPAuthError) -> str:
+    return json.dumps({"error": exc.detail, "status": exc.status_code})
+
+
 def _parse_claims(raw: Any) -> list[dict[str, Any]]:
     """Parse claims JSON string into a list of claim dicts. Returns [] on failure."""
     if not raw:
@@ -51,51 +66,6 @@ def _parse_claims(raw: Any) -> list[dict[str, Any]]:
     if isinstance(parsed, list):
         return [c for c in parsed if isinstance(c, dict)]
     return []
-
-
-def _register_all(server: Any) -> None:
-    """Register all Rytera MCP tools on a FastMCP server instance."""
-    if FastMCP is None or not hasattr(server, "tool"):
-        return
-
-    @server.tool()
-    def list_jobs(org_id: str = "default", limit: int = 50) -> str:
-        """List recent insurance pipeline jobs."""
-        js = _get_job_store()
-        ids = js.list_ids(_INSURANCE_NS, org_id=org_id)
-        jobs: list[dict[str, Any]] = []
-        for jid in ids[-limit:]:
-            job = js.get(_INSURANCE_NS, jid, org_id=org_id)
-            if job:
-                jobs.append(_json_safe({"id": jid, "status": job.get("status")}))
-        return json.dumps({"count": len(jobs), "jobs": jobs}, indent=2)
-
-    @server.tool()
-    def get_job(job_id: str, org_id: str = "default") -> str:
-        """Get full details of a specific pipeline job."""
-        js = _get_job_store()
-        job = js.get(_INSURANCE_NS, job_id, org_id=org_id)
-        if not job:
-            return json.dumps({"error": f"Job {job_id} not found"})
-        return json.dumps(_json_safe(job), indent=2)
-
-    @server.tool()
-    def calculate_mortgage_metrics(loan_amount: float, interest_rate: float, term_years: int) -> str:
-        """Calculate basic mortgage metrics."""
-        if term_years <= 0 or loan_amount <= 0 or interest_rate < 0:
-            return json.dumps({"error": "Invalid inputs"})
-        monthly_rate = interest_rate / 100.0 / 12.0
-        n_payments = term_years * 12
-        if monthly_rate == 0:
-            monthly_payment = loan_amount / n_payments
-        else:
-            monthly_payment = loan_amount * (monthly_rate * (1 + monthly_rate) ** n_payments) / ((1 + monthly_rate) ** n_payments - 1)
-        return json.dumps({"monthly_payment": round(monthly_payment, 2)})
-
-    @server.tool()
-    def get_health() -> str:
-        """Check system health."""
-        return json.dumps({"status": "ok", "version": "0.3.1"})
 
 
 def _json_safe(obj: Any) -> Any:
@@ -117,8 +87,13 @@ def create_mcp_server(name: str = "rytera") -> FastMCP | None:
     # ── Jobs ──────────────────────────────────────────────────────
 
     @mcp.tool()
-    def list_jobs(org_id: str = "default", limit: int = 50) -> str:
-        """List recent insurance pipeline jobs. Returns job IDs with status and timestamps."""
+    def list_jobs(limit: int = 50) -> str:
+        """List recent insurance pipeline jobs for your organization. Returns job IDs with status and timestamps."""
+        try:
+            require_role(Role.VIEWER)
+            org_id = require_org_id()
+        except MCPAuthError as exc:
+            return _auth_error(exc)
         js = _get_job_store()
         ids = js.list_ids(_INSURANCE_NS, org_id=org_id)
         jobs: list[dict[str, Any]] = []
@@ -140,8 +115,13 @@ def create_mcp_server(name: str = "rytera") -> FastMCP | None:
         return json.dumps({"count": len(jobs), "jobs": jobs}, indent=2)
 
     @mcp.tool()
-    def get_job(job_id: str, org_id: str = "default") -> str:
-        """Get full details of a specific pipeline job including results and memo summary."""
+    def get_job(job_id: str) -> str:
+        """Get full details of a specific pipeline job in your organization, including results and memo summary."""
+        try:
+            require_role(Role.VIEWER)
+            org_id = require_org_id()
+        except MCPAuthError as exc:
+            return _auth_error(exc)
         js = _get_job_store()
         job = js.get(_INSURANCE_NS, job_id, org_id=org_id)
         if not job:
@@ -158,8 +138,13 @@ def create_mcp_server(name: str = "rytera") -> FastMCP | None:
         return json.dumps(safe, indent=2)
 
     @mcp.tool()
-    def get_job_memo(job_id: str, org_id: str = "default") -> str:
-        """Retrieve the full underwriting memo for a completed job."""
+    def get_job_memo(job_id: str) -> str:
+        """Retrieve the full underwriting memo for a completed job in your organization."""
+        try:
+            require_role(Role.VIEWER)
+            org_id = require_org_id()
+        except MCPAuthError as exc:
+            return _auth_error(exc)
         store = _get_audit_store()
         memo = store.load_json(job_id, "underwriting_memo.json", org_id=org_id)
         if not memo:
@@ -173,17 +158,27 @@ def create_mcp_server(name: str = "rytera") -> FastMCP | None:
     # ── Companies ─────────────────────────────────────────────────
 
     @mcp.tool()
-    def list_companies(org_id: str = "default") -> str:
-        """List the writing panel companies available for this organization."""
+    def list_companies() -> str:
+        """List the writing panel companies available for your organization."""
         from insureflow.insurance.companies import list_companies as _list
 
+        try:
+            require_role(Role.VIEWER)
+            org_id = require_org_id()
+        except MCPAuthError as exc:
+            return _auth_error(exc)
         return json.dumps(_json_safe(_list(org_id=org_id)), indent=2)
 
     @mcp.tool()
-    def add_company(name: str, org_id: str = "default", naic: str = "", notes: str = "") -> str:
-        """Add a new company to the organization's writing panel. Validates name format."""
+    def add_company(name: str, naic: str = "", notes: str = "") -> str:
+        """Add a new company to your organization's writing panel. Validates name format."""
         from insureflow.insurance.companies import add_company as _add
 
+        try:
+            require_role(Role.UNDERWRITER)
+            org_id = require_org_id()
+        except MCPAuthError as exc:
+            return _auth_error(exc)
         try:
             result = _add(org_id, name=name, naic=naic, notes=notes)
             return json.dumps(_json_safe(result))
@@ -191,10 +186,15 @@ def create_mcp_server(name: str = "rytera") -> FastMCP | None:
             return json.dumps({"error": str(exc)})
 
     @mcp.tool()
-    def delete_company(company_id: str, org_id: str = "default") -> str:
-        """Remove an org-added company from the writing panel. Demo companies cannot be deleted."""
+    def delete_company(company_id: str) -> str:
+        """Remove an org-added company from your organization's writing panel. Demo companies cannot be deleted."""
         from insureflow.insurance.companies import delete_company as _del
 
+        try:
+            require_role(Role.UNDERWRITER)
+            org_id = require_org_id()
+        except MCPAuthError as exc:
+            return _auth_error(exc)
         try:
             result = _del(org_id, company_id)
             return json.dumps(_json_safe(result))
@@ -337,4 +337,15 @@ def create_mcp_server(name: str = "rytera") -> FastMCP | None:
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, stream=sys.stderr)
     server = create_mcp_server()
+    # stdio carries no request headers, so identity comes from
+    # MCP_ACCESS_TOKEN. Without it only the tenant-agnostic tools work —
+    # that is deliberate, not an oversight: an unauthenticated client has
+    # no business reading job records.
+    from insureflow.mcp.auth import STDIO_TOKEN_ENV, bind_process_principal
+
+    if bind_process_principal() is None:
+        logger.warning(
+            "%s is not set — org-scoped tools (jobs, memos, companies) will refuse to run. Set it to a valid access token to enable them.",
+            STDIO_TOKEN_ENV,
+        )
     server.run(transport="stdio")

@@ -256,11 +256,17 @@ def maybe_enable_langsmith_tracing() -> bool:
 
 def bootstrap_security() -> list[str]:
     """Validate bank/prod posture; return error messages (empty = ok)."""
+    from insureflow.mcp.auth import audit_auth_disabled
     from insureflow.security.posture import resolve_security_posture, validate_startup_secrets
 
     posture = resolve_security_posture(environment=settings.environment, bank_mode=settings.bank_mode)
-    return validate_startup_secrets(
+    errors = validate_startup_secrets(
         secret_key=settings.secret_key,
         encryption_key=settings.encryption_key,
         posture=posture,
     )
+    # The /mcp mount is a separate ASGI app, so it is invisible to every
+    # other check here — make an explicit opt-out of its auth a blocking
+    # startup error in hardened mode rather than a silent hole.
+    errors.extend(audit_auth_disabled())
+    return errors
