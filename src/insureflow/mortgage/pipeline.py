@@ -12,6 +12,7 @@ from insureflow.models.audit import PipelineEvent
 from insureflow.models.mortgage import MortgageBundle, MortgageBundleStatus, MortgageDecision, MortgageFinding, ProductLine
 from insureflow.mortgage.audit import MortgageAuditLogger
 from insureflow.mortgage.bundler import discover_borrower_packages
+from insureflow.mortgage.commercial_metrics import compute_commercial_metrics
 from insureflow.mortgage.compliance import MortgageComplianceEngine
 from insureflow.mortgage.pricing import LoanPricingEngine, LoanProduct
 from insureflow.mortgage.reconciliation import MortgageReconciliationEngine
@@ -278,6 +279,9 @@ class MortgagePipeline:
         rate_quote = self.pricing.quote(bundle, memo, loan_amount=loan_amount, product=product_enum)
         progress.complete("pricing", detail=f"{rate_quote.adjusted_rate}%")
 
+        is_commercial = bundle.product_line == ProductLine.COMMERCIAL_MORTGAGE
+        commercial_metrics = compute_commercial_metrics(bundle, loan_amount=loan_amount) if is_commercial else None
+
         dti_ratio = memo.dti_ratio
         if bundle.income and bundle.credit and rate_quote.monthly_pi:
             monthly_income = (bundle.income.adjusted_gross_income or bundle.income.total_income) / 12
@@ -307,6 +311,25 @@ class MortgagePipeline:
             "dti_ratio": dti_ratio,
             "ltv_ratio": memo.ltv_ratio,
             "ml_default_risk": ml_default,
+            **(
+                {
+                    "commercial_credit": {
+                        "dscr": round(commercial_metrics.dscr.dscr, 3) if commercial_metrics.dscr.dscr is not None else None,
+                        "dscr_basis": commercial_metrics.dscr.basis,
+                        "dscr_provenance": commercial_metrics.dscr.provenance(),
+                        "noi": commercial_metrics.dscr.noi,
+                        "annual_debt_service": commercial_metrics.dscr.annual_debt_service,
+                        "stated_dscr": commercial_metrics.dscr.stated_dscr,
+                        "dscr_on_total_debt": commercial_metrics.dscr.dscr_on_total_debt,
+                        "debt_yield": round(commercial_metrics.debt_yield, 4) if commercial_metrics.debt_yield is not None else None,
+                        "ltv": commercial_metrics.ltv,
+                        "missing_metrics": commercial_metrics.missing(),
+                        "notes": list(commercial_metrics.notes),
+                    }
+                }
+                if commercial_metrics is not None
+                else {}
+            ),
             "human_review_required": memo.human_review_required,
             "rate_quote": {
                 "product": rate_quote.product.value,
@@ -358,6 +381,75 @@ class MortgagePipeline:
             return ProductLine.COMMERCIAL_MORTGAGE
         return ProductLine.RESIDENTIAL_MORTGAGE
 
+    def _commercial_default_risk(
+        self,
+        bundle: MortgageBundle,
+        loan_amount: float | None = None,
+    ) -> dict[str, Any]:
+        """Risk band for a commercial deal, driven by property cash flow.
+
+        The mortgage default-risk model is a residential FICO model. Run on
+        a commercial bundle its inputs are empty, so its output is noise
+        with a model version attached — worse than no number, because it
+        looks authoritative. Commercial risk is instead graded from DSCR,
+        debt yield and LTV, with the same fail-closed shape as the model
+        fallback below.
+        """
+        metrics = compute_commercial_metrics(bundle, loan_amount=loan_amount)
+        dscr = metrics.dscr.dscr
+        dy = metrics.debt_yield
+        ltv = metrics.ltv
+
+        factors: list[str] = []
+        score = 0.0
+
+        if dscr is None:
+            factors.append("dscr_unavailable")
+            score += 0.35
+        else:
+            score += max(0.0, (1.40 - dscr) / 0.40) * 0.35
+            if dscr < 1.20:
+                factors.append("dscr_below_minimum")
+            elif dscr < 1.35:
+                factors.append("thin_dscr")
+
+        if dy is None:
+            factors.append("debt_yield_unavailable")
+            score += 0.15
+        else:
+            score += max(0.0, (0.11 - dy) / 0.06) * 0.20
+            if dy < 0.08:
+                factors.append("debt_yield_below_minimum")
+            elif dy < 0.10:
+                factors.append("thin_debt_yield")
+
+        if ltv is None:
+            factors.append("ltv_unavailable")
+            score += 0.10
+        elif ltv > 75:
+            score += 0.15
+            factors.append("high_ltv")
+
+        probability = round(min(1.0, max(0.0, score)), 4)
+        if probability >= 0.65:
+            level, action = "high", "manual_review"
+        elif probability >= 0.35:
+            level, action = "moderate", "manual_review"
+        else:
+            level, action = "low", "standard_processing"
+
+        return {
+            "default_probability": probability,
+            "risk_level": level,
+            "delinquency_band": "unknown",
+            "top_risk_factors": factors,
+            "recommended_action": action,
+            "model_version": "commercial_cashflow_v1",
+            "dscr": round(dscr, 3) if dscr is not None else None,
+            "debt_yield": round(dy, 4) if dy is not None else None,
+            "ltv": round(ltv, 2) if ltv is not None else None,
+        }
+
     def _ml_default_risk(
         self,
         bundle: MortgageBundle,
@@ -368,6 +460,8 @@ class MortgagePipeline:
 
         Falls back to deterministic rules when no trained model is available.
         """
+        if bundle.product_line == ProductLine.COMMERCIAL_MORTGAGE:
+            return self._commercial_default_risk(bundle, loan_amount=loan_amount)
         try:
             from insureflow.ml.base import BaseMLModel
             from insureflow.ml.features import FeatureVector

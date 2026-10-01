@@ -7,6 +7,7 @@ from typing import Any
 
 from insureflow.decisions import is_bind_eligible
 from insureflow.models.mortgage import MortgageBundle, MortgageMemo
+from insureflow.mortgage.commercial_metrics import compute_commercial_metrics
 
 
 class LoanProduct(str, Enum):
@@ -21,15 +22,32 @@ class LoanProduct(str, Enum):
 
 @dataclass(frozen=True)
 class ProductRules:
+    """Underwriting and pricing rules for one product.
+
+    Residential products are judged on the borrower's personal balance
+    sheet: ``min_credit_score`` and ``max_dti``. Commercial products are
+    judged on the property's cash flow and leverage: ``min_dscr`` and
+    ``min_debt_yield``. ``basis`` says which set applies, so a commercial
+    quote can never be denied for a personal score or a DTI that a
+    commercial borrower does not have.
+    """
+
     product: LoanProduct
-    min_credit_score: int
-    max_ltv: float
-    max_dti: float
-    min_down_payment_pct: float
-    base_rate: float
+    min_credit_score: int | None = None
+    max_ltv: float = 100.0
+    max_dti: float | None = None
+    min_down_payment_pct: float = 0.0
+    base_rate: float = 0.0
     rate_lock_days: int = 45
     pmi_required_above_ltv: float = 80.0
     notes: str = ""
+    basis: str = "personal"
+    min_dscr: float | None = None
+    min_debt_yield: float | None = None
+
+    @property
+    def is_commercial(self) -> bool:
+        return self.basis == "commercial"
 
 
 PRODUCT_CATALOG: dict[LoanProduct, ProductRules] = {
@@ -88,13 +106,14 @@ PRODUCT_CATALOG: dict[LoanProduct, ProductRules] = {
     ),
     LoanProduct.COMMERCIAL_5_1_ARM: ProductRules(
         product=LoanProduct.COMMERCIAL_5_1_ARM,
-        min_credit_score=680,
+        basis="commercial",
         max_ltv=75.0,
-        max_dti=45.0,
         min_down_payment_pct=25.0,
         base_rate=7.50,
         rate_lock_days=60,
-        notes="Commercial 5/1 ARM — min DSCR 1.20x",
+        min_dscr=1.20,
+        min_debt_yield=0.08,
+        notes="Commercial 5/1 ARM — underwritten on property DSCR and debt yield, not borrower DTI or personal credit score",
     ),
 }
 
@@ -138,37 +157,41 @@ class LoanPricingEngine:
         credit_score = bundle.credit.credit_score if bundle.credit else 0
         ltv = memo.ltv_ratio or (bundle.collateral.ltv if bundle.collateral else 0)
         dti = memo.dti_ratio or 0
-
-        if credit_score and credit_score < rules.min_credit_score:
-            ineligible.append(f"Credit score {credit_score} below minimum {rules.min_credit_score}")
-        if ltv and ltv > rules.max_ltv:
-            ineligible.append(f"LTV {ltv:.1f}% exceeds product max {rules.max_ltv}%")
-        if dti and dti > rules.max_dti:
-            ineligible.append(f"DTI {dti:.1f}% exceeds product max {rules.max_dti}%")
-
-        # Credit score pricing adjustments (LLPA-style)
-        if credit_score >= 760:
-            adjustments.append({"reason": "excellent_credit", "bps": -25})
-            rate -= 0.25
-        elif credit_score >= 700:
-            adjustments.append({"reason": "good_credit", "bps": 0})
-        elif credit_score >= 660:
-            adjustments.append({"reason": "fair_credit", "bps": 50})
-            rate += 0.50
-        elif credit_score >= 620:
-            adjustments.append({"reason": "marginal_credit", "bps": 100})
-            rate += 1.00
-
-        if ltv and ltv > 80:
-            adjustments.append({"reason": "high_ltv", "bps": 25})
-            rate += 0.25
-
         amount = loan_amount or (bundle.collateral.purchase_price if bundle.collateral else 0)
-        if amount > 766_550:
-            adjustments.append({"reason": "jumbo_threshold", "bps": 50})
-            rate += 0.50
 
-        pmi = bool(ltv and ltv > rules.pmi_required_above_ltv)
+        if rules.is_commercial:
+            rate = self._apply_commercial_pricing(rules, bundle, amount, ltv, adjustments)
+            ineligible.extend(self._commercial_ineligibility(rules, bundle, amount, ltv))
+        else:
+            if rules.min_credit_score and credit_score and credit_score < rules.min_credit_score:
+                ineligible.append(f"Credit score {credit_score} below minimum {rules.min_credit_score}")
+            if ltv and ltv > rules.max_ltv:
+                ineligible.append(f"LTV {ltv:.1f}% exceeds product max {rules.max_ltv}%")
+            if rules.max_dti and dti and dti > rules.max_dti:
+                ineligible.append(f"DTI {dti:.1f}% exceeds product max {rules.max_dti}%")
+
+            # Credit score pricing adjustments (LLPA-style)
+            if credit_score >= 760:
+                adjustments.append({"reason": "excellent_credit", "bps": -25})
+                rate -= 0.25
+            elif credit_score >= 700:
+                adjustments.append({"reason": "good_credit", "bps": 0})
+            elif credit_score >= 660:
+                adjustments.append({"reason": "fair_credit", "bps": 50})
+                rate += 0.50
+            elif credit_score >= 620:
+                adjustments.append({"reason": "marginal_credit", "bps": 100})
+                rate += 1.00
+
+            if ltv and ltv > 80:
+                adjustments.append({"reason": "high_ltv", "bps": 25})
+                rate += 0.25
+
+            if amount > 766_550:
+                adjustments.append({"reason": "jumbo_threshold", "bps": 50})
+                rate += 0.50
+
+        pmi = bool(rules.is_commercial is False and ltv and ltv > rules.pmi_required_above_ltv)
         monthly_pi = self._calc_monthly_pi(amount, rate, 30)
 
         lock_expires = (datetime.now(tz=timezone.utc) + timedelta(days=rules.rate_lock_days)).strftime("%Y-%m-%d")
@@ -186,6 +209,95 @@ class LoanPricingEngine:
             eligible=len(ineligible) == 0 and is_bind_eligible(memo.decision),
             ineligibility_reasons=ineligible,
         )
+
+    def _commercial_ineligibility(
+        self,
+        rules: ProductRules,
+        bundle: MortgageBundle,
+        amount: float,
+        ltv: float,
+    ) -> list[str]:
+        """Commercial eligibility: DSCR, debt yield and LTV.
+
+        A commercial borrower is an entity. Its personal credit score and
+        DTI say nothing about whether the property services its debt, so
+        neither is consulted here. When a metric cannot be computed that is
+        ineligibility, not a pass: an unpriced deal is not a qualified one.
+        """
+        metrics = compute_commercial_metrics(bundle, loan_amount=amount or None)
+        reasons: list[str] = []
+
+        dscr = metrics.dscr.dscr
+        if dscr is None:
+            reasons.append("DSCR could not be computed from the submitted documents")
+        elif rules.min_dscr and dscr < rules.min_dscr:
+            reasons.append(f"DSCR {dscr:.2f}x below product minimum {rules.min_dscr:.2f}x")
+
+        if metrics.debt_yield is None:
+            reasons.append("Debt yield could not be computed: requires annual NOI and a loan amount")
+        elif rules.min_debt_yield and metrics.debt_yield < rules.min_debt_yield:
+            reasons.append(f"Debt yield {metrics.debt_yield * 100:.1f}% below product minimum {rules.min_debt_yield * 100:.1f}%")
+
+        effective_ltv = metrics.ltv if metrics.ltv is not None else ltv
+        if effective_ltv and effective_ltv > rules.max_ltv:
+            reasons.append(f"LTV {effective_ltv:.1f}% exceeds product max {rules.max_ltv}%")
+        elif not effective_ltv:
+            reasons.append("LTV could not be determined: no appraised value or purchase price on file")
+
+        return reasons
+
+    def _apply_commercial_pricing(
+        self,
+        rules: ProductRules,
+        bundle: MortgageBundle,
+        amount: float,
+        ltv: float,
+        adjustments: list[dict[str, Any]],
+    ) -> float:
+        """Price a commercial deal off property cash flow and leverage.
+
+        Thinner DSCR and lower debt yield mean less cushion for the lender,
+        which is worth more than the borrower's personal credit. Higher LTV
+        and larger balances carry more exposure, so they price wider.
+        """
+        metrics = compute_commercial_metrics(bundle, loan_amount=amount or None)
+        rate = rules.base_rate
+
+        dscr = metrics.dscr.dscr
+        if dscr is not None:
+            if dscr >= 1.50:
+                adjustments.append({"reason": "strong_dscr", "dscr": round(dscr, 2), "bps": -20})
+                rate -= 0.20
+            elif dscr >= 1.35:
+                adjustments.append({"reason": "adequate_dscr", "dscr": round(dscr, 2), "bps": 0})
+            elif dscr >= rules.min_dscr - 0.15 if rules.min_dscr else dscr >= 1.05:
+                adjustments.append({"reason": "thin_dscr", "dscr": round(dscr, 2), "bps": 75})
+                rate += 0.75
+            else:
+                adjustments.append({"reason": "substandard_dscr", "dscr": round(dscr, 2), "bps": 150})
+                rate += 1.50
+
+        if metrics.debt_yield is not None:
+            if metrics.debt_yield >= 0.12:
+                adjustments.append({"reason": "strong_debt_yield", "debt_yield": round(metrics.debt_yield, 4), "bps": -10})
+                rate -= 0.10
+            elif metrics.debt_yield < 0.08:
+                adjustments.append({"reason": "thin_debt_yield", "debt_yield": round(metrics.debt_yield, 4), "bps": 60})
+                rate += 0.60
+
+        effective_ltv = metrics.ltv if metrics.ltv is not None else ltv
+        if effective_ltv and effective_ltv > 75:
+            adjustments.append({"reason": "high_ltv", "ltv": round(effective_ltv, 1), "bps": 40})
+            rate += 0.40
+
+        if amount >= 2_000_000:
+            adjustments.append({"reason": "large_balance", "loan_amount": amount, "bps": 30})
+            rate += 0.30
+        elif amount >= 1_000_000:
+            adjustments.append({"reason": "above_average_balance", "loan_amount": amount, "bps": 15})
+            rate += 0.15
+
+        return rate
 
     def _select_product(
         self,

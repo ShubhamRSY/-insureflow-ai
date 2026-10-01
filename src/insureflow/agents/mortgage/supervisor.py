@@ -5,6 +5,7 @@ import logging
 from concurrent.futures import ThreadPoolExecutor
 
 from insureflow.models.mortgage import MortgageAgentResult, MortgageBundle, MortgageDecision, MortgageDocumentType, MortgageFinding, MortgageMemo, ProductLine
+from insureflow.mortgage.commercial_metrics import compute_commercial_metrics
 from insureflow.redaction.pipeline import RedactedLLMClient
 
 logger = logging.getLogger(__name__)
@@ -135,6 +136,139 @@ class MortgageCreditAgent:
     agent_name = "CreditAnalystAgent"
 
     def analyze(self, bundle: MortgageBundle) -> MortgageAgentResult:
+        if bundle.product_line == ProductLine.COMMERCIAL_MORTGAGE:
+            return self._analyze_commercial(bundle)
+        return self._analyze_residential(bundle)
+
+    def _analyze_commercial(self, bundle: MortgageBundle) -> MortgageAgentResult:
+        """Assess a commercial borrower on property cash flow, not FICO.
+
+        A commercial borrower is an entity whose credit is its cash flow
+        and balance sheet. Judging it on a personal credit score and DTI
+        either denies sound deals (a strong property with a thin owner
+        credit file) or passes weak ones (a bad owner score masking an
+        over-levered property). Business credit is informational here; the
+        enforceable test is DSCR and debt yield.
+        """
+        findings: list[MortgageFinding] = []
+
+        metrics = compute_commercial_metrics(bundle)
+        dscr_result = metrics.dscr
+
+        if not dscr_result.computable:
+            findings.append(
+                MortgageFinding(
+                    title="Commercial coverage ratios not determinable",
+                    description="; ".join(dscr_result.notes) or "NOI and annual debt service could not both be sourced from the submitted documents",
+                    severity="critical",
+                    category="credit",
+                )
+            )
+        else:
+            dscr = dscr_result.dscr or 0.0
+            if dscr < 1.20:
+                findings.append(
+                    MortgageFinding(
+                        title="DSCR below minimum",
+                        description=f"DSCR {dscr:.2f}x is under the 1.20x minimum. {dscr_result.provenance()}",
+                        severity="critical",
+                        category="credit",
+                    )
+                )
+            elif dscr < 1.35:
+                findings.append(
+                    MortgageFinding(
+                        title="Thin DSCR coverage",
+                        description=f"DSCR {dscr:.2f}x leaves limited cushion. {dscr_result.provenance()}",
+                        severity="moderate",
+                        category="credit",
+                    )
+                )
+            else:
+                findings.append(
+                    MortgageFinding(
+                        title="Adequate DSCR coverage",
+                        description=f"DSCR {dscr:.2f}x. {dscr_result.provenance()}",
+                        severity="low",
+                        category="credit",
+                    )
+                )
+
+        if metrics.debt_yield is None:
+            findings.append(
+                MortgageFinding(
+                    title="Debt yield not determinable",
+                    description="Debt yield requires both annual NOI and a loan amount",
+                    severity="high",
+                    category="credit",
+                )
+            )
+        elif metrics.debt_yield < 0.08:
+            findings.append(
+                MortgageFinding(
+                    title="Debt yield below minimum",
+                    description=(
+                        f"Debt yield {metrics.debt_yield * 100:.1f}% is under the 8.0% minimum (NOI {metrics.noi:,.0f} / loan {metrics.loan_amount:,.0f})"
+                        if metrics.noi is not None and metrics.loan_amount
+                        else f"Debt yield {metrics.debt_yield * 100:.1f}% is under the 8.0% minimum"
+                    ),
+                    severity="critical",
+                    category="credit",
+                )
+            )
+        else:
+            findings.append(
+                MortgageFinding(
+                    title="Acceptable debt yield",
+                    description=f"Debt yield {metrics.debt_yield * 100:.1f}%",
+                    severity="low",
+                    category="credit",
+                )
+            )
+
+        for note in dscr_result.notes:
+            lowered = note.lower()
+            if "disagrees" in lowered or "inconsistent" in lowered:
+                findings.append(
+                    MortgageFinding(
+                        title="Stated DSCR conflicts with the file's own figures",
+                        description=note,
+                        severity="high",
+                        category="credit",
+                    )
+                )
+
+        business_credit = bundle.documents_by_type(MortgageDocumentType.BUSINESS_CREDIT_REPORT)
+        if business_credit:
+            paydex = business_credit[0].get_float("paydex_score")
+            if paydex:
+                findings.append(
+                    MortgageFinding(
+                        title="Business credit report on file",
+                        description=f"PAYDEX {paydex:.0f}",
+                        severity="low" if paydex >= 70 else "moderate",
+                        category="credit",
+                    )
+                )
+        else:
+            findings.append(
+                MortgageFinding(
+                    title="No business credit report",
+                    description="Business credit report is absent; entity credit was not independently verified",
+                    severity="moderate",
+                    category="credit",
+                )
+            )
+
+        risk = 0.75 if any(f.severity == "critical" for f in findings) else 0.3
+        return MortgageAgentResult(
+            agent_name=self.agent_name,
+            findings=findings,
+            risk_score=risk,
+            summary=f"Commercial credit assessed on property coverage: DSCR {dscr_result.dscr:.2f}x" if dscr_result.dscr else "Commercial coverage ratios unavailable",
+        )
+
+    def _analyze_residential(self, bundle: MortgageBundle) -> MortgageAgentResult:
         llm = _mortgage_llm()
         findings: list[MortgageFinding] = []
 
@@ -552,6 +686,9 @@ class MortgageDecisionAgent:
         risk_scores = [ar.risk_score for ar in agent_results]
         overall_risk = sum(risk_scores) / len(risk_scores) if risk_scores else 0.5
 
+        is_commercial = bundle.product_line == ProductLine.COMMERCIAL_MORTGAGE
+        commercial_metrics = compute_commercial_metrics(bundle) if is_commercial else None
+
         dti = None
         if bundle.credit and bundle.income:
             monthly = (bundle.income.adjusted_gross_income or bundle.income.total_income) / 12
@@ -560,6 +697,10 @@ class MortgageDecisionAgent:
 
         borrower = bundle.borrowers[0].full_name if bundle.borrowers else "Unknown"
         conditions: list[str] = []
+        if commercial_metrics is not None:
+            gaps = commercial_metrics.missing()
+            if gaps:
+                conditions.append(f"Commercial credit metrics incomplete: {', '.join(gaps)} could not be computed from the file")
         if bundle.reconciliation_issues:
             conditions.append("Resolve cross-document reconciliation issues before closing")
         for v in bundle.compliance_violations:
@@ -568,6 +709,18 @@ class MortgageDecisionAgent:
             else:
                 conditions.append(f"[Condition] {v.message}")
 
+        if commercial_metrics is not None:
+            dscr_value = commercial_metrics.dscr.dscr
+            dti = None  # DTI is a personal metric; it does not describe a commercial deal
+            basis = f"DSCR {dscr_value:.2f}x" if dscr_value is not None else "DSCR unavailable"
+            dy = f"debt yield {commercial_metrics.debt_yield * 100:.1f}%" if commercial_metrics.debt_yield is not None else "debt yield unavailable"
+            ltv_value = commercial_metrics.ltv
+            ltv_text = f"LTV {ltv_value:.1f}%" if ltv_value is not None else "LTV unavailable"
+            summary_text = f"Decision: {decision.value.upper()} | commercial credit: {basis}, {dy}, {ltv_text} | {len(all_findings)} findings | {len(bundle.compliance_violations)} compliance checks"
+        else:
+            ltv_value = bundle.collateral.ltv if bundle.collateral else None
+            summary_text = f"Decision: {decision.value.upper()} | {len(all_findings)} findings | {len(bundle.compliance_violations)} compliance checks"
+
         return MortgageMemo(
             bundle_id=bundle.bundle_id,
             product_line=bundle.product_line,
@@ -575,8 +728,8 @@ class MortgageDecisionAgent:
             decision=decision,
             risk_score=round(overall_risk, 3),
             dti_ratio=dti,
-            ltv_ratio=bundle.collateral.ltv if bundle.collateral else None,
-            summary=f"Decision: {decision.value.upper()} | {len(all_findings)} findings | {len(bundle.compliance_violations)} compliance checks",
+            ltv_ratio=ltv_value,
+            summary=summary_text,
             key_findings=sorted(
                 all_findings,
                 key=lambda f: {"critical": 0, "high": 1, "moderate": 2, "low": 3}.get(f.severity, 4),

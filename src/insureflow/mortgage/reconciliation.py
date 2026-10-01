@@ -223,6 +223,7 @@ class MortgageReconciliationEngine:
     def _build_collateral(self, bundle: MortgageBundle) -> CollateralSummary | None:
         appr_val = 0.0
         price = 0.0
+        loan_amount = 0.0
         address = ""
 
         for appr in bundle.documents_by_type(MortgageDocumentType.RESIDENTIAL_APPRAISAL):
@@ -240,10 +241,28 @@ class MortgageReconciliationEngine:
         if not appr_val and not price:
             return None
         collateral_value = appr_val or price
-        ltv = (price / collateral_value * 100) if collateral_value and price else 0.0
+
+        # LTV is loan over value. Residential packages state the loan on the
+        # 1003 and carry a purchase price, so price is the numerator there.
+        # A commercial package frequently has neither, which left LTV at 0
+        # and made the metric unusable for the deals it exists to judge.
+        # Only when there is no purchase price to work from. Where a price
+        # exists the existing residential calculation is kept exactly as it
+        # was, so residential LTV and the golden outcomes do not move.
+        if not price:
+            for doc in bundle.documents_by_type(MortgageDocumentType.LOAN_APPLICATION_1003):
+                loan_amount = max(loan_amount, doc.get_float("loan_amount"))
+            if not loan_amount:
+                for doc in bundle.documents_by_type(MortgageDocumentType.BUSINESS_DEBT_SCHEDULE):
+                    loan_amount = max(loan_amount, doc.get_float("subject_loan_principal_balance"))
+                    if not loan_amount:
+                        loan_amount = max(loan_amount, doc.get_float("original_loan_amount"))
+
+        numerator = price or loan_amount
+        ltv = (numerator / collateral_value * 100) if collateral_value and numerator else 0.0
         return CollateralSummary(
             property_address=address,
-            appraised_value=appr_val,
+            appraised_value=collateral_value,
             purchase_price=price,
             ltv=ltv,
         )

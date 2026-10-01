@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Callable, Iterable
 
 from insureflow.models.mortgage import ComplianceViolation, MortgageBundle, MortgageDocumentType, ProductLine
+from insureflow.mortgage.commercial_metrics import compute_commercial_metrics, compute_dscr
 
 
 @dataclass(frozen=True)
@@ -134,15 +135,54 @@ def _reconciliation_blockers(bundle: MortgageBundle) -> ComplianceViolation | No
 def _commercial_dscr(bundle: MortgageBundle) -> ComplianceViolation | None:
     if bundle.product_line != ProductLine.COMMERCIAL_MORTGAGE:
         return None
-    for doc in bundle.documents_by_type(MortgageDocumentType.OPERATING_STATEMENT):
-        dscr = doc.get_float("dscr")
-        if dscr and dscr < 1.20:
-            return ComplianceViolation(
-                rule_id="CM-DSCR-001",
-                rule_name="Commercial Minimum DSCR",
-                severity="critical",
-                message=f"DSCR {dscr:.2f}x below bank minimum of 1.20x",
-            )
+
+    result = compute_dscr(bundle)
+
+    if not result.computable:
+        missing = []
+        if result.noi is None:
+            missing.append("NOI")
+        if result.annual_debt_service is None:
+            missing.append("annual debt service")
+        detail = " and ".join(missing) or "required DSCR inputs"
+        return ComplianceViolation(
+            rule_id="CM-DSCR-001",
+            rule_name="Commercial Minimum DSCR",
+            severity="critical",
+            message=f"DSCR unavailable: missing {detail} from the submitted documents",
+        )
+
+    dscr = result.dscr or 0.0
+    if dscr < 1.20:
+        return ComplianceViolation(
+            rule_id="CM-DSCR-001",
+            rule_name="Commercial Minimum DSCR",
+            severity="critical",
+            message=f"DSCR {dscr:.2f}x below bank minimum of 1.20x (provenance: {result.provenance()})",
+        )
+    return None
+
+
+def _commercial_debt_yield(bundle: MortgageBundle) -> ComplianceViolation | None:
+    if bundle.product_line != ProductLine.COMMERCIAL_MORTGAGE:
+        return None
+    metrics = compute_commercial_metrics(bundle)
+    if metrics.debt_yield is None:
+        return ComplianceViolation(
+            rule_id="CM-DY-001",
+            rule_name="Commercial Minimum Debt Yield",
+            severity="critical",
+            message="Debt yield unavailable: requires both annual NOI and a loan amount",
+        )
+    if metrics.debt_yield * 100 < 8.0:
+        return ComplianceViolation(
+            rule_id="CM-DY-001",
+            rule_name="Commercial Minimum Debt Yield",
+            severity="critical",
+            message=f"Debt yield {metrics.debt_yield * 100:.1f}% below bank minimum of 8.0% (NOI {metrics.noi:,.0f} / loan {metrics.loan_amount:,.0f})"
+            if metrics.noi is not None and metrics.loan_amount
+            else f"Debt yield {metrics.debt_yield * 100:.1f}% below bank minimum of 8.0%",
+        )
     return None
 
 
@@ -377,6 +417,13 @@ BANK_RULES: list[BankRule] = [
         "critical",
         (ProductLine.COMMERCIAL_MORTGAGE,),
         _commercial_dscr,
+    ),
+    BankRule(
+        "CM-DY-001",
+        "Commercial Debt Yield",
+        "critical",
+        (ProductLine.COMMERCIAL_MORTGAGE,),
+        _commercial_debt_yield,
     ),
     BankRule(
         "PKG-ID-001",
