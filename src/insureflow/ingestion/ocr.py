@@ -35,6 +35,19 @@ def _table_to_markdown(rows: list[list[str]]) -> str:
     return "\n".join(lines)
 
 
+def _upright(image: Any) -> Any:
+    """Rotate a scanned page upright before OCR — phone and fax scans often
+    arrive sideways or upside down, and Tesseract reads those as near-empty."""
+    # ponytail: fixes 90/180/270° turns only; slight skew is left to Tesseract
+    try:
+        import pytesseract
+
+        angle = int(pytesseract.image_to_osd(image, output_type=pytesseract.Output.DICT).get("rotate", 0))
+    except Exception:  # too little text to tell, or no osd data installed
+        return image
+    return image.rotate(-angle, expand=True) if angle else image
+
+
 class OCRProcessor:
     def __init__(self, engine: str = "auto") -> None:
         self.engine = engine
@@ -149,7 +162,7 @@ class OCRProcessor:
                 import pytesseract
                 from PIL import Image
 
-                text = pytesseract.image_to_string(Image.open(file_path))
+                text = pytesseract.image_to_string(_upright(Image.open(file_path)))
                 if text and text.strip():
                     return str(text), "tesseract", {}
             except ImportError:
@@ -169,7 +182,7 @@ class OCRProcessor:
         except Exception:
             pass
 
-        return Path(file_path).read_text(errors="replace"), "raw", {}
+        return "", "raw", {}  # every engine failed; an image's raw bytes are never text
 
     def _ocr_image_bytes(self, data: bytes, submission_id: str) -> UnstructuredSubmission:
         with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
@@ -278,8 +291,8 @@ class OCRProcessor:
                 from pdf2image import convert_from_path
 
                 pages = convert_from_path(file_path, dpi=200)
-                ocr_parts = [pytesseract.image_to_string(page) for page in pages]
-                combined = "\n\n".join(p for p in ocr_parts if p.strip())
+                ocr_parts = [pytesseract.image_to_string(_upright(page)) for page in pages]
+                combined = "\f".join(ocr_parts)  # one page per \f, as pdfminer does — packet splitting relies on it
                 if combined.strip():
                     # Check if pages contain handwriting — if so, enhance with HTR
                     try:
@@ -309,11 +322,13 @@ class OCRProcessor:
 
             with open(file_path, "rb") as f:
                 reader = PyPDF2.PdfReader(f)
-                return "\n".join(page.extract_text() or "" for page in reader.pages)
+                return "\f".join(page.extract_text() or "" for page in reader.pages)
         except ImportError:
             pass
+        except Exception as exc:  # corrupt or encrypted — fall through to "unreadable", don't fail the upload
+            logger.warning("PyPDF2 extraction failed: %s", exc)
 
-        return Path(file_path).read_text(errors="replace")
+        return ""  # a PDF's raw bytes are never text; callers treat empty as unreadable
 
     def _build_pdf_spatial_lines(self, file_path: str) -> dict[int, dict[str, list[float]]]:
         """Line-level normalized boxes via pdfplumber for spatial grounding."""

@@ -1,19 +1,31 @@
 from __future__ import annotations
 
 import base64
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
 
 from insureflow.ingestion.base import BaseParser
+from insureflow.ingestion.intake import ACTIVE_CONTENT_FIELD, BLOCKED_TEXT, IMAGE_EXTS, UNREADABLE_ENGINE, decode_text, intake_documents, is_unreadable, pdf_packet_sections, prepare
 from insureflow.ingestion.mortgage.classifier import MortgageDocumentClassifier
 from insureflow.ingestion.mortgage.extractors import extract_fields
 from insureflow.ingestion.ocr import OCRProcessor
+from insureflow.ingestion.structured_docs import parse_structured_document
 from insureflow.models.mortgage import ExtractedMortgageField, MortgageDocument, MortgageDocumentType, ProductLine
 from insureflow.mortgage.llm_extractor import MortgageLLMExtractor
 from insureflow.mortgage.privacy import sanitize_document
 
 SUPPORTED_EXTENSIONS = {".txt", ".pdf", ".png", ".jpg", ".jpeg", ".tiff", ".bmp", ".tif"}
+
+
+def _classify_heading(heading: str) -> MortgageDocumentType:
+    # Content scoring guesses at any text; the filename rules ("pay_stub",
+    # "closing_disclosure") are precise and match a title written like a filename.
+    # A "Schedule ..." page (Schedule C, Schedule B - Exceptions) belongs to the document before it.
+    if heading.lower().startswith("schedule"):
+        return MortgageDocumentType.UNKNOWN
+    return MortgageDocumentClassifier.classify("", re.sub(r"\W+", "_", heading.lower().replace("-", "")))
 
 
 class MortgageDocumentParser(BaseParser):
@@ -94,6 +106,39 @@ class MortgageDocumentParser(BaseParser):
 
         return self.parse(raw, submission_id, source_path=path, product_line=product_line, ocr_engine=ocr_engine)
 
+    def parse_upload(
+        self,
+        data: bytes,
+        filename: str,
+        submission_id: str,
+        product_line: ProductLine | None = None,
+    ) -> list[MortgageDocument]:
+        """A raw upload becomes one document — or one per section of a
+        multi-document PDF packet (e.g. a closing package)."""
+        data, filename, blocked, active = prepare(data, filename)
+        if blocked:
+            return [self.parse(BLOCKED_TEXT[blocked], submission_id, source_path=filename, product_line=product_line, ocr_engine=blocked)]
+        raw, engine = self._bytes_to_text(data, filename, submission_id)
+        sections = pdf_packet_sections(data, filename, _classify_heading, MortgageDocumentType.UNKNOWN, MortgageDocumentClassifier.classify, ocr_text=raw) if engine not in BLOCKED_TEXT else []
+        if sections:
+            docs = [
+                self.parse(
+                    text,
+                    f"{submission_id}.{k}",
+                    source_path=f"{filename} (pages {first}-{last})",
+                    doc_type=kind if kind != MortgageDocumentType.UNKNOWN else None,
+                    product_line=product_line,
+                    ocr_engine=engine,
+                )
+                for k, (kind, first, last, text) in enumerate(sections)
+            ]
+        else:
+            docs = [self.parse(raw, submission_id, source_path=filename, product_line=product_line, ocr_engine=engine)]
+        if active:
+            for doc in docs:
+                doc.extracted_fields[ACTIVE_CONTENT_FIELD] = [ExtractedMortgageField(field_name=ACTIVE_CONTENT_FIELD, value=", ".join(active), confidence=1.0)]
+        return docs
+
     def parse_bytes(
         self,
         data: bytes,
@@ -101,23 +146,26 @@ class MortgageDocumentParser(BaseParser):
         submission_id: str,
         product_line: ProductLine | None = None,
     ) -> MortgageDocument:
+        raw, engine = self._bytes_to_text(data, filename, submission_id)
+        return self.parse(raw, submission_id, source_path=filename, product_line=product_line, ocr_engine=engine)
+
+    def _bytes_to_text(self, data: bytes, filename: str, submission_id: str) -> tuple[str, str]:
+        """``(text, engine)``: OCR for PDFs and images, the structured parsers
+        for Office files and email, else a UTF-8 decode. Text that comes out
+        empty or as junk is replaced by the unreadable marker."""
         ext = Path(filename).suffix.lower()
-        ocr_engine = ""
-
         if ext in {".pdf", ".png", ".jpg", ".jpeg", ".tiff", ".bmp", ".tif"}:
-            ocr_sub = self.ocr.extract_text_from_bytes(data, filename, submission_id)
-            raw = ocr_sub.raw_text
-            ocr_engine = "pdfminer+tesseract" if ext == ".pdf" else "tesseract"
+            raw = self.ocr.extract_text_from_bytes(data, filename, submission_id).raw_text
+            engine = "pdfminer+tesseract" if ext == ".pdf" else "tesseract"
         else:
-            raw = data.decode("utf-8", errors="replace")
-
-        return self.parse(
-            raw,
-            submission_id,
-            source_path=filename,
-            product_line=product_line,
-            ocr_engine=ocr_engine,
-        )
+            try:
+                structured = parse_structured_document(data, filename)
+            except Exception:
+                structured = None
+            raw, engine = (structured[0], structured[1]) if structured else (decode_text(data), "")
+        if ext not in IMAGE_EXTS and is_unreadable(raw):
+            return BLOCKED_TEXT[UNREADABLE_ENGINE], UNREADABLE_ENGINE
+        return raw, engine
 
 
 class MortgageSubmissionLoader:
@@ -168,19 +216,18 @@ class MortgageSubmissionLoader:
     ) -> list[MortgageDocument]:
         bid = bundle_id or f"mortgage-{uuid4().hex[:12]}"
         results: list[MortgageDocument] = []
-        for i, item in enumerate(documents):
+        for i, item in enumerate(intake_documents(documents)):
             filename = item.get("filename", f"doc-{i}.txt")
             content = item.get("content", "")
             encoding = item.get("encoding", "utf-8")
 
             if encoding == "s3_ref":
-                doc = self._load_s3_ref(content, filename, bid, i, product_line)
+                results.extend(self._load_s3_ref(content, filename, bid, i, product_line))
             elif encoding == "base64":
                 data = base64.b64decode(content)
-                doc = self.parser.parse_bytes(data, filename, f"{bid}-doc-{i}", product_line=product_line)
+                results.extend(self.parser.parse_upload(data, filename, f"{bid}-doc-{i}", product_line=product_line))
             else:
-                doc = self.parser.parse(content, f"{bid}-doc-{i}", source_path=filename, product_line=product_line)
-            results.append(doc)
+                results.append(self.parser.parse(content, f"{bid}-doc-{i}", source_path=filename, product_line=product_line))
         return results
 
     def _load_s3_ref(
@@ -190,7 +237,7 @@ class MortgageSubmissionLoader:
         bundle_id: str,
         index: int,
         product_line: ProductLine,
-    ) -> MortgageDocument:
+    ) -> list[MortgageDocument]:
         """Large-file path mirroring the insurance loader's ``s3_ref`` branch
         (``insurance/loader.py:_resolve_content``) — ``storage_key`` is an S3
         object reference, not inline content. Gated by the same
@@ -203,7 +250,7 @@ class MortgageSubmissionLoader:
         size = int((meta or {}).get("size_bytes") or 0)
         if size > MAX_PROCESSABLE_BYTES:
             raw = f"[File too large to auto-process: {size:,} bytes exceeds the {MAX_PROCESSABLE_BYTES // (1024 * 1024)}MB automatic-processing limit — needs manual review]"
-            return self.parser.parse(raw, f"{bundle_id}-doc-{index}", source_path=filename, product_line=product_line, ocr_engine="unprocessed_oversized")
+            return [self.parser.parse(raw, f"{bundle_id}-doc-{index}", source_path=filename, product_line=product_line, ocr_engine="unprocessed_oversized")]
 
         data = download_object_bytes(storage_key)
-        return self.parser.parse_bytes(data, filename, f"{bundle_id}-doc-{index}", product_line=product_line)
+        return self.parser.parse_upload(data, filename, f"{bundle_id}-doc-{index}", product_line=product_line)

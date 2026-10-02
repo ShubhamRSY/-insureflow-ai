@@ -1,5 +1,7 @@
 /** Client-side insurance document typing (mirrors server classifier). */
 
+import { endpoints } from './api';
+
 export const DOC_SLOTS = {
   acord_xml: {
     id: 'acord_xml',
@@ -40,12 +42,12 @@ export const DOC_SLOTS = {
     id: 'supplemental',
     label: 'Other / PDF',
     required: false,
-    accept: '.pdf,.png,.jpg,.jpeg,.tiff,.bmp,.tif,.docx,.doc,.xlsx,.xls,.csv,.eml,.html,.txt,.md',
+    accept: '.pdf,.png,.jpg,.jpeg,.heic,.heif,.tiff,.bmp,.tif,.docx,.doc,.xlsx,.xls,.csv,.eml,.msg,.zip,.html,.txt,.md',
     hint: 'Additional PDFs, Office docs, or scans — text and tables are extracted automatically.',
   },
 };
 
-const BINARY_EXT = new Set(['pdf', 'png', 'jpg', 'jpeg', 'tiff', 'bmp', 'tif', 'xlsx', 'xls', 'docx', 'doc', 'eml', 'msg']);
+const BINARY_EXT = new Set(['pdf', 'png', 'jpg', 'jpeg', 'heic', 'heif', 'tiff', 'bmp', 'tif', 'xlsx', 'xls', 'docx', 'doc', 'eml', 'msg', 'zip']);
 
 export function detectDocType(filename, textPreview = '') {
   const combined = `${filename}\n${textPreview}`.toLowerCase();
@@ -67,6 +69,39 @@ export function detectDocType(filename, textPreview = '') {
   return 'supplemental';
 }
 
+const OOXML_EXT = new Set(['xlsx', 'xlsm', 'docx', 'pptx']);
+const LEGACY_OFFICE_EXT = new Set(['xls', 'doc', 'ppt']);
+const OLE_MAGIC = [0xd0, 0xcf, 0x11, 0xe0];
+
+async function isOle(file) {
+  const head = new Uint8Array(await file.slice(0, 4).arrayBuffer());
+  return OLE_MAGIC.every((b, i) => head[i] === b);
+}
+
+/** Whether the file needs a password to open, so the UI can ask up front.
+ * Decided locally where the bytes make it certain; otherwise the server checks
+ * (a PDF with only a permissions password also has /Encrypt but opens fine;
+ * legacy .xls/.doc are always OLE, locked or not). */
+async function detectLock(file, ext, content) {
+  // Encrypted .xlsx/.docx are an OLE container instead of a zip.
+  if (OOXML_EXT.has(ext)) return isOle(file);
+  if (ext === 'zip') {
+    // bit 0 of the first entry's flags marks an encrypted ZIP
+    const head = new Uint8Array(await file.slice(0, 8).arrayBuffer());
+    return head[0] === 0x50 && head[1] === 0x4b && (head[6] & 1) === 1;
+  }
+  const maybe = ext === 'pdf'
+    ? new TextDecoder('latin1').decode(await file.arrayBuffer()).includes('/Encrypt')
+    : LEGACY_OFFICE_EXT.has(ext) && (await isOle(file));
+  if (!maybe) return false;
+  try {
+    const { locked } = await endpoints.checkLocked([{ filename: file.name, content, encoding: 'base64' }]);
+    return locked.includes(file.name);
+  } catch {
+    return ext === 'pdf'; // offline: /Encrypt is a fair guess; an OLE header alone says nothing
+  }
+}
+
 export async function readFileForUpload(file) {
   const ext = (file.name.split('.').pop() || '').toLowerCase();
   if (BINARY_EXT.has(ext)) {
@@ -77,7 +112,8 @@ export async function readFileForUpload(file) {
       reader.readAsDataURL(file);
     });
     const base64 = String(dataUrl).split(',')[1] || '';
-    return { filename: file.name, content: base64, encoding: 'base64' };
+    const locked = await detectLock(file, ext, base64);
+    return { filename: file.name, content: base64, encoding: 'base64', ...(locked && { locked }) };
   }
   const text = await file.text();
   return { filename: file.name, content: text, encoding: 'utf-8' };
@@ -88,6 +124,7 @@ export function buildSubmissionPayload(files, useLlm = true) {
     filename: f.filename,
     content: f.content,
     encoding: f.encoding,
+    ...(f.password && { password: f.password }),
   }));
   return { documents, use_llm: useLlm };
 }

@@ -148,6 +148,22 @@ def run_browser_tests(
             assert "Dashboard" in _main_heading()
             return "refreshed"
 
+        def locked_upload() -> str:
+            from insureflow.e2e import documents
+
+            page.goto(f"{dashboard}lending", wait_until="networkidle", timeout=30000)
+            page.locator('input[type="file"]').first.set_input_files(
+                [
+                    {"name": "loss_run.pdf", "mimeType": "application/pdf", "buffer": documents.pdf("secret", pages=[documents.LOSS_RUN])},
+                    {"name": "sov.pdf", "mimeType": "application/pdf", "buffer": documents.pdf(pages=[documents.SOV])},
+                ]
+            )
+            password = page.get_by_label("Password for loss_run.pdf")
+            password.wait_for(timeout=10000)
+            assert password.get_attribute("type") == "password"
+            assert page.get_by_label("Password for sov.pdf").count() == 0
+            return "password box shown for the locked file only"
+
         steps = [
             ("Browser: load dashboard", load_dashboard),
             ("Browser: login + password visibility", login_flow),
@@ -157,6 +173,7 @@ def run_browser_tests(
             ("Browser: navigate UW Sign-off", nav_workflow),
             ("Browser: navigate Settings", nav_settings),
             ("Browser: refresh dashboard", refresh_button),
+            ("Browser: locked upload asks for a password", locked_upload),
         ]
 
         for name, fn in steps:

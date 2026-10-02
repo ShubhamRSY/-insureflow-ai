@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Loader2, Upload, FileText, Play, Database, Cable, AlertTriangle, Trash2, ChevronRight } from 'lucide-react';
+import { Loader2, Upload, FileText, Play, Database, Cable, AlertTriangle, Trash2, ChevronRight, Lock } from 'lucide-react';
 import { readFileForUpload, buildSubmissionPayload, scoreFileRelevance, validatePackageRelevance } from '../lib/insuranceDocs';
 import { insuranceLineLabel } from '../lib/insuranceLines';
 import { UI_HINTS } from '../lib/uiHints';
@@ -40,7 +40,46 @@ const fmtSize = (bytes) => {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
 
-function FileDropZone({ onDrop, files, fileScores, onRemove, onRemoveAll }) {
+function FileRow({ file, score, onRemove, onPassword }) {
+  const bad = score && !score.relevant;
+  return (
+    <div className={`rounded-md transition hover:bg-white/[0.03] ${bad ? 'bg-amber-500/10' : ''}`}>
+      <div className="group flex items-center gap-2 px-2 py-1.5">
+        {bad ? <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-400" /> : file.locked ? <Lock className="h-3.5 w-3.5 shrink-0 text-amber-400" /> : <FileText className="h-3.5 w-3.5 shrink-0 text-insurance" />}
+        <span className="min-w-0 flex-1 truncate text-[11px] text-slate-300" title={score?.reason || ''}>{file.filename}</span>
+        <span className={`shrink-0 text-[9px] ${bad ? 'text-amber-400' : 'text-slate-600'}`}>
+          {bad ? 'irrelevant' : (score?.doc_type || file.kind)}
+          {file.size ? ` · ${fmtSize(file.size)}` : ''}
+        </span>
+        <button
+          type="button"
+          onClick={onRemove}
+          className="shrink-0 rounded p-1 text-red-400 hover:bg-red-500/10"
+          title={`Delete ${file.filename}`}
+          aria-label={`Delete ${file.filename}`}
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
+      </div>
+      {file.locked && (
+        <label className="flex items-center gap-2 px-2 pb-1.5 pl-[30px]">
+          <span className="shrink-0 text-[10px] text-amber-400">Password protected</span>
+          <input
+            type="password"
+            autoComplete="off"
+            value={file.password || ''}
+            onChange={(e) => onPassword(e.target.value)}
+            placeholder="Enter password if it asks for one"
+            aria-label={`Password for ${file.filename}`}
+            className="min-w-0 flex-1 rounded border border-white/10 bg-black/20 px-2 py-0.5 text-[11px] text-slate-200 placeholder:text-slate-600 focus:border-insurance/50 focus:outline-none"
+          />
+        </label>
+      )}
+    </div>
+  );
+}
+
+function FileDropZone({ onDrop, files, fileScores, onRemove, onPassword, onRemoveAll }) {
   return (
     <div className="space-y-3">
       <label
@@ -50,7 +89,7 @@ function FileDropZone({ onDrop, files, fileScores, onRemove, onRemoveAll }) {
         <Upload className="h-5 w-5 text-slate-500" />
         <span className="text-sm font-medium text-slate-200">Drop multiple files here or click to browse</span>
         <span className="text-xs text-slate-400">.pdf .png .jpg .xml .json .txt .md .xlsx .docx .eml — multi-select supported</span>
-        <input type="file" multiple className="hidden" accept=".xml,.json,.pdf,.txt,.md,.csv,.xlsx,.xls,.docx,.doc,.eml,.html,.png,.jpg,.jpeg,.tiff,.tif,.bmp"
+        <input type="file" multiple className="hidden" accept=".xml,.json,.pdf,.txt,.md,.csv,.xlsx,.xls,.docx,.doc,.eml,.msg,.zip,.html,.png,.jpg,.jpeg,.heic,.heif,.tiff,.tif,.bmp"
           onChange={(e) => { onDrop({ dataTransfer: { files: e.target.files } }); e.target.value = ''; }} />
       </label>
 
@@ -70,29 +109,9 @@ function FileDropZone({ onDrop, files, fileScores, onRemove, onRemoveAll }) {
             </button>
           </div>
           <div className="max-h-44 space-y-1 overflow-y-auto">
-            {files.map((f, i) => {
-              const score = fileScores[i];
-              const bad = score && !score.relevant;
-              return (
-                <div key={`${f.filename}-${i}`} className={`group flex items-center gap-2 rounded-md px-2 py-1.5 transition hover:bg-white/[0.03] ${bad ? 'bg-amber-500/10' : ''}`}>
-                  {bad ? <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-400" /> : <FileText className="h-3.5 w-3.5 shrink-0 text-insurance" />}
-                  <span className="min-w-0 flex-1 truncate text-[11px] text-slate-300" title={score?.reason || ''}>{f.filename}</span>
-                  <span className={`shrink-0 text-[9px] ${bad ? 'text-amber-400' : 'text-slate-600'}`}>
-                    {bad ? 'irrelevant' : (score?.doc_type || f.kind)}
-                    {f.size ? ` · ${fmtSize(f.size)}` : ''}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => onRemove(i)}
-                    className="shrink-0 rounded p-1 text-red-400 hover:bg-red-500/10"
-                    title={`Delete ${f.filename}`}
-                    aria-label={`Delete ${f.filename}`}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              );
-            })}
+            {files.map((f, i) => (
+              <FileRow key={`${f.filename}-${i}`} file={f} score={fileScores[i]} onRemove={() => onRemove(i)} onPassword={(pw) => onPassword(i, pw)} />
+            ))}
           </div>
         </div>
       )}
@@ -245,6 +264,7 @@ export default function RunSelector({
   };
 
   const removeFile = (index) => setFiles((prev) => prev.filter((_, i) => i !== index));
+  const setFilePassword = (index, password) => setFiles((prev) => prev.map((f, i) => (i === index ? { ...f, password } : f)));
 
   const removeIrrelevantFiles = () => {
     setFiles((prev) => prev.filter((f) => scoreFileRelevance(f).relevant));
@@ -414,7 +434,7 @@ export default function RunSelector({
                 </div>
 
                 {tab === 'files' && (
-                  <FileDropZone onDrop={handleDrop} files={files} fileScores={fileScores} onRemove={removeFile} onRemoveAll={() => { setFiles([]); setWarning(''); }} />
+                  <FileDropZone onDrop={handleDrop} files={files} fileScores={fileScores} onRemove={removeFile} onPassword={setFilePassword} onRemoveAll={() => { setFiles([]); setWarning(''); }} />
                 )}
 
                 {tab === 'connect' && (
@@ -571,7 +591,7 @@ export default function RunSelector({
             <Upload className="h-5 w-5 text-slate-500" />
             <span className="text-sm font-medium text-slate-200">Drop multiple files here or click to browse</span>
             <span className="text-xs text-slate-400">.pdf .png .jpg .xml .json .txt .md .xlsx .docx .eml — multi-select supported</span>
-            <input type="file" multiple className="hidden" accept=".xml,.json,.pdf,.txt,.md,.csv,.xlsx,.xls,.docx,.doc,.eml,.html,.png,.jpg,.jpeg,.tiff,.tif,.bmp"
+            <input type="file" multiple className="hidden" accept=".xml,.json,.pdf,.txt,.md,.csv,.xlsx,.xls,.docx,.doc,.eml,.msg,.zip,.html,.png,.jpg,.jpeg,.heic,.heif,.tiff,.tif,.bmp"
               onChange={(e) => { addFiles(e.target.files); e.target.value = ''; }} />
           </label>
 
@@ -591,29 +611,9 @@ export default function RunSelector({
                 </button>
               </div>
               <div className="max-h-44 space-y-1 overflow-y-auto">
-                {files.map((f, i) => {
-                  const score = fileScores[i];
-                  const bad = score && !score.relevant;
-                  return (
-                    <div key={`${f.filename}-${i}`} className={`group flex items-center gap-2 rounded-md px-2 py-1.5 transition hover:bg-white/[0.03] ${bad ? 'bg-amber-500/10' : ''}`}>
-                      {bad ? <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-400" /> : <FileText className="h-3.5 w-3.5 shrink-0 text-insurance" />}
-                      <span className="min-w-0 flex-1 truncate text-[11px] text-slate-300" title={score?.reason || ''}>{f.filename}</span>
-                      <span className={`shrink-0 text-[9px] ${bad ? 'text-amber-400' : 'text-slate-600'}`}>
-                        {bad ? 'irrelevant' : (score?.doc_type || f.kind)}
-                        {f.size ? ` · ${fmtSize(f.size)}` : ''}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => removeFile(i)}
-                        className="shrink-0 rounded p-1 text-red-400 hover:bg-red-500/10"
-                        title={`Delete ${f.filename}`}
-                        aria-label={`Delete ${f.filename}`}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  );
-                })}
+                {files.map((f, i) => (
+                  <FileRow key={`${f.filename}-${i}`} file={f} score={fileScores[i]} onRemove={() => removeFile(i)} onPassword={(pw) => setFilePassword(i, pw)} />
+                ))}
               </div>
             </div>
           )}

@@ -3,6 +3,7 @@ FROM python:3.12-slim
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     tesseract-ocr \
+    tesseract-ocr-osd \
     poppler-utils \
     libpango-1.0-0 \
     libpangocairo-1.0-0 \

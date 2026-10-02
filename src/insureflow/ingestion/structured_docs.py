@@ -325,6 +325,40 @@ def parse_eml_bytes(data: bytes, filename: str = "submission.eml") -> tuple[str,
     return "\n".join(parts).strip(), fields
 
 
+def read_msg(data: bytes) -> tuple[str, list[tuple[str, bytes]]]:
+    """Headers + body text and ``(filename, bytes)`` attachments from an
+    Outlook .msg — an OLE compound file of MAPI property streams, not MIME."""
+    import olefile
+
+    with olefile.OleFileIO(io.BytesIO(data)) as ole:
+
+        def prop(code: str, storage: str = "") -> str:
+            for kind, encoding in (("001F", "utf-16-le"), ("001E", "latin-1")):  # unicode, then ANSI
+                path = f"{storage}__substg1.0_{code}{kind}"
+                if ole.exists(path):
+                    return cast(bytes, ole.openstream(path).read()).decode(encoding, errors="replace").rstrip("\0")
+            return ""
+
+        headers = [f"{label}: {value}" for label, code in (("Subject", "0037"), ("From", "0C1A"), ("To", "0E04")) if (value := prop(code))]
+        attachments: list[tuple[str, bytes]] = []
+        for entry in ole.listdir(streams=False, storages=True):
+            if len(entry) == 1 and entry[0].startswith("__attach_version1.0_"):
+                base = entry[0] + "/"
+                if ole.exists(base + "__substg1.0_37010102"):  # embedded .msg attachments are storages, not data — skipped
+                    name = prop("3707", base) or prop("3704", base) or entry[0]
+                    attachments.append((name, cast(bytes, ole.openstream(base + "__substg1.0_37010102").read())))
+        return "\n".join([*headers, _collapse_whitespace(prop("1000"))]).strip(), attachments
+
+
+def parse_msg_bytes(data: bytes, filename: str = "submission.msg") -> tuple[str, dict[str, list[ExtractedField]]]:
+    """Extract headers + body from an Outlook .msg file."""
+    text, _ = read_msg(data)
+    fields: dict[str, list[ExtractedField]] = {}
+    if text.startswith("Subject: "):
+        fields["eml.subject"] = [_field("eml.subject", text.splitlines()[0].removeprefix("Subject: "), filename)]
+    return text, fields
+
+
 def parse_html_bytes(data: bytes, filename: str = "file.html") -> tuple[str, dict[str, list[ExtractedField]]]:
     """Strip an HTML page down to readable text."""
     return _html_to_text(data.decode("utf-8", errors="replace")), {}
@@ -342,7 +376,7 @@ STRUCTURED_PARSERS: dict[str, Any] = {
     ".csv": parse_csv_bytes,
     ".docx": parse_docx_bytes,
     ".eml": parse_eml_bytes,
-    ".msg": parse_eml_bytes,
+    ".msg": parse_msg_bytes,
     ".html": parse_html_bytes,
     ".htm": parse_html_bytes,
     ".mhtml": parse_html_bytes,

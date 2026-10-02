@@ -7,6 +7,7 @@ from insureflow.agents.mortgage.supervisor import MortgageSupervisorAgent
 from insureflow.analytics.documents import DocumentAnalyticsEngine
 from insureflow.audit.store import AuditStore
 from insureflow.decisions import normalize_decision
+from insureflow.ingestion.intake import ACTIVE_CONTENT_FIELD, BLOCKED_FINDINGS
 from insureflow.ingestion.mortgage.loader import MortgageSubmissionLoader
 from insureflow.models.audit import PipelineEvent
 from insureflow.models.mortgage import MortgageBundle, MortgageBundleStatus, MortgageDecision, MortgageFinding, ProductLine
@@ -214,6 +215,8 @@ class MortgagePipeline:
         llm_doc_count = sum(1 for d in documents if any(f.field_name == "extraction_method" and "llm" in f.value for f in d.extracted_fields.get("extraction_method", [])))
         ocr_doc_count = sum(1 for d in documents if d.extracted_fields.get("ocr_engine"))
         oversized_docs = [d.document_id for d in documents if any(f.value == "unprocessed_oversized" for f in d.extracted_fields.get("ocr_engine", []))]
+        blocked_docs = {engine: [d.document_id for d in documents if any(f.value == engine for f in d.extracted_fields.get("ocr_engine", []))] for engine in BLOCKED_FINDINGS}
+        active_docs = [d.document_id for d in documents if ACTIVE_CONTENT_FIELD in d.extracted_fields]
 
         if llm_doc_count:
             audit.log(PipelineEvent.EXTRACTION_COMPLETE, f"LLM extraction on {llm_doc_count} document(s)")
@@ -270,6 +273,25 @@ class MortgagePipeline:
             )
             if memo.decision not in (MortgageDecision.DENY, MortgageDecision.REFER):
                 memo.decision = MortgageDecision.REFER
+        for engine, refs in blocked_docs.items():
+            if not refs:
+                continue
+            title, detail = BLOCKED_FINDINGS[engine]
+            memo.human_review_required = True
+            memo.key_findings.append(MortgageFinding(title=title, description=f"{len(refs)} document(s) {detail}", severity="high", category="data_quality", document_refs=refs))
+            if memo.decision not in (MortgageDecision.DENY, MortgageDecision.REFER):
+                memo.decision = MortgageDecision.REFER
+        if active_docs:
+            memo.human_review_required = True
+            memo.key_findings.append(
+                MortgageFinding(
+                    title="Document contains macros or scripts",
+                    description=f"{len(active_docs)} document(s) contain macros, scripts or embedded files. Text was extracted without running them, but don't open the originals outside a sandbox.",
+                    severity="moderate",
+                    category="security",
+                    document_refs=active_docs,
+                )
+            )
         bundle.status = MortgageBundleStatus.COMPLETED
         progress.complete("underwrite", detail=memo.decision.value)
 

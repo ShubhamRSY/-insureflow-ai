@@ -8,6 +8,8 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
+from insureflow.ingestion.intake import BLOCKED_TEXT, IMAGE_EXTS, UNREADABLE_ENGINE, decode_text, intake_documents, is_unreadable, pdf_packet_sections, prepare
+from insureflow.ingestion.structured_docs import parse_structured_document
 from insureflow.lending.models import BusinessFinancialData, BusinessLoanApplication, ConsumerFinancialData, ConsumerLoanApplication, LendingDocumentType, LoanProductType, LoanPurpose
 
 TEXT_SUFFIXES = {".md", ".txt", ".json", ".csv", ".xml", ".html"}
@@ -22,6 +24,7 @@ class LendingDocument:
     extracted: dict[str, Any] = field(default_factory=dict)
     ocr_engine: str = ""
     extraction_method: str = "regex"
+    active_content: str = ""  # macros / scripts found in the file, e.g. "macros"
 
 
 # filename / content hints → document type
@@ -205,39 +208,61 @@ def load_lending_documents_from_directory(
     return docs
 
 
+def _upload_parts(item: dict[str, Any]) -> list[tuple[str, str, str, LendingDocumentType | None, list[str]]]:
+    """``(filename, text, ocr_engine, known_type, active_content)`` for each
+    document in one upload — several when a PDF packet holds more than one."""
+    import base64
+    import tempfile
+
+    filename = str(item.get("filename") or "document.txt")
+    content = str(item.get("content") or "")
+    if str(item.get("encoding") or "utf-8") != "base64":
+        return [(filename, content, "", None, [])]
+    data, filename, blocked, active = prepare(base64.b64decode(content), filename)
+    if blocked:
+        return [(filename, BLOCKED_TEXT[blocked], blocked, None, [])]
+    suffix = Path(filename).suffix.lower()
+    if suffix in BINARY_SUFFIXES:
+        with tempfile.NamedTemporaryFile(suffix=suffix, delete=True) as tmp:
+            tmp.write(data)
+            tmp.flush()
+            text, engine = _read_path_text(Path(tmp.name))
+    else:  # Office files, email, CSV …
+        try:
+            structured = parse_structured_document(data, filename)
+        except Exception:
+            structured = None
+        text, engine = (structured[0], structured[1]) if structured else (decode_text(data), "")
+    if suffix not in IMAGE_EXTS and is_unreadable(text):
+        return [(filename, BLOCKED_TEXT[UNREADABLE_ENGINE], UNREADABLE_ENGINE, None, [])]
+    sections = pdf_packet_sections(data, filename, lambda heading: classify_lending_document("", heading), LendingDocumentType.LOAN_APPLICATION, ocr_text=text)
+    if sections:
+        untitled = LendingDocumentType.LOAN_APPLICATION  # the fallback: classify those sections whole
+        return [(f"{filename} (pages {first}-{last})", section, engine, None if kind == untitled else kind, active) for kind, first, last, section in sections]
+    return [(filename, text, engine, None, active)]
+
+
 def load_lending_documents_from_payloads(
     payloads: list[dict[str, Any]],
     *,
     use_llm: bool = True,
 ) -> list[LendingDocument]:
-    import base64
-    import tempfile
-
     docs: list[LendingDocument] = []
-    for item in payloads:
-        filename = str(item.get("filename") or "document.txt")
-        encoding = str(item.get("encoding") or "utf-8")
-        content = str(item.get("content") or "")
-        ocr_engine = ""
-        suffix = Path(filename).suffix.lower()
-        if encoding == "base64" and suffix in BINARY_SUFFIXES:
-            raw = base64.b64decode(content)
-            with tempfile.NamedTemporaryFile(suffix=suffix, delete=True) as tmp:
-                tmp.write(raw)
-                tmp.flush()
-                content, ocr_engine = _read_path_text(Path(tmp.name))
-        dtype = classify_lending_document(filename, content)
-        extracted = _enrich_extraction(content, dtype, source_path=filename, use_llm=use_llm)
-        docs.append(
-            LendingDocument(
-                filename=filename,
-                content=content,
-                document_type=dtype,
-                extracted=extracted,
-                ocr_engine=ocr_engine,
-                extraction_method=str(extracted.get("extraction_method") or "regex"),
+    for item in intake_documents(payloads):
+        for filename, content, ocr_engine, known_type, active in _upload_parts(item):
+            dtype = known_type or classify_lending_document(filename, content)
+            extracted = _enrich_extraction(content, dtype, source_path=filename, use_llm=use_llm)
+            docs.append(
+                LendingDocument(
+                    filename=filename,
+                    content=content,
+                    document_type=dtype,
+                    extracted=extracted,
+                    ocr_engine=ocr_engine,
+                    extraction_method=str(extracted.get("extraction_method") or "regex"),
+                    active_content=", ".join(active),
+                )
             )
-        )
     return docs
 
 

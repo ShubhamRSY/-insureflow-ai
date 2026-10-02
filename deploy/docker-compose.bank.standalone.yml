@@ -36,11 +36,14 @@ services:
       LANGSMITH_API_KEY: ${LANGSMITH_API_KEY:-}
       LANGSMITH_PROJECT: ${LANGSMITH_PROJECT:-insureflow-evals}
       PYTHONPATH: /app
+      CLAMAV_HOST: clamav
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_started
+      clamav:
+        condition: service_healthy
 
   worker:
     build: .
@@ -58,11 +61,14 @@ services:
       JOB_STORE_BACKEND: redis
       INSURANCE_USE_CELERY: "true"
       PYTHONPATH: /app
+      CLAMAV_HOST: clamav
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_started
+      clamav:
+        condition: service_healthy
 
   # Dedicated pool for the pipeline-large queue (GB-scale submissions — see
   # tasks/dispatch.py:LARGE_FILE_QUEUE) so a burst of large-file jobs can't
@@ -83,11 +89,28 @@ services:
       JOB_STORE_BACKEND: redis
       INSURANCE_USE_CELERY: "true"
       PYTHONPATH: /app
+      CLAMAV_HOST: clamav
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_started
+      clamav:
+        condition: service_healthy
+
+  # Antivirus for uploads (ingestion/intake.py). Scanning fails closed, so the
+  # app waits for clamd to finish loading signatures (~1-2 min on first boot).
+  clamav:
+    image: clamav/clamav:stable
+    volumes:
+      - clamav_db_bank:/var/lib/clamav
+    healthcheck:
+      test: ["CMD", "clamdcheck.sh"]
+      interval: 30s
+      timeout: 10s
+      start_period: 300s
+      retries: 5
+    restart: unless-stopped
 
   redis:
     image: redis:7-alpine
@@ -122,4 +145,5 @@ services:
 
 volumes:
   pgdata_bank:
+  clamav_db_bank:
   caddy_data_bank:

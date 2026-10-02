@@ -60,10 +60,10 @@ def test_add_documents() -> None:
 def test_add_documents_accumulates() -> None:
     store = _make_store()
     bundle = store.create(org_id="test")
-    store.add_documents(bundle["bundle_id"], [{"filename": "a.xml", "content": "", "encoding": "utf-8"}], org_id="test")
+    store.add_documents(bundle["bundle_id"], [{"filename": "a.xml", "content": "<a/>", "encoding": "utf-8"}], org_id="test")
     store.add_documents(
         bundle["bundle_id"],
-        [{"filename": "b.md", "content": "", "encoding": "utf-8"}],
+        [{"filename": "b.md", "content": "# b", "encoding": "utf-8"}],
         source_id="s3",
         org_id="test",
     )
@@ -79,7 +79,7 @@ def test_remove_document() -> None:
     bundle = store.create(org_id="test")
     store.add_documents(
         bundle["bundle_id"],
-        [{"filename": "a.xml", "content": "", "encoding": "utf-8"}, {"filename": "b.md", "content": "", "encoding": "utf-8"}],
+        [{"filename": "a.xml", "content": "<a/>", "encoding": "utf-8"}, {"filename": "b.md", "content": "# b", "encoding": "utf-8"}],
         org_id="test",
     )
     full = store.get(bundle["bundle_id"], org_id="test")
@@ -303,7 +303,7 @@ def test_concurrent_add_documents_does_not_lose_writes() -> None:
     store.get = slow_get  # type: ignore[method-assign]
 
     def worker(name: str) -> None:
-        store.add_documents(bundle_id, [{"filename": f"{name}.pdf", "content": "x", "encoding": "utf-8"}], org_id="test")
+        store.add_documents(bundle_id, [{"filename": f"{name}.pdf", "content": name, "encoding": "utf-8"}], org_id="test")
 
     threads = [threading.Thread(target=worker, args=(f"uw{i}",)) for i in range(5)]
     for t in threads:

@@ -8,6 +8,7 @@ from typing import Any
 
 from insureflow.analytics.documents import DocumentAnalyticsEngine
 from insureflow.decisions import normalize_decision
+from insureflow.ingestion.intake import BLOCKED_FINDINGS
 from insureflow.lending.compliance import LendingComplianceEngine
 from insureflow.lending.models import BusinessFinancialData, BusinessLoanApplication, ConsumerLoanApplication, CreditAnalysis, LendingPipelineResult, LoanDecision
 from insureflow.lending.pricing import LendingPricingEngine
@@ -87,6 +88,21 @@ class LendingPipeline:
                 human_review_reasons=["No supporting documents provided — cannot underwrite from form fields alone"],
             )
             timeline.append(self._record("ingest", "blocked", run_id, {"reason": "missing_documents"}))
+            self._save_audit(run_id, application, result, timeline, documents)
+            return result
+
+        blocked = [(BLOCKED_FINDINGS[engine][0], str(d.get("filename") or "?")) for d in documents or [] if (engine := d.get("ocr_engine")) in BLOCKED_FINDINGS]
+        if blocked:
+            result = LendingPipelineResult(
+                application_id=application.application_id,
+                product_type=application.product_type,
+                decision=LoanDecision.REFERRED,
+                human_review_required=True,
+                human_review_reasons=[f"{title}: {name}" for title, name in blocked],
+                lender_notes="Blocked document(s) could not be read — get an unlocked or clean copy",
+                document_count=len(documents or []),
+            )
+            timeline.append(self._record("ingest", "referred", run_id, {"blocked_documents": [name for _, name in blocked]}))
             self._save_audit(run_id, application, result, timeline, documents)
             return result
 
@@ -198,6 +214,10 @@ class LendingPipeline:
         if application.requested_amount > 1_000_000:
             human_review = True
             human_reasons.append(f"Loan amount ${application.requested_amount:,.0f} exceeds $1M threshold")
+        active = list(dict.fromkeys(f"{d.get('filename')} ({d['active_content']})" for d in documents or [] if d.get("active_content")))
+        if active:
+            human_review = True
+            human_reasons.append(f"Macros or scripts found (not run) in: {', '.join(active)}")
 
         result = LendingPipelineResult(
             application_id=application.application_id,

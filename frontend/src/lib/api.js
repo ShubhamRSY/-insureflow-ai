@@ -195,6 +195,7 @@ export const endpoints = {
     if (opts.strict_relevance) params.set('strict_relevance', 'true');
     return api(`/pipeline/bundles/${id}/run?${params}`, { method: 'POST' });
   },
+  checkLocked: (documents) => api('/pipeline/documents/lock-check', { method: 'POST', body: { documents } }),
   validateDocuments: (documents, vertical = 'insurance', strict = false) =>
     api('/pipeline/validate-documents', { method: 'POST', body: { documents, vertical, strict } }),
 

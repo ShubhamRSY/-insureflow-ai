@@ -44,6 +44,7 @@ class E2ERunner:
     _celery_job_id: str = field(default="", init=False)
     _bound_policy_number: str = field(default="", init=False)
     results: list[E2EResult] = field(default_factory=list)
+    only_suites: tuple[str, ...] = ()  # run just these suites (by name); empty = all
     _client: Any = field(default=None, init=False)
 
     def run_all(self) -> dict[str, Any]:
@@ -64,8 +65,11 @@ class E2ERunner:
             ("Dashboard overview", self._test_dashboard_overview),
             ("Mortgage webhooks", self._test_mortgage_webhooks),
             ("Direct pipeline (sync)", self._test_direct_pipelines),
+            ("Document intake", self._test_document_intake),
             ("Browser UI", self._test_browser_ui),
         ]
+        if self.only_suites:
+            suites = [(name, fn) for name, fn in suites if name in self.only_suites]
         for suite_name, fn in suites:
             try:
                 fn()
@@ -747,6 +751,121 @@ class E2ERunner:
 
         self._step("InsurancePipeline.run() sync", insurance_sync)
         self._step("MortgagePipeline.run_from_directory() sync", mortgage_sync)
+
+    def _test_document_intake(self) -> None:
+        """Uploads that used to slip through as junk text: password-protected,
+        archived, emailed, bundled, corrupt, duplicated and infected files."""
+        from insureflow.e2e import documents as d
+
+        acord = (PROJECT_ROOT / "examples" / "insurance" / "sample_acord.xml").read_text(encoding="utf-8")
+        loss_run, sov = d.pdf(pages=[d.LOSS_RUN, d.LOSS_RUN_CONT]), d.pdf(pages=[d.SOV])
+
+        def upload(filename: str, data: bytes, **extra: Any) -> dict[str, Any]:
+            return {"filename": filename, "content": d.b64(data), "encoding": "base64", **extra}
+
+        def run_insurance(*docs: dict[str, Any], expected: int = 202) -> tuple[str, list[str]]:
+            body = {"documents": [{"filename": "acord.xml", "content": acord}, *docs], "use_llm": self.use_llm, "use_celery": False}
+            job = self._wait_job("/pipeline/jobs", self._request("POST", "/pipeline/run", json_body=body, auth=True, expected=expected)["job_id"])
+            if job.get("status") == "failed":
+                raise AssertionError(job.get("error", "insurance job failed"))
+            results = job.get("results") or {}
+            return str(results.get("ai_decision")), list((results.get("memo") or {}).get("human_review_reasons") or [])
+
+        def has(reasons: list[str], text: str) -> bool:
+            return any(text in r for r in reasons)
+
+        def lock_check() -> str:
+            docs = [upload("locked.pdf", d.pdf("secret")), upload("print_only.pdf", d.pdf("")), upload("sov.xlsx", d.xlsx("secret"))]
+            locked = self._request("POST", "/pipeline/documents/lock-check", json_body={"documents": docs}, auth=True)["locked"]
+            assert locked == ["locked.pdf", "sov.xlsx"], locked
+            return f"locked={locked}"
+
+        def locked_without_password() -> str:
+            decision, reasons = run_insurance(upload("loss_run.pdf", d.pdf("secret", pages=[d.LOSS_RUN])))
+            assert decision == "refer" and has(reasons, "Password-protected document: loss_run.pdf"), reasons
+            assert not has(reasons, "irrelevant"), reasons
+            return f"decision={decision}"
+
+        def wrong_password() -> str:
+            resp = self._request("POST", "/pipeline/run", json_body={"documents": [upload("loss_run.pdf", d.pdf("secret"), password="hunter2")]}, auth=True, expected=422)
+            assert "Wrong password" in str(resp) and "hunter2" not in str(resp), resp
+            return "422, password not echoed"
+
+        def right_password() -> str:
+            _, reasons = run_insurance(upload("loss_run.pdf", d.pdf("secret", pages=[d.LOSS_RUN, d.LOSS_RUN_CONT]), password="secret"))
+            assert not has(reasons, "Password-protected") and not has(reasons, "Missing required document: Loss run"), reasons
+            return "unlocked and read as a loss run"
+
+        def zip_package() -> str:
+            package = d.zip_of({"loss_run.pdf": loss_run, "nested/sov.zip": d.zip_of({"sov.pdf": sov})})
+            _, reasons = run_insurance(upload("broker_package.zip", package))
+            assert not has(reasons, "Missing required document: Loss run") and not has(reasons, "Missing required document: Statement of Values"), reasons
+            return "loss run and SOV found inside the ZIP (incl. nested)"
+
+        def email_attachments() -> str:
+            _, reasons = run_insurance(upload("broker.eml", d.email_with({"loss_run.pdf": loss_run, "sov.pdf": sov})))
+            assert not has(reasons, "Missing required document: Loss run") and not has(reasons, "Missing required document: Statement of Values"), reasons
+            return "attachments read"
+
+        def packet_split() -> str:
+            _, reasons = run_insurance(upload("package.pdf", d.pdf(pages=[d.LOSS_RUN, d.LOSS_RUN_CONT, d.SOV])))
+            assert not has(reasons, "Missing required document: Loss run") and not has(reasons, "Missing required document: Statement of Values"), reasons
+            return "one PDF split into loss run + SOV"
+
+        def corrupt_pdf() -> str:
+            decision, reasons = run_insurance(upload("broken.pdf", d.pdf()[:300]))
+            assert decision in ("refer", "decline") and has(reasons, "Unreadable document: broken.pdf"), reasons
+            return f"decision={decision}"
+
+        def draft_duplicates() -> str:
+            bundle_id = self._request("POST", "/pipeline/bundles", json_body={"name": "e2e-intake"}, auth=True, expected=(200, 201))["bundle_id"]
+            path = f"/pipeline/bundles/{bundle_id}/documents"
+            self._request("POST", path, json_body={"documents": [upload("loss_run.pdf", loss_run)]}, auth=True)
+            again = self._request("POST", path, json_body={"documents": [upload("loss_run (1).pdf", loss_run)]}, auth=True)
+            assert again["document_count"] == 1 and "duplicate of loss_run.pdf" in again["skipped_oversized"][0]["reason"], again
+            return "second copy skipped"
+
+        def mortgage_unreadable() -> str:
+            body = {"documents": [upload("w2.pdf", d.pdf()[:300])], "use_llm": self.use_llm, "use_celery": False}
+            job = self._wait_job("/mortgage/pipeline/jobs", self._request("POST", "/mortgage/pipeline/run", json_body=body, auth=True, expected=202)["job_id"])
+            titles = [f.get("title") for f in ((job.get("results") or {}).get("memo") or {}).get("key_findings") or []]
+            assert "Unreadable document" in titles, titles
+            return "flagged"
+
+        def lending_locked() -> str:
+            resp = self._request("POST", "/lending/pipeline/run", json_body={"documents": [upload("bank.pdf", d.pdf("secret", pages=[d.BANK_STATEMENT]))]}, auth=True)
+            result = resp["result"]
+            assert result["decision"] == "referred" and "Password-protected document: bank.pdf" in result["human_review_reasons"], result
+            return "referred"
+
+        def antivirus() -> str:
+            if self._client is None:
+                return "skipped: needs the in-process server to point CLAMAV_HOST at a test scanner"
+            saved = {k: os.environ.get(k) for k in ("CLAMAV_HOST", "CLAMAV_PORT")}
+            os.environ["CLAMAV_HOST"], os.environ["CLAMAV_PORT"] = "127.0.0.1", str(d.fake_clamd(b"stream: Win.Test.EICAR_HDB-1 FOUND\0"))
+            try:
+                resp = self._request("POST", "/pipeline/run", json_body={"documents": [upload("loss_run.pdf", loss_run)]}, auth=True, expected=422)
+            finally:
+                for key, value in saved.items():
+                    if value is None:
+                        os.environ.pop(key, None)
+                    else:
+                        os.environ[key] = value
+            assert "antivirus" in str(resp), resp
+            return "infected upload rejected (422)"
+
+        self._step("Intake: lock-check flags only files that need a password", lock_check)
+        self._step("Intake: locked loss run without password → refer", locked_without_password)
+        self._step("Intake: wrong password → 422, not echoed", wrong_password)
+        self._step("Intake: right password → read as a loss run", right_password)
+        self._step("Intake: ZIP package (nested) unpacked", zip_package)
+        self._step("Intake: email attachments read", email_attachments)
+        self._step("Intake: multi-document PDF split", packet_split)
+        self._step("Intake: corrupt PDF → unreadable, refer", corrupt_pdf)
+        self._step("Intake: duplicate upload skipped in draft bundle", draft_duplicates)
+        self._step("Intake: mortgage flags unreadable document", mortgage_unreadable)
+        self._step("Intake: lending refers password-protected statement", lending_locked)
+        self._step("Intake: antivirus rejects infected upload", antivirus)
 
     def _test_browser_ui(self) -> None:
         if not self.test_browser:

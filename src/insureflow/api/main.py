@@ -13,7 +13,7 @@ from typing import Any, Callable, Optional
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect, status
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, model_validator
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
@@ -917,6 +917,30 @@ class InsuranceDocumentPayload(BaseModel):
     filename: str
     content: str
     encoding: str = "utf-8"  # or "base64" for PDF/image uploads
+    # For password-protected files. Used once, right here, to decrypt the
+    # content, then cleared — never serialized, logged, or stored.
+    password: Optional[str] = Field(default=None, exclude=True, repr=False)
+
+    @model_validator(mode="after")
+    def _screen(self) -> "InsuranceDocumentPayload":
+        """Unlock with the supplied password, and refuse malware before the
+        file is stored anywhere (the loader scans again for connector pulls)."""
+        if self.encoding == "base64":
+            import base64
+
+            from insureflow.ingestion.intake import malware_scanning_enabled, scan_for_malware
+            from insureflow.ingestion.locked_docs import WrongPasswordError, unlock
+
+            if self.password:
+                try:
+                    self.content = base64.b64encode(unlock(base64.b64decode(self.content), self.filename, self.password)).decode()
+                except WrongPasswordError as exc:
+                    # Not a ValueError on purpose: a pydantic 422 echoes the input — password included.
+                    raise HTTPException(status_code=422, detail=str(exc)) from None
+            if malware_scanning_enabled() and (signature := scan_for_malware(base64.b64decode(self.content))):
+                raise HTTPException(status_code=422, detail=f"'{self.filename}' was rejected: the antivirus scan flagged it ({signature})")
+        self.password = None
+        return self
 
 
 def _reject_oversized_inline_documents(
@@ -2753,6 +2777,8 @@ class DraftBundleConfirmUploadRequest(BaseModel):
     content_type: str = ""
     source_id: str = ""
     connection_label: str = ""
+    # For a password-protected upload: used once to decrypt the stored object, never kept.
+    password: Optional[str] = Field(default=None, exclude=True, repr=False)
 
 
 @app.get("/pipeline/bundles")
@@ -2922,6 +2948,29 @@ def presign_draft_document_upload(
     return presigned
 
 
+def _unlock_uploaded_object(storage_key: str, filename: str, password: Optional[str], size: int) -> int:
+    """Decrypt a presigned upload in place when the caller supplied its
+    password, so the stored object — and everything that later reads it — is
+    an ordinary file. Call only after the storage key's ownership is checked.
+    Returns the object's size afterwards."""
+    if not password:
+        return size
+    from insureflow.ingestion.locked_docs import WrongPasswordError, unlock
+    from insureflow.storage.object_storage import MAX_PROCESSABLE_BYTES, download_object_bytes, put_object_bytes
+
+    if size > MAX_PROCESSABLE_BYTES:
+        raise HTTPException(status_code=413, detail=f"'{filename}' is too large to unlock automatically — upload an unlocked copy")
+    data = download_object_bytes(storage_key)
+    try:
+        unlocked = unlock(data, filename, password)
+    except WrongPasswordError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from None
+    if unlocked is data:
+        return size
+    put_object_bytes(storage_key, unlocked)
+    return len(unlocked)
+
+
 @app.post("/pipeline/bundles/{bundle_id}/documents/confirm")
 def confirm_draft_document_upload(
     bundle_id: str,
@@ -2953,24 +3002,45 @@ def confirm_draft_document_upload(
     if meta is None:
         raise HTTPException(status_code=400, detail="Upload not found in object storage — the presigned upload may not have completed")
 
+    size_bytes = _unlock_uploaded_object(req.storage_key, req.filename, req.password, meta["size_bytes"])
     store = get_draft_bundle_store()
     bundle = store.add_object_reference(
         bundle_id,
         storage_key=req.storage_key,
         filename=req.filename,
-        size_bytes=meta["size_bytes"],
+        size_bytes=size_bytes,
         content_type=req.content_type or meta.get("content_type", ""),
         source_id=req.source_id,
         connection_label=req.connection_label,
         org_id=current.org_id,
+        etag=meta.get("etag", ""),
     )
     if not bundle:
         raise HTTPException(status_code=404, detail="Draft bundle not found")
+    skipped = [s for s in bundle.get("last_skipped_oversized") or [] if s.get("filename") == req.filename and "duplicate" in str(s.get("reason"))]
     return {
         "bundle_id": bundle["bundle_id"],
         "document_count": len(bundle.get("documents", [])),
         "size_bytes": meta["size_bytes"],
+        "duplicate_of": skipped[0]["reason"] if skipped else None,
     }
+
+
+class LockCheckRequest(BaseModel):
+    documents: list[InsuranceDocumentPayload]
+
+
+@app.post("/pipeline/documents/lock-check")
+def check_documents_locked(req: LockCheckRequest, current: TokenData = Depends(require_role(Role.VIEWER))) -> dict[str, list[str]]:
+    """Which uploads need a password to open — so the UI can ask for it before
+    the run. The browser can't tell for legacy .xls/.doc, or for a PDF that
+    only has a permissions password."""
+    import base64
+
+    from insureflow.ingestion.locked_docs import is_locked
+
+    _reject_oversized_inline_documents(req.documents, endpoint="/pipeline/documents/lock-check")
+    return {"locked": [d.filename for d in req.documents if d.encoding == "base64" and is_locked(base64.b64decode(d.content), d.filename)]}
 
 
 @app.post("/pipeline/validate-documents")
@@ -7201,10 +7271,8 @@ def run_ratemaking(body: RatemakingRunRequest, _: TokenData = Depends(require_ro
 # ── Mortgage Pipeline ───────────────────────────────────────────
 
 
-class MortgageDocumentPayload(BaseModel):
-    filename: str
-    content: str
-    encoding: str = "utf-8"  # or "base64" for PDF/image uploads, or "s3_ref" (content = storage key) for large files
+class MortgageDocumentPayload(InsuranceDocumentPayload):
+    """Same shape; ``encoding`` may also be "s3_ref" (content = storage key) for large files."""
 
 
 class MortgageSubmissionRequest(BaseModel):
@@ -7436,6 +7504,8 @@ class MortgageConfirmUploadRequest(BaseModel):
     storage_key: str
     filename: str
     content_type: str = ""
+    # For a password-protected upload: used once to decrypt the stored object, never kept.
+    password: Optional[str] = Field(default=None, exclude=True, repr=False)
 
 
 @app.post("/mortgage/pipeline/documents/presign")
@@ -7501,7 +7571,7 @@ def confirm_mortgage_document_upload(
         "filename": req.filename,
         "content": req.storage_key,
         "encoding": "s3_ref",
-        "size_bytes": meta["size_bytes"],
+        "size_bytes": _unlock_uploaded_object(req.storage_key, req.filename, req.password, meta["size_bytes"]),
         "content_type": req.content_type or meta.get("content_type", ""),
     }
 
@@ -8532,9 +8602,10 @@ def run_lending_pipeline(
         elif req.documents:
             from insureflow.ingestion.lending import application_from_documents, load_lending_documents_from_payloads
 
-            payloads = [{"filename": d.filename, "content": d.content} for d in req.documents]
+            payloads = [{"filename": d.filename, "content": d.content, "encoding": d.encoding} for d in req.documents]
             loaded_docs = load_lending_documents_from_payloads(payloads)
-            doc_payloads = payloads
+            # Built from the loaded docs, not the payloads: a PDF packet can split into several documents.
+            doc_payloads = [{"filename": d.filename, "content": d.content, "document_type": d.document_type.value, "ocr_engine": d.ocr_engine, "active_content": d.active_content} for d in loaded_docs]
             overrides = {
                 "amount": req.amount,
                 "term_months": req.term_months,

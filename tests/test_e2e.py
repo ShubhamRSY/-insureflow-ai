@@ -41,3 +41,12 @@ def test_e2e_inprocess_fast(monkeypatch) -> None:
     report = run_inprocess(test_connectors=False, use_llm=False, job_timeout=120)
     failures = [r for r in report["results"] if not r["passed"]]
     assert report["success"], f"E2E failures: {[f['name'] + ': ' + f['detail'] for f in failures]}"
+
+
+@pytest.mark.e2e
+def test_e2e_document_intake() -> None:
+    """Locked, zipped, emailed, bundled, corrupt, duplicate and infected uploads through the real API."""
+    report = run_inprocess(test_connectors=False, test_browser=False, test_celery=False, use_llm=False, job_timeout=180, only_suites=("Document intake",))
+    failures = [r for r in report["results"] if not r["passed"]]
+    assert report["total"] == 12, report
+    assert report["success"], f"E2E failures: {[f['name'] + ': ' + f['detail'] for f in failures]}"

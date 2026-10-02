@@ -7,6 +7,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterator, Optional
 
+from insureflow.ingestion.intake import content_hash
+
 logger = logging.getLogger(__name__)
 
 _PREVIEW_LIMIT = 80_000
@@ -117,11 +119,17 @@ class DraftBundleStore:
             existing = bundle.get("documents", [])
             running_total = _bundle_total_bytes(bundle)
             skipped: list[dict[str, Any]] = []
+            seen = {(d.get("encoding") or "utf-8", content_hash(d.get("content"))): d.get("filename") for d in existing}
             for doc in documents:
                 filename = str(doc.get("filename") or "unknown")
                 content = doc.get("content", "") or ""
                 encoding = doc.get("encoding", "utf-8") or "utf-8"
                 size = _size_bytes(content, encoding)
+                key = (encoding, content_hash(content))
+                if key in seen:
+                    skipped.append({"filename": filename, "size_bytes": size, "reason": f"duplicate of {seen[key]}, already in this bundle"})
+                    continue
+                seen[key] = filename
                 if size > MAX_DOCUMENT_BYTES:
                     skipped.append(
                         {
@@ -183,6 +191,7 @@ class DraftBundleStore:
         source_id: str = "",
         connection_label: str = "",
         org_id: str = "default",
+        etag: str = "",
     ) -> Optional[dict[str, Any]]:
         """Register a file that was uploaded directly to object storage
         rather than inline (see ``object_storage.presign_upload`` — the path
@@ -204,6 +213,14 @@ class DraftBundleStore:
                 )
 
             existing = bundle.get("documents", [])
+            duplicate = next((d for d in existing if etag and d.get("etag") == etag), None)
+            if duplicate:
+                from insureflow.storage.object_storage import delete_object
+
+                delete_object(storage_key)  # the second copy is never referenced
+                bundle["last_skipped_oversized"] = [{"filename": filename, "size_bytes": size_bytes, "reason": f"duplicate of {duplicate.get('filename')}, already in this bundle"}]
+                self._store.set(DRAFT_NS, bundle_id, bundle, org_id=org_id)
+                return bundle
             doc_id = f"doc-{uuid.uuid4().hex[:8]}"
             existing.append(
                 {
@@ -212,6 +229,7 @@ class DraftBundleStore:
                     "path": filename,
                     "directory": "",
                     "content": storage_key,
+                    "etag": etag,
                     "encoding": "s3_ref",
                     "content_type": content_type,
                     "size_bytes": size_bytes,
@@ -221,6 +239,7 @@ class DraftBundleStore:
                 }
             )
             bundle["documents"] = existing
+            bundle["last_skipped_oversized"] = []
             bundle["updated_at"] = datetime.now(tz=timezone.utc).isoformat()
             self._store.set(DRAFT_NS, bundle_id, bundle, org_id=org_id)
             return bundle

@@ -60,7 +60,7 @@ def test_head_object_returns_real_size(monkeypatch: pytest.MonkeyPatch) -> None:
     fake_client.head_object.return_value = {"ContentLength": 2_147_483_648, "ContentType": "video/mp4"}
     with patch.object(osmod, "_client", return_value=fake_client):
         meta = osmod.head_object("draft-uploads/org1/b1/roof.mp4")
-    assert meta == {"size_bytes": 2_147_483_648, "content_type": "video/mp4"}
+    assert meta == {"size_bytes": 2_147_483_648, "content_type": "video/mp4", "etag": ""}
 
 
 def test_head_object_returns_none_when_object_missing(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -103,3 +103,11 @@ def test_download_object_bytes_succeeds_under_cap(monkeypatch: pytest.MonkeyPatc
     ):
         data = osmod.download_object_bytes("draft-uploads/org1/b1/small.txt")
     assert data == b"file contents"
+
+
+def test_head_object_returns_unquoted_etag(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("S3_UPLOADS_BUCKET", "my-bucket")
+    fake_client = MagicMock()
+    fake_client.head_object.return_value = {"ContentLength": 10, "ContentType": "application/pdf", "ETag": '"9e107d9d372bb6826bd81d3542a419d6"'}
+    with patch.object(osmod, "_client", return_value=fake_client):
+        assert osmod.head_object("draft-uploads/org1/b1/a.pdf")["etag"] == "9e107d9d372bb6826bd81d3542a419d6"

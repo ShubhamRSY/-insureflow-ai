@@ -114,7 +114,8 @@ def head_object(storage_key: str) -> dict[str, Any] | None:
         resp = _client().head_object(Bucket=bucket, Key=storage_key)
     except Exception:
         return None
-    return {"size_bytes": int(resp.get("ContentLength") or 0), "content_type": str(resp.get("ContentType") or "")}
+    # ETag is the content MD5 for single-part uploads (presigned POST), so equal ETags mean the same file.
+    return {"size_bytes": int(resp.get("ContentLength") or 0), "content_type": str(resp.get("ContentType") or ""), "etag": str(resp.get("ETag") or "").strip('"')}
 
 
 def download_object_bytes(storage_key: str, *, max_bytes: int = MAX_PROCESSABLE_BYTES) -> bytes:
@@ -140,6 +141,13 @@ def download_object_bytes(storage_key: str, *, max_bytes: int = MAX_PROCESSABLE_
     buf = io.BytesIO()
     _client().download_fileobj(bucket, storage_key, buf)
     return buf.getvalue()
+
+
+def put_object_bytes(storage_key: str, data: bytes) -> None:
+    bucket = _bucket()
+    if not bucket:
+        raise ConnectionError("Object storage not configured — set S3_UPLOADS_BUCKET (or S3_SUBMISSIONS_BUCKET)")
+    _client().put_object(Bucket=bucket, Key=storage_key, Body=data)
 
 
 def delete_object(storage_key: str) -> None:

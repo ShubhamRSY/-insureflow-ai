@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import os
+import re
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -17,6 +18,7 @@ from insureflow.ingestion.financial_parser import FinancialStatementParser
 from insureflow.ingestion.insurance.classifier import InsuranceDocumentClassifier, InsuranceDocumentType
 from insureflow.ingestion.insurance.extractors import extract_fields
 from insureflow.ingestion.insurance.normalizers import get_normalizer
+from insureflow.ingestion.intake import ACTIVE_CONTENT_FIELD, BLOCKED_TEXT, IMAGE_EXTS, UNREADABLE_ENGINE, decode_text, intake_documents, is_unreadable, pdf_packet_sections, prepare
 from insureflow.ingestion.json_parser import JSONBrokerParser
 from insureflow.ingestion.loss_run_parser import LossRunParser
 from insureflow.ingestion.ocr import OCRProcessor
@@ -59,6 +61,9 @@ def _code_exec_fallback_enabled() -> bool:
     return code_exec_enabled()
 
 
+_LOSS_RUN_TITLE = re.compile(r"^(?:\S+\s+){0,3}loss runs?\b", re.IGNORECASE)
+
+
 class InsuranceDocumentLoader:
     """Load insurance broker submissions including OCR on PDF/image uploads."""
 
@@ -91,12 +96,27 @@ class InsuranceDocumentLoader:
         bid = bundle_id or f"bundle-{uuid4().hex[:12]}"
         bundle = SubmissionBundle(bundle_id=bid, status=SubmissionStatus.RECEIVED)
 
-        for i, doc in enumerate(documents):
+        for i, doc in enumerate(intake_documents(documents)):
             filename = doc.get("filename", f"doc-{i}.txt")
             content = doc.get("content", "")
             encoding = doc.get("encoding", "utf-8")
 
             raw_text, engine, extra_fields, spatial_lines, raw_bytes = self._resolve_content(content, filename, encoding)
+
+            # One PDF holding several documents (ACORD + loss run + SOV): parse each section as its own document.
+            sections = (
+                pdf_packet_sections(raw_bytes, filename, self._classify_heading, InsuranceDocumentType.SUPPLEMENTAL, self.classifier.classify, ocr_text=raw_text)
+                if raw_bytes and engine not in BLOCKED_TEXT
+                else []
+            )
+            for k, (section_type, first, last, section_text) in enumerate(sections):
+                if section_type == InsuranceDocumentType.SUPPLEMENTAL:  # untitled section: classify it whole
+                    section_type = self.classifier.classify(section_text)
+                lines = {page: box for page, box in spatial_lines.items() if first <= page <= last}
+                bundle.unstructured.append(self._build_unstructured(section_text, f"{filename} (pages {first}-{last})", section_type, bid, f"{i}.{k}", engine, extra_fields, lines, raw_bytes))
+            if sections:
+                continue
+
             doc_type = self.classifier.classify(raw_text, filename)
 
             if doc_type == InsuranceDocumentType.ACORD_XML:
@@ -118,6 +138,14 @@ class InsuranceDocumentLoader:
         if bundle.unstructured or bundle.structured:
             bundle.status = SubmissionStatus.PARSED
         return bundle
+
+    def _classify_heading(self, heading: str) -> InsuranceDocumentType:
+        # The classifier wants claim rows before it calls text a loss run, which a title
+        # never has. A short title line naming one ("Commercial Loss Run Report") is one;
+        # a sentence ("Please attach 5 years of loss runs") isn't.
+        if any(_LOSS_RUN_TITLE.match(line) for line in heading.splitlines()):
+            return InsuranceDocumentType.LOSS_RUN
+        return self.classifier.classify(heading)
 
     def load_from_paths(self, paths: list[str], bundle_id: str | None = None) -> SubmissionBundle:
         docs = []
@@ -187,11 +215,11 @@ class InsuranceDocumentLoader:
                 return message, "unprocessed_oversized", {}, {}, None
 
             data = download_object_bytes(content)
-            return self._process_binary(data, filename, ext)
+            return self._process_binary(data, filename)
 
         if encoding == "base64":
             data = base64.b64decode(content)
-            return self._process_binary(data, filename, ext)
+            return self._process_binary(data, filename)
 
         if ext == ".pdf" and encoding == "utf-8":
             raw_bytes = content.encode("utf-8", errors="surrogateescape") if isinstance(content, str) else content
@@ -206,9 +234,22 @@ class InsuranceDocumentLoader:
 
         return content, "", {}, {}, None
 
-    def _process_binary(self, data: bytes, filename: str, ext: str) -> tuple[str, str, dict[str, list[ExtractedField]], dict[int, dict[str, list[float]]], bytes | None]:
+    def _process_binary(self, data: bytes, filename: str) -> tuple[str, str, dict[str, list[ExtractedField]], dict[int, dict[str, list[float]]], bytes | None]:
         """Shared by the inline-base64 and object-storage (``s3_ref``) paths
         once each has produced the same thing: raw file bytes in memory."""
+        source = {"source_filename": [ExtractedField(field_name="source_filename", value=filename, confidence=1.0)]}
+        data, filename, blocked, active = prepare(data, filename)
+        if blocked:
+            return BLOCKED_TEXT[blocked], blocked, source, {}, data
+        if active:
+            source[ACTIVE_CONTENT_FIELD] = [ExtractedField(field_name=ACTIVE_CONTENT_FIELD, value=", ".join(active), confidence=1.0)]
+        ext = Path(filename).suffix.lower()
+        text, engine, fields, lines, raw = self._parse_binary(data, filename, ext)
+        if ext not in IMAGE_EXTS and is_unreadable(text):  # a photo with no text is still a photo
+            return BLOCKED_TEXT[UNREADABLE_ENGINE], UNREADABLE_ENGINE, source, {}, data
+        return text, engine, {**fields, **source}, lines, raw
+
+    def _parse_binary(self, data: bytes, filename: str, ext: str) -> tuple[str, str, dict[str, list[ExtractedField]], dict[int, dict[str, list[float]]], bytes | None]:
         if ext in _PDF_IMAGE_EXTS and router_enabled():
             decision = route_document(profile_document(filename, data))
             if decision.route == RouteKind.VLM and vlm_enabled():
@@ -233,7 +274,7 @@ class InsuranceDocumentLoader:
             result = self._code_parse(data, filename)
             if result is not None:
                 return result
-        return data.decode("utf-8", errors="replace"), "", {}, {}, data
+        return decode_text(data), "", {}, {}, data
 
     def _code_parse(self, data: bytes, filename: str) -> tuple[str, str, dict[str, list[ExtractedField]], dict[int, dict[str, list[float]]], bytes] | None:
         """Programmatic-generative fallback for binary blobs the generic parsers miss."""
@@ -255,7 +296,7 @@ class InsuranceDocumentLoader:
         filename: str,
         doc_type: InsuranceDocumentType,
         bundle_id: str,
-        index: int,
+        index: int | str,
         engine: str,
         extra_fields: dict[str, list[ExtractedField]] | None = None,
         spatial_lines: dict[int, dict[str, list[float]]] | None = None,

@@ -21,6 +21,7 @@ from insureflow.audit.insurance_audit import InsuranceAuditLogger
 from insureflow.audit.store import AuditStore
 from insureflow.ingestion.insurance.loader import InsuranceDocumentLoader
 from insureflow.ingestion.insurance.validation import validate_extraction
+from insureflow.ingestion.intake import ACTIVE_CONTENT_FIELD, BLOCKED_FINDINGS
 from insureflow.ingestion.loader import SubmissionLoader
 from insureflow.insurance.progress import PipelineProgressTracker
 from insureflow.integrations.factory import build_policy_admin_service
@@ -409,6 +410,15 @@ class InsurancePipeline:
             bundle = self.doc_loader.load_from_documents(documents, bundle_id=bid)
             ocr_count = sum(1 for d in bundle.unstructured if d.extracted_fields.get("ocr_engine"))
             oversized_docs = [d.submission_id for d in bundle.unstructured if any(f.value == "unprocessed_oversized" for f in d.extracted_fields.get("ocr_engine", []))]
+            blocked_docs = {
+                engine: [d.extracted_fields["source_filename"][0].value for d in bundle.unstructured if any(f.value == engine for f in d.extracted_fields.get("ocr_engine", []))]
+                for engine in BLOCKED_FINDINGS
+            }
+            active_docs = list(
+                dict.fromkeys(  # sections of one PDF packet share the flag
+                    f"{d.extracted_fields['source_filename'][0].value} ({d.extracted_fields[ACTIVE_CONTENT_FIELD][0].value})" for d in bundle.unstructured if ACTIVE_CONTENT_FIELD in d.extracted_fields
+                )
+            )
         else:
             bundle = self.legacy_loader.load_bundle(
                 acord_xml=acord_xml,
@@ -422,6 +432,8 @@ class InsurancePipeline:
             )
             ocr_count = len(pdf_paths or [])
             oversized_docs = []
+            blocked_docs = {}
+            active_docs = []
 
         audit.log(
             PipelineEvent.STRUCTURED_PARSE_COMPLETE,
@@ -595,7 +607,9 @@ class InsurancePipeline:
         from insureflow.insurance.relevance import score_document_relevance
 
         irrelevant_hits = 0
-        for doc in bundle.unstructured or []:
+        # Blocked files (locked, malware, unreadable) carry only a placeholder and get their own finding.
+        readable_docs = [d for d in bundle.unstructured or [] if not any(f.value in BLOCKED_FINDINGS for f in d.extracted_fields.get("ocr_engine", []))]
+        for doc in readable_docs:
             dtype = str(getattr(doc, "document_type", "") or "").lower()
             if dtype == "irrelevant":
                 irrelevant_hits += 1
@@ -626,7 +640,7 @@ class InsurancePipeline:
                         field_path="irrelevant_document",
                     )
                 )
-        if irrelevant_hits and irrelevant_hits >= max(1, len(bundle.unstructured or [])):
+        if irrelevant_hits and irrelevant_hits >= max(1, len(readable_docs)):
             validation_findings.append(
                 Finding(
                     title="Package appears to contain only irrelevant files",
@@ -1066,6 +1080,32 @@ class InsurancePipeline:
             )
             if memo.decision not in (UWDecision.DECLINE, UWDecision.REFER):
                 memo.decision = UWDecision.REFER
+
+        for engine, names in blocked_docs.items():
+            if not names:
+                continue
+            from insureflow.models.agents import Finding, RiskSeverity, UWDecision
+
+            title, detail = BLOCKED_FINDINGS[engine]
+            memo.human_review_required = True
+            memo.human_review_reasons.append(f"{title}: {', '.join(names)}")
+            memo.key_findings.append(Finding(title=title, description=f"{len(names)} document(s) {detail}", severity=RiskSeverity.HIGH, category="data_quality"))
+            if memo.decision not in (UWDecision.DECLINE, UWDecision.REFER):
+                memo.decision = UWDecision.REFER
+
+        if active_docs:
+            from insureflow.models.agents import Finding, RiskSeverity
+
+            memo.human_review_required = True
+            memo.human_review_reasons.append(f"Macros or scripts found in: {', '.join(active_docs)}")
+            memo.key_findings.append(
+                Finding(
+                    title="Document contains macros or scripts",
+                    description="Text was extracted without running them, but don't open the original files outside a sandbox: " + ", ".join(active_docs),
+                    severity=RiskSeverity.MODERATE,
+                    category="security",
+                )
+            )
 
         # ── 6a. Apply deferred critical oracle failures to memo ──
         if pending_oracle_failures:

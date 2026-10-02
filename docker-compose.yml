@@ -35,6 +35,7 @@ x-api-env: &api-env
   OPENOBSERVE_USER: ${ZO_ROOT_USER_EMAIL:-root@example.com}
   OPENOBSERVE_PASSWORD: ${ZO_ROOT_USER_PASSWORD:-Complexpass#123}
   GRAFANA_URL: ${GRAFANA_URL:-http://localhost:3000}
+  CLAMAV_HOST: ${CLAMAV_HOST:-clamav}
 
 services:
   api:
@@ -48,6 +49,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
+      clamav:
+        condition: service_healthy
     restart: unless-stopped
 
   worker:
@@ -60,6 +63,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
+      clamav:
+        condition: service_healthy
     restart: unless-stopped
 
   # Dedicated pool for the pipeline-large queue (GB-scale submissions — see
@@ -75,6 +80,22 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
+      clamav:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Antivirus for uploads (ingestion/intake.py). Scanning fails closed, so the
+  # app waits for clamd to finish loading signatures (~1-2 min on first boot).
+  clamav:
+    image: clamav/clamav:stable
+    volumes:
+      - clamav-db:/var/lib/clamav
+    healthcheck:
+      test: ["CMD", "clamdcheck.sh"]
+      interval: 30s
+      timeout: 10s
+      start_period: 300s
+      retries: 5
     restart: unless-stopped
 
   redis:
@@ -153,6 +174,7 @@ services:
 
 volumes:
   pgdata:
+  clamav-db:
   prometheus-data:
   grafana-data:
   oo-data:
