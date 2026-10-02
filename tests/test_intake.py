@@ -5,6 +5,7 @@ import io
 import shutil
 import socket
 import zipfile
+from typing import Any
 
 import pytest
 from fastapi import HTTPException
@@ -66,8 +67,8 @@ def test_mortgage_and_lending_packets_are_split():
     assert [d.document_type for d in docs] == [MortgageDocumentType.W2, MortgageDocumentType.PAY_STUB]
 
     packet = _pdf(pages=[["Business Bank Statement - Checking", "Ending balance $41,200"], ["Profit and Loss Statement", "Revenue $1,200,000"]])
-    docs = load_lending_documents_from_payloads([{"filename": "financials.pdf", "content": _b64(packet), "encoding": "base64"}], use_llm=False)
-    assert [d.document_type for d in docs] == [LendingDocumentType.BANK_STATEMENT, LendingDocumentType.PROFIT_LOSS]
+    lending = load_lending_documents_from_payloads([{"filename": "financials.pdf", "content": _b64(packet), "encoding": "base64"}], use_llm=False)
+    assert [d.document_type for d in lending] == [LendingDocumentType.BANK_STATEMENT, LendingDocumentType.PROFIT_LOSS]
 
 
 # ── Duplicates ───────────────────────────────────────────────────────
@@ -82,6 +83,7 @@ def test_duplicate_uploads_are_dropped():
     draft = store.create(org_id="test")
     store.add_documents(draft["bundle_id"], [doc], org_id="test")
     again = store.add_documents(draft["bundle_id"], [{**doc, "filename": "copy.pdf"}], org_id="test")
+    assert again is not None
     assert len(again["documents"]) == 1
     assert again["last_skipped_oversized"][0]["reason"].startswith("duplicate of loss_run.pdf")
 
@@ -228,7 +230,9 @@ def test_email_attachments_become_documents():
     msg["Subject"] = "New submission - Acme Widgets"
     msg.set_content("Loss runs attached.")
     msg.add_alternative('<p>Loss runs attached.<img src="cid:logo"></p>', subtype="html")
-    msg.get_payload()[1].add_related(b"\x89PNG\r\n\x1a\n" + b"\0" * 50, maintype="image", subtype="png", cid="logo", filename="logo.png", disposition="inline")
+    html_part = msg.get_payload()[1]  # type: ignore[index, unused-ignore]
+    assert isinstance(html_part, EmailMessage)
+    html_part.add_related(b"\x89PNG\r\n\x1a\n" + b"\0" * 50, maintype="image", subtype="png", cid="logo", filename="logo.png", disposition="inline")
     msg.add_attachment(_pdf(pages=[LOSS_RUN]), maintype="application", subtype="pdf", filename="loss_run.pdf")
 
     bundle = InsuranceDocumentLoader().load_from_documents([{"filename": "broker.eml", "content": _b64(msg.as_bytes()), "encoding": "base64"}])
@@ -237,12 +241,12 @@ def test_email_attachments_become_documents():
     assert any("Loss runs attached" in t for t in texts) and any("10442" in t for t in texts)
 
 
-def _ole(tree: dict) -> bytes:
+def _ole(tree: dict[str, Any]) -> bytes:
     """Minimal OLE compound file writer (512-byte sectors, no mini stream) — enough to build a .msg for tests."""
     import struct
 
     end, free, fatsect, nostream = 0xFFFFFFFE, 0xFFFFFFFF, 0xFFFFFFFD, 0xFFFFFFFF
-    entries: list[dict] = []
+    entries: list[dict[str, Any]] = []
 
     def add(name, node):
         if isinstance(node, bytes):  # readers send anything under 4096 bytes to the mini stream, which this writer doesn't build
@@ -406,6 +410,7 @@ def test_duplicate_presigned_upload_is_skipped_by_etag():
     store.add_object_reference(draft["bundle_id"], storage_key="k1", filename="sov.xlsx", size_bytes=10, etag="abc", org_id="test")
     with patch("insureflow.storage.object_storage.delete_object") as delete:
         again = store.add_object_reference(draft["bundle_id"], storage_key="k2", filename="sov (1).xlsx", size_bytes=10, etag="abc", org_id="test")
+    assert again is not None
     assert len(again["documents"]) == 1
     delete.assert_called_once_with("k2")
     assert "duplicate of sov.xlsx" in again["last_skipped_oversized"][0]["reason"]

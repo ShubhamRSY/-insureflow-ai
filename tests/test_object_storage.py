@@ -110,4 +110,5 @@ def test_head_object_returns_unquoted_etag(monkeypatch: pytest.MonkeyPatch) -> N
     fake_client = MagicMock()
     fake_client.head_object.return_value = {"ContentLength": 10, "ContentType": "application/pdf", "ETag": '"9e107d9d372bb6826bd81d3542a419d6"'}
     with patch.object(osmod, "_client", return_value=fake_client):
-        assert osmod.head_object("draft-uploads/org1/b1/a.pdf")["etag"] == "9e107d9d372bb6826bd81d3542a419d6"
+        head = osmod.head_object("draft-uploads/org1/b1/a.pdf")
+    assert head is not None and head["etag"] == "9e107d9d372bb6826bd81d3542a419d6"

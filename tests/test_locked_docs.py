@@ -1,6 +1,7 @@
 """Password-protected uploads: flagged when no password is given, unlocked when one is."""
 
 import base64
+from typing import Any
 
 import pytest
 from fastapi import HTTPException
@@ -67,7 +68,7 @@ def test_wrong_password_over_http_does_not_echo_the_password():
     app = FastAPI()
 
     @app.post("/doc")
-    def _doc(doc: InsuranceDocumentPayload) -> dict:
+    def _doc(doc: InsuranceDocumentPayload) -> dict[str, Any]:
         return doc.model_dump()
 
     client = TestClient(app)

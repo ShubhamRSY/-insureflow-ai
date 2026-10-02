@@ -23,6 +23,18 @@ from insureflow.models.submissions import (
     UnstructuredSubmission,
 )
 
+
+@pytest.fixture(autouse=True)
+def _disable_rate_limiter():
+    """The limiter keys on the TestClient's address, so hits pile up across tests and
+    unrelated ones start 429ing. Tests that exercise the limit re-enable it themselves."""
+    from insureflow.api import main as _main
+
+    _main.limiter.enabled = False
+    _main.limiter.reset()
+    yield
+    _main.limiter.enabled = False
+
 SAMPLE_ACORD_XML = """<?xml version="1.0" encoding="UTF-8"?>
 <ACORD xmlns="http://www.acord.org/standards/PC_Surety/ACORD">
   <Submission>
