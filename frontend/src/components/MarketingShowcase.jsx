@@ -1,8 +1,12 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { SplitText } from 'gsap/SplitText';
+import { useGSAP } from '@gsap/react';
 import {
   ArrowRight, FileSearch, HeartPulse, Building2, Home, Wallet,
-  ScrollText, ShieldCheck, Layers, Gauge, Sparkles, FileText, Briefcase,
+  ScrollText, ShieldCheck, Layers, Gauge, Check, FileText, Briefcase,
   ClipboardCheck, BadgeCheck, FolderOpen, Route, Repeat, TrendingUp, HandCoins,
 } from 'lucide-react';
 import { endpoints } from '../lib/api';
@@ -43,7 +47,7 @@ const SOLUTIONS = [
 const AUTOMATIONS = [
   {
     id: 'loss-run',
-    title: 'AI Loss Run Analysis',
+    title: 'Loss Run Analysis',
     desc: 'Normalize carrier loss runs, flag large / unusual claims, and feed experience rating.',
     icon: FileSearch,
     vertical: 'insurance',
@@ -52,7 +56,7 @@ const AUTOMATIONS = [
   },
   {
     id: 'life-medical',
-    title: 'AI Life Medical UW',
+    title: 'Life Medical UW',
     desc: 'Paramed / APS-aware classing, tobacco, face amount, and filing-grade life rating.',
     icon: HeartPulse,
     vertical: 'insurance',
@@ -61,7 +65,7 @@ const AUTOMATIONS = [
   },
   {
     id: 'cope',
-    title: 'AI COPE Property Rating',
+    title: 'COPE Property Rating',
     desc: 'Construction, occupancy, protection, and exposure schedule mods with evidence.',
     icon: Building2,
     vertical: 'insurance',
@@ -70,7 +74,7 @@ const AUTOMATIONS = [
   },
   {
     id: 'acord',
-    title: 'AI ACORD Extraction',
+    title: 'ACORD Extraction',
     desc: 'Classify ACORD 125/126/130/140 packages and extract every field with provenance.',
     icon: ScrollText,
     vertical: 'insurance',
@@ -78,7 +82,7 @@ const AUTOMATIONS = [
   },
   {
     id: 'financial',
-    title: 'AI Financial Statement Review',
+    title: 'Financial Statement Review',
     desc: 'Parse balance sheets, income statements, and tax returns into a 16-line financial-condition read.',
     icon: Wallet,
     vertical: 'insurance',
@@ -86,7 +90,7 @@ const AUTOMATIONS = [
   },
   {
     id: 'floor-plan',
-    title: 'AI Floor Plan & Schematic Review',
+    title: 'Floor Plan & Schematic Review',
     desc: 'Extract area, stories, fire compartments, exits, and sprinkler protection from drawings.',
     icon: Building2,
     vertical: 'insurance',
@@ -94,7 +98,7 @@ const AUTOMATIONS = [
   },
   {
     id: 'oracles',
-    title: 'AI Oracle Verification',
+    title: 'Oracle Verification',
     desc: 'Cross-check CLUE, NCCI, credit bureau, OSHA, and public-record feeds before you bind.',
     icon: Gauge,
     vertical: 'insurance',
@@ -102,7 +106,7 @@ const AUTOMATIONS = [
   },
   {
     id: 'memo',
-    title: 'AI Underwriting Memo',
+    title: 'Underwriting Memo',
     desc: 'Generate a coherent UW memo — decision, summary, and conditions stay in sync.',
     icon: FileText,
     vertical: 'insurance',
@@ -110,7 +114,7 @@ const AUTOMATIONS = [
   },
   {
     id: 'mortgage-pkg',
-    title: 'AI Mortgage Package',
+    title: 'Mortgage Package',
     desc: 'Abstract appraisals, income docs, and credit into a lender-ready risk view.',
     icon: Home,
     vertical: 'mortgage',
@@ -118,7 +122,7 @@ const AUTOMATIONS = [
   },
   {
     id: 'lending-decision',
-    title: 'AI Credit Decision',
+    title: 'Credit Decision',
     desc: 'Score applications, price risk, and emit compliant adverse-action narratives.',
     icon: Wallet,
     vertical: 'lending',
@@ -126,7 +130,7 @@ const AUTOMATIONS = [
   },
   {
     id: 'triage',
-    title: 'AI Appetite Triage',
+    title: 'Appetite Triage',
     desc: 'LOB-aware package checklists and priority scoring before expensive processing.',
     icon: Gauge,
     vertical: 'insurance',
@@ -134,7 +138,7 @@ const AUTOMATIONS = [
   },
   {
     id: 'portfolio',
-    title: 'AI Portfolio Guardrails',
+    title: 'Portfolio Guardrails',
     desc: 'Concentration, treaty fit, and authority checks before you bind exposure.',
     icon: Layers,
     vertical: 'insurance',
@@ -142,7 +146,7 @@ const AUTOMATIONS = [
   },
   {
     id: 'audit',
-    title: 'AI Audit & Provenance',
+    title: 'Audit & Provenance',
     desc: 'Field-level trust, encrypted trails, and human checkpoints for examiners.',
     icon: ShieldCheck,
     vertical: 'insurance',
@@ -166,11 +170,30 @@ const AUTOMATIONS = [
   },
 ];
 
-const VERT_COLOR = {
-  insurance: 'text-insurance',
-  mortgage: 'text-mortgage',
-  lending: 'text-lending',
-};
+gsap.registerPlugin(useGSAP, ScrollTrigger, SplitText);
+
+// Animations only run for users who haven't asked for reduced motion (and
+// never in jsdom, which has no matchMedia). Content is visible by default, so
+// skipping the animation never hides anything.
+function withMotion(fn) {
+  if (typeof window === 'undefined' || !window.matchMedia) return;
+  gsap.matchMedia().add('(prefers-reduced-motion: no-preference)', fn);
+}
+
+// Section headings marked data-kinetic rise in word by word as they scroll
+// into view. Cards stay put: one orchestrated moment (the hero) is enough.
+function useScrollReveal(scope, dependencies = []) {
+  useGSAP(() => withMotion(() => {
+    scope.current.querySelectorAll('[data-kinetic]').forEach((el) => {
+      const split = SplitText.create(el, { type: 'words', mask: 'words' });
+      gsap.from(split.words, {
+        yPercent: 110, duration: 0.8, ease: 'power4.out', stagger: 0.05,
+        onComplete: () => split.revert(), // masks clip descenders; restore plain text
+        scrollTrigger: { trigger: el, start: 'top 85%', once: true },
+      });
+    });
+  }), { scope, dependencies, revertOnUpdate: true });
+}
 
 function Container({ className = '', children }) {
   return <div className={`mx-auto w-full max-w-7xl px-6 lg:px-8 ${className}`}>{children}</div>;
@@ -180,23 +203,19 @@ function PipelineViz() {
   const steps = ['Ingest', 'Extract', 'Verify', 'Score', 'Price', 'Decide'];
   return (
     <div className="relative mt-10 w-full max-w-3xl" aria-hidden>
-      <div className="absolute inset-x-8 top-1/2 h-px -translate-y-1/2 bg-gradient-to-r from-transparent via-brand/50 to-transparent" />
+      <div data-pipe-line className="absolute inset-x-8 top-5 h-px origin-left bg-brand/40" />
       <div className="relative flex justify-between gap-2">
         {steps.map((label, i) => (
-          <div
-            key={label}
-            className="animate-float flex flex-col items-center"
-            style={{ animationDelay: `${i * 0.12}s` }}
-          >
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-raised ring-1 ring-brand/30 shadow-glow">
+          <div key={label} className="flex flex-col items-center">
+            <div data-pipe-step className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-raised ring-1 ring-brand/40">
               <span className="font-display text-xs font-bold text-brand-light">{String(i + 1).padStart(2, '0')}</span>
             </div>
-            <span className="mt-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400">{label}</span>
+            <span className="mt-2 text-xs font-medium text-slate-400">{label}</span>
           </div>
         ))}
       </div>
-      <p className="mt-6 text-center text-xs text-slate-500">
-        Live pipeline · hundreds of documents in parallel · every field cited
+      <p data-hero-fade className="mt-6 text-center text-xs text-slate-500">
+        Hundreds of documents run in parallel, from intake to decision.
       </p>
     </div>
   );
@@ -205,6 +224,22 @@ function PipelineViz() {
 export function HeroSection({ user, onLogin, onRunDemo, presets }) {
   const navigate = useNavigate();
   const firstDemo = presets?.insurance?.[0];
+  const scope = useRef(null);
+
+  useGSAP(() => withMotion(() => {
+    const q = gsap.utils.selector(scope);
+    const brand = SplitText.create(q('[data-hero-brand]'), { type: 'chars', mask: 'chars' });
+    const head = SplitText.create(q('[data-hero-head]'), { type: 'words', mask: 'words' });
+    // Give the masks room below the baseline so descenders aren't clipped mid-animation.
+    gsap.set([...brand.masks, ...head.masks], { paddingBottom: '0.2em', marginBottom: '-0.2em' });
+    // Masks clip descenders (the "y"), so restore plain text once the intro lands.
+    gsap.timeline({ defaults: { ease: 'power4.out' }, onComplete: () => { brand.revert(); head.revert(); } })
+      .from(brand.chars, { yPercent: 120, rotate: 6, duration: 1.1, stagger: 0.05 })
+      .from(head.words, { yPercent: 110, duration: 0.8, stagger: 0.04 }, '-=0.7')
+      .from(q('[data-hero-fade]'), { y: 16, autoAlpha: 0, duration: 0.6, stagger: 0.08, ease: 'power3.out' }, '-=0.5')
+      .from(q('[data-pipe-line]'), { scaleX: 0, duration: 1, ease: 'power2.inOut' }, '-=0.6')
+      .from(q('[data-pipe-step]'), { scale: 0.4, autoAlpha: 0, duration: 0.5, stagger: 0.08, ease: 'back.out(2)' }, '<0.1');
+  }), { scope });
 
   const primary = () => {
     if (user) {
@@ -216,22 +251,19 @@ export function HeroSection({ user, onLogin, onRunDemo, presets }) {
   };
 
   return (
-    <section className="relative overflow-hidden rounded-none border-b border-white/[0.06] bg-hero-glow pb-16 pt-10 lg:pb-20 lg:pt-14">
-      <div className="pointer-events-none absolute -right-24 top-0 h-[420px] w-[420px] rounded-full bg-insurance/10 blur-3xl animate-pulse-soft" />
-      <div className="pointer-events-none absolute -left-16 bottom-0 h-[280px] w-[280px] rounded-full bg-brand/15 blur-3xl" />
-
+    <section ref={scope} className="relative overflow-hidden border-b border-white/[0.06] bg-hero-glow pb-16 pt-12 lg:pb-20 lg:pt-16">
       <Container>
-        <p className="font-display text-5xl font-bold tracking-tight text-white sm:text-6xl lg:text-7xl animate-fade-in">
+        <p data-hero-brand className="font-display text-5xl font-bold tracking-tight text-white sm:text-6xl lg:text-7xl">
           Rytera
         </p>
-        <h2 className="mt-4 max-w-2xl font-display text-2xl font-semibold leading-snug tracking-tight text-slate-100 sm:text-3xl animate-slide-up">
+        <h2 data-hero-head className="mt-4 max-w-2xl font-display text-2xl font-semibold leading-snug tracking-tight text-slate-100 sm:text-3xl">
           Automate document-heavy underwriting with AI
         </h2>
-        <p className="mt-4 max-w-xl text-base leading-relaxed text-slate-400 animate-slide-up" style={{ animationDelay: '0.08s' }}>
+        <p data-hero-fade className="mt-4 max-w-xl text-base leading-relaxed text-slate-400">
           Turn insurance, mortgage, and lending packages into verified decisions — for line underwriters on the branch desk and staff underwriters at the home office.
         </p>
 
-        <div className="mt-8 flex flex-wrap items-center gap-3 animate-slide-up" style={{ animationDelay: '0.16s' }}>
+        <div data-hero-fade className="mt-8 flex flex-wrap items-center gap-3">
           <button type="button" onClick={primary} className="btn-primary px-5 py-3 text-sm">
             {user ? 'Run a live demo' : 'Sign in to try it'}
             <ArrowRight className="h-4 w-4" />
@@ -239,20 +271,12 @@ export function HeroSection({ user, onLogin, onRunDemo, presets }) {
           <button type="button" onClick={() => navigate('/insurance')} className="btn-secondary px-5 py-3 text-sm">
             Explore insurance
           </button>
-          <button type="button" onClick={() => navigate('/line-uw')} className="btn-secondary px-5 py-3 text-sm">
-            Line UW desk
-          </button>
-          <button type="button" onClick={() => navigate('/staff-uw')} className="btn-secondary px-5 py-3 text-sm">
-            Staff UW desk
-          </button>
         </div>
 
-        <div className="mt-8 flex flex-wrap gap-4 text-[11px] font-semibold uppercase tracking-widest text-slate-500 animate-fade-in" style={{ animationDelay: '0.24s' }}>
-          <span className="ring-1 ring-white/10 rounded-md px-2.5 py-1">Line + staff UW</span>
-          <span className="ring-1 ring-white/10 rounded-md px-2.5 py-1">SOC-ready audit</span>
-          <span className="ring-1 ring-white/10 rounded-md px-2.5 py-1">Encrypted at rest</span>
-          <span className="ring-1 ring-white/10 rounded-md px-2.5 py-1">Human checkpoints</span>
-        </div>
+        <p data-hero-fade className="mt-6 flex max-w-xl items-start gap-2 text-sm text-slate-500">
+          <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-verdigris" />
+          Every field cites its source, risky files stop for a human, and every record is encrypted at rest.
+        </p>
 
         <PipelineViz />
       </Container>
@@ -264,16 +288,23 @@ export function SolutionsSection() {
   const [active, setActive] = useState('insurance');
   const navigate = useNavigate();
   const sol = SOLUTIONS.find((s) => s.id === active) || SOLUTIONS[0];
+  const scope = useRef(null);
+  const panel = useRef(null);
+  useScrollReveal(scope);
+
+  // Crossfade the detail column when the tab changes.
+  useGSAP(() => withMotion(() => {
+    gsap.from(panel.current.children, { y: 12, autoAlpha: 0, duration: 0.45, ease: 'power2.out', stagger: 0.05 });
+  }), { dependencies: [active], scope: panel });
 
   return (
-    <section className="py-14 lg:py-20">
+    <section ref={scope} className="py-14 lg:py-20">
       <Container>
-        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-brand-light">Solutions</p>
-        <h3 className="mt-2 font-display text-2xl font-semibold tracking-tight text-white sm:text-3xl">
-          Tailored for your workflows
+        <h3 data-kinetic className="font-display text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+          Three kinds of underwriting, one pipeline
         </h3>
         <p className="mt-2 max-w-2xl text-sm text-slate-400">
-          Specialized agents for every vertical — same platform, same audit trail.
+          Insurance, mortgage, and lending packages share the same extraction, checks, and audit trail.
         </p>
 
         <div className="mt-8 flex flex-wrap gap-2">
@@ -294,13 +325,13 @@ export function SolutionsSection() {
         </div>
 
         <div className="mt-8 grid gap-8 lg:grid-cols-[1.2fr_1fr] lg:items-center">
-          <div>
-            <h4 className={`font-display text-xl font-semibold ${VERT_COLOR[sol.id] || 'text-white'}`}>{sol.label}</h4>
+          <div ref={panel}>
+            <h4 className="font-display text-xl font-semibold text-white">{sol.label}</h4>
             <p className="mt-2 text-sm leading-relaxed text-slate-400">{sol.blurb}</p>
             <ul className="mt-4 space-y-2">
               {sol.points.map((p) => (
                 <li key={p} className="flex items-start gap-2 text-sm text-slate-300">
-                  <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-brand-light" />
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-verdigris" />
                   {p}
                 </li>
               ))}
@@ -309,14 +340,13 @@ export function SolutionsSection() {
               Open {sol.label} <ArrowRight className="h-4 w-4" />
             </button>
           </div>
-          <div className="relative overflow-hidden rounded-2xl bg-surface-overlay/80 p-6 ring-1 ring-white/[0.06]">
-            <div className="absolute inset-0 bg-gradient-to-br from-brand/10 via-transparent to-insurance/10" />
-            <p className="relative text-[10px] font-bold uppercase tracking-widest text-slate-500">Workflow snapshot</p>
-            <ol className="relative mt-4 space-y-3">
+          <div className="rounded-2xl bg-surface-overlay/60 p-6 ring-1 ring-white/[0.06]">
+            <p className="text-sm font-medium text-slate-300">How a package moves through</p>
+            <ol className="mt-4 space-y-3">
               {['Pull package from broker / LOS', 'Extract & reconcile fields', 'Apply appetite + rating logic', 'Emit memo, quote, or decision'].map((step, i) => (
                 <li key={step} className="flex items-center gap-3 text-sm text-slate-300">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-surface-raised font-mono text-[10px] text-brand-light ring-1 ring-white/10">
-                    {String(i + 1).padStart(2, '0')}
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full font-display text-sm font-semibold text-brand-light ring-1 ring-brand/40">
+                    {i + 1}
                   </span>
                   {step}
                 </li>
@@ -332,6 +362,8 @@ export function SolutionsSection() {
 export function UnderwriterPlaybook() {
   const navigate = useNavigate();
   const [hub, setHub] = useState(null);
+  const scope = useRef(null);
+  useScrollReveal(scope, [hub]);
 
   useEffect(() => {
     let cancelled = false;
@@ -351,10 +383,9 @@ export function UnderwriterPlaybook() {
   };
 
   return (
-    <section className="border-t border-white/[0.06] py-14 lg:py-20">
+    <section ref={scope} className="border-t border-white/[0.06] py-14 lg:py-20">
       <Container>
-        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-brand-light">Business &amp; Commercial</p>
-        <h3 className="mt-2 font-display text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+        <h3 data-kinetic className="font-display text-2xl font-semibold tracking-tight text-white sm:text-3xl">
           What the commercial underwriter does
         </h3>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
@@ -378,8 +409,8 @@ export function UnderwriterPlaybook() {
 
         {(hub?.base_packet || []).length > 0 && (
           <div className="mt-8 rounded-2xl bg-surface-overlay/60 p-6 ring-1 ring-white/[0.06]">
-            <p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-500">
-              <FolderOpen className="h-3.5 w-3.5" /> Base packet (almost every line)
+            <p className="flex items-center gap-2 text-sm font-medium text-slate-300">
+              <FolderOpen className="h-4 w-4 text-brand-light" /> Documents almost every line asks for
             </p>
             <ul className="mt-4 grid gap-2 sm:grid-cols-2">
               {hub.base_packet.map((item) => (
@@ -434,6 +465,8 @@ export function AutomationsCatalog({ filterVertical }) {
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [tab, setTab] = useState(filterVertical || 'all');
+  const scope = useRef(null);
+  useScrollReveal(scope);
 
   const items = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -445,12 +478,11 @@ export function AutomationsCatalog({ filterVertical }) {
   }, [query, tab]);
 
   return (
-    <section className="border-t border-white/[0.06] bg-surface-raised/40 py-14 lg:py-20">
+    <section ref={scope} className="border-t border-white/[0.06] bg-surface-raised/40 py-14 lg:py-20">
       <Container>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-brand-light">Free AI automations</p>
-            <h3 className="mt-2 font-display text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+            <h3 data-kinetic className="font-display text-2xl font-semibold tracking-tight text-white sm:text-3xl">
               Ready-to-run underwriting agents
             </h3>
             <p className="mt-2 max-w-xl text-sm text-slate-400">
@@ -482,39 +514,35 @@ export function AutomationsCatalog({ filterVertical }) {
           ))}
         </div>
 
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {items.map((a, i) => {
+        <ul className="mt-6 grid gap-x-10 sm:grid-cols-2">
+          {items.map((a) => {
             const Icon = a.icon;
             return (
-              <button
-                key={a.id}
-                type="button"
-                onClick={() => navigate(a.path)}
-                className="group relative flex flex-col overflow-hidden rounded-2xl bg-surface/60 p-5 text-left ring-1 ring-white/[0.06] transition hover:ring-brand/35 hover:shadow-glow animate-slide-up"
-                style={{ animationDelay: `${Math.min(i, 8) * 0.04}s` }}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand/10 ring-1 ring-brand/20">
-                    <Icon className="h-5 w-5 text-brand-light" />
-                  </div>
-                  <span className={`text-[10px] font-bold uppercase tracking-wider ${VERT_COLOR[a.vertical]}`}>
-                    {a.vertical}
+              <li key={a.id} className="border-t border-white/[0.06]">
+                <button
+                  type="button"
+                  onClick={() => navigate(a.path)}
+                  className="group flex w-full items-start gap-4 py-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
+                >
+                  <Icon className="mt-0.5 h-5 w-5 shrink-0 text-brand-light" />
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-baseline justify-between gap-3">
+                      <span className="font-display text-base font-semibold text-white transition group-hover:text-brand-light">{a.title}</span>
+                      <span className="shrink-0 text-xs capitalize text-slate-500">{a.vertical}</span>
+                    </span>
+                    <span className="mt-1 block text-sm leading-relaxed text-slate-400">{a.desc}</span>
                   </span>
-                </div>
-                <h4 className="mt-4 font-display text-base font-semibold text-white group-hover:text-brand-light transition">
-                  {a.title}
-                </h4>
-                <p className="mt-2 text-sm leading-relaxed text-slate-400">{a.desc}</p>
-                <span className="mt-auto inline-flex items-center gap-1 pt-4 text-xs font-semibold text-brand-light opacity-0 transition group-hover:opacity-100">
-                  Launch <ArrowRight className="h-3 w-3" />
-                </span>
-              </button>
+                  <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-slate-600 transition group-hover:translate-x-0.5 group-hover:text-brand-light" />
+                </button>
+              </li>
             );
           })}
           {!items.length && (
-            <p className="col-span-full text-sm text-slate-500">No automations match that search.</p>
+            <li className="col-span-full border-t border-white/[0.06] py-4 text-sm text-slate-500">
+              No automations match that search. Try a document type, like "loss run".
+            </li>
           )}
-        </div>
+        </ul>
       </Container>
     </section>
   );
@@ -522,17 +550,18 @@ export function AutomationsCatalog({ filterVertical }) {
 
 export function PlatformStrip() {
   const pillars = [
-    { title: 'Minutes, not weeks', body: 'Ingest, extract, verify, and decide in one visible pipeline.', accent: 'from-brand to-brand' },
-    { title: 'Cited & controllable', body: 'Provenance on every field. Human checkpoints when risk rises.', accent: 'from-insurance to-cyan-400' },
-    { title: 'LOB-native', body: 'Life medical, COPE property, mortgage packages — not one generic checklist.', accent: 'from-lending to-teal-400' },
+    { title: 'Minutes, not weeks', body: 'Ingest, extract, verify, and decide in one visible pipeline.' },
+    { title: 'Cited and controllable', body: 'Every field links to its source. Files stop for a human when risk rises.' },
+    { title: 'Built per line of business', body: 'Life medical, COPE property, and mortgage packages each get their own checklist.' },
   ];
+  const scope = useRef(null);
+  useScrollReveal(scope);
   return (
-    <section className="py-14 lg:py-20">
+    <section ref={scope} className="border-t border-white/[0.06] py-14 lg:py-20">
       <Container>
-        <div className="grid gap-5 md:grid-cols-3">
+        <div className="grid gap-8 md:grid-cols-3">
           {pillars.map((p) => (
-            <div key={p.title} className="relative overflow-hidden rounded-xl bg-surface-overlay/60 p-5 ring-1 ring-white/[0.06]">
-              <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${p.accent} opacity-70`} />
+            <div key={p.title} className="border-l-2 border-brand/50 pl-5">
               <h4 className="font-display text-lg font-semibold text-white">{p.title}</h4>
               <p className="mt-2 text-sm leading-relaxed text-slate-400">{p.body}</p>
             </div>
