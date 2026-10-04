@@ -26,6 +26,11 @@
 :root,
 [data-theme="night"] {
   color-scheme: dark;
+  --mark-a: #b8893f;
+  --mark-b: #e6c896;
+  --mark-c: #6fa8a3;
+  --mark-ov: #0e1a16;
+  --mark-ov-a: .45;
   --bg: #0e1a16;
   --bg-2: #0a1512;
   --surface: rgba(30, 46, 40, .58);
@@ -125,6 +130,11 @@
 /* Day — parchment ledger, brass-brown ink (auto by local time) */
 [data-theme="day"] {
   color-scheme: light;
+  --mark-a: #8a5a28;
+  --mark-b: #c99a4b;
+  --mark-c: #3f7a78;
+  --mark-ov: #10201c;
+  --mark-ov-a: .35;
   --bg: #ece7d6;
   --bg-2: #e3ddc9;
   --surface: rgba(250, 247, 238, .92);
@@ -328,7 +338,8 @@ p { margin: 0; text-wrap: pretty; }
 }
 
 /* ---- Layout ---- */
-.page { position: relative; z-index: 1; }
+/* clip, not hidden: decorative glows bleed past the edges, and clip keeps the sticky header working */
+.page { position: relative; z-index: 1; overflow-x: clip; }
 
 main { max-width: 1160px; margin: 0 auto; padding: 0 1.5rem 3rem; }
 
@@ -476,17 +487,13 @@ section + section { border-top: 1px solid var(--border); }
 }
 
 .brand-mark {
-  width: 38px;
-  height: 38px;
+  width: 30px;
+  height: 34px;
   display: grid;
   place-items: center;
-  border-radius: 12px;
-  color: var(--on-accent);
-  background: var(--grad);
-  box-shadow: 0 8px 22px rgba(201, 154, 75, .4), inset 0 1px 0 rgba(255, 255, 255, .3);
 }
 
-.brand-mark svg { width: 22px; height: 22px; }
+.brand-mark svg { width: 100%; height: 100%; }
 
 .brand-name { font-family: var(--font-display); font-weight: 600; font-size: 1.2rem; letter-spacing: -.01em; }
 
@@ -837,24 +844,6 @@ section + section { border-top: 1px solid var(--border); }
   font-size: 1.05rem;
 }
 
-.punch-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: .5rem;
-  margin-top: 1rem;
-}
-
-.punch-row span {
-  padding: .4rem .75rem;
-  border-radius: 999px;
-  border: 1px solid rgba(52, 211, 153, .28);
-  background: rgba(16, 185, 129, .08);
-  color: var(--success-soft);
-  font-size: .78rem;
-  font-weight: 650;
-  letter-spacing: -.01em;
-}
-
 .num.static {
   font-size: 1.15rem;
   font-weight: 750;
@@ -866,18 +855,6 @@ section + section { border-top: 1px solid var(--border); }
 .hero-media {
   position: relative;
   min-width: 0;
-}
-
-.hero-halo {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 110%;
-  height: 90%;
-  transform: translate(-50%, -50%);
-  background: radial-gradient(ellipse 55% 50% at 50% 45%, rgba(201, 154, 75, .35), rgba(179, 138, 66, .12) 55%, transparent 72%);
-  filter: blur(24px);
-  pointer-events: none;
 }
 
 .mockup {
@@ -1092,12 +1069,6 @@ section + section { border-top: 1px solid var(--border); }
   font-size: .7rem;
   color: var(--text);
   z-index: 2;
-  animation: floaty 7s ease-in-out infinite;
-}
-
-@keyframes floaty {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
 }
 
 .float-chip .fc-ico {
@@ -1120,9 +1091,10 @@ section + section { border-top: 1px solid var(--border); }
 
 .fc-s { color: var(--muted); display: block; margin-top: .1rem; }
 
-.fc-1 { top: -24px; right: -16px; animation-delay: 0s; }
-.fc-2 { bottom: 12%; left: -46px; animation-delay: -2.4s; }
-.fc-3 { bottom: -26px; right: 8%; animation-delay: -4.4s; }
+/* Chips sit outside the mockup's data so they never cover a figure. */
+.fc-1 { top: -24px; right: -16px; }
+.fc-2 { bottom: -46px; left: -46px; }
+.fc-3 { bottom: -46px; right: -16px; }
 
 /* ---- Trust strip ---- */
 .trust-strip {
@@ -1153,6 +1125,8 @@ section + section { border-top: 1px solid var(--border); }
   gap: 1.1rem;
   margin-top: 2.2rem;
 }
+
+.stats-3 { grid-template-columns: repeat(3, 1fr); }
 
 .stat {
   padding: 1.35rem 1.4rem;
@@ -1450,9 +1424,10 @@ section + section { border-top: 1px solid var(--border); }
   transition: width .8s var(--ease);
 }
 
-.zta-share-bar .zta-share-l1 { width: 90%; background: var(--zta-l1); }
-.zta-share-bar .zta-share-l2 { width: 8%; background: var(--zta-l2); }
-.zta-share-bar .zta-share-l3 { width: 2%; background: var(--zta-l3); }
+.zta-share-bar .zta-share-l1 { width: 62%; background: var(--zta-l1); }
+.zta-share-bar .zta-share-l2 { width: 29%; background: var(--zta-l2); }
+.zta-share-bar .zta-share-l3 { width: 9%; background: var(--zta-l3); }
+.zta-share-note { margin-top: .6rem; font-size: .78rem; color: var(--muted-2); }
 
 .zta-share-legend {
   display: grid;
@@ -3323,11 +3298,6 @@ footer .brand-mark { width: 32px; height: 32px; border-radius: 10px; }
   box-shadow: 0 12px 30px rgba(138, 90, 40, .15);
 }
 
-[data-theme="day"] .punch-row span {
-  border-color: rgba(4, 120, 87, .22);
-  background: rgba(16, 185, 129, .1);
-}
-
 [data-theme="day"] .field select option {
   background: #ffffff;
   color: var(--text);
@@ -3490,20 +3460,9 @@ footer .brand-mark { width: 32px; height: 32px; border-radius: 10px; }
 
 /* =========================================================================
    2026 MODERN UI ENHANCEMENTS
-   3D tilt, animated gradient borders, morphing dividers, magnetic buttons,
-   glow follower, staggered reveals, text scramble, parallax, ripple
+   Animated gradient borders, morphing dividers, staggered reveals, ripple.
+   (Hero intro motion is GSAP, in landing.js.)
    ========================================================================= */
-
-/* ---- 3D Card Tilt ---- */
-.tilt-card {
-  transform-style: preserve-3d;
-  will-change: transform;
-  transition: transform .15s ease-out, box-shadow .35s var(--ease), border-color .35s;
-}
-
-.tilt-card .tilt-inner {
-  transform: translateZ(0);
-}
 
 /* ---- Animated Gradient Border ---- */
 .gradient-border-wrap {
@@ -3556,25 +3515,6 @@ footer .brand-mark { width: 32px; height: 32px; border-radius: 10px; }
   .gradient-border-wrap::before {
     background: linear-gradient(135deg, var(--brand), var(--violet), var(--cyan));
   }
-}
-
-/* ---- Glow Mouse Follower ---- */
-.glow-follower {
-  position: fixed;
-  width: 600px;
-  height: 600px;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0;
-  transition: opacity .8s var(--ease);
-  background: radial-gradient(circle, rgba(201, 154, 75, .12) 0%, rgba(179, 138, 66, .06) 35%, transparent 70%);
-  transform: translate(-50%, -50%);
-  will-change: left, top;
-}
-
-.glow-follower.active {
-  opacity: 1;
 }
 
 /* ---- Section Morphing Dividers ---- */
@@ -3640,48 +3580,6 @@ footer .brand-mark { width: 32px; height: 32px; border-radius: 10px; }
 .stagger-reveal.visible > * {
   opacity: 1;
   transform: none;
-}
-
-/* ---- Text Scramble ---- */
-.scramble-char {
-  display: inline-block;
-  opacity: 0;
-  transform: translateY(20px) rotateX(-40deg);
-  animation: scrambleIn .5s var(--ease) forwards;
-}
-
-@keyframes scrambleIn {
-  to { opacity: 1; transform: none; }
-}
-
-/* ---- Parallax Layers ---- */
-.parallax-wrap {
-  position: relative;
-  overflow: hidden;
-}
-
-.parallax-layer {
-  will-change: transform;
-  transition: transform .1s linear;
-}
-
-/* ---- Floating Particles (retired: read as generic "AI network" decoration) ---- */
-.particle-field { display: none; }
-
-.particle {
-  position: absolute;
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
-  background: rgba(201, 154, 75, .35);
-  animation: particleFloat linear infinite;
-}
-
-@keyframes particleFloat {
-  0% { transform: translateY(0) translateX(0); opacity: 0; }
-  10% { opacity: 1; }
-  90% { opacity: 1; }
-  100% { transform: translateY(-100vh) translateX(40px); opacity: 0; }
 }
 
 /* ---- Glass Shimmer ---- */
@@ -4096,7 +3994,10 @@ footer .brand-mark { width: 32px; height: 32px; border-radius: 10px; }
 @media (max-width: 900px) {
   .nav-desktop { display: none; }
   .nav-dash { display: none !important; }
+  /* Glossary lives in the mobile menu; keeping it here pushed the header off-screen. */
+  #open-glossary-nav { display: none; }
   .menu-btn { display: grid; }
+  .glossary-preview-actions .btn { white-space: normal; max-width: 100%; }
   .nav-inner { padding-left: .9rem; }
   .stats, .zta-stats { grid-template-columns: repeat(2, 1fr); }
   .agent-grid, .audience-grid, .feature-grid, .testimonial-grid, .bento, .pricing-grid, .buy-gates { grid-template-columns: repeat(2, 1fr); }
@@ -4138,7 +4039,6 @@ footer .brand-mark { width: 32px; height: 32px; border-radius: 10px; }
   .fc-1, .fc-2, .fc-3 { display: none; }
   .trust-strip { justify-content: flex-start; }
   .btn { padding: .75rem 1.25rem; }
-  .glow-follower { display: none; }
 }
 
 /* ---- Reduced motion ---- */
@@ -4146,8 +4046,6 @@ footer .brand-mark { width: 32px; height: 32px; border-radius: 10px; }
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
   html { scroll-behavior: auto; }
   .reveal, .stagger-reveal, .stagger-reveal > * { opacity: 1; transform: none; }
-  .scramble-char { opacity: 1; transform: none; }
-  .glow-follower { display: none; }
 }
 
 /* ---------------------------------------------------------------------------

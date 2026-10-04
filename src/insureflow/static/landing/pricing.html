@@ -111,7 +111,7 @@
   </div>
   <div class="bg-noise" aria-hidden="true"></div>
   <div id="scroll-progress" aria-hidden="true"></div>
-  <div class="glow-follower" aria-hidden="true"></div>
+
   <div class="page">
     <header id="header">
       <div class="nav-inner">
@@ -265,13 +265,13 @@
     </nav>
 
     <main>
-      <section class="page-hero">
-        <div class="reveal">
-          <p class="section-label">Pricing</p>
+      <section class="page-hero" data-hero-intro>
+        <div>
+          <p class="section-label" data-hero-fade>Pricing</p>
           <h1>You pay for production — not pretend data</h1>
-          <p class="lead">Pilot is free and honest: practice outside data, a demo rate book, and nothing issued. Desk, Book, and Enterprise refuse to quote unless live oracles, your filed rates, and PAS bind without re-key are actually connected.</p>
+          <p class="lead" data-hero-fade>Pilot is free and honest: practice outside data, a demo rate book, and nothing issued. Desk, Book, and Enterprise refuse to quote unless live oracles, your filed rates, and PAS bind without re-key are actually connected.</p>
 
-    <div class="cta">
+    <div class="cta" data-hero-fade>
       <button type="button" class="btn btn-primary" id="open-demo-hero">Book a demo</button>
       <a class="btn btn-ghost" href="/dashboard/signup">Open the live dashboard</a>
     </div>
@@ -553,6 +553,8 @@
       </div>
     </div>
   </div>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js" integrity="sha384-XmJ9SoHtVOHoQUcKvFAzVXwdkKo1Ie3bhmSoIAkcdsHGaIrVJIkmozyq0FJeb/Ly" crossorigin="anonymous" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/SplitText.min.js" integrity="sha384-SWJ0lLVRoipvHh59xj0pL7uC7Ih51F+5smaFtrG+2nr+TlDZU5SYJHmxfolbeNTr" crossorigin="anonymous" defer></script>
   <script src="/static/landing.js" defer></script>
 </body>
 </html>

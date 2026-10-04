@@ -111,7 +111,7 @@
   </div>
   <div class="bg-noise" aria-hidden="true"></div>
   <div id="scroll-progress" aria-hidden="true"></div>
-  <div class="glow-follower" aria-hidden="true"></div>
+
   <div class="page">
     <header id="header">
       <div class="nav-inner">
@@ -265,13 +265,13 @@
     </nav>
 
     <main>
-      <section class="page-hero">
-        <div class="reveal">
-          <p class="section-label">Technology</p>
+      <section class="page-hero" data-hero-intro>
+        <div>
+          <p class="section-label" data-hero-fade>Technology</p>
           <h1>Rules first. AI last. Always counted.</h1>
-          <p class="lead">Most steps are ordinary software (no AI bill). A language model is the last resort, counted, and never used to invent a fact. That is Zero Token Architecture &mdash; said simply: we do not pay an AI to do what a rule already can.</p>
+          <p class="lead" data-hero-fade>Most steps are ordinary software (no AI bill). A language model is the last resort, counted, and never used to invent a fact. That is Zero Token Architecture &mdash; said simply: we do not pay an AI to do what a rule already can.</p>
 
-    <div class="cta">
+    <div class="cta" data-hero-fade>
       <button type="button" class="btn btn-primary" id="open-demo-hero">Book a demo</button>
       <a class="btn btn-ghost" href="/dashboard/signup">Open the live dashboard</a>
     </div>
@@ -320,14 +320,15 @@
           </div>
         </div>
         <div class="zta-share-wrap reveal">
-          <div class="zta-share-bar" role="img" aria-label="Roughly 90 percent rules, 8 percent scorers, 2 percent language model">
+          <div class="zta-share-bar" role="img" aria-label="Measured: about 62 percent rules and scorers, 29 percent sent to an underwriter, 9 percent language model">
             <span class="zta-share-l1"></span><span class="zta-share-l2"></span><span class="zta-share-l3"></span>
           </div>
           <div class="zta-share-legend">
-            <div class="zta-legend-item"><span class="zta-swatch l1" aria-hidden="true"></span><span><strong>~90%</strong> Layer 1 &middot; ordinary rules (no AI cost)</span></div>
-            <div class="zta-legend-item"><span class="zta-swatch l2" aria-hidden="true"></span><span><strong>~8%</strong> Layer 2 &middot; trained scorers (no AI cost)</span></div>
-            <div class="zta-legend-item"><span class="zta-swatch l3" aria-hidden="true"></span><span><strong>~2%</strong> Layer 3 &middot; language model (counted &amp; reported)</span></div>
+            <div class="zta-legend-item"><span class="zta-swatch l1" aria-hidden="true"></span><span><strong>~62%</strong> Layers 1&ndash;2 &middot; ordinary rules and trained scorers (no AI cost)</span></div>
+            <div class="zta-legend-item"><span class="zta-swatch l2" aria-hidden="true"></span><span><strong>~29%</strong> Sent straight to an underwriter (no AI cost)</span></div>
+            <div class="zta-legend-item"><span class="zta-swatch l3" aria-hidden="true"></span><span><strong>~9%</strong> Layer 3 &middot; language model (counted &amp; reported)</span></div>
           </div>
+          <p class="zta-share-note">Measured across 95 pipeline test runs.</p>
         </div>
         <div class="zta-detail-panel reveal" id="zta-detail-panel" role="tabpanel"></div>
         <div class="zta-stats reveal">
@@ -341,7 +342,7 @@
           </div>
           <div class="zta-stat">
             <span class="zstat-ico violet"><svg class="ico" aria-hidden="true"><use href="#i-bot"/></svg></span>
-            <div class="body"><span class="num" data-target="8">0</span><p>trained scorers in the model registry</p></div>
+            <div class="body"><span class="num" data-target="8">0</span><p>scorers in the model registry &mdash; 6 trained models, plus portfolio simulation and broker scoring</p></div>
           </div>
         </div>
       </section>
@@ -641,6 +642,8 @@
       </div>
     </div>
   </div>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js" integrity="sha384-XmJ9SoHtVOHoQUcKvFAzVXwdkKo1Ie3bhmSoIAkcdsHGaIrVJIkmozyq0FJeb/Ly" crossorigin="anonymous" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/SplitText.min.js" integrity="sha384-SWJ0lLVRoipvHh59xj0pL7uC7Ih51F+5smaFtrG+2nr+TlDZU5SYJHmxfolbeNTr" crossorigin="anonymous" defer></script>
   <script src="/static/landing.js" defer></script>
 </body>
 </html>

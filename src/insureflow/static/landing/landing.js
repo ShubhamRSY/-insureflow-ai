@@ -31,63 +31,21 @@
 
   var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /* ---- Location-time day/night theme (automatic — no user toggle) ---- */
-  var themeGeo = { lat: null, lng: null };
-
-  function sunTimes(lat, lng, date) {
-    var rad = Math.PI / 180;
-    var start = new Date(date.getFullYear(), 0, 0);
-    var day = Math.floor((date - start) / 86400000);
-    var lngHour = lng / 15;
-    var t = day + ((6 - lngHour) / 24);
-    var M = (357.5291 + 0.98560028 * t) % 360;
-    var C = 1.9148 * Math.sin(M * rad) + 0.02 * Math.sin(2 * M * rad);
-    var lambda = (M + 102.9372 + C + 180) % 360;
-    var Jtransit = 2451545 + t + 0.0053 * Math.sin(M * rad) - 0.0069 * Math.sin(2 * lambda * rad);
-    var sinDec = Math.sin(lambda * rad) * Math.sin(23.4397 * rad);
-    var cosDec = Math.cos(Math.asin(sinDec));
-    var zenith = 90.833 * rad;
-    var cosH = (Math.cos(zenith) - Math.sin(lat * rad) * sinDec) / (Math.cos(lat * rad) * cosDec);
-    if (cosH > 1 || cosH < -1) return null;
-    var H = Math.acos(cosH) / rad;
-    function jdToLocal(jd) {
-      return new Date((jd - 2440587.5) * 86400000 - date.getTimezoneOffset() * 60000);
-    }
-    return { sunrise: jdToLocal(Jtransit - H / 360), sunset: jdToLocal(Jtransit + H / 360) };
-  }
-
-  function isDaytime(now) {
-    if (themeGeo.lat != null && themeGeo.lng != null) {
-      var st = sunTimes(themeGeo.lat, themeGeo.lng, now);
-      if (st) return now >= st.sunrise && now < st.sunset;
-    }
+  /* ---- Day/night theme from the visitor's local clock (no user toggle) ---- */
+  // Same rule as THEME_BOOTSTRAP in build_landing.py; this keeps it current on
+  // long-lived tabs. No geolocation: the server's Permissions-Policy blocks it,
+  // and a location prompt isn't worth a color theme.
+  function applyClockTheme() {
+    var now = new Date();
     var h = now.getHours() + now.getMinutes() / 60;
-    return h >= 6.5 && h < 19.5;
+    document.documentElement.setAttribute('data-theme', h >= 6.5 && h < 19.5 ? 'day' : 'night');
   }
 
-  function applyLocationTheme() {
-    document.documentElement.setAttribute('data-theme', isDaytime(new Date()) ? 'day' : 'night');
-  }
-
-  applyLocationTheme();
-  setInterval(applyLocationTheme, 60000);
+  applyClockTheme();
+  setInterval(applyClockTheme, 60000);
   document.addEventListener('visibilitychange', function () {
-    if (!document.hidden) applyLocationTheme();
+    if (!document.hidden) applyClockTheme();
   });
-
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-      function (pos) {
-        themeGeo.lat = pos.coords.latitude;
-        themeGeo.lng = pos.coords.longitude;
-        applyLocationTheme();
-      },
-      function () {},
-      { timeout: 8000, maximumAge: 3600000, enableHighAccuracy: false }
-    );
-  }
-
-  window.__ryteraTheme = { apply: applyLocationTheme, geo: themeGeo };
 
   /* ---- Active nav link (by path) ---- */
   var pathname = window.location.pathname.replace(/\/+$/, '') || '/';
@@ -725,66 +683,6 @@
      2026 MODERN UI ENHANCEMENTS
      ===================================================================== */
 
-  /* ---- Glow Mouse Follower ---- */
-  if (!prefersReduced) {
-    var glowEl = document.querySelector('.glow-follower');
-    if (glowEl) {
-      var glowX = 0, glowY = 0, glowCurX = 0, glowCurY = 0;
-      document.addEventListener('mousemove', function (e) {
-        glowX = e.clientX;
-        glowY = e.clientY;
-        glowEl.classList.add('active');
-      });
-      document.addEventListener('mouseleave', function () {
-        glowEl.classList.remove('active');
-      });
-      function animateGlow() {
-        glowCurX += (glowX - glowCurX) * 0.08;
-        glowCurY += (glowY - glowCurY) * 0.08;
-        glowEl.style.left = glowCurX + 'px';
-        glowEl.style.top = glowCurY + 'px';
-        requestAnimationFrame(animateGlow);
-      }
-      animateGlow();
-    }
-  }
-
-  /* ---- 3D Card Tilt ---- */
-  if (!prefersReduced) {
-    var tiltCards = document.querySelectorAll('.feature-card, .audience-card, .agent-card, .bento-card, .testimonial-card');
-    tiltCards.forEach(function (card) {
-      card.classList.add('tilt-card');
-      card.addEventListener('mousemove', function (e) {
-        var r = card.getBoundingClientRect();
-        var cx = r.left + r.width / 2;
-        var cy = r.top + r.height / 2;
-        var dx = (e.clientX - cx) / (r.width / 2);
-        var dy = (e.clientY - cy) / (r.height / 2);
-        var tiltX = dy * -4;
-        var tiltY = dx * 4;
-        card.style.transform = 'perspective(800px) rotateX(' + tiltX + 'deg) rotateY(' + tiltY + 'deg) translateY(-5px)';
-      });
-      card.addEventListener('mouseleave', function () {
-        card.style.transform = '';
-      });
-    });
-  }
-
-  /* ---- Magnetic Buttons ---- */
-  if (!prefersReduced) {
-    document.querySelectorAll('.btn-primary').forEach(function (btn) {
-      btn.addEventListener('mousemove', function (e) {
-        var r = btn.getBoundingClientRect();
-        var x = e.clientX - r.left - r.width / 2;
-        var y = e.clientY - r.top - r.height / 2;
-        btn.style.transform = 'translate(' + (x * 0.15) + 'px, ' + (y * 0.15) + 'px)';
-      });
-      btn.addEventListener('mouseleave', function () {
-        btn.style.transform = '';
-      });
-    });
-  }
-
   /* ---- Button Ripple Effect ---- */
   document.querySelectorAll('.btn').forEach(function (btn) {
     btn.addEventListener('click', function (e) {
@@ -814,47 +712,6 @@
     document.querySelectorAll('.stagger-reveal').forEach(function (el) { el.classList.add('visible'); });
   }
 
-  /* ---- Text Scramble Hero ---- */
-  if (!prefersReduced) {
-    var scrambleEls = document.querySelectorAll('.scramble-text');
-    scrambleEls.forEach(function (el) {
-      var text = el.getAttribute('data-text') || el.textContent;
-      el.textContent = '';
-      el.setAttribute('aria-label', text);
-      var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%&*';
-      var len = text.length;
-      var revealed = 0;
-      function step() {
-        if (revealed >= len) {
-          el.textContent = text;
-          return;
-        }
-        var display = '';
-        for (var i = 0; i < len; i++) {
-          if (i < revealed) {
-            display += text[i];
-          } else if (text[i] === ' ' || text[i] === '\n') {
-            display += text[i];
-          } else {
-            display += chars[Math.floor(Math.random() * chars.length)];
-          }
-        }
-        el.textContent = display;
-        revealed += 1;
-        setTimeout(step, 25 + Math.random() * 15);
-      }
-      var scrambleObs = new IntersectionObserver(function (entries) {
-        entries.forEach(function (en) {
-          if (en.isIntersecting) {
-            step();
-            scrambleObs.unobserve(en.target);
-          }
-        });
-      }, { threshold: 0.5 });
-      scrambleObs.observe(el);
-    });
-  }
-
   /* ---- Stat Ring Animation ---- */
   if ('IntersectionObserver' in window && !prefersReduced) {
     var rings = document.querySelectorAll('.stat-ring');
@@ -868,46 +725,28 @@
     document.querySelectorAll('.stat-ring').forEach(function (el) { el.classList.add('visible'); });
   }
 
-  /* ---- Parallax Scroll ---- */
-  if (!prefersReduced) {
-    var parallaxLayers = document.querySelectorAll('.parallax-layer');
-    if (parallaxLayers.length) {
-      var lastScroll = 0;
-      function updateParallax() {
-        var sy = window.scrollY;
-        if (Math.abs(sy - lastScroll) < 1) {
-          requestAnimationFrame(updateParallax);
-          return;
-        }
-        lastScroll = sy;
-        parallaxLayers.forEach(function (layer) {
-          var speed = parseFloat(layer.getAttribute('data-speed')) || 0.3;
-          var rect = layer.parentElement.getBoundingClientRect();
-          var offset = (rect.top + rect.height / 2 - window.innerHeight / 2) * speed;
-          layer.style.transform = 'translateY(' + offset + 'px)';
-        });
-        requestAnimationFrame(updateParallax);
-      }
-      requestAnimationFrame(updateParallax);
-    }
-  }
-
-  /* ---- Floating Particles ---- */
-  if (!prefersReduced) {
-    var particleFields = document.querySelectorAll('.particle-field');
-    particleFields.forEach(function (field) {
-      for (var i = 0; i < 18; i++) {
-        var p = document.createElement('div');
-        p.classList.add('particle');
-        p.style.left = Math.random() * 100 + '%';
-        p.style.bottom = '-10px';
-        p.style.animationDuration = (8 + Math.random() * 14) + 's';
-        p.style.animationDelay = (Math.random() * 10) + 's';
-        p.style.width = p.style.height = (2 + Math.random() * 3) + 'px';
-        p.style.opacity = 0.15 + Math.random() * 0.35;
-        field.appendChild(p);
-      }
-    });
+  /* ---- Hero intro (GSAP, every page) ---- */
+  // Each page's one orchestrated moment: the headline rises word by word and
+  // the supporting copy follows; on the home page the mockup then assembles
+  // stage by stage. Everything is visible without JS, without the GSAP CDN,
+  // or with reduced motion.
+  var heroIntro = document.querySelector('[data-hero-intro]');
+  if (heroIntro && !prefersReduced && window.gsap && window.SplitText) {
+    gsap.registerPlugin(SplitText);
+    var hq = gsap.utils.selector(heroIntro);
+    var heroHead = SplitText.create(hq('h1'), { type: 'words', mask: 'words' });
+    // Room below the baseline so descenders aren't clipped by the masks.
+    gsap.set(heroHead.masks, { paddingBottom: '0.14em', marginBottom: '-0.14em' });
+    var heroTl = gsap.timeline({ defaults: { ease: 'power3.out' }, onComplete: function () { heroHead.revert(); } })
+      .from(heroHead.words, { yPercent: 110, duration: 0.9, ease: 'power4.out', stagger: 0.06 })
+      .from(hq('[data-hero-fade]'), { y: 14, autoAlpha: 0, duration: 0.6, stagger: 0.08 }, '-=0.5');
+    if (hq('.mockup').length) heroTl
+      .from(hq('.mockup'), { y: 24, autoAlpha: 0, duration: 0.7 }, '-=0.7')
+      .from(hq('.m-stage'), { x: -8, autoAlpha: 0, duration: 0.35, stagger: 0.12 }, '-=0.2')
+      .from(hq('.m-bar span'), { scaleX: 0, transformOrigin: 'left center', duration: 0.9, ease: 'power2.inOut' }, '<')
+      .from(hq('.m-cell'), { y: 8, autoAlpha: 0, duration: 0.4, stagger: 0.06 }, '-=0.3')
+      .from(hq('.m-badge'), { scale: 0.6, autoAlpha: 0, duration: 0.45, ease: 'back.out(2.5)' })
+      .from(hq('.float-chip'), { y: 12, autoAlpha: 0, duration: 0.5, stagger: 0.1 }, '-=0.2');
   }
 
   /* ---- Lob directory filter ---- */

@@ -111,7 +111,7 @@
   </div>
   <div class="bg-noise" aria-hidden="true"></div>
   <div id="scroll-progress" aria-hidden="true"></div>
-  <div class="glow-follower" aria-hidden="true"></div>
+
   <div class="page">
     <header id="header">
       <div class="nav-inner">
@@ -265,13 +265,13 @@
     </nav>
 
     <main>
-      <section class="page-hero">
-        <div class="reveal">
-          <p class="section-label">Company</p>
+      <section class="page-hero" data-hero-intro>
+        <div>
+          <p class="section-label" data-hero-fade>Company</p>
           <h1>Rytera Inc.</h1>
-          <p class="lead">We build underwriting software for the people who say yes or no &mdash; a person stays in charge, ordinary software does most of the work, and you can hand the paper trail to a regulator.</p>
+          <p class="lead" data-hero-fade>We build underwriting software for the people who say yes or no &mdash; a person stays in charge, ordinary software does most of the work, and you can hand the paper trail to a regulator.</p>
 
-    <div class="cta">
+    <div class="cta" data-hero-fade>
       <button type="button" class="btn btn-primary" id="open-demo-hero">Book a demo</button>
       <a class="btn btn-ghost" href="/dashboard/signup">Open the live dashboard</a>
     </div>
@@ -289,7 +289,7 @@
           <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-refresh"/></svg></span><h3>The pilot model</h3><p>Practice first, issue last. Run on your real book in shadow mode. Measure accuracy and examiner readiness before the policy system turns on.</p></div>
           <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-shield-check"/></svg></span><h3>Security &amp; compliance</h3><p>Files stored locked. Role-based access. Names stripped before AI. Every decision ships in a sealed pack an examiner can open years later.</p></div>
           <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-landmark"/></svg></span><h3>State law built in</h3><p>50 states + DC with line-specific rules: rate filing method, surplus lines, tort model, workers&rsquo; comp funds, and health mandates &mdash; checked on every job.</p></div>
-          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-zap"/></svg></span><h3>Zero Token Architecture</h3><p>Ordinary rules and trained scorers handle ~98% of pipeline steps. Language models are the last resort, counted, and never used to invent a fact.</p></div>
+          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-zap"/></svg></span><h3>Zero Token Architecture</h3><p>About 90% of pipeline steps finish without a language model. Language models are the last resort, counted, and never used to invent a fact.</p></div>
           <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-mail"/></svg></span><h3>Get in touch</h3><p>Book a walkthrough with a real submission or email <a class="contact-email" href="mailto:hello@ryterainc.com">hello@ryterainc.com</a> &mdash; we respond within one business day.</p></div>
         </div>
       </section>
@@ -449,6 +449,8 @@
       </div>
     </div>
   </div>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js" integrity="sha384-XmJ9SoHtVOHoQUcKvFAzVXwdkKo1Ie3bhmSoIAkcdsHGaIrVJIkmozyq0FJeb/Ly" crossorigin="anonymous" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/SplitText.min.js" integrity="sha384-SWJ0lLVRoipvHh59xj0pL7uC7Ih51F+5smaFtrG+2nr+TlDZU5SYJHmxfolbeNTr" crossorigin="anonymous" defer></script>
   <script src="/static/landing.js" defer></script>
 </body>
 </html>

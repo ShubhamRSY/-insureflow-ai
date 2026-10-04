@@ -146,8 +146,11 @@ def test_landing_page_html() -> None:
     assert "Names and private details come off before any AI sees a page" in resp.text
     assert "Production Underwriting Needs More Than a Model Score" in resp.text or "Zero Black Boxes" in resp.text
     assert "All Your Lines, on One Workbench" in resp.text
-    assert "85%+ Field Extraction SLA" in resp.text or "Field-extraction SLA 85%+" in resp.text
-    assert "Licensed Underwriter Sign-Off" in resp.text
+    # Unmeasured / contradicted by evaluation_report.json — must not come back.
+    assert "85%+" not in resp.text
+    assert "Hallucinated Facts" not in resp.text
+    assert "cite a source page, or the file stops" in resp.text
+    assert "signed by a licensed underwriter" in resp.text
     assert "Continuously Evolving" in resp.text or "Continuous Innovation" in resp.text
     assert "The Underwriting &amp; Risk Glossary" in resp.text or "Underwriting Glossary" in resp.text
 
@@ -410,16 +413,13 @@ def test_landing_css_responsive_new_layouts() -> None:
 
 
 def test_landing_js_interactive_features() -> None:
-    """JS file still has all interactive features (tilt, glow, scramble, etc.)."""
+    """JS file still has its interactive features (reveals, ripple, GSAP hero intro, etc.)."""
     js = client.get("/static/landing.js").text
     features = [
         "IntersectionObserver",
-        "tilt",
-        "glow-follower",
-        "scramble",
         "ripple",
-        "particle",
-        "parallax",
+        "data-hero-intro",
+        "SplitText",
     ]
     for f in features:
         assert f in js, f"JS feature {f!r} missing from landing.js"

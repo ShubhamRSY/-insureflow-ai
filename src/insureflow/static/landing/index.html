@@ -111,7 +111,7 @@
   </div>
   <div class="bg-noise" aria-hidden="true"></div>
   <div id="scroll-progress" aria-hidden="true"></div>
-  <div class="glow-follower" aria-hidden="true"></div>
+
   <div class="page">
     <header id="header">
       <div class="nav-inner">
@@ -265,42 +265,30 @@
     </nav>
 
     <main>
-      <section class="hero parallax-wrap" id="top">
-        <div class="particle-field" aria-hidden="true"></div>
+      <section class="hero" id="top" data-hero-intro>
         <div class="hero-grid">
-          <div class="reveal">
-            <h1><span class="scramble-text" data-text="Every number, traced to its source.">Every number, traced to its source.</span></h1>
-            <p class="lead">
+          <div>
+            <h1>Every number, traced to its source.</h1>
+            <p class="lead" data-hero-fade>
               Rytera reads the submission, pulls external data, runs the numbers against your state-filed rate manual, and hands you a decision-ready memo &mdash; every figure linked back to the page it came from.
               Nothing is collected for its own sake. It's read so you can decide.
             </p>
-            <p class="brand-line">Zero invented rates. A licensed underwriter still signs.</p>
-            <div class="punch-row" aria-hidden="true">
-              <span>Field-extraction SLA 85%+</span>
-              <span>Zero-Token Architecture</span>
-              <span>100% Licensed UW Sign-Off</span>
-              <span>Audit-Sealed Paper Trail</span>
-            </div>
-            <div class="cta">
+            <p class="brand-line" data-hero-fade>Zero invented rates. A licensed underwriter still signs.</p>
+            <div class="cta" data-hero-fade>
               <button type="button" class="btn btn-primary" id="open-demo-hero">
                 Book a demo
                 <svg class="ico sm" aria-hidden="true"><use href="#i-arrow-right"/></svg>
               </button>
-              <button type="button" class="btn btn-ghost" id="open-glossary-hero">
-                <svg class="ico sm" aria-hidden="true"><use href="#i-search"/></svg>
-                Underwriting Glossary
-              </button>
               <a class="btn btn-ghost" href="/dashboard/signup">Start free trial</a>
             </div>
-            <div class="hero-audience" aria-label="Built for">
+            <div class="hero-audience" aria-label="Built for" data-hero-fade>
               <span class="audience-pill"><svg class="ico sm"><use href="#i-building"/></svg> Commercial Insurance</span>
               <span class="audience-pill"><svg class="ico sm"><use href="#i-layers"/></svg> MGAs &amp; Programs</span>
               <span class="audience-pill"><svg class="ico sm"><use href="#i-home"/></svg> Mortgage Underwriting</span>
               <span class="audience-pill"><svg class="ico sm"><use href="#i-banknote"/></svg> Credit &amp; Lending</span>
             </div>
           </div>
-          <div class="hero-media reveal parallax-layer" data-speed="0.15">
-            <div class="hero-halo" aria-hidden="true"></div>
+          <div class="hero-media">
             <div class="mockup" aria-hidden="true">
               <div class="mock-bar">
                 <span class="mock-dots"><i></i><i></i><i></i></span>
@@ -361,18 +349,14 @@
           </div>
         </div>
         <div class="trust-strip reveal" aria-label="Why you can trust Rytera">
-          <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> Licensed human sign-off</span>
-          <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> 0% hallucinated rates &mdash; state-filed pricing only</span>
-          <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> Practice shadow mode &mdash; zero risk to live books</span>
-          <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> Full PII de-identification before model access</span>
-          <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> Bidirectional citation grounding on every number</span>
-          <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> Fernet-encrypted audit manifest</span>
+          <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> Practice mode first &mdash; nothing touches your live book</span>
+          <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> Personal data removed before any model reads the file</span>
+          <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> Encrypted, tamper-evident audit trail</span>
         </div>
-        <div class="stats reveal stagger-reveal" aria-label="Key Performance Indicators">
-          <div class="stat"><span class="num" data-target="100" data-suffix="%">100%</span><span>Fields Traced to a Source Page</span></div>
-          <div class="stat"><span class="num" data-target="85" data-suffix="%+">85%+</span><span>Faster Submission Turnaround</span></div>
-          <div class="stat"><span class="num" data-target="0" data-suffix="%">0%</span><span>Invented Prices or Hallucinated Facts</span></div>
-          <div class="stat"><span class="num" data-target="100" data-suffix="%">100%</span><span>Licensed Underwriter Sign-Off</span></div>
+        <div class="stats stats-3 reveal stagger-reveal" aria-label="What Rytera guarantees">
+          <div class="stat"><span class="num">0</span><span>Invented rates. Pricing comes only from your state-filed manual.</span></div>
+          <div class="stat"><span class="num">100%</span><span>Of premiums, limits, and losses cite a source page, or the file stops.</span></div>
+          <div class="stat"><span class="num">100%</span><span>Of decisions signed by a licensed underwriter.</span></div>
         </div>
       </section>
 
@@ -588,7 +572,6 @@
       </section>
 
       <section id="trust">
-        <div class="particle-field" aria-hidden="true"></div>
         <div class="reveal">
           <p class="section-label">Controls, Intake, and a Paper Trail You Can Defend</p>
           <h2>Production Underwriting Needs More Than a Model Score</h2>
@@ -1047,6 +1030,8 @@
       </div>
     </div>
   </div>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js" integrity="sha384-XmJ9SoHtVOHoQUcKvFAzVXwdkKo1Ie3bhmSoIAkcdsHGaIrVJIkmozyq0FJeb/Ly" crossorigin="anonymous" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/SplitText.min.js" integrity="sha384-SWJ0lLVRoipvHh59xj0pL7uC7Ih51F+5smaFtrG+2nr+TlDZU5SYJHmxfolbeNTr" crossorigin="anonymous" defer></script>
   <script src="/static/landing.js" defer></script>
 </body>
 </html>

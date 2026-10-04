@@ -111,7 +111,7 @@
   </div>
   <div class="bg-noise" aria-hidden="true"></div>
   <div id="scroll-progress" aria-hidden="true"></div>
-  <div class="glow-follower" aria-hidden="true"></div>
+
   <div class="page">
     <header id="header">
       <div class="nav-inner">
@@ -265,13 +265,13 @@
     </nav>
 
     <main>
-      <section class="page-hero">
-        <div class="reveal">
-          <p class="section-label">Underwriting</p>
+      <section class="page-hero" data-hero-intro>
+        <div>
+          <p class="section-label" data-hero-fade>Underwriting</p>
           <h1>Built for the desks that decide</h1>
-          <p class="lead">Line underwriters run the files. Staff underwriters set the rules. Both get a ranked queue, a memo they can sign, and prices from rates you actually filed &mdash; insurance, mortgage, and lending.</p>
+          <p class="lead" data-hero-fade>Line underwriters run the files. Staff underwriters set the rules. Both get a ranked queue, a memo they can sign, and prices from rates you actually filed &mdash; insurance, mortgage, and lending.</p>
 
-    <div class="cta">
+    <div class="cta" data-hero-fade>
       <button type="button" class="btn btn-primary" id="open-demo-hero">Book a demo</button>
       <a class="btn btn-ghost" href="/platform">Explore the platform</a>
     </div>
@@ -683,6 +683,8 @@
       </div>
     </div>
   </div>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js" integrity="sha384-XmJ9SoHtVOHoQUcKvFAzVXwdkKo1Ie3bhmSoIAkcdsHGaIrVJIkmozyq0FJeb/Ly" crossorigin="anonymous" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/SplitText.min.js" integrity="sha384-SWJ0lLVRoipvHh59xj0pL7uC7Ih51F+5smaFtrG+2nr+TlDZU5SYJHmxfolbeNTr" crossorigin="anonymous" defer></script>
   <script src="/static/landing.js" defer></script>
 </body>
 </html>

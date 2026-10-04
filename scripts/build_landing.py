@@ -91,11 +91,11 @@ BG = """  <div class="bg-canvas" aria-hidden="true">
   </div>
   <div class="bg-noise" aria-hidden="true"></div>
   <div id="scroll-progress" aria-hidden="true"></div>
-  <div class="glow-follower" aria-hidden="true"></div>"""
+"""
 
 BRAND = """      <a class="brand" href="/" aria-label="Rytera home">
         <span class="brand-mark" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21V3h7a3.5 3.5 0 0 1 0 7H7m7 0 4 11"/></svg>
+          <svg viewBox="8 6 46 53" fill="none"><defs><clipPath id="ms1"><rect x="10" y="8" width="10" height="48" rx="5"/></clipPath><clipPath id="mb1"><path clip-rule="evenodd" d="M14 8H38a14 14 0 0 1 0 28H14ZM22 16H36a6 6 0 0 1 0 12H22Z"/></clipPath></defs><rect x="10" y="8" width="10" height="48" rx="5" style="fill:var(--mark-a)"/><path fill-rule="evenodd" d="M14 8H38a14 14 0 0 1 0 28H14ZM22 16H36a6 6 0 0 1 0 12H22Z" style="fill:var(--mark-b)"/><path d="M33 34L47 52" style="stroke:var(--mark-c)" stroke-width="10" stroke-linecap="round"/><g style="fill:var(--mark-ov);stroke:var(--mark-ov);opacity:var(--mark-ov-a)"><path fill-rule="evenodd" stroke="none" d="M14 8H38a14 14 0 0 1 0 28H14ZM22 16H36a6 6 0 0 1 0 12H22Z" clip-path="url(#ms1)"/><path d="M33 34L47 52" fill="none" stroke-width="10" stroke-linecap="round" clip-path="url(#mb1)"/></g></svg>
         </span>
         <span class="brand-name">Rytera<sup>&trade;</sup></span>
       </a>"""
@@ -271,8 +271,8 @@ FOOTER = (
       <div class="footer-grid">
         <div class="brand" aria-label="Rytera">
           <span class="brand-mark" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21V3h7a3.5 3.5 0 0 1 0 7H7m7 0 4 11"/></svg>
-          </span>
+          <svg viewBox="8 6 46 53" fill="none"><defs><clipPath id="ms2"><rect x="10" y="8" width="10" height="48" rx="5"/></clipPath><clipPath id="mb2"><path clip-rule="evenodd" d="M14 8H38a14 14 0 0 1 0 28H14ZM22 16H36a6 6 0 0 1 0 12H22Z"/></clipPath></defs><rect x="10" y="8" width="10" height="48" rx="5" style="fill:var(--mark-a)"/><path fill-rule="evenodd" d="M14 8H38a14 14 0 0 1 0 28H14ZM22 16H36a6 6 0 0 1 0 12H22Z" style="fill:var(--mark-b)"/><path d="M33 34L47 52" style="stroke:var(--mark-c)" stroke-width="10" stroke-linecap="round"/><g style="fill:var(--mark-ov);stroke:var(--mark-ov);opacity:var(--mark-ov-a)"><path fill-rule="evenodd" stroke="none" d="M14 8H38a14 14 0 0 1 0 28H14ZM22 16H36a6 6 0 0 1 0 12H22Z" clip-path="url(#ms2)"/><path d="M33 34L47 52" fill="none" stroke-width="10" stroke-linecap="round" clip-path="url(#mb2)"/></g></svg>
+        </span>
           <span class="brand-name">Rytera<sup>&trade;</sup></span>
         </div>
         <nav class="footer-links" aria-label="Footer">
@@ -455,6 +455,12 @@ CONSENT_BANNER = """  <div class="consent-banner" id="consent-banner" role="dial
   </div>"""
 
 
+GSAP_SCRIPTS = (
+    '  <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js" integrity="sha384-XmJ9SoHtVOHoQUcKvFAzVXwdkKo1Ie3bhmSoIAkcdsHGaIrVJIkmozyq0FJeb/Ly" crossorigin="anonymous" defer></script>\n'
+    '  <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/SplitText.min.js" integrity="sha384-SWJ0lLVRoipvHh59xj0pL7uC7Ih51F+5smaFtrG+2nr+TlDZU5SYJHmxfolbeNTr" crossorigin="anonymous" defer></script>\n'
+)
+
+
 def page(title: str, desc: str, canonical: str, og_desc: str, main_html: str) -> str:
     return (
         '<!DOCTYPE html>\n<html lang="en" data-theme="day">\n<head>\n'
@@ -472,7 +478,9 @@ def page(title: str, desc: str, canonical: str, og_desc: str, main_html: str) ->
         + "\n  </div>\n\n"
         + MODAL
         + ("\n" + CONSENT_BANNER if GA4_MEASUREMENT_ID else "")
-        + '\n  <script src="/static/landing.js" defer></script>\n</body>\n</html>\n'
+        + "\n"
+        + GSAP_SCRIPTS
+        + '  <script src="/static/landing.js" defer></script>\n</body>\n</html>\n'
     )
 
 
@@ -491,13 +499,13 @@ def sub_page_hero(label: str, h1: str, lead: str, primary: str = "book", primary
         btns.append(f'      <a class="btn btn-ghost" href="{secondary}">{secondary_label}</a>')
     cta = ""
     if btns:
-        cta = '\n    <div class="cta">\n' + "\n".join(btns) + "\n    </div>"
+        cta = '\n    <div class="cta" data-hero-fade>\n' + "\n".join(btns) + "\n    </div>"
     return (
-        '      <section class="page-hero">\n'
-        '        <div class="reveal">\n'
-        f'          <p class="section-label">{label}</p>\n'
+        '      <section class="page-hero" data-hero-intro>\n'
+        "        <div>\n"
+        f'          <p class="section-label" data-hero-fade>{label}</p>\n'
         f"          <h1>{h1}</h1>\n"
-        f'          <p class="lead">{lead}</p>\n' + cta + "\n        </div>\n"
+        f'          <p class="lead" data-hero-fade>{lead}</p>\n' + cta + "\n        </div>\n"
         "      </section>"
     )
 
@@ -1108,42 +1116,30 @@ def page_close(quote_key: str = "home") -> str:
 
 
 def hero_home() -> str:
-    return """      <section class="hero parallax-wrap" id="top">
-        <div class="particle-field" aria-hidden="true"></div>
+    return """      <section class="hero" id="top" data-hero-intro>
         <div class="hero-grid">
-          <div class="reveal">
-            <h1><span class="scramble-text" data-text="Every number, traced to its source.">Every number, traced to its source.</span></h1>
-            <p class="lead">
+          <div>
+            <h1>Every number, traced to its source.</h1>
+            <p class="lead" data-hero-fade>
               Rytera reads the submission, pulls external data, runs the numbers against your state-filed rate manual, and hands you a decision-ready memo &mdash; every figure linked back to the page it came from.
               Nothing is collected for its own sake. It's read so you can decide.
             </p>
-            <p class="brand-line">Zero invented rates. A licensed underwriter still signs.</p>
-            <div class="punch-row" aria-hidden="true">
-              <span>Field-extraction SLA 85%+</span>
-              <span>Zero-Token Architecture</span>
-              <span>100% Licensed UW Sign-Off</span>
-              <span>Audit-Sealed Paper Trail</span>
-            </div>
-            <div class="cta">
+            <p class="brand-line" data-hero-fade>Zero invented rates. A licensed underwriter still signs.</p>
+            <div class="cta" data-hero-fade>
               <button type="button" class="btn btn-primary" id="open-demo-hero">
                 Book a demo
                 <svg class="ico sm" aria-hidden="true"><use href="#i-arrow-right"/></svg>
               </button>
-              <button type="button" class="btn btn-ghost" id="open-glossary-hero">
-                <svg class="ico sm" aria-hidden="true"><use href="#i-search"/></svg>
-                Underwriting Glossary
-              </button>
               <a class="btn btn-ghost" href="/dashboard/signup">Start free trial</a>
             </div>
-            <div class="hero-audience" aria-label="Built for">
+            <div class="hero-audience" aria-label="Built for" data-hero-fade>
               <span class="audience-pill"><svg class="ico sm"><use href="#i-building"/></svg> Commercial Insurance</span>
               <span class="audience-pill"><svg class="ico sm"><use href="#i-layers"/></svg> MGAs &amp; Programs</span>
               <span class="audience-pill"><svg class="ico sm"><use href="#i-home"/></svg> Mortgage Underwriting</span>
               <span class="audience-pill"><svg class="ico sm"><use href="#i-banknote"/></svg> Credit &amp; Lending</span>
             </div>
           </div>
-          <div class="hero-media reveal parallax-layer" data-speed="0.15">
-            <div class="hero-halo" aria-hidden="true"></div>
+          <div class="hero-media">
             <div class="mockup" aria-hidden="true">
               <div class="mock-bar">
                 <span class="mock-dots"><i></i><i></i><i></i></span>
@@ -1204,18 +1200,14 @@ def hero_home() -> str:
           </div>
         </div>
         <div class="trust-strip reveal" aria-label="Why you can trust Rytera">
-          <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> Licensed human sign-off</span>
-          <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> 0% hallucinated rates &mdash; state-filed pricing only</span>
-          <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> Practice shadow mode &mdash; zero risk to live books</span>
-          <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> Full PII de-identification before model access</span>
-          <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> Bidirectional citation grounding on every number</span>
-          <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> Fernet-encrypted audit manifest</span>
+          <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> Practice mode first &mdash; nothing touches your live book</span>
+          <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> Personal data removed before any model reads the file</span>
+          <span class="trust-item"><svg class="ico sm"><use href="#i-check"/></svg> Encrypted, tamper-evident audit trail</span>
         </div>
-        <div class="stats reveal stagger-reveal" aria-label="Key Performance Indicators">
-          <div class="stat"><span class="num" data-target="100" data-suffix="%">100%</span><span>Fields Traced to a Source Page</span></div>
-          <div class="stat"><span class="num" data-target="85" data-suffix="%+">85%+</span><span>Faster Submission Turnaround</span></div>
-          <div class="stat"><span class="num" data-target="0" data-suffix="%">0%</span><span>Invented Prices or Hallucinated Facts</span></div>
-          <div class="stat"><span class="num" data-target="100" data-suffix="%">100%</span><span>Licensed Underwriter Sign-Off</span></div>
+        <div class="stats stats-3 reveal stagger-reveal" aria-label="What Rytera guarantees">
+          <div class="stat"><span class="num">0</span><span>Invented rates. Pricing comes only from your state-filed manual.</span></div>
+          <div class="stat"><span class="num">100%</span><span>Of premiums, limits, and losses cite a source page, or the file stops.</span></div>
+          <div class="stat"><span class="num">100%</span><span>Of decisions signed by a licensed underwriter.</span></div>
         </div>
       </section>"""
 
@@ -1429,7 +1421,6 @@ def desks_section() -> str:
 
 def trust_section() -> str:
     return """      <section id="trust">
-        <div class="particle-field" aria-hidden="true"></div>
         <div class="reveal">
           <p class="section-label">Controls, Intake, and a Paper Trail You Can Defend</p>
           <h2>Production Underwriting Needs More Than a Model Score</h2>
@@ -2100,14 +2091,15 @@ def technology_main() -> str:
           </div>
         </div>
         <div class="zta-share-wrap reveal">
-          <div class="zta-share-bar" role="img" aria-label="Roughly 90 percent rules, 8 percent scorers, 2 percent language model">
+          <div class="zta-share-bar" role="img" aria-label="Measured: about 62 percent rules and scorers, 29 percent sent to an underwriter, 9 percent language model">
             <span class="zta-share-l1"></span><span class="zta-share-l2"></span><span class="zta-share-l3"></span>
           </div>
           <div class="zta-share-legend">
-            <div class="zta-legend-item"><span class="zta-swatch l1" aria-hidden="true"></span><span><strong>~90%</strong> Layer 1 &middot; ordinary rules (no AI cost)</span></div>
-            <div class="zta-legend-item"><span class="zta-swatch l2" aria-hidden="true"></span><span><strong>~8%</strong> Layer 2 &middot; trained scorers (no AI cost)</span></div>
-            <div class="zta-legend-item"><span class="zta-swatch l3" aria-hidden="true"></span><span><strong>~2%</strong> Layer 3 &middot; language model (counted &amp; reported)</span></div>
+            <div class="zta-legend-item"><span class="zta-swatch l1" aria-hidden="true"></span><span><strong>~62%</strong> Layers 1&ndash;2 &middot; ordinary rules and trained scorers (no AI cost)</span></div>
+            <div class="zta-legend-item"><span class="zta-swatch l2" aria-hidden="true"></span><span><strong>~29%</strong> Sent straight to an underwriter (no AI cost)</span></div>
+            <div class="zta-legend-item"><span class="zta-swatch l3" aria-hidden="true"></span><span><strong>~9%</strong> Layer 3 &middot; language model (counted &amp; reported)</span></div>
           </div>
+          <p class="zta-share-note">Measured across 95 pipeline test runs.</p>
         </div>
         <div class="zta-detail-panel reveal" id="zta-detail-panel" role="tabpanel"></div>
         <div class="zta-stats reveal">
@@ -2121,7 +2113,7 @@ def technology_main() -> str:
           </div>
           <div class="zta-stat">
             <span class="zstat-ico violet"><svg class="ico" aria-hidden="true"><use href="#i-bot"/></svg></span>
-            <div class="body"><span class="num" data-target="8">0</span><p>trained scorers in the model registry</p></div>
+            <div class="body"><span class="num" data-target="8">0</span><p>scorers in the model registry &mdash; 6 trained models, plus portfolio simulation and broker scoring</p></div>
           </div>
         </div>
       </section>"""
@@ -2374,7 +2366,7 @@ def company_main() -> str:
           <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-refresh"/></svg></span><h3>The pilot model</h3><p>Practice first, issue last. Run on your real book in shadow mode. Measure accuracy and examiner readiness before the policy system turns on.</p></div>
           <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-shield-check"/></svg></span><h3>Security &amp; compliance</h3><p>Files stored locked. Role-based access. Names stripped before AI. Every decision ships in a sealed pack an examiner can open years later.</p></div>
           <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-landmark"/></svg></span><h3>State law built in</h3><p>50 states + DC with line-specific rules: rate filing method, surplus lines, tort model, workers&rsquo; comp funds, and health mandates &mdash; checked on every job.</p></div>
-          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-zap"/></svg></span><h3>Zero Token Architecture</h3><p>Ordinary rules and trained scorers handle ~98% of pipeline steps. Language models are the last resort, counted, and never used to invent a fact.</p></div>
+          <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-zap"/></svg></span><h3>Zero Token Architecture</h3><p>About 90% of pipeline steps finish without a language model. Language models are the last resort, counted, and never used to invent a fact.</p></div>
           <div class="feature-card"><span class="icon"><svg class="ico" aria-hidden="true"><use href="#i-mail"/></svg></span><h3>Get in touch</h3><p>Book a walkthrough with a real submission or email <a class="contact-email" href="mailto:hello@ryterainc.com">hello@ryterainc.com</a> &mdash; we respond within one business day.</p></div>
         </div>
       </section>"""
