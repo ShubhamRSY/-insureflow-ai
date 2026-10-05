@@ -1,0 +1,1828 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<!-- Commercial Property learning course. Live copy (with the Ask-the-tutor panel): https://claude.ai/artifact/6bF4pDHGH42prdJjxTSQYZ
+     Opened locally, the tutor stays hidden; everything else works offline. Numbers come from the Northwind run of 2026-10-05 at 3d4d552. -->
+</head>
+<body style="margin:0">
+<title>Commercial Property Pipeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Public+Sans:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap">
+<style>
+/* Layout: a course built around one real case file (Northwind Logistics). Sticky lesson index left, reading column right.
+   Hero = interactive pipeline explorer with the real trace. Every lesson: problem → idea → how the code does it → the Northwind case → watch out → self-check.
+   Single light theme by request. Palette: paper + ink; teal = deterministic, gold = generative, red = gate/failure. Chart marks use validated blue/orange (dataviz palette). */
+:root {
+  --ink: #1B2430;
+  --paper: #EDE9DD;
+  --raised: #E3DCC8;
+  --line: rgba(27,36,48,0.18);
+  --muted: #5B5749;
+  --teal: #2A6A5E;
+  --teal-fill: rgba(42,106,94,0.12);
+  --gold: #8B5E2A;
+  --gold-fill: rgba(139,94,42,0.14);
+  --red: #A23B2C;
+  --red-fill: rgba(162,59,44,0.10);
+  --c-blue: #2a78d6;
+  --c-orange: #eb6834;
+  --c-total: #5B5749;
+  --f-display: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+  --f-body: 'Public Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --f-mono: 'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body { background: var(--paper); color: var(--ink); font-family: var(--f-body); font-size: 16.5px; line-height: 1.65; }
+code, .mono { font-family: var(--f-mono); font-size: 0.85em; }
+code { background: var(--raised); border: 1px solid var(--line); border-radius: 3px; padding: 0 4px; overflow-wrap: anywhere; }
+a { color: var(--teal); }
+:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+b, strong { font-weight: 600; }
+
+.shell { max-width: 1200px; margin: 0 auto; padding-inline: 20px; display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 52px; }
+aside.index { position: sticky; top: env(safe-area-inset-top, 0px); align-self: start; max-height: 100vh; overflow-y: auto; padding-block: 34px 24px; }
+.brand { font-family: var(--f-mono); font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
+.progress { margin-bottom: 16px; }
+.progress .bar { height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; }
+.progress .bar i { display: block; height: 100%; width: 0; background: var(--teal); transition: width .3s; }
+.progress small { display: block; margin-top: 6px; font-family: var(--f-mono); font-size: 11.5px; color: var(--muted); }
+.index ol { list-style: none; margin: 0; padding: 0; }
+.index li a { display: grid; grid-template-columns: 26px 1fr 14px; gap: 6px; align-items: baseline; padding: 5px 4px; color: var(--ink); text-decoration: none; font-size: .88rem; border-radius: 3px; }
+.index li a:hover { background: var(--raised); }
+.index li a .n { font-family: var(--f-mono); font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.index li a .ok { color: var(--teal); font-size: 12px; visibility: hidden; }
+.index li.done a .ok { visibility: visible; }
+.index .sep { margin: 14px 0 4px; font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--gold); }
+.index .reset { margin-top: 16px; background: none; border: 1px solid var(--line); color: var(--muted); font: 12px var(--f-mono); padding: 4px 8px; border-radius: 3px; cursor: pointer; }
+
+main { padding-block: 34px 96px; min-width: 0; }
+.meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 20px; font-family: var(--f-mono); font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--line); padding-bottom: 12px; }
+h1 { font-family: var(--f-display); font-weight: 700; font-size: clamp(2.1rem, 4.6vw, 3.2rem); line-height: 1.05; letter-spacing: -0.01em; margin: 22px 0 12px; text-wrap: balance; }
+.dek { color: var(--muted); font-size: 1.1rem; max-width: 62ch; margin: 0; }
+
+/* Case file card */
+.case { margin-top: 28px; border: 1.5px solid var(--ink); display: grid; grid-template-columns: minmax(0,1.3fr) minmax(0,1fr); }
+.case > div { padding: 18px 20px; min-width: 0; }
+.case > div + div { border-left: 1px solid var(--line); }
+.case .tag { font-family: var(--f-mono); font-size: 11px; letter-spacing: .09em; text-transform: uppercase; color: var(--gold); }
+.case h3 { font-family: var(--f-display); font-size: 1.35rem; margin: 4px 0 10px; }
+.files { list-style: none; padding: 0; margin: 0; font-size: .9rem; }
+.files li { display: grid; grid-template-columns: 22px minmax(0,1fr); gap: 6px; padding: 5px 0; border-top: 1px solid var(--line); }
+.files li span { color: var(--muted); }
+.result-num { font-family: var(--f-mono); font-size: 2rem; font-weight: 500; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.result-row { display: flex; flex-wrap: wrap; gap: 16px 28px; margin-top: 8px; }
+.result-row small { display: block; font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+@media (max-width: 700px) { .case { grid-template-columns: minmax(0,1fr); } .case > div + div { border-left: 0; border-top: 1px solid var(--line); } }
+
+/* Explorer */
+.explorer { margin-top: 30px; }
+.explorer-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px; }
+.explorer-head h2 { font-family: var(--f-display); font-size: 1.5rem; margin: 0; }
+.explorer-head p { margin: 0; color: var(--muted); font-size: .9rem; }
+.xgrid { display: grid; grid-template-columns: 260px minmax(0,1fr); gap: 0; margin-top: 14px; border: 1px solid var(--line); background: var(--raised); }
+.xrail { list-style: none; margin: 0; padding: 10px 0; border-right: 1px solid var(--line); position: relative; }
+.xrail button { width: 100%; display: grid; grid-template-columns: 22px minmax(0,1fr) auto; gap: 10px; align-items: center; background: none; border: 0; padding: 8px 14px; text-align: left; font: inherit; font-size: .9rem; color: var(--ink); cursor: pointer; position: relative; }
+.xrail button:hover { background: var(--paper); }
+.xrail button[aria-selected="true"] { background: var(--paper); box-shadow: inset 3px 0 0 var(--ink); font-weight: 600; }
+.dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--teal); background: var(--paper); justify-self: center; position: relative; z-index: 1; }
+.dot.gen { border-color: var(--gold); }
+.dot.warn { border-color: var(--red); background: var(--red-fill); }
+.dot.hum { border-color: var(--ink); border-radius: 2px; }
+.xrail button .ms { font-family: var(--f-mono); font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; font-weight: 400; }
+.xrail::before { content: ""; position: absolute; left: 24px; top: 26px; bottom: 26px; width: 2px; background: var(--line); }
+.xpanel { padding: 20px 24px; min-width: 0; background: var(--paper); }
+.xpanel .step { font-family: var(--f-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--gold); }
+.xpanel h3 { font-family: var(--f-display); font-size: 1.45rem; margin: 2px 0 6px; }
+.xpanel .status { font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
+.xpanel p.what { margin: 10px 0 14px; }
+.io2 { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 14px; }
+.io2 > div { border-top: 2px solid var(--line); padding-top: 8px; min-width: 0; }
+.io2 > div.out2 { border-top-color: var(--ink); }
+.io2 h4 { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 4px; font-weight: 500; }
+.io2 ul { margin: 0; padding-left: 18px; font-size: .9rem; }
+.xfoot { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; justify-content: space-between; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--line); font-size: .84rem; color: var(--muted); }
+.xnav { display: flex; gap: 8px; }
+.btn { font: 13px var(--f-body); color: var(--ink); background: var(--raised); border: 1px solid var(--line); border-radius: 3px; padding: 6px 12px; cursor: pointer; }
+.btn:hover { border-color: var(--ink); }
+.btn.primary { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+@media (max-width: 760px) {
+  .xgrid { grid-template-columns: minmax(0,1fr); }
+  .xrail { border-right: 0; border-bottom: 1px solid var(--line); display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); padding: 6px; }
+  .xrail::before { display: none; }
+  .io2 { grid-template-columns: minmax(0,1fr); }
+}
+
+/* Lessons */
+.lesson { margin-top: 84px; scroll-margin-top: 20px; max-width: 780px; }
+.lesson .num { font-family: var(--f-mono); font-size: 12px; letter-spacing: .09em; text-transform: uppercase; color: var(--gold); }
+.lesson h2 { font-family: var(--f-display); font-weight: 600; font-size: 1.85rem; line-height: 1.15; margin: 4px 0 8px; text-wrap: balance; }
+.why { color: var(--muted); font-size: 1.06rem; margin: 0 0 22px; max-width: 62ch; }
+.lesson p { max-width: 66ch; }
+.lesson h3 { font-size: 1.05rem; font-weight: 700; margin: 30px 0 8px; }
+.lesson ul, .lesson ol { padding-left: 22px; }
+.lesson li { margin: 5px 0; }
+.beats { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 18px 26px; margin: 4px 0 8px; }
+.beat h4 { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); margin: 0 0 4px; font-weight: 500; }
+.beat p { margin: 0; }
+@media (max-width: 640px) { .beats { grid-template-columns: minmax(0,1fr); } }
+ol.how { counter-reset: how; list-style: none; padding-left: 0; }
+ol.how > li { counter-increment: how; position: relative; padding-left: 38px; margin: 10px 0; }
+ol.how > li::before { content: counter(how); position: absolute; left: 0; top: 1px; width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--ink); font: 500 12px/21px var(--f-mono); text-align: center; }
+.casebox { border: 1.5px solid var(--ink); background: var(--paper); margin: 24px 0; }
+.casebox > .lbl { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; background: var(--ink); color: var(--paper); padding: 5px 12px; }
+.casebox > .body { padding: 14px 16px; }
+.casebox p { margin: 0 0 8px; }
+.casebox p:last-child { margin-bottom: 0; }
+.watch { border-left: 3px solid var(--red); background: var(--red-fill); padding: 12px 16px; margin: 20px 0; }
+.watch b.h { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .09em; text-transform: uppercase; color: var(--red); display: block; margin-bottom: 4px; font-weight: 500; }
+.watch p { margin: 0; font-size: .94rem; }
+.code-map { border: 1px solid var(--line); background: var(--raised); padding: 12px 16px; margin: 18px 0; font-size: .88rem; }
+.code-map b { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 500; display: block; margin-bottom: 4px; }
+.code-map div { padding: 2px 0; }
+
+figure { margin: 24px 0; }
+.frame { border: 1px solid var(--line); background: var(--raised); padding: 18px 14px; overflow-x: auto; }
+.frame svg { display: block; width: 100%; height: auto; }
+.frame svg.wide { min-width: 620px; }
+figcaption { font-size: .88rem; color: var(--muted); margin-top: 8px; max-width: 66ch; }
+figcaption b { color: var(--ink); }
+.s-det { fill: var(--teal-fill); stroke: var(--teal); stroke-width: 1.5; }
+.s-gen { fill: var(--gold-fill); stroke: var(--gold); stroke-width: 1.5; }
+.s-gate { fill: var(--red-fill); stroke: var(--red); stroke-width: 1.5; }
+.s-neu { fill: var(--paper); stroke: var(--muted); stroke-width: 1.2; }
+.s-hum { fill: var(--paper); stroke: var(--ink); stroke-width: 2.4; }
+.s-ghost { fill: none; stroke: var(--line); stroke-width: 1.2; stroke-dasharray: 3 4; }
+.s-t { fill: var(--ink); font-family: var(--f-body); font-size: 14px; }
+.s-tb { fill: var(--ink); font-family: var(--f-body); font-size: 14.5px; font-weight: 700; }
+.s-ts { fill: var(--muted); font-family: var(--f-mono); font-size: 12px; }
+.s-tr { fill: var(--red); font-family: var(--f-mono); font-size: 12px; font-weight: 500; }
+.s-tt { fill: var(--teal); font-family: var(--f-mono); font-size: 12px; font-weight: 500; }
+.s-num { fill: var(--paper); font-family: var(--f-mono); font-size: 12px; font-weight: 500; }
+.s-numbg { fill: var(--ink); }
+.s-line { stroke: var(--muted); stroke-width: 1.6; fill: none; }
+.s-dash { stroke: var(--muted); stroke-width: 1.3; fill: none; stroke-dasharray: 5 4; }
+.s-red { stroke: var(--red); stroke-width: 1.8; fill: none; }
+.s-teal { stroke: var(--teal); stroke-width: 1.8; fill: none; }
+.s-head { fill: var(--muted); }
+.s-headr { fill: var(--red); }
+.s-headt { fill: var(--teal); }
+.s-grid { stroke: var(--line); stroke-width: 1; }
+.c-blue { fill: var(--c-blue); }
+.c-orange { fill: var(--c-orange); }
+.c-total { fill: var(--c-total); }
+.bar-hit { fill: transparent; cursor: default; }
+.bar-hit:hover + .bar-mark, .bar-mark:hover { opacity: .85; }
+
+.tw { overflow-x: auto; margin: 14px 0; }
+table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+th { text-align: left; font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); font-weight: 500; padding: 0 12px 7px 0; border-bottom: 1.5px solid var(--ink); }
+td { padding: 9px 12px 9px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+td.k { font-weight: 600; }
+td.r, th.r { text-align: right; font-variant-numeric: tabular-nums; }
+.chip { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .04em; text-transform: uppercase; padding: 1px 7px; border-radius: 3px; font-weight: 500; white-space: nowrap; }
+.chip.det { color: var(--teal); background: var(--teal-fill); }
+.chip.gen { color: var(--gold); background: var(--gold-fill); }
+.chip.gate { color: var(--red); background: var(--red-fill); }
+.chip.hum { color: var(--ink); border: 1.5px solid var(--ink); }
+
+.formula { background: var(--raised); border: 1px solid var(--line); padding: 14px 18px; font-family: var(--f-mono); font-size: 12.5px; line-height: 1.85; overflow-x: auto; white-space: pre; margin: 14px 0; }
+.formula .c { color: var(--muted); }
+pre.term { background: var(--ink); color: var(--paper); padding: 14px 16px; font-family: var(--f-mono); font-size: 12.5px; line-height: 1.6; overflow-x: auto; border-radius: 3px; margin: 12px 0; }
+pre.term .c { opacity: .6; }
+
+.tool { border: 1.5px solid var(--ink); padding: 18px; margin: 24px 0; background: var(--paper); }
+.tool > b { font-family: var(--f-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--teal); display: block; margin-bottom: 10px; }
+.fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px 16px; }
+.fields label, .row label { display: grid; gap: 3px; font-size: .82rem; color: var(--muted); }
+input[type="number"], select, input[type="search"] { font: 14px var(--f-body); color: var(--ink); background: var(--raised); border: 1px solid var(--line); border-radius: 3px; padding: 6px 8px; width: 100%; min-width: 0; }
+.checks { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 12px; font-size: .88rem; }
+.checks label { display: inline-flex; gap: 6px; align-items: center; color: var(--ink); }
+.out { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+.out div { min-width: 0; }
+.out small { display: block; font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
+.out strong { font-family: var(--f-mono); font-size: 1.15rem; font-weight: 500; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.verdict { font-family: var(--f-mono); font-weight: 500; padding: 2px 8px; border-radius: 3px; }
+.v-accept { color: var(--teal); background: var(--teal-fill); }
+.v-cond { color: var(--gold); background: var(--gold-fill); }
+.v-refer, .v-decline, .v-human { color: var(--red); background: var(--red-fill); }
+.explain { font-size: .87rem; color: var(--muted); margin-top: 10px; }
+.row { display: grid; grid-template-columns: 1fr .8fr 1.4fr 70px 32px; gap: 8px; align-items: end; margin-bottom: 8px; }
+.row .contrib { font-family: var(--f-mono); font-size: 12.5px; color: var(--muted); padding-bottom: 7px; text-align: right; font-variant-numeric: tabular-nums; }
+.row button { font: 13px var(--f-body); color: var(--ink); background: var(--raised); border: 1px solid var(--line); border-radius: 3px; padding: 6px 0; cursor: pointer; }
+@media (max-width: 560px) { .row { grid-template-columns: 1fr 1fr; } .row .contrib { text-align: left; } }
+
+.gates { list-style: none; padding: 0; margin: 16px 0; counter-reset: g; }
+.gates li { counter-increment: g; display: grid; grid-template-columns: 34px minmax(0,1fr) auto; gap: 12px; align-items: start; padding: 10px 0; border-top: 1px solid var(--line); }
+.gates li::before { content: counter(g); width: 26px; height: 26px; border: 1.5px solid var(--ink); border-radius: 3px; font: 500 12px/23px var(--f-mono); text-align: center; }
+.gates li span.nw { font-family: var(--f-mono); font-size: 11.5px; white-space: nowrap; padding: 1px 7px; border-radius: 3px; }
+.gates .pass { color: var(--teal); background: var(--teal-fill); }
+.gates .stop { color: var(--red); background: var(--red-fill); }
+.gates .wait { color: var(--gold); background: var(--gold-fill); }
+
+.quiz { margin-top: 34px; border-top: 1.5px solid var(--ink); padding-top: 14px; }
+.quiz > b { font-family: var(--f-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--gold); }
+.q { margin: 14px 0 18px; }
+.q p { margin: 0 0 8px; font-weight: 600; }
+.q label { display: flex; gap: 8px; align-items: flex-start; padding: 7px 10px; border: 1px solid var(--line); border-radius: 3px; margin-bottom: 6px; cursor: pointer; font-size: .93rem; }
+.q label:hover { border-color: var(--muted); }
+.q input { margin-top: 5px; }
+.q label.right { border-color: var(--teal); background: var(--teal-fill); }
+.q label.wrong { border-color: var(--red); background: var(--red-fill); }
+.q .fb { font-size: .88rem; color: var(--muted); margin-top: 4px; }
+.lesson-done { font-family: var(--f-mono); font-size: 12px; color: var(--teal); margin-top: 6px; }
+details { border-top: 1px solid var(--line); padding: 10px 0; }
+details summary { cursor: pointer; font-weight: 600; font-size: .95rem; }
+details > div { padding-top: 8px; font-size: .92rem; }
+.gloss dt { font-weight: 600; margin-top: 12px; }
+.gloss dd { margin: 2px 0 0; color: var(--muted); font-size: .93rem; max-width: 66ch; }
+footer { margin-top: 90px; padding-top: 14px; border-top: 1px solid var(--line); font-family: var(--f-mono); font-size: 11.5px; color: var(--muted); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
+
+
+/* v4: lifecycle, formula sheet, tutor */
+[hidden] { display: none !important; }
+.fsheet { border-top: 1.5px solid var(--ink); }
+.fs { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 15rem); gap: 6px 22px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+.fs h4 { margin: 0 0 4px; font-size: 1rem; }
+.fs .src { font-family: var(--f-mono); font-size: 11.5px; color: var(--muted); overflow-wrap: anywhere; }
+.fs pre { margin: 6px 0 0; font-family: var(--f-mono); font-size: 12.5px; line-height: 1.75; white-space: pre-wrap; overflow-wrap: anywhere; }
+.fs .nw { border-left: 3px solid var(--ink); padding: 2px 0 2px 12px; font-size: .88rem; min-width: 0; }
+.fs .nw b { display: block; font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+@media (max-width: 680px) { .fs { grid-template-columns: minmax(0, 1fr); } }
+.qs4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin: 18px 0; }
+.qs4 div { border: 1px solid var(--line); background: var(--raised); padding: 12px 14px; font-size: .9rem; }
+.qs4 b { display: block; font-family: var(--f-display); font-size: 1.05rem; margin-bottom: 4px; }
+.askline { margin-top: 12px; }
+.askbtn { font: 13px var(--f-body); color: var(--teal); background: none; border: 1px solid var(--teal); border-radius: 3px; padding: 5px 10px; cursor: pointer; }
+.askbtn:hover { background: var(--teal-fill); }
+#tutor-fab { position: fixed; right: 18px; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); z-index: 20; font: 600 14px var(--f-body); color: var(--paper); background: var(--ink); border: 0; border-radius: 22px; padding: 11px 18px; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,.18); }
+#tutor { position: fixed; right: 18px; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); z-index: 21; width: min(430px, calc(100vw - 36px)); height: min(620px, calc(100vh - 60px)); background: var(--paper); border: 1.5px solid var(--ink); display: flex; flex-direction: column; box-shadow: 0 6px 30px rgba(0,0,0,.22); }
+#tutor header { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+#tutor header b { font-family: var(--f-display); font-size: 1.1rem; }
+#tutor header small { display: block; font-family: var(--f-mono); font-size: 10.5px; color: var(--muted); letter-spacing: .05em; }
+#tutor-log { flex: 1; overflow-y: auto; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; font-size: .92rem; }
+.msg { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.55; }
+.msg.me { align-self: flex-end; background: var(--raised); border: 1px solid var(--line); padding: 7px 11px; border-radius: 10px 10px 2px 10px; max-width: 88%; }
+.msg.ai { border-left: 2px solid var(--teal); padding-left: 10px; }
+.msg.note { color: var(--muted); font-size: .85rem; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips button { font: 12.5px var(--f-body); color: var(--ink); background: var(--raised); border: 1px solid var(--line); border-radius: 14px; padding: 4px 10px; cursor: pointer; text-align: left; }
+#tutor form { display: flex; gap: 8px; padding: 10px 14px; border-top: 1px solid var(--line); }
+#tutor textarea { flex: 1; min-width: 0; resize: none; height: 54px; font: 14px var(--f-body); color: var(--ink); background: var(--raised); border: 1px solid var(--line); border-radius: 3px; padding: 7px 9px; }
+#tutor .ctx { font-family: var(--f-mono); font-size: 11px; color: var(--muted); padding: 0 14px 8px; }
+
+@media (max-width: 960px) {
+  .shell { grid-template-columns: minmax(0,1fr); gap: 0; }
+  aside.index { position: static; max-height: none; padding-block: 24px 0; border-bottom: 1px solid var(--line); }
+  .index ol { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); column-gap: 10px; }
+}
+</style>
+
+<div class="shell">
+<aside class="index" aria-label="Course lessons">
+  <div class="brand">InsureFlow · Learn the pipeline</div>
+  <div class="progress"><div class="bar"><i id="pbar"></i></div><small id="ptext">0 of 16 lessons done</small></div>
+  <ol id="toc">
+    <li><a href="#explorer"><span class="n">▶</span>Follow Northwind<span class="ok"></span></a></li>
+    <li class="sep">Foundations</li>
+    <li data-l="primer"><a href="#primer"><span class="n">P</span>How underwriting works<span class="ok">✓</span></a></li>
+    <li data-l="l0"><a href="#l0"><span class="n">00</span>The big picture<span class="ok">✓</span></a></li>
+    <li data-l="l1"><a href="#l1"><span class="n">01</span>Insurance words<span class="ok">✓</span></a></li>
+    <li data-l="l2"><a href="#l2"><span class="n">02</span>Life of a request<span class="ok">✓</span></a></li>
+    <li class="sep">Reading and checking</li>
+    <li data-l="l3"><a href="#l3"><span class="n">03</span>Reading documents<span class="ok">✓</span></a></li>
+    <li data-l="limg"><a href="#limg"><span class="n">03b</span>Images and photos<span class="ok">✓</span></a></li>
+    <li data-l="l4"><a href="#l4"><span class="n">04</span>Rules before AI<span class="ok">✓</span></a></li>
+    <li data-l="l5"><a href="#l5"><span class="n">05</span>Agents and ReAct<span class="ok">✓</span></a></li>
+    <li data-l="l6"><a href="#l6"><span class="n">06</span>Trusting the facts<span class="ok">✓</span></a></li>
+    <li class="sep">Deciding and pricing</li>
+    <li data-l="l7"><a href="#l7"><span class="n">07</span>Making the call<span class="ok">✓</span></a></li>
+    <li data-l="l8"><a href="#l8"><span class="n">08</span>Pricing a building<span class="ok">✓</span></a></li>
+    <li class="sep">Platform</li>
+    <li data-l="l9"><a href="#l9"><span class="n">09</span>RAG<span class="ok">✓</span></a></li>
+    <li data-l="l10"><a href="#l10"><span class="n">10</span>MCP<span class="ok">✓</span></a></li>
+    <li data-l="l11"><a href="#l11"><span class="n">11</span>Where data lives<span class="ok">✓</span></a></li>
+    <li data-l="l12"><a href="#l12"><span class="n">12</span>The human signs<span class="ok">✓</span></a></li>
+    <li data-l="l13"><a href="#l13"><span class="n">13</span>Lab and bug hunt<span class="ok">✓</span></a></li>
+    <li class="sep">Reference</li>
+    <li><a href="#formulas"><span class="n">R0</span>Every calculation<span class="ok"></span></a></li>
+    <li><a href="#ref-agents"><span class="n">R1</span>All 16 agents<span class="ok"></span></a></li>
+    <li><a href="#glossary"><span class="n">R2</span>Glossary<span class="ok"></span></a></li>
+  </ol>
+  <button class="reset" id="reset" type="button">Reset progress</button>
+</aside>
+
+<main>
+  <div class="meta"><span>Rytera · InsureFlow AI · Commercial Property</span><span>Traced from source · main @ 3d4d552 · run 2026-10-05</span></div>
+  <h1>Learn the Commercial Property pipeline by following one real file</h1>
+  <p class="dek">Every lesson uses the same submission, Northwind Logistics, run through the real code on 2026-10-05. The numbers, findings and mistakes below are what the system actually produced, not illustrations.</p>
+
+  <div class="case">
+    <div>
+      <div class="tag">Case file · examples/insurance/northwind_*</div>
+      <h3>Northwind Logistics LLC</h3>
+      <ul class="files">
+        <li>1<div>ACORD application (XML) <span>· Mokena, IL · freight warehouse</span></div></li>
+        <li>2<div>Statement of Values <span>· $28.5M insured value · says "fully sprinklered"</span></div></li>
+        <li>3<div>Loss run <span>· 14 claims · $1.89M incurred · one truck rollover</span></div></li>
+        <li>4<div>Inspection report <span>· 12,000 sq ft cross-dock is not sprinklered</span></div></li>
+      </ul>
+    </div>
+    <div>
+      <div class="tag">What the pipeline produced</div>
+      <div class="result-row">
+        <div><small>Decision</small><div class="result-num" style="color:var(--red)">REFER</div></div>
+        <div><small>Premium</small><div class="result-num">$383,852</div></div>
+      </div>
+      <div class="result-row">
+        <div><small>Risk score</small><span class="mono">0.65</span></div>
+        <div><small>Findings</small><span class="mono">39</span></div>
+        <div><small>Run time</small><span class="mono">7.8 s</span></div>
+      </div>
+      <p style="font-size:.88rem;color:var(--muted);margin:12px 0 0">The REFER is right, but partly for a wrong reason: the system lost the loss run. You will find out why in lesson 03.</p>
+      <p style="font-size:.88rem;color:var(--muted);margin:8px 0 0">New here? Start with the <a href="#primer">primer on how underwriting works</a>. Stuck? Use <b>Ask the tutor</b> at the bottom right.</p>
+    </div>
+  </div>
+
+  <!-- ═════════════ EXPLORER ═════════════ -->
+  <section class="explorer" id="explorer" aria-label="Pipeline explorer">
+    <div class="explorer-head"><h2>Follow Northwind through every stage</h2><p>Pick a stage, or step through with Next.</p></div>
+    <div class="xgrid">
+      <div class="xrail" id="xrail" role="tablist" aria-label="Pipeline stages"></div>
+      <div class="xpanel" id="xpanel" role="tabpanel" aria-live="polite"></div>
+    </div>
+  </section>
+
+
+  <!-- ═════════════ PRIMER ═════════════ -->
+  <section class="lesson" id="primer">
+    <div class="num">Primer</div>
+    <h2>How a commercial underwriter actually works</h2>
+    <p class="why">Before the code: the job itself. Every stage of the pipeline exists because a human underwriter does that step.</p>
+    <p>A <b>commercial underwriter</b> works for an insurance company (the carrier). Brokers send them businesses that want insurance. For each one, the underwriter decides whether to insure it, on what terms, and at what price, and must be able to defend that decision to their manager, the reinsurers and the state regulator.</p>
+    <h3>The four questions behind every file</h3>
+    <div class="qs4">
+      <div><b>Do we want it?</b>Is this kind of business, in this place, at this size, something we write? (appetite)</div>
+      <div><b>What could go wrong?</b>Fire, wind, flood, theft. How likely, and how big could one loss be? (COPE, catastrophe exposure)</div>
+      <div><b>How has it gone before?</b>Past claims: how many, how large, still open, any lawsuits? (loss history)</div>
+      <div><b>What makes it worth it?</b>Price, deductible, limits and conditions that make the risk acceptable. (pricing, terms)</div>
+    </div>
+    <figure>
+      <div class="frame">
+        <svg class="wide" viewBox="0 0 780 260" role="img" aria-label="Top row: the eight steps a human underwriter follows, from receiving a submission to renewal. Bottom row: the InsureFlow stage that does each step. Clearance and renewal are not part of this pipeline run.">
+          <text x="10" y="22" class="s-ts">WHAT THE UNDERWRITER DOES</text>
+          <text x="10" y="178" class="s-ts">WHERE INSUREFLOW DOES IT</text>
+          <g text-anchor="middle">
+            <rect x="10" y="34" width="86" height="64" class="s-hum"/><text x="53" y="60" class="s-tb">Receive</text><text x="53" y="78" class="s-ts">submission</text>
+            <rect x="106" y="34" width="86" height="64" class="s-hum"/><text x="149" y="60" class="s-tb">Clear</text><text x="149" y="78" class="s-ts">duplicates</text>
+            <rect x="202" y="34" width="86" height="64" class="s-hum"/><text x="245" y="60" class="s-tb">Appetite</text><text x="245" y="78" class="s-ts">do we write it</text>
+            <rect x="298" y="34" width="86" height="64" class="s-hum"/><text x="341" y="60" class="s-tb">Evaluate</text><text x="341" y="78" class="s-ts">COPE, losses</text>
+            <rect x="394" y="34" width="86" height="64" class="s-hum"/><text x="437" y="60" class="s-tb">Price</text><text x="437" y="78" class="s-ts">filed rates</text>
+            <rect x="490" y="34" width="86" height="64" class="s-hum"/><text x="533" y="60" class="s-tb">Terms</text><text x="533" y="78" class="s-ts">deductibles</text>
+            <rect x="586" y="34" width="86" height="64" class="s-hum"/><text x="629" y="60" class="s-tb">Decide</text><text x="629" y="78" class="s-ts">or refer up</text>
+            <rect x="682" y="34" width="88" height="64" class="s-hum"/><text x="726" y="60" class="s-tb">Bind</text><text x="726" y="78" class="s-ts">then renew</text>
+            <rect x="10" y="188" width="86" height="56" class="s-det"/><text x="53" y="212" class="s-t">Intake</text><text x="53" y="230" class="s-ts">parse</text>
+            <rect x="106" y="188" width="86" height="56" class="s-ghost"/><text x="149" y="212" class="s-ts">not in</text><text x="149" y="230" class="s-ts">pipeline</text>
+            <rect x="202" y="188" width="86" height="56" class="s-det"/><text x="245" y="212" class="s-t">Appetite</text><text x="245" y="230" class="s-ts">filter</text>
+            <rect x="298" y="188" width="86" height="56" class="s-gen"/><text x="341" y="212" class="s-t">Verify,</text><text x="341" y="230" class="s-ts">agents</text>
+            <rect x="394" y="188" width="86" height="56" class="s-det"/><text x="437" y="212" class="s-t">Price</text><text x="437" y="230" class="s-ts">leaf filing</text>
+            <rect x="490" y="188" width="86" height="56" class="s-det"/><text x="533" y="212" class="s-t">Checklist</text><text x="533" y="230" class="s-ts">conditions</text>
+            <rect x="586" y="188" width="86" height="56" class="s-det"/><text x="629" y="212" class="s-t">Decision</text><text x="629" y="230" class="s-ts">+ authority</text>
+            <rect x="682" y="188" width="88" height="56" class="s-hum"/><text x="726" y="212" class="s-t">Human</text><text x="726" y="230" class="s-ts">sign-off</text>
+          </g>
+          <path d="M53 98 V188 M245 98 V188 M341 98 V188 M437 98 V188 M533 98 V188 M629 98 V188 M726 98 V188" class="s-dash"/>
+          <path d="M149 98 V188" class="s-ghost"/>
+        </svg>
+      </div>
+      <figcaption><b>How to read it:</b> each top box is a step the human does; the box below it is the code that now does the clerical part. Grey dashed boxes are steps this pipeline does not do yet. The final decision stays with a person.</figcaption>
+    </figure>
+    <h3>The words for the outcome</h3>
+    <ul>
+      <li><b>Accept</b>: quote at the indicated price.</li>
+      <li><b>Conditional accept</b>: quote, but "subject to" conditions (for example, "subject to a sprinkler retrofit plan within 90 days"). These conditions are called <b>subjectivities</b>.</li>
+      <li><b>Refer</b>: outside this underwriter's authority or comfort; a more senior person decides.</li>
+      <li><b>Decline</b>: the carrier will not write it.</li>
+    </ul>
+    <h3>Why underwriters are cautious</h3>
+    <p>Premium arrives once a year; one bad fire can cost 50 to 100 times that premium. An underwriter is judged on the <b>loss ratio</b> of their book: claims paid divided by premium collected. Most carriers need it well under 65% to make money after expenses. Every rule in this pipeline exists to keep bad risks out, or to charge enough for them.</p>
+    <div class="casebox"><div class="lbl">Case · Northwind</div><div class="body">
+      <p>A real underwriter would read Northwind like this. Trucking company, so not a preferred class (<b>appetite</b>: maybe). A $28.5M warehouse, part of it unsprinklered with combustible packaging (<b>what could go wrong</b>: a large fire). 14 claims in five years, $1.89M incurred, one lawsuit (<b>how it has gone</b>: poorly). And the SOV claims full sprinklers while the inspection disagrees (<b>trust</b>: low). The verdict is to refer, require sprinklers in the cross-dock, raise the deductible, and price up. The pipeline reached nearly the same answer.</p>
+    </div></div>
+    <div class="askline" hidden><button class="askbtn" type="button">Ask the tutor about this lesson</button></div>
+    <div class="quiz" data-quiz="primer"></div>
+  </section>
+
+  <!-- ═════════════ L0 ═════════════ -->
+  <section class="lesson" id="l0">
+    <div class="num">Lesson 00</div>
+    <h2>The big picture</h2>
+    <p class="why">What goes in, what comes out, who decides, and where the 7.8 seconds go.</p>
+    <div class="beats">
+      <div class="beat"><h4>The problem</h4><p>A broker sends a stack of documents about a business's buildings. An underwriter must read all of it, cross-check it, judge the risk and price it. By hand this takes hours per file, and most of that time is reading and re-typing.</p></div>
+      <div class="beat"><h4>The idea</h4><p>Let software do the reading, checking and arithmetic, and hand the underwriter a finished memo and quote to judge. The person still makes the decision; they just stop doing clerical work.</p></div>
+    </div>
+    <figure>
+      <div class="frame">
+        <svg class="wide" viewBox="0 0 760 200" role="img" aria-label="Four automated jobs (read, check, judge, price) turn a broker package into a memo and quote; a licensed underwriter then signs and binds.">
+          <defs><marker id="a0" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="s-head"/></marker></defs>
+          <g text-anchor="middle">
+            <rect x="8" y="60" width="104" height="70" class="s-neu"/><text x="60" y="90" class="s-tb">Broker</text><text x="60" y="110" class="s-ts">4 files</text>
+            <rect x="142" y="60" width="104" height="70" class="s-det"/><text x="194" y="90" class="s-tb">1 Read</text><text x="194" y="110" class="s-ts">parse</text>
+            <rect x="276" y="60" width="104" height="70" class="s-det"/><text x="328" y="90" class="s-tb">2 Check</text><text x="328" y="110" class="s-ts">verify</text>
+            <rect x="410" y="60" width="104" height="70" class="s-gen"/><text x="462" y="90" class="s-tb">3 Judge</text><text x="462" y="110" class="s-ts">agents</text>
+            <rect x="544" y="60" width="104" height="70" class="s-det"/><text x="596" y="90" class="s-tb">4 Price</text><text x="596" y="110" class="s-ts">rate</text>
+            <rect x="672" y="52" width="82" height="86" class="s-hum"/><text x="713" y="88" class="s-tb">Human</text><text x="713" y="108" class="s-ts">signs</text>
+            <text x="194" y="160" class="s-ts">parse 5.4 s</text><text x="328" y="160" class="s-ts">0.4 s</text><text x="462" y="160" class="s-ts">1.9 s</text><text x="596" y="160" class="s-ts">0.1 s</text>
+          </g>
+          <path d="M112 95 H142" class="s-line" marker-end="url(#a0)"/><path d="M246 95 H276" class="s-line" marker-end="url(#a0)"/><path d="M380 95 H410" class="s-line" marker-end="url(#a0)"/><path d="M514 95 H544" class="s-line" marker-end="url(#a0)"/><path d="M648 95 H672" class="s-line" marker-end="url(#a0)"/>
+          <path d="M142 30 H648" class="s-dash"/><text x="395" y="22" text-anchor="middle" class="s-ts">automatic · advice only</text>
+        </svg>
+      </div>
+      <figcaption><b>How to read it:</b> teal boxes are rules and arithmetic, the gold box is where a language model may reason, the bold box is a person. Times are Northwind's real stage durations.</figcaption>
+    </figure>
+
+    <h3>Where the time actually goes</h3>
+    <figure>
+      <div class="frame">
+        <svg viewBox="0 0 720 330" role="img" aria-label="Bar chart of Northwind stage durations in milliseconds: parse 5,380; analyze 1,872; verify 381; price 82; decision 26; reconcile 4; the rest under 1 ms.">
+          <g id="timechart"></g>
+        </svg>
+      </div>
+      <figcaption><b>Reading the documents takes 69% of the run.</b> Most of the 1.9 s in "analyze" is four LLM calls failing with an invalid key before the agents fell back to rules (lesson 05). Hover a bar for exact times.</figcaption>
+    </figure>
+    <div class="code-map"><b>Open next</b><div><code>insurance/pipeline.py</code> → <code>InsurancePipeline.run()</code>: each stage starts with a <code># ── N. NAME ──</code> comment, so you can jump between them</div></div>
+    <div class="askline" hidden><button class="askbtn" type="button">Ask the tutor about this lesson</button></div>
+    <div class="quiz" data-quiz="l0"></div>
+  </section>
+
+  <!-- ═════════════ L1 ═════════════ -->
+  <section class="lesson" id="l1">
+    <div class="num">Lesson 01</div>
+    <h2>Insurance words you need</h2>
+    <p class="why">The code is named after underwriting ideas. Here is each one, with Northwind's actual value.</p>
+    <div class="tw"><table>
+      <thead><tr><th>Term</th><th>Plain meaning</th><th>Northwind</th></tr></thead>
+      <tbody>
+        <tr><td class="k">TIV</td><td>Total insured value: what it would cost to replace the buildings, contents and lost income. Property is priced per $100 of TIV.</td><td class="mono">$28,500,000</td></tr>
+        <tr><td class="k">ACORD 140</td><td>The standard property application form, usually sent as XML.</td><td class="mono">present</td></tr>
+        <tr><td class="k">SOV</td><td>Statement of Values: one row per building with address, construction and value.</td><td class="mono">present</td></tr>
+        <tr><td class="k">Loss run</td><td>The claim history from previous insurers. The single best predictor of future claims.</td><td class="mono">14 claims, $1.89M (lost, see lesson 03)</td></tr>
+        <tr><td class="k">COPE</td><td>The four ways a building's fire risk is graded: Construction, Occupancy (what happens inside), Protection (sprinklers, fire service), Exposure (neighbours, weather).</td><td class="mono">construction good; occupancy higher-risk; protection partial</td></tr>
+        <tr><td class="k">Loss cost × LCM</td><td>Expected claims per $100 of value, times a multiplier that adds expenses and profit.</td><td class="mono">0.6954 × 2.063</td></tr>
+        <tr><td class="k">Coinsurance</td><td>You must insure at least, say, 80% of the value. Insure less and every claim is paid proportionally less.</td><td class="mono">not computable (no limit stated)</td></tr>
+        <tr><td class="k">Refer</td><td>"A senior underwriter must decide this one." The normal outcome for anything unusual.</td><td class="mono">REFER</td></tr>
+        <tr><td class="k">Bind</td><td>The moment coverage starts. Needs a licensed underwriter and a live policy system.</td><td class="mono">not bound</td></tr>
+      </tbody>
+    </table></div>
+    <p>More terms are in the <a href="#glossary">glossary</a>.</p>
+    <div class="askline" hidden><button class="askbtn" type="button">Ask the tutor about this lesson</button></div>
+    <div class="quiz" data-quiz="l1"></div>
+  </section>
+
+  <!-- ═════════════ L2 ═════════════ -->
+  <section class="lesson" id="l2">
+    <div class="num">Lesson 02</div>
+    <h2>Life of a request</h2>
+    <p class="why">How a slow job survives inside a web API.</p>
+    <div class="beats">
+      <div class="beat"><h4>The problem</h4><p>The pipeline takes seconds to minutes. A browser request that waits that long times out, and if the server restarts mid-run, the work is lost.</p></div>
+      <div class="beat"><h4>The idea</h4><p>Answer immediately with a ticket (a job id). Do the work in a separate worker, and let the client watch progress by polling or by a live stream.</p></div>
+    </div>
+    <figure>
+      <div class="frame">
+        <svg class="wide" viewBox="0 0 740 360" role="img" aria-label="Sequence diagram: client posts, API records the job in Redis and queues it for a Celery worker, then replies 202 with a job id; the worker reports progress to Redis per stage; the client streams progress and fetches the quote at the end.">
+          <defs><marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="s-head"/></marker></defs>
+          <g text-anchor="middle">
+            <rect x="20" y="10" width="120" height="38" class="s-neu"/><text x="80" y="34" class="s-tb">Client</text>
+            <rect x="215" y="10" width="120" height="38" class="s-det"/><text x="275" y="34" class="s-tb">FastAPI</text>
+            <rect x="410" y="10" width="120" height="38" class="s-neu"/><text x="470" y="34" class="s-tb">Redis</text>
+            <rect x="600" y="10" width="130" height="38" class="s-det"/><text x="665" y="34" class="s-tb">Worker</text>
+          </g>
+          <path d="M80 48 V350 M275 48 V350 M470 48 V350 M665 48 V350" class="s-ghost"/>
+          <g class="s-ts" text-anchor="middle">
+            <circle cx="16" cy="80" r="10" class="s-numbg"/><text x="16" y="84" class="s-num">1</text>
+            <path d="M80 80 H272" class="s-line" marker-end="url(#a2)"/><text x="178" y="72">POST /pipeline/run</text>
+            <circle cx="16" cy="118" r="10" class="s-numbg"/><text x="16" y="122" class="s-num">2</text>
+            <path d="M275 118 H467" class="s-line" marker-end="url(#a2)"/><text x="372" y="110">save job: processing</text>
+            <circle cx="16" cy="152" r="10" class="s-numbg"/><text x="16" y="156" class="s-num">3</text>
+            <path d="M275 152 H662" class="s-line" marker-end="url(#a2)"/><text x="565" y="144">queue the task</text>
+            <circle cx="16" cy="186" r="10" class="s-numbg"/><text x="16" y="190" class="s-num">4</text>
+            <path d="M275 186 H83" class="s-line" marker-end="url(#a2)"/><text x="178" y="178">202 + job_id (instant)</text>
+            <rect x="652" y="200" width="26" height="110" class="s-det"/>
+            <circle cx="16" cy="226" r="10" class="s-numbg"/><text x="16" y="230" class="s-num">5</text>
+            <path d="M652 226 H473" class="s-line" marker-end="url(#a2)"/><text x="565" y="218">progress, each stage</text>
+            <path d="M80 250 H272" class="s-dash" marker-end="url(#a2)"/><text x="178" y="242">watch: …/stream</text>
+            <circle cx="16" cy="290" r="10" class="s-numbg"/><text x="16" y="294" class="s-num">6</text>
+            <path d="M652 290 H473" class="s-line" marker-end="url(#a2)"/><text x="565" y="282">completed + results</text>
+            <circle cx="16" cy="330" r="10" class="s-numbg"/><text x="16" y="334" class="s-num">7</text>
+            <path d="M80 330 H272" class="s-line" marker-end="url(#a2)"/><text x="178" y="322">GET …/quote, …/report</text>
+          </g>
+        </svg>
+      </div>
+      <figcaption><b>How to read it:</b> time runs downward; each arrow is one message, numbered in order. The client is free after step 4.</figcaption>
+    </figure>
+    <ol class="how">
+      <li>The API checks the caller's role (<code>viewer</code> or higher) and a rate limit of 10 runs per minute.</li>
+      <li>It writes <code>status: processing</code> to the job store, scoped to the caller's organisation.</li>
+      <li>It queues the job to Celery. If Celery is off or the queue fails, it runs the same function in-process with FastAPI <code>BackgroundTasks</code>, so the client never notices.</li>
+      <li>The worker updates progress after every stage; the dashboard reads it over a server-sent-events stream.</li>
+      <li>Redis drops jobs after about a week. A later request rebuilds the job from the encrypted audit archive.</li>
+    </ol>
+    <div class="code-map"><b>Open next</b><div><code>api/main.py</code> → <code>run_pipeline</code>, <code>_run_pipeline_task</code></div><div><code>tasks/dispatch.py</code> → <code>should_use_celery</code></div><div><code>storage/job_store.py</code> → <code>RedisJobStore</code></div></div>
+    <div class="askline" hidden><button class="askbtn" type="button">Ask the tutor about this lesson</button></div>
+    <div class="quiz" data-quiz="l2"></div>
+  </section>
+
+  <!-- ═════════════ L3 ═════════════ -->
+  <section class="lesson" id="l3">
+    <div class="num">Lesson 03</div>
+    <h2>Reading the documents</h2>
+    <p class="why">The step that takes the longest, and the one where Northwind went wrong.</p>
+    <div class="beats">
+      <div class="beat"><h4>The problem</h4><p>Files arrive with random names in many formats. Before anything can be extracted, the system has to know what each file is, because a loss run and an inspection report are parsed by completely different code.</p></div>
+      <div class="beat"><h4>The idea</h4><p>Classify each file by keywords, then send it to the parser for that type. Keywords are fast, free and predictable. Their weakness is that a word can mean two things.</p></div>
+    </div>
+    <h3>How the code does it</h3>
+    <ol class="how">
+      <li><b>Guard.</b> Virus scan (ClamAV, fails closed if configured but down), macro and active-content checks, locked PDFs, and limits against zip bombs: 200 files, 500 MB unpacked, 3 levels deep.</li>
+      <li><b>Classify.</b> <code>InsuranceDocumentClassifier.classify()</code> lowercases the filename plus the first 8,000 characters and walks a long list of keyword rules from top to bottom. <b>The first rule that matches wins.</b></li>
+      <li><b>Parse.</b> ACORD XML goes to a schema parser and becomes structured data. Other types go to their own parsers. Scanned PDFs go through OCR first.</li>
+      <li><b>Check the package.</b> Missing ACORD 140, SOV or loss run is a CRITICAL finding. Missing roof age or protection class is MODERATE. These are findings, not stops: the run continues.</li>
+    </ol>
+    <figure>
+      <div class="frame">
+        <svg class="wide" viewBox="0 0 760 400" role="img" aria-label="The loss run text contains the word rollover from a truck accident. The classifier checks rules in order; the retirement-account rule at line 441 matches rollover first, so the loss-run rule at line 522 is never reached and the claims history is treated as missing.">
+          <defs>
+            <marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="s-head"/></marker>
+            <marker id="a3r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="s-headr"/></marker>
+          </defs>
+          <rect x="10" y="20" width="220" height="150" class="s-neu"/>
+          <text x="24" y="44" class="s-tb">northwind_loss_run.md</text>
+          <text x="24" y="70" class="s-ts">LOSS RUN / CLAIMS HISTORY</text>
+          <text x="24" y="90" class="s-ts">Total claims: 14</text>
+          <text x="24" y="110" class="s-ts">Total incurred: $1,893,700</text>
+          <text x="24" y="134" class="s-ts">Cause: Tire blowout caused</text>
+          <rect x="22" y="141" width="62" height="18" fill="none" class="s-red"/><text x="26" y="155" class="s-tr">rollover</text><text x="90" y="155" class="s-ts">on I-57</text>
+          <text x="300" y="16" class="s-ts">classifier rules, checked top to bottom</text>
+          <rect x="300" y="26" width="270" height="34" class="s-det"/><text x="314" y="48" class="s-t">ACORD XML?</text><text x="556" y="48" text-anchor="end" class="s-ts">no</text>
+          <rect x="300" y="68" width="270" height="34" class="s-det"/><text x="314" y="90" class="s-t">Life application? Medical exam? …</text><text x="556" y="90" text-anchor="end" class="s-ts">no</text>
+          <rect x="300" y="110" width="270" height="34" class="s-det"/><text x="314" y="132" class="s-t">… ~40 life and annuity rules …</text><text x="556" y="132" text-anchor="end" class="s-ts">no</text>
+          <rect x="300" y="152" width="270" height="46" class="s-gate"/><text x="314" y="172" class="s-tb">Retirement account statement</text><text x="314" y="190" class="s-ts">"rollover" · line 441</text>
+          <rect x="300" y="246" width="270" height="46" class="s-neu" style="opacity:.55"/><text x="314" y="266" class="s-tb">Loss run</text><text x="314" y="284" class="s-ts">"loss run" · line 522</text>
+          <text x="435" y="230" text-anchor="middle" class="s-ts">never reached</text>
+          <path d="M435 198 V244" class="s-dash"/>
+          <path d="M230 150 C 265 150, 270 175, 300 175" class="s-red" marker-end="url(#a3r)"/>
+          <text x="591" y="198" class="s-tr" text-anchor="middle">MATCH</text>
+          <path d="M570 175 H610" class="s-red" marker-end="url(#a3r)"/>
+          <rect x="612" y="140" width="140" height="132" class="s-gate"/>
+          <text x="682" y="164" text-anchor="middle" class="s-tb">Result</text>
+          <text x="682" y="186" text-anchor="middle" class="s-ts">type = retirement</text>
+          <text x="682" y="204" text-anchor="middle" class="s-ts">claims parsed: 0</text>
+          <text x="682" y="228" text-anchor="middle" class="s-tr">CRITICAL:</text>
+          <text x="682" y="246" text-anchor="middle" class="s-tr">"Missing loss</text>
+          <text x="682" y="262" text-anchor="middle" class="s-tr">run reports"</text>
+          <text x="300" y="330" class="s-t">The inspection report mentions the same accident,</text>
+          <text x="300" y="350" class="s-t">so it was misfiled the same way.</text>
+        </svg>
+      </div>
+      <figcaption><b>How to read it:</b> the file on the left is checked against rules from top to bottom. The red path shows the first match. The faded box is the rule that should have matched but was never checked.</figcaption>
+    </figure>
+    <div class="casebox"><div class="lbl">Case · Northwind</div><div class="body">
+      <p>Four files went in. The ACORD became structured data. The SOV was classified correctly. The loss run and the inspection report were both classified as <code>retirement_account_statement</code>, a life-insurance document, because both describe a truck <i>rollover</i>.</p>
+      <p>As a result the package checklist found 3 of 18 property documents (17%), and the system reported <b>"Missing required document: Loss run reports"</b> as CRITICAL. A real underwriter would see 14 claims and $1.89M incurred, including an open auto liability claim.</p>
+    </div></div>
+    <div class="watch"><b class="h">Watch out</b><p>First-match keyword classifiers break on ordinary words. Two safer patterns: check the <i>current line of business</i> first (a commercial property package should not contain retirement statements), and score all rules then take the best, instead of the first hit. This is exercise 1 in lesson 13.</p></div>
+    <div class="code-map"><b>Open next</b><div><code>ingestion/insurance/classifier.py</code> → <code>classify()</code> at line 274, retirement rule at 441, loss-run rule at 522</div><div><code>ingestion/insurance/loader.py</code> → <code>load_from_documents</code></div><div><code>insurance/pipeline.py</code> → <code>2c. REQUIRED DATA VALIDATION</code></div></div>
+    <div class="askline" hidden><button class="askbtn" type="button">Ask the tutor about this lesson</button></div>
+    <div class="quiz" data-quiz="l3"></div>
+  </section>
+
+
+  <!-- ═════════════ L3b IMAGES ═════════════ -->
+  <section class="lesson" id="limg">
+    <div class="num">Lesson 03b</div>
+    <h2>Images: scans, handwriting and property photos</h2>
+    <p class="why">Two very different kinds of image arrive in a package, and each takes its own path.</p>
+    <div class="beats">
+      <div class="beat"><h4>The problem</h4><p>Many documents arrive as pictures of paper: a scanned loss run, a phone photo of a signed form, a handwritten note. Separately, brokers attach photos of the building itself. Text has to be recovered from the first kind; risk has to be judged from the second.</p></div>
+      <div class="beat"><h4>The idea</h4><p>For documents, try the cheapest way to get text first and climb a ladder of stronger engines only when needed. For photos, measure picture quality first, then look for hazards and damage, and never trust a photo that looks edited.</p></div>
+    </div>
+    <figure>
+      <div class="frame">
+        <svg class="wide" viewBox="0 0 780 470" role="img" aria-label="Two lanes. Top: a document that is an image is profiled by the router, then read by the cheapest suitable engine; scans climb an OCR ladder from cloud OCR to vision models, handwriting recognition, Tesseract and pdfminer, ending as text with page positions. Bottom: a property photo gets a quality score, then a vision model or local heuristic, damage and forensics checks, and a visual risk level; but the pipeline currently passes photos in a format the analyzer does not read, so none are analyzed.">
+          <defs>
+            <marker id="ai1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="s-head"/></marker>
+            <marker id="ai2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="s-headr"/></marker>
+          </defs>
+          <text x="10" y="20" class="s-ts">LANE A · A DOCUMENT THAT IS AN IMAGE (scan, PDF, phone photo of a form)</text>
+          <rect x="10" y="34" width="120" height="62" class="s-neu"/><text x="70" y="60" text-anchor="middle" class="s-tb">scan.pdf</text><text x="70" y="80" text-anchor="middle" class="s-ts">or form.jpg</text>
+          <rect x="160" y="34" width="150" height="62" class="s-det"/><text x="235" y="60" text-anchor="middle" class="s-tb">Router profile</text><text x="235" y="80" text-anchor="middle" class="s-ts">pages, text, columns</text>
+          <path d="M130 65 H160" class="s-line" marker-end="url(#ai1)"/>
+          <path d="M310 65 H340" class="s-line" marker-end="url(#ai1)"/>
+          <rect x="340" y="34" width="190" height="200" class="s-neu"/>
+          <text x="352" y="54" class="s-tb">OCR ladder (scans)</text>
+          <text x="352" y="80" class="s-t">1 Cloud OCR</text><text x="518" y="80" text-anchor="end" class="s-ts">opt-in</text>
+          <text x="352" y="106" class="s-t">2 Vision ML</text><text x="518" y="106" text-anchor="end" class="s-ts">opt-in</text>
+          <text x="352" y="132" class="s-t">3 Handwriting</text><text x="518" y="132" text-anchor="end" class="s-ts">TrOCR</text>
+          <text x="352" y="158" class="s-t">4 Tesseract</text><text x="518" y="158" text-anchor="end" class="s-ts">default</text>
+          <text x="352" y="184" class="s-t">5 pdfminer</text><text x="518" y="184" text-anchor="end" class="s-ts">text layer</text>
+          <text x="352" y="214" class="s-tr">6 nothing → "unreadable"</text>
+          <path d="M530 65 H570" class="s-line" marker-end="url(#ai1)"/>
+          <rect x="570" y="34" width="200" height="62" class="s-det"/><text x="670" y="60" text-anchor="middle" class="s-tb">Text + page boxes</text><text x="670" y="80" text-anchor="middle" class="s-ts">→ classify → extract</text>
+          <text x="352" y="252" class="s-ts">first engine that returns text wins</text>
+
+          <text x="10" y="296" class="s-ts">LANE B · A PHOTO OF THE PROPERTY (roof.jpg, panel.png)</text>
+          <rect x="10" y="310" width="120" height="62" class="s-neu"/><text x="70" y="336" text-anchor="middle" class="s-tb">roof.jpg</text><text x="70" y="356" text-anchor="middle" class="s-ts">base64 upload</text>
+          <rect x="160" y="310" width="140" height="62" class="s-det"/><text x="230" y="336" text-anchor="middle" class="s-tb">Quality score</text><text x="230" y="356" text-anchor="middle" class="s-ts">blur, size, light</text>
+          <rect x="320" y="310" width="140" height="62" class="s-gen"/><text x="390" y="336" text-anchor="middle" class="s-tb">Look for hazards</text><text x="390" y="356" text-anchor="middle" class="s-ts">vision LLM or local</text>
+          <rect x="480" y="310" width="140" height="62" class="s-det"/><text x="550" y="336" text-anchor="middle" class="s-tb">Damage + forensics</text><text x="550" y="356" text-anchor="middle" class="s-ts">edits, recompress</text>
+          <rect x="640" y="310" width="130" height="62" class="s-det"/><text x="705" y="336" text-anchor="middle" class="s-tb">Visual risk</text><text x="705" y="356" text-anchor="middle" class="s-ts">worst photo wins</text>
+          <path d="M300 341 H320 M460 341 H480 M620 341 H640" class="s-line"/>
+          <path d="M130 341 H160" class="s-red" marker-end="url(#ai2)"/>
+          <path d="M138 332 L152 350 M152 332 L138 350" class="s-red"/>
+          <text x="10" y="402" class="s-tr">Today this arrow is broken: the pipeline passes {filename, content}, the analyzer reads "image_data".</text>
+          <text x="10" y="422" class="s-tr">Every photo is skipped and the stage still reports "low risk". Satellite imagery never runs either.</text>
+          <text x="10" y="452" class="s-ts">The same photo also goes down Lane A as a document, where it is OCR'd for any text it contains.</text>
+        </svg>
+      </div>
+      <figcaption><b>How to read it:</b> lane A turns pictures of paper into text; lane B judges the building from photos. Red marks a defect found while tracing (verified by test).</figcaption>
+    </figure>
+    <h3>Lane A: how the router picks a reader</h3>
+    <div class="tw"><table>
+      <thead><tr><th>If the file…</th><th>Route</th><th>Read by</th></tr></thead>
+      <tbody>
+        <tr><td>is xlsx, csv, docx, eml, html, json, xml</td><td class="k">structured</td><td>its own parser, no OCR</td></tr>
+        <tr><td>has no readable pages</td><td class="k">scanned</td><td>OCR ladder</td></tr>
+        <tr><td>has no text layer, or under 6% text with images</td><td class="k">scanned</td><td>OCR ladder; PDFs rendered at 200 dpi, one page at a time</td></tr>
+        <tr><td>spans many columns (≥ 0.55) with real text (≥ 15%)</td><td class="k">VLM</td><td>a vision-language model, if <code>vlm_enabled</code></td></tr>
+        <tr><td>looks like tables (≥ 0.6) or has 4+ images</td><td class="k">table-heavy</td><td>pdfplumber tables → Markdown</td></tr>
+        <tr><td>anything else</td><td class="k">standard</td><td>pdfplumber, then pdfminer</td></tr>
+      </tbody>
+    </table></div>
+    <ul>
+      <li><b>Rotation:</b> Tesseract first asks the page which way is up (OSD) and rotates it, so sideways scans still read.</li>
+      <li><b>Handwriting:</b> with <code>USE_HTR=1</code>, a detector looks for uneven stroke widths. Above 0.4 confidence the page goes to Microsoft's TrOCR model, and its output is accepted at 0.3 confidence or more.</li>
+      <li><b>Page positions:</b> pdfplumber records a box for every line, so a finding can later point at page 3, line 12. This is what lets the citation gate work.</li>
+      <li><b>Big files:</b> uploads over the auto-processing limit are kept but not OCR'd, and are flagged for manual review instead of risking an out-of-memory crash.</li>
+      <li><b>Bad files:</b> the document quality gate subtracts penalties from 1.0. Empty is −0.5, OCR failure −0.3, unusually short −0.15. Under 0.3 is a reject, which blocks straight-through processing.</li>
+    </ul>
+    <h3>Lane B: the photo quality score</h3>
+<div class="formula">blur        = min(1, Laplacian variance ÷ 500)          <span class="c"># sharp edges → high variance</span>
+resolution  = min(1, width × height ÷ (1920 × 1080))    <span class="c"># 0.3 if under 640 × 480</span>
+quality     = 0.40 × blur + 0.30 × resolution + 0.15 × brightness
+            + 0.15 × (1 − |brightness − 0.5| × 2)       <span class="c"># best at mid-grey exposure</span>
+grade       = < 0.15 unusable · < 0.35 poor · < 0.55 acceptable · < 0.80 good · else excellent</div>
+    <div class="tool" id="photo">
+      <b>Try it · photo quality</b>
+      <div class="fields">
+        <label for="ph-var">Laplacian variance (sharpness)<input id="ph-var" type="number" min="0" step="10" value="220"></label>
+        <label for="ph-w">Width (px)<input id="ph-w" type="number" min="0" step="10" value="1280"></label>
+        <label for="ph-h">Height (px)<input id="ph-h" type="number" min="0" step="10" value="960"></label>
+        <label for="ph-b">Brightness (0–1)<input id="ph-b" type="number" min="0" max="1" step="0.05" value="0.5"></label>
+      </div>
+      <div class="out">
+        <div><small>Blur score</small><strong id="ph-bs">–</strong></div>
+        <div><small>Resolution</small><strong id="ph-rs">–</strong></div>
+        <div><small>Quality</small><strong id="ph-q">–</strong></div>
+        <div><small>Grade</small><strong><span id="ph-g" class="verdict">–</span></strong></div>
+      </div>
+      <p class="explain" id="ph-why"></p>
+    </div>
+    <p>After quality, a vision model (if configured) or a local heuristic looks for roof wear, exposed wiring, stored combustibles and water damage. The forensics check flags edit-software tags and JPEG re-compression hotspots, and asks for the original camera files. The property's visual risk is its <b>worst</b> photo, never the average, so one bad roof photo cannot be diluted by ten nice ones.</p>
+    <div class="casebox"><div class="lbl">Case · Northwind</div><div class="body"><p>Northwind's four files were text, so neither ladder was needed: regex found 120–350% of expected fields. Had the broker attached roof photos, they would have hit the bug above: the stage would say "0 photos · low risk" and nobody would know the photos were never looked at.</p></div></div>
+    <div class="watch"><b class="h">Watch out</b><p>A stage that silently does nothing looks exactly like a stage that found nothing. The fix is one line (pass <code>image_data</code> as decoded bytes), and the lesson is general: assert that "analyzed" equals "received".</p></div>
+    <div class="code-map"><b>Open next</b><div><code>ingestion/router.py</code> → <code>route_document</code> · <code>ingestion/ocr.py</code> → <code>_extract_image_text</code></div><div><code>ingestion/handwriting.py</code> · <code>ingestion/doc_quality.py</code></div><div><code>ml/vision/photo_scorer.py</code> → <code>score_photo_quality</code> · <code>ml/vision/pipeline.py:57</code> (reads <code>image_data</code>) · <code>insurance/pipeline.py:720</code> (passes documents)</div></div>
+    <div class="askline" hidden><button class="askbtn" type="button">Ask the tutor about this lesson</button></div>
+    <div class="quiz" data-quiz="limg"></div>
+  </section>
+
+  <!-- ═════════════ L4 ═════════════ -->
+  <section class="lesson" id="l4">
+    <div class="num">Lesson 04</div>
+    <h2>Rules before AI: the Zero-Token router</h2>
+    <p class="why">How the system decides, task by task, whether a language model is needed at all.</p>
+    <div class="beats">
+      <div class="beat"><h4>The problem</h4><p>LLM calls cost money, take seconds, can make things up, and give different answers on different runs. An underwriting file needs to be cheap, fast, and reproducible for auditors.</p></div>
+      <div class="beat"><h4>The idea</h4><p>Before each task, ask: can rules do this well enough? Only if not, and only if a model is allowed, use one. Log every decision with the tokens it saved or spent.</p></div>
+    </div>
+    <figure>
+      <div class="frame">
+        <svg viewBox="0 0 700 300" role="img" aria-label="Routing decision for extracting a document: if regex found at least 60 percent of expected fields, use rules. Otherwise, if an LLM is configured, strict mode is off and fewer than 5 LLM tasks were used, call the cheap LLM. Otherwise send to a human.">
+          <defs>
+            <marker id="a4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="s-head"/></marker>
+          </defs>
+          <rect x="20" y="20" width="200" height="54" class="s-neu"/><text x="120" y="44" text-anchor="middle" class="s-tb">A document to read</text><text x="120" y="62" text-anchor="middle" class="s-ts">expects 8 fields</text>
+          <rect x="250" y="20" width="230" height="54" class="s-neu" style="stroke-width:2"/><text x="365" y="42" text-anchor="middle" class="s-tb">Did regex find ≥ 60%</text><text x="365" y="60" text-anchor="middle" class="s-tb">of expected fields?</text>
+          <rect x="520" y="20" width="160" height="54" class="s-det"/><text x="600" y="44" text-anchor="middle" class="s-tb">Use rules</text><text x="600" y="62" text-anchor="middle" class="s-ts">0 tokens</text>
+          <rect x="250" y="130" width="230" height="70" class="s-neu" style="stroke-width:2"/><text x="365" y="154" text-anchor="middle" class="s-tb">LLM configured, not</text><text x="365" y="172" text-anchor="middle" class="s-tb">strict, &lt; 5 used this job?</text>
+          <rect x="520" y="138" width="160" height="54" class="s-gen"/><text x="600" y="162" text-anchor="middle" class="s-tb">Cheap LLM</text><text x="600" y="180" text-anchor="middle" class="s-ts">PII redacted first</text>
+          <rect x="270" y="240" width="190" height="50" class="s-hum"/><text x="365" y="270" text-anchor="middle" class="s-tb">Ask a human</text>
+          <path d="M220 47 H250" class="s-line" marker-end="url(#a4)"/>
+          <path d="M480 47 H520" class="s-line" marker-end="url(#a4)"/><text x="500" y="40" text-anchor="middle" class="s-tt">yes</text>
+          <path d="M365 74 V130" class="s-line" marker-end="url(#a4)"/><text x="378" y="106" class="s-tr">no</text>
+          <path d="M480 165 H520" class="s-line" marker-end="url(#a4)"/><text x="500" y="158" text-anchor="middle" class="s-tt">yes</text>
+          <path d="M365 200 V240" class="s-line" marker-end="url(#a4)"/><text x="378" y="225" class="s-tr">no</text>
+        </svg>
+      </div>
+      <figcaption><b>How to read it:</b> start top left and answer each question. Scoring, pricing and the decision never take the LLM branch; missing inputs there go straight to a human.</figcaption>
+    </figure>
+    <div class="casebox"><div class="lbl">Case · Northwind</div><div class="body">
+      <p>The router logged 5 decisions. All three documents were read by rules, with regex finding 120%, 350% and 300% of the expected fields. Reconciliation found 6 conflicts and wanted the LLM, but none was available, so it was <b>escalated to a human</b>. The memo was built from a template. Tokens used by the router's tasks: <b>0</b>.</p>
+    </div></div>
+    <div class="tool" id="zta">
+      <b>Try it · extraction routing</b>
+      <div class="fields">
+        <label for="z-doc">Document type<select id="z-doc"><option value="12">Inspection report (12 fields)</option><option value="10">SOV (10 fields)</option><option value="8" selected>Loss run (8 fields)</option><option value="6">Other (6 fields)</option></select></label>
+        <label for="z-found">Fields regex found<input id="z-found" type="number" min="0" value="3"></label>
+        <label for="z-used">LLM tasks already used<input id="z-used" type="number" min="0" max="10" value="1"></label>
+      </div>
+      <div class="checks">
+        <label><input type="checkbox" id="z-llm" checked> LLM key configured</label>
+        <label><input type="checkbox" id="z-strict"> Strict mode (<code>ZTA_STRICT=1</code>)</label>
+      </div>
+      <div class="out"><div><small>Coverage</small><strong id="z-ratio">–</strong></div><div><small>Route</small><strong id="z-route">–</strong></div></div>
+      <p class="explain" id="z-why"></p>
+    </div>
+    <div class="watch"><b class="h">Watch out</b><p>The router only governs the tasks it is asked about. The specialist agents in lesson 05 call the LLM on their own whenever a key exists, and <code>InsurancePipeline(use_llm=False)</code> does not switch them off. That is why Northwind still made four failed LLM calls.</p></div>
+    <div class="code-map"><b>Open next</b><div><code>zta/router.py</code> → <code>ZeroTokenRouter.route</code></div><div><code>zta/config.py</code> → <code>ZTA_STRICT</code>, <code>ZTA_EXPECTED_FIELDS_RATIO</code> (0.6), <code>ZTA_MAX_LLM_TASKS_PER_JOB</code> (5)</div></div>
+    <div class="askline" hidden><button class="askbtn" type="button">Ask the tutor about this lesson</button></div>
+    <div class="quiz" data-quiz="l4"></div>
+  </section>
+
+  <!-- ═════════════ L5 ═════════════ -->
+  <section class="lesson" id="l5">
+    <div class="num">Lesson 05</div>
+    <h2>Agents and the ReAct loop</h2>
+    <p class="why">What "agent" means here, how they work together, and what happens when the AI is unavailable.</p>
+    <div class="beats">
+      <div class="beat"><h4>The problem</h4><p>Judging a risk needs several kinds of expertise: claims history, compliance, fraud, physical risk. One giant prompt would be slow, hard to test and hard to explain.</p></div>
+      <div class="beat"><h4>The idea</h4><p>Split the work into specialist <b>agents</b>, each a Python class that returns findings, a 0–1 risk score and a recommendation. Run them in parallel, then let a final agent combine them.</p></div>
+    </div>
+    <figure>
+      <div class="frame">
+        <svg class="wide" viewBox="0 0 760 360" role="img" aria-label="Northwind agent run: the supervisor ran four specialists in parallel. Risk Analyst used rules and returned 3 findings in 8 ms. Loss Run, Compliance and Fraud each tried the LLM, got a 401 error after about 1.5 seconds and fell back to rules. The UW Decision agent also fell back, then produced the memo with score 0.65 and decision REFER.">
+          <defs>
+            <marker id="a5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="s-head"/></marker>
+          </defs>
+          <rect x="10" y="140" width="140" height="70" class="s-det"/><text x="80" y="170" text-anchor="middle" class="s-tb">Supervisor</text><text x="80" y="190" text-anchor="middle" class="s-ts">4 threads</text>
+          <g>
+            <rect x="200" y="14" width="250" height="66" class="s-det"/><text x="214" y="38" class="s-tb">Risk Analyst</text><text x="214" y="58" class="s-ts">rules only · 8 ms</text><text x="436" y="38" text-anchor="end" class="s-tt">0.60</text><text x="436" y="58" text-anchor="end" class="s-ts">3 findings</text>
+            <rect x="200" y="96" width="250" height="66" class="s-gen"/><text x="214" y="120" class="s-tb">Loss Run Analyst</text><text x="214" y="140" class="s-tr">LLM 401 → rules · 1.6 s</text><text x="436" y="120" text-anchor="end" class="s-tt">0.80</text><text x="436" y="140" text-anchor="end" class="s-ts">1 finding</text>
+            <rect x="200" y="178" width="250" height="66" class="s-gen"/><text x="214" y="202" class="s-tb">Compliance</text><text x="214" y="222" class="s-tr">LLM 401 → rules · 1.4 s</text><text x="436" y="202" text-anchor="end" class="s-tt">0.00</text><text x="436" y="222" text-anchor="end" class="s-ts">0 findings</text>
+            <rect x="200" y="260" width="250" height="66" class="s-gen"/><text x="214" y="284" class="s-tb">Fraud Detection</text><text x="214" y="304" class="s-tr">LLM 401 → rules · 1.6 s</text><text x="436" y="284" text-anchor="end" class="s-tt">0.58</text><text x="436" y="304" text-anchor="end" class="s-ts">1 finding</text>
+          </g>
+          <path d="M150 165 C 175 165, 175 47, 200 47" class="s-line" marker-end="url(#a5)"/>
+          <path d="M150 170 C 178 170, 178 129, 200 129" class="s-line" marker-end="url(#a5)"/>
+          <path d="M150 180 C 178 180, 178 211, 200 211" class="s-line" marker-end="url(#a5)"/>
+          <path d="M150 185 C 175 185, 175 293, 200 293" class="s-line" marker-end="url(#a5)"/>
+          <path d="M450 47 C 480 47, 480 160, 505 165 M450 129 C 480 129, 480 168, 505 170 M450 211 C 480 211, 480 182, 505 180 M450 293 C 480 293, 480 190, 505 185" class="s-line"/>
+          <rect x="505" y="130" width="120" height="90" class="s-gen"/><text x="565" y="160" text-anchor="middle" class="s-tb">UW Decision</text><text x="565" y="180" text-anchor="middle" class="s-tr">401 → rules</text><text x="565" y="200" text-anchor="middle" class="s-ts">5 findings in</text>
+          <path d="M625 175 H655" class="s-line" marker-end="url(#a5)"/>
+          <rect x="655" y="130" width="96" height="90" class="s-hum"/><text x="703" y="160" text-anchor="middle" class="s-tb">Memo</text><text x="703" y="182" text-anchor="middle" class="s-t">0.65</text><text x="703" y="202" text-anchor="middle" class="s-tr">REFER</text>
+        </svg>
+      </div>
+      <figcaption><b>How to read it:</b> the supervisor fans out to four specialists at once, then everything flows into UW Decision. Big numbers on the right of each box are that agent's risk score. Red text shows the fallback that actually happened.</figcaption>
+    </figure>
+    <h3>Inside one agent: the ReAct loop</h3>
+    <p>Four of the five are <b>ReAct</b> agents (reason + act). Instead of answering in one shot, the model works like an analyst with a calculator:</p>
+    <ol class="how">
+      <li><b>Think.</b> The model reads the task and decides what it needs, for example "I need the claim frequency".</li>
+      <li><b>Act.</b> It names one of 18 tools, such as <code>compute_claim_frequency</code>. Python runs the tool, so all arithmetic is exact.</li>
+      <li><b>Observe.</b> The tool's result is added to the conversation. Back to step 1, at most 10 times.</li>
+      <li><b>Answer.</b> When it has enough, it returns <code>final_answer</code> with its findings.</li>
+    </ol>
+    <p>If anything fails (no key, a 401, a timeout), the agent throws away partial LLM output and runs its rule-based <code>_analyze()</code> instead, which returns the same shape of result. After 3 failures in a row a <b>circuit breaker</b> opens for 60 seconds and agents skip the LLM entirely.</p>
+    <div class="casebox"><div class="lbl">Case · Northwind</div><div class="body">
+      <p>The <code>.env</code> OpenAI key was rejected (HTTP 401). Each ReAct agent spent about 1.5 s on the failed call, then fell back to rules. The memo was still produced, with score 0.65 and REFER, because the rule paths are complete on their own. The only visible trace is the "1 error" on each agent's summary.</p>
+    </div></div>
+    <div class="watch"><b class="h">Watch out</b><p>Silent fallback is good for availability and bad for awareness. Northwind looks normal unless you read the agent errors. Check <code>memo.agent_results[*].errors</code> after a run, and rotate the key in <code>.env</code>.</p></div>
+    <div class="code-map"><b>Open next</b><div><code>agents/supervisor.py</code> → <code>analyze_submission</code>, <code>_run_agents_threadpool</code></div><div><code>agents/react_agent.py</code> → <code>run</code>, <code>_react_loop</code></div><div><code>agents/react_tools.py</code> → the 18 tools</div><div><code>llm/client.py</code> → cheap tier (gpt-4o-mini) and expensive tier (gpt-4o)</div></div>
+    <div class="askline" hidden><button class="askbtn" type="button">Ask the tutor about this lesson</button></div>
+    <div class="quiz" data-quiz="l5"></div>
+  </section>
+
+  <!-- ═════════════ L6 ═════════════ -->
+  <section class="lesson" id="l6">
+    <div class="num">Lesson 06</div>
+    <h2>Trusting the facts</h2>
+    <p class="why">How the system notices when documents disagree, and refuses to state anything it cannot point to.</p>
+    <div class="beats">
+      <div class="beat"><h4>The problem</h4><p>The same fact appears in several documents, often with different values. Brokers make typos, applications are optimistic, inspections find surprises. A memo that silently picks one value hides the most important signal.</p></div>
+      <div class="beat"><h4>The idea</h4><p>Remember where every value came from (<b>provenance</b>), compare values across documents (<b>reconciliation</b>), and refuse to publish a claim that has no source (<b>citation gate</b>).</p></div>
+    </div>
+    <figure>
+      <div class="frame">
+        <svg class="wide" viewBox="0 0 760 300" role="img" aria-label="Northwind: the ACORD names Northwind Logistics LLC in Mokena, Illinois; the SOV names Northwind Traders Manufacturing Inc in Tukwila, Washington. The comparison flags an entity mismatch; the SOV says fully sprinklered while the inspection finds 12,000 square feet unsprinklered, which the property checklist flags.">
+          <defs><marker id="a6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="s-head"/></marker></defs>
+          <text x="10" y="18" class="s-ts">the same fact, as each document states it</text>
+          <rect x="10" y="30" width="250" height="60" class="s-neu"/><text x="24" y="54" class="s-ts">ACORD · named insured</text><text x="24" y="76" class="s-tb">Northwind Logistics LLC</text>
+          <rect x="10" y="100" width="250" height="60" class="s-neu"/><text x="24" y="124" class="s-ts">SOV · named insured</text><text x="24" y="146" class="s-tb">Northwind Traders Mfg., Inc.</text>
+          <rect x="10" y="190" width="250" height="44" class="s-neu"/><text x="24" y="210" class="s-ts">SOV · sprinklers</text><text x="24" y="226" class="s-t">"Yes, wet pipe throughout"</text>
+          <rect x="10" y="242" width="250" height="44" class="s-neu"/><text x="24" y="262" class="s-ts">Inspection · sprinklers</text><text x="24" y="278" class="s-t">"12,000 sq ft not sprinklered"</text>
+          <rect x="320" y="60" width="150" height="70" class="s-det"/><text x="395" y="90" text-anchor="middle" class="s-tb">Compare</text><text x="395" y="110" text-anchor="middle" class="s-ts">2 sources</text>
+          <rect x="320" y="215" width="150" height="50" class="s-det"/><text x="395" y="245" text-anchor="middle" class="s-tb">Property checklist</text>
+          <path d="M260 60 C 290 60, 290 85, 320 85" class="s-line" marker-end="url(#a6)"/>
+          <path d="M260 130 C 290 130, 290 105, 320 105" class="s-line" marker-end="url(#a6)"/>
+          <path d="M260 212 C 290 212, 290 232, 320 232" class="s-line" marker-end="url(#a6)"/>
+          <path d="M260 264 C 290 264, 290 248, 320 248" class="s-line" marker-end="url(#a6)"/>
+          <rect x="520" y="60" width="230" height="70" class="s-gate"/><text x="534" y="86" class="s-tb">Inconsistent entity names</text><text x="534" y="108" class="s-ts">MODERATE · Fraud Detection</text>
+          <rect x="520" y="205" width="230" height="70" class="s-gate"/><text x="534" y="231" class="s-tb">No sprinkler system</text><text x="534" y="253" class="s-ts">HIGH · +18% premium, refer</text>
+          <path d="M470 95 H520" class="s-red" marker-end="url(#a6)"/><text x="495" y="88" text-anchor="middle" class="s-tr">≠</text>
+          <path d="M470 240 H520" class="s-red" marker-end="url(#a6)"/><text x="495" y="233" text-anchor="middle" class="s-tr">≠</text>
+        </svg>
+      </div>
+      <figcaption><b>How to read it:</b> left, what each document claims; middle, the check that compares them; right, the finding the disagreement became. Neither conflict was averaged away.</figcaption>
+    </figure>
+    <h3>Three checks after the memo is written</h3>
+    <ol class="how">
+      <li><b>Citation gate.</b> Every figure in the memo must trace to a source document. Uncited figures become CRITICAL findings. If the gate itself crashes, it adds a CRITICAL finding and forces REFER. This is called <b>failing closed</b>: a broken safety check never turns into a pass.</li>
+      <li><b>Confidence floor.</b> A coverage limit, deductible or premium read with under 60% confidence must be confirmed by a person.</li>
+      <li><b>Oracles.</b> Outside databases (CLUE and A-PLUS claims history, NCCI, a catastrophe model, credit bureau, public records, OSHA, a rating agency, and the OFAC sanctions list) confirm or contradict what the broker said.</li>
+    </ol>
+    <div class="casebox"><div class="lbl">Case · Northwind</div><div class="body">
+      <p>Provenance traced <b>69 fields</b>; 17 were verified by a second source. Reconciliation found <b>6 conflicts</b>. The citation gate added <b>4 CRITICAL</b> "unverified figure" findings, for example the SOV's total value, which could not be matched to the application.</p>
+      <p>Oracles (in mock mode) found prior litigation on CLUE (CRITICAL), an open auto liability claim, a clean A-PLUS property history and an NCCI mod of 1.000. Four lookups failed in mock mode and were recorded as findings, not ignored. OFAC: no match.</p>
+    </div></div>
+    <div class="code-map"><b>Open next</b><div><code>provenance/hierarchy.py</code>, <code>reconciliation/engine.py</code></div><div><code>verification/zero_hallucination.py</code></div><div><code>oracles/oracle_agent.py</code> → <code>_analyze</code></div></div>
+    <div class="askline" hidden><button class="askbtn" type="button">Ask the tutor about this lesson</button></div>
+    <div class="quiz" data-quiz="l6"></div>
+  </section>
+
+  <!-- ═════════════ L7 ═════════════ -->
+  <section class="lesson" id="l7">
+    <div class="num">Lesson 07</div>
+    <h2>Making the call</h2>
+    <p class="why">How 39 findings become one word, using arithmetic you can check by hand.</p>
+    <div class="beats">
+      <div class="beat"><h4>The problem</h4><p>Underwriters must be able to explain every decision to a regulator. A neural-network probability cannot be explained finding by finding.</p></div>
+      <div class="beat"><h4>The idea</h4><p>Score = the average weight of the findings, plus a small bonus when many pile up. Then apply plain rules in a fixed order. Anyone can redo it on paper.</p></div>
+    </div>
+<div class="formula"><span class="c"># each finding contributes:</span>
+contribution = severity weight × (0.5 + 0.5 × confidence)
+               critical 1.00 · high 0.75 · moderate 0.50 · low 0.20
+<span class="c"># the score:</span>
+score = average contribution
+      + min(0.15, log2(1 + number of moderate-or-worse) ÷ 6
+                + 0.1 per fraud / moral hazard / selection finding, max 0.3)
+<span class="c"># findings about failed lookups or the citation gate are left out of the score</span></div>
+    <h3>Then the rules, in order</h3>
+    <ol class="how">
+      <li>10 or more claims per year → <b>DECLINE</b>, whatever the score.</li>
+      <li>Any CRITICAL finding → <b>REFER</b>. Most critical findings are missing data, which needs a person, not a decline.</li>
+      <li>Any HIGH finding, or score ≥ 0.70 → <b>REFER</b>.</li>
+      <li>Only MODERATE findings → <b>CONDITIONAL ACCEPT</b>, with "SUBJECT TO" conditions.</li>
+      <li>Otherwise → <b>ACCEPT</b>. A later pass declines anything scoring 0.85 or more.</li>
+    </ol>
+    <div class="tool" id="dec">
+      <b>Try it · decision calculator</b>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+        <button class="btn primary" type="button" id="dec-nw">Load Northwind's 5 agent findings</button>
+        <button class="btn" type="button" id="dec-add">Add finding</button>
+        <button class="btn" type="button" id="dec-clear">Clear</button>
+      </div>
+      <div id="dec-rows"></div>
+      <label style="display:grid;gap:3px;font-size:.82rem;color:var(--muted);max-width:220px;margin-top:6px" for="dec-freq">Claims per year (from loss run)<input id="dec-freq" type="number" min="0" step="0.5" value="0"></label>
+      <div class="out">
+        <div><small>Average</small><strong id="dec-base">–</strong></div>
+        <div><small>Pile-up bonus</small><strong id="dec-pile">–</strong></div>
+        <div><small>Score</small><strong id="dec-score">–</strong></div>
+        <div><small>Decision</small><strong><span id="dec-out" class="verdict">–</span></strong></div>
+      </div>
+      <p class="explain" id="dec-why"></p>
+    </div>
+    <div class="casebox"><div class="lbl">Case · Northwind</div><div class="body">
+      <p>Load the preset above. Five agent findings give an average of 0.499 and a pile-up bonus of 0.15, so the score is <b>0.65</b>, exactly the memo's number. Two HIGH findings mean <b>REFER</b> at this point already.</p>
+      <p>The final memo lists 39 findings (6 critical, 11 high, 8 moderate, 14 low), but the score was fixed at this stage. Findings added later, from oracles, gates and the property checklist, can only push the decision stricter through <code>worst_decision()</code>. They never change the score.</p>
+    </div></div>
+    <div class="code-map"><b>Open next</b><div><code>agents/uw_decision_agent.py</code> → <code>_calculate_aggregate_risk</code>, <code>_build_recommendation</code></div><div><code>underwriting/decision_thresholds.py</code> (0.70 and 0.85)</div><div><code>underwriting/memo_sync.py</code> → <code>worst_decision</code></div></div>
+    <div class="askline" hidden><button class="askbtn" type="button">Ask the tutor about this lesson</button></div>
+    <div class="quiz" data-quiz="l7"></div>
+  </section>
+
+  <!-- ═════════════ L8 ═════════════ -->
+  <section class="lesson" id="l8">
+    <div class="num">Lesson 08</div>
+    <h2>Pricing a building</h2>
+    <p class="why">How $28.5M of buildings became a $383,852 premium, one multiplication at a time.</p>
+    <div class="beats">
+      <div class="beat"><h4>The problem</h4><p>Carriers must charge the rates they filed with each state, and every adjustment must be justified. A single opaque number is useless to an underwriter who wants to negotiate.</p></div>
+      <div class="beat"><h4>The idea</h4><p>Start from the filed rate, then apply each adjustment as a visible step. The quote lists every factor so any one can be challenged.</p></div>
+    </div>
+    <figure>
+      <div class="frame">
+        <svg viewBox="0 0 720 340" role="img" aria-label="Waterfall of Northwind's premium: filed base 384,332 dollars; soft market minus 8 percent, minus 30,747; schedule credits minus 8 percent, minus 28,287; property checklist plus 18 percent, plus 58,554; final premium 383,852 dollars.">
+          <g id="waterfall"></g>
+        </svg>
+      </div>
+      <figcaption><b>How to read it:</b> each bar starts where the last one ended. <span style="color:var(--c-blue)">■</span> blue steps lower the price, <span style="color:var(--c-orange)">■</span> orange raises it; grey bars are totals. Hover a bar for its value. The same steps are listed below.</figcaption>
+    </figure>
+    <div class="tw"><table>
+      <thead><tr><th>Step</th><th>Why</th><th class="r">Change</th><th class="r">Running total</th></tr></thead>
+      <tbody>
+        <tr><td class="k">Filed base</td><td>$28.5M ÷ 100 × 0.6954 × 2.063 × 0.94 (Illinois)</td><td class="r">–</td><td class="r">$384,332</td></tr>
+        <tr><td class="k">Market</td><td>The market is soft, so rates are 8% lower</td><td class="r">−$30,747</td><td class="r">$353,585</td></tr>
+        <tr><td class="k">Schedule credits</td><td>"sprinkler" −5% and "alarm" −3%, matched as words in the documents</td><td class="r">−$28,287</td><td class="r">$325,299</td></tr>
+        <tr><td class="k">Property checklist</td><td>Higher-hazard occupancy, no sprinklers in part, flammable storage, combined fire scenario</td><td class="r">+$58,554</td><td class="r">$383,852</td></tr>
+      </tbody>
+    </table></div>
+    <h3>How the code does it</h3>
+    <ol class="how">
+      <li>Because the product is <code>property_bi</code>, the engine uses the carrier's <b>filed rate</b> for that product (<code>SERFF-IF-PROPERTY_BI-2026A</code>). Without a product id it would use a generic ISO/COPE formula instead.</li>
+      <li>Every commercial property quote then passes one function that adds state-law notes (valued policy law, named-storm deductibles, wind pools) and checks coinsurance.</li>
+      <li>Finally the property checklist scores hazards and can add a premium percentage, require mitigation, or refer.</li>
+    </ol>
+    <div class="watch"><b class="h">Watch out</b><p>Schedule credits are applied when the word appears anywhere in the package. Northwind got the −5% sprinkler credit and, in the same run, a HIGH finding for missing sprinklers. The two steps disagree and the price nets them out. A better rule would read the sprinkler <i>field</i> per location instead of searching for the word.</p></div>
+    <div class="tool" id="price">
+      <b>Try it · premium and coinsurance (preset: Northwind)</b>
+      <div class="fields">
+        <label for="p-tiv">TIV ($)<input id="p-tiv" type="number" min="0" step="100000" value="28500000"></label>
+        <label for="p-state">Issue state<select id="p-state"></select></label>
+        <label for="p-mkt">Market adjustment (%)<input id="p-mkt" type="number" step="1" value="-8"></label>
+        <label for="p-chk">Checklist adjustment (%)<input id="p-chk" type="number" step="1" value="18"></label>
+      </div>
+      <div class="checks" id="p-credits"></div>
+      <div class="out">
+        <div><small>Filed base</small><strong id="p-base">–</strong></div>
+        <div><small>Schedule</small><strong id="p-sched">–</strong></div>
+        <div><small>Premium</small><strong id="p-prem">–</strong></div>
+        <div><small>Rate per $100</small><strong id="p-rate">–</strong></div>
+      </div>
+      <div class="fields" style="margin-top:18px">
+        <label for="c-val">Building + contents value ($)<input id="c-val" type="number" min="0" step="100000" value="28500000"></label>
+        <label for="c-lim">Limit purchased ($)<input id="c-lim" type="number" min="0" step="100000" value="18000000"></label>
+        <label for="c-pct">Coinsurance clause (%)<input id="c-pct" type="number" min="0" max="100" value="80"></label>
+        <label for="c-loss">A loss of ($)<input id="c-loss" type="number" min="0" step="10000" value="500000"></label>
+      </div>
+      <div class="out">
+        <div><small>Required limit</small><strong id="c-req">–</strong></div>
+        <div><small>Penalty</small><strong id="c-pen">–</strong></div>
+        <div><small>Carrier pays</small><strong id="c-pays">–</strong></div>
+      </div>
+      <p class="explain">The coinsurance inputs are a hypothetical: Northwind's documents did not state a limit, so the real run skipped this check instead of inventing one.</p>
+    </div>
+    <div class="code-map"><b>Open next</b><div><code>rating/leaf_filings.py</code> → <code>rate_leaf_filing</code></div><div><code>rating/engine.py</code> → <code>_finalize_quote</code></div><div><code>commercial/lobs/property_bi.py</code> · <code>underwriting/commercial_checklists.py</code></div></div>
+    <div class="askline" hidden><button class="askbtn" type="button">Ask the tutor about this lesson</button></div>
+    <div class="quiz" data-quiz="l8"></div>
+  </section>
+
+  <!-- ═════════════ L9 ═════════════ -->
+  <section class="lesson" id="l9">
+    <div class="num">Lesson 09</div>
+    <h2>RAG: looking up the rulebook</h2>
+    <p class="why">How the system finds the right underwriting guideline, and why property doesn't use it inline.</p>
+    <div class="beats">
+      <div class="beat"><h4>The problem</h4><p>A language model doesn't know this carrier's guidelines and will invent plausible ones if asked.</p></div>
+      <div class="beat"><h4>The idea</h4><p><b>R</b>etrieve the relevant guideline passages first, <b>a</b>ugment the prompt with them, then <b>g</b>enerate an answer that must cite them.</p></div>
+    </div>
+    <figure>
+      <div class="frame">
+        <svg class="wide" viewBox="0 0 760 230" role="img" aria-label="Retrieval: the question is rewritten (HyDE), 15 candidates are fetched by vector similarity, re-ranked by 65 percent meaning and 35 percent keywords, de-duplicated with MMR, and the top 5 are cited. If the best vector match scores under 0.12, keyword search runs, then the knowledge graph.">
+          <defs><marker id="a9" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="s-head"/></marker></defs>
+          <g text-anchor="middle">
+            <circle cx="70" cy="22" r="11" class="s-numbg"/><text x="70" y="26" class="s-num">1</text>
+            <rect x="10" y="40" width="120" height="60" class="s-neu"/><text x="70" y="66" class="s-tb">Question</text><text x="70" y="86" class="s-ts">HyDE rewrite</text>
+            <circle cx="225" cy="22" r="11" class="s-numbg"/><text x="225" y="26" class="s-num">2</text>
+            <rect x="160" y="40" width="130" height="60" class="s-det"/><text x="225" y="66" class="s-tb">Fetch 15</text><text x="225" y="86" class="s-ts">by meaning</text>
+            <circle cx="385" cy="22" r="11" class="s-numbg"/><text x="385" y="26" class="s-num">3</text>
+            <rect x="320" y="40" width="130" height="60" class="s-det"/><text x="385" y="66" class="s-tb">Re-rank</text><text x="385" y="86" class="s-ts">meaning + words</text>
+            <circle cx="540" cy="22" r="11" class="s-numbg"/><text x="540" y="26" class="s-num">4</text>
+            <rect x="480" y="40" width="120" height="60" class="s-det"/><text x="540" y="66" class="s-tb">De-duplicate</text><text x="540" y="86" class="s-ts">MMR λ 0.7</text>
+            <circle cx="690" cy="22" r="11" class="s-numbg"/><text x="690" y="26" class="s-num">5</text>
+            <rect x="630" y="40" width="120" height="60" class="s-gen"/><text x="690" y="66" class="s-tb">Top 5</text><text x="690" y="86" class="s-ts">cited in answer</text>
+            <rect x="160" y="160" width="130" height="56" class="s-neu"/><text x="225" y="184" class="s-tb">Keyword search</text><text x="225" y="202" class="s-ts">fallback A</text>
+            <rect x="330" y="160" width="140" height="56" class="s-neu"/><text x="400" y="184" class="s-tb">Knowledge graph</text><text x="400" y="202" class="s-ts">fallback B</text>
+          </g>
+          <path d="M130 70 H160" class="s-line" marker-end="url(#a9)"/><path d="M290 70 H320" class="s-line" marker-end="url(#a9)"/><path d="M450 70 H480" class="s-line" marker-end="url(#a9)"/><path d="M600 70 H630" class="s-line" marker-end="url(#a9)"/>
+          <path d="M225 100 V160" class="s-dash" marker-end="url(#a9)"/><text x="235" y="136" class="s-ts">best match &lt; 0.12</text>
+          <path d="M290 188 H330" class="s-dash" marker-end="url(#a9)"/>
+          <path d="M470 188 C 640 188, 690 150, 690 100" class="s-dash" marker-end="url(#a9)"/>
+        </svg>
+      </div>
+      <figcaption><b>How to read it:</b> the solid path is the normal route, numbered in order. Dashed arrows are fallbacks when the vector search finds nothing convincing.</figcaption>
+    </figure>
+    <ul>
+      <li><b>What is indexed:</b> underwriting guidelines and appetite rules only. No customer submission is ever embedded.</li>
+      <li><b>Where vectors live:</b> the first one configured among Chroma, Weaviate, Postgres + pgvector, or memory.</li>
+      <li><b>Embeddings:</b> <code>intfloat/e5-large-v2</code> locally or OpenAI <code>text-embedding-3-small</code>; hashed vectors when neither works.</li>
+    </ul>
+    <div class="casebox"><div class="lbl">Case · Northwind</div><div class="body">
+      <p>No guideline retrieval ran. Inline RAG is wired only for D&amp;O, Trade Credit, E&amp;O and Key Person. Property gets its rules from the appetite table and the coded property checklist. The one embedding call in the run (for "similar past decisions") failed without a valid key and fell back to hashed vectors.</p>
+    </div></div>
+    <div class="code-map"><b>Open next</b><div><code>rag/rag_agent.py</code> → <code>retrieve_contexts</code></div><div><code>rag/retrieval_config.py</code> (every knob, env <code>RAG_*</code>)</div><div><code>rag/vector_store.py</code> → <code>get_vector_store</code></div></div>
+    <div class="askline" hidden><button class="askbtn" type="button">Ask the tutor about this lesson</button></div>
+    <div class="quiz" data-quiz="l9"></div>
+  </section>
+
+  <!-- ═════════════ L10 ═════════════ -->
+  <section class="lesson" id="l10">
+    <div class="num">Lesson 10</div>
+    <h2>MCP: letting other AI tools look in</h2>
+    <p class="why">How Claude Desktop or an IDE agent can read InsureFlow results without being able to change them.</p>
+    <div class="beats">
+      <div class="beat"><h4>The problem</h4><p>Underwriters already use AI assistants. Each assistant would need a custom integration to read InsureFlow data.</p></div>
+      <div class="beat"><h4>The idea</h4><p>The <b>Model Context Protocol</b> is a standard plug: expose a list of tools once, and any MCP-capable assistant can call them.</p></div>
+    </div>
+    <figure>
+      <div class="frame">
+        <svg class="wide" viewBox="0 0 760 240" role="img" aria-label="Claude Desktop connects over stdio and remote clients over SSE at /mcp. A bearer token is turned into an organisation-scoped user, then one of 13 tools reads jobs, memos and catalogs. There is no tool that runs the pipeline or binds a policy.">
+          <defs>
+            <marker id="a10" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="s-head"/></marker>
+          </defs>
+          <rect x="10" y="30" width="150" height="54" class="s-neu"/><text x="85" y="54" text-anchor="middle" class="s-tb">Claude Desktop</text><text x="85" y="72" text-anchor="middle" class="s-ts">local</text>
+          <rect x="10" y="110" width="150" height="54" class="s-neu"/><text x="85" y="134" text-anchor="middle" class="s-tb">Remote agent</text><text x="85" y="152" text-anchor="middle" class="s-ts">over HTTP</text>
+          <rect x="220" y="66" width="160" height="62" class="s-det"/><text x="300" y="92" text-anchor="middle" class="s-tb">Auth middleware</text><text x="300" y="112" text-anchor="middle" class="s-ts">token → org + role</text>
+          <rect x="440" y="56" width="150" height="82" class="s-det"/><text x="515" y="84" text-anchor="middle" class="s-tb">13 tools</text><text x="515" y="104" text-anchor="middle" class="s-ts">jobs · memos</text><text x="515" y="120" text-anchor="middle" class="s-ts">carriers · catalogs</text>
+          <rect x="640" y="66" width="110" height="62" class="s-neu"/><text x="695" y="94" text-anchor="middle" class="s-tb">Job store</text><text x="695" y="112" text-anchor="middle" class="s-ts">audit</text>
+          <rect x="440" y="180" width="150" height="46" class="s-ghost"/><text x="515" y="208" text-anchor="middle" class="s-ts">run pipeline / bind</text>
+          <path d="M160 57 C 190 57, 190 90, 220 90" class="s-line" marker-end="url(#a10)"/><text x="190" y="50" text-anchor="middle" class="s-ts">stdio</text>
+          <path d="M160 137 C 190 137, 190 106, 220 106" class="s-line" marker-end="url(#a10)"/><text x="190" y="158" text-anchor="middle" class="s-ts">SSE /mcp</text>
+          <path d="M380 97 H440" class="s-line" marker-end="url(#a10)"/>
+          <path d="M590 97 H640" class="s-line" marker-end="url(#a10)"/><text x="615" y="90" text-anchor="middle" class="s-ts">read</text>
+          <path d="M515 138 V180" class="s-red"/><path d="M505 152 L525 168 M525 152 L505 168" class="s-red"/>
+          <text x="604" y="208" class="s-tr">no such tool</text>
+        </svg>
+      </div>
+      <figcaption><b>How to read it:</b> two ways in, one auth check, then tools that read. The crossed path is deliberate: no MCP tool can start a run or bind a policy.</figcaption>
+    </figure>
+    <div class="tw"><table>
+      <thead><tr><th>Group</th><th>Tools</th></tr></thead>
+      <tbody>
+        <tr><td class="k">Jobs</td><td class="mono">list_jobs · get_job · get_job_memo</td></tr>
+        <tr><td class="k">Carriers</td><td class="mono">list_companies · add_company · delete_company</td></tr>
+        <tr><td class="k">Life catalog</td><td class="mono">list_life_lines · get_life_line · detect_life_product · list_life_categories</td></tr>
+        <tr><td class="k">System</td><td class="mono">list_sources · get_health</td></tr>
+        <tr><td class="k">Mortgage</td><td class="mono">calculate_mortgage_metrics</td></tr>
+      </tbody>
+    </table></div>
+    <div class="casebox"><div class="lbl">Case · Northwind</div><div class="body"><p>An underwriter in Claude Desktop could ask "why was Northwind referred?". Claude would call <code>get_job_memo</code> with the job id and read the same 39 findings you saw above.</p></div></div>
+    <div class="code-map"><b>Open next</b><div><code>mcp/server.py</code> → <code>create_mcp_server</code></div><div><code>mcp/auth.py</code> → <code>MCPAuthMiddleware</code></div></div>
+    <div class="askline" hidden><button class="askbtn" type="button">Ask the tutor about this lesson</button></div>
+    <div class="quiz" data-quiz="l10"></div>
+  </section>
+
+  <!-- ═════════════ L11 ═════════════ -->
+  <section class="lesson" id="l11">
+    <div class="num">Lesson 11</div>
+    <h2>Where data lives</h2>
+    <p class="why">Which store holds what, how long it lasts, and what is encrypted.</p>
+    <div class="tw"><table>
+      <thead><tr><th>Store</th><th>Backend</th><th>Northwind left behind</th><th>Lasts</th></tr></thead>
+      <tbody>
+        <tr><td class="k">Job store</td><td>Redis 7</td><td>Status, 10 stage records, full result</td><td>about a week</td></tr>
+        <tr><td class="k">Audit trail</td><td>JSON per bundle in <code>audit_logs/</code>, Fernet-encrypted</td><td>Every event, <code>verification.json</code>, <code>zero_hallucination.json</code></td><td>permanent record</td></tr>
+        <tr><td class="k">Workflow</td><td>Locked JSON files</td><td>A review item, priority CRITICAL</td><td>until closed</td></tr>
+        <tr><td class="k">Outcomes</td><td>Outcome store</td><td>The prediction, for later comparison with real claims</td><td>long term</td></tr>
+        <tr><td class="k">Portfolio</td><td><code>data/portfolio/policies.json</code></td><td>Nothing: written only at bind</td><td>long term</td></tr>
+        <tr><td class="k">Users and keys</td><td>Postgres 17</td><td>(who ran it)</td><td>long term</td></tr>
+        <tr><td class="k">Vector index</td><td>pgvector in Postgres</td><td>Nothing: guidelines only</td><td>long term</td></tr>
+        <tr><td class="k">Uploads</td><td>S3, presigned URLs</td><td>The raw files, when uploaded through the dashboard</td><td>per bucket policy</td></tr>
+        <tr><td class="k">Rate book</td><td><code>data/rating/*.json</code></td><td>Read the property_bi filing</td><td>until replaced</td></tr>
+        <tr><td class="k">ML models</td><td>scikit-learn pickles in <code>ml_models/</code></td><td>Fraud model scored the file</td><td>until retrained</td></tr>
+      </tbody>
+    </table></div>
+    <p>One redaction policy covers everything that leaves the process: the same PII redactor cleans LLM prompts, streamed replies, embedding calls and log lines.</p>
+    <div class="askline" hidden><button class="askbtn" type="button">Ask the tutor about this lesson</button></div>
+    <div class="quiz" data-quiz="l11"></div>
+  </section>
+
+  <!-- ═════════════ L12 ═════════════ -->
+  <section class="lesson" id="l12">
+    <div class="num">Lesson 12</div>
+    <h2>The human signs</h2>
+    <p class="why">Everything so far was advice. Here is what a person must do, and every gate between REFER and a bound policy.</p>
+    <div class="beats">
+      <div class="beat"><h4>The problem</h4><p>Binding a policy commits the carrier to pay claims. Regulators require a licensed person to take that decision, within their authority.</p></div>
+      <div class="beat"><h4>The idea</h4><p>A queue sorted by urgency, a sign-off with reasons, and a series of gates that each must pass. Any failed gate stops the bind and says why.</p></div>
+    </div>
+    <h3>Northwind against each bind gate</h3>
+    <ol class="gates">
+      <li><div><b>Quoted or approved by a licensed underwriter</b><br><span style="color:var(--muted);font-size:.9rem">POST /pipeline/workflow/{id}/sign-off, role LICENSED_UW</span></div><span class="nw wait">waiting</span></li>
+      <li><div><b>A real policy admin system is connected</b><br><span style="color:var(--muted);font-size:.9rem">The pilot Guidewire key is a placeholder, so <code>bind_is_allowed()</code> is false on purpose</span></div><span class="nw stop">stops here</span></li>
+      <li><div><b>The quote is eligible</b><br><span style="color:var(--muted);font-size:.9rem">TIV known, no OFAC hit</span></div><span class="nw pass">passes</span></li>
+      <li><div><b>No bind holds</b><br><span style="color:var(--muted);font-size:.9rem">OFAC, surplus-lines stamping documents</span></div><span class="nw pass">passes</span></li>
+      <li><div><b>A policy admin quote reference exists</b><br><span style="color:var(--muted);font-size:.9rem">Not pushed: referrals are never sent to the PAS</span></div><span class="nw stop">missing</span></li>
+      <li><div><b>Binding authority covers the premium</b><br><span style="color:var(--muted);font-size:.9rem">Junior up to $25K, senior up to $500K, CUO unlimited. $383,852 needs senior or CUO.</span></div><span class="nw wait">senior+</span></li>
+      <li><div><b>Co-signature, when required</b></div><span class="nw wait">if required</span></li>
+    </ol>
+    <p>The file was queued with priority <b>CRITICAL</b> because it has critical findings. When it is finally bound, it is added to the portfolio, so future concentration checks see real business, not quotes.</p>
+    <div class="code-map"><b>Open next</b><div><code>api/main.py</code> → <code>licensed_uw_sign_off</code>, <code>bind_policy</code></div><div><code>underwriting/bind_gates.py</code> · <code>authority.py</code> · <code>cosign.py</code> · <code>pilot/sandbox_readiness.py</code></div></div>
+    <div class="askline" hidden><button class="askbtn" type="button">Ask the tutor about this lesson</button></div>
+    <div class="quiz" data-quiz="l12"></div>
+  </section>
+
+  <!-- ═════════════ L13 ═════════════ -->
+  <section class="lesson" id="l13">
+    <div class="num">Lesson 13</div>
+    <h2>Lab and bug hunt</h2>
+    <p class="why">Reproduce Northwind on your machine, then fix what you found along the way.</p>
+    <p>Save as <code>lab.py</code> in the repo root and run <code>PYTHONPATH=src python3.12 lab.py</code>:</p>
+<pre class="term">from pathlib import Path
+from insureflow.insurance.pipeline import InsurancePipeline
+
+ex = Path("examples/insurance")
+docs = [{"filename": f, "content": (ex / f).read_text()} for f in
+        ["northwind_acord.xml", "northwind_sov.md",
+         "northwind_loss_run.md", "northwind_inspection_report.md"]]
+r = InsurancePipeline(use_llm=False).run(
+    documents=docs, commercial_product_id="property_bi",
+    insurance_line="commercial_property", state_code="IL",
+    skip_core_integration=True)
+print("decision:", r["outcome"], "| premium:", r["quote"]["adjusted_premium"])
+for s in r["pipeline_stages"]:
+    print(f'{s["id"]:12} {s["status"]:9} {s.get("detail", "")}')
+for name, a in r["memo"]["agent_results"].items():
+    print(name, a["risk_score"], a["errors"][:1])</pre>
+    <h3>Bug hunt, ranked by impact</h3>
+    <details><summary>0 · Uploaded photos are never analyzed</summary><div><code>insurance/pipeline.py:720</code> passes the raw document dicts (<code>filename</code>, <code>content</code>) to <code>PropertyPhotoAnalyzer</code>, which reads <code>photo["image_data"]</code> (<code>ml/vision/pipeline.py:57</code>). Every photo is skipped. Decode the base64 into <code>image_data</code> and assert analyzed == received.</div></details>
+    <details><summary>0b · Appetite and triage run before anything is parsed</summary><div>On the upload path <code>acord_xml</code> is <code>None</code> when stages 1–2 run, so they score an empty bundle. Re-run appetite after ingest (stage 2b already re-runs triage), or parse the ACORD first.</div></details>
+    <details open><summary>1 · "Rollover" turns a loss run into a retirement statement</summary><div><code>ingestion/insurance/classifier.py:441</code> matches "rollover" before the loss-run rule at line 522. Write a failing test with the Northwind loss run, then fix it. Options: skip life-only rules when the package is commercial; or require stronger retirement phrases ("401(k) rollover", "IRA rollover"). Rerun the lab: the CRITICAL "missing loss run" should disappear and 14 claims should appear.</div></details>
+    <details><summary>2 · Agents ignore <code>use_llm=False</code></summary><div><code>InsurancePipeline(use_llm=False)</code> only affects the extraction agent. <code>SupervisorAgent</code> builds its own <code>LLMClient</code>s. Decide whether the flag should reach the supervisor, and make the lab run with zero LLM calls.</div></details>
+    <details><summary>3 · The sprinkler credit and the sprinkler finding disagree</summary><div><code>rating/leaf_filings.py</code> applies schedule credits when the word appears in the package. Change it to use the structured protection data per location, so a file with an unsprinklered area does not earn the full credit.</div></details>
+    <details><summary>4 · The conflict note can name the wrong winner</summary><div><code>agents/supervisor.py:280</code> uses <code>max()</code> on severity strings: <code>max("critical", "low")</code> is <code>"low"</code>. Use the <code>severity_map</code> defined a few lines above.</div></details>
+    <details><summary>5 · Satellite imagery never runs</summary><div><code>insurance/pipeline.py:734-735</code> sets <code>lat</code> and <code>lng</code> to <code>None</code>; <code>ml/vision/pipeline.py:70</code> needs both. Decide where coordinates should come from.</div></details>
+    <details><summary>6 · Run the tests for what you learned</summary><div><code>PYTHONPATH=src python3.12 -m pytest tests/test_zta.py tests/test_leaf_filings.py tests/test_decisions.py tests/test_decision_consistency.py -q</code></div></details>
+    <div class="askline" hidden><button class="askbtn" type="button">Ask the tutor about this lesson</button></div>
+    <div class="quiz" data-quiz="l13"></div>
+  </section>
+
+  <!-- ═════════════ REFERENCE ═════════════ -->
+
+  <section class="lesson" id="formulas" style="max-width:860px">
+    <div class="num">Reference 0</div>
+    <h2>Every calculation, in pipeline order</h2>
+    <p class="why">Each formula as the code computes it, with Northwind's value where it applies. Constants are the defaults in the named file.</p>
+    <div class="fsheet">
+      <div class="fs"><div><h4>1 · Triage priority</h4><div class="src">agents/triage_agent.py · score_submission</div>
+<pre>score = 0.30·industry + 0.25·state + 0.20·size + 0.15·coverage + 0.10·checklist%
+industry: preferred NAICS 100 · other 40 · none 30
+state:    TX/OK 100 · other preferred 70 · elsewhere 20 · none 50
+size:     TIV &lt; 50K → 20 · &gt; 25M → 30 · &gt; 10M → 60 · else 100
+priority: ≥ 80 hot · ≥ 50 warm · ≥ 25 cold · else no fit</pre></div>
+      <div class="nw"><b>Northwind</b>52 = 0.30·30 + 0.25·50 + 0.20·100 + 0.15·70 + 0. These are the "nothing known" defaults: on the upload path triage runs before any file is parsed. With the ACORD it scores 49.4 (cold).</div></div>
+
+      <div class="fs"><div><h4>2 · Appetite</h4><div class="src">agents/appetite_filter.py · rag/guidelines.builtin_carrier_appetite_rules</div>
+<pre>rule checks: class (NAICS), state, size, premium band
+hard miss → DECLINE (run ends) · soft miss → REFER and continue</pre></div>
+      <div class="nw"><b>Northwind</b>Passed, but only because it checked an empty bundle. With the ACORD: "Non-preferred NAICS code; estimated premium exceeds maximum", which means refer.</div></div>
+
+      <div class="fs"><div><h4>3 · Document quality</h4><div class="src">ingestion/doc_quality.py · quality_gate.py</div>
+<pre>score = 1 − penalties   (empty 0.5 · &lt;10 chars 0.3 · &lt;200 chars 0.15
+        base64 near-empty 0.4 · OCR failure 0.3 · executable 0.4
+        no filename 0.1 · garbled text 0.2)
+doc: &lt; 0.3 reject · &lt; 0.5 warn · else pass
+batch: any reject → block · &gt; 30% warn → warn</pre></div>
+      <div class="nw"><b>Northwind</b>All four files passed.</div></div>
+
+      <div class="fs"><div><h4>4 · LLM routing for extraction</h4><div class="src">zta/router.py</div>
+<pre>coverage = regex fields found ÷ expected fields (loss run 8, SOV 10, inspection 12)
+coverage ≥ 0.6 → rules · else LLM if allowed and &lt; 5 used · else human</pre></div>
+      <div class="nw"><b>Northwind</b>120%, 350%, 300%: all rules, 0 tokens.</div></div>
+
+      <div class="fs"><div><h4>5 · Photo quality</h4><div class="src">ml/vision/photo_scorer.py</div>
+<pre>0.40·blur + 0.30·resolution + 0.15·brightness + 0.15·(1 − |brightness − 0.5|·2)</pre></div>
+      <div class="nw"><b>Northwind</b>No photos attached.</div></div>
+
+      <div class="fs"><div><h4>6 · COPE grade and schedule modifier</h4><div class="src">underwriting/cope.py · analyze_cope</div>
+<pre>each of C, O, P, E scored 0 (best) – 1 (worst)
+total = 0.25·C + 0.25·O + 0.25·P + 0.25·E
+grade: ≤ 0.25 preferred · ≤ 0.50 standard · ≤ 0.75 non-standard · else decline
+schedule % = construction + occupancy + protection + exposure debits/credits
+             capped to −25% … +50%  (sprinklered −5 · pre-1970 +10 · &gt; 5 storeys +5)</pre></div>
+      <div class="nw"><b>Northwind</b>Not used for the price: the <code>property_bi</code> picker sends pricing to the leaf filing. Try the COPE calculator below.</div></div>
+
+      <div class="fs"><div><h4>7 · Loss history</h4><div class="src">agents/tools.py · underwriting/loss_ratio.py</div>
+<pre>frequency      = claims ÷ years (default 5)
+severity       = total incurred ÷ claims
+large-loss %   = claims ≥ $100,000 ÷ claims
+open %, litigation % = share of claims open / in suit
+loss ratio     = stated ratio, else incurred ÷ premium</pre></div>
+      <div class="nw"><b>Northwind</b>Should have been 14 ÷ 5 = 2.8 claims/yr and $1,893,700 ÷ 14 = $135,264 average. Actually 0 claims, because the loss run was misfiled (lesson 03).</div></div>
+
+      <div class="fs"><div><h4>8 · Frequency and severity surcharge</h4><div class="src">agents/uw_decision_agent.py</div>
+<pre>frequency &gt; 3/yr   → 15% + 15% per claim above 3 ·  &gt; 1.5/yr → 10%
+severity  &gt; $200K  → 10% + 1% per $20K above      ·  &gt; $75K   → 5%
+total capped at 100% · on REFER only proposed when score &gt; 0.60
+frequency ≥ 10/yr  → automatic DECLINE</pre></div>
+      <div class="nw"><b>Northwind</b>With the real loss run: 2.8/yr → 10%, $135K → 5%, so a 15% surcharge would have been proposed.</div></div>
+
+      <div class="fs"><div><h4>9 · Aggregate risk score and decision</h4><div class="src">agents/uw_decision_agent.py · underwriting/memo_sync.py</div>
+<pre>score = mean(severity_w × (0.5 + 0.5·confidence)) + pile-up (≤ 0.15)
+rules: ≥ 10 claims/yr DECLINE → CRITICAL REFER → HIGH or ≥ 0.70 REFER
+       → MODERATE CONDITIONAL → ACCEPT · memo pass: ≥ 0.85 DECLINE</pre></div>
+      <div class="nw"><b>Northwind</b>0.4986 + 0.15 = 0.6486 → REFER (two HIGH findings).</div></div>
+
+      <div class="fs"><div><h4>10 · Premium, filed leaf (property_bi)</h4><div class="src">rating/leaf_filings.py · rate_leaf_filing</div>
+<pre>base = TIV ÷ 100 × 0.6954 × 2.063 × state factor
+adj  = base × (1 + market%) × (1 + schedule%) , minimum $1,762.80</pre></div>
+      <div class="nw"><b>Northwind</b>$384,332 × 0.92 × 0.92 = $325,299</div></div>
+
+      <div class="fs"><div><h4>11 · Premium, ISO/COPE (no product id)</h4><div class="src">rating/engine.py · _quote_dispatch</div>
+<pre>base = TIV ÷ 100 × ISO loss cost × LCM × territory
+adj  = base × (1+market) × (1+COPE) × (1+UW schedule) × (1+deductible credit)
+           × (1+loss experience) × (1+years in business) + $75 policy fee
+deductible credit: $1K −5% · $2.5K −10% · $5K −15% · $10K −20% · $25K+ −25%
+loss experience:  LR &lt;10% −10 · &lt;20% −5 · &lt;30% 0 · &lt;50% +5 · &lt;75% +10 · else +20</pre></div>
+      <div class="nw"><b>Northwind</b>Not used (picker chose the leaf filing).</div></div>
+
+      <div class="fs"><div><h4>12 · Property checklist debit</h4><div class="src">underwriting/commercial_checklists.py</div>
+<pre>flags (unsprinklered, flammables, hazardous occupancy, poor protection…)
+2+ fire flags together → PROP_FIRE_SCENARIO: refer, require mitigation,
+min $25K deductible, +18% premium</pre></div>
+      <div class="nw"><b>Northwind</b>3 flags → fire scenario → $325,299 × 1.18 = $383,852</div></div>
+
+      <div class="fs"><div><h4>13 · Coinsurance penalty</h4><div class="src">underwriting/policy_architecture.py · coinsurance_penalty</div>
+<pre>required = clause% × property value
+paid share = min(1, limit ÷ required)   ·   penalty = 1 − paid share</pre></div>
+      <div class="nw"><b>Northwind</b>Skipped: no limit stated, and the code never invents one.</div></div>
+
+      <div class="fs"><div><h4>14 · Binding authority</h4><div class="src">underwriting/authority.py</div>
+<pre>junior ≤ $25K premium · senior ≤ $500K · CUO unlimited (TIV ≤ $500M)</pre></div>
+      <div class="nw"><b>Northwind</b>$383,852 → senior underwriter or CUO.</div></div>
+    </div>
+
+    <div class="tool" id="cope">
+      <b>Try it · COPE grade</b>
+      <div class="fields">
+        <label for="cp-c">Construction<select id="cp-c"><option value="frame">Frame</option><option value="jm">Joisted masonry</option><option value="mnc">Masonry non-combustible</option><option value="mfr">Modified fire resistive</option><option value="fr" selected>Fire resistive</option></select></label>
+        <label for="cp-o">Occupancy<select id="cp-o"><option value="manufacturing">Manufacturing</option><option value="special">Special hazard</option><option value="warehouse" selected>Warehouse</option><option value="lodging">Lodging</option><option value="service">Service</option><option value="habitational">Habitational</option><option value="mercantile">Mercantile</option><option value="office">Office</option><option value="institutional">Institutional</option></select></label>
+        <label for="cp-p">ISO protection class (1–10)<input id="cp-p" type="number" min="1" max="10" value="4"></label>
+        <label for="cp-e">Main exposure<select id="cp-e"><option value="none">None</option><option value="hail" selected>Hail / inland wind</option><option value="wildfire">Wildfire</option><option value="quake">Earthquake</option><option value="coastal">Coastal wind</option></select></label>
+      </div>
+      <div class="checks">
+        <label><input type="checkbox" id="cp-spr" checked> Sprinklered</label>
+        <label><input type="checkbox" id="cp-old"> Built before 1970</label>
+        <label><input type="checkbox" id="cp-tall"> More than 5 storeys</label>
+      </div>
+      <div class="out">
+        <div><small>C · O · P · E</small><strong id="cp-parts">–</strong></div>
+        <div><small>Total</small><strong id="cp-total">–</strong></div>
+        <div><small>Grade</small><strong><span id="cp-grade" class="verdict">–</span></strong></div>
+        <div><small>Schedule</small><strong id="cp-mod">–</strong></div>
+      </div>
+      <p class="explain">Uses the modifier tables in <code>underwriting/cope.py</code>. Hail/inland wind stands for the "moderate exposures" branch (score 0.3).</p>
+    </div>
+  </section>
+
+  <section class="lesson" id="ref-agents">
+    <div class="num">Reference 1</div>
+    <h2>All 16 agents on this path</h2>
+    <div class="tw"><table>
+      <thead><tr><th>Agent</th><th>Decides</th><th>Model</th><th>Stage</th></tr></thead>
+      <tbody>
+        <tr><td class="k">TriageAgent</td><td>Product, checklist, priority</td><td>none</td><td>Triage</td></tr>
+        <tr><td class="k">AppetiteFilterAgent</td><td>In or out of appetite</td><td>none</td><td>Appetite</td></tr>
+        <tr><td class="k">ExtractionAgent</td><td>Field values from text</td><td>cheap, if routed</td><td>Parse</td></tr>
+        <tr><td class="k">OracleAgent</td><td>Outside-data findings</td><td>none</td><td>Verify</td></tr>
+        <tr><td class="k">SupervisorAgent</td><td>Runs specialists, resolves conflicts</td><td>expensive, conflicts only</td><td>Analyze</td></tr>
+        <tr><td class="k">↳ RiskAnalystAgent</td><td>COPE, valuation</td><td>none</td><td>Analyze</td></tr>
+        <tr><td class="k">↳ LossRunAnalystAgent</td><td>Frequency, severity</td><td>cheap (ReAct)</td><td>Analyze</td></tr>
+        <tr><td class="k">↳ ComplianceAgent</td><td>Terms, regulation</td><td>cheap (ReAct)</td><td>Analyze</td></tr>
+        <tr><td class="k">↳ FraudDetectionAgent</td><td>Fraud, entity mismatches</td><td>cheap (ReAct) + ML</td><td>Analyze</td></tr>
+        <tr><td class="k">↳ UWDecisionAgent</td><td>Score, decision, memo</td><td>expensive (ReAct)</td><td>Analyze</td></tr>
+        <tr><td class="k">PortfolioRiskAgent</td><td>Concentration</td><td>none</td><td>Book checks</td></tr>
+        <tr><td class="k">ProducerExperienceAgent</td><td>Broker track record</td><td>none</td><td>Book checks</td></tr>
+        <tr><td class="k">SelectionStandardsAgent</td><td>Acceptable or not</td><td>none</td><td>Book checks</td></tr>
+        <tr><td class="k">AdverseSelectionAgent</td><td>Market shedding this risk?</td><td>none</td><td>Book checks</td></tr>
+        <tr><td class="k">MoralHazardAgent</td><td>Applicant character</td><td>none</td><td>Character</td></tr>
+        <tr><td class="k">ReinsuranceAgent</td><td>Treaty fit</td><td>none</td><td>Book checks</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section class="lesson" id="glossary">
+    <div class="num">Reference 2</div>
+    <h2>Glossary</h2>
+    <label for="g-filter" style="display:block;max-width:320px;font-size:.82rem;color:var(--muted)">Filter terms<input id="g-filter" type="search" placeholder="e.g. coinsurance"></label>
+    <dl class="gloss" id="gloss"></dl>
+  </section>
+
+  <footer><span>Commercial Property · property_bi · Northwind trace 2026-10-05</span><span>Source: src/insureflow/ at 3d4d552</span></footer>
+</main>
+</div>
+
+
+<button id="tutor-fab" type="button" hidden>Ask the tutor</button>
+<section id="tutor" hidden aria-label="Tutor">
+  <header><div><b>Ask the tutor</b><small>Claude, answering from this course</small></div><button class="btn" type="button" id="tutor-close">Close</button></header>
+  <div id="tutor-log" aria-live="polite"></div>
+  <div class="ctx" id="tutor-ctx"></div>
+  <form id="tutor-form"><label for="tutor-in" style="position:absolute;left:-9999px">Your question</label><textarea id="tutor-in" placeholder="Ask anything about the pipeline or underwriting…"></textarea><div style="display:grid;gap:6px"><button class="btn primary" type="submit" id="tutor-send">Ask</button><button class="btn" type="button" id="tutor-stop" hidden>Stop</button></div></form>
+</section>
+
+<script>
+(function () {
+  "use strict";
+  var NS = "http://www.w3.org/2000/svg";
+  function el(tag, attrs, text) { var e = document.createElementNS(NS, tag); for (var k in attrs) e.setAttribute(k, attrs[k]); if (text != null) e.textContent = text; return e; }
+  var money = function (v) { return "$" + Math.round(v).toLocaleString("en-US"); };
+
+  /* ── Explorer: real Northwind trace ── */
+  var ST = [
+    { id: "intake", name: "Intake", ms: "0 ms", k: "det", st: "complete",
+      what: "The API accepts the package, creates a job, and answers 202 right away. The rest runs in a worker.",
+      inn: ["4 files: ACORD XML, SOV, loss run, inspection report", "Product picker: property_bi, state IL"],
+      out: ["job id, status processing"], llm: "No", code: "api/main.py · run_pipeline" },
+    { id: "triage", name: "Triage", ms: "<1 ms", k: "det", st: "complete",
+      what: "Decides which product rules apply and how urgent the file is. An explicit product choice beats keyword guessing, so a mislabeled file cannot reroute itself.",
+      inn: ["Picker: property_bi", "An EMPTY preliminary bundle: files are not parsed yet"], out: ["Line: commercial property", "Priority 52 (warm): the all-defaults score", "With the ACORD it would be 49.4 (cold)"], llm: "No", code: "agents/triage_agent.py" },
+    { id: "appetite", name: "Appetite", ms: "<1 ms", k: "det", st: "complete",
+      what: "Checks whether this carrier writes this kind of business at all, before spending time on parsing. A hard no ends the run here with DECLINE. On the upload path it runs before any file is read, so it checks nothing.",
+      inn: ["The same empty bundle"], out: ["\"All appetite checks passed\"", "With the ACORD: non-preferred NAICS and premium over maximum → refer"], llm: "No", code: "agents/appetite_filter.py" },
+    { id: "parse", name: "Parse", ms: "5,380 ms", k: "warn", st: "warning",
+      what: "Scans, classifies and parses each file, then checks the package against the property checklist. This is where Northwind lost its loss run.",
+      inn: ["4 files"], out: ["ACORD → structured data", "SOV → schedule of values ✓", "Loss run → retirement statement ✗", "Inspection → retirement statement ✗", "Checklist 3 of 18 present (17%)", "CRITICAL: missing loss run reports"], llm: "No (regex covered 120–350% of fields)", code: "ingestion/insurance/classifier.py · loader.py", lesson: "l3" },
+    { id: "verify", name: "Verify", ms: "381 ms", k: "warn", st: "warning",
+      what: "Queries outside databases to confirm or contradict the application, then screens names against the OFAC sanctions list.",
+      inn: ["Insured name, address, tax id"], out: ["11 oracle findings", "CLUE: prior litigation (CRITICAL)", "CLUE: open auto liability claim (HIGH)", "A-PLUS: clean property history", "NCCI mod 1.000", "4 lookups failed in mock mode", "OFAC: no match"], llm: "No", code: "oracles/oracle_agent.py", lesson: "l6" },
+    { id: "reconcile", name: "Reconcile", ms: "4 ms", k: "warn", st: "warning",
+      what: "Records where every value came from and compares the same field across documents.",
+      inn: ["69 extracted fields"], out: ["17 verified by a second source", "6 conflicts", "Router wanted the LLM, none available → human"], llm: "Wanted, unavailable", code: "provenance/ · reconciliation/engine.py", lesson: "l6" },
+    { id: "analyze", name: "Analyze", ms: "1,872 ms", k: "gen", st: "warning",
+      what: "The supervisor runs four specialist agents in parallel, then the UW Decision agent scores the findings and writes the memo. Gates then add uncited figures as CRITICAL.",
+      inn: ["The parsed bundle"], out: ["Risk Analyst 0.60 (rules, 8 ms)", "Loss Run, Compliance, Fraud: LLM 401 → rules", "Memo score 0.65 → REFER", "Citation gate: 4 CRITICAL unverified figures"], llm: "Tried, key rejected (401)", code: "agents/supervisor.py · uw_decision_agent.py", lesson: "l5" },
+    { id: "moral_hazard", name: "Book checks", ms: "<1 ms", k: "det", st: "complete",
+      what: "Looks beyond this file: the carrier's whole book, the broker's record, the applicant's character, and reinsurance.",
+      inn: ["The bundle and the portfolio"], out: ["Character: no red flags (27%)", "Book too small for predictable losses (MODERATE)", "Per-risk treaty $1M xs $2M applies"], llm: "No", code: "agents/moral_hazard_agent.py and 5 others" },
+    { id: "price", name: "Price", ms: "82 ms", k: "det", st: "complete",
+      what: "Rates from the filed rate table, applies market and schedule adjustments, then the property checklist adds its own modifier.",
+      inn: ["TIV $28.5M, state IL"], out: ["Filed base $384,332", "Market −8%, schedule −8%", "Checklist +18% (fire hazards)", "Premium $383,852"], llm: "No", code: "rating/leaf_filings.py · commercial_checklists.py", lesson: "l8" },
+    { id: "decision", name: "Decision", ms: "26 ms", k: "warn", st: "warning",
+      what: "Final consistency gate, then the file is queued for a licensed underwriter and the broker is notified by webhook. Referrals are not pushed to the policy system.",
+      inn: ["Memo, quote, 39 findings"], out: ["REFER", "6 critical · 11 high · 8 moderate · 14 low", "Review priority CRITICAL", "Not pushed to PAS"], llm: "No", code: "insurance/pipeline.py · workflow/service.py", lesson: "l7" },
+    { id: "human", name: "Underwriter", ms: "human", k: "hum", st: "waiting",
+      what: "A licensed underwriter reads the memo, can reprice, and signs off. Binding then needs every gate to pass.",
+      inn: ["Memo and quote"], out: ["Sign-off pending", "Bind blocked: pilot policy system"], llm: "No", code: "api/main.py · bind_policy", lesson: "l12" }
+  ];
+  var rail = document.getElementById("xrail"), panel = document.getElementById("xpanel"), cur = 3;
+  ST.forEach(function (s, i) {
+    var b = document.createElement("button"); b.type = "button"; b.setAttribute("role", "tab"); b.id = "xt-" + s.id;
+    var dot = document.createElement("span"); dot.className = "dot " + (s.k === "gen" ? "gen" : s.k === "warn" ? "warn" : s.k === "hum" ? "hum" : "");
+    var nm = document.createElement("span"); nm.textContent = s.name;
+    var ms = document.createElement("span"); ms.className = "ms"; ms.textContent = s.ms;
+    b.appendChild(dot); b.appendChild(nm); b.appendChild(ms);
+    b.addEventListener("click", function () { show(i); });
+    rail.appendChild(b);
+  });
+  function list(items) { var u = document.createElement("ul"); items.forEach(function (t) { var li = document.createElement("li"); li.textContent = t; u.appendChild(li); }); return u; }
+  function show(i) {
+    cur = Math.max(0, Math.min(ST.length - 1, i));
+    var s = ST[cur];
+    Array.prototype.forEach.call(rail.children, function (b, j) { b.setAttribute("aria-selected", j === cur ? "true" : "false"); });
+    panel.innerHTML = "";
+    var step = document.createElement("div"); step.className = "step"; step.textContent = "Stage " + (cur + 1) + " of " + ST.length; panel.appendChild(step);
+    var h = document.createElement("h3"); h.textContent = s.name; panel.appendChild(h);
+    var stl = document.createElement("div"); stl.className = "status"; stl.textContent = "Northwind: " + s.st + " · " + s.ms + " · LLM: " + s.llm; panel.appendChild(stl);
+    var p = document.createElement("p"); p.className = "what"; p.textContent = s.what; panel.appendChild(p);
+    var g = document.createElement("div"); g.className = "io2";
+    var a = document.createElement("div"); var ah = document.createElement("h4"); ah.textContent = "Went in"; a.appendChild(ah); a.appendChild(list(s.inn));
+    var o = document.createElement("div"); o.className = "out2"; var oh = document.createElement("h4"); oh.textContent = "Came out"; o.appendChild(oh); o.appendChild(list(s.out));
+    g.appendChild(a); g.appendChild(o); panel.appendChild(g);
+    var f = document.createElement("div"); f.className = "xfoot";
+    var c = document.createElement("span"); c.innerHTML = "Code: <code></code>"; c.querySelector("code").textContent = s.code;
+    if (s.lesson) { var l = document.createElement("a"); l.href = "#" + s.lesson; l.textContent = " · go to the lesson"; c.appendChild(l); }
+    var nav = document.createElement("div"); nav.className = "xnav";
+    var pv = document.createElement("button"); pv.type = "button"; pv.className = "btn"; pv.textContent = "← Previous"; pv.disabled = cur === 0; pv.addEventListener("click", function () { show(cur - 1); });
+    var nx = document.createElement("button"); nx.type = "button"; nx.className = "btn primary"; nx.textContent = "Next →"; nx.disabled = cur === ST.length - 1; nx.addEventListener("click", function () { show(cur + 1); });
+    nav.appendChild(pv); nav.appendChild(nx); f.appendChild(c); f.appendChild(nav); panel.appendChild(f);
+  }
+  rail.addEventListener("keydown", function (e) {
+    if (e.key === "ArrowDown" || e.key === "ArrowRight") { e.preventDefault(); show(cur + 1); rail.children[cur].focus(); }
+    if (e.key === "ArrowUp" || e.key === "ArrowLeft") { e.preventDefault(); show(cur - 1); rail.children[cur].focus(); }
+  });
+  show(cur);
+
+  /* ── Chart: stage durations (single series, magnitude) ── */
+  (function () {
+    var g = document.getElementById("timechart");
+    var rows = [["Intake",0],["Triage",0],["Appetite",0],["Parse",5380],["Verify",381],["Reconcile",4],["Analyze",1872],["Book checks",0],["Price",82],["Decision",26]];
+    var x0 = 120, x1 = 620, max = 6000, y0 = 20, rh = 28;
+    var sx = function (v) { return x0 + (v / max) * (x1 - x0); };
+    [0, 2000, 4000, 6000].forEach(function (t) {
+      g.appendChild(el("line", { x1: sx(t), x2: sx(t), y1: y0 - 6, y2: y0 + rows.length * rh, "class": "s-grid" }));
+      g.appendChild(el("text", { x: sx(t), y: y0 + rows.length * rh + 18, "text-anchor": "middle", "class": "s-ts" }, t === 0 ? "0" : (t / 1000) + " s"));
+    });
+    rows.forEach(function (r, i) {
+      var y = y0 + i * rh;
+      g.appendChild(el("text", { x: x0 - 10, y: y + 18, "text-anchor": "end", "class": "s-t" }, r[0]));
+      var w = r[1] > 0 ? Math.max(3, sx(r[1]) - x0) : 0;
+      var hit = el("rect", { x: x0, y: y + 2, width: x1 - x0, height: rh - 4, "class": "bar-hit" });
+      hit.appendChild(el("title", {}, r[0] + ": " + (r[1] ? r[1].toLocaleString("en-US") + " ms" : "under 1 ms")));
+      g.appendChild(hit);
+      if (w) { var m = el("rect", { x: x0, y: y + 6, width: w, height: rh - 12, rx: 3, "class": "c-blue bar-mark" }); m.appendChild(el("title", {}, r[0] + ": " + r[1].toLocaleString("en-US") + " ms")); g.appendChild(m); }
+      var lbl = r[1] >= 50 ? r[1].toLocaleString("en-US") + " ms" : (r[1] ? r[1] + " ms" : "< 1 ms");
+      g.appendChild(el("text", { x: x0 + w + 6, y: y + 18, "class": "s-ts" }, lbl));
+    });
+    g.appendChild(el("text", { x: x1, y: 12, "text-anchor": "end", "class": "s-ts" }, "total 7.8 s"));
+  })();
+
+  /* ── Chart: premium waterfall ── */
+  (function () {
+    var g = document.getElementById("waterfall");
+    var steps = [["Filed base", 0, 384332.07, "total"], ["Market −8%", 384332.07, 353585.50, "down"], ["Schedule −8%", 353585.50, 325298.66, "down"], ["Checklist +18%", 325298.66, 383852.42, "up"], ["Premium", 0, 383852.42, "total"]];
+    var top = 30, bot = 280, max = 420000, x0 = 80, slot = 124, bw = 76;
+    var sy = function (v) { return bot - (v / max) * (bot - top); };
+    [0, 100000, 200000, 300000, 400000].forEach(function (t) {
+      g.appendChild(el("line", { x1: x0 - 6, x2: 700, y1: sy(t), y2: sy(t), "class": "s-grid" }));
+      g.appendChild(el("text", { x: x0 - 12, y: sy(t) + 4, "text-anchor": "end", "class": "s-ts" }, t === 0 ? "$0" : "$" + (t / 1000) + "K"));
+    });
+    steps.forEach(function (s, i) {
+      var x = x0 + 20 + i * slot, a = Math.min(s[1], s[2]), b = Math.max(s[1], s[2]);
+      var cls = s[3] === "total" ? "c-total" : s[3] === "down" ? "c-blue" : "c-orange";
+      var r = el("rect", { x: x, y: sy(b), width: bw, height: Math.max(2, sy(a) - sy(b)), rx: 3, "class": cls });
+      var delta = s[2] - s[1];
+      r.appendChild(el("title", {}, s[0] + ": " + (s[3] === "total" ? money(s[2]) : (delta > 0 ? "+" : "−") + money(Math.abs(delta)).slice(0) + " → " + money(s[2]))));
+      g.appendChild(r);
+      var lab = s[3] === "total" ? money(s[2]) : (delta > 0 ? "+" : "−") + money(Math.abs(delta));
+      g.appendChild(el("text", { x: x + bw / 2, y: sy(b) - 8, "text-anchor": "middle", "class": "s-t" }, lab));
+      g.appendChild(el("text", { x: x + bw / 2, y: bot + 20, "text-anchor": "middle", "class": "s-ts" }, s[0]));
+      if (i < steps.length - 1) {
+        var nx = x0 + 20 + (i + 1) * slot;
+        g.appendChild(el("line", { x1: x + bw, x2: nx, y1: sy(s[2]), y2: sy(s[2]), "class": "s-dash" }));
+      }
+    });
+  })();
+
+  /* ── Progress + quizzes ── */
+  var KEY = "insureflow-course-v3";
+  var LESSONS = ["primer","limg","l0","l1","l2","l3","l4","l5","l6","l7","l8","l9","l10","l11","l12","l13"];
+  var done = {};
+  try { done = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { done = {}; }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(done)); } catch (e) {} }
+  function renderProgress() {
+    var n = LESSONS.filter(function (l) { return done[l]; }).length;
+    document.getElementById("pbar").style.width = (n / LESSONS.length * 100) + "%";
+    document.getElementById("ptext").textContent = n + " of " + LESSONS.length + " lessons done";
+    document.querySelectorAll("#toc li[data-l]").forEach(function (li) { li.classList.toggle("done", !!done[li.dataset.l]); });
+  }
+  document.getElementById("reset").addEventListener("click", function () { done = {}; save(); renderProgress(); document.querySelectorAll(".lesson-done").forEach(function (e) { e.remove(); }); });
+  var Q = {
+    primer: [["An underwriter's book has a loss ratio of 80%. What does that mean?", ["80% of applications were accepted", "Claims paid were 80% of premium collected", "80% of risks were referred"], 1, "Loss ratio = claims ÷ premium. At 80% there is little left for expenses and profit."],
+             ["A quote is issued 'subject to a sprinkler retrofit plan'. What is that condition called?", ["An exclusion", "A subjectivity", "A deductible"], 1, "Subjectivities are conditions that must be met before or after binding."]],
+    limg: [["A scanned PDF has no text layer. Which reader is used by default?", ["The vision LLM", "Tesseract OCR, page by page at 200 dpi", "Nothing"], 1, "Cloud OCR, vision ML and handwriting models are opt-in; Tesseract is the default."],
+           ["Why does Northwind-style photo analysis report 'low risk' even with a damaged roof photo?", ["The model is weak", "The photos never reach the analyzer: it reads image_data, the pipeline passes content", "Photos are ignored by design"], 1, "A wiring bug: 0 photos analyzed looks like 0 problems found."]],
+    l0: [["Which stage took most of Northwind's 7.8 seconds?", ["Analyze (the AI agents)", "Parse (reading the documents)", "Price"], 1, "Parse took 5.4 s, about 69%. The agents took 1.9 s, mostly failed LLM calls."],
+         ["Who makes the final decision?", ["The UW Decision agent", "A licensed underwriter", "The rating engine"], 1, "The pipeline's REFER is advice. Sign-off and bind need the LICENSED_UW role."]],
+    l1: [["Northwind's TIV is $28.5M. What does TIV measure?", ["The premium", "The cost to replace buildings, contents and lost income", "Total claims paid"], 1, "Property is priced per $100 of TIV."],
+         ["What does the P in COPE stand for, and what was Northwind's issue?", ["Premium; too low", "Protection; part of the building has no sprinklers", "Peril; flood zone"], 1, "Protection covers sprinklers and fire service. The inspection found 12,000 sq ft unsprinklered."]],
+    l2: [["What does POST /pipeline/run return?", ["The finished memo", "202 with a job id, immediately", "A websocket"], 1, "The work happens in a worker; the client watches progress."],
+         ["Celery is down. What happens to the request?", ["500 error", "The same job runs in-process with BackgroundTasks", "It is dropped"], 1, "The API falls back automatically."]],
+    l3: [["Why was Northwind's loss run classified as a retirement statement?", ["The file was corrupt", "It mentions a truck 'rollover', and the retirement rule is checked first", "The LLM guessed wrong"], 1, "First-match keyword rules: line 441 matched before the loss-run rule at line 522."],
+         ["A required document is missing. Does the run stop?", ["Yes", "No, a CRITICAL finding is added and the run continues", "Only for life"], 1, "Gates add findings. Findings push the decision toward REFER later."]],
+    l4: [["A loss run expects 8 fields and regex found 3. LLM available. Route?", ["Rules", "Cheap LLM", "Skip"], 1, "3/8 = 38%, under the 60% threshold."],
+         ["Northwind's reconciliation wanted the LLM but none was available. Result?", ["Silently skipped", "Escalated to a human", "Rules guessed"], 1, "The router never guesses; it hands the task to a person."]],
+    l5: [["Northwind's OpenAI key was rejected. What did the ReAct agents do?", ["Crash the run", "Fall back to their rule-based analysis", "Retry for minutes"], 1, "Each took ~1.5 s on the failed call, then ran _analyze()."],
+         ["In ReAct, who does the arithmetic?", ["The language model", "Python tools the model chooses", "The supervisor"], 1, "The model picks tools like compute_claim_frequency; Python computes exact numbers."]],
+    l6: [["The ACORD says 'Northwind Logistics LLC', the SOV 'Northwind Traders Mfg.'. What does the system do?", ["Picks the ACORD", "Averages them", "Raises an entity-mismatch finding"], 2, "Disagreements become findings, never silent choices."],
+         ["The citation gate crashes. What happens?", ["The memo passes", "CRITICAL finding and REFER", "The job fails"], 1, "Failing closed: a broken check never becomes a pass."]],
+    l7: [["Northwind's memo has 39 findings, but the score uses how many?", ["All 39", "The 5 agent findings at the analyze stage", "Only critical ones"], 1, "The score is fixed at stage 9. Later findings change the decision through gates, not the score."],
+         ["One HIGH finding, score 0.40. Decision?", ["Accept", "Conditional accept", "Refer"], 2, "Any HIGH finding refers, regardless of score."]],
+    l8: [["Which step raised Northwind's premium?", ["The market adjustment", "The property checklist (+18%)", "Schedule credits"], 1, "Market and schedule lowered it by 8% each; the checklist added 18% for fire hazards."],
+         ["Why did Northwind get a sprinkler credit despite a 'no sprinklers' finding?", ["A data entry error", "Credits match the word 'sprinkler' anywhere in the documents", "The underwriter added it"], 1, "Keyword matching; exercise 3 in lesson 13."]],
+    l9: [["Did Northwind's run retrieve any guidelines?", ["Yes, 5", "No, inline RAG is only wired for four specialty lines", "Only for photos"], 1, "D&O, Trade Credit, E&O and Key Person."],
+         ["The best vector match scores 0.08. What next?", ["Use it anyway", "Keyword search, then the knowledge graph", "Error"], 1, "Below 0.12 the fallback ladder runs."]],
+    l10: [["Can Claude Desktop bind Northwind through MCP?", ["Yes", "No, there is no tool for runs or binds", "Only an admin can"], 1, "MCP tools read results and manage reference data only."],
+          ["What turns an MCP bearer token into permissions?", ["Nothing", "MCPAuthMiddleware: org + role", "An IP allowlist"], 1, "Same model as the REST API."]],
+    l11: [["Where is Northwind recorded permanently?", ["Redis", "The Fernet-encrypted audit trail", "The browser"], 1, "Redis drops jobs after about a week; the audit trail is the record."],
+          ["Was Northwind written to the portfolio?", ["Yes, at quote time", "No, only bound policies are", "Yes, at triage"], 1, "So concentration checks count real business only."]],
+    l12: [["Which gate stops Northwind's bind even after sign-off?", ["Authority", "The policy admin connection (pilot key)", "OFAC"], 1, "bind_is_allowed() is false until a real PAS key is configured."],
+          ["Who can bind a $383,852 premium?", ["Junior underwriter", "Senior underwriter or CUO", "Any viewer"], 1, "Junior authority stops at $25K; senior goes to $500K."]],
+    l13: [["What's the smallest safe fix for the rollover bug?", ["Delete the retirement rule", "Skip life-only rules for commercial packages, with a test", "Rename the file"], 1, "Keep the rule for life files; stop it firing on property packages. Prove it with a test."],
+          ["In Python, max(\"critical\", \"low\") returns…", ["\"critical\"", "\"low\"", "an error"], 1, "Strings compare alphabetically. That's bug 4."]]
+  };
+  function markDone(id, box) {
+    if (!done[id]) { done[id] = true; save(); renderProgress(); }
+    if (!box.querySelector(".lesson-done")) { var d = document.createElement("div"); d.className = "lesson-done"; d.textContent = "✓ Lesson complete"; box.appendChild(d); }
+  }
+  document.querySelectorAll(".quiz").forEach(function (box) {
+    var id = box.dataset.quiz, qs = Q[id]; if (!qs) return;
+    box.innerHTML = "<b>Check yourself</b>";
+    var right = {};
+    qs.forEach(function (q, qi) {
+      var wrap = document.createElement("div"); wrap.className = "q";
+      var p = document.createElement("p"); p.textContent = q[0]; wrap.appendChild(p);
+      var fb = document.createElement("div"); fb.className = "fb";
+      q[1].forEach(function (opt, oi) {
+        var lab = document.createElement("label");
+        var inp = document.createElement("input"); inp.type = "radio"; inp.name = id + "-" + qi; inp.id = id + "-" + qi + "-" + oi;
+        lab.htmlFor = inp.id; lab.appendChild(inp); lab.appendChild(document.createTextNode(opt));
+        inp.addEventListener("change", function () {
+          wrap.querySelectorAll("label").forEach(function (l) { l.classList.remove("right", "wrong"); });
+          var ok = oi === q[2];
+          lab.classList.add(ok ? "right" : "wrong");
+          fb.textContent = (ok ? "Right. " : "Not quite. ") + q[3];
+          right[qi] = ok;
+          if (qs.every(function (_, i) { return right[i]; })) markDone(id, box);
+        });
+        wrap.appendChild(lab);
+      });
+      wrap.appendChild(fb); box.appendChild(wrap);
+    });
+    if (done[id]) markDone(id, box);
+  });
+  renderProgress();
+
+  /* ── Router simulator (zta/router.py EXTRACT_UNSTRUCTURED) ── */
+  function zta() {
+    var expected = +document.getElementById("z-doc").value;
+    var found = Math.max(0, +document.getElementById("z-found").value || 0);
+    var used = Math.max(0, +document.getElementById("z-used").value || 0);
+    var llm = document.getElementById("z-llm").checked, strict = document.getElementById("z-strict").checked;
+    var ratio = found / Math.max(1, expected), route, why;
+    if (ratio >= 0.6) { route = ["RULES", "v-accept"]; why = "Regex captured " + Math.round(ratio * 100) + "% of expected fields, at or above 60%. Zero tokens."; }
+    else if (llm && !strict && used < 5) { route = ["CHEAP LLM", "v-cond"]; why = "Only " + Math.round(ratio * 100) + "% found, so the document is ambiguous. Uses one of the job's 5 LLM tasks, with PII redacted."; }
+    else { route = ["HUMAN", "v-human"]; why = "Too little found and no LLM allowed: " + (strict ? "strict mode forbids it." : !llm ? "no key configured." : "the job's 5 LLM tasks are used up."); }
+    document.getElementById("z-ratio").textContent = Math.round(ratio * 100) + "%";
+    var r = document.getElementById("z-route"); r.textContent = route[0]; r.className = "verdict " + route[1];
+    document.getElementById("z-why").textContent = why;
+  }
+  ["z-doc","z-found","z-used","z-llm","z-strict"].forEach(function (i) { var e = document.getElementById(i); e.addEventListener("input", zta); e.addEventListener("change", zta); });
+  zta();
+
+  /* ── Decision calculator (uw_decision_agent._calculate_aggregate_risk + _build_recommendation) ── */
+  var SEV = { critical: 1.0, high: 0.75, moderate: 0.5, low: 0.2 };
+  var CATS = [["general","General risk"],["fraud_detection","Fraud (adds bonus)"],["moral_hazard","Moral hazard (adds bonus)"],["selection","Selection (adds bonus)"],["adverse_selection","Adverse selection (adds bonus)"],["external_oracle","Failed lookup (left out)"],["hallucination","Citation gate (left out)"]];
+  var HIGH_RISK = { fraud_detection: 1, moral_hazard: 1, selection: 1, adverse_selection: 1 };
+  var NOISE = { external_oracle: 1, hallucination: 1, oracle_failure: 1 };
+  var rowsEl = document.getElementById("dec-rows"), rowId = 0;
+  function addRow(sev, conf, cat, label) {
+    var id = rowId++, d = document.createElement("div"); d.className = "row";
+    d.innerHTML =
+      '<label for="ds' + id + '">' + (label ? "" : "Severity") + '<select id="ds' + id + '"><option>critical</option><option>high</option><option>moderate</option><option>low</option></select></label>' +
+      '<label for="dc' + id + '">Confidence<input id="dc' + id + '" type="number" min="0" max="1" step="0.01"></label>' +
+      '<label for="dk' + id + '">Category<select id="dk' + id + '">' + CATS.map(function (c) { return '<option value="' + c[0] + '">' + c[1] + "</option>"; }).join("") + "</select></label>" +
+      '<span class="contrib" title="This finding\'s contribution"></span>' +
+      '<button type="button" aria-label="Remove finding">×</button>';
+    if (label) d.querySelector("label").insertBefore(document.createTextNode(label), d.querySelector("select"));
+    d.querySelector("select").value = sev; d.querySelector("input").value = conf; d.querySelectorAll("select")[1].value = cat;
+    d.querySelector("button").addEventListener("click", function () { d.remove(); decide(); });
+    d.addEventListener("input", decide); d.addEventListener("change", decide);
+    rowsEl.appendChild(d);
+  }
+  function decide() {
+    var rows = Array.prototype.map.call(rowsEl.children, function (r) {
+      var s = r.querySelectorAll("select"), c = parseFloat(r.querySelector("input").value);
+      var f = { sev: s[0].value, conf: isNaN(c) || c <= 0 ? 0.7 : Math.min(1, c), cat: s[1].value, el: r.querySelector(".contrib") };
+      f.el.textContent = NOISE[f.cat] ? "left out" : (SEV[f.sev] * (0.5 + f.conf * 0.5)).toFixed(3);
+      return f;
+    });
+    var scored = rows.filter(function (f) { return !NOISE[f.cat]; }), base = 0, pile = 0, score = 0;
+    if (scored.length) {
+      var sum = 0, vol = 0, hr = 0;
+      scored.forEach(function (f) { sum += SEV[f.sev] * (0.5 + f.conf * 0.5); if (f.sev !== "low") vol++; if (HIGH_RISK[f.cat]) hr++; });
+      base = sum / scored.length; pile = Math.min(0.15, Math.log2(1 + vol) / 6 + Math.min(0.3, hr * 0.1));
+      score = Math.min(1, Math.max(0, base + pile));
+    }
+    var freq = +document.getElementById("dec-freq").value || 0;
+    var has = function (s) { return rows.some(function (f) { return f.sev === s; }); };
+    var out, why;
+    if (freq >= 10) { out = ["DECLINE","v-decline"]; why = freq + " claims a year is at or above the 10/yr hard decline."; }
+    else if (has("critical")) { out = ["REFER","v-refer"]; why = "A CRITICAL finding always goes to a licensed underwriter."; }
+    else if (has("high") || score >= 0.70) { out = ["REFER","v-refer"]; why = has("high") ? "There is at least one HIGH finding." : "The score is at or above 0.70."; }
+    else if (has("moderate")) { out = ["CONDITIONAL","v-cond"]; why = "Only MODERATE findings: quote with SUBJECT TO conditions."; }
+    else { out = ["ACCEPT","v-accept"]; why = rows.length ? "Only LOW or left-out findings." : "No findings yet. Load Northwind or add one."; }
+    if (score >= 0.85 && out[0] !== "DECLINE") { out = ["DECLINE","v-decline"]; why += " The later memo pass declines at 0.85 or more."; }
+    document.getElementById("dec-base").textContent = base.toFixed(3);
+    document.getElementById("dec-pile").textContent = "+" + pile.toFixed(3);
+    document.getElementById("dec-score").textContent = score.toFixed(4);
+    var o = document.getElementById("dec-out"); o.textContent = out[0]; o.className = "verdict " + out[1];
+    document.getElementById("dec-why").textContent = why;
+  }
+  function loadNorthwind() {
+    rowsEl.innerHTML = "";
+    addRow("low", 0.98, "general", "Favorable construction");
+    addRow("moderate", 0.98, "general", "Higher-risk occupancy");
+    addRow("high", 0.8, "general", "Elevated credit rating");
+    addRow("high", 0.8, "general", "No loss runs on file");
+    addRow("moderate", 0.8, "general", "Entity name mismatch");
+    document.getElementById("dec-freq").value = 0;
+    decide();
+  }
+  document.getElementById("dec-nw").addEventListener("click", loadNorthwind);
+  document.getElementById("dec-add").addEventListener("click", function () { addRow("low", 0.8, "general"); decide(); });
+  document.getElementById("dec-clear").addEventListener("click", function () { rowsEl.innerHTML = ""; decide(); });
+  document.getElementById("dec-freq").addEventListener("input", decide);
+  loadNorthwind();
+
+  /* ── Premium + coinsurance (leaf_filings.rate_leaf_filing, property_bi; policy_architecture.coinsurance_penalty) ── */
+  var REL = { CA: 1.12, NY: 1.08, NJ: 1.06, WA: 1.05, FL: 1.02, PA: 0.98, GA: 0.97, TX: 0.96, OH: 0.95, IL: 0.94 };
+  var CREDITS = [["sprinkler", -5, true], ["alarm", -3, true], ["safety_program", -4], ["multi_location", 2], ["new_venture", 8]];
+  var st = document.getElementById("p-state");
+  Object.keys(REL).concat(["Other"]).forEach(function (k) { var o = document.createElement("option"); o.value = k; o.textContent = k === "Other" ? "Other state (1.00)" : k + " (" + REL[k].toFixed(2) + ")"; st.appendChild(o); });
+  st.value = "IL";
+  var cr = document.getElementById("p-credits");
+  CREDITS.forEach(function (c) { var l = document.createElement("label"); var i = document.createElement("input"); i.type = "checkbox"; i.id = "pc-" + c[0]; i.checked = !!c[2]; l.appendChild(i); l.appendChild(document.createTextNode(" " + c[0].replace("_", " ") + " (" + (c[1] > 0 ? "+" : "") + c[1] + "%)")); cr.appendChild(l); });
+  function price() {
+    var tiv = Math.max(0, +document.getElementById("p-tiv").value || 0);
+    var rel = REL[st.value] || 1.0, mkt = +document.getElementById("p-mkt").value || 0, chk = +document.getElementById("p-chk").value || 0, sched = 0;
+    CREDITS.forEach(function (c) { if (document.getElementById("pc-" + c[0]).checked) sched += c[1]; });
+    var base = tiv / 100 * 0.6954 * 2.063 * rel;
+    if (tiv <= 0) {
+      document.getElementById("p-base").textContent = "$0"; document.getElementById("p-sched").textContent = sched + "%";
+      document.getElementById("p-prem").textContent = "Not quotable: TIV unknown"; document.getElementById("p-rate").textContent = "–";
+    } else {
+      var leaf = Math.max(Math.round(base * (1 + mkt / 100) * (1 + sched / 100) * 100) / 100, 1762.80);
+      var prem = leaf * (1 + chk / 100);
+      document.getElementById("p-base").textContent = money(base);
+      document.getElementById("p-sched").textContent = (sched > 0 ? "+" : "") + sched + "%";
+      document.getElementById("p-prem").textContent = money(prem);
+      document.getElementById("p-rate").textContent = "$" + (prem / Math.max(tiv / 100, 1)).toFixed(4);
+    }
+    var val = Math.max(0, +document.getElementById("c-val").value || 0), lim = Math.max(0, +document.getElementById("c-lim").value || 0);
+    var pct = +document.getElementById("c-pct").value || 0; if (pct > 0 && pct <= 1) pct *= 100;
+    var loss = Math.max(0, +document.getElementById("c-loss").value || 0), req = pct / 100 * val;
+    if (req <= 0) { document.getElementById("c-req").textContent = "n/a"; document.getElementById("c-pen").textContent = "none"; document.getElementById("c-pays").textContent = money(Math.min(loss, lim)); return; }
+    var ratio = Math.min(lim / req, 1);
+    document.getElementById("c-req").textContent = money(req);
+    document.getElementById("c-pen").textContent = ratio < 1 ? Math.round((1 - ratio) * 100) + "% of each loss" : "none";
+    document.getElementById("c-pays").textContent = money(Math.min(loss * ratio, lim));
+  }
+  document.getElementById("price").addEventListener("input", price);
+  document.getElementById("price").addEventListener("change", price);
+  price();
+
+
+  /* ── Photo quality (ml/vision/photo_scorer.py) ── */
+  function photo() {
+    var v = Math.max(0, +document.getElementById("ph-var").value || 0), w = +document.getElementById("ph-w").value || 0, h = +document.getElementById("ph-h").value || 0;
+    var br = Math.min(1, Math.max(0, +document.getElementById("ph-b").value || 0));
+    var blur = Math.min(1, v / 500), res = (w >= 640 && h >= 480) ? Math.min(1, w * h / (1920 * 1080)) : (w > 0 && h > 0 ? 0.3 : 0);
+    var q = Math.max(0, Math.min(1, blur * 0.40 + res * 0.30 + br * 0.15 + (1 - Math.abs(br - 0.5) * 2) * 0.15));
+    var g = q < 0.15 ? ["UNUSABLE","v-decline"] : (q < 0.35 || blur < 0.1 || br < 0.1 || br > 0.95) ? ["POOR","v-refer"] : q < 0.55 ? ["ACCEPTABLE","v-cond"] : q < 0.8 ? ["GOOD","v-accept"] : ["EXCELLENT","v-accept"];
+    document.getElementById("ph-bs").textContent = blur.toFixed(2);
+    document.getElementById("ph-rs").textContent = res.toFixed(2);
+    document.getElementById("ph-q").textContent = q.toFixed(3);
+    var e = document.getElementById("ph-g"); e.textContent = g[0]; e.className = "verdict " + g[1];
+    var why = [];
+    if (blur < 0.15) why.push("blurred: details may be unreliable");
+    if (br < 0.15) why.push("too dark"); else if (br > 0.9) why.push("overexposed");
+    if (w < 640 || h < 480) why.push("below 640 × 480: request a re-shoot");
+    document.getElementById("ph-why").textContent = why.length ? "Findings: " + why.join("; ") + "." : "No quality findings.";
+  }
+  document.getElementById("photo").addEventListener("input", photo); photo();
+
+  /* ── COPE (underwriting/cope.py analyze_cope) ── */
+  var C = { frame: [0.8, 25], jm: [0.8, 15], mnc: [0.4, 0], mfr: [0.2, -10], fr: [0.1, -15] };
+  var O = { manufacturing: [0.7, 15], special: [0.7, 20], warehouse: [0.5, 5], lodging: [0.5, 10], service: [0.5, 10], habitational: [0.5, 5], mercantile: [0.3, 0], office: [0.2, -5], institutional: [0.2, -5] };
+  var PM = { 1: -15, 2: -10, 3: -5, 4: 0, 5: 5, 6: 10, 7: 15, 8: 20, 9: 25, 10: 35 };
+  var E = { none: [0.1, 0], hail: [0.3, 10], wildfire: [0.6, 15], quake: [0.5, 20], coastal: [0.9, 25] };
+  function cope() {
+    var c = C[document.getElementById("cp-c").value], o = O[document.getElementById("cp-o").value].slice(), e = E[document.getElementById("cp-e").value];
+    var pc = Math.max(1, Math.min(10, Math.round(+document.getElementById("cp-p").value || 4)));
+    if (document.getElementById("cp-spr").checked) { o[1] -= 5; o[0] = Math.max(0, o[0] - 0.1); }
+    if (document.getElementById("cp-old").checked) { o[1] += 10; o[0] = Math.min(1, o[0] + 0.15); }
+    if (document.getElementById("cp-tall").checked) { o[1] += 5; o[0] = Math.min(1, o[0] + 0.1); }
+    var p = pc <= 3 ? 0.1 : pc <= 5 ? 0.3 : pc <= 7 ? 0.5 : 0.8;
+    var total = 0.25 * (c[0] + o[0] + p + e[0]);
+    var mod = Math.max(-25, Math.min(50, c[1] + o[1] + PM[pc] + Math.min(e[1], 45)));
+    var g = total <= 0.25 ? ["PREFERRED","v-accept"] : total <= 0.5 ? ["STANDARD","v-accept"] : total <= 0.75 ? ["NON-STANDARD","v-cond"] : ["DECLINE","v-decline"];
+    document.getElementById("cp-parts").textContent = [c[0], o[0], p, e[0]].map(function (x) { return x.toFixed(2); }).join(" · ");
+    document.getElementById("cp-total").textContent = total.toFixed(3);
+    var ge = document.getElementById("cp-grade"); ge.textContent = g[0]; ge.className = "verdict " + g[1];
+    document.getElementById("cp-mod").textContent = (mod > 0 ? "+" : "") + mod + "%";
+  }
+  document.getElementById("cope").addEventListener("input", cope); document.getElementById("cope").addEventListener("change", cope); cope();
+
+  /* ── Tutor (sample capability) ── */
+  var FACTS = [
+    "COURSE: InsureFlow (Rytera) Commercial Property & BI pipeline, product id property_bi, Python package src/insureflow. Main entry InsurancePipeline.run() in insurance/pipeline.py; API POST /pipeline/run returns 202 + job_id, Celery worker or BackgroundTasks fallback, Redis job store.",
+    "STAGES: intake, triage (agents/triage_agent.py), appetite (agents/appetite_filter.py), parse (ingestion/insurance/loader.py, classifier.py), doc quality gate, required-data gates (ACORD 140, SOV, loss runs = CRITICAL if missing), vision for photos, extraction with Zero-Token router (zta/router.py: regex coverage >= 0.6 -> rules, else cheap LLM if allowed and < 5 LLM tasks, else human), oracles (CLUE, A-PLUS, NCCI, CAT model, credit bureau, public records, OSHA, rating agency) + OFAC, provenance + reconciliation, SupervisorAgent with 4 parallel agents (RiskAnalyst rules-only; LossRunAnalyst, Compliance, FraudDetection are ReAct, max 10 steps, 18 tools, circuit breaker 3 failures/60s) then UWDecisionAgent, zero-hallucination citation gate (fails closed to REFER), 60% confidence floor, book checks (portfolio, producer, selection, adverse selection, moral hazard, reinsurance), pricing, quote HTML, PAS push only if not refer/decline, workflow queue, webhooks, licensed UW sign-off and bind gates.",
+    "FORMULAS: triage = 0.30 industry + 0.25 state + 0.20 size + 0.15 coverage + 0.10 checklist%; >=80 hot, >=50 warm, >=25 cold. Risk score = mean(severity weight x (0.5+0.5 confidence)) + min(0.15, log2(1+n moderate-or-worse)/6 + min(0.3, 0.1 per fraud/moral hazard/selection finding)); weights critical 1, high .75, moderate .5, low .2; failed lookups and citation-gate findings excluded. Decision: >=10 claims/yr DECLINE; any CRITICAL REFER; any HIGH or score>=0.70 REFER; only MODERATE CONDITIONAL; else ACCEPT; memo pass >=0.85 DECLINE. Surcharge: freq>3/yr 15%+15%/claim above 3, >1.5 10%; severity>200K 10%+1% per 20K above, >75K 5%; cap 100%. Leaf premium = TIV/100 x 0.6954 x 2.063 x state factor (IL 0.94, CA 1.12) x (1+market) x (1+schedule credits: sprinkler -5, alarm -3, safety program -4, multi-location +2, new venture +8), min $1,762.80. ISO/COPE path adds COPE schedule, deductible credits (-5..-25%), loss experience (-10..+20%), years in business, $75 fee. COPE: C,O,P,E each 0-1, total = average, <=.25 preferred, <=.5 standard, <=.75 non-standard, else decline; schedule capped -25..+50%. Coinsurance: required = clause% x value, paid share = min(1, limit/required). Fire scenario (2+ fire flags) +18%, refer, min $25K deductible. Authority: junior $25K, senior $500K, CUO unlimited. Photo quality = .40 blur + .30 resolution + .15 brightness + .15 (1-|brightness-.5| x 2).",
+    "IMAGES: router (ingestion/router.py) routes structured/standard/scanned/VLM/table-heavy; OCR ladder for images: cloud OCR (Textract/Document AI, opt-in) -> vision ML (PaddleOCR/Donut, opt-in) -> handwriting detection + TrOCR (USE_HTR) -> Tesseract with auto-rotation (scanned PDFs at 200 dpi) -> pdfminer -> unreadable. pdfplumber line boxes give page positions for citations. Photos: quality score -> vision LLM or local heuristic -> damage + forensics -> visual risk = worst photo.",
+    "RAG: guidelines only; Chroma -> Weaviate -> pgvector -> memory; e5-large-v2 or text-embedding-3-small; fetch 15, rerank 0.65 vector/0.35 keyword, MMR 0.7, top 5, fallback keyword then knowledge graph below 0.12. Inline only for D&O, Trade Credit, E&O, Key Person, not property. MCP: FastMCP server 'rytera', stdio + SSE /mcp, 13 read-mostly tools, no run/bind tool.",
+    "NORTHWIND RUN (2026-10-05): 4 files; REFER; premium $383,852 = $384,332 base x 0.92 market x 0.92 schedule x 1.18 fire checklist; score 0.6486 from 5 agent findings; 39 findings (6 critical, 11 high, 8 moderate, 14 low); 7.8 s (parse 5.4 s, analyze 1.9 s).",
+    "KNOWN BUGS: (1) classifier.py:441 retirement rule matches 'rollover' before loss-run rule at :522, so the loss run (14 claims, $1.89M) was misfiled; (2) pipeline passes photos as {filename, content} but analyzer reads image_data, so no photo is ever analyzed; (3) triage/appetite run on an empty bundle on the upload path; (4) .env OpenAI key returns 401, ReAct agents fall back silently; use_llm=False does not stop them; (5) schedule credits match keywords; (6) supervisor.py:280 max() on severity strings; (7) satellite never runs (lat/lng None)."
+  ].join("\n");
+  var RULES = "You are a patient tutor inside a course about how commercial property underwriting works and how the InsureFlow code implements it. Answer the learner's question using the COURSE FACTS and the CURRENT LESSON TEXT below. When something is not covered there, say so in one short sentence, then answer from general commercial-insurance knowledge and label it 'General knowledge'. Explain in plain English for someone learning, use a small worked example with numbers when it helps, and name the file path or lesson to look at next. Keep it under 220 words. Plain text only: short paragraphs and lines starting with '- '. No markdown headings, no tables.\n\nCOURSE FACTS:\n" + FACTS;
+  var tutor = document.getElementById("tutor"), fab = document.getElementById("tutor-fab"), log = document.getElementById("tutor-log"), tin = document.getElementById("tutor-in");
+  var sendB = document.getElementById("tutor-send"), stopB = document.getElementById("tutor-stop"), ctxEl = document.getElementById("tutor-ctx");
+  var turns = [], lessonEl = null, ctl = null, busy = false, sampleFn = null;
+  function addMsg(cls, text) { var d = document.createElement("div"); d.className = "msg " + cls; d.textContent = text; log.appendChild(d); log.scrollTop = log.scrollHeight; return d; }
+  function currentLesson() {
+    var best = null, y = window.innerHeight * 0.35;
+    document.querySelectorAll("section.lesson").forEach(function (sec) { var r = sec.getBoundingClientRect(); if (r.top <= y && r.bottom > 0) best = sec; });
+    return best;
+  }
+  function setContext(sec) {
+    lessonEl = sec;
+    var h = sec && sec.querySelector("h2");
+    ctxEl.textContent = h ? "Context: " + h.textContent : "Context: whole course";
+  }
+  function openTutor(sec, prefill) {
+    setContext(sec || currentLesson());
+    tutor.hidden = false; fab.hidden = true;
+    if (!log.children.length) {
+      addMsg("note", "I answer from this course's material and the Northwind run. Each answer uses your own Claude usage. Try one of these:");
+      var chips = document.createElement("div"); chips.className = "chips";
+      ["How are scanned PDFs and photos read?", "Walk me through Northwind's premium step by step", "Why was Northwind referred?", "What does a commercial underwriter do all day?"].forEach(function (q) {
+        var b = document.createElement("button"); b.type = "button"; b.textContent = q; b.addEventListener("click", function () { ask(q); }); chips.appendChild(b);
+      });
+      log.appendChild(chips);
+    }
+    if (prefill) tin.value = prefill;
+    tin.focus();
+  }
+  var COPY = { rate_limited: "Too many questions at once or your usage limit was reached. Try again in a little while.", session_expired: "Please sign in to Claude again, then ask.", refused: "Claude couldn't answer that one. Try rephrasing the question.", empty_completion: "No answer came back. Try a shorter or more specific question.", prompt_too_large: "That was too much text. Ask a shorter question.", upstream_error: "The connection dropped. Ask again." };
+  async function ask(q) {
+    q = (q || "").trim(); if (!q || busy || !sampleFn) return;
+    busy = true; sendB.disabled = true; stopB.hidden = false; tin.value = "";
+    addMsg("me", q);
+    var out = addMsg("ai", "Thinking…");
+    var lessonText = lessonEl ? lessonEl.innerText.slice(0, 6000) : "";
+    turns.push({ role: "user", content: q });
+    if (turns.length > 8) turns = turns.slice(turns.length - 8);
+    while (turns.length && turns[0].role !== "user") turns.shift();
+    var intro = RULES + "\n\nCURRENT LESSON TEXT:\n" + (lessonText || "(none)");
+    ctl = new AbortController();
+    try {
+      var res = await sampleFn([{ role: "user", content: intro }].concat(turns), { cache: false, signal: ctl.signal, onText: function (u) { out.textContent = u.text; log.scrollTop = log.scrollHeight; } });
+      out.textContent = res.text;
+      if (res.truncated) addMsg("note", "The answer was cut short. Ask about one part at a time.");
+      turns.push({ role: "assistant", content: res.text });
+    } catch (e) {
+      var code = e && e.code;
+      out.textContent = (e && e.text) || "";
+      if (!out.textContent) out.remove();
+      turns.pop();
+      if (code === "cancelled") { }
+      else if (["not_granted", "sampling_disabled", "not_declared", "capability_disabled", "capability_removed"].indexOf(code) >= 0) {
+        addMsg("note", "The tutor isn't available in this view, or using Claude here wasn't allowed. Everything else on the page still works.");
+        disableTutor();
+      } else addMsg("note", COPY[code] || COPY.upstream_error);
+    } finally {
+      busy = false; sendB.disabled = false; stopB.hidden = true; ctl = null;
+    }
+  }
+  function disableTutor() { fab.hidden = true; document.querySelectorAll(".askline").forEach(function (a) { a.hidden = true; }); sendB.disabled = true; tin.disabled = true; }
+  document.getElementById("tutor-form").addEventListener("submit", function (e) { e.preventDefault(); ask(tin.value); });
+  tin.addEventListener("keydown", function (e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); ask(tin.value); } });
+  stopB.addEventListener("click", function () { if (ctl) ctl.abort(); });
+  document.getElementById("tutor-close").addEventListener("click", function () { tutor.hidden = true; fab.hidden = false; });
+  fab.addEventListener("click", function () { openTutor(null); });
+  document.querySelectorAll(".askline button").forEach(function (b) { b.addEventListener("click", function () { openTutor(b.closest("section.lesson")); }); });
+  if (window.claude && typeof window.claude.use === "function") {
+    window.claude.use("sample").then(function (fn) {
+      if (!fn) return;
+      sampleFn = fn; fab.hidden = false;
+      document.querySelectorAll(".askline").forEach(function (a) { a.hidden = false; });
+    }).catch(function () {});
+  }
+
+  /* ── Glossary ── */
+  var G = [
+    ["A-PLUS", "Verisk's property claims history database, queried as an oracle."],
+    ["ACORD 140", "Standard commercial property application form."],
+    ["Agent", "Here: a Python class that inspects a submission and returns findings, a 0–1 score and a recommendation."],
+    ["Appetite", "The kinds of business a carrier is willing to write."],
+    ["Bind", "Making coverage effective. Needs a licensed underwriter, enough authority and a live policy system."],
+    ["Binding authority", "The most premium an underwriter may bind: junior $25K, senior $500K, CUO unlimited."],
+    ["BI", "Business interruption: lost income while a damaged property is restored."],
+    ["Circuit breaker", "After 3 LLM failures in a row, stop calling the provider for 60 s and use rules."],
+    ["Classifier", "Code that decides what type a document is. Here: first-match keyword rules."],
+    ["CLUE", "LexisNexis claims history database."],
+    ["Coinsurance", "Clause requiring insurance to a % of value; under-insuring reduces every claim payment proportionally."],
+    ["COPE", "Construction, Occupancy, Protection, Exposure: how property fire risk is graded."],
+    ["E&S / surplus lines", "Coverage from non-admitted carriers; needs stamping documents to bind."],
+    ["Fail closed", "When a safety check breaks, choose the safe outcome (REFER), never a silent pass."],
+    ["Finding", "One observation with severity, confidence, category and source evidence."],
+    ["HyDE", "Write a hypothetical answer first, then search with it; finds passages phrased like answers."],
+    ["LCM", "Loss cost multiplier: adds expense and profit to expected losses."],
+    ["Leaf filing", "A product-specific filed rate in the carrier book, e.g. SERFF-IF-PROPERTY_BI-2026A."],
+    ["Loss run", "Prior insurers' claim history for the applicant."],
+    ["MCP", "Model Context Protocol: a standard for AI assistants to call another system's tools."],
+    ["MMR", "Maximal marginal relevance: keep results relevant but not repetitive."],
+    ["OFAC", "US Treasury sanctions list. A match makes the quote ineligible."],
+    ["Oracle", "An outside data source queried to verify the submission."],
+    ["PAS", "Policy administration system (Guidewire, BriteCore), the record of policies."],
+    ["Provenance", "Where each value came from, and how much that source is trusted."],
+    ["RAG", "Retrieval-augmented generation: find guidelines first, then answer citing them."],
+    ["ReAct", "Reason + act: an LLM loop that thinks, calls a tool, observes, repeats."],
+    ["Reconciliation", "Comparing the same field across documents and flagging disagreements."],
+    ["Refer", "Send to a senior or licensed underwriter to decide."],
+    ["Schedule credit", "A percentage adjustment for features like sprinklers or alarms."],
+    ["SERFF", "The system carriers use to file rates with state regulators."],
+    ["SOV", "Statement of Values: every location with construction and values."],
+    ["TIV", "Total insured value: building + contents + BI."],
+    ["Valued Policy Law", "State rule that a total loss pays the full stated policy value."],
+    ["Zero-Token routing", "Decide per task whether rules can do it before allowing an LLM."]
+  ];
+  var gl = document.getElementById("gloss");
+  function gloss(f) {
+    f = (f || "").toLowerCase(); gl.innerHTML = "";
+    G.filter(function (g) { return !f || (g[0] + " " + g[1]).toLowerCase().indexOf(f) >= 0; }).forEach(function (g) {
+      var dt = document.createElement("dt"), dd = document.createElement("dd"); dt.textContent = g[0]; dd.textContent = g[1]; gl.appendChild(dt); gl.appendChild(dd);
+    });
+    if (!gl.children.length) { var dd = document.createElement("dd"); dd.textContent = "No term matches. Try a shorter word."; gl.appendChild(dd); }
+  }
+  document.getElementById("g-filter").addEventListener("input", function (e) { gloss(e.target.value); });
+  gloss("");
+})();
+</script>
+
+</body>
+</html>
