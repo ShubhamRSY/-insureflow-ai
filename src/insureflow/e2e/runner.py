@@ -894,7 +894,18 @@ def run_inprocess(**kwargs: Any) -> dict[str, Any]:
     from insureflow.auth import Role
     from insureflow.auth.jwt import create_access_token
     from insureflow.auth.models import User
-    from insureflow.auth.store import clear_user_store, get_user_store
+    from insureflow.auth.store import clear_user_store, get_user_store, store_is_isolated
+
+    # This wipes every account in the active store to install a throwaway admin.
+    # With DATABASE_URL set that is the live PostgreSQL `users` table, so refuse
+    # unless the caller has confined the run to the test namespace.
+    if not store_is_isolated() and os.environ.get("INSUREFLOW_E2E_ALLOW_STORE_WIPE") != "1":
+        raise SystemExit(
+            "Refusing to run in-process E2E: it calls clear_user_store(), which would DELETE every "
+            "account in the live user store (PostgreSQL `users` table when DATABASE_URL is set).\n"
+            "Run with INSUREFLOW_AUTH_TESTING=1 to use the isolated temp namespace, or set "
+            "INSUREFLOW_E2E_ALLOW_STORE_WIPE=1 if you really mean to wipe production credentials."
+        )
 
     runner = E2ERunner(**kwargs)
     runner._client = TestClient(app)

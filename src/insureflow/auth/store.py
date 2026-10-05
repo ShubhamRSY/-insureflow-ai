@@ -23,6 +23,21 @@ def _test_namespace() -> bool:
     return os.environ.get("INSUREFLOW_AUTH_TESTING") == "1"
 
 
+def _pg_allowed() -> bool:
+    """PostgreSQL holds the live credentials table, so tests must never touch it.
+
+    ``INSUREFLOW_AUTH_TESTING`` redirects the Redis key and JSON file into a
+    temp namespace; without this guard ``_init_pg_store()`` would still hand
+    tests the real ``users`` table and ``clear()`` would DELETE every account.
+    Tests that genuinely need Postgres must opt in explicitly by pointing
+    ``DATABASE_URL`` at a dedicated test database via
+    ``INSUREFLOW_AUTH_TEST_PG_ALLOW=1``.
+    """
+    if not _test_namespace():
+        return True
+    return os.environ.get("INSUREFLOW_AUTH_TEST_PG_ALLOW") == "1"
+
+
 def _default_path() -> Path:
     if os.environ.get("INSUREFLOW_AUTH_STORE_PATH"):
         return Path(os.environ["INSUREFLOW_AUTH_STORE_PATH"])
@@ -380,6 +395,9 @@ def _init_pg_store() -> PostgresUserStore | None:
         return _pg_store
     from insureflow.auth.db import get_engine
 
+    if not _pg_allowed():
+        logger.info("INSUREFLOW_AUTH_TESTING=1: skipping PostgreSQL user store, using isolated test namespace")
+        return None
     if get_engine() is None:
         return None
     try:
@@ -411,3 +429,15 @@ def clear_user_store() -> int:
     if _file_store is not None:
         return _file_store.clear()
     return 0
+
+
+def store_is_isolated() -> bool:
+    """True when ``clear_user_store()`` cannot destroy real credentials.
+
+    Callers that wipe the store on purpose (the in-process E2E runner, test
+    fixtures) should check this first and refuse unless the caller explicitly
+    opted in. Postgres is never isolated — it is the live credential table.
+    """
+    if isinstance(get_user_store(), PostgresUserStore):
+        return False
+    return _test_namespace()

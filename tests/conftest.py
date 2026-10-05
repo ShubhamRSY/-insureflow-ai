@@ -6,6 +6,13 @@ import os
 # real production credentials (Redis key + file live in a test-only namespace).
 os.environ.setdefault("INSUREFLOW_AUTH_TESTING", "1")
 
+# Tests must never reach the real PostgreSQL `users` table, so `get_engine()`
+# has to come back None. A developer may still have DATABASE_URL exported in
+# their shell or .env, and PostgresUserStore wins over the isolated file store.
+# Blank it unless the developer deliberately points it at a throwaway database.
+if not os.environ.get("INSUREFLOW_AUTH_TEST_PG_ALLOW"):
+    os.environ["DATABASE_URL"] = ""
+
 from datetime import date
 
 import pytest
