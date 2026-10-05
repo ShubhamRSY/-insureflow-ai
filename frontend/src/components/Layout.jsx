@@ -3,11 +3,12 @@ import {
   Shield, Home, Settings, LogOut, RefreshCw, Menu, X,
   BarChart3, FileCheck, Briefcase, ShieldCheck, Library, Lock, Cable, AlertTriangle, LayoutDashboard,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { auth } from '../lib/api';
 import { RAIL_GROUPS, deriveActiveGroupId } from '../lib/railNav';
 import { displayText } from '../lib/safe';
 import { useStateContext } from '../lib/useStateContext';
+import { gsap, useGSAP, motionAllowed } from '../lib/motion';
 import BrandMark from './BrandMark';
 import ThemeToggle from './ThemeToggle';
 import StateSelector from './StateSelector';
@@ -74,10 +75,20 @@ function crumbsFor(pathname) {
   return [];
 }
 
+// A brief fade on route change so the switch registers; nothing more.
+// Underwriters work in these screens all day, so motion stays out of the way.
+function usePageFade(scope, pathname) {
+  useGSAP(() => {
+    if (motionAllowed()) gsap.from(scope.current, { autoAlpha: 0, duration: 0.2, ease: 'power1.out' });
+  }, { scope, dependencies: [pathname], revertOnUpdate: true });
+}
+
 export default function Layout({ health, pendingCount, onRefresh, onLogin, user, setUser, isLimited, welcomeMessage, onDismissWelcome }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const pageRef = useRef(null);
+  usePageFade(pageRef, pathname);
   const { selectedState } = useStateContext();
   const crumbs = crumbsFor(pathname);
 
@@ -256,9 +267,11 @@ export default function Layout({ health, pendingCount, onRefresh, onLogin, user,
             </div>
           )}
           <OperatingModeBanner />
-          <ErrorBoundary resetKey={pathname}>
-            <Outlet context={{ user, onLogin }} />
-          </ErrorBoundary>
+          <div ref={pageRef}>
+            <ErrorBoundary resetKey={pathname}>
+              <Outlet context={{ user, onLogin }} />
+            </ErrorBoundary>
+          </div>
         </main>
 
         <footer className="border-t border-white/[0.06] px-6 py-3 text-center text-xs text-slate-400">

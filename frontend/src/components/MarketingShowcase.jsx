@@ -1,9 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { SplitText } from 'gsap/SplitText';
-import { useGSAP } from '@gsap/react';
+import { gsap, SplitText, useGSAP, withMotion } from '../lib/motion';
 import {
   ArrowRight, FileSearch, HeartPulse, Building2, Home, Wallet,
   ScrollText, ShieldCheck, Layers, Gauge, Check, FileText, Briefcase,
@@ -169,16 +166,6 @@ const AUTOMATIONS = [
     path: '/staff-uw',
   },
 ];
-
-gsap.registerPlugin(useGSAP, ScrollTrigger, SplitText);
-
-// Animations only run for users who haven't asked for reduced motion (and
-// never in jsdom, which has no matchMedia). Content is visible by default, so
-// skipping the animation never hides anything.
-function withMotion(fn) {
-  if (typeof window === 'undefined' || !window.matchMedia) return;
-  gsap.matchMedia().add('(prefers-reduced-motion: no-preference)', fn);
-}
 
 // Section headings marked data-kinetic rise in word by word as they scroll
 // into view. Cards stay put: one orchestrated moment (the hero) is enough.
