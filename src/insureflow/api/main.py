@@ -22,7 +22,7 @@ from insureflow.auth import Role
 from insureflow.auth.dependencies import clear_user_store, get_current_user, get_current_user_optional, get_user_store, require_role, require_staff_desk
 from insureflow.auth.jwt import create_access_token, hash_password, verify_password
 from insureflow.auth.models import LoginRequest, PasswordResetConfirm, PasswordResetRequest, SignupRequest, Token, TokenData, User, UserCreateRequest
-from insureflow.auth.store import PostgresUserStore
+from insureflow.auth.store import PostgresUserStore, pg_store_unavailable
 from insureflow.auth.validation import validate_registration
 from insureflow.insurance.pipeline import InsurancePipeline
 from insureflow.models.mortgage import ProductLine
@@ -509,6 +509,11 @@ def login(req: LoginRequest, request: Request) -> Token:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Password login is disabled. Use SSO.",
+        )
+    if pg_store_unavailable():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Can't reach the account database, so your sign-in can't be checked right now. Your account is fine. Try again shortly or contact your administrator.",
         )
     store = get_user_store()
     user = store.resolve_user(req.username)

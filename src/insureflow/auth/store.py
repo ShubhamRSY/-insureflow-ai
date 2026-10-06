@@ -431,6 +431,17 @@ def clear_user_store() -> int:
     return 0
 
 
+def pg_store_unavailable() -> bool:
+    """True when PostgreSQL is configured as the credential store but can't be reached.
+
+    ``get_user_store()`` then quietly falls back to Redis/file, which doesn't hold
+    the real accounts, so a correct password would look like "Invalid credentials".
+    """
+    from insureflow.auth.db import _build_database_url
+
+    return _pg_allowed() and bool(_build_database_url()) and _init_pg_store() is None
+
+
 def store_is_isolated() -> bool:
     """True when ``clear_user_store()`` cannot destroy real credentials.
 
