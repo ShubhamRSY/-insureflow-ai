@@ -51,13 +51,16 @@ def _refresh_from_live_store(token_data: TokenData) -> TokenData | None:
     return token_data
 
 
-async def get_current_user(
+# Plain ``def`` on purpose: the live user-store lookup is synchronous (SQLAlchemy
+# or a JSON file), so FastAPI runs these in its threadpool instead of on the
+# event loop, where a slow database would stall every request in the process.
+def get_current_user(
     credentials: HTTPAuthorizationCredentials = Security(security_required),
 ) -> TokenData:
     return authenticate_bearer(credentials.credentials)
 
 
-async def get_current_user_optional(
+def get_current_user_optional(
     credentials: Optional[HTTPAuthorizationCredentials] = Security(security),
 ) -> Optional[TokenData]:
     if credentials is None:

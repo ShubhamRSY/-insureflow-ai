@@ -14,9 +14,11 @@ from insureflow.life.lobs.base import (
     LifeProductContext,
     LobOutcome,
     add_common_loads,
+    apply_state_filing_gate,
     finish_quote,
     merge_state_rules,
 )
+from insureflow.underwriting.life_product import is_filed_permanent_product
 from insureflow.life.whole_life_formulas import compute_full_whole_life_quote
 from insureflow.rating.models import RateComponent
 
@@ -135,9 +137,20 @@ def underwrite_graded(ctx: LifeProductContext, *, guaranteed_issue: bool) -> Lob
 def build_quote(ctx: LifeProductContext) -> Any:
     guaranteed_issue = (ctx.coverage_id or "").lower() in {"guaranteed_issue"} or "guaranteed issue" in (ctx.coverage_name or "").lower()
     outcome = underwrite_graded(ctx, guaranteed_issue=guaranteed_issue)
-    variant = "guaranteed issue" if guaranteed_issue else "graded"
-    outcome.eligible = False
-    outcome.add_reason(f"{variant} whole life priced on GI exhibit — illustrative only, no {ctx.filing_state}-filed permanent rates")
-    if ctx.issue_state and ctx.issue_state != ctx.filing_state:
-        outcome.add_reason(f"{ctx.filing_state} pilot exhibit applied — not a {ctx.issue_state} state-of-issue filing")
-    return finish_quote(ctx, outcome, logic_path=LOGIC_PATH, family="whole_life")
+    filed = is_filed_permanent_product(PRODUCT_ID)
+    apply_state_filing_gate(ctx, outcome, filed_for_state=filed, product_family="graded_guaranteed_issue_whole_life")
+    if filed and outcome.eligible:
+        permanent_raw = (ctx.manual or {}).get("permanent_filing")
+        permanent = permanent_raw if isinstance(permanent_raw, dict) else {}
+        outcome.metadata["filed_permanent"] = True
+        if permanent.get("filing_id"):
+            outcome.metadata["filing_id"] = permanent["filing_id"]
+        if permanent.get("serff_tracking"):
+            outcome.metadata["serff_tracking"] = permanent["serff_tracking"]
+    return finish_quote(
+        ctx,
+        outcome,
+        logic_path=LOGIC_PATH,
+        family="whole_life",
+        rating_engine="life_filing" if filed else "life_whole_life_actuarial",
+    )

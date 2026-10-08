@@ -263,6 +263,13 @@ DEDICATED_MANUAL_PRODUCTS = frozenset(
     {
         "workers_comp",
         "employers_liability",
+        "general_liability",
+        "product_liability",
+        "umbrella",
+        "architects_engineers",
+        "miscellaneous_professional",
+        "epli",
+        "fiduciary_liability",
         "cyber_liability",
         "tech_eo_cyber",
         "commercial_auto",

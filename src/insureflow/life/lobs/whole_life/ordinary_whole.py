@@ -47,7 +47,9 @@ STATE_RULES: dict[str, dict[str, Any]] = {
 }
 
 MIN_ISSUE_AGE = 0
-MAX_ISSUE_AGE = 80
+# Filed manual eligibility.max_age is 75. A higher ceiling here was dead:
+# ages 76–80 were declined by the shared medical gate with no product reason.
+MAX_ISSUE_AGE = 75
 
 
 def underwrite_ordinary_whole_life(ctx: LifeProductContext) -> LobOutcome:
@@ -55,7 +57,7 @@ def underwrite_ordinary_whole_life(ctx: LifeProductContext) -> LobOutcome:
 
     if ctx.age > MAX_ISSUE_AGE:
         outcome.eligible = False
-        outcome.add_reason(f"Whole life issue age {ctx.age} above maximum {MAX_ISSUE_AGE}")
+        outcome.add_reason(f"Whole life issue age {ctx.age} outside 18-{MAX_ISSUE_AGE}")
 
     state_rules = merge_state_rules(ctx, DEFAULT_STATE_RULES, STATE_RULES)
     if ctx.face > float(state_rules["paramed_face_threshold"]) and state_rules["paramed_exam_required"]:

@@ -15,6 +15,7 @@ from insureflow.life.lobs.base import (
     LifeProductContext,
     LobOutcome,
     add_common_loads,
+    apply_state_filing_gate,
     band_factor,
     finish_quote,
     medical_class_factor,
@@ -23,6 +24,7 @@ from insureflow.life.lobs.base import (
 )
 from insureflow.life.mortality import discount_factor, k_p_x
 from insureflow.life.whole_life_formulas import compute_full_whole_life_quote, whole_life_annuity_due
+from insureflow.underwriting.life_product import is_filed_permanent_product
 from insureflow.rating.models import RateComponent
 
 PRODUCT_ID = "modified_whole_life"
@@ -134,13 +136,27 @@ def underwrite_modified(ctx: LifeProductContext) -> LobOutcome:
 
     if ctx.medical.decision.value == "decline":
         outcome.eligible = False
-    outcome.eligible = False
-    outcome.add_reason(f"modified whole life priced on actuarial equivalence with step-up schedule — illustrative only, no {ctx.filing_state}-filed permanent rates")
-    if ctx.issue_state and ctx.issue_state != ctx.filing_state:
-        outcome.add_reason(f"{ctx.filing_state} pilot exhibit applied — not a {ctx.issue_state} state-of-issue filing")
+
+    filed = is_filed_permanent_product(PRODUCT_ID)
+    apply_state_filing_gate(ctx, outcome, filed_for_state=filed, product_family="modified_whole_life")
+    if filed and outcome.eligible:
+        permanent_raw = (ctx.manual or {}).get("permanent_filing")
+        permanent = permanent_raw if isinstance(permanent_raw, dict) else {}
+        outcome.metadata["filed_permanent"] = True
+        if permanent.get("filing_id"):
+            outcome.metadata["filing_id"] = permanent["filing_id"]
+        if permanent.get("serff_tracking"):
+            outcome.metadata["serff_tracking"] = permanent["serff_tracking"]
     return outcome
 
 
 def build_quote(ctx: LifeProductContext) -> Any:
     outcome = underwrite_modified(ctx)
-    return finish_quote(ctx, outcome, logic_path=LOGIC_PATH, family="whole_life")
+    filed = is_filed_permanent_product(PRODUCT_ID)
+    return finish_quote(
+        ctx,
+        outcome,
+        logic_path=LOGIC_PATH,
+        family="whole_life",
+        rating_engine="life_filing" if filed else "life_whole_life_actuarial",
+    )

@@ -20,6 +20,8 @@ from typing import Callable
 
 from insureflow.commercial.lobs import directors_officers as _directors_officers
 from insureflow.commercial.lobs import errors_omissions as _errors_omissions
+from insureflow.commercial.lobs import extended as _extended
+from insureflow.commercial.lobs import gates as _gates
 from insureflow.commercial.lobs import key_person as _key_person
 from insureflow.commercial.lobs import property_bi as _property_bi
 from insureflow.commercial.lobs import trade_credit as _trade_credit
@@ -36,6 +38,24 @@ PRODUCT_LOGIC_PATHS: dict[str, str] = {
     _trade_credit.PRODUCT_ID: _trade_credit.LOGIC_PATH,
     _errors_omissions.PRODUCT_ID: _errors_omissions.LOGIC_PATH,
     _key_person.PRODUCT_ID: _key_person.LOGIC_PATH,
+    **{pid: _extended.LOGIC_PATH for pid in _extended.PRODUCT_IDS},
+    # Catalog rating_line already points at a manual we own. Same formula.
+    "architects_engineers": _errors_omissions.LOGIC_PATH,
+    "miscellaneous_professional": _errors_omissions.LOGIC_PATH,
+    "epli": _errors_omissions.LOGIC_PATH,
+    "fiduciary_liability": _directors_officers.LOGIC_PATH,
+    "employers_liability": _workers_comp.LOGIC_PATH,
+    **{pid: _gates.LOGIC_PATH for pid in _gates.PRODUCT_IDS},
+}
+
+# Sibling product → the manual it is actually priced on.
+RATED_ON: dict[str, str] = {
+    "product_liability": "general_liability",
+    "architects_engineers": "errors_omissions",
+    "miscellaneous_professional": "errors_omissions",
+    "epli": "errors_omissions",
+    "fiduciary_liability": "directors_officers",
+    "employers_liability": "workers_comp",
 }
 
 
@@ -63,4 +83,15 @@ def run_product_logic(ctx: CommercialProductContext) -> QuoteResult | None:
     builder = _load_builder(PRODUCT_LOGIC_PATHS[resolved])
     if builder is None:
         return None
-    return builder(ctx)
+    quote = builder(ctx)
+    parent = RATED_ON.get(resolved)
+    if parent and quote is not None:
+        meta = dict(quote.metadata or {})
+        meta["rated_on_product"] = parent
+        note = f"Rated on the {parent.replace('_', ' ')} manual — no separate exhibit for {resolved.replace('_', ' ')}"
+        conds = list(meta.get("conditions") or [])
+        if note not in conds:
+            conds.append(note)
+        meta["conditions"] = conds
+        quote.metadata = meta
+    return quote

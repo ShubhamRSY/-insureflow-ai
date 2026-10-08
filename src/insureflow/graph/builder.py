@@ -1,3 +1,11 @@
+"""LangGraph version of the commercial pipeline (the "legacy" path).
+
+Runs only when a request sets ``use_legacy_pipeline=True`` (see
+tasks/submission_runner.py). The default path is ``InsurancePipeline`` in
+insurance/pipeline.py, which has gates, oracles and pricing this graph lacks.
+The checkpointer is in-memory, so state does not survive a restart.
+"""
+
 from __future__ import annotations
 
 import logging

@@ -271,20 +271,163 @@
     color: var(--muted);
     letter-spacing: 0.03em;
   }
+
+  /* ── Sticky section nav ───────────────────────────────────── */
+  .site-nav {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    margin: 28px 0 0;
+    padding: 10px 0;
+    background: color-mix(in srgb, var(--paper) 92%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--paper-line);
+  }
+  .site-nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+  }
+  .site-nav a {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+  }
+  .site-nav a:hover,
+  .site-nav a:focus-visible {
+    color: var(--teal);
+    border-bottom-color: var(--teal);
+    outline: none;
+  }
+
+  /* ── Implementation callouts ──────────────────────────────── */
+  .callout {
+    background: var(--paper-raised);
+    border: 1px solid var(--paper-line);
+    border-left: 3px solid var(--teal);
+    padding: 16px 18px;
+    margin: 0 0 22px;
+  }
+  .callout.warn { border-left-color: var(--gold); }
+  .callout p { margin: 0; font-size: 0.95rem; max-width: 72ch; }
+  .callout strong {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+
+  .stack-flow {
+    display: grid;
+    gap: 0;
+    margin: 8px 0 20px;
+    border: 1px solid var(--paper-line);
+    background: var(--paper-raised);
+  }
+  .stack-step {
+    display: grid;
+    grid-template-columns: 88px 1fr;
+    gap: 14px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--paper-line);
+    align-items: start;
+  }
+  .stack-step:last-child { border-bottom: none; }
+  .stack-step .n {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--gold);
+    padding-top: 2px;
+  }
+  .stack-step h4 {
+    margin: 0 0 4px;
+    font-size: 0.98rem;
+    font-weight: 600;
+  }
+  .stack-step p {
+    margin: 0;
+    font-size: 0.92rem;
+    color: var(--muted);
+    max-width: 68ch;
+  }
+  .stack-step code {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85em;
+    background: var(--paper);
+    padding: 1px 5px;
+    border-radius: 3px;
+    border: 1px solid var(--paper-line);
+    color: var(--ink);
+  }
+  @media (max-width: 600px) {
+    .stack-step { grid-template-columns: 1fr; gap: 4px; }
+  }
+
+  .pill-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 10px 0 0;
+  }
+  .pill {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.03em;
+    padding: 5px 9px;
+    border: 1px solid var(--paper-line);
+    background: var(--paper);
+    color: var(--ink);
+  }
+  .pill.teal { border-color: var(--teal); background: var(--teal-fill); }
+  .pill.gold { border-color: var(--gold); background: var(--gold-fill); }
+
+  section[id] { scroll-margin-top: 56px; }
 </style>
 
 <div class="page">
 
   <div class="case-meta">
     <span>System Design &middot; Commercial Lines</span>
-    <span>Rev. 2026-08</span>
+    <span>Rev. 2026-10 &middot; Implementation</span>
   </div>
 
   <h1>From submission to sign-off: the commercial underwriting pipeline</h1>
-  <p class="dek">Every layer, from the API gateway down to the audit log: the orchestrator, the tool-calling and validation layers, what's stored versus redacted, how the risk score is actually computed, and what the system does the moment something goes wrong — not just the happy path from documents to a decision.</p>
+  <p class="dek">Not just the happy path — how we actually wired it: FastAPI ingress, the sync <span class="num">InsurancePipeline</span>, where LangGraph does and does not run, Celery vs in-process jobs, how API payloads are validated and sanitized, and how commercial product features are registered in code.</p>
   <p class="principle">Use AI only where it must be used. Everything that can be solved with rules, a trained model, or a lookup, is — and every field a reader sees is traceable back to the page it came from.</p>
 
-  <section>
+  <nav class="site-nav" aria-label="Sections">
+    <ul>
+      <li><a href="#architecture">Architecture</a></li>
+      <li><a href="#fastapi">FastAPI</a></li>
+      <li><a href="#orchestration">Orchestration</a></li>
+      <li><a href="#sync-async">Sync / Async</a></li>
+      <li><a href="#api-data">API data</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#call-path">Call path</a></li>
+      <li><a href="#sequence">Sequence</a></li>
+      <li><a href="#time-trade">Time trade</a></li>
+      <li><a href="#decision">Decision</a></li>
+      <li><a href="#documents">Documents</a></li>
+      <li><a href="#storage">Storage</a></li>
+      <li><a href="#governance">Governance</a></li>
+      <li><a href="#reliability">Reliability</a></li>
+      <li><a href="#human">Sign-off</a></li>
+    </ul>
+  </nav>
+
+  <section id="architecture">
     <p class="section-label">01 &middot; System architecture</p>
     <h2>Ingress, orchestration &amp; knowledge</h2>
     <p class="lede">Everything a request touches before an agent ever calls a tool. Every box names its real implementation, not a generic label — this is what the code is actually called.</p>
@@ -329,7 +472,7 @@
           <text x="396" y="296" fill="var(--muted)" font-size="10.5">authorized job</text>
 
           <!-- B3 ORCHESTRATOR -->
-          <text x="40" y="318" font-size="11" fill="var(--muted)" letter-spacing="0.06em">AI ORCHESTRATOR</text>
+          <text x="40" y="318" font-size="11" fill="var(--muted)" letter-spacing="0.06em">PRODUCTION ORCHESTRATOR — InsurancePipeline.run() (sync stages)</text>
           <g fill="var(--teal-fill)" stroke="var(--teal)" stroke-width="1.3">
             <rect x="40" y="328" width="210" height="84" rx="3"/>
             <rect x="275" y="328" width="210" height="84" rx="3"/>
@@ -342,9 +485,9 @@
             <text x="145" y="399" fill="var(--muted)" font-size="10">escalate / skip</text>
 
             <text x="380" y="350" fill="var(--ink)" font-weight="600" font-size="13">Task Planner</text>
-            <text x="380" y="368" fill="var(--ink)" font-size="10.5" font-style="italic">SupervisorAgent.run()</text>
+            <text x="380" y="368" fill="var(--ink)" font-size="10.5" font-style="italic">SupervisorAgent.analyze…</text>
             <text x="380" y="386" fill="var(--muted)" font-size="10">fans out agents —</text>
-            <text x="380" y="399" fill="var(--muted)" font-size="10">threadpool / celery</text>
+            <text x="380" y="399" fill="var(--muted)" font-size="10">ThreadPool / Celery</text>
 
             <text x="615" y="350" fill="var(--ink)" font-weight="600" font-size="13">Context Manager</text>
             <text x="615" y="368" fill="var(--ink)" font-size="10.5" font-style="italic">SubmissionBundle</text>
@@ -385,7 +528,7 @@
           </g>
         </g>
       </svg>
-      <figcaption>Every box names its real class or function — this is the literal call path a submission takes, not a conceptual sketch. Teal is deterministic work (rules, trained ML, or storage); gold is the one place a generative model actually reasons over text.</figcaption>
+      <figcaption>Every box names its real class or function. Production commercial runs through <code>InsurancePipeline</code> — not LangGraph. LangGraph powers the opt-in legacy graph and the mortgage graph (see Orchestration). Teal is deterministic work; gold is where a generative model reasons over text.</figcaption>
       <div class="legend">
         <span><i class="swatch teal"></i>Deterministic — rules, trained ML, or storage</span>
         <span><i class="swatch gold"></i>Generative AI — used only when routed here</span>
@@ -566,19 +709,205 @@
     </figure>
   </section>
 
-  <section>
-    <p class="section-label">02 &middot; Technical reference</p>
+  <section id="fastapi">
+    <p class="section-label">02 &middot; How we built it</p>
+    <h2>FastAPI ingress — the real request shape</h2>
+    <p class="lede">The commercial desk talks to one FastAPI app. Routes live primarily in <code>src/insureflow/api/main.py</code>; platform surfaces (fraud, AML, marketplace, banking) mount from <code>platform_router.py</code>; connectors sit under <code>/integrations</code>.</p>
+
+    <div class="callout">
+      <strong>Stakeholder view</strong>
+      <p>Broker or workbench submits a package → API returns a job id immediately → UI polls or streams until a memo and quote are ready. Nothing waits on the HTTP request for the full underwrite.</p>
+    </div>
+
+    <div class="stack-flow">
+      <div class="stack-step">
+        <div class="n">APP</div>
+        <div>
+          <h4><code>FastAPI(...)</code> in <code>api/main.py</code></h4>
+          <p>SlowAPI rate limit (default 30/min; pipeline run tighter), Prometheus HTTP middleware, security headers, optional trusted hosts. JWT via <code>Depends(get_current_user)</code> / <code>require_role(Role.*)</code>.</p>
+        </div>
+      </div>
+      <div class="stack-step">
+        <div class="n">BODY</div>
+        <div>
+          <h4>Pydantic <code>SubmissionRequest</code></h4>
+          <p>ACORD / loss run / SOV / inspection / JSON / <code>documents[]</code> (<code>InsuranceDocumentPayload</code> with malware + password validators). Taxonomy fields: <code>commercial_product_id</code>, coverage IDs, <code>use_llm</code>, <code>use_legacy_pipeline</code>, <code>use_celery</code>.</p>
+        </div>
+      </div>
+      <div class="stack-step">
+        <div class="n">RUN</div>
+        <div>
+          <h4><code>POST /pipeline/run</code> → <code>202</code> + <code>job_id</code></h4>
+          <p>Handler creates JobStore row, then <code>should_use_celery()</code> chooses Celery worker or FastAPI <code>BackgroundTasks</code>. Response includes <code>use_celery</code> so the client knows which backend took the job.</p>
+        </div>
+      </div>
+      <div class="stack-step">
+        <div class="n">WATCH</div>
+        <div>
+          <h4>Poll, SSE, or WebSocket</h4>
+          <p><code>GET /pipeline/jobs/{id}</code> (sanitized), <code>GET …/stream</code> (<code>text/event-stream</code>), <code>WS /ws/jobs/{id}</code>. Quote/report downloads use <code>StreamingResponse</code>.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-scroll">
+      <table class="ref-table">
+        <tr><th>Surface</th><th>Where in code</th><th>Role</th></tr>
+        <tr><td class="k">Insurance / UW API</td><td class="mono"><code>api/main.py</code></td><td>Pipeline, workbench, auth, bundles, downloads</td></tr>
+        <tr><td class="k">Platform</td><td class="mono"><code>api/platform_router.py</code></td><td>Fraud, marketplace, banking, AML, workflow draft</td></tr>
+        <tr><td class="k">Integrations gateway</td><td class="mono"><code>gateway/router.py</code></td><td>Oracle / PAS / CRM stubs under <code>/integrations</code></td></tr>
+        <tr><td class="k">MCP tools</td><td class="mono"><code>/mcp</code> + auth middleware</td><td>Same tool surface for external MCP clients</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section id="orchestration">
+    <p class="section-label">03 &middot; Orchestration</p>
+    <h2>InsurancePipeline by default — LangGraph only where we opted in</h2>
+    <p class="lede">This is the most common misconception in theory decks. Production commercial underwriting is an imperative stage runner. LangGraph is real code in the repo — it is not the desk's default path.</p>
+
+    <div class="callout warn">
+      <strong>Implementation truth</strong>
+      <p>Default <code>POST /pipeline/run</code> → <code>InsurancePipeline</code> in <code>insurance/pipeline.py</code>. Set <code>use_legacy_pipeline=True</code> to take <code>UnderwritingPipeline</code> + LangGraph (<code>graph/builder.py</code>). Mortgage has its own <code>MortgagePipelineGraph</code>.</p>
+    </div>
+
+    <div class="fact-grid">
+      <div class="fact yes">
+        <h4>DEFAULT — InsurancePipeline</h4>
+        <p>Sync Python stages in order: triage → appetite → ingest → doc quality → LOB gates → oracles/OFAC → provenance → reconciliation → <code>SupervisorAgent</code> swarm → portfolio/selection → reinsurance → <code>InsuranceRatingEngine.quote</code> → specialty UW → package, workflow, audit, webhooks.</p>
+      </div>
+      <div class="fact no">
+        <h4>LANGGRAPH — LEGACY / MORTGAGE</h4>
+        <p><code>PipelineGraph</code>: ingest → classify → parse → merge → extract agents → provenance → reconcile → optional HITL → RAG → synthesize → audit (<code>MemorySaver</code> checkpointer). Mortgage graph fans out income/credit/asset/collateral/fraud after compliance.</p>
+      </div>
+    </div>
+
+    <p class="lede" style="margin-top:20px;">Inside the default path, specialist agents are not a LangGraph fan-out. <code>SupervisorAgent.analyze_submission()</code> runs risk, loss-run, compliance, and fraud in a <code>ThreadPoolExecutor</code> (or optional Celery <code>group</code>), then <code>UWDecisionAgent</code> builds the <code>UnderwritingMemo</code>. ZTA (<code>ZeroTokenRouter</code>) decides whether conflict resolution needs an LLM.</p>
+  </section>
+
+  <section id="sync-async">
+    <p class="section-label">04 &middot; Sync &amp; async</p>
+    <h2>Async at the edge, sync in the pipeline core</h2>
+    <p class="lede">We did not rewrite the underwriting core as <code>asyncio</code>. The HTTP layer can be <code>async def</code>; the commercial pipeline and oracles stay synchronous and run off the request thread via workers.</p>
+
+    <div class="table-scroll">
+      <table class="ref-table">
+        <tr><th>Layer</th><th>Style</th><th>Why</th></tr>
+        <tr><td class="k">FastAPI handlers</td><td>Mix of <code>async def</code> and plain <code>def</code></td><td>Validate, authorize, enqueue — return 202 fast</td></tr>
+        <tr><td class="k"><code>InsurancePipeline.run</code></td><td><strong>Fully sync</strong></td><td>Stages, rating, agents, stores share one sequential/threaded model</td></tr>
+        <tr><td class="k">Job dispatch</td><td>Celery <em>or</em> <code>BackgroundTasks</code></td><td><code>should_use_celery()</code> probes Redis broker; fallback uses in-process semaphore (default 3 slots)</td></tr>
+        <tr><td class="k">Agent parallelism</td><td><code>ThreadPoolExecutor</code></td><td>Not <code>asyncio.gather</code> on the commercial path</td></tr>
+        <tr><td class="k">Realtime status</td><td>WebSocket + SSE</td><td>UI watches progress without busy-polling only</td></tr>
+        <tr><td class="k">File downloads</td><td><code>StreamingResponse</code></td><td>Quote / report PDFs stream out of the API</td></tr>
+      </table>
+    </div>
+
+    <div class="pill-row">
+      <span class="pill teal">Celery + Redis</span>
+      <span class="pill teal">BackgroundTasks fallback</span>
+      <span class="pill gold">No RQ</span>
+      <span class="pill">pipeline / pipeline-large queues</span>
+      <span class="pill">progress_callback → JobStore</span>
+    </div>
+  </section>
+
+  <section id="api-data">
+    <p class="section-label">05 &middot; API data handling</p>
+    <h2>Validate in, sanitize out, retry the edge</h2>
+    <p class="lede">Data quality is enforced at three boundaries: request models, integration HTTP, and what we ever echo back to a browser.</p>
+
+    <div class="fact-grid">
+      <div class="fact yes">
+        <h4>REQUEST VALIDATION</h4>
+        <p>Pydantic models on every body. Document payloads run malware scan / password unlock validators. Oversized inline docs are rejected (413); S3 keys must be owned by the caller (403).</p>
+      </div>
+      <div class="fact yes">
+        <h4>RESPONSE SANITIZE</h4>
+        <p><code>api/job_sanitize.py</code> strips sensitive fields before poll/stream clients see a job. Errors return JSON with an <code>error_id</code> — not raw stack traces to the desk.</p>
+      </div>
+      <div class="fact yes">
+        <h4>ORACLE HTTP</h4>
+        <p><code>IntegrationHTTPClient</code> (stdlib urllib): retries on 429/502/503/504 with backoff. Mode <code>auto|live|simulated</code> per client; misconfigured live clients return an error result — not invented bureau data.</p>
+      </div>
+      <div class="fact no">
+        <h4>WHAT WE DON'T FAKE</h4>
+        <p>Critical oracle failures can force REFER. Missing keys do not silently become "clean CLUE." LLM client retries only transient failures (timeout / 5xx / rate limit).</p>
+      </div>
+    </div>
+
+    <p class="lede" style="margin-top:20px;">Domain shapes stay typed end-to-end: <code>SubmissionBundle</code>, <code>UnderwritingMemo</code>, <code>Finding</code>, <code>QuoteResult</code>, provenance records. Job state lives in <code>JobStore</code> (Redis/memory); sealed audit in encrypted stores — see Storage below.</p>
+  </section>
+
+  <section id="features">
+    <p class="section-label">06 &middot; Feature building</p>
+    <h2>How a commercial product becomes a runnable feature</h2>
+    <p class="lede">We do not use a heavy Clean Architecture use-case layer. A feature is a thin vertical: API field → pipeline stage recognition → product module → rating dispatch → audit/workflow hooks.</p>
+
+    <div class="stack-flow">
+      <div class="stack-step">
+        <div class="n">01</div>
+        <div>
+          <h4>UI taxonomy + checklist</h4>
+          <p><code>insurance/commercial_lobs.py</code> exposes product IDs and document checklists the desk picker uses. API accepts <code>commercial_product_id</code> / coverage IDs on <code>SubmissionRequest</code>.</p>
+        </div>
+      </div>
+      <div class="stack-step">
+        <div class="n">02</div>
+        <div>
+          <h4>Pipeline stages pick it up</h4>
+          <p><code>InsurancePipeline</code> resolves picker scope, runs LOB document gates, then later calls <code>InsuranceRatingEngine.quote</code>.</p>
+        </div>
+      </div>
+      <div class="stack-step">
+        <div class="n">03</div>
+        <div>
+          <h4>Register product logic</h4>
+          <p>Add <code>commercial/lobs/&lt;product&gt;.py</code> with <code>build_quote(ctx)</code>, register in <code>PRODUCT_LOGIC_PATHS</code>. Shared helpers live in <code>commercial/lobs/base.py</code> (<code>CommercialProductContext</code>, <code>LobOutcome</code>).</p>
+        </div>
+      </div>
+      <div class="stack-step">
+        <div class="n">04</div>
+        <div>
+          <h4>Rating dispatch</h4>
+          <p><code>run_product_logic(ctx)</code> loads the builder (<code>lru_cache</code>). Missing path falls back to specialty/generic engines in <code>rating/commercial_specialty.py</code> — logged, never invisible.</p>
+        </div>
+      </div>
+    </div>
+
+    <p class="lede">Dedicated commercial paths already registered:</p>
+    <div class="pill-row">
+      <span class="pill teal">property_bi</span>
+      <span class="pill teal">workers_comp</span>
+      <span class="pill teal">directors_officers</span>
+      <span class="pill teal">trade_credit</span>
+      <span class="pill teal">errors_omissions</span>
+      <span class="pill teal">key_person</span>
+      <span class="pill teal">general_liability</span>
+      <span class="pill teal">umbrella</span>
+      <span class="pill teal">cyber / auto / marine / crime / builders / surety / bop / cpp</span>
+    </div>
+
+    <div class="callout" style="margin-top:22px;">
+      <strong>Engineer map</strong>
+      <p><code>api/main.py</code> → <code>tasks/dispatch.py</code> / <code>pipeline_tasks.py</code> → <code>insurance/pipeline.py</code> → <code>agents/supervisor.py</code> → <code>rating/engine.py</code> → <code>commercial/lobs/*</code> → <code>JobStore</code> / <code>WorkflowStore</code> / <code>AuditStore</code>.</p>
+    </div>
+  </section>
+
+  <section id="call-path">
+    <p class="section-label">07 &middot; Technical reference</p>
     <h2>The literal call path, not a paraphrase</h2>
     <p class="lede">What a request actually looks like end to end — the endpoints, the audit record shape, and the tool definition an agent calls.</p>
 
     <div class="table-scroll">
       <table class="ref-table">
         <tr><th>Step</th><th>Endpoint</th><th>What comes back</th></tr>
-        <tr><td class="k">Submit</td><td class="mono"><code>POST /pipeline/run</code></td><td>202 Accepted, <code>{job_id}</code> — async, doesn't block on the pipeline</td></tr>
-        <tr><td class="k">Poll</td><td class="mono"><code>GET /pipeline/jobs/{job_id}</code></td><td>status: processing / completed / failed</td></tr>
+        <tr><td class="k">Submit</td><td class="mono"><code>POST /pipeline/run</code></td><td>202 Accepted, <code>{job_id, use_celery}</code> — does not block on the pipeline</td></tr>
+        <tr><td class="k">Poll</td><td class="mono"><code>GET /pipeline/jobs/{job_id}</code></td><td>sanitized status: processing / completed / failed</td></tr>
+        <tr><td class="k">Stream</td><td class="mono"><code>GET …/stream</code> or <code>WS /ws/jobs/{id}</code></td><td>SSE / WebSocket progress updates</td></tr>
+        <tr><td class="k">Retry</td><td class="mono"><code>POST …/jobs/{id}/retry</code></td><td>new job from the prior request payload</td></tr>
         <tr><td class="k">Read the decision</td><td class="mono"><code>GET /pipeline/jobs/{job_id}/quote</code></td><td>rated quote, or <code>/report</code> for the full memo</td></tr>
         <tr><td class="k">Verify it</td><td class="mono"><code>GET /pipeline/audit/{bundle_id}</code></td><td>the complete <code>AuditTrail</code> for that submission</td></tr>
-        <tr><td class="k">Agent tools</td><td class="mono"><code>/mcp</code></td><td>the same tool surface, exposed to external MCP clients (Claude Desktop, etc.)</td></tr>
+        <tr><td class="k">Agent tools</td><td class="mono"><code>/mcp</code></td><td>the same tool surface, exposed to external MCP clients</td></tr>
       </table>
     </div>
 
@@ -607,10 +936,10 @@
   </section>
 
 
-  <section>
-    <p class="section-label">03 &middot; Sequence view</p>
+  <section id="sequence">
+    <p class="section-label">08 &middot; Sequence view</p>
     <h2>How one submission actually moves</h2>
-    <p class="lede">The architecture above is the floor plan; this is the walk-through — one submission, in order, through those same layers. Parallel work is drawn as parallel lanes, not a list, because that's where most of the wall-clock time disappears.</p>
+    <p class="lede">The architecture above is the floor plan; this is the walk-through of <code>InsurancePipeline.run</code> — one submission, in order. Parallel work is drawn as parallel lanes (oracles + specialist agents via thread pool), because that's where most of the wall-clock time disappears.</p>
 
     <figure class="diagram-frame">
       <span class="tick tl"></span><span class="tick br"></span>
@@ -834,8 +1163,8 @@
     </figure>
   </section>
 
-  <section>
-    <p class="section-label">04 &middot; The time trade</p>
+  <section id="time-trade">
+    <p class="section-label">09 &middot; The time trade</p>
     <h2>What moves off the underwriter's desk</h2>
     <p class="lede">Same five jobs get done either way. The question is who's holding the file while each one happens.</p>
 
@@ -884,8 +1213,8 @@
     </figure>
   </section>
 
-  <section>
-    <p class="section-label">05 &middot; Decision logic</p>
+  <section id="decision">
+    <p class="section-label">10 &middot; Decision logic</p>
     <h2>How the aggregate risk score is actually computed</h2>
     <p class="lede">Not a black-box probability — a weighted sum an underwriter can re-derive by hand from the findings in front of them.</p>
     <div class="formula-box">
@@ -902,8 +1231,8 @@
     <p class="lede" style="margin-top:16px;">Environmental "data unavailable" findings never count toward the score — a missing loss run isn't the same risk signal as a disclosed one, and conflating the two is exactly the false-positive pattern this system had to fix. Findings are capped at HIGH unless a specific rule promotes them to CRITICAL, so no single fragile signal can auto-decline a file on its own.</p>
   </section>
 
-  <section>
-    <p class="section-label">06 &middot; Data &amp; documents</p>
+  <section id="documents">
+    <p class="section-label">11 &middot; Data &amp; documents</p>
     <h2>What actually gets read, and by what</h2>
     <p class="lede">Every document type has a named deterministic parser first; the LLM is the fallback, not the default.</p>
     <div class="table-scroll">
@@ -920,8 +1249,8 @@
     <p class="lede" style="margin-top:16px;">Broker-side intake connects through 12+ source integrations already in the connector library — SharePoint, S3, Azure Blob, IVANS, Salesforce, DocuSign, Snowflake, and direct carrier/PAS feeds — so "input" in practice means wherever the broker already works, not a bespoke upload portal.</p>
   </section>
 
-  <section>
-    <p class="section-label">07 &middot; Data handling &amp; storage</p>
+  <section id="storage">
+    <p class="section-label">12 &middot; Data handling &amp; storage</p>
     <h2>What's kept, what's encrypted, and what's never stored at all</h2>
     <div class="fact-grid">
       <div class="fact yes">
@@ -944,8 +1273,8 @@
     <p class="lede" style="margin-top:20px;">The knowledge base the RAG layer searches is built from underwriting <em>guidelines</em>, not customer submissions — so a vector-search leak, if it ever happened, would expose reference material, not a policyholder's data.</p>
   </section>
 
-  <section>
-    <p class="section-label">08 &middot; Governance, guardrails &amp; observability</p>
+  <section id="governance">
+    <p class="section-label">13 &middot; Governance, guardrails &amp; observability</p>
     <h2>The cross-cutting layer, in specifics</h2>
     <p class="lede">Shown as one column in the diagram above; this is what's actually inside it.</p>
     <div class="table-scroll">
@@ -963,8 +1292,8 @@
     </div>
   </section>
 
-  <section>
-    <p class="section-label">09 &middot; Reliability &amp; trust</p>
+  <section id="reliability">
+    <p class="section-label">14 &middot; Reliability &amp; trust</p>
     <h2>What happens when something goes wrong</h2>
     <p class="lede">The trust question isn't "does it work" — it's "what does it do when it doesn't." Every failure mode below defaults toward a human, never toward a silent accept.</p>
     <div class="table-scroll">
@@ -981,8 +1310,8 @@
     <p class="lede" style="margin-top:16px;">Reproducibility is a design constraint, not an afterthought: rating, scoring, and appetite decisions are deterministic — the same submission prices the same way twice — because that determinism is exactly what makes the audit trail worth trusting.</p>
   </section>
 
-  <section>
-    <p class="section-label">10 &middot; What doesn't change</p>
+  <section id="human">
+    <p class="section-label">15 &middot; What doesn't change</p>
     <h2>The sign-off stays human</h2>
     <p class="lede">Speed comes from removing the reading and re-checking, not the judgment.</p>
     <div class="closing">
@@ -1002,7 +1331,7 @@
   </section>
 
   <footer>
-    Commercial Lines &middot; Underwriting Pipeline &middot; System Design Reference
+    Commercial Lines &middot; Underwriting Pipeline &middot; Implementation + System Design Reference &middot; grounded in <code>src/insureflow/</code>
   </footer>
 
 </div>

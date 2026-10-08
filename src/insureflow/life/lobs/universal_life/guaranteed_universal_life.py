@@ -15,12 +15,14 @@ from insureflow.life.lobs.base import (
     LifeProductContext,
     LobOutcome,
     add_common_loads,
+    apply_state_filing_gate,
     band_factor,
     finish_quote,
     medical_class_factor,
     merge_state_rules,
     state_relativity,
 )
+from insureflow.underwriting.life_product import is_filed_gul_product
 from insureflow.life.whole_life_formulas import compute_full_whole_life_quote
 from insureflow.rating.models import RateComponent
 
@@ -55,6 +57,57 @@ NO_LAPSE_LOAD = 1.08  # secondary-guarantee reserve charge on top of lifetime ba
 PAY_TO_AGE = 100
 COI_LOADING = 1.25
 ADMIN_FEE_ANNUAL = 96.0
+GUARANTEED_CREDIT = 0.02
+
+
+def _first_negative_year(face: float, age: int, sex: str, smoker: bool, annual: float, horizon: int) -> int | None:
+    from insureflow.life.mortality import q_x
+
+    av = 0.0
+    for year in range(1, horizon + 1):
+        coi = face * q_x(age + year, sex, smoker) * COI_LOADING
+        raw = (av + annual - coi - ADMIN_FEE_ANNUAL) * (1.0 + GUARANTEED_CREDIT)
+        if raw < 0:
+            return year
+        av = raw
+    return None
+
+
+def _cents_that_hold(face: float, age: int, sex: str, smoker: bool, premium: float, horizon: int) -> tuple[float, bool]:
+    """Round to cents and step up until the shadow account holds.
+
+    The binary-search result can round down through the boundary and go
+    negative in the last guarantee year.
+    """
+    premium = round(max(premium, 0.0), 2)
+    for _ in range(500):
+        if _first_negative_year(face, age, sex, smoker, premium, horizon) is None:
+            return premium, True
+        premium = round(premium + 0.01, 2)
+    return premium, False
+
+
+def _solve_no_lapse_premium(face: float, age: int, sex: str, smoker: bool, seed: float, horizon: int) -> tuple[float, bool]:
+    """Level premium that keeps the guaranteed-credit shadow account non-negative.
+
+    # ponytail: binary search, closed form if this path is hot.
+    """
+    if _first_negative_year(face, age, sex, smoker, seed, horizon) is None:
+        return _cents_that_hold(face, age, sex, smoker, seed, horizon)
+    hi = max(seed, 1.0)
+    ceiling = max(face, hi)
+    while _first_negative_year(face, age, sex, smoker, hi, horizon) is not None and hi < ceiling:
+        hi = min(hi * 2.0, ceiling)
+    if _first_negative_year(face, age, sex, smoker, hi, horizon) is not None:
+        return round(hi, 2), False
+    lo = 0.0
+    for _ in range(48):
+        mid = (lo + hi) / 2.0
+        if _first_negative_year(face, age, sex, smoker, mid, horizon) is None:
+            hi = mid
+        else:
+            lo = mid
+    return _cents_that_hold(face, age, sex, smoker, hi, horizon)
 
 
 def underwrite_gul(ctx: LifeProductContext) -> LobOutcome:
@@ -101,39 +154,26 @@ def underwrite_gul(ctx: LifeProductContext) -> LobOutcome:
 
     coi_annual = round(ctx.face * q_x(ctx.age, ctx.sex_key, ctx.smoker) * COI_LOADING, 2)  # year-1 estimate
     loaded = formula.gross_premium * NO_LAPSE_LOAD * class_f * band_f * state_rel
-    annual = add_common_loads(ctx, loaded)
-
-    # Shadow-account projection at the guaranteed credit rate, run over the
-    # FULL guarantee horizon (to `to_age`, not a fixed 20 years) — the
-    # no-lapse guarantee's shadow-account test runs for as long as the
-    # guarantee itself does. Mortality is NOT capped at an arbitrary
-    # attained age; q_x() already clamps correctly to each sex table's own
-    # terminal age, so letting it run the full horizon doesn't understate
-    # COI at the older durations this guarantee actually covers.
-    # `annual` is already the annual premium — dividing by modal_f would
-    # inflate the account-value input ~11.5x for monthly payers.
-    premium_net = annual
+    seed = add_common_loads(ctx, loaded)
     horizon_years = max(to_age - ctx.age, 1)
+    annual, funded = _solve_no_lapse_premium(ctx.face, ctx.age, ctx.sex_key, ctx.smoker, seed, horizon_years)
+    first_negative_year = _first_negative_year(ctx.face, ctx.age, ctx.sex_key, ctx.smoker, annual, horizon_years)
+    funded = funded and first_negative_year is None
+
     av = 0.0
-    shadow_account_negative = False
-    first_negative_year: int | None = None
     projection: dict[str, float] = {}
     checkpoint_years = {5, 10, 20, horizon_years}
     for year in range(1, horizon_years + 1):
         coi = ctx.face * q_x(ctx.age + year, ctx.sex_key, ctx.smoker) * COI_LOADING
-        raw = (av + premium_net - coi - ADMIN_FEE_ANNUAL) * (1.0 + 0.02)
-        if raw < 0 and not shadow_account_negative:
-            shadow_account_negative = True
-            first_negative_year = year
+        raw = (av + annual - coi - ADMIN_FEE_ANNUAL) * (1.0 + GUARANTEED_CREDIT)
         av = max(raw, 0.0)
         if year in checkpoint_years:
             projection[f"av_year_{year}"] = round(av, 2)
 
-    if shadow_account_negative:
-        outcome.add_condition(
-            f"Shadow-account funding test fails in policy year {first_negative_year} at the guaranteed credit rate — "
-            f"the quoted premium may be insufficient to keep the no-lapse guarantee in force to age {to_age}; "
-            "re-illustrate at a higher premium or shorter guarantee period before issue"
+    if not funded:
+        outcome.eligible = False
+        outcome.add_reason(
+            f"No premium at or below the face amount keeps the no-lapse guarantee funded to age {to_age} at the {GUARANTEED_CREDIT:.0%} credit"
         )
 
     outcome.base_premium = round(formula.gross_premium * NO_LAPSE_LOAD, 2)
@@ -158,8 +198,10 @@ def underwrite_gul(ctx: LifeProductContext) -> LobOutcome:
             "annual_coi_estimate": coi_annual,
             "admin_fee_annual": ADMIN_FEE_ANNUAL,
             "account_value_projection_guaranteed_basis": projection,
-            "shadow_account_funding_adequate": not shadow_account_negative,
+            "shadow_account_funding_adequate": funded and first_negative_year is None,
             "shadow_account_first_negative_year": first_negative_year,
+            "no_lapse_premium_solved": funded and annual > seed + 0.01,
+            "formula_premium_before_solve": round(seed, 2),
             "state_rules_applied": state_rules,
             "exam_required": bool(state_rules["paramed_exam_required"]),
         }
@@ -167,17 +209,31 @@ def underwrite_gul(ctx: LifeProductContext) -> LobOutcome:
 
     if ctx.medical.decision.value == "decline":
         outcome.eligible = False
+    income = getattr(ctx.financial, "income", 0.0) or 0.0
+    if income > 0 and annual > income * 0.35:
+        outcome.eligible = False
+        outcome.add_reason(f"No-lapse premium ${annual:,.0f} exceeds 35% of documented income ${income:,.0f}")
 
-    # Pilot has no filed universal life rates — illustrative only.
-    filing = ctx.filing_state
-    issue = ctx.issue_state
-    outcome.eligible = False
-    outcome.add_reason(f"universal life priced on actuarial equivalence — illustrative only, no {filing}-filed UL rates")
-    if issue and issue != filing:
-        outcome.add_reason(f"{filing} pilot exhibit applied — not a {issue} state-of-issue filing")
+    filed = is_filed_gul_product(PRODUCT_ID)
+    apply_state_filing_gate(ctx, outcome, filed_for_state=filed, product_family="guaranteed_universal_life")
+    if filed and outcome.eligible:
+        raw = (ctx.manual or {}).get("gul_filing")
+        filing = raw if isinstance(raw, dict) else {}
+        outcome.metadata["filed_gul"] = True
+        if filing.get("filing_id"):
+            outcome.metadata["filing_id"] = filing["filing_id"]
+        if filing.get("serff_tracking"):
+            outcome.metadata["serff_tracking"] = filing["serff_tracking"]
     return outcome
 
 
 def build_quote(ctx: LifeProductContext) -> Any:
     outcome = underwrite_gul(ctx)
-    return finish_quote(ctx, outcome, logic_path=LOGIC_PATH, family="universal_life")
+    filed = is_filed_gul_product(PRODUCT_ID)
+    return finish_quote(
+        ctx,
+        outcome,
+        logic_path=LOGIC_PATH,
+        family="universal_life",
+        rating_engine="life_filing" if filed else "life_whole_life_actuarial",
+    )

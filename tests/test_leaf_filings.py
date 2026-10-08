@@ -11,6 +11,7 @@ from insureflow.models.submissions import (
     RiskProfile,
     StructuredSubmission,
     SubmissionBundle,
+    UnstructuredSubmission,
 )
 from insureflow.rating.engine import InsuranceRatingEngine
 from insureflow.rating.leaf_filings import carrier_book_status, get_leaf_filing, rate_leaf_filing
@@ -66,10 +67,12 @@ def test_engine_uses_leaf_for_catalog_product():
     )
     b = SubmissionBundle(bundle_id="eng", structured=s)
     engine = InsuranceRatingEngine()
-    q = engine.quote(b, memo, line=InsuranceLine.GENERAL_LIABILITY, commercial_product_id="product_liability")
+    q = engine.quote(b, memo, line=InsuranceLine.COMMERCIAL_PROPERTY, commercial_product_id="ordinance_or_law")
     assert q.metadata.get("rating_engine") == "carrier_leaf_filing"
-    assert q.metadata.get("product_id") == "product_liability"
+    assert q.metadata.get("product_id") == "ordinance_or_law"
+    assert q.metadata.get("lob_logic_path") == "insureflow.commercial.lobs.gates"
     assert q.adjusted_premium > 0
+    assert any("year built" in c.lower() for c in q.metadata.get("conditions") or [])
 
 
 NEWLY_LIVE_LEAF_LINES = {
@@ -99,11 +102,21 @@ def test_newly_live_leaf_lines_quote_via_engine():
     )
     b = SubmissionBundle(bundle_id="leaf8", structured=s)
     engine = InsuranceRatingEngine()
+    facts = {
+        "aviation": "aircraft hull N12345",
+        "kidnap_ransom": "employees: 40 foreign travel",
+        "political_risk": "host country: Mexico",
+    }
     premiums = {}
     for pid, (insurance_line, _exposure) in NEWLY_LIVE_LEAF_LINES.items():
         line = parse_insurance_line(insurance_line)
         assert line is not None, insurance_line
-        q = engine.quote(b, memo, line=line, commercial_product_id=pid)
+        filed = SubmissionBundle(
+            bundle_id="leaf8",
+            structured=s,
+            unstructured=[UnstructuredSubmission(submission_id="u", raw_text=facts[pid])] if pid in facts else [],
+        )
+        q = engine.quote(filed, memo, line=line, commercial_product_id=pid)
         assert q.eligible is True, (pid, q.ineligibility_reasons)
         assert q.metadata.get("rating_engine") == "carrier_leaf_filing", pid
         assert q.metadata.get("product_id") == pid
@@ -114,3 +127,44 @@ def test_newly_live_leaf_lines_quote_via_engine():
     assert parse_insurance_line("flood") == InsuranceLine.FLOOD
     assert parse_insurance_line("earthquake") == InsuranceLine.EARTHQUAKE
     assert len(set(premiums.values())) == len(premiums)
+
+
+def test_product_gate_declines_when_its_exposure_is_missing():
+    memo = UnderwritingMemo(bundle_id="gate", recommendation=Recommendation(suggested_premium_modification=0.0))
+    s = StructuredSubmission(
+        submission_id="s",
+        named_insured=NamedInsured(legal_name="Gate Co"),
+        locations=[LocationData(address="1 Main", city="Austin", state="TX", zip_code="78701", building_value=2_000_000, contents_value=400_000)],
+        financial=FinancialData(annual_revenue=5_000_000),
+    )
+    b = SubmissionBundle(bundle_id="gate", structured=s)
+    engine = InsuranceRatingEngine()
+    for pid, needle in (
+        ("aviation", "aircraft"),
+        ("liquor_liability", "alcohol"),
+        ("political_risk", "host country"),
+        ("crop_insurance", "acre"),
+    ):
+        q = engine.quote(b, memo, line=InsuranceLine.COMMERCIAL_PROPERTY, commercial_product_id=pid)
+        assert q.eligible is False, pid
+        assert q.adjusted_premium == 0.0
+        assert any(needle in r.lower() for r in q.ineligibility_reasons), (pid, q.ineligibility_reasons)
+
+
+def test_liquor_with_alcohol_sales_is_referred_not_declined():
+    memo = UnderwritingMemo(bundle_id="bar", recommendation=Recommendation(suggested_premium_modification=0.0))
+    s = StructuredSubmission(
+        submission_id="s",
+        named_insured=NamedInsured(legal_name="Bar Co"),
+        locations=[LocationData(address="1 Main", city="Austin", state="TX", zip_code="78701", building_value=1_000_000)],
+        financial=FinancialData(annual_revenue=2_000_000),
+    )
+    b = SubmissionBundle(
+        bundle_id="bar",
+        structured=s,
+        unstructured=[UnstructuredSubmission(submission_id="u", raw_text="alcohol sales 400000 on-premises")],
+    )
+    q = InsuranceRatingEngine().quote(b, memo, line=InsuranceLine.GENERAL_LIABILITY, commercial_product_id="liquor_liability")
+    assert q.eligible is True
+    assert q.adjusted_premium > 0
+    assert any("server-training" in c.lower() or "tips" in c.lower() for c in q.metadata.get("conditions") or [])

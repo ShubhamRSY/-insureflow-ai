@@ -3,8 +3,10 @@
 A multi-worker web deployment must not run the 13-agent pipeline swarm on an
 API event loop: one heavy submission would stall the worker serving it. The
 default is therefore to dispatch through Celery whenever a broker is
-configured and reachable, and to degrade gracefully to in-process background
-tasks when the broker is down — so a Redis hiccup never drops a submission.
+reachable AND a worker is listening on the job's queue, and to run the job in
+a background thread otherwise. Checking for a worker matters: a reachable
+Redis with no worker would accept the task and leave the job "processing"
+forever.
 
 Explicit escapes:
 - ``INSURANCE_USE_CELERY=1`` / ``=0`` — force Celery on/off.
@@ -94,13 +96,50 @@ def broker_reachable() -> bool:
     return bool(_celery_available)
 
 
-def should_use_celery(requested: bool | None = None) -> bool:
+_WORKER_TTL_SECONDS = 15.0
+_worker_lock = threading.Lock()
+_worker_cache: dict[str, tuple[bool, float]] = {}
+
+
+def _queues_with_workers() -> set[str]:
+    """Names of the queues at least one live Celery worker consumes (1 s timeout)."""
+    from insureflow.tasks.celery_app import celery_app
+
+    replies = celery_app.control.inspect(timeout=1.0).active_queues() or {}
+    return {q.get("name", "") for queues in replies.values() for q in (queues or [])}
+
+
+def worker_listening(queue: str) -> bool:
+    """True when a live Celery worker consumes ``queue`` (cached, TTL'd). Blocking: call off the event loop."""
+    now = time.monotonic()
+    cached = _worker_cache.get(queue)
+    if cached and now - cached[1] <= _WORKER_TTL_SECONDS:
+        return cached[0]
+    with _worker_lock:
+        try:
+            names = _queues_with_workers()
+        except Exception as exc:  # pragma: no cover - network dependent
+            logger.warning("Could not ask Celery which queues have workers: %s", exc)
+            names = set()
+        stamp = time.monotonic()
+        for name in names | {queue}:
+            _worker_cache[name] = (name in names, stamp)
+    return _worker_cache[queue][0]
+
+
+def pipeline_queue(request_data: dict[str, Any]) -> str:
+    """The Celery queue an insurance job goes to: large-file jobs get their own."""
+    return LARGE_FILE_QUEUE if _has_large_file_document(request_data) else "pipeline"
+
+
+def should_use_celery(requested: bool | None = None, queue: str = "pipeline") -> bool:
     """Decide whether a pipeline run should dispatch through Celery.
 
     Precedence:
     1. ``INSURANCE_USE_CELERY=1/0`` or ``INSURANCE_IN_PROCESS=1`` — explicit.
-    2. Explicit request on the submission (``req.use_celery``).
-    3. Default: Celery when the broker is configured and reachable.
+    2. Explicit request on the submission (``req.use_celery`` True or False).
+    3. Default (``None``): Celery when the broker is reachable and a worker
+       listens on ``queue``; otherwise in-process.
     """
     env = os.getenv("INSURANCE_USE_CELERY", "").strip().lower()
     if env in _TRUE_ENV:
@@ -113,7 +152,7 @@ def should_use_celery(requested: bool | None = None) -> bool:
         return True
     if requested is False:
         return False
-    return broker_reachable()
+    return broker_reachable() and worker_listening(queue)
 
 
 def _has_large_file_document(request_data: dict[str, Any]) -> bool:
@@ -140,8 +179,8 @@ def send_pipeline_task(job_id: str, request_data: dict[str, Any], org_id: str) -
     """
     from insureflow.tasks.celery_app import celery_app
 
-    large = _has_large_file_document(request_data)
-    queue = LARGE_FILE_QUEUE if large else "pipeline"
+    queue = pipeline_queue(request_data)
+    large = queue == LARGE_FILE_QUEUE
     extra: dict[str, Any] = {"soft_time_limit": _LARGE_FILE_SOFT_TIME_LIMIT, "time_limit": _LARGE_FILE_TIME_LIMIT} if large else {}
 
     async_result = celery_app.send_task(

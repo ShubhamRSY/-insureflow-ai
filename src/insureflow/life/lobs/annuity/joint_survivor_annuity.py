@@ -13,11 +13,13 @@ from insureflow.life.lobs.actuarial import joint_and_survivor_annuity_factor, wh
 from insureflow.life.lobs.base import (
     LifeProductContext,
     LobOutcome,
+    apply_state_filing_gate,
     enforce_minimum_consideration,
     finish_quote,
     merge_state_rules,
     purchase_price,
 )
+from insureflow.underwriting.life_product import is_filed_annuity_product
 
 PRODUCT_ID = "joint_survivor_annuity"
 LOGIC_PATH = "insureflow.life.lobs.annuity.joint_survivor_annuity"
@@ -120,22 +122,31 @@ def underwrite_joint_annuity(ctx: LifeProductContext) -> LobOutcome:
         }
     )
 
-    filing = ctx.filing_state
-    issue = ctx.issue_state
-    outcome.eligible = False
-    outcome.add_reason("annuity illustration only — requires a payout / consideration filing to issue")
-    if issue and issue != filing:
-        outcome.add_reason(f"{filing} pilot exhibit applied — not a {issue} state-of-issue filing")
+    if outcome.metadata.get("spouse_age_source") != "submission" or outcome.metadata.get("spouse_sex_source") != "submission":
+        outcome.eligible = False
+        outcome.add_reason("Joint annuitant age and sex are not on the submission — payout is not issueable on an assumed spouse")
+
+    filed = is_filed_annuity_product(PRODUCT_ID)
+    apply_state_filing_gate(ctx, outcome, filed_for_state=filed, product_family="joint_survivor_annuity")
+    if filed and outcome.eligible:
+        annuity_raw = (ctx.manual or {}).get("annuity_filing")
+        annuity = annuity_raw if isinstance(annuity_raw, dict) else {}
+        outcome.metadata["filed_annuity"] = True
+        if annuity.get("filing_id"):
+            outcome.metadata["filing_id"] = annuity["filing_id"]
+        if annuity.get("serff_tracking"):
+            outcome.metadata["serff_tracking"] = annuity["serff_tracking"]
     return outcome
 
 
 def build_quote(ctx: LifeProductContext) -> Any:
     outcome = underwrite_joint_annuity(ctx)
+    filed = is_filed_annuity_product(PRODUCT_ID)
     return finish_quote(
         ctx,
         outcome,
         logic_path=LOGIC_PATH,
         family="annuity",
-        rating_engine="annuity_illustration",
+        rating_engine="life_filing" if filed else "annuity_illustration",
         apply_minimum_premium=False,
     )

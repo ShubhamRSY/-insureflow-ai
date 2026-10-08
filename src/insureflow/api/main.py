@@ -5,7 +5,6 @@ import json as _json
 import logging
 import os
 import uuid
-from collections import defaultdict
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any, Callable, Optional
@@ -13,11 +12,12 @@ from typing import Any, Callable, Optional
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect, status
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, PrivateAttr, model_validator
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
+from insureflow.api.upload_screening import ScreenedRoute, defer_screening
 from insureflow.auth import Role
 from insureflow.auth.dependencies import clear_user_store, get_current_user, get_current_user_optional, get_user_store, require_role, require_staff_desk
 from insureflow.auth.jwt import create_access_token, hash_password, verify_password
@@ -26,7 +26,6 @@ from insureflow.auth.store import PostgresUserStore, pg_store_unavailable
 from insureflow.auth.validation import validate_registration
 from insureflow.insurance.pipeline import InsurancePipeline
 from insureflow.models.mortgage import ProductLine
-from insureflow.pipeline import UnderwritingPipeline
 from insureflow.security.posture import SecurityPosture, resolve_security_posture
 from insureflow.storage.draft_bundle_store import BundleTooLargeError, DraftBundleBusyError
 from insureflow.storage.job_store import JobStore, get_job_store
@@ -94,7 +93,28 @@ def _rate_limit_key(request: Request) -> str:
     return get_remote_address(request)
 
 
-limiter = Limiter(key_func=_rate_limit_key, default_limits=["30/minute"])
+def _rate_limit_storage_uri() -> str:
+    """Share rate-limit counters across uvicorn workers through Redis.
+
+    With in-memory counters each worker process counts on its own, so "10 runs a
+    minute" really allowed 10 per worker. RATE_LIMIT_STORAGE_URL overrides (tests use
+    memory://). If Redis drops out, slowapi falls back to in-memory counting instead
+    of failing requests.
+    """
+    explicit = os.getenv("RATE_LIMIT_STORAGE_URL", "").strip()
+    if explicit:
+        return explicit
+    url = (os.getenv("REDIS_URL") or os.getenv("CELERY_BROKER_URL") or "").strip()
+    return url if url.startswith(("redis://", "rediss://")) else "memory://"
+
+
+limiter = Limiter(
+    key_func=_rate_limit_key,
+    default_limits=["30/minute"],
+    storage_uri=_rate_limit_storage_uri(),
+    in_memory_fallback_enabled=True,
+    swallow_errors=True,
+)
 
 
 @asynccontextmanager
@@ -109,6 +129,10 @@ app = FastAPI(
     version="0.3.1",
     lifespan=lifespan,
 )
+# Every route screens uploaded documents (unlock + virus scan) in a thread before
+# it runs, instead of on the event loop during body validation. See
+# api/upload_screening.py. Must be set before any route is declared.
+app.router.route_class = ScreenedRoute
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
 
@@ -139,6 +163,32 @@ async def _draft_bundle_busy_handler(_request: Any, exc: DraftBundleBusyError) -
 async def _bundle_too_large_handler(_request: Any, exc: BundleTooLargeError) -> JSONResponse:
     """This draft bundle's total content size has hit the aggregate cap."""
     return JSONResponse(status_code=413, content={"detail": str(exc)})
+
+
+def _redis_unavailable_types() -> tuple[type[Exception], ...]:
+    try:
+        import redis.exceptions as _rex
+
+        return (_rex.ConnectionError, _rex.TimeoutError)
+    except ImportError:  # pragma: no cover - redis is a core dependency
+        return ()
+
+
+async def _redis_unavailable_handler(request: Request, exc: Exception) -> JSONResponse:
+    """The job store (Redis) is unreachable. No job can be created, tracked or
+    read, and the in-process fallback cannot help, because it records progress in
+    the same store. Say so plainly with a retryable 503 instead of a bare 500."""
+    error_id = uuid.uuid4().hex[:12]
+    logger.error("Job store unavailable [%s] on %s %s: %s", error_id, request.method, request.url.path, exc)
+    return JSONResponse(
+        status_code=503,
+        content={"detail": "Job storage is temporarily unavailable. Nothing was submitted; please try again in a minute.", "error_id": error_id},
+        headers={"Retry-After": "30"},
+    )
+
+
+for _redis_exc in _redis_unavailable_types():
+    app.add_exception_handler(_redis_exc, _redis_unavailable_handler)
 
 
 @app.exception_handler(Exception)
@@ -922,30 +972,40 @@ class InsuranceDocumentPayload(BaseModel):
     filename: str
     content: str
     encoding: str = "utf-8"  # or "base64" for PDF/image uploads
-    # For password-protected files. Used once, right here, to decrypt the
-    # content, then cleared — never serialized, logged, or stored.
+    # For password-protected files. Used once to decrypt the content, then
+    # cleared — never serialized, logged, or stored.
     password: Optional[str] = Field(default=None, exclude=True, repr=False)
+    _pending_password: Optional[str] = PrivateAttr(default=None)
 
     @model_validator(mode="after")
     def _screen(self) -> "InsuranceDocumentPayload":
-        """Unlock with the supplied password, and refuse malware before the
-        file is stored anywhere (the loader scans again for connector pulls)."""
-        if self.encoding == "base64":
-            import base64
+        """Unlock with the supplied password, and refuse malware before the file is
+        stored anywhere (the loader scans again for connector pulls).
 
-            from insureflow.ingestion.intake import malware_scanning_enabled, scan_for_malware
-            from insureflow.ingestion.locked_docs import WrongPasswordError, unlock
-
-            if self.password:
-                try:
-                    self.content = base64.b64encode(unlock(base64.b64decode(self.content), self.filename, self.password)).decode()
-                except WrongPasswordError as exc:
-                    # Not a ValueError on purpose: a pydantic 422 echoes the input — password included.
-                    raise HTTPException(status_code=422, detail=str(exc)) from None
-            if malware_scanning_enabled() and (signature := scan_for_malware(base64.b64decode(self.content))):
-                raise HTTPException(status_code=422, detail=f"'{self.filename}' was rejected: the antivirus scan flagged it ({signature})")
-        self.password = None
+        Inside an HTTP request the work is deferred to ``ScreenedRoute``, which runs
+        it in a thread just before the route function; everywhere else it runs now."""
+        self._pending_password, self.password = self.password, None
+        if not defer_screening(self):
+            self.screen_now()
         return self
+
+    def screen_now(self) -> None:
+        password, self._pending_password = self._pending_password, None
+        if self.encoding != "base64":
+            return
+        import base64
+
+        from insureflow.ingestion.intake import malware_scanning_enabled, scan_for_malware
+        from insureflow.ingestion.locked_docs import WrongPasswordError, unlock
+
+        if password:
+            try:
+                self.content = base64.b64encode(unlock(base64.b64decode(self.content), self.filename, password)).decode()
+            except WrongPasswordError as exc:
+                # Not a ValueError on purpose: a pydantic 422 echoes the input — password included.
+                raise HTTPException(status_code=422, detail=str(exc)) from None
+        if malware_scanning_enabled() and (signature := scan_for_malware(base64.b64decode(self.content))):
+            raise HTTPException(status_code=422, detail=f"'{self.filename}' was rejected: the antivirus scan flagged it ({signature})")
 
 
 def _reject_oversized_inline_documents(
@@ -1035,7 +1095,8 @@ class SubmissionRequest(BaseModel):
     state_code: Optional[str] = None
     use_llm: bool = True
     use_legacy_pipeline: bool = False
-    use_celery: bool = False
+    # None: Celery when INSURANCE_USE_CELERY says so, or when a worker is listening.
+    use_celery: Optional[bool] = None
 
 
 class SignOffRequest(BaseModel):
@@ -1118,7 +1179,7 @@ class InsuranceSourcePullRequest(BaseModel):
 
 
 @app.get("/health")
-async def health() -> dict[str, Any]:
+def health() -> dict[str, Any]:
     """Health check that tells the truth — checks Redis, DB, and oracle connectivity."""
     checks: dict[str, str] = {}
     overall = "ok"
@@ -1353,7 +1414,7 @@ def ops_snapshot(
 
 
 @app.get("/system/diagnostics")
-async def system_diagnostics(current: TokenData | None = Depends(get_current_user_optional)) -> dict[str, Any]:
+def system_diagnostics(current: TokenData | None = Depends(get_current_user_optional)) -> dict[str, Any]:
     """System health — public in development; auth required in production/bank mode."""
     _require_auth_if_hardened(current)
     from insureflow.health.diagnostics import SystemDiagnostics
@@ -1362,7 +1423,7 @@ async def system_diagnostics(current: TokenData | None = Depends(get_current_use
 
 
 @app.get("/api/state-rules")
-async def get_state_rules(state: str = "", line: str = "") -> dict[str, Any]:
+def get_state_rules(state: str = "", line: str = "") -> dict[str, Any]:
     """State insurance regulatory rules — load by state code, line of business, or list all."""
     from insureflow.regulatory.state_rules import StateRegulatoryEngine
 
@@ -1386,7 +1447,7 @@ async def get_state_rules(state: str = "", line: str = "") -> dict[str, Any]:
 
 
 @app.get("/api/state-rules/{state_code}/compliance")
-async def check_state_compliance(
+def check_state_compliance(
     state_code: str,
     surplus_lines: bool = False,
     windstorm_zone: bool = False,
@@ -1406,7 +1467,7 @@ async def check_state_compliance(
 
 
 @app.get("/api/state-rules/lines")
-async def list_regulatory_lines() -> dict[str, Any]:
+def list_regulatory_lines() -> dict[str, Any]:
     """List all available lines of business with line-specific regulatory data."""
     from insureflow.regulatory.state_rules import StateRegulatoryEngine
 
@@ -1433,7 +1494,7 @@ async def list_regulatory_lines() -> dict[str, Any]:
 
 
 @app.get("/api/regulatory/state-detail")
-async def regulatory_state_detail(state: str = "") -> dict[str, Any]:
+def regulatory_state_detail(state: str = "") -> dict[str, Any]:
     """Full regulatory rules for one state across ALL lines of business."""
     from insureflow.regulatory.state_rules import StateRegulatoryEngine
 
@@ -1464,7 +1525,7 @@ async def regulatory_state_detail(state: str = "") -> dict[str, Any]:
 
 
 @app.get("/api/regulatory/state-compliance-all")
-async def regulatory_state_compliance_all(state: str = "") -> dict[str, Any]:
+def regulatory_state_compliance_all(state: str = "") -> dict[str, Any]:
     """Compliance flags for one state across ALL lines of business."""
     from insureflow.regulatory.state_rules import StateRegulatoryEngine
 
@@ -1488,7 +1549,7 @@ async def regulatory_state_compliance_all(state: str = "") -> dict[str, Any]:
 
 
 @app.get("/api/regulatory/health")
-async def regulatory_health() -> dict[str, Any]:
+def regulatory_health() -> dict[str, Any]:
     """Regulatory freshness dashboard — staleness scores per line/state."""
     from insureflow.regulatory.monitor import RegulatoryMonitor
 
@@ -1522,7 +1583,7 @@ async def regulatory_health() -> dict[str, Any]:
 
 
 @app.get("/api/regulatory/changelog")
-async def regulatory_changelog(
+def regulatory_changelog(
     state: str = "",
     line: str = "",
     since: str = "",
@@ -1547,7 +1608,7 @@ async def regulatory_changelog(
 
 
 @app.get("/api/regulatory/poll")
-async def regulatory_poll() -> dict[str, Any]:
+def regulatory_poll() -> dict[str, Any]:
     """Poll all active regulatory sources and return collected items."""
     from insureflow.regulatory.poller import RegulatoryPoller
 
@@ -1561,7 +1622,7 @@ async def regulatory_poll() -> dict[str, Any]:
 
 
 @app.get("/api/regulatory/poll/log")
-async def regulatory_poll_log(limit: int = 20) -> dict[str, Any]:
+def regulatory_poll_log(limit: int = 20) -> dict[str, Any]:
     """Recent poll log entries."""
     from insureflow.regulatory.poller import RegulatoryPoller
 
@@ -1570,7 +1631,7 @@ async def regulatory_poll_log(limit: int = 20) -> dict[str, Any]:
 
 
 @app.get("/api/regulatory/review/pending")
-async def regulatory_review_pending() -> dict[str, Any]:
+def regulatory_review_pending() -> dict[str, Any]:
     """Changes awaiting human review."""
     from insureflow.regulatory.review import RegulatoryReviewService
 
@@ -1582,7 +1643,7 @@ async def regulatory_review_pending() -> dict[str, Any]:
 
 
 @app.post("/api/regulatory/review/{changelog_id}")
-async def regulatory_review_decision(
+def regulatory_review_decision(
     changelog_id: str,
     approved: bool = False,
     reviewer: str = "system",
@@ -1602,7 +1663,7 @@ async def regulatory_review_decision(
 
 
 @app.get("/api/regulatory/review/history")
-async def regulatory_review_history(limit: int = 100) -> dict[str, Any]:
+def regulatory_review_history(limit: int = 100) -> dict[str, Any]:
     """History of all review decisions."""
     from insureflow.regulatory.review import RegulatoryReviewService
 
@@ -1611,7 +1672,7 @@ async def regulatory_review_history(limit: int = 100) -> dict[str, Any]:
 
 
 @app.post("/api/doc-quality/check")
-async def doc_quality_check(
+def doc_quality_check(
     documents: list[dict[str, Any]],
     current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
@@ -1640,7 +1701,7 @@ def _bundle_owned_by_org(bundle_id: str, org_id: str) -> bool:
 
 
 @app.get("/api/resubmit/pending")
-async def resubmit_pending(
+def resubmit_pending(
     bundle_id: str = "",
     current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
@@ -1666,7 +1727,7 @@ async def resubmit_pending(
 
 
 @app.post("/api/resubmit/{bundle_id}/waive")
-async def resubmit_waive(
+def resubmit_waive(
     bundle_id: str,
     filename: str,
     reason: str = "",
@@ -1684,7 +1745,7 @@ async def resubmit_waive(
 
 
 @app.get("/api/resubmit/{bundle_id}/summary")
-async def resubmit_summary(
+def resubmit_summary(
     bundle_id: str,
     current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
@@ -1699,7 +1760,7 @@ async def resubmit_summary(
 
 
 @app.get("/api/demo/presets")
-async def demo_presets() -> dict[str, Any]:
+def demo_presets() -> dict[str, Any]:
     """Available one-click demo submissions for the dashboard."""
     insurance = [
         {
@@ -2266,7 +2327,7 @@ def _load_northwind_submission() -> SubmissionRequest:
 
 
 @app.post("/api/demo/insurance/{preset_id}", status_code=202)
-async def run_insurance_demo(
+def run_insurance_demo(
     preset_id: str,
     background_tasks: BackgroundTasks,
     current: TokenData | None = Depends(get_current_user_optional),
@@ -2299,27 +2360,9 @@ async def run_insurance_demo(
         raise HTTPException(status_code=503, detail="Example data not found on server")
     job_id = f"demo-{uuid.uuid4().hex[:12]}"
     req = loader()
-    job_store.set(INSURANCE_NS, job_id, {"status": "processing", "demo": True}, org_id=org_id)
-
-    from insureflow.tasks.dispatch import send_pipeline_task, should_use_celery
-
-    celery_task_id: str | None = None
-    if should_use_celery(False):
-        try:
-            celery_task_id = send_pipeline_task(job_id, req.model_dump(), org_id)
-        except Exception as exc:
-            logger.warning("Celery demo dispatch failed for job %s, falling back to in-process: %s", job_id, exc)
-            celery_task_id = None
+    celery_task_id = _dispatch_insurance_job(job_id, req, org_id, background_tasks, extra={"demo": True})
     if celery_task_id:
-        job_store.set(
-            INSURANCE_NS,
-            job_id,
-            {"status": "processing", "demo": True, "backend": "celery", "celery_task_id": celery_task_id},
-            org_id=org_id,
-        )
         return {"job_id": job_id, "status": "processing", "preset": preset_id, "org_id": org_id, "use_celery": True}
-
-    background_tasks.add_task(_run_pipeline_task, job_id, req, org_id)
     return {"job_id": job_id, "status": "processing", "preset": preset_id, "org_id": org_id}
 
 
@@ -3161,7 +3204,12 @@ def run_draft_bundle(
             bundle_id=job_id,
             state_code=state_code or None,
         )
-        background_tasks.add_task(_run_mortgage_task, job_id, mortgage_req, current.org_id)
+        from insureflow.tasks.dispatch import should_use_celery
+
+        if should_use_celery(mortgage_req.use_celery, queue="mortgage"):
+            background_tasks.add_task(_dispatch_mortgage_celery, job_id, mortgage_req, current.org_id)
+        else:
+            background_tasks.add_task(_run_mortgage_task, job_id, mortgage_req, current.org_id)
         if bundle:
             bundle["status"] = "submitted"
             bundle["submitted_job_id"] = job_id
@@ -3183,7 +3231,6 @@ def run_draft_bundle(
         return {"bundle_id": bundle_id, "vertical": "lending", "relevance": relevance, **result}
 
     job_id = f"job-{uuid.uuid4().hex[:12]}"
-    job_store.set(INSURANCE_NS, job_id, {"status": "processing"}, org_id=current.org_id)
 
     req = SubmissionRequest(
         documents=[InsuranceDocumentPayload(**d) for d in docs],
@@ -3204,7 +3251,7 @@ def run_draft_bundle(
         insurance_company_name=insurance_company_name or None,
         state_code=state_code or None,
     )
-    background_tasks.add_task(_run_pipeline_task, job_id, req, current.org_id)
+    _dispatch_insurance_job(job_id, req, current.org_id, background_tasks)
 
     # Mark draft as submitted
     if bundle:
@@ -3216,7 +3263,7 @@ def run_draft_bundle(
 
 
 @app.post("/api/demo/mortgage/{preset_id}", status_code=202)
-async def run_mortgage_demo(
+def run_mortgage_demo(
     preset_id: str,
     background_tasks: BackgroundTasks,
     current: TokenData | None = Depends(get_current_user_optional),
@@ -3374,7 +3421,7 @@ def _landing_response(path: Path, media_type: str = "text/html") -> FileResponse
 
 
 @app.get("/", response_model=None)
-async def root(request: Request) -> FileResponse | JSONResponse:
+def root(request: Request) -> FileResponse | JSONResponse:
     """Serve the marketing landing by default; JSON only when explicitly requested."""
     accept = (request.headers.get("accept") or "*/*").lower()
     wants_json_only = "application/json" in accept and "text/html" not in accept
@@ -3535,73 +3582,66 @@ def icon_512() -> FileResponse:
     return FileResponse(path, media_type="image/png")
 
 
+INSURANCE_REQUEST_NS = "insurance-request"
+
+
+def _dispatch_insurance_job(
+    job_id: str,
+    req: SubmissionRequest,
+    org_id: str,
+    background_tasks: BackgroundTasks,
+    extra: dict[str, Any] | None = None,
+) -> str | None:
+    """The one way to start an insurance pipeline job. Returns the Celery task id, or None if it runs in-process.
+
+    Saves the request (encrypted with the job store) so retry can re-run the real
+    submission, then sends the job to Celery when ``should_use_celery`` says so,
+    falling back to this process if the send fails.
+    """
+    from insureflow.tasks.dispatch import pipeline_queue, send_pipeline_task, should_use_celery
+
+    extra = extra or {}
+    request_data = req.model_dump()
+    job_store.set(INSURANCE_REQUEST_NS, job_id, {"request": request_data}, org_id=org_id)
+    celery_task_id: str | None = None
+    if should_use_celery(req.use_celery, queue=pipeline_queue(request_data)):
+        try:
+            celery_task_id = send_pipeline_task(job_id, request_data, org_id)
+        except Exception as exc:
+            logger.warning("Celery dispatch failed for job %s, falling back to in-process: %s", job_id, exc)
+    if celery_task_id:
+        job_store.set(INSURANCE_NS, job_id, {"status": "processing", "backend": "celery", "celery_task_id": celery_task_id, **extra}, org_id=org_id)
+    else:
+        job_store.set(INSURANCE_NS, job_id, {"status": "processing", "backend": "background", **extra}, org_id=org_id)
+        background_tasks.add_task(_run_pipeline_task, job_id, req, org_id)
+    return celery_task_id
+
+
 def _run_pipeline_task(job_id: str, request: SubmissionRequest, org_id: str) -> None:
+    """In-process fallback for a pipeline job. Shares ``run_submission`` with the
+    Celery task so both backends make exactly the same pipeline call."""
     from insureflow.tasks.dispatch import in_process_job_slot
+    from insureflow.tasks.submission_runner import run_submission
 
     with in_process_job_slot():
+
+        def on_progress(data: dict[str, Any]) -> None:
+            job_store.set(INSURANCE_NS, job_id, {"status": "processing", "progress": data}, org_id=org_id)
+            _notify_job_subscribers(job_id, {"type": "progress", **data})
+
         try:
-            pipeline: Any
-            result: Any
-            if request.use_legacy_pipeline:
-                pipeline = UnderwritingPipeline()
-                result = pipeline.run(
-                    acord_xml=request.acord_xml,
-                    inspection_reports=request.inspection_reports,
-                    supplemental_docs=request.supplemental_docs,
-                    bundle_id=request.bundle_id or job_id,
-                )
-            else:
-                docs = [{"filename": d.filename, "content": d.content, "encoding": getattr(d, "encoding", None) or "utf-8"} for d in request.documents] if request.documents else None
-                pipeline = InsurancePipeline(org_id=org_id, use_llm=request.use_llm)
-
-                def on_progress(data: dict[str, Any]) -> None:
-                    job_store.set(
-                        INSURANCE_NS,
-                        job_id,
-                        {"status": "processing", "progress": data},
-                        org_id=org_id,
-                    )
-                    try:
-                        _notify_job_subscribers(job_id, {"type": "progress", **data})
-                    except Exception:
-                        pass
-
-                result = pipeline.run(
-                    acord_xml=request.acord_xml,
-                    inspection_reports=request.inspection_reports,
-                    supplemental_docs=request.supplemental_docs,
-                    json_payload=request.json_payload,
-                    loss_run=request.loss_run,
-                    schedule_of_values=request.schedule_of_values,
-                    documents=docs,
-                    pdf_paths=request.pdf_paths,
-                    bundle_id=request.bundle_id or job_id,
-                    insurance_line=request.insurance_line,
-                    commercial_product_id=request.commercial_product_id,
-                    life_product_id=request.life_product_id,
-                    life_coverage_id=request.life_coverage_id,
-                    health_product_id=request.health_product_id,
-                    health_coverage_id=request.health_coverage_id,
-                    general_product_id=request.general_product_id,
-                    general_coverage_id=request.general_coverage_id,
-                    commercial_coverage_id=request.commercial_coverage_id,
-                    commercial_product_name=request.commercial_product_name,
-                    commercial_coverage_name=request.commercial_coverage_name,
-                    commercial_category_id=request.commercial_category_id,
-                    insurance_company_id=request.insurance_company_id,
-                    insurance_company_name=request.insurance_company_name,
-                    state_code=request.state_code or "",
-                    progress_callback=on_progress,
-                )
+            result = run_submission(request, job_id, org_id, progress_callback=on_progress)
             job_store.set(INSURANCE_NS, job_id, {"status": "completed", "results": result, "state_code": request.state_code}, org_id=org_id)
+            _notify_job_subscribers(job_id, {"type": "status", "status": "completed", "job_id": job_id})
         except Exception as exc:
             logger.exception("Pipeline run failed")
             job_store.set(INSURANCE_NS, job_id, {"status": "failed", "error": str(exc)}, org_id=org_id)
+            _notify_job_subscribers(job_id, {"type": "status", "status": "failed", "job_id": job_id})
 
 
 @app.post("/pipeline/run", status_code=202)
 @limiter.limit("10/minute")
-async def run_pipeline(
+def run_pipeline(
     req: SubmissionRequest,
     background_tasks: BackgroundTasks,
     request: Request,
@@ -3609,43 +3649,11 @@ async def run_pipeline(
 ) -> dict[str, Any]:
     _reject_oversized_inline_documents(req.documents, endpoint="/pipeline/run", org_id=current.org_id)
     job_id = f"job-{uuid.uuid4().hex[:12]}"
-    from insureflow.tasks.dispatch import send_pipeline_task, should_use_celery
-
-    use_celery = should_use_celery(req.use_celery)
-    job_store.set(
-        INSURANCE_NS,
-        job_id,
-        {"status": "processing", "backend": "celery" if use_celery else "background"},
-        org_id=current.org_id,
-    )
-    celery_task_id: str | None = None
-    if use_celery:
-        try:
-            celery_task_id = send_pipeline_task(job_id, req.model_dump(), current.org_id)
-        except Exception as exc:
-            logger.warning("Celery dispatch failed for job %s, falling back to in-process: %s", job_id, exc)
-            celery_task_id = None
+    celery_task_id = _dispatch_insurance_job(job_id, req, current.org_id, background_tasks)
+    out: dict[str, Any] = {"job_id": job_id, "status": "processing", "org_id": current.org_id, "use_celery": bool(celery_task_id)}
     if celery_task_id:
-        job_store.set(
-            INSURANCE_NS,
-            job_id,
-            {
-                "status": "processing",
-                "backend": "celery",
-                "celery_task_id": celery_task_id,
-            },
-            org_id=current.org_id,
-        )
-        return {
-            "job_id": job_id,
-            "status": "processing",
-            "org_id": current.org_id,
-            "use_celery": True,
-            "celery_task_id": celery_task_id,
-        }
-
-    background_tasks.add_task(_run_pipeline_task, job_id, req, current.org_id)
-    return {"job_id": job_id, "status": "processing", "org_id": current.org_id, "use_celery": False}
+        out["celery_task_id"] = celery_task_id
+    return out
 
 
 @app.get("/pipeline/jobs/{job_id}")
@@ -3686,47 +3694,34 @@ def download_job(
     job_id: str,
     current: TokenData = Depends(require_role(Role.VIEWER)),
 ) -> dict[str, Any]:
-    job = job_store.get(INSURANCE_NS, job_id, org_id=current.org_id)
+    from insureflow.api.job_sanitize import sanitize_job_for_client
+
+    job = sanitize_job_for_client(job_store.get(INSURANCE_NS, job_id, org_id=current.org_id))
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
     return {"job_id": job_id, "status": job.get("status"), "results": job.get("results", {}), "error": job.get("error")}
 
 
 @app.post("/pipeline/jobs/{job_id}/retry", status_code=202)
-async def retry_job(
+def retry_job(
     job_id: str,
     background_tasks: BackgroundTasks,
     current: TokenData = Depends(require_role(Role.UNDERWRITER)),
 ) -> dict[str, Any]:
-    """Re-run a failed or completed insurance pipeline job."""
+    """Re-run an insurance pipeline job with the exact submission it was started with."""
     org_id = current.org_id
-    old_job = job_store.get(INSURANCE_NS, job_id, org_id=org_id)
-    if not old_job:
+    if not job_store.get(INSURANCE_NS, job_id, org_id=org_id):
         raise HTTPException(status_code=404, detail="Job not found")
-    req = _load_pacific_coast_submission()
-    new_id = f"retry-{uuid.uuid4().hex[:12]}"
-    job_store.set(INSURANCE_NS, new_id, {"status": "processing", "retry_of": job_id}, org_id=org_id)
-
-    from insureflow.tasks.dispatch import send_pipeline_task, should_use_celery
-
-    celery_task_id: str | None = None
-    if should_use_celery(False):
-        try:
-            celery_task_id = send_pipeline_task(new_id, req.model_dump(), org_id)
-        except Exception as exc:
-            logger.warning("Celery retry dispatch failed for job %s, falling back to in-process: %s", job_id, exc)
-            celery_task_id = None
-    if celery_task_id:
-        job_store.set(
-            INSURANCE_NS,
-            new_id,
-            {"status": "processing", "retry_of": job_id, "backend": "celery", "celery_task_id": celery_task_id},
-            org_id=org_id,
+    saved = job_store.get(INSURANCE_REQUEST_NS, job_id, org_id=org_id)
+    if not saved or not isinstance(saved.get("request"), dict):
+        raise HTTPException(
+            status_code=409,
+            detail="The original submission for this job is no longer stored (it is kept for 7 days, and jobs started before this feature have none). Please submit the documents again.",
         )
-        return {"job_id": new_id, "status": "processing", "retry_of": job_id, "use_celery": True}
-
-    background_tasks.add_task(_run_pipeline_task, new_id, req, org_id)
-    return {"job_id": new_id, "status": "processing", "retry_of": job_id}
+    req = SubmissionRequest(**saved["request"])
+    new_id = f"retry-{uuid.uuid4().hex[:12]}"
+    celery_task_id = _dispatch_insurance_job(new_id, req, org_id, background_tasks, extra={"retry_of": job_id})
+    return {"job_id": new_id, "status": "processing", "retry_of": job_id, "use_celery": bool(celery_task_id)}
 
 
 @app.delete("/pipeline/jobs/bulk", status_code=204)
@@ -6765,7 +6760,9 @@ async def analyze_property_photos_endpoint(
     bundle_id = body.get("bundle_id", f"vision-{uuid.uuid4().hex[:12]}")
 
     analyzer = PropertyPhotoAnalyzer()
-    profile = analyzer.analyze_photos(
+    # Vision models and image processing are blocking: keep them off the event loop.
+    profile = await asyncio.to_thread(
+        analyzer.analyze_photos,
         photos,
         latitude=latitude,
         longitude=longitude,
@@ -6893,7 +6890,7 @@ class PilotRunRequest(BaseModel):
 
 
 @app.post("/pilot/packages/run", status_code=202)
-async def run_pilot_package_api(
+def run_pilot_package_api(
     req: PilotRunRequest,
     background_tasks: BackgroundTasks,
     current: TokenData = Depends(require_role(Role.VIEWER)),
@@ -7290,7 +7287,7 @@ class MortgageSubmissionRequest(BaseModel):
     loan_amount: Optional[float] = None
     use_llm: bool = True
     per_borrower: bool = False
-    use_celery: bool = False
+    use_celery: Optional[bool] = None  # None: decided by INSURANCE_USE_CELERY or a listening worker
     state_code: Optional[str] = None
 
 
@@ -7582,7 +7579,7 @@ def confirm_mortgage_document_upload(
 
 
 @app.post("/mortgage/pipeline/run", status_code=202)
-async def run_mortgage_pipeline(
+def run_mortgage_pipeline(
     req: MortgageSubmissionRequest,
     background_tasks: BackgroundTasks,
     current: TokenData = Depends(require_role(Role.VIEWER)),
@@ -7593,7 +7590,7 @@ async def run_mortgage_pipeline(
 
     from insureflow.tasks.dispatch import should_use_celery
 
-    use_celery = should_use_celery(req.use_celery)
+    use_celery = should_use_celery(req.use_celery, queue="mortgage")
     if use_celery:
         background_tasks.add_task(_dispatch_mortgage_celery, job_id, req, current.org_id)
     else:
@@ -8162,7 +8159,7 @@ class PipelineConfigRequest(BaseModel):
 
 
 @app.post("/pipeline/v2/run", status_code=202)
-async def run_pipeline_v2(
+def run_pipeline_v2(
     req: PipelineConfigRequest,
     background_tasks: BackgroundTasks,
     current: TokenData = Depends(require_role(Role.VIEWER)),
@@ -8203,7 +8200,9 @@ def _run_pipeline_v2_task(job_id: str, request: PipelineConfigRequest, org_id: s
 
     with in_process_job_slot():
         try:
-            docs = [{"filename": d.filename, "content": d.content} for d in request.documents] if request.documents else None
+            from insureflow.tasks.submission_runner import documents_payload
+
+            docs = documents_payload(request.documents)
             pipeline = InsurancePipeline(org_id=org_id, use_llm=request.use_llm)
             result = pipeline.run(
                 acord_xml=request.acord_xml,
@@ -8735,23 +8734,17 @@ def list_lending_products(
 
 # ── WebSocket / SSE: Real-time Job Status ────────────────────────
 
-_job_ws_subscribers: dict[str, set[asyncio.Queue[str]]] = defaultdict(set)
-_job_sse_subscribers: dict[str, set[asyncio.Queue[str]]] = defaultdict(set)
-
 
 def _notify_job_subscribers(job_id: str, data: dict[str, Any]) -> None:
-    """Push status update to all WebSocket and SSE subscribers of a job."""
-    payload = _json.dumps(data, default=str)
-    for q in list(_job_ws_subscribers.get(job_id, set())):
-        try:
-            q.put_nowait(payload)
-        except asyncio.QueueFull:
-            pass
-    for q in list(_job_sse_subscribers.get(job_id, set())):
-        try:
-            q.put_nowait(payload)
-        except asyncio.QueueFull:
-            pass
+    """Push a status event to every SSE/WebSocket stream watching this job.
+
+    Safe from any thread, and from Celery workers too: see api/job_events.py."""
+    from insureflow.api import job_events
+
+    try:
+        job_events.publish(job_id, data)
+    except Exception as exc:  # streams are best-effort; clients also poll the job record
+        logger.warning("Job event for %s not delivered: %s", job_id, exc)
 
 
 @app.websocket("/ws/jobs/{job_id}")
@@ -8776,31 +8769,31 @@ async def websocket_job_status(websocket: WebSocket, job_id: str) -> None:
     # disabled/deleted user's still-unexpired JWT can't keep streaming job
     # status, and so org scoping matches the live-resolved org_id rather
     # than a potentially stale JWT claim.
-    user = _refresh_from_live_store(token_data)
+    user = await asyncio.to_thread(_refresh_from_live_store, token_data)
     if user is None:
         await websocket.close(code=4001, reason="Invalid token")
         return
 
-    job = job_store.get(INSURANCE_NS, job_id, org_id=user.org_id)
+    job = await asyncio.to_thread(job_store.get, INSURANCE_NS, job_id, user.org_id)
     if not job:
         await websocket.close(code=4004, reason="Job not found or access denied")
         return
 
     await websocket.accept()
-    queue: asyncio.Queue[str] = asyncio.Queue(maxsize=100)
-    _job_ws_subscribers[job_id].add(queue)
+    from insureflow.api import job_events
+
+    events = job_events.subscribe(job_id)
     try:
         await websocket.send_json({"type": "connected", "job_id": job_id, "status": job.get("status", "unknown")})
-        while True:
-            try:
-                msg = await asyncio.wait_for(queue.get(), timeout=30.0)
-                await websocket.send_text(msg)
-            except asyncio.TimeoutError:
+        async for msg in events:
+            if msg is None:
                 await websocket.send_json({"type": "heartbeat"})
+            else:
+                await websocket.send_text(msg)
     except WebSocketDisconnect:
         pass
     finally:
-        _job_ws_subscribers[job_id].discard(queue)
+        await events.aclose()
 
 
 @app.get("/pipeline/jobs/{job_id}/stream")
@@ -8812,24 +8805,19 @@ async def sse_job_status(
 
     Useful for clients that cannot use WebSocket (e.g., Load Balancers that strip Upgrade headers).
     """
-    job = job_store.get(INSURANCE_NS, job_id, org_id=current.org_id)
+    job = await asyncio.to_thread(job_store.get, INSURANCE_NS, job_id, current.org_id)
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
-
-    queue: asyncio.Queue[str] = asyncio.Queue(maxsize=100)
-    _job_sse_subscribers[job_id].add(queue)
+    from insureflow.api import job_events
 
     async def event_generator() -> Any:
+        events = job_events.subscribe(job_id)
         try:
             yield f"data: {_json.dumps({'type': 'connected', 'job_id': job_id, 'status': job.get('status', 'unknown')})}\n\n"
-            while True:
-                try:
-                    msg = await asyncio.wait_for(queue.get(), timeout=30.0)
-                    yield f"data: {msg}\n\n"
-                except asyncio.TimeoutError:
-                    yield f"data: {_json.dumps({'type': 'heartbeat'})}\n\n"
+            async for msg in events:
+                yield f"data: {_json.dumps({'type': 'heartbeat'}) if msg is None else msg}\n\n"
         finally:
-            _job_sse_subscribers[job_id].discard(queue)
+            await events.aclose()
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
@@ -8851,7 +8839,7 @@ def _check_row_access(resource_org_id: str, user_org_id: str) -> None:
 
 @app.post("/v2/pipeline/run", status_code=202)
 @limiter.limit("10/minute")
-async def run_pipeline_row_level(
+def run_pipeline_row_level(
     req: SubmissionRequest,
     background_tasks: BackgroundTasks,
     request: Request,
@@ -8860,26 +8848,7 @@ async def run_pipeline_row_level(
     """Pipeline run with enforced org isolation — jobs always scoped to caller's org."""
     _reject_oversized_inline_documents(req.documents, endpoint="/v2/pipeline/run", org_id=current.org_id)
     job_id = f"job-{uuid.uuid4().hex[:12]}"
-    job_store.set(INSURANCE_NS, job_id, {"status": "processing"}, org_id=current.org_id)
-    from insureflow.tasks.dispatch import send_pipeline_task, should_use_celery
-
-    if should_use_celery(False):
-        try:
-            celery_task_id = send_pipeline_task(job_id, req.model_dump(), current.org_id)
-        except Exception as exc:
-            logger.warning("Celery dispatch failed for job %s, falling back to in-process: %s", job_id, exc)
-            celery_task_id = None
-    else:
-        celery_task_id = None
-    if celery_task_id:
-        job_store.set(
-            INSURANCE_NS,
-            job_id,
-            {"status": "processing", "backend": "celery", "celery_task_id": celery_task_id},
-            org_id=current.org_id,
-        )
-    else:
-        background_tasks.add_task(_run_pipeline_task, job_id, req, current.org_id)
+    _dispatch_insurance_job(job_id, req, current.org_id, background_tasks)
     _notify_job_subscribers(job_id, {"type": "status", "status": "processing", "job_id": job_id})
     return {"job_id": job_id, "status": "processing", "org_id": current.org_id}
 

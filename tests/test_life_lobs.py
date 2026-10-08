@@ -134,6 +134,7 @@ def test_level_term_duration_ladder_via_lob_path() -> None:
     "product_id,coverage_id",
     [
         ("level_term", "term_20"),
+        ("traditional_whole_life", "ordinary"),
         ("guaranteed_universal_life", "gul"),
         ("indexed_universal_life", "iul"),
         ("current_assumption_universal_life", "caul"),
@@ -262,12 +263,10 @@ def test_single_premium_equals_nsp_scale() -> None:
     sp = rate_life(_bundle(), coverage_id="lump_sum", product_id="single_premium_whole_life")
     lifetime = rate_life(_bundle(), coverage_name="Guaranteed Whole Life", product_id="traditional_whole_life")
 
-    def ill(q):
-        return q.metadata["illustrated_adjusted_premium"]
-
-    assert sp.eligible is False and sp.adjusted_premium == 0.0
+    assert sp.eligible is True and sp.adjusted_premium > 0
+    assert sp.metadata["rating_engine"] == "life_filing"
     assert lifetime.eligible is True and lifetime.adjusted_premium > 0
-    assert ill(sp) > lifetime.adjusted_premium * 10
+    assert sp.adjusted_premium > lifetime.adjusted_premium * 10
     assert sp.metadata["actuarial"]["premium_term"] == 1
     assert sp.metadata["mec_notice_required"] is True
     assert any("AML" in c or "source-of-funds" in c.lower() for c in sp.metadata["conditions"])
@@ -277,12 +276,11 @@ def test_par_costs_more_than_non_par() -> None:
     par_cash = rate_life(_bundle(), coverage_id="div_cash", product_id="participating_whole_life")
     par_pua = rate_life(_bundle(), coverage_id="div_pua", product_id="participating_whole_life")
     nonpar = rate_life(_bundle(), coverage_id="non_par_whole", product_id="non_participating_whole_life")
-    # Participating is filed; non-par remains illustrative — compare on illustrated basis.
     assert par_cash.eligible is True and par_cash.adjusted_premium > 0
     assert par_cash.metadata["rating_engine"] == "life_filing"
-    assert nonpar.eligible is False and nonpar.adjusted_premium == 0.0
-    nonpar_ill = nonpar.metadata["illustrated_adjusted_premium"]
-    assert par_cash.adjusted_premium == pytest.approx(nonpar_ill * 1.12, rel=0.02)
+    assert nonpar.eligible is True and nonpar.adjusted_premium > 0
+    assert nonpar.metadata["rating_engine"] == "life_filing"
+    assert par_cash.adjusted_premium == pytest.approx(nonpar.adjusted_premium * 1.12, rel=0.02)
     assert par_pua.adjusted_premium == pytest.approx(par_cash.adjusted_premium, rel=0.01)
     assert any("NOT guaranteed" in c or "not guaranteed" in c.lower() for c in par_cash.metadata["conditions"])
 
@@ -294,6 +292,10 @@ def test_modified_step_up_schedule() -> None:
     assert schedule["year_step_onward"]["annual"] > schedule["years_1_to_step"]["annual"]
     m510 = rate_life(_bundle(), coverage_id="modified_5_10", product_id="modified_whole_life")
     assert m510.metadata["premium_schedule"]["variant_5_10"] is True
+    filed = rate_life(_bundle("Applicant age: 42. Sex: female. Face amount: $100000. Annual income: 200000. Non-smoker."), product_id="modified_whole_life", state="IL")
+    assert filed.eligible is True
+    assert filed.metadata["rating_engine"] == "life_filing"
+    assert filed.adjusted_premium > 0
 
 
 def test_graded_gi_no_exam_with_medical_decline() -> None:
@@ -306,6 +308,10 @@ def test_graded_gi_no_exam_with_medical_decline() -> None:
     assert graded.metadata["graded_schedule"] == {"1": 0.30, "2": 0.65}
     young = rate_life(_bundle(), coverage_id="guaranteed_issue", product_id="graded_guaranteed_issue_whole_life")
     assert young.eligible is False  # age 42 outside GI window
+    issued = rate_life(sick, coverage_id="guaranteed_issue", coverage_name="Guaranteed Issue Whole Life", product_id="graded_guaranteed_issue_whole_life", state="IL")
+    assert issued.eligible is True
+    assert issued.metadata["rating_engine"] == "life_filing"
+    assert issued.adjusted_premium > 0
 
 
 def test_traditional_whole_life_actuarial_metadata() -> None:
@@ -543,10 +549,17 @@ def test_gul_no_lapse_guarantee_and_projection() -> None:
     # not a fixed 20 years — checkpoints at 5/10/20 plus the final horizon
     # year, so the exact final-year key varies with issue age.
     assert {"av_year_5", "av_year_10", "av_year_20"} <= set(proj)
-    assert "shadow_account_funding_adequate" in gul.metadata
+    assert gul.metadata["shadow_account_funding_adequate"] is True
+    assert gul.metadata["illustrated_adjusted_premium"] > gul.metadata["formula_premium_before_solve"]
     assert any("no-lapse" in c.lower() for c in gul.metadata["conditions"])
-    assert gul.metadata["rating_engine"].startswith("life_")
-    assert "universal life priced on actuarial equivalence" in " ".join(gul.ineligibility_reasons)
+    assert any("35% of documented income" in r for r in gul.ineligibility_reasons)
+    affordable = "Face amount: $100000. Annual income: 250000. Applicant age: 40. Sex: female. Non-smoker. Preferred."
+    issued = rate_life(_bundle(affordable), coverage_id="no_lapse", product_id="guaranteed_universal_life", state="IL")
+    assert issued.eligible is True, issued.ineligibility_reasons
+    assert issued.adjusted_premium > 0
+    assert issued.metadata["rating_engine"] == "life_filing"
+    assert issued.metadata.get("filed_gul") is True
+    assert issued.metadata["shadow_account_funding_adequate"] is True
 
 
 def test_ul_charge_load_ordering_gul_lt_iul_lt_vul() -> None:
@@ -555,13 +568,14 @@ def test_ul_charge_load_ordering_gul_lt_iul_lt_vul() -> None:
     vul = rate_life(_bundle(), coverage_id="gmdb", product_id="variable_universal_life")
     caul = rate_life(_bundle(), coverage_id="current_rate", product_id="current_assumption_universal_life")
 
-    # Universal is filed-permanent (illustration-only) -> premium contract $0;
-    # the charge-load ordering is preserved on the illustrated premium.
+    # CAUL / IUL / VUL stay illustrations. GUL books the solved no-lapse premium,
+    # which is not on the charge-load scale.
     def ill(q):
         return q.metadata["illustrated_adjusted_premium"]
 
-    assert all(q.eligible is False and q.adjusted_premium == 0.0 for q in (gul, iul, vul, caul))
-    assert ill(caul) < ill(gul) < ill(iul) < ill(vul)  # lowest flexibility load
+    assert all(q.eligible is False and q.adjusted_premium == 0.0 for q in (iul, vul, caul))
+    assert ill(caul) < ill(iul) < ill(vul)
+    assert gul.metadata["shadow_account_funding_adequate"] is True
 
 
 def test_iul_crediting_scenarios_cap_and_floor() -> None:
@@ -600,13 +614,21 @@ def test_endowment_ordering_pure_lt_with_profit_lt_fixed() -> None:
     full = rate_life(_bundle(), coverage_id="with_profit", product_id="full_endowment")
     fixed = rate_life(_bundle(), coverage_id="fixed_endowment", product_id="guaranteed_fixed_endowment")
 
-    # Endowment is filed-permanent (illustration-only) -> premium contract $0;
-    # No death benefit → cheapest; guaranteed-all-values → most expensive.
     def ill(q):
         return q.metadata["illustrated_adjusted_premium"]
 
-    assert all(q.eligible is False and q.adjusted_premium == 0.0 for q in (pure, full, fixed))
     assert ill(pure) < ill(full) < ill(fixed)
+    affordable = "Face amount: $100000. Annual income: 250000. Applicant age: 40. Sex: female. Non-smoker."
+    for pid, cid in (
+        ("pure_endowment", "pure_maturity"),
+        ("full_endowment", "with_profit"),
+        ("guaranteed_fixed_endowment", "fixed_endowment"),
+    ):
+        issued = rate_life(_bundle(affordable), coverage_id=cid, product_id=pid, state="IL")
+        assert issued.eligible is True, (pid, issued.ineligibility_reasons)
+        assert issued.adjusted_premium > 0
+        assert issued.metadata["rating_engine"] == "life_filing"
+        assert issued.metadata.get("filed_endowment") is True
     assert pure.metadata["death_benefit"] == 0.0
     assert fixed.metadata["actuarial"]["basis"].endswith("fully guaranteed")
 
@@ -623,6 +645,8 @@ def test_pure_endowment_no_death_benefit_disclosure_and_uw() -> None:
     pe = rate_life(poor_income, coverage_id="pure_maturity", product_id="pure_endowment")
     assert any("nothing is payable if the insured dies" in c.lower() or "PURE ENDOWMENT" in c for c in pe.metadata["conditions"])
     assert pe.metadata["maturity_value"] == 400000.0
+    assert pe.eligible is False
+    assert pe.adjusted_premium == 0.0
 
 
 # ---------------------------------------------------------------------------
@@ -779,6 +803,12 @@ def test_money_back_survival_schedule_totals() -> None:
     total_pct = sum(s["pct_of_sa"] for s in schedule)
     assert total_pct == pytest.approx(1.0)  # 20+20+20+40% fully returned while living
     assert mb.metadata["death_benefit"] == 500000.0  # full SA on death throughout
+    affordable = "Face amount: $100000. Annual income: 250000. Applicant age: 40. Sex: female. Non-smoker. Preferred."
+    issued = rate_life(_bundle(affordable), coverage_id="traditional_mb", product_id="traditional_money_back", state="IL")
+    assert issued.eligible is True, issued.ineligibility_reasons
+    assert issued.adjusted_premium > 0
+    assert issued.metadata["rating_engine"] == "life_filing"
+    assert issued.metadata.get("filed_money_back") is True
 
 
 def test_with_profit_money_back_bonuses_on_top() -> None:
@@ -814,6 +844,16 @@ def test_children_money_back_uses_real_child_age_and_sex_when_documented() -> No
     assert [s["year"] for s in documented.metadata["payout_schedule"]] == [10, 12, 14, 17]  # 18/20/22/25 minus real age 8
     # A real 8-year-old (vs. an assumed 5-year-old on the proposer's own sex) prices differently, not identically.
     assert documented.metadata["illustrated_adjusted_premium"] != no_data.metadata["illustrated_adjusted_premium"]
+    assert no_data.eligible is False
+    assert any("assumed child" in r for r in no_data.ineligibility_reasons)
+    issued = rate_life(
+        _bundle("Applicant age: 34. Sex: male. Face amount: $100000. Annual income: 250000. Child's age: 8. Child's sex: female. Non-smoker. Preferred."),
+        coverage_id="children_mb",
+        product_id="children_money_back",
+        state="IL",
+    )
+    assert issued.eligible is True, issued.ineligibility_reasons
+    assert issued.metadata.get("filed_money_back") is True
 
 
 # ---------------------------------------------------------------------------
@@ -834,17 +874,27 @@ def test_immediate_annuity_is_filed_pilot_exhibit() -> None:
     assert q.adjusted_premium > 0
     assert q.metadata["rating_engine"] == "life_filing"
     assert q.metadata.get("filed_annuity") is True
+    life = rate_life(_ann(), coverage_id="single_life_income", product_id="life_annuity", state="IL")
+    assert life.eligible is True and life.metadata["rating_engine"] == "life_filing"
+    assumed = rate_life(_ann(), coverage_id="joint_100", product_id="joint_survivor_annuity", state="IL")
+    assert assumed.eligible is False
+    assert any("assumed spouse" in r for r in assumed.ineligibility_reasons)
+    documented = rate_life(
+        _ann(ANN_TEXT + " Spouse's age: 62. Spouse's sex: female."),
+        coverage_id="joint_100",
+        product_id="joint_survivor_annuity",
+        state="IL",
+    )
+    assert documented.eligible is True
+    assert documented.metadata.get("filed_annuity") is True
 
 
 def test_other_annuity_paths_are_illustrations_only() -> None:
     cases = [
-        ("deferred_annuity", "deferred_income"),
+        ("deferred_annuity", "deferred_accum"),
         ("fixed_annuity", "fixed_accum"),
         ("variable_annuity", "var_annuity"),
         ("indexed_annuity", "indexed_crediting"),
-        ("life_annuity", "single_life_income"),
-        ("joint_survivor_annuity", "joint_100"),
-        ("qlac", "qlac_lifetime"),
         ("structured_settlement_annuity", "structured_payments"),
     ]
     for pid, cid in cases:
@@ -903,40 +953,66 @@ def test_joint_survivor_uses_real_spouse_age_and_sex_when_documented() -> None:
 
 
 def test_deferred_accumulates_then_annuitizes_at_vesting() -> None:
-    d = rate_life(_ann("Purchase price: $500000. Applicant age: 55. Sex: male."), coverage_id="deferred_income", product_id="deferred_annuity")
+    d = rate_life(_ann("Purchase price: $500000. Applicant age: 55. Sex: male."), coverage_id="deferred_income", product_id="deferred_annuity", state="IL")
+    assert d.eligible is True, d.ineligibility_reasons
     assert d.metadata["vesting_age"] == 65
+    assert d.metadata["years_to_vesting"] == 10
     fv = d.metadata["fund_value_at_vesting"]
-    assert fv > 500000  # credited growth over 10 years
-    payout = d.metadata["annual_payout_at_vesting"]
+    assert fv > 500000  # illustrated credit over 10 years, not the guaranteed income
     factor = d.metadata["annuitization_factor_at_vesting"]
-    assert payout == pytest.approx(fv / factor, rel=0.01)
+    assert d.metadata["illustrated_payout_at_vesting"] == pytest.approx(fv / factor, rel=0.01)
+    assert d.metadata["annual_payout_at_vesting"] == pytest.approx(500000 / d.metadata["actuarial"]["deferred_annuity_factor"], rel=0.001)
+    assert d.metadata["annual_payout_at_vesting"] != pytest.approx(d.metadata["illustrated_payout_at_vesting"], rel=0.01)
 
 
 def test_qlac_irs_cap_enforced_inside_path() -> None:
-    within = rate_life(_ann("Purchase price: $200000. Applicant age: 60. Sex: male."), coverage_id="qlac_lifetime", product_id="qlac")
-    over = rate_life(_ann("Purchase price: $400000. Applicant age: 60. Sex: male."), coverage_id="qlac_lifetime", product_id="qlac")
-    assert within.eligible is False  # illustration only regardless
+    within = rate_life(_ann("Purchase price: $200000. Applicant age: 60. Sex: male."), coverage_id="qlac_lifetime", product_id="qlac", state="IL")
+    over = rate_life(_ann("Purchase price: $400000. Applicant age: 60. Sex: male."), coverage_id="qlac_lifetime", product_id="qlac", state="IL")
+    assert within.eligible is True, within.ineligibility_reasons
+    assert within.adjusted_premium == 200000.0
+    assert within.metadata["rating_engine"] == "life_filing"
+    assert within.metadata["filed_annuity"] is True
+    assert within.metadata["filing_id"] == "RYT-LIFE-ANN-2026-01"
+    assert within.metadata["years_of_deferral"] == 15
+    spot = within.metadata["purchase_price"] / within.metadata["actuarial"]["annuity_factor_at_start"]
+    assert within.metadata["annual_payout_at_start"] > spot
+    assert over.eligible is False
     assert over.metadata["purchase_price"] == over.metadata["irs_cap"] == 210000.0
+    assert over.metadata.get("filed_annuity") is not True
     assert "IRS QLAC cap" in " ".join(over.ineligibility_reasons)
     assert over.metadata["rmd_excluded_until_income_starts"] is True
     assert over.metadata["income_start_age"] <= 75
+    missing = rate_life(_ann("Applicant age: 60. Sex: male."), coverage_id="qlac_lifetime", product_id="qlac", state="IL")
+    assert missing.eligible is False
+    assert missing.metadata.get("purchase_price") == 0.0
+    assert any("not on the submission" in r for r in missing.ineligibility_reasons)
 
 
 def test_structured_settlement_prices_schedule_pv() -> None:
     text = "$2500 per month for 20 years settlement."
-    q = rate_life(_ann(text), coverage_id="structured_payments", product_id="structured_settlement_annuity")
+    q = rate_life(_ann(text), coverage_id="structured_payments", product_id="structured_settlement_annuity", state="IL")
     meta = q.metadata
     expected_pv = 2500 * ((1 - (1 / (1 + 0.04 / 12)) ** 240) / (0.04 / 12))
+    assert q.eligible is True, q.ineligibility_reasons
+    assert q.adjusted_premium == pytest.approx(expected_pv, rel=0.001)
+    assert q.metadata["rating_engine"] == "life_filing"
+    assert q.metadata["filed_annuity"] is True
     assert meta["present_value_of_settlement"] == pytest.approx(expected_pv, rel=0.001)
     assert meta["total_nominal_payouts"] == 600000.0
-    lump = rate_life(_ann(text), coverage_id="structured_lump", product_id="structured_settlement_annuity")
+    lump = rate_life(_ann(text), coverage_id="structured_lump", product_id="structured_settlement_annuity", state="IL")
+    assert lump.eligible is True
     assert lump.metadata["commuted_lump_pv"] == pytest.approx(expected_pv, rel=0.001)
 
 
 def test_variable_indexed_annuity_riders_and_scenarios() -> None:
-    va = rate_life(_ann(), coverage_id="var_gmwb", product_id="variable_annuity")
+    va = rate_life(_ann(), coverage_id="var_gmwb", product_id="variable_annuity", state="IL")
+    assert va.eligible is True, va.ineligibility_reasons
     assert va.metadata["gmwb_rider"] is True
     assert va.metadata["gmwb_rider_fee_pct"] == 0.0115
+    assert va.metadata["guaranteed_annual_withdrawal"] == pytest.approx(500_000 * 0.05)
+    assert va.metadata["annual_payout_at_vesting"] == va.metadata["guaranteed_annual_withdrawal"]
+    assert va.metadata["fund_value_projection_air_basis"] > 500_000
+    assert va.metadata["illustrated_payout_at_vesting"] != pytest.approx(va.metadata["guaranteed_annual_withdrawal"], rel=0.01)
     ia = rate_life(_ann(), coverage_id="indexed_crediting", product_id="indexed_annuity")
     sc = ia.metadata["credited_rate_scenarios"]
     assert sc["index_gain_-15pct"] == 0.0

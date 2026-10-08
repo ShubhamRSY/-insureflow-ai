@@ -14,11 +14,13 @@ from typing import Any
 from insureflow.life.lobs.base import (
     LifeProductContext,
     LobOutcome,
+    apply_state_filing_gate,
     finish_quote,
     merge_state_rules,
     purchase_price,
 )
 from insureflow.rating.models import RateComponent
+from insureflow.underwriting.life_product import is_filed_annuity_product
 from insureflow.underwriting.personal_lines import _blob
 
 PRODUCT_ID = "structured_settlement_annuity"
@@ -45,17 +47,29 @@ STATE_RULES: dict[str, dict[str, Any]] = {
 MIN_SETTLEMENT = 25_000.0
 
 
-def _parse_schedule(ctx: LifeProductContext) -> tuple[float, int]:
-    """Explicit schedule parse: '$X per month for N years' from the submission."""
+def _parse_schedule(ctx: LifeProductContext) -> tuple[float, int, bool]:
+    """Monthly amount, month count, and whether both were written on the submission.
+
+    A missing term is not 20 years. An explicit "$0 per month" is a zero
+    schedule, not a missing one.
+    """
     blob = _blob(ctx.bundle)
-    m = re.search(r"\$?\s*([\d,]+(?:\.\d+)?)\s*(?:per\s+month|/month|monthly)", blob, re.I)
-    monthly = float(m.group(1).replace(",", "")) if m else 0.0
-    y = re.search(r"for\s+(\d{1,2})\s*years", blob, re.I)
-    years = int(y.group(1)) if y else 20
-    if monthly <= 0:
-        annual = purchase_price(ctx) / years
-        return round(annual / 12.0, 2), years
-    return monthly, years
+    amount = re.search(r"\$?\s*([\d,]+(?:\.\d+)?)\s*(?:per\s+month|/month|monthly)", blob, re.I)
+    years_m = re.search(r"for\s+(\d{1,2})\s*years", blob, re.I)
+    payments_m = re.search(r"for\s+(\d{1,4})\s*payments", blob, re.I)
+    if years_m:
+        months = int(years_m.group(1)) * 12
+        term_stated = True
+    elif payments_m:
+        months = int(payments_m.group(1))
+        term_stated = True
+    else:
+        months = 20 * 12
+        term_stated = False
+    if amount:
+        return float(amount.group(1).replace(",", "")), months, term_stated
+    annual = purchase_price(ctx) / (months / 12.0)
+    return round(annual / 12.0, 2), months, False
 
 
 def underwrite_structured_settlement(ctx: LifeProductContext) -> LobOutcome:
@@ -63,7 +77,8 @@ def underwrite_structured_settlement(ctx: LifeProductContext) -> LobOutcome:
 
     state_rules = merge_state_rules(ctx, DEFAULT_STATE_RULES, STATE_RULES)
     interest = float(state_rules["payout_basis_interest"])
-    monthly_payment, years = _parse_schedule(ctx)
+    monthly_payment, months, explicit = _parse_schedule(ctx)
+    years = months / 12.0
 
     outcome.add_condition(f"{state_rules['free_look_days']}-day free-look period applies ({state_rules['issue_state'] or 'default'})")
     if state_rules["court_approval_required"]:
@@ -90,7 +105,7 @@ def underwrite_structured_settlement(ctx: LifeProductContext) -> LobOutcome:
     outcome.base_premium = settlement_value
 
     outcome.components = [
-        RateComponent(name="monthly_payment", amount=round(monthly_payment, 2), basis=f"guaranteed {years}yr certain"),
+        RateComponent(name="monthly_payment", amount=round(monthly_payment, 2), basis=f"guaranteed {months} months certain"),
         RateComponent(name="pv_of_schedule", amount=settlement_value, basis=f"@ {interest:.0%} annual ({interest / 12:.3%} monthly)"),
     ]
     outcome.metadata.update(
@@ -101,6 +116,8 @@ def underwrite_structured_settlement(ctx: LifeProductContext) -> LobOutcome:
             },
             "monthly_payment": round(monthly_payment, 2),
             "term_years": years,
+            "term_months": months,
+            "schedule_source": "submission" if explicit else "assumed",
             "total_nominal_payouts": total_paid,
             "present_value_of_settlement": settlement_value,
             # Not a purchase_price in the retail-annuity sense, but this is
@@ -119,22 +136,37 @@ def underwrite_structured_settlement(ctx: LifeProductContext) -> LobOutcome:
         }
     )
 
-    filing = ctx.filing_state
-    issue = ctx.issue_state
-    outcome.eligible = False
-    outcome.add_reason("structured settlement illustration only — requires a qualified assignment filing to issue")
-    if issue and issue != filing:
-        outcome.add_reason(f"{filing} pilot exhibit applied — not a {issue} state-of-issue filing")
+    if not explicit:
+        outcome.eligible = False
+        outcome.add_reason("Payment schedule is not on the submission — structured settlement is not issueable on an assumed stream")
+    elif monthly_payment <= 0:
+        outcome.eligible = False
+        outcome.add_reason("Structured settlement payment schedule is zero")
+    elif settlement_value < MIN_SETTLEMENT:
+        outcome.eligible = False
+        outcome.add_reason(f"Settlement present value ${settlement_value:,.0f} is below the ${MIN_SETTLEMENT:,.0f} minimum")
+
+    filed = is_filed_annuity_product(PRODUCT_ID)
+    apply_state_filing_gate(ctx, outcome, filed_for_state=filed, product_family="structured_settlement_annuity")
+    if filed and outcome.eligible:
+        raw = (ctx.manual or {}).get("annuity_filing")
+        filing = raw if isinstance(raw, dict) else {}
+        outcome.metadata["filed_annuity"] = True
+        if filing.get("filing_id"):
+            outcome.metadata["filing_id"] = filing["filing_id"]
+        if filing.get("serff_tracking"):
+            outcome.metadata["serff_tracking"] = filing["serff_tracking"]
     return outcome
 
 
 def build_quote(ctx: LifeProductContext) -> Any:
     outcome = underwrite_structured_settlement(ctx)
+    filed = is_filed_annuity_product(PRODUCT_ID)
     return finish_quote(
         ctx,
         outcome,
         logic_path=LOGIC_PATH,
         family="annuity",
-        rating_engine="annuity_illustration",
+        rating_engine="life_filing" if filed else "annuity_illustration",
         apply_minimum_premium=False,
     )

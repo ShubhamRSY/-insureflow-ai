@@ -11,6 +11,25 @@ from typing import Any, Iterator, cast
 logger = logging.getLogger(__name__)
 
 
+def encode_record(data: dict[str, Any]) -> str:
+    """Serialize a job record for storage, Fernet-encrypted when ENCRYPTION_KEY is set.
+
+    Job records hold the memo, quote, extracted fields and (for retry) the original
+    submission, so they are encrypted at rest like the audit trail. Production
+    already refuses to start without ENCRYPTION_KEY (security/posture.py).
+    """
+    from insureflow.storage.encryption import EnvelopeEncryption
+
+    return EnvelopeEncryption().encrypt_text(json.dumps(data, default=str))
+
+
+def decode_record(raw: str) -> dict[str, Any]:
+    """Inverse of ``encode_record``. Plain JSON written before encryption still reads."""
+    from insureflow.storage.encryption import EnvelopeEncryption
+
+    return cast(dict[str, Any], json.loads(EnvelopeEncryption().decrypt_text(raw)))
+
+
 class JobStore(ABC):
     @abstractmethod
     def set(self, namespace: str, job_id: str, data: dict[str, Any], org_id: str = "default") -> None: ...
@@ -57,6 +76,7 @@ class RedisJobStore(JobStore):
     def __init__(self, url: str, ttl_seconds: int = 86400 * 7) -> None:
         import redis
 
+        self.url = url
         self.client = redis.from_url(
             url,
             decode_responses=True,
@@ -76,7 +96,7 @@ class RedisJobStore(JobStore):
         created_at = (existing or {}).get("created_at") or datetime.now(tz=timezone.utc).isoformat()
         data = {**data, "org_id": org_id, "created_at": created_at, "updated_at": datetime.now(tz=timezone.utc).isoformat()}
         key = self._key(namespace, job_id, org_id)
-        self.client.setex(key, self.ttl, json.dumps(data, default=str))
+        self.client.setex(key, self.ttl, encode_record(data))
         self.client.sadd(self._index_key(namespace, org_id), job_id)
         self.client.expire(self._index_key(namespace, org_id), self.ttl)
 
@@ -84,7 +104,7 @@ class RedisJobStore(JobStore):
         raw = self.client.get(self._key(namespace, job_id, org_id))
         if not raw:
             return None
-        return cast(dict[str, Any], json.loads(raw))
+        return decode_record(raw.decode() if isinstance(raw, bytes) else raw)
 
     def delete(self, namespace: str, job_id: str, org_id: str = "default") -> bool:
         key = self._key(namespace, job_id, org_id)

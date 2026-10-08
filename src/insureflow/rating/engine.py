@@ -399,7 +399,25 @@ class InsuranceRatingEngine:
                 market_mod_pct=market_mod,
             )
             if leaf is not None:
+                from insureflow.commercial.lobs.gates import apply_leaf_underwriting
+
+                leaf = apply_leaf_underwriting(leaf, bundle, leaf_product)
                 return self._adapt_actuarial_result(leaf, memo, bundle, schedule_mod)
+
+        # Manual-backed products (GL, umbrella, cyber, auto, packages, …).
+        # Customer SERFF already returned above. Property has no build_quote.
+        dedicated = self._dispatch_commercial_lob(
+            bundle,
+            memo,
+            line,
+            commercial_product_id,
+            state,
+            schedule_mod,
+            market_mod,
+            experience_mod=experience_mod,
+        )
+        if dedicated is not None:
+            return dedicated
 
         if line == InsuranceLine.WORKERS_COMP:
             dedicated = self._dispatch_commercial_lob(bundle, memo, line, commercial_product_id or "workers_comp", state, schedule_mod, market_mod, experience_mod=experience_mod)

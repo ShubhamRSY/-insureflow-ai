@@ -1,3 +1,11 @@
+"""LangGraph version of the mortgage pipeline. NOT wired to any route or task.
+
+The live mortgage path is ``MortgagePipeline`` (tasks/mortgage_tasks.py ->
+run_mortgage_pipeline). The Celery task that used to run this graph was never
+dispatched and was removed. Keep or delete this module deliberately; do not
+assume it runs.
+"""
+
 from __future__ import annotations
 
 import logging

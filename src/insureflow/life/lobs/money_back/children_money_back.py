@@ -14,12 +14,14 @@ from insureflow.life.lobs.base import (
     LifeProductContext,
     LobOutcome,
     add_common_loads,
+    apply_state_filing_gate,
     band_factor,
     finish_quote,
     medical_class_factor,
     merge_state_rules,
     state_relativity,
 )
+from insureflow.underwriting.life_product import is_filed_money_back_product
 from insureflow.life.money_back_uw import run_money_back_uw
 from insureflow.life.mortality import discount_factor, k_p_x
 from insureflow.rating.models import RateComponent
@@ -169,15 +171,30 @@ def underwrite_children_money_back(ctx: LifeProductContext) -> LobOutcome:
         }
     )
 
-    filing = ctx.filing_state
-    issue = ctx.issue_state
-    outcome.eligible = False
-    outcome.add_reason(f"children's money-back priced on actuarial equivalence — illustrative only, no {filing}-filed money-back rates")
-    if issue and issue != filing:
-        outcome.add_reason(f"{filing} pilot exhibit applied — not a {issue} state-of-issue filing")
+    if child_age_from_submission is None or not child_sex_from_submission:
+        outcome.eligible = False
+        outcome.add_reason("Child age and sex are not on the submission — children's money-back is not issueable on an assumed child")
+
+    filed = is_filed_money_back_product(PRODUCT_ID)
+    apply_state_filing_gate(ctx, outcome, filed_for_state=filed, product_family="children_money_back")
+    if filed and outcome.eligible:
+        raw = (ctx.manual or {}).get("money_back_filing")
+        filing = raw if isinstance(raw, dict) else {}
+        outcome.metadata["filed_money_back"] = True
+        if filing.get("filing_id"):
+            outcome.metadata["filing_id"] = filing["filing_id"]
+        if filing.get("serff_tracking"):
+            outcome.metadata["serff_tracking"] = filing["serff_tracking"]
     return outcome
 
 
 def build_quote(ctx: LifeProductContext) -> Any:
     outcome = underwrite_children_money_back(ctx)
-    return finish_quote(ctx, outcome, logic_path=LOGIC_PATH, family="money_back")
+    filed = is_filed_money_back_product(PRODUCT_ID)
+    return finish_quote(
+        ctx,
+        outcome,
+        logic_path=LOGIC_PATH,
+        family="money_back",
+        rating_engine="life_filing" if filed else "life_whole_life_actuarial",
+    )

@@ -6,6 +6,10 @@ import os
 # real production credentials (Redis key + file live in a test-only namespace).
 os.environ.setdefault("INSUREFLOW_AUTH_TESTING", "1")
 
+# Rate-limit counters stay in memory for tests, even when REDIS_URL is set, so a
+# developer's real Redis is not touched and limiter.reset() never needs a server.
+os.environ.setdefault("RATE_LIMIT_STORAGE_URL", "memory://")
+
 # Tests must never reach the real PostgreSQL `users` table, so `get_engine()`
 # has to come back None. A developer may still have DATABASE_URL exported in
 # their shell or .env, and PostgresUserStore wins over the isolated file store.

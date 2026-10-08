@@ -28,13 +28,50 @@ LIVE_WHOLE_LIFE_PRODUCT_IDS = frozenset(
         "ordinary_whole_life",  # legacy / coverage-hint alias
         "limited_pay_whole_life",
         "participating_whole_life",
+        "non_participating_whole_life",
+        "single_premium_whole_life",
+        "modified_whole_life",
+        "graded_guaranteed_issue_whole_life",
     }
 )
 
-# Pilot annuity exhibit — immediate annuity only (consideration → payout filing).
+# Pilot endowment exhibit — pure / with-profit / guaranteed fixed. Bonus on
+# with-profit is illustrated and is not part of the guaranteed premium.
+LIVE_ENDOWMENT_PRODUCT_IDS = frozenset(
+    {
+        "pure_endowment",
+        "full_endowment",
+        "guaranteed_fixed_endowment",
+    }
+)
+
+# Pilot money-back exhibit — traditional, with-profit, children's. With-profit
+# bonus is illustrated and is not part of the guaranteed premium. Children's
+# is issueable only when the child's age and sex are on the submission.
+LIVE_MONEY_BACK_PRODUCT_IDS = frozenset(
+    {
+        "traditional_money_back",
+        "with_profit_money_back",
+        "children_money_back",
+    }
+)
+
+# Pilot GUL exhibit — no-lapse premium solved at the guaranteed credit.
+# Current-assumption, indexed, and variable UL stay illustrative.
+LIVE_GUL_PRODUCT_IDS = frozenset({"guaranteed_universal_life"})
+
+# Pilot annuity exhibit. Income and GMWB issue on the contractual payout.
+# Accumulation, subaccounts, and indexed crediting stay illustrated.
 LIVE_ANNUITY_PRODUCT_IDS = frozenset(
     {
         "immediate_annuity",
+        "life_annuity",
+        "joint_survivor_annuity",
+        "qlac",
+        "structured_settlement_annuity",
+        "fixed_annuity",
+        "deferred_annuity",
+        "variable_annuity",
     }
 )
 
@@ -168,10 +205,37 @@ def is_filed_annuity_product(product_id: str | None = None, coverage_id: str | N
     return False
 
 
+def is_filed_endowment_product(product_id: str | None = None, coverage_id: str | None = None, coverage_name: str | None = None) -> bool:
+    pid = normalize_life_id(product_id)
+    if pid in LIVE_ENDOWMENT_PRODUCT_IDS:
+        return True
+    _ = coverage_id, coverage_name
+    return False
+
+
+def is_filed_gul_product(product_id: str | None = None, coverage_id: str | None = None, coverage_name: str | None = None) -> bool:
+    pid = normalize_life_id(product_id)
+    if pid in LIVE_GUL_PRODUCT_IDS:
+        return True
+    _ = coverage_id, coverage_name
+    return False
+
+
+def is_filed_money_back_product(product_id: str | None = None, coverage_id: str | None = None, coverage_name: str | None = None) -> bool:
+    pid = normalize_life_id(product_id)
+    if pid in LIVE_MONEY_BACK_PRODUCT_IDS:
+        return True
+    _ = coverage_id, coverage_name
+    return False
+
+
 def is_filed_life_product(product_id: str | None = None, coverage_id: str | None = None, coverage_name: str | None = None) -> bool:
-    """True when the product has any issueable pilot filing (term, permanent, or annuity)."""
+    """True when the product has any issueable pilot filing (term, permanent, endowment, money-back, or annuity)."""
     return (
         is_filed_term_product(product_id, coverage_id, coverage_name)
         or is_filed_permanent_product(product_id, coverage_id, coverage_name)
+        or is_filed_endowment_product(product_id, coverage_id, coverage_name)
+        or is_filed_money_back_product(product_id, coverage_id, coverage_name)
+        or is_filed_gul_product(product_id, coverage_id, coverage_name)
         or is_filed_annuity_product(product_id, coverage_id, coverage_name)
     )

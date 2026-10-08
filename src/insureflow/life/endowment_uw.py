@@ -144,6 +144,9 @@ def run_endowment_uw(
     score = 0.0
     if not result.premium_capacity_pass:
         score += 0.40
+    # Above 35% of income the contract cannot be sustained — decline, not a file-more-docs refer.
+    if result.premium_to_income_pct > 35.0:
+        score += 0.40
     if result.short_term_parking_risk:
         score += 0.35
     if result.persistency_risk == "high":

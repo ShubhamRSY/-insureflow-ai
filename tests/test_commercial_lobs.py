@@ -65,6 +65,10 @@ def _ctx(product_id: str, line: InsuranceLine, *, state: str = "IL", bundle: Sub
 
 
 def test_all_six_live_products_registered():
+    from insureflow.commercial.lobs import RATED_ON
+    from insureflow.commercial.lobs.extended import PRODUCT_IDS
+    from insureflow.commercial.lobs.gates import PRODUCT_IDS as GATE_IDS
+
     assert set(PRODUCT_LOGIC_PATHS) == {
         "property_bi",
         "workers_comp",
@@ -72,6 +76,9 @@ def test_all_six_live_products_registered():
         "trade_credit",
         "errors_omissions",
         "key_person",
+        *PRODUCT_IDS,
+        *RATED_ON,
+        *GATE_IDS,
     }
 
 
@@ -398,3 +405,42 @@ def test_property_coinsurance_no_penalty_when_adequately_insured():
     check = quote.metadata.get("coinsurance_check")
     assert check is not None
     assert check["penalty_applies"] is False
+
+
+def test_gl_manual_is_a_dedicated_path():
+    from insureflow.models.submissions import CoverageDetail
+
+    bundle = _bundle(with_payroll=True, state="TX")
+    assert bundle.structured is not None
+    bundle.structured.coverages = [CoverageDetail(coverage_type="gl", limit_amount=1_000_000, deductible=5_000, premium=0)]
+    quote = InsuranceRatingEngine().quote(bundle, _memo(), line=InsuranceLine.GENERAL_LIABILITY, commercial_product_id="general_liability", state_override="TX")
+    assert quote.eligible is True
+    assert quote.metadata["rating_engine"] == "iso_gl_sales"
+    assert quote.metadata["lob_logic_path"] == "insureflow.commercial.lobs.extended"
+    assert quote.adjusted_premium > 0
+
+
+def test_product_liability_uses_gl_manual():
+    from insureflow.models.submissions import CoverageDetail
+
+    bundle = _bundle(with_payroll=True, state="TX")
+    assert bundle.structured is not None
+    bundle.structured.coverages = [CoverageDetail(coverage_type="products", limit_amount=1_000_000, deductible=5_000, premium=0)]
+    quote = InsuranceRatingEngine().quote(bundle, _memo(), line=InsuranceLine.GENERAL_LIABILITY, commercial_product_id="product_liability", state_override="TX")
+    assert quote.eligible is True
+    assert quote.metadata["rating_engine"] == "iso_gl_sales"
+    assert quote.metadata["rated_on_product"] == "general_liability"
+
+
+def test_architects_engineers_uses_eo_manual():
+    quote = run_product_logic(_ctx("architects_engineers", InsuranceLine.ERRORS_AND_OMISSIONS, state="IL"))
+    assert isinstance(quote, QuoteResult)
+    assert quote.metadata["lob_logic_path"] == "insureflow.commercial.lobs.errors_omissions"
+    assert quote.metadata["rated_on_product"] == "errors_omissions"
+
+
+def test_cyber_without_limit_stays_ineligible_on_dedicated_path():
+    quote = InsuranceRatingEngine().quote(_bundle(with_payroll=True), _memo(), line=InsuranceLine.CYBER, commercial_product_id="cyber_liability")
+    assert quote.eligible is False
+    assert quote.metadata["lob_logic_path"] == "insureflow.commercial.lobs.extended"
+    assert quote.adjusted_premium == 0.0

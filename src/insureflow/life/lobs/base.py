@@ -168,7 +168,12 @@ def apply_binding_gates(ctx: LifeProductContext, outcome: LobOutcome, *, family:
     # without this opt-out the shared gate below would auto-decline the
     # exact buyer the product exists for. A path sets this explicitly and
     # takes responsibility for its own (documented) underwriting rules.
-    skip_medical_gate = bool(outcome.metadata.pop("_skip_medical_gate", False))
+    # The life guide's max age is 75. Annuity contracts are issued into the 80s;
+    # an age-only life decline must not veto a product whose own age gate passed.
+    # Any other medical decline (cancer, a vital over the decline line) still sticks.
+    medical_reasons = [str(r) for r in (ctx.medical.reasons or []) if r]
+    annuity_age_only = family == "annuity" and bool(medical_reasons) and all(r == "Age outside issue ages" for r in medical_reasons)
+    skip_medical_gate = bool(outcome.metadata.pop("_skip_medical_gate", False)) or annuity_age_only
 
     # Medical decision propagation.
     if skip_medical_gate:

@@ -152,6 +152,14 @@ class TestVitalsBands:
         ("Blood pressure: {v}/78", 151, "table_b"),
         ("Blood pressure: {v}/78", 180, "table_b"),
         ("Blood pressure: {v}/78", 181, "DECLINE"),
+        ("Blood pressure: 120/{v}", 85, "preferred"),
+        ("Blood pressure: 120/{v}", 86, "standard"),
+        ("Blood pressure: 120/{v}", 90, "standard"),
+        ("Blood pressure: 120/{v}", 91, "table_a"),
+        ("Blood pressure: 120/{v}", 100, "table_a"),
+        ("Blood pressure: 120/{v}", 101, "table_b"),
+        ("Blood pressure: 120/{v}", 110, "table_b"),
+        ("Blood pressure: 120/{v}", 111, "DECLINE"),
         ("BMI: {v}", 27.0, "preferred"),
         ("BMI: {v}", 27.1, "standard"),
         ("BMI: {v}", 32.0, "standard"),
@@ -932,8 +940,9 @@ class TestProductGatesAllLOBs:
         def ill(q):
             return q.metadata["illustrated_adjusted_premium"]
 
-        assert all(q.eligible is False and q.adjusted_premium == 0.0 for q in (caul, gul, iul, vul))
-        assert ill(caul) < ill(gul) < ill(iul) < ill(vul)
+        assert all(q.eligible is False and q.adjusted_premium == 0.0 for q in (caul, iul, vul))
+        assert ill(caul) < ill(iul) < ill(vul)
+        assert gul.metadata["shadow_account_funding_adequate"] is True
 
     def test_iul_floor_and_cap_scenarios(self) -> None:
         iul = rate_life(_bundle(self.B), coverage_id="indexed_account", product_id="indexed_universal_life")
@@ -982,7 +991,7 @@ class TestProductGatesAllLOBs:
         filed = rate_life(_bundle("Purchase price: $200000. Applicant age: 65. Sex: male."), coverage_id="life_income", product_id="immediate_annuity", state="IL")
         assert filed.eligible is True and filed.adjusted_premium > 0
         assert filed.metadata.get("filed_annuity") is True
-        for pid, cid in (("qlac", "qlac_lifetime"), ("structured_settlement_annuity", "structured_payments")):
+        for pid, cid in (("structured_settlement_annuity", "structured_payments"),):
             q = rate_life(_bundle("Purchase price: $200000. Applicant age: 65. Sex: male."), coverage_id=cid, product_id=pid, state="IL")
             assert q.eligible is False, pid
             # Illustration-only (unfiled) -> premium contract is $0 (C1), but
@@ -1416,13 +1425,12 @@ class TestRefutedSuspicionPins:
         assert adult.eligible is True and adult.adjusted_premium > 0
 
 
-@pytest.mark.xfail(reason="KNOWN GAP (spec needed): diastolic pressure ignored entirely — 118/105 rates Preferred; needs diastolic band table", strict=False)
 def test_diastolic_hypertension_should_not_rate_preferred():
     d = _med(f"{BASE} Blood pressure: 118/105. Preferred plus.")
-    assert d.underwriting_class not in ("preferred", "preferred_plus")
+    assert d.underwriting_class == "table_b"
+    assert any("bp_diastolic" in r for r in d.reasons)
 
 
-@pytest.mark.xfail(reason="KNOWN GAP (robustness): structured settlement fabricates PV from garbage input ('$0 per month' → pv≈343795)", strict=False)
 def test_structured_settlement_zero_payment_should_not_fabricate_value():
     q = rate_life(
         _bundle("Structured settlement: $0 per month for 240 payments. Claimant age: 34."),

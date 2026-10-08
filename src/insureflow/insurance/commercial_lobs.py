@@ -2090,9 +2090,9 @@ COMMERCIAL_LINES: list[dict[str, Any]] = [
 ]
 
 # Every commercial product has a leaf filing in the carrier book
-# (see insureflow.rating.leaf_filings). Dedicated LOB modules still own
-# UW depth for property / WC / D&O / trade credit / E&O / key person; the
-# remaining leaves rate from their product-specific filings.
+# (see insureflow.rating.leaf_filings). Dedicated modules own property,
+# WC, D&O, trade credit, E&O, key person, plus the actuarial manuals in
+# commercial.lobs.extended. Everything else still rates from its leaf filing.
 LIVE_COMMERCIAL_PRODUCT_IDS = frozenset(
     {
         "property_bi",

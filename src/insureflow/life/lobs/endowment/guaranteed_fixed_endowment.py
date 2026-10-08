@@ -16,6 +16,7 @@ from insureflow.life.lobs.base import (
     LifeProductContext,
     LobOutcome,
     add_common_loads,
+    apply_state_filing_gate,
     band_factor,
     finish_quote,
     medical_class_factor,
@@ -24,6 +25,7 @@ from insureflow.life.lobs.base import (
     stated_term_years,
 )
 from insureflow.rating.models import RateComponent
+from insureflow.underwriting.life_product import is_filed_endowment_product
 
 PRODUCT_ID = "guaranteed_fixed_endowment"
 LOGIC_PATH = "insureflow.life.lobs.endowment.guaranteed_fixed_endowment"
@@ -92,6 +94,8 @@ def underwrite_fixed_endowment(ctx: LifeProductContext) -> LobOutcome:
     )
     if uw.decision == "DECLINE":
         outcome.eligible = False
+        for finding in uw.findings:
+            outcome.add_reason(f"Endowment UW: {finding}")
     for finding in uw.findings[:6]:
         outcome.add_condition(f"Endowment UW: {finding}")
 
@@ -123,15 +127,20 @@ def underwrite_fixed_endowment(ctx: LifeProductContext) -> LobOutcome:
         }
     )
 
-    filing = ctx.filing_state
-    issue = ctx.issue_state
-    outcome.eligible = False
-    outcome.add_reason(f"fixed endowment priced on actuarial equivalence — illustrative only, no {filing}-filed endowment rates")
-    if issue and issue != filing:
-        outcome.add_reason(f"{filing} pilot exhibit applied — not a {issue} state-of-issue filing")
+    filed = is_filed_endowment_product(PRODUCT_ID)
+    apply_state_filing_gate(ctx, outcome, filed_for_state=filed, product_family="guaranteed_fixed_endowment")
+    if filed and outcome.eligible:
+        raw = (ctx.manual or {}).get("endowment_filing")
+        filing = raw if isinstance(raw, dict) else {}
+        outcome.metadata["filed_endowment"] = True
+        if filing.get("filing_id"):
+            outcome.metadata["filing_id"] = filing["filing_id"]
+        if filing.get("serff_tracking"):
+            outcome.metadata["serff_tracking"] = filing["serff_tracking"]
     return outcome
 
 
 def build_quote(ctx: LifeProductContext) -> Any:
     outcome = underwrite_fixed_endowment(ctx)
-    return finish_quote(ctx, outcome, logic_path=LOGIC_PATH, family="endowment")
+    filed = is_filed_endowment_product(PRODUCT_ID)
+    return finish_quote(ctx, outcome, logic_path=LOGIC_PATH, family="endowment", rating_engine="life_filing" if filed else "life_whole_life_actuarial")

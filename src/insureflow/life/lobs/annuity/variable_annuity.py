@@ -10,14 +10,16 @@ from __future__ import annotations
 from typing import Any
 
 from insureflow.life.lobs.actuarial import whole_life_annuity_due_factor
+from insureflow.life.lobs.annuity.qlac import _stated_consideration
 from insureflow.life.lobs.base import (
     LifeProductContext,
     LobOutcome,
+    apply_state_filing_gate,
     enforce_minimum_consideration,
     finish_quote,
     merge_state_rules,
-    purchase_price,
 )
+from insureflow.underwriting.life_product import is_filed_annuity_product
 
 PRODUCT_ID = "variable_annuity"
 LOGIC_PATH = "insureflow.life.lobs.annuity.variable_annuity"
@@ -50,7 +52,13 @@ MIN_PURCHASE_PRICE = 25_000.0
 
 def underwrite_variable_annuity(ctx: LifeProductContext) -> LobOutcome:
     outcome = LobOutcome(product_label="Variable Annuity")
-    principal = purchase_price(ctx)
+    stated = _stated_consideration(ctx)
+    if stated is None:
+        principal = 0.0
+        outcome.eligible = False
+        outcome.add_reason("Variable annuity consideration is not on the submission")
+    else:
+        principal = stated
     enforce_minimum_consideration(outcome, principal, MIN_PURCHASE_PRICE)
 
     state_rules = merge_state_rules(ctx, DEFAULT_STATE_RULES, STATE_RULES)
@@ -75,7 +83,10 @@ def underwrite_variable_annuity(ctx: LifeProductContext) -> LobOutcome:
         fee_years = min(years, 20)
         fund_at_vesting = round(fund_at_vesting * ((1.0 - float(state_rules["gmwb_rider_fee_pct"])) ** fee_years), 2)
     income_factor = whole_life_annuity_due_factor(vesting_age, ctx.sex_key, ctx.smoker, 0.04)
-    annual_payout = round(fund_at_vesting / income_factor, 2) if income_factor > 0 else 0.0
+    illustrated_payout = round(fund_at_vesting / income_factor, 2) if income_factor > 0 else 0.0
+    withdrawal_pct = float(state_rules["gmwb_withdrawal_pct"])
+    guaranteed_withdrawal = round(principal * withdrawal_pct, 2) if gmwb else 0.0
+    annual_payout = guaranteed_withdrawal if gmwb else illustrated_payout
 
     # Single-consideration product — the premium IS the purchase price.
     outcome.annual_premium = round(principal, 2)
@@ -91,7 +102,9 @@ def underwrite_variable_annuity(ctx: LifeProductContext) -> LobOutcome:
             "vesting_age": vesting_age,
             "fund_value_projection_air_basis": fund_at_vesting,
             "annual_payout_at_vesting": annual_payout,
+            "illustrated_payout_at_vesting": illustrated_payout,
             "monthly_payout_at_vesting": round(annual_payout / 12.0, 2),
+            "guaranteed_annual_withdrawal": guaranteed_withdrawal,
             "gmwb_rider": gmwb,
             "gmwb_rider_fee_pct": float(state_rules["gmwb_rider_fee_pct"]) if gmwb else None,
             "withdrawal_base_if_gmwb": round(principal, 2) if gmwb else None,
@@ -100,22 +113,32 @@ def underwrite_variable_annuity(ctx: LifeProductContext) -> LobOutcome:
         }
     )
 
-    filing = ctx.filing_state
-    issue = ctx.issue_state
-    outcome.eligible = False
-    outcome.add_reason("annuity illustration only — requires a payout / consideration filing to issue")
-    if issue and issue != filing:
-        outcome.add_reason(f"{filing} pilot exhibit applied — not a {issue} state-of-issue filing")
+    if not gmwb:
+        outcome.eligible = False
+        outcome.add_reason("Variable annuity subaccounts can lose value — the account projection is illustrated, not a guaranteed payout")
+
+    filed = is_filed_annuity_product(PRODUCT_ID)
+    apply_state_filing_gate(ctx, outcome, filed_for_state=filed, product_family="variable_annuity")
+    if filed and outcome.eligible:
+        raw = (ctx.manual or {}).get("annuity_filing")
+        filing = raw if isinstance(raw, dict) else {}
+        outcome.metadata["filed_annuity"] = True
+        if filing.get("filing_id"):
+            outcome.metadata["filing_id"] = filing["filing_id"]
+        if filing.get("serff_tracking"):
+            outcome.metadata["serff_tracking"] = filing["serff_tracking"]
     return outcome
 
 
 def build_quote(ctx: LifeProductContext) -> Any:
     outcome = underwrite_variable_annuity(ctx)
+    filed = is_filed_annuity_product(PRODUCT_ID)
+    gmwb = bool(outcome.metadata.get("gmwb_rider"))
     return finish_quote(
         ctx,
         outcome,
         logic_path=LOGIC_PATH,
         family="annuity",
-        rating_engine="annuity_illustration",
+        rating_engine="life_filing" if filed and gmwb else "annuity_illustration",
         apply_minimum_premium=False,
     )

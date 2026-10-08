@@ -261,30 +261,89 @@
   "filed_permanent_products": [
     "traditional_whole_life",
     "limited_pay_whole_life",
-    "participating_whole_life"
+    "participating_whole_life",
+    "non_participating_whole_life",
+    "single_premium_whole_life",
+    "modified_whole_life",
+    "graded_guaranteed_issue_whole_life"
   ],
   "permanent_filing": {
     "filing_id": "RYT-LIFE-WL-2026-01",
-    "product": "Traditional / Limited-Pay / Participating Whole Life",
+    "product": "Traditional / Limited-Pay / Participating / Non-Participating Whole Life",
     "serff_tracking": "RYT-LIFE-WL-2026-001",
     "products": [
       "traditional_whole_life",
       "limited_pay_whole_life",
-      "participating_whole_life"
+      "participating_whole_life",
+      "non_participating_whole_life",
+      "single_premium_whole_life",
+      "modified_whole_life",
+      "graded_guaranteed_issue_whole_life"
+    ]
+  },
+  "filed_endowment_products": [
+    "pure_endowment",
+    "full_endowment",
+    "guaranteed_fixed_endowment"
+  ],
+  "endowment_filing": {
+    "filing_id": "RYT-LIFE-END-2026-01",
+    "product": "Pure / With-Profit / Guaranteed Fixed Endowment",
+    "serff_tracking": "RYT-LIFE-END-2026-001",
+    "products": [
+      "pure_endowment",
+      "full_endowment",
+      "guaranteed_fixed_endowment"
     ]
   },
   "filed_annuity_products": [
-    "immediate_annuity"
+    "immediate_annuity",
+    "life_annuity",
+    "joint_survivor_annuity",
+    "qlac",
+    "structured_settlement_annuity",
+    "fixed_annuity",
+    "deferred_annuity",
+    "variable_annuity"
   ],
   "annuity_filing": {
     "filing_id": "RYT-LIFE-ANN-2026-01",
-    "product": "Immediate Annuity",
+    "product": "Immediate / Life / Joint-and-Survivor / QLAC / Structured Settlement / Fixed Income / Deferred Income / Variable GMWB Annuity",
     "serff_tracking": "RYT-LIFE-ANN-2026-001",
     "products": [
-      "immediate_annuity"
+      "immediate_annuity",
+      "life_annuity",
+      "joint_survivor_annuity",
+      "qlac",
+      "structured_settlement_annuity",
+      "fixed_annuity",
+      "deferred_annuity",
+      "variable_annuity"
     ]
   },
-  "notes": "IL pilot exhibits for term, traditional/limited-pay/participating whole life, and immediate annuity. Other permanent/ULIP/UL/annuity families remain illustrative loads, not issueable filings. Modal factors convert annual premium; actuarial memorandum required for production.",
+  "filed_money_back_products": [
+    "traditional_money_back",
+    "with_profit_money_back",
+    "children_money_back"
+  ],
+  "money_back_filing": {
+    "filing_id": "RYT-LIFE-MB-2026-01",
+    "product": "Traditional / With-Profit / Children's Money-Back",
+    "serff_tracking": "RYT-LIFE-MB-2026-001",
+    "products": [
+      "traditional_money_back",
+      "with_profit_money_back",
+      "children_money_back"
+    ]
+  },
+  "filed_gul_products": ["guaranteed_universal_life"],
+  "gul_filing": {
+    "filing_id": "RYT-LIFE-GUL-2026-01",
+    "product": "No-Lapse Guaranteed Universal Life",
+    "serff_tracking": "RYT-LIFE-GUL-2026-001",
+    "products": ["guaranteed_universal_life"]
+  },
+  "notes": "IL pilot exhibits for term, whole life, endowment, money-back, no-lapse GUL (premium solved at the 2% guaranteed credit), and immediate / life / joint-and-survivor annuities, QLAC (deferred on the contractual interest basis), structured settlement (stated payment schedule only), fixed-annuity income, and deferred-annuity income (contractual deferred life annuity; the credited fund is not the payout). Accumulation phases stay illustrated. Variable-annuity GMWB issues at 5% of the stated benefit base; the subaccount projection does not. Current-assumption, indexed, and variable UL, ULIP, and indexed annuities remain illustrative. Modal factors convert annual premium; actuarial memorandum required for production.",
   "relativity_basis": {
     "AL": "no_state_filing_generic_engine_only",
     "AK": "no_state_filing_generic_engine_only",

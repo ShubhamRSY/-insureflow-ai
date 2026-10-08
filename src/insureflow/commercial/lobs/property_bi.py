@@ -103,7 +103,7 @@ def apply_state_law_overlay(result: QuoteResult, issue_state: str) -> QuoteResul
     """
     state = normalize_state(issue_state)
     row = property_state_row(state)
-    result.metadata["lob_logic_path"] = LOGIC_PATH
+    result.metadata["lob_logic_path"] = result.metadata.get("lob_logic_path") or LOGIC_PATH
     result.metadata["state_rules_applied"] = {"issue_state": state, **row}
 
     conditions = list(result.metadata.get("conditions") or [])

@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from insureflow.storage.job_store import JobStore
+from insureflow.storage.job_store import JobStore, decode_record, encode_record
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +62,7 @@ class FileJobStore(JobStore):
             existing = self.get(namespace, job_id, org_id)
             created_at = (existing or {}).get("created_at") or datetime.now(tz=timezone.utc).isoformat()
             payload = {**data, "org_id": org_id, "created_at": created_at, "updated_at": datetime.now(tz=timezone.utc).isoformat()}
-            self._path(namespace, job_id, org_id).write_text(json.dumps(payload, default=str), encoding="utf-8")
+            self._path(namespace, job_id, org_id).write_text(encode_record(payload), encoding="utf-8")
             ids = self._read_index(namespace, org_id)
             if job_id not in ids:
                 ids.append(job_id)
@@ -73,7 +73,7 @@ class FileJobStore(JobStore):
         if not path.exists():
             return None
         try:
-            raw = json.loads(path.read_text(encoding="utf-8"))
+            raw = decode_record(path.read_text(encoding="utf-8"))
         except json.JSONDecodeError:
             return None
         return raw if isinstance(raw, dict) else None
