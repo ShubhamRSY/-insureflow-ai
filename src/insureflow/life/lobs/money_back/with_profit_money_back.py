@@ -21,7 +21,6 @@ from insureflow.life.lobs.base import (
     merge_state_rules,
     state_relativity,
 )
-from insureflow.underwriting.life_product import is_filed_money_back_product
 from insureflow.life.lobs.money_back.traditional_money_back import (
     DEFAULT_STATE_RULES as _TRADITIONAL_STATE_RULES,
 )
@@ -36,6 +35,7 @@ from insureflow.life.lobs.money_back.traditional_money_back import (
 from insureflow.life.money_back_uw import run_money_back_uw
 from insureflow.life.mortality import discount_factor, k_p_x
 from insureflow.rating.models import RateComponent
+from insureflow.underwriting.life_product import is_filed_money_back_product
 
 PRODUCT_ID = "with_profit_money_back"
 LOGIC_PATH = "insureflow.life.lobs.money_back.with_profit_money_back"

@@ -44,22 +44,22 @@ PRODUCT_IDS = frozenset(ROUTES)
 
 def build_quote(ctx: CommercialProductContext) -> QuoteResult:
     kind, line = ROUTES[ctx.product_id.strip().lower().replace("-", "_").replace(" ", "_")]
-    kwargs = {
-        "state": ctx.issue_state,
-        "schedule_mod_pct": ctx.schedule_mod_pct,
-        "market_mod_pct": ctx.market_mod_pct,
-    }
+    state = ctx.issue_state
+    schedule_mod_pct = ctx.schedule_mod_pct
+    market_mod_pct = ctx.market_mod_pct
     if kind == "gl":
-        result = rate_general_liability_iso(ctx.bundle, ctx.memo, **kwargs)
+        result = rate_general_liability_iso(ctx.bundle, ctx.memo, state=state, schedule_mod_pct=schedule_mod_pct, market_mod_pct=market_mod_pct)
     elif kind == "umbrella":
-        result = rate_umbrella(ctx.bundle, ctx.memo, **kwargs)
+        result = rate_umbrella(ctx.bundle, ctx.memo, state=state, schedule_mod_pct=schedule_mod_pct, market_mod_pct=market_mod_pct)
     elif kind == "package":
-        result = rate_package_policy(ctx.bundle, ctx.memo, line, **kwargs)
+        result = rate_package_policy(ctx.bundle, ctx.memo, line, state=state, schedule_mod_pct=schedule_mod_pct, market_mod_pct=market_mod_pct)
     else:
-        rated = rate_extended_commercial(ctx.bundle, ctx.memo, line, **kwargs)
+        rated = rate_extended_commercial(ctx.bundle, ctx.memo, line, state=state, schedule_mod_pct=schedule_mod_pct, market_mod_pct=market_mod_pct)
         result = rated or QuoteResult(
             bundle_id=ctx.bundle.bundle_id,
             line=line,
+            base_premium=0.0,
+            adjusted_premium=0.0,
             eligible=False,
             ineligibility_reasons=[f"No actuarial manual branch for {ctx.product_id}"],
         )

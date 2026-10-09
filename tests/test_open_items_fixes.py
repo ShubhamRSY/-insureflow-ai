@@ -90,7 +90,10 @@ def test_every_route_that_accepts_uploads_screens_them() -> None:
     def takes_uploads(route: APIRoute) -> bool:
         if route.body_field is None:
             return False
-        schema = json.dumps(TypeAdapter(route.body_field.field_info.annotation).json_schema())
+        ann = route.body_field.field_info.annotation
+        if ann is None:
+            return False
+        schema = json.dumps(TypeAdapter(ann).json_schema())
         return "InsuranceDocumentPayload" in schema or "MortgageDocumentPayload" in schema
 
     upload_routes = [r for r in api_main.app.routes if isinstance(r, APIRoute) and takes_uploads(r)]
@@ -134,7 +137,9 @@ def test_file_job_store_encrypts_records_and_reads_old_ones(tmp_path: Any, monke
     store.set("insurance", "job-1", {"status": "completed", "results": {"named_insured": "Northwind Logistics LLC"}}, org_id="o")
     raw = next(tmp_path.rglob("job-1*")).read_text()
     assert raw.startswith("ENC:v1:") and "Northwind" not in raw
-    assert store.get("insurance", "job-1", org_id="o")["results"]["named_insured"] == "Northwind Logistics LLC"
+    record = store.get("insurance", "job-1", org_id="o")
+    assert record is not None
+    assert record["results"]["named_insured"] == "Northwind Logistics LLC"
     # a record written before encryption existed still reads
     next(tmp_path.rglob("job-1*")).write_text(json.dumps({"status": "completed"}))
     assert store.get("insurance", "job-1", org_id="o") == {"status": "completed"}
@@ -171,8 +176,11 @@ def test_redis_job_store_encrypts_records(redis_url: str, monkeypatch: pytest.Mo
     store = RedisJobStore(redis_url)
     store.set("insurance", "job-2", {"results": {"named_insured": "Northwind Logistics LLC"}}, org_id="o")
     raw = redis.from_url(redis_url, decode_responses=True).get("insureflow:o:insurance:job:job-2")
+    assert isinstance(raw, str)
     assert raw.startswith("ENC:v1:") and "Northwind" not in raw
-    assert store.get("insurance", "job-2", org_id="o")["results"]["named_insured"] == "Northwind Logistics LLC"
+    record = store.get("insurance", "job-2", org_id="o")
+    assert record is not None
+    assert record["results"]["named_insured"] == "Northwind Logistics LLC"
 
 
 # ── 4. Dashboard bundle runs go through the same dispatch (Celery when available) ──
@@ -192,12 +200,18 @@ def test_bundle_run_uses_the_shared_dispatch(client: TestClient, monkeypatch: py
             return None
 
     sent: list[str] = []
+
+    def _send(job_id: str, data: object, org_id: str) -> str:
+        sent.append(job_id)
+        return "celery-task-1"
+
     monkeypatch.setattr(dbs, "get_draft_bundle_store", lambda: FakeStore())
     monkeypatch.setenv("INSURANCE_USE_CELERY", "1")
-    monkeypatch.setattr(dispatch, "send_pipeline_task", lambda job_id, data, org_id: sent.append(job_id) or "celery-task-1")
+    monkeypatch.setattr(dispatch, "send_pipeline_task", _send)
     r = client.post("/pipeline/bundles/b1/run")
     assert r.status_code == 202, r.text
     job = api_main.job_store.get(api_main.INSURANCE_NS, r.json()["job_id"], org_id="org-fix")
+    assert job is not None
     assert sent == [r.json()["job_id"]]
     assert job["backend"] == "celery"
 
@@ -255,9 +269,14 @@ def test_should_use_celery(monkeypatch: pytest.MonkeyPatch, env: str, requested:
 
 
 def test_worker_check_is_per_queue_and_cached(monkeypatch: pytest.MonkeyPatch) -> None:
-    calls = []
+    calls: list[int] = []
+
+    def _queues() -> set[str]:
+        calls.append(1)
+        return {"pipeline", "agents"}
+
     monkeypatch.setattr(dispatch, "_worker_cache", {})
-    monkeypatch.setattr(dispatch, "_queues_with_workers", lambda: calls.append(1) or {"pipeline", "agents"})
+    monkeypatch.setattr(dispatch, "_queues_with_workers", _queues)
     assert dispatch.worker_listening("pipeline") is True
     assert dispatch.worker_listening("pipeline-large") is False  # nobody serves the large queue
     assert dispatch.worker_listening("pipeline") is True

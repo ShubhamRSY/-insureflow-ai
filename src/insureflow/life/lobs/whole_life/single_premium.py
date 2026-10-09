@@ -21,8 +21,8 @@ from insureflow.life.lobs.base import (
     state_relativity,
 )
 from insureflow.life.whole_life_formulas import compute_full_whole_life_quote
-from insureflow.underwriting.life_product import is_filed_permanent_product
 from insureflow.rating.models import RateComponent
+from insureflow.underwriting.life_product import is_filed_permanent_product
 
 PRODUCT_ID = "single_premium_whole_life"
 LOGIC_PATH = "insureflow.life.lobs.whole_life.single_premium"

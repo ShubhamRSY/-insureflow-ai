@@ -88,7 +88,6 @@ def underwrite_structured_settlement(ctx: LifeProductContext) -> LobOutcome:
 
     # PV of the fixed payment stream (certain-and-period — not life-contingent).
     v = 1.0 / (1.0 + interest / 12.0)
-    months = years * 12
     pv_monthly_stream = monthly_payment * (1.0 - v**months) / (interest / 12.0)
     settlement_value = round(pv_monthly_stream, 2)
 

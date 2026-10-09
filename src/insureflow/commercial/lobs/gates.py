@@ -11,7 +11,7 @@ from __future__ import annotations
 from collections.abc import Callable
 
 from insureflow.commercial.lobs.base import CommercialProductContext
-from insureflow.models.submissions import SubmissionBundle
+from insureflow.models.submissions import LocationData, SubmissionBundle
 from insureflow.rating.models import QuoteResult
 from insureflow.underwriting.personal_lines import _blob
 
@@ -38,7 +38,7 @@ def _employees(bundle: SubmissionBundle) -> int:
     return int(m.group(1)) if m else 0
 
 
-def _locs(bundle: SubmissionBundle):
+def _locs(bundle: SubmissionBundle) -> list[LocationData]:
     return list(bundle.structured.locations or []) if bundle.structured else []
 
 
@@ -302,6 +302,8 @@ def build_quote(ctx: CommercialProductContext) -> QuoteResult:
         return QuoteResult(
             bundle_id=ctx.bundle.bundle_id,
             line=ctx.line,
+            base_premium=0.0,
+            adjusted_premium=0.0,
             eligible=False,
             ineligibility_reasons=[f"No leaf filing for {ctx.product_id}"],
             metadata={"lob_logic_path": LOGIC_PATH, "product_id": ctx.product_id},

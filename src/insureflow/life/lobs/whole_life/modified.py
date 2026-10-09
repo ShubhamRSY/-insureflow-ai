@@ -24,8 +24,8 @@ from insureflow.life.lobs.base import (
 )
 from insureflow.life.mortality import discount_factor, k_p_x
 from insureflow.life.whole_life_formulas import compute_full_whole_life_quote, whole_life_annuity_due
-from insureflow.underwriting.life_product import is_filed_permanent_product
 from insureflow.rating.models import RateComponent
+from insureflow.underwriting.life_product import is_filed_permanent_product
 
 PRODUCT_ID = "modified_whole_life"
 LOGIC_PATH = "insureflow.life.lobs.whole_life.modified"

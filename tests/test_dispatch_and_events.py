@@ -82,7 +82,7 @@ def test_celery_task_and_in_process_path_make_the_same_pipeline_call(fake_pipeli
 
 
 def test_v2_task_keeps_document_encoding(fake_pipeline: type[_FakePipeline]) -> None:
-    req = api_main.PipelineConfigRequest(documents=[{"filename": "a.pdf", "content": base64.b64encode(b"x").decode(), "encoding": "base64"}])
+    req = api_main.PipelineConfigRequest(documents=[InsuranceDocumentPayload(filename="a.pdf", content=base64.b64encode(b"x").decode(), encoding="base64")])
     api_main._run_pipeline_v2_task("job-v2", req, "org-a")
     assert fake_pipeline.calls[0]["documents"][0]["encoding"] == "base64"
 

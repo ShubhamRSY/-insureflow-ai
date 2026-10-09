@@ -18,9 +18,9 @@ from insureflow.life.lobs.base import (
     finish_quote,
     merge_state_rules,
 )
-from insureflow.underwriting.life_product import is_filed_permanent_product
 from insureflow.life.whole_life_formulas import compute_full_whole_life_quote
 from insureflow.rating.models import RateComponent
+from insureflow.underwriting.life_product import is_filed_permanent_product
 
 PRODUCT_ID = "graded_guaranteed_issue_whole_life"
 LOGIC_PATH = "insureflow.life.lobs.whole_life.graded"

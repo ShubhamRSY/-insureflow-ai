@@ -20,9 +20,9 @@ from insureflow.life.lobs.base import (
     merge_state_rules,
     state_relativity,
 )
-from insureflow.underwriting.life_product import is_filed_permanent_product
 from insureflow.life.whole_life_formulas import compute_full_whole_life_quote
 from insureflow.rating.models import RateComponent
+from insureflow.underwriting.life_product import is_filed_permanent_product
 
 PRODUCT_ID = "non_participating_whole_life"
 LOGIC_PATH = "insureflow.life.lobs.whole_life.non_participating"

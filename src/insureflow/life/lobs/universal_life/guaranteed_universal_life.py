@@ -22,9 +22,9 @@ from insureflow.life.lobs.base import (
     merge_state_rules,
     state_relativity,
 )
-from insureflow.underwriting.life_product import is_filed_gul_product
 from insureflow.life.whole_life_formulas import compute_full_whole_life_quote
 from insureflow.rating.models import RateComponent
+from insureflow.underwriting.life_product import is_filed_gul_product
 
 PRODUCT_ID = "guaranteed_universal_life"
 LOGIC_PATH = "insureflow.life.lobs.universal_life.guaranteed_universal_life"
@@ -165,16 +165,14 @@ def underwrite_gul(ctx: LifeProductContext) -> LobOutcome:
     checkpoint_years = {5, 10, 20, horizon_years}
     for year in range(1, horizon_years + 1):
         coi = ctx.face * q_x(ctx.age + year, ctx.sex_key, ctx.smoker) * COI_LOADING
-        raw = (av + annual - coi - ADMIN_FEE_ANNUAL) * (1.0 + GUARANTEED_CREDIT)
-        av = max(raw, 0.0)
+        credited = (av + annual - coi - ADMIN_FEE_ANNUAL) * (1.0 + GUARANTEED_CREDIT)
+        av = max(credited, 0.0)
         if year in checkpoint_years:
             projection[f"av_year_{year}"] = round(av, 2)
 
     if not funded:
         outcome.eligible = False
-        outcome.add_reason(
-            f"No premium at or below the face amount keeps the no-lapse guarantee funded to age {to_age} at the {GUARANTEED_CREDIT:.0%} credit"
-        )
+        outcome.add_reason(f"No premium at or below the face amount keeps the no-lapse guarantee funded to age {to_age} at the {GUARANTEED_CREDIT:.0%} credit")
 
     outcome.base_premium = round(formula.gross_premium * NO_LAPSE_LOAD, 2)
     outcome.annual_premium = annual

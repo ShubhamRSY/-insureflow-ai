@@ -100,7 +100,6 @@ def test_newly_live_leaf_lines_quote_via_engine():
         locations=[LocationData(address="1 Main", city="Austin", state="TX", zip_code="78701", building_value=5_000_000, contents_value=1_000_000)],
         financial=FinancialData(annual_revenue=50_000_000),
     )
-    b = SubmissionBundle(bundle_id="leaf8", structured=s)
     engine = InsuranceRatingEngine()
     facts = {
         "aviation": "aircraft hull N12345",
