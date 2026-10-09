@@ -688,9 +688,7 @@ def test_deferred_income_age_and_consideration_edges() -> None:
     assert at_vesting.metadata["years_to_vesting"] == 0
     assert at_vesting.metadata["vesting_age"] == 65
     assert at_vesting.metadata["fund_value_at_vesting"] == 100_000
-    assert at_vesting.metadata["annual_payout_at_vesting"] == pytest.approx(
-        at_vesting.metadata["illustrated_payout_at_vesting"]
-    )
+    assert at_vesting.metadata["annual_payout_at_vesting"] == pytest.approx(at_vesting.metadata["illustrated_payout_at_vesting"])
     assert at_vesting.adjusted_premium == 100_000
 
     at_max = income("Purchase price: $100000. Applicant age: 70. Sex: male. Non-smoker.")
