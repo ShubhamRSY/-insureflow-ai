@@ -1,0 +1,86 @@
+{
+  "submission": "SUB-014",
+  "fields": [
+    {
+      "field_id": "named_insured",
+      "value": "Nogal Accounting LLC",
+      "source": "application.md",
+      "start": 15,
+      "end": 35
+    },
+    {
+      "field_id": "premises_address",
+      "value": "12 Nogal St, San Antonio, TX 78212",
+      "source": "application.md",
+      "start": 54,
+      "end": 88
+    },
+    {
+      "field_id": "effective_date",
+      "value": "2027-02-01",
+      "source": "application.md",
+      "start": 105,
+      "end": 115
+    },
+    {
+      "field_id": "operations",
+      "value": "office, accounting, no cooking",
+      "source": "application.md",
+      "start": 143,
+      "end": 173
+    },
+    {
+      "field_id": "sales_or_payroll",
+      "value": "430000",
+      "source": "application.md",
+      "start": 192,
+      "end": 198
+    },
+    {
+      "field_id": "tiv_building",
+      "value": "900000",
+      "source": "application.md",
+      "start": 213,
+      "end": 219
+    },
+    {
+      "field_id": "construction",
+      "value": "frame",
+      "source": "application.md",
+      "start": 234,
+      "end": 239
+    },
+    {
+      "field_id": "year_built",
+      "value": "1955",
+      "source": "application.md",
+      "start": 252,
+      "end": 256
+    },
+    {
+      "field_id": "loss_run_valued_through",
+      "value": "2026-09-20",
+      "source": "loss-runs.md",
+      "start": 52,
+      "end": 62
+    }
+  ],
+  "conflicts": [
+    {
+      "field": "premises_address",
+      "values": [
+        {
+          "value": "12 Nogal St, San Antonio, TX 78212",
+          "source": "application.md"
+        },
+        {
+          "value": "120 Nogal St, San Antonio, TX 78212",
+          "source": "schedule.csv"
+        }
+      ],
+      "resolution": "resolved",
+      "resolved_value": "12 Nogal St, San Antonio, TX 78212",
+      "resolved_by": "reply.md states this value and not the other"
+    }
+  ]
+}

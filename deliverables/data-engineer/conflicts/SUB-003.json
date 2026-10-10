@@ -1,0 +1,37 @@
+{
+  "submission": "SUB-003",
+  "conflicts": [
+    {
+      "field": "premises_address",
+      "values": [
+        {
+          "value": "55 Culebra Park Dr, San Antonio, TX 78228",
+          "source": "application.md"
+        },
+        {
+          "value": "550 Culebra Park Dr, San Antonio, TX 78228",
+          "source": "schedule.csv"
+        }
+      ],
+      "resolution": "resolved",
+      "resolved_value": "55 Culebra Park Dr, San Antonio, TX 78228",
+      "resolved_by": "producer reply.md; schedule.csv replaced to match the application"
+    },
+    {
+      "field": "square_feet",
+      "values": [
+        {
+          "value": "8000",
+          "source": "application.md"
+        },
+        {
+          "value": "14000",
+          "source": "schedule.csv"
+        }
+      ],
+      "resolution": "resolved",
+      "resolved_value": "8000",
+      "resolved_by": "producer reply.md; schedule.csv replaced to match the application"
+    }
+  ]
+}

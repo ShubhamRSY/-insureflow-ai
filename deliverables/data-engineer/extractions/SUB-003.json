@@ -1,0 +1,102 @@
+{
+  "submission": "SUB-003",
+  "fields": [
+    {
+      "field_id": "named_insured",
+      "value": "Mission City Powder Coating LLC",
+      "source": "application.md",
+      "start": 59,
+      "end": 90
+    },
+    {
+      "field_id": "premises_address",
+      "value": "55 Culebra Park Dr, San Antonio, TX 78228",
+      "source": "application.md",
+      "start": 109,
+      "end": 150
+    },
+    {
+      "field_id": "effective_date",
+      "value": "2026-12-01",
+      "source": "application.md",
+      "start": 167,
+      "end": 177
+    },
+    {
+      "field_id": "operations",
+      "value": "powder coating metal parts, light manufacturing",
+      "source": "application.md",
+      "start": 205,
+      "end": 252
+    },
+    {
+      "field_id": "sales_or_payroll",
+      "value": "2100000",
+      "source": "application.md",
+      "start": 271,
+      "end": 278
+    },
+    {
+      "field_id": "tiv_building",
+      "value": "1800000",
+      "source": "application.md",
+      "start": 293,
+      "end": 300
+    },
+    {
+      "field_id": "construction",
+      "value": "metal",
+      "source": "application.md",
+      "start": 315,
+      "end": 320
+    },
+    {
+      "field_id": "year_built",
+      "value": "1976",
+      "source": "application.md",
+      "start": 333,
+      "end": 337
+    },
+    {
+      "field_id": "loss_run_valued_through",
+      "value": "2026-08-15",
+      "source": "loss-runs.md",
+      "start": 85,
+      "end": 95
+    }
+  ],
+  "conflicts": [
+    {
+      "field": "premises_address",
+      "values": [
+        {
+          "value": "55 Culebra Park Dr, San Antonio, TX 78228",
+          "source": "application.md"
+        },
+        {
+          "value": "550 Culebra Park Dr, San Antonio, TX 78228",
+          "source": "schedule.csv"
+        }
+      ],
+      "resolution": "resolved",
+      "resolved_value": "55 Culebra Park Dr, San Antonio, TX 78228",
+      "resolved_by": "producer reply.md; schedule.csv replaced to match the application"
+    },
+    {
+      "field": "square_feet",
+      "values": [
+        {
+          "value": "8000",
+          "source": "application.md"
+        },
+        {
+          "value": "14000",
+          "source": "schedule.csv"
+        }
+      ],
+      "resolution": "resolved",
+      "resolved_value": "8000",
+      "resolved_by": "producer reply.md; schedule.csv replaced to match the application"
+    }
+  ]
+}

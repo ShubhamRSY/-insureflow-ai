@@ -1,0 +1,69 @@
+{
+  "submission": "SUB-001",
+  "fields": [
+    {
+      "field_id": "named_insured",
+      "value": "Bright Ledger Bookkeeping LLC",
+      "source": "application.md",
+      "start": 79,
+      "end": 108
+    },
+    {
+      "field_id": "premises_address",
+      "value": "418 Nogales Ave, San Antonio, TX 78201",
+      "source": "application.md",
+      "start": 127,
+      "end": 165
+    },
+    {
+      "field_id": "effective_date",
+      "value": "2026-11-01",
+      "source": "application.md",
+      "start": 182,
+      "end": 192
+    },
+    {
+      "field_id": "operations",
+      "value": "bookkeeping office, no retail, no cooking",
+      "source": "application.md",
+      "start": 220,
+      "end": 261
+    },
+    {
+      "field_id": "sales_or_payroll",
+      "value": "900000",
+      "source": "application.md",
+      "start": 280,
+      "end": 286
+    },
+    {
+      "field_id": "tiv_building",
+      "value": "2400000",
+      "source": "application.md",
+      "start": 301,
+      "end": 308
+    },
+    {
+      "field_id": "construction",
+      "value": "masonry",
+      "source": "application.md",
+      "start": 323,
+      "end": 330
+    },
+    {
+      "field_id": "year_built",
+      "value": "1998",
+      "source": "application.md",
+      "start": 343,
+      "end": 347
+    },
+    {
+      "field_id": "loss_run_valued_through",
+      "value": "2026-09-30",
+      "source": "loss-runs.md",
+      "start": 108,
+      "end": 118
+    }
+  ],
+  "conflicts": []
+}

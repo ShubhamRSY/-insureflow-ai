@@ -1,0 +1,69 @@
+{
+  "submission": "SUB-010",
+  "fields": [
+    {
+      "field_id": "named_insured",
+      "value": "Leon Creek Painting LLC",
+      "source": "application.md",
+      "start": 15,
+      "end": 38
+    },
+    {
+      "field_id": "premises_address",
+      "value": "600 Nogalitos St, San Antonio, TX 78204",
+      "source": "application.md",
+      "start": 57,
+      "end": 96
+    },
+    {
+      "field_id": "effective_date",
+      "value": "2027-02-15",
+      "source": "application.md",
+      "start": 113,
+      "end": 123
+    },
+    {
+      "field_id": "operations",
+      "value": "light contractor, interior painting, no roofing",
+      "source": "application.md",
+      "start": 151,
+      "end": 198
+    },
+    {
+      "field_id": "sales_or_payroll",
+      "value": "480000",
+      "source": "application.md",
+      "start": 217,
+      "end": 223
+    },
+    {
+      "field_id": "tiv_building",
+      "value": "0",
+      "source": "application.md",
+      "start": 238,
+      "end": 239
+    },
+    {
+      "field_id": "construction",
+      "value": "masonry",
+      "source": "application.md",
+      "start": 254,
+      "end": 261
+    },
+    {
+      "field_id": "year_built",
+      "value": "1962",
+      "source": "application.md",
+      "start": 274,
+      "end": 278
+    },
+    {
+      "field_id": "loss_run_valued_through",
+      "value": "2026-09-01",
+      "source": "loss-runs.md",
+      "start": 55,
+      "end": 65
+    }
+  ],
+  "conflicts": []
+}

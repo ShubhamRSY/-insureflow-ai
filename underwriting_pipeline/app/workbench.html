@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Underwriter workbench</title>
+<style>
+body { font: 15px/1.4 sans-serif; margin: 2rem; }
+article { border-top: 1px solid #ccc; padding: 1rem 0; }
+table { border-collapse: collapse; }
+td, th { border: 1px solid #ddd; padding: 0.3rem 0.5rem; text-align: left; }
+</style></head><body>
+<h1>Underwriter workbench</h1>
+<p>Synthetic queue. A decision is logged only with an underwriter id. Decline and edit need a reason. Approve, edit, and decline are saved with that reason. This page does not bind and does not send a carrier package.</p>
+<p>Decisions so far: 0 approved, 0 edited, 0 declined. Corrections: 0.</p>
+<article id="SUB-009">
+<h2>SUB-009</h2>
+<p>Files: application.md, email.md, loss-runs.md, schedule.csv</p>
+<p>Not read by extraction: none</p>
+<p>Score: 10 · TIV_OVER_1M · not a price</p>
+<p>Carrier match: carrier_a · recommendation only</p>
+<h3>Extracted fields</h3>
+<table><tr><th>Field</th><th>Value</th><th>Confidence</th><th>Source</th><th>Cited text</th></tr><tr><td>named_insured</td><td>Frio Paper Wholesale LLC</td><td>1.0</td><td>application.md</td><td>Named insured: Frio Paper Wholesale LLC</td></tr><tr><td>premises_address</td><td>1800 Factor St, San Antonio, TX 78208</td><td>1.0</td><td>application.md</td><td>Premises address: 1800 Factor St, San Antonio, TX 78208</td></tr><tr><td>effective_date</td><td>2027-03-01</td><td>1.0</td><td>application.md</td><td>Effective date: 2027-03-01</td></tr><tr><td>operations</td><td>light wholesale, paper goods, no cold storage</td><td>1.0</td><td>application.md</td><td>Description of operations: light wholesale, paper goods, no cold storage</td></tr><tr><td>sales_or_payroll</td><td>2400000</td><td>1.0</td><td>application.md</td><td>Sales or payroll: 2400000</td></tr><tr><td>tiv_building</td><td>4100000</td><td>1.0</td><td>application.md</td><td>Building TIV: 4100000</td></tr><tr><td>construction</td><td>noncombustible</td><td>1.0</td><td>application.md</td><td>Construction: noncombustible</td></tr><tr><td>year_built</td><td>1995</td><td>1.0</td><td>application.md</td><td>Year built: 1995</td></tr><tr><td>loss_run_valued_through</td><td>2026-08-31</td><td>1.0</td><td>loss-runs.md</td><td>Valued through: 2026-08-31</td></tr></table>
+<h3>Conflicts</h3><p>No stored conflict.</p>
+<h3>Missing</h3>
+<p>none</p>
+<form method="post" action="/decision">
+<input type="hidden" name="submission" value="SUB-009">
+<label>Underwriter id <input name="underwriter_id" required></label>
+<label>Action
+<select name="action"><option>approve</option><option>edit</option><option>decline</option></select>
+</label>
+<label>Reason <input name="reason"></label>
+<button type="submit">Record decision</button>
+</form>
+</article>
+</body></html>

@@ -1,0 +1,69 @@
+{
+  "submission": "SUB-012",
+  "fields": [
+    {
+      "field_id": "named_insured",
+      "value": "Zarzamora Electric LLC",
+      "source": "application.md",
+      "start": 15,
+      "end": 37
+    },
+    {
+      "field_id": "premises_address",
+      "value": "2200 Zarzamora St, San Antonio, TX 78207",
+      "source": "application.md",
+      "start": 56,
+      "end": 96
+    },
+    {
+      "field_id": "effective_date",
+      "value": "2027-01-01",
+      "source": "application.md",
+      "start": 113,
+      "end": 123
+    },
+    {
+      "field_id": "operations",
+      "value": "light contractor, interior electrical, no roofing",
+      "source": "application.md",
+      "start": 151,
+      "end": 200
+    },
+    {
+      "field_id": "sales_or_payroll",
+      "value": "720000",
+      "source": "application.md",
+      "start": 219,
+      "end": 225
+    },
+    {
+      "field_id": "tiv_building",
+      "value": "200000",
+      "source": "application.md",
+      "start": 240,
+      "end": 246
+    },
+    {
+      "field_id": "construction",
+      "value": "masonry",
+      "source": "application.md",
+      "start": 261,
+      "end": 268
+    },
+    {
+      "field_id": "year_built",
+      "value": "1974",
+      "source": "application.md",
+      "start": 281,
+      "end": 285
+    },
+    {
+      "field_id": "loss_run_valued_through",
+      "value": "2026-10-01",
+      "source": "loss-runs.md",
+      "start": 54,
+      "end": 64
+    }
+  ],
+  "conflicts": []
+}

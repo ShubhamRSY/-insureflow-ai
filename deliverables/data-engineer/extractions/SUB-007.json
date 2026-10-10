@@ -1,0 +1,69 @@
+{
+  "submission": "SUB-007",
+  "fields": [
+    {
+      "field_id": "named_insured",
+      "value": "Brightwell Office Suites LLC",
+      "source": "application.md",
+      "start": 15,
+      "end": 43
+    },
+    {
+      "field_id": "premises_address",
+      "value": "900 Brooklyn Ave, San Antonio, TX 78215",
+      "source": "application.md",
+      "start": 62,
+      "end": 101
+    },
+    {
+      "field_id": "effective_date",
+      "value": "2027-02-01",
+      "source": "application.md",
+      "start": 118,
+      "end": 128
+    },
+    {
+      "field_id": "operations",
+      "value": "office tenants, accounting and law, no cooking",
+      "source": "application.md",
+      "start": 156,
+      "end": 202
+    },
+    {
+      "field_id": "sales_or_payroll",
+      "value": "1100000",
+      "source": "application.md",
+      "start": 221,
+      "end": 228
+    },
+    {
+      "field_id": "tiv_building",
+      "value": "3200000",
+      "source": "application.md",
+      "start": 243,
+      "end": 250
+    },
+    {
+      "field_id": "construction",
+      "value": "masonry",
+      "source": "application.md",
+      "start": 265,
+      "end": 272
+    },
+    {
+      "field_id": "year_built",
+      "value": "1988",
+      "source": "application.md",
+      "start": 285,
+      "end": 289
+    },
+    {
+      "field_id": "loss_run_valued_through",
+      "value": "2026-10-01",
+      "source": "loss-runs.md",
+      "start": 60,
+      "end": 70
+    }
+  ],
+  "conflicts": []
+}

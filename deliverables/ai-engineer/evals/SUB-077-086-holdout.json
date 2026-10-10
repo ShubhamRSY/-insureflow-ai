@@ -1,0 +1,246 @@
+{
+  "submissions": [
+    {
+      "submission": "SUB-077",
+      "format": "handwritten tilted scan",
+      "error": null,
+      "checks": {
+        "named_insured": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "miss",
+        "premises": "miss",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "miss"
+      },
+      "extracted_named_insured": "Rigsby Watch LLC"
+    },
+    {
+      "submission": "SUB-078",
+      "format": "rotated low-quality scan",
+      "error": null,
+      "checks": {
+        "named_insured": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "miss",
+        "premises": "miss",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "miss"
+      },
+      "extracted_named_insured": "Goliad Bookkeeping LLC"
+    },
+    {
+      "submission": "SUB-079",
+      "format": "multi-page loss run with claims",
+      "error": null,
+      "checks": {
+        "named_insured": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Blanco Clinic Office LLC"
+    },
+    {
+      "submission": "SUB-080",
+      "format": "multiple locations",
+      "error": null,
+      "checks": {
+        "named_insured": "miss",
+        "operations": "miss",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "miss",
+        "loss_runs": "not_credited",
+        "conflict": "miss",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Fresno Wholesale LLC."
+    },
+    {
+      "submission": "SUB-081",
+      "format": "blank ACORD plus attachment",
+      "error": null,
+      "checks": {
+        "named_insured": "hit",
+        "operations": "miss",
+        "sales": "miss",
+        "construction": "miss",
+        "year_built": "miss",
+        "premises": "hit",
+        "tiv": "miss",
+        "loss_runs": "miss",
+        "conflict": "hit",
+        "status": "miss"
+      },
+      "extracted_named_insured": "Hays Accounting LLC"
+    },
+    {
+      "submission": "SUB-082",
+      "format": "contradictory emails",
+      "error": null,
+      "checks": {
+        "named_insured": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "flagged",
+        "tiv": "hit",
+        "loss_runs": "not_credited",
+        "conflict": "flagged",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Devine Retail LLC"
+    },
+    {
+      "submission": "SUB-083",
+      "format": "duplicate resubmission",
+      "error": null,
+      "checks": {
+        "named_insured": "hit",
+        "operations": "hit",
+        "sales": "flagged",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "flagged",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Eads Gifts LLC"
+    },
+    {
+      "submission": "SUB-084",
+      "format": "handwritten Spanish scan",
+      "error": null,
+      "checks": {
+        "named_insured": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "miss",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "miss"
+      },
+      "extracted_named_insured": "Taqueria Luna LLC"
+    },
+    {
+      "submission": "SUB-085",
+      "format": "upside-down low-quality scan",
+      "error": null,
+      "checks": {
+        "named_insured": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "miss",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "miss"
+      },
+      "extracted_named_insured": "Woodlawn Painting LLC"
+    },
+    {
+      "submission": "SUB-086",
+      "format": "duplicate loss-run dates",
+      "error": null,
+      "checks": {
+        "named_insured": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "flagged",
+        "conflict": "flagged",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Soledad Law Office LLC"
+    }
+  ],
+  "counted": {
+    "named_insured": {
+      "hit": 9,
+      "miss": 1,
+      "not_credited": 0,
+      "flagged": 0
+    },
+    "premises": {
+      "hit": 5,
+      "miss": 4,
+      "not_credited": 0,
+      "flagged": 1
+    },
+    "operations": {
+      "hit": 8,
+      "miss": 2,
+      "not_credited": 0,
+      "flagged": 0
+    },
+    "sales": {
+      "hit": 8,
+      "miss": 1,
+      "not_credited": 0,
+      "flagged": 1
+    },
+    "tiv": {
+      "hit": 8,
+      "miss": 2,
+      "not_credited": 0,
+      "flagged": 0
+    },
+    "construction": {
+      "hit": 9,
+      "miss": 1,
+      "not_credited": 0,
+      "flagged": 0
+    },
+    "year_built": {
+      "hit": 7,
+      "miss": 3,
+      "not_credited": 0,
+      "flagged": 0
+    },
+    "loss_runs": {
+      "hit": 6,
+      "miss": 1,
+      "not_credited": 2,
+      "flagged": 1
+    },
+    "conflict": {
+      "hit": 6,
+      "miss": 1,
+      "not_credited": 0,
+      "flagged": 3
+    },
+    "status": {
+      "hit": 5,
+      "miss": 5,
+      "not_credited": 0,
+      "flagged": 0
+    }
+  }
+}

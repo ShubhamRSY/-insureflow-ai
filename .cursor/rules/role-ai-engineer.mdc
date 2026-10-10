@@ -1,0 +1,10 @@
+---
+description: Retired handle. Use @ai-engineer-assistant.
+alwaysApply: false
+---
+
+# Retired
+
+D-017 renamed this role to @ai-engineer-assistant. Follow `.cursor/rules/role-ai-engineer-assistant.mdc`.
+
+Do not change extraction, prompts, OCR, models, or evals from this file.

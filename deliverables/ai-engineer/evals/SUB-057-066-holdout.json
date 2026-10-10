@@ -1,0 +1,236 @@
+{
+  "submissions": [
+    {
+      "submission": "SUB-057",
+      "format": "handwritten tilted scan",
+      "error": null,
+      "checks": {
+        "named_insured": "miss",
+        "operations": "miss",
+        "sales": "miss",
+        "construction": "miss",
+        "year_built": "miss",
+        "premises": "miss",
+        "tiv": "miss",
+        "loss_runs": "miss",
+        "conflict": "not_credited",
+        "status": "miss"
+      },
+      "extracted_named_insured": null
+    },
+    {
+      "submission": "SUB-058",
+      "format": "rotated low-quality scan",
+      "error": null,
+      "checks": {
+        "named_insured": "miss",
+        "operations": "miss",
+        "sales": "miss",
+        "construction": "miss",
+        "year_built": "miss",
+        "premises": "miss",
+        "tiv": "miss",
+        "loss_runs": "miss",
+        "conflict": "not_credited",
+        "status": "miss"
+      },
+      "extracted_named_insured": null
+    },
+    {
+      "submission": "SUB-059",
+      "format": "multi-page loss run with claims",
+      "error": null,
+      "checks": {
+        "named_insured": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Vance Jackson Clinic Office LLC"
+    },
+    {
+      "submission": "SUB-060",
+      "format": "multiple locations",
+      "error": null,
+      "checks": {
+        "named_insured": "miss",
+        "operations": "miss",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "miss",
+        "premises": "miss",
+        "tiv": "hit",
+        "loss_runs": "not_credited",
+        "conflict": "miss",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Babcock Wholesale LLC."
+    },
+    {
+      "submission": "SUB-061",
+      "format": "blank ACORD plus attachment",
+      "error": null,
+      "checks": {
+        "named_insured": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Hackberry Accounting LLC"
+    },
+    {
+      "submission": "SUB-062",
+      "format": "contradictory emails",
+      "error": null,
+      "checks": {
+        "named_insured": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "not_credited",
+        "conflict": "hit",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Poplar Retail LLC"
+    },
+    {
+      "submission": "SUB-063",
+      "format": "duplicate resubmission",
+      "error": null,
+      "checks": {
+        "named_insured": "hit",
+        "operations": "hit",
+        "sales": "miss",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Duval Gifts LLC"
+    },
+    {
+      "submission": "SUB-064",
+      "format": "handwritten Spanish scan",
+      "error": null,
+      "checks": {
+        "named_insured": "miss",
+        "operations": "miss",
+        "sales": "miss",
+        "construction": "miss",
+        "year_built": "miss",
+        "premises": "miss",
+        "tiv": "miss",
+        "loss_runs": "miss",
+        "conflict": "not_credited",
+        "status": "miss"
+      },
+      "extracted_named_insured": null
+    },
+    {
+      "submission": "SUB-065",
+      "format": "upside-down low-quality scan",
+      "error": null,
+      "checks": {
+        "named_insured": "miss",
+        "operations": "miss",
+        "sales": "miss",
+        "construction": "miss",
+        "year_built": "miss",
+        "premises": "miss",
+        "tiv": "miss",
+        "loss_runs": "miss",
+        "conflict": "not_credited",
+        "status": "miss"
+      },
+      "extracted_named_insured": null
+    },
+    {
+      "submission": "SUB-066",
+      "format": "duplicate loss-run resubmission",
+      "error": null,
+      "checks": {
+        "named_insured": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "miss",
+        "conflict": "hit",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Bandera Law Office LLC"
+    }
+  ],
+  "counted": {
+    "named_insured": {
+      "hit": 5,
+      "miss": 5,
+      "not_credited": 0
+    },
+    "premises": {
+      "hit": 5,
+      "miss": 5,
+      "not_credited": 0
+    },
+    "operations": {
+      "hit": 5,
+      "miss": 5,
+      "not_credited": 0
+    },
+    "sales": {
+      "hit": 5,
+      "miss": 5,
+      "not_credited": 0
+    },
+    "tiv": {
+      "hit": 6,
+      "miss": 4,
+      "not_credited": 0
+    },
+    "construction": {
+      "hit": 6,
+      "miss": 4,
+      "not_credited": 0
+    },
+    "year_built": {
+      "hit": 5,
+      "miss": 5,
+      "not_credited": 0
+    },
+    "loss_runs": {
+      "hit": 3,
+      "miss": 5,
+      "not_credited": 2
+    },
+    "conflict": {
+      "hit": 5,
+      "miss": 1,
+      "not_credited": 4
+    },
+    "status": {
+      "hit": 6,
+      "miss": 4,
+      "not_credited": 0
+    }
+  }
+}

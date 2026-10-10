@@ -1,0 +1,236 @@
+{
+  "submissions": [
+    {
+      "submission": "SUB-037",
+      "format": "text PDF",
+      "error": null,
+      "checks": {
+        "named_insured": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Mission Creek Bookkeeping LLC"
+    },
+    {
+      "submission": "SUB-038",
+      "format": "scanned page",
+      "error": null,
+      "checks": {
+        "named_insured": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Probandt Shoe Repair LLC"
+    },
+    {
+      "submission": "SUB-039",
+      "format": "Excel schedule plus email",
+      "error": null,
+      "checks": {
+        "named_insured": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "not_credited",
+        "conflict": "hit",
+        "status": "hit"
+      },
+      "extracted_named_insured": "South Presa Dry Goods LLC"
+    },
+    {
+      "submission": "SUB-040",
+      "format": "email body",
+      "error": null,
+      "checks": {
+        "named_insured": "hit",
+        "operations": "miss",
+        "sales": "hit",
+        "construction": "miss",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "not_credited",
+        "conflict": "hit",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Nogal Street Pupusas LLC"
+    },
+    {
+      "submission": "SUB-041",
+      "format": "Spanish",
+      "error": null,
+      "checks": {
+        "named_insured": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Estudio Salinas LLC"
+    },
+    {
+      "submission": "SUB-042",
+      "format": "text PDF plus email",
+      "error": null,
+      "checks": {
+        "named_insured": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Cesar Chavez Tax LLC"
+    },
+    {
+      "submission": "SUB-043",
+      "format": "scanned page",
+      "error": null,
+      "checks": {
+        "named_insured": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "not_credited",
+        "conflict": "hit",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Labor Street Flats LLC"
+    },
+    {
+      "submission": "SUB-044",
+      "format": "Excel schedule plus email",
+      "error": null,
+      "checks": {
+        "named_insured": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "not_credited",
+        "conflict": "miss",
+        "status": "hit"
+      },
+      "extracted_named_insured": "McCullough Gifts LLC"
+    },
+    {
+      "submission": "SUB-045",
+      "format": "Spanish",
+      "error": null,
+      "checks": {
+        "named_insured": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Club del Rio LLC"
+    },
+    {
+      "submission": "SUB-046",
+      "format": "text PDF",
+      "error": null,
+      "checks": {
+        "named_insured": "hit",
+        "operations": "hit",
+        "sales": "hit",
+        "construction": "hit",
+        "year_built": "hit",
+        "premises": "hit",
+        "tiv": "hit",
+        "loss_runs": "hit",
+        "conflict": "hit",
+        "status": "hit"
+      },
+      "extracted_named_insured": "Martin Street Painting LLC"
+    }
+  ],
+  "counted": {
+    "named_insured": {
+      "hit": 10,
+      "miss": 0,
+      "not_credited": 0
+    },
+    "premises": {
+      "hit": 10,
+      "miss": 0,
+      "not_credited": 0
+    },
+    "operations": {
+      "hit": 9,
+      "miss": 1,
+      "not_credited": 0
+    },
+    "sales": {
+      "hit": 10,
+      "miss": 0,
+      "not_credited": 0
+    },
+    "tiv": {
+      "hit": 10,
+      "miss": 0,
+      "not_credited": 0
+    },
+    "construction": {
+      "hit": 9,
+      "miss": 1,
+      "not_credited": 0
+    },
+    "year_built": {
+      "hit": 10,
+      "miss": 0,
+      "not_credited": 0
+    },
+    "loss_runs": {
+      "hit": 6,
+      "miss": 0,
+      "not_credited": 4
+    },
+    "conflict": {
+      "hit": 9,
+      "miss": 1,
+      "not_credited": 0
+    },
+    "status": {
+      "hit": 10,
+      "miss": 0,
+      "not_credited": 0
+    }
+  }
+}

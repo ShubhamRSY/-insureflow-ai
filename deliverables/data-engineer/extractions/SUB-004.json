@@ -1,0 +1,69 @@
+{
+  "submission": "SUB-004",
+  "fields": [
+    {
+      "field_id": "named_insured",
+      "value": "Mesa Caliche Gifts LLC",
+      "source": "application.md",
+      "start": 52,
+      "end": 74
+    },
+    {
+      "field_id": "premises_address",
+      "value": "214 S Flores St, San Antonio, TX 78204",
+      "source": "application.md",
+      "start": 93,
+      "end": 131
+    },
+    {
+      "field_id": "effective_date",
+      "value": "2026-12-01",
+      "source": "application.md",
+      "start": 148,
+      "end": 158
+    },
+    {
+      "field_id": "operations",
+      "value": "dry retail, gifts and cards, no cooking, no liquor",
+      "source": "application.md",
+      "start": 186,
+      "end": 236
+    },
+    {
+      "field_id": "sales_or_payroll",
+      "value": "640000",
+      "source": "application.md",
+      "start": 255,
+      "end": 261
+    },
+    {
+      "field_id": "tiv_building",
+      "value": "900000",
+      "source": "application.md",
+      "start": 276,
+      "end": 282
+    },
+    {
+      "field_id": "construction",
+      "value": "masonry",
+      "source": "application.md",
+      "start": 297,
+      "end": 304
+    },
+    {
+      "field_id": "year_built",
+      "value": "1952",
+      "source": "application.md",
+      "start": 317,
+      "end": 321
+    },
+    {
+      "field_id": "loss_run_valued_through",
+      "value": "2026-09-01",
+      "source": "loss-runs.md",
+      "start": 76,
+      "end": 86
+    }
+  ],
+  "conflicts": []
+}
