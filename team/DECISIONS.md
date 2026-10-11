@@ -222,3 +222,26 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Follow-up tasks: T-054, T-055, T-056, T-057, T-058
 - Status: ACCEPTED
 - Amends: future hold-out size. Does not restore auto-decline or auto-bind. Does not switch OCR. Does not authorize a send. Does not rewrite a published hold-out score.
+
+## D-021 — A failed model call is not "no data"
+- Date / Owner: 2026-10-10 / @user
+- Context: Eight files came back with no fields on the regression before P-002 and P-003b, and that run did not save the error. One of them, SUB-051, scored 10 of 10 when it was called again alone. The model host refused a call on 2026-10-10 with HTTP 429, tokens per day: limit 200,000, used 198,304. The old code waited at most 60 seconds on a 429, tried six times, and then stored an empty file with every field missing.
+- Options considered: Keep an empty file as an incomplete file. Or give it its own status, block the send, and count it apart from a miss.
+- Decision: (1) A failed or empty model call gets the status "extraction_failed" with the error. The workbench shows it. No missing-information request is drafted for that file. No send is allowed for that file, by the account manager or by the user. Every scorer counts it apart: hit, miss, not credited, flagged, call failed. (2) SUB-077 through SUB-086 is scored again with the retry and with no extraction change. If a call failed in the original run, the rerun replaces the original score. Both are kept in the memo. (3) Every failed call is counted by cause: rate limit 429, timeout, or other. Calls are paced to the host's token limit. (4) P-006 is approved. It is implemented only after (1), (2), and (3) are done. The regression runs again after it.
+- Rationale: The user said this directly.
+- Dissent: none
+- Follow-up tasks: T-059, T-060, T-061, T-062
+- Status: ACCEPTED
+- Amends: how every score is counted from now on. Does not restore auto-decline or auto-bind. Does not authorize a send. Published scores before this decision are not recounted.
+
+## D-022 — Extraction cache, a quick regression set, and a token log
+- Date / Owner: 2026-10-10 / @user
+- Context: Every score run called the model again for every file. The model host allows 200,000 tokens a day. One day of scoring used all of it, and the next runs waited on the limit or failed.
+- Options considered: Keep calling the model on every run. Or save each model result and call the model only when the files, the prompt, the OCR settings, or the model change.
+- Decision: P-007 is approved and in the code. (1) Each model result is saved under a key made from the file contents, the prompt version, the OCR settings, and the model name. A matching key is reused. Rules that run after the model, such as the gates, validation, status, conflicts, and carrier match, run again on the saved result with no model call. (2) An interrupted score continues from the saved results. (3) A failed or empty call is never saved. It stays "extraction_failed" and is called again on the next run. (4) The check after each change is a quick set of 15 development files. The full 60 files run only at milestones. (5) Tokens are logged for each call and each run. (6) The order after P-007 is: finish the SUB-077 through SUB-086 rerun, check P-002 and P-003b on saved results, then P-006.
+- Rationale: The user said this directly.
+- Dissent: none
+- Follow-up tasks: T-063, T-064
+- Status: ACCEPTED
+- Amends: D-020 item 8. The check after each approved change is the quick set of 15. The full regression runs at milestones. Does not change a hit or miss rule. Does not authorize a send.
+

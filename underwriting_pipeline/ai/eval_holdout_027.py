@@ -115,6 +115,8 @@ def score_one(sid: str) -> dict:
         checks["status"] = "miss" if gold_complete else "not_credited"
     else:
         checks["status"] = "hit" if report["complete"] is gold_complete else "miss"
+    if report.get("error"):
+        checks = dict.fromkeys(checks, "call_failed")  # a failed or empty model call is not a miss
     return {
         "submission": sid,
         "format": gold.get("format"),
@@ -126,7 +128,7 @@ def score_one(sid: str) -> dict:
 
 def main() -> None:
     rows = [score_one(sid) for sid in IDS]
-    counted = {field: {"hit": 0, "miss": 0, "not_credited": 0} for field in FIELDS}
+    counted = {field: {"hit": 0, "miss": 0, "not_credited": 0, "call_failed": 0} for field in FIELDS}
     for row in rows:
         for field, mark in row["checks"].items():
             counted[field][mark] += 1
@@ -141,12 +143,12 @@ def main() -> None:
         "",
         "## Per-field",
         "",
-        "| Field | Hit | Miss | Not credited |",
-        "|---|---|---|---|",
+        "| Field | Hit | Miss | Not credited | Call failed |",
+        "|---|---|---|---|---|",
     ]
     for field in FIELDS:
         item = counted[field]
-        lines.append(f"| {field} | {item['hit']} | {item['miss']} | {item['not_credited']} |")
+        lines.append(f"| {field} | {item['hit']} | {item['miss']} | {item['not_credited']} | {item['call_failed']} |")
     lines.append("")
     lines.append("## Per submission")
     lines.append("")

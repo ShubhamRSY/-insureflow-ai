@@ -524,6 +524,9 @@ def process_submission(folder: Path) -> dict:
         except Exception as exc:
             extracted = {"fields": [], "conflicts": []}
             error = llm_extract._safe(str(exc))
+        else:
+            if not extracted["conflicts"] and not any(row.get("value") for row in extracted["fields"]):
+                error = "model call returned no fields"
     for row in extracted["fields"]:
         field_id = row.get("field_id")
         if field_id not in merged or not row.get("value"):
@@ -589,7 +592,12 @@ def process_submission(folder: Path) -> dict:
     report["needs_human"] = needs_human
     report["locations"] = locations
     report["error"] = error
-    if report["complete"]:
+    # A failed or empty model call is not "no data". Nothing is asked of the producer and nothing is sent.
+    report["status"] = "extraction_failed" if error else "complete" if report["complete"] else "incomplete"
+    if error:
+        report["complete"] = False
+        report["request"] = None
+    elif report["complete"]:
         report["request"] = None
     else:
         text = _request(folder.name, report["missing"], [c["field"] for c in open_conflicts])

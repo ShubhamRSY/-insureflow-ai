@@ -183,6 +183,9 @@ def render(queue: list[dict], counts: dict | None = None) -> str:
         for row in report["fields"]:
             if row["field_id"] == "premises_address":
                 address_check = row.get("address_check") or "—"
+        extraction = "ok"
+        if report.get("status") == "extraction_failed":
+            extraction = f"FAILED — {report['error']}. No field was read. This is not a missing-data file. Sends are blocked."
         missing = report["missing"] + report.get("extra", [])
         blocks.append(
             f"""<article id="{html.escape(item['id'])}">
@@ -191,6 +194,7 @@ def render(queue: list[dict], counts: dict | None = None) -> str:
 <p>Not read by extraction: {html.escape(', '.join(item['ignored']) or 'none')}</p>
 <p>Score: {item['score']['points']} · {html.escape(', '.join(item['score']['reason_codes']) or 'none')} · not a price</p>
 <p>Carrier match: {html.escape(item['route'])} · recommendation only</p>
+<p>Extraction: {html.escape(extraction)}</p>
 <p>Needs human read: {html.escape(', '.join(report.get('needs_human') or []) or 'none')}</p>
 <p>Address check: {html.escape(address_check)}</p>
 <p>Locations: {html.escape('; '.join(('primary ' if row.get('primary') else 'other ') + row['address'] for row in report.get('locations') or []) or 'one premises')}</p>

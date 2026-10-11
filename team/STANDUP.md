@@ -892,3 +892,24 @@ Format:
 - Done: Recorded D-020. Left the app repo alone because it already has uncommitted work.
 - Doing next: Wait for the after regression and for you on P-006.
 - Blocked by / need from: You, for the dirty app repo and for P-006.
+
+### 2026-10-10 — @ai-engineer-assistant
+- Done: Added "extraction_failed", the send block, and the call-failed count. Saved the before-change comparison memo. Found the daily token limit on the model host.
+- Doing next: Finish the SUB-077 through SUB-086 rerun and the regression, report failed calls by cause, then P-006.
+- Blocked by / need from: The model host's daily token limit. A higher limit from you would end the wait.
+
+### 2026-10-10 — @pm
+- Done: Recorded D-021. The team folders are in the app repo on ai-team. Removed the duplicate log entries.
+- Doing next: Wait for the two score runs.
+- Blocked by / need from: T-058 and T-060.
+
+### 2026-10-10 — @ai-engineer-assistant
+- Done: Implemented P-007: the cache, the token log, and the quick set of 15. Restarted the SUB-077 through SUB-086 rerun through the cache.
+- Doing next: Finish that rerun, score the quick set for P-002 and P-003b, then P-006.
+- Blocked by / need from: The model host's daily token limit.
+
+### 2026-10-10 — @pm
+- Done: Recorded D-022.
+- Doing next: Wait for T-060 and T-064.
+- Blocked by / need from: T-060 and T-064.
+

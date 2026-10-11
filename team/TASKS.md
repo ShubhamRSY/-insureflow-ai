@@ -668,7 +668,94 @@ D-004 (user, 2026-10-09): Sanger & Altgelt agency pipeline. Eight steps. No auto
   - [ ] Any field whose hit count drops is reported
   - [ ] The before file is kept
 - Output: deliverables/ai-engineer/evals/regression-SUB-017-076-after-P002-P003b.json
-- Notes: D-020. Running. Official hold-out files are not rewritten.
+- Notes: D-020, D-022. The full run was stopped. Under D-022 the check after a change is the quick set in T-064, and the full 60 run at the next milestone. Official hold-out files are not rewritten.
+
+### T-059 — Status "extraction_failed" for a failed or empty model call
+- Owner: @ai-engineer-assistant
+- Requested by: @user
+- Status: IN_REVIEW
+- Priority: P0
+- Depends on: —
+- Reviewers: @model-risk, @software-engineer, @account-manager
+- Acceptance criteria:
+  - [x] A failed call and a call with no fields both get the status and the error
+  - [x] The workbench shows it
+  - [x] No send is allowed for that file, and no missing-information request is drafted
+  - [x] Every scorer counts call failed apart from a miss
+  - [x] Self-checks passed
+- Output: underwriting_pipeline/ai/prepare.py, underwriting_pipeline/app/package.py, underwriting_pipeline/app/workbench.py, underwriting_pipeline/ai/eval_gold.py, underwriting_pipeline/ai/eval_holdout*.py
+- Notes: D-021. The scorers were edited only to add the call-failed count. No hit or miss rule was changed.
+
+### T-060 — Score SUB-077 through SUB-086 again with the retry
+- Owner: @ai-engineer-assistant
+- Requested by: @user
+- Status: IN_PROGRESS
+- Priority: P0
+- Depends on: T-059
+- Reviewers: @model-risk
+- Acceptance criteria:
+  - [ ] Scored again with the retry and no extraction change
+  - [ ] The original score and the rerun are both in the memo
+  - [ ] The original is replaced only if one of its calls failed
+- Output: deliverables/ai-engineer/evals/SUB-077-086-holdout-rerun.md, deliverables/ai-engineer/evals/SUB-077-086-holdout-original.md
+- Notes: D-021. The original run saved no error and every file returned a name. Running. Waits on the host's daily token limit.
+
+### T-061 — Count failed calls by cause and pace the calls
+- Owner: @ai-engineer-assistant
+- Requested by: @user
+- Status: IN_PROGRESS
+- Priority: P0
+- Depends on: T-059
+- Reviewers: @model-risk, @ml-engineer
+- Acceptance criteria:
+  - [x] Each failed attempt is saved as rate limit 429, timeout, or other
+  - [x] Calls wait for the per-minute token budget, and a 429 waits as long as the host asks
+  - [ ] The counts from T-058 and T-060 are reported
+- Output: underwriting_pipeline/ai/llm_extract.py, underwriting_pipeline/ai/regression_dev.py
+- Notes: D-021. The host allows 8,000 tokens a minute, 200,000 tokens a day, and 1,000 requests a day. The daily token limit was reached on 2026-10-10. Pacing cannot raise a daily limit.
+
+### T-063 — Implement P-007, the extraction cache
+- Owner: @ai-engineer-assistant
+- Requested by: @user
+- Status: IN_REVIEW
+- Priority: P0
+- Depends on: T-059
+- Reviewers: @model-risk, @ml-engineer
+- Acceptance criteria:
+  - [x] The key is the file contents, the prompt version, the OCR settings, and the model name
+  - [x] The same key does not call the model twice
+  - [x] A failed or empty call is not saved and is called again
+  - [x] Tokens are logged for each call and each run
+  - [x] Self-check passed
+- Output: underwriting_pipeline/ai/llm_extract.py, underwriting_pipeline/ai/sources.py, underwriting_pipeline/cache/
+- Notes: D-022. The key also holds the text sent to the model, so a change in OCR output is a new key even if the OCR settings line was not updated. `python underwriting_pipeline/ai/llm_extract.py --budget` prints tokens for the last 24 hours.
+
+### T-064 — Quick regression set of 15 files
+- Owner: @ai-engineer-assistant
+- Requested by: @user
+- Status: IN_PROGRESS
+- Priority: P0
+- Depends on: T-063
+- Reviewers: @model-risk
+- Acceptance criteria:
+  - [x] 15 development files: text PDF, scan, Excel, email, Spanish, conflicts, and missing loss runs
+  - [ ] Scored once after P-002 and P-003b, and any field that drops is reported
+- Output: underwriting_pipeline/ai/regression_dev.py, deliverables/ai-engineer/evals/regression-quick-15-after-P002-P003b.json
+- Notes: D-022. SUB-027, 029, 038, 042, 044, 050, 051, 053, 056, 067, 070, 071, 073, 074, 076. Run with `--quick`. This replaces the full run for T-058. The full 60 run at the next milestone.
+
+### T-062 — Implement P-006
+- Owner: @ai-engineer-assistant
+- Requested by: @user
+- Status: BLOCKED
+- Priority: P1
+- Depends on: T-059, T-060, T-061
+- Reviewers: @model-risk, @senior-underwriter
+- Acceptance criteria:
+  - [ ] EasyOCR runs only on a scanned page whose address fails validation or whose Tesseract score is under 0.75
+  - [ ] The fallback cannot create a loss-run date that Tesseract did not show
+  - [ ] The regression runs again and any field that drops is reported
+- Output: underwriting_pipeline/ai/sources.py
+- Notes: D-021, D-022. Approved. Not started. Waits on T-060 and T-064.
 
 ### T-022 — Agency regulatory register
 - Owner: @compliance

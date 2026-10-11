@@ -129,6 +129,8 @@ def score_one(sid: str) -> dict:
         "conflict": hit_conflict(gold["conflict"], report),
         "status": hit_status(gold["status"], report),
     }
+    if report.get("error"):
+        checks = dict.fromkeys(checks, "call_failed")  # a failed or empty model call is not a miss
     return {
         "submission": sid,
         "format": gold.get("format"),
@@ -138,7 +140,7 @@ def score_one(sid: str) -> dict:
         "missing": report["missing"],
         "conflicts": [c["field"] for c in report["conflicts"]],
         "checks": checks,
-        "correct": sum(checks.values()),
+        "correct": sum(ok is True for ok in checks.values()),
         "scored": len(checks),
     }
 
@@ -148,7 +150,7 @@ def main() -> None:
     totals = {field: 0 for field in FIELDS}
     for row in rows:
         for field, ok in row["checks"].items():
-            totals[field] += int(ok)
+            totals[field] += ok is True
     n = len(rows)
     payload = {"submissions": rows, "per_field": totals, "n": n}
     OUT_JSON.write_text(json.dumps(payload, indent=2) + "\n")
@@ -174,11 +176,12 @@ def main() -> None:
     lines.append("## Per submission")
     lines.append("")
     for row in rows:
-        missed = [k for k, ok in row["checks"].items() if not ok]
+        missed = [k for k, ok in row["checks"].items() if ok is False]
         lines.append(
             f"- {row['submission']} ({row['format']}): {row['correct']}/{row['scored']}. "
             f"Ignored: {', '.join(row['ignored_files']) or 'none'}. "
-            f"Misses: {', '.join(missed) or 'none'}."
+            f"Misses: {', '.join(missed) or 'none'}. "
+            f"Call failed: {'yes' if 'call_failed' in row['checks'].values() else 'no'}."
         )
     lines.append("")
     OUT_MD.write_text("\n".join(lines))

@@ -1134,3 +1134,24 @@ Message: I accept the comparison as a development rerun, not as a replacement of
 [2026-10-10 | @pm → @user] TYPE: UPDATE
 Re: D-020
 Message: D-020 is recorded. P-003b and the address flag are in the code. P-006 is waiting on you. The after-change regression is running and will report any field that drops. The app repo was not touched: its ai-team branch already has uncommitted files. Nothing was copied, stashed, or committed. Nothing was sent.
+
+---
+[2026-10-10 | @user → @pm, @ai-engineer-assistant, @model-risk, @account-manager] TYPE: UPDATE
+Re: D-021
+Message: A failed or empty model call must never look like "no data". Add status "extraction_failed" with the error, show it in the workbench, block sends for that file, and count it separately in every eval. Rerun SUB-077 through SUB-086 with the retry and no extraction changes; if a call failed in the original run, the rerun replaces it and both are kept in the memo. Report how many calls failed and why; if rate limits are the cause, add pacing. approve change P-006, implemented only after those three are done, then run the regression check again.
+
+---
+[2026-10-10 | @ai-engineer-assistant → @user, @model-risk, @pm] TYPE: UPDATE
+Re: D-021
+Message: The status, the send block, the workbench line, and the call-failed count are in the code. Self-checks passed. The cause found so far is the host's daily limit: HTTP 429, tokens per day, 200,000 allowed and 198,304 used. The old code waited 60 seconds at most and then stored an empty file. It now waits as long as the host asks. The SUB-077 through SUB-086 rerun and the SUB-017 through SUB-076 regression are running and are slow for that reason. No counts yet. P-006 is not started. The team folders now live in the app repo on ai-team. The log duplicate is removed and regression-SUB-017-076.md is saved. Nothing was sent.
+
+---
+[2026-10-10 | @user → @pm, @ai-engineer-assistant, @model-risk, @ml-engineer] TYPE: UPDATE
+Re: D-022
+Message: Stop the current rerun and keep what it finished. P-007 extraction cache is approved, implement now: cache every model result by file contents, prompt version, OCR settings, and model name; rule-only changes rerun on cached results with no model calls; runs are resumable; a failed call is never cached; a quick regression set of 15 files after each change and the full 60 only at milestones; log tokens per call and per run; report my Groq limits per model and files per day. Then finish the SUB-077 through SUB-086 rerun from the cache, check P-002 and P-003b on cached results, then P-006.
+
+---
+[2026-10-10 | @ai-engineer-assistant → @user, @model-risk, @pm] TYPE: UPDATE
+Re: D-022
+Message: The rerun was stopped. Its one finished file, SUB-077, was held in memory and was lost, because that code wrote only at the end. P-007 is in the code and its self-check passed. The SUB-077 through SUB-086 rerun started again through the cache and has 9 of 10 files saved. The quick set of 15 follows it. Both wait on the daily token limit. The account shows three chat models, each with 1,000 requests and 200,000 tokens a day. P-006 is not started. Nothing was sent.
+

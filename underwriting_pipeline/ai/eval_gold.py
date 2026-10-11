@@ -150,12 +150,16 @@ def main() -> None:
         "carrier_route": [],
     }
     details = []
+    call_failed = []
     for sub in IDS:
         folder = INBOX / sub
         gold = parse_gold((GOLD / f"{sub}.md").read_text())
         if CUES[sub] not in gold["expected recommendation"]:
             raise SystemExit(f"gold cue drifted for {sub}")
         report = prepare.process_submission(folder)
+        if report.get("error"):
+            call_failed.append(sub)  # a failed or empty model call is not scored and is not a miss
+            continue
         by = field_map(report)
         got_conflicts = {c["field"] for c in report["conflicts"]}
         expect_conflicts = expected_conflict_fields(gold["conflict"])
@@ -286,6 +290,7 @@ def main() -> None:
         "- Synthetic gold set only. Not a production approval.",
         "- Command: `python underwriting_pipeline/ai/eval_gold.py`",
         "- Scored with `prepare.process_submission` on `simulation/inbox` before this round's producer replies.",
+        f"- Call failed, not scored: {', '.join(call_failed) or 'none'}.",
         "",
         "## How a hit is counted",
         "",

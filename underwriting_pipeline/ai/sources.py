@@ -6,11 +6,14 @@ Unreadable scans are returned empty and marked needs_human. Nothing is guessed f
 """
 
 import csv
+import hashlib
 import re
 from io import StringIO
 from pathlib import Path
 
 IMAGE = {".png", ".jpg", ".jpeg", ".tif", ".tiff"}
+# Part of the extraction cache key. Change this line whenever the OCR steps below change.
+OCR_SETTINGS = "tesseract psm6; osd turn; deskew +-12; rule lift; x2 lanczos; pdf 200dpi"
 
 
 def _fill(image):
@@ -196,9 +199,11 @@ def read_folder(folder: Path) -> list[dict]:
             text, needs_human, ocr_confidence = _ocr_image(path)
         else:
             continue
-        doc = {"name": path.name, "text": text, "needs_human": needs_human}
+        doc = {"name": path.name, "text": text, "needs_human": needs_human, "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
         if ocr_confidence is not None:
             doc["ocr_confidence"] = round(ocr_confidence / 100, 3)
+        if suffix == ".pdf" or suffix in IMAGE:
+            doc["ocr"] = OCR_SETTINGS
         docs.append(doc)
     return docs
 

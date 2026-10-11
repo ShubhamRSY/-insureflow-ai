@@ -9,17 +9,21 @@ A 429 waits and retries. Do not put a real key in a file in this project.
 # ponytail: one chat call per submission. Batch when a queue is large enough to measure.
 """
 
+import hashlib
 import json
 import os
 import re
+import sys
 import time
 import urllib.error
 import urllib.request
+from pathlib import Path
 
 MIN_CONFIDENCE = 0.75
 DEFAULT_BASE = "http://localhost:11434/v1"
 DEFAULT_MODEL = "qwen2.5:7b"
 DEFAULT_KEY = "ollama"
+MAX_WAIT = float(os.environ.get("LLM_MAX_WAIT") or 60)  # seconds to wait on one 429; a batch scorer sets this higher
 
 SYSTEM = """You extract commercial insurance fields from the documents.
 Return one JSON object and nothing else.
@@ -35,6 +39,58 @@ If two documents disagree, do not pick a side. Leave that field null and add a c
 Fields: named_insured, premises_address, effective_date, operations, sales_or_payroll, tiv_building, construction, year_built, loss_run_valued_through.
 Schema: {"fields":[{"field_id":"","value":null,"source":"","quote":"","confidence":0}],"conflicts":[{"field":"","values":[{"value":"","source":"","quote":"","confidence":0}]}]}
 """
+
+
+# P-007. A model result is saved under a key made from the files, the prompt, the OCR settings, and the model.
+# The same key is never called twice. Rules after the model (gates, validation, status, conflicts, carrier match)
+# run again on the saved result with no model call. A failed or empty call is never saved.
+CACHE = Path(os.environ.get("LLM_CACHE_DIR") or Path(__file__).resolve().parents[1] / "cache")
+PROMPT_VERSION = hashlib.sha256(SYSTEM.encode()).hexdigest()[:12]
+USAGE: list[dict] = []  # every extraction in this process: tokens, or cached
+
+
+def cache_key(docs: list[dict], model: str) -> str:
+    files = [[doc["name"], doc.get("sha256"), doc.get("ocr"), doc.get("needs_human", False), doc["text"]] for doc in docs]
+    return hashlib.sha256(json.dumps([PROMPT_VERSION, model, files]).encode()).hexdigest()
+
+
+def _log_tokens(model: str, names: list[str], usage: dict) -> None:
+    row = {
+        "at": time.strftime("%Y-%m-%dT%H:%M:%S"),
+        "epoch": int(time.time()),
+        "model": model,
+        "files": names,
+        "prompt_tokens": usage.get("prompt_tokens", 0),
+        "completion_tokens": usage.get("completion_tokens", 0),
+        "total_tokens": usage.get("total_tokens", 0),
+    }
+    USAGE.append(row)
+    CACHE.mkdir(parents=True, exist_ok=True)
+    with (CACHE / "token_log.jsonl").open("a") as log:
+        log.write(json.dumps(row) + "\n")
+
+
+def budget() -> dict:
+    """Tokens and calls in this run, and tokens per model in the last 24 hours from the log."""
+    day: dict[str, dict] = {}
+    log = CACHE / "token_log.jsonl"
+    if log.exists():
+        for line in log.read_text().splitlines():
+            row = json.loads(line)
+            if row["epoch"] >= time.time() - 86400:
+                item = day.setdefault(row["model"], {"calls": 0, "tokens": 0})
+                item["calls"] += 1
+                item["tokens"] += row["total_tokens"]
+    calls = [row for row in USAGE if not row.get("cached")]
+    return {
+        "this_run": {
+            "model_calls": len(calls),
+            "from_cache": len(USAGE) - len(calls),
+            "tokens": sum(row["total_tokens"] for row in calls),
+            "tokens_per_call": round(sum(row["total_tokens"] for row in calls) / len(calls)) if calls else 0,
+        },
+        "last_24_hours": day,
+    }
 
 
 def _safe(message: str) -> str:
@@ -137,11 +193,41 @@ def accept_field(item: dict, docs: dict[str, str], ocr_confidence: dict | None =
     }
 
 
+CALL_LOG: list[dict] = []  # every failed attempt in this process: {"kind": rate_limit_429 | timeout | other, "detail": ...}
+_budget: dict = {}  # token budget from the host's last reply
+
+
+def _pace(need: int) -> None:
+    """Wait until the host's per-minute token budget can take this request.
+
+    # ponytail: reads Groq's x-ratelimit headers; a host without them is not paced, and 429 still waits and retries.
+    """
+    if not _budget:
+        return
+    refill = _budget["limit"] / 60
+    have = min(_budget["limit"], _budget["remaining"] + (time.time() - _budget["at"]) * refill)
+    need = min(need, _budget["limit"])
+    if need > have:
+        time.sleep((need - have) / refill)
+
+
+def _note_budget(headers) -> None:
+    try:
+        _budget.update(
+            limit=float(headers["x-ratelimit-limit-tokens"]),
+            remaining=float(headers["x-ratelimit-remaining-tokens"]),
+            at=time.time(),
+        )
+    except (KeyError, TypeError, ValueError):
+        pass
+
+
 def _post(settings: dict, payload: dict) -> dict:
+    data = json.dumps(payload).encode()
     for attempt in range(6):
         request = urllib.request.Request(
             settings["base"] + "/chat/completions",
-            data=json.dumps(payload).encode(),
+            data=data,
             headers={
                 "Authorization": f"Bearer {settings['key']}",
                 "Content-Type": "application/json",
@@ -149,24 +235,38 @@ def _post(settings: dict, payload: dict) -> dict:
             },
             method="POST",
         )
+        _pace(len(data) // 4 + 2000)
         try:
             with urllib.request.urlopen(request, timeout=120) as response:
+                _note_budget(response.headers)
                 return json.loads(response.read().decode())
         except urllib.error.HTTPError as exc:
-            if exc.code == 429 and attempt < 5:
-                retry_after = exc.headers.get("Retry-After") if exc.headers else None
-                exc.read()
-                try:
-                    wait = float(retry_after)
-                except (TypeError, ValueError):
-                    wait = min(60, 2**attempt)
-                time.sleep(min(wait, 60))
-                continue
+            detail = _safe(exc.read().decode(errors="replace")[:300])
+            if exc.code == 429:
+                limit = "tokens per day" if "(TPD)" in detail else "requests per day" if "(RPD)" in detail else "per minute"
+                CALL_LOG.append({"kind": "rate_limit_429", "detail": f"{limit}: {detail}"})
+                if attempt < 5:
+                    _note_budget(exc.headers or {})
+                    try:
+                        wait = float(exc.headers.get("Retry-After")) + 1
+                    except (AttributeError, TypeError, ValueError):
+                        wait = min(60, 2**attempt)
+                    # Wait as long as the host asks, up to MAX_WAIT. Retrying sooner only spends another refused call.
+                    time.sleep(min(wait, MAX_WAIT))
+                    continue
+                raise RuntimeError(f"model call failed: HTTP 429 rate limit, {limit}") from None
+            CALL_LOG.append({"kind": "other", "detail": f"HTTP {exc.code} {detail}"})
             if exc.code == 401:
                 raise RuntimeError("model call failed: HTTP 401 authentication failed.") from None
-            detail = exc.read().decode(errors="replace")[:300]
-            raise RuntimeError(_safe(f"model call failed: HTTP {exc.code} {detail}")) from None
-    raise RuntimeError("model call failed: HTTP 429")
+            raise RuntimeError(f"model call failed: HTTP {exc.code} {detail}") from None
+        except (TimeoutError, urllib.error.URLError) as exc:
+            timed_out = isinstance(exc, TimeoutError) or isinstance(getattr(exc, "reason", None), TimeoutError)
+            CALL_LOG.append({"kind": "timeout" if timed_out else "other", "detail": _safe(str(exc))[:300]})
+            if attempt < 5:
+                time.sleep(min(60, 2**attempt))
+                continue
+            raise RuntimeError(f"model call failed: {'timeout' if timed_out else _safe(str(exc))[:300]}") from None
+    raise RuntimeError("model call failed: HTTP 429 rate limit")
 
 
 def llm_extract(docs: list[dict]) -> dict:
@@ -187,15 +287,28 @@ def llm_extract(docs: list[dict]) -> dict:
             {"role": "user", "content": packed[:120000]},
         ],
     }
-    try:
-        body = _post(settings, payload)
-    except RuntimeError as exc:
-        if "HTTP 400" not in str(exc):
-            raise
-        payload.pop("response_format", None)
-        body = _post(settings, payload)
-    content = body["choices"][0]["message"]["content"]
-    parsed = _parse_json(content)
+    names = [doc["name"] for doc in docs]
+    saved = CACHE / "extractions" / f"{cache_key(docs, settings['model'])}.json"
+    if saved.exists():
+        parsed = json.loads(saved.read_text())["parsed"]
+        USAGE.append({"model": settings["model"], "files": names, "cached": True, "total_tokens": 0})
+    else:
+        try:
+            body = _post(settings, payload)
+        except RuntimeError as exc:
+            if "HTTP 400" not in str(exc):
+                raise
+            payload.pop("response_format", None)
+            body = _post(settings, payload)
+        _log_tokens(settings["model"], names, body.get("usage") or {})
+        parsed = _parse_json(body["choices"][0]["message"]["content"])
+        if not parsed.get("conflicts") and not any(item.get("value") for item in parsed.get("fields") or []):
+            raise RuntimeError("model call returned no fields")
+        saved.parent.mkdir(parents=True, exist_ok=True)
+        saved.write_text(
+            json.dumps({"model": settings["model"], "prompt_version": PROMPT_VERSION, "files": names, "usage": body.get("usage"), "parsed": parsed}, indent=2)
+            + "\n"
+        )
     by_name = {doc["name"]: doc["text"] for doc in docs}
     ocr_confidence = {
         doc["name"]: doc["ocr_confidence"]
@@ -223,6 +336,41 @@ def llm_extract(docs: list[dict]) -> dict:
 
 
 if __name__ == "__main__":
+    _budget.update(limit=6000.0, remaining=6000.0, at=time.time())
+    began = time.time()
+    _pace(3000)
+    assert time.time() - began < 0.5, "a request inside the budget must not wait"
+    _budget.clear()
+    if sys.argv[1:] == ["--budget"]:
+        print(json.dumps(budget(), indent=2))
+        raise SystemExit(0)
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as tmp:
+        CACHE, real_post, posts = Path(tmp), _post, []
+        page = [{"name": "a.md", "text": "Named insured: Example LLC", "sha256": "x"}]
+        reply = {"fields": [{"field_id": "named_insured", "value": "Example LLC", "source": "a.md", "quote": "Example LLC", "confidence": 0.9}]}
+
+        def _post(settings, payload):  # noqa: F811
+            posts.append(1)
+            return {"choices": [{"message": {"content": json.dumps(reply)}}], "usage": {"total_tokens": 50}}
+
+        first = llm_extract(page)
+        assert llm_extract(page) == first and len(posts) == 1, "the same files must not call the model twice"
+        assert budget()["this_run"] == {"model_calls": 1, "from_cache": 1, "tokens": 50, "tokens_per_call": 50}
+        llm_extract([{**page[0], "sha256": "y"}])
+        assert len(posts) == 2, "a changed file is a new key"
+        reply = {"fields": []}
+        empty = [{"name": "b.md", "text": "nothing here", "sha256": "z"}]
+        for _ in range(2):
+            try:
+                llm_extract(empty)
+                raise SystemExit("an empty reply should fail")
+            except RuntimeError:
+                pass
+        assert len(posts) == 4, "a failed call is never cached and is called again"
+        _post = real_post
+        USAGE.clear()
     docs = {"application.md": "Named insured: Example LLC\nSales or payroll: 10"}
     low = accept_field(
         {

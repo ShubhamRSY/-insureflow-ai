@@ -45,11 +45,33 @@ def published(band: str) -> dict:
     return {"hits": hits, "rows": rows}
 
 
+def by_file(sids, old: dict) -> dict:
+    """For a set with no score of its own (the quick 15): each file's published row, or its row in OLD when none was published."""
+    rows = {}
+    for path in sorted(EVALS.glob("SUB-0[2-9]*-holdout.json")):
+        for row in json.loads(path.read_text())["submissions"]:
+            rows[row["submission"]] = row["checks"]
+    for item in old.values():
+        for sid, checks in item["rows"].items():
+            rows.setdefault(sid, checks)
+    rows = {sid: rows[sid] for sid in sids if sid in rows}
+    hits: dict[str, int] = {}
+    for checks in rows.values():
+        for field, mark in checks.items():
+            hits[field] = hits.get(field, 0) + hit(mark)
+    return {"hits": hits, "rows": rows}
+
+
 def compare(new: dict, old: dict, old_label: str, new_label: str) -> list[str]:
     lines = [f"| Set | Field | {old_label} hits | {new_label} hits | Change | Files that lost the hit |", "|---|---|---|---|---|---|"]
     drops = 0
     for band, now in new.items():
-        was = old.get(band) or published(band)
+        if band in old:
+            was = old[band]
+        elif (EVALS / f"SUB-{band}-holdout.md").exists():
+            was = published(band)
+        else:
+            was = by_file(now["rows"], old)
         for field, hits in now["hits"].items():
             before = was["hits"].get(field)
             if before is None or hits == before:
@@ -59,19 +81,23 @@ def compare(new: dict, old: dict, old_label: str, new_label: str) -> list[str]:
                 if hit(was["rows"].get(sid, {}).get(field)) and not hit(checks.get(field))
             )
             drops += hits < before
-            lines.append(f"| SUB-{band} | {field} | {before} | {hits} | {hits - before:+d} | {', '.join(lost) or '—'} |")
+            lines.append(f"| {band} | {field} | {before} | {hits} | {hits - before:+d} | {', '.join(lost) or '—'} |")
     if len(lines) == 2:
         lines.append("| all | all | — | — | no change | — |")
     lines.append("")
     lines.append(f"Fields with a lower hit count: {drops}.")
+    failed = sorted(sid for now in new.values() for sid, checks in now["rows"].items() if "call_failed" in checks.values())
+    lines.append(f"Files where the model call failed, counted apart from a miss: {', '.join(failed) or 'none'}.")
     return lines
 
 
 def demo() -> None:
-    row = lambda mark: {"hits": {"year_built": int(mark)}, "rows": {"SUB-001": {"year_built": mark}}}
+    def row(mark: bool) -> dict:
+        return {"hits": {"year_built": int(mark)}, "rows": {"SUB-001": {"year_built": mark}}}
+
     out = compare({"001-010": row(False)}, {"001-010": row(True)}, "old", "new")
-    assert "| SUB-001-010 | year_built | 1 | 0 | -1 | SUB-001 |" in out and out[-1].endswith(": 1."), out
-    assert compare({"001-010": row(True)}, {"001-010": row(True)}, "old", "new")[-1].endswith(": 0.")
+    assert "| 001-010 | year_built | 1 | 0 | -1 | SUB-001 |" in out and out[-2].endswith(": 1."), out
+    assert compare({"001-010": row(True)}, {"001-010": row(True)}, "old", "new")[-2].endswith(": 0.")
 
 
 if __name__ == "__main__":

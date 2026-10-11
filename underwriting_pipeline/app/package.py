@@ -34,6 +34,8 @@ def agency_problem(report: dict | None) -> str:
     """Empty string means the account manager may approve. The user may override."""
     if not report:
         return "the account manager needs the extraction report"
+    if report.get("status") == "extraction_failed":
+        return "extraction failed on this file"
     if report.get("needs_human"):
         return "an unread page is still on the file"
     open_conflicts = [
@@ -59,6 +61,8 @@ def send_to_carrier(
     name = _actor(actor)
     if name not in {"user", "account-manager"}:
         raise ValueError("only the user or the account manager may send to a carrier")
+    if report and report.get("status") == "extraction_failed":
+        raise ValueError("extraction failed on this file; run extraction again before any send")
     if name == "account-manager":
         if not (reason or "").strip():
             raise ValueError("the account manager must write a reason")
@@ -95,6 +99,13 @@ if __name__ == "__main__":
         "fields": [{"field_id": "operations", "value": "accounting office"}],
     }
     held = {**clean, "complete": False}
+    failed = {**clean, "status": "extraction_failed", "error": "model call failed: HTTP 429 rate limit"}
+    assert agency_problem(failed) == "extraction failed on this file"
+    try:
+        send_to_carrier("SUB-000", "user", Path("simulation/to-carrier"), body, report=failed)
+        raise SystemExit("a send after a failed extraction should fail, even for the user")
+    except ValueError:
+        pass
     with tempfile.TemporaryDirectory() as tmp:
         dest_dir = Path(tmp) / "to-carrier"
         dest_dir.mkdir()
