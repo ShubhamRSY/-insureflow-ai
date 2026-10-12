@@ -913,3 +913,73 @@ Format:
 - Doing next: Wait for T-060 and T-064.
 - Blocked by / need from: T-060 and T-064.
 
+
+### 2026-10-11 — @ai-engineer-assistant
+- Done: Compared the SUB-077 through SUB-086 original and rerun. 0 failed calls. The original stays published. T-060 is in review.
+- Doing next: Score the quick set of 15 for P-002 and P-003b, then P-006.
+- Blocked by / need from: You, for the Groq settings in the shell.
+
+### 2026-10-11 — @pm
+- Done: Moved T-060 to IN_REVIEW. Listed 14 tasks waiting on reviewers.
+- Doing next: A review round, when you ask for it.
+- Blocked by / need from: T-064, and the reviewers.
+
+### 2026-10-11 — @pm
+- Done: Created T-065 (P-008 guard), T-066 (P-009 and three runs), T-067 (name-swap test), and T-068 (quick set after P-006) for D-023. Cancelled T-058, which T-064 replaced under D-022. Reworded T-061's last criterion. Replaced the retired @ai-engineer on six open tasks and four open risks. Added R-015. Gave no review verdict.
+- Doing next: Close tasks as verdicts come in from the review round.
+- Blocked by / need from: The review round for the 15 IN_REVIEW tasks. T-062 cannot start until T-059, T-060, and T-061 are done.
+
+### 2026-10-11 — @ai-engineer-assistant
+- Done: Implemented P-008 as the user amended it on D-023. Every extraction and every `regression_dev.py` run prints the host and the model first. Groq and localhost run. Any other host stops with exit 1 unless ALLOW_PROVIDER is set. No settings file is read. The self-check covers all three cases and passed. No model call was made. T-065 is in review.
+- Doing next: T-066, the three runs of the quick set, when dispatched.
+- Blocked by / need from: Verdicts on T-065 from @model-risk, @compliance, and @ml-engineer.
+
+### 2026-10-11 — @ai-engineer-assistant
+- Done: T-065, the user's second amendment to P-008. ALLOW_PROVIDER now lets a host through only when it is exactly the host name in LLM_BASE_URL. The refusal moved to just before the model call, so a run that reads only saved results is not refused and a run that needs a call on a refused host stops with exit 1 before it. The self-check covers the four new cases and passed. No model call was made. One mistake, fixed: a cache-only test run of the SUB-077 scorer wrote over the published SUB-077-086-holdout.json and .md; both were restored from the last commit and match it.
+- Doing next: T-066, when dispatched.
+- Blocked by / need from: Verdicts on T-065 from @model-risk, @compliance, and @ml-engineer. From @user: whether ALLOW_PROVIDER should also match a port or the full URL, and whether a partly cached run should stop at its first uncached file or before it starts.
+
+### 2026-10-11 — @ai-engineer-assistant
+- Done: Wrote two proposals in deliverables/ai-engineer/proposals-P-010-P-011.md. P-010 is the T-059 fix: the user's five points, what each of the three reviewers said would resolve it, and D-024. P-011 is D-025: score runs write to a scratch folder, and a publish run refuses to overwrite. Posted one PROPOSAL message for each. No code, scorer, prompt, or score file was changed. No model call. No scorer was run. T-059 and T-060 statuses were not changed.
+- Doing next: Nothing on these until the user replies. The T-060 memo corrections @model-risk asked for are still open.
+- Blocked by / need from: @user: "approve change P-010" and "approve change P-011", or not, and the choices listed in each. @pm: a task for @software-engineer for package.py and workbench.py. @data-engineer: two new keys in the saved extraction file.
+
+### 2026-10-11 — @ai-engineer-assistant
+- Done: (1) T-060 memo corrected as D-026 says: relabeled "with P-002 and P-003b, not a same-code comparison", not an improvement, original is the official baseline, 10 marks (9 up, 1 down), false @model-risk header removed from the rerun file. The "429: 0" claim is withdrawn as not recorded. (2) P-012 implemented: every 429, timeout, other failed attempt, and retry is a row in the token log. (3) P-013 implemented under D-027: atomic cache writes, and an unreadable saved file is called again. Self-check extended for both and passed. No model call. No scorer was run. Published score files and the real token log are byte-identical to before.
+- Doing next: T-066, when dispatched.
+- Blocked by / need from: @model-risk: look again at T-060 and T-063, and review P-012. @user: P-010 and P-011 are still pending. The quick set of 15 has not run after P-012 and P-013 because it needs model calls.
+
+### 2026-10-11 — @ai-engineer-assistant
+- Done: D-028, the user's three follow-ups to P-012 and P-013. `reply_not_usable` is counted in the failure totals as its own cause. Leftover temp files from a killed cache write are removed at the first extraction of each run. The Author line is corrected in the rerun .md and in architecture.md; published score files, the -original copy, the dev-rerun file, and the frozen scorers were left alone. Self-check extended for the first two and passed. Wrote P-014 for @ml-engineer's two token-log findings; it is a proposal only. No model call. No scorer was run. Published score files, the 13 saved results, and the real token log are byte-identical to before.
+- Doing next: T-066, when dispatched.
+- Blocked by / need from: @user: "approve change P-014" or not, and its seven choices; P-010 and P-011 are still pending. The quick set of 15 has not run after P-012, P-013, or D-028 because it needs model calls. @model-risk and @ml-engineer: look again at T-063.
+
+### 2026-10-11 — @pm
+- Done: Put D-024 through D-030 on the board. New: T-069 (@data-engineer, saved-file keys), T-070 (P-010, ai part), T-071 (P-010, package.py and workbench.py, @software-engineer), T-072 (P-011), T-076 (demo prep), all TODO. T-073 (P-012), T-074 (P-013), and T-075 (D-028 follow-ups) are built and start at IN_REVIEW. Recorded the T-059, T-060, and T-063 verdicts as the reviewers wrote them; none of the three is closed. Reordered for D-030: P-006 (T-062) now comes before the variance test (T-066) and the fairness test (T-067). Created team/BACKLOG.md with 13 parked findings. Filled in the follow-up tasks on the seven decisions. Risks: R-016 to R-019 added; R-001, R-010, R-014, R-015 updated. No task for P-014. Gave no verdict. Nothing was sent.
+- Doing next: Close tasks only as reviewers look again. T-076 after the fairness test.
+- Blocked by / need from: Reviewers: a second look at T-060 and T-063, first verdicts on T-073, T-074, T-075, and T-065. @data-engineer: T-069. @user: what the demo must show and who it is for; P-014; the points owners left open on T-065 and T-075.
+
+### 2026-10-11 — @pm
+- Done: Checked the board against D-030. Added T-077, a proposal-only task to redraft P-014 with the two D-030 additions. Added T-072 to T-062's "Depends on" and raised T-062 and T-068 to P0. Added the four T-060 findings to team/BACKLOG.md as B-014 to B-017, covered by D-026. Updated "Follow-up tasks" on D-030. Gave no verdict. Nothing was sent.
+- Doing next: Close tasks only as reviewers look again. T-076 after the fairness test.
+- Blocked by / need from: @user: what the demo must show and for whom (T-076's criteria are my assumption until then); "approve change P-014" or not, after the redraft. Reviewers: the second looks and first verdicts already listed.
+
+### 2026-10-11 — @pm
+- Done: Round wrap-up. Recorded every review outcome on its task as written. Closed T-029, T-032, and T-036 (both reviewers approved) and T-026 as D-036 words it. Unticked boxes reviewers showed to fail on T-017, T-019, T-020, T-021, T-027, and T-039. Restated T-020 criterion 2 for D-017 and D-033. Wrote team/DEMO-BLOCKERS.md: nine lines in the user's fix order, with D-035 and D-037. New tasks T-078 to T-093; T-077 cancelled into T-078. T-076 now carries the user's demo brief. Backlog: B-061 to B-137 copied from the six reviewer files as written, B-138 to B-148 High findings not on the demo path, B-149 claim extraction. Risks R-020 to R-027 added, seven updated. Order of work added to deliverables/pm/roadmap.md. Filled "Follow-up tasks" on D-031 and D-033 to D-037. Gave no verdict. Nothing was sent. No commit.
+- Doing next: Make the build tasks for P-015, P-016, and P-017 when the user approves each. T-076 after every blocker line is closed.
+- Blocked by / need from: @user: "approve change" for P-015, P-016, and P-017 once each is written; who makes the commit before a scored run; a declined file that is later approved; whether T-081 (line 3b) stays on the demo path; whether B-138 and B-139 join it; the price basis for the cost estimate. Reviewers: first verdicts on T-065, T-073, T-074, T-075; a second look at T-060 and T-063.
+
+### 2026-10-11 — @ai-engineer-assistant
+- Done: Wrote two proposals and posted one PROPOSAL message for each. P-016 (T-080), deliverables/ai-engineer/proposal-P-016.md: T-027 (a), (b), (c) in one proposal, with the reviewers' "what resolves it" lines quoted, the functions and files that change, the reviewers' cases as self-checks, and an estimate from the 13 saved replies made with no model call (115 of 115 values kept today; typed files unchanged; on the five saved scans 44 kept today and 24 to 38 after, by option). P-017 (T-088), deliverables/ai-engineer/proposal-P-017.md: the commit hash in every score file and memo, the literal `call` status, the scorer lines that change, how it is built in one pass with P-011, and the new hold-out's scorer as D-038 item 4 decided it. No code, prompt, OCR setting, cache file, scorer, or score file was changed. No model call. No scorer run. No commit.
+- Doing next: Nothing on either until the user replies. T-078 (P-014 build) when dispatched.
+- Blocked by / need from: @user: "approve change P-016" with its twelve letters, and "approve change P-017" with U, V, X, J, or not; and whether the label "9 of 10 fields scored" stands, since by the earlier count the new scorer scores 9 of 9 extracted fields. @senior-underwriter: the exact gold wording of the Effective date line. @model-risk, @senior-underwriter, @ml-engineer: review the two proposals. @pm: whether P-017 is built in the same pass as T-072.
+
+### 2026-10-11 — @data-scientist
+- Done: Wrote proposal P-015 (T-084), deliverables/data-scientist/proposal-P-015.md, and posted one PROPOSAL message. It covers the user's five items, the reviewers' "resolves" lines quoted with fully, partly, or not, the files and owners, where the cooking facts come from, the wording-pair and name-swap checks, and an estimate from the 80 gold files and 13 saved replies made with no model call (a number on 80 files today, 43 after; 37 "Not scored"). No code, prompt, scorer, or score file was changed. Weights not refit. No commit.
+- Doing next: Nothing on P-015 until the user replies. T-067 after the build, if approved.
+- Blocked by / need from: @user: "approve change P-015" with the letters S, H, M, T, V, W, A, E, or not. @actuary, @model-risk, @responsible-ai, @compliance: review the proposal.
+
+### 2026-10-11 — @ai-engineer-assistant
+- Done: T-078, built P-014 as approved in D-033 ("approve change P-014 with U1 R2 H1 O1 L1 T2 S1 G1") with the two D-030 additions. First brought deliverables/ai-engineer/proposal-P-014.md up to what was approved. Then `llm_extract.py` (token log reading and writing, run id, cache-hit rows, the reader, host name and temperature in the cache key), one line in the `failed_attempts` block of `regression_dev.py`, and two lines in `.gitignore`. G1: `git rm --cached` on the token log and the 9 tracked saved results, 10 paths, staged, no commit, files left on disk. 13 of 13 saved results are unreachable under the new key and were left as they are. Self-check extended and passed, "llm gate ok"; 24 altered copies each failed. No model call. No scorer run. The real token log, the 13 saved results, the published score files, and the scorers are byte-identical to before. Prompt, OCR, gate, pacing, provider guard, and hit rules not changed. T-078 is IN_REVIEW.
+- Doing next: T-064, the quick set of 15, after the orchestrator's commit. All 15 calls are fresh.
+- Blocked by / need from: The orchestrator: the commit (D-038 item 6), with `.gitignore` staged, which I did not stage. @model-risk and @ml-engineer: review T-078. @user: whether "host" in the cache key should include the port; I used the host name only.

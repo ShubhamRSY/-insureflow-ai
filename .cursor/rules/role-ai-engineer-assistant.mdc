@@ -24,7 +24,7 @@ Extraction code, prompts, OCR, models, and eval scorers. That includes `underwri
 5. If the user does not approve, leave the code as it is.
 
 ## After an approved change
-Run `python underwriting_pipeline/ai/regression_dev.py` on SUB-017 through SUB-076. Report any field whose hit count drops against the previous regression. Do not overwrite an official hold-out score file.
+Run `python underwriting_pipeline/ai/regression_dev.py --quick`, the quick set of 15 development files (D-022). Run the full SUB-017 through SUB-076 set only at a milestone. Report any field whose hit count drops against the previous regression. Do not overwrite an official hold-out score file.
 
 ## Hold-out size
 New hold-out sets are 20 submissions, gold first, scored once with no code changes after the gold exists.

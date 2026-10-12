@@ -1,9 +1,0 @@
-{"at": "2026-10-10T20:34:52", "epoch": 1791682492, "model": "openai/gpt-oss-120b", "files": ["scan.jpg"], "prompt_tokens": 608, "completion_tokens": 798, "total_tokens": 1406}
-{"at": "2026-10-10T20:34:57", "epoch": 1791682497, "model": "openai/gpt-oss-120b", "files": ["scan.jpg"], "prompt_tokens": 607, "completion_tokens": 803, "total_tokens": 1410}
-{"at": "2026-10-10T20:34:59", "epoch": 1791682499, "model": "openai/gpt-oss-120b", "files": ["application.pdf", "loss-runs-page-1.md", "loss-runs-page-2.md"], "prompt_tokens": 716, "completion_tokens": 822, "total_tokens": 1538}
-{"at": "2026-10-10T20:35:02", "epoch": 1791682502, "model": "openai/gpt-oss-120b", "files": ["email.md", "schedule.xlsx"], "prompt_tokens": 679, "completion_tokens": 994, "total_tokens": 1673}
-{"at": "2026-10-10T20:35:05", "epoch": 1791682505, "model": "openai/gpt-oss-120b", "files": ["application.pdf", "attachment.md"], "prompt_tokens": 622, "completion_tokens": 1483, "total_tokens": 2105}
-{"at": "2026-10-10T20:35:08", "epoch": 1791682508, "model": "openai/gpt-oss-120b", "files": ["email-1.md", "email-2.md"], "prompt_tokens": 648, "completion_tokens": 912, "total_tokens": 1560}
-{"at": "2026-10-10T20:35:27", "epoch": 1791682527, "model": "openai/gpt-oss-120b", "files": ["application.md", "resubmission.md"], "prompt_tokens": 708, "completion_tokens": 1241, "total_tokens": 1949}
-{"at": "2026-10-10T20:37:59", "epoch": 1791682679, "model": "openai/gpt-oss-120b", "files": ["scan.jpg"], "prompt_tokens": 602, "completion_tokens": 1225, "total_tokens": 1827}
-{"at": "2026-10-10T20:44:59", "epoch": 1791683099, "model": "openai/gpt-oss-120b", "files": ["scan.jpg"], "prompt_tokens": 609, "completion_tokens": 1054, "total_tokens": 1663}

@@ -106,12 +106,11 @@ def holdout(module_name: str) -> None:
 def report_failures() -> dict:
     import llm_extract
 
-    kinds: dict[str, int] = {}
-    for item in llm_extract.CALL_LOG:
-        kinds[item["kind"]] = kinds.get(item["kind"], 0) + 1
+    kinds = llm_extract.failure_counts()  # D-028: 429, timeout, other, and reply_not_usable, each shown even at 0
     print("failed attempts", kinds, {i["kind"]: i["detail"] for i in llm_extract.CALL_LOG}, flush=True)
     print("tokens", json.dumps(llm_extract.budget()), flush=True)
-    return {"counts": kinds, "samples": {i["kind"]: i["detail"] for i in llm_extract.CALL_LOG}, "tokens": llm_extract.budget()}
+    run = llm_extract.budget()["run"]  # P-014 (T2): the run id, and this run's totals rebuilt from the token log alone
+    return {"run": run, "run_totals": llm_extract.run_totals().get(run), "counts": kinds, "samples": {i["kind"]: i["detail"] for i in llm_extract.CALL_LOG}, "tokens": llm_extract.budget()}
 
 
 def main() -> None:
@@ -137,6 +136,9 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    import llm_extract
+
+    llm_extract.provider_guard(calling=False)  # P-008: print the host and the model. A refused host stops at its first model call, inside llm_extract
     if sys.argv[1:2] == ["--holdout"]:
         holdout(sys.argv[2])
     elif sys.argv[1:2] == ["--quick"]:

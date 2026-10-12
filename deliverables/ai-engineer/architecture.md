@@ -1,6 +1,6 @@
 # AI architecture proposal — intake, extraction, triage, copilot
 
-- Author: @ai-engineer
+- Author: @ai-engineer-assistant
 - Date: 2026-10-09
 - Status: Proposal (T-006)
 - Reviewers: @ml-engineer, @software-engineer, @model-risk, @compliance

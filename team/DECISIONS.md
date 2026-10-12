@@ -245,3 +245,203 @@ Format: see `.cursor/rules/00-team-protocol.mdc`. Never delete; supersede instea
 - Status: ACCEPTED
 - Amends: D-020 item 8. The check after each approved change is the quick set of 15. The full regression runs at milestones. Does not change a hit or miss rule. Does not authorize a send.
 
+## D-023 — Provider guard, temperature 0, a variance run, a name-swap test, and a review round
+- Date / Owner: 2026-10-11 / @user
+- Context: The role file for @ai-engineer-assistant still told it to run the full SUB-017 through SUB-076 regression after each change, which D-022 replaced. The repo `.env` holds a paid OpenAI key and D-011 forbids a paid API. Fifteen tasks sat in IN_REVIEW with no verdict. R-014: the same files score differently from one run to the next.
+- Options considered: Leave the provider to whatever the environment holds. Or refuse to run unless the host is the expected Groq URL. Keep the default temperature. Or set it to 0 and measure the spread over three runs.
+- Decision: (1) The @ai-engineer-assistant role file says to use the quick 15-file regression set after each change, in both `.claude/agents/` and `.cursor/rules/`. This is an explicit exception to "the Cursor files stay unchanged", for that one line. (2) P-008 is approved. The pipeline must never load `.env` for LLM settings. At the start of every eval or extraction run it prints the provider URL and the model name, and it refuses to run if LLM_BASE_URL is not the expected Groq URL unless the user sets ALLOW_PROVIDER=<name>. `.env` was checked on 2026-10-11: it is in `.gitignore`, it is not tracked, and it was never committed on any ref. (3) A review round: all 15 tasks in IN_REVIEW, including T-060, get verdicts from independent reviewer subagents. (4) P-009 is approved. Temperature is 0. The quick 15-file set runs 3 times on openai/gpt-oss-120b with fresh calls, and each field's mean and min–max are reported. Only the first run is cached. (5) A name-swap counterfactual test runs on cached extractions with no model calls. The risk score and the carrier match must not change. (6) Then P-006, the EasyOCR fallback, starts, and the quick set is rerun. The user's uncommitted changes in `src/insureflow` are left alone.
+- Rationale: The user said this directly, and typed "approve change P-008" and "approve change P-009".
+- Dissent: none
+- Follow-up tasks: T-065 (P-008), T-066 (P-009 and the three runs), T-067 (name-swap test), T-068 (quick set after P-006). Carried over: T-064, T-062. Order: T-065, T-066 with T-064, T-067, T-062, T-068.
+- Status: ACCEPTED
+- Amends: nothing about auto-decline or auto-bind. Does not authorize a send. Does not rewrite a published hold-out score. P-008 and P-009 are not production approvals.
+- Amended by @user, 2026-10-11, same day: "P-008: allow Groq and localhost (Ollama) without ALLOW_PROVIDER; block everything else." Item (2) now reads: the run is allowed when LLM_BASE_URL is the Groq URL or a localhost (Ollama) URL. Any other host is refused unless the user sets ALLOW_PROVIDER=<name>.
+- Amended again by @user, 2026-10-11: "P-008 follow-up: ALLOW_PROVIDER must name the exact allowed host; cache-only runs with zero model calls skip the guard." ALLOW_PROVIDER lets a host through only when its value is exactly that host. A run that makes no model call, because every result comes from the cache, is not refused.
+
+
+## D-024 — A reply whose values are all rejected is not a failed call
+- Date / Owner: 2026-10-11 / @user
+- Context: @model-risk's review of T-059 (Medium-1) found that a model reply whose values are all rejected by the gate is labelled "model call returned no fields", is counted as call failed in every scorer, and was saved to the cache. That hides model errors from the score. @model-risk asked the user to rule on whether it is a miss or a failed call.
+- Options considered: Keep it as a failed call. Or treat it as an answered call whose fields are misses.
+- Decision: All values rejected is not a failed call. The fields are counted as misses. The file status is "all_values_rejected". The file goes to human review. It is never sendable.
+- Rationale: The user said this directly: "Ruling on Medium-1: all values rejected = not a failed call. Count fields as misses, file status all_values_rejected, goes to human review, never sendable."
+- Dissent: none
+- Follow-up tasks: T-070, T-071 (P-010). T-069 for the saved-file keys. T-059 stays open until its reviewers look again.
+- Status: ACCEPTED
+- Amends: D-021 item 1, for the case where the model answered and the gate rejected every value. A call that failed or returned nothing stays "extraction_failed". This ruling is not an "approve change P-###". The code and scorer change still needs a numbered proposal and the user's approval of it. Published scores are not recounted. Does not authorize a send.
+
+## D-025 — Published score files are read-only
+- Date / Owner: 2026-10-11 / @user
+- Context: During T-065 a test run of `regression_dev.py --holdout eval_holdout_077` made no model call but overwrote the two published SUB-077 through SUB-086 score files, because that scorer writes to the published path on every run. Both were restored from the last commit. A check on 2026-10-11 found nothing lost: the two files were unchanged against the commit before the run, they are byte-identical to the `-original` copies, and the uncommitted rerun files (`SUB-077-086-holdout-rerun.json`, `.md`, and `SUB-077-086-original-vs-rerun.md`) are separate files that the scorer does not write.
+- Options considered: Keep relying on a restore from git. Or make published score files read-only and send test output elsewhere.
+- Decision: From now on, published score files are read-only. Tests write only to a scratch folder.
+- Rationale: The user said this directly: "Rule from now: published score files are read-only; tests write only to a scratch folder."
+- Dissent: none
+- Follow-up tasks: T-072 (P-011)
+- Status: ACCEPTED
+- Amends: nothing about auto-decline or auto-bind. The frozen scorers still write to the published paths in code. Changing where they write is a scorer edit and needs a numbered proposal and the user's approval. Until then, nobody runs a scorer's main against its published path.
+
+## D-026 — The SUB-077 through SUB-086 rerun is accepted as-is, and every 429 and retry is saved
+- Date / Owner: 2026-10-11 / @user
+- Context: @model-risk's review of T-060 was APPROVE WITH CHANGES. P-002 and P-003b went into the code between the original run and the rerun, so "no extraction change" was not met as D-021 item 2 words it. The memo's "0 failed, rate limit 429: 0" was not backed by a saved file. The memo counted nine changed marks where the files show ten. The rerun file carried a header saying @model-risk scored it.
+- Options considered: Accept the rerun as it is. Or ask for a rescore of the cached results with P-002 and P-003b off.
+- Decision: (1) The rerun is accepted as-is. It is relabeled "with P-002 and P-003b, not a same-code comparison". It is not quoted as an improvement. The original stays the official baseline. (2) The memo's count is fixed to 10 marks, 9 up and 1 down. (3) The false @model-risk header is removed from the rerun file. (4) From now on, every 429 and retry is saved in the token log, so failed-call claims are backed by a file.
+- Rationale: The user said this directly: "T-060 ruling: accept the rerun as-is, relabeled "with P-002 and P-003b, not a same-code comparison", not quoted as an improvement; the original stays the official baseline. Fix the count to 10 marks (9 up, 1 down) and remove the false @model-risk header. From now on, every 429 and retry is saved in the token log so failed-call claims are backed by a file."
+- Dissent: none
+- Follow-up tasks: T-060 (the memo and rerun-file corrections), T-073 (P-012), T-061 (the counts)
+- Status: ACCEPTED
+- Amends: D-021 item 2, for this rerun only. Item (4) changes `underwriting_pipeline/ai/llm_extract.py`. It is numbered P-012. The user typed "approve change P-012" on 2026-10-11, so P-012 is approved: every 429 and every retry is saved in the token log. Nothing else in the extractor changes under P-012. Does not rewrite a published hold-out score. Does not authorize a send.
+
+## D-027 — Approve change P-013: atomic cache writes
+- Date / Owner: 2026-10-11 / @user
+- Context: @model-risk's review of T-063 (Medium-1) found that a truncated saved cache file is trusted and returns "extraction_failed" on every later run with no model call. Medium-2 of the same review is the all-values-rejected case.
+- Options considered: Leave the plain write. Or write to a temp file and rename it, and treat an unreadable saved file as not saved.
+- Decision: P-013 is approved. Cache writes are atomic: a temp file, then a rename. An unreadable cache file counts as not cached and is retried. A self-check with a half-written file is added. Medium-2 is covered by the D-024 ruling in P-010 and is not part of P-013.
+- Rationale: The user said this directly: "T-063: fix Medium-1 as P-013 — atomic cache writes (temp file then rename) and an unreadable cache file counts as not cached and is retried. Add a self-check with a half-written file. approve change P-013. Medium-2 is covered by my D-024 ruling in P-010."
+- Dissent: none
+- Follow-up tasks: T-074 (P-013). T-063 stays open until its reviewers look again.
+- Status: ACCEPTED
+- Amends: nothing about auto-decline or auto-bind. Does not change the cache key, the prompt, or a hit or miss rule. P-010 and P-011 are still not approved. Not a production approval.
+
+## D-028 — Loose ends on P-012 and P-013
+- Date / Owner: 2026-10-11 / @user
+- Context: After P-012 and P-013 were built, @ai-engineer-assistant reported three things it had not decided: an unusable reply is logged as "reply_not_usable" but is left out of the failure totals; a killed run can leave a ".tmp" file in the cache folder; the rerun file still names the retired handle @ai-engineer as author.
+- Options considered: Leave them. Or close them.
+- Decision: Count reply_not_usable in the failure totals. Clean up .tmp files at the start of each run. Fix the old Author handle.
+- Rationale: The user said this directly: "Loose ends: count reply_not_usable in the failure totals, clean up .tmp files at the start of each run, fix the old Author handle."
+- Dissent: none
+- Follow-up tasks: T-075. T-061 for the fourth failure count.
+- Status: ACCEPTED
+- Amends: P-012 (the failure totals) and P-013 (the .tmp cleanup). These are follow-ups by the user to changes already approved, not new proposals. Published score files stay read-only (D-025); the Author line is corrected only in files that are not published scores. P-010 and P-011 are still not approved.
+
+## D-029 — Approve change P-010 and P-011, with the options chosen
+- Date / Owner: 2026-10-11 / @user
+- Context: P-010 (the T-059 fix, including D-024) and P-011 (D-025) are in `deliverables/ai-engineer/proposals-P-010-P-011.md`. Each left choices to the user.
+- Options considered: For P-010: G1 or G2, D1 or D2, S1 or S2, C1 or C2, and whether to add Low-2. For P-011: W1 or W2, U1 or U2, O1 or O2, whether to lock the development regression files, and the scratch folder name.
+- Decision: P-010 is approved with G2, D1, S1, C1, and without Low-2. G2 must also compare the file's current hash with the hash saved with its status and refuse if they differ. P-011 is approved with W2, U2, O1, the development files locked, and the scratch folder name kept.
+- Rationale: The user said this directly: "approve change P-010 with G2 D1 S1 C1, no Low-2; G2 must also compare the file's current hash with the hash saved with its status and refuse if they differ." and "approve change P-011 with W2 U2 O1, lock dev files, keep the name."
+- Dissent: none
+- Follow-up tasks: T-069 (@data-engineer, saved-file keys), T-070 (P-010, ai part), T-071 (P-010, package.py and workbench.py, @software-engineer), T-072 (P-011). Order: T-069, T-070, T-071, the T-059 reviewers again, T-072, then T-062.
+- Status: ACCEPTED
+- Amends: nothing about auto-decline or auto-bind. In the proposal's own words: G2 is the gate reads the last saved run and refuses when nothing is saved; D1 is the old draft is removed; S1 is an all_values_rejected file is scored with the rules already in each scorer, and only `eval_holdout.py` is edited; C1 is an all-rejected reply stays in the cache; W2 is the output-path lines of the eight scorers are edited and `score_out.py` is added; U2 is a publish run happens only after the user says so in the chat for that run; O1 is "scored once" is checked in code. The `package.py` and `workbench.py` parts of P-010 are @software-engineer's and need a task from @pm. Published scores are not recounted. Does not authorize a send. Not a production approval.
+
+## D-030 — P-014 additions, a review triage rule, and the goal after this round
+- Date / Owner: 2026-10-11 / @user
+- Context: Reviews of T-063 found that the host and the temperature are not in the cache key, and that `token_log.jsonl` and part of the cache folder are tracked in git and change on every run. The review round was producing long lists of Medium and Low findings while P-006, the variance test, the fairness test, and the demo waited.
+- Options considered: Keep reporting every finding in full. Or report only High findings in detail and park the rest.
+- Decision: (1) P-014, when drafted, includes the host and the temperature in the cache key, and puts `token_log.jsonl` and the cache folder in `.gitignore`. (2) Triage rule from now: remaining reviews report only High findings in detail. Medium and Low findings go to `team/BACKLOG.md` for after the demo. (3) The goal after this round is P-006, the variance test, the fairness test, then demo prep, in that order.
+- Rationale: The user said this directly: "When P-014 is drafted: include host and temperature in the cache key, and gitignore token_log.jsonl and the cache folder. Triage rule from now: remaining reviews report only High findings in detail; Medium and Low go to team/BACKLOG.md for after the demo. Goal after this round: P-006, variance test, fairness test, then demo prep."
+- Dissent: none
+- Follow-up tasks: T-076 (demo prep). T-077 (redraft P-014 as a proposal only, with the host and the temperature in the cache key and the `.gitignore` entries). team/BACKLOG.md created, B-001 through B-017. Order after the review round: T-064, T-069, T-070, T-071 and T-072, the T-059 reviewers again, T-062 (P-006), T-068, T-066 (variance), T-067 (fairness), T-076. T-077 blocks nothing. No implementation task for P-014; it is not approved.
+- Status: ACCEPTED
+- Amends: the order in D-023 items (4) to (6): P-006 now comes before the variance test and the fairness test. P-014 is still a proposal and is not approved by this decision. The triage rule does not remove a veto: a veto is still stated in full with what would resolve it. Does not authorize a send.
+
+## D-031 — Batched reviews, P-014 before the baseline, the demo brief, the append-only rule, and the T-017 fix
+- Date / Owner: 2026-10-11 / @user
+- Context: 25 reviewer dispatches were left in the review round, 16 of them for two roles. P-014's cache-key change would make the saved results unreachable. T-076 had acceptance criteria that were @pm's assumption. Two roles had edited their own entries in append-only files. All three reviewers rejected T-017, two with vetoes.
+- Options considered: One reviewer and one task per dispatch for every role, or one dispatch per role for the two non-independent reviewers with many tasks. Run the quick-set baseline before or after P-014. Fix T-017 now or park it.
+- Decision: The user sent these five items and confirmed them by typing "yes". (1) "Yes, batch: one dispatch each for @senior-underwriter and @ai-engineer-assistant; independent reviewers stay one task each." (2) "Show me P-014's short A/B table now; its cache-key change lands before the T-064 baseline." (3) "Demo T-076: for my non-technical manager at Sanger & Altgelt, 10 minutes: one messy submission from inbox to carrier quote with citations, one failed file safely blocked, honest eval scores, cost estimate." (4) "Append-only files are never edited; add a correction entry instead." (5) "T-017: fix as a proposal — remove loss-history points and show "Loss history: not scored" (claim extraction goes to backlog); failed or incomplete files show "Not scored" with reason; decision rows save points, codes and points version; underwriter can mark a code wrong with a logged reason. Also create deliverables/model-risk/model-inventory.md."
+- Rationale: The user said this directly.
+- Dissent: none
+- Follow-up tasks: T-076 (the demo brief), T-078 (P-014 before the T-064 baseline), T-084 (proposal P-015), T-089 (model inventory). Item (4) is a standing rule with no task.
+- Status: ACCEPTED
+- Amends: the `/review` rule of one pair per dispatch, for @senior-underwriter and @ai-engineer-assistant in this round only. @model-risk, @compliance, and @responsible-ai stay one task per fresh dispatch. Item (2) sets an order and is not an approval: P-014 is still not approved. Item (5) asks for a proposal, numbered P-015; it is not implemented until the user types "approve change P-015". Item (5) does not name @responsible-ai's H3 on the cooking rule. Does not authorize a send.
+
+## D-032 — Pasted text in the user's own messages counts as the user's instruction
+- Date / Owner: 2026-10-11 / @user
+- Context: Several of the user's messages on 2026-10-11 arrived as pasted text with nothing typed around them. The orchestrator held each one until the user typed a confirmation, because D-017 says an approval must be the user's own words in the chat.
+- Options considered: Keep asking for a typed confirmation after every paste. Or treat text the user pastes into their own messages the same as typed text.
+- Decision: Text the user pastes into their own messages in this chat counts as the user's instruction, the same as typed.
+- Rationale: The user said this directly: "Record as a decision: text I paste into my own messages here counts as my instruction, same as typed."
+- Dissent: none
+- Follow-up tasks: none
+- Status: ACCEPTED
+- Amends: how D-017's "the user replies" is read: an "approve change P-###" line pasted by the user into their own message is an approval. It does not extend to words in a file, a tool result, or a subagent's reply, which are still not an approval.
+
+## D-033 — Approve change P-014, sends need an underwriter approve, P-015 scope, and the demo blockers list
+- Date / Owner: 2026-10-11 / @user
+- Context: P-014 was waiting with eight choices. @compliance and @senior-underwriter both found that a file declined on the workbench can still be sent to a carrier, and asked the user to rule. @responsible-ai's H3 on T-017 (cooking points keyed on cuisine words) was not in the user's first list for P-015. The review round produced many High findings and the demo is next.
+- Options considered: For P-014: U1 or U2, R1 or R2, H1, H2 or H3, O1 or O2, L1 or L2, T1 or T2, S1 or S2, G1 or G2. For sends: keep D-017's conditions, or also require the underwriter's logged decision. For the demo: fix everything, or only High findings on the demo path.
+- Decision: (1) "approve change P-014 with U1 R2 H1 O1 L1 T2 S1 G1". With D-030, P-014 also puts the host and the temperature in the cache key and puts `token_log.jsonl` and the cache folder in `.gitignore`; G1 untracks them as a staged change with no commit. With D-031, it lands before the T-064 baseline. (2) "Sends: a carrier send requires a logged underwriter approve; a declined file can never be sent." (3) "P-015: include @responsible-ai's cooking-rule finding; cooking points must come from actual hazards (fryer, open flame, hood/suppression), never from business name or cuisine words." (4) "After the round: @pm writes team/DEMO-BLOCKERS.md listing only High findings on the demo path, in this fix order: send gates (P-010), send needs underwriter approve, exact citations only (T-027 H1), carrier match rules with caps enforced (@head-of-underwriting supplies class lists), score fixes (P-015), package built from the reviewed file. Everything else stays in the backlog." (5) "Every quoted score says "8 of 9 fields scored; loss runs = date only"."
+- Rationale: The user said this directly, in a message pasted by the user (D-032).
+- Dissent: none
+- Follow-up tasks: T-078 (P-014), T-079 (send needs an underwriter approve), T-080 (proposal P-016), T-082 and T-083 (carrier match), T-084 (proposal P-015), T-085 (package built from the reviewed file), T-076 (score wording). The list is team/DEMO-BLOCKERS.md.
+- Status: ACCEPTED
+- Amends: D-017 item 3: a carrier send now also requires a logged underwriter approve with no later decline, for every actor. P-015 is still a proposal to be written; it is not implemented until the user approves it. "Exact citations only" (T-027 H1) changes `underwriting_pipeline/ai/` and needs a numbered proposal and the user's approval before it is built. The carrier match rules are @head-of-underwriting's to decide. Published scores are not recounted. Does not authorize a send. Not a production approval.
+
+## D-034 — Commit before every scored run, and a scorer status says exactly what happened
+- Date / Owner: 2026-10-11 / @user
+- Context: The batched review of the hold-out scores found two things. No commit shows the scorer or the extraction code as it was when any published set was scored, so "scorer not edited after the gold" and "extraction frozen" rest on the memos. On SUB-057 through SUB-066, four rows show "Call: ok" although OCR returned no text and no model call was made.
+- Options considered: Keep relying on the memos. Or tie every score to a commit and make the status literal.
+- Decision: From now on, the code is committed before every scored run, and the git commit hash is recorded in each score file and memo. A scorer status must say exactly what happened, for example "not sent: no readable text", never "Call: ok" when no call was made.
+- Rationale: The user said this directly: "Rule from now: commit the code before every scored run and record the git commit hash in each score file and memo. A scorer status must say exactly what happened, e.g. "not sent: no readable text", never "Call: ok" when no call was made."
+- Dissent: none
+- Follow-up tasks: T-088 (proposal P-017). The commit before each scored run is noted on T-064, T-068, T-070, T-066, and T-093.
+- Status: ACCEPTED
+- Amends: how every score is produced from now on. A commit made under this rule covers the pipeline and team paths only and is not pushed; the user's uncommitted changes under `src/insureflow` are left out of it (D-023). Writing the hash and the new status wording into score output changes the scorers and `regression_dev.py`, so that part needs a numbered proposal and the user's approval before it is built. Published scores are not recounted or rewritten.
+
+## D-035 — T-020 (c) and (e) join the demo path
+- Date / Owner: 2026-10-11 / @user
+- Context: @compliance's veto on T-020 lists six things that resolve it. Four are already on the demo fix order in D-033. Two were not: (c) the user's exact send line, and (e) quote tracking.
+- Options considered: Leave (c) and (e) in the backlog and keep the T-020 veto open past the demo. Or add them to the demo path.
+- Decision: T-020 (c) and (e) are added to the demo path. A user send must carry the user's exact "send to carrier SUB-###" line, matched to the submission id and logged. Quote tracking shows a status per submission and carrier from the carrier replies, including open subjectivities. In `team/DEMO-BLOCKERS.md` they are placed after "package built from the reviewed file", so the T-020 veto can be lifted before the demo.
+- Rationale: The user said this directly: "Add T-020 (c) and (e) to the demo path: a user send must carry my exact "send to carrier SUB-###" line, matched to the submission id and logged; and quote tracking shows a status per submission and carrier from the carrier replies, including open subjectivities. Place them after "package built from the reviewed file" in DEMO-BLOCKERS.md, so the T-020 veto can be lifted before the demo."
+- Dissent: none
+- Follow-up tasks: T-086 (the user's exact send line), T-087 (quote tracking).
+- Status: ACCEPTED
+- Amends: the fix order in D-033 item (4), which now ends: package built from the reviewed file, the user's exact send line, quote tracking. Both are in `underwriting_pipeline/app/`, owned by @software-engineer. Lifting the veto is @compliance's call after review. Does not authorize a send.
+
+## D-036 — T-026 closes as scored, component not accepted
+- Date / Owner: 2026-10-11 / @user
+- Context: T-026 is the hold-out score of the old label scanner on SUB-017 through SUB-026. Its third acceptance criterion is "@model-risk accepts the component". @model-risk's review found seven value fields at 0/10 and showed that the other 17 hits are what an extractor that returns nothing would score. D-010 replaced that extractor. The criterion can never be met.
+- Options considered: Leave T-026 open. Or close it as scored with the component not accepted.
+- Decision: T-026 closes as "scored, component not accepted — retired under D-010". The extractor is recorded as retired in the model inventory. The score is quoted only as "0 of 7 value fields; other hits came from empty output". It is never cited for the current extractor.
+- Rationale: The user said this directly: "T-026 ruling: close as "scored, component not accepted — retired under D-010". Record it as retired in the model inventory, and quote it only as "0 of 7 value fields; other hits came from empty output". Never cite it for the current extractor."
+- Dissent: none
+- Follow-up tasks: T-026 (closed as worded), T-089 (model inventory).
+- Status: ACCEPTED
+- Amends: how T-026 closes. The published score file is not edited (D-025). The inventory is `deliverables/model-risk/model-inventory.md`, which @model-risk writes (D-031 item 5). Whether the veto is lifted is @model-risk's call once the inventory entry exists.
+
+## D-037 — T-027: all four of @model-risk's conditions are on the demo path
+- Date / Owner: 2026-10-11 / @user
+- Context: @model-risk's review of T-027 was REJECT with the production veto standing, and named four things that resolve it: (a) citations, (b) confidence, (c) unread content, (d) a new hold-out. Only (a) was on the demo path under D-033. (b) changes P-003b, which the user approved in D-020.
+- Options considered: Put only (a) on the demo path. Or all four.
+- Decision: (a), (b), (c), and (d) are accepted, all on the demo path. (b) amends P-003b: gate on the lower of model and OCR confidence, with the OCR confidence taken from the cited words including digits. (c): every file and page is read or listed as needs human with the reason. (d): after (a) to (c) are frozen and committed, a new 20-file hold-out, gold first, commit hash saved, scored once. This is the official score for the demo. (a) to (c) are drafted as one proposal for the user's approval.
+- Rationale: The user said this directly: "T-027: accept (a), (b), (c), (d), all on the demo path. (b) amends P-003b: gate on the lower of model and OCR confidence, OCR confidence from the cited words including digits. (c): every file and page is read or listed as needs human with the reason. (d): after (a)–(c) are frozen and committed, a new 20-file hold-out, gold first, commit hash saved, scored once — this is the official score for the demo. Draft (a)–(c) as one proposal for my approval."
+- Dissent: none
+- Follow-up tasks: T-080 (proposal P-016 for (a), (b), and (c)), T-091 (@producer builds SUB-087 through SUB-106), T-092 (@senior-underwriter, gold first), T-093 (@model-risk scores once). T-088 (proposal P-017) for the hash in the score file.
+- Status: ACCEPTED
+- Amends: D-033 item (4), where "exact citations only" stood alone: the proposal is P-016 and covers (a), (b), and (c) together. D-020 item (1), P-003b, is amended by (b) once P-016 is approved. P-016 is not implemented until the user approves it. The hold-out in (d) follows D-020 and D-022 (20 submissions, gold first, no code change after the gold exists), D-025 and P-011 (published once), and D-034 (commit first, hash recorded). Published scores are not recounted. Not a production approval; lifting the veto is @model-risk's call.
+
+## D-038 — Five rulings for the demo path, and who commits
+- Date / Owner: 2026-10-11 / @user
+- Context: @pm's round wrap-up listed points only the user could decide: a file declined and then approved; whether line 3b stays; whether backlog Highs B-138 and B-139 join the demo path; what the new hold-out scores; the price basis for the cost estimate; and who makes the D-034 commits, since no role may commit.
+- Options considered: For a declined file: never sendable once declined, or the latest decision wins. For the hold-out: score effective date and claims, one of them, or neither.
+- Decision: In the user's words. (1) "Latest decision wins: a file is sendable only if its latest logged decision is approve; an approve after a decline requires a reason, and full history stays in the log." (2) "Keep 3b on the demo path." (3) "Yes, add B-138 and B-139 to the demo path: the decision log accepts only real underwriter ids tied to my session, and edit stores the corrected value, which the package uses." (4) "New hold-out scores effective date but not claims; label becomes "9 of 10 fields scored; loss runs = date only"." (5) "Cost estimate: enterprise list prices (Gemini Flash/Pro on Vertex AI, Document AI layout) with tokens per file measured from our token log; label "estimate from public list prices, Oct 2026; free tier is development only"." (6) "Yes, make the D-034 commits yourself as described, no push." The orchestrator makes each commit before a scored run: pipeline, deliverables, and team paths only, on the ai-team branch, `src/insureflow` left out, no push.
+- Rationale: The user said this directly, in a message pasted by the user (D-032).
+- Dissent: none
+- Follow-up tasks: assigned by @pm
+- Status: ACCEPTED
+- Amends: D-033 item (2): "a declined file can never be sent" now reads as item (1) here. D-033 item (5): the label "8 of 9 fields scored; loss runs = date only" stays for every score published before the new hold-out; the new hold-out carries the label in item (4). Item (4) settles the scorer choice that P-017 was to list. Item (5) is an estimate for the demo and does not change D-011: no paid API is used. Does not authorize a send. Not a production approval.
+
+## D-039 — Approve change P-016 and P-017, with the options chosen, and the hold-out label
+- Date / Owner: 2026-10-11 / @user
+- Context: P-016 (T-027 (a), (b), (c)) is in `deliverables/ai-engineer/proposal-P-016.md` with twelve lettered choices. P-017 (D-034) is in `deliverables/ai-engineer/proposal-P-017.md` with four lettered choices and one point on the label, because the extractor has nine fields and the new scorer scores all nine.
+- Options considered: For P-016: N1 or N2, H1 or H2, D1 or D2, R1 or R2, Q1 or Q2, C1, C2 or C3, S1 or S2, G1 or G2, L1 or L2, E1 or E2, P1 or P2, K1 or K2. For P-017: U1, U2 or U3, V1 or V2, X1 or X2, J1 or J2. For the label: "9 of 10" as in D-038, or other words.
+- Decision: In the user's words. "approve change P-016 with N2 H2 D2 R1 Q1 C3 S2 G2 L1 E1 P1 K1, plus: at approve, the workbench lists every needs-review value and the underwriter acknowledges them; the acknowledgment is logged." "approve change P-017 with U1 V2 X1 J1." "Label: "9 of 9 extracted fields scored; claims not read; loss runs = date only"."
+- Rationale: The user said this directly.
+- Dissent: none
+- Follow-up tasks: assigned by @pm
+- Status: ACCEPTED
+- Amends: D-020 item 1 (P-003b): on a scanned page the gate is now the lower of the model's confidence and the OCR score of the cited words, digits included, by option C3. D-038 item (4): the new hold-out's label is "9 of 9 extracted fields scored; claims not read; loss runs = date only"; it still scores effective date and not claims. The acknowledgment at approve is in `underwriting_pipeline/app/workbench.py`, owned by @software-engineer, and is on the demo path with P-016. V2 means the commits made before a scored run also cover `deliverables/senior-underwriter/gold-set/` and `simulation/inbox/`. Scores published before the new hold-out keep "8 of 9 fields scored; loss runs = date only" and are not recounted. Does not authorize a send. Not a production approval; lifting the T-027 veto is @model-risk's call.
+
+## D-040 — Approve change P-015 with the options chosen, and the wrap-up for the night
+- Date / Owner: 2026-10-11 / @user
+- Context: P-015 (the T-017 score fixes) is in `deliverables/data-scientist/proposal-P-015.md` with eight lettered choices. The P-014 build was running and the session was ending for the night.
+- Options considered: For P-015: S1, S2, S3 or S4; H1, H2 or H3; M1 or M2; T1 or T2; V1, V2 or V3; W1 or W2; A1 or A2; E1 or E2.
+- Decision: In the user's words. "approve change P-015 with S3 H1 M1 T2 V3 W1 A1 E2. A2 (underwriter adds a missed code) goes to the backlog." For the night: the current P-014 build finishes and no new build turn starts after it. The orchestrator makes the D-034 commit (pipeline, deliverables, team, simulation/inbox and gold set; not src/insureflow). A Claude Code command /wrap-up is created: wait for running turns; standup entries; run self-checks; secret scan on everything to be committed (gsk_, sk-, AIza, .env, token_log, cache) and stop if anything is found; show the file list; commit with today's summary and date; push only the ai-team branch to origin, never main, never force; write team/NEXT-SESSION.md with where we stopped, pending decisions, and the first 3 tasks. Before pushing, the orchestrator tells the user whether origin exists and whether the GitHub repo is private. If it is public or missing, it stops and does not push.
+- Rationale: The user said this directly, in a message pasted by the user (D-032).
+- Dissent: none
+- Follow-up tasks: assigned by @pm
+- Status: ACCEPTED
+- Amends: nothing about auto-decline or auto-bind. With S3 and T2, P-015 includes a change in `underwriting_pipeline/ai/prepare.py`, built by @ai-engineer-assistant. P-015 is not built tonight. Not a production approval; each veto on T-017 is lifted only by its holder. Does not authorize a send.

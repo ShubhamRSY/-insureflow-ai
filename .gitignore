@@ -65,3 +65,7 @@ external_data/**
 .playwright-mcp/
 graphify-out/
 .worktrees/
+
+# P-014 (D-030): the extraction token log and the cache folder are run output, not source
+underwriting_pipeline/cache/token_log.jsonl
+underwriting_pipeline/cache/

@@ -54,3 +54,25 @@ Loss ratio is not a headline metric. We do not file rates.
 ## Cancelled
 
 T-001, T-002, T-005, T-006, T-010, T-011. Reasons are on the board.
+
+## Order of work to the demo (2026-10-11, @pm)
+
+From D-030, D-031 item 2, D-033, D-034, D-035, and D-037. One turn at a time. The numbered lines of team/DEMO-BLOCKERS.md are fixed in the user's order. Reviews of each build go to its reviewers as it lands.
+
+Before every scored run the code is committed and the hash is written in the memo (D-034). Who makes the commit is the user's to say.
+
+1. Work with no code in it, first, so approvals and inputs are ready before their turn: T-084 (proposal P-015), T-080 (proposal P-016), T-088 (proposal P-017), T-082 (carrier class lists), T-069 (saved-file keys), T-089 (model inventory), T-090 (memo lines).
+2. T-078, build P-014. Then the reviews that are still owed: T-065, T-073, T-074, T-075, T-078; a second look at T-060 and T-063.
+3. Commit. T-064, the quick-set baseline. T-061 takes its count from it.
+4. Blocker 1: T-070, then T-071. The three T-059 reviewers look again. T-072 (P-011) follows T-070. The P-017 build follows T-072, if approved.
+5. Blocker 2: T-079.
+6. Blocker 3: the P-016 build, if approved, then the quick set. T-081.
+7. Blocker 4: T-083.
+8. Blocker 5: the P-015 build, if approved.
+9. Blocker 6: T-085. Blocker 7: T-086. Blocker 8: T-087. Then T-020 goes back to @compliance and @senior-underwriter, T-017 to its three reviewers, T-019 and T-027 to theirs.
+10. T-062 (P-006), then T-068. This is the last change to extraction.
+11. Freeze and commit. Blocker 9: T-091, T-092, T-093. No code changes between the gold and the published score.
+12. T-066, the variance test. T-067, the fairness test.
+13. T-076, demo prep.
+
+If a proposal is not approved when its line is reached, work stops there and @pm asks the user; the order is not changed by @pm. Nothing in this order depends on something later in it.

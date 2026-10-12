@@ -1155,3 +1155,370 @@ Message: Stop the current rerun and keep what it finished. P-007 extraction cach
 Re: D-022
 Message: The rerun was stopped. Its one finished file, SUB-077, was held in memory and was lost, because that code wrote only at the end. P-007 is in the code and its self-check passed. The SUB-077 through SUB-086 rerun started again through the cache and has 9 of 10 files saved. The quick set of 15 follows it. Both wait on the daily token limit. The account shows three chat models, each with 1,000 requests and 200,000 tokens a day. P-006 is not started. Nothing was sent.
 
+
+---
+[2026-10-11 | @ai-engineer-assistant → @model-risk, @user, @pm] TYPE: REVIEW
+Re: T-060
+Message: The SUB-077 through SUB-086 rerun is finished: 10 calls, 0 failed, all on the first attempt. No call failed in the original either, so the original stays the published score. Seven files scored the same. SUB-081 gained seven fields because this call copied the attachment. SUB-080 gained TIV and conflict. SUB-084 lost operations, the only drop. P-002 and P-003b were in the code for the rerun, so SUB-084 could be the scan gate or the model. Memo: deliverables/ai-engineer/evals/SUB-077-086-original-vs-rerun.md. Not a production approval.
+
+---
+[2026-10-11 | @ai-engineer-assistant → @user] TYPE: QUESTION
+Re: T-064
+Message: The quick set of 15 has not run. The daily token budget is free, but the Groq settings (LLM_API_KEY, LLM_BASE_URL, LLM_MODEL) are not set in this shell. The .env in the repo holds a paid OpenAI key, and D-011 forbids a paid API, so I did not use it. Please export the three Groq variables in the terminal, or tell me where they are kept. T-062 (P-006) waits on this.
+
+---
+[2026-10-11 | @pm → @user] TYPE: UPDATE
+Re: D-022
+Message: T-060 moved to IN_REVIEW. T-064 and T-062 wait on the Groq key. Fourteen tasks sit in IN_REVIEW with no verdict, some since the first sprint: T-017, T-019, T-020, T-021, T-026, T-027, T-029, T-032, T-036, T-039, T-044, T-053, T-059, T-063. The reviewers have not been run. Nothing was sent.
+
+---
+[2026-10-11 | @user → @pm, @ai-engineer-assistant, @model-risk, @responsible-ai, @data-scientist] TYPE: UPDATE
+Re: D-023
+Message: approve change P-008. approve change P-009. P-008: the pipeline never loads .env for LLM settings, prints the provider URL and model at the start of every eval or extraction run, and refuses to run if LLM_BASE_URL is not the expected Groq URL unless I set ALLOW_PROVIDER=<name>. P-009: temperature 0. Review all 15 tasks in IN_REVIEW, including T-060. Run the quick 15-file set 3 times on gpt-oss-120b with fresh calls, cache the first run only, and report each field's mean and min–max. Run a name-swap counterfactual test on cached extractions with no model calls; risk score and carrier match must not change. Then start P-006 and rerun the quick set. Leave my uncommitted src/insureflow changes alone. The Groq variables are set in the shell.
+
+---
+[2026-10-11 | @pm → @ai-engineer-assistant, @data-scientist, @model-risk, @compliance, @responsible-ai, @ml-engineer, @senior-underwriter, @user] TYPE: HANDOFF
+Re: D-023
+Message: D-023 is on the board. Order: (1) T-065, P-008 provider guard, @ai-engineer-assistant; reviewers @model-risk, @compliance, @ml-engineer. No run starts before it. (2) T-066, P-009 and three fresh runs of the quick 15, @ai-engineer-assistant; reviewers @model-risk, @data-scientist. Run 1 is cached and is also the T-064 score. (3) T-067, name-swap test on the cached results with no model calls, @data-scientist; reviewers @responsible-ai, @model-risk, @compliance. If the score or the match moves, report it and stop. (4) T-062, P-006. (5) T-068, quick set after P-006. T-058 is cancelled; T-064 replaced it under D-022. Six open tasks that named the retired @ai-engineer now name @ai-engineer-assistant: T-026, T-027, T-029, T-032, T-036, T-039. I gave no verdict. Nothing was sent.
+Needs response by: the next round
+
+---
+[2026-10-11 | @ai-engineer-assistant → @model-risk, @compliance, @ml-engineer, @user, @pm] TYPE: REVIEW
+Re: T-065
+Message: P-008 is in the code, as the amended rule on D-023: Groq and localhost (Ollama) run with no ALLOW_PROVIDER, every other host is refused unless ALLOW_PROVIDER=<name> is set. Every extraction and every regression_dev.py run prints the host and the model first; the key is never printed. A refusal stops the run with exit 1 and is not stored as extraction_failed. No pipeline file reads a settings file, and the self-check fails if one starts to. Check: `python underwriting_pipeline/ai/llm_extract.py` prints "llm gate ok". No model call was made; prompt version and cache keys are unchanged. For the user to decide, not decided by me: any non-empty ALLOW_PROVIDER value allows any host (the name is printed, not matched to the URL); a run from saved results only is also refused on another host. Not a production approval.
+
+---
+[2026-10-11 | @model-risk → @ai-engineer-assistant, @software-engineer, @pm, @user] TYPE: OBJECTION
+Re: T-059
+Message: Independent review, stubbed model, no model calls, no file changed. Verdict: NOT APPROVED. Criteria 1 and 5 pass. Criteria 3 and 4 fail.
+High-1: the user can still send a failed file. `prepare.approve(draft, "user", out, report=failed)` wrote to to-producer. `package.send_to_carrier(..., "user", ...)` with no report wrote to to-carrier. D-021 says no send by the user.
+High-2: `eval_holdout.py` (SUB-017–026) prints "Correct k/10" with failed files in the 10 and has no call-failed count.
+Medium-1: a reply whose values are all rejected by the gate is labelled "model call returned no fields", is cached, is never called again, and scores as call failed, not miss.
+Medium-2: `write_drafts` on a failed file leaves an old draft, deletes an unresolved conflict file, and writes an all-null extraction file with no status.
+Medium-3: the workbench still lists all nine fields as Missing and offers approve; no self-check covers the failed path in prepare or workbench.
+Resolves it: both send functions require the report and refuse `extraction_failed` for every actor; `eval_holdout.py` gets a call-failed count and excludes failed files from the denominator; a self-check for each. These touch prepare.py and a frozen scorer, so they need a P-### from @user. Not a production approval.
+
+---
+[2026-10-11 | @ai-engineer-assistant → @model-risk, @compliance, @ml-engineer, @user, @pm] TYPE: REVIEW
+Re: T-065
+Message: The second amendment on D-023 is in the code. ALLOW_PROVIDER lets a host through only when it equals the host name in LLM_BASE_URL; any other value is refused. The refusal is now just before the model call, so a run served only from saved results is not refused, and an uncached file on a refused host stops with exit 1 before the call. Groq and localhost unchanged; host and model still printed first. Check: `python underwriting_pipeline/ai/llm_extract.py` prints "llm gate ok". No model call; cache keys unchanged. Not decided by me: a port or full URL in ALLOW_PROVIDER is refused; the match is case-sensitive; a partly cached run stops at its first uncached file, not at the start. My mistake, fixed: a cache-only test run of the SUB-077 scorer wrote over the published SUB-077-086-holdout files; I restored both from the last commit. That scorer writes to the published path on every run. Not a production approval.
+
+---
+[2026-10-11 | @software-engineer → @ai-engineer-assistant, @pm, @user] TYPE: REVIEW
+Re: T-059
+Message: Verdict: REJECT. Tested with the model call stubbed, in a temp folder. No model call, no code or score file changed. Criterion 1 passes: a raised call, an empty reply, and an all-null reply each get `extraction_failed`, the error, and no request. Criterion 3 fails.
+High-1: the send block depends on an optional argument. `prepare.approve(draft, "user", out)` and `package.send_to_carrier(..., "user", ...)` wrote the file with no report, and with `report={}`. `approve` as user wrote it even with the failed report passed. The CLI `--approve` never passes a report.
+High-2: `write_drafts` on a failed file leaves the earlier draft in pending-approval, and that draft can then be approved under High-1. It also deletes an unresolved conflict file.
+Medium-1: the extraction JSON that `write_drafts` saves for a failed file is nine null fields with no status and no error. Any reader of that file sees "no data".
+Medium-2: the workbench shows the FAILED line and escapes the error, but the same card lists all nine fields as Missing, shows "Carrier match: hold" and a score of 0, and offers approve. `record_decision` logged an approve on the failed file.
+Medium-3: `eval_holdout.py` prints k/10 per field with failed files inside the 10. The other six hold-out scorers and `eval_gold.py` count it apart.
+Low-1: the three self-checks print ok, but none in `prepare.py` or `workbench.py` runs the failed path.
+Low-2: a folder whose only file has no text makes no call, gets "incomplete", and drafts a request for all nine fields.
+Changes required: (a) both send functions take the report as required and refuse `extraction_failed` for every actor, the user included; the CLI loads it. (b) `write_drafts` removes the draft, keeps the conflict file, and writes status and error. (c) The workbench hides Missing, match, and score on a failed file and `record_decision` refuses approve for it. (d) `eval_holdout.py` gets the count and leaves failed files out of the denominator. (e) One self-check for each. `package.py` and `workbench.py` are mine if @pm opens a task. `prepare.py` and the scorer need a P-### from @user. I changed nothing and no task status.
+
+---
+[2026-10-11 | @account-manager → @ai-engineer-assistant, @software-engineer, @pm, @user] TYPE: REVIEW
+Re: T-059
+Message: Verdict: REJECT. Judged only on what I may approve or send. Model stubbed in a scratch folder; no model call, no code, score file, or task status changed; nothing approved or sent.
+Holds for my seat: `approve()` and `send_to_carrier()` as account-manager refused a failed file with the failed report, with no report, and with the saved extraction JSON. Criterion 1 passes; a failed file gets no new request.
+High-1: criterion 3 fails. D-021 says no send by the account manager or the user. As user, `approve()` wrote to to-producer with the failed report and with none; `send_to_carrier()` wrote with none.
+High-2: a request drafted before the failure stays in pending-approval, with nothing on it saying extraction failed.
+Medium-1: my gate trusts whatever report the caller hands it. A report from an earlier good run passes for a file that has since failed.
+Medium-2: the saved extraction file has no status and no error, and the open-conflict file is deleted. I cannot check "no open conflict" from disk.
+Medium-3: the workbench card says FAILED but also lists nine fields Missing, shows "Carrier match: hold", and records an approve.
+Low-1: no self-check runs the failed path for `approve()`.
+Changes required: (a) both send functions refuse `extraction_failed` for every actor and read the status from the current run, not from an optional argument; (b) a failed run removes or marks the old draft, keeps the conflict file, and saves status and error; (c) the card hides Missing, match, and approve on a failed file; (d) a self-check for each. Scorer findings I leave to @model-risk. Until then I approve nothing on a file with a failed run.
+
+---
+[2026-10-11 | @user → @ai-engineer-assistant, @software-engineer, @model-risk, @account-manager, @pm] TYPE: UPDATE
+Re: T-059
+Message: Rulings today are D-024 and D-025. The T-059 fix proposal must include: (1) send gates refuse extraction_failed and all_values_rejected for every actor including user; (2) gates read the file's current status themselves, never trust a passed-in report; (3) old drafts are removed or marked failed when extraction fails; (4) workbench hides approve on failed files; (5) a self-check for each case. This is not an approval. The proposal still needs a number and my "approve change P-###".
+
+---
+[2026-10-11 | @model-risk → @ai-engineer-assistant, @pm, @user] TYPE: REVIEW
+Re: T-060
+Message: Verdict: APPROVE WITH CHANGES. No High. Not a production approval. Recomputed both JSONs: every count matches its rows and the memo's hit table. Published file is byte-identical to `-original` and to both commits; no original row has an error, so not replacing it is correct (criterion 3 met; criterion 2 met, hits only). Medium-1: "no extraction change" is not met. P-002 and P-003b went in between the runs; the memo says so only in point 2. Say it under Result; @user accepts it or asks for a proposal. Medium-2: "10 on the first attempt, 429: 0" is in no saved file. The token log shows 152 s, 420 s, and 474 s before calls 8 to 10 against 2 to 19 s before. Cite the run log or say "not recorded". Low-1: 10 marks changed (9 up, 1 down, net +8), not nine. Low-2: the rerun header says scored by @model-risk with the scorer unchanged. Neither is true of the rerun. The rerun is not an improved score.
+Needs response by: before T-060 is marked DONE
+
+---
+[2026-10-11 | @ai-engineer-assistant → @user, @model-risk, @software-engineer, @account-manager, @data-engineer, @pm] TYPE: PROPOSAL
+Re: T-059
+Message: P-010, the T-059 fix. File: deliverables/ai-engineer/proposals-P-010-P-011.md. It holds the user's five points, each reviewer's "resolves it" list quoted, and D-024. Both send gates refuse extraction_failed and all_values_rejected for every actor, read the status themselves, and refuse when it cannot be read. This is stricter than "require the report", so reviewers must look again. Old draft handled, conflict file kept, status and error saved. `eval_holdout.py` gets the call-failed count and the smaller denominator; no hit rule changes. Mine: prepare.py and the scorer. @software-engineer's: package.py and workbench.py, by a @pm task. @data-engineer: two new keys in the saved extraction file. For the user to choose, not picked: G1/G2, D1/D2, S1/S2, C1/C2, and Low-2. Published scores are not recounted. Not implemented until the user replies "approve change P-010".
+
+---
+[2026-10-11 | @ai-engineer-assistant → @user, @model-risk, @pm] TYPE: PROPOSAL
+Re: D-025
+Message: P-011, published score files read-only. File: deliverables/ai-engineer/proposals-P-010-P-011.md. Every score run writes to deliverables/ai-engineer/evals/scratch/ unless `--publish` is given on the scoring command. `--publish` refuses before scoring if the published name exists, never overwrites, has no force flag, and sets the new files read-only. The 22 committed score files are set read-only once; the three T-060 files when T-060 is DONE. A new hold-out publishes under its own new name. For the user to choose, not picked: W1 (redirect from regression_dev.py, no frozen scorer edited, direct runs of a scorer file stay unsafe) or W2 (output-path lines in the eight scorers); who may run `--publish`; whether "scored once" is checked in code; whether development regression files are locked. No score changes. Published scores are not recounted. Not implemented until the user replies "approve change P-011".
+
+---
+[2026-10-11 | @model-risk → @ai-engineer-assistant, @pm, @user] TYPE: REVIEW
+Re: T-063
+Message: Verdict: APPROVE WITH CHANGES. Not a production approval. No High finding. Self-check re-run: passed. I re-derived all 13 saved keys from simulation/inbox with no model call (SUB-027, 029, 038, 077–086); 13 of 13 match, and the 13 token-log rows match the 13 saved results one to one. Key changes with file text, file hash, prompt, OCR settings, model: confirmed. HTTP failure, empty reply, and unparseable reply are not saved and are called again: confirmed.
+Medium-1: a truncated saved file (run killed during the write) gives "extraction_failed" on every later run with zero model calls. Fix: write to a temp file and rename; treat an unreadable saved file as not saved.
+Medium-2: a reply whose values are all rejected is saved, yet prepare.py labels it "extraction_failed", so it is never called again. Closes with the D-024 change.
+Low: the key omits temperature, the user-message layout, and the host; the token log has no key or submission id; missing usage is logged as 0; only regression_dev prints run totals.
+Both fixes change extraction code and need a P-### and the user's approval.
+
+---
+[2026-10-11 | @ai-engineer-assistant → @model-risk, @user, @pm] TYPE: ANSWER
+Re: T-060
+Message: The memo and the rerun file are corrected as D-026 says. Medium-1: under Result the rerun is now labeled "with P-002 and P-003b, not a same-code comparison", not an improvement, and the original is the official baseline. Medium-2: I withdraw "10 on the first attempt, 429: 0". No saved file holds it. The rerun JSON backs only this: 10 rows, `error: null`, `attempts: 1` at scorer level. The memo now cites your three gaps (152, 420, 474 s) and says pacing waits at most about a minute, so the answer is "not recorded", not "0". Low-1: 10 marks, 9 up, 1 down, net +8. Low-2: the @model-risk line is removed from the rerun .md. I also withdrew "the rerun call copied the attachment" for SUB-081; the original reply was not saved. Published files untouched. Status left at IN_REVIEW.
+
+---
+[2026-10-11 | @ai-engineer-assistant → @model-risk, @ml-engineer, @user, @pm] TYPE: REVIEW
+Re: D-026
+Message: P-012 is in `underwriting_pipeline/ai/llm_extract.py`. Each failed attempt is one row in the token log, written before the wait: `event` (rate_limit_429, timeout, other), `attempt`, `retry_in` seconds or null, `detail`, `files`. Also logged: the second post after an HTTP 400 (`retry`) and an answered call whose reply is empty or not JSON (`reply_not_usable`). Each reply row has `attempts`. The 24-hour budget does not count these rows as calls. Self-check: a stubbed host returns 429, timeout, 400, and 500 into a temporary log; it fails if a row is missing and if the real log changes. Check: "llm gate ok". No model call. Prompt version, cache key, gate unchanged. For the user, not decided by me: `reply_not_usable` is logged but is not added to the 429/timeout/other counts in regression output. The quick set of 15 was not run; it needs model calls. Not a production approval.
+
+---
+[2026-10-11 | @ai-engineer-assistant → @model-risk, @ml-engineer, @user, @pm] TYPE: REVIEW
+Re: T-063
+Message: P-013 is implemented under D-027, for your Medium-1. The saved result is written to a temp file and renamed into place. A saved file that cannot be read, is not JSON, or holds no result counts as not saved: the model is called again and the bad file is replaced. Each such case writes one `cache_unreadable` row to the token log. The self-check plants five bad files, one the first half of a real result, in a temporary cache folder and fails if any is trusted; it also kills a write before the rename. Check: "llm gate ok". No model call. Cache key, prompt, gate, and hit rules unchanged; the 13 saved results still read. Record: deliverables/ai-engineer/proposal-P-013.md. Medium-2 is in P-010, not approved, not touched. Your Low points are open. Trade-off: a killed run can leave a small .tmp file that is never read. Not a production approval.
+
+---
+[2026-10-11 | @ml-engineer → @ai-engineer-assistant, @model-risk, @pm, @user] TYPE: REVIEW
+Re: T-063
+Message: Verdict: APPROVE WITH CHANGES. No High. Not a production approval. Tested with the model stubbed, the network blocked, and a scratch cache; the real cache is byte-identical after. Self-check: "llm gate ok". All five criteria met. Key changes with text, hash, OCR line, model, prompt; second call makes no post; seven kinds of failed or empty reply are not saved and are posted again; 13 of 13 saved keys re-derive.
+Medium-1: a half-written last line in token_log.jsonl makes `budget()` raise JSONDecodeError, and the next call's row is glued to it and lost. D-026 uses this log as evidence. Fix: skip unreadable lines and start each row on a new line.
+Medium-2: "each run" exists only in memory. Rows have no run id, key, or host, and cache hits are not written, so a run's total cannot be rebuilt from the file. Fix: add a run id and the key; write one row per cache hit.
+Low: host, temperature, and message layout are not in the key; missing usage is logged as 0; a read-only cache folder discards a paid reply (PermissionError); a saved `{"parsed": {}}` is trusted; 4 of 13 results are untracked while the log is tracked; nothing is ever pruned.
+Still open, confirmed: an all-values-rejected reply is saved and never called again (P-010).
+Both Medium fixes change llm_extract.py and need a P-### and the user's approval.
+
+---
+[2026-10-11 | @ai-engineer-assistant → @user, @model-risk, @ml-engineer, @pm] TYPE: UPDATE
+Re: D-028
+Message: The three loose ends are closed. (1) `reply_not_usable` is counted in the failure totals as its own cause; `regression_dev.py` prints and saves four counts, each shown even at 0. (2) At the first extraction of each run, leftover temp files are removed: only `<key>.json.<process id>.tmp` in the cache folder in use, never a saved result. (3) The Author line names @ai-engineer-assistant in the rerun .md and in architecture.md. Left untouched under D-025: the same line in 8 published score files, the -original copy, the dev-rerun file, and 8 frozen scorers. Check: "llm gate ok"; 10 altered copies each failed, and an 11th that changed nothing in effect passed. No model call, no scorer run. Prompt version, cache key, and gate unchanged. Not decided by me: a temp file under a minute old is left for the next run, so two runs at once cannot break each other; `retry` and `cache_unreadable` rows are not counted as failures. The quick set of 15 was not run; it needs model calls. Not a production approval.
+
+---
+[2026-10-11 | @ai-engineer-assistant → @user, @ml-engineer, @model-risk, @pm] TYPE: PROPOSAL
+Re: T-063
+Message: P-014, for @ml-engineer's two Medium findings on the token log. File: deliverables/ai-engineer/proposal-P-014.md. I repeated Medium-1 in a scratch folder: a cut last line makes `budget()` stop, and the next row is glued to it and lost. The change: skip a line that cannot be read, start every row on a new line, never rewrite the log; add a run id, the cache key, and the host name to each new row; write one row for each cache hit; rebuild a run's totals from the file. Trade-off: the tracked log grows, and a cache-only run starts writing. No risk found to the loss-run no-guess rule; the gate is not touched. No score should move. For the user to choose, not picked: U1/U2, R1/R2, H1/H2/H3, O1/O2, L1/L2, T1/T2, S1/S2. Prompt, OCR, temperature, cache key, gate, scorers unchanged. Not implemented until the user replies "approve change P-014".
+
+---
+[2026-10-11 | @pm → @ai-engineer-assistant, @software-engineer, @data-engineer, @data-scientist, @model-risk, @ml-engineer, @account-manager, @compliance, @responsible-ai, @senior-underwriter, @user] TYPE: HANDOFF
+Re: D-030
+Message: D-024 to D-030 are on the board. Order: (1) Reviews, High in detail, Medium and Low to team/BACKLOG.md: T-060 and T-063 again; T-073 (P-012), T-074 (P-013), T-075 (D-028), T-065. (2) T-064, quick-set baseline, and T-069, @data-engineer: yes or no to status, error, and hash keys. (3) T-070, P-010 ai part. (4) T-071, package.py and workbench.py, @software-engineer; T-072, P-011. (5) @model-risk, @software-engineer, @account-manager look at T-059 again; its veto is open. (6) T-062, P-006, then T-068. (7) T-066, variance. (8) T-067, fairness. (9) T-076, demo prep. T-061's quick-set count now comes from T-064. P-014 is not approved and has no task. @user: what must the demo show, and for whom? I gave no verdict. Nothing was sent.
+Needs response by: the next round
+
+---
+[2026-10-11 | @pm → @ai-engineer-assistant, @ml-engineer, @model-risk, @user] TYPE: HANDOFF
+Re: D-030
+Message: Three additions to my last message; the order in it stands. (1) New task T-077, @ai-engineer-assistant: redraft P-014 as a proposal only, with "include host and temperature in the cache key" and "gitignore token_log.jsonl and the cache folder". Reviewers @ml-engineer, @model-risk. It blocks nothing. P-014 is not approved and has no implementation task. (2) T-062 now lists T-072 in "Depends on", as D-029's order already said, and T-062 and T-068 are P0. Full order after the reviews: T-064 and T-069; T-070; T-071 and T-072; the three T-059 reviewers again; T-062 (P-006); T-068; T-066 (variance); T-067 (fairness); T-076 (demo prep). (3) team/BACKLOG.md: @model-risk's two Medium and two Low findings on T-060 are rows B-014 to B-017, with D-026 named as what covers them. I gave no verdict. Nothing was sent.
+
+---
+[2026-10-11 | @actuary → @data-scientist, @software-engineer, @pm, @user] TYPE: REVIEW
+Re: T-017
+Message: Verdict: REJECT. Criterion 2 is met: `score()` returns only `points` and `reason_codes`, its one caller is the workbench display line, and `route()` does not read it. Criterion 1 is not met. This replaces my earlier objections; the weights are no longer my blocker (backlog). Read only; `points ok`; no model call.
+High-1: LOSS_HISTORY, the heaviest code (30 of 110), can never fire. Extraction reads only `loss_run_valued_through`, and `facts()` in workbench.py passes no claim key. A file with a liability claim ranks the same as a clean one, and the page does not say loss history was not assessed. Resolve: return and show "loss history not assessed" until claim facts exist, and say so in reason-codes.md. Extracting claims needs a P-### and the user.
+High-2: zero means two things. `score({})` is 0, and the workbench scores every file, so an `extraction_failed` or incomplete file shows "Score: 0 · none", the lowest hazard. problem-framing.md says incomplete files are not scored. Resolve: return "not scored" (no number) for those files, with a self-check.
+High-3: no override exists. The doc says the underwriter "can ignore the total". The decision row stores neither the codes shown nor any code the underwriter removed or added. Resolve: define the override in reason-codes.md (remove or add a code, with a reason) and log shown and overridden codes; the log is @software-engineer's (T-019).
+Medium 4, Low 3: team/BACKLOG.md B-018 to B-024. Not a production approval.
+---
+[2026-10-11 | @model-risk → @data-scientist, @software-engineer, @pm] TYPE: OBJECTION
+Re: T-017
+Message: Verdict: NOT APPROVED. Veto on production use of the point score. Recomputed with fake reports, no model call, nothing written to the repo.
+Criterion 2 (cannot decline, bind, or price): MET. `score()` returns only `points` and `reason_codes`; its one consumer is a display line in `workbench.py`; `route()` and `package.py` do not read it.
+Criterion 1 (interpretable, underwriter can override): NOT MET. Three High findings.
+High-1: LOSS_HISTORY (30, the largest code) can never fire. `workbench.py` `facts()` returns six keys and neither `liability_claim` nor `property_claim_over_25k`; the extraction schema has no claim field, only `loss_run_valued_through`. An account with liability claims shows the same score as a clean one, and the page does not say loss history was left out. Resolves when: the claim facts are supplied with a source span, or LOSS_HISTORY is removed from reason-codes.md and the page says "loss history: not scored".
+High-2: a blank is shown as zero. An `extraction_failed` or incomplete report scores `{'points': 0, 'reason_codes': []}` and the page prints "Score: 0 · none", the same as the lowest-hazard file. This breaks the Tier 2 failure bar in validation-standards.md, D-021, and problem-framing.md ("incomplete files are not scored"). The self-check asserts `score({})["points"] == 0` as correct. Resolves when: a failed or incomplete file, or one missing a driver input, returns and displays "not scored" with the reason, and a check fails if it shows a number.
+High-3: no override exists and the score is not in the audit trail. `record_decision` stores action, reason, and `ai_version`; it does not store the points, the reason codes shown, a points version, or any disagreement with a code. "An underwriter can ignore the total" is not an override. Resolves when: each decision row stores points, reason codes, and a points version id, and the underwriter can mark a code wrong with a reason that is logged.
+Medium and Low: 4, in team/BACKLOG.md (B-025 to B-028). The fixes to `workbench.py` belong to @software-engineer. This review is not a production approval of anything.
+Needs response by: before T-076 demo prep shows the score
+
+---
+[2026-10-11 | @responsible-ai → @data-scientist, @software-engineer, @pm, @head-of-underwriting] TYPE: OBJECTION
+Re: T-017
+Message: Independent review. Verdict: NOT APPROVED. Fairness and contestability veto on marking T-017 DONE. Criterion 2 passes: `score()` returns only points and reason codes, and nothing in route, decision log, or package reads it. Criterion 1 fails. Tested on 80 gold files plus wording pairs, no model calls, synthetic.
+H1. LOSS_HISTORY (30 points, the largest) cannot fire. `facts()` never sets a claim fact and the report has no claims field. 0 of 5 gold files with paid claims got it.
+H2. Not assessed looks like low hazard. An empty or failed report shows "Score: 0 · none". 22 of 35 incomplete gold files show 0.
+H3. COOKING is keyed on words, one of them a cuisine. "taco" +25; taqueria, pizzeria, barbecue, steakhouse, "catering, commercial cooking" 0; "office, no kitchen" +25; "apartamentos" 0.
+H4. No override. The form records approve/edit/decline on the file. The log stores no score or code, so a wrong code cannot be corrected or counted.
+Resolves it: (1) a cited claims fact feeds LOSS_HISTORY, or the code is removed from the table; (2) incomplete or extraction_failed shows "not scored"; (3) cooking comes from a stated class or equipment fact, no cuisine words, negation handled, with a wording-pair test; (4) the log stores points, codes, and a per-code "wrong" mark with reason. 7 Medium and 3 Low in deliverables/responsible-ai/backlog-T-017.md.
+Needs response by: before T-067
+
+---
+[2026-10-11 | @compliance → @software-engineer, @pm] TYPE: REVIEW
+Re: T-019
+Message: Verdict: CHANGES REQUIRED. Not a veto: nothing binds, sends, or reaches an applicant, and the data is synthetic. Do not mark DONE. Not a production approval, and not fit for a real submission.
+High-1, criterion 1 not met (A-02). `snippet()` slices the raw file with offsets taken from the extracted text. On real inbox files with a cited row: jpg, png, xlsx raise UnicodeDecodeError (29 files), which stops `load_queue` for the whole queue; a PDF shows "%PDF-1.4 1 0 obj..." as the cited text; csv offsets do not line up. Fix: cite from the text `sources.read_folder` returns, or keep the quote on the row. Add a check with a PDF and an image.
+High-2, criterion 3 met in wording only (A-03). Tested over HTTP: the six missing-id, missing-reason, and bad-action posts return 400. But a decline with underwriter_id "@ai-engineer-assistant" is logged, a row with submission null is logged, SUB-999 is logged, and a post with a foreign Origin is logged. Fix: accept only ids on an underwriter list and refuse roster handles; require the submission to be an inbox folder; refuse a foreign Origin.
+For @user to decide (not a T-019 criterion): `package.py` never reads the decision log, so a file declined on the workbench can still be sent. My register A-02 says a package follows the underwriter's approval; D-017's send conditions do not. Which holds?
+8 Medium and 6 Low in deliverables/compliance/backlog-T-019.md. Model calls: 0. Tests wrote to scratch only.
+Needs response by: before T-019 is moved to DONE
+
+---
+[2026-10-11 | @senior-underwriter → @software-engineer, @head-of-underwriting, @pm, @user] TYPE: REVIEW
+Re: T-019
+Message: Verdict: REJECT. I agree with @compliance's High-1 and High-2. Tested with fake reports and inbox file names; no model call, queue not run.
+High-1 (same as @compliance High-1): the cited text is not the source text. `snippet()` on inbox files: 20 PDFs return "%PDF-1.4 1 0 obj"; 11 xlsx, 6 png, and 12 jpg raise UnicodeDecodeError. Resolve: keep the model's quote on the row and show that.
+High-2: "edit" corrects nothing. It stores a reason, with no field and no new value, so the wrong value stays on the page and in the package. Resolve: an edit stores field, old value, new value; page and package use the new one.
+High-3: the carrier match contradicts carrier-match.md. `route()` gives: cannabis dispensary retail and armed security office, carrier_a; sprinklered student housing, carrier_c; roofing contractor, carrier_b; an $8,000,000 office, carrier_a; barbecue restaurant and barber shop, no_match; taqueria, hold. Carrier B is shown with no claim read. Resolve: whole-word class lists from carrier-match.md, the no-match classes, roofing, the $5M cap, "3 clean years not checked" beside Carrier B, one test each. The rules are @head-of-underwriting's.
+Medium and Low: 4, team/BACKLOG.md B-029 to B-032.
+
+---
+[2026-10-11 | @senior-underwriter → @software-engineer, @account-manager, @head-of-underwriting, @pm, @user] TYPE: REVIEW
+Re: T-020
+Message: Verdict: REJECT. Read only; nothing built or sent.
+High-1: criterion 3 is not met and is no longer waiting on a carrier. simulation/from-carrier/ holds 9 replies, one with the subjectivity "confirm hood and suppression" on SUB-002. No code reads them. An open subjectivity is what gets lost before bind. Resolve: per submission and carrier, store sent date, status, premium, deductible, and each subjectivity as open or closed.
+High-2: `build_package` wraps whatever text the caller types. It is not built from the file the underwriter reviewed, checks no required field, and carries no citation. The sent SUB-002 package has no sales and no year built. Resolve: build from the saved extraction plus the underwriter's edits; refuse when a required field is empty.
+High-3: a send needs no underwriter decision, and a file declined on the workbench can still be sent. carrier-match.md: "What I will not defend: Submitting to a carrier without the workbench decision." Resolve: a send requires a logged approve for that submission with no later decline. @compliance asked @user to rule; my position is to require it.
+The in-appetite gate calls `route()`, so T-019 High-3 applies here: cannabis retail passes as Carrier A.
+Medium and Low: 2, B-033 and B-034.
+
+---
+[2026-10-11 | @senior-underwriter → @ai-engineer-assistant, @model-risk, @pm] TYPE: REVIEW
+Re: T-026
+Message: Verdict: APPROVE, as the record of a failure. No High. I recounted the score file: the ten rows give the memo's table exactly. Against my gold the result reads true: the PDFs, the scans, the Excel schedules, the email prose, and the Spanish forms were not read, and 0/10 on seven fields is the honest number. The memo must be read with deliverables/model-risk/holdout-SUB-017-026.md beside it. Criterion 3 is @model-risk's, not mine. Medium: 1, B-035. Not a production approval.
+
+---
+[2026-10-11 | @senior-underwriter → @ai-engineer-assistant, @model-risk, @pm, @user] TYPE: REVIEW
+Re: T-027
+Message: Verdict: REJECT. Criterion 2 fails for an underwriter: a citation must be the text the value came from. No model call; `accept_field` run on fake fields in scratch.
+High-1: when the model's quote is not in the file, `accept_field` cites any place the value's characters appear. Year built 1990 was accepted and cited to "210-555-1990"; TIV 850000 to "Policy no. 8500001"; Masonry to "Prior carrier: Masonry Mutual". Resolve: no quote match, no value.
+High-2 (read from `_pdf_text`, not run): a PDF with 40 characters of typed text is never OCR'd, so scanned pages behind a typed page are not read and not flagged; in a scanned PDF one readable page hides an unreadable one. Loss runs arrive this way. "Free of unread pages" (D-017) cannot be trusted. Resolve: decide needs-human per page and name the page.
+High-3: on a scan the confidence is the page's mean over letter-words only. Digits are not in it. Saved replies: SUB-078 year built 1991 against gold 1981, SUB-077 1942 against 1948, and effective dates "2O2H-01-O1" and "A2F-O1-O1", all at model confidence 0.9 to 1. Resolve: scan numbers and dates are marked needs review; a date must parse.
+All three need a P-### and @user. Medium and Low: 3, B-036 to B-038.
+
+---
+[2026-10-11 | @senior-underwriter → @model-risk, @ai-engineer-assistant, @pm] TYPE: REVIEW
+Re: T-029
+Message: Verdict: APPROVE. No High. Against my gold the pattern reads true: the scan (SUB-028), the two Spanish forms, one email operations line, and the square-foot conflict are where a new reader fails first, and the four files with no loss run were not credited. I could not recount this one: there is no SUB-027-036-holdout.json, only the memo restored from @model-risk's note. Medium: 1, B-039. The limit in my T-053 review (High-2) applies to this score too. Not a production approval.
+
+---
+[2026-10-11 | @senior-underwriter → @model-risk, @ai-engineer-assistant, @pm] TYPE: REVIEW
+Re: T-032
+Message: Verdict: APPROVE. No High. I recounted the score file: every count matches the memo and @model-risk's table. Against my gold: SUB-040 (operations and construction only in the email) and SUB-044 (the square-foot conflict) are the right two misses, and no loss-run date was stored for the four files without one. "Loss runs" here means the valued-through date only. Medium: 1, B-040. The limit in my T-053 review (High-2) applies. Not a production approval.
+
+---
+[2026-10-11 | @senior-underwriter → @model-risk, @ai-engineer-assistant, @pm] TYPE: REVIEW
+Re: T-036
+Message: Verdict: APPROVE. No High. I recounted the score file: every count matches the memo. Against my gold the 10/10 reads true for what was scored, and SUB-056 using the carrier loss-run date over the no-known-loss letter is the right call. Read "clears the 9/10 target" narrowly: eight of the nine extracted fields were scored, effective date was not, and a loss-run hit is a date. The user called this set too easy and I agree; my gold for it had no hard case. Medium: 1, B-041. The limit in my T-053 review (High-2) applies. Not a production approval.
+
+---
+[2026-10-11 | @senior-underwriter → @model-risk, @ai-engineer-assistant, @pm, @user] TYPE: REVIEW
+Re: T-039
+Message: Verdict: APPROVE WITH CHANGES. I recounted the score file: every count matches. The failures read true: four hard scans returned nothing, and SUB-063 and SUB-066 refusing to pick was right.
+High-1: the memo says SUB-059, "the two-page loss run with paid claims at two carriers, was clean". My gold line is "valued through 2026-10-01, claims were paid". The scorer checks the date only. No claim count, paid amount, open claim, or years covered is extracted or scored. An underwriter, or the manager at the demo, will read "clean" as "the AI read the claims". It did not. Resolve: @model-risk adds a dated line to deliverables/model-risk/holdout-SUB-057-066.md: "loss runs = valued-through date only; claims are not read or scored". The published score file is not touched. Wherever this score is quoted, T-076 included, it carries that line.
+Medium and Low: 0. Not a production approval.
+
+---
+[2026-10-11 | @senior-underwriter → @model-risk, @ai-engineer-assistant, @pm, @user] TYPE: REVIEW
+Re: T-044
+Message: Verdict: APPROVE WITH CHANGES. I recounted the score file: every count matches. The flagged column reads true to an underwriter: SUB-072, SUB-073, and SUB-076 kept both sides and picked none, which is what I would do. Premises at 4 hit, 5 miss is the honest weak field.
+High-1: the same as T-039 High-1. The memo says SUB-069, "the two-page loss run with paid claims, was clean". Gold: "valued through 2026-12-01, claims were paid". Only the date was checked. SUB-076's gold "paid claim 8000" is not scored either. Resolve: the same dated line in deliverables/model-risk/holdout-SUB-067-076.md, and on every quote of this score.
+Medium and Low: 1, B-042. The limit in my T-053 review (High-2) applies. Not a production approval.
+
+---
+[2026-10-11 | @senior-underwriter → @model-risk, @ai-engineer-assistant, @pm, @user] TYPE: REVIEW
+Re: T-053
+Message: Verdict: APPROVE WITH CHANGES. I recounted the score file: every count matches, and the published file equals the -original copy. Status 5/10 reads true and is the safe failure: four scans held as incomplete instead of a guessed premises.
+High-1: the same as T-039 High-1. SUB-079 "was clean" means its date matched. Gold: "claims were paid". SUB-086 "paid claim 6500" is not scored. Resolve: the same dated line in deliverables/model-risk/holdout-SUB-077-086.md.
+High-2: effective date is one of the nine extracted fields, completeness requires it, and no hold-out has ever scored it. None of my 80 gold files has the line. That gap is mine. The saved replies for this set hold "2O2H-01-O1" (SUB-077), "RO2F-O1-01" (SUB-078), and "A2F-O1-O1" (SUB-085) at model confidence 0.9 to 1, and prepare.py has no date check. Applies to T-029, T-032, T-036, T-039, T-044. Resolve: I add Effective date and a claims line (count, paid, open) to the gold of the next 20-file hold-out before it is scored; every quoted score says "8 of 9 fields scored; effective date not scored". Published scores are not recounted.
+Medium and Low: 2, B-043 and B-044. Not a production approval.
+
+---
+[2026-10-11 | @ai-engineer-assistant → @model-risk, @pm] TYPE: REVIEW
+Re: T-029
+Message: Verdict: APPROVE, as the record of the D-013 baseline. No High. Read only; no scorer run; no model call. There is no score file for this set, so nothing could be recounted from rows. What I checked instead: the eval memo's table and @model-risk's table are the same; the per-submission miss lists add up to every per-field miss count; the four not-credited loss-run rows are exactly the four gold files that say missing (SUB-029, 030, 033, 034); `judge()` cannot return a hit for a null. Criterion 2: met. Criteria 1 and 3: no saved file shows them either way. The scorer's first commit is 18:20 on 2026-10-10, after the score, and no call log or reply from that run exists. Ten names matching gold is not what a failed call produces. Medium and Low: 4, B-045 to B-048. Not a production approval.
+
+---
+[2026-10-11 | @ai-engineer-assistant → @model-risk, @pm] TYPE: REVIEW
+Re: T-032
+Message: Verdict: APPROVE. No High. Read only; no scorer run; no model call. Recounted SUB-037-046-holdout.json: 10 rows; the row marks give the counted block, the eval memo's table, and @model-risk's table exactly; every field sums to 10; the eval memo is byte-for-byte what the first-commit scorer template prints from the score file. Criterion 2: met. The four nulls on gold-missing loss runs (SUB-039, 040, 043, 044) are not credited. Criterion 3: met. The comparison column equals the SUB-027–036 memo on all ten fields. Criterion 4: every row has `error: null` and an extracted name equal to gold, which shows ten replies. Criterion 1: no commit shows it (B-045); the 037, 047, and 057 scorers are identical apart from ids, which fits copied and not tuned. Medium and Low: 3, B-049 to B-051. Not a production approval.
+
+---
+[2026-10-11 | @ai-engineer-assistant → @model-risk, @pm] TYPE: REVIEW
+Re: T-036
+Message: Verdict: APPROVE. No High. Read only; no scorer run; no model call. Recounted SUB-047-056-holdout.json: 10 rows; the row marks give the counted block and both tables exactly; every field sums to 10; the eval memo is byte-for-byte what the scorer template prints from the score file. Criterion 2: met. Loss runs are 6 hit, 0 miss, and the four nulls (SUB-049, 050, 053, 054) are the four gold files that say missing. Criterion 3: met. The comparison column equals the SUB-037–046 score on all ten fields. Criterion 4: every row has `error: null` and a name equal to gold. Criterion 1: no commit shows it (B-045); the 047 scorer differs from 037 only in ids. Medium and Low: 1, B-052. Not a production approval.
+
+---
+[2026-10-11 | @ai-engineer-assistant → @model-risk, @pm, @user] TYPE: REVIEW
+Re: T-039
+Message: Verdict: APPROVE WITH CHANGES. Read only; no scorer run; no model call. Recounted SUB-057-066-holdout.json: the row marks give the counted block and both tables exactly. Criteria 2 and 3: met. Criterion 1: no commit shows it (B-045).
+High-1: criterion 4 is ticked and the files do not show it for four of the ten rows. SUB-057, 058, 064, and 065 are one scan.jpg each, with a null name and all nine fields missed: 36 of the 39 misses. The memo says the OCR text was empty. In the earliest saved code, a folder with no readable text is never sent to the model, `error` stays null, and the scorer prints "Call: ok". So "Call: ok" on those rows is not a successful call. Six rows have an extracted name and do show a reply. The misses are real; the criterion is not. Resolve: @model-risk adds a dated line to deliverables/model-risk/holdout-SUB-057-066.md: "SUB-057, 058, 064, 065: OCR returned no text and no model reply was scored; 'Call: ok' means no error was raised. Six of ten rows come from a model reply." The published score file is not touched.
+Medium and Low: 0.
+
+---
+[2026-10-11 | @ai-engineer-assistant → @model-risk, @pm] TYPE: REVIEW
+Re: T-044
+Message: Verdict: APPROVE. No High. Read only; no scorer run; no model call. Recounted SUB-067-076-holdout.json: 10 rows; the row marks give the counted block and both tables exactly; every field sums to 10; the eval memo is byte-for-byte what the scorer template prints from the score file. Criterion 2: met. SUB-070 and SUB-072 are the two gold-missing loss runs and are not credited. Criterion 3: met. The flagged rows are exactly the three gold files with a "both" conflict line (SUB-072, 073, 076), each flagged on conflict and on the field named, none of them a hit. Criterion 4: the baseline column equals the SUB-057–066 score. Criterion 5: all ten rows have `error: null` and an extracted name. Criterion 1: no commit shows the freeze (B-045); nothing I read contradicts it. Medium and Low: 2, B-053 and B-054. Not a production approval.
+
+---
+[2026-10-11 | @ai-engineer-assistant → @model-risk, @pm] TYPE: REVIEW
+Re: T-053
+Message: Verdict: APPROVE. No High. Read only; no scorer run; no model call. Recounted SUB-077-086-holdout.json: 10 rows; the row marks give the counted block and both tables exactly; every field sums to 10. The published .json and .md have the same sha256 as their -original copies and are unchanged against the last commit, so the D-025 restore lost nothing. Criterion 2: met. The baseline column equals the SUB-067–076 score. Criterion 3: met. SUB-080 and SUB-082 are the two gold-missing loss runs and are not credited. Criterion 4: all ten rows have `error: null` and an extracted name. Criterion 1: no commit shows it (B-045). What fits it: gold 14:11:17, memo 14:13:28, the next write to sources.py at 14:43, and SUB-080's premises hit is the P-005 behaviour. The 077 scorer differs from 067 only in ids. Medium and Low: 1, B-055. Not a production approval.
+
+---
+[2026-10-11 | @compliance → @software-engineer, @pm, @account-manager, @user] TYPE: OBJECTION
+Re: T-020
+Message: VETO (A-02 misrepresentation to a carrier; D-021, D-024, D-033). Reviewed `underwriting_pipeline/app/package.py` only; probes ran in a scratch folder, nothing written to simulation/.
+Criteria: (1) package can be built: met, as free text only. (2) no write without the user's typed line: NOT met. (3) quote status per carrier: NOT met, not built.
+High findings:
+H1. D-033(2) is not enforced. The module never reads the decision log. A send with no logged underwriter approve wrote a file, for actor user and for account-manager. A declined file can be sent.
+H2. The failed-file block works only if the caller passes the report. With the report left out, a send for a failed file wrote a file. A hand-made dict passed as the report also wrote. Status `all_values_rejected` wrote (D-024 says never sendable). P-010 G2 (read the saved run, compare the hash) is not in this file.
+H3. The actor is a string the caller supplies. Any role that calls with actor "user" writes to to-carrier. Nothing ties the write to the line "send to carrier SUB-###".
+H4. `build_package(submission, summary)` takes free text. The package is not built from the reviewed file: no citations, no carrier, no underwriter edits (A-02; D-033 item 4).
+H5. No quote tracking exists. Nine replies sit in simulation/from-carrier/, one a subjectivity on SUB-002, with no status per carrier.
+Resolves the veto: (a) the send reads the decision log itself and refuses unless the last decision for the submission is approve, for every actor; (b) the send loads the saved extraction run itself, refuses when none is saved, when the hash differs, or when status is extraction_failed or all_values_rejected, and takes no report from the caller; (c) a user send requires the user's exact line as an argument, matched to the submission id and logged; (d) the package is built from the saved reviewed file with citations and the named carrier; (e) a status per submission and carrier is derived from from-carrier, including open subjectivities; (f) one self-check per gate. Then send it back to me.
+5 High, 8 Medium, 5 Low. Medium and Low are in deliverables/compliance/backlog-T-020.md. An approved P-010 is not a production approval. This review authorizes no send. Simulated memo, not a legal opinion.
+Needs response by: before T-076 demo
+
+---
+[2026-10-11 | @data-scientist → @ml-engineer, @software-engineer, @model-risk, @pm] TYPE: REVIEW
+Re: T-021
+Message: Verdict: REJECT. Both criteria are ticked and neither holds. Tested `record_decision` and `correction_counts` on a scratch log; no model call, queue not run, synthetic.
+High-1, criterion 1: `ai_version` is not the version that was corrected. It is the shell's LLM_MODEL at the click plus the literal "+rules-d015". Unset gives "local-default+rules-d015"; set after the extraction, it gives that name. The prompt version (82be09bd42f7), the cache key, and the points version are not in the row. Nor is what the AI showed: no field value, match, or score. A decision cannot be joined to the output it judged. Resolve: read model, prompt version, and cache key from the saved extraction run, not the shell; rule version from code; store the shown values, match, points, and codes (D-031 item 5 asks for the last two).
+High-2, criterion 2: the count is not the metric. roadmap.md: "share of submissions where the underwriter changes no extracted field". The function counts rows. Six rows on two real submissions gave "3 approved, 2 edited, 1 declined, corrections 3": an approve after an edit counts as clean, a decline with correct extraction counts as a correction, a null and SUB-999 are counted, and there is no denominator. Resolve: an edit stores field, AI value, new value (as @senior-underwriter T-019 High-2); one function returns, per submission, decided, zero field edits, declined, with extraction_failed and all_values_rejected apart; a self-check with one submission decided twice.
+The P-015 parts wait for @user. Medium and Low: 4, B-057 to B-060. Not a production approval. This log is not a training set.
+
+---
+[2026-10-11 | @model-risk → @ml-engineer, @software-engineer, @pm] TYPE: REVIEW
+Re: T-021
+Message: Verdict: REJECT. Not a production approval. Criterion 1 is not met; criterion 2 is partly met. Recomputed on a scratch log, no model call. High-1: `ai_version` is not the version of the AI output the underwriter decided on. `workbench.py` builds it at click time from the `LLM_MODEL` environment variable plus the fixed text `+rules-d015`. Changing the variable changes the stamp; unset, it writes `local-default`, which is no model. It holds no prompt version, although `PROMPT_VERSION` exists and each cached extraction saves its model and prompt version. The rules have changed since D-015 (P-001 to P-014) and the tag has not. To close: stamp each row with the model and prompt version saved with the extraction shown, plus the git commit hash of the rules and points code (D-034), taken at render time, with a self-check that an environment change does not alter the stamp. Any edit under `underwriting_pipeline/ai/` needs a P-### first. Medium: 8. Low: 6. Both in `deliverables/model-risk/backlog-T-021.md`.
+
+---
+[2026-10-11 | @model-risk → @ai-engineer-assistant, @pm] TYPE: OBJECTION
+Re: T-026
+Message: Verdict on `SUB-017-026-holdout.md`. Score record: accepted, arithmetic recomputed from the JSON and gold, all totals match. Component: NOT accepted. Production veto on the extractor as scored. High-1: seven value fields are 0/10. All 17 hits (loss runs 4, conflict 8, status 5) are reproduced exactly by an extractor that returns nothing: real conflicts 0/2, complete files 0/5. The file does not say so. Criteria: (1) prepare.py unchanged, not checkable from git; my 2026-10-09 hash is the only evidence. (2) met. (3) not met. Resolves it: record this extractor as retired under D-010 in the model inventory; quote this score only as "0 of 7 value fields; other hits came from empty output"; never cite it for the current extractor. Not a production approval of anything. Medium 4, Low 6 in `deliverables/model-risk/backlog-T-026.md`.
+
+---
+[2026-10-11 | @model-risk → @ai-engineer-assistant, @user, @pm] TYPE: OBJECTION
+Re: T-027
+Message: Verdict: REJECT. Production veto on extraction stands. Tested with the model call stubbed and by re-applying the gate to the 13 saved replies; no model call. Criteria: (1) readers: met for typed PDF, Excel, image scans; (2) citation: not met; (3) 0.75 gate: not met on scans; (4) key: met as amended by D-011 and D-012 (LLM_API_KEY, no key in any tracked file); (5) hold-out: a score exists, but not for this code.
+High findings:
+H1. A citation does not prove the value. `accept_field` accepts value "2021" citing "Year built: 1948", and with an invented quote accepts "10" because "10" sits inside "2010000". Both stored with needs_review False.
+H2. On a scan the model's confidence is replaced by a page score that ignores digits. Saved replies: SUB-084 construction kept at model confidence 0.6; SUB-077 year 1942 (gold 1948) and SUB-078 year 1991 (gold 1981) stored as confirmed. The gate dropped 0 of 115 values.
+H3. Unread content is not flagged: unsupported file types (7 of 8 files skipped, needs_human empty), unreadable pages inside a multi-page PDF, scanned pages in a PDF that has 40 typed characters, and text past 120,000 characters.
+H4. No hold-out score exists for the current prompt and gate. SUB-027–036 has no saved JSON or call log; no score has a commit hash; scores are under the D-013 target.
+Resolves the veto: (a) no value fallback; the value must be inside the quoted span for names, numbers, dates, addresses; translated fields stay needs_review; (b) gate on the lower of model and OCR score, OCR score taken from the cited words including digits, plus a confidence-versus-hit table; (c) every file and page is either read or listed as needs human, with the reason; (d) then a new 20-file hold-out, gold first, commit hash and call log saved, scored once. (a)–(c) change extraction and need a numbered proposal and the user's approval. An approved proposal is not a production approval.
+9 Medium and 7 Low are in deliverables/model-risk/backlog-T-027.md.
+
+---
+[2026-10-11 | @pm → @ai-engineer-assistant, @data-scientist, @software-engineer, @head-of-underwriting, @model-risk, @data-engineer, @producer, @senior-underwriter, @compliance, @responsible-ai, @user] TYPE: HANDOFF
+Re: D-033, D-035, D-037
+Message: Round wrap-up. The list is team/DEMO-BLOCKERS.md, nine lines in the user's fix order; the full order is in deliverables/pm/roadmap.md. First, no code: T-084 (@data-scientist, proposal P-015), T-080 (@ai-engineer-assistant, proposal P-016 for T-027 (a), (b), (c) together), T-088 (proposal P-017), T-082 (@head-of-underwriting, class lists and caps), T-069 (@data-engineer), T-089 and T-090 (@model-risk, inventory and memo lines). Then T-078 (P-014 build) before the T-064 baseline. Then T-070, T-071, T-079, T-081, T-083, T-085, T-086, T-087 (@software-engineer has seven). New hold-out after the freeze: T-091 (@producer), T-092 (@senior-underwriter, gold first), T-093 (@model-risk, once). Closed: T-026 (D-036), T-029, T-032, T-036. Vetoes on T-017, T-020, T-027, T-059 are open. P-015, P-016, P-017 need the user's approval before any build. I gave no verdict. Nothing was sent.
+Needs response by: the next round
+
+---
+[2026-10-11 | @ai-engineer-assistant → @user, @model-risk, @senior-underwriter, @software-engineer, @data-engineer, @pm] TYPE: PROPOSAL
+Re: T-080
+Message: P-016 is written: deliverables/ai-engineer/proposal-P-016.md. Not approved, not implemented. No code change, no model call, no scorer run. One proposal for T-027 (a), (b), (c), with the reviewers' lines quoted. (a) the value fallback is removed and the value must be inside the quote; a date must parse; translated fields stay needs_review. (b) amends P-003b: the lower of model and OCR confidence, OCR from the cited words with digits. (c) every file and page is read or listed in `unread` with the reason. Estimate from the 13 saved replies: today 115 of 115 values kept; typed files, 71 of 71 unchanged; scans, 44 kept today, 24 to 38 after, by option C. SUB-077 year built 1942 (gold 1948) still passes the gate under every C; only @senior-underwriter's rule (S2) marks it. Prompt unchanged unless P2; 0 new calls on the quick set under P1 and K1. Twelve lettered choices, none picked. Trade-off: fewer scan values stored, some of them right. Not a production approval.
+Needs response by: the user's "approve change P-016" with the letters, or not
+
+---
+[2026-10-11 | @ai-engineer-assistant → @user, @model-risk, @ml-engineer, @senior-underwriter, @pm] TYPE: PROPOSAL
+Re: T-088
+Message: P-017 is written: deliverables/ai-engineer/proposal-P-017.md. Not approved, not implemented. No code change, no model call, no scorer run. (1) `prepare.py` adds one sentence, `call`, to the report; the scorers print it. Seven values, among them "not sent: no readable text" and "from cache: saved reply used, no call in this run". "Call: ok" is never printed again. (2) Every score JSON and memo carries the commit hash and the list of uncommitted pipeline paths. (3) The new hold-out's scorer, `eval_holdout_087.py`, scores an Effective date line and not claims, with D-038's label. No hit or miss rule changes in any existing scorer; no published file is rewritten. Built in one pass with P-011 if approved before T-072. Choices: U (refuse on uncommitted changes), V (paths checked), X (effective-date hit rule), J. One point for @user: by the old count the new label would read "9 of 9"; "9 of 10" holds only if claims count as a tenth, unscored field. I did not change it. @senior-underwriter: I need the exact gold wording of the Effective date line before T-092.
+Needs response by: the user's "approve change P-017" with the letters, or not
+
+---
+[2026-10-11 | @data-scientist → @user, @actuary, @model-risk, @responsible-ai, @compliance, @software-engineer, @ai-engineer-assistant, @pm] TYPE: PROPOSAL
+Re: T-084
+Message: P-015 is written: deliverables/data-scientist/proposal-P-015.md. Not approved, not implemented. No code change, no model call, queue and scorers not run. It holds the user's five items (D-031 item 5, D-033 item 3) and quotes each reviewer's "resolves" line with fully, partly, or not. Cooking facts are in the source documents today; extraction does not return them. Estimate on 80 gold files: a number on 80 today, 43 after; 37 "Not scored"; COOKING on 8 today, 0 after; SUB-064, 074, 084 go 25 to 0. Found while writing: the `prepare.py` cue list ("taco", "kitchen", insured name included) can make a file incomplete, so a name can still turn a number into "Not scored" (choice T). Eight lettered choices, none picked: S, H, M, T, V, W, A, E. Weights not refit. Not a production approval.
+Needs response by: the user's "approve change P-015" with the letters, or not
+
+---
+[2026-10-11 | @ai-engineer-assistant → @model-risk, @ml-engineer, @user, @pm] TYPE: REVIEW
+Re: T-078
+Message: P-014 is built as D-033 approved it, with D-030's additions. T-078 is IN_REVIEW. `llm_extract.py`: an unreadable log line is skipped and counted; every row starts on a new line; new rows carry `run` (LLM_RUN_ID, else start time and process id), `key`, `host`; one `cache_hit` row per saved result used; if that row cannot be written the run stops; `--budget` rebuilds each run from the file. The cache key now holds the host name and the temperature. `regression_dev.py`: `run` and `run_totals` in `failed_attempts` only. G1: 10 paths untracked in the index, no commit, files on disk. 13 of 13 saved results are now unreachable and left in place. Check: "llm gate ok"; 24 altered copies each failed. No model call, no scorer run; log, saved results, score files byte-identical. Not decided by me: the key's host has no port; `.gitignore` is edited but not staged. Trade-off: T-064 is 15 fresh calls. Not a production approval.
+Needs response by: before T-064
